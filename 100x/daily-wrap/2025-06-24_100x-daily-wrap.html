@@ -918,7 +918,16 @@
         if (window.top === window.self) {
             fetch(`../../nav.html?v=${siteVersion}`)
                 .then(r => r.text())
-                .then(html => { document.getElementById('nav').innerHTML = html; });
+                .then(html => {
+                    const nav = document.getElementById('nav');
+                    nav.innerHTML = html;
+                    nav.querySelectorAll('script').forEach(oldScript => {
+                        const script = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
+                        script.textContent = oldScript.textContent;
+                        oldScript.replaceWith(script);
+                    });
+                });
         }
     </script>
   <script type="module" src="../../version.js"></script>
