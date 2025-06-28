@@ -30,4 +30,4 @@ After starting a local server, open `index.html` in your browser to launch the a
 
 ## Contributing
 
-Pull requests are welcome. Please run `node tests/run-tests.js` before submitting changes and ensure HTML pages remain valid. Describe any significant changes in your commit messages.
+Pull requests are welcome. Please run `node tests/run-tests.js` before submitting changes and ensure HTML pages remain valid. By contributing you agree that your contributions will be licensed under the MIT License as detailed in the LICENSE file. Describe any significant changes in your commit messages.
