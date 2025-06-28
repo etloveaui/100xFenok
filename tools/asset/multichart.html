@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <script defer>
-    const siteVersion = '20250628T1121';
+  <script type="module">
+        import { siteVersion } from '../../version.js';
     const cfg = document.createElement('script');
     cfg.defer = true;
     cfg.type = 'module';
@@ -493,5 +493,6 @@ async function fetchPriceDataAlpha(symbol) {
 </script>
 <!-- === override end === -->
 
+  <script type="module" src="../../version.js"></script>
 </body>
 </html>
