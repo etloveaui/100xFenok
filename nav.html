@@ -24,18 +24,18 @@
 <body class="bg-white/90 backdrop-blur-lg border-b border-slate-200 animate-fadeIn text-base sm:text-lg">
   <div class="container mx-auto px-4 sm:px-6 py-4 md:py-5 flex justify-between items-center">
     <!-- 로고 -->
-  <a href="javascript:parent.loadPage('./main.html')" data-path="main.html" class="text-slate-600 font-medium flex items-center space-x-2 text-xl sm:text-2xl lg:text-3xl hover:text-blue-600 orbitron">
+  <a href="./main.html" data-path="main.html" class="text-slate-600 font-medium flex items-center space-x-2 text-xl sm:text-2xl lg:text-3xl hover:text-blue-600 orbitron">
       <img src="./favicon.svg" alt="FenoK" class="h-8 w-8">
       <span>FenoK</span>
     </a>
 
     <!-- 데스크톱 메뉴 -->
   <nav class="hidden md:flex items-center space-x-4 sm:space-x-8 text-slate-600 text-base sm:text-lg">
-      <a href="javascript:parent.loadPage('./ib/ib-total-guide-calculator.html')" data-path="ib/ib-total-guide-calculator.html" class="text-slate-600 font-medium hover:text-blue-600">무한매수법</a>
-      <a href="javascript:parent.loadPage('./vr/index.html')" data-path="vr/index.html"                            class="text-slate-600 font-medium hover:text-blue-600">VR</a>
-      <a href="javascript:parent.loadPage('./tools/asset/multichart.html')" data-path="tools/asset/multichart.html"             class="text-slate-600 font-medium hover:text-blue-600">멀티차트</a>
-      <a href="javascript:parent.loadPage('./100x/index.html')" data-path="100x/index.html"                         class="text-slate-600 font-medium hover:text-blue-600">Daily Wrap</a>
-      <a href="javascript:parent.loadPage('./posts/index.html')" data-path="posts/index.html"                        class="text-slate-600 font-medium hover:text-blue-600">분석</a>
+      <a href="./ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html" class="text-slate-600 font-medium hover:text-blue-600">무한매수법</a>
+      <a href="./vr/index.html" data-path="vr/index.html"                            class="text-slate-600 font-medium hover:text-blue-600">VR</a>
+      <a href="./tools/asset/multichart.html" data-path="tools/asset/multichart.html"             class="text-slate-600 font-medium hover:text-blue-600">멀티차트</a>
+      <a href="./100x/index.html" data-path="100x/index.html"                         class="text-slate-600 font-medium hover:text-blue-600">Daily Wrap</a>
+      <a href="./posts/index.html" data-path="posts/index.html"                        class="text-slate-600 font-medium hover:text-blue-600">분석</a>
     </nav>
 
     <!-- 모바일 햄버거 -->
@@ -44,11 +44,11 @@
 
   <!-- 모바일 드롭다운 -->
   <div id="mobile-menu" class="hidden md:hidden bg-gray-50 border-t border-slate-200 px-4 sm:px-6 py-4 space-y-2 text-base sm:text-lg">
-    <a href="javascript:parent.loadPage('./ib/ib-total-guide-calculator.html')" data-path="ib/ib-total-guide-calculator.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">무한매수법</a>
-    <a href="javascript:parent.loadPage('./vr/index.html')" data-path="vr/index.html"                     class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">VR</a>
-    <a href="javascript:parent.loadPage('./tools/asset/multichart.html')" data-path="tools/asset/multichart.html"       class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">멀티차트</a>
-    <a href="javascript:parent.loadPage('./100x/index.html')" data-path="100x/index.html"                   class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">Daily Wrap</a>
-    <a href="javascript:parent.loadPage('./posts/index.html')" data-path="posts/index.html"                  class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">분석</a>
+    <a href="./ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">무한매수법</a>
+    <a href="./vr/index.html" data-path="vr/index.html"                     class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">VR</a>
+    <a href="./tools/asset/multichart.html" data-path="tools/asset/multichart.html"       class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">멀티차트</a>
+    <a href="./100x/index.html" data-path="100x/index.html"                   class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">Daily Wrap</a>
+    <a href="./posts/index.html" data-path="posts/index.html"                  class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">분석</a>
   </div>
 
   <script defer>
@@ -58,5 +58,13 @@
     menu.onclick = e => e.target.tagName==='A' && menu.classList.add('hidden');
   </script>
   <script type="module" src="./version.js"></script>
+  <script>
+    document.querySelectorAll('a[data-path]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        parent.loadPage(a.getAttribute('href'));
+      });
+    });
+  </script>
 </body>
 </html>
