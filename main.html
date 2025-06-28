@@ -26,6 +26,7 @@
 </head>
 
 <body class="bg-slate-50 text-slate-800 animate-fadeIn text-base sm:text-lg lg:text-xl">
+  <div id="nav"></div>
   <main class="container mx-auto p-4 sm:p-6 md:py-20 lg:p-10">
 
     <!-- 헤드라인 -->
@@ -129,5 +130,11 @@
                 <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
         </div>
   </footer>
+  <script defer>
+    const siteVersion = '20250628T1121';
+    fetch('./nav.html?v=' + siteVersion)
+      .then(r => r.text())
+      .then(html => { document.getElementById('nav').innerHTML = html; });
+  </script>
 </body>
 </html>

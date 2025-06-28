@@ -61,6 +61,7 @@
 <body class="bg-slate-50 text-slate-800">
 
     <!-- 메인 콘텐츠 영역 -->
+    <div id="nav"></div>
     <main class="container mx-auto p-6 md:p-12">
         <!-- 최신 리포트 하이라이트 섹션: 페이지의 핵심. 가장 중요한 3개의 리포트를 상단에 배치 -->
         <section id="featured-reports" class="mb-16">
@@ -209,6 +210,12 @@
                 });
             });
         });
+    </script>
+    <script defer>
+        const siteVersion = '20250628T1121';
+        fetch('../nav.html?v=' + siteVersion)
+            .then(r => r.text())
+            .then(html => { document.getElementById('nav').innerHTML = html; });
     </script>
 </body>
 </html>
