@@ -599,9 +599,11 @@
     </script>
     <script type="module">
         import { siteVersion } from '../../version.js';
-        fetch(`../../nav.html?v=${siteVersion}`)
-            .then(r => r.text())
-            .then(html => { document.getElementById('nav').innerHTML = html; });
+        if (window.top === window.self) {
+            fetch(`../../nav.html?v=${siteVersion}`)
+                .then(r => r.text())
+                .then(html => { document.getElementById('nav').innerHTML = html; });
+        }
     </script>
   <script type="module" src="../../version.js"></script>
 </body>
