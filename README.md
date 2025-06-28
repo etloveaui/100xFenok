@@ -4,7 +4,7 @@ FenoK is a collection of investment dashboards and tools built as a simple Singl
 
 ## Installation
 
-No build step is required. Clone the repository and open `index.html` in a browser or serve the directory using a static HTTP server. Node is only required to run the small test suite.
+No build step is required. Clone the repository and serve the directory using a simple HTTP server. Opening the files directly from disk can trigger cross-origin issues and some CDN assets may not load. Start a local server such as `npx serve` or `python -m http.server` and then browse to `index.html`. Node is only required to run the small test suite.
 
 ```bash
 npm install       # only if tests require additional modules
@@ -26,7 +26,7 @@ version.js      Cache busting constant
 
 ## Usage
 
-Open `index.html` to launch the application. The navigation menu lets you switch between tools and articles. When adding new pages, update `nav.html` and increase the version in `version.js` so browsers fetch the latest resources.
+After starting a local server, open `index.html` in your browser to launch the application. The navigation menu lets you switch between tools and articles. When adding new pages, update `nav.html` and increase the version in `version.js` so browsers fetch the latest resources.
 
 ## Contributing
 
