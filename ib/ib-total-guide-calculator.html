@@ -50,6 +50,7 @@
 </head>
 <body class="text-003f5c">
     <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <div id="nav"></div>
 
         <header class="text-center mb-16">
 
@@ -518,6 +519,12 @@
                 resultDiv.classList.remove('hidden');
             });
         });
+    </script>
+    <script defer>
+        const siteVersion = '20250628T1121';
+        fetch('../nav.html?v=' + siteVersion)
+            .then(r => r.text())
+            .then(html => { document.getElementById('nav').innerHTML = html; });
     </script>
 </body>
 </html>
