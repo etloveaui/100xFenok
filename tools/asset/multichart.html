@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <script defer type="module" src="config.js?v=20250628C"></script>
+  <script defer>
+    const siteVersion = '20250628T1121';
+    const cfg = document.createElement('script');
+    cfg.defer = true;
+    cfg.type = 'module';
+    cfg.src = `config.js?v=${siteVersion}`;
+    document.head.appendChild(cfg);
+  </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>100x 멀티차트 (최종 안정판)</title>
