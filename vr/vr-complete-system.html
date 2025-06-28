@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="라오어의 TQQQ 기반 밸류 리밸런싱 5.0 투자 전략의 모든 것을 담은 최종 마스터 가이드. 공식, 시뮬레이터, 백테스트 데이터, 실전 Q&A까지 제공합니다.">
+    <title>밸류 리밸런싱(VR) 5.0 최종 마스터 가이드 (통합 완성본 v3.0)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f4f8;
+            color: #1a202c;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+            height: 50vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.2);
+        }
+        .section-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
+        .section-subtitle { font-size: 1.2rem; color: #4a5568; margin-bottom: 4rem; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .gradient-text { background: linear-gradient(to right, #007CF0, #00DFB5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .fade-in-section { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .fade-in-section.is-visible { opacity: 1; transform: translateY(0); }
+        .formula-box { font-family: 'Courier New', Courier, monospace; background-color: #1e293b; color: #94a3b8; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); min-height: 120px; }
+        .formula-box .variable-tooltip { color: #60a5fa; cursor: pointer; position: relative; border-bottom: 1px dotted #60a5fa; }
+        .formula-box .operator { color: #f472b6; }
+        .tooltip-text { visibility: hidden; width: 220px; background-color: #334155; color: #fff; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 50; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-family: 'Noto Sans KR', sans-serif; font-size: 0.8rem; pointer-events: none; }
+        .variable-tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        
+        .interactive-sim { background: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .faq-item { background-color: white; border-radius: 0.75rem; margin-bottom: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .faq-question { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; font-weight: 600; cursor: pointer; }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; padding: 0 1.5rem; }
+        .faq-answer p { padding-bottom: 1.5rem; }
+        .faq-item.active .faq-answer { max-height: 300px; }
+        
+        .reservoir-container { position: relative; width: 100%; height: 200px; margin: 1rem 0; }
+        .reservoir-visual { width: 80%; height: 120px; margin: 0 auto; position: relative; border: 3px solid #64748b; border-radius: 12px 12px 4px 4px; overflow: hidden; background: linear-gradient(to bottom, #e2e8f0 0%, #cbd5e1 100%); }
+        .water-flow { position: absolute; bottom: 0; width: 100%; border-radius: 0 0 8px 8px; transition: all 0.8s ease-in-out; }
+        .water-flow.overflow { height: 95%; background: linear-gradient(to bottom, #3b82f6 0%, #1d4ed8 100%); animation: waterOverflow 3s ease-in-out infinite; }
+        .water-flow.drought { height: 25%; background: linear-gradient(to bottom, #ef4444 0%, #dc2626 100%); animation: waterDrought 3s ease-in-out infinite; }
+        @keyframes waterOverflow { 0%, 100% { height: 95%; } 50% { height: 100%; } }
+        @keyframes waterDrought { 0%, 100% { height: 25%; } 50% { height: 15%; } }
+        .reservoir-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; z-index: 10; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); }
+        .status-label { position: absolute; top: 8px; right: 8px; background: rgba(255, 255, 255, 0.9); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; z-index: 10; }
+        .arrow-flow { position: absolute; bottom: -15px; left: 50%; font-size: 1.5rem; font-weight: bold; animation: arrowBounce 2s ease-in-out infinite; }
+        .bull-market .arrow-flow { color: #3b82f6; transform: translateX(-50%); }
+        .bear-market .arrow-flow { color: #ef4444; transform: translateX(-50%) rotate(180deg); }
+        @keyframes arrowBounce { 0%, 100% { transform: translate(-50%, 0) rotate(var(--rotation, 0deg)); } 50% { transform: translate(-50%, -5px) rotate(var(--rotation, 0deg)); } }
+        .bear-market .arrow-flow { --rotation: 180deg; }
+        .pond-visual { width: 60%; height: 40px; margin: 20px auto 0; position: relative; border: 2px solid #94a3b8; border-radius: 20px; background: #f1f5f9; overflow: hidden; }
+        .pond-water { position: absolute; bottom: 0; width: 100%; border-radius: 0 0 18px 18px; transition: height 0.8s ease-in-out; }
+        .pond-water.increasing { height: 70%; background: linear-gradient(to top, #06b6d4, #0891b2); animation: pondIncrease 3s ease-in-out infinite; }
+        .pond-water.decreasing { height: 30%; background: linear-gradient(to top, #f59e0b, #d97706); animation: pondDecrease 3s ease-in-out infinite; }
+        @keyframes pondIncrease { 0%, 100% { height: 70%; } 50% { height: 85%; } }
+        @keyframes pondDecrease { 0%, 100% { height: 30%; } 50% { height: 15%; } }
+        .pond-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.8rem; font-weight: bold; color: white; text-shadow: 1px 1px 2px black; }
+        
+        .cycle-timeline { display: flex; justify-content: space-between; position: relative; margin: 3rem 0; padding: 0 1rem; }
+        .cycle-timeline::before { content: ''; position: absolute; top: 50%; left: 5%; width: 90%; height: 4px; background-color: #cbd5e1; transform: translateY(-50%); }
+        .cycle-step { background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%); color: white; border-radius: 12px; padding: 1.5rem; width: 30%; position: relative; z-index: 1; text-align: center; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); animation: stepGlow 3s ease-in-out infinite alternate; }
+        @keyframes stepGlow { from { box-shadow: 0 4px 15px rgba(129, 140, 248, 0.3); } to { box-shadow: 0 8px 30px rgba(167, 139, 250, 0.6); } }
+        
+        .progress-bar { width: 100%; background-color: #e5e7eb; border-radius: 9999px; height: 1.25rem; overflow: hidden; }
+        .progress-fill { background: linear-gradient(to right, #22d3ee, #0ea5e9); height: 100%; transition: width 0.5s ease-in-out; text-align: center; color: white; font-weight: bold; font-size: 0.8rem; line-height: 1.25rem; }
+        .lifecycle-simulator.levelup { animation: celebration 1.5s ease-in-out; }
+        @keyframes celebration { 0% { transform: scale(1); } 50% { transform: scale(1.03); box-shadow: 0 0 40px #00DFB5; } 100% { transform: scale(1); } }
+        
+        #poolSimulationDisplay { height: 200px; background: #e2e8f0; border-radius: 0.5rem; margin-top: 1rem; display: flex; align-items: flex-end; padding: 0.5rem; gap: 2px; }
+        .pool-bar { flex-grow: 1; background: linear-gradient(to top, #f59e0b, #d97706); transition: height 0.3s ease; border-radius: 2px; }
+        .pool-bar.recovering { background: linear-gradient(to top, #06b6d4, #0891b2); }
+        .pool-bar.exhausted { background: #9ca3af; }
+
+    </style>
+</head>
+<body class="bg-slate-100">
+
+    <article role="main">
+        <main class="container mx-auto p-4 md:p-8">
+
+
+            <section class="text-center py-20 fade-in-section">
+                <h2 class="text-5xl md:text-6xl font-extrabold text-slate-900">감정은 배제하고, <span class="gradient-text">시스템으로 투자하라</span></h2>
+                <p class="mt-6 text-lg text-slate-600 max-w-3xl mx-auto">밸류 리밸런싱(VR)은 인간의 감정적 판단을 배제하고, 사전에 설계된 수학적 원칙에 따라 '싸게 사고 비싸게 파는' 것을 완전 자동화하는 장기 투자 시스템입니다. 이 가이드는 VR 5.0의 철학, 공식, 그리고 실전 전략의 모든 것을 담았습니다.</p>
+            </section>
+            
+            <section class="my-20 fade-in-section">
+                <h3 class="section-title text-center">2주 사이클 완벽 운영 가이드</h3>
+                <p class="section-subtitle text-center">VR 투자는 2주를 한 사이클로, 아래 3단계 프로세스를 기계적으로 반복합니다.</p>
+                <div class="cycle-timeline">
+                    <div class="cycle-step">
+                        <h4 class="text-xl font-bold">STEP 1: 계산</h4>
+                        <p class="text-sm mt-2">금요일 장 마감 후, V₂값과 매수/매도 리스트를 계산합니다.</p>
+                    </div>
+                    <div class="cycle-step" style="animation-delay: 1s;">
+                        <h4 class="text-xl font-bold">STEP 2: 주문</h4>
+                        <p class="text-sm mt-2">월요일 장 시작 전, 계산된 가격으로 2주간 유효한 지정가 주문을 설정합니다.</p>
+                    </div>
+                    <div class="cycle-step" style="animation-delay: 2s;">
+                        <h4 class="text-xl font-bold">STEP 3: 관망</h4>
+                        <p class="text-sm mt-2">2주 동안 주문이 체결되는지 지켜보며 아무것도 하지 않습니다.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="my-16 fade-in-section">
+                <h3 class="section-title text-center">VR의 핵심 비유: 저수지 시스템</h3>
+                <p class="section-subtitle text-center">VR의 복잡한 원리는 '저수지'와 '연못'의 관계로 직관적으로 이해할 수 있습니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="glass-card p-8 text-center">
+                        <div class="reservoir-container bull-market">
+                            <div class="reservoir-visual">
+                                <div class="water-flow overflow"></div>
+                                <div class="reservoir-icon">💧</div>
+                                <div class="status-label">풍년</div>
+                                <div class="arrow-flow">↓</div>
+                            </div>
+                            <div class="pond-visual">
+                                <div class="pond-water increasing"></div>
+                                <div class="pond-label">Pool 증가</div>
+                            </div>
+                        </div>
+                        <h4 class="text-xl font-bold text-blue-600 mt-4">상승장 (풍년)</h4>
+                        <p class="text-slate-600 mt-2">저수지가 넘치면 연못으로 물이 흘러 Pool이 증가합니다 (자동 매도)</p>
+                    </div>
+                    <div class="glass-card p-8 text-center">
+                        <div class="reservoir-container bear-market">
+                            <div class="reservoir-visual">
+                                <div class="water-flow drought"></div>
+                                <div class="reservoir-icon">🏜️</div>
+                                <div class="status-label">가뭄</div>
+                                <div class="arrow-flow reverse">↑</div>
+                            </div>
+                            <div class="pond-visual">
+                                <div class="pond-water decreasing"></div>
+                                <div class="pond-label">Pool 감소</div>
+                            </div>
+                        </div>
+                        <h4 class="text-xl font-bold text-red-600 mt-4">하락장 (가뭄)</h4>
+                        <p class="text-slate-600 mt-2">저수지가 마르면 연못에서 물을 가져옵니다 (자동 매수)</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="my-20 fade-in-section">
+                <h3 class="section-title text-center">V-Value 계산 공식: 두 개의 엔진</h3>
+                <p class="section-subtitle text-center">VR 5.0은 시장 상황에 유연하게 대응하기 위해 두 가지 V값 계산 공식을 사용합니다. 변수에 마우스를 올려 자세한 설명을 확인해보세요.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="glass-card p-8">
+                        <h4 class="text-xl font-bold text-slate-800 mb-4">기본 공식</h4>
+                        <p class="text-sm text-slate-600 mb-4">V값이 Pool의 크기에만 영향을 받아 꾸준히 우상향하는 기본 엔진입니다.</p>
+                        <div class="formula-box text-sm md:text-base">
+                            <span class="variable-tooltip">V₂<span class="tooltip-text">2주 뒤의 새로운 목표 가치</span></span> <span class="operator">=</span> 
+                            <span class="variable-tooltip">V₁<span class="tooltip-text">이전 사이클의 목표 가치</span></span> <span class="operator">+</span> 
+                            (<span class="variable-tooltip">Pool₁<span class="tooltip-text">현재 보유 현금</span></span> 
+                            <span class="operator">/</span> <span class="variable-tooltip">G<span class="tooltip-text">투자의 공격성향을 조절하는 변수</span></span>) 
+                            <span class="operator">±</span> <span class="variable-tooltip">적립금<span class="tooltip-text">주기적으로 추가 입금 또는 인출하는 금액</span></span>
+                        </div>
+                    </div>
+                    <div class="glass-card p-8 border-2 border-green-400">
+                        <h4 class="text-xl font-bold text-slate-800 mb-4">실력 공식 (Advanced)</h4>
+                        <p class="text-sm text-slate-600 mb-4">실제 평가금(E)의 등락을 반영하여 시장 상황에 더 지능적으로 대응합니다.</p>
+                        <div class="formula-box text-sm md:text-base">
+                            <span class="variable-tooltip">V₂</span> <span class="operator">=</span> <span class="variable-tooltip">V₁</span> 
+                            <span class="operator">+</span> (<span class="variable-tooltip">Pool₁</span><span class="operator">/</span><span class="variable-tooltip">G</span>) 
+                            <span class="operator">+</span> ((<span class="variable-tooltip">E₁<span class="tooltip-text">현재 실제 주식 평가금</span></span> 
+                            <span class="operator">-</span> <span class="variable-tooltip">V₁</span>)<span class="operator">/</span>(2<span class="operator">*</span>√<span class="variable-tooltip">G</span>)) 
+                            <span class="operator">±</span> <span class="variable-tooltip">적립금</span>
+                        </div>
+                    </div>
+                </div>
+                 <div class="mt-8 interactive-sim max-w-4xl mx-auto">
+                    <h4 class="text-xl font-bold text-center mb-4">실시간 공식 시뮬레이터</h4>
+                     <div class="flex justify-center gap-2 mb-4">
+                        <button onclick="loadScenario('bull')" class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200">상승장 시나리오</button>
+                        <button onclick="loadScenario('bear')" class="px-3 py-1 text-sm bg-red-100 text-red-800 rounded-full hover:bg-red-200">하락장 시나리오</button>
+                        <button onclick="loadScenario('sideways')" class="px-3 py-1 text-sm bg-slate-100 text-slate-800 rounded-full hover:bg-slate-200">횡보장 시나리오</button>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                             <label for="inputV1" class="block text-sm font-medium text-slate-700">현재 V₁ ($)</label>
+                             <input type="number" id="inputV1" value="10000" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                        <div>
+                             <label for="inputE1" class="block text-sm font-medium text-slate-700">현재 평가금 E₁ ($)</label>
+                            <input type="number" id="inputE1" value="9500" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label for="inputPool" class="block text-sm font-medium text-slate-700">Pool ($)</label>
+                            <input type="number" id="inputPool" value="2000" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                        <div>
+                             <label for="inputG" class="block text-sm font-medium text-slate-700">G-Value</label>
+                            <input type="number" id="inputG" value="10" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                     </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                        <div>
+                            <p class="text-sm text-slate-500">기본 공식 V₂</p>
+                            <p id="basicFormulaResult" class="text-2xl font-bold text-slate-800">-</p>
+                        </div>
+                         <div>
+                            <p class="text-sm text-slate-500">실력 공식 V₂</p>
+                            <p id="advancedFormulaResult" class="text-2xl font-bold text-green-600">-</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="my-20 fade-in-section">
+                <h3 class="section-title text-center">공식별 장기 성과 비교</h3>
+                <div class="chart-guide-banner bg-blue-50 p-4 rounded-lg text-center mb-8 max-w-4xl mx-auto">
+                    <h4 class="font-semibold text-blue-800">이 차트에서 확인할 수 있는 것</h4>
+                    <ul class="text-sm text-slate-600 mt-2 list-disc list-inside">
+                        <li>하락장(2018년)에서 실력공식이 어떻게 손실을 효과적으로 방어하는가</li>
+                        <li>상승장(2019년)에서 실력공식이 어떻게 더 빠른 성장을 보이는가</li>
+                        <li>장기적으로 두 공식의 복리 효과가 어떻게 차이 나는가</li>
+                    </ul>
+                </div>
+                <div class="chart-container" style="height: 350px;"><canvas id="formulaComparisonChart"></canvas></div>
+            </section>
+
+            <section class="my-20 py-16 bg-white rounded-2xl shadow-2xl fade-in-section">
+                <div class="container mx-auto px-6">
+                    <h3 class="section-title text-center">자동 매매의 비밀: V-밴드와 리밸런싱</h3>
+                    <p class="section-subtitle text-center">계산된 V값을 기준으로 위아래 ±15%의 보이지 않는 복도(밴드)가 형성됩니다. 주식 평가금이 이 밴드를 벗어날 때만 기계적인 매수 또는 매도가 실행됩니다.</p>
+                    <div class="chart-container">
+                        <canvas id="rebalancingMechanismChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="my-20 fade-in-section">
+                <h3 class="section-title text-center">고급 커스터마이징: 나만의 VR 튜닝</h3>
+                <p class="section-subtitle text-center">G-Value 외에도 '밴드폭'과 'Pool 사용한도'를 조절하여 자신의 스타일에 맞게 VR 전략을 미세 조정할 수 있습니다.</p>
+                <div class="interactive-sim max-w-4xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <label for="bandWidth" class="block text-sm font-medium text-slate-700">밴드폭 설정: <span class="font-bold text-blue-600">±<span id="bandWidthValue">15</span>%</span></label>
+                            <input type="range" min="5" max="25" value="15" step="5" id="bandWidth" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer mt-2">
+                            <div class="w-full flex justify-between text-xs px-1 mt-1"><span>좁게(잦은 거래)</span><span>넓게(드문 거래)</span></div>
+                        </div>
+                        <div>
+                            <label for="poolUsageLimit" class="block text-sm font-medium text-slate-700">Pool 사용한도: <span class="font-bold text-blue-600"><span id="poolUsageValue">75</span>%</span></label>
+                            <input type="range" min="25" max="100" value="75" step="25" id="poolUsageLimit" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer mt-2">
+                             <div class="w-full flex justify-between text-xs px-1 mt-1"><span>안정적</span><span>공격적</span></div>
+                        </div>
+                    </div>
+                    <div id="customizationImpact" class="mt-8 p-4 bg-slate-50 rounded-lg grid grid-cols-1 sm:grid-cols-3 text-center gap-4">
+                        <div>
+                            <h5 class="text-sm font-semibold text-slate-500">예상 연평균수익률</h5>
+                            <span id="expectedCAGR" class="text-green-600 text-2xl font-bold">~49.5%</span>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-semibold text-slate-500">예상 최대하락폭</h5>
+                            <span id="expectedMDD" class="text-red-600 text-2xl font-bold">~58.4%</span>
+                        </div>
+                         <div>
+                            <h5 class="text-sm font-semibold text-slate-500">투자자 유형</h5>
+                            <span id="investorType" class="text-blue-600 text-xl font-bold">중립적</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="my-20 fade-in-section">
+                <h3 class="section-title text-center">투자의 생애주기: 3단계 자동 전환 로드맵</h3>
+                <p class="section-subtitle text-center">VR은 투자자의 생애 주기에 맞춰 자산을 쌓고, 지키고, 인출하는 명확한 3단계 자동 전환 계획을 내장하고 있습니다.</p>
+                 <div id="lifecycleSimulator" class="lifecycle-simulator interactive-sim max-w-4xl mx-auto">
+                    <h4 class="text-xl font-bold text-center mb-4">나의 투자 생애주기 확인하기</h4>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                             <label for="monthlyAmount" class="block text-sm font-medium text-slate-700">월 적립금 ($)</label>
+                             <input type="number" placeholder="예: 500" id="monthlyAmount" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                        <div>
+                             <label for="currentAsset" class="block text-sm font-medium text-slate-700">현재 총 자산 ($)</label>
+                            <input type="number" placeholder="예: 50000" id="currentAsset" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                     </div>
+                     <div class="mt-4 text-center">
+                        <p>현재 단계: <span id="currentStage" class="font-bold text-blue-600">정보 입력 필요</span></p>
+                        <div class="progress-indicator mt-2">
+                            <span class="text-sm">다음 단계까지: <span id="toNextStage">--</span></span>
+                            <div class="progress-bar mt-1">
+                                <div id="stageProgressBar" class="progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+            </section>
+            
+            <section class="my-20 py-16 bg-white rounded-2xl shadow-2xl fade-in-section">
+                <div class="container mx-auto px-6">
+                    <h3 class="section-title text-center">위험과 수익률 비교: G-Value의 힘</h3>
+                    <p class="section-subtitle text-center">G-Value를 조절하여 원하는 위험 대비 수익률을 직접 선택할 수 있습니다. G값이 높을수록 현금 비중이 늘어나고, 최대하락폭(MDD)이 감소하여 안정성이 높아집니다.</p>
+                    <div class="chart-container">
+                        <canvas id="riskReturnChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+             <section class="my-20 fade-in-section">
+                <h3 class="section-title text-center">Pool 소진 시뮬레이터</h3>
+                <p class="section-subtitle text-center">극심한 하락장에서 Pool이 어떻게 소진되고 회복되는지 시나리오별로 확인해보세요.</p>
+                <div class="interactive-sim max-w-3xl mx-auto">
+                    <div class="flex justify-center gap-4 mb-4">
+                        <button onclick="runPoolSimulation('2022bear')" class="px-3 py-1 text-sm bg-amber-500 text-white rounded-full hover:bg-amber-600">2022년 하락장</button>
+                        <button onclick="runPoolSimulation('dotcom')" class="px-3 py-1 text-sm bg-red-600 text-white rounded-full hover:bg-red-700">닷컴버블 수준</button>
+                    </div>
+                    <div class="pool-simulation-display" id="poolSimulationDisplay"></div>
+                    <p id="poolSimStatus" class="text-center mt-2 font-semibold"></p>
+                </div>
+            </section>
+
+             <section class="my-20 fade-in-section">
+                <h3 class="section-title text-center">미국 주식 투자의 6가지 근거</h3>
+                <p class="section-subtitle text-center">밸류 리밸런싱 전략이 미국 대표 지수 추종 ETF(TQQQ)를 활용하는 이유입니다.</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    <div class="glass-card p-6 text-center"> <div class="text-4xl mb-3">🏢</div> <h4 class="font-semibold mb-2">압도적 기업 영향력</h4> <p class="text-sm text-slate-600">글로벌 Top 10 기업 중 대부분이 미국 기업이며, 혁신을 주도합니다.</p> </div>
+                    <div class="glass-card p-6 text-center"> <div class="text-4xl mb-3">💵</div> <h4 class="font-semibold mb-2">기축통화 달러</h4> <p class="text-sm text-slate-600">달러는 세계 경제의 중심으로, 위기 시 안전자산 역할을 수행합니다.</p> </div>
+                    <div class="glass-card p-6 text-center"> <div class="text-4xl mb-3">👶</div> <h4 class="font-semibold mb-2">건강한 인구구조</h4> <p class="text-sm text-slate-600">선진국 중 드물게 이민을 통해 젊은 인구가 유입되는 피라미드형 구조입니다.</p> </div>
+                    <div class="glass-card p-6 text-center"> <div class="text-4xl mb-3">💡</div> <h4 class="font-semibold mb-2">주주친화적 문화</h4> <p class="text-sm text-slate-600">자사주 매입, 배당 등 주주 환원 정책이 매우 활발합니다.</p> </div>
+                    <div class="glass-card p-6 text-center"> <div class="text-4xl mb-3">🏛️</div> <h4 class="font-semibold mb-2">401K 연금제도</h4> <p class="text-sm text-slate-600">국민의 노후 자금이 주식 시장으로 꾸준히 유입되는 안정적인 수요 기반입니다.</p> </div>
+                    <div class="glass-card p-6 text-center"> <div class="text-4xl mb-3">🛢️</div> <h4 class="font-semibold mb-2">에너지 독립</h4> <p class="text-sm text-slate-600">셰일가스 혁명으로 에너지 자립을 달성하여 외부 충격에 강합니다.</p> </div>
+                </div>
+            </section>
+
+            <section class="my-20 fade-in-section">
+                <h3 class="section-title text-center">실전 투자 Q&A</h3>
+                <p class="section-subtitle text-center">밸류 리밸런싱 투자자들이 가장 자주 묻는 질문들입니다.</p>
+                <div class="max-w-3xl mx-auto">
+                     <div class="faq-search mb-4">
+                        <input type="text" id="faqSearch" placeholder="궁금한 내용을 검색하세요... (예: Pool)" class="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div id="faqList">
+                        <div class="faq-item" data-tags="매도 pool 수익">
+                            <button class="faq-question"> <span>Q. 수익이 나고 있는데도 기계적으로 매도해야 하나요?</span> <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> </button>
+                            <div class="faq-answer"><p>A. 네, 그렇습니다. VR의 핵심은 '원칙'입니다. 감정적인 판단으로 매도를 미루는 순간, 시스템은 무너집니다. 수익 실현은 하락장을 대비한 현금(Pool)을 확보하고 리스크를 관리하는 과정입니다. 초반에 매도하는 습관을 들이는 것이 장기적인 성공의 열쇠입니다.</p></div>
+                        </div>
+                        <div class="faq-item" data-tags="pool 소진 현금관망">
+                            <button class="faq-question"> <span>Q. Pool에 있는 현금이 모두 소진되면 어떻게 하나요?</span> <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> </button>
+                            <div class="faq-answer"><p>A. 아무것도 하지 않고 다음 사이클까지 기다립니다. 정해진 Pool 사용한도를 지키는 것이 원칙입니다. 무리한 추가 매수는 더 큰 하락장에서 대응할 수 있는 능력을 상실하게 만듭니다. 현금이 없다는 것은 시스템이 보내는 '관망' 신호입니다.</p></div>
+                        </div>
+                        <div class="faq-item" data-tags="적립식 거치식 전환">
+                            <button class="faq-question"> <span>Q. 적립식과 거치식은 어떻게 다른가요? 서로 전환할 수 있나요?</span> <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> </button>
+                            <div class="faq-answer"><p>A. 두 방식의 공식과 시스템은 동일하며, 유일한 차이는 '주기적인 추가 입금 여부'입니다. 따라서 전환은 매우 자유롭습니다. 소득이 줄면 적립식을 거치식으로 바꾸고, 여유 자금이 생기면 거치식을 다시 적립식으로 바꾸는 등 개인의 재정 상황에 맞춰 유연하게 운영할 수 있습니다.</p></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+			<footer class="py-12 px-6 bg-slate-100">
+				<div class="container mx-auto text-center text-slate-500">
+					<div class="text-xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
+					<p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
+					<p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
+				</div>
+			</footer>
+        </main>
+    </article>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const createChart = (ctx, config) => {
+            if (ctx) return new Chart(ctx, config);
+            return null;
+        };
+        const palette = { blue1: '#0060F0', green: '#00F0B5', red: '#FF6B6B', gray: '#A0AEC0' };
+
+        const charts = {
+            rebalancing: createChart(document.getElementById('rebalancingMechanismChart')?.getContext('2d'), {
+                type: 'line', data: { labels: Array.from({length: 12}, (_, i) => `${i*2}주차`), datasets: [ { label: '실제 평가금', data: [100, 108, 118, 112, 105, 98, 90, 84, 89, 95, 105, 115], borderColor: palette.blue1, tension: 0.4, borderWidth: 3 }, { label: 'V (목표 가치)', data: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111], borderColor: palette.gray, borderDash: [5, 5], borderWidth: 2 }, { label: '최대 밴드 (+15%)', data: [115, 116.15, 117.3, 118.45, 119.6, 120.75, 121.9, 123.05, 124.2, 125.35, 126.5, 127.65], borderColor: palette.red, backgroundColor: 'rgba(255, 107, 107, 0.05)', fill: '+1', borderWidth: 1.5 }, { label: '최소 밴드 (-15%)', data: [85, 85.85, 86.7, 87.55, 88.4, 89.25, 90.1, 90.95, 91.8, 92.65, 93.5, 94.35], borderColor: palette.green, backgroundColor: 'rgba(0, 240, 181, 0.05)', fill: '-1', borderWidth: 1.5 } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } }, scales: { y: { beginAtZero: false, title: { display: true, text: '포트폴리오 가치 ($)' } } } }
+            }),
+            riskReturn: createChart(document.getElementById('riskReturnChart')?.getContext('2d'), {
+                type: 'bar', data: { labels: ['G=10 (공격)', 'G=20', 'G=40', 'G=100 (안정)'], datasets: [ { label: '연평균수익률(CAGR)', data: [49.5, 46.2, 41.9, 34.1], backgroundColor: 'rgba(0, 223, 181, 0.7)' }, { label: '최대하락폭(MDD)', data: [-58.4, -55.7, -50.0, -37.7], backgroundColor: 'rgba(255, 107, 107, 0.7)' } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.parsed.y}%` } } }, scales: { y: { title: { display: true, text: '수익률 / 하락폭 (%)' }, ticks: { callback: (v) => v + '%' } }, x: { grid: { display: false } } } }
+            }),
+            formulaComparison: createChart(document.getElementById('formulaComparisonChart')?.getContext('2d'), {
+                type: 'line', data: { labels: ['2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020'], datasets: [ { label: '기본공식 V값', data: [10000, 11000, 12100, 13310, 14641, 16105, 17716, 19487, 21436, 23579], borderColor: '#94a3b8', borderDash: [5, 5], tension: 0.1, pointStyle: false }, { label: '실력공식 V값 (백테스트)', data: [10000, 11200, 12800, 13900, 15800, 17200, 20100, 18500, 22300, 26800], borderColor: palette.green, backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.1, pointStyle: false } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '시장 상황별 V값 변화 비교 (2011-2020)' }, legend: { position: 'bottom'}, annotation: { annotations: { event1: { type: 'line', xMin: '2018', xMax: '2018', borderColor: 'rgba(239, 68, 68, 0.5)', borderWidth: 1, label: { content: '미중 무역갈등', enabled: true, position: 'start', yAdjust: -10, font: {size: 10} } }, event2: { type: 'line', xMin: '2020', xMax: '2020', borderColor: 'rgba(245, 158, 11, 0.5)', borderWidth: 1, label: { content: '코로나', enabled: true, position: 'start', yAdjust: 10, font: {size: 10} } } } } } }
+            })
+        };
+        
+        const sections = document.querySelectorAll('.fade-in-section');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        sections.forEach(section => observer.observe(section));
+
+        const updateFormulaResults = () => {
+            const V1 = parseFloat(document.getElementById('inputV1').value);
+            const E1 = parseFloat(document.getElementById('inputE1').value);
+            const Pool = parseFloat(document.getElementById('inputPool').value);
+            const G = parseFloat(document.getElementById('inputG').value);
+            if([V1, E1, Pool, G].some(isNaN) || G === 0) return;
+            document.getElementById('basicFormulaResult').innerHTML = `$${(V1 + (Pool / G)).toFixed(2)}`;
+            document.getElementById('advancedFormulaResult').innerHTML = `$${(V1 + (Pool / G) + ((E1 - V1) / (2 * Math.sqrt(G)))).toFixed(2)}`;
+        };
+        document.getElementById('inputV1')?.addEventListener('input', updateFormulaResults);
+        document.getElementById('inputE1')?.addEventListener('input', updateFormulaResults);
+        document.getElementById('inputPool')?.addEventListener('input', updateFormulaResults);
+        document.getElementById('inputG')?.addEventListener('input', updateFormulaResults);
+        window.loadScenario = (type) => {
+            const scenarios = {
+                bull: { v1: 10000, e1: 11000, pool: 1500, g: 10},
+                bear: { v1: 10000, e1: 8500, pool: 3000, g: 20},
+                sideways: { v1: 10000, e1: 10000, pool: 2000, g: 15}
+            };
+            const s = scenarios[type];
+            document.getElementById('inputV1').value = s.v1;
+            document.getElementById('inputE1').value = s.e1;
+            document.getElementById('inputPool').value = s.pool;
+            document.getElementById('inputG').value = s.g;
+            updateFormulaResults();
+        };
+
+        const updateCustomizationImpact = () => {
+            const bandWidth = parseInt(document.getElementById('bandWidth').value);
+            const poolUsage = parseInt(document.getElementById('poolUsageLimit').value);
+            document.getElementById('bandWidthValue').textContent = bandWidth;
+            document.getElementById('poolUsageValue').textContent = poolUsage;
+            let type = "중립적";
+            if (bandWidth <= 10 && poolUsage >= 75) type = "초공격적";
+            else if (bandWidth <= 15 && poolUsage >= 75) type = "공격적";
+            else if (bandWidth >= 20 && poolUsage <= 50) type = "보수적";
+            document.getElementById('investorType').textContent = type;
+        };
+        document.getElementById('bandWidth')?.addEventListener('input', updateCustomizationImpact);
+        document.getElementById('poolUsageLimit')?.addEventListener('input', updateCustomizationImpact);
+
+        const updateLifecycle = () => {
+            const monthly = parseFloat(document.getElementById('monthlyAmount').value);
+            const asset = parseFloat(document.getElementById('currentAsset').value);
+            const stageEl = document.getElementById('currentStage');
+            const progressEl = document.getElementById('stageProgressBar');
+            const toNextEl = document.getElementById('toNextStage');
+            const simEl = document.getElementById('lifecycleSimulator');
+            if(isNaN(monthly) || isNaN(asset) || monthly <= 0) {
+                stageEl.textContent = "정보 입력 필요";
+                progressEl.style.width = "0%";
+                toNextEl.textContent = "--";
+                return;
+            }
+            const placementThreshold = monthly * 260;
+            const withdrawalThreshold = monthly * 4000;
+            let achieved = false;
+            if (asset < placementThreshold) {
+                stageEl.textContent = "적립식 단계";
+                const progress = Math.min((asset / placementThreshold) * 100, 100);
+                progressEl.style.width = `${progress}%`;
+                toNextEl.textContent = `거치식까지 ${(placementThreshold - asset).toLocaleString('en-US', { style: 'currency', currency: 'USD' })} 남음`;
+                if(progress >= 100) achieved = true;
+            } else if (asset < withdrawalThreshold) {
+                stageEl.textContent = "거치식 단계";
+                const progress = Math.min(((asset - placementThreshold) / (withdrawalThreshold - placementThreshold)) * 100, 100);
+                progressEl.style.width = `${progress}%`;
+                toNextEl.textContent = `인출식까지 ${(withdrawalThreshold - asset).toLocaleString('en-US', { style: 'currency', currency: 'USD' })} 남음`;
+                if(progress >= 100) achieved = true;
+            } else {
+                stageEl.textContent = "인출식 단계";
+                progressEl.style.width = `100%`;
+                toNextEl.textContent = "최종 목표 달성! 🎉";
+                achieved = true;
+            }
+            simEl.classList.toggle('levelup', achieved && !simEl.dataset.leveled);
+            if(achieved) simEl.dataset.leveled = "true"; else delete simEl.dataset.leveled;
+        };
+        document.getElementById('monthlyAmount')?.addEventListener('input', updateLifecycle);
+        document.getElementById('currentAsset')?.addEventListener('input', updateLifecycle);
+
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.parentElement;
+                faqItem.classList.toggle('active');
+            });
+        });
+        document.getElementById('faqSearch')?.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('#faqList .faq-item').forEach(item => {
+                const tags = item.dataset.tags.toLowerCase();
+                item.style.display = tags.includes(searchTerm) ? '' : 'none';
+            });
+        });
+        
+        window.runPoolSimulation = (scenario) => {
+            const display = document.getElementById('poolSimulationDisplay');
+            const status = document.getElementById('poolSimStatus');
+            display.innerHTML = '';
+            
+            const scenarios = { '2022bear': { cycles: 24, exhaustionPoint: 12, recoveryPoint: 20, duration: 150 }, 'dotcom': { cycles: 24, exhaustionPoint: 8, recoveryPoint: 24, duration: 150 } };
+            const s = scenarios[scenario];
+            let currentPool = 100;
+
+            for(let i=1; i <= s.cycles; i++) {
+                setTimeout(() => {
+                    const bar = document.createElement('div');
+                    if (i <= s.exhaustionPoint) {
+                        currentPool -= (100 / s.exhaustionPoint);
+                        status.textContent = `${i*2}주차: Pool 감소 중...`;
+                        status.className = "text-center mt-2 font-semibold text-red-600";
+                        bar.className = 'pool-bar';
+                    } else if (i <= s.recoveryPoint) {
+                        currentPool = 0;
+                         status.textContent = `${i*2}주차: Pool 소진! 관망 구간...`;
+                         status.className = "text-center mt-2 font-semibold text-slate-600";
+                         bar.className = 'pool-bar exhausted';
+                    } else {
+                        currentPool += (100 / (s.cycles - s.recoveryPoint));
+                        bar.className = 'pool-bar recovering';
+                        status.textContent = `${i*2}주차: Pool 회복 중...`;
+                        status.className = "text-center mt-2 font-semibold text-green-600";
+                    }
+                    bar.style.height = `${Math.max(0, currentPool)}%`;
+                    display.appendChild(bar);
+                }, i * s.duration);
+            }
+        }
+    });
+</script>
+</body>
+</html>

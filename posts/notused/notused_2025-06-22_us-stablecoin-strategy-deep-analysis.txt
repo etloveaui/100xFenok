@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미국 코인 시나리오: 새로운 경제 패러다임 인포그래픽 (최종 완성본 v6)</title>
+    
+    <!-- SEO & Social Media Meta Tags -->
+    <meta name="description" content="미국의 스테이블코인 전략과 새로운 경제 패러다임 분석. RRP에서 스테이블코인으로의 전환, 2조 달러 규모의 새로운 유동성 창출 과정을 시각적으로 탐색합니다.">
+    <meta property="og:title" content="스테이블코인 갬빗: 미국의 새로운 경제 전략">
+    <meta property="og:description" content="RRP에서 스테이블코인으로의 전환, 2조 달러 규모의 새로운 유동성 창출, 그리고 이것이 글로벌 경제와 투자에 미치는 영향을 분석한 인터랙티브 인포그래픽입니다.">
+    <meta property="og:image" content="https://placehold.co/1200x630/0d1117/e6edf3?text=Stablecoin%20Gambit">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Performance Optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js" as="script">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Annotation Plugin for highlighting forecast area -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0d1117;
+            color: #e6edf3;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 300px;
+            width: 100%;
+            max-width: 800px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #ffa600, #ff6361, #bc5090);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-number {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffa600 0%, #ff6361 50%, #bc5090 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(255, 166, 0, 0.3);
+        }
+        .card {
+            background-color: rgba(33, 38, 45, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+        }
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+        }
+        .flow-arrow {
+            font-size: 2.5rem;
+            color: #ffa600;
+            line-height: 1;
+            text-shadow: 0 0 10px #ffa600;
+        }
+        .interactive-tab {
+            transition: background-color 0.3s, color 0.3s;
+            cursor: pointer;
+        }
+        .interactive-tab.active {
+            background-color: #ffa600;
+            color: #0d1117;
+            font-weight: 700;
+        }
+        .details-pane {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        .details-pane.active {
+            display: block;
+        }
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .timeline-item {
+            position: relative;
+            width: 50%;
+            padding: 1rem 2rem;
+            box-sizing: border-box;
+        }
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            padding-left: 3rem;
+        }
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            padding-right: 3rem;
+        }
+        .timeline-content {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid;
+        }
+        .timeline-dot {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #e6edf3;
+            transform: translateY(-50%);
+            border: 3px solid;
+        }
+        .timeline-item:nth-child(odd) .timeline-dot {
+            right: -7.5px;
+        }
+        .timeline-item:nth-child(even) .timeline-dot {
+            left: -7.5px;
+        }
+        [data-counter] {
+            transition: all 1s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+<body class="bg-[#0d1117] text-gray-200">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-12 md:mb-20">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-4 gradient-text">스테이블코인 갬빗</h1>
+            <p class="text-lg md:text-2xl text-gray-300 max-w-4xl mx-auto">미국은 어떻게 부채 위기를 기회로 전환하고, 달러 패권을 재설계하여 AI 시대의 성장을 주도하는가</p>
+        </header>
+
+        <main class="space-y-12">
+
+            <section class="card rounded-xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-white">1. 위기의 서막: 고갈된 마법의 주머니</h2>
+                <p class="text-gray-300 mb-6">2023년, 연준의 역레포(RRP) <span class="hero-number">2조 달러</span>를 활용한 옐런의 유동성 공급 전략이 성공적으로 연착륙을 유도했지만, 2024년 그 자금이 소진되며 미국은 막대한 국채 발행을 소화할 새로운 '의무적 매수자'를 찾아야 하는 절체절명의 과제에 직면했습니다.</p>
+                <div class="chart-container h-64 md:h-96" role="img" aria-label="연준 역레포 잔고 추이 차트">
+                    <canvas id="rrpChart" aria-describedby="rrp-description"></canvas>
+                    <p id="rrp-description" class="sr-only">2023년 1월 2.3조 달러에서 시작하여 2025년 초 0으로 고갈될 것으로 예상되는 RRP 잔고 변화를 보여주는 꺾은선 그래프.</p>
+                </div>
+            </section>
+
+            <section class="card rounded-xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-white">2. 베센트 독트린: 글로벌 자금 조달 엔진의 재설계</h2>
+                <p class="text-gray-300 mb-8">미국의 해법은 '규제된 스테이블코인'을 통해 전 세계의 유휴 자본을 미국 단기 국채 시장으로 끌어들이는 것입니다. 이는 단순한 유동성 공급을 넘어, 달러 패권을 디지털 영역으로 확장하고 새로운 성장 동력의 재원을 확보하는 정교한 금융 공학입니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-5 items-center gap-6 text-center">
+                    <div class="space-y-2"><div class="text-4xl">🌍</div><h3 class="font-bold">글로벌 자본</h3><p class="text-sm">해외 비은행권, 개인/기업 자금</p></div>
+                    <div class="flow-arrow hidden md:block animate-pulse">→</div>
+                    <div class="flow-arrow block md:hidden self-center justify-self-center rotate-90 animate-pulse">↓</div>
+                    <div class="space-y-2"><div class="text-4xl">🏦</div><h3 class="font-bold">스테이블코인 발행사</h3><p class="text-sm">법안 기반 국채 의무 매입</p></div>
+                    <div class="flow-arrow hidden md:block animate-pulse">→</div>
+                    <div class="flow-arrow block md:hidden self-center justify-self-center rotate-90 animate-pulse">↓</div>
+                    <div class="space-y-2"><div class="text-4xl">🏛️</div><h3 class="font-bold">미 재무부 (TGA)</h3><p class="text-sm">안정적 재정 확보</p></div>
+                    <div class="flow-arrow hidden md:block animate-pulse">→</div>
+                    <div class="flow-arrow block md:hidden self-center justify-self-center rotate-90 animate-pulse">↓</div>
+                    <div class="space-y-2"><div class="text-4xl">🤖</div><h3 class="font-bold">전략 산업 투자</h3><p class="text-sm">AI, 반도체, 에너지</p></div>
+                    <div class="flow-arrow hidden md:block animate-pulse">→</div>
+                    <div class="flow-arrow block md:hidden self-center justify-self-center rotate-90 animate-pulse">↓</div>
+                    <div class="space-y-2"><div class="text-4xl">📈</div><h3 class="font-bold">미국 경제 성장</h3><p class="text-sm">패권 유지 및 성장 동력 확보</p></div>
+                </div>
+            </section>
+            
+            <section class="card rounded-xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-white">3. 법적 기틀: 지니어스 법안(GENIUS Act)</h2>
+                <p class="text-gray-300 mb-6">이 전략의 성공은 '지니어스 법안'이라는 법적 토대 위에 세워집니다. 이 법안은 스테이블코인을 국가에 유용한 금융 도구로 정밀하게 설계하는 것을 목표로 합니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                    <div class="p-4 rounded-lg bg-black/20 border-l-4 border-amber-500">
+                        <div class="text-3xl mb-2">🛡️</div>
+                        <h3 class="font-bold">엄격한 준비금</h3>
+                        <p class="text-sm">1:1 비율의 국채 및 현금 등가물 의무 보유. 국채의 '의무적 매수자' 창출.</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-black/20 border-l-4 border-sky-500">
+                        <div class="text-3xl mb-2">🏛️</div>
+                        <h3 class="font-bold">허가된 발행사</h3>
+                        <p class="text-sm">대형 은행 및 빅테크 기업의 시장 진입을 유도하여 신뢰도와 확장성 확보.</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-black/20 border-l-4 border-red-500">
+                        <div class="text-3xl mb-2">🚫</div>
+                        <h3 class="font-bold">이자 지급 금지</h3>
+                        <p class="text-sm">금리 변동에 둔감한, 안정적인 국채 수요층을 확보하기 위한 핵심 전략.</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-black/20 border-l-4 border-green-500">
+                        <div class="text-3xl mb-2">📜</div>
+                        <h3 class="font-bold">규제 명확성</h3>
+                        <p class="text-sm">'증권' 정의에서 제외하여 SEC 규제 리스크를 해소하고 기관 참여 유도.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card rounded-xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-white">4. 목표: 2조 달러 규모의 플라이휠</h2>
+                <p class="text-gray-300 mb-6">미국은 현재 약 1,600억 달러 규모의 스테이블코인 시장을 <strong id="marketCapCounter" class="hero-number" data-target="2000">2조</strong>달러 이상으로 성장시킬 계획입니다. 이는 RRP 고갈분을 상쇄하고도 남는 거대한 규모입니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div role="img" aria-label="스테이블코인 시장 규모 성장 전망 막대 그래프">
+                        <h3 class="text-lg font-semibold text-center mb-2">시장 규모 성장 전망</h3>
+                        <div class="chart-container h-64 md:h-80"><canvas id="marketCapChart"></canvas></div>
+                    </div>
+                    <div role="img" aria-label="스테이블코인 핵심 성장 동력 버블 차트">
+                        <h3 class="text-lg font-semibold text-center mb-2">핵심 성장 동력</h3>
+                        <div class="chart-container h-64 md:h-80"><canvas id="demandDriversChart"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card rounded-xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-white">5. 국가 자본주의의 귀환: 성장 엔진의 역사</h2>
+                <p class="text-gray-300 mb-6">현재의 AI 중심 산업 정책은 위기 속에서 정부 주도로 새로운 성장 패러다임을 만들어온 미국의 역사적 패턴과 일치합니다. 스테이블코인은 이 거대한 계획의 자금줄 역할을 합니다.</p>
+                <div class="timeline max-w-4xl mx-auto">
+                    <div class="timeline-item"><div class="timeline-dot border-red-500"></div><div class="timeline-content border-red-500"><h3 class="font-bold text-lg">2020s: AI & 스테이블코인</h3><p class="text-sm">기술 패권 유지와 새로운 유동성 확보를 통한 성장 동력 창출 시도.</p></div></div>
+                    <div class="timeline-item"><div class="timeline-dot border-purple-500"></div><div class="timeline-content border-purple-500"><h3 class="font-bold text-lg">1980s: 반도체 & 신자유주의</h3><p class="text-sm">기술 패권 구축 및 냉전 종식을 통한 초강대국 위상 확립.</p></div></div>
+                    <div class="timeline-item"><div class="timeline-dot border-blue-500"></div><div class="timeline-content border-blue-500"><h3 class="font-bold text-lg">1950s: 고속도로 & 제트엔진</h3><p class="text-sm">물류 혁명과 소비 사회 출현으로 내수 시장 통합.</p></div></div>
+                    <div class="timeline-item"><div class="timeline-dot border-green-500"></div><div class="timeline-content border-green-500"><h3 class="font-bold text-lg">1890s: 산업화 & 철도</h3><p class="text-sm">세계 최대 산업 국가로의 도약.</p></div></div>
+                </div>
+            </section>
+
+            <section class="card rounded-xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-white">6. 거대한 재정의 재조정: 부채 책임의 이전</h2>
+                <p class="text-gray-300 mb-6">연방 정부는 정치적 부담이 큰 복지 지출의 책임을 주/지방 정부로 이전하며 재정의 '체질 개선'을 시도하고 있습니다. 이는 연방 정부가 전략 산업에 집중 투자할 여력을 확보하기 위한 포석이며, <span class="text-amber-400 font-semibold">향후 주/지방 정부의 부채 부담을 가속화시킬 것으로 전망됩니다.</span></p>
+                <div class="chart-container h-72 md:h-96" role="img" aria-label="연방정부와 주/지방정부 부채 추이 및 전망 비교 꺾은선 그래프"><canvas id="debtDivergenceChart"></canvas></div>
+                <p class="text-xs text-gray-500 text-center mt-2">📊 **주의:** 점선은 2025년 이후 전망치로, 현재 정책 기조 지속 시 예상되는 시나리오입니다. 실제 결과는 정치적, 경제적 변수에 따라 달라질 수 있습니다.</p>
+            </section>
+            
+            <section class="card rounded-xl p-6 md:p-8">
+                 <h2 class="text-2xl md:text-3xl font-bold mb-4 text-white">7. 새로운 투자 플레이북: 인플레이션 성장 시대</h2>
+                 <p class="text-gray-300 mb-2">저물가 시대의 종식은 새로운 투자 전략을 요구합니다. 아래 탭을 클릭하여 각 항목의 상세 분석을 확인하세요.</p>
+                 <div class="flex border-b border-gray-700 mb-4">
+                     <button id="tab-winners" class="interactive-tab py-2 px-4 rounded-t-md active">WINNERS</button>
+                     <button id="tab-allocation" class="interactive-tab py-2 px-4 rounded-t-md">ALLOCATION</button>
+                     <button id="tab-risks" class="interactive-tab py-2 px-4 rounded-t-md">RISKS</button>
+                 </div>
+                 <div id="pane-winners" class="details-pane active">
+                    <h3 class="text-xl font-bold text-green-400 mb-4">정책의 바람을 타는 승자들</h3>
+                    <p class="mb-4">정부 주도 성장은 특정 산업에 막대한 자본을 집중시킵니다. 이는 관련 기업에 장기적인 성장 기회를 제공합니다.</p>
+                    <div class="chart-container h-64 md:h-80" role="img" aria-label="정책 수혜 잠재력 레이더 차트"><canvas id="winnersChart"></canvas></div>
+                 </div>
+                 <div id="pane-allocation" class="details-pane">
+                    <h3 class="text-xl font-bold text-yellow-400 mb-4">자산 배분 전략의 변화</h3>
+                    <p class="mb-6">"재무부에 맞서지 말라"는 격언이 중요해지는 시대입니다. 금융 억압 환경은 자산 시장의 서열을 재편할 수 있습니다.</p>
+                     <div class="space-y-4">
+                        <div class="flex items-center p-3 bg-black/20 rounded-lg">
+                            <span class="text-2xl mr-4">📈</span>
+                            <div class="flex-1"><h4 class="font-bold">주식</h4><p class="text-sm text-gray-400">명목 성장의 직접적 수혜</p></div>
+                            <div class="w-2/4 h-4 bg-green-500 rounded"></div>
+                        </div>
+                        <div class="flex items-center p-3 bg-black/20 rounded-lg">
+                            <span class="text-2xl mr-4">🪨</span>
+                            <div class="flex-1"><h4 class="font-bold">원자재</h4><p class="text-sm text-gray-400">인플레이션 헤지 수단</p></div>
+                            <div class="w-1/2 h-4 bg-orange-500 rounded"></div>
+                        </div>
+                        <div class="flex items-center p-3 bg-black/20 rounded-lg">
+                            <span class="text-2xl mr-4">📄</span>
+                            <div class="flex-1"><h4 class="font-bold">채권</h4><p class="text-sm text-gray-400">금융 억압으로 실질 수익률 압박</p></div>
+                            <div class="w-1/3 h-4 bg-red-500 rounded"></div>
+                        </div>
+                     </div>
+                 </div>
+                 <div id="pane-risks" class="details-pane">
+                     <h3 class="text-xl font-bold text-red-400 mb-4">잠재적 리스크 요인</h3>
+                     <p class="mb-6">이 거대한 계획에는 성공을 담보할 수 없는 여러 리스크가 내재되어 있습니다.</p>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-lg bg-black/20"><div class="flex items-center mb-2"><span class="text-2xl mr-3">💥</span><h4 class="font-bold">실행 리스크</h4></div><p class="text-sm">스테이블코인 채택 실패 또는 '디지털 뱅크런' 발생 시 국채 시장 충격 가능성.</p></div>
+                        <div class="p-4 rounded-lg bg-black/20"><div class="flex items-center mb-2"><span class="text-2xl mr-3">🏛️</span><h4 class="font-bold">정치적 리스크</h4></div><p class="text-sm">차기 행정부의 정책 기조 변화, 부채 한도 협상 관련 갈등으로 인한 불확실성.</p></div>
+                        <div class="p-4 rounded-lg bg-black/20"><div class="flex items-center mb-2"><span class="text-2xl mr-3">🌍</span><h4 class="font-bold">지정학적 리스크</h4></div><p class="text-sm">경쟁국의 달러 이탈 가속화나 디지털 유로 등 대항마의 성공.</p></div>
+                        <div class="p-4 rounded-lg bg-black/20"><div class="flex items-center mb-2"><span class="text-2xl mr-3">🔥</span><h4 class="font-bold">인플레이션 통제 실패</h4></div><p class="text-sm">통제 불능의 인플레이션 발생 시, 연준의 급격한 긴축으로 계획 무력화 위험.</p></div>
+                     </div>
+                 </div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-12 md:mt-20 text-gray-500 text-sm">
+            <p>본 인포그래픽은 제공된 분석 자료를 기반으로 제작되었으며, 특정 투자를 권유하는 것이 아닌 정보 제공을 목적으로 합니다.</p>
+            <p>데이터 출처: FRED, 언더스탠딩 분석 리포트. 최종 업데이트: 2025-06-21.</p>
+        </footer>
+    </div>
+
+    <script>
+        const brilliantBlues = { navy: '#003f5c', purple: '#58508d', pink: '#bc5090', red: '#ff6361', orange: '#ffa600' };
+        const chartTextColor = 'rgba(230, 230, 230, 0.9)';
+        const gridColor = 'rgba(255, 255, 255, 0.1)';
+
+        const tooltipTitleCallback = {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            return Array.isArray(label) ? label.join(' ') : label;
+                        }
+                    }
+                },
+                legend: { 
+                    labels: { 
+                        color: chartTextColor,
+                        // Filter out legend items for forecast datasets
+                        filter: function(item, chart) {
+                            return !item.text.includes('(전망)');
+                        }
+                    } 
+                }
+            }
+        };
+        
+        const chartDefaultOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 1000, easing: 'easeInOutQuart' },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: chartTextColor }, grid: { color: gridColor } },
+                x: { ticks: { color: chartTextColor }, grid: { color: 'transparent' } }
+            },
+            ...tooltipTitleCallback
+        };
+
+        new Chart(document.getElementById('rrpChart'), {
+            type: 'line',
+            data: {
+                labels: ['23년 1월', '23년 7월', '24년 1월', '24년 7월', '25년 1월 (예상)'],
+                datasets: [{ label: '연준 역레포(RRP) 잔고 (단위: 조 달러)', data: [2.3, 1.8, 0.7, 0.05, 0], fill: true, backgroundColor: 'rgba(255, 99, 97, 0.2)', borderColor: brilliantBlues.red, tension: 0.3 }]
+            },
+            options: { ...chartDefaultOptions, scales: { ...chartDefaultOptions.scales, y: { ...chartDefaultOptions.scales.y, ticks: { ...chartDefaultOptions.scales.y.ticks, callback: (value) => `${value}T` }}}}
+        });
+
+        new Chart(document.getElementById('marketCapChart'), {
+            type: 'bar',
+            data: {
+                labels: ['현재 (2024)', '목표 (202X)'],
+                datasets: [{ label: '스테이블코인 시장 규모 (단위: 10억 달러)', data: [165, 2000], backgroundColor: [brilliantBlues.purple, brilliantBlues.red] }]
+            },
+            options: { ...chartDefaultOptions, indexAxis: 'y', scales: { ...chartDefaultOptions.scales, x: { ...chartDefaultOptions.scales.x, ticks: { ...chartDefaultOptions.scales.x.ticks, callback: (value) => `${value/1000}T` }}}}
+        });
+
+        new Chart(document.getElementById('demandDriversChart'), {
+            type: 'bubble',
+            data: {
+                labels: ['암호화폐 거래', ['국경 간', '결제'], ['디지털 달러화', '& 자본 도피']],
+                datasets: [{ label: '수요 동력 (영향력)', data: [{ x: 5, y: 6, r: 35 }, { x: 15, y: 8, r: 25 }, { x: 12, y: 2, r: 20 }], backgroundColor: [ 'rgba(0, 63, 92, 0.7)', 'rgba(255, 99, 97, 0.7)', 'rgba(188, 80, 144, 0.7)' ], borderColor: [ brilliantBlues.navy, brilliantBlues.red, brilliantBlues.pink ] }]
+            },
+            options: { ...chartDefaultOptions, scales: { y: { display: false, max: 12 }, x: { display: false, max: 20 } } }
+        });
+        
+        new Chart(document.getElementById('debtDivergenceChart'), {
+            type: 'line',
+            data: {
+                labels: [1980, 1990, 2000, 2010, 2020, 2024, 2030],
+                datasets: [
+                    { 
+                        label: '연방 정부 부채', 
+                        data: [909, 3206, 5629, 13528, 27747, 34586, null], 
+                        borderColor: brilliantBlues.red, 
+                        yAxisID: 'y',
+                    },
+                     { 
+                        label: '연방 정부 부채 (전망)', 
+                        data: [null, null, null, null, null, 34586, 42000], 
+                        borderColor: brilliantBlues.red, 
+                        borderDash: [6, 6],
+                        yAxisID: 'y',
+                        pointBackgroundColor: brilliantBlues.red,
+                        pointBorderColor: '#fff',
+                    },
+                    { 
+                        label: '주/지방 정부 부채', 
+                        data: [335, 836, 1351, 2467, 3222, 3300, null], 
+                        borderColor: brilliantBlues.orange, 
+                        yAxisID: 'y1'
+                    },
+                    { 
+                        label: '주/지방 정부 부채 (전망)', 
+                        data: [null, null, null, null, null, 3300, 4800], 
+                        borderColor: brilliantBlues.orange,
+                        borderDash: [6, 6],
+                        yAxisID: 'y1',
+                        pointBackgroundColor: brilliantBlues.orange,
+                        pointBorderColor: '#fff',
+                    }
+                ]
+            },
+            options: { ...chartDefaultOptions, 
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    ...tooltipTitleCallback.plugins,
+                    annotation: {
+                        annotations: {
+                            projectionArea: {
+                                type: 'box',
+                                xMin: 5.5, // 2024 (index 5) and 2030 (index 6)
+                                xMax: 6.5,
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                borderWidth: 0,
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { 
+                        ...chartDefaultOptions.scales.x, 
+                        grid: { color: gridColor },
+                        ticks: {
+                            color: chartTextColor,
+                            callback: function(value, index, values) {
+                                const label = this.getLabelForValue(value);
+                                if (label == 2030) {
+                                    return label + ' (전망)';
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: '연방 부채 (10억$)', color: brilliantBlues.red }, ticks: { color: brilliantBlues.red, callback: (value) => `${Math.round(value/1000)}T` }, grid: { color: gridColor } },
+                    y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: '주/지방 부채 (10억$)', color: brilliantBlues.orange }, ticks: { color: brilliantBlues.orange, callback: (value) => `${Math.round(value/1000)}T` }, grid: { drawOnChartArea: false } }
+            }}
+        });
+        
+        new Chart(document.getElementById('winnersChart'), {
+            type: 'radar',
+            data: {
+                labels: ['AI', '반도체(CHIPS)', '친환경(IRA)', '원자재', '국내 제조업'],
+                datasets: [{ label: '정책 수혜 잠재력', data: [9, 8.5, 7.5, 8, 7], backgroundColor: 'rgba(0, 63, 92, 0.5)', borderColor: '#003f5c', pointBackgroundColor: '#003f5c' }]
+            },
+            options: { ...chartDefaultOptions, scales: { r: { angleLines: { color: gridColor }, grid: { color: gridColor }, pointLabels: { color: chartTextColor, font: { size: 14 }}, ticks: { display: false, backdropColor: 'transparent' }}}}
+        });
+        
+        document.querySelectorAll('.interactive-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.interactive-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const targetPaneId = tab.id.replace('tab-', 'pane-');
+                document.querySelectorAll('.details-pane').forEach(pane => {
+                    pane.classList.remove('active');
+                    if (pane.id === targetPaneId) {
+                        pane.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        const counter = document.getElementById('marketCapCounter');
+        if (counter) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = +counter.dataset.target;
+                        let current = 0;
+                        const increment = target / 100;
+
+                        const updateCounter = () => {
+                            if (current < target) {
+                                current += increment;
+                                counter.innerText = `${Math.ceil(current)}`;
+                                requestAnimationFrame(updateCounter);
+                            } else {
+                                counter.innerText = `${target}`;
+                            }
+                        };
+                        updateCounter();
+                        observer.unobserve(counter);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            observer.observe(counter);
+        }
+
+    </script>
+</body>
+</html>

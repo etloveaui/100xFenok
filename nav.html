@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *{font-family:'Noto Sans KR',sans-serif}
+    .orbitron{font-family:'Orbitron',monospace}
+  </style>
+</head>
+
+<body class="bg-white/90 backdrop-blur-lg border-b border-slate-200">
+  <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+    <!-- 로고 -->
+    <a href="javascript:parent.loadPage('/001_DtWfk/main.html')" class="flex items-center space-x-2 text-2xl font-bold text-slate-900 hover:text-blue-600 orbitron">
+      <img src="/001_DtWfk/favicon.svg" alt="FenoK" class="h-8 w-8">
+      <span>FenoK</span>
+    </a>
+
+    <!-- 데스크톱 메뉴 -->
+    <nav class="hidden md:flex items-center space-x-8 text-slate-600">
+      <a href="javascript:parent.loadPage('/001_DtWfk/ib/ib-total-guide-calculator.html')" class="hover:text-blue-600">무한매수법</a>
+      <a href="javascript:parent.loadPage('/001_DtWfk/vr/index.html')"                            class="hover:text-blue-600">VR</a>
+      <a href="javascript:parent.loadPage('/001_DtWfk/tools/asset/multichart.html')"             class="hover:text-blue-600">멀티차트</a>
+      <a href="javascript:parent.loadPage('/001_DtWfk/100x/index.html')"                         class="hover:text-blue-600">Daily Wrap</a>
+      <a href="javascript:parent.loadPage('/001_DtWfk/posts/index.html')"                        class="hover:text-blue-600">분석</a>
+    </nav>
+
+    <!-- 모바일 햄버거 -->
+    <button id="mobile-btn" class="md:hidden text-2xl text-slate-800">☰</button>
+  </div>
+
+  <!-- 모바일 드롭다운 -->
+  <div id="mobile-menu" class="hidden md:hidden bg-gray-50 border-t border-slate-200 px-6 py-4 space-y-2">
+    <a href="javascript:parent.loadPage('/001_DtWfk/ib/ib-total-guide-calculator.html')" class="block py-2 hover:text-blue-600">무한매수법</a>
+    <a href="javascript:parent.loadPage('/001_DtWfk/vr/index.html')"                     class="block py-2 hover:text-blue-600">VR</a>
+    <a href="javascript:parent.loadPage('/001_DtWfk/tools/asset/multichart.html')"       class="block py-2 hover:text-blue-600">멀티차트</a>
+    <a href="javascript:parent.loadPage('/001_DtWfk/100x/index.html')"                   class="block py-2 hover:text-blue-600">Daily Wrap</a>
+    <a href="javascript:parent.loadPage('/001_DtWfk/posts/index.html')"                  class="block py-2 hover:text-blue-600">분석</a>
+  </div>
+
+  <script>
+    const btn  = document.getElementById('mobile-btn');
+    const menu = document.getElementById('mobile-menu');
+    btn.onclick = () => menu.classList.toggle('hidden');
+    menu.onclick = e => e.target.tagName==='A' && menu.classList.add('hidden');
+  </script>
+</body>
+</html>
