@@ -1,594 +1,681 @@
-<!DOCTYPE html>
-<!-- 
-    ================================================================================
-    LLM 및 개발자를 위한 100x Daily Wrap 페이지 제작 가이드 (FenoK's Philosophy v4.5)
-    ================================================================================
-    * **살아있는 지침 (Living Document):** 이 가이드는 고정불변이 아닙니다. 제작 과정에서 발견되는 더 나은 아이디어나 새로운 지침은 
-        지속적으로 이 문서에 추가하고 반영하여, 우리 결과물의 품질을 함께 향상시켜 나가야 합니다.
-
-    --- [ 제작 원칙 (Principles) ] ---
-
-    1.  **반응형 설계 (Responsive First):**
-        -   모든 컴포넌트는 모바일, 태블릿, PC 등 모든 디바이스에서 최적의 가독성과 사용성을 제공해야 합니다.
-        -   Tailwind CSS의 반응형 분기점(`sm:`, `md:`, `lg:`)을 적극적으로 사용하여 유동적인 레이아웃을 구현합니다.
-        -   특히 테이블(<table>)은 `<div class="overflow-x-auto">`로 감싸 작은 화면에서도 가로 스크롤로 모든 데이터를 확인할 수 있도록 보장해야 합니다.
-
-    2.  **데이터 처리 및 표현 (Data Handling & Representation):**
-        -   **데이터 무결성:** 원본 소스의 모든 데이터를 누락 없이 담는 것을 원칙으로 합니다. "이 정도면 되겠지"라는 타협 없이, 모든 정보를 충실히 반영하여 상세함을 유지합니다.
-        -   **데이터 공백의 창의적 시각화:**
-            -   **개별 N/A 값:** `.na-value` 클래스를 적용하여 '-' 와 같이 간결하고 세련되게 처리합니다.
-            -   **정보가 부족한 테이블:** 데이터가 없는 테이블 전체를 '-'로 채우는 대신, 과감히 해당 UI를 제거합니다. 대신, 데이터를 더욱 풍부하고 직관적으로 보여줄 수 있는 새로운 시각화 방식(ex: 히트맵, 정보 카드)으로 대체하여 정보의 공백을 가치 있는 정보로 전환합니다.
-            -   **주요 지표 N/A (ex: 유동성 지표):** 데이터 부재를 시각적으로 인지할 수 있는 비활성화된 그래픽(ex: 게이지)과 상세 설명을 추가하여 전문성을 높입니다.
-        -   **자연스러운 언어:** '시장 체제' 등 기계 번역투의 어색한 단어 사용을 지양합니다. '시장 환경' 등 문맥에 맞는 가장 자연스럽고 전문적인 용어를 끊임없이 탐색하고 적용합니다.
-        -   **복합 정보의 가독성 향상:** 하나의 항목에 주요 결론과 근거 데이터가 함께 있을 경우, 괄호로 길게 나열하기보다, '↳ 근거:'와 같은 보조 텍스트를 사용하여 명확하게 분리하고 시각적 계층을 만듭니다.
-        -   **강조와 생략:** `<b>` 태그, 색상, 아이콘을 활용해 핵심 키워드와 데이터를 강조하고, 불필요한 가이드라인 텍스트는 최종 산출물에서 반드시 제거합니다.
-
-    3.  **구조와 시맨틱 (Structure & Semantics):**
-        -   콘텐츠의 논리적 흐름에 따라 `<section>`으로 명확하게 구획을 나눕니다. 각 섹션의 제목은 `<h2>` 태그를 사용합니다.
-        -   정보의 위계가 중요합니다. 가장 중요한 '요약'과 '핵심 지표'를 최상단에 배치하고, 상세 데이터와 부록은 그 아래에 순차적으로 구성합니다.
-        -   FenoK(또는 El Fenomeno Kim)의 브랜딩이 푸터 등에 일관되게 적용되어야 합니다.
-
-    4.  **시각화 일관성 및 창의성 (Consistent & Creative Visualization):**
-        -   **아이콘의 체계적 활용(Systematic Use of Icons):** 아이콘은 단순히 장식용이 아닙니다. 긍정(초록), 부정(빨강), 중립/정책(파랑/보라) 등 내용의 성격에 맞는 색상을 체계적으로 사용하여 정보를 직관적으로 전달하는 역할을 합니다.
-        -   **차트:** Chart.js를 사용하되, 색상, 폰트 등을 통일하여 일관된 스타일을 유지합니다. 그날의 데이터 특성에 맞춰 '오늘의 차트'와 같이 새로운 시각화 아이디어를 적극적으로 제안하고 적용하여 리포트의 가치를 높입니다.
-        -   **정보 카드(Information Cards):** 경제 캘린더나 실적 발표처럼 목록형 정보는 단순 테이블 대신 개별 카드 형태로 표현하여 정보를 명확히 구분합니다. 특히 중요한 항목(ex: 핵심 PCE)은 `bg-yellow-100`과 같은 강조 색상을 사용하여 시각적 중요도를 높입니다.
-        -   **분석/관점 블록(Viewpoint Blocks):** 필진의 핵심 분석을 담는 'Viewpoint' 또는 '관점' 단락은 `border-l-4`, `bg-gray-50` 등을 사용하여 시각적으로 구분되는 컴포넌트로 만듭니다. 문단 내 핵심 키워드를 `<b>` 태그로 강조하여 가독성을 높입니다.
-
-    --- [ LLM 분석 방법론 (Methodology) ] ---
-
-    5.  **LLM의 데이터 분석 프로세스:**
-        단순 변환을 넘어 정보의 누락을 원천적으로 방지하고, 데이터의 의도와 가치를 보존하기 위해 다음과 같은 다단계 분석 프로세스를 따릅니다.
-
-        -   **1단계: 목표 및 구조 이해 (Goal & Structure Comprehension)**
-            -   **변환 목표 정의:** 최종 결과물의 목적(요약, 재구성, 시각화 개선 등)을 명확히 하여 '의도된 변경'과 '오류'를 구분할 기준을 세웁니다.
-            -   **구조적 스키마 매핑:** 두 문서의 전체 섹션 구조(골격)를 먼저 비교하여 거시적인 수준의 누락이 없는지 확인합니다.
-
-        -   **2단계: 데이터 계층적 추출 및 정형화 (Hierarchical Data Extraction & Structuring)**
-            -   **데이터 노드화:** 원본 데이터(HTML, JSON 등)를 단순 텍스트가 아닌 계층적 트리 구조(상위/자식 노드)로 파싱하여 모든 정보 요소를 구조적으로 관리합니다.
-            -   **콘텐츠 요소 분해:** 문장이나 문단도 '주체-행위-대상-수치' 등 의미 단위의 요소로 분해하여 핵심 정보의 누락 여부를 정밀하게 추적합니다.
-
-        -   **3단계: 체계적 매핑 및 1:1 검증 (Systematic Mapping & 1:1 Verification)**
-            -   **양방향 매핑:** '원본 → 결과물' 추적을 통해 누락을 찾고, '결과물 → 원본' 역추적을 통해 환각(Hallucination)이나 잘못된 정보 생성을 방지합니다.
-            -   **콘텐츠 체크섬(Checksum) 비교:** 테이블의 행/열 개수, 목록의 항목 수 등 정량화 가능한 요소들을 체크섬처럼 사용하여 불일치 여부를 신속하게 파악합니다.
-
-        -   **4. 차이점 분석 및 최종 보고 (Gap Analysis & Final Reporting)**
-            -   **차이점 분류:** 발견된 차이점을 '의도된 변경', '정보 누락', '세부 정보 누락', '디자인 개선 필요' 등으로 명확히 분류합니다.
-            -   **컨텍스트 기반의 해결책 제시:** 단순히 "A가 빠졌음"이라고 보고하는 것을 넘어, "A는 B라는 맥락에서 중요하므로 C 위치에 D 형식으로 추가해야 함"과 같이 구체적이고 실행 가능한 해결책을 제시합니다.
--->
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>100x Daily Wrap - 2025년 6월 27일</title>
-    <!-- 외부 라이브러리: Tailwind(스타일), Chart.js(차트), FontAwesome(아이콘) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Roboto:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Noto Sans KR', 'Roboto', sans-serif; }
-        .orbitron { font-family: 'Orbitron', monospace; }
-        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #e5e7eb; padding: 10px 14px; text-align: left; vertical-align: middle; }
-        th { background-color: #f9fafb; font-weight: 600; }
-        tbody tr:hover { background-color: #f3f4f6; }
-        .tag { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 500; }
-        .na-value { color: #9ca3af; } /* N/A 값 처리를 위한 스타일 */
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
-
-    <!-- 헤더: 리포트의 제목과 날짜, 핵심 헤드라인을 명확하게 전달 -->
-    <header class="container mx-auto px-4 py-8 md:py-12">
-        <div class="text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-800 orbitron">100x Daily Wrap</h1>
-            <div class="text-lg md:text-xl text-gray-600 mb-2">2025년 6월 27일 (금요일)</div>
-            <div class="text-base md:text-lg text-blue-600 font-medium">연준 정책 불확실성 지배 속 달러 약세, 기술주 강세 지속</div>
-        </div>
-    </header>
-
-    <!-- 핵심 지표 섹션 -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white rounded-lg p-4 text-center card-shadow">
-                <h4 class="text-sm font-semibold text-gray-500">S&P 500</h4>
-                <p class="text-2xl font-bold text-green-600">6,141.02</p>
-                <p class="text-sm font-semibold text-green-600">+0.80%</p>
-            </div>
-            <div class="bg-white rounded-lg p-4 text-center card-shadow">
-                <h4 class="text-sm font-semibold text-gray-500">Nasdaq 100</h4>
-                <p class="text-2xl font-bold text-green-600">22,447.29</p>
-                <p class="text-sm font-semibold text-green-600">+0.94%</p>
-            </div>
-            <div class="bg-white rounded-lg p-4 text-center card-shadow">
-                <h4 class="text-sm font-semibold text-gray-500">VIX</h4>
-                <p class="text-2xl font-bold text-red-600">16.59</p>
-                <p class="text-sm font-semibold text-red-600">-1.01%</p>
-            </div>
-             <div class="bg-white rounded-lg p-4 text-center card-shadow">
-                <h4 class="text-sm font-semibold text-gray-500">10-Y Treasury</h4>
-                <p class="text-2xl font-bold text-green-600">4.25%</p>
-                <p class="text-sm font-semibold text-green-600">-0.93%</p>
-            </div>
-        </div>
-    </section>
-    
-    <!-- 1. Executive Summary & Today's Thesis -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-receipt mr-3 text-blue-600"></i>요약 및 오늘의 논점</h2>
-            <div class="space-y-4 text-gray-700">
-                <p>● <b>연준(Fed) 정책 불확실성이 시장의 지배적 동인으로 부상했습니다.</b> 트럼프 대통령이 이르면 9월에 파월 의장을 교체할 수 있다는 추측이 나오면서, 미국 달러 지수는 3년여 만에 최저 수준으로 하락했고 주식 시장은 금리 인하 가속화 기대로 지지받았습니다.</p>
-                <p>● <b>100x 유동성 지표는 데이터 부족으로 제공되지 않았습니다.</b> 그러나 시장은 약화되는 노동 시장 상황 속에서 연말까지 64bp의 금리 인하를 가격에 반영하고 있습니다.</p>
-                <p>● <b>미국 달러와 위험 자산 간의 가장 중요한 상관관계 붕괴가 발생했습니다.</b> 블룸버그 달러 지수는 4거래일 연속 하락한 반면 S&P 500은 사상 최고치에 근접하며, 연준 독립성 우려가 달러를 약화시키고 주식을 지지하는 이례적인 괴리를 보였습니다.</p>
-                <p>● <b>가장 확실한 실행 가능한 시그널은 7월 9일 관세 마감일에 집중됩니다.</b> 백악관 대변인이 마감일을 가볍게 다루면서 즉각적인 시장 변동성을 유발했고, 주식은 장중 최고치에서 하락했습니다.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- 2. Today's Market Pulse -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-heartbeat mr-3 text-blue-600"></i>오늘의 시장 동향</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-xl font-bold mb-4">주요 변화 요인</h3>
-                    <ul class="space-y-3 text-gray-700">
-                        <li class="flex items-start"><i class="fas fa-users-slash text-red-500 mt-1 mr-3"></i><span><b>노동 시장 약화:</b> 계속 실업수당 청구건수가 2021년 11월 이후 최고치를 기록하며 비둘기파적 연준 기대를 강화했습니다.</span></li>
-                        <li class="flex items-start"><i class="fas fa-arrow-trend-down text-orange-500 mt-1 mr-3"></i><span><b>1분기 GDP 하향 조정:</b> GDP 성장률이 -0.5%로 수정되며, 특히 서비스 지출 둔화로 경제 부진이 부각되었습니다.</span></li>
-                        <li class="flex items-start"><i class="fas fa-plane-departure text-green-500 mt-1 mr-3"></i><span><b>내구재 주문 급증:</b> 민간 항공기 주문이 230.8% 급증하며 5월 내구재 주문이 16.4% 상승을 견인했습니다.</span></li>
-                        <li class="flex items-start"><i class="fas fa-file-invoice-dollar text-red-500 mt-1 mr-3"></i><span><b>무역 적자 확대:</b> 5월 상품 무역 적자가 966억 달러로 확대되며 2020년 이후 가장 큰 수출 감소를 기록했습니다.</span></li>
-                        <li class="flex items-start"><i class="fas fa-shield-alt text-green-500 mt-1 mr-3"></i><span><b>VIX 지수 안정:</b> VIX 지수가 16.59로 하락하며 2월 말 이후 최저 수준을 기록, 시장 불안 심리가 완화되었음을 시사했습니다.</span></li>
-                    </ul>
-                </div>
-                <!-- N/A 처리 개선: '시장 체제' -> '시장 환경'으로 용어 변경 및 유동성 지표 시각화 -->
-                <div class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-4">시장 환경 및 주요 기회</h3>
-                    <div class="flex items-center justify-center bg-gray-200 rounded-lg p-4 mb-4">
-                        <div class="text-center">
-                            <i class="fas fa-hourglass-half text-5xl text-gray-400"></i>
-                            <p class="mt-2 font-semibold text-gray-600">100x 유동성 지표</p>
-                            <p class="text-sm text-gray-500">금주 연준 데이터 집계 지연으로 산출 보류</p>
-                        </div>
-                    </div>
-                    <p class="text-gray-700 mb-6 text-center">시장은 연말까지 약 64bp 금리 인하를 반영 중이며, 9월 인하가 유력시됩니다.</p>
-                    <h4 class="text-lg font-semibold mb-3">주요 기회</h4>
-                    <ul class="list-disc list-inside space-y-2 text-gray-700">
-                        <li class="flex items-start">
-                            <i class="fas fa-landmark text-indigo-500 mt-1 mr-3"></i>
-                            <div>
-                                <span><b>정책 연계:</b> 연준 독립성 우려에 따른 달러 매도(Short) 포지션.</span>
-                            </div>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-retweet text-blue-500 mt-1 mr-3"></i> 
-                            <div>
-                                <span><b>섹터 순환:</b> 제조업 위축 신호에 따른 금융(XLF) 비중 확대 및 항공 섹터 비중 축소.</span>
-                                <p class="text-xs text-gray-500 mt-1">↳ 근거: 캔자스시티 연은 제조업 지수 3개월 연속 -2 기록</p>
-                            </div>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-shield-alt text-yellow-500 mt-1 mr-3"></i>
-                            <div>
-                                <span><b>매크로 주도:</b> 7월 9일 관세 만료를 앞두고 경기방어주 비중 확대.</span>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 3. Multi-Asset Performance Dashboard -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-tachometer-alt mr-3 text-blue-600"></i>멀티에셋 퍼포먼스 대시보드</h2>
-            <!-- 새로운 아이디어: 오늘의 차트 추가 -->
-            <div class="mb-8">
-                <h3 class="text-xl font-bold mb-4 text-center">오늘의 차트: 주요 상승/하락 종목 비교</h3>
-                <div class="relative h-64 md:h-80 w-full">
-                    <canvas id="gainerLoserChart"></canvas>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div>
-                    <h3 class="text-xl font-bold mb-4 text-green-700">주요 상승 종목</h3>
-                    <table>
-                        <thead><tr><th>티커</th><th>종가($)</th><th>일일(%)</th><th>코멘트</th></tr></thead>
-                        <tbody>
-                            <tr><td>ENPH</td><td>43.00</td><td class="text-green-600 font-semibold">+12.83%</td><td>강력한 실적 성과가 주가 상승 견인</td></tr>
-                            <tr><td>NKE</td><td class="na-value">-</td><td class="text-green-600 font-semibold">+10.4%</td><td>소폭의 4분기 실적 상회 및 연간 전망 개선</td></tr>
-                            <tr><td>AYI</td><td class="na-value">-</td><td class="text-green-600 font-semibold">+10.0%</td><td>강력한 3분기 실적이 예상 상회</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold mb-4 text-red-700">주요 하락 종목</h3>
-                    <table>
-                         <thead><tr><th>티커</th><th>종가($)</th><th>일일(%)</th><th>코멘트</th></tr></thead>
-                        <tbody>
-                            <tr><td>AEMD</td><td class="na-value">-</td><td class="text-red-600 font-semibold">-26.3%</td><td>실망스러운 실적 발표</td></tr>
-                            <tr><td>CRMD</td><td class="na-value">-</td><td class="text-red-600 font-semibold">-10.5%</td><td>주식 발행 발표로 주가 압박</td></tr>
-                            <tr><td>EQIX</td><td class="na-value">-</td><td class="text-red-600 font-semibold">-9.56%</td><td>BMO Capital의 투자의견 하향 조정</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <h3 class="text-xl font-bold mb-4">자산별 성과 요약</h3>
-                <table>
-                    <thead>
-                        <tr><th>자산/티커</th><th>종가</th><th>일일 변동률</th><th>연초 대비 변동률</th><th>코멘트</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>S&P 500</td><td>6,141.02</td><td class="text-green-600 font-semibold">+0.80%</td><td class="text-green-600 font-semibold">+4.41%</td><td>관세 마감일 유연성 소식에 사상 최고치 근접</td></tr>
-                        <tr><td>나스닥 100</td><td>22,447.29</td><td class="text-green-600 font-semibold">+0.94%</td><td class="text-green-600 font-semibold">+6.83%</td><td>기술주 강세에 힘입어 사상 최고치 경신</td></tr>
-                        <tr><td>러셀 2000</td><td>2,172.11</td><td class="text-green-600 font-semibold">+1.68%</td><td class="text-red-600 font-semibold">-2.60%</td><td>대형주 대비 초과 성과, 연초 대비는 여전히 부진</td></tr>
-                        <tr><td>VIX</td><td>16.59</td><td class="text-red-600 font-semibold">-1.01%</td><td class="text-red-600 font-semibold">-4.38%</td><td>2월 말 이후 최저 수준으로 하락</td></tr>
-                        <tr><td>2년물 국채 금리</td><td>4.25%</td><td class="text-green-600 font-semibold">-0.93%</td><td class="text-red-600 font-semibold">-7.00%</td><td>연준 금리 인하 기대감에 하락</td></tr>
-                        <tr><td>10년물 국채 금리</td><td>4.25%</td><td class="text-green-600 font-semibold">-0.93%</td><td class="text-red-600 font-semibold">-7.00%</td><td>파월 의장 교체 가능성 우려 속 하락</td></tr>
-                        <tr><td>DXY</td><td>97.25</td><td class="text-red-600 font-semibold">-0.50%</td><td class="text-red-600 font-semibold">-24.35%</td><td>연준 독립성 우려로 3년래 최저치 기록</td></tr>
-                        <tr><td>USD/KRW</td><td>1,355.35</td><td class="text-green-600 font-semibold">-0.18%</td><td class="na-value">-</td><td>광범위한 달러 약세에 원화 강세</td></tr>
-                        <tr><td>금 (GLD)</td><td>3,313.70</td><td class="text-red-600 font-semibold">-1.02%</td><td class="text-green-600 font-semibold">+26.03%</td><td>달러 약세에도 불구하고 장중 최고치에서 후퇴</td></tr>
-                        <tr><td>은 (SLV)</td><td>36.50</td><td class="text-red-600 font-semibold">-0.25%</td><td class="text-green-600 font-semibold">+26.12%</td><td>전반적인 귀금속 약세 속 소폭 하락</td></tr>
-                        <tr><td>구리 (CPER)</td><td>5.08</td><td class="text-green-600 font-semibold">+0.27%</td><td class="text-green-600 font-semibold">+27.43%</td><td>인프라 수요 기대감에 상승</td></tr>
-                        <tr><td>유가 (WTI)</td><td>65.57</td><td class="text-green-600 font-semibold">+0.51%</td><td class="text-red-600 font-semibold">-8.58%</td><td>지정학적 긴장 완화에도 상승</td></tr>
-                        <tr><td>천연가스 (UNG)</td><td>3.30</td><td class="text-green-600 font-semibold">+1.26%</td><td class="text-red-600 font-semibold">-9.11%</td><td>200일 이동평균선 지지선에서 반등</td></tr>
-                        <tr><td>비트코인/USD</td><td>107,377.82</td><td class="text-green-600 font-semibold">+0.37%</td><td class="na-value">-</td><td>주요 옵션 만기를 앞두고 박스권 형성</td></tr>
-                        <tr><td>이더리움/USD</td><td>2,443.81</td><td class="text-green-600 font-semibold">+1.14%</td><td class="na-value">-</td><td>중요한 2,800달러 저항선에 근접</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <p class="mt-4 text-gray-700"><b>100x 관점:</b> 자산 간 역학은 연준 독립성 우려가 달러를 3년래 최저치로 약화시키고 주식 시장이 사상 최고치에 근접하는 것을 반영했습니다. 이러한 이례적인 괴리는 모든 주요 자산군에 걸쳐 정책 불확실성이 지배적인 테마임을 부각합니다.</p>
-        </div>
-    </section>
-
-    <!-- 4. Correlation & Volatility Matrix: N/A 처리 개선 -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-wave-square mr-3 text-blue-600"></i>상관관계 및 변동성 매트릭스</h2>
-             <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg">
-                <h3 class="text-xl font-bold mb-4 text-blue-800 flex items-center"><i class="fas fa-search-dollar mr-2"></i>Anomaly Spotlight (주목할 만한 이례 현상)</h3>
-                <p class="mb-4 text-sm text-blue-700">금일 상관관계 데이터는 30일 이동 평균 데이터 집계 중으로, 정성적 분석으로 대체 제공합니다.</p>
-                <div class="space-y-4 text-gray-700">
-                    <p>● <b class="text-blue-600">수익률 곡선 상관관계 변화:</b> S&P 500과 국채 5-30년 수익률 곡선 간의 상관관계가 4월의 깊은 음(-)의 값에서 빠르게 회복되고 있습니다. 이는 90일 관세 유예 발표 이후 관계가 변화했음을 시사합니다.</p>
-                    <p>● <b class="text-red-600">금-달러 역상관관계:</b> 금과 달러의 이례적인 역상관관계는 6월 초 -96%에 달했으며, 이는 역사적 평균(-39%)을 크게 하회합니다. 이러한 강력한 역상관관계는 역사적으로 높은 금 수익률과 연관되어 왔습니다.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 5. Fresh Wall Street Intelligence -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="far fa-lightbulb mr-3 text-blue-600"></i>월스트리트 최신 정보</h2>
-            <h3 class="text-xl font-bold mb-4">주요 투자은행 업데이트</h3>
-            <div class="overflow-x-auto mb-8">
-                <table>
-                    <thead>
-                        <tr><th>은행</th><th>티커</th><th>투자의견</th><th>신규 목표가($)</th><th>상승여력(%)</th><th>핵심 코멘트</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Citi</td><td>COF</td><td><span class="tag bg-green-100 text-green-700">매수</span></td><td>250</td><td class="text-green-600 font-semibold">18.8%</td><td>디스커버 인수 시너지에 대한 낙관적 전망</td></tr>
-                        <tr><td>Goldman Sachs</td><td>BEN</td><td><span class="tag bg-green-100 text-green-700">매수 상향</span></td><td>29</td><td class="text-green-600 font-semibold">25.0%</td><td>사모 시장 확장 진전에 대한 긍정적 평가</td></tr>
-                        <tr><td>Citi</td><td>TFC</td><td><span class="tag bg-green-100 text-green-700">매수 상향</span></td><td>55</td><td class="text-green-600 font-semibold">32.9%</td><td>자기자본이익률(ROTCE) 개선 기대</td></tr>
-                        <tr><td>BofA</td><td>C</td><td><span class="tag bg-green-100 text-green-700">매수</span></td><td>100</td><td class="text-green-600 font-semibold">21.0%</td><td>가속화된 자사주 매입 기대</td></tr>
-                        <tr><td>Citi</td><td>BAC</td><td><span class="tag bg-green-100 text-green-700">매수</span></td><td>54</td><td class="text-green-600 font-semibold">15.2%</td><td>2026년까지 순이자마진(NIM) 확장 순풍</td></tr>
-                        <tr><td>HSBC</td><td>EL</td><td><span class="tag bg-green-100 text-green-700">매수 상향</span></td><td class="na-value">-</td><td class="na-value">-</td><td>기존 '보유' 의견에서 상향 조정</td></tr>
-                        <tr><td>BNP Paribas</td><td>GOOGL</td><td><span class="tag bg-yellow-100 text-yellow-700">중립 하향</span></td><td>172</td><td class="na-value">-</td><td>밸류에이션 우려 제기</td></tr>
-                        <tr><td>BMO Capital</td><td>EQIX</td><td><span class="tag bg-yellow-100 text-yellow-700">시장수익률 하향</span></td><td>850</td><td class="na-value">-</td><td>예상에 미치지 못하는 AFFO 성장</td></tr>
-                        <tr><td>Morgan Stanley</td><td>MU</td><td><span class="tag bg-blue-100 text-blue-700">동일 비중</span></td><td>135</td><td class="na-value">-</td><td>AI 수요 강세가 높은 밸류에이션 지지</td></tr>
-                        <tr><td>JPMorgan</td><td>EQIX</td><td><span class="tag bg-blue-100 text-blue-700">비중 확대</span></td><td>935</td><td class="na-value">-</td><td>실망스러운 재무 가이던스 영향</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <h3 class="text-xl font-bold mb-4">C-Suite 언어 분석</h3>
-            <p class="text-gray-700">● <b>C-Suite 센티먼트 지수:</b> <span class="font-bold text-green-600">7.2 / 10 (낙관적)</span></p>
-            <p class="text-gray-700">● 경영진들은 관세 불확실성 속에서 신중한 낙관론을 보였으며, 운영 탄력성과 AI 투자 가속화를 강조했습니다. H.B. Fuller와 Concentrix 경영진은 각각 "강력한 재무 성과"와 "투자로부터의 모멘텀"에 대한 자신감을 표명했습니다.</p>
-            <p class="text-gray-700">● <b>주요 테마 언급:</b> <b>AI 전략</b> (+45% 빈도), <b>관세 완화</b> (+38% 빈도)</p>
-        </div>
-    </section>
-
-    <!-- 6. Institutional Money Flows -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-water mr-3 text-blue-600"></i>기관 자금 흐름</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-chart-pie mr-2 text-purple-500"></i>대규모 옵션 거래</h3>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600">
-                        <li><b>NVIDIA (NVDA):</b> 42,000개의 풋옵션이 개설되며 하락에 베팅하는 기관 헤징 활동 포착.</li>
-                        <li><b>Vertex (VRTX):</b> 총 122만 달러 규모의 혼재된 옵션 거래 발생.</li>
-                        <li><b>Goldman Sachs (GS):</b> 일일 평균 거래량의 231%에 달하는 높은 옵션 활동.</li>
-                        <li><b>암호화폐:</b> 6월 27일, 총 170억 달러 규모의 비트코인 및 이더리움 옵션 만기 도래.</li>
-                    </ul>
-                </div>
-                <div class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-exchange-alt mr-2 text-green-500"></i>ETF 자금 흐름</h3>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600">
-                        <li><b>주식 ETF:</b> 3개월간 1,151억 달러 순유입으로 시장 지배.</li>
-                        <li><b>비트코인 ETF:</b> 12일 연속 순유입으로 40억 달러에 육박.</li>
-                        <li><b>방위 산업 ETF:</b> 주간 8.5%의 단위 증가와 함께 집중적인 기관 관심.</li>
-                        <li><b>채권 ETF:</b> 해외 회사채가 미국 회사채 대비 높은 성과를 보이며 자금 유입.</li>
-                    </ul>
-                </div>
-                 <div class="bg-gray-50 p-6 rounded-lg md:col-span-2">
-                    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-user-secret mr-2 text-gray-500"></i>다크 풀 및 정치 자금</h3>
-                     <ul class="list-disc list-inside space-y-2 text-sm text-gray-600">
-                        <li><b>다크 풀:</b> SPY와 QQQ가 다크 풀 활동을 주도했으며, NVDA와 PLTR에서도 상당한 거래량 발생.</li>
-                        <li><b>정치 자금:</b> 2026년 선거 주기를 위해 양당 위원회가 총 3억 1,800만 달러를 모금했으며, 공화당이 현금 보유액에서 상당한 우위를 점유.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- 7. Sector & Rotation Pulse: N/A 처리 개선 -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-sync-alt mr-3 text-blue-600"></i>섹터 및 순환 동향</h2>
-            <div>
-                <h3 class="text-xl font-bold mb-4">섹터 퍼포먼스 히트맵</h3>
-                <div id="sector-heatmap" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-white">
-                    <!-- JavaScript에 의해 동적으로 채워집니다. -->
-                </div>
-            </div>
-             <p class="mt-6 text-gray-700"><b>100x 관점:</b> 임의소비재 섹터는 연초 대비 부진에도 불구하고 3개월 성과에서 14.05%로 선두를 달리고 있으며, 헬스케어(-7.33%)와 같은 방어주는 크게 뒤처지고 있습니다. 이는 연준 정책 불확실성 속에서 성장주 중심의 로테이션이 지속되고 있음을 나타냅니다.</p>
-        </div>
-    </section>
-
-    <!-- 8. Tech Leadership Pulse -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-robot mr-3 text-blue-600"></i>테크 선두 동향</h2>
-            <h3 class="text-xl font-bold mb-4">주요 기술주 동향</h3>
-            <div class="overflow-x-auto mb-6">
-                <table>
-                    <thead>
-                        <tr><th>티커</th><th>일일 (%)</th><th>YTD (%)</th><th>뉴스 요약 (24-48시간)</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>META</td><td class="text-green-600 font-semibold">+2.46%</td><td class="text-green-600 font-semibold">+24.01%</td><td>PlayAI 음성 AI 스타트업 인수 협상 진전, 초지능 팀 강화를 위해 OpenAI 연구원 영입.</td></tr>
-                        <tr><td>NFLX</td><td class="text-green-600 font-semibold">+2.46%</td><td class="text-green-600 font-semibold">+46.60%</td><td>오징어 게임 시즌 3 최종 시즌으로 6월 27일 공개.</td></tr>
-                        <tr><td>AMZN</td><td class="text-green-600 font-semibold">+2.42%</td><td class="text-red-600 font-semibold">-1.03%</td><td>생성형 AI 개발 담당 부사장 퇴사, re:Inforce에서 신규 AI 보안 기능 공개.</td></tr>
-                        <tr><td>CRWD</td><td class="text-green-600 font-semibold">+2.25%</td><td class="text-green-600 font-semibold">+47.66%</td><td>Citi, 목표주가 $575 제시, Fal.Con 개발자 키노트에서 신규 AI 모듈 발표 기대.</td></tr>
-                        <tr><td>AVGO</td><td class="text-green-600 font-semibold">+2.09%</td><td class="text-green-600 font-semibold">+16.53%</td><td>HSBC, ASIC 파이프라인 가시성을 근거로 '매수' 상향, UBS가 주요 AI 수혜주로 지목.</td></tr>
-                        <tr><td>GOOGL</td><td class="text-green-600 font-semibold">+1.68%</td><td class="text-red-600 font-semibold">-8.33%</td><td>Gemini CLI 오픈소스 AI 에이전트 도입, Pearson과 교육 제품 협력 발표.</td></tr>
-                        <tr><td>MSFT</td><td class="text-green-600 font-semibold">+1.05%</td><td class="text-green-600 font-semibold">+18.02%</td><td>Morgan Stanley, Azure AI 잠재력 근거로 목표주가 상향, OpenAI와 AGI 접근권 재협상.</td></tr>
-                        <tr><td>PLTR</td><td class="text-green-600 font-semibold">+0.94%</td><td class="text-green-600 font-semibold">+90.73%</td><td>The Nuclear Company와 1억 달러 규모 AI 소프트웨어 개발 계약 체결.</td></tr>
-                        <tr><td>NOW</td><td class="text-green-600 font-semibold">+0.62%</td><td class="text-red-600 font-semibold">-4.59%</td><td>AI 생산성 도구의 초기 수혜주로 포지셔닝, 기업 AI 도입 가속화로 수요 지지.</td></tr>
-                        <tr><td>NVDA</td><td class="text-green-600 font-semibold">+0.46%</td><td class="text-green-600 font-semibold">+15.44%</td><td>시가총액 3.8조 달러 돌파, AI 인프라 제공업체로의 전환 강조.</td></tr>
-                        <tr><td>AAPL</td><td class="text-red-600 font-semibold">-0.28%</td><td class="text-red-600 font-semibold">-19.73%</td><td>"F1" 영화 투자 및 극장 배급 부문 고려, EU로부터 5억 유로 벌금 부과.</td></tr>
-                        <tr><td>TSLA</td><td class="text-red-600 font-semibold">-0.54%</td><td class="text-red-600 font-semibold">-19.33%</td><td>오스틴에서 로보택시 서비스 출시, 제조 부문 책임자 해고.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-6 mb-8 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
-                <h4 class="font-bold text-gray-800 mb-2">100x Viewpoint on Tech Leadership</h4>
-                <p class="text-gray-700">
-                    기술주 그룹은 <b>메타(+2.46%)</b>와 <b>넷플릭스(+2.46%)</b>가 주도하는 광범위한 상승으로 <b>회복력</b>을 보였습니다. 그러나 <b>애플(-0.28%)</b>과 <b>테슬라(-0.54%)</b>는 규제 문제, 운영 구조조정 등 개별적인 악재로 인해 뒤처지며 <b>내부적인 격차</b>는 지속되었습니다.
-                </p>
-            </div>
-            <h3 class="text-xl font-bold mb-4">신흥 AI 및 딥 테크 뉴스</h3>
-            <ul class="list-disc list-inside space-y-2 text-gray-700">
-                <li><b>자금 조달 & M&A:</b> 메타의 PlayAI 인수 협상 및 루브릭의 Predibase 인수는 특화 AI 역량 확보를 위한 M&A 경쟁이 심화되고 있음을 반영합니다.</li>
-                <li><b>제품 & 기술:</b> 엔비디아의 사업 모델 전환과 마이크로소프트-OpenAI 간의 계약 재협상은 AI가 실험적 기술에서 핵심 비즈니스 인프라로 성숙하고 있음을 시사합니다.</li>
-                <li><b>시장 & 파트너십:</b> 대기업의 35%가 AI를 실제 생산에 활용하고 있으며, 이는 AI 인프라 및 서비스에 대한 지속 가능한 수요를 창출하고 있습니다.</li>
-            </ul>
-        </div>
-    </section>
-
-    <!-- 9. Tomorrow's Catalyst & Economic Calendar: N/A 처리 개선 -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-calendar-check mr-3 text-blue-600"></i>내일의 기폭제</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-landmark mr-2 text-indigo-500"></i>경제 캘린더</h3>
-                    <div class="space-y-3">
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="font-semibold">개인 소득 및 소비 (8:30 AM ET)</p>
-                            <p class="text-sm text-gray-600">컨센서스: 소득 +0.1%, 소비 +0.1%</p>
-                        </div>
-                        <div class="bg-yellow-100 p-4 rounded-lg border-l-4 border-yellow-400">
-                            <p class="font-bold text-yellow-800">핵심 PCE 물가 지수 (8:30 AM ET)</p>
-                            <p class="text-sm text-gray-600">MoM 컨센서스: +0.2% / YoY 컨센서스: +2.6%</p>
-                        </div>
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="font-semibold">계속 실업수당 청구건수 (8:30 AM ET)</p>
-                            <p class="text-sm text-gray-600">컨센서스: 1955K</p>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-bullhorn mr-2 text-teal-500"></i>주요 실적 발표</h3>
-                    <div class="space-y-3">
-                         <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="font-semibold">NKE (Nike)</p>
-                            <p class="text-sm text-gray-600">EPS 컨센서스: $0.12</p>
-                        </div>
-                         <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="font-semibold">CNXC (Concentrix)</p>
-                            <p class="text-sm text-gray-600">EPS 컨센서스: $2.75</p>
-                        </div>
-                         <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="font-semibold">APOG (Apogee)</p>
-                            <p class="text-sm text-gray-600">EPS 컨센서스: $0.45</p>
-                        </div>
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="font-semibold">AOUT (American Outdoor Brands)</p>
-                            <p class="text-sm text-gray-600">EPS 컨센서스: ($0.11)</p>
-                        </div>
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="font-semibold">AEMD (Aethlon Medical)</p>
-                            <p class="text-sm text-gray-600">EPS 컨센서스: ($1.09)</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- 10. Today's Actionable Trade Signals -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-compass mr-3 text-blue-600"></i>오늘의 실행 가능한 트레이드 시그널</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div class="p-6 bg-green-50 rounded-xl border-2 border-green-200 text-center">
-                    <h3 class="font-bold text-green-700 mb-2">시그널 1: S&P 500 선물 매수</h3>
-                    <i class="fas fa-arrow-up text-green-600 text-2xl mb-3"></i>
-                    <div class="space-y-1 text-sm"><p><b>진입:</b> 6,203 이상</p><p><b>목표:</b> 6,345</p><p>기술적 돌파 및 JPMorgan 모델 기반</p></div>
-                </div>
-                <div class="p-6 bg-red-50 rounded-xl border-2 border-red-200 text-center">
-                     <h3 class="font-bold text-red-700 mb-2">시그널 2: VIX 매도</h3>
-                    <i class="fas fa-arrow-down text-red-600 text-2xl mb-3"></i>
-                    <div class="space-y-1 text-sm"><p><b>진입:</b> 16.59 하회 시</p><p><b>목표:</b> 15.00</p><p>변동성 압축 및 강세 풋-콜 비율 기반</p></div>
-                </div>
-                <div class="p-6 bg-blue-50 rounded-xl border-2 border-blue-200 text-center">
-                    <h3 class="font-bold text-blue-700 mb-2">시그널 3: 기술 섹터 비중확대</h3>
-                    <i class="fas fa-chart-line text-blue-600 text-2xl mb-3"></i>
-                    <div class="space-y-1 text-sm"><p><b>진입:</b> XLK $250.25 돌파 시</p><p>21% 이익 성장 전망 및 반도체 강세 기반</p></div>
-                </div>
-            </div>
-            <div class="bg-gray-100 p-6 rounded-lg">
-                <h3 class="text-xl font-bold mb-4">내일의 준비</h3>
-                <ul class="list-disc list-inside space-y-2 text-gray-700">
-                    <li><b>전반적인 리스크 수준:</b> <b>낮음</b> (VIX 16.59 및 국채 변동성 감소).</li>
-                    <li><b>포트폴리오 베타 목표:</b> <b>1.0 초과</b> (VIX 15-25 범위 하회로 공격적 포지셔닝 지지).</li>
-                    <li><b>주요 섹터 비중:</b> <b>기술주 ▲ / 임의소비재 ▲ 비중 확대, 헬스케어 ▼ 비중 축소.</b></li>
-                    <li><b>주시할 주요 수준:</b> S&P 500 저항선 <b>6,345</b>, 지지선 <b>6,025</b>.</li>
-                    <li><b>추가 고려사항:</b> 7월 9일 관세 마감일을 면밀히 주시해야 합니다. <b>전략가 79%가 연말까지 미-중 무역 협상 타결을 예상</b>하는 만큼, 현재 시장의 안도감에도 불구하고 잠재적인 변동성 촉매제가 될 수 있습니다.</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <!-- 11. Appendix -->
-    <section class="container mx-auto px-4 mb-8 md:mb-12">
-        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-book-open mr-3 text-blue-600"></i>부록: 야간 선물 및 주요 차트</h2>
-            <h3 class="text-xl font-bold mb-4">부록 A: 야간 선물 움직임</h3>
-            <div class="overflow-x-auto mb-6">
-                <table>
-                    <thead>
-                        <tr><th>상품</th><th>최종가</th><th>일일 변동률</th><th>코멘트</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>S&P 500 선물</td><td>6,203.50</td><td class="text-green-600 font-semibold">+0.14%</td><td>6,200 저항선 이상에서 모멘텀 지속</td></tr>
-                        <tr><td>나스닥 선물</td><td>22,701.50</td><td class="text-green-600 font-semibold">+0.14%</td><td>테크 선두 유지 속 사상 최고치 경신</td></tr>
-                        <tr><td>다우 선물</td><td>43,803.00</td><td class="text-green-600 font-semibold">+0.19%</td><td>야간 세션에서 다른 지수들 대비 초과 성과</td></tr>
-                        <tr><td>유가 (WTI)</td><td>65.55</td><td class="text-green-600 font-semibold">+0.48%</td><td>공급 우려 속 주간 하락세에서 회복</td></tr>
-                        <tr><td>금</td><td>3,314.20</td><td class="text-red-600 font-semibold">-1.01%</td><td>달러 약세에도 불구하고 장중 최고치에서 후퇴</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <h3 class="text-xl font-bold mb-4">부록 B: 주요 차트 요약</h3>
-            <ul class="list-disc list-inside space-y-2 text-gray-700">
-                <li><b>S&P 500 일일 지지/저항:</b> 지수는 2월 고점 저항선인 6,144.15 바로 아래에서 거래되고 있으며, 6,025의 상승 갭이 즉각적인 지지선입니다. RSI는 과매수 신호를 보내고 있습니다.</li>
-                <li><b>나스닥 vs. 기술주 리더십:</b> 나스닥 100은 AI 중심 모멘텀으로 사상 최고치를 경신했습니다. 아시아 기술주가 저렴한 대안으로 부상하며 랠리에 동참하고 있습니다.</li>
-                <li><b>10년물 국채 금리 추세:</b> 금리가 200일 이동평균선을 하회하며 마감하여 강세 기술적 전망을 형성했습니다. 채권 트레이더들은 4%를 향한 하락에 베팅하고 있습니다.</li>
-            </ul>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-12 px-6 bg-slate-100">
-        <div class="container mx-auto text-center text-slate-500">
-            <div class="text-xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
-            <p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
-            <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
-        </div>
-    </footer>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            Chart.register(ChartDataLabels);
-
-            const gainerLoserCtx = document.getElementById('gainerLoserChart')?.getContext('2d');
-            if (gainerLoserCtx) {
-                new Chart(gainerLoserCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['ENPH', 'NKE', 'AYI', 'AEMD', 'CRMD', 'EQIX'],
-                        datasets: [{
-                            label: '일일 변동률 (%)',
-                            data: [12.83, 10.4, 10.0, -26.3, -10.5, -9.56],
-                            backgroundColor: [
-                                'rgba(5, 150, 105, 0.7)', 'rgba(5, 150, 105, 0.7)', 'rgba(5, 150, 105, 0.7)',
-                                'rgba(220, 38, 38, 0.7)', 'rgba(220, 38, 38, 0.7)', 'rgba(220, 38, 38, 0.7)'
-                            ],
-                            borderColor: [
-                                'rgba(5, 150, 105, 1)', 'rgba(5, 150, 105, 1)', 'rgba(5, 150, 105, 1)',
-                                'rgba(220, 38, 38, 1)', 'rgba(220, 38, 38, 1)', 'rgba(220, 38, 38, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) { label += ': '; }
-                                        if (context.parsed.y !== null) { label += context.parsed.y + '%'; }
-                                        return label;
-                                    }
-                                }
-                            },
-                            datalabels: { display: false }
-                        },
-                        scales: {
-                            y: { grid: { color: '#e9ecef' }, title: { display: true, text: '일일 변동률 (%)' } },
-                            x: { grid: { display: false } }
-                        }
-                    }
-                });
-            }
-
-            const sectorData = [
-                { name: '에너지', etf: 'XLE', day: 1.43, ytd: 0.11 },
-                { name: '커뮤니케이션', etf: 'XLC', day: 1.16, ytd: 9.94 },
-                { name: '소재', etf: 'XLB', day: 1.11, ytd: 4.33 },
-                { name: '산업재', etf: 'XLI', day: 1.08, ytd: 10.31 },
-                { name: '임의소비재', etf: 'XLY', day: 0.92, ytd: -4.16 },
-                { name: '유틸리티', etf: 'XLU', day: 0.83, ytd: 7.24 },
-                { name: '금융', etf: 'XLF', day: 0.74, ytd: 7.16 },
-                { name: '기술', etf: 'XLK', day: 0.69, ytd: 7.98 },
-                { name: '헬스케어', etf: 'XLV', day: 0.24, ytd: -2.44 },
-                { name: '필수소비재', etf: 'XLP', day: -0.09, ytd: 1.98 },
-                { name: '부동산', etf: 'XLRE', day: -0.63, ytd: 0.74 }
-            ];
-            
-            const heatmapContainer = document.getElementById('sector-heatmap');
-            if(heatmapContainer){
-                sectorData.sort((a,b) => b.day - a.day).forEach(sector => {
-                    const value = sector.day;
-                    let bgColorClass = '';
-                    if (value > 1) bgColorClass = 'bg-green-600';
-                    else if (value > 0) bgColorClass = 'bg-green-400';
-                    else if (value > -1) bgColorClass = 'bg-red-400';
-                    else bgColorClass = 'bg-red-600';
-
-                    const ytdColorClass = sector.ytd >= 0 ? 'text-green-300' : 'text-red-300';
-                    
-                    const cell = `
-                        <div class="p-4 rounded-lg ${bgColorClass} card-shadow">
-                            <div class="font-bold text-lg">${sector.name} (${sector.etf})</div>
-                            <div class="text-2xl font-black">${value.toFixed(2)}%</div>
-                            <div class="text-sm ${ytdColorClass}">(YTD ${sector.ytd.toFixed(2)}%)</div>
-                        </div>
-                    `;
-                    heatmapContainer.innerHTML += cell;
-                });
-            }
-        });
-    </script>
-</body>
-</html>
+<div class="flex flex-row flex-1 overflow-y-hidden overflow-x-hidden"><div class="flex flex-col items-start p-[32px] h-full w-[252px] gap-[16px] overflow-y-auto scrollbar-hide"><div>Table of Content</div><div class="flex flex-col justify-start items-start w-full gap-[12px]"><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Executive Summary &amp; Today's Thesis">Executive Summary &amp; Today's Thesis</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Today's Market Pulse">Today's Market Pulse</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Multi-Asset Performance Dashboard">Multi-Asset Performance Dashboard</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Correlation &amp; Volatility Matrix">Correlation &amp; Volatility Matrix</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Fresh Wall Street Intelligence">Fresh Wall Street Intelligence</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Institutional Money Flows">Institutional Money Flows</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Sector &amp; Rotation Pulse">Sector &amp; Rotation Pulse</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Tech Leadership Pulse">Tech Leadership Pulse</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Tomorrow's Catalyst &amp; Economic Calendar">Tomorrow's Catalyst &amp; Economic Calendar</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Today's Actionable Trade Signals">Today's Actionable Trade Signals</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 192 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"></path></svg></div><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h2-Appendix: Overnight Futures &amp; Key Charts">Appendix: Overnight Futures &amp; Key Charts</a></div></div></div><div class="self-stretch flex flex-col justify-start items-start"><div class="w-[2px] h-full mt-[2px] bg-[rgba(180,180,180,1)]"></div><div class="flex justify-start text-[14px] text-[rgba(180,180,180,1)] flex-1"><div class="flex flex-col gap-[8px]"><a class="hover:text-[rgba(51,102,204,1)] text-[rgba(0,0,0,1)] no-underline" href="#h0-References">References</a></div></div></div></div></div><div class="flex flex-col flex-1 gap-[24px] overflow-y-auto overflow-x-hidden"><div class="text-[#121212] max-w-[915px] p-[32px]"><div class="text-[22px] font-[400] text-[rgba(18,18,18,1)]font-robotoFlex">20250628 100x Daily Wrap</div><div class="divbox justify-end gap-[16px] items-center pb-[10px]" style="display: flex; flex-direction: row;"><div class="flex flex-row justify-end"><button class="MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium mui-theme-5tfiwy" tabindex="0" type="button" style="display: flex; height: 40px; background: transparent; border-radius: 64px; transition: 0.5s cubic-bezier(0, 0, 0, 1);"><div class="divbox gap-[8px] justify-center items-center" style="display: flex; flex-direction: row;"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" color="black" height="18" width="18" xmlns="http://www.w3.org/2000/svg" style="color: black;"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 5h7"></path><path d="M7 4c0 4.846 0 7 .5 8"></path><path d="M10 8.5c0 2.286 -2 4.5 -3.5 4.5s-2.5 -1.135 -2.5 -2c0 -2 1 -3 3 -3s5 .57 5 2.857c0 1.524 -.667 2.571 -2 3.143"></path><path d="M12 20l4 -9l4 9"></path><path d="M19.1 18h-6.2"></path></svg><p class="text-[14px] underline text-black font-[500] flex items-center">한글로 보기 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" color="black" height="16" width="16" xmlns="http://www.w3.org/2000/svg" style="color: black;"><path d="M85 277.375h259.704L225.002 397.077 256 427l171-171L256 85l-29.922 29.924 118.626 119.701H85v42.75z"></path></svg></p></div><span class="MuiTouchRipple-root mui-theme-w0pj6f"></span></button></div><button class="flex items-center justify-center h-[30px] rounded text-[14px] font-[500] font-robotoFlex text-black bg-[rgba(245,245,245,1)] border-none cursor-pointer">Edit Report</button></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Executive Summary &amp; Today's Thesis">Executive Summary &amp; Today's Thesis</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><p>● <strong>S&amp;P 500 achieves first record close since February:</strong> The index surged 3.4% for the week to close at 6,173.07, marking a complete recovery from April's 20% drawdown and adding nearly $10 trillion in market value since the tariff-induced selloff <span id="citation-1"><a onclick="(function(event){window.history.pushState(null, '', '#reference-1');})(event);" href="#reference-1" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [1] </a></span><span id="citation-2"><a onclick="(function(event){window.history.pushState(null, '', '#reference-2');})(event);" href="#reference-2" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [2] </a></span><span id="citation-3"><a onclick="(function(event){window.history.pushState(null, '', '#reference-3');})(event);" href="#reference-3" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [3] </a></span>.</p>
+<p>● <strong>Trade deal momentum drives cross-asset rally:</strong> June 2025 delivered the best multi-asset performance since May 2024, with stocks, bonds, commodities, and credit all surging on optimism around finalized US-China agreements and potential EU deal completion by July 9 deadline <span id="citation-1"><a onclick="(function(event){window.history.pushState(null, '', '#reference-1');})(event);" href="#reference-1" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [1] </a></span><span id="citation-4"><a onclick="(function(event){window.history.pushState(null, '', '#reference-4');})(event);" href="#reference-4" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [4] </a></span><span id="citation-5"><a onclick="(function(event){window.history.pushState(null, '', '#reference-5');})(event);" href="#reference-5" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [5] </a></span>.</p>
+<p>● <strong>Consumer spending weakness contradicts equity strength:</strong> Personal consumption dropped 0.3% in May (largest decline this year) while core PCE inflation surprised higher at 2.7% y/y, creating a divergence between softening economic fundamentals and record-high stock valuations <span id="citation-6"><a onclick="(function(event){window.history.pushState(null, '', '#reference-6');})(event);" href="#reference-6" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [6] </a></span><span id="citation-7"><a onclick="(function(event){window.history.pushState(null, '', '#reference-7');})(event);" href="#reference-7" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [7] </a></span>.</p>
+<p>● <strong>Institutional positioning signals caution amid euphoria:</strong> Despite the rally, asset managers moved slightly underweight US equities while hedge funds increased exposure, and options markets show elevated demand for downside protection in speculative ETFs including ARK Innovation and Russell 2000 <span id="citation-8"><a onclick="(function(event){window.history.pushState(null, '', '#reference-8');})(event);" href="#reference-8" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [8] </a></span><span id="citation-1"><a onclick="(function(event){window.history.pushState(null, '', '#reference-1');})(event);" href="#reference-1" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [1] </a></span><span id="citation-9"><a onclick="(function(event){window.history.pushState(null, '', '#reference-9');})(event);" href="#reference-9" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [9] </a></span>.</p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Today's Market Pulse">Today's Market Pulse</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-2.1 Key Change Drivers">2.1 Key Change Drivers</h3>
+<p>● <strong>Trade deal momentum accelerates with July 9 deadline approaching:</strong> US Commerce Secretary Lutnick expressed optimism about reaching a tariff deal with the EU by the July deadline, while the US and China finalized their trade understanding including rare earth material commitments <span id="citation-10"><a onclick="(function(event){window.history.pushState(null, '', '#reference-10');})(event);" href="#reference-10" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [10] </a></span><span id="citation-11"><a onclick="(function(event){window.history.pushState(null, '', '#reference-11');})(event);" href="#reference-11" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [11] </a></span><span id="citation-12"><a onclick="(function(event){window.history.pushState(null, '', '#reference-12');})(event);" href="#reference-12" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [12] </a></span>.</p>
+<p>● <strong>Consumer spending weakness contradicts equity euphoria:</strong> Personal consumption dropped 0.3% in May (largest decline this year) while core PCE inflation surprised higher at 2.7% y/y, creating divergence between softening fundamentals and record valuations <span id="citation-13"><a onclick="(function(event){window.history.pushState(null, '', '#reference-13');})(event);" href="#reference-13" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [13] </a></span><span id="citation-14"><a onclick="(function(event){window.history.pushState(null, '', '#reference-14');})(event);" href="#reference-14" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [14] </a></span><span id="citation-15"><a onclick="(function(event){window.history.pushState(null, '', '#reference-15');})(event);" href="#reference-15" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [15] </a></span>.</p>
+<p>● <strong>Labor market deterioration signals Fed pivot potential:</strong> Continuing jobless claims increased to 1,974k from 1,937k while Citi forecasts unemployment to rise to 4.4% in June, a new cycle high that could trigger dovish Fed action <span id="citation-8"><a onclick="(function(event){window.history.pushState(null, '', '#reference-8');})(event);" href="#reference-8" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [8] </a></span><span id="citation-16"><a onclick="(function(event){window.history.pushState(null, '', '#reference-16');})(event);" href="#reference-16" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [16] </a></span>.</p>
+<p>● <strong>Institutional positioning shifts amid record highs:</strong> Asset managers moved slightly underweight US equities while increasing EM allocations, even as hedge funds increased US exposure and options markets show elevated downside protection demand <span id="citation-8"><a onclick="(function(event){window.history.pushState(null, '', '#reference-8');})(event);" href="#reference-8" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [8] </a></span><span id="citation-9"><a onclick="(function(event){window.history.pushState(null, '', '#reference-9');})(event);" href="#reference-9" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [9] </a></span>.</p>
+<p>● <strong>Trump administration policy uncertainty intensifies:</strong> Abrupt termination of Canada trade talks over digital services tax caused yield curve steepening and equity volatility, while speculation grows around early Fed Chair succession announcement <span id="citation-17"><a onclick="(function(event){window.history.pushState(null, '', '#reference-17');})(event);" href="#reference-17" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [17] </a></span><span id="citation-18"><a onclick="(function(event){window.history.pushState(null, '', '#reference-18');})(event);" href="#reference-18" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [18] </a></span>.</p>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-2.2 Market Regime &amp; 100x Liquidity Indicator">2.2 Market Regime &amp; 100x Liquidity Indicator</h3>
+<p>● <strong>100x Liquidity Indicator:</strong> N/A (Insufficient data for calculation)</p>
+<p>● Market conditions reflect a "Risk-On" regime driven by trade deal optimism and Fed dovish pivot expectations, despite underlying economic weakness creating potential for regime shift if labor data deteriorates further <span id="citation-1"><a onclick="(function(event){window.history.pushState(null, '', '#reference-1');})(event);" href="#reference-1" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [1] </a></span><span id="citation-19"><a onclick="(function(event){window.history.pushState(null, '', '#reference-19');})(event);" href="#reference-19" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [19] </a></span>.</p>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-2.3 Primary Opportunities">2.3 Primary Opportunities</h3>
+<p>● <strong>Policy-Linked:</strong> Trade deadline resolution catalyst → Overweight international equities benefiting from dollar weakness and tariff relief, particularly European stocks up 20% in dollar terms <span id="citation-20"><a onclick="(function(event){window.history.pushState(null, '', '#reference-20');})(event);" href="#reference-20" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [20] </a></span><span id="citation-21"><a onclick="(function(event){window.history.pushState(null, '', '#reference-21');})(event);" href="#reference-21" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [21] </a></span>.</p>
+<p>● <strong>Sector Rotation:</strong> Labor market softening catalyst → Favor defensive sectors (utilities, healthcare) over cyclicals as unemployment rises and Fed cuts become more likely <span id="citation-22"><a onclick="(function(event){window.history.pushState(null, '', '#reference-22');})(event);" href="#reference-22" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [22] </a></span><span id="citation-23"><a onclick="(function(event){window.history.pushState(null, '', '#reference-23');})(event);" href="#reference-23" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [23] </a></span>.</p>
+<p>● <strong>Macro-Driven:</strong> VIX compression to 16.32 catalyst → Implement volatility strategies as extreme low VIX levels historically precede larger volatility shocks with elevated downside protection demand in speculative ETFs <span id="citation-13"><a onclick="(function(event){window.history.pushState(null, '', '#reference-13');})(event);" href="#reference-13" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [13] </a></span><span id="citation-1"><a onclick="(function(event){window.history.pushState(null, '', '#reference-1');})(event);" href="#reference-1" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [1] </a></span>.</p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Multi-Asset Performance Dashboard">Multi-Asset Performance Dashboard</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-3.1 Top 3 U.S. Gainers">3.1 Top 3 U.S. Gainers</h3>
+<table>
+<thead>
+<tr>
+<th>TICKER</th>
+<th>Day (%)</th>
+<th>YTD (%)</th>
+<th>Close ($)</th>
+<th>One-Line Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NKE</td>
+<td>+15.19</td>
+<td>N/A</td>
+<td>$71.91</td>
+<td>Upbeat Q4 results despite conservative Q1 revenue outlook <span id="citation-24"><a onclick="(function(event){window.history.pushState(null, '', '#reference-24');})(event);" href="#reference-24" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [24] </a></span><span id="citation-25"><a onclick="(function(event){window.history.pushState(null, '', '#reference-25');})(event);" href="#reference-25" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [25] </a></span></td>
+</tr>
+<tr>
+<td>BA</td>
+<td>+5.91</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>Rothschild &amp; Co Redburn upgrade to Buy from Neutral <span id="citation-26"><a onclick="(function(event){window.history.pushState(null, '', '#reference-26');})(event);" href="#reference-26" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [26] </a></span><span id="citation-24"><a onclick="(function(event){window.history.pushState(null, '', '#reference-24');})(event);" href="#reference-24" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [24] </a></span></td>
+</tr>
+<tr>
+<td>EQIX</td>
+<td>+5.31</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>Strong performance despite BMO Capital downgrade to Market Perform <span id="citation-26"><a onclick="(function(event){window.history.pushState(null, '', '#reference-26');})(event);" href="#reference-26" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [26] </a></span><span id="citation-25"><a onclick="(function(event){window.history.pushState(null, '', '#reference-25');})(event);" href="#reference-25" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [25] </a></span></td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-3.2 Top 3 U.S. Losers">3.2 Top 3 U.S. Losers</h3>
+<table>
+<thead>
+<tr>
+<th>TICKER</th>
+<th>Day (%)</th>
+<th>YTD (%)</th>
+<th>Close ($)</th>
+<th>One-Line Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PLTR</td>
+<td>-9.37</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>Broad tech selloff amid trade uncertainty <span id="citation-25"><a onclick="(function(event){window.history.pushState(null, '', '#reference-25');})(event);" href="#reference-25" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [25] </a></span></td>
+</tr>
+<tr>
+<td>COIN</td>
+<td>-5.77</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>Crypto sector weakness despite hitting first record since 2021 <span id="citation-27"><a onclick="(function(event){window.history.pushState(null, '', '#reference-27');})(event);" href="#reference-27" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [27] </a></span><span id="citation-25"><a onclick="(function(event){window.history.pushState(null, '', '#reference-25');})(event);" href="#reference-25" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [25] </a></span></td>
+</tr>
+<tr>
+<td>ENPH</td>
+<td>-4.93</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>Energy sector decline following trade talk termination with Canada <span id="citation-25"><a onclick="(function(event){window.history.pushState(null, '', '#reference-25');})(event);" href="#reference-25" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [25] </a></span></td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-3.3 Multi-Asset Table">3.3 Multi-Asset Table</h3>
+<table>
+<thead>
+<tr>
+<th>Asset / Ticker</th>
+<th>Close</th>
+<th>Day Δ</th>
+<th>YTD Δ</th>
+<th>Note (≤ 15 words)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S&amp;P 500</td>
+<td>6,173.07</td>
+<td>+0.52%</td>
+<td>+4.96%</td>
+<td>Record high close, fastest recovery from 20% drawdown</td>
+</tr>
+<tr>
+<td>Nasdaq 100</td>
+<td>20,273.46</td>
+<td>+0.52%</td>
+<td>+7.24%</td>
+<td>All-time high alongside S&amp;P 500 recovery</td>
+</tr>
+<tr>
+<td>Russell 2000</td>
+<td>2,172.53</td>
+<td>+0.02%</td>
+<td>-2.58%</td>
+<td>Underperformed amid small-cap weakness</td>
+</tr>
+<tr>
+<td>VIX</td>
+<td>16.32</td>
+<td>-1.63%</td>
+<td>-5.94%</td>
+<td>Compressed to low levels, 75% call volume</td>
+</tr>
+<tr>
+<td>2-Y UST Yield</td>
+<td>3.75%</td>
+<td>+2.5bp</td>
+<td>N/A</td>
+<td>Weekly decline of 15 bps expected</td>
+</tr>
+<tr>
+<td>10-Y UST Yield</td>
+<td>4.28%</td>
+<td>+0.71%</td>
+<td>-6.34%</td>
+<td>Rose 3bp to 4.27%, 10bp weekly loss</td>
+</tr>
+<tr>
+<td>5y5y Fwd Breakeven</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>Note or Data Gap Reason</td>
+</tr>
+<tr>
+<td>DXY</td>
+<td>97.25</td>
+<td>-0.15%</td>
+<td>-24.35%</td>
+<td>Three-year lows, down 11% YTD</td>
+</tr>
+<tr>
+<td>USD/KRW</td>
+<td>1,364.31</td>
+<td>+0.64%</td>
+<td>-7.02%</td>
+<td>Korean won strength amid geopolitical easing</td>
+</tr>
+<tr>
+<td>Gold (GLD)</td>
+<td>3,286.10</td>
+<td>-1.85%</td>
+<td>+24.51%</td>
+<td>Dropped below $3,300 on safe-haven unwinding</td>
+</tr>
+<tr>
+<td>Silver (SLV)</td>
+<td>35.84</td>
+<td>-2.05%</td>
+<td>+24.52%</td>
+<td>Declined amid reduced geopolitical risk premium</td>
+</tr>
+<tr>
+<td>Copper (CPER)</td>
+<td>5.12</td>
+<td>+0.03%</td>
+<td>+27.16%</td>
+<td>Weekly gain of 5.02% on trade optimism</td>
+</tr>
+<tr>
+<td>Oil (WTI)</td>
+<td>65.07</td>
+<td>-0.26%</td>
+<td>-8.64%</td>
+<td>OPEC+ considering aggressive supply strategy, down 12.56% weekly</td>
+</tr>
+<tr>
+<td>Natural Gas (UNG)</td>
+<td>3.75</td>
+<td>+6.21%</td>
+<td>+2.92%</td>
+<td>Surged on supply concerns, up 44% year-over-year</td>
+</tr>
+<tr>
+<td>BTC/USD</td>
+<td>107,266.52</td>
+<td>+0.16%</td>
+<td>N/A</td>
+<td>Trading near $107K resistance, institutional accumulation continues</td>
+</tr>
+<tr>
+<td>ETH/USD</td>
+<td>2,421.28</td>
+<td>-0.11%</td>
+<td>N/A</td>
+<td>Holding above $2,400 support, altcoin dominance declining</td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-3.4 100x Viewpoint on Multi-Asset Dynamics">3.4 100x Viewpoint on Multi-Asset Dynamics</h3>
+<p>● Cross-asset performance reflects trade deal euphoria driving risk-on sentiment, with equities hitting records while safe havens like gold retreat, though underlying economic weakness and extreme VIX compression suggest potential for volatility regime shift <span id="citation-27"><a onclick="(function(event){window.history.pushState(null, '', '#reference-27');})(event);" href="#reference-27" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [27] </a></span><span id="citation-28"><a onclick="(function(event){window.history.pushState(null, '', '#reference-28');})(event);" href="#reference-28" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [28] </a></span><span id="citation-29"><a onclick="(function(event){window.history.pushState(null, '', '#reference-29');})(event);" href="#reference-29" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [29] </a></span>.</p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Correlation &amp; Volatility Matrix">Correlation &amp; Volatility Matrix</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-4.1 Core Correlation Matrix (30-Day Rolling)">4.1 Core Correlation Matrix (30-Day Rolling)</h3>
+<table>
+<thead>
+<tr>
+<th>Asset Pair</th>
+<th>Correlation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S&amp;P 500 vs. 10-Y Treasury</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>S&amp;P 500 vs. Gold</td>
+<td>-0.79</td>
+</tr>
+<tr>
+<td>US Dollar (DXY) vs. S&amp;P 500</td>
+<td>-0.79</td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-4.2 Anomaly Spotlight">4.2 Anomaly Spotlight</h3>
+<p>● <strong>[BREAKDOWN/SURGE]:</strong> S&amp;P 500 vs. US Dollar correlation strengthened to -0.79 on 20-day rolling basis, indicating heightened inverse relationship as dollar weakness accelerated to three-year lows while equities reached record highs, reflecting structural shift away from US exceptionalism <span id="citation-30"><a onclick="(function(event){window.history.pushState(null, '', '#reference-30');})(event);" href="#reference-30" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [30] </a></span><span id="citation-31"><a onclick="(function(event){window.history.pushState(null, '', '#reference-31');})(event);" href="#reference-31" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [31] </a></span>.</p>
+<p>● <strong>[BREAKDOWN/SURGE]:</strong> Cross-asset correlations elevated at 0.86 versus long-run average of 0.81, remaining above normal levels despite reset from April's crisis spike to 0.95, suggesting investors maintain broad-based allocation strategies rather than selective stock picking amid ongoing trade policy and economic growth concerns <span id="citation-32"><a onclick="(function(event){window.history.pushState(null, '', '#reference-32');})(event);" href="#reference-32" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [32] </a></span>.</p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Fresh Wall Street Intelligence">Fresh Wall Street Intelligence</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-5.1 Major IB Updates">5.1 Major IB Updates</h3>
+<table>
+<thead>
+<tr>
+<th>Bank</th>
+<th>Ticker</th>
+<th>Action</th>
+<th>New PT</th>
+<th>Upside %</th>
+<th>Impact (≤ 15 words)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Citizens JMP</td>
+<td>GOOGL</td>
+<td>Upgrade to Outperform</td>
+<td>$220</td>
+<td>N/A</td>
+<td>AI positioned as "net tailwind" for company <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span><span id="citation-34"><a onclick="(function(event){window.history.pushState(null, '', '#reference-34');})(event);" href="#reference-34" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [34] </a></span></td>
+</tr>
+<tr>
+<td>Melius Research</td>
+<td>AMD</td>
+<td>Upgrade to Buy</td>
+<td>$175</td>
+<td>N/A</td>
+<td>"Sustainable surge in inferencing" driving upgrade <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span></td>
+</tr>
+<tr>
+<td>Rothschild &amp; Co</td>
+<td>BA</td>
+<td>Upgrade to Buy</td>
+<td>$275</td>
+<td>N/A</td>
+<td>Improvements in financials, culture, and strategy <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span><span id="citation-34"><a onclick="(function(event){window.history.pushState(null, '', '#reference-34');})(event);" href="#reference-34" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [34] </a></span></td>
+</tr>
+<tr>
+<td>Raymond James</td>
+<td>DASH</td>
+<td>Upgrade to Strong Buy</td>
+<td>$260</td>
+<td>N/A</td>
+<td>Deliveroo synergy potential underappreciated <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span></td>
+</tr>
+<tr>
+<td>HSBC</td>
+<td>NKE</td>
+<td>Upgrade to Buy</td>
+<td>$80</td>
+<td>N/A</td>
+<td>Following fiscal Q4 earnings beat <span id="citation-34"><a onclick="(function(event){window.history.pushState(null, '', '#reference-34');})(event);" href="#reference-34" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [34] </a></span><span id="citation-35"><a onclick="(function(event){window.history.pushState(null, '', '#reference-35');})(event);" href="#reference-35" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [35] </a></span></td>
+</tr>
+<tr>
+<td>Baird</td>
+<td>JPM</td>
+<td>Downgrade to Underperform</td>
+<td>$235</td>
+<td>N/A</td>
+<td>Valuation concerns, returns won't match recent years <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span><span id="citation-36"><a onclick="(function(event){window.history.pushState(null, '', '#reference-36');})(event);" href="#reference-36" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [36] </a></span></td>
+</tr>
+<tr>
+<td>Goldman Sachs</td>
+<td>RH</td>
+<td>Downgrade to Sell</td>
+<td>$179</td>
+<td>N/A</td>
+<td>Housing market pressures and delayed brand extensions <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span></td>
+</tr>
+<tr>
+<td>Canaccord</td>
+<td>LYFT</td>
+<td>Downgrade to Hold</td>
+<td>$14</td>
+<td>-12%</td>
+<td>Autonomous vehicle uncertainty and disruption risk <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span><span id="citation-37"><a onclick="(function(event){window.history.pushState(null, '', '#reference-37');})(event);" href="#reference-37" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [37] </a></span></td>
+</tr>
+<tr>
+<td>Canaccord</td>
+<td>UBER</td>
+<td>Downgrade to Hold</td>
+<td>$84</td>
+<td>-10%</td>
+<td>AV market crystallization poses rapid disruption threat <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span><span id="citation-37"><a onclick="(function(event){window.history.pushState(null, '', '#reference-37');})(event);" href="#reference-37" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [37] </a></span></td>
+</tr>
+<tr>
+<td>Monness Crespi</td>
+<td>ESTC</td>
+<td>Upgrade to Buy</td>
+<td>$111</td>
+<td>N/A</td>
+<td>Compelling valuation, well-positioned for generative AI <span id="citation-38"><a onclick="(function(event){window.history.pushState(null, '', '#reference-38');})(event);" href="#reference-38" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [38] </a></span></td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-5.2 C-Suite Linguistic Analysis">5.2 C-Suite Linguistic Analysis</h3>
+<p>● <strong>C-Suite Sentiment Index:</strong> N/A (No earnings call transcripts found from last 24 hours)</p>
+<p>● No earnings call transcripts were available for analysis from the last 24 hours period.</p>
+<p>● <strong>Top Thematic Mentions:</strong> N/A</p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Institutional Money Flows">Institutional Money Flows</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-6.1 Large Options Trades">6.1 Large Options Trades</h3>
+<p>● <strong>Quantum Computing (QUBT) bullish surge:</strong> 46,644 calls traded at 1.5x expected volume with implied volatility spiking over 6 points to 99.36%, concentrated in 7/3 weekly 16.5 calls and 6/27 weekly 17 calls totaling 11,800 contracts <span id="citation-39"><a onclick="(function(event){window.history.pushState(null, '', '#reference-39');})(event);" href="#reference-39" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [39] </a></span>.</p>
+<p>● <strong>Snap Inc. (SNAP) massive call volume:</strong> 94,490 calls traded at 9x expected volume with implied volatility rising over 4 points to 61.07%, dominated by 6/27 weekly 8.5 and 9 calls with 37,100 contracts in those strikes <span id="citation-40"><a onclick="(function(event){window.history.pushState(null, '', '#reference-40');})(event);" href="#reference-40" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [40] </a></span>.</p>
+<p>● <strong>SPX 0DTE institutional adoption:</strong> Institutional volume in SPX zero-day-to-expiration options nearly doubled over two years, with average daily volume growing from 479,000 contracts in Q1 2023 to 820,000 in Q1 2025, now representing 40-50% of total SPX 0DTE flow <span id="citation-41"><a onclick="(function(event){window.history.pushState(null, '', '#reference-41');})(event);" href="#reference-41" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [41] </a></span>.</p>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-6.2 ETF Flows">6.2 ETF Flows</h3>
+<p>● <strong>US High Grade bond acceleration:</strong> Inflows reached $4.68bn this week, up from $2.88bn prior week, with HG ETFs driving $4.10bn compared to $2.84bn previously, while High Yield saw inflows accelerate to $2.03bn from $0.13bn <span id="citation-42"><a onclick="(function(event){window.history.pushState(null, '', '#reference-42');})(event);" href="#reference-42" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [42] </a></span>.</p>
+<p>● <strong>Technology Select Sector SPDR (XLK) inflows:</strong> Experienced $175.8 million inflow representing 0.2% week-over-week increase in outstanding units, rising from 313.6 million to 314.3 million shares <span id="citation-43"><a onclick="(function(event){window.history.pushState(null, '', '#reference-43');})(event);" href="#reference-43" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [43] </a></span>.</p>
+<p>● <strong>Bitcoin ETF momentum continues:</strong> US BTC-spot ETFs saw $344.5 million in total inflows led by Fidelity's FBTC at $165.5 million and ARK 21Shares' ARKB at $150.3 million, potentially extending net inflow streak to 14 sessions <span id="citation-44"><a onclick="(function(event){window.history.pushState(null, '', '#reference-44');})(event);" href="#reference-44" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [44] </a></span>.</p>
+<p>● <strong>ARK Innovation (ARKK) June surge:</strong> Gained 23% in June driven by Circle's 750% rally (5.2% of portfolio), Coinbase's 30% jump (9.6% weight), and Tesla gains (9.9% largest holding), while Wood added $18.5 million in NVIDIA shares <span id="citation-45"><a onclick="(function(event){window.history.pushState(null, '', '#reference-45');})(event);" href="#reference-45" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [45] </a></span>.</p>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-6.3 Dark Pool Activity">6.3 Dark Pool Activity</h3>
+<p>● <strong>AMC Entertainment dark pool concentration:</strong> Off-exchange and dark pool volume reached 3.77 million shares representing 38.66% of total daily volume on June 27, below the 30-day average of 57.22% dark pool activity <span id="citation-46"><a onclick="(function(event){window.history.pushState(null, '', '#reference-46');})(event);" href="#reference-46" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [46] </a></span>.</p>
+<p>● <strong>GameStop (GME) elevated dark pool trading:</strong> Dark pool volume hit 8.03 million shares accounting for 68.67% of total volume, significantly above the 30-day average of 55.97% off-exchange activity <span id="citation-47"><a onclick="(function(event){window.history.pushState(null, '', '#reference-47');})(event);" href="#reference-47" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [47] </a></span>.</p>
+<p>● <strong>Sky Quarry unusual volume patterns:</strong> Over 50 million shares traded at $1.40 volume-weighted average price despite only 9 million shares outstanding, with market makers potentially adjusting positions and half the volume attributed to short trading activity <span id="citation-48"><a onclick="(function(event){window.history.pushState(null, '', '#reference-48');})(event);" href="#reference-48" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [48] </a></span>.</p>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-6.4 Political Donation Flows">6.4 Political Donation Flows</h3>
+<p>● <strong>Elon Musk record political spending:</strong> Contributed $259 million to support Trump's 2024 campaign according to FEC filings, including $239 million to America PAC and $20 million to RBG PAC, making him one of the largest presidential campaign underwriters in US history <span id="citation-49"><a onclick="(function(event){window.history.pushState(null, '', '#reference-49');})(event);" href="#reference-49" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [49] </a></span>.</p>
+<p>● <strong>FEC reporting deadlines approaching:</strong> July Quarterly Reports due July 15, July Monthly Reports due July 20, and Mid-Year Reports due July 31, with increased scrutiny on campaign finance disclosures following record spending levels <span id="citation-50"><a onclick="(function(event){window.history.pushState(null, '', '#reference-50');})(event);" href="#reference-50" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [50] </a></span>.</p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Sector &amp; Rotation Pulse">Sector &amp; Rotation Pulse</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-7.1 11 GICS Sector Table">7.1 11 GICS Sector Table</h3>
+<table>
+<thead>
+<tr>
+<th>ETF</th>
+<th>Sector</th>
+<th>Day (%)</th>
+<th>YTD (%)</th>
+<th>Fwd P/E</th>
+<th>vs 5yr Avg</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>XLK</td>
+<td>Tech</td>
+<td>-0.12</td>
+<td>+7.85</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLC</td>
+<td>Comm Svcs</td>
+<td>+1.17</td>
+<td>+11.23</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLI</td>
+<td>Industrials</td>
+<td>+1.00</td>
+<td>+11.41</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLV</td>
+<td>Health Care</td>
+<td>-0.22</td>
+<td>-2.65</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLF</td>
+<td>Financials</td>
+<td>+0.29</td>
+<td>+7.47</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLRE</td>
+<td>Real Estate</td>
+<td>+0.37</td>
+<td>+1.11</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLE</td>
+<td>Energy</td>
+<td>-0.52</td>
+<td>-0.42</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLY</td>
+<td>Cons Disc</td>
+<td>+1.67</td>
+<td>-2.57</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLP</td>
+<td>Cons Staples</td>
+<td>+0.47</td>
+<td>+2.47</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLB</td>
+<td>Materials</td>
+<td>+0.13</td>
+<td>+4.46</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>XLU</td>
+<td>Utilities</td>
+<td>+0.20</td>
+<td>+7.45</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-7.2 100x Viewpoint on Sector Rotation">7.2 100x Viewpoint on Sector Rotation</h3>
+<p>● Technology and Communication Services lead quarterly performance with 21% and 15% rallies respectively, driven by semiconductor outperformance as the VanEck Semiconductor ETF (SMH) surged over 30% while Nvidia gained more than 40% <span id="citation-51"><a onclick="(function(event){window.history.pushState(null, '', '#reference-51');})(event);" href="#reference-51" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [51] </a></span>. Consumer Discretionary emerges as the top 3-month performer at 14.05% average return, led by gaming and e-sports ETFs, while Healthcare lags significantly with -7.33% average returns creating clear sector divergence amid AI-driven growth themes <span id="citation-52"><a onclick="(function(event){window.history.pushState(null, '', '#reference-52');})(event);" href="#reference-52" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [52] </a></span>.</p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Tech Leadership Pulse">Tech Leadership Pulse</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-8.1 12 Key Tickers Table">8.1 12 Key Tickers Table</h3>
+<table>
+<thead>
+<tr>
+<th>Ticker</th>
+<th>Day (%)</th>
+<th>YTD (%)</th>
+<th>News Summary (24-48 h)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AAPL</td>
+<td>+0.04</td>
+<td>-19.70</td>
+<td>Entertainment operations unprofitable with 4% margin vs 31% prior year <span id="citation-53"><a onclick="(function(event){window.history.pushState(null, '', '#reference-53');})(event);" href="#reference-53" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [53] </a></span></td>
+</tr>
+<tr>
+<td>MSFT</td>
+<td>-0.30</td>
+<td>+17.66</td>
+<td>Next-gen Maia AI chip delayed to 2026 due to design changes <span id="citation-54"><a onclick="(function(event){window.history.pushState(null, '', '#reference-54');})(event);" href="#reference-54" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [54] </a></span><span id="citation-55"><a onclick="(function(event){window.history.pushState(null, '', '#reference-55');})(event);" href="#reference-55" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [55] </a></span></td>
+</tr>
+<tr>
+<td>NVDA</td>
+<td>+1.72</td>
+<td>+17.47</td>
+<td>Regained most valuable company status at $3.8T market cap <span id="citation-56"><a onclick="(function(event){window.history.pushState(null, '', '#reference-56');})(event);" href="#reference-56" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [56] </a></span><span id="citation-57"><a onclick="(function(event){window.history.pushState(null, '', '#reference-57');})(event);" href="#reference-57" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [57] </a></span></td>
+</tr>
+<tr>
+<td>AMZN</td>
+<td>+2.85</td>
+<td>+1.78</td>
+<td>Led Magnificent Seven gains after BNP Paribas Exane upgrade <span id="citation-58"><a onclick="(function(event){window.history.pushState(null, '', '#reference-58');})(event);" href="#reference-58" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [58] </a></span></td>
+</tr>
+<tr>
+<td>GOOGL</td>
+<td>+2.88</td>
+<td>-5.69</td>
+<td>Upgraded to Outperform at Citizens JMP on AI tailwinds <span id="citation-33"><a onclick="(function(event){window.history.pushState(null, '', '#reference-33');})(event);" href="#reference-33" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [33] </a></span><span id="citation-59"><a onclick="(function(event){window.history.pushState(null, '', '#reference-59');})(event);" href="#reference-59" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [59] </a></span></td>
+</tr>
+<tr>
+<td>META</td>
+<td>+1.04</td>
+<td>+25.30</td>
+<td>Hiring OpenAI researchers, acquiring PlayAI for voice tech <span id="citation-60"><a onclick="(function(event){window.history.pushState(null, '', '#reference-60');})(event);" href="#reference-60" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [60] </a></span><span id="citation-61"><a onclick="(function(event){window.history.pushState(null, '', '#reference-61');})(event);" href="#reference-61" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [61] </a></span></td>
+</tr>
+<tr>
+<td>AVGO</td>
+<td>-0.30</td>
+<td>+16.18</td>
+<td>Stock up 125% from early 2024, AI chips now 50% of sales <span id="citation-62"><a onclick="(function(event){window.history.pushState(null, '', '#reference-62');})(event);" href="#reference-62" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [62] </a></span></td>
+</tr>
+<tr>
+<td>CRWD</td>
+<td>-1.17</td>
+<td>+45.93</td>
+<td>Stock gained 44% YTD but faces valuation concerns at 141x forward PE <span id="citation-63"><a onclick="(function(event){window.history.pushState(null, '', '#reference-63');})(event);" href="#reference-63" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [63] </a></span></td>
+</tr>
+<tr>
+<td>NFLX</td>
+<td>+1.26</td>
+<td>+48.45</td>
+<td>Gaining momentum with strong subscriber growth and bold 2030 goals <span id="citation-64"><a onclick="(function(event){window.history.pushState(null, '', '#reference-64');})(event);" href="#reference-64" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [64] </a></span></td>
+</tr>
+<tr>
+<td>NOW</td>
+<td>+1.09</td>
+<td>-3.56</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>TSLA</td>
+<td>-1.48</td>
+<td>-19.86</td>
+<td>RBC estimates Q2 deliveries at 366K below consensus 390K <span id="citation-65"><a onclick="(function(event){window.history.pushState(null, '', '#reference-65');})(event);" href="#reference-65" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [65] </a></span><span id="citation-66"><a onclick="(function(event){window.history.pushState(null, '', '#reference-66');})(event);" href="#reference-66" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [66] </a></span></td>
+</tr>
+<tr>
+<td>PLTR</td>
+<td>-10.64</td>
+<td>+72.87</td>
+<td>Stock soared 2,100% since January 2023, most analysts see overvaluation <span id="citation-67"><a onclick="(function(event){window.history.pushState(null, '', '#reference-67');})(event);" href="#reference-67" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [67] </a></span></td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-8.2 100x Viewpoint on Tech Leadership">8.2 100x Viewpoint on Tech Leadership</h3>
+<p>● Technology megacaps demonstrate divergent performance with AI infrastructure leaders like Nvidia and Microsoft approaching $4 trillion valuations while Apple and Tesla lag significantly, reflecting market preference for companies with direct AI exposure and monetization pathways rather than traditional consumer hardware plays <span id="citation-68"><a onclick="(function(event){window.history.pushState(null, '', '#reference-68');})(event);" href="#reference-68" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [68] </a></span><span id="citation-69"><a onclick="(function(event){window.history.pushState(null, '', '#reference-69');})(event);" href="#reference-69" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [69] </a></span>.</p>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-8.3 Emerging AI &amp; Deep Tech News">8.3 Emerging AI &amp; Deep Tech News</h3>
+<p>● <strong>Funding &amp; M&amp;A:</strong> Meta pursuing aggressive AI talent acquisition with $29 billion fundraising for data centers while hiring OpenAI researchers and acquiring PlayAI for voice replication technology, signaling intensified competition for AI capabilities <span id="citation-70"><a onclick="(function(event){window.history.pushState(null, '', '#reference-70');})(event);" href="#reference-70" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [70] </a></span><span id="citation-60"><a onclick="(function(event){window.history.pushState(null, '', '#reference-60');})(event);" href="#reference-60" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [60] </a></span>. SoftBank positions as "No. 1 ASI Platform Provider" with $32 billion OpenAI investment and strategic chip acquisitions including Graphcore and Ampere <span id="citation-71"><a onclick="(function(event){window.history.pushState(null, '', '#reference-71');})(event);" href="#reference-71" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [71] </a></span><span id="citation-31"><a onclick="(function(event){window.history.pushState(null, '', '#reference-31');})(event);" href="#reference-31" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [31] </a></span>.</p>
+<p>● <strong>Product &amp; Technology:</strong> OpenAI begins using Google's TPU chips for first time, reducing Nvidia dependence while developing Office competitor with document collaboration features, creating new competitive dynamics in enterprise productivity software <span id="citation-72"><a onclick="(function(event){window.history.pushState(null, '', '#reference-72');})(event);" href="#reference-72" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [72] </a></span><span id="citation-73"><a onclick="(function(event){window.history.pushState(null, '', '#reference-73');})(event);" href="#reference-73" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [73] </a></span>. Microsoft's Maia AI chip faces 2026 delay due to design constraints, hampering efforts to reduce Nvidia reliance as DeepSeek's R2 model also delayed by chip shortages <span id="citation-54"><a onclick="(function(event){window.history.pushState(null, '', '#reference-54');})(event);" href="#reference-54" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [54] </a></span><span id="citation-74"><a onclick="(function(event){window.history.pushState(null, '', '#reference-74');})(event);" href="#reference-74" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [74] </a></span>.</p>
+<p>● <strong>Market &amp; Partnership:</strong> Enterprise AI adoption accelerates with 35% of large enterprises having GenAI in production and 65% piloting agentic capabilities, while 71% of Q1 2025 VC deals flowed into AI investments excluding OpenAI's $40 billion round <span id="citation-8"><a onclick="(function(event){window.history.pushState(null, '', '#reference-8');})(event);" href="#reference-8" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [8] </a></span><span id="citation-75"><a onclick="(function(event){window.history.pushState(null, '', '#reference-75');})(event);" href="#reference-75" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [75] </a></span>. Switzerland leads global Deep Tech funding with 60% of venture capital allocated since 2019, while AI/ML companies now represent 23% of startups founded since 2021 <span id="citation-76"><a onclick="(function(event){window.history.pushState(null, '', '#reference-76');})(event);" href="#reference-76" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [76] </a></span>.</p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Tomorrow's Catalyst &amp; Economic Calendar">Tomorrow's Catalyst &amp; Economic Calendar</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-9.1 Economic Calendar">9.1 Economic Calendar</h3>
+<table>
+<thead>
+<tr>
+<th>Release</th>
+<th>ET</th>
+<th>Consensus</th>
+<th>Prior</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Chicago PMI (June)</td>
+<td>9:45 AM</td>
+<td>43.0</td>
+<td>40.5</td>
+</tr>
+<tr>
+<td>ISM Manufacturing (June)</td>
+<td>10:00 AM</td>
+<td>48.8</td>
+<td>48.5</td>
+</tr>
+<tr>
+<td>Construction Spending MoM (May)</td>
+<td>10:00 AM</td>
+<td>-0.1%</td>
+<td>-0.4%</td>
+</tr>
+<tr>
+<td>Nonfarm Payrolls (June)</td>
+<td>8:30 AM</td>
+<td>120K</td>
+<td>139K</td>
+</tr>
+<tr>
+<td>Unemployment Rate (June)</td>
+<td>8:30 AM</td>
+<td>4.3%</td>
+<td>4.2%</td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-9.2 Earnings Calendar">9.2 Earnings Calendar</h3>
+<table>
+<thead>
+<tr>
+<th>Ticker</th>
+<th>EPS Consensus</th>
+<th>Implied Move %</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NKE</td>
+<td>$0.12</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>APOG</td>
+<td>$0.45</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>CNXC</td>
+<td>$2.75</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>AOUT</td>
+<td>($0.11)</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>AEMD</td>
+<td>($1.09)</td>
+<td>N/A</td>
+</tr>
+</tbody></table>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Today's Actionable Trade Signals">Today's Actionable Trade Signals</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-10.1 Trade Signal Dashboard">10.1 Trade Signal Dashboard</h3>
+<p>● <strong>Signal 1:</strong> Short 2y forward 2y inflation swap at 2.335% with target 2.15% and stop 2.45% based on Citi positioning ahead of payroll data <span id="citation-77"><a onclick="(function(event){window.history.pushState(null, '', '#reference-77');})(event);" href="#reference-77" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [77] </a></span></p>
+<p>● <strong>Signal 2:</strong> Long VIX volatility protection as index compressed to 16.32 with elevated call volume at 75% suggesting institutional hedging demand ahead of employment data <span id="citation-78"><a onclick="(function(event){window.history.pushState(null, '', '#reference-78');})(event);" href="#reference-78" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [78] </a></span><span id="citation-79"><a onclick="(function(event){window.history.pushState(null, '', '#reference-79');})(event);" href="#reference-79" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [79] </a></span></p>
+<p>● <strong>Signal 3:</strong> Overweight European equities vs US given 20% dollar-terms outperformance and cheaper valuations across all sectors with forward PE discount <span id="citation-20"><a onclick="(function(event){window.history.pushState(null, '', '#reference-20');})(event);" href="#reference-20" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [20] </a></span></p>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-10.2 Tomorrow's Setup">10.2 Tomorrow's Setup</h3>
+<p>● <strong>Overall Risk Level:</strong> Moderate risk environment with VIX at 16.32 suggesting complacency despite upcoming labor market catalysts and July tariff deadlines creating potential volatility triggers <span id="citation-80"><a onclick="(function(event){window.history.pushState(null, '', '#reference-80');})(event);" href="#reference-80" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [80] </a></span><span id="citation-81"><a onclick="(function(event){window.history.pushState(null, '', '#reference-81');})(event);" href="#reference-81" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [81] </a></span></p>
+<p>● <strong>Portfolio Beta Target:</strong> Target Beta ~1.0 given VIX between 15-25 range per framework, maintaining neutral positioning ahead of key employment data that could shift Fed policy expectations <span id="citation-82"><a onclick="(function(event){window.history.pushState(null, '', '#reference-82');})(event);" href="#reference-82" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [82] </a></span><span id="citation-83"><a onclick="(function(event){window.history.pushState(null, '', '#reference-83');})(event);" href="#reference-83" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [83] </a></span></p>
+<p>● <strong>Key Sector Tilts:</strong> Overweight Defensives ▲ / Underweight Cyclicals ▼ as unemployment expected to rise to 4.4% cycle high potentially triggering dovish Fed pivot favoring utilities and healthcare over industrials <span id="citation-3"><a onclick="(function(event){window.history.pushState(null, '', '#reference-3');})(event);" href="#reference-3" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [3] </a></span><span id="citation-83"><a onclick="(function(event){window.history.pushState(null, '', '#reference-83');})(event);" href="#reference-83" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [83] </a></span></p>
+<p>● <strong>Key Levels to Watch:</strong> S&amp;P 500 support at 6,150 level with resistance at 6,200, while VIX support break could fuel further equity gains if large speculators cover short positions <span id="citation-13"><a onclick="(function(event){window.history.pushState(null, '', '#reference-13');})(event);" href="#reference-13" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [13] </a></span><span id="citation-84"><a onclick="(function(event){window.history.pushState(null, '', '#reference-84');})(event);" href="#reference-84" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [84] </a></span><span id="citation-83"><a onclick="(function(event){window.history.pushState(null, '', '#reference-83');})(event);" href="#reference-83" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [83] </a></span></p>
+<p>● <strong>Additional actionable thought for the next session:</strong> Monitor employment data closely as Citi forecasts 85K payrolls vs 120K consensus with unemployment rising to 4.4%, which could accelerate Fed dovish pivot and trigger sector rotation into defensive names <span id="citation-3"><a onclick="(function(event){window.history.pushState(null, '', '#reference-3');})(event);" href="#reference-3" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [3] </a></span><span id="citation-83"><a onclick="(function(event){window.history.pushState(null, '', '#reference-83');})(event);" href="#reference-83" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [83] </a></span></p>
+</div></div></div><div class="markdown-body "><div><div class="divbox flex items-center w-full" style="display: flex; flex-direction: row;"><div class="flex-1 flex items-center font-robotoFlex border-b border-b-[rgba(180,180,180,1)] border-solid "><h2 style="padding-bottom:16px!important;margin:0px!important;" id="h2-Appendix: Overnight Futures &amp; Key Charts">Appendix: Overnight Futures &amp; Key Charts</h2>
+</div></div><div class="font-robotoFlex text-[14px] pt-[8px] "><h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-11.1 Appendix A: Overnight Futures Movements">11.1 Appendix A: Overnight Futures Movements</h3>
+<table>
+<thead>
+<tr>
+<th>Instrument</th>
+<th>Last</th>
+<th>Change (Day)</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S&amp;P 500 Futures</td>
+<td>6,220.75</td>
+<td>+0.42%</td>
+<td>Strong weekly gain of 3.55% on trade optimism <span id="citation-85"><a onclick="(function(event){window.history.pushState(null, '', '#reference-85');})(event);" href="#reference-85" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [85] </a></span></td>
+</tr>
+<tr>
+<td>Nasdaq Futures</td>
+<td>22,740.25</td>
+<td>+0.31%</td>
+<td>Outperformed with 3.94% weekly advance <span id="citation-85"><a onclick="(function(event){window.history.pushState(null, '', '#reference-85');})(event);" href="#reference-85" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [85] </a></span></td>
+</tr>
+<tr>
+<td>Dow Futures</td>
+<td>44,241.00</td>
+<td>+1.20%</td>
+<td>Led overnight gains, up 4.18% for the week <span id="citation-85"><a onclick="(function(event){window.history.pushState(null, '', '#reference-85');})(event);" href="#reference-85" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [85] </a></span></td>
+</tr>
+<tr>
+<td>Oil (WTI)</td>
+<td>65.07</td>
+<td>-0.26%</td>
+<td>Weekly decline of 12.56% pressures energy complex <span id="citation-85"><a onclick="(function(event){window.history.pushState(null, '', '#reference-85');})(event);" href="#reference-85" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [85] </a></span></td>
+</tr>
+<tr>
+<td>Gold</td>
+<td>3,286.10</td>
+<td>-1.85%</td>
+<td>Safe-haven unwinding continues, down 2.80% weekly <span id="citation-85"><a onclick="(function(event){window.history.pushState(null, '', '#reference-85');})(event);" href="#reference-85" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [85] </a></span></td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:0px!important; margin-bottom:8px!important" id="h3-11.2 Appendix B: Key Chart Summaries">11.2 Appendix B: Key Chart Summaries</h3>
+<p>● <strong>S&amp;P 500 Daily Support/Resistance:</strong> Index approaching "Golden Cross" as 50-day moving average nears crossover above 200-day MA at bullish signal threshold, with intermediate resistance at 6,170 and key support at 6,150 level near January all-time highs <span id="citation-84"><a onclick="(function(event){window.history.pushState(null, '', '#reference-84');})(event);" href="#reference-84" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [84] </a></span><span id="citation-86"><a onclick="(function(event){window.history.pushState(null, '', '#reference-86');})(event);" href="#reference-86" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [86] </a></span>.</p>
+<p>● <strong>NASDAQ vs. Tech Leadership (1-Month):</strong> Technology-heavy Nasdaq 100 rallied 33% since April 8 lows with Asian tech stocks outperforming year-to-date, trading at 27x forward earnings versus MSCI Asian info tech at 16.2x, indicating valuation divergence between US and international tech exposure <span id="citation-87"><a onclick="(function(event){window.history.pushState(null, '', '#reference-87');})(event);" href="#reference-87" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [87] </a></span><span id="citation-88"><a onclick="(function(event){window.history.pushState(null, '', '#reference-88');})(event);" href="#reference-88" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [88] </a></span>.</p>
+<p>● <strong>10-Y Treasury Yield Trend:</strong> Yield declined to 4.28% marking largest one-week drop since April 17 at 0.091 percentage points, down for three consecutive weeks totaling 0.224 point decline, with structural support from corporate deleveraging and safe-haven demand pushing yields lower from 4.80% January highs <span id="citation-89"><a onclick="(function(event){window.history.pushState(null, '', '#reference-89');})(event);" href="#reference-89" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [89] </a></span><span id="citation-90"><a onclick="(function(event){window.history.pushState(null, '', '#reference-90');})(event);" href="#reference-90" style="color:rgba(51, 102, 204)!important; font-weight:400!important; font-size:10px;!important;"> [90] </a></span>.</p>
+</div></div></div><div class="flex flex-col gap-[12px] border-t-[1px] border-[#b4b4b4] border-solid pt-[24px]"><div class="text-[22px] font-regular text-[#121212] " id="h0-References">References</div><div id="reference-1" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-1">[1] </a><span>Bloomberg (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Wall Street’s Booming June Is Big Bet Against Economy Doomsayers</a></div><div id="reference-2" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-2">[2] </a><span>The Associated Press (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">US stocks close at an all-time high just months after plunging on ...</a></div><div id="reference-3" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-3">[3] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">S&amp;P 500 Trades at Record High on Fed-Cut Bets, Tariff Optimism</a></div><div id="reference-4" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-4">[4] </a><span>Bloomberg (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: If Trade Deals Get Done, What’s Next for Stocks? Markets Pulse</a></div><div id="reference-5" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-5">[5] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">EU, US Confident They’ll Reach Tariff Deal by July Deadline</a></div><div id="reference-6" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-6">[6] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: Equities Shrug Off Unfriendly Data Mix</a></div><div id="reference-7" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-7">[7] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">US Consumer Spending Drops in May, Price Pressures Remain Muted</a></div><div id="reference-8" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-8">[8] </a><span>c (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">The Point for North America</a></div><div id="reference-9" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-9">[9] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: Hedge Funds Gripped by Stock FOMO While Retail Holds Fire</a></div><div id="reference-10" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-10">[10] </a><span>Nasdaq (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">June 2025 Investment Insights: What the Market is Focusing on and ...</a></div><div id="reference-11" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-11">[11] </a><span>The Fly (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">U.S., China confirm details of trade pact, Nike reports Q4 beat: Morning Buzz</a></div><div id="reference-12" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-12">[12] </a><span>Barchart (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">S&amp;P 500 VIX Jun '25 (VIM25) - Futures - Barchart.com</a></div><div id="reference-13" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-13">[13] </a><span>VT Markets (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">With the S&amp;P 500 nearing its February peak, questions arise about ...</a></div><div id="reference-14" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-14">[14] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">May core PCE price index up 2.7% vs. last year, consensus 2.6%</a></div><div id="reference-15" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-15">[15] </a><span>CNBC (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Core inflation rate rose to 2.7% in May, more than expected, Fed’s preferred gauge shows</a></div><div id="reference-16" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-16">[16] </a><span>Federated Hermes (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Equity market completes stunning roundtrip - Federated Hermes</a></div><div id="reference-17" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-17">[17] </a><span>Blue Owl Capital (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">2025 Midyear Outlook | Blue Owl Capital</a></div><div id="reference-18" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-18">[18] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Trump Trade: Fannie, Freddie ordered to explore crypto as federal mortgage asset</a></div><div id="reference-19" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-19">[19] </a><span>Bloomberg (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: Stocks at a Record Contradicts Bonds Braced for Rate Cuts</a></div><div id="reference-20" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-20">[20] </a><span>Bloomberg (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: US Investors Can Profit on European Stocks Amid Dollar Weakness</a></div><div id="reference-21" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-21">[21] </a><span>STL.News (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Global Markets Surge - Dollar Weakens - June 27, 2025 - STL.News</a></div><div id="reference-22" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-22">[22] </a><span>Ainvest (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Labor Market Tightness Drives Sector Rotation: Building Materials ...</a></div><div id="reference-23" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-23">[23] </a><span>AInvest (06/26/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">US Economic Contractions and Strategic Investment Shifts - AInvest</a></div><div id="reference-24" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-24">[24] </a><span>Business Insider (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Dow Jones Market Movers | Dow Jones Gainers and Losers</a></div><div id="reference-25" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-25">[25] </a><span>Business Insider (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">S&amp;P 500 Market Movers | S&amp;P 500 Gainers and Losers</a></div><div id="reference-26" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-26">[26] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Early notable gainers among liquid option names on June 27th</a></div><div id="reference-27" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-27">[27] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Closing Bell Movers: Nike gains 10% on more positive earnings call</a></div><div id="reference-28" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-28">[28] </a><span>CNBC (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">What’s driving Wall Street stablecoin interest? Trillions up for grabs in the future and banks waking up to it</a></div><div id="reference-29" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-29">[29] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: Risk-On Mood Yet to Spread to Currency Space</a></div><div id="reference-30" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-30">[30] </a><span>Pepperstone (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">US Dollar Breaking Down: Key Drivers Behind the Decline &amp; Risks ...</a></div><div id="reference-31" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-31">[31] </a><span>Bloomberg (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: Trade Euphoria in Stocks Masks Skepticism in Other US Assets</a></div><div id="reference-32" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-32">[32] </a><span>MarketWatch (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">There's an important market indicator that suggests investors remain ...</a></div><div id="reference-33" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-33">[33] </a><span>The Fly (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Buy/Sell: Wall Street's top 10 stock calls this week</a></div><div id="reference-34" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-34">[34] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Nike, Boeing and Alphabet upgraded: Wall Street's top analyst calls</a></div><div id="reference-35" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-35">[35] </a><span>CNBC (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">HSBC upgrades Nike shares after earnings beat, says inflection is ‘finally here’</a></div><div id="reference-36" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-36">[36] </a><span>Baird (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">JPMorgan downgraded to Underperform on valuation at Baird</a></div><div id="reference-37" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-37">[37] </a><span>Canaccord (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Uber, Lyft Stocks Slip After Canaccord Downgrade Citing ...</a></div><div id="reference-38" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-38">[38] </a><span>Monness Crespi (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Elastic upgraded to Buy at Monness Crespi following underperformance</a></div><div id="reference-39" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-39">[39] </a><span>The Fly (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Quantum Computing call volume above normal and directionally bullish</a></div><div id="reference-40" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-40">[40] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Snap Inc. call volume above normal and directionally bullish</a></div><div id="reference-41" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-41">[41] </a><span>Traders Magazine (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">FLASH FRIDAY: Institutions Warm Up to Short-Dated Options</a></div><div id="reference-42" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-42">[42] </a><span>bofa (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Situation Room. Heat wave meets bonds</a></div><div id="reference-43" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-43">[43] </a><span>Nasdaq (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Noteworthy ETF Inflows: XLK, LRCX, KLAC, ADI - Nasdaq</a></div><div id="reference-44" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-44">[44] </a><span>fxempire (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">XRP News Today: Ripple Drops Appeal, Eyes ETF Boom as SEC ...</a></div><div id="reference-45" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-45">[45] </a><span>Zacks (06/26/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Cathie Wood's ARKK ETF Turns Red Hot in June: Here's Why</a></div><div id="reference-46" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-46">[46] </a><span>ChartExchange (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">AMC Dark Pool Statistics | ChartExchange</a></div><div id="reference-47" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-47">[47] </a><span>ChartExchange (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">GME Dark Pool Statistics | ChartExchange</a></div><div id="reference-48" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-48">[48] </a><span>Update / Briefing (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Sky Quarry Inc Sky Quarry Inc Status Update Update / Briefing</a></div><div id="reference-49" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-49">[49] </a><span>Reuters (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Musk spent over a quarter of a billion dollars to help elect Trump</a></div><div id="reference-50" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-50">[50] </a><span>Federal Election Commission (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Week of June 23 – 27, 2025 - FEC</a></div><div id="reference-51" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-51">[51] </a><span>CNBC (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">U.S. is still ‘exceptional’ despite rest of world outperformance this year, Apollo’s Marc Rowan says</a></div><div id="reference-52" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-52">[52] </a><span>c (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">North America Systems Software AWS re:Inforce #1: Pulse Check on What’s Next In Cloud + AI Security Trends</a></div><div id="reference-53" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-53">[53] </a><span>The Information (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">The Briefing: Apple’s Movie Puzzle</a></div><div id="reference-54" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-54">[54] </a><span>Reuters, The Information, Bloomberg (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">AI Daily: Trump prepares orders aimed at boosting AI power supply</a></div><div id="reference-55" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-55">[55] </a><span>The Information (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Microsoft's next-gen Maia AI chip delayed to 2026, The Information reports</a></div><div id="reference-56" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-56">[56] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Nvidia Breakout Puts $4 Trillion Market Value Within Reach</a></div><div id="reference-57" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-57">[57] </a><span>CNBC (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Nvidia heads for 5-day win streak as it hits record highs</a></div><div id="reference-58" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-58">[58] </a><span>c (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">The SMID Point</a></div><div id="reference-59" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-59">[59] </a><span>Citizens JMP (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Citizens JMP upgrades Alphabet to Outperform on AI tailwinds</a></div><div id="reference-60" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-60">[60] </a><span>The Information AM (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Meta Hires Four Researchers from OpenAI, Discusses Buying PlayAI</a></div><div id="reference-61" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-61">[61] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Meta Platforms in advanced talks to acquire PlayAI, Bloomberg reports</a></div><div id="reference-62" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-62">[62] </a><span>Forbes (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">AVGO Stock To $500? - Forbes</a></div><div id="reference-63" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-63">[63] </a><span>The Motley Fool (06/26/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">This Cybersecurity Stock Is Beating the Market in 2025. Is It Still ...</a></div><div id="reference-64" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-64">[64] </a><span>Zacks (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Research Daily: Archive - Zacks</a></div><div id="reference-65" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-65">[65] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Tesla Q2 deliveries tracking below consensus, says RBC Capital</a></div><div id="reference-66" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-66">[66] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">RBC predicts below-consensus 366,000 Tesla deliveries in Q2</a></div><div id="reference-67" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-67">[67] </a><span>The Motley Fool (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Should You Buy Palantir Stock After Its 2,100% Gain Since 2023 ...</a></div><div id="reference-68" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-68">[68] </a><span>wedbush (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Disruptive Technology. The Race to $4 Trillion Market Cap Has Begun With Microsoft and Nvidia Nearing</a></div><div id="reference-69" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-69">[69] </a><span>MoneyShow (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Chart of the Day 6/27/25: Big Tech is SO Back. Again.</a></div><div id="reference-70" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-70">[70] </a><span>Financial Times (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">Meta eyes raising $29B to fund AI data center push, FT reports</a></div><div id="reference-71" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-71">[71] </a><span>The Fly (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">The U.S. advance indicators data</a></div><div id="reference-72" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-72">[72] </a><span>The Information (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Exclusive: Google Convinces OpenAI to Use TPU Chips in Win Against Nvidia</a></div><div id="reference-73" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-73">[73] </a><span>The Information (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Applied AI: Is OpenAI About to Spice Up the Productivity App Market?</a></div><div id="reference-74" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-74">[74] </a><span>The Information (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-black cursor-default font-[400] cursor-pointer">DeepSeek model faces delays amid Nvidia server chip shortage, Information says</a></div><div id="reference-75" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-75">[75] </a><span>Evergreen Gavekal (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Venture Capital in 2025: IPO Liquidity Crunch, M&amp;A Momentum, and ...</a></div><div id="reference-76" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-76">[76] </a><span>GlobeNewswire (06/26/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Landmark report spotlights Switzerland's rise as a global</a></div><div id="reference-77" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-77">[77] </a><span>CNBC (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Equity investors showing greed, so may be time to take profits, says Bank of America’s Hartnett</a></div><div id="reference-78" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-78">[78] </a><span>Bloomberg (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: CFTC Positioning Update: Bond and Dollar Selling</a></div><div id="reference-79" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-79">[79] </a><span>WallStreetMojo (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">VIX Option - What Is It, Trading Strategies, Examples - WallStreetMojo</a></div><div id="reference-80" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-80">[80] </a><span>CNBC (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Traders head into the second half of the year with stocks at all-time highs, jobs report pending</a></div><div id="reference-81" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-81">[81] </a><span>Ainvest (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">S&amp;P 500's Soaring Heights: A Golden Opportunity or a Precarious ...</a></div><div id="reference-82" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-82">[82] </a><span> (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">LLM Knowledge Source Framework</a></div><div id="reference-83" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-83">[83] </a><span>CNBC (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Look for S&amp;P 500 rally to continue into mid-July, says chart analyst</a></div><div id="reference-84" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-84">[84] </a><span>MarketPulse (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">S&amp;P 500 hits new all-time highs despite disappointing Core PCE ...</a></div><div id="reference-85" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-85">[85] </a><span>Business Insider (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Premarket | Futures | Pre-market Trading - Markets Insider</a></div><div id="reference-86" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-86">[86] </a><span>Forexlive (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">S&amp;P 500 Technical Analysis – Lack of bearish drivers keeps the ...</a></div><div id="reference-87" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-87">[87] </a><span>Edward Jones (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Weekly Stock Market Update | Edward Jones</a></div><div id="reference-88" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-88">[88] </a><span>Bloomberg (06/27/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">MARKETS LIVE BLOG: Asian Tech Stocks Increasingly Rival US Peers</a></div><div id="reference-89" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-89">[89] </a><span>Dow Jones (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">10-Year Treasury Yield Falls to 4.283% This Week — Data Talk</a></div><div id="reference-90" class="text-[14px] font-robotoFlex"><a class="no-underline text-[rgba(51,102,204)] font-[400] cursor-pointer" href="#citation-90">[90] </a><span>Ainvest (06/28/2025) | </span><a target="_blank" rel="noopener noreferrer" class="text-[rgba(51,102,204)] font-[400] cursor-pointer">Navigating U.S. Treasury Yields Amid Policy Uncertainty and Market ...</a></div></div></div></div></div>
