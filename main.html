@@ -13,18 +13,21 @@
     .orbitron{font-family:'Orbitron',monospace}
     .card-hover{transition:all .3s cubic-bezier(.4,0,.2,1)}
     .card-hover:hover{transform:translateY(-8px);box-shadow:0 20px 25px -5px rgb(0 0 0 / .10),0 8px 10px -6px rgb(0 0 0 / .10)}
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .animate-fadeIn { animation: fadeIn 0.5s ease-in-out; }
   </style>
 </head>
 
-<body class="bg-slate-50 text-slate-800">
-  <main class="container mx-auto p-6 md:py-20">
+<body class="bg-slate-50 text-slate-800 animate-fadeIn text-base sm:text-lg lg:text-xl">
+  <main class="container mx-auto p-4 sm:p-6 md:py-20 lg:p-10">
 
     <!-- 헤드라인 -->
     <header class="text-center mb-20">
-      <h1 class="text-5xl md:text-7xl font-black orbitron bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-blue-600">
+      <h1 class="text-4xl sm:text-5xl md:text-7xl font-black orbitron bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-blue-600">
         Investment Knowledge
       </h1>
-      <p class="text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto mt-2">
+      <p class="text-base sm:text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto mt-2">
         데이터 기반의 정교한 분석과 실전 검증된 투자 도구를 제공합니다.
       </p>
     </header>
@@ -35,13 +38,13 @@
     <section class="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 mb-8">
 
       <!-- Daily Wrap -->
-      <a href="./100x/index.html" class="bg-white rounded-2xl p-8 card-hover shadow-lg flex flex-col group">
+      <a href="./100x/index.html" class="bg-white rounded-2xl p-6 sm:p-8 card-hover shadow-lg flex flex-col group">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold orbitron text-slate-900">100x&nbsp;Daily&nbsp;Wrap</h2>
+        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">100x&nbsp;Daily&nbsp;Wrap</h2>
           <i class="fas fa-newspaper text-3xl text-blue-500 group-hover:text-blue-600"></i>
         </div>
         <p class="text-slate-500 mb-6">AI 기반 멀티에셋 분석으로 시장 핵심 동인을 매일 제공.</p>
-        <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm">
+        <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base">
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>월스트리트 이슈 요약</p>
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>기관 자금 흐름</p>
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>실행 가능한 트레이드</p>
@@ -49,13 +52,13 @@
       </a>
 
       <!-- 멀티 차트 (요청: 이름 변경 및 상단 배치) -->
-      <a href="./tools/asset/multichart.html" class="bg-white rounded-2xl p-8 card-hover shadow-lg flex flex-col group">
+      <a href="./tools/asset/multichart.html" class="bg-white rounded-2xl p-6 sm:p-8 card-hover shadow-lg flex flex-col group">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold orbitron text-slate-900">100x&nbsp;Multichart&nbsp;Pro</h2>
+        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">100x&nbsp;Multichart&nbsp;Pro</h2>
           <i class="fas fa-chart-line text-3xl text-amber-500 group-hover:text-amber-600"></i>
         </div>
         <p class="text-slate-500 mb-6">레버리지 ETF까지 지원하는 초고속 브라우저 기반 멀티차트.</p>
-        <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm">
+        <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base">
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>Stooq + Polygon 자동 소스 선택</p>
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>100+ 종목 동시 분석</p>
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>성능 최적화 캐싱</p>
@@ -69,13 +72,13 @@
     <section class="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       
       <!-- 무한매수법 -->
-      <a href="./ib/ib-total-guide-calculator.html" class="bg-white rounded-2xl p-8 card-hover shadow-lg flex flex-col group">
+      <a href="./ib/ib-total-guide-calculator.html" class="bg-white rounded-2xl p-6 sm:p-8 card-hover shadow-lg flex flex-col group">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold orbitron text-slate-900">Infinite Buying</h2>
+        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">Infinite Buying</h2>
           <i class="fas fa-calculator text-3xl text-purple-500 group-hover:text-purple-600"></i>
         </div>
         <p class="text-slate-500 mb-6">TQQQ·SOXL 분할매수를 자동 계산해 주는 가이드.</p>
-        <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm">
+        <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base">
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>실시간 가격 연동</p>
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>자동 주문표 생성</p>
           <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>위기관리 단계별 지원</p>
@@ -83,9 +86,9 @@
       </a>
 
       <!-- 밸류리밸런싱 (요청: 이름 'VR' -> '밸류리밸런싱' 변경) -->
-      <a href="./vr/index.html" class="bg-white rounded-2xl p-8 card-hover shadow-lg flex flex-col group">
+      <a href="./vr/index.html" class="bg-white rounded-2xl p-6 sm:p-8 card-hover shadow-lg flex flex-col group">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold orbitron text-slate-900">Value Rebalancing</h2>
+        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">Value Rebalancing</h2>
           <i class="fas fa-balance-scale-right text-3xl text-teal-500 group-hover:text-teal-600"></i>
         </div>
         <p class="text-slate-500 mb-6">밸류 리밸런싱 완전 자동화 시스템과 백테스트.</p>
@@ -97,13 +100,13 @@
       </a>
 
       <!-- Quantum Analysis (요청: '분석' 탭 추가 및 이름 변경) -->
-      <a href="./posts/index.html" class="bg-white rounded-2xl p-8 card-hover shadow-lg flex flex-col group">
+      <a href="./posts/index.html" class="bg-white rounded-2xl p-6 sm:p-8 card-hover shadow-lg flex flex-col group">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-bold text-slate-900 orbitron">Quantum Analysis</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 orbitron">Quantum Analysis</h2>
             <i class="fas fa-search-dollar text-3xl text-red-500 group-hover:text-red-600 transition-colors"></i>
         </div>
         <p class="text-slate-500 mb-6">시장의 거시적 흐름을 꿰뚫는 통찰력 높은 심층 분석 콘텐츠.</p>
-        <div class="mt-auto border-t border-slate-200 pt-4 text-sm space-y-2">
+        <div class="mt-auto border-t border-slate-200 pt-4 text-sm sm:text-base space-y-2">
             <p class="flex items-center text-slate-600"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>거시 경제 및 정책 분석</p>
             <p class="flex items-center text-slate-600"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>미국 경제 플레이북</p>
             <p class="flex items-center text-slate-600"><i class="fas fa-check-circle w-5 mr-2 text-green-500"></i>디지털 자산 동향</p>
@@ -113,12 +116,12 @@
     </section>
   </main>
 
-  <footer class="py-12 px-6 bg-slate-100">
-	<div class="container mx-auto text-center text-slate-500">
-		<div class="text-xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
-		<p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
-		<p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
-	</div>
+  <footer class="py-12 px-6 sm:px-8 lg:px-12 bg-slate-100">
+        <div class="container mx-auto text-center text-slate-500 text-sm sm:text-base">
+                <div class="text-lg sm:text-xl lg:text-2xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
+                <p class="mb-4 text-xs sm:text-sm">The Ultimate Investment Knowledge Platform</p>
+                <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
+        </div>
   </footer>
 </body>
 </html>
