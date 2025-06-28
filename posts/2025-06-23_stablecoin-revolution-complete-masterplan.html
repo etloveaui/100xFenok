@@ -724,6 +724,12 @@
             <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
         </div>
     </footer>
+    <script>
+        const siteVersion = '20250628T1121';
+        fetch(`../nav.html?v=${siteVersion}`)
+            .then(res => res.text())
+            .then(html => { document.getElementById('nav').innerHTML = html; });
+    </script>
 
 </body>
 </html>
