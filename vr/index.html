@@ -223,25 +223,6 @@
             <p class="text-slate-500 text-xs mt-4">
                 * 기본 설정(G=10) 기준, 실제 수익률은 시장 상황에 따라 달라질 수 있습니다.
             </p>
-        </div>
-
-    </div>
-    <script type="module">
-        import { siteVersion } from '../version.js';
-        if (window.top === window.self) {
-            fetch(`../nav.html?v=${siteVersion}`)
-                .then(r => r.text())
-                .then(html => {
-                    const nav = document.getElementById('nav');
-                    nav.innerHTML = html;
-                    nav.querySelectorAll('script').forEach(oldScript => {
-                        const script = document.createElement('script');
-                        Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
-                        script.textContent = oldScript.textContent;
-                        oldScript.replaceWith(script);
-                    });
-                });
-        }
-    </script>
+</div>
 </body>
 </html>
