@@ -63,6 +63,8 @@
 <body class="bg-gray-50 text-gray-900 min-h-screen">
     <!-- 네비게이션: FenoK의 다른 플랫폼으로 연결되는 일관된 탐색 경험 제공 -->
 
+    <div id="nav"></div>
+
 
     <!-- 헤더: 리포트의 제목과 날짜, 핵심 헤드라인을 명확하게 전달 -->
     <header class="container mx-auto px-4 py-8 md:py-12">
@@ -489,6 +491,12 @@
                 });
             }
         });
+    </script>
+    <script defer>
+        const siteVersion = '20250628T1121';
+        fetch('../../nav.html?v=' + siteVersion)
+            .then(r => r.text())
+            .then(html => { document.getElementById('nav').innerHTML = html; });
     </script>
 </body>
 </html>

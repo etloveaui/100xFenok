@@ -98,6 +98,7 @@
 <body class="bg-gray-50 text-gray-800">
 
     <div class="container mx-auto p-4 md:p-8">
+        <div id="nav"></div>
 
         <header class="text-center mb-12">
             <h1 class="text-4xl md:text-5xl font-extrabold text-[#1A535C] mb-4">미국의 새로운 플레이북</h1>
@@ -628,6 +629,12 @@
             }
         });
 
+    </script>
+    <script defer>
+        const siteVersion = '20250628T1121';
+        fetch('../nav.html?v=' + siteVersion)
+            .then(r => r.text())
+            .then(html => { document.getElementById('nav').innerHTML = html; });
     </script>
 </body>
 </html>
