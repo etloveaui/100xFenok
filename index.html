@@ -106,7 +106,7 @@ LLM_GUIDE_END -->
         });
 
         /* ──────────────── 핵심 함수 loadPage ──────────────── */
-        function loadPage(pageUrl) {
+        window.loadPage = function loadPage(pageUrl) {
             if (contentFrame) {
                 contentFrame.src = `${pageUrl}?v=${siteVersion}`;
             }
