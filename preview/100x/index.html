@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<!-- 
+    ================================================================================
+    LLM 및 개발자를 위한 100x Daily Wrap 목록 페이지 제작 가이드 (FenoK's Philosophy)
+    ================================================================================
+    이 문서는 '100x Daily Wrap' 브랜드의 금융 리포트 목록 페이지를 효과적으로 구성하기 위한 핵심 설계 철학과 지침을 담고 있습니다.
+    우리의 목표는 단순한 정보 전달을 넘어, 사용자가 복잡한 데이터를 쉽고 직관적으로 통찰할 수 있는 최상의 경험을 제공하는 것입니다.
+    코드 길이에 제약을 두지 않고, 내용의 깊이와 시각적 완성도를 최우선으로 합니다.
+
+    [ v2.1 업데이트 노트 ]
+    - 신규 리포트(2025-06-28) 추가 및 목록 재정렬.
+    - 디자인 시스템 변경: 기존의 다크 테마에서 벗어나, 가독성과 전문성을 극대화하기 위한 밝고 정제된 화이트 테마로 전환.
+    - 구조 개편: 사용자가 가장 중요한 정보에 즉시 접근할 수 있도록, 페이지 최상단에 'Featured Reports'를 배치하는 '콘텐츠 우선' 레이아웃으로 변경.
+
+    1.  **반응형 설계 (Responsive First):**
+        -   모든 컴포넌트는 모바일, 태블릿, PC 등 모든 디바이스에서 최적의 가독성과 사용성을 제공해야 합니다.
+        -   Tailwind CSS의 반응형 분기점(`sm:`, `md:`, `lg:`)을 적극적으로 사용하여 유동적인 레이아웃을 구현합니다.
+        -   특히 테이블(<table>)은 `<div class="overflow-x-auto">`로 감싸 작은 화면에서도 가로 스크롤로 모든 데이터를 확인할 수 있도록 보장해야 합니다.
+
+    2.  **데이터 처리 및 표현 (Data Handling & Representation):**
+        -   **데이터 무결성:** 원본 소스의 모든 데이터를 누락 없이 담는 것을 원칙으로 합니다. "이 정도면 되겠지"라는 타협 없이, 모든 정보를 충실히 반영하여 상세함을 유지합니다.
+        -   **원본 데이터의 불완전성 처리:** 소스에서 제공되는 데이터에 'N/A', 'null' 등 미처리 값이 포함될 수 있습니다. 이를 그대로 노출하지 않고, CSS 클래스 `.na-value`를 적용하여 '-' 또는 '데이터 없음'과 같이 회색 텍스트로 비활성화 처리하여 시각적 완성도를 높입니다.
+        -   **자연스러운 언어:** '개시(Initiate)', '붕괴(Breakdown)' 등 기계 번역투의 어색한 단어 사용을 지양합니다. '신규 커버리지', '상관관계 변화' 등 문맥에 맞는 자연스럽고 전문적인 용어를 선택합니다.
+        -   **강조와 생략:** `<b>` 태그, 색상, 아이콘을 활용해 핵심 키워드와 데이터를 강조하고, '15단어 이하' 같은 불필요한 가이드라인 텍스트는 최종 산출물에서 반드시 제거합니다.
+
+    3.  **구조와 시맨틱 (Structure & Semantics):**
+        -   페이지를 '최신 리포트 하이라이트', '리포트 아카이브' 두 부분으로 명확히 나눕니다. Hero 섹션은 콘텐츠 집중을 위해 의도적으로 제거했습니다.
+        -   정보의 위계가 중요합니다. 사용자의 관심이 가장 높은 최신 리포트는 상단에 자세히 배치하고, 오래된 정보는 하단에 간결하게 목록화하여 정보의 중요도에 따라 접근성을 차등적으로 설계합니다.
+        -   FenoK(또는 El Fenomeno Kim)의 브랜딩이 푸터 등에 일관되게 적용되어야 합니다.
+
+    4.  **시각화 일관성 (Consistent Visualization):**
+        -   **디자인 테마:** `bg-slate-50`을 기본 배경으로 사용하고, 카드에는 `bg-white`와 `card-shadow`를 적용하여 깨끗하고 입체적인 느낌을 줍니다.
+        -   **최신 리포트 카드:** 더 많은 정보(요약, 핵심 키워드 태그)를 담을 수 있도록 확장하고, '최신' 뱃지를 통해 시각적으로 구분합니다.
+        -   **아카이브 테이블:** hover 효과를 주어 사용자와의 상호작용을 높입니다.
+
+    * **유연성 원칙:** 소스 데이터의 목차나 구조가 변경될 수 있음을 인지하고, 여기에 얽매이지 않습니다. 핵심은 '내용을 깊이 분석'하여 위 가이드라인에 맞춰 '최적의 형태'로 재구성하는 것입니다. 구조가 바뀌더라도 놀라지 말고, 유연하게 대처하여 일관된 품질을 유지하는 것이 중요합니다.
+-->
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100x Daily Wrap - El Fenomeno Kim</title>
+    <meta name="description" content="100x Daily Wrap 리포트 아카이브 페이지입니다.">
+    <link rel="canonical" href="https://el-fenomeno-kim-dashboard.on.drv.tw/100x/index.html">
+    <meta property="og:title" content="100x Daily Wrap - El Fenomeno Kim">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://el-fenomeno-kim-dashboard.on.drv.tw/favicon-96x96.png">
+    <meta name="theme-color" content="#0ea5e9">
+    <style>
+        * { font-family: 'Noto Sans KR', sans-serif; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .tag { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- 메인 콘텐츠 영역 -->
+    <div id="nav"></div>
+    <main class="container mx-auto p-6 md:p-12">
+        <!-- 최신 리포트 하이라이트 섹션: 페이지의 핵심. 가장 중요한 3개의 리포트를 상단에 배치 -->
+        <section id="featured-reports" class="mb-16">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl md:text-6xl font-black mb-4 orbitron bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-slate-800">100x Daily Wrap</h1>
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto">AI 기반 멀티에셋 분석으로 시장의 핵심 동인과 투자 기회를 매일 분석합니다.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- 가장 최신 리포트 (2025-06-28) -->
+                <div class="lg:col-span-12 bg-white rounded-2xl p-8 card-shadow card-hover flex flex-col md:flex-row items-center gap-8">
+                    <div class="md:w-2/3">
+                        <div class="flex items-center gap-4 mb-3">
+                           <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">최신 리포트</span>
+                           <div class="text-sm text-slate-500">2025-06-28 (토)</div>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
+                            <a href="./daily-wrap/2025-06-28_100x-daily-wrap.html">무역 협상 낙관론 속 사상 최고치 경신</a>
+                        </h2>
+                        <p class="text-slate-600 text-base leading-relaxed mb-5">
+                            미-중, 미-EU 무역 협상 타결 기대감에 S&P 500 지수가 사상 최고치를 경신하는 등 시장이 환호했지만, 약화된 소비 지출 등 펀더멘털과의 괴리가 심화되며 잠재적 변동성 확대를 시사합니다.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="tag bg-green-100 text-green-800">S&P 500 최고치</span>
+                            <span class="tag bg-blue-100 text-blue-800">무역 협상</span>
+                            <span class="tag bg-red-100 text-red-800">소비 위축</span>
+                            <span class="tag bg-yellow-100 text-yellow-800">정책 불확실성</span>
+                        </div>
+                        <a href="./daily-wrap/2025-06-28_100x-daily-wrap.html" class="bg-slate-800 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-colors inline-flex items-center">
+                            리포트 전체 보기<i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                    <div class="hidden md:block md:w-1/3">
+                        <img src="https://placehold.co/600x400/1e293b/ffffff?text=100x" alt="Report visual" class="rounded-lg object-cover w-full h-full">
+                    </div>
+                </div>
+
+                <!-- 2번째 최신 리포트 (2025-06-27) -->
+                <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
+                    <div class="text-sm text-slate-500 mb-2">2025-06-27 (금)</div>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
+                        <a href="./daily-wrap/2025-06-27_100x-daily-wrap.html">연준 정책 불확실성과 시장의 이중적 반응</a>
+                    </h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                        연준 의장 교체 가능성에 달러는 3년래 최저치로 하락했지만, 기술주 중심의 주식 시장은 금리 인하 기대로 강세를 보이는 이례적인 디커플링 현상을 분석합니다.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tag bg-red-100 text-red-800">달러 약세</span>
+                        <span class="tag bg-green-100 text-green-800">기술주 강세</span>
+                        <span class="tag bg-blue-100 text-blue-800">연준 정책</span>
+                    </div>
+                </div>
+
+                <!-- 3번째 최신 리포트 (2025-06-26) -->
+                <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
+                     <div class="text-sm text-slate-500 mb-2">2025-06-26 (목)</div>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
+                        <a href="./daily-wrap/2025-06-26_100x-daily-wrap.html">마이크론 실적 호조와 기술주 랠리</a>
+                    </h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                        마이크론의 어닝 서프라이즈가 기술주 랠리를 이끌었으나, 연준의 정책 불확실성과 소비자 신뢰 악화가 혼재된 신호를 보낸 하루를 분석합니다.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tag bg-purple-100 text-purple-800">마이크론 실적</span>
+                        <span class="tag bg-green-100 text-green-800">기술주 강세</span>
+                        <span class="tag bg-red-100 text-red-800">연준 불확실성</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    <!-- 리포트 아카이브 섹션: 과거 리포트들을 게시판 형태로 간결하게 나열 -->
+    <section id="report-archive" class="py-16 bg-white">
+        <div class="container mx-auto max-w-5xl px-6">
+            <h2 class="text-3xl font-bold text-center mb-10 text-slate-900">리포트 아카이브</h2>
+            <div class="border border-slate-200 rounded-lg shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500 uppercase">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">날짜</th>
+                                <th scope="col" class="px-6 py-3">리포트 제목</th>
+                                <th scope="col" class="px-6 py-3 hidden md:table-cell">핵심 키워드</th>
+                                <th scope="col" class="px-6 py-3 text-right">링크</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-500">2025-06-25</td>
+                                <td class="px-6 py-4 font-semibold text-slate-800">지정학적 리스크 완화와 시장 반응</td>
+                                <td class="px-6 py-4 hidden md:table-cell">
+                                    <span class="tag bg-blue-100 text-blue-800">지정학 리스크</span>
+                                    <span class="tag bg-green-100 text-green-800">Fed 정책</span>
+                                    <span class="tag bg-orange-100 text-orange-800">소비자 신뢰</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <a href="./daily-wrap/2025-06-25_100x-daily-wrap.html" class="font-medium text-blue-600 hover:underline">보기</a>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-500">2025-06-24</td>
+                                <td class="px-6 py-4 font-semibold text-slate-800">휴전 협정에 따른 시장 랠리 분석</td>
+                                <td class="px-6 py-4 hidden md:table-cell">
+                                    <span class="tag bg-green-100 text-green-800">시장 랠리</span>
+                                    <span class="tag bg-blue-100 text-blue-800">유가 급락</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <a href="./daily-wrap/2025-06-24_100x-daily-wrap.html" class="font-medium text-blue-600 hover:underline">보기</a>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-500">2025-06-21</td>
+                                <td class="px-6 py-4 font-semibold text-slate-800">연준 내 분열을 활용한 커브 스티프닝 전략</td>
+                                <td class="px-6 py-4 hidden md:table-cell">
+                                    <span class="tag bg-yellow-100 text-yellow-800">커브 스티프닝</span>
+                                    <span class="tag bg-blue-100 text-blue-800">FOMC</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <a href="./daily-wrap/2025-06-21_100x-daily-wrap.html" class="font-medium text-blue-600 hover:underline">보기</a>
+                                </td>
+                            </tr>
+                            <!-- 새로운 과거 리포트는 이 아래에 추가 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer class="py-12 px-6 bg-slate-50">
+        <div class="container mx-auto text-center text-slate-500">
+            <div class="text-xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
+            <p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
+            <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
+        </div>
+    </footer>
+
+    <script defer>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
