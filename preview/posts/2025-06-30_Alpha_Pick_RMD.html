@@ -160,6 +160,25 @@
                         <div class="chart-container h-80">
                             <canvas id="weightedScoreChart"></canvas>
                         </div>
+                        <h3 class="text-xl font-semibold mt-6">최종 가중 점수표</h3>
+                        <table class="w-full border text-sm text-left">
+                          <thead>
+                            <tr class="bg-gray-100">
+                              <th class="border px-2 py-1">기업</th>
+                              <th class="border px-2 py-1">성장성/촉매 (30%)</th>
+                              <th class="border px-2 py-1">해자/방어력 (30%)</th>
+                              <th class="border px-2 py-1">밸류에이션/재평가 (25%)</th>
+                              <th class="border px-2 py-1">경영진/자본효율 (15%)</th>
+                              <th class="border px-2 py-1">최종 점수</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr><td class="border px-2 py-1">ResMed (RMD)</td><td>27.0</td><td>27.6</td><td>20.0</td><td>14.9</td><td>89.5</td></tr>
+                            <tr><td class="border px-2 py-1">Trimble (TRMB)</td><td>25.5</td><td>24.3</td><td>19.5</td><td>11.6</td><td>80.9</td></tr>
+                            <tr><td class="border px-2 py-1">Abbott (ABT)</td><td>21.0</td><td>28.5</td><td>18.5</td><td>11.4</td><td>79.4</td></tr>
+                            <tr><td class="border px-2 py-1">Edwards (EW)</td><td>25.5</td><td>21.3</td><td>16.8</td><td>10.8</td><td>74.4</td></tr>
+                          </tbody>
+                        </table>
                     </div>
                     <div class="glass-card rounded-xl p-6 scroll-fade-in">
                         <h3 class="text-xl font-bold text-white mb-2">핵심 역량비교 (레이더 차트)</h3>
@@ -167,6 +186,36 @@
                         <div class="chart-container h-80">
                             <canvas id="competencyRadarChart"></canvas>
                         </div>
+                        <h3 class="text-xl font-semibold mt-6">핵심 역량 종합 점수표 (15개 항목)</h3>
+                        <table class="w-full border text-sm text-left">
+                          <thead>
+                            <tr class="bg-gray-100">
+                              <th class="border px-2 py-1">항목</th>
+                              <th class="border px-2 py-1">ABT</th>
+                              <th class="border px-2 py-1">EW</th>
+                              <th class="border px-2 py-1">RMD</th>
+                              <th class="border px-2 py-1">TRMB</th>
+                              <th class="border px-2 py-1">1위</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr><td class="border px-2 py-1">1. 저평가</td><td>4.0</td><td>2.5</td><td>3.0</td><td>5.0</td><td>TRMB</td></tr>
+                            <tr><td class="border px-2 py-1">2. 성장성</td><td>3.0</td><td>3.5</td><td>3.0</td><td>5.0</td><td>TRMB</td></tr>
+                            <tr><td class="border px-2 py-1">3. 경기 방어력</td><td>5.0</td><td>3.3</td><td>4.2</td><td>3.8</td><td>ABT</td></tr>
+                            <tr><td class="border px-2 py-1">4. 자본 효율성</td><td>4.0</td><td>3.5</td><td>5.0</td><td>3.6</td><td>RMD</td></tr>
+                            <tr><td class="border px-2 py-1">5. 경영진 역량</td><td>4.4</td><td>3.7</td><td>5.0</td><td>4.1</td><td>RMD</td></tr>
+                            <tr><td class="border px-2 py-1">6. 전략적 해자</td><td>4.0</td><td>3.8</td><td>5.0</td><td>4.3</td><td>RMD</td></tr>
+                            <tr><td class="border px-2 py-1">7. 매크로 민감도</td><td>4.8</td><td>3.2</td><td>4.3</td><td>4.0</td><td>ABT</td></tr>
+                            <tr><td class="border px-2 py-1">8. 재평가 가능성</td><td>3.6</td><td>4.2</td><td>5.0</td><td>3.8</td><td>RMD</td></tr>
+                            <tr><td class="border px-2 py-1">9. 시장 심리</td><td>4.0</td><td>4.2</td><td>3.5</td><td>4.1</td><td>EW</td></tr>
+                            <tr><td class="border px-2 py-1">10. 6개월 리스크 내성</td><td>4.5</td><td>3.5</td><td>4.2</td><td>3.8</td><td>ABT</td></tr>
+                            <tr><td class="border px-2 py-1">11. 기관 수급</td><td>5.0</td><td>3.0</td><td>3.5</td><td>3.0</td><td>ABT</td></tr>
+                            <tr><td class="border px-2 py-1">12. 제품 믹스/ASP</td><td>4.0</td><td>3.8</td><td>4.2</td><td>4.5</td><td>TRMB</td></tr>
+                            <tr><td class="border px-2 py-1">13. FCF 수익률</td><td>3.5</td><td>3.5</td><td>4.9</td><td>2.8</td><td>RMD</td></tr>
+                            <tr><td class="border px-2 py-1">14. 리더십 신뢰도</td><td>3.6</td><td>3.7</td><td>4.8</td><td>4.1</td><td>RMD</td></tr>
+                            <tr><td class="border px-2 py-1">15. 6개월 추천</td><td>4.0</td><td>3.5</td><td>4.5</td><td>4.0</td><td>RMD</td></tr>
+                          </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
