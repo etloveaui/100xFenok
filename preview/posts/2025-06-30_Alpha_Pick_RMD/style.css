@@ -1571,7 +1571,7 @@ a:hover {
 }
 
 /* Valuation Table */
-.valuation-table .table {
+/* .valuation-table .table {
   color: white;
   margin: 0;
 }
@@ -1590,7 +1590,62 @@ a:hover {
 
 .valuation-table .table tr.highlight {
   background: rgba(251, 191, 36, 0.05);
+} */
+
+/* ============ Valuation Table 리디자인 ============ */
+/* 테이블 헤더: 네이비 단색 + 얇은 바텀 보더로 강조 */
+.valuation-table .table th {
+  background: #23324f !important;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-bottom: 3px solid #fbbf24;
+  padding: 15px 10px;
+  text-align: center;
+  font-size: 1.08em;
+  letter-spacing: 0.01em;
 }
+
+/* 하이라이트 행: 연한 네이비(혹은 #fff9db 아이보리) 배경, 글씨만 부드럽게 강조 */
+.valuation-table .table tr.highlight {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbbf24 !important;
+  font-weight: 600;
+}
+
+/* 일반행 hover 효과만 자연스럽게 */
+.valuation-table .table tbody tr:not(.highlight):hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.valuation-table .table td {
+  background: transparent;
+  color: #e0e7ef;
+  border: none;
+  text-align: center;
+  padding: 13px 8px;
+  vertical-align: middle;
+}
+
+/* 강조 컬러 */
+.valuation-table .table td.positive {
+  color: #16a34a;
+  font-weight: 700;
+}
+.valuation-table .badge-medium {
+  background: #fbbf24;
+  color: #23324f;
+}
+.valuation-table .badge-high {
+  background: #f43f5e;
+  color: #fff;
+}
+.valuation-table .badge-low {
+  background: #2563eb;
+  color: #fff;
+}
+
+
 
 .positive {
   color: var(--fenok-success);
@@ -2018,6 +2073,19 @@ a:hover {
   border-radius: var(--radius-lg);
   padding: 3rem;
 }
+
+.conclusion-content {
+  padding: 3.5rem 2.5rem 3rem 2.5rem;
+  border-radius: 18px;
+  min-width: 0;
+  min-height: 340px;
+  background: rgba(30,41,59,0.45);
+  border: 1.5px solid #fbbf24;
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 8px 36px 0 rgba(16,32,72,0.14);
+}
+
 
 .conclusion-highlight {
   background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
