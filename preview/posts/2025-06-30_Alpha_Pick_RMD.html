@@ -116,7 +116,8 @@
 <body>
 
     <!-- Main Content -->
-    <div class="main-content">
+<main>
+
 
             <header class="text-center mb-20">
                 <p class="font-roboto font-bold text-blue-400">100x FenoK Alpha Pick</p>
@@ -124,8 +125,9 @@
                 <p class="text-lg text-gray-400 max-w-3xl mx-auto">독점적 시장 지위, 시장이 오해한 GLP-1 촉매제, 그리고 탁월한 자본 효율성을 바탕으로 최고의 투자 기회로 부상한 이유를 심층 분석합니다.</p>
             </header>
 
-            <section id="hero" class="mb-24 scroll-section">
-                <h2 class="text-3xl font-bold text-center text-white mb-4">왜 RMD인가?</h2>
+
+            <section id="hero" class="mb-24 scroll-section" aria-labelledby="hero-title">
+                <h2 id="hero-title" class="text-3xl font-bold text-center text-white mb-4">왜 RMD인가?</h2>
                 <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">ResMed의 투자 매력은 세 가지 강력하고 상호 보완적인 핵심 논리에 기반합니다. 각 요소는 단독으로도 강력하지만, 결합되었을 때 특별한 투자 기회를 창출합니다.</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="glass-card rounded-xl p-6 text-center scroll-fade-in">
@@ -146,8 +148,9 @@
                 </div>
             </section>
 
-            <section id="comparison" class="mb-24 scroll-section">
-                <h2 class="text-3xl font-bold text-center text-white mb-4">종합 비교 분석</h2>
+
+            <section id="comparison" class="mb-24 scroll-section" aria-labelledby="comparison-title">
+                <h2 id="comparison-title" class="text-3xl font-bold text-center text-white mb-4">데이터로 증명하는 우위</h2>
                 <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">4개 후보 기업을 정량적으로 평가한 결과, ResMed는 모든 면에서 가장 높은 점수를 획득하며 명확한 선두주자임을 입증했습니다.</p>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -168,20 +171,9 @@
                 </div>
             </section>
 
-            <section id="scenario" class="mb-24 scroll-section">
-                <h2 class="text-3xl font-bold text-center text-white mb-4">시나리오 분석: 기대 수익률</h2>
-                <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">강세/기본/약세 시나리오별 목표 수익률을 S&P 500 예상 수익률과 비교하여 RMD의 매력적인 위험-보상 프로필을 확인합니다.</p>
-                <div class="glass-card rounded-xl p-6 scroll-fade-in">
-                    <h3 class="text-xl font-bold text-white mb-2">시나리오별 기대 수익률 범위</h3>
-                    <p class="text-sm text-gray-400 mb-4">RMD는 약세 시나리오에서도 자본 손실 위험이 없는 반면, 강세 시나리오에서는 높은 상승 잠재력을 보여줍니다.</p>
-                    <div class="chart-container h-96">
-                        <canvas id="scenarioChartDeepDive"></canvas>
-                    </div>
-                </div>
-            </section>
 
-            <section id="deep-dive" class="mb-24 scroll-section">
-                <h2 class="text-3xl font-bold text-center text-white mb-4">심층분석</h2>
+            <section id="deep-dive" class="mb-24 scroll-section" aria-labelledby="deep-dive-title">
+                <h2 id="deep-dive-title" class="text-3xl font-bold text-center text-white mb-4">투자의 핵심 근거</h2>
                 <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">각 기업의 투자 유형과 핵심 분석 내용을 살펴봅니다. 카드에 마우스를 올리거나 클릭하여 상세 정보를 확인하세요.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -235,6 +227,48 @@
                 </div>
             </section>
 
+
+            <section id="scenario" class="mb-24 scroll-section" aria-labelledby="scenario-title">
+                <h2 id="scenario-title" class="text-3xl font-bold text-center text-white mb-4">기대 수익과 리스크</h2>
+                <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">강세/기본/약세 시나리오별 목표 수익률을 S&P 500 예상 수익률과 비교하여 RMD의 매력적인 위험-보상 프로필을 확인합니다.</p>
+                <div class="glass-card rounded-xl p-6 scroll-fade-in">
+                    <h3 class="text-xl font-bold text-white mb-2">시나리오별 기대 수익률 범위</h3>
+                    <p class="text-sm text-gray-400 mb-4">RMD는 약세 시나리오에서도 자본 손실 위험이 없는 반면, 강세 시나리오에서는 높은 상승 잠재력을 보여줍니다.</p>
+                    <div class="chart-container h-96">
+                        <canvas id="scenarioChartDeepDive"></canvas>
+                    </div>
+                </div>
+            </section>
+
+
+            <section id="conclusion" class="scroll-section" aria-labelledby="conclusion-title">
+                <h2 id="conclusion-title" class="text-3xl font-bold text-center text-white mb-4">최종 추천 및 리스크 요인</h2>
+                <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">최종 투자 추천을 다시 한번 강조하며, 성공적인 투자를 위해 반드시 고려해야 할 잠재적 리스크 요인을 제시합니다.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="glass-card rounded-xl p-6 border-l-4 border-green-400 scroll-fade-in">
+                        <h3 class="font-bold text-xl text-white mb-3">최종 투자 추천: ResMed (RMD)</h3>
+                        <p class="text-gray-400">분석 결과, RMD는 가장 매력적인 위험 조정 수익률을 제공합니다. 견고한 방어적 성장성, 시장이 오해하는 새로운 성장 동력, 그리고 경영진의 검증된 자본 배분 능력을 고려할 때, RMD는 향후 6개월간 5%비중의 '인사이트' 포트폴리오 편입 종목으로 가장 적합합니다.</p>
+                        <ul class="text-sm text-gray-400 mt-4 space-y-1">
+                            <li><strong class="text-white">1순위 (Top Pick):</strong> ResMed (RMD)</li>
+                            <li><strong class="text-white">2순위 (Runner-up):</strong> Trimble (TRMB)</li>
+                            <li><strong class="text-white">포트폴리오 앵커:</strong> Abbott (ABT)</li>
+                            <li><strong class="text-white">고위험/고수익:</strong> Edwards (EW)</li>
+                        </ul>
+                    </div>
+                    <div class="glass-card rounded-xl p-6 border-l-4 border-red-500 scroll-fade-in">
+                        <h3 class="font-bold text-xl text-white mb-3">주요 리스크 요인</h3>
+                        <p class="text-gray-400">모든 투자에는 리스크가 따릅니다. RMD 투자 시 다음 사항들을 주의 깊게 모니터링해야 합니다.</p>
+                        <ul class="text-sm list-disc list-inside text-gray-400 mt-4 space-y-1">
+                            <li><strong class="text-white">GLP-1 영향 재평가:</strong> 시장이 GLP-1의 영향을 긍정적으로 재해석했지만, 예상보다 체중 감량 효과가 더 크게 나타나거나 사용이 광범위해질 경우, 환자 수 증가폭이 기대에 미치지 못할수 있습니다.</li>
+                            <li><strong class="text-white">경쟁사 회복:</strong> 필립스가 리콜 문제를 해결하고 시장에 성공적으로 복귀할 경우, RMD의 독점적 지위가 약화되고 가격 경쟁이 심화될 수 있습니다.</li>
+                            <li><strong class="text-white">공급망 및 규제 리스크:</strong> 모든 의료기기 업체와 마찬가지로, 예기치 못한 공급망 문제나 각국의 의료 규제 변경은 실적에 영향을 줄 수 있습니다.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+
             <section id="decision-matrix" class="mb-24 scroll-section">
                 <h2 class="text-3xl font-bold text-center text-white mb-4">종합 판단 매트릭스</h2>
                 <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">각 기업에 대한 최종 평가를 한눈에 요약합니다.</p>
@@ -272,43 +306,14 @@
                     </table>
                 </div>
             </section>
-
-            <section id="conclusion" class="scroll-section">
-                <h2 class="text-3xl font-bold text-center text-white mb-4">결론 및 리스크 요인</h2>
-                <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">최종 투자 추천을 다시 한번 강조하며, 성공적인 투자를 위해 반드시 고려해야 할 잠재적 리스크 요인을 제시합니다.</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="glass-card rounded-xl p-6 border-l-4 border-green-400 scroll-fade-in">
-                        <h3 class="font-bold text-xl text-white mb-3">최종 투자 추천: ResMed (RMD)</h3>
-                        <p class="text-gray-400">분석 결과, RMD는 가장 매력적인 위험 조정 수익률을 제공합니다. 견고한 방어적 성장성, 시장이 오해하는 새로운 성장 동력, 그리고 경영진의 검증된 자본 배분 능력을 고려할 때, RMD는 향후 6개월간 5%비중의 '인사이트' 포트폴리오 편입 종목으로 가장 적합합니다.</p>
-                        <ul class="text-sm text-gray-400 mt-4 space-y-1">
-                            <li><strong class="text-white">1순위 (Top Pick):</strong> ResMed (RMD)</li>
-                            <li><strong class="text-white">2순위 (Runner-up):</strong> Trimble (TRMB)</li>
-                            <li><strong class="text-white">포트폴리오 앵커:</strong> Abbott (ABT)</li>
-                            <li><strong class="text-white">고위험/고수익:</strong> Edwards (EW)</li>
-                        </ul>
-                    </div>
-                    <div class="glass-card rounded-xl p-6 border-l-4 border-red-500 scroll-fade-in">
-                        <h3 class="font-bold text-xl text-white mb-3">주요 리스크 요인</h3>
-                        <p class="text-gray-400">모든 투자에는 리스크가 따릅니다. RMD 투자 시 다음 사항들을 주의 깊게 모니터링해야 합니다.</p>
-                        <ul class="text-sm list-disc list-inside text-gray-400 mt-4 space-y-1">
-                            <li><strong class="text-white">GLP-1 영향 재평가:</strong> 시장이 GLP-1의 영향을 긍정적으로 재해석했지만, 예상보다 체중 감량 효과가 더 크게 나타나거나 사용이 광범위해질 경우, 환자 수 증가폭이 기대에 미치지 못할수 있습니다.</li>
-                            <li><strong class="text-white">경쟁사 회복:</strong> 필립스가 리콜 문제를 해결하고 시장에 성공적으로 복귀할 경우, RMD의 독점적 지위가 약화되고 가격 경쟁이 심화될 수 있습니다.</li>
-                            <li><strong class="text-white">공급망 및 규제 리스크:</strong> 모든 의료기기 업체와 마찬가지로, 예기치 못한 공급망 문제나 각국의 의료 규제 변경은 실적에 영향을 줄 수 있습니다.</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
             <footer class="text-center mt-24 pt-12 border-t border-gray-800">
                 <p class="font-roboto font-black text-2xl text-white">100x • QUANTUM POWERED</p>
                 <p class="text-sm text-gray-500 mt-2">Analyzed by El Fenomeno Kim</p>
                 <p class="text-xs text-gray-600 mt-1">Published on 2025-07-02</p>
             </footer>
-    </div>
-
+    </main>
     <!-- Scripts -->
-    <script src="app.js"></script>
+<script src="app.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
