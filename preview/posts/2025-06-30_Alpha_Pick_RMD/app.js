@@ -147,17 +147,6 @@ function initializeIntersectionObserver() {
 
 // Enhanced navigation with smooth scrolling and active states
 function initializeNavigation() {
-    const navbar = document.querySelector('.navbar');
-    
-    // Navbar scroll effect
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
-
     // Smooth scrolling for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -169,17 +158,21 @@ function initializeNavigation() {
                     top: offsetTop,
                     behavior: 'smooth'
                 });
-            }
+            } else {
+            // 없는 섹션 클릭 시 JS 에러 방지
+            console.warn('존재하지 않는 섹션:', this.getAttribute('href'));
+			}
         });
     });
 
     // Update active navigation states
     const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+    const navLinks = document.querySelectorAll('.sticky a[href^="#"]');
 
     window.addEventListener('scroll', () => {
         let current = '';
         sections.forEach(section => {
+			if (!section) return; // null 방지
             const sectionTop = section.offsetTop - 100;
             if (window.scrollY >= sectionTop) {
                 current = section.getAttribute('id');
@@ -187,6 +180,7 @@ function initializeNavigation() {
         });
 
         navLinks.forEach(link => {
+			if (!link) return; // null 방지			
             link.classList.remove('active');
             if (link.getAttribute('href') === `#${current}`) {
                 link.classList.add('active');
@@ -721,8 +715,10 @@ const performanceObserver = new PerformanceObserver((list) => {
 
 // Error handling
 window.addEventListener('error', function(e) {
+
+
     console.error('Application error:', e.error);
-    
+
     // Show user-friendly error message
     const errorDiv = document.createElement('div');
     errorDiv.className = 'alert alert-warning fixed-top';
