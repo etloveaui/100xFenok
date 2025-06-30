@@ -291,7 +291,8 @@
                     <h3 class="text-xl font-bold text-white mb-2">시나리오별 기대 수익률 범위</h3>
                     <p class="text-sm text-gray-400 mb-4">RMD는 약세 시나리오에서도 자본 손실 위험이 없는 반면, 강세 시나리오에서는 높은 상승 잠재력을 보여줍니다.</p>
                     <h3 class="text-xl font-semibold mt-8">6개월 시나리오 및 목표 수익률 요약</h3>
-                    <table class="w-full border text-sm text-left mb-8">
+                    <div class="glass-card rounded-xl p-4 mb-8 scroll-fade-in" style="transition-delay: 150ms;">
+                      <table class="w-full border text-sm text-left">
                       <thead>
                         <tr class="bg-gray-100">
                           <th class="border px-2 py-1">기업</th>
@@ -306,29 +307,41 @@
                         <tr><td class="border px-2 py-1">Abbott (ABT)</td><td>+8%</td><td>+15%</td><td>-2%</td></tr>
                         <tr><td class="border px-2 py-1">Edwards (EW)</td><td>+7%</td><td>+15%</td><td>-8%</td></tr>
                       </tbody>
-                    </table>
+                      </table>
+                    </div>
                     <div class="chart-container h-96">
                         <canvas id="scenarioChartDeepDive"></canvas>
+                    </div>
+                    <div class="scroll-fade-in mb-12" style="transition-delay: 150ms;">
                         <div class="prose prose-invert max-w-none prose-h4:text-blue-400 prose-p:text-gray-300">
                           <h4>ResMed (RMD)</h4>
-                          <p><strong>기본 시나리오:</strong> EPS 22% 성장세와 총이익률 60% 유지, PE 배수 24배로 소폭 상승. GLP-1 순풍 내러티브와 AirSense 11 수요가 견조.</p>
-                          <p><strong>강세 시나리오:</strong> GLP-1 내러티브 완전 반영 + 전략적 M&A 발생 시 PE 27~28배까지 상승. JP모건 목표가 $290 수준 반영.</p>
+                          <p><strong>기본 시나리오:</strong> EPS 22% 성장세와 총이익률 60% 유지, <span class="text-green-400 font-semibold">PE 배수 24배</span>로 소폭 상승. GLP-1 순풍 내러티브와 AirSense 11 수요가 견조.</p>
+                          <p><strong>강세 시나리오:</strong> GLP-1 내러티브 완전 반영 + 전략적 M&A 발생 시 <span class="text-green-400 font-semibold">PE 27~28배</span>까지 상승. JP모건 목표가 <span class="text-green-400 font-semibold">$290</span> 수준 반영.</p>
                           <p><strong>약세 시나리오:</strong> 필립스 조기 복귀, GLP-1 데이터 부정, 소비 위축 발생 시 상승 제한 (보합 예상).</p>
-
+                        </div>
+                    </div>
+                    <div class="scroll-fade-in mb-12" style="transition-delay: 300ms;">
+                        <div class="prose prose-invert max-w-none prose-h4:text-blue-400 prose-p:text-gray-300">
                           <h4>Trimble (TRMB)</h4>
-                          <p><strong>기본 시나리오:</strong> ARR 15% 성장 유지 + EPS 가이던스 충족. 소프트웨어 전환의 점진적 반영.</p>
-                          <p><strong>강세 시나리오:</strong> 건설 경기 호조와 JP모건 등 애널리스트 커버리지 시작 시 빠른 재평가 가능.</p>
+                          <p><strong>기본 시나리오:</strong> ARR <span class="text-green-400 font-semibold">15%</span> 성장 유지 + EPS 가이던스 충족. 소프트웨어 전환의 점진적 반영.</p>
+                          <p><strong>강세 시나리오:</strong> 건설 경기 호조와 JP모건 등 애널리스트 커버리지 시작 시 <span class="text-green-400 font-semibold">빠른 재평가 가능</span>.</p>
                           <p><strong>약세 시나리오:</strong> 경기 둔화로 필드 시스템 부문 실적 부진 및 ‘산업재’로 분류 지속 시 하락.</p>
-
+                        </div>
+                    </div>
+                    <div class="scroll-fade-in mb-12" style="transition-delay: 450ms;">
+                        <div class="prose prose-invert max-w-none prose-h4:text-blue-400 prose-p:text-gray-300">
                           <h4>Abbott (ABT)</h4>
-                          <p><strong>기본 시나리오:</strong> 8% 내외 유기적 성장률 유지, 배당 안정 지속. 관세 영향 통제 가능.</p>
-                          <p><strong>강세 시나리오:</strong> Volt PFA / Tendyne 제품 조기 침투 시 가이던스 상향 및 $155 이상 목표 주가 도달.</p>
+                          <p><strong>기본 시나리오:</strong> <span class="text-green-400 font-semibold">8%</span> 내외 유기적 성장률 유지, 배당 안정 지속. 관세 영향 통제 가능.</p>
+                          <p><strong>강세 시나리오:</strong> Volt PFA / Tendyne 제품 조기 침투 시 가이던스 상향 및 <span class="text-green-400 font-semibold">$155 이상 목표 주가</span> 도달.</p>
                           <p><strong>약세 시나리오:</strong> 관세로 인한 이익 하향 조정 및 안전자산 회피 매도 발생 가능.</p>
-
+                        </div>
+                    </div>
+                    <div class="scroll-fade-in mb-12" style="transition-delay: 600ms;">
+                        <div class="prose prose-invert max-w-none prose-h4:text-blue-400 prose-p:text-gray-300">
                           <h4>Edwards (EW)</h4>
                           <p><strong>기본 시나리오:</strong> SAPIEN M3 출시 및 연간 가이던스 도달. 약한 상승률.</p>
-                          <p><strong>강세 시나리오:</strong> TAVR 보험 확대나 ENCIRCLE 데이터 호재 발생 시 $95~105까지 상승 가능.</p>
-                          <p><strong>약세 시나리오:</strong> 선택적 시술 위축, 부정적 임상결과 발생 시 -8% 이상 급락 가능성.</p>
+                          <p><strong>강세 시나리오:</strong> TAVR 보험 확대나 ENCIRCLE 데이터 호재 발생 시 <span class="text-green-400 font-semibold">$95~105</span>까지 상승 가능.</p>
+                          <p><strong>약세 시나리오:</strong> 선택적 시술 위축, 부정적 임상결과 발생 시 <span class="text-green-400 font-semibold">-8% 이상</span> 급락 가능성.</p>
                         </div>
                     </div>
                 </div>
