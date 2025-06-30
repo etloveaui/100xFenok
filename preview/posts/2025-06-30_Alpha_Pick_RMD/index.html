@@ -3,187 +3,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ResMed (RMD) Alpha Pick | 100x FenoK 투자 분석</title>
-    <meta name="description" content="ResMed (RMD) 전문 투자 분석 - 독점적 시장 지위와 탁월한 자본 효율성을 바탕으로 한 최고의 투자 기회">
-    <meta name="keywords" content="ResMed, RMD, 투자분석, 수면무호흡증, CPAP, 의료기기, 헬스케어 투자">
+    <title>100x FenoK Alpha Pick: ResMed (RMD)</title>
     
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" as="style">
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js" as="script">
+    <!-- FenoK 기본 스타일 시스템 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- External Stylesheets -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "FinancialService",
-        "name": "100x FenoK Alpha Pick",
-        "description": "전문 투자 분석 서비스",
-        "serviceType": "Investment Analysis",
-        "areaServed": "KR"
-    }
+    <!-- Tailwind 커스텀 설정 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fenok-primary': '#0A1931',
+                        'fenok-accent': '#FFC947',
+                        'fenok-card': '#183B56'
+                    },
+                    fontFamily: {
+                        'orbitron': ['Orbitron', 'monospace'],
+                        'noto': ['Noto Sans KR', 'sans-serif']
+                    }
+                }
+            }
+        }
     </script>
+    
+    <style>
+        /* 스크롤 애니메이션을 위한 커스텀 CSS */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 플립 카드 애니메이션 */
+        .flip-card {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
 </head>
-<body data-bs-spy="scroll" data-bs-target="#navbar-main" data-bs-offset="80">
-    <!-- Navigation -->
-    <nav id="navbar-main" class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="#hero">
-                <i class="fas fa-chart-line me-2"></i>
-                <span class="brand-text">100x FenoK</span>
-                <span class="brand-sub">Alpha Pick</span>
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#hero">
-                            <i class="fas fa-home me-1"></i>개요
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="analysisDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-chart-bar me-1"></i>분석
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#dashboard">대시보드</a></li>
-                            <li><a class="dropdown-item" href="#comparison">종합 비교</a></li>
-                            <li><a class="dropdown-item" href="#competency">핵심 역량</a></li>
-                            <li><a class="dropdown-item" href="#scenarios">시나리오 분석</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#financials">재무 분석</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#risk">리스크 평가</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#portfolio">포트폴리오</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#profiles">기업 프로필</a>
-                    </li>
-                </ul>
-            </div>
+
+<body class="bg-slate-50 text-slate-800 font-noto">
+    <!-- 스크롤 네비게이션 -->
+    <nav class="fixed top-0 right-0 z-50 p-6 hidden lg:block">
+        <div class="bg-white rounded-2xl shadow-lg p-4 space-y-2">
+            <a href="#hero" class="block text-sm text-slate-600 hover:text-blue-600 transition-colors">히어로</a>
+            <a href="#comparison" class="block text-sm text-slate-600 hover:text-blue-600 transition-colors">비교분석</a>
+            <a href="#scenarios" class="block text-sm text-slate-600 hover:text-blue-600 transition-colors">시나리오</a>
+            <a href="#companies" class="block text-sm text-slate-600 hover:text-blue-600 transition-colors">기업분석</a>
+            <a href="#dashboard" class="block text-sm text-slate-600 hover:text-blue-600 transition-colors">대시보드</a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="hero" class="hero-section">
-        <div class="hero-background">
-            <div class="hero-overlay"></div>
-            <div class="hero-particles"></div>
+    <!-- 히어로 섹션 -->
+    <section id="hero" class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div class="relative container mx-auto px-6 py-20 lg:py-32">
+            <div class="text-center fade-in">
+                <h1 class="text-6xl lg:text-8xl font-orbitron font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-400">
+                    100x FenoK Alpha Pick
+                </h1>
+                <div class="text-4xl lg:text-6xl font-bold mb-8 text-fenok-accent">
+                    ResMed (RMD)
+                </div>
+                <p class="text-xl lg:text-2xl max-w-4xl mx-auto mb-12 text-slate-200">
+                    독보적인 시장 지위, '잘못 가격 매겨진' 성장 촉매(GLP-1), 그리고 업계 최고 수준의 자본 효율성을 바탕으로, 
+                    ResMed가 향후 6개월간 S&P 500을 초과하는 가장 우수한 성과를 보일 것으로 기대됩니다.
+                </p>
+            </div>
+            
+            <!-- 핵심 투자 논리 카드 -->
+            <div class="grid md:grid-cols-3 gap-8 mt-16 fade-in">
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 border border-white border-opacity-20">
+                    <div class="text-fenok-accent text-4xl mb-4">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">독점적 시장 지위</h3>
+                    <p class="text-slate-200">Philips 리콜 사태로 인한 80%+ 시장 점유율 확보</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 border border-white border-opacity-20">
+                    <div class="text-fenok-accent text-4xl mb-4">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">잘못 인식된 GLP-1 기회</h3>
+                    <p class="text-slate-200">10.8% 높은 PAP 치료 시작률로 입증된 신규 환자 유입</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 border border-white border-opacity-20">
+                    <div class="text-fenok-accent text-4xl mb-4">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">탁월한 자본 효율성</h3>
+                    <p class="text-slate-200">업계 최고 수준 ROIC 21.2% 및 지속적 마진 확대</p>
+                </div>
+            </div>
         </div>
-        
-        <div class="container-fluid">
-            <div class="row min-vh-100 align-items-center">
-                <div class="col-lg-6">
-                    <div class="hero-content fade-in">
-                        <div class="hero-badge mb-3">
-                            <i class="fas fa-star me-2"></i>
-                            Alpha Pick #1
+    </section>
+
+    <!-- 종합 비교 분석 섹션 -->
+    <section id="comparison" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-4xl lg:text-5xl font-orbitron font-bold text-slate-900 mb-6">종합 비교 분석</h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+                    각 기업의 강점과 약점을 다각도에서 비교하여 투자 매력도를 평가합니다.
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- 최종 가중 점수 차트 -->
+                <div class="bg-slate-50 rounded-3xl p-8 shadow-lg fade-in">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-6 text-center">최종 가중 점수</h3>
+                    <div class="h-80">
+                        <canvas id="finalScoresChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 핵심 역량 비교 레이더 차트 -->
+                <div class="bg-slate-50 rounded-3xl p-8 shadow-lg fade-in">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-6 text-center">핵심 역량 비교 (Radar Chart)</h3>
+                    <p class="text-sm text-slate-600 mb-4 text-center">아래 기업명을 클릭하여 차트에 추가하거나 제거하세요.</p>
+                    <div class="h-80">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    [asset:1]
+
+    <!-- 6개월 시나리오 분석 섹션 -->
+    <section id="scenarios" class="py-20 bg-slate-100">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-4xl lg:text-5xl font-orbitron font-bold text-slate-900 mb-6">6개월 시나리오 분석 vs S&P 500</h2>
+                <p class="text-xl text-slate-600 max-w-4xl mx-auto">
+                    강세/기본/약세 시나리오별 기대 수익률을 시장 지수와 비교하여 초과 성과 잠재력을 분석합니다.
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-3xl p-8 shadow-lg max-w-6xl mx-auto fade-in">
+                <p class="text-center text-slate-600 mb-6">차트의 막대에 마우스를 올려 시나리오별 상세 설명을 확인하세요.</p>
+                <div class="h-96">
+                    <canvas id="scenarioChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 기업 상세 분석 섹션 -->
+    <section id="companies" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-4xl lg:text-5xl font-orbitron font-bold text-slate-900 mb-6">기업 상세 분석</h2>
+                <p class="text-xl text-slate-600">
+                    기업을 선택하여 투자 유형, 핵심 동인, 강점 및 약점에 대한 상세 정보를 확인하세요.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- ResMed 카드 -->
+                <div class="flip-card h-80 cursor-pointer fade-in" onclick="flipCard(this)">
+                    <div class="flip-card-inner h-full">
+                        <div class="flip-card-front bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl p-6 flex flex-col justify-center items-center shadow-lg">
+                            <div class="text-4xl mb-4">🫁</div>
+                            <h3 class="text-2xl font-bold mb-2">ResMed</h3>
+                            <p class="text-lg text-blue-100">RMD</p>
+                            <p class="text-sm mt-4 text-center">클릭하여 상세 정보 보기</p>
                         </div>
-                        
-                        <h1 class="hero-title">
-                            <span class="text-accent">ResMed</span><br>
-                            <span class="hero-subtitle">독점적 시장 지위의 복리 성장주</span>
-                        </h1>
-                        
-                        <div class="hero-stock-card">
-                            <div class="stock-info">
-                                <div class="stock-ticker">RMD</div>
-                                <div class="stock-price">$255.16</div>
-                                <div class="stock-change positive">+2.8% (24h)</div>
-                            </div>
-                            <div class="stock-score">
-                                <div class="score-label">종합 점수</div>
-                                <div class="score-value">89.5</div>
-                            </div>
-                        </div>
-                        
-                        <p class="hero-description">
-                            경쟁사 Philips의 대규모 리콜 사태 이후 미국 CPAP 시장에서 80% 이상의 압도적 점유율을 확보한 ResMed는 
-                            업계 최고 수준의 ROIC 21.2%와 함께 GLP-1 약물 확산이라는 잘못 인식된 기회까지 보유한 완벽한 투자처입니다.
-                        </p>
-                        
-                        <div class="hero-actions">
-                            <a href="#dashboard" class="btn btn--primary btn--lg">
-                                <i class="fas fa-chart-line me-2"></i>
-                                상세 분석 보기
-                            </a>
-                            <a href="#portfolio" class="btn btn--secondary btn--lg">
-                                <i class="fas fa-briefcase me-2"></i>
-                                포트폴리오 구성
-                            </a>
-                        </div>
-                        
-                        <div class="hero-stats">
-                            <div class="stat-item">
-                                <div class="stat-value">+25%</div>
-                                <div class="stat-label">6개월 목표 수익률</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">21.2%</div>
-                                <div class="stat-label">ROIC</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">80%+</div>
-                                <div class="stat-label">시장 점유율</div>
-                            </div>
+                        <div class="flip-card-back bg-slate-800 text-white rounded-2xl p-6 flex flex-col justify-center">
+                            <h4 class="text-lg font-bold mb-3">디지털 헬스 복리 성장주</h4>
+                            <ul class="text-sm space-y-2">
+                                <li>• 최종 점수: 89.5점</li>
+                                <li>• 기대수익률: +15.5%</li>
+                                <li>• ROIC: 21.2%</li>
+                                <li>• 80%+ 시장 점유율</li>
+                                <li>• GLP-1 촉매 효과</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
                 
-                <div class="col-lg-6">
-                    <div class="hero-visual">
-                        <div class="investment-cards">
-                            <div class="investment-card primary fade-in" style="animation-delay: 0.2s;">
-                                <div class="card-icon">
-                                    <i class="fas fa-crown"></i>
-                                </div>
-                                <h3>독점적 시장 지위</h3>
-                                <p>경쟁사 리콜 사태로 인한 80% 이상의 압도적 시장 점유율</p>
-                                <div class="card-metric">
-                                    <span class="metric-value">2,900만+</span>
-                                    <span class="metric-label">커넥티드 기기</span>
-                                </div>
-                            </div>
-                            
-                            <div class="investment-card secondary fade-in" style="animation-delay: 0.4s;">
-                                <div class="card-icon">
-                                    <i class="fas fa-flask"></i>
-                                </div>
-                                <h3>GLP-1 기회</h3>
-                                <p>체중 감량 약물 확산이 오히려 수면무호흡 진단률을 높이는 역설적 기회</p>
-                                <div class="card-metric">
-                                    <span class="metric-value">+10.8%</span>
-                                    <span class="metric-label">진단률 증가</span>
-                                </div>
-                            </div>
-                            
-                            <div class="investment-card tertiary fade-in" style="animation-delay: 0.6s;">
-                                <div class="card-icon">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                                <h3>탁월한 자본 효율성</h3>
-                                <p>업계 최고 수준의 ROIC와 지속적인 R&D 재투자로 경쟁우위 강화</p>
-                                <div class="card-metric">
-                                    <span class="metric-value">220억+</span>
-                                    <span class="metric-label">수면 데이터 포인트</span>
-                                </div>
-                            </div>
+                <!-- Trimble 카드 -->
+                <div class="flip-card h-80 cursor-pointer fade-in" onclick="flipCard(this)">
+                    <div class="flip-card-inner h-full">
+                        <div class="flip-card-front bg-gradient-to-br from-red-600 to-red-800 text-white rounded-2xl p-6 flex flex-col justify-center items-center shadow-lg">
+                            <div class="text-4xl mb-4">🏗️</div>
+                            <h3 class="text-2xl font-bold mb-2">Trimble</h3>
+                            <p class="text-lg text-red-100">TRMB</p>
+                            <p class="text-sm mt-4 text-center">클릭하여 상세 정보 보기</p>
+                        </div>
+                        <div class="flip-card-back bg-slate-800 text-white rounded-2xl p-6 flex flex-col justify-center">
+                            <h4 class="text-lg font-bold mb-3">소프트웨어 전환 가치주</h4>
+                            <ul class="text-sm space-y-2">
+                                <li>• 최종 점수: 80.9점</li>
+                                <li>• 기대수익률: +11.6%</li>
+                                <li>• P/E: 23.0배</li>
+                                <li>• ARR 17% 성장</li>
+                                <li>• 70B+ TAM 기회</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Abbott 카드 -->
+                <div class="flip-card h-80 cursor-pointer fade-in" onclick="flipCard(this)">
+                    <div class="flip-card-inner h-full">
+                        <div class="flip-card-front bg-gradient-to-br from-green-600 to-green-800 text-white rounded-2xl p-6 flex flex-col justify-center items-center shadow-lg">
+                            <div class="text-4xl mb-4">🏥</div>
+                            <h3 class="text-2xl font-bold mb-2">Abbott</h3>
+                            <p class="text-lg text-green-100">ABT</p>
+                            <p class="text-sm mt-4 text-center">클릭하여 상세 정보 보기</p>
+                        </div>
+                        <div class="flip-card-back bg-slate-800 text-white rounded-2xl p-6 flex flex-col justify-center">
+                            <h4 class="text-lg font-bold mb-3">다각화된 방어적 리더</h4>
+                            <ul class="text-sm space-y-2">
+                                <li>• 최종 점수: 79.4점</li>
+                                <li>• 기대수익률: +8.2%</li>
+                                <li>• FCF 수익률: 6.3%</li>
+                                <li>• 53년 연속 배당증가</li>
+                                <li>• 안정적 현금흐름</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edwards 카드 -->
+                <div class="flip-card h-80 cursor-pointer fade-in" onclick="flipCard(this)">
+                    <div class="flip-card-inner h-full">
+                        <div class="flip-card-front bg-gradient-to-br from-amber-600 to-amber-800 text-white rounded-2xl p-6 flex flex-col justify-center items-center shadow-lg">
+                            <div class="text-4xl mb-4">❤️</div>
+                            <h3 class="text-2xl font-bold mb-2">Edwards</h3>
+                            <p class="text-lg text-amber-100">EW</p>
+                            <p class="text-sm mt-4 text-center">클릭하여 상세 정보 보기</p>
+                        </div>
+                        <div class="flip-card-back bg-slate-800 text-white rounded-2xl p-6 flex flex-col justify-center">
+                            <h4 class="text-lg font-bold mb-3">집중형 혁신가</h4>
+                            <ul class="text-sm space-y-2">
+                                <li>• 최종 점수: 74.4점</li>
+                                <li>• 기대수익률: +6.0%</li>
+                                <li>• TAVR 리더십</li>
+                                <li>• TMTT 기회 2030년 2B$</li>
+                                <li>• 구조적 심장질환 전문</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -191,1069 +283,378 @@
         </div>
     </section>
 
-    <!-- Dashboard Section -->
-    <section id="dashboard" class="dashboard-section">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-header text-center">
-                        <h2 class="section-title fade-in">
-                            <i class="fas fa-tachometer-alt me-3"></i>
-                            투자 분석 대시보드
-                        </h2>
-                        <p class="section-description fade-in">
-                            실시간 데이터 기반의 종합적인 투자 분석 및 의사결정 지원 시스템
-                        </p>
+    <!-- 전문 대시보드 섹션 -->
+    <section id="dashboard" class="py-20 bg-slate-900 text-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-4xl lg:text-5xl font-orbitron font-bold mb-6">전문 투자 대시보드</h2>
+                <p class="text-xl text-slate-300">
+                    Bloomberg Terminal 수준의 종합 분석 도구
+                </p>
+            </div>
+            
+            <!-- 탭 내비게이션 -->
+            <div class="flex flex-wrap justify-center mb-8 fade-in">
+                <button class="tab-btn active px-6 py-3 mx-2 mb-2 bg-blue-600 text-white rounded-lg font-semibold transition-colors" data-tab="overview">
+                    대시보드
+                </button>
+                <button class="tab-btn px-6 py-3 mx-2 mb-2 bg-slate-700 text-slate-300 rounded-lg font-semibold transition-colors hover:bg-slate-600" data-tab="analysis">
+                    종합분석
+                </button>
+                <button class="tab-btn px-6 py-3 mx-2 mb-2 bg-slate-700 text-slate-300 rounded-lg font-semibold transition-colors hover:bg-slate-600" data-tab="financials">
+                    재무분석
+                </button>
+                <button class="tab-btn px-6 py-3 mx-2 mb-2 bg-slate-700 text-slate-300 rounded-lg font-semibold transition-colors hover:bg-slate-600" data-tab="risk">
+                    리스크평가
+                </button>
+                <button class="tab-btn px-6 py-3 mx-2 mb-2 bg-slate-700 text-slate-300 rounded-lg font-semibold transition-colors hover:bg-slate-600" data-tab="portfolio">
+                    포트폴리오
+                </button>
+            </div>
+            
+            <!-- 탭 콘텐츠 -->
+            <div class="tab-content" id="overview">
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- 핵심 지표 -->
+                    <div class="bg-slate-800 rounded-2xl p-6">
+                        <h3 class="text-xl font-bold mb-4">핵심 지표</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span>최고 점수</span>
+                                <span class="text-fenok-accent font-bold">RMD (89.5)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>평균 기대수익률</span>
+                                <span class="text-green-400 font-bold">+10.3%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>리스크 조정 수익률</span>
+                                <span class="text-blue-400 font-bold">0.84</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 포트폴리오 권고 -->
+                    <div class="bg-slate-800 rounded-2xl p-6">
+                        <h3 class="text-xl font-bold mb-4">균형 포트폴리오</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>RMD</span>
+                                <span class="text-blue-400">35%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>TRMB</span>
+                                <span class="text-red-400">30%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>ABT</span>
+                                <span class="text-green-400">25%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>EW</span>
+                                <span class="text-amber-400">10%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 리스크 매트릭스 -->
+                    <div class="bg-slate-800 rounded-2xl p-6">
+                        <h3 class="text-xl font-bold mb-4">리스크 매트릭스</h3>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div class="bg-green-900 bg-opacity-50 p-2 rounded text-center">
+                                <div class="font-bold">낮음-높음</div>
+                                <div>RMD</div>
+                            </div>
+                            <div class="bg-yellow-900 bg-opacity-50 p-2 rounded text-center">
+                                <div class="font-bold">중간-중간</div>
+                                <div>TRMB</div>
+                            </div>
+                            <div class="bg-blue-900 bg-opacity-50 p-2 rounded text-center">
+                                <div class="font-bold">낮음-중간</div>
+                                <div>ABT</div>
+                            </div>
+                            <div class="bg-red-900 bg-opacity-50 p-2 rounded text-center">
+                                <div class="font-bold">높음-중간</div>
+                                <div>EW</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="row g-4">
-                <div class="col-xl-8">
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-bar me-2"></i>
-                                최종 가중 점수 비교
-                            </h3>
-                            <div class="card-controls">
-                                <button class="btn btn--sm btn--outline" onclick="refreshChart('comparison')">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="comparisonChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-xl-4">
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-ranking-star me-2"></i>
-                                순위 및 점수
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="ranking-list">
-                                <div class="rank-item gold">
-                                    <div class="rank-badge">1</div>
-                                    <div class="rank-info">
-                                        <div class="rank-name">ResMed</div>
-                                        <div class="rank-ticker">RMD</div>
-                                    </div>
-                                    <div class="rank-score">89.5</div>
-                                </div>
-                                <div class="rank-item silver">
-                                    <div class="rank-badge">2</div>
-                                    <div class="rank-info">
-                                        <div class="rank-name">Trimble</div>
-                                        <div class="rank-ticker">TRMB</div>
-                                    </div>
-                                    <div class="rank-score">80.9</div>
-                                </div>
-                                <div class="rank-item bronze">
-                                    <div class="rank-badge">3</div>
-                                    <div class="rank-info">
-                                        <div class="rank-name">Abbott</div>
-                                        <div class="rank-ticker">ABT</div>
-                                    </div>
-                                    <div class="rank-score">79.4</div>
-                                </div>
-                                <div class="rank-item">
-                                    <div class="rank-badge">4</div>
-                                    <div class="rank-info">
-                                        <div class="rank-name">Edwards</div>
-                                        <div class="rank-ticker">EW</div>
-                                    </div>
-                                    <div class="rank-score">74.4</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Competency Analysis Section -->
-    <section id="competency" class="analysis-section">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-header text-center">
-                        <h2 class="section-title fade-in">
-                            <i class="fas fa-spider me-3"></i>
-                            핵심 역량 분석
-                        </h2>
-                        <p class="section-description fade-in">
-                            15개 평가 기준에 따른 4개 기업의 종합적인 역량 비교 분석
-                        </p>
-                    </div>
+            <!-- 다른 탭들은 기본적으로 숨김 -->
+            <div class="tab-content hidden" id="analysis">
+                <div class="text-center py-12">
+                    <h3 class="text-2xl font-bold mb-4">종합 분석</h3>
+                    <p class="text-slate-400">상세한 종합 분석 내용이 여기에 표시됩니다.</p>
                 </div>
             </div>
             
-            <div class="row g-4">
-                <div class="col-lg-8">
-                    <div class="analysis-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-radar me-2"></i>
-                                레이더 차트 분석
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="competencyChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-4">
-                    <div class="analysis-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-list me-2"></i>
-                                범례 및 제어
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="legend-controls">
-                                <div class="legend-item active" data-company="RMD">
-                                    <span class="legend-dot rmd"></span>
-                                    <span class="legend-label">ResMed</span>
-                                    <span class="legend-score">89.5</span>
-                                </div>
-                                <div class="legend-item active" data-company="TRMB">
-                                    <span class="legend-dot trmb"></span>
-                                    <span class="legend-label">Trimble</span>
-                                    <span class="legend-score">80.9</span>
-                                </div>
-                                <div class="legend-item active" data-company="ABT">
-                                    <span class="legend-dot abt"></span>
-                                    <span class="legend-label">Abbott</span>
-                                    <span class="legend-score">79.4</span>
-                                </div>
-                                <div class="legend-item active" data-company="EW">
-                                    <span class="legend-dot ew"></span>
-                                    <span class="legend-label">Edwards</span>
-                                    <span class="legend-score">74.4</span>
-                                </div>
-                            </div>
-                            
-                            <div class="evaluation-criteria">
-                                <h4>평가 기준</h4>
-                                <div class="criteria-grid">
-                                    <div class="criteria-item">저평가</div>
-                                    <div class="criteria-item">성장성</div>
-                                    <div class="criteria-item">경기방어력</div>
-                                    <div class="criteria-item">해자</div>
-                                    <div class="criteria-item">경영진</div>
-                                    <div class="criteria-item">자본효율성</div>
-                                    <div class="criteria-item">촉매 요인</div>
-                                    <div class="criteria-item">밸류에이션</div>
-                                    <div class="criteria-item">재평가 가능성</div>
-                                    <div class="criteria-item">시장 심리</div>
-                                    <div class="criteria-item">애널리스트 전망</div>
-                                    <div class="criteria-item">기술 혁신</div>
-                                    <div class="criteria-item">시장 지위</div>
-                                    <div class="criteria-item">재무 건전성</div>
-                                    <div class="criteria-item">주주 환원</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Scenario Analysis Section -->
-    <section id="scenarios" class="analysis-section">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-header text-center">
-                        <h2 class="section-title fade-in">
-                            <i class="fas fa-chart-area me-3"></i>
-                            시나리오 분석
-                        </h2>
-                        <p class="section-description fade-in">
-                            6개월 투자 기간 동안의 상승/하락 시나리오 vs S&P 500 벤치마크 비교
-                        </p>
-                    </div>
+            <div class="tab-content hidden" id="financials">
+                <div class="text-center py-12">
+                    <h3 class="text-2xl font-bold mb-4">재무 분석</h3>
+                    <p class="text-slate-400">재무 지표 및 분석 내용이 여기에 표시됩니다.</p>
                 </div>
             </div>
             
-            <div class="row">
-                <div class="col-12">
-                    <div class="analysis-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-line me-2"></i>
-                                6개월 수익률 시나리오
-                            </h3>
-                            <div class="scenario-legend">
-                                <div class="legend-item">
-                                    <span class="legend-dot bull"></span>
-                                    <span>상승 시나리오</span>
-                                </div>
-                                <div class="legend-item">
-                                    <span class="legend-dot bear"></span>
-                                    <span>하락 시나리오</span>
-                                </div>
-                                <div class="legend-item">
-                                    <span class="legend-dot sp500"></span>
-                                    <span>S&P 500 기준</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="scenarioChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Financials Section -->
-    <section id="financials" class="analysis-section">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-header text-center">
-                        <h2 class="section-title fade-in">
-                            <i class="fas fa-calculator me-3"></i>
-                            재무 분석
-                        </h2>
-                        <p class="section-description fade-in">
-                            핵심 재무 지표 및 밸류에이션 분석
-                        </p>
-                    </div>
+            <div class="tab-content hidden" id="risk">
+                <div class="text-center py-12">
+                    <h3 class="text-2xl font-bold mb-4">리스크 평가</h3>
+                    <p class="text-slate-400">리스크 분석 및 평가 내용이 여기에 표시됩니다.</p>
                 </div>
             </div>
             
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="financial-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-pie me-2"></i>
-                                핵심 재무 지표
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="financial-metrics">
-                                <div class="metric-group">
-                                    <h4>ResMed (RMD)</h4>
-                                    <div class="metric-row">
-                                        <span class="metric-label">P/E Ratio</span>
-                                        <span class="metric-value">28.5</span>
-                                    </div>
-                                    <div class="metric-row">
-                                        <span class="metric-label">EV/EBITDA</span>
-                                        <span class="metric-value">17.0</span>
-                                    </div>
-                                    <div class="metric-row">
-                                        <span class="metric-label">ROIC</span>
-                                        <span class="metric-value highlight">21.2%</span>
-                                    </div>
-                                    <div class="metric-row">
-                                        <span class="metric-label">FCF Yield</span>
-                                        <span class="metric-value">3.9%</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="metric-group">
-                                    <h4>Trimble (TRMB)</h4>
-                                    <div class="metric-row">
-                                        <span class="metric-label">P/E Ratio</span>
-                                        <span class="metric-value">23.0</span>
-                                    </div>
-                                    <div class="metric-row">
-                                        <span class="metric-label">EV/EBITDA</span>
-                                        <span class="metric-value">17.0</span>
-                                    </div>
-                                    <div class="metric-row">
-                                        <span class="metric-label">ARR Growth</span>
-                                        <span class="metric-value highlight">17% YoY</span>
-                                    </div>
-                                    <div class="metric-row">
-                                        <span class="metric-label">TAM</span>
-                                        <span class="metric-value">$70B+ (25% 침투율)</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-6">
-                    <div class="financial-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-balance-scale me-2"></i>
-                                밸류에이션 비교
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="valuation-table">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>기업</th>
-                                            <th>현재가</th>
-                                            <th>목표가</th>
-                                            <th>상승여력</th>
-                                            <th>리스크</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="highlight">
-                                            <td><strong>ResMed</strong></td>
-                                            <td>$255.16</td>
-                                            <td>$295.00</td>
-                                            <td class="positive">+15.5%</td>
-                                            <td><span class="badge badge-medium">중간</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Trimble</strong></td>
-                                            <td>$67.50</td>
-                                            <td>$76.00</td>
-                                            <td class="positive">+12.8%</td>
-                                            <td><span class="badge badge-high">중상</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Abbott</strong></td>
-                                            <td>$115.20</td>
-                                            <td>$125.00</td>
-                                            <td class="positive">+8.5%</td>
-                                            <td><span class="badge badge-low">낮음</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Edwards</strong></td>
-                                            <td>$89.30</td>
-                                            <td>$95.50</td>
-                                            <td class="positive">+7.2%</td>
-                                            <td><span class="badge badge-high">높음</span></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+            <div class="tab-content hidden" id="portfolio">
+                <div class="text-center py-12">
+                    <h3 class="text-2xl font-bold mb-4">포트폴리오 최적화</h3>
+                    <p class="text-slate-400">포트폴리오 구성 및 최적화 도구가 여기에 표시됩니다.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Risk Assessment Section -->
-    <section id="risk" class="analysis-section">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-header text-center">
-                        <h2 class="section-title fade-in">
-                            <i class="fas fa-shield-alt me-3"></i>
-                            리스크 평가
-                        </h2>
-                        <p class="section-description fade-in">
-                            종합적인 리스크 분석 및 관리 전략
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row g-4">
-                <div class="col-lg-8">
-                    <div class="risk-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                리스크 매트릭스
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="risk-matrix">
-                                <div class="risk-item low">
-                                    <div class="risk-company">Abbott</div>
-                                    <div class="risk-level">낮은 리스크</div>
-                                    <div class="risk-factors">
-                                        <span class="factor">다각화 포트폴리오</span>
-                                        <span class="factor">안정적 현금흐름</span>
-                                        <span class="factor">경기 방어력</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="risk-item medium">
-                                    <div class="risk-company">ResMed</div>
-                                    <div class="risk-level">중간 리스크</div>
-                                    <div class="risk-factors">
-                                        <span class="factor">독점적 지위</span>
-                                        <span class="factor">규제 변화</span>
-                                        <span class="factor">경쟁 복귀</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="risk-item high">
-                                    <div class="risk-company">Trimble</div>
-                                    <div class="risk-level">중상 리스크</div>
-                                    <div class="risk-factors">
-                                        <span class="factor">경기 민감도</span>
-                                        <span class="factor">전환 리스크</span>
-                                        <span class="factor">기술 경쟁</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="risk-item high">
-                                    <div class="risk-company">Edwards</div>
-                                    <div class="risk-level">높은 리스크</div>
-                                    <div class="risk-factors">
-                                        <span class="factor">규제 승인</span>
-                                        <span class="factor">임상 실패</span>
-                                        <span class="factor">시장 변동</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-4">
-                    <div class="risk-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-line me-2"></i>
-                                VaR 분석
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="var-analysis">
-                                <div class="var-item">
-                                    <div class="var-label">95% 신뢰구간 (6개월)</div>
-                                    <div class="var-value">-12.1%</div>
-                                </div>
-                                <div class="var-item">
-                                    <div class="var-label">99% 신뢰구간 (6개월)</div>
-                                    <div class="var-value">-17.8%</div>
-                                </div>
-                                <div class="var-item">
-                                    <div class="var-label">최대 예상 손실</div>
-                                    <div class="var-value">-25%</div>
-                                </div>
-                            </div>
-                            
-                            <div class="risk-management">
-                                <h4>리스크 관리 전략</h4>
-                                <ul>
-                                    <li>개별 종목 최대 5% 제한</li>
-                                    <li>손절매 기준: -15%</li>
-                                    <li>이익실현: +20%</li>
-                                    <li>주간 리뷰 및 월간 재평가</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Portfolio Optimization Section -->
-    <section id="portfolio" class="analysis-section">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-header text-center">
-                        <h2 class="section-title fade-in">
-                            <i class="fas fa-briefcase me-3"></i>
-                            포트폴리오 최적화
-                        </h2>
-                        <p class="section-description fade-in">
-                            리스크 성향별 최적 포트폴리오 구성 권고안
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="portfolio-card conservative">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-shield me-2"></i>
-                                보수적 포트폴리오
-                            </h3>
-                            <div class="portfolio-stats">
-                                <div class="stat">
-                                    <span class="stat-label">예상 수익률</span>
-                                    <span class="stat-value">+10.2%</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-label">리스크 수준</span>
-                                    <span class="stat-value low">낮음</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="allocation-chart">
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill abt" style="width: 40%"></div>
-                                    </div>
-                                    <div class="allocation-label">Abbott 40%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill rmd" style="width: 25%"></div>
-                                    </div>
-                                    <div class="allocation-label">ResMed 25%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill trmb" style="width: 20%"></div>
-                                    </div>
-                                    <div class="allocation-label">Trimble 20%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill ew" style="width: 15%"></div>
-                                    </div>
-                                    <div class="allocation-label">Edwards 15%</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-4">
-                    <div class="portfolio-card balanced recommended">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-balance-scale me-2"></i>
-                                균형 포트폴리오
-                                <span class="recommended-badge">추천</span>
-                            </h3>
-                            <div class="portfolio-stats">
-                                <div class="stat">
-                                    <span class="stat-label">예상 수익률</span>
-                                    <span class="stat-value">+11.4%</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-label">리스크 수준</span>
-                                    <span class="stat-value medium">중간</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="allocation-chart">
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill rmd" style="width: 35%"></div>
-                                    </div>
-                                    <div class="allocation-label">ResMed 35%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill trmb" style="width: 30%"></div>
-                                    </div>
-                                    <div class="allocation-label">Trimble 30%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill abt" style="width: 25%"></div>
-                                    </div>
-                                    <div class="allocation-label">Abbott 25%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill ew" style="width: 10%"></div>
-                                    </div>
-                                    <div class="allocation-label">Edwards 10%</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-4">
-                    <div class="portfolio-card aggressive">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-rocket me-2"></i>
-                                공격적 포트폴리오
-                            </h3>
-                            <div class="portfolio-stats">
-                                <div class="stat">
-                                    <span class="stat-label">예상 수익률</span>
-                                    <span class="stat-value">+12.8%</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-label">리스크 수준</span>
-                                    <span class="stat-value high">높음</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="allocation-chart">
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill rmd" style="width: 45%"></div>
-                                    </div>
-                                    <div class="allocation-label">ResMed 45%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill trmb" style="width: 35%"></div>
-                                    </div>
-                                    <div class="allocation-label">Trimble 35%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill abt" style="width: 15%"></div>
-                                    </div>
-                                    <div class="allocation-label">Abbott 15%</div>
-                                </div>
-                                <div class="allocation-item">
-                                    <div class="allocation-bar">
-                                        <div class="allocation-fill ew" style="width: 5%"></div>
-                                    </div>
-                                    <div class="allocation-label">Edwards 5%</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Company Profiles Section -->
-    <section id="profiles" class="analysis-section">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-header text-center">
-                        <h2 class="section-title fade-in">
-                            <i class="fas fa-building me-3"></i>
-                            기업 상세 분석
-                        </h2>
-                        <p class="section-description fade-in">
-                            각 기업의 핵심 투자 포인트와 특징 분석
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row g-4">
-                <div class="col-lg-6 col-xl-3">
-                    <div class="company-card rmd fade-in">
-                        <div class="card-inner">
-                            <div class="card-front">
-                                <div class="company-logo">
-                                    <i class="fas fa-bed"></i>
-                                </div>
-                                <div class="company-info">
-                                    <h3 class="company-ticker">RMD</h3>
-                                    <p class="company-name">ResMed</p>
-                                    <div class="company-score">89.5</div>
-                                </div>
-                                <div class="company-type">
-                                    높은 해자를 가진 디지털 헬스 복리 성장주
-                                </div>
-                                <div class="flip-indicator">
-                                    <i class="fas fa-sync-alt"></i>
-                                    클릭하여 상세 정보 보기
-                                </div>
-                            </div>
-                            <div class="card-back">
-                                <div class="company-details">
-                                    <h4>핵심 강점</h4>
-                                    <ul>
-                                        <li>2,900만+ 커넥티드 기기</li>
-                                        <li>220억+ 수면 데이터 포인트</li>
-                                        <li>1만+ 특허 포트폴리오</li>
-                                        <li>80%+ CPAP 시장 점유율</li>
-                                    </ul>
-                                    
-                                    <h4>투자 논리</h4>
-                                    <p>경쟁사 Philips의 대규모 리콜 사태 이후 독점적 시장 지위를 확보하고, GLP-1 약물 확산이 오히려 수면무호흡 진단률을 높이는 역설적 기회를 보유</p>
-                                    
-                                    <div class="target-metrics">
-                                        <div class="metric">
-                                            <span class="metric-label">목표 수익률</span>
-                                            <span class="metric-value">+15.5%</span>
-                                        </div>
-                                        <div class="metric">
-                                            <span class="metric-label">리스크 수준</span>
-                                            <span class="metric-value">중간</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-6 col-xl-3">
-                    <div class="company-card trmb fade-in">
-                        <div class="card-inner">
-                            <div class="card-front">
-                                <div class="company-logo">
-                                    <i class="fas fa-drafting-compass"></i>
-                                </div>
-                                <div class="company-info">
-                                    <h3 class="company-ticker">TRMB</h3>
-                                    <p class="company-name">Trimble</p>
-                                    <div class="company-score">80.9</div>
-                                </div>
-                                <div class="company-type">
-                                    소프트웨어 전환 및 가치주 투자
-                                </div>
-                                <div class="flip-indicator">
-                                    <i class="fas fa-sync-alt"></i>
-                                    클릭하여 상세 정보 보기
-                                </div>
-                            </div>
-                            <div class="card-back">
-                                <div class="company-details">
-                                    <h4>핵심 강점</h4>
-                                    <ul>
-                                        <li>79% 소프트웨어/서비스 매출</li>
-                                        <li>AECO 시장 리더</li>
-                                        <li>$3B ARR 목표</li>
-                                        <li>17% YoY ARR 성장</li>
-                                    </ul>
-                                    
-                                    <h4>투자 논리</h4>
-                                    <p>건설, 농업 등 전통 산업 분야에서 하드웨어 중심 기업에서 고마진의 구독 기반 소프트웨어 기업으로 성공적인 전환 진행 중</p>
-                                    
-                                    <div class="target-metrics">
-                                        <div class="metric">
-                                            <span class="metric-label">목표 수익률</span>
-                                            <span class="metric-value">+12.8%</span>
-                                        </div>
-                                        <div class="metric">
-                                            <span class="metric-label">리스크 수준</span>
-                                            <span class="metric-value">중상</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-6 col-xl-3">
-                    <div class="company-card abt fade-in">
-                        <div class="card-inner">
-                            <div class="card-front">
-                                <div class="company-logo">
-                                    <i class="fas fa-heartbeat"></i>
-                                </div>
-                                <div class="company-info">
-                                    <h3 class="company-ticker">ABT</h3>
-                                    <p class="company-name">Abbott</p>
-                                    <div class="company-score">79.4</div>
-                                </div>
-                                <div class="company-type">
-                                    다각화된 방어적 리더
-                                </div>
-                                <div class="flip-indicator">
-                                    <i class="fas fa-sync-alt"></i>
-                                    클릭하여 상세 정보 보기
-                                </div>
-                            </div>
-                            <div class="card-back">
-                                <div class="company-details">
-                                    <h4>핵심 강점</h4>
-                                    <ul>
-                                        <li>다각화 포트폴리오</li>
-                                        <li>글로벌 90개 생산시설</li>
-                                        <li>강력한 브랜드</li>
-                                        <li>53년 연속 배당 증가</li>
-                                    </ul>
-                                    
-                                    <h4>투자 논리</h4>
-                                    <p>의료기기, 진단, 영양, 제약 등 광범위한 포트폴리오를 통해 안정성과 예측 가능한 현금 흐름을 제공하는 글로벌 헬스케어 대기업</p>
-                                    
-                                    <div class="target-metrics">
-                                        <div class="metric">
-                                            <span class="metric-label">목표 수익률</span>
-                                            <span class="metric-value">+8.5%</span>
-                                        </div>
-                                        <div class="metric">
-                                            <span class="metric-label">리스크 수준</span>
-                                            <span class="metric-value">낮음</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-6 col-xl-3">
-                    <div class="company-card ew fade-in">
-                        <div class="card-inner">
-                            <div class="card-front">
-                                <div class="company-logo">
-                                    <i class="fas fa-heart"></i>
-                                </div>
-                                <div class="company-info">
-                                    <h3 class="company-ticker">EW</h3>
-                                    <p class="company-name">Edwards</p>
-                                    <div class="company-score">74.4</div>
-                                </div>
-                                <div class="company-type">
-                                    구조적 심장 질환 분야의 집중형 혁신가
-                                </div>
-                                <div class="flip-indicator">
-                                    <i class="fas fa-sync-alt"></i>
-                                    클릭하여 상세 정보 보기
-                                </div>
-                            </div>
-                            <div class="card-back">
-                                <div class="company-details">
-                                    <h4>핵심 강점</h4>
-                                    <ul>
-                                        <li>TAVR 기술 선도</li>
-                                        <li>TMTT 파이프라인</li>
-                                        <li>임상 데이터 우위</li>
-                                        <li>$2B 매출 목표 (2030)</li>
-                                    </ul>
-                                    
-                                    <h4>투자 논리</h4>
-                                    <p>경피적 대동맥판막 치환술(TAVR)과 경피적 승모판 및 삼첨판 치료(TMTT) 등 특정 고성장 분야에 집중하는 기술 기반 의료기기 기업</p>
-                                    
-                                    <div class="target-metrics">
-                                        <div class="metric">
-                                            <span class="metric-label">목표 수익률</span>
-                                            <span class="metric-value">+7.2%</span>
-                                        </div>
-                                        <div class="metric">
-                                            <span class="metric-label">리스크 수준</span>
-                                            <span class="metric-value">높음</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Conclusion Section -->
-    <section id="conclusion" class="conclusion-section">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-lg-10 mx-auto">
-                    <div class="conclusion-content fade-in">
-                        <div class="conclusion-header text-center">
-                            <h2 class="section-title">
-                                <i class="fas fa-trophy me-3"></i>
-                                최종 투자 권고
-                            </h2>
-                            <p class="section-description">
-                                종합적 분석을 바탕으로 한 투자 의사결정 및 실행 계획
-                            </p>
-                        </div>
-                        
-                        <div class="conclusion-highlight">
-                            <div class="highlight-content">
-                                <h3>
-                                    <i class="fas fa-star text-accent me-2"></i>
-                                    ResMed (RMD) - 최고의 투자 기회
-                                </h3>
-                                <p>
-                                    ResMed는 독점적 시장 지위, 탁월한 자본 효율성, 그리고 GLP-1 약물 확산이라는 잘못 인식된 기회까지 
-                                    모든 면에서 뛰어난 투자 가치를 제공합니다. 89.5점의 최고 점수로 4개 기업 중 명확한 1위를 차지했습니다.
-                                </p>
-                                
-                                <div class="highlight-metrics">
-                                    <div class="metric-item">
-                                        <div class="metric-icon">
-                                            <i class="fas fa-crown"></i>
-                                        </div>
-                                        <div class="metric-content">
-                                            <div class="metric-value">80%+</div>
-                                            <div class="metric-label">시장 점유율</div>
-                                        </div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-icon">
-                                            <i class="fas fa-chart-line"></i>
-                                        </div>
-                                        <div class="metric-content">
-                                            <div class="metric-value">21.2%</div>
-                                            <div class="metric-label">ROIC</div>
-                                        </div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-icon">
-                                            <i class="fas fa-target"></i>
-                                        </div>
-                                        <div class="metric-content">
-                                            <div class="metric-value">+25%</div>
-                                            <div class="metric-label">목표 수익률</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row g-4">
-                            <div class="col-lg-6">
-                                <div class="conclusion-card">
-                                    <div class="card-header">
-                                        <h4>
-                                            <i class="fas fa-lightbulb me-2"></i>
-                                            핵심 투자 논리
-                                        </h4>
-                                    </div>
-                                    <div class="card-body">
-                                        <ul class="investment-points">
-                                            <li>
-                                                <strong>독점적 시장 지위:</strong> 
-                                                Philips 리콜 사태로 인한 80% 이상의 시장 점유율 확보
-                                            </li>
-                                            <li>
-                                                <strong>GLP-1 기회:</strong> 
-                                                체중 감량 약물 확산이 오히려 수면무호흡 진단률을 10.8% 증가시킴
-                                            </li>
-                                            <li>
-                                                <strong>자본 효율성:</strong> 
-                                                업계 최고 수준의 ROIC 21.2%와 지속적인 R&D 투자
-                                            </li>
-                                            <li>
-                                                <strong>디지털 생태계:</strong> 
-                                                2,900만+ 커넥티드 기기와 220억+ 데이터 포인트
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-6">
-                                <div class="conclusion-card">
-                                    <div class="card-header">
-                                        <h4>
-                                            <i class="fas fa-exclamation-triangle me-2"></i>
-                                            주요 리스크 요인
-                                        </h4>
-                                    </div>
-                                    <div class="card-body">
-                                        <ul class="risk-points">
-                                            <li>
-                                                <strong>규제 리스크:</strong> 
-                                                FDA 승인 지연 또는 규제 환경 변화 가능성
-                                            </li>
-                                            <li>
-                                                <strong>경쟁 리스크:</strong> 
-                                                Philips의 시장 복귀 가능성 (2026년 예상)
-                                            </li>
-                                            <li>
-                                                <strong>기술 리스크:</strong> 
-                                                새로운 치료 방법이나 대체 기술의 등장
-                                            </li>
-                                            <li>
-                                                <strong>시장 리스크:</strong> 
-                                                경기 침체 시 의료비 지출 감소 우려
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="final-recommendation">
-                            <div class="recommendation-card">
-                                <div class="recommendation-header">
-                                    <h3>
-                                        <i class="fas fa-bullseye me-2"></i>
-                                        최종 투자 권고
-                                    </h3>
-                                </div>
-                                <div class="recommendation-content">
-                                    <div class="recommendation-rating">
-                                        <div class="rating-label">투자 등급</div>
-                                        <div class="rating-value strong-buy">매수 강력 추천</div>
-                                    </div>
-                                    
-                                    <div class="recommendation-targets">
-                                        <div class="target-item">
-                                            <span class="target-label">목표 수익률</span>
-                                            <span class="target-value">+15.5%</span>
-                                        </div>
-                                        <div class="target-item">
-                                            <span class="target-label">투자 기간</span>
-                                            <span class="target-value">6개월</span>
-                                        </div>
-                                        <div class="target-item">
-                                            <span class="target-label">리스크 수준</span>
-                                            <span class="target-value">중간</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="recommendation-summary">
-                                        <p>
-                                            ResMed는 현재 시장에서 가장 매력적인 투자 기회 중 하나로, 
-                                            독점적 시장 지위와 탁월한 자본 효율성을 바탕으로 6개월 목표 수익률 +15.5%를 달성할 수 있는 
-                                            높은 확률을 보여줍니다. 균형 포트폴리오에서 35% 비중으로 배분할 것을 권장합니다.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="footer-brand">
-                        <h5>100x FenoK Alpha Pick</h5>
-                        <p>전문적인 투자 분석과 데이터 기반 의사결정을 지원합니다.</p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="footer-disclaimer">
-                        <h6>면책 조항</h6>
-                        <p>
-                            본 분석은 정보 제공 목적으로만 작성되었으며, 투자 권유나 매매 제안이 아닙니다. 
-                            투자 결정은 본인의 판단과 책임 하에 신중하게 내리시기 바랍니다.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 text-center">
-                    <div class="footer-bottom">
-                        <p>&copy; 2025 100x FenoK. 모든 권리 보유.</p>
-                    </div>
-                </div>
-            </div>
+    <!-- 푸터 -->
+    <footer class="py-12 px-6 bg-slate-50">
+        <div class="container mx-auto text-center text-slate-500">
+            <div class="text-2xl font-orbitron font-bold mb-2 text-slate-800">El Fenomeno Kim</div>
+            <p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
+            <p class="text-xs text-slate-400">
+                © 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>
+                100x • QUANTUM POWERED
+            </p>
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-    <script src="app.js"></script>
+    <script>
+        // 투자 분석 데이터
+        const investmentData = {
+            finalScores: {
+                labels: ['RMD', 'TRMB', 'ABT', 'EW'],
+                data: [89.5, 80.9, 79.4, 74.4]
+            },
+            scenarioAnalysis: {
+                'RMD': [0, 25],
+                'TRMB': [-5, 22], 
+                'ABT': [-2, 15],
+                'EW': [-8, 15]
+            },
+            radarChart: {
+                labels: ['저평가', '성장성', '경기방어력', '해자', '경영진', '자본효율성', '주주환원', '재평가', '촉매', '리스크내성', '시장심리', '유동성', 'ESG', '배당', '기술력'],
+                datasets: [
+                    {
+                        label: 'RMD',
+                        data: [8, 10, 8, 10, 9, 10, 7, 9, 10, 9, 8, 8, 7, 5, 9],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)'
+                    },
+                    {
+                        label: 'TRMB', 
+                        data: [9, 9, 6, 8, 8, 7, 6, 10, 8, 7, 7, 7, 8, 4, 8],
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)'
+                    },
+                    {
+                        label: 'ABT',
+                        data: [7, 6, 10, 7, 8, 8, 10, 6, 6, 9, 8, 9, 9, 9, 7],
+                        borderColor: '#10B981', 
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)'
+                    },
+                    {
+                        label: 'EW',
+                        data: [6, 8, 5, 7, 7, 8, 6, 7, 9, 6, 6, 6, 7, 6, 8],
+                        borderColor: '#F59E0B',
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)'
+                    }
+                ]
+            }
+        };
+
+        // 스크롤 애니메이션
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 애니메이션 요소 관찰
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+
+            // 차트 초기화
+            initializeCharts();
+            
+            // 탭 기능 초기화
+            initializeTabs();
+        });
+
+        // 차트 초기화 함수
+        function initializeCharts() {
+            // 최종 점수 차트
+            const finalScoresCtx = document.getElementById('finalScoresChart').getContext('2d');
+            new Chart(finalScoresCtx, {
+                type: 'bar',
+                data: {
+                    labels: investmentData.finalScores.labels,
+                    datasets: [{
+                        data: investmentData.finalScores.data,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(239, 68, 68, 0.8)', 
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)'
+                        ],
+                        borderColor: [
+                            '#3B82F6',
+                            '#EF4444',
+                            '#10B981', 
+                            '#F59E0B'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // 레이더 차트
+            const radarCtx = document.getElementById('radarChart').getContext('2d');
+            new Chart(radarCtx, {
+                type: 'radar',
+                data: investmentData.radarChart,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 10
+                        }
+                    }
+                }
+            });
+
+            // 시나리오 분석 차트
+            const scenarioCtx = document.getElementById('scenarioChart').getContext('2d');
+            const scenarioLabels = Object.keys(investmentData.scenarioAnalysis);
+            const scenarioData = Object.values(investmentData.scenarioAnalysis);
+            
+            new Chart(scenarioCtx, {
+                type: 'bar',
+                data: {
+                    labels: scenarioLabels,
+                    datasets: [{
+                        label: '6개월 시나리오 범위',
+                        data: scenarioData,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.6)',
+                            'rgba(239, 68, 68, 0.6)',
+                            'rgba(16, 185, 129, 0.6)', 
+                            'rgba(245, 158, 11, 0.6)'
+                        ],
+                        borderColor: [
+                            '#3B82F6',
+                            '#EF4444',
+                            '#10B981',
+                            '#F59E0B'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: -10,
+                            max: 30
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const range = context.parsed.y;
+                                    return `수익률 범위: ${range[0]}% ~ ${range[1]}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 플립 카드 함수
+        function flipCard(card) {
+            card.classList.toggle('flipped');
+        }
+
+        // 탭 기능 초기화
+        function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.getAttribute('data-tab');
+                    
+                    // 모든 탭 버튼 비활성화
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active', 'bg-blue-600', 'text-white');
+                        btn.classList.add('bg-slate-700', 'text-slate-300');
+                    });
+                    
+                    // 클릭된 탭 버튼 활성화
+                    button.classList.add('active', 'bg-blue-600', 'text-white');
+                    button.classList.remove('bg-slate-700', 'text-slate-300');
+                    
+                    // 모든 탭 콘텐츠 숨김
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // 선택된 탭 콘텐츠 표시
+                    document.getElementById(targetTab).classList.remove('hidden');
+                });
+            });
+        }
+
+        // 스무스 스크롤
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
 </body>
 </html>
