@@ -585,26 +585,26 @@ function initializeLegendControls() {
 
 // Portfolio interaction features
 function initializePortfolioInteractions() {
-    const portfolioCards = document.querySelectorAll('.portfolio-card');
+    // const portfolioCards = document.querySelectorAll('.portfolio-card');
     
-    portfolioCards.forEach(card => {
-        card.addEventListener('click', function() {
-            // Remove active class from all cards
-            portfolioCards.forEach(c => c.classList.remove('active'));
+    // portfolioCards.forEach(card => {
+    //     card.addEventListener('click', function() {
+    //         // Remove active class from all cards
+    //         portfolioCards.forEach(c => c.classList.remove('active'));
             
-            // Add active class to clicked card
-            this.classList.add('active');
+    //         // Add active class to clicked card
+    //         this.classList.add('active');
             
-            // Get portfolio type
-            const portfolioType = this.classList.contains('conservative') ? 'conservative' :
-                                 this.classList.contains('balanced') ? 'balanced' : 'aggressive';
+    //         // Get portfolio type
+    //         const portfolioType = this.classList.contains('conservative') ? 'conservative' :
+    //                              this.classList.contains('balanced') ? 'balanced' : 'aggressive';
             
-            // Update allocation visualization (if needed)
-            updatePortfolioVisualization(portfolioType);
+    //         // Update allocation visualization (if needed)
+    //         updatePortfolioVisualization(portfolioType);
             
-            console.log(`Portfolio selected: ${portfolioType}`);
-        });
-    });
+    //         console.log(`Portfolio selected: ${portfolioType}`);
+    //     });
+    // });
 }
 
 // Scroll effects and performance optimizations
@@ -796,3 +796,10 @@ window.addEventListener('afterprint', function() {
 });
 
 console.log('Investment Analysis Dashboard - ResMed Alpha Pick v2.0 Loaded Successfully');
+
+const flippableCard = document.querySelector('.flippable-card-container');
+if (flippableCard) {
+    flippableCard.addEventListener('click', () => {
+        flippableCard.classList.toggle('flipped');
+    });
+}

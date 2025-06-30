@@ -1327,12 +1327,19 @@ a:hover {
 .risk-card,
 .portfolio-card,
 .conclusion-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.0);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   transition: all 0.3s ease;
   height: 100%;
+}
+
+.conclusion-card .card-header h4 {
+    color: #f1f5f9 !important; /* !important를 추가해 다른 스타일에 덮어쓰여지지 않도록 강제 적용 */
+    font-family: 'Noto Sans KR', sans-serif !important; /* 폰트 강제 적용 */
+    font-weight: 700;
+    font-size: 1.25rem;
 }
 
 .dashboard-card:hover,
@@ -1551,6 +1558,7 @@ a:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: white;
   padding: 0.75rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -1569,28 +1577,6 @@ a:hover {
   color: var(--fenok-accent);
   font-weight: 700;
 }
-
-/* Valuation Table */
-/* .valuation-table .table {
-  color: white;
-  margin: 0;
-}
-
-.valuation-table .table th {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: var(--fenok-accent);
-  font-weight: 600;
-}
-
-.valuation-table .table td {
-  border-color: rgba(255, 255, 255, 0.05);
-  vertical-align: middle;
-}
-
-.valuation-table .table tr.highlight {
-  background: rgba(251, 191, 36, 0.05);
-} */
 
 /* ============ Valuation Table 리디자인 ============ */
 /* 테이블 헤더: 네이비 단색 + 얇은 바텀 보더로 강조 */
@@ -2067,36 +2053,33 @@ a:hover {
 
 /* Conclusion Section */
 .conclusion-content {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-lg);
-  padding: 3rem;
+    /* 첫 번째 코드의 장점인 블러 배경 효과를 그대로 사용합니다. */
+    background: rgba(30, 41, 59, 0.75); /* 배경을 조금 더 불투명하게 하여 글씨가 잘 보이게 조정 */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px); /* 웹킷 브라우저 호환성 */
+
+    /* 두 번째 코드의 레이아웃 장점을 가져옵니다. */
+    border: 1px solid rgba(251, 191, 36, 0.4); /* 테두리 색상을 톤 다운된 골드로 변경 */
+    border-radius: 18px;
+    padding: 3rem 2.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 8px 36px 0 rgba(0,0,0,0.2);
+    font-family: 'Noto Sans KR', sans-serif; /* 내부 모든 텍스트에 폰트 적용 */
 }
 
-.conclusion-content {
-  padding: 3.5rem 2.5rem 3rem 2.5rem;
-  border-radius: 18px;
-  min-width: 0;
-  min-height: 340px;
-  background: rgba(30,41,59,0.45);
-  border: 1.5px solid #fbbf24;
-  margin-top: 2.5rem;
-  margin-bottom: 2.5rem;
-  box-shadow: 0 8px 36px 0 rgba(16,32,72,0.14);
-}
-
-
+/* 눈부심을 줄이기 위해 하이라이트 배경색 변경 */
 .conclusion-highlight {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: linear-gradient(135deg, rgba(217, 161, 11, 0.15) 0%, rgba(217, 161, 11, 0.1) 100%);
+  border: 1px solid rgba(217, 161, 11, 0.4);
   border-radius: var(--radius-lg);
   padding: 2rem;
   margin-bottom: 3rem;
 }
 
+/* 제목("핵심 투자 논리") 글씨가 안보이는 문제 해결 */
 .highlight-content h3 {
-  color: var(--fenok-accent);
+  color: #f1f5f9; /* 흰색 계열로 변경하여 가독성 확보 */
   font-weight: 700;
   margin-bottom: 1rem;
   font-size: 1.5rem;
@@ -2121,10 +2104,11 @@ a:hover {
   text-align: center;
 }
 
+/* 눈부신 노란색 아이콘 배경색 조정 */
 .metric-icon {
   width: 60px;
   height: 60px;
-  background: var(--fenok-accent);
+  background: #D9A10B; /* 톤 다운된 골드 색상 */
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2134,19 +2118,21 @@ a:hover {
 
 .metric-icon i {
   font-size: 1.5rem;
-  color: var(--fenok-primary);
+  color: #1e293b;
 }
 
+/* 눈부신 노란색 텍스트 색 조정 */
 .metric-content .metric-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--fenok-accent);
+  color: #d90b0b; /* 톤 다운된 골드 색상 */
   font-family: 'Orbitron', monospace;
 }
 
+/* 나머지 스타일은 기존 코드를 활용할 수 있도록 유지합니다. */
 .metric-content .metric-label {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: #cbd5e1;
   margin-top: 0.25rem;
 }
 
@@ -2426,4 +2412,45 @@ a:hover {
     min-height: auto;
     padding: 2rem 0;
   }
+}
+
+/* Flippable Card Styles (레이아웃 겹침 해결 최종 수정본) */
+.flippable-card-container {
+    perspective: 1000px;
+    cursor: pointer;
+    /* ★★★★★ 높이가 무너지지 않도록 최소 높이를 지정합니다 ★★★★★ */
+    min-height: 750px; /* 카드의 실제 콘텐츠 높이와 유사하게 설정 */
+}
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+
+.flippable-card-container.flipped .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden; /* Safari */
+    backface-visibility: hidden;
+}
+
+.card-back {
+    transform: rotateY(180deg);
+}
+
+.flip-indicator2 {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
 }
