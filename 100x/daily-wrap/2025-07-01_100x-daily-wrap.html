@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<!-- 
+    ================================================================================
+    LLM 및 개발자를 위한 100x Daily Wrap 페이지 제작 가이드 (FenoK's Philosophy v4.5)
+    ================================================================================
+    * **살아있는 지침 (Living Document):** 이 가이드는 고정불변이 아닙니다. 제작 과정에서 발견되는 더 나은 아이디어나 새로운 지침은 
+        지속적으로 이 문서에 추가하고 반영하여, 우리 결과물의 품질을 함께 향상시켜 나가야 합니다.
+
+    --- [ 제작 원칙 (Principles) ] ---
+
+    1.  **반응형 설계 (Responsive First):**
+        -   모든 컴포넌트는 모바일, 태블릿, PC 등 모든 디바이스에서 최적의 가독성과 사용성을 제공해야 합니다.
+        -   Tailwind CSS의 반응형 분기점(`sm:`, `md:`, `lg:`)을 적극적으로 사용하여 유동적인 레이아웃을 구현합니다.
+        -   특히 테이블(<table>)은 `<div class="overflow-x-auto">`로 감싸 작은 화면에서도 가로 스크롤로 모든 데이터를 확인할 수 있도록 보장해야 합니다.
+
+    2.  **데이터 처리 및 표현 (Data Handling & Representation):**
+        -   **데이터 무결성:** 원본 소스의 모든 데이터를 누락 없이 담는 것을 원칙으로 합니다. "이 정도면 되겠지"라는 타협 없이, 모든 정보를 충실히 반영하여 상세함을 유지합니다.
+        -   **데이터 공백의 창의적 시각화:**
+            -   **개별 N/A 값:** `.na-value` 클래스를 적용하여 '-' 와 같이 간결하고 세련되게 처리합니다.
+            -   **정보가 부족한 테이블:** 데이터가 없는 테이블 전체를 '-'로 채우는 대신, 과감히 해당 UI를 제거합니다. 대신, 데이터를 더욱 풍부하고 직관적으로 보여줄 수 있는 새로운 시각화 방식(ex: 히트맵, 정보 카드)으로 대체하여 정보의 공백을 가치 있는 정보로 전환합니다.
+            -   **주요 지표 N/A (ex: 유동성 지표):** 데이터 부재를 시각적으로 인지할 수 있는 비활성화된 그래픽(ex: 게이지)과 상세 설명을 추가하여 전문성을 높입니다.
+        -   **자연스러운 언어:** '시장 체제' 등 기계 번역투의 어색한 단어 사용을 지양합니다. '시장 환경' 등 문맥에 맞는 가장 자연스럽고 전문적인 용어를 끊임없이 탐색하고 적용합니다.
+        -   **복합 정보의 가독성 향상:** 하나의 항목에 주요 결론과 근거 데이터가 함께 있을 경우, 괄호로 길게 나열하기보다, '↳ 근거:'와 같은 보조 텍스트를 사용하여 명확하게 분리하고 시각적 계층을 만듭니다.
+        -   **강조와 생략:** `<b>` 태그, 색상, 아이콘을 활용해 핵심 키워드와 데이터를 강조하고, 불필요한 가이드라인 텍스트는 최종 산출물에서 반드시 제거합니다.
+
+    3.  **구조와 시맨틱 (Structure & Semantics):**
+        -   콘텐츠의 논리적 흐름에 따라 `<section>`으로 명확하게 구획을 나눕니다. 각 섹션의 제목은 `<h2>` 태그를 사용합니다.
+        -   정보의 위계가 중요합니다. 가장 중요한 '요약'과 '핵심 지표'를 최상단에 배치하고, 상세 데이터와 부록은 그 아래에 순차적으로 구성합니다.
+        -   FenoK(또는 El Fenomeno Kim)의 브랜딩이 푸터 등에 일관되게 적용되어야 합니다.
+
+    4.  **시각화 일관성 및 창의성 (Consistent & Creative Visualization):**
+        -   **아이콘의 체계적 활용(Systematic Use of Icons):** 아이콘은 단순히 장식용이 아닙니다. 긍정(초록), 부정(빨강), 중립/정책(파랑/보라) 등 내용의 성격에 맞는 색상을 체계적으로 사용하여 정보를 직관적으로 전달하는 역할을 합니다.
+        -   **차트:** Chart.js를 사용하되, 색상, 폰트 등을 통일하여 일관된 스타일을 유지합니다. 그날의 데이터 특성에 맞춰 '오늘의 차트'와 같이 새로운 시각화 아이디어를 적극적으로 제안하고 적용하여 리포트의 가치를 높입니다.
+        -   **정보 카드(Information Cards):** 경제 캘린더나 실적 발표처럼 목록형 정보는 단순 테이블 대신 개별 카드 형태로 표현하여 정보를 명확히 구분합니다. 특히 중요한 항목(ex: 핵심 PCE)은 `bg-yellow-100`과 같은 강조 색상을 사용하여 시각적 중요도를 높입니다.
+        -   **분석/관점 블록(Viewpoint Blocks):** 필진의 핵심 분석을 담는 'Viewpoint' 또는 '관점' 단락은 `border-l-4`, `bg-gray-50` 등을 사용하여 시각적으로 구분되는 컴포넌트로 만듭니다. 문단 내 핵심 키워드를 `<b>` 태그로 강조하여 가독성을 높입니다.
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100x Daily Wrap - 2025년 7월 1일</title>
+    <meta name="description" content="2025년 7월 1일자 100x Daily Wrap 리포트.">
+    <link rel="canonical" href="./2025-07-01_100x-daily-wrap.html">
+    <meta property="og:title" content="100x Daily Wrap - 2025년 7월 1일">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../../favicon-96x96.png">
+    <meta name="theme-color" content="#0ea5e9">
+    <!-- 외부 라이브러리: Tailwind(스타일), Chart.js(차트), FontAwesome(아이콘) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        body { font-family: 'Noto Sans KR', 'Roboto', sans-serif; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #e5e7eb; padding: 10px 14px; text-align: left; vertical-align: middle; }
+        th { background-color: #f9fafb; font-weight: 600; }
+        tbody tr:hover { background-color: #f3f4f6; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 500; }
+        .na-value { color: #9ca3af; font-style: italic;} /* N/A 값 처리를 위한 스타일 */
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+    <div id="nav"></div>
+
+    <!-- 헤더: 리포트의 제목과 날짜, 핵심 헤드라인을 명확하게 전달 -->
+    <header class="container mx-auto px-4 py-8 md:py-12">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-800 orbitron">100x Daily Wrap</h1>
+            <div class="text-lg md:text-xl text-gray-600 mb-2">2025년 7월 1일 (화요일)</div>
+            <div class="text-base md:text-lg text-blue-600 font-medium">무역 협상 낙관론으로 S&P 500 종가 사상 최고치 경신</div>
+        </div>
+    </header>
+
+    <!-- 핵심 지표 섹션 -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">S&P 500</h4>
+                <p class="text-2xl font-bold text-green-600">6,204.95</p>
+                <p class="text-sm font-semibold text-green-600">+0.52%</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">Nasdaq 100</h4>
+                <p class="text-2xl font-bold text-green-600">20,369.73</p>
+                <p class="text-sm font-semibold text-green-600">+0.47%</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">VIX</h4>
+                <p class="text-2xl font-bold text-green-600">16.73</p>
+                <p class="text-sm font-semibold text-green-600">+2.51%</p>
+            </div>
+             <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">10-Y Treasury</h4>
+                <p class="text-2xl font-bold text-red-600">4.26%</p>
+                <p class="text-sm font-semibold text-red-600">-3bp</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 1. Executive Summary & Today's Thesis -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-receipt mr-3 text-blue-600"></i>요약 및 오늘의 논점</h2>
+            <ul class="space-y-3 text-gray-700">
+                <li class="flex items-start"><i class="fas fa-chart-line text-green-500 mt-1 mr-3"></i><span><b>무역 협상 및 테크 감세 정책이 S&P 500 신고가 견인:</b> S&P 500은 캐나다의 디지털세 철회, 미국 무역 재개 기대 등 정책 모멘텀에 힘입어 0.52% 상승(6,204.95), 2023년 12월 이후 분기 최고치 기록.</span></li>
+                <li class="flex items-start"><i class="fas fa-water text-blue-500 mt-1 mr-3"></i><span><b>100x 유동성 지표, 옵션 기반 중립 시그널:</b> 딜러의 포지티브 감마 포지션(방어적 베팅)이 지지력 역할, 만기 옵션 포지션은 단기 변동성 상승 리스크.</span></li>
+                <li class="flex items-start"><i class="fas fa-globe-americas text-purple-500 mt-1 mr-3"></i><span><b>멀티에셋 강세 및 듀레이션 모멘텀:</b> 나스닥(+0.47%, 20,369.73) 등 리스크 자산 전반 강세, 월말 리밸런싱과 연준 인하 기대(9월 64% 확률 반영)로 미 국채 수요 견고.</span></li>
+                <li class="flex items-start"><i class="fas fa-percentage text-indigo-500 mt-1 mr-3"></i><span><b>Fed 금리 인하 기대치:</b> 시장은 7월 인하 20%, 9월 인하 73% 확률을 반영하며, 정책 변화 기대가 상승 동력으로 작용했습니다.</span></li>
+                <li class="flex items-start"><i class="fas fa-calendar-alt text-yellow-500 mt-1 mr-3"></i><span><b>7월 계절성+정책 모멘텀 환경:</b> 7월 강세 계절성, 회사채 순발행 감소, 미국-캐나다 무역 협상 진전이 하반기 주식시장에 긍정적 배경을 제공.</span></li>
+                <li class="flex items-start"><i class="fas fa-user-tie text-yellow-500 mt-1 mr-3"></i><span><b>주요 정책·옵션 이벤트:</b> 미 재무장관의 단기채 발행 선호 시사, 옵션 거래 집중(포지티브 감마) 등이 당일 시장 방향성에 직접적 영향.</span></li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 2. Today's Market Pulse -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-heartbeat mr-3 text-blue-600"></i>오늘의 시장 동향</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">주요 변화 요인</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start"><i class="fas fa-handshake text-green-500 mt-1 mr-3"></i><span><b>캐나다 무역 돌파구:</b> 캐나다가 미국 테크 기업에 대한 디지털 서비스세 계획을 철회하고 무역 협상을 재개하면서 테크 대기업에 즉각적인 안도감을 제공했습니다.</span></li>
+                        <li class="flex items-start"><i class="fas fa-stream text-blue-500 mt-1 mr-3"></i><span><b>옵션 흐름 역학:</b> 6,150-6,140 수준 근처에서 고객 풋 매수로부터 발생한 딜러들의 대규모 포지티브 감마 포지션은 하락 시 체계적인 매수를 강제하여 하락폭을 제한합니다.</span></li>
+                        <li class="flex items-start"><i class="fas fa-sync-alt text-orange-500 mt-1 mr-3"></i><span><b>월말 리밸런싱:</b> 7월 1일부로 고정 수익 지수가 0.07년 만기를 연장하면서 포트폴리오 보유 자산 리밸런싱에 따라 국채 매수가 발생했습니다.</span></li>
+                        <li class="flex items-start"><i class="fas fa-dove text-purple-500 mt-1 mr-3"></i><span><b>연준 금리 인하 기대:</b> 이번 주 연준 금리 인하에 대한 시장 가격 반영이 15bp 증가했으며, 트레이더들은 현재 7월 인하 가능성을 20%, 9월 인하 가능성을 73%로 보고 있습니다.</span></li>
+                        <li class="flex items-start"><i class="fas fa-globe text-green-500 mt-1 mr-3"></i><span><b>지정학적 긴장 완화:</b> 이스라엘-이란 휴전 이후 중동 긴장이 완화되면서 위험 선호 심리가 강화되고 유가가 하락했습니다.</span></li>
+                    </ul>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4">시장 환경 및 주요 기회</h3>
+                    <div class="flex items-center justify-center bg-blue-100 rounded-lg p-4 mb-4">
+                        <div class="text-center">
+                            <p class="font-semibold text-blue-800">100x 유동성 지표</p>
+                            <p class="text-4xl font-black text-blue-600 my-2">6<span class="text-lg">/10</span></p>
+                            <p class="text-sm text-blue-700 font-semibold">(중립)</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-6 text-center">옵션 포지셔닝의 기계적 지지력이 분기말 유동성 및 연금 리밸런싱의 잠재적 역풍을 상쇄하며 균형 잡힌 유동성 환경을 반영합니다.</p>
+                    <h4 class="text-lg font-semibold mb-3">주요 기회</h4>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>
+                        <b>시장 변화:</b> 무역 협상 재개, 옵션 거래 집중(포지티브 감마), Fed 인하 기대 등 주요 정책 이벤트가 유동성 환경을 개선.
+                        </li>
+                        <li>
+                        <b>투자 기회:</b> 이러한 환경에서 테크 수혜주와 듀레이션 전략, 신용 스프레드 축소에 유리한 섹터에 초점을 맞춘 미국 주식 비중 확대가 유효.
+                        </li>
+                        <li>
+                        <b>구체 전략:</b> 7월 계절성에 따른 고정 수익→신용/듀레이션 플레이, 연준의 비둘기적 스탠스에 대응한 수익률곡선 스티프닝(커브 플래튼) 및 금리 민감 섹터 포지셔닝을 병행.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Multi-Asset Performance Dashboard -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-tachometer-alt mr-3 text-blue-600"></i>멀티에셋 퍼포먼스 대시보드</h2>
+            <div class="mb-8">
+                <h3 class="text-xl font-bold mb-4 text-center">오늘의 차트: 주요 상승/하락 종목 비교</h3>
+                <div class="relative h-64 md:h-80 w-full">
+                    <canvas id="gainerLoserChart"></canvas>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-green-700">주요 상승 종목</h3>
+                    <table>
+                        <thead><tr><th>티커</th><th>일일(%)</th><th>코멘트</th></tr></thead>
+                        <tbody>
+                            <tr><td>HALO</td><td class="text-green-600 font-semibold">+2.7%</td><td>러셀 1000 지수 편입</td></tr>
+                            <tr><td>OVV</td><td class="text-green-600 font-semibold">+1.2%</td><td>골드만삭스, '매수'로 상향 조정</td></tr>
+                            <tr><td>CXW</td><td class="text-green-600 font-semibold">+0.6%</td><td>Texas Capital, '매수'로 신규 분석 개시</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-red-700">주요 하락 종목</h3>
+                    <table>
+                         <thead><tr><th>티커</th><th>일일(%)</th><th>코멘트</th></tr></thead>
+                        <tbody>
+                            <tr><td>TSLA</td><td class="text-red-600 font-semibold">-1.89%</td><td>수요 약화 우려 및 정치적 스탠스 문제</td></tr>
+                            <tr><td>AMZN</td><td class="text-red-600 font-semibold">-1.75%</td><td>기술 섹터 내 차익 실현 매물 출회</td></tr>
+                            <tr><td>INTC</td><td class="text-red-600 font-semibold">-1.29%</td><td>반도체 약세 속 하락</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <h3 class="text-xl font-bold mb-4">자산별 성과 요약</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>자산/티커</th>
+                            <th>종가</th>
+                            <th>일일<br>(%)</th>
+                            <th>YTD<br>(%)</th>
+                            <th>코멘트</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 주식 -->
+                        <tr><td>S&P 500</td><td>6,204.95</td><td class="text-green-600 font-semibold">+0.52%</td><td class="text-green-600 font-semibold">+5.50%</td><td>무역 낙관론과 옵션 흐름 지지에 힘입어 사상 최고치</td></tr>
+                        <tr><td>Nasdaq 100</td><td>20,369.73</td><td class="text-green-600 font-semibold">+0.47%</td><td class="text-green-600 font-semibold">+7.93%</td><td>캐나다 세금 철회로 인한 기술주 강세</td></tr>
+                        <tr><td>Russell 2000</td><td>2,175.04</td><td class="text-green-600 font-semibold">+0.12%</td><td class="text-red-600 font-semibold">-2.47%</td><td>중소형주 상대적 부진</td></tr>
+                        <!-- 변동성 -->
+                        <tr><td>VIX</td><td>16.73</td><td class="text-red-600 font-semibold">+2.51pt</td><td class="text-red-600 font-semibold">-3.57%</td><td>5년 평균 하회, 저변동성 지속</td></tr>
+                        <!-- 금리/채권 -->
+                        <tr><td>2Y Treasury</td><td>3.73%</td><td class="text-red-600 font-semibold">-2bp</td><td class="na-value">-</td><td>월말 매수 및 연준 인하 기대</td></tr>
+                        <tr><td>10Y Treasury</td><td>4.26%</td><td class="text-red-600 font-semibold">-3bp</td><td class="na-value">-</td><td>듀레이션 수요 견고</td></tr>
+                        <!-- 환율 -->
+                        <tr><td>DXY (달러)</td><td>97.2</td><td class="text-red-600 font-semibold">-0.30%</td><td class="text-red-600 font-semibold">-11.5%</td><td>무역 협상 진전, 달러 약세</td></tr>
+                        <!-- 대체자산: 금속/원자재 -->
+                        <tr><td>Gold (XAUUSD)</td><td>3,328.70</td><td class="text-green-600 font-semibold">+0.63%</td><td class="text-green-600 font-semibold">+26.61%</td><td>안전자산 강세</td></tr>
+                        <tr><td>Silver (SLV)</td><td>36.17</td><td class="text-green-600 font-semibold">+0.11%</td><td class="text-green-600 font-semibold">+24.98%</td><td>금과 동반 강세</td></tr>
+                        <tr><td>Copper (CPER)</td><td>5.09</td><td class="text-green-600 font-semibold">+0.16%</td><td class="text-green-600 font-semibold">+27.68%</td><td>산업 수요 견인</td></tr>
+                        <!-- 원유/가스 -->
+                        <tr><td>WTI Oil</td><td>64.84</td><td class="text-red-600 font-semibold">-0.41%</td><td class="text-red-600 font-semibold">-9.59%</td><td>중동 리스크 완화</td></tr>
+                        <tr><td>UNG (천연가스)</td><td>7.53</td><td class="text-green-600 font-semibold">+1.98%</td><td class="text-red-600 font-semibold">-3.01%</td><td>여름 수요 증가</td></tr>
+                        <!-- 디지털 자산 -->
+                        <tr><td>BTC/USD</td><td>107,311.20</td><td class="text-green-600 font-semibold">+0.13%</td><td class="text-green-600 font-semibold">+53.21%</td><td>현물 ETF 유입 지속</td></tr>
+                        <tr><td>ETH/USD</td><td>2,491.97</td><td class="text-green-600 font-semibold">+0.19%</td><td class="text-green-600 font-semibold">+32.14%</td><td>2Q 네트워크 성장</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+                <h4 class="font-bold text-gray-800 mb-2">100x 관점: 멀티에셋 역학</h4>
+                <p class="text-gray-700">
+                멀티에셋 수익률은 무역 협상 진전과 구조적 옵션 흐름에 힘입은 <b>위험 선호 시장 환경</b>을 반영합니다. 
+                주식 강세에도 불구하고 국채는 듀레이션(Duration) 리밸런싱의 수혜로 <b>유동성 균형 유지</b>라는 신호를 보냅니다.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Correlation & Volatility Matrix -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-wave-square mr-3 text-blue-600"></i>상관관계 및 변동성 매트릭스</h2>
+             <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-4 text-blue-800 flex items-center"><i class="fas fa-search-dollar mr-2"></i>Anomaly Spotlight (주목할 만한 이례 현상)</h3>
+                <div class="overflow-x-auto mb-4">
+                    <table>
+                        <thead><tr><th>자산 쌍</th><th>상관관계 (30일)</th></tr></thead>
+                        <tbody>
+                            <tr><td>S&P 500 vs. 10-Y Treasury</td><td>-0.42</td></tr>
+                            <tr><td>S&P 500 vs. Gold</td><td>0.18</td></tr>
+                            <tr><td>US Dollar (DXY) vs. S&P 500</td><td>-0.67</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="space-y-4 text-gray-700">
+                    <p>● <b class="text-blue-600">주식-달러 역상관계 심화:</b> 20일 이동 상관관계가 -0.67로 강화되었습니다. 이는 무역 협상 낙관론과 연준의 비둘기파적 피벗 기대감에 힘입어 DXY의 상반기 10.8% 하락이 주식 강세와 동시에 발생했기 때문입니다.</p>
+                    <p>● <b class="text-red-600">채권-통화 연계 재개:</b> 10년물 국채 금리 변화에 대한 환율 민감도는 5월에 2년 만에 최저치를 기록했으나, 최근 반등은 금리 인하 기대감이 심화되면서 채권-통화 연계가 재개되었음을 시사합니다.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Fresh Wall Street Intelligence -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="far fa-lightbulb mr-3 text-blue-600"></i>월스트리트 최신 정보</h2>
+            <h3 class="text-xl font-bold mb-4">주요 투자은행 업데이트</h3>
+            <div class="overflow-x-auto mb-8">
+                <table>
+                    <thead><tr><th>은행</th><th>티커</th><th>투자의견</th><th>신규 목표가($)</th><th>상승여력(%)</th><th>핵심 코멘트</th></tr></thead>
+                    <tbody>
+                        <tr><td>Stifel</td><td>ORCL</td><td><span class="tag bg-green-100 text-green-700">상향</span></td><td>250</td><td class="text-green-600 font-semibold">15.2%</td><td>클라우드 가속화 및 운영 규율</td></tr>
+                        <tr><td>Citi</td><td>CRCL</td><td><span class="tag bg-blue-100 text-blue-700">신규</span></td><td>243</td><td class="na-value">-</td><td>선도적인 스테이블코인 채택 지원</td></tr>
+                        <tr><td>Needham</td><td>CRCL</td><td><span class="tag bg-blue-100 text-blue-700">신규</span></td><td>250</td><td class="na-value">-</td><td>빠르게 성장하는 패러다임 전환 금융 생태계</td></tr>
+                        <tr><td>Bernstein</td><td>CRCL</td><td><span class="tag bg-blue-100 text-blue-700">신규</span></td><td>230</td><td class="na-value">-</td><td>인터넷의 머니 레일로서 스테이블코인</td></tr>
+                        <tr><td>JPMorgan</td><td>CRCL</td><td><span class="tag bg-blue-100 text-blue-700">신규</span></td><td>80</td><td class="na-value">-</td><td>높은 밸류에이션 및 경쟁 우려</td></tr>
+                        <tr><td>Baird</td><td>JPM</td><td><span class="tag bg-red-100 text-red-700">하향</span></td><td>235</td><td class="text-red-600 font-semibold">-7.8%</td><td>밸류에이션 우려, 매력적이지 않은 리스크/리워드</td></tr>
+                        <tr><td>Citizens JMP</td><td>GOOGL</td><td><span class="tag bg-green-100 text-green-700">상향</span></td><td>220</td><td class="text-green-600 font-semibold">25.7%</td><td>AI가 검색 기회 확장</td></tr>
+                        <tr><td>Melius</td><td>AMD</td><td><span class="tag bg-green-100 text-green-700">상향</span></td><td>175</td><td class="text-green-600 font-semibold">21.5%</td><td>지속 가능한 추론 급증</td></tr>
+                        <tr><td>Rothschild</td><td>BA</td><td><span class="tag bg-green-100 text-green-700">상향</span></td><td>275</td><td class="text-green-600 font-semibold">58.4%</td><td>재무 및 생산 개선</td></tr>
+                        <tr><td>Raymond James</td><td>DASH</td><td><span class="tag bg-green-100 text-green-700">상향</span></td><td>260</td><td class="text-green-600 font-semibold">78.1%</td><td>저평가된 딜리버루 시너지</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3 class="text-xl font-bold mb-4">C-Suite 언어 분석</h3>
+            <p class="text-gray-700">● <b>C-Suite 센티먼트 지수:</b> <span class="font-bold text-green-600">7 / 10 (낙관적)</span></p>
+            <p class="text-gray-700">● 오라클 경영진은 "지속 가능한 클라우드 가속화"와 100% 이상 성장한 멀티클라우드 데이터베이스 매출의 "기록적인 성장"을 강조했으며, 2028 회계연도부터 시작되는 새로운 클라우드 계약에서 연간 300억 달러 이상의 매출 잠재력을 언급했습니다.</p>
+            <p class="text-gray-700">● <b>주요 테마 언급:</b> 클라우드 인프라 (+47% 빈도), AI 통합 (+23% 빈도)</p>
+        </div>
+    </section>
+
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-water mr-3 text-blue-600"></i>기관 자금 흐름</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-chart-pie mr-2 text-purple-500"></i>대규모 옵션 거래</h3>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600">
+                        <li><b>Oracle (ORCL):</b> 300억 달러 클라우드 계약 발표 및 Stifel의 매수 상향 조정 후 7월 3일 만기 $230 콜 옵션 거래량 13,421건 기록.</li>
+                        <li><b>American Express (AXP):</b> 콜 옵션 거래량이 406% 급증, 어닝 시즌 앞두고 이례적인 기관 포지셔닝.</li>
+                        <li><b>JPMorgan (JPM):</b> 27건의 대규모 거래에서 풋 프리미엄 11.6만 달러 대비 320만 달러 콜 프리미엄 유치.</li>
+                        <li><b>Nvidia (NVDA):</b> 콜 거래량이 하락 베팅 풋의 거의 3배에 달하며 1월 이후 가장 큰 상승 갭 기록.</li>
+                    </ul>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-exchange-alt mr-2 text-green-500"></i>ETF 자금 흐름</h3>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600">
+                        <li><b>하이일드 ETF:</b> 주간 20.3억 달러 순유입으로 이전 주 1.3억 달러에서 가속화.</li>
+                        <li><b>투자등급 채권 ETF:</b> 주간 총 46.8억 달러 순유입 중 41억 달러 기여.</li>
+                        <li><b>iShares Core MSCI EM (IEMG):</b> 주간 12억 달러 순유입으로 월간 총 31억 달러 기록.</li>
+                        <li><b>현물 비트코인 ETF:</b> 금요일 5억 달러 이상 순유입 기록.</li>
+                    </ul>
+                </div>
+                 <div class="bg-gray-50 p-6 rounded-lg md:col-span-2">
+                    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-user-secret mr-2 text-gray-500"></i>다크 풀 및 정치 자금</h3>
+                     <ul class="list-disc list-inside space-y-2 text-sm text-gray-600">
+                        <li><b>다크 풀:</b> SPY가 64건의 주문에서 86.1억 달러 규모로 활동 주도. Nvidia(NVDA)는 628건 주문에서 48.8억 달러 기록.</li>
+                        <li><b>정치 자금:</b> 미시간 유틸리티 DTE 에너지와 컨슈머스 에너지는 기부금 금지 발의안에 직면.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-sync-alt mr-3 text-blue-600"></i>섹터 및 순환 동향</h2>
+            <div>
+                <h3 class="text-xl font-bold mb-4">섹터 퍼포먼스 히트맵</h3>
+                <div id="sector-heatmap" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-white">
+                    <!-- JavaScript에 의해 동적으로 채워집니다. -->
+                </div>
+            </div>
+			<div class="mt-6 mb-8 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+                <h4 class="font-bold text-gray-800 mb-2">100x 전략 관점: 듀레이션·신용 스프레드 & 섹터 순환</h4>
+                <ul class="list-disc list-inside space-y-1 text-gray-700">
+                    <li><b>전략 요약:</b> 듀레이션 친화적 섹터(기술, 통신, 산업재)가 YTD 기준 강세를 견인. 금리 하락 기대와 신용 스프레드 축소 가능성이 테크/커뮤니케이션 중심의 위험자산 랠리를 뒷받침.</li>
+                    <li><b>상승 섹터:</b> <span class="text-green-700">통신서비스(XLC +12.11%), 산업재(XLI +11.96%), 기술(XLK +8.91%)</span> — 메타의 AI Capex, 인프라 투자, 전방 수요 확대.</li>
+                    <li><b>하락 섹터:</b> <span class="text-red-600">임의소비재(XLY –3.13%), 헬스케어(XLV –2.02%)</span> — 리플레이션 기대 약화, 경기 민감주 차익실현.</li>
+                    <li><b>시멘틱:</b> “AI·반도체·인프라 수요가 섹터 로테이션 및 리플레이션(재팽창) 기대를 견인. 신용 스프레드 축소와 듀레이션 롱 전략이 유효.”</li>
+                </ul>    
+            </div>
+        </div>
+    </section>
+
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-robot mr-3 text-blue-600"></i>테크 선두 동향</h2>
+            <h3 class="text-xl font-bold mb-4">주요 기술주 동향</h3>
+            <div class="overflow-x-auto mb-6">
+                <table>
+                    <thead>
+                        <tr><th>티커</th><th>일일 (%)</th><th>YTD (%)</th><th>뉴스 요약 (24-48시간)</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>AAPL</td><td class="text-green-600 font-semibold">+2.03</td><td class="text-red-600">-18.07%</td><td>연방 판사, 반독점 기각 신청 기각; 시리 강화를 위한 앤트로픽/오픈AI 파트너십 모색 중.</td></tr>
+                        <tr><td>MSFT</td><td class="text-green-600 font-semibold">+0.30</td><td class="text-green-600">+18.01%</td><td>영업 총괄 알토프, 안식년; 이번 주 영업 부서에서 수천 명 해고 예상.</td></tr>
+                        <tr><td>NVDA</td><td class="text-green-600 font-semibold">+0.15</td><td class="text-green-600">+17.65%</td><td>AI 과학자 주와 지아오를 수석 연구 과학자로 임명; CentML 스타트업 인수.</td></tr>
+                        <tr><td>AMZN</td><td class="text-red-600 font-semibold">-1.75</td><td class="na-value">0.00%</td><td>테크 섹터 로테이션 속 나스닥 최대 하락 종목; 가장 많이 선택된 애널리스트 "최고의 투자처".</td></tr>
+                        <tr><td>GOOGL</td><td class="text-red-600 font-semibold">-1.29</td><td class="text-red-600">-6.90%</td><td>시티즌스 JMP, AI가 검색 기회 확장 언급하며 목표 주가 220달러로 상향.</td></tr>
+                        <tr><td>META</td><td class="text-green-600 font-semibold">+0.61</td><td class="text-green-600">+26.06%</td><td>저커버그, 메타 슈퍼인텔리전스 랩스 공개; 오픈AI 연구원 4명 고용.</td></tr>
+                        <tr><td>AVGO</td><td class="text-green-600 font-semibold">+2.34</td><td class="text-green-600">+18.90%</td><td class="na-value">-</td></tr>
+                        <tr><td>CRWD</td><td class="text-green-600 font-semibold">+2.00</td><td class="text-green-600">+48.85%</td><td class="na-value">-</td></tr>
+                        <tr><td>NFLX</td><td class="text-green-600 font-semibold">+1.21</td><td class="text-green-600">+50.24%</td><td>사상 최고치 근처; 올해 약 50% 상승.</td></tr>
+                        <tr><td>NOW</td><td class="text-green-600 font-semibold">+0.55</td><td class="text-red-600">-3.02%</td><td class="na-value">-</td></tr>
+                        <tr><td>TSLA</td><td class="text-red-600 font-semibold">-1.89</td><td class="text-red-600">-21.34%</td><td>제안된 법안, EV 에너지 크레딧 삭감; 머스크의 정치적 스탠스와 연관된 수요 감소.</td></tr>
+                        <tr><td>PLTR</td><td class="text-green-600 font-semibold">+4.27</td><td class="text-green-600">+80.25%</td><td>연초 대비 S&P 500 최고 수익률 종목.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- [After: 시멘틱 분석 블록 추가] -->
+			<div class="mt-6 mb-8 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+			  <h3 class="text-lg font-bold mb-2 text-blue-800">📡 AI/테크 시멘틱 인사이트</h3>
+			  <ul class="list-disc pl-5 space-y-1 text-gray-800 text-sm">
+				<li>
+				  <b>META AI Capex:</b> 저커버그가 AI 인프라에 1,000억 달러 이상 투자 계획을 발표, 글로벌 AI 경쟁 구도 심화.
+				</li>
+				<li>
+				  <b>캐나다 디지털세 Relief Rally:</b> 캐나다의 디지털세 철회로 미국 테크 대형주가 즉각적으로 강세를 보이며 시장 랠리 주도.
+				</li>
+				<li>
+				  <b>NVDA 옵션 흐름:</b> 7월 3일 만기 기준 NVDA 콜/풋 비율 3.1배, 옵션 시장에서 AI/반도체 기대감 반영.
+				</li>
+				<li>
+				  <b>Oracle 멀티클라우드:</b> 2028년부터 연 300억 달러 규모 멀티클라우드 계약, AI/클라우드 부문 매출 성장 기대.
+				</li>
+				<li>
+				  <b>전략 해설:</b> 위 이벤트들은 단기적으로 테크섹터 랠리와 AI 밸류체인 재평가 신호로 작용, 투자 포트폴리오 내 AI·클라우드·반도체 비중 확대 전략 제안.
+				</li>
+			  </ul>
+			</div>
+            <div class="mt-6 mb-8 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+                <h4 class="font-bold text-gray-800 mb-2">100x 관점: 테크 리더십</h4>
+                <p class="text-gray-700">기술주 그룹은 내부적으로 차이를 보이며, AI 인프라 선두 기업(NVDA, MSFT, META)은 모멘텀을 유지하는 반면, 레거시 플랫폼(AAPL, GOOGL)은 경쟁 압력에 직면해 있습니다. 대기업의 생성형 AI 도입은 현재 35%에서 가속화되고 있습니다.</p>
+            </div>
+            <h3 class="text-xl font-bold mb-4">신흥 AI 및 딥 테크 뉴스</h3>
+            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li><b>자금 조달 & M&A:</b> Clio가 vLex를 10억 달러에 인수하여 통합 법률 AI 플랫폼 구축; Aria Ventures가 AI, 바이오테크, 로봇 섹터를 목표로 100만 달러 이집트 딥테크 펀드 출시.</li>
+                <li><b>제품 & 기술:</b> 오라클의 멀티클라우드 데이터베이스 매출 100% 이상 성장, 2028 회계연도부터 300억 달러 이상의 클라우드 계약 시작; 비트디어 AI가 포괄적인 ML 운영 플랫폼으로 MLOps 혁신상 수상.</li>
+                <li><b>시장 & 파트너십:</b> 오픈AI, 1천만 달러 이상 고객을 위한 모델 맞춤화 및 컨설팅 서비스 두 배 확대; 기업의 생성형 AI 도입률은 현재 35%에서 2026년까지 80%에 이를 것으로 예상.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-calendar-check mr-3 text-blue-600"></i> 시장 주목 이벤트 </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-landmark mr-2 text-indigo-500"></i>주요 경제지표 일정</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>지표명</th>
+                                <th>발표시각(ET)</th>
+                                <th>컨센서스</th>
+                                <th>이전치</th>
+                                <th>해설</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ADP 고용 변화 (6월)</td>
+                                <td>8:15 AM</td>
+                                <td>110k</td>
+                                <td>37k</td>
+                                <td>고용 시장의 회복 추세 가늠. 서프라이즈 시 시장 방향성 영향.</td>
+                            </tr>
+                            <tr>
+                                <td>ISM 제조업 PMI (6월)</td>
+                                <td>10:00 AM</td>
+                                <td>49.1</td>
+                                <td>48.7</td>
+                                <td>50 이상이면 확장. 제조업 경기 방향성 지표.</td>
+                            </tr>
+                            <tr>
+                                <td>유로존 실업률 (5월)</td>
+                                <td>5:00 AM</td>
+                                <td>6.3%</td>
+                                <td>6.2%</td>
+                                <td>유럽 경기 모멘텀 확인.</td>
+                            </tr>
+                            <tr>
+                                <td>MBA 모기지 신청 (6/27)</td>
+                                <td>7:00 AM</td>
+                                <td>-</td>
+                                <td>0.0%</td>
+                                <td>부동산 시장 내 수요 흐름 반영.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-bullhorn mr-2 text-teal-500"></i>주요 실적 발표</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>티커</th>
+                                <th>회사명</th>
+                                <th>EPS 컨센서스</th>
+                                <th>매출 컨센서스</th>
+                                <th>발표시각</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>STZ</td>
+                                <td>Constellation Brands</td>
+                                <td>$2.10</td>
+                                <td>$2.6B</td>
+                                <td>Pre-Market</td>
+                            </tr>
+                            <tr>
+                                <td>SPOT</td>
+                                <td>Spotify</td>
+                                <td>$0.80</td>
+                                <td>$3.7B</td>
+                                <td>Pre-Market</td>
+                            </tr>
+                            <tr>
+                                <td>AROC</td>
+                                <td>Archrock</td>
+                                <td>$0.41</td>
+                                <td>-</td>
+                                <td>After-Market</td>
+                            </tr>
+                            <tr>
+                                <td>DKNG</td>
+                                <td>DraftKings</td>
+                                <td>-$0.12</td>
+                                <td>$1.2B</td>
+                                <td>After-Market</td>
+                            </tr>
+                            <tr>
+                                <td>QMCO</td>
+                                <td>Quantum Corp</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>발표 지연</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-compass mr-3 text-blue-600"></i>오늘의 시장 전략</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="p-6 bg-green-50 rounded-xl border-2 border-green-200 text-center">
+                    <h3 class="font-bold text-green-700 mb-2">시그널 1: S&P 500 매수</h3>
+                    <i class="fas fa-arrow-up text-green-600 text-2xl mb-3"></i>
+                    <div class="space-y-1 text-sm"><p><b>진입:</b> 6,215 돌파 시</p><p><b>목표:</b> 6,250</p><p><b>손절:</b> 6,148</p><p>로그 추세선 저항선 기반</p></div>
+                </div>
+                <div class="p-6 bg-green-50 rounded-xl border-2 border-green-200 text-center">
+                     <h3 class="font-bold text-green-700 mb-2">시그널 2: 기술주 비중확대</h3>
+                    <i class="fas fa-microchip text-green-600 text-2xl mb-3"></i>
+                    <div class="space-y-1 text-sm"><p><b>진입:</b> XLK $250.25 돌파 시</p><p>10.75% 월간 수익률 및 AI 모멘텀 기반</p></div>
+                </div>
+                <div class="p-6 bg-green-50 rounded-xl border-2 border-green-200 text-center">
+                    <h3 class="font-bold text-green-700 mb-2">시그널 3: 10년물 국채 매수</h3>
+                    <i class="fas fa-arrow-down text-green-600 text-2xl mb-3"></i>
+                    <div class="space-y-1 text-sm"><p><b>진입:</b> 4.20% 하회 시 <b>(금리 하락, 채권 매수 신호)</b></p><p>금리 하락 구간에서 채권 매수 기회 확대, 듀레이션 플레이 전략 부각</p></div>
+                </div>
+            </div>
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-4">내일의 준비</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-700">
+                    <li><b>전체 리스크 수준:</b> <b>중간</b> (VIX 16.73, 5년 평균 20 미만) - 월요일 만기로 280억 달러의 보호 감마가 제거되면서 기계적인 옵션 지지력 감소.</li>
+                    <li><b>포트폴리오 베타 목표:</b> <b>1.1x</b> (VIX 17 미만 및 무역 협상 모멘텀으로 공격적인 포지셔닝 정당화) - 역사적으로 7월은 30년 기간 동안 평균 VIX 수치가 가장 낮은 달.</li>
+                    <li><b>주요 섹터 비중:</b> <b>기술주 비중 확대 ▲ / 임의소비재 비중 축소 ▼</b> - 기술주는 연초 대비 8.91% 수익률로 선두, 임의소비재는 3.13% 하락.</li>
+                    <li><b>주시할 주요 수준:</b> SPX 6,215 돌파 확인, 10년 만기 국채 금리 4.20% 하향 돌파, DXY 97.2 다년래 지지선 시험.</li>
+                    <li><b>추가 고려사항:</b> 7월은 역사적으로 선거 후 연도에 가장 강한 달이며 10년 연속 긍정적인 흐름을 보임 - 회사채 발행 감소와 배당금 지급이 유리한 기술적 배경 조성.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-book-open mr-3 text-blue-600"></i>부록: 야간 선물 및 주요 차트</h2>
+            <h3 class="text-xl font-bold mb-4">부록 A: 야간 선물 움직임</h3>
+            <div class="overflow-x-auto mb-6">
+                <table>
+                    <thead><tr><th>상품</th><th>최종가</th><th>일일(%)</th><th>코멘트</th></tr></thead>
+                    <tbody>
+                        <tr><td>S&P 500 선물</td><td>6,257.25</td><td class="text-green-600 font-semibold">+0.06%</td><td>사상 최고치 근처에서 소폭 상승하며 통합 중</td></tr>
+                        <tr><td>나스닥 100 선물</td><td>22,912.75</td><td class="text-green-600 font-semibold">+0.09%</td><td>캐나다 디지털세 철회로 아웃퍼폼</td></tr>
+                        <tr><td>10년 만기 국채 선물</td><td>4.23%</td><td class="text-green-600 font-semibold">+0.05%</td><td>베센트의 수익률곡선 평탄화 발언에도 불구하고 금리 안정</td></tr>
+                        <tr><td>DXY 선물</td><td>97.2</td><td class="text-red-600 font-semibold">-0.1%</td><td>무역 협상 낙관론으로 다년래 최저치 시험</td></tr>
+                        <tr><td>금 선물</td><td>3296.10</td><td class="text-green-600 font-semibold">+$8.50</td><td>금요일 60달러 하락에서 회복</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3 class="text-xl font-bold mb-4">부록 B: 주요 차트 요약</h3>
+            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li><b>S&P 500 일일 지지/저항:</b> 6,215 "범죄 현장" 수준을 넘어선 중요한 돌파는 6,250 로그 추세선으로 가는 길을 열었습니다 - 이 1929년 추세선의 모든 이전 시험은 20% 이상의 조정을 선행했습니다.</li>
+                <li><b>나스닥 vs. 기술주 리더십 (1개월):</b> 나스닥 종합 지수는 AI 인프라 지출에 힘입어 월간 6.27% 수익률을 기록했으며, 기업의 생성형 AI 도입률은 35%에서 2026년까지 80%로 예상됩니다.</li>
+                <li><b>10년 만기 국채 금리 추세:</b> 10년-30년 스프레드가 56bp로 확대되며 수익률곡선 스티프닝이 가속화되었는데, 이는 2021년 10월 이후 가장 넓은 수준이며, 재무장관이 장기 부채보다 단기채 발행을 선호한다는 시그널을 보냈습니다.</li>
+            </ul>
+        </div>
+    </section>
+
+    <footer class="py-12 px-6 bg-slate-50">
+        <div class="container mx-auto text-center text-slate-500">
+            <div class="text-xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
+            <p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
+            <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Chart.register(ChartDataLabels);
+
+            const gainerLoserCtx = document.getElementById('gainerLoserChart')?.getContext('2d');
+            if (gainerLoserCtx) {
+                new Chart(gainerLoserCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['HALO', 'OVV', 'CXW', 'TSLA', 'AMZN', 'INTC'],
+                        datasets: [{
+                            label: '일일 변동률 (%)',
+                            data: [2.7, 1.2, 0.6, -1.89, -1.75, -1.29],
+                            backgroundColor: [
+                                'rgba(5, 150, 105, 0.7)', 'rgba(5, 150, 105, 0.7)', 'rgba(5, 150, 105, 0.7)',
+                                'rgba(220, 38, 38, 0.7)', 'rgba(220, 38, 38, 0.7)', 'rgba(220, 38, 38, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(5, 150, 105, 1)', 'rgba(5, 150, 105, 1)', 'rgba(5, 150, 105, 1)',
+                                'rgba(220, 38, 38, 1)', 'rgba(220, 38, 38, 1)', 'rgba(220, 38, 38, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        if (context.parsed.y !== null) { label += context.parsed.y.toFixed(2) + '%'; }
+                                        return label;
+                                    }
+                                }
+                            },
+                            datalabels: { display: false }
+                        },
+                        scales: {
+                            y: { grid: { color: '#e9ecef' }, title: { display: true, text: '일일 변동률 (%)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            const sectorData = [
+                { name: '기술', etf: 'XLK', day: 0.98, ytd: 8.91 },
+                { name: '금융', etf: 'XLF', day: 0.83, ytd: 8.36 },
+                { name: '통신 서비스', etf: 'XLC', day: 0.79, ytd: 12.11 },
+                { name: '부동산', etf: 'XLRE', day: 0.73, ytd: 1.84 },
+                { name: '헬스케어', etf: 'XLV', day: 0.64, ytd: -2.02 },
+                { name: '필수소비재', etf: 'XLP', day: 0.52, ytd: 3.00 },
+                { name: '산업재', etf: 'XLI', day: 0.50, ytd: 11.96 },
+                { name: '유틸리티', etf: 'XLU', day: 0.41, ytd: 7.89 },
+                { name: '소재', etf: 'XLB', day: -0.09, ytd: 4.36 },
+                { name: '에너지', etf: 'XLE', day: -0.57, ytd: -0.99 },
+                { name: '임의소비재', etf: 'XLY', day: -0.58, ytd: -3.13 }
+            ];
+            
+            const heatmapContainer = document.getElementById('sector-heatmap');
+            if(heatmapContainer){
+                sectorData.sort((a,b) => b.day - a.day).forEach(sector => {
+                    const value = sector.day;
+                    let bgColorClass = '';
+                    if (value > 0.75) bgColorClass = 'bg-green-600';
+                    else if (value > 0.25) bgColorClass = 'bg-green-500';
+                    else if (value >= 0) bgColorClass = 'bg-green-400';
+                    else if (value > -0.5) bgColorClass = 'bg-red-400';
+                    else bgColorClass = 'bg-red-600';
+
+                    const ytdColorClass = sector.ytd >= 0 ? 'text-green-300' : 'text-red-300';
+                    
+                    const cell = `
+                        <div class="p-4 rounded-lg ${bgColorClass} card-shadow text-white">
+                            <div class="font-bold text-base md:text-lg">${sector.name} (${sector.etf})</div>
+                            <div class="text-2xl font-black">${value.toFixed(2)}%</div>
+                            <div class="text-sm ${ytdColorClass}">(YTD ${sector.ytd.toFixed(2)}%)</div>
+                        </div>
+                    `;
+                    heatmapContainer.innerHTML += cell;
+                });
+            }
+
+            const navScript = document.createElement('script');
+            navScript.type = 'module';
+            navScript.innerHTML = `
+                import { siteVersion } from '../../version.js';
+                if (window.top === window.self) {
+                    fetch(\`../../nav.html?v=\${siteVersion}\`)
+                        .then(r => r.text())
+                        .then(html => {
+                            const nav = document.getElementById('nav');
+                            if (nav) {
+                                nav.innerHTML = html;
+                                nav.querySelectorAll('script').forEach(oldScript => {
+                                    const script = document.createElement('script');
+                                    Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
+                                    script.textContent = oldScript.textContent;
+                                    oldScript.replaceWith(script);
+                                });
+                            }
+                        });
+                }
+            `;
+            document.body.appendChild(navScript);
+        });
+    </script>
+</body>
+</html>
