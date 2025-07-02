@@ -56,6 +56,32 @@ LLM_GUIDE_END -->
 
 <html lang="ko">
 <head>
+    <script>
+      // 로컬, GitHub 메인, GitHub Preview 환경을 모두 자동으로 감지하는 스크립트
+      (() => {
+        // 1. 현재 주소가 로컬 환경인지 확인
+        const isLocal = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+        
+        // 2. 현재 경로에 '/preview/'가 포함되어 있는지 확인
+        const isPreview = window.location.pathname.includes('/preview/');
+
+        let baseHref;
+
+        // 3. 환경에 따라 올바른 기본 경로를 설정
+        if (isLocal) {
+          baseHref = '/'; // 로컬 환경일 경우
+        } else if (isPreview) {
+          baseHref = '/100xFenok/preview/'; // GitHub의 Preview 폴더일 경우
+        } else {
+          baseHref = '/100xFenok/'; // GitHub의 메인 폴더일 경우
+        }
+        
+        // 4. <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가
+        if (!document.querySelector('base')) {
+          document.head.insertAdjacentHTML('afterbegin', `<base href="${baseHref}">`);
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -80,7 +106,8 @@ LLM_GUIDE_END -->
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         .frame-container { display: flex; flex-direction: column; height: 100svh; }
-        #nav-frame { flex-shrink: 0; border: none; width: 100%; }
+        /* #nav-frame { flex-shrink: 0; border: none; width: 100%; } */
+        #nav { flex-shrink: 0; }
         #content-frame { flex-grow: 1; border: none; width: 100%; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -89,21 +116,38 @@ LLM_GUIDE_END -->
 </head>
 <body class="animate-fadeIn text-base sm:text-lg lg:text-xl">
     <div class="frame-container p-4 sm:p-6">
-        <iframe id="nav-frame" class="h-[70px] md:h-[80px] lg:h-[90px]" loading="lazy"></iframe>
+        <!-- <iframe id="nav-frame" class="h-[70px] md:h-[80px] lg:h-[90px]" loading="lazy"></iframe> -->
+        <div id="nav"></div> 
         <iframe id="content-frame" name="content-display-area" loading="lazy"></iframe>
     </div>
 
     <script type="module">
         /* ──────────────── 설정 상수 ──────────────── */
-        const ROOT        = '.';            // 사이트 루트 한곳에서 관리
         import { siteVersion } from './version.js';
 
-        const navFrame     = document.getElementById('nav-frame');
+        // const navFrame     = document.getElementById('nav-frame');
+        const navContainer = document.getElementById('nav');
         const contentFrame = document.getElementById('content-frame');
 
         document.addEventListener('DOMContentLoaded', () => {
-            navFrame.src = `${ROOT}/nav.html?v=${siteVersion}`;
-            loadPage(`${ROOT}/main.html`);
+            // 🚀 Nav를 fetch로 로드 (멀티차트와 동일한 방식)
+            fetch(`nav.html?v=${siteVersion}`)
+                .then(r => r.text())
+                .then(html => {
+                    navContainer.innerHTML = html;
+                    
+                    // 🔄 Nav 스크립트 재실행 (중요!)
+                    navContainer.querySelectorAll('script').forEach(oldScript => {
+                        const script = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => 
+                            script.setAttribute(attr.name, attr.value));
+                        script.textContent = oldScript.textContent;
+                        oldScript.replaceWith(script);
+                    });
+                    
+                    // Nav 로드 완료 후 메인 페이지 로드
+                    loadPage('main.html');
+                });
         });
 
         /* ──────────────── 핵심 함수 loadPage ──────────────── */
@@ -114,10 +158,7 @@ LLM_GUIDE_END -->
 
             // 메뉴 활성화 토글 (nav.html 내부 DOM 접근)
             setTimeout(() => {
-                const navDoc = navFrame.contentDocument || navFrame.contentWindow.document;
-                if (!navDoc) return;
-
-                navDoc.querySelectorAll('a[data-path]').forEach(link => {
+                navContainer.querySelectorAll('a[data-path]').forEach(link => {
                     const linkPath = link.getAttribute('data-path');
                     if (pageUrl.includes(linkPath)) {
                         link.classList.add('text-blue-600','font-semibold');
@@ -127,7 +168,7 @@ LLM_GUIDE_END -->
                         link.classList.add('text-slate-600','font-medium');
                     }
                 });
-            }, 150); // nav iframe 로드 대기
+            }, 100); // fetch nav는 iframe보다 빠르므로 대기시간 단축
         }
     </script>
 </body>

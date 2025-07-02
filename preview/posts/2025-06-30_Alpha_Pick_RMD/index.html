@@ -1,6 +1,32 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script>
+    // 로컬, GitHub 메인, GitHub Preview 환경을 모두 자동으로 감지하는 스크립트
+    (() => {
+        // 1. 현재 주소가 로컬 환경인지 확인
+        const isLocal = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+        
+        // 2. 현재 경로에 '/preview/'가 포함되어 있는지 확인
+        const isPreview = window.location.pathname.includes('/preview/');
+
+        let baseHref;
+
+        // 3. 환경에 따라 올바른 기본 경로를 설정
+        if (isLocal) {
+        baseHref = '/'; // 로컬 환경일 경우
+        } else if (isPreview) {
+        baseHref = '/100xFenok/preview/'; // GitHub의 Preview 폴더일 경우
+        } else {
+        baseHref = '/100xFenok/'; // GitHub의 메인 폴더일 경우
+        }
+        
+        // 4. <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가
+        if (!document.querySelector('base')) {
+        document.head.insertAdjacentHTML('afterbegin', `<base href="${baseHref}">`);
+        }
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ResMed (RMD) Alpha Pick | 100x FenoK 투자 분석</title>
@@ -34,7 +60,7 @@
 </head>
 <body>
 	<!-- contents navigator -->
-    <div class="group fixed top-1/4 -translate-y-1/2 right-0 z-50">
+    <!-- <div class="group fixed top-1/4 -translate-y-1/2 right-0 z-50">
       <nav class="transform translate-x-[calc(100%-20px)] group-hover:translate-x-0 transition-transform duration-500">
         <div class="bg-slate-900/80 backdrop-blur-lg rounded-l-2xl shadow-lg p-4 space-y-2 border border-slate-700 w-48">
           <a href="#hero" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">개요</a>
@@ -47,7 +73,27 @@
           <a href="#profiles" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">기업 프로필</a>
         </div>
       </nav>
-    </div>	
+    </div>	 -->
+    <!-- 모바일 전용 토글 버튼 (하단 우측) -->
+    <button id="mobileNavBtn" class="fixed bottom-4 right-4 z-50 bg-amber-500 text-white px-4 py-2 rounded-full shadow-lg md:hidden">
+    분석 메뉴
+    </button>
+
+    <!-- 내비게이션 패널 (PC: hover, 모바일: 버튼 클릭) -->
+    <div class="fixed top-1/4 -translate-y-1/2 right-0 z-40 group">
+        <nav id="navPanel" class="transform translate-x-full md:translate-x-[calc(100%-20px)] group-hover:translate-x-0 transition-transform duration-500">
+            <div class="bg-slate-900/80 backdrop-blur-lg rounded-l-2xl shadow-lg p-4 space-y-2 border border-slate-700 w-48">
+            <a href="#hero" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">개요</a>
+            <a href="#dashboard" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">대시보드</a>
+            <a href="#competency" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">역량 분석</a>
+            <a href="#scenarios" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">시나리오</a>
+            <a href="#financials" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">재무 분석</a>
+            <a href="#risk" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">리스크</a>
+            <a href="#portfolio" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">포트폴리오</a>
+            <a href="#profiles" class="block text-sm text-slate-300 hover:text-amber-400 transition-colors">기업 프로필</a>
+            </div>
+        </nav>
+    </div>
     <!-- Hero Section -->
     <section id="hero" class="hero-section">
         <div class="hero-background">

@@ -15,6 +15,19 @@
 -->
 <html lang="ko">
 <head>
+	<script>
+	// 로컬(127.0.0.1 또는 localhost)과 GitHub Pages 환경을 자동으로 감지하는 스크립트
+	(() => {
+		// 현재 주소가 로컬 환경인지 정규식으로 확인
+		const isLocal = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+		// 환경에 따라 올바른 기본 경로를 설정
+		const baseHref = isLocal ? '/' : '/100xFenok/';
+		// <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가 (중복 방지)
+		if (!document.querySelector('base')) {
+		document.head.insertAdjacentHTML('afterbegin', `<base href="${baseHref}">`);
+		}
+	})();
+	</script>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
