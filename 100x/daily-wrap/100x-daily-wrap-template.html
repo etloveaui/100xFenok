@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<!-- 
+    ================================================================================
+    100x Daily Wrap 전체 템플릿 (v2.0)
+    ================================================================================
+    * 사용 가이드:
+    1. 이 파일은 100x Daily Wrap 리포트 제작을 위한 완전한 템플릿입니다.
+    2. 원본 파일의 모든 구조와 디자인 요소를 보존하고 있습니다.
+    3. [괄호]로 표시된 부분과 예시 텍스트를 실제 데이터로 교체하여 사용하세요.
+    4. 각 섹션의 구조와 CSS 클래스는 디자인 일관성을 위해 수정하지 않는 것을 권장합니다.
+    5. 자바스크립트의 `sectorData` 배열에 해당 날짜의 섹터별 데이터를 입력하면 히트맵이 자동으로 생성됩니다.
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- [수정] 리포트 날짜에 맞게 제목을 수정하세요. -->
+    <title>100x Daily Wrap - [리포트 날짜]</title>
+    <meta name="description" content="100x Daily Wrap 리포트 템플릿입니다.">
+    <style>
+        body { font-family: 'Noto Sans KR', 'Roboto', sans-serif; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #e5e7eb; padding: 10px 14px; text-align: left; vertical-align: middle; }
+        th { background-color: #f9fafb; font-weight: 600; }
+        tbody tr:hover { background-color: #f3f4f6; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 500; }
+        .na-value { color: #9ca3af; font-style: italic;}
+        .transform-style-3d { transform-style: preserve-3d; }
+		.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+		.rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+    <div id="nav"></div>
+
+    <!-- 헤더: 리포트의 제목과 날짜, 핵심 헤드라인을 명확하게 전달 -->
+	<header class="bg-slate-50 border-b border-slate-200">
+		<div class="container mx-auto px-4 py-8 md:py-10">
+			<div class="grid md:grid-cols-2 gap-8 items-center">
+				
+				<div class="text-center md:text-left">
+					<h1 class="text-4xl md:text-5xl font-bold orbitron text-slate-800">100x Daily Wrap</h1>
+					<!-- [수정] 리포트 날짜와 요일을 입력하세요. -->
+					<p class="text-lg text-slate-500 mt-2">[YYYY년 MM월 DD일 (요일)]</p>
+				</div>
+
+				<div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+					<div class="flex items-start space-x-4">
+						<div class="flex-shrink-0">
+							<i class="fas fa-bullseye text-3xl text-blue-500"></i>
+						</div>
+						<div>
+							<h2 class="text-sm font-semibold text-blue-600">오늘의 핵심 논점</h2>
+							<!-- [수정] 오늘의 가장 중요한 헤드라인을 입력하세요. -->
+							<p class="text-lg font-semibold text-slate-700 mt-1">
+								[오늘의 가장 중요한 시장 헤드라인을 여기에 입력하세요]
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
+	
+    <!-- 핵심 지표 섹션 -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- [수정] 각 지표의 이름, 값, 변동률을 입력하세요. 긍정적일 경우 text-green-600, 부정적일 경우 text-red-600 클래스를 사용하세요. -->
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">S&P 500</h4>
+                <p class="text-2xl font-bold text-green-600">[지수 값]</p>
+                <p class="text-sm font-semibold text-green-600">[+0.00%]</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">Nasdaq 100</h4>
+                <p class="text-2xl font-bold text-green-600">[지수 값]</p>
+                <p class="text-sm font-semibold text-green-600">[+0.00%]</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">VIX</h4>
+                <p class="text-2xl font-bold text-green-600">[지수 값]</p>
+                <p class="text-sm font-semibold text-green-600">[+0.00%]</p>
+            </div>
+             <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">10-Y Treasury</h4>
+                <p class="text-2xl font-bold text-red-600">[금리 값]</p>
+                <p class="text-sm font-semibold text-red-600">[-0bp]</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 1. Executive Summary & Today's Thesis -->
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-receipt mr-3 text-blue-600"></i>요약 및 오늘의 논점
+			</h2>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+				<!-- [수정] 각 요약 카드의 제목과 내용을 입력하세요. 아이콘(fas fa-*)과 배경색(bg-*-50), 테두리색(border-*-200)은 내용에 맞게 변경할 수 있습니다. -->
+				<div class="bg-green-50 p-6 rounded-lg border border-green-200 transition hover:shadow-lg hover:border-green-300">
+					<div class="flex items-start">
+						<i class="fas fa-chart-line text-2xl text-green-500 mr-4 mt-1"></i>
+						<div>
+							<h4 class="font-bold text-lg text-gray-800">[요약1 제목]</h4>
+							<p class="text-base text-gray-600 mt-1">
+								[요약1 내용]
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-blue-50 p-6 rounded-lg border border-blue-200 transition hover:shadow-lg hover:border-blue-300">
+					<div class="flex items-start">
+						<i class="fas fa-water text-2xl text-blue-500 mr-4 mt-1"></i>
+						<div>
+							<h4 class="font-bold text-lg text-gray-800">[요약2 제목]</h4>
+							<p class="text-base text-gray-600 mt-1">
+                                [요약2 내용]
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-purple-50 p-6 rounded-lg border border-purple-200 transition hover:shadow-lg hover:border-purple-300">
+					 <div class="flex items-start">
+						<i class="fas fa-globe-americas text-2xl text-purple-500 mr-4 mt-1"></i>
+						<div>
+							<h4 class="font-bold text-lg text-gray-800">[요약3 제목]</h4>
+							<p class="text-base text-gray-600 mt-1">
+                                [요약3 내용]
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-indigo-50 p-6 rounded-lg border border-indigo-200 transition hover:shadow-lg hover:border-indigo-300">
+					<div class="flex items-start">
+						<i class="fas fa-percentage text-2xl text-indigo-500 mr-4 mt-1"></i>
+						<div>
+							<h4 class="font-bold text-lg text-gray-800">[요약4 제목]</h4>
+							<p class="text-base text-gray-600 mt-1">
+                                [요약4 내용]
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
+					<div class="bg-yellow-50 p-6 rounded-lg border border-yellow-200 transition hover:shadow-lg hover:border-yellow-300">
+						<div class="flex items-start">
+							<i class="fas fa-calendar-alt text-2xl text-yellow-500 mr-4 mt-1"></i>
+							<div>
+								<h4 class="font-bold text-lg text-gray-800">[요약5 제목]</h4>
+								<p class="text-base text-gray-600 mt-1">
+									[요약5 내용]
+								</p>
+							</div>
+						</div>
+					</div>
+					<div class="bg-gray-100 p-6 rounded-lg border border-gray-200 transition hover:shadow-lg hover:border-gray-300">
+						<div class="flex items-start">
+							<i class="fas fa-user-tie text-2xl text-gray-500 mr-4 mt-1"></i>
+							<div>
+								<h4 class="font-bold text-lg text-gray-800">[요약6 제목]</h4>
+								<p class="text-base text-gray-600 mt-1">
+									[요약6 내용]
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+    <!-- 2. Today's Market Pulse -->
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-heartbeat mr-3 text-blue-600"></i>오늘의 시장 동향
+			</h2>
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+				
+				<div>
+					<h3 class="text-xl font-bold mb-4">주요 변화 요인</h3>
+					<div class="space-y-4">
+						<!-- [수정] 시장 변화의 주요 요인들을 입력하세요. 아이콘과 내용을 수정합니다. -->
+						<div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-handshake text-green-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">[변화 요인 1 제목]</p>
+								<p class="text-sm text-gray-600">[변화 요인 1 상세 설명]</p>
+							</div>
+						</div>
+						<div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-stream text-blue-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">[변화 요인 2 제목]</p>
+								<p class="text-sm text-gray-600">[변화 요인 2 상세 설명]</p>
+							</div>
+						</div>
+						<div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-sync-alt text-orange-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">[변화 요인 3 제목]</p>
+								<p class="text-sm text-gray-600">[변화 요인 3 상세 설명]</p>
+							</div>
+						</div>
+						 <div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-dove text-purple-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">[변화 요인 4 제목]</p>
+								<p class="text-sm text-gray-600">[변화 요인 4 상세 설명]</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-gray-50 p-6 rounded-lg border flex flex-col">
+					<h3 class="text-xl font-bold mb-4">시장 환경 및 주요 기회</h3>
+					
+					<div class="mb-4">
+						<div class="flex justify-between items-center mb-2">
+							<p class="font-semibold text-blue-800">100x 유동성 지표</p>
+							<!-- [수정] 유동성 지표 점수(1-10)와 상태(예: 중립, 긍정적)를 입력하세요. -->
+							<span class="font-bold text-lg text-blue-600">[점수] / 10 <span class="text-sm font-semibold">([상태])</span></span>
+						</div>
+						<div class="w-full bg-gray-200 rounded-full h-2.5">
+							<!-- [수정] style의 width 값을 (점수 * 10)%로 설정하세요. 예: 6점 -> 60% -->
+							<div class="bg-blue-500 h-2.5 rounded-full" style="width: 60%"></div>
+						</div>
+					</div>
+					
+					<!-- [수정] 유동성 환경에 대한 설명을 입력하세요. -->
+					<p class="text-sm text-gray-700 mb-6 text-left">
+						[유동성 환경에 대한 종합적인 설명을 여기에 입력하세요.]
+					</p>
+					
+					<div class="mt-auto">
+						<h4 class="text-lg font-semibold mb-3">주요 기회</h4>
+						<ul class="space-y-3 text-sm">
+							<!-- [수정] 현재 시장의 주요 기회 요소를 입력하세요. -->
+							<li class="flex items-start">
+								<i class="fas fa-landmark text-indigo-500 w-5 text-center mr-3 mt-1"></i>
+								<div>
+									<b class="text-gray-800">[기회 1]:</b> [기회 1에 대한 설명]
+								</div>
+							</li>
+							<li class="flex items-start">
+								 <i class="fas fa-briefcase text-green-500 w-5 text-center mr-3 mt-1"></i>
+								<div>
+									<b class="text-gray-800">[기회 2]:</b> [기회 2에 대한 설명]
+								</div>
+							</li>
+							<li class="flex items-start">
+								 <i class="fas fa-route text-blue-500 w-5 text-center mr-3 mt-1"></i>
+								<div>
+									<b class="text-gray-800">[기회 3]:</b> [기회 3에 대한 설명]
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+    <!-- 3. Multi-Asset Performance Dashboard -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-tachometer-alt mr-3 text-blue-600"></i>멀티에셋 퍼포먼스 대시보드
+			</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+			
+				<div>
+					<h3 class="text-xl font-bold mb-4 text-green-700 flex items-center">
+						<i class="fas fa-arrow-trend-up mr-2"></i>주요 상승 종목
+					</h3>
+					<div class="space-y-4">
+						<!-- [수정] 주요 상승 종목 정보를 3개까지 입력하세요. (티커, 변동률, 상승 이유) -->
+						<div class="bg-green-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-green-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">1</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">[TICKER] <span class="font-normal text-green-600 ml-2">[+X.XX%]</span></p>
+								<p class="text-xs text-gray-500">[상승 이유]</p>
+							</div>
+						</div>
+						<div class="bg-green-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-green-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">2</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">[TICKER] <span class="font-normal text-green-600 ml-2">[+X.XX%]</span></p>
+								<p class="text-xs text-gray-500">[상승 이유]</p>
+							</div>
+						</div>
+						<div class="bg-green-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-green-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">3</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">[TICKER] <span class="font-normal text-green-600 ml-2">[+X.XX%]</span></p>
+								<p class="text-xs text-gray-500">[상승 이유]</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div>
+					<h3 class="text-xl font-bold mb-4 text-red-700 flex items-center">
+						<i class="fas fa-arrow-trend-down mr-2"></i>주요 하락 종목
+					</h3>
+					<div class="space-y-4">
+						 <!-- [수정] 주요 하락 종목 정보를 3개까지 입력하세요. (티커, 변동률, 하락 이유) -->
+						 <div class="bg-red-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-red-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">1</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">[TICKER] <span class="font-normal text-red-600 ml-2">[-X.XX%]</span></p>
+								<p class="text-xs text-gray-500">[하락 이유]</p>
+							</div>
+						</div>
+						 <div class="bg-red-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-red-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">2</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">[TICKER] <span class="font-normal text-red-600 ml-2">[-X.XX%]</span></p>
+								<p class="text-xs text-gray-500">[하락 이유]</p>
+							</div>
+						</div>
+						 <div class="bg-red-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-red-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">3</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">[TICKER] <span class="font-normal text-red-600 ml-2">[-X.XX%]</span></p>
+								<p class="text-xs text-gray-500">[하락 이유]</p>
+							</div>
+						</div>
+					</div>
+				</div>			
+            </div>
+			
+			<div class="overflow-x-auto">
+				<h3 class="text-xl font-bold mb-4">자산별 성과 요약</h3>
+				
+				<div x-data="{ tab: 'indices' }" class="w-full">
+					<div class="border-b border-gray-200">
+						<nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+							<button @click="tab = 'indices'" :class="{ 'border-blue-500 text-blue-600': tab === 'indices', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'indices' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+								주요 지수
+							</button>
+							<button @click="tab = 'fixed_income_fx'" :class="{ 'border-blue-500 text-blue-600': tab === 'fixed_income_fx', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'fixed_income_fx' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+								채권 & 환율
+							</button>
+							<button @click="tab = 'commodities'" :class="{ 'border-blue-500 text-blue-600': tab === 'commodities', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'commodities' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+								원자재
+							</button>
+							<button @click="tab = 'digital_assets'" :class="{ 'border-blue-500 text-blue-600': tab === 'digital_assets', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'digital_assets' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+								디지털 자산
+							</button>
+						</nav>
+					</div>
+
+					<div class="pt-5">
+						<!-- [수정] 각 탭의 아코디언 메뉴에 해당 자산의 데이터를 입력하세요. -->
+						<div x-show="tab === 'indices'" class="space-y-2">
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-chart-line text-blue-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">S&P 500</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-microchip text-purple-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Nasdaq 100</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cubes text-gray-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Russell 2000</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-sort-amount-up-alt text-red-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">VIX</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[+X.XXpt]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+						</div>
+
+						<div x-show="tab === 'fixed_income_fx'" class="space-y-2">
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">2Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">10Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-dollar-sign text-teal-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">DXY (달러)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+						</div>
+						
+						<div x-show="tab === 'commodities'" class="space-y-2">
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Gold (XAUUSD)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-oil-can text-gray-800 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">WTI Oil</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+						</div>
+
+						<div x-show="tab === 'digital_assets'" class="space-y-2">
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-bitcoin text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">BTC/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-ethereum text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">ETH/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="mt-8 bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-lg">
+				<h3 class="font-bold text-blue-800 mb-3 flex items-center text-lg">
+					<i class="fas fa-lightbulb mr-2"></i>100x Insight: 멀티에셋 역학 분석
+				</h3>
+				<!-- [수정] 멀티에셋 동향에 대한 종합적인 분석/인사이트를 입력하세요. -->
+				<p class="text-sm text-gray-700 leading-relaxed">
+					[전반적인 자산 시장 동향 및 주요 자산 간의 역학 관계에 대한 분석을 여기에 입력하세요. <b>키워드</b>는 b 태그로 강조할 수 있습니다.]
+				</p>
+			</div>
+			
+    </section>
+
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-wave-square mr-3 text-blue-600"></i>상관관계 및 변동성 매트릭스
+			</h2>
+			
+			<div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+				<h3 class="text-xl font-bold mb-6 text-blue-800 flex items-center">
+					<i class="fas fa-search-dollar mr-2"></i>Anomaly Watch
+				</h3>
+
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+					<!-- [수정] 각 자산 간의 상관관계 수치를 입력하세요. -->
+					<div class="bg-white rounded-lg p-4 text-center shadow-md">
+						<p class="text-sm font-semibold text-gray-700">S&P 500 vs 10년물 국채</p>
+						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
+							<i class="fas fa-link-slash mr-2"></i> [상관계수]
+						</p>
+						<p class="text-xs text-gray-500">[상관관계 설명]</p>
+					</div>
+					<div class="bg-white rounded-lg p-4 text-center shadow-md">
+						<p class="text-sm font-semibold text-gray-700">S&P 500 vs 금</p>
+						<p class="text-3xl font-bold my-2 text-gray-500 flex items-center justify-center">
+							<i class="fas fa-arrows-left-right-to-line mr-2"></i> [상관계수]
+						</p>
+						<p class="text-xs text-gray-500">[상관관계 설명]</p>
+					</div>
+					<div class="bg-white rounded-lg p-4 text-center shadow-md">
+						<p class="text-sm font-semibold text-gray-700">달러(DXY) vs S&P 500</p>
+						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
+							<i class="fas fa-link-slash mr-2"></i> [상관계수]
+						</p>
+						<p class="text-xs text-gray-500">[상관관계 설명]</p>
+					</div>
+				</div>
+
+				<div class="space-y-4 text-sm">
+					<!-- [수정] 특이사항에 대한 분석 내용을 입력하세요. -->
+					<div class="flex items-start">
+						<i class="fas fa-check-circle text-blue-600 mr-3 mt-1"></i>
+						<div>
+							<b class="text-blue-700">[특이사항 1]:</b> 
+							[특이사항 1에 대한 상세 분석]
+						</div>
+					</div>
+					<div class="flex items-start">
+						<i class="fas fa-check-circle text-blue-600 mr-3 mt-1"></i>
+						<div>
+							<b class="text-blue-700">[특이사항 2]:</b>
+							[특이사항 2에 대한 상세 분석]
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="far fa-lightbulb mr-3 text-blue-600"></i>월스트리트 최신 정보
+			</h2>
+			
+			<div>
+				<h3 class="text-xl font-bold mb-6">주요 투자은행 업데이트</h3>
+				<div class="relative border-l-2 border-gray-200 pl-8 space-y-8">
+					
+					<!-- [수정] 투자은행 업데이트 내용을 반복해서 추가/수정하세요. -->
+					<!-- 종류: 상향(green), 하향(red), 신규(blue) -->
+					<div class="relative">
+						<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-green-200 rounded-full ring-4 ring-white">
+							<i class="fas fa-arrow-up text-green-600"></i>
+						</div>
+						<div class="bg-gray-50 rounded-lg p-4">
+							<p class="text-sm text-gray-500">[투자은행 이름]</p>
+							<p class="font-bold text-lg">[종목명 (TICKER)] <span class="text-green-600 font-semibold ml-2">[상향/하향/신규]</span></p>
+							<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+								<span>목표가: <b class="text-gray-800">[목표가]</b></span>
+								<span>상승여력: <b class="text-green-600">[상승여력]</b></span>
+							</div>
+							<p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> [핵심 코멘트]</p>
+						</div>
+					</div>
+
+					<div class="relative">
+						 <div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-red-200 rounded-full ring-4 ring-white">
+							<i class="fas fa-arrow-down text-red-600"></i>
+						</div>
+						<div class="bg-gray-50 rounded-lg p-4">
+							<p class="text-sm text-gray-500">[투자은행 이름]</p>
+							<p class="font-bold text-lg">[종목명 (TICKER)] <span class="text-red-600 font-semibold ml-2">[상향/하향/신규]</span></p>
+							 <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+								<span>목표가: <b class="text-gray-800">[목표가]</b></span>
+								<span>상승여력: <b class="text-red-600">[상승여력]</b></span>
+							</div>
+							<p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> [핵심 코멘트]</p>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+
+			<div class="mt-10 pt-6 border-t">
+				<h3 class="text-xl font-bold mb-4">경영진 코멘트 분석</h3>
+				<div class="bg-amber-50 border-l-4 border-amber-400 p-5 rounded-r-lg">
+					<div class="flex justify-between items-start mb-2">
+						<h4 class="font-bold text-amber-800">C-Suite 센티먼트 지수</h4>
+						<!-- [수정] 센티먼트 지수(1-10)와 색상(green/yellow/red)을 수정하세요. -->
+						<span class="font-bold text-xl text-green-600 bg-green-100 px-3 py-1 rounded-full">[점수] / 10</span>
+					</div>
+					 <!-- [수정] 주요 경영진 코멘트 내용을 입력하세요. -->
+					 <p class="text-sm text-gray-700 mb-3">
+						<b class="text-gray-800">[기업명] 경영진:</b> "[경영진 코멘트 내용]"
+					</p>
+					<div>
+						<!-- [수정] 코멘트에서 추출된 주요 테마를 입력하세요. -->
+						<span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">주요 테마: [테마1] ([+XX%])</span>
+						<span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">[테마2] ([+XX%])</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-water mr-3 text-blue-600"></i>기관 자금 흐름
+			</h2>
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+				<div class="bg-gray-50 rounded-lg p-6 flex flex-col">
+					<h3 class="font-bold text-lg mb-4 flex items-center">
+						<i class="fas fa-chart-pie mr-2 text-purple-500"></i>대규모 옵션 거래
+					</h3>
+					<div class="space-y-4 text-sm flex-grow">
+						<!-- [수정] 주요 옵션 거래 내용을 입력하세요. -->
+						<div>
+							<p class="font-semibold text-gray-800">[종목명 (TICKER)]</p>
+							<p class="text-gray-600">[옵션 거래 상세 내용]</p>
+						</div>
+						<div>
+							<p class="font-semibold text-gray-800">[종목명 (TICKER)]</p>
+							<p class="text-gray-600">[옵션 거래 상세 내용]</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-gray-50 rounded-lg p-6 flex flex-col">
+					<h3 class="font-bold text-lg mb-4 flex items-center">
+						<i class="fas fa-exchange-alt mr-2 text-green-500"></i>ETF 자금 흐름
+					</h3>
+					<div class="space-y-4 text-sm">
+						<!-- [수정] 주요 ETF 자금 흐름 내용을 입력하세요. -->
+						<div>
+							<p class="font-semibold text-gray-800">[ETF 종류]</p>
+							<p class="text-gray-600">[ETF 자금 흐름 상세 내용]</p>
+						</div>
+						<div>
+							<p class="font-semibold text-gray-800">[ETF 종류]</p>
+							<p class="text-gray-600">[ETF 자금 흐름 상세 내용]</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-gray-50 p-6 rounded-lg lg:col-span-2">
+					<h3 class="font-bold text-lg mb-4 flex items-center">
+						<i class="fas fa-user-secret mr-2 text-gray-500"></i>다크 풀 및 기타 자금
+					</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div>
+							<h4 class="font-semibold text-gray-700 mb-2 border-b pb-1">다크 풀 (비공개 대량 매매)</h4>
+							<!-- [수정] 다크풀 거래 내용을 입력하세요. -->
+							<p class="text-sm text-gray-600">
+								[다크풀 관련 분석 내용. <b>TICKER</b>에서 <span class="font-mono text-blue-600 font-semibold">[거래 규모]</span> 거래 포착.]
+							</p>
+						</div>
+						<div>
+							<h4 class="font-semibold text-gray-700 mb-2 border-b pb-1">정치 자금 동향</h4>
+							<!-- [수정] 정치 자금 관련 내용을 입력하세요. -->
+							<p class="text-sm text-gray-600">
+							   [정치 자금 관련 동향 및 분석 내용]
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section> 
+   
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-sync-alt mr-3 text-blue-600"></i>섹터 및 순환 동향</h2>
+			
+			<div>
+				<h3 class="text-xl font-bold mb-4">섹터 퍼포먼스 히트맵</h3>
+				<!-- 이 부분은 아래 스크립트에서 자동으로 생성됩니다. sectorData 배열만 수정하세요. -->
+				<div id="sector-heatmap" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-white">
+				</div>
+			</div>
+			
+			<div class="mt-8 bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-lg">
+				<h3 class="font-bold text-blue-800 mb-4 flex items-center text-lg">
+					<i class="fas fa-lightbulb mr-2"></i>100x Insight: 섹터 순환 및 전략 분석
+				</h3>
+				<div class="space-y-4 text-sm">
+					<!-- [수정] 섹터 순환에 대한 분석 내용을 입력하세요. -->
+					<div>
+						<h4 class="font-semibold text-gray-800">전략 요약</h4>
+						<p class="text-gray-700 leading-relaxed">
+							[섹터 순환에 대한 전략적 요약]
+						</p>
+					</div>
+					<div>
+						<h4 class="font-semibold text-gray-800">주요 동향</h4>
+						<ul class="list-disc list-inside space-y-1 pl-2">
+							<li>
+								<b>주도 섹터:</b> 
+								<span class="font-semibold text-green-600">[주도 섹터명 (TICKER +X.XX%)]</span>, 
+								[주도 섹터 분석]
+							</li>
+							<li>
+								<b>부진 섹터:</b> 
+								<span class="font-semibold text-red-600">[부진 섹터명 (TICKER -X.XX%)]</span>, 
+								[부진 섹터 분석]
+							</li>
+						</ul>
+					</div>
+					<div>
+						<h4 class="font-semibold text-gray-800">핵심 시사점</h4>
+						<p class="text-gray-700 leading-relaxed">
+							[핵심 시사점 및 투자 전략 제안]
+						</p>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+	</section>
+
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-robot mr-3 text-blue-600"></i>100x Tech Radar
+			</h2>
+
+			<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" style="perspective: 1000px;">
+				
+				<!-- [수정] 각 기술주 카드의 데이터를 입력하세요. (티커, 이름, 등락률, YTD, 뒷면 코멘트) -->
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group">
+					<div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }">
+						<div class="absolute w-full h-full backface-hidden bg-green-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-green-600">
+							<div><p class="font-bold text-lg">[TICKER]</p><p class="text-xs text-gray-500">[회사명]</p></div>
+							<div class="text-right"><p class="text-lg font-bold text-green-600">[+X.XX%]</p><p class="text-xs text-green-600">YTD [+XX.XX%]</p></div>
+						</div>
+						<div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180">
+							<p>[카드 뒷면 코멘트]</p>
+						</div>
+					</div>
+				</div>
+
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group">
+					<div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }">
+						<div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500">
+							<div><p class="font-bold text-lg">[TICKER]</p><p class="text-xs text-gray-500">[회사명]</p></div>
+							<div class="text-right"><p class="text-lg font-bold text-red-600">[-X.XX%]</p><p class="text-xs text-red-600">YTD [-XX.XX%]</p></div>
+						</div>
+						<div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180">
+							<p>[카드 뒷면 코멘트]</p>
+						</div>
+					</div>
+				</div>
+				
+				<!-- ... 이런 식으로 12개 카드 모두 채우기 ... -->
+
+			</div>
+		</div>
+	</section>
+			
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center">
+				<i class="fas fa-robot mr-3 text-blue-600"></i>AI & 테크 동향
+			</h2>
+
+			<div class="space-y-6">
+				<div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+					<h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+						<i class="fas fa-chart-bar mr-3 text-indigo-500"></i>핵심 동향 분석
+					</h3>
+					
+					<div>
+						<h4 class="font-semibold text-gray-700 mb-3">주요 시장 이벤트 및 전략적 함의</h4>
+						<ul class="space-y-3 text-sm">
+							<!-- [수정] AI/테크 관련 핵심 동향을 입력하세요. -->
+							<li class="flex items-start">
+								<i class="fas fa-dollar-sign text-green-500 w-4 text-center mr-3 mt-1"></i>
+								<div>
+									<b>[동향 1 제목]:</b> [동향 1 상세 내용]
+								</div>
+							</li>
+							<li class="flex items-start">
+								<i class="fas fa-handshake text-blue-500 w-4 text-center mr-3 mt-1"></i>
+								<div>
+									<b>[동향 2 제목]:</b> [동향 2 상세 내용]
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+					<h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+						<i class="far fa-newspaper mr-3 text-teal-500"></i>신흥 기술 및 투자 뉴스
+					</h3>
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 text-sm">
+						<!-- [수정] 각 카테고리별 뉴스 요약을 입력하세요. -->
+						<div>
+							<h4 class="font-semibold text-gray-700 mb-2">자금 조달 & M&A</h4>
+							<p class="text-gray-600">[관련 뉴스 요약]</p>
+						</div>
+						<div>
+							<h4 class="font-semibold text-gray-700 mb-2">제품 & 기술</h4>
+							<p class="text-gray-600">[관련 뉴스 요약]</p>
+						</div>
+						<div>
+							<h4 class="font-semibold text-gray-700 mb-2">시장 & 파트너십</h4>
+							<p class="text-gray-600">[관련 뉴스 요약]</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-lg">
+					<h4 class="font-bold text-blue-800 mb-2 flex items-center">
+						<i class="fas fa-lightbulb mr-2"></i>100x Insight: AI 시장 분석
+					</h4>
+					<!-- [수정] AI 시장에 대한 종합적인 분석/인사이트를 입력하세요. -->
+					<p class="text-sm text-gray-700 leading-relaxed">
+						[AI 시장에 대한 종합적인 분석 및 전망]
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center">
+				<i class="fas fa-calendar-check mr-3 text-blue-600"></i> 시장 주목 이벤트
+			</h2>
+			
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-8">
+				<div>
+					<h3 class="text-xl font-bold mb-4 flex items-center">
+						<i class="fas fa-landmark mr-2 text-indigo-500"></i>주요 경제지표 일정
+					</h3>
+					<div class="space-y-4">
+
+						<!-- [수정] 발표 예정인 주요 경제지표 정보를 입력하세요. 중요도에 따라 border-amber-400 등을 사용하세요. -->
+						<div class="border-l-4 border-amber-400 rounded-lg p-4 transition-all hover:shadow-lg bg-amber-50">
+							<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+								<div class="mb-3 sm:mb-0">
+									<p class="font-bold text-gray-900">[지표 이름]</p>
+									<p class="text-sm text-gray-500">발표: [시간] (ET)</p>
+								</div>
+								<div class="flex space-x-4 text-right">
+									<div>
+										<p class="text-xs text-gray-500">컨센서스</p>
+										<p class="font-semibold text-base">[예상치]</p>
+									</div>
+									<div>
+										<p class="text-xs text-gray-500">이전치</p>
+										<p class="font-semibold text-base">[이전치]</p>
+									</div>
+								</div>
+							</div>
+							<p class="text-xs text-gray-600 mt-3 pt-3 border-t">
+								<b class="text-gray-700">해설:</b> [지표에 대한 간단한 해설]
+							</p>
+						</div>
+						
+						<div class="border rounded-lg p-4 transition-all hover:shadow-lg bg-gray-50">
+							<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+								<div class="mb-3 sm:mb-0">
+									<p class="font-bold text-gray-900">[지표 이름]</p>
+									<p class="text-sm text-gray-500">발표: [시간] (ET)</p>
+								</div>
+								<div class="flex space-x-4 text-right">
+									<div>
+										<p class="text-xs text-gray-500">컨센서스</p>
+										<p class="font-semibold text-base">[예상치]</p>
+									</div>
+									<div>
+										<p class="text-xs text-gray-500">이전치</p>
+										<p class="font-semibold text-base">[이전치]</p>
+									</div>
+								</div>
+							</div>
+							<p class="text-xs text-gray-600 mt-3 pt-3 border-t">
+								<b class="text-gray-700">해설:</b> [지표에 대한 간단한 해설]
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div>
+					<h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-bullhorn mr-2 text-teal-500"></i>주요 실적 발표</h3>
+					<div class="space-y-4">
+						
+						<!-- [수정] 발표 예정인 주요 기업 실적 정보를 입력하세요. -->
+						<div class="border rounded-lg p-4 transition-all hover:shadow-lg hover:border-teal-200">
+							<div class="flex justify-between items-center mb-2">
+								<p class="font-bold text-gray-900">[회사명] <span class="text-sm font-light text-gray-500">([TICKER])</span></p>
+								<!-- Pre-Market: bg-sky-200, After-Market: bg-pink-200 -->
+								<span class="inline-block bg-sky-200 text-sky-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">[발표 시점]</span>
+							</div>
+							<div class="flex justify-around text-center pt-2 border-t">
+								<div>
+									<p class="text-xs text-gray-500">EPS 컨센서스</p>
+									<p class="font-semibold text-lg">[EPS 예상치]</p>
+								</div>
+								<div>
+									<p class="text-xs text-gray-500">매출 컨센서스</p>
+									<p class="font-semibold text-lg">[매출 예상치]</p>
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+    
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-compass mr-3 text-blue-600"></i>오늘의 시장 전략</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- [수정] 오늘의 시장 전략 시그널을 입력하세요. -->
+                <div class="p-6 bg-green-50 rounded-xl border-2 border-green-200 text-center">
+                    <h3 class="font-bold text-green-700 mb-2">시그널 1: [전략명]</h3>
+                    <i class="fas fa-arrow-up text-green-600 text-2xl mb-3"></i>
+                    <div class="space-y-1 text-sm"><p><b>진입:</b> [진입 조건]</p><p><b>목표:</b> [목표가]</p><p><b>손절:</b> [손절가]</p><p>[전략 근거]</p></div>
+                </div>
+                <div class="p-6 bg-green-50 rounded-xl border-2 border-green-200 text-center">
+                     <h3 class="font-bold text-green-700 mb-2">시그널 2: [전략명]</h3>
+                    <i class="fas fa-microchip text-green-600 text-2xl mb-3"></i>
+                    <div class="space-y-1 text-sm"><p><b>진입:</b> [진입 조건]</p><p>[전략 근거]</p></div>
+                </div>
+                <div class="p-6 bg-red-50 rounded-xl border-2 border-red-200 text-center">
+                    <h3 class="font-bold text-red-700 mb-2">시그널 3: [전략명]</h3>
+                    <i class="fas fa-arrow-down text-red-600 text-2xl mb-3"></i>
+                    <div class="space-y-1 text-sm"><p><b>진입:</b> [진입 조건]</p><p>[전략 근거]</p></div>
+                </div>
+            </div>
+		</div>
+    </section>
+	
+	<section class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-compass mr-3 text-blue-600"></i>내일의 시장 대응 전략
+			</h2>
+			<div class="space-y-6">
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div class="bg-white-50 rounded-xl shadow-inner p-5">
+						<div class="flex items-center text-lg font-bold text-gray-800 mb-3">
+							<i class="fas fa-shield-alt text-yellow-500 mr-3"></i>
+							<span>리스크 종합 진단</span>
+							<!-- [수정] 리스크 레벨과 색상을 수정하세요. -->
+							<span class="ml-auto text-yellow-600 bg-yellow-100 px-3 py-1 rounded-full text-base">[레벨]</span>
+						</div>
+						<p class="text-sm text-gray-600">
+							[리스크 진단 코멘트]
+						</p>
+					</div>
+					
+					<div class="bg-white-50 rounded-xl shadow-inner p-5">
+						<div class="flex items-center text-lg font-bold text-gray-800 mb-3">
+							<i class="fas fa-tachometer-alt text-red-500 mr-3"></i>
+							<span>포트폴리오 목표 베타</span>
+							<!-- [수정] 목표 베타값과 색상을 수정하세요. -->
+							<span class="ml-auto text-red-600 bg-red-100 px-3 py-1 rounded-full text-base">[X.Xx]</span>
+						</div>
+						<p class="text-sm text-gray-600">
+							[목표 베타 설정 근거]
+						</p>
+					</div>
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div class="bg-white-50 rounded-xl shadow-inner p-5">
+						<h4 class="font-bold text-lg text-gray-800 mb-3 flex items-center">
+							<i class="fas fa-chart-pie mr-2 text-blue-500"></i>
+							주요 섹터 비중
+						</h4>
+						<div class="space-y-2">
+							<!-- [수정] 섹터 비중 전략을 입력하세요. -->
+							<div class="flex justify-between items-center text-sm">
+								<span>[섹터명]</span>
+								<span class="font-bold text-green-600 flex items-center">비중 확대 <i class="fas fa-arrow-up ml-1"></i></span>
+							</div>
+							<div class="flex justify-between items-center text-sm">
+								<span>[섹터명]</span>
+								<span class="font-bold text-red-600 flex items-center">비중 축소 <i class="fas fa-arrow-down ml-1"></i></span>
+							</div>
+						</div>
+					</div>
+
+					<div class="bg-white-50 rounded-xl shadow-inner p-5">
+						<h4 class="font-bold text-lg text-gray-800 mb-3 flex items-center">
+							<i class="fas fa-binoculars mr-2 text-indigo-500"></i>
+							핵심 모니터링 레벨
+						</h4>
+						<ul class="text-sm text-gray-700 space-y-1">
+							<!-- [수정] 모니터링할 주요 지수/가격을 입력하세요. -->
+							<li><span class="font-semibold w-24 inline-block text-gray-500">SPX:</span> [모니터링 레벨]</li>
+							<li><span class="font-semibold w-24 inline-block text-gray-500">10Y 금리:</span> [모니터링 레벨]</li>
+							<li><span class="font-semibold w-24 inline-block text-gray-500">DXY:</span> [모니터링 레벨]</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+					<h4 class="font-bold text-blue-800 mb-2 flex items-center"><i class="fas fa-info-circle mr-2"></i>추가 고려사항</h4>
+					<p class="text-sm text-blue-700">
+						[기타 시장에 영향을 줄 수 있는 추가 고려사항]
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-book-open mr-3 text-blue-600"></i>부록: 야간 선물 및 주요 차트</h2>
+			<h3 class="text-xl font-bold mb-4">부록 A: 야간 선물 움직임</h3>
+
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+				
+				<!-- [수정] 야간 선물 데이터를 입력하세요. -->
+				<div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500 flex flex-col" x-data="{ open: false }">
+					<div class="flex-grow">
+						<div class="flex justify-between items-start">
+							<span class="font-bold text-gray-800">[선물 이름1]</span>
+							<span class="text-lg font-bold text-green-600">[+X.XX%]</span>
+						</div>
+						<div class="text-sm text-gray-600 mt-1">최종가: [가격]</div>
+					</div>
+					<button @click="open = !open" class="text-sm text-blue-600 mt-3 pt-2 border-t border-gray-200 w-full text-left flex justify-between items-center">
+						<span>코멘트 보기</span>
+						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+					</button>
+					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+						[선물 움직임에 대한 코멘트]
+					</div>
+				</div>
+
+                <div class="bg-white rounded-lg shadow p-4 border-l-4 border-red-500 flex flex-col" x-data="{ open: false }">
+					<div class="flex-grow">
+						<div class="flex justify-between items-start">
+							<span class="font-bold text-gray-800">[선물 이름2]</span>
+							<span class="text-lg font-bold text-red-600">[-X.XX%]</span>
+						</div>
+						<div class="text-sm text-gray-600 mt-1">최종가: [가격]</div>
+					</div>
+					<button @click="open = !open" class="text-sm text-blue-600 mt-3 pt-2 border-t border-gray-200 w-full text-left flex justify-between items-center">
+						<span>코멘트 보기</span>
+						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+					</button>
+					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+						[선물 움직임에 대한 코멘트]
+					</div>
+				</div>
+
+			</div>
+
+			<h3 class="text-xl font-bold mb-4">부록 B: 주요 차트 요약</h3>
+
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+				<!-- [수정] 주요 차트 분석 내용을 입력하세요. -->
+				<div class="bg-white p-6 rounded-xl shadow border-t-4 border-blue-500">
+					<div class="flex items-center mb-3">
+						<i class="fas fa-chart-bar text-xl text-blue-500 mr-3"></i>
+						<h4 class="font-bold text-gray-800">[차트 1 제목]</h4>
+					</div>
+					<p class="text-sm text-gray-600 leading-relaxed">
+						[차트 1 분석 및 해설]
+					</p>
+				</div>
+
+				<div class="bg-white p-6 rounded-xl shadow border-t-4 border-purple-500">
+					<div class="flex items-center mb-3">
+						<i class="fas fa-microchip text-xl text-purple-500 mr-3"></i>
+						<h4 class="font-bold text-gray-800">[차트 2 제목]</h4>
+					</div>
+					<p class="text-sm text-gray-600 leading-relaxed">
+						[차트 2 분석 및 해설]
+					</p>
+				</div>
+
+				<div class="bg-white p-6 rounded-xl shadow border-t-4 border-teal-500">
+					<div class="flex items-center mb-3">
+						<i class="fas fa-chart-line text-xl text-teal-500 mr-3"></i>
+						<h4 class="font-bold text-gray-800">[차트 3 제목]</h4>
+					</div>
+					<p class="text-sm text-gray-600 leading-relaxed">
+						[차트 3 분석 및 해설]
+					</p>
+				</div>
+
+			</div>
+        </div>
+    </section>
+
+    <footer class="py-12 px-6 bg-slate-50">
+        <div class="container mx-auto text-center text-slate-500">
+            <div class="text-xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
+            <p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
+			<!-- [수정] 연도를 현재 연도로 수정하세요. -->
+            <p class="text-xs text-slate-400">© [YYYY] FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+	<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Chart.register(ChartDataLabels);
+
+            // [수정] 아래 sectorData 배열에 그날의 섹터별 데이터를 입력하세요.
+            // name: 섹터 이름, etf: 관련 ETF 티커, day: 당일 등락률, ytd: 연초 대비 등락률
+            const sectorData = [
+                { name: '기술', etf: 'XLK', day: 0.98, ytd: 8.91 },
+                { name: '금융', etf: 'XLF', day: 0.83, ytd: 8.36 },
+                { name: '통신 서비스', etf: 'XLC', day: 0.79, ytd: 12.11 },
+                { name: '부동산', etf: 'XLRE', day: 0.73, ytd: 1.84 },
+                { name: '헬스케어', etf: 'XLV', day: 0.64, ytd: -2.02 },
+                { name: '필수소비재', etf: 'XLP', day: 0.52, ytd: 3.00 },
+                { name: '산업재', etf: 'XLI', day: 0.50, ytd: 11.96 },
+                { name: '유틸리티', etf: 'XLU', day: 0.41, ytd: 7.89 },
+                { name: '소재', etf: 'XLB', day: -0.09, ytd: 4.36 },
+                { name: '에너지', etf: 'XLE', day: -0.57, ytd: -0.99 },
+                { name: '임의소비재', etf: 'XLY', day: -0.58, ytd: -3.13 }
+            ];
+            
+            const heatmapContainer = document.getElementById('sector-heatmap');
+            if(heatmapContainer){
+                heatmapContainer.innerHTML = ''; // 기존 내용 초기화
+                sectorData.sort((a,b) => b.day - a.day).forEach(sector => {
+                    const value = sector.day;
+                    let bgColorClass = '';
+                    if (value > 0.75) bgColorClass = 'bg-green-600';
+                    else if (value > 0.25) bgColorClass = 'bg-green-500';
+                    else if (value >= 0) bgColorClass = 'bg-green-400';
+                    else if (value > -0.5) bgColorClass = 'bg-red-400';
+                    else bgColorClass = 'bg-red-600';
+
+                    const ytdColorClass = sector.ytd >= 0 ? 'text-green-300' : 'text-red-300';
+                    
+                    const cell = `
+                        <div class="p-4 rounded-lg ${bgColorClass} card-shadow text-white">
+                            <div class="font-bold text-base md:text-lg">${sector.name} (${sector.etf})</div>
+                            <div class="text-2xl font-black">${value.toFixed(2)}%</div>
+                            <div class="text-sm ${ytdColorClass}">(YTD ${sector.ytd.toFixed(2)}%)</div>
+                        </div>
+                    `;
+                    heatmapContainer.innerHTML += cell;
+                });
+            }
+
+            // 네비게이션 로딩 스크립트 (수정 불필요)
+            const navScript = document.createElement('script');
+            navScript.type = 'module';
+            navScript.innerHTML = `
+                이 부분은 상위 폴더의 네비게이션 파일을 로드하는 스크립트입니다.
+                로컬 환경이나 다른 서버 구조에서는 경로 수정이 필요할 수 있습니다.
+                import { siteVersion } from '../../version.js';
+                if (window.top === window.self) {
+                    fetch(\`../../nav.html?v=\${siteVersion}\`)
+                        .then(r => r.text())
+                        .then(html => {
+                            const nav = document.getElementById('nav');
+                            if (nav) {
+                                nav.innerHTML = html;
+                                nav.querySelectorAll('script').forEach(oldScript => {
+                                    const script = document.createElement('script');
+                                    Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
+                                    script.textContent = oldScript.textContent;
+                                    oldScript.replaceWith(script);
+                                });
+                            }
+                        });
+                }
+            `;
+            document.body.appendChild(navScript);
+        });
+    </script>
+</body>
+</html>
