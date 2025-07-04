@@ -4,21 +4,8 @@ export async function loadNav(siteVersion, containerId = 'nav') {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
-    // Detect base href
-    let baseHref;
-    const baseEl = doc.querySelector('base');
-    if (baseEl) {
-        baseHref = baseEl.getAttribute('href');
-    } else {
-        const scriptEl = Array.from(doc.scripts).find(s => s.textContent.includes('baseHref'));
-        if (scriptEl) {
-            const isLocal = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
-            const isPreview = window.location.pathname.includes('/preview/');
-            if (isLocal) baseHref = '/';
-            else if (isPreview) baseHref = '/100xFenok/preview/';
-            else baseHref = '/100xFenok/';
-        }
-    }
+    // Use global base href computed by the host page
+    const baseHref = window.baseHref;
 
     if (baseHref) {
         let base = document.head.querySelector('base');
