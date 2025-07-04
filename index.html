@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<!-- LLM_GUIDE_START
+<!DOCTYPE html><!-- LLM_GUIDE_START
 {
   "doc_version": "1.4",
   "generated": "2025-06-28T09:00:00+09:00",
@@ -43,19 +42,14 @@
     "patch_format": "Markdown ```diff``` or JSON"
   }
 }
-LLM_GUIDE_END -->
-
-<!-- ──────────────────────────────────────────────────
+LLM_GUIDE_END --><!-- ──────────────────────────────────────────────────
 인간 개발자용 요약 (Living Document)
 1) GitHub Pages 환경: root 경로 ./ 아래에 모든 파일 배치
 2) index.html + 두 iframe(nav, content) = SPA 기본 골격
 3) loadPage() 가 컨텐츠 로드 · 메뉴 활성화 · 캐싱 우회 모두 담당
 4) 페이지/리소스 수정 시 siteVersion 반드시 증가 (?v=버전)
 5) 브라우저 캐시가 남을 땐 CTRL-F5로 강제 새로고침
-────────────────────────────────────────────────── -->
-
-<html lang="ko">
-<head>
+────────────────────────────────────────────────── --><html lang="ko"><head>
     <script>
       // 로컬, GitHub 메인, GitHub Preview 환경을 모두 자동으로 감지하는 스크립트
       (() => {
@@ -84,7 +78,7 @@ LLM_GUIDE_END -->
       })();
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,55 +116,12 @@ LLM_GUIDE_END -->
         <iframe id="content-frame" name="content-display-area" loading="lazy"></iframe>
     </div>
 
-    <script type="module">
-        /* ──────────────── 설정 상수 ──────────────── */
-        const { siteVersion } = await import(`${window.baseHref}version.js`);
+    <script type="module">const { siteVersion } = await import(`${window.baseHref}version.js`);
+const { loadNav } = await import(`${window.baseHref}loadNav.js`);
+if (window.top === window.self) {
+    await loadNav(siteVersion);
+    loadPage('main.html');
+}</script>
 
-        // const navFrame     = document.getElementById('nav-frame');
-        const navContainer = document.getElementById('nav');
-        const contentFrame = document.getElementById('content-frame');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // 🚀 Nav를 fetch로 로드 (멀티차트와 동일한 방식)
-            fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
-                .then(r => r.text())
-                .then(html => {
-                    navContainer.innerHTML = html;
-                    
-                    // 🔄 Nav 스크립트 재실행 (중요!)
-                    navContainer.querySelectorAll('script').forEach(oldScript => {
-                        const script = document.createElement('script');
-                        Array.from(oldScript.attributes).forEach(attr => 
-                            script.setAttribute(attr.name, attr.value));
-                        script.textContent = oldScript.textContent;
-                        oldScript.replaceWith(script);
-                    });
-                    
-                    // Nav 로드 완료 후 메인 페이지 로드
-                    loadPage('main.html');
-                });
-        });
-
-        /* ──────────────── 핵심 함수 loadPage ──────────────── */
-        window.loadPage = function loadPage(pageUrl) {
-            if (contentFrame) {
-                contentFrame.src = `${pageUrl}?v=${siteVersion}`;
-            }
-
-            // 메뉴 활성화 토글 (nav.html 내부 DOM 접근)
-            setTimeout(() => {
-                navContainer.querySelectorAll('a[data-path]').forEach(link => {
-                    const linkPath = link.getAttribute('data-path');
-                    if (pageUrl.includes(linkPath)) {
-                        link.classList.add('text-blue-600','font-semibold');
-                        link.classList.remove('text-slate-600','font-medium');
-                    } else {
-                        link.classList.remove('text-blue-600','font-semibold');
-                        link.classList.add('text-slate-600','font-medium');
-                    }
-                });
-            }, 100); // fetch nav는 iframe보다 빠르므로 대기시간 단축
-        }
-    </script>
-</body>
-</html>
+</body></html>

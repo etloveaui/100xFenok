@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
+<!DOCTYPE html><html lang="ko"><head>
     <script>
     // 로컬, GitHub 메인, GitHub Preview 환경을 모두 자동으로 감지하는 스크립트
     (() => {
@@ -29,7 +27,7 @@
     })();
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,7 +38,7 @@
     <meta property="og:type" content="website">
     <meta property="og:image" content="favicon-96x96.png">
     <meta name="theme-color" content="#0ea5e9">
-    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -448,11 +446,11 @@
                     <div class="bg-blue-500/20 p-6 rounded-lg border-l-4 border-blue-400">
                         <h4 class="font-bold text-white mb-4">📊 지수 투자의 유효성</h4>
                         <p class="text-white/80 mb-4">
-                            전략 산업의 핵심인 빅테크 기업들이 S&P 500과 나스닥에 집중되어 있어, 지수 투자 역시 유효한 전략입니다.
+                            전략 산업의 핵심인 빅테크 기업들이 S&amp;P 500과 나스닥에 집중되어 있어, 지수 투자 역시 유효한 전략입니다.
                         </p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <h5 class="font-bold text-white mb-2">S&P 500</h5>
+                                <h5 class="font-bold text-white mb-2">S&amp;P 500</h5>
                                 <p class="text-white/70 text-sm">AI 혁명의 핵심 기업들이 상위 가중치를 차지</p>
                             </div>
                             <div>
@@ -567,7 +565,7 @@
                             <ul class="space-y-2 text-white/80">
                                 <li>• 정부 육성 산업 (AI, 반도체, 방산)</li>
                                 <li>• 인플레이션 헤지 자산 (원자재, 금)</li>
-                                <li>• 주요 지수 (S&P 500, 나스닥)</li>
+                                <li>• 주요 지수 (S&amp;P 500, 나스닥)</li>
                             </ul>
                         </div>
                         <div>
@@ -585,7 +583,7 @@
 
     </div>
 
-    <script defer>
+    <script defer="">
         // Chart.js 기본 설정
         Chart.defaults.font.family = 'Noto Sans KR';
         Chart.defaults.color = '#e2e8f0';
@@ -757,23 +755,12 @@
             <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
         </div>
     </footer>
-    <script type="module">
-        const { siteVersion } = await import(`${window.baseHref}version.js`);
-        if (window.top === window.self) {
-            fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
-                .then(res => res.text())
-                .then(html => {
-                    const nav = document.getElementById('nav');
-                    nav.innerHTML = html;
-                    nav.querySelectorAll('script').forEach(oldScript => {
-                        const script = document.createElement('script');
-                        Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
-                        script.textContent = oldScript.textContent;
-                        oldScript.replaceWith(script);
-                    });
-                });
-        }
-    </script>
+    <script type="module">const { siteVersion } = await import(`${window.baseHref}version.js`);
+const { loadNav } = await import(`${window.baseHref}loadNav.js`);
+if (window.top === window.self) {
+    await loadNav(siteVersion);
+}</script>
 
-</body>
-</html>
+
+
+</body></html>

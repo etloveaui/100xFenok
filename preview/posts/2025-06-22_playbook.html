@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
+<!DOCTYPE html><html lang="ko"><head>
     <script>
     // 로컬, GitHub 메인, GitHub Preview 환경을 모두 자동으로 감지하는 스크립트
     (() => {
@@ -29,7 +27,7 @@
     })();
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,7 +38,7 @@
     <meta property="og:type" content="website">
     <meta property="og:image" content="favicon-96x96.png">
     <meta name="theme-color" content="#0ea5e9">
-    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!--
     Narrative Plan (Final Static Version):
     1. Introduction (Hook): State the core thesis upfront: "There is no recession in the US, because a recession means losing hegemony." Frame this as a bipartisan, structural shift.
@@ -158,9 +156,9 @@
                         <h3 class="font-bold text-xl mb-4 text-[#1A535C]">40년 성장 사이클의 종말</h3>
                         <p class="text-gray-600 mb-6">1980년대 신자유주의와 반도체 혁명으로 시작된 저물가-고성장 시대는 막을 내렸습니다. 미국은 역사적으로 40~50년마다 위기를 새로운 성장 동력으로 돌파해왔으며, 지금이 바로 그 변곡점입니다.</p>
                         <ul class="space-y-4">
-                            <li class="flex items-start"><span class="text-[#4ECDC4] font-bold text-2xl mr-4">→</span><div><strong class="text-gray-900">1950년대:</strong> 대량생산 & 고속도로 시스템</div></li>
-                            <li class="flex items-start"><span class="text-[#4ECDC4] font-bold text-2xl mr-4">→</span><div><strong class="text-gray-900">1980년대:</strong> 반도체 & 신자유주의</div></li>
-                            <li class="flex items-start"><span class="text-[#FF6B6B] font-bold text-2xl mr-4">→</span><div><strong class="text-gray-900">2020년대:</strong> AI & 국가 자본주의 & <span class="font-black text-[#FF6B6B]">디지털 달러</span></div></li>
+                            <li class="flex items-start"><span class="text-[#4ECDC4] font-bold text-2xl mr-4">→</span><div><strong class="text-gray-900">1950년대:</strong> 대량생산 &amp; 고속도로 시스템</div></li>
+                            <li class="flex items-start"><span class="text-[#4ECDC4] font-bold text-2xl mr-4">→</span><div><strong class="text-gray-900">1980년대:</strong> 반도체 &amp; 신자유주의</div></li>
+                            <li class="flex items-start"><span class="text-[#FF6B6B] font-bold text-2xl mr-4">→</span><div><strong class="text-gray-900">2020년대:</strong> AI &amp; 국가 자본주의 &amp; <span class="font-black text-[#FF6B6B]">디지털 달러</span></div></li>
                         </ul>
                     </div>
                     <div>
@@ -211,7 +209,7 @@
                          <div class="space-y-4">
                             <div class="p-4 rounded-lg bg-gray-100 border-l-4 border-gray-400">
                                 <h4 class="font-bold text-gray-700">전통 채권자: MMF</h4>
-                                <p class="text-gray-600">"금리 주면 가고, 금리 내리면 <span class='text-red-500 font-bold'>빤스런</span>"</p>
+                                <p class="text-gray-600">"금리 주면 가고, 금리 내리면 <span class="text-red-500 font-bold">빤스런</span>"</p>
                                 <p class="text-sm text-gray-500 mt-1">오직 이자 수익을 위해 움직이는, 변덕스러운 자금</p>
                             </div>
                             <div class="p-4 rounded-lg bg-blue-50 border-l-4 border-blue-400">
@@ -451,12 +449,12 @@
 
         <footer class="text-center text-gray-500 text-sm mt-12">
             <p>본 인포그래픽은 제공된 자료를 바탕으로 재구성 및 시각화되었습니다.</p>
-            <p>&copy; 2025 Data Visualization. All Rights Reserved.</p>
+            <p>© 2025 Data Visualization. All Rights Reserved.</p>
         </footer>
 
     </div>
 
-    <script defer>
+    <script defer="">
         const vibrantPalette = {
             blue: '#4ECDC4',
             red: '#FF6B6B',
@@ -656,22 +654,11 @@
         });
 
     </script>
-    <script type="module">
-        const { siteVersion } = await import(`${window.baseHref}version.js`);
-        if (window.top === window.self) {
-            fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
-                .then(r => r.text())
-                .then(html => {
-                    const nav = document.getElementById('nav');
-                    nav.innerHTML = html;
-                    nav.querySelectorAll('script').forEach(oldScript => {
-                        const script = document.createElement('script');
-                        Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
-                        script.textContent = oldScript.textContent;
-                        oldScript.replaceWith(script);
-                    });
-                });
-        }
-    </script>
-</body>
-</html>
+    <script type="module">const { siteVersion } = await import(`${window.baseHref}version.js`);
+const { loadNav } = await import(`${window.baseHref}loadNav.js`);
+if (window.top === window.self) {
+    await loadNav(siteVersion);
+}</script>
+
+
+</body></html>
