@@ -31,6 +31,7 @@
 		} else {
 		baseHref = '/100xFenok/'; // GitHub의 메인 폴더일 경우
 		}
+        window.baseHref = baseHref;
 		
 		// 4. <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가
 		if (!document.querySelector('base')) {
@@ -1107,9 +1108,9 @@
             navScript.innerHTML = `
                 이 부분은 상위 폴더의 네비게이션 파일을 로드하는 스크립트입니다.
                 로컬 환경이나 다른 서버 구조에서는 경로 수정이 필요할 수 있습니다.
-                import { siteVersion } from '../../version.js';
+                const { siteVersion } = await import(`${window.baseHref}version.js`);
                 if (window.top === window.self) {
-                    fetch(\`../../nav.html?v=\${siteVersion}\`)
+                    fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
                         .then(r => r.text())
                         .then(html => {
                             const nav = document.getElementById('nav');
