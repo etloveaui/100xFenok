@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<!-- 
+<!DOCTYPE html><!-- 
     ================================================================================
     100x Daily Wrap 전체 템플릿 (v2.0)
     ================================================================================
@@ -9,9 +8,7 @@
     3. [괄호]로 표시된 부분과 예시 텍스트를 실제 데이터로 교체하여 사용하세요.
     4. 각 섹션의 구조와 CSS 클래스는 디자인 일관성을 위해 수정하지 않는 것을 권장합니다.
     5. 자바스크립트의 `sectorData` 배열에 해당 날짜의 섹터별 데이터를 입력하면 히트맵이 자동으로 생성됩니다.
--->
-<html lang="ko">
-<head>
+--><html lang="ko"><head>
 	<script>
 	// 로컬, GitHub 메인, GitHub Preview 환경을 모두 자동으로 감지하는 스크립트
 	(() => {
@@ -41,7 +38,7 @@
 	</script>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- [수정] 리포트 날짜에 맞게 제목을 수정하세요. -->
@@ -100,7 +97,7 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <!-- [수정] 각 지표의 이름, 값, 변동률을 입력하세요. 긍정적일 경우 text-green-600, 부정적일 경우 text-red-600 클래스를 사용하세요. -->
             <div class="bg-white rounded-lg p-4 text-center card-shadow">
-                <h4 class="text-sm font-semibold text-gray-500">S&P 500</h4>
+                <h4 class="text-sm font-semibold text-gray-500">S&amp;P 500</h4>
                 <p class="text-2xl font-bold text-green-600">[지수 값]</p>
                 <p class="text-sm font-semibold text-green-600">[+0.00%]</p>
             </div>
@@ -379,7 +376,7 @@
 								주요 지수
 							</button>
 							<button @click="tab = 'fixed_income_fx'" :class="{ 'border-blue-500 text-blue-600': tab === 'fixed_income_fx', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'fixed_income_fx' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
-								채권 & 환율
+								채권 &amp; 환율
 							</button>
 							<button @click="tab = 'commodities'" :class="{ 'border-blue-500 text-blue-600': tab === 'commodities', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'commodities' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
 								원자재
@@ -393,26 +390,26 @@
 					<div class="pt-5">
 						<!-- [수정] 각 탭의 아코디언 메뉴에 해당 자산의 데이터를 입력하세요. -->
 						<div x-show="tab === 'indices'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-chart-line text-blue-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">S&P 500</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-microchip text-purple-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Nasdaq 100</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cubes text-gray-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Russell 2000</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-sort-amount-up-alt text-red-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">VIX</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[+X.XXpt]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-chart-line text-blue-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">S&amp;P 500</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-microchip text-purple-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Nasdaq 100</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cubes text-gray-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Russell 2000</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-sort-amount-up-alt text-red-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">VIX</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[+X.XXpt]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
 						</div>
 
 						<div x-show="tab === 'fixed_income_fx'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">2Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">10Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-dollar-sign text-teal-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">DXY (달러)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">2Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">10Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-dollar-sign text-teal-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">DXY (달러)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
 						</div>
 						
 						<div x-show="tab === 'commodities'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Gold (XAUUSD)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-oil-can text-gray-800 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">WTI Oil</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Gold (XAUUSD)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-oil-can text-gray-800 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">WTI Oil</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
 						</div>
 
 						<div x-show="tab === 'digital_assets'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-bitcoin text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">BTC/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-ethereum text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">ETH/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-bitcoin text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">BTC/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-ethereum text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">ETH/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
 						</div>
 					</div>
 				</div>
@@ -428,7 +425,7 @@
 				</p>
 			</div>
 			
-    </section>
+    </div></section>
 
 	<section class="container mx-auto px-4 mb-8 md:mb-12">
 		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
@@ -444,21 +441,21 @@
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 					<!-- [수정] 각 자산 간의 상관관계 수치를 입력하세요. -->
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
-						<p class="text-sm font-semibold text-gray-700">S&P 500 vs 10년물 국채</p>
+						<p class="text-sm font-semibold text-gray-700">S&amp;P 500 vs 10년물 국채</p>
 						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
 							<i class="fas fa-link-slash mr-2"></i> [상관계수]
 						</p>
 						<p class="text-xs text-gray-500">[상관관계 설명]</p>
 					</div>
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
-						<p class="text-sm font-semibold text-gray-700">S&P 500 vs 금</p>
+						<p class="text-sm font-semibold text-gray-700">S&amp;P 500 vs 금</p>
 						<p class="text-3xl font-bold my-2 text-gray-500 flex items-center justify-center">
 							<i class="fas fa-arrows-left-right-to-line mr-2"></i> [상관계수]
 						</p>
 						<p class="text-xs text-gray-500">[상관관계 설명]</p>
 					</div>
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
-						<p class="text-sm font-semibold text-gray-700">달러(DXY) vs S&P 500</p>
+						<p class="text-sm font-semibold text-gray-700">달러(DXY) vs S&amp;P 500</p>
 						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
 							<i class="fas fa-link-slash mr-2"></i> [상관계수]
 						</p>
@@ -712,7 +709,7 @@
 	<section class="container mx-auto px-4 mb-8 md:mb-12">
 		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
 			<h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center">
-				<i class="fas fa-robot mr-3 text-blue-600"></i>AI & 테크 동향
+				<i class="fas fa-robot mr-3 text-blue-600"></i>AI &amp; 테크 동향
 			</h2>
 
 			<div class="space-y-6">
@@ -748,15 +745,15 @@
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 text-sm">
 						<!-- [수정] 각 카테고리별 뉴스 요약을 입력하세요. -->
 						<div>
-							<h4 class="font-semibold text-gray-700 mb-2">자금 조달 & M&A</h4>
+							<h4 class="font-semibold text-gray-700 mb-2">자금 조달 &amp; M&amp;A</h4>
 							<p class="text-gray-600">[관련 뉴스 요약]</p>
 						</div>
 						<div>
-							<h4 class="font-semibold text-gray-700 mb-2">제품 & 기술</h4>
+							<h4 class="font-semibold text-gray-700 mb-2">제품 &amp; 기술</h4>
 							<p class="text-gray-600">[관련 뉴스 요약]</p>
 						</div>
 						<div>
-							<h4 class="font-semibold text-gray-700 mb-2">시장 & 파트너십</h4>
+							<h4 class="font-semibold text-gray-700 mb-2">시장 &amp; 파트너십</h4>
 							<p class="text-gray-600">[관련 뉴스 요약]</p>
 						</div>
 					</div>
@@ -984,7 +981,7 @@
 						<span>코멘트 보기</span>
 						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
 					</button>
-					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+					<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
 						[선물 움직임에 대한 코멘트]
 					</div>
 				</div>
@@ -1001,7 +998,7 @@
 						<span>코멘트 보기</span>
 						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
 					</button>
-					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+					<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
 						[선물 움직임에 대한 코멘트]
 					</div>
 				</div>
@@ -1109,25 +1106,14 @@
                 이 부분은 상위 폴더의 네비게이션 파일을 로드하는 스크립트입니다.
                 로컬 환경이나 다른 서버 구조에서는 경로 수정이 필요할 수 있습니다.
                 const { siteVersion } = await import(`${window.baseHref}version.js`);
+                const { loadNav } = await import(`${window.baseHref}loadNav.js`);
                 if (window.top === window.self) {
-                    fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
-                        .then(r => r.text())
-                        .then(html => {
-                            const nav = document.getElementById('nav');
-                            if (nav) {
-                                nav.innerHTML = html;
-                                nav.querySelectorAll('script').forEach(oldScript => {
-                                    const script = document.createElement('script');
-                                    Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
-                                    script.textContent = oldScript.textContent;
-                                    oldScript.replaceWith(script);
-                                });
-                            }
-                        });
+                    await loadNav(siteVersion);
                 }
             `;
             document.body.appendChild(navScript);
         });
     </script>
-</body>
-</html>
+
+
+</body></html>
