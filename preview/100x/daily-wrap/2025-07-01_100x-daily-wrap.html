@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<!-- 
+<!DOCTYPE html><!-- 
     ================================================================================
     LLM 및 개발자를 위한 100x Daily Wrap 페이지 제작 가이드 (FenoK's Philosophy v4.5)
     ================================================================================
@@ -33,12 +32,10 @@
         -   **차트:** Chart.js를 사용하되, 색상, 폰트 등을 통일하여 일관된 스타일을 유지합니다. 그날의 데이터 특성에 맞춰 '오늘의 차트'와 같이 새로운 시각화 아이디어를 적극적으로 제안하고 적용하여 리포트의 가치를 높입니다.
         -   **정보 카드(Information Cards):** 경제 캘린더나 실적 발표처럼 목록형 정보는 단순 테이블 대신 개별 카드 형태로 표현하여 정보를 명확히 구분합니다. 특히 중요한 항목(ex: 핵심 PCE)은 `bg-yellow-100`과 같은 강조 색상을 사용하여 시각적 중요도를 높입니다.
         -   **분석/관점 블록(Viewpoint Blocks):** 필진의 핵심 분석을 담는 'Viewpoint' 또는 '관점' 단락은 `border-l-4`, `bg-gray-50` 등을 사용하여 시각적으로 구분되는 컴포넌트로 만듭니다. 문단 내 핵심 키워드를 `<b>` 태그로 강조하여 가독성을 높입니다.
--->
-<html lang="ko">
-<head>
+--><html lang="ko"><head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>100x Daily Wrap - 2025년 7월 1일</title>
@@ -82,7 +79,7 @@
 						<div>
 							<h2 class="text-sm font-semibold text-blue-600">오늘의 핵심 논점</h2>
 							<p class="text-lg font-semibold text-slate-700 mt-1">
-								무역 협상 낙관론으로 S&P 500 종가 사상 최고치 경신
+								무역 협상 낙관론으로 S&amp;P 500 종가 사상 최고치 경신
 							</p>
 						</div>
 					</div>
@@ -95,7 +92,7 @@
     <section class="container mx-auto px-4 mb-8 md:mb-12">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white rounded-lg p-4 text-center card-shadow">
-                <h4 class="text-sm font-semibold text-gray-500">S&P 500</h4>
+                <h4 class="text-sm font-semibold text-gray-500">S&amp;P 500</h4>
                 <p class="text-2xl font-bold text-green-600">6,204.95</p>
                 <p class="text-sm font-semibold text-green-600">+0.52%</p>
             </div>
@@ -129,9 +126,9 @@
 					<div class="flex items-start">
 						<i class="fas fa-chart-line text-2xl text-green-500 mr-4 mt-1"></i>
 						<div>
-							<h4 class="font-bold text-lg text-gray-800">S&P 500, 신고가 랠리</h4>
+							<h4 class="font-bold text-lg text-gray-800">S&amp;P 500, 신고가 랠리</h4>
 							<p class="text-base text-gray-600 mt-1">
-								무역 협상 기대감과 캐나다의 디지털세 철회 등 정책 모멘텀에 힘입어 S&P 500 지수가 <b>0.52% 상승</b>하며 2023년 12월 이후 최고의 분기를 기록했습니다.
+								무역 협상 기대감과 캐나다의 디지털세 철회 등 정책 모멘텀에 힘입어 S&amp;P 500 지수가 <b>0.52% 상승</b>하며 2023년 12월 이후 최고의 분기를 기록했습니다.
 							</p>
 						</div>
 					</div>
@@ -366,7 +363,7 @@
 								주요 지수
 							</button>
 							<button @click="tab = 'fixed_income_fx'" :class="{ 'border-blue-500 text-blue-600': tab === 'fixed_income_fx', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'fixed_income_fx' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
-								채권 & 환율
+								채권 &amp; 환율
 							</button>
 							<button @click="tab = 'commodities'" :class="{ 'border-blue-500 text-blue-600': tab === 'commodities', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'commodities' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
 								원자재
@@ -379,29 +376,29 @@
 
 					<div class="pt-5">
 						<div x-show="tab === 'indices'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-chart-line text-blue-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">S&P 500</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.52%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 6,204.95 / <b>YTD:</b> <span class="text-green-600">+5.50%</span></p><p class="mt-1 text-xs text-gray-600"> 무역 낙관론과 옵션 흐름 지지에 힘입어 사상 최고치</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-microchip text-purple-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Nasdaq 100</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.47%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 20,369.73 / <b>YTD:</b> <span class="text-green-600">+7.93%</span></p><p class="mt-1 text-xs text-gray-600"> 캐나다 세금 철회로 인한 기술주 강세</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cubes text-gray-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Russell 2000</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.12%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 2,175.04 / <b>YTD:</b> <span class="text-red-600">-2.47%</span></p><p class="mt-1 text-xs text-gray-600"> 중소형주 상대적 부진</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-sort-amount-up-alt text-red-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">VIX</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">+2.51pt</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 16.73 / <b>YTD:</b> <span class="text-red-600">-3.57%</span></p><p class="mt-1 text-xs text-gray-600"> 5년 평균 하회, 저변동성 지속</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-chart-line text-blue-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">S&amp;P 500</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.52%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 6,204.95 / <b>YTD:</b> <span class="text-green-600">+5.50%</span></p><p class="mt-1 text-xs text-gray-600"> 무역 낙관론과 옵션 흐름 지지에 힘입어 사상 최고치</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-microchip text-purple-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Nasdaq 100</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.47%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 20,369.73 / <b>YTD:</b> <span class="text-green-600">+7.93%</span></p><p class="mt-1 text-xs text-gray-600"> 캐나다 세금 철회로 인한 기술주 강세</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cubes text-gray-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Russell 2000</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.12%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 2,175.04 / <b>YTD:</b> <span class="text-red-600">-2.47%</span></p><p class="mt-1 text-xs text-gray-600"> 중소형주 상대적 부진</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-sort-amount-up-alt text-red-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">VIX</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">+2.51pt</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 16.73 / <b>YTD:</b> <span class="text-red-600">-3.57%</span></p><p class="mt-1 text-xs text-gray-600"> 5년 평균 하회, 저변동성 지속</p></div></div>
 						</div>
 
 						<div x-show="tab === 'fixed_income_fx'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">2Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-2bp</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> 3.73% / <b>YTD:</b> <span class="text-gray-500">-</span></p><p class="mt-1 text-xs text-gray-600"> 월말 매수 및 연준 인하 기대</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">10Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-3bp</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> 4.26% / <b>YTD:</b> <span class="text-gray-500">-</span></p><p class="mt-1 text-xs text-gray-600"> 듀레이션 수요 견고</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-dollar-sign text-teal-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">DXY (달러)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-0.30%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 97.2 / <b>YTD:</b> <span class="text-red-600">-11.5%</span></p><p class="mt-1 text-xs text-gray-600"> 무역 협상 진전, 달러 약세</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">2Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-2bp</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> 3.73% / <b>YTD:</b> <span class="text-gray-500">-</span></p><p class="mt-1 text-xs text-gray-600"> 월말 매수 및 연준 인하 기대</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">10Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-3bp</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> 4.26% / <b>YTD:</b> <span class="text-gray-500">-</span></p><p class="mt-1 text-xs text-gray-600"> 듀레이션 수요 견고</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-dollar-sign text-teal-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">DXY (달러)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-0.30%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 97.2 / <b>YTD:</b> <span class="text-red-600">-11.5%</span></p><p class="mt-1 text-xs text-gray-600"> 무역 협상 진전, 달러 약세</p></div></div>
 						</div>
 						
 						<div x-show="tab === 'commodities'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Gold (XAUUSD)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.63%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 3,328.70 / <b>YTD:</b> <span class="text-green-600">+26.61%</span></p><p class="mt-1 text-xs text-gray-600"> 안전자산 강세</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Silver (SLV)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.11%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 36.17 / <b>YTD:</b> <span class="text-green-600">+24.98%</span></p><p class="mt-1 text-xs text-gray-600"> 금과 동반 강세</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-box-tissue text-orange-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Copper (CPER)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.16%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 5.09 / <b>YTD:</b> <span class="text-green-600">+27.68%</span></p><p class="mt-1 text-xs text-gray-600"> 산업 수요 견인</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-oil-can text-gray-800 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">WTI Oil</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-0.41%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 64.84 / <b>YTD:</b> <span class="text-red-600">-9.59%</span></p><p class="mt-1 text-xs text-gray-600"> 중동 리스크 완화</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-fire text-orange-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">UNG (천연가스)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+1.98%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 7.53 / <b>YTD:</b> <span class="text-red-600">-3.01%</span></p><p class="mt-1 text-xs text-gray-600"> 여름 수요 증가</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Gold (XAUUSD)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.63%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 3,328.70 / <b>YTD:</b> <span class="text-green-600">+26.61%</span></p><p class="mt-1 text-xs text-gray-600"> 안전자산 강세</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Silver (SLV)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.11%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 36.17 / <b>YTD:</b> <span class="text-green-600">+24.98%</span></p><p class="mt-1 text-xs text-gray-600"> 금과 동반 강세</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-box-tissue text-orange-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Copper (CPER)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.16%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 5.09 / <b>YTD:</b> <span class="text-green-600">+27.68%</span></p><p class="mt-1 text-xs text-gray-600"> 산업 수요 견인</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-oil-can text-gray-800 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">WTI Oil</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-0.41%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 64.84 / <b>YTD:</b> <span class="text-red-600">-9.59%</span></p><p class="mt-1 text-xs text-gray-600"> 중동 리스크 완화</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-fire text-orange-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">UNG (천연가스)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+1.98%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 7.53 / <b>YTD:</b> <span class="text-red-600">-3.01%</span></p><p class="mt-1 text-xs text-gray-600"> 여름 수요 증가</p></div></div>
 						</div>
 
 						<div x-show="tab === 'digital_assets'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-bitcoin text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">BTC/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.13%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 107,311.20 / <b>YTD:</b> <span class="text-green-600">+53.21%</span></p><p class="mt-1 text-xs text-gray-600"> 현물 ETF 유입 지속</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-ethereum text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">ETH/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.19%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 2,491.97 / <b>YTD:</b> <span class="text-green-600">+32.14%</span></p><p class="mt-1 text-xs text-gray-600"> 2Q 네트워크 성장</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-bitcoin text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">BTC/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.13%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 107,311.20 / <b>YTD:</b> <span class="text-green-600">+53.21%</span></p><p class="mt-1 text-xs text-gray-600"> 현물 ETF 유입 지속</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-ethereum text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">ETH/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.19%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 2,491.97 / <b>YTD:</b> <span class="text-green-600">+32.14%</span></p><p class="mt-1 text-xs text-gray-600"> 2Q 네트워크 성장</p></div></div>
 						</div>
 					</div>
 				</div>
@@ -416,7 +413,7 @@
 				</p>
 			</div>
 			
-    </section>
+    </div></section>
 
 	<section class="container mx-auto px-4 mb-8 md:mb-12">
 		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
@@ -431,21 +428,21 @@
 
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
-						<p class="text-sm font-semibold text-gray-700">S&P 500 vs 10년물 국채</p>
+						<p class="text-sm font-semibold text-gray-700">S&amp;P 500 vs 10년물 국채</p>
 						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
 							<i class="fas fa-link-slash mr-2"></i> -0.42
 						</p>
 						<p class="text-xs text-gray-500">역상관관계 (금리↓ 주식↑)</p>
 					</div>
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
-						<p class="text-sm font-semibold text-gray-700">S&P 500 vs 금</p>
+						<p class="text-sm font-semibold text-gray-700">S&amp;P 500 vs 금</p>
 						<p class="text-3xl font-bold my-2 text-gray-500 flex items-center justify-center">
 							<i class="fas fa-arrows-left-right-to-line mr-2"></i> +0.18
 						</p>
 						<p class="text-xs text-gray-500">낮은 상관관계</p>
 					</div>
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
-						<p class="text-sm font-semibold text-gray-700">달러(DXY) vs S&P 500</p>
+						<p class="text-sm font-semibold text-gray-700">달러(DXY) vs S&amp;P 500</p>
 						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
 							<i class="fas fa-link-slash mr-2"></i> -0.67
 						</p>
@@ -783,7 +780,7 @@
 							<div class="text-right"><p class="text-lg font-bold text-green-600">+4.27%</p><p class="text-xs text-green-600">YTD +80.25%</p></div>
 						</div>
 						<div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180">
-							<p>연초 대비 S&P 500 최고 수익률 종목.</p>
+							<p>연초 대비 S&amp;P 500 최고 수익률 종목.</p>
 						</div>
 					</div>
 				</div>
@@ -932,7 +929,7 @@
 	<section class="container mx-auto px-4 mb-8 md:mb-12">
 		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
 			<h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center">
-				<i class="fas fa-robot mr-3 text-blue-600"></i>AI & 테크 동향
+				<i class="fas fa-robot mr-3 text-blue-600"></i>AI &amp; 테크 동향
 			</h2>
 
 			<div class="space-y-6">
@@ -972,15 +969,15 @@
 					</h3>
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 text-sm">
 						<div>
-							<h4 class="font-semibold text-gray-700 mb-2">자금 조달 & M&A</h4>
+							<h4 class="font-semibold text-gray-700 mb-2">자금 조달 &amp; M&amp;A</h4>
 							<p class="text-gray-600">통합 법률 AI 플랫폼을 위한 Clio의 vLex 인수(10억 달러), 이집트 딥테크 펀드(100만 달러) 출시 등 특정 분야의 기술 확보 경쟁이 치열합니다.</p>
 						</div>
 						<div>
-							<h4 class="font-semibold text-gray-700 mb-2">제품 & 기술</h4>
+							<h4 class="font-semibold text-gray-700 mb-2">제품 &amp; 기술</h4>
 							<p class="text-gray-600">오라클의 멀티클라우드 데이터베이스 매출이 100% 이상 성장하며 클라우드 부문의 강력한 모멘텀을 증명했습니다.</p>
 						</div>
 						<div>
-							<h4 class="font-semibold text-gray-700 mb-2">시장 & 파트너십</h4>
+							<h4 class="font-semibold text-gray-700 mb-2">시장 &amp; 파트너십</h4>
 							<p class="text-gray-600">기업의 생성형 AI 도입률이 현재 35%에서 2026년까지 80%로 급증할 것으로 예상됨에 따라, 관련 서비스 시장의 구조적 성장이 기대됩니다.</p>
 						</div>
 					</div>
@@ -1205,7 +1202,7 @@
             <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-compass mr-3 text-blue-600"></i>오늘의 시장 전략</h2>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div class="p-6 bg-green-50 rounded-xl border-2 border-green-200 text-center">
-                    <h3 class="font-bold text-green-700 mb-2">시그널 1: S&P 500 매수</h3>
+                    <h3 class="font-bold text-green-700 mb-2">시그널 1: S&amp;P 500 매수</h3>
                     <i class="fas fa-arrow-up text-green-600 text-2xl mb-3"></i>
                     <div class="space-y-1 text-sm"><p><b>진입:</b> 6,215 돌파 시</p><p><b>목표:</b> 6,250</p><p><b>손절:</b> 6,148</p><p>로그 추세선 저항선 기반</p></div>
                 </div>
@@ -1306,7 +1303,7 @@
 				<div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500 flex flex-col" x-data="{ open: false }">
 					<div class="flex-grow">
 						<div class="flex justify-between items-start">
-							<span class="font-bold text-gray-800">S&P 500 선물</span>
+							<span class="font-bold text-gray-800">S&amp;P 500 선물</span>
 							<span class="text-lg font-bold text-green-600">+0.06%</span>
 						</div>
 						<div class="text-sm text-gray-600 mt-1">최종가: 6,257.25</div>
@@ -1315,7 +1312,7 @@
 						<span>코멘트 보기</span>
 						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
 					</button>
-					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+					<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
 						사상 최고치 근처에서 소폭 상승하며 통합 중
 					</div>
 				</div>
@@ -1332,7 +1329,7 @@
 						<span>코멘트 보기</span>
 						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
 					</button>
-					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+					<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
 						캐나다 디지털세 철회로 아웃퍼폼
 					</div>
 				</div>
@@ -1349,7 +1346,7 @@
 						<span>코멘트 보기</span>
 						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
 					</button>
-					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+					<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
 						베센트의 수익률곡선 평탄화 발언에도 불구하고 금리 안정
 					</div>
 				</div>
@@ -1366,7 +1363,7 @@
 						<span>코멘트 보기</span>
 						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
 					</button>
-					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+					<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
 						무역 협상 낙관론으로 다년래 최저치 시험
 					</div>
 				</div>
@@ -1383,7 +1380,7 @@
 						<span>코멘트 보기</span>
 						<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
 					</button>
-					<div x-show="open" x-transition class="text-xs text-gray-500 mt-2">
+					<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
 						금요일 60달러 하락에서 회복
 					</div>
 				</div>
@@ -1397,7 +1394,7 @@
 				<div class="bg-white p-6 rounded-xl shadow border-t-4 border-blue-500">
 					<div class="flex items-center mb-3">
 						<i class="fas fa-chart-bar text-xl text-blue-500 mr-3"></i>
-						<h4 class="font-bold text-gray-800">S&P 500 지지/저항</h4>
+						<h4 class="font-bold text-gray-800">S&amp;P 500 지지/저항</h4>
 					</div>
 					<p class="text-sm text-gray-600 leading-relaxed">
 						6,215 "범죄 현장" 수준을 넘어선 중요한 돌파는 <b>6,250 로그 추세선</b>으로 가는 길을 열었습니다. 이 1929년 추세선의 모든 이전 시험은 <b>20% 이상의 조정</b>을 선행했습니다.
@@ -1407,7 +1404,7 @@
 				<div class="bg-white p-6 rounded-xl shadow border-t-4 border-purple-500">
 					<div class="flex items-center mb-3">
 						<i class="fas fa-microchip text-xl text-purple-500 mr-3"></i>
-						<h4 class="font-bold text-gray-800">나스닥 & 기술주 리더십</h4>
+						<h4 class="font-bold text-gray-800">나스닥 &amp; 기술주 리더십</h4>
 					</div>
 					<p class="text-sm text-gray-600 leading-relaxed">
 						나스닥 종합 지수는 <b>AI 인프라 지출</b>에 힘입어 월간 <b>6.27% 수익률</b>을 기록했습니다. 기업의 생성형 AI 도입률은 35%에서 2026년까지 80%로 예상됩니다.
@@ -1437,7 +1434,7 @@
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-	<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+	<script defer="" src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Chart.register(ChartDataLabels);
@@ -1484,25 +1481,14 @@
             navScript.type = 'module';
             navScript.innerHTML = `
                 const { siteVersion } = await import(`${window.baseHref}version.js`);
+                const { loadNav } = await import(`${window.baseHref}loadNav.js`);
                 if (window.top === window.self) {
-                    fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
-                        .then(r => r.text())
-                        .then(html => {
-                            const nav = document.getElementById('nav');
-                            if (nav) {
-                                nav.innerHTML = html;
-                                nav.querySelectorAll('script').forEach(oldScript => {
-                                    const script = document.createElement('script');
-                                    Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
-                                    script.textContent = oldScript.textContent;
-                                    oldScript.replaceWith(script);
-                                });
-                            }
-                        });
+                    await loadNav(siteVersion);
                 }
             `;
             document.body.appendChild(navScript);
         });
     </script>
-</body>
-</html>
+
+
+</body></html>
