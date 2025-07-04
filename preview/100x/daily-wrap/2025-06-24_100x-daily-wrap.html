@@ -11,7 +11,7 @@
     <link rel="canonical" href="./2025-06-24_100x-daily-wrap.html">
     <meta property="og:title" content="100x Daily Wrap - 2025년 6월 24일 (차트 수정)">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="../../../favicon-96x96.png">
+    <meta property="og:image" content="favicon-96x96.png">
     <meta name="theme-color" content="#0ea5e9">
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chart.js 데이터 레이블 플러그인 추가 -->
@@ -914,9 +914,9 @@
         });
     </script>
     <script type="module">
-        import { siteVersion } from '../../version.js';
+        const { siteVersion } = await import(`${window.baseHref}version.js`);
         if (window.top === window.self) {
-            fetch(`../../nav.html?v=${siteVersion}`)
+            fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
                 .then(r => r.text())
                 .then(html => {
                     const nav = document.getElementById('nav');
