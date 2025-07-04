@@ -18,11 +18,12 @@
 		// 현재 주소가 로컬 환경인지 정규식으로 확인
 		const isLocal = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
 		// 환경에 따라 올바른 기본 경로를 설정
-		const baseHref = isLocal ? '/' : '/100xFenok/';
-		// <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가 (중복 방지)
-		if (!document.querySelector('base')) {
-		document.head.insertAdjacentHTML('afterbegin', `<base href="${baseHref}">`);
-		}
+                const baseHref = isLocal ? '/' : '/100xFenok/';
+                window.baseHref = baseHref;
+                // <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가 (중복 방지)
+                if (!document.querySelector('base')) {
+                document.head.insertAdjacentHTML('afterbegin', `<base href="${baseHref}">`);
+                }
 	})();
 	</script>
     <meta charset="UTF-8">
