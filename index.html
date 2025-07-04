@@ -75,6 +75,7 @@ LLM_GUIDE_END -->
         } else {
           baseHref = '/100xFenok/'; // GitHub의 메인 폴더일 경우
         }
+        window.baseHref = baseHref;
         
         // 4. <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가
         if (!document.querySelector('base')) {
@@ -123,7 +124,7 @@ LLM_GUIDE_END -->
 
     <script type="module">
         /* ──────────────── 설정 상수 ──────────────── */
-        import { siteVersion } from './version.js';
+        const { siteVersion } = await import(`${window.baseHref}version.js`);
 
         // const navFrame     = document.getElementById('nav-frame');
         const navContainer = document.getElementById('nav');
@@ -131,7 +132,7 @@ LLM_GUIDE_END -->
 
         document.addEventListener('DOMContentLoaded', () => {
             // 🚀 Nav를 fetch로 로드 (멀티차트와 동일한 방식)
-            fetch(`nav.html?v=${siteVersion}`)
+            fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
                 .then(r => r.text())
                 .then(html => {
                     navContainer.innerHTML = html;
