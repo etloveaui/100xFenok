@@ -1,31 +1,5 @@
 <!DOCTYPE html><html lang="ko"><head>
-    <script>
-    // 로컬, GitHub 메인, GitHub Preview 환경을 모두 자동으로 감지하는 스크립트
-    (() => {
-        // 1. 현재 주소가 로컬 환경인지 확인
-        const isLocal = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
-        
-        // 2. 현재 경로에 '/preview/'가 포함되어 있는지 확인
-        const isPreview = window.location.pathname.includes('/preview/');
-
-        let baseHref;
-
-        // 3. 환경에 따라 올바른 기본 경로를 설정
-        if (isLocal) {
-        baseHref = '/'; // 로컬 환경일 경우
-        } else if (isPreview) {
-        baseHref = '/100xFenok/preview/'; // GitHub의 Preview 폴더일 경우
-        } else {
-        baseHref = '/100xFenok/'; // GitHub의 메인 폴더일 경우
-        }
-        window.baseHref = baseHref;
-        
-        // 4. <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가
-        if (!document.querySelector('base')) {
-        document.head.insertAdjacentHTML('afterbegin', `<base href="${baseHref}">`);
-        }
-    })();
-    </script>
+    <script type="module" src="../initBaseHref.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700;900&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
