@@ -118,6 +118,7 @@ LLM_GUIDE_END --><!-- ───────────────────�
 
     <script type="module">const { siteVersion } = await import(`${window.baseHref}version.js`);
 const { loadNav } = await import(`${window.baseHref}loadNav.js`);
+const { loadPage } = await import(`${window.baseHref}loadPage.js`);
 if (window.top === window.self) {
     await loadNav(siteVersion);
     loadPage('main.html');
