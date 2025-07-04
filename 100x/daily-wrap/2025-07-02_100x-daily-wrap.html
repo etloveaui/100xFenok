@@ -12,20 +12,7 @@
     5. 키워드 강조 규칙(b 태그 및 색상 클래스)을 모든 섹션에 일관되게 적용.
     6. 데이터 누락 방지를 위한 자체 검증 절차(항목 수 계산) 완료.
 --><html lang="ko"><head>
-	<script>
-	// 로컬(127.0.0.1 또는 localhost)과 GitHub Pages 환경을 자동으로 감지하는 스크립트
-	(() => {
-		// 현재 주소가 로컬 환경인지 정규식으로 확인
-		const isLocal = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
-		// 환경에 따라 올바른 기본 경로를 설정
-                const baseHref = isLocal ? '/' : '/100xFenok/';
-                window.baseHref = baseHref;
-                // <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가 (중복 방지)
-                if (!document.querySelector('base')) {
-                document.head.insertAdjacentHTML('afterbegin', `<base href="${baseHref}">`);
-                }
-	})();
-	</script>
+	<script type="module" src="../../initBaseHref.js"></script>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
