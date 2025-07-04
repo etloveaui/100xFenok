@@ -1,12 +1,15 @@
 import { siteVersion } from './version.js';
 
 export function loadPage(pageUrl) {
-  const isAbsolute = /^(?:[a-z]+:)?\/\//i.test(pageUrl) || pageUrl.startsWith(window.baseHref);
-  const resolved = isAbsolute ? pageUrl : window.baseHref + pageUrl;
+  const isExternal = /^(?:[a-z]+:)?\/\//i.test(pageUrl);
+  const relative = isExternal
+    ? pageUrl
+    : pageUrl.replace(window.baseHref, '').replace(/^\.\//, '').replace(/^\//, '');
+  const resolved = isExternal ? pageUrl : window.baseHref + relative;
   const fullUrl = `${resolved}?v=${siteVersion}`;
   document.getElementById('content-frame').src = fullUrl;
 
-  const normalize = url => url.replace(window.baseHref, '').replace(/^\.\//, '');
+  const normalize = url => url.replace(window.baseHref, '').replace(/^\.\//, '').replace(/^\//, '');
   const target = normalize(pageUrl);
 
   document.querySelectorAll('#nav a[data-path]').forEach(a => {

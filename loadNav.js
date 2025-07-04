@@ -16,8 +16,12 @@ export async function loadNav(siteVersion, containerId = 'nav') {
         base.setAttribute('href', baseHref);
 
         doc.querySelectorAll('a[data-path]').forEach(a => {
-            const path = a.getAttribute('data-path');
-            if (path) a.setAttribute('href', baseHref + path);
+            let path = a.getAttribute('data-path');
+            if (path) {
+                path = path.replace(/^\/+/, '');
+                a.setAttribute('data-path', path);
+                a.setAttribute('href', baseHref + path);
+            }
         });
     }
 
