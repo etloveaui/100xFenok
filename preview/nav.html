@@ -88,7 +88,7 @@
   <script>
     document.querySelectorAll('a[data-path]').forEach(a => {
       a.addEventListener('click', e => {
-        const target = a.getAttribute('data-path');
+        const target = a.dataset.path;
 
         // --- 핵심 수정 로직 ---
         // 1. 현재 페이지가 iframe 안에서 실행되었고,
