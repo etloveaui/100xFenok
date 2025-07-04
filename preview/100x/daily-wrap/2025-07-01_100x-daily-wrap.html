@@ -46,7 +46,7 @@
     <link rel="canonical" href="./2025-07-01_100x-daily-wrap.html">
     <meta property="og:title" content="100x Daily Wrap - 2025년 7월 1일">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="../../../favicon-96x96.png"> 
+    <meta property="og:image" content="favicon-96x96.png"> 
     <meta name="theme-color" content="#0ea5e9">
     <style>
         body { font-family: 'Noto Sans KR', 'Roboto', sans-serif; }
@@ -1483,9 +1483,9 @@
             const navScript = document.createElement('script');
             navScript.type = 'module';
             navScript.innerHTML = `
-                import { siteVersion } from '../../version.js';
+                const { siteVersion } = await import(`${window.baseHref}version.js`);
                 if (window.top === window.self) {
-                    fetch(\`../../nav.html?v=\${siteVersion}\`)
+                    fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
                         .then(r => r.text())
                         .then(html => {
                             const nav = document.getElementById('nav');

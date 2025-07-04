@@ -20,6 +20,7 @@
         } else {
         baseHref = '/100xFenok/'; // GitHub의 메인 폴더일 경우
         }
+        window.baseHref = baseHref;
         
         // 4. <base> 태그가 이미 존재하는지 확인 후, 없을 때만 추가
         if (!document.querySelector('base')) {
@@ -37,7 +38,7 @@
     <link rel="canonical" href="./index.html">
     <meta property="og:title" content="VR 시스템 아카이브 - El Fenomeno">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="../../favicon-96x96.png">
+    <meta property="og:image" content="favicon-96x96.png">
     <meta name="theme-color" content="#0ea5e9">
     <style>
         body {
@@ -251,9 +252,9 @@
             </p>
 </div>
 <script type="module">
-        import { siteVersion } from '../version.js';
+        const { siteVersion } = await import(`${window.baseHref}version.js`);
         if (window.top === window.self) {
-            fetch(`../nav.html?v=${siteVersion}`)
+            fetch(`${window.baseHref}nav.html?v=${siteVersion}`)
                 .then(r => r.text())
                 .then(html => {
                     const nav = document.getElementById('nav');
