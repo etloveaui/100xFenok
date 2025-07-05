@@ -1,4 +1,22 @@
 export async function loadNav(siteVersion, containerId = 'nav') {
+
+    // 1. CSS 로딩 완료를 확실히 기다리기
+    if (!document.getElementById('global-css-loaded')) {
+        const globalCSS = document.createElement('link');
+        globalCSS.id = 'global-css-loaded';
+        globalCSS.rel = 'stylesheet';
+        globalCSS.href = `${window.baseHref}global.css?v=${siteVersion}`;
+
+        // CSS 로딩 완료 대기
+        await new Promise((resolve, reject) => {
+            globalCSS.onload = resolve;
+            globalCSS.onerror = reject;
+            document.head.appendChild(globalCSS);
+        });
+    }
+
+
+
     const res = await fetch(`${window.baseHref}nav.html?v=${siteVersion}`);
     const html = await res.text();
     const parser = new DOMParser();
