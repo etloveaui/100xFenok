@@ -1,4 +1,9 @@
 <!DOCTYPE html><!-- 
+<script>
+if (window.top === window.self) {
+  window.location.href = "index.html?path=100x/daily-wrap/100x-daily-wrap-template.html";
+}
+</script>
     ================================================================================
     100x Daily Wrap 전체 템플릿 (v2.0)
     ================================================================================
@@ -9,7 +14,6 @@
     4. 각 섹션의 구조와 CSS 클래스는 디자인 일관성을 위해 수정하지 않는 것을 권장합니다.
     5. 자바스크립트의 `sectorData` 배열에 해당 날짜의 섹터별 데이터를 입력하면 히트맵이 자동으로 생성됩니다.
 --><html lang="ko"><head>
-	<script type="module" src="../../initBaseHref.js"></script>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
@@ -35,7 +39,6 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
-    <div id="nav"></div>
 
     <!-- 헤더: 리포트의 제목과 날짜, 핵심 헤드라인을 명확하게 전달 -->
 	<header class="bg-slate-50 border-b border-slate-200">
@@ -1079,10 +1082,7 @@
             navScript.innerHTML = `
                 이 부분은 상위 폴더의 네비게이션 파일을 로드하는 스크립트입니다.
                 로컬 환경이나 다른 서버 구조에서는 경로 수정이 필요할 수 있습니다.
-                const { siteVersion } = await import(`${window.baseHref}version.js`);
-                const { loadNav } = await import(`${window.baseHref}loadNav.js`);
                 if (window.top === window.self) {
-                    await loadNav(siteVersion);
                 }
             `;
             document.body.appendChild(navScript);

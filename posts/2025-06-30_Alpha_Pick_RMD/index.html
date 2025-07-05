@@ -1,7 +1,11 @@
 <!DOCTYPE html>
+<script>
+if (window.top === window.self) {
+  window.location.href = "index.html?path=posts/2025-06-30_Alpha_Pick_RMD/index.html";
+}
+</script>
 <html lang="ko">
 <head>
-    <script type="module" src="../../initBaseHref.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ResMed (RMD) Alpha Pick | 100x FenoK 투자 분석</title>
@@ -34,7 +38,6 @@
 	<script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <div id="nav"></div>
         <!-- contents navigator -->
     <!-- <div class="group fixed top-1/4 -translate-y-1/2 right-0 z-50">
       <nav class="transform translate-x-[calc(100%-20px)] group-hover:translate-x-0 transition-transform duration-500">
@@ -1230,10 +1233,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <script src="app.js"></script>
     <script type="module">
-      const { siteVersion } = await import(`${window.baseHref}version.js`);
-      const { loadNav } = await import(`${window.baseHref}loadNav.js`);
       if (window.top === window.self) {
-          await loadNav(siteVersion);
       }
     </script>
 </body>

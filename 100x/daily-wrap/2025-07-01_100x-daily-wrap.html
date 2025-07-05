@@ -1,4 +1,9 @@
 <!DOCTYPE html><!-- 
+<script>
+if (window.top === window.self) {
+  window.location.href = "index.html?path=100x/daily-wrap/2025-07-01_100x-daily-wrap.html";
+}
+</script>
     ================================================================================
     LLM 및 개발자를 위한 100x Daily Wrap 페이지 제작 가이드 (FenoK's Philosophy v4.5)
     ================================================================================
@@ -33,7 +38,6 @@
         -   **정보 카드(Information Cards):** 경제 캘린더나 실적 발표처럼 목록형 정보는 단순 테이블 대신 개별 카드 형태로 표현하여 정보를 명확히 구분합니다. 특히 중요한 항목(ex: 핵심 PCE)은 `bg-yellow-100`과 같은 강조 색상을 사용하여 시각적 중요도를 높입니다.
         -   **분석/관점 블록(Viewpoint Blocks):** 필진의 핵심 분석을 담는 'Viewpoint' 또는 '관점' 단락은 `border-l-4`, `bg-gray-50` 등을 사용하여 시각적으로 구분되는 컴포넌트로 만듭니다. 문단 내 핵심 키워드를 `<b>` 태그로 강조하여 가독성을 높입니다.
 --><html lang="ko"><head>
-	<script type="module" src="../../initBaseHref.js"></script>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
@@ -60,7 +64,6 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
-    <div id="nav"></div>
 
     <!-- 헤더: 리포트의 제목과 날짜, 핵심 헤드라인을 명확하게 전달 -->
 	<header class="bg-slate-50 border-b border-slate-200">
@@ -1481,10 +1484,7 @@
             const navScript = document.createElement('script');
             navScript.type = 'module';
             navScript.innerHTML = `
-                const { siteVersion } = await import(`${window.baseHref}version.js`);
-                const { loadNav } = await import(`${window.baseHref}loadNav.js`);
                 if (window.top === window.self) {
-                    await loadNav(siteVersion);
                 }
             `;
             document.body.appendChild(navScript);
