@@ -15,7 +15,7 @@ assert(html.includes('▲') && html.includes('▼'), 'Arrow icons missing');
 
 // Index page tests
 const indexHtml = fs.readFileSync('index.html', 'utf8');
-assert(indexHtml.includes('<title>100x FenoK</title>'), 'Index title missing');
+assert(indexHtml.includes('<title>FenoK Dashboard</title>'), 'Index title missing');
 assert(indexHtml.includes('meta name="description"'), 'Index meta description missing');
 assert(indexHtml.includes('<div id="nav">'), 'Nav container missing');
 assert(indexHtml.includes('<iframe id="content-frame"'), 'Content frame missing');
