@@ -1,6 +1,11 @@
-<!DOCTYPE html><html lang="ko"><head>
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,6 +23,7 @@
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             min-height: 100vh;
         }
+
         .masterplan-card {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -27,6 +33,7 @@
             position: relative;
             overflow: hidden;
         }
+
         .masterplan-card::before {
             content: '';
             position: absolute;
@@ -34,52 +41,82 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             transform: rotate(45deg);
             transition: all 0.6s;
         }
+
         .masterplan-card:hover::before {
             animation: shine 0.8s ease-in-out;
         }
+
         .masterplan-card:hover {
             transform: translateY(-15px) scale(1.02);
             border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
         }
+
         @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
         }
+
         .cycle-badge {
             background: linear-gradient(45deg, #f59e0b, #d97706);
             animation: pulse 3s infinite;
         }
+
         .mechanism-badge {
             background: linear-gradient(45deg, #3b82f6, #1d4ed8);
         }
+
         .digital-badge {
             background: linear-gradient(45deg, #8b5cf6, #7c3aed);
         }
+
         .strategy-badge {
             background: linear-gradient(45deg, #10b981, #059669);
         }
+
         .risk-badge {
             background: linear-gradient(45deg, #ef4444, #dc2626);
         }
+
         .floating-timeline {
             animation: float 6s ease-in-out infinite;
         }
+
         @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            25% { transform: translateY(-20px) rotate(2deg); }
-            50% { transform: translateY(-10px) rotate(0deg); }
-            75% { transform: translateY(-25px) rotate(-2deg); }
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-20px) rotate(2deg);
+            }
+
+            50% {
+                transform: translateY(-10px) rotate(0deg);
+            }
+
+            75% {
+                transform: translateY(-25px) rotate(-2deg);
+            }
         }
+
         .simulator-container {
             background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
             border-radius: 1rem;
             position: relative;
         }
+
         .simulator-container::before {
             content: '';
             position: absolute;
@@ -90,32 +127,43 @@
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
             border-radius: 1rem;
         }
+
         .progress-bar {
             background: linear-gradient(90deg, #f59e0b, #3b82f6, #8b5cf6, #10b981, #ef4444);
             height: 6px;
             border-radius: 3px;
             animation: progress 2s ease-in-out;
         }
+
         @keyframes progress {
-            from { width: 0%; }
-            to { width: 100%; }
+            from {
+                width: 0%;
+            }
+
+            to {
+                width: 100%;
+            }
         }
+
         .interactive-tab {
             transition: all 0.3s;
             cursor: pointer;
         }
+
         .interactive-tab.active {
             background: linear-gradient(45deg, #3b82f6, #8b5cf6);
             color: white;
             font-weight: 700;
         }
+
         .flow-diagram {
             background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
         }
     </style>
 </head>
+
 <body>
-<script type="module" src="../initBaseHref.js"></script>
+    <script type="module" src="../initBaseHref.js"></script>
     <div class="container mx-auto p-4 md:p-8">
 
         <!-- Header -->
@@ -136,22 +184,27 @@
                 <p class="text-white/80 text-center mb-12 max-w-3xl mx-auto text-lg">
                     미국은 역대급 부채 상황에서 산업 트렌드를 바꾸며 새로운 40년 패권을 만들어왔습니다.
                 </p>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mb-12">
                     <div class="masterplan-card border-2 border-yellow-400/50 p-6">
-                        <div class="cycle-badge text-white text-sm font-bold px-4 py-2 rounded-full mb-4 inline-block">1940년</div>
+                        <div class="cycle-badge text-white text-sm font-bold px-4 py-2 rounded-full mb-4 inline-block">
+                            1940년</div>
                         <h3 class="text-xl font-bold text-white mb-3">루즈벨트 혁명</h3>
                         <p class="text-white/70 text-sm">뉴딜정책과 제조업 중심 경제로 패권 구축</p>
                     </div>
-                    
+
                     <div class="masterplan-card border-2 border-blue-400/50 p-6">
-                        <div class="mechanism-badge text-white text-sm font-bold px-4 py-2 rounded-full mb-4 inline-block">1980년</div>
+                        <div
+                            class="mechanism-badge text-white text-sm font-bold px-4 py-2 rounded-full mb-4 inline-block">
+                            1980년</div>
                         <h3 class="text-xl font-bold text-white mb-3">레이건 혁명</h3>
                         <p class="text-white/70 text-sm">금융 중심 경제와 달러 패권 강화</p>
                     </div>
-                    
+
                     <div class="masterplan-card border-2 border-purple-400/50 p-6">
-                        <div class="digital-badge text-white text-sm font-bold px-4 py-2 rounded-full mb-4 inline-block">2020년</div>
+                        <div
+                            class="digital-badge text-white text-sm font-bold px-4 py-2 rounded-full mb-4 inline-block">
+                            2020년</div>
                         <h3 class="text-xl font-bold text-white mb-3">디지털 혁명</h3>
                         <p class="text-white/70 text-sm">AI와 디지털 자산을 통한 패권 재정립</p>
                     </div>
@@ -160,7 +213,7 @@
                 <div class="bg-white/10 p-6 rounded-lg border-l-4 border-yellow-400">
                     <h4 class="font-bold text-white mb-2">💡 핵심 인사이트</h4>
                     <p class="text-white/80">
-                        매번 역대급 부채 상황에서 산업 트렌드를 바꾸려 했고, 강한 저항이 있었지만 결국 새로운 40년 패권을 만들어갔습니다. 
+                        매번 역대급 부채 상황에서 산업 트렌드를 바꾸려 했고, 강한 저항이 있었지만 결국 새로운 40년 패권을 만들어갔습니다.
                         이번에도 미국이 산업 정책을 바꾸려는 시도에 경제학자들의 반대가 심하지만, 정치·군사 관점에서는 필요한 방향입니다.
                     </p>
                 </div>
@@ -171,12 +224,12 @@
         <section class="masterplan-card p-8 mb-16">
             <div class="relative z-10">
                 <h2 class="text-3xl font-bold text-white text-center mb-8">💫 Part 1: 유동성 엔진의 대변혁</h2>
-                
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
                     <div>
                         <h3 class="text-2xl font-bold text-white mb-6">연준 대차대조표: 유동성의 진실</h3>
                         <p class="text-white/80 mb-6">
-                            연준의 양적긴축(QT)에도 불구하고 은행 지급준비금은 안정적이었습니다. 
+                            연준의 양적긴축(QT)에도 불구하고 은행 지급준비금은 안정적이었습니다.
                             그 비밀은 급감하는 역레포(RRP) 잔고에 있었습니다.
                         </p>
                         <div class="space-y-4">
@@ -190,7 +243,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="chart-container">
                         <canvas id="rrpFlowChart" style="height: 300px;"></canvas>
                     </div>
@@ -234,7 +287,7 @@
                 <div class="bg-red-500/20 p-6 rounded-lg border-l-4 border-red-400">
                     <h4 class="font-bold text-white mb-2">⚠️ 위기의 신호</h4>
                     <p class="text-white/80">
-                        현재 역레포 잔고가 약 2천억 달러까지 감소했으며, 이는 더 이상 단기채 발행을 뒷받침할 수 없는 수준입니다. 
+                        현재 역레포 잔고가 약 2천억 달러까지 감소했으며, 이는 더 이상 단기채 발행을 뒷받침할 수 없는 수준입니다.
                         따라서 새로운 미국채 수요처가 필요한 상황이며, 이것이 바로 스테이블코인입니다.
                     </p>
                 </div>
@@ -245,7 +298,7 @@
         <section class="masterplan-card p-8 mb-16">
             <div class="relative z-10">
                 <h2 class="text-3xl font-bold text-white text-center mb-8">🌐 Part 2: 디지털 패권의 공생 관계</h2>
-                
+
                 <div class="text-center mb-12">
                     <div class="inline-flex items-center space-x-8 bg-white/10 p-6 rounded-lg">
                         <div class="text-center">
@@ -280,7 +333,7 @@
                             <li>• 스테이블코인 → 미국 국채 매입으로 직결</li>
                         </ul>
                     </div>
-                    
+
                     <div class="bg-white/10 p-6 rounded-lg">
                         <h3 class="text-xl font-bold text-white mb-4">💰 스테이블코인 잠재력</h3>
                         <div class="text-center mb-4">
@@ -296,7 +349,7 @@
                 <div class="bg-purple-500/20 p-6 rounded-lg border-l-4 border-purple-400">
                     <h4 class="font-bold text-white mb-2">🌍 해외 거래소의 특성</h4>
                     <p class="text-white/80">
-                        한국을 제외한 해외 거래소에서는 비트코인을 USDT 등 스테이블코인으로 거래합니다. 
+                        한국을 제외한 해외 거래소에서는 비트코인을 USDT 등 스테이블코인으로 거래합니다.
                         비트코인 시가총액이 2조 달러이고, 만약 이를 모두 스테이블코인으로 전환한다면 스테이블코인 시장이 즉시 2조 달러로 확대될 수 있습니다.
                     </p>
                 </div>
@@ -307,10 +360,10 @@
         <section class="simulator-container p-8 mb-16 relative">
             <div class="relative z-10">
                 <h2 class="text-3xl font-bold text-white text-center mb-8">🎮 Part 3: 스테이블코인 시나리오 시뮬레이터</h2>
-                
+
                 <div class="bg-white/10 p-6 rounded-lg mb-8">
                     <h3 class="text-xl font-bold text-white mb-6 text-center">📊 변수 조작 패널</h3>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div>
                             <label class="block text-white mb-2 font-semibold">스테이블코인 성장률 (%)</label>
@@ -329,7 +382,8 @@
                         </div>
                     </div>
 
-                    <button id="simulateBtn" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 px-6 rounded-lg text-lg hover:from-yellow-600 hover:to-orange-600 transition-all">
+                    <button id="simulateBtn"
+                        class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 px-6 rounded-lg text-lg hover:from-yellow-600 hover:to-orange-600 transition-all">
                         시뮬레이션 실행
                     </button>
                 </div>
@@ -358,14 +412,14 @@
         <section class="masterplan-card p-8 mb-16">
             <div class="relative z-10">
                 <h2 class="text-3xl font-bold text-white text-center mb-8">📈 Part 4: 새로운 시대의 투자 전략</h2>
-                
+
                 <div class="mb-8">
                     <h3 class="text-2xl font-bold text-white mb-6 text-center">🎯 자산 클래스 매력도 분석</h3>
                     <p class="text-white/80 text-center mb-8 max-w-3xl mx-auto">
-                        정부 주도, 인플레이션 동반 성장 환경에서는 자산의 매력도가 재평가됩니다. 
+                        정부 주도, 인플레이션 동반 성장 환경에서는 자산의 매력도가 재평가됩니다.
                         정부 지원을 받는 성장 자산과 인플레이션 헤지 능력이 중요해집니다.
                     </p>
-                    
+
                     <div class="chart-container mb-8">
                         <canvas id="assetAttractivenessChart" style="height: 400px;"></canvas>
                     </div>
@@ -440,10 +494,11 @@
         <section class="masterplan-card p-8 mb-16">
             <div class="relative z-10">
                 <h2 class="text-3xl font-bold text-white text-center mb-8">⚠️ Part 5: 리스크 시나리오와 대응</h2>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-red-500/20 p-6 rounded-lg border-l-4 border-red-400">
-                        <div class="risk-badge text-white text-sm font-bold px-3 py-1 rounded-full mb-4 inline-block">단기 리스크</div>
+                        <div class="risk-badge text-white text-sm font-bold px-3 py-1 rounded-full mb-4 inline-block">단기
+                            리스크</div>
                         <h3 class="font-bold text-white mb-3">💥 단기 유동성 충격</h3>
                         <p class="text-white/80 text-sm mb-4">
                             부채한도 협상 타결 후 대규모 국채 발행 시, 일시적 시장 유동성 흡수로 조정이 발생할 수 있습니다.
@@ -454,7 +509,8 @@
                     </div>
 
                     <div class="bg-orange-500/20 p-6 rounded-lg border-l-4 border-orange-400">
-                        <div class="risk-badge text-white text-sm font-bold px-3 py-1 rounded-full mb-4 inline-block">지정학 리스크</div>
+                        <div class="risk-badge text-white text-sm font-bold px-3 py-1 rounded-full mb-4 inline-block">
+                            지정학 리스크</div>
                         <h3 class="font-bold text-white mb-3">🌏 분쟁의 동진 현상</h3>
                         <p class="text-white/80 text-sm mb-4">
                             분쟁의 동진(東進) 현상, 특히 대만 해협 등에서의 충돌은 글로벌 경제 질서에 큰 충격을 줄 수 있습니다.
@@ -465,7 +521,8 @@
                     </div>
 
                     <div class="bg-purple-500/20 p-6 rounded-lg border-l-4 border-purple-400">
-                        <div class="risk-badge text-white text-sm font-bold px-3 py-1 rounded-full mb-4 inline-block">정책 리스크</div>
+                        <div class="risk-badge text-white text-sm font-bold px-3 py-1 rounded-full mb-4 inline-block">정책
+                            리스크</div>
                         <h3 class="font-bold text-white mb-3">🎯 정책 실패 리스크</h3>
                         <p class="text-white/80 text-sm mb-4">
                             스테이블코인 시장이 예상만큼 성장하지 못하거나 해외 자금 유입에 실패하면 전략 효과가 반감됩니다.
@@ -479,7 +536,7 @@
                 <div class="mt-8 bg-yellow-500/20 p-6 rounded-lg border-l-4 border-yellow-400">
                     <h4 class="font-bold text-white mb-2">📅 주요 일정</h4>
                     <p class="text-white/80">
-                        8월 이전에 부채 한도 협상이 타결될 것으로 예상되며, 협상이 타결되면 대규모 국채 발행으로 TGA 잔고를 채우는 과정에서 
+                        8월 이전에 부채 한도 협상이 타결될 것으로 예상되며, 협상이 타결되면 대규모 국채 발행으로 TGA 잔고를 채우는 과정에서
                         일시적으로 시중 유동성이 긴축될 가능성이 있어 7-8월 조정을 주의해야 합니다.
                     </p>
                 </div>
@@ -490,11 +547,11 @@
         <section class="masterplan-card p-8 mb-16">
             <div class="relative z-10">
                 <h2 class="text-3xl font-bold text-white text-center mb-8">🎯 2028년까지의 로드맵</h2>
-                
+
                 <div class="text-center mb-12">
                     <div class="text-6xl mb-4">🗺️</div>
                     <p class="text-xl text-white/80 max-w-3xl mx-auto">
-                        앞으로 항상 인플레이션을 동반하는 성장 사이클로 움직일 것이며, 
+                        앞으로 항상 인플레이션을 동반하는 성장 사이클로 움직일 것이며,
                         스테이블코인 2조 달러 목표 달성을 통해 새로운 달러 패권 시대를 열어갈 것입니다.
                     </p>
                 </div>
@@ -556,173 +613,177 @@
 
     </div>
 
-    <script defer="">
-        // Chart.js 기본 설정
-        Chart.defaults.font.family = 'Noto Sans KR';
-        Chart.defaults.color = '#e2e8f0';
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Chart.js 기본 설정
+            Chart.defaults.font.family = 'Noto Sans KR';
+            Chart.defaults.color = '#e2e8f0';
 
-        // RRP 플로우 차트
-        const rrpCtx = document.getElementById('rrpFlowChart').getContext('2d');
-        new Chart(rrpCtx, {
-            type: 'line',
-            data: {
-                labels: ['2023-Q1', '2023-Q2', '2023-Q3', '2023-Q4', '2024-Q1', '2024-Q2', '2025-Q1'],
-                datasets: [{
-                    label: 'RRP 잔고 (조 달러)',
-                    data: [2.3, 2.1, 1.5, 0.9, 0.5, 0.2, 0.0],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#e2e8f0'
-                        }
-                    }
+            // RRP 플로우 차트
+            const rrpCtx = document.getElementById('rrpFlowChart').getContext('2d');
+            new Chart(rrpCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2023-Q1', '2023-Q2', '2023-Q3', '2023-Q4', '2024-Q1', '2024-Q2', '2025-Q1'],
+                    datasets: [{
+                        label: 'RRP 잔고 (조 달러)',
+                        data: [2.3, 2.1, 1.5, 0.9, 0.5, 0.2, 0.0],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#e2e8f0'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e2e8f0'
+                            }
                         }
                     },
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#e2e8f0'
-                        }
-                    }
-                }
-            }
-        });
-
-        // 자산 매력도 레이더 차트
-        const assetCtx = document.getElementById('assetAttractivenessChart').getContext('2d');
-        new Chart(assetCtx, {
-            type: 'radar',
-            data: {
-                labels: ['AI/반도체', '방산', '원자재', '금', '부동산', '에너지'],
-                datasets: [{
-                    label: '매력도 점수',
-                    data: [9.5, 8.5, 8.0, 7.5, 7.0, 8.5],
-                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                    borderColor: '#3b82f6',
-                    pointBackgroundColor: '#3b82f6',
-                    pointBorderColor: '#ffffff',
-                    pointHoverBackgroundColor: '#ffffff',
-                    pointHoverBorderColor: '#3b82f6'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        angleLines: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        pointLabels: {
-                            color: '#e2e8f0',
-                            font: {
-                                size: 14
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e2e8f0'
                             }
                         },
-                        ticks: {
-                            display: false,
-                            backdropColor: 'transparent'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#e2e8f0'
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e2e8f0'
+                            }
                         }
                     }
                 }
-            }
-        });
-
-        // 시뮬레이터 기능
-        const growthRate = document.getElementById('growthRate');
-        const foreignRatio = document.getElementById('foreignRatio');
-        const targetYear = document.getElementById('targetYear');
-        const simulateBtn = document.getElementById('simulateBtn');
-        const simulationResults = document.getElementById('simulationResults');
-
-        // 슬라이더 값 표시 업데이트
-        growthRate.oninput = function() {
-            document.getElementById('growthDisplay').textContent = this.value + '%';
-        }
-        foreignRatio.oninput = function() {
-            document.getElementById('foreignDisplay').textContent = this.value + '%';
-        }
-        targetYear.oninput = function() {
-            document.getElementById('yearDisplay').textContent = this.value;
-        }
-
-        simulateBtn.onclick = function() {
-            const growth = parseInt(growthRate.value);
-            const foreign = parseInt(foreignRatio.value);
-            const year = parseInt(targetYear.value);
-            
-            // 계산 로직
-            const baseAmount = 0.25; // 현재 2500억 달러
-            const marketCap = baseAmount * (growth / 100);
-            const bondDemand = marketCap * (foreign / 100);
-            const liquidityMultiplier = marketCap / baseAmount;
-            
-            // 결과 표시
-            document.getElementById('marketCapResult').textContent = marketCap.toFixed(1);
-            document.getElementById('bondDemandResult').textContent = bondDemand.toFixed(1);
-            document.getElementById('liquidityResult').textContent = liquidityMultiplier.toFixed(1);
-            
-            simulationResults.classList.remove('hidden');
-        }
-
-        // 탭 기능
-        const tabs = {
-            winners: document.getElementById('winnersTab'),
-            caution: document.getElementById('cautionTab'),
-            index: document.getElementById('indexTab')
-        };
-        
-        const contents = {
-            winners: document.getElementById('winnersContent'),
-            caution: document.getElementById('cautionContent'),
-            index: document.getElementById('indexContent')
-        };
-
-        function switchTab(activeTab) {
-            Object.keys(tabs).forEach(key => {
-                const isActive = key === activeTab;
-                tabs[key].classList.toggle('active', isActive);
-                contents[key].classList.toggle('hidden', !isActive);
             });
-        }
 
-        tabs.winners.onclick = () => switchTab('winners');
-        tabs.caution.onclick = () => switchTab('caution');
-        tabs.index.onclick = () => switchTab('index');
+            // 자산 매력도 레이더 차트
+            const assetCtx = document.getElementById('assetAttractivenessChart').getContext('2d');
+            new Chart(assetCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['AI/반도체', '방산', '원자재', '금', '부동산', '에너지'],
+                    datasets: [{
+                        label: '매력도 점수',
+                        data: [9.5, 8.5, 8.0, 7.5, 7.0, 8.5],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: '#3b82f6',
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#ffffff',
+                        pointHoverBackgroundColor: '#ffffff',
+                        pointHoverBorderColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            pointLabels: {
+                                color: '#e2e8f0',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            ticks: {
+                                display: false,
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e2e8f0'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 시뮬레이터 기능
+            const growthRate = document.getElementById('growthRate');
+            const foreignRatio = document.getElementById('foreignRatio');
+            const targetYear = document.getElementById('targetYear');
+            const simulateBtn = document.getElementById('simulateBtn');
+            const simulationResults = document.getElementById('simulationResults');
+
+            // 슬라이더 값 표시 업데이트
+            growthRate.oninput = function () {
+                document.getElementById('growthDisplay').textContent = this.value + '%';
+            }
+            foreignRatio.oninput = function () {
+                document.getElementById('foreignDisplay').textContent = this.value + '%';
+            }
+            targetYear.oninput = function () {
+                document.getElementById('yearDisplay').textContent = this.value;
+            }
+
+            simulateBtn.onclick = function () {
+                const growth = parseInt(growthRate.value);
+                const foreign = parseInt(foreignRatio.value);
+                const year = parseInt(targetYear.value);
+
+                // 계산 로직
+                const baseAmount = 0.25; // 현재 2500억 달러
+                const marketCap = baseAmount * (growth / 100);
+                const bondDemand = marketCap * (foreign / 100);
+                const liquidityMultiplier = marketCap / baseAmount;
+
+                // 결과 표시
+                document.getElementById('marketCapResult').textContent = marketCap.toFixed(1);
+                document.getElementById('bondDemandResult').textContent = bondDemand.toFixed(1);
+                document.getElementById('liquidityResult').textContent = liquidityMultiplier.toFixed(1);
+
+                simulationResults.classList.remove('hidden');
+            }
+
+            // 탭 기능
+            const tabs = {
+                winners: document.getElementById('winnersTab'),
+                caution: document.getElementById('cautionTab'),
+                index: document.getElementById('indexTab')
+            };
+
+            const contents = {
+                winners: document.getElementById('winnersContent'),
+                caution: document.getElementById('cautionContent'),
+                index: document.getElementById('indexContent')
+            };
+
+            function switchTab(activeTab) {
+                Object.keys(tabs).forEach(key => {
+                    const isActive = key === activeTab;
+                    tabs[key].classList.toggle('active', isActive);
+                    contents[key].classList.toggle('hidden', !isActive);
+                });
+            }
+
+            tabs.winners.onclick = () => switchTab('winners');
+            tabs.caution.onclick = () => switchTab('caution');
+            tabs.index.onclick = () => switchTab('index');
+        });
     </script>
 
-    
 
 
 
-</body></html>
+
+</body>
+
+</html>
