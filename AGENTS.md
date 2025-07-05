@@ -63,9 +63,6 @@ This document outlines structural, behavioral, and coding conventions for Codex 
 
 ## 📄 File Editing Rules
 
-- `nav.html` is deprecated.
-  - Do **NOT** use or update `nav.html`.
-  - Navigation is fully modular and JS-injected now.
 - Every file must include:
   - initBaseHref
   - version.js

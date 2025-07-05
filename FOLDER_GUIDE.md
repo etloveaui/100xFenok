@@ -8,9 +8,8 @@
 
 | 항목                              | 설명                                                      |
 | ------------------------------- | ------------------------------------------------------- |
-| `index.html`                    | SPA 진입점 – `nav.html`과 `iframe#content-frame`으로 전체 구조 형성 |
+| `index.html`                    | SPA 진입점 – `iframe#content-frame`으로 전체 구조 형성 |
 | `main.html`                     | 홈 콘텐츠 – What's New 카드/버튼 등 표시                           |
-| `nav.html`, `nav.css`           | 모든 페이지에서 로드되는 메뉴 및 스타일                                  |
 | `loadPage.js`, `loadNav.js`     | SPA 방식 페이지 전환 및 동적 nav 삽입 스크립트                          |
 | `initBaseHref.js`               | GitHub Pages/preview/로컬 경로를 자동 판단하여 `<base href>` 설정    |
 | `version.js`                    | `siteVersion` 값을 통해 캐시 무효화를 제어함                         |
