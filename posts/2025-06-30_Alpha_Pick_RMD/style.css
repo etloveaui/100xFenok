@@ -1865,7 +1865,7 @@ a:hover {
 
 /* Company Cards */
 .company-card {
-  height: 400px;
+  height: 500px;
   perspective: 1000px;
   cursor: pointer;
 }
@@ -1873,10 +1873,15 @@ a:hover {
 .card-inner {
   position: relative;
   width: 100%;
-  height: 100%;
+  min-height: 100%; /* height 대신 min-height 사용 */
   text-align: center;
   transition: transform 0.8s;
   transform-style: preserve-3d;
+}
+
+/* 카드가 뒤집혔을 때 높이 자동 조정 */
+.company-card.flipped {
+  min-height: 500px; /* 뒤집었을 때 더 큰 최소 높이 */
 }
 
 .company-card.flipped .card-inner {
@@ -1887,7 +1892,7 @@ a:hover {
 .card-back {
   position: absolute;
   width: 100%;
-  height: 100%;
+  min-height: 100%; /* height 대신 min-height 사용 */
   backface-visibility: hidden;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
