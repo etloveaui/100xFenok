@@ -1,0 +1,119 @@
+/* ========================================
+   네비게이션 바 - 완전한 CSS 스타일
+   ======================================== */
+
+/* 전체 네비게이션 바 스타일 */
+.enhanced-nav {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(248,250,252,0.85) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+  box-shadow: 0 4px 12px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.enhanced-nav:hover {
+  box-shadow: 0 8px 20px -2px rgba(0, 0, 0, 0.08);
+}
+
+/* 로고 섹션 */
+.logo-section {
+  text-decoration: none !important;
+  transition: all 0.3s ease;
+}
+
+.logo-section:hover {
+  transform: translateY(-1px);
+}
+
+.brand-text {
+  font-family: 'Orbitron', monospace, sans-serif;
+  font-weight: 700;
+  color: #1e293b;
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+}
+
+.logo-section:hover .brand-text {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Favicon 호버 효과 */
+.logo-section:hover img {
+  transform: scale(1.1) rotate(-10deg);
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.2));
+}
+
+/* 메뉴 아이템 - 한글 볼드 처리 */
+.nav-item {
+  position: relative;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 700 !important;
+  font-size: 1.1rem;
+  color: #475569 !important;
+  padding: 10px 6px;
+  transition: all 0.3s ease;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+  text-decoration: none !important;
+}
+
+.nav-item:hover {
+  color: #3b82f6 !important;
+  transform: translateY(-2px);
+}
+
+/* 밑줄 애니메이션 */
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+  border-radius: 1px;
+}
+
+.nav-item:hover::after {
+  width: 100%;
+}
+
+.nav-item:active {
+  transform: translateY(0);
+  color: #2563eb !important;
+}
+
+/* 그라데이션 미지원 브라우저 fallback */
+@supports not (-webkit-background-clip: text) {
+  .brand-text {
+    color: #1e293b !important;
+  }
+  
+  .logo-section:hover .brand-text {
+    color: #3b82f6 !important;
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .enhanced-nav {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  
+  .nav-item {
+    font-size: 1rem;
+    font-weight: 600 !important;
+  }
+}
+
