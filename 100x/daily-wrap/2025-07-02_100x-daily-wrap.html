@@ -1,9 +1,4 @@
 <!DOCTYPE html><!-- 
-<script>
-if (window.top === window.self) {
-  window.location.href = "index.html?path=100x/daily-wrap/2025-07-02_100x-daily-wrap.html";
-}
-</script>
     ================================================================================
     100x Daily Wrap 전체 템플릿 (v2.0)
     ================================================================================
@@ -46,6 +41,8 @@ if (window.top === window.self) {
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
+<script type="module" src="../../initBaseHref.js"></script>
+<div id="nav"></div>
 
     <!-- 헤더: 리포트의 제목과 날짜, 핵심 헤드라인을 명확하게 전달 -->
 	<header class="bg-slate-50 border-b border-slate-200">
@@ -319,20 +316,7 @@ if (window.top === window.self) {
 				
 				<div x-data="{ tab: 'indices' }" class="w-full">
 					<div class="border-b border-gray-200">
-						<nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
-							<button @click="tab = 'indices'" :class="{ 'border-blue-500 text-blue-600': tab === 'indices', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'indices' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
-								주요 지수
-							</button>
-							<button @click="tab = 'fixed_income_fx'" :class="{ 'border-blue-500 text-blue-600': tab === 'fixed_income_fx', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'fixed_income_fx' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
-								채권 &amp; 환율
-							</button>
-							<button @click="tab = 'commodities'" :class="{ 'border-blue-500 text-blue-600': tab === 'commodities', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'commodities' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
-								원자재
-							</button>
-							<button @click="tab = 'digital_assets'" :class="{ 'border-blue-500 text-blue-600': tab === 'digital_assets', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': tab !== 'digital_assets' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
-								디지털 자산
-							</button>
-						</nav>
+						
 					</div>
 
 					<div class="pt-5">
@@ -1350,13 +1334,7 @@ if (window.top === window.self) {
         </div>
     </section>
 
-    <footer class="py-12 px-6 bg-slate-50">
-        <div class="container mx-auto text-center text-slate-500">
-            <div class="text-xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
-            <p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
-            <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
-        </div>
-    </footer>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 	<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer=""></script>
@@ -1406,7 +1384,6 @@ if (window.top === window.self) {
             const navScript = document.createElement('script');
             navScript.type = 'module';
             navScript.innerHTML = `
-                if (window.top === window.self) {
                 }
             `;
             document.body.appendChild(navScript);
