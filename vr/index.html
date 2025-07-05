@@ -1,5 +1,9 @@
 <!DOCTYPE html><html lang="ko"><head>
-    <script type="module" src="../initBaseHref.js"></script>
+<script>
+if (window.top === window.self) {
+  window.location.href = "index.html?path=vr/index.html";
+}
+</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -69,7 +73,6 @@
 </head>
 <body class="mathematical-bg">
     <div class="container mx-auto p-4 md:p-8">
-        <div id="nav"></div>
 
         <!-- Header -->
         <header class="text-center mb-16">
@@ -223,10 +226,7 @@
                 * 기본 설정(G=10) 기준, 실제 수익률은 시장 상황에 따라 달라질 수 있습니다.
             </p>
 </div>
-<script type="module">const { siteVersion } = await import(`${window.baseHref}version.js`);
-const { loadNav } = await import(`${window.baseHref}loadNav.js`);
 if (window.top === window.self) {
-    await loadNav(siteVersion);
 }</script>
 
 
