@@ -1,5 +1,4 @@
 <!DOCTYPE html><html lang="ko"><head>
-  <script type="module" src="../../../initBaseHref.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -38,6 +37,7 @@
   <script defer="" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body class="bg-gray-100">
+  <script type="module" src="../../../initBaseHref.js"></script>
   <div id="root"></div>
 
   <script defer="" type="text/babel">
@@ -375,7 +375,6 @@ async function fetchPriceDataAlpha(symbol) {
       return (
         <div className="px-4 sm:px-6 md:px-8 py-4 md:py-6 max-w-screen-xl mx-auto flex flex-col min-h-screen">
           <main className="flex-grow">
-            <div id="nav"></div>
             <h1 className="text-3xl font-bold mb-4 text-gray-800"><i className="fas fa-chart-line text-blue-600 mr-3"></i>100x&nbsp;Multichart&nbsp;Pro</h1>
             <ControlPanel {...{ rows, setRows, period, setPeriod, startDate, setStartDate, endDate, setEndDate, chartMode, setChartMode, options, setOptions, onUpdate: drawChart, isLoading }} />
             {message && <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 border border-yellow-200 text-sm rounded-md whitespace-pre-wrap">{message}</div>}
