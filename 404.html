@@ -1,31 +1,138 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 - Page Not Found</title>
-  <meta name="description" content="Requested page not found">
-  <link rel="canonical" href="./404.html">
-  <meta property="og:title" content="404 - Page Not Found">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="./favicon-96x96.png">
-  <meta name="theme-color" content="#0ea5e9">
-  <style>
-    body {font-family: 'Noto Sans KR', sans-serif;}
-  </style>
+<!DOCTYPE html><!-- LLM_GUIDE_START
+{
+  "doc_version": "1.4",
+  "generated": "2025-06-28T09:00:00+09:00",
+  "hosting": {
+    "provider": "GitHub Pages",
+    "root_url": "https://etloveaui.github.io/100xFenok/"
+  },
+  "entry_file": "index.html",
+  "cache_buster": "siteVersion",
+  "frames": [
+    { "id": "content-frame", "dynamic": true }
+  ],
+  "core_function": {
+    "name": "loadPage",
+    "signature": "loadPage(pageUrl)",
+    "logic": [
+      "const fullUrl = pageUrl + '?v=' + siteVersion;",
+      "document.getElementById('content-frame').src = fullUrl;",
+      "nav-frame 내부 <a data-path> 와 pageUrl 비교 후 활성화 스타일 토글"
+    ]
+  },
+  "site_map": [
+    { "path": "main.html",                        "label": "Home",          "menu": "logo" },
+    { "path": "ib/ib-total-guide-calculator.html","label": "무한매수법" },
+    { "path": "vr/vr-main.html",                    "label": "VR 시스템" },
+    { "path": "posts/posts-main.html",                 "label": "분석" },
+    { "path": "100x/100x-main.html",                  "label": "100x Daily Wrap" }
+  ],
+  "update_rules": {
+    "add_page": [
+      "새 HTML 업로드 (예: /posts/2025-07-01_new.html)",
+      "index.html navigation list 업데이트",
+      "필요 시 main.html 카드 갱신",
+      "siteVersion 값을 +1 (캐시 무효화)"
+    ],
+    "drive_to_web_refresh": "컨텐츠 수정 후  CTRL-F5 (또는 Shift-F5) 로 강제 새로고침"
+  },
+  "llm_rules": {
+    "on_detect_change": "변경점(diff)을 요약하고 새 site_map·frames·logic·update_rules를 제안",
+    "patch_format": "Markdown ```diff``` or JSON"
+  }
+}
+LLM_GUIDE_END --><!-- ──────────────────────────────────────────────────
+인간 개발자용 요약 (Living Document)
+1) GitHub Pages 환경: root 경로 ./ 아래에 모든 파일 배치
+2) index.html + 두 iframe(nav, content) = SPA 기본 골격
+3) loadPage() 가 컨텐츠 로드 · 메뉴 활성화 · 캐싱 우회 모두 담당
+4) 페이지/리소스 수정 시 siteVersion 반드시 증가 (?v=버전)
+5) 브라우저 캐시가 남을 땐 CTRL-F5로 강제 새로고침
+────────────────────────────────────────────────── --><html lang="ko"><head>
+    <script>
+    // Universal SPA redirect: 404.html → index.html?path=...
+    (function() {
+      // Ensure BASE matches your deployed GitHub Pages subdirectory exactly (ending with a slash)
+      const BASE = '/100xFenok/';
+      // Strip base and leading slash from the current path
+      const path = location.pathname.replace(BASE, '').replace(/^\//, '');
+      // Redirect to SPA root with path, query, and hash
+      location.replace(BASE + 'index.html?path=' + path + location.search + location.hash);
+    })();
+    </script>
+    <script type="module" src="initBaseHref.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100x FenoK</title>
+    <meta name="description" content="FenoK analytics and trading tools.">
+    <link rel="canonical" href="./index.html">
+    <meta property="og:title" content="100x FenoK">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="./favicon-96x96.png">
+    <meta name="theme-color" content="#0ea5e9">
+
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="manifest" href="./site.webmanifest">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Tailwind -->
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        .frame-container { display: flex; flex-direction: column; height: 100svh; }
+        #nav { flex-shrink: 0; }
+        #content-frame { flex-grow: 1; border: none; width: 100%; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-in-out; }
+    </style>
 </head>
-<body class="h-screen flex items-center justify-center bg-slate-50 text-slate-800">
-  <div class="text-center p-6">
-    <h1 class="text-5xl font-bold mb-4">404</h1>
-    <p class="mb-6 text-lg">죄송합니다. 요청하신 페이지를 찾을 수 없습니다.</p>
-    <a href="./index.html" class="text-blue-600 hover:underline">메인 페이지로 돌아가기</a>
-  </div>
-  <script type="module">
+<body class="animate-fadeIn text-base sm:text-lg lg:text-xl">
+    <div class="frame-container p-4 sm:p-6">
+        <div id="nav">
+          <div class="container mx-auto px-4 sm:px-6 py-4 md:py-5 flex justify-between items-center">
+            <a href="index.html" data-path="main.html" class="text-slate-600 font-medium flex items-center space-x-2 text-xl sm:text-2xl lg:text-3xl hover:text-blue-600 orbitron">
+              <img src="./favicon.svg" alt="FenoK" class="h-8 w-8">
+              <span>FenoK</span>
+            </a>
+            <nav class="hidden md:flex items-center space-x-4 sm:space-x-8 text-slate-600 text-base sm:text-lg">
+              <a href="ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html" class="text-slate-600 font-medium hover:text-blue-600">무한매수법</a>
+              <a href="vr/vr-main.html" data-path="vr/vr-main.html" class="text-slate-600 font-medium hover:text-blue-600">VR</a>
+              <a href="tools/asset/multichart.html" data-path="tools/asset/multichart.html" class="text-slate-600 font-medium hover:text-blue-600">멀티차트</a>
+              <a href="100x/100x-main.html" data-path="100x/100x-main.html" class="text-slate-600 font-medium hover:text-blue-600">Daily Wrap</a>
+              <a href="posts/posts-main.html" data-path="posts/posts-main.html" class="text-slate-600 font-medium hover:text-blue-600">분석</a>
+            </nav>
+            <button id="mobile-btn" class="md:hidden text-2xl sm:text-3xl text-slate-800">☰</button>
+          </div>
+          <div id="mobile-menu" class="hidden md:hidden bg-gray-50 border-t border-slate-200 px-4 sm:px-6 py-4 space-y-2 text-base sm:text-lg">
+            <a href="ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">무한매수법</a>
+            <a href="vr/vr-main.html" data-path="vr/vr-main.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">VR</a>
+            <a href="tools/asset/multichart.html" data-path="tools/asset/multichart.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">멀티차트</a>
+            <a href="100x/100x-main.html" data-path="100x/100x-main.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">Daily Wrap</a>
+            <a href="posts/posts-main.html" data-path="posts/posts-main.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">분석</a>
+          </div>
+        </div>
+        <iframe id="content-frame" name="content-display-area" loading="lazy"></iframe>
+    </div>
+
+    <script type="module">
+    const { loadPage } = await import(`${window.baseHref}loadPage.js`);
+    document.getElementById('mobile-btn').onclick = () => document.getElementById('mobile-menu').classList.toggle('hidden');
+    document.querySelectorAll('#nav a[data-path]').forEach(a => a.addEventListener('click', e => {
+        e.preventDefault();
+        loadPage(a.dataset.path);
+        document.getElementById('mobile-menu').classList.add('hidden');
+    }));
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialPath = urlParams.get('path');
     if (window.top === window.self) {
+        loadPage(initialPath || 'main.html');
     }
-  </script>
-</body>
-</html>
+    </script>
+
+</body></html>

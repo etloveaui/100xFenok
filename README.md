@@ -1,6 +1,6 @@
 # FenoK Dashboard
 
-FenoK is a collection of investment dashboards and tools built as a simple Single Page Application. Navigation and content are served as static HTML so the project can be hosted from any static file server.
+FenoK is a collection of investment dashboards and tools built as a simple Single Page Application. Navigation and content are served as static HTML so the project can be hosted from any static file server. The SPA has exactly one entry point: `index.html`.
 
 ## Installation
 
@@ -19,13 +19,14 @@ node tests/run-tests.js
 /vr             VR system documentation and calculators
 /posts          Analysis posts
 /tools          Auxiliary tools (e.g., multichart)
-index.html      Main entry point containing the iframe loader
+index.html      SPA entry containing the iframe loader
+404.html        Redirects any unknown URL to `index.html?path=...`
 version.js      Cache busting constant
 ```
 
 ## Usage
 
-After starting a local server, open `index.html` in your browser to launch the application. The navigation menu lets you switch between tools and articles.
+After starting a local server, open `index.html` in your browser to launch the application. All internal navigation uses the `?path=` query to load content pages. `404.html` performs a universal redirect so any deep link or broken URL is absorbed back into `index.html?path=...`.
 
 ## Updating preview/
 
