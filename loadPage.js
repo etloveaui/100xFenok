@@ -1,11 +1,18 @@
 import { siteVersion } from './version.js';
 
+let currentActivePage = 'main.html';
+
 export function loadPage(pageUrl) {
   console.log("--- [Debug] Page Load Triggered ---");
   console.log("1. Clicked Path (pageUrl):", pageUrl);
   console.log("2. Base Href (window.baseHref):", window.baseHref);
+  currentActivePage = pageUrl;
+  window.currentActivePage = pageUrl; // window 객체에도 저장
+  console.log("3. 전역 변수 업데이트:", currentActivePage);
+
+
   const isExternal = /^(?:[a-z]+:)?\/\//i.test(pageUrl);
-  
+
   let resolvedUrl;
   if (isExternal) {
     resolvedUrl = pageUrl;
@@ -19,6 +26,7 @@ export function loadPage(pageUrl) {
 
   const normalize = url => url.replace(window.baseHref, '').replace(/^\.\//, '').replace(/^\//, '');
   const target = normalize(pageUrl);
+  currentActivePage = target;
 
   document.querySelectorAll('#nav a[data-path]').forEach(a => {
     const isActive = normalize(a.getAttribute('data-path')) === target;
@@ -26,7 +34,13 @@ export function loadPage(pageUrl) {
     a.classList.toggle('font-bold', isActive);
     a.classList.toggle('text-slate-600', !isActive);
     a.classList.toggle('font-medium', !isActive);
-  });
+  });  
+}
+
+// 현재 활성 페이지 가져오는 함수 내보내기
+export function getCurrentActivePage() {
+  return currentActivePage;
 }
 
 window.loadPage = loadPage;
+window.getCurrentActivePage = getCurrentActivePage; // 전역으로도 접근 가능

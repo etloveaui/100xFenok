@@ -19,3 +19,261 @@
   </div>
 </nav>
 
+<div class="combined-floating-menu lg:hidden">
+  <button class="main-toggle-btn" id="main-toggle">
+    <i class="fas fa-dot-circle"></i>
+  </button>
+
+  <div class="sub-buttons" id="sub-buttons">
+    <a href="index.html?path=main.html" data-path="main.html" class="sub-btn home-sub">
+      <i class="fas fa-redo"></i> <!-- 로켓 (성장/투자) -->
+    </a>
+
+    <button class="sub-btn scroll-sub" id="scroll-combined">
+      <i class="fas fa-rocket"></i> <!-- 레벨업 화살표 -->
+    </button>
+  </div>
+
+  <!-- 새로운 왼쪽 공유 버튼 -->
+  <div class="share-button" id="share-button">
+    <button class="sub-btn share-sub" id="share-url">
+      <i class="fas fa-share-alt"></i>
+    </button>
+  </div>
+
+
+</div>
+
+<script>
+  (function () {
+    function initFloatingMenu() {
+      const mainToggle = document.getElementById('main-toggle');
+      const subButtons = document.getElementById('sub-buttons');
+      const scrollBtn = document.getElementById('scroll-combined');
+      const shareBtn = document.getElementById('share-url'); // 공유 버튼 추가
+
+      if (!mainToggle || !subButtons) {
+        setTimeout(initFloatingMenu, 500);
+        return;
+      }
+
+      let isOpen = false;
+
+      // 메인 버튼 클릭 이벤트 (기존 코드 그대로)
+      mainToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        isOpen = !isOpen;
+
+        if (isOpen) {
+          mainToggle.classList.add('active');
+          subButtons.classList.add('active');
+        } else {
+          mainToggle.classList.remove('active');
+          subButtons.classList.remove('active');
+        }
+      });
+
+      // 공유 버튼 기능 (최종 완벽 버전)
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          console.log('🔗 URL 복사 시작');
+
+          // loadPage.js에서 설정한 전역 변수 활용
+          let currentPath = 'main.html';
+
+          try {
+            // 방법 1: window에서 직접 가져오기
+            if (window.currentActivePage) {
+              currentPath = window.currentActivePage;
+              console.log('✅ 전역 변수에서 현재 경로 획득:', currentPath);
+            } else if (window.parent && window.parent.currentActivePage) {
+              // 방법 2: 부모 창에서 가져오기 (iframe 환경)
+              currentPath = window.parent.currentActivePage;
+              console.log('✅ 부모 창에서 현재 경로 획득:', currentPath);
+            } else {
+              // 방법 3: URL params에서 fallback
+              const urlParams = new URLSearchParams(window.location.search);
+              currentPath = urlParams.get('path') || 'main.html';
+              console.log('📍 URL params fallback 사용:', currentPath);
+            }
+          } catch (error) {
+            console.log('❌ 경로 획득 실패, 기본값 사용:', error);
+            currentPath = 'main.html';
+          }
+
+          // 완전한 공유 URL 구성
+          const baseURL = window.location.origin + window.location.pathname;
+          const shareableURL = `${baseURL}?path=${currentPath}`;
+
+          console.log('📋 공유할 완전한 URL:', shareableURL);
+
+          // 클립보드에 URL 복사
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareableURL)
+              .then(() => {
+                console.log('✅ URL 복사 완료:', shareableURL);
+                showCopyNotification('URL이 복사되었습니다!');
+              })
+              .catch((error) => {
+                console.log('❌ URL 복사 실패:', error);
+                fallbackCopyURL(shareableURL);
+              });
+          } else {
+            fallbackCopyURL(shareableURL);
+          }
+
+          // 메뉴 닫기
+          isOpen = false;
+          mainToggle.classList.remove('active');
+          subButtons.classList.remove('active');
+        });
+      }
+
+
+      // 위로가기 기능 - 올바른 스크롤 대상 지정
+      if (scrollBtn) {
+        scrollBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          console.log('🚀 위로가기 시작');
+
+          // 방법 1: iframe 내부 스크롤 (현재 페이지가 iframe인 경우)
+          const iframe = document.querySelector('iframe');
+          if (iframe && iframe.contentWindow) {
+            try {
+              iframe.contentWindow.scrollTo({ top: 0, behavior: 'smooth' });
+              console.log('✅ iframe 내부 스크롤 성공');
+            } catch (error) {
+              console.log('iframe 내부 스크롤 실패:', error);
+            }
+          }
+
+          // 방법 2: 부모 window 스크롤 (가장 중요!)
+          try {
+            if (window.parent && window.parent !== window) {
+              window.parent.scrollTo({ top: 0, behavior: 'smooth' });
+              console.log('✅ 부모 창 스크롤 성공');
+            }
+          } catch (error) {
+            console.log('부모 창 스크롤 실패:', error);
+          }
+
+          // 방법 3: index.html의 iframe 찾아서 스크롤
+          try {
+            const parentDocument = window.parent.document;
+            const contentFrame = parentDocument.getElementById('content-frame');
+            if (contentFrame && contentFrame.contentWindow) {
+              contentFrame.contentWindow.scrollTo({ top: 0, behavior: 'smooth' });
+              console.log('✅ content-frame 스크롤 성공');
+            }
+          } catch (error) {
+            console.log('content-frame 스크롤 실패:', error);
+          }
+
+          // 방법 4: 모든 가능한 스크롤 요소 시도
+          try {
+            // 현재 창
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+
+            // 부모 창의 모든 스크롤 요소
+            if (window.parent && window.parent.document) {
+              window.parent.document.documentElement.scrollTop = 0;
+              window.parent.document.body.scrollTop = 0;
+            }
+
+            console.log('✅ 전체 스크롤 시도 완료');
+          } catch (error) {
+            console.log('전체 스크롤 시도 실패:', error);
+          }
+
+          // 메뉴 닫기
+          isOpen = false;
+          mainToggle.classList.remove('active');
+          subButtons.classList.remove('active');
+        });
+      }
+    }
+
+    // URL 복사 알림 표시 함수
+    function showCopyNotification(message) {
+      // 기존 알림 제거
+      const existingNotification = document.querySelector('.copy-notification');
+      if (existingNotification) {
+        existingNotification.remove();
+      }
+
+      // 새 알림 생성
+      const notification = document.createElement('div');
+      notification.className = 'copy-notification';
+      notification.textContent = message;
+      notification.style.cssText = `
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      background: rgba(34, 197, 94, 0.9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1001;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    `;
+
+      document.body.appendChild(notification);
+
+      // 애니메이션
+      setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+      }, 10);
+
+      // 3초 후 제거
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-10px)';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // 구형 브라우저용 URL 복사 함수
+    function fallbackCopyURL(url) {
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand('copy');
+        console.log('✅ fallback URL 복사 성공');
+        showCopyNotification('URL이 복사되었습니다!');
+      } catch (error) {
+        console.log('❌ fallback URL 복사 실패:', error);
+        showCopyNotification('URL 복사에 실패했습니다.');
+      }
+
+      document.body.removeChild(textArea);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initFloatingMenu);
+    } else {
+      initFloatingMenu();
+    }
+  })();
+</script>
