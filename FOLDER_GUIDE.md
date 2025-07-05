@@ -16,7 +16,7 @@
 | `AGENTS.md`                     | 전체 시스템 유지보수용 Codex 작업 기준 규칙 문서                          |
 | `README.md`                     | 프로젝트 개요, 실행 방법, agent 기준 안내 포함                          |
 | `favicon.*`, `site.webmanifest` | PWA 및 SEO용 자산 파일 모음 (SVG, ICO, PNG 등)                   |
-| `404.html`                      | GitHub Pages용 커스텀 404 처리                                |
+| `404.html`                      | 모든 잘못된 URL을 `index.html?path=` 로 돌려보내는 리다이렉터 |
 | `tests/run-tests.js`            | HTML 구조 정합성 검증용 Node 기반 테스트 스크립트                        |
 
 ---
