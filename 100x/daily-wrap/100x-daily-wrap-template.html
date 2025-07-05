@@ -1076,16 +1076,7 @@ if (window.top === window.self) {
                 });
             }
 
-            // 네비게이션 로딩 스크립트 (수정 불필요)
-            const navScript = document.createElement('script');
-            navScript.type = 'module';
-            navScript.innerHTML = `
-                이 부분은 상위 폴더의 네비게이션 파일을 로드하는 스크립트입니다.
-                로컬 환경이나 다른 서버 구조에서는 경로 수정이 필요할 수 있습니다.
-                if (window.top === window.self) {
-                }
-            `;
-            document.body.appendChild(navScript);
+            // SPA shell(index.html) provides navigation and footer
         });
     </script>
 

@@ -24,6 +24,21 @@ index.html      SPA entry containing the iframe loader
 version.js      Cache busting constant
 ```
 
+Only `index.html` and `404.html` include the site's navigation and footer. Every
+other page should remain content-only. Place
+
+```html
+<script type="module" src="../initBaseHref.js"></script>
+```
+
+in the `<head>` (adjust `../` depth as needed) and begin the `<body>` with
+
+```html
+<div id="nav"></div>
+```
+
+as a placeholder for SPA compatibility.
+
 ## Usage
 
 After starting a local server, open `index.html` in your browser to launch the application. All internal navigation uses the `?path=` query to load content pages. `404.html` performs a universal redirect so any deep link or broken URL is absorbed back into `index.html?path=...`.

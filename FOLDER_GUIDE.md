@@ -10,7 +10,7 @@
 | ------------------------------- | ------------------------------------------------------- |
 | `index.html`                    | SPA 진입점 – `iframe#content-frame`으로 전체 구조 형성 |
 | `main.html`                     | 홈 콘텐츠 – What's New 카드/버튼 등 표시                           |
-| `loadPage.js`, `loadNav.js`     | SPA 방식 페이지 전환 및 동적 nav 삽입 스크립트                          |
+| `loadPage.js`, `loadNav.js`     | SPA 페이지 로딩 로직, nav은 index/404에서만 사용 |
 | `initBaseHref.js`               | GitHub Pages/preview/로컬 경로를 자동 판단하여 `<base href>` 설정    |
 | `version.js`                    | `siteVersion` 값을 통해 캐시 무효화를 제어함                         |
 | `AGENTS.md`                     | 전체 시스템 유지보수용 Codex 작업 기준 규칙 문서                          |
@@ -92,7 +92,7 @@
 
 ## 📌 폴더 구조 운영 원칙 요약
 
-1. 모든 index.html은 반드시 `<div id="nav"></div>` 및 `initBaseHref.js` 포함
+1. 모든 콘텐츠 페이지는 `<script type="module" src="../initBaseHref.js"></script>`를 포함하고 `<body>` 시작부에 `<div id="nav"></div>`를 배치한다 (nav와 footer는 index.html/404.html에만 존재)
 2. `_agent-prompts/` 폴더는 폴더별 기능 단위로만 존재해야 함
 3. `version.js`는 HTML/JS/CSS 수정 시 반드시 갱신
 4. preview 디렉토리는 항상 루트와 경로만 다르게 복사되어야 함
