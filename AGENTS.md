@@ -15,32 +15,22 @@ This document outlines structural, behavioral, and coding conventions for Codex 
 
 ## 🧭 Navigation Structure
 
-- Do **NOT** hardcode nav into each HTML file.
-- All pages must dynamically inject `<div id="nav"></div>` and run `loadNav(siteVersion)` from `loadNav.js`.
+- Navigation and footer markup exist **only** in `index.html` and `404.html`, which act as the SPA shell.
+- Content pages must **not** embed navigation or footer sections themselves.
 
-### Required setup for each HTML:
+### Required setup for each content HTML
 
 **In `<head>`**
 ```html
-<script type="module" src="./initBaseHref.js"></script>
+<script type="module" src="../initBaseHref.js"></script>
 ```
-(Use `../` or `../../` based on file depth)
+(Adjust the `../` depth based on the file location.)
 
-**At top of `<body>`**
+**At start of `<body>`**
 ```html
 <div id="nav"></div>
 ```
-
-**At bottom of `<body>`**
-```html
-<script type="module">
-  const { siteVersion } = await import(`${window.baseHref}version.js`);
-  const { loadNav } = await import(`${window.baseHref}loadNav.js`);
-  if (window.top === window.self) {
-      await loadNav(siteVersion);
-  }
-</script>
-```
+This placeholder keeps the layout consistent even though navigation is not injected here.
 
 ---
 
@@ -65,18 +55,17 @@ This document outlines structural, behavioral, and coding conventions for Codex 
 
 ## 📄 File Editing Rules
 
-- Every file must include:
-  - initBaseHref
-  - version.js
-  - loadNav.js
-  - div#nav container
+- Content pages must include:
+  - `<script type="module" src="../initBaseHref.js"></script>` with the correct relative path
+  - `<div id="nav"></div>` as the first element in `<body>`
+  - No embedded navigation or footer markup
 
 ---
 
 ## 🆕 When Adding a New Page
 
 1. Add content under correct folder (`/posts/`, `/100x/daily-wrap/`, etc.)
-2. Include nav injection logic as above
+2. Include the `initBaseHref.js` script and `<div id="nav"></div>` placeholder as shown above
 3. Update `/posts/index.html` or `/100x/index.html` **only when prompted**
 4. Bump `siteVersion` in `version.js` **only if instructed**
 5. Run `node tests/run-tests.js` after major HTML changes
@@ -95,7 +84,7 @@ node tests/run-tests.js
 
 ## 📄 Commit/PR Notes
 
-- Always summarize each major change (e.g., "Applied nav injection to Alpha Pick post")
+- Always summarize each major change (e.g., "Updated VR calculator tables")
 - List all edited files
 - If version bumped, include version string (e.g., 20250703T0107)
 
