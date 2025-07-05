@@ -9,7 +9,6 @@
   "entry_file": "index.html",
   "cache_buster": "siteVersion",
   "frames": [
-    { "id": "nav-frame", "src": "nav.html" },
     { "id": "content-frame", "dynamic": true }
   ],
   "core_function": {
@@ -31,7 +30,7 @@
   "update_rules": {
     "add_page": [
       "새 HTML 업로드 (예: /posts/2025-07-01_new.html)",
-      "nav.html에 <a data-path=\"posts/2025-07-01_new.html\"> 추가",
+      "index.html navigation list 업데이트",
       "필요 시 main.html 카드 갱신",
       "siteVersion 값을 +1 (캐시 무효화)"
     ],
@@ -52,7 +51,7 @@ LLM_GUIDE_END --><!-- ───────────────────�
 ────────────────────────────────────────────────── --><html lang="ko"><head>
     <script type="module" src="initBaseHref.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -75,7 +74,6 @@ LLM_GUIDE_END --><!-- ───────────────────�
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         .frame-container { display: flex; flex-direction: column; height: 100svh; }
-        /* #nav-frame { flex-shrink: 0; border: none; width: 100%; } */
         #nav { flex-shrink: 0; }
         #content-frame { flex-grow: 1; border: none; width: 100%; }
 
@@ -85,17 +83,45 @@ LLM_GUIDE_END --><!-- ───────────────────�
 </head>
 <body class="animate-fadeIn text-base sm:text-lg lg:text-xl">
     <div class="frame-container p-4 sm:p-6">
-        <div id="nav"></div>
+        <div id="nav">
+          <div class="container mx-auto px-4 sm:px-6 py-4 md:py-5 flex justify-between items-center">
+            <a href="index.html" data-path="main.html" class="text-slate-600 font-medium flex items-center space-x-2 text-xl sm:text-2xl lg:text-3xl hover:text-blue-600 orbitron">
+              <img src="./favicon.svg" alt="FenoK" class="h-8 w-8">
+              <span>FenoK</span>
+            </a>
+            <nav class="hidden md:flex items-center space-x-4 sm:space-x-8 text-slate-600 text-base sm:text-lg">
+              <a href="ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html" class="text-slate-600 font-medium hover:text-blue-600">무한매수법</a>
+              <a href="vr/index.html" data-path="vr/index.html" class="text-slate-600 font-medium hover:text-blue-600">VR</a>
+              <a href="tools/asset/multichart.html" data-path="tools/asset/multichart.html" class="text-slate-600 font-medium hover:text-blue-600">멀티차트</a>
+              <a href="100x/index.html" data-path="100x/index.html" class="text-slate-600 font-medium hover:text-blue-600">Daily Wrap</a>
+              <a href="posts/index.html" data-path="posts/index.html" class="text-slate-600 font-medium hover:text-blue-600">분석</a>
+            </nav>
+            <button id="mobile-btn" class="md:hidden text-2xl sm:text-3xl text-slate-800">☰</button>
+          </div>
+          <div id="mobile-menu" class="hidden md:hidden bg-gray-50 border-t border-slate-200 px-4 sm:px-6 py-4 space-y-2 text-base sm:text-lg">
+            <a href="ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">무한매수법</a>
+            <a href="vr/index.html" data-path="vr/index.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">VR</a>
+            <a href="tools/asset/multichart.html" data-path="tools/asset/multichart.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">멀티차트</a>
+            <a href="100x/index.html" data-path="100x/index.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">Daily Wrap</a>
+            <a href="posts/index.html" data-path="posts/index.html" class="text-slate-600 font-medium block py-2 sm:py-3 hover:text-blue-600">분석</a>
+          </div>
+        </div>
         <iframe id="content-frame" name="content-display-area" loading="lazy"></iframe>
     </div>
 
-    <script type="module">const { siteVersion } = await import(`${window.baseHref}version.js`);
-const { loadNav } = await import(`${window.baseHref}loadNav.js`);
-const { loadPage } = await import(`${window.baseHref}loadPage.js`);
-if (window.top === window.self) {
-    await loadNav(siteVersion);
-    loadPage('main.html');
-}</script>
-
+    <script type="module">
+    const { loadPage } = await import(`${window.baseHref}loadPage.js`);
+    document.getElementById('mobile-btn').onclick = () => document.getElementById('mobile-menu').classList.toggle('hidden');
+    document.querySelectorAll('#nav a[data-path]').forEach(a => a.addEventListener('click', e => {
+        e.preventDefault();
+        loadPage(a.dataset.path);
+        document.getElementById('mobile-menu').classList.add('hidden');
+    }));
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialPath = urlParams.get('path');
+    if (window.top === window.self) {
+        loadPage(initialPath || 'main.html');
+    }
+    </script>
 
 </body></html>

@@ -1,4 +1,9 @@
 <!DOCTYPE html><!-- 
+<script>
+if (window.top === window.self) {
+  window.location.href = "index.html?path=100x/index.html";
+}
+</script>
     ================================================================================
     LLM 및 개발자를 위한 100x Daily Wrap 목록 페이지 제작 가이드 (FenoK's Philosophy)
     ================================================================================
@@ -35,7 +40,6 @@
 
     * **유연성 원칙:** 소스 데이터의 목차나 구조가 변경될 수 있음을 인지하고, 여기에 얽매이지 않습니다. 핵심은 '내용을 깊이 분석'하여 위 가이드라인에 맞춰 '최적의 형태'로 재구성하는 것입니다. 구조가 바뀌더라도 놀라지 말고, 유연하게 대처하여 일관된 품질을 유지하는 것이 중요합니다.
 --><html lang="ko"><head>
-    <script type="module" src="../initBaseHref.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -60,7 +64,6 @@
 <body class="bg-slate-50 text-slate-800">
 
     <!-- 메인 콘텐츠 영역 -->
-    <div id="nav"></div>
     <main class="container mx-auto p-6 md:p-12">
         <!-- 최신 리포트 하이라이트 섹션: 페이지의 핵심. 가장 중요한 3개의 리포트를 상단에 배치 -->
         <section id="featured-reports" class="mb-16">
@@ -232,10 +235,7 @@
             });
         });
     </script>
-    <script type="module">const { siteVersion } = await import(`${window.baseHref}version.js`);
-const { loadNav } = await import(`${window.baseHref}loadNav.js`);
 if (window.top === window.self) {
-    await loadNav(siteVersion);
 }</script>
     <script>
         document.querySelectorAll('a[data-path]').forEach(a => {
