@@ -19,18 +19,17 @@ node tests/run-tests.js
 /vr             VR system documentation and calculators
 /posts          Analysis posts
 /tools          Auxiliary tools (e.g., multichart)
-nav.html        Navigation bar loaded by the SPA
 index.html      Main entry point containing the iframe loader
 version.js      Cache busting constant
 ```
 
 ## Usage
 
-After starting a local server, open `index.html` in your browser to launch the application. The navigation menu lets you switch between tools and articles. When adding new pages, update `nav.html` and increase the version in `version.js` so browsers fetch the latest resources.
+After starting a local server, open `index.html` in your browser to launch the application. The navigation menu lets you switch between tools and articles.
 
 ## Updating preview/
 
-The `preview/` folder serves a GitHub Pages preview of the site. After modifying pages or assets in the project root, copy the updated files here so the preview stays in sync. Typically this includes `index.html`, `nav.html`, `main.html`, `version.js`, `site.webmanifest`, `404.html` and any updated icon files.
+The `preview/` folder serves a GitHub Pages preview of the site. After modifying pages or assets in the project root, copy the updated files here so the preview stays in sync. Typically this includes `index.html`, `main.html`, `version.js`, `site.webmanifest`, `404.html` and any updated icon files.
 
 ## Contributing
 
