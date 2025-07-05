@@ -803,10 +803,3 @@ if (flippableCard) {
         flippableCard.classList.toggle('flipped');
     });
 }
-
-// 모바일 내비게이션 버튼 토글
-document.getElementById('mobileNavBtn')?.addEventListener('click', () => {
-  const panel = document.getElementById('navPanel');
-  panel.classList.toggle('translate-x-full');
-  panel.classList.toggle('translate-x-0');
-});
