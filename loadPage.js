@@ -5,10 +5,7 @@ export function loadPage(pageUrl) {
   console.log("1. Clicked Path (pageUrl):", pageUrl);
   console.log("2. Base Href (window.baseHref):", window.baseHref);
   const isExternal = /^(?:[a-z]+:)?\/\//i.test(pageUrl);
-  // const relative = isExternal
-  //   ? pageUrl
-  //   : pageUrl.replace(window.baseHref, '').replace(/^\.\//, '').replace(/^\//, '');
-  // const resolved = isExternal ? pageUrl : window.baseHref + relative;
+  
   let resolvedUrl;
   if (isExternal) {
     resolvedUrl = pageUrl;

@@ -18,18 +18,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap"
     rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="nav.css">
   <script type="module" src="initBaseHref.js"></script>
-  <!-- <style>
-    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-    .frame-container { display: flex; flex-direction: column; height: 100svh; }
-    #nav { flex-shrink: 0; }
-    #content-frame { flex-grow: 1; border: none; width: 100%; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .animate-fadeIn { animation: fadeIn 0.5s ease-in-out; }
-  </style> -->
+
 
   <style>
     body,
@@ -54,10 +48,6 @@
       border: none;
     }
 
-    footer {
-      flex-shrink: 0;
-    }
-
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -71,6 +61,130 @@
     .animate-fadeIn {
       animation: fadeIn 0.5s ease-in-out;
     }
+
+    .enhanced-simple-footer {
+      flex-shrink: 0;
+      height: 30px;
+      /* 50px → 30px로 변경 */
+      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+      border-top: 1px solid #e5e7eb;
+      padding: 0 20px;
+      /* 24px → 20px로 줄임 */
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 브랜드 아이콘 크기 조정 */
+    .brand-icon {
+      width: 18px;
+      /* 24px → 18px */
+      height: 18px;
+      /* 24px → 18px */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      border-radius: 4px;
+      /* 6px → 4px */
+      transition: all 0.3s ease;
+    }
+
+    /* 브랜드 텍스트 크기 조정 */
+    .brand-name {
+      font-weight: 300 !important;
+      font-size: 14px;
+      /* 16px → 14px */
+      color: #1f2937;
+      background: linear-gradient(135deg, #374151, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      transition: all 0.3s ease;
+    }
+
+    .copyright {
+      font-weight: 200 !important;
+      font-size: 12px;
+      /* 13px → 12px */
+      color: #9ca3af;
+      margin-left: 6px;
+      /* 8px → 6px */
+      transition: color 0.3s ease;
+    }
+
+    /* 상태 표시등 크기 조정 */
+    .status-dot {
+      width: 5px;
+      /* 6px → 5px */
+      height: 5px;
+      /* 6px → 5px */
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+      /* 2px → 1px */
+    }
+
+    .status-text {
+      font-weight: 300 !important;
+      font-size: 11px;
+      /* 12px → 11px */
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      /* 0.5px → 0.3px */
+    }
+
+    /* 푸터 메시지 크기 조정 */
+    .footer-message {
+      font-weight: 200 !important;
+      font-size: 12px;
+      /* 13px → 12px */
+      color: #9ca3af;
+      transition: all 0.3s ease;
+    }
+
+    /* 반응형 디자인 수정 */
+    @media (max-width: 768px) {
+      .enhanced-simple-footer {
+        padding: 0 16px;
+        height: 28px;
+        /* 45px → 28px */
+      }
+
+      .brand-name {
+        font-size: 13px;
+        /* 14px → 13px */
+      }
+
+      .copyright {
+        font-size: 11px;
+        /* 12px → 11px */
+      }
+
+      .footer-message {
+        font-size: 11px;
+        /* 12px → 11px */
+      }
+    }
+
+    @media (max-width: 640px) {
+      .enhanced-simple-footer {
+        height: 26px;
+        /* 더욱 얇게 */
+      }
+
+      .enhanced-simple-footer .container {
+        justify-content: center;
+      }
+
+      .footer-message {
+        display: none;
+      }
+      
+    }
   </style>
 
 </head>
@@ -79,55 +193,51 @@
   <div class="frame-container">
     <div id="nav"></div>
     <iframe id="content-frame" name="content-display-area" class="w-full" loading="lazy"></iframe>
-    <!-- <footer class="py-3 px-3 sm:px-4 lg:px-6 bg-slate-25">
-      <div class="container mx-auto text-center text-slate-500 text-sm sm:text-base">
-        <div class="text-lg sm:text-xl lg:text-2xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
-        <p class="mb-4 text-xs sm:text-sm">The Ultimate Investment Knowledge Platform</p>
-        <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM
-          POWERED</p>
-      </div>
-    </footer> -->
-    <footer class="py-6 px-4 bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-00">
-      <div class="container mx-auto flex justify-between items-center text-sm text-slate-100">
 
-        <div class="font-semibold orbitron">
-          <span class="text-slate-700">100x FenoK</span>
-          <span class="text-slate-400 ml-2">© 2025</span>
+    <!-- 기존 푸터 삭제하고 이것으로 교체 -->
+    <footer class="enhanced-simple-footer">
+      <div class="container mx-auto flex justify-between items-center text-sm text-gray-600">
+        <div class="font-medium">
+          <span class="orbitron text-gray-800">100x FenoK</span>
+          <span class="text-gray-400 ml-2">© 2025</span>
         </div>
-
-        <div class="text-slate-400 hidden sm:block">
-          모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.
+        <div class="hidden sm:block text-gray-500">
+          모든 정보는 투자 참고용이지만, 손실 나면 니 탓 수익 나면 내 탓
         </div>
-
       </div>
     </footer>
+
+
   </div>
-  <script type="module">
-    const { siteVersion } = await import(`${window.baseHref}version.js`);
-    const { loadNav } = await import(`${window.baseHref}loadNav.js`);
-    const { loadPage } = await import(`${window.baseHref}loadPage.js`);
-    // Inject nav dynamically
-    if (window.top === window.self) {
-      await loadNav(siteVersion);
+</body>
+
+</div>
+<script type="module">
+  const { siteVersion } = await import(`${window.baseHref}version.js`);
+  const { loadNav } = await import(`${window.baseHref}loadNav.js`);
+  const { loadPage } = await import(`${window.baseHref}loadPage.js`);
+  // Inject nav dynamically
+  if (window.top === window.self) {
+    await loadNav(siteVersion);
+  }
+  // SPA: nav click → loadPage
+  document.addEventListener('click', function (e) {
+    const a = e.target.closest('a[data-path]');
+    if (a) {
+      e.preventDefault();
+      loadPage(a.getAttribute('data-path'));
+      // 모바일 메뉴 닫기 (nav.html 내 스크립트와 연동 가능)
+      const mm = document.getElementById('mobile-menu');
+      if (mm && !mm.classList.contains('hidden')) mm.classList.add('hidden');
     }
-    // SPA: nav click → loadPage
-    document.addEventListener('click', function (e) {
-      const a = e.target.closest('a[data-path]');
-      if (a) {
-        e.preventDefault();
-        loadPage(a.getAttribute('data-path'));
-        // 모바일 메뉴 닫기 (nav.html 내 스크립트와 연동 가능)
-        const mm = document.getElementById('mobile-menu');
-        if (mm && !mm.classList.contains('hidden')) mm.classList.add('hidden');
-      }
-    });
-    // Initial load (deep link)
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialPath = urlParams.get('path');
-    if (window.top === window.self) {
-      loadPage(initialPath || 'main.html');
-    }
-  </script>
+  });
+  // Initial load (deep link)
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialPath = urlParams.get('path');
+  if (window.top === window.self) {
+    loadPage(initialPath || 'main.html');
+  }
+</script>
 </body>
 
 </html>

@@ -1,15 +1,26 @@
 /* ========================================
-   전체 사이트 공통 스타일 - global.css
+   글로벌 CSS - 최종 확정판 (global.css)
    ======================================== */
 
-/* 텍스트 선택 및 커서 제거 */
+/* 기본 리셋 및 폰트 설정 */
 *, *:before, *:after {
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
+  box-sizing: border-box;
 }
 
-/* 모든 링크와 버튼 */
-a, button, input, textarea, select {
+body {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+/* ========================================
+   포커스 및 아웃라인 제거 (선택적)
+   ======================================== */
+
+/* 네비게이션과 버튼류만 제거 */
+a, button, .nav-item, .logo-section,
+.btn, .button, [role="button"] {
   outline: none !important;
   outline-width: 0 !important;
   outline-style: none !important;
@@ -17,8 +28,12 @@ a, button, input, textarea, select {
   -webkit-tap-highlight-color: transparent !important;
 }
 
-/* 텍스트 커서 완전 제거 */
-a, a *, button, button * {
+/* 네비게이션과 버튼류 텍스트 선택 방지 */
+a, a *, button, button *, 
+.nav-item, .nav-item *,
+.logo-section, .logo-section *,
+.brand-text, .btn, .btn *,
+[role="button"], [role="button"] * {
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
@@ -27,32 +42,279 @@ a, a *, button, button * {
   caret-color: transparent !important;
 }
 
-/* 포커스 상태 모든 제거 */
-*:focus, *:active, *:visited, *:focus-visible, *:focus-within {
-  outline: none !important;
-  outline-width: 0 !important;
-  outline-offset: 0 !important;
-  box-shadow: none !important;
-  border: none !important;
+/* 입력 요소들은 제외 - 커서 허용 */
+input, textarea, select, 
+input *, textarea *, select *,
+[contenteditable="true"],
+[contenteditable="true"] *,
+.input, .textarea {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+  cursor: text !important;
+  caret-color: auto !important;
+  outline: revert !important;
 }
 
-/* 드래그 방지 */
-img, a, span, div {
+/* 특별한 입력 요소들 */
+input[type="checkbox"],
+input[type="radio"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer !important;
+  caret-color: transparent !important;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="file"] {
+  cursor: pointer !important;
+}
+
+/* 포커스 상태 관리 */
+a:focus, button:focus,
+.nav-item:focus, .logo-section:focus,
+.btn:focus, [role="button"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 입력 필드 포커스는 허용 */
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 0px !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* ========================================
+   공통 유틸리티 클래스
+   ======================================== */
+
+/* 폰트 패밀리 */
+.orbitron {
+  font-family: 'Orbitron', monospace, sans-serif !important;
+}
+
+.noto-sans-kr {
+  font-family: 'Noto Sans KR', sans-serif !important;
+}
+
+/* 텍스트 선택 방지/허용 */
+.no-select {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+.allow-select {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+/* 스크롤바 스타일 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ========================================
+   드래그 방지 (이미지, 아이콘 등)
+   ======================================== */
+
+img, .icon, .logo, svg {
   -webkit-user-drag: none !important;
   -khtml-user-drag: none !important;
   -moz-user-drag: none !important;
   -o-user-drag: none !important;
   user-drag: none !important;
+  pointer-events: auto !important;
 }
 
-/* 모바일 탭 하이라이트 제거 */
-* {
+/* ========================================
+   모바일 최적화
+   ======================================== */
+
+/* 탭 하이라이트 제거 (입력 요소 제외) */
+*:not(input):not(textarea):not(select) {
   -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
   -webkit-touch-callout: none !important;
 }
 
-/* Webkit 브라우저 전용 */
+/* iOS Safari 줌 방지 */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+input[type="search"],
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="password"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ========================================
+   브라우저 호환성
+   ======================================== */
+
+/* Firefox 전용 */
 *::-moz-focus-inner {
   border: 0 !important;
   outline: none !important;
+}
+
+/* 그라데이션 미지원 브라우저 fallback */
+@supports not (-webkit-background-clip: text) {
+  .brand-text, .gradient-text {
+    color: #1e293b !important;
+  }
+}
+
+/* backdrop-filter 미지원 브라우저 fallback */
+@supports not (backdrop-filter: blur(10px)) {
+  .enhanced-nav, .glass-effect {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+}
+
+/* ========================================
+   성능 최적화
+   ======================================== */
+
+/* GPU 가속 활성화 */
+.logo-section, .nav-item, .btn,
+.transition-transform, .hover-effect {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* 애니메이션 성능 최적화 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========================================
+   특정 페이지 타입별 스타일
+   ======================================== */
+
+/* 차트/데이터 페이지 */
+canvas, .chart-container, .data-table {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  user-select: none !important;
+  cursor: default !important;
+}
+
+/* 계산기/폼 페이지 */
+.calculator-container input,
+.form-container input,
+.form-container textarea {
+  cursor: text !important;
+  user-select: text !important;
+}
+
+/* 읽기 전용 콘텐츠 */
+.content-area, .article-content, .post-content {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  user-select: text !important;
+  cursor: text !important;
+}
+
+/* ========================================
+   디버깅 및 개발 지원
+   ======================================== */
+
+/* 개발 모드에서만 사용 */
+.debug-outline * {
+  outline: 1px solid red !important;
+}
+
+.debug-no-select {
+  background: rgba(255, 0, 0, 0.1) !important;
+}
+
+/* ========================================
+   iframe 특화 스타일
+   ======================================== */
+
+/* iframe 내부 페이지용 */
+body.iframe-content {
+  margin: 0;
+  padding: 20px;
+  background: #f8fafc;
+}
+
+/* iframe 네비게이션 연동 */
+.iframe-nav-spacing {
+  padding-top: 80px; /* 네비게이션 높이만큼 */
+}
+
+/* ========================================
+   기타 유틸리티
+   ======================================== */
+
+/* 숨김 처리 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 중요 요소 강조 */
+.highlight {
+  background: linear-gradient(135deg, #fef3c7, #fbbf24);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* 로딩 상태 */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: wait !important;
 }

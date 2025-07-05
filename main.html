@@ -2,11 +2,11 @@
 <html lang="ko">
 
 <head>
-  <script>
-    if (window.top === window.self) {
-      window.location.href = "index.html?path=main.html";
-    }
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FenoK Dashboard - Main</title>
+
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link
     href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap"
@@ -211,17 +211,6 @@
     </section>
   </main>
 
-  <!-- <footer class="py-12 px-6 sm:px-8 lg:px-12 bg-slate-50">
-    <div class="container mx-auto text-center text-slate-500 text-sm sm:text-base">
-      <div class="text-lg sm:text-xl lg:text-2xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
-      <p class="mb-4 text-xs sm:text-sm">The Ultimate Investment Knowledge Platform</p>
-      <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED
-      </p>
-    </div>
-  </footer> -->
-  <!-- if (window.top === window.self) {
-} -->
-
   <script>
     document.body.addEventListener('click', event => {
       const link = event.target.closest('a[href*="?path="]');
@@ -230,7 +219,6 @@
       parent.loadPage(new URL(link.href).searchParams.get('path'));
     });
   </script>
-
 </body>
 
 </html>
