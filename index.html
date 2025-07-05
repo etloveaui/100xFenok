@@ -62,129 +62,38 @@
       animation: fadeIn 0.5s ease-in-out;
     }
 
-    .enhanced-simple-footer {
-      flex-shrink: 0;
-      height: 30px;
-      /* 50px → 30px로 변경 */
-      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-      border-top: 1px solid #e5e7eb;
-      padding: 0 20px;
-      /* 24px → 20px로 줄임 */
-      display: flex;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-    }
+    /* ========================================
+   푸터 공유 버튼 스타일
+   ======================================== */
 
-    /* 브랜드 아이콘 크기 조정 */
-    .brand-icon {
-      width: 18px;
-      /* 24px → 18px */
-      height: 18px;
-      /* 24px → 18px */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-      border-radius: 4px;
-      /* 6px → 4px */
-      transition: all 0.3s ease;
-    }
+.footer-share-btn[data-tooltip] {
+  position: relative;
+}
 
-    /* 브랜드 텍스트 크기 조정 */
-    .brand-name {
-      font-weight: 300 !important;
-      font-size: 14px;
-      /* 16px → 14px */
-      color: #1f2937;
-      background: linear-gradient(135deg, #374151, #6366f1);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      transition: all 0.3s ease;
-    }
+.footer-share-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  display: block;
+}
 
-    .copyright {
-      font-weight: 200 !important;
-      font-size: 12px;
-      /* 13px → 12px */
-      color: #9ca3af;
-      margin-left: 6px;
-      /* 8px → 6px */
-      transition: color 0.3s ease;
-    }
+.footer-share-btn[data-tooltip]:hover::after {
+  opacity: 1;
+}
 
-    /* 상태 표시등 크기 조정 */
-    .status-dot {
-      width: 5px;
-      /* 6px → 5px */
-      height: 5px;
-      /* 6px → 5px */
-      background: #10b981;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
-      /* 2px → 1px */
-    }
-
-    .status-text {
-      font-weight: 300 !important;
-      font-size: 11px;
-      /* 12px → 11px */
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      /* 0.5px → 0.3px */
-    }
-
-    /* 푸터 메시지 크기 조정 */
-    .footer-message {
-      font-weight: 200 !important;
-      font-size: 12px;
-      /* 13px → 12px */
-      color: #9ca3af;
-      transition: all 0.3s ease;
-    }
-
-    /* 반응형 디자인 수정 */
-    @media (max-width: 768px) {
-      .enhanced-simple-footer {
-        padding: 0 16px;
-        height: 28px;
-        /* 45px → 28px */
-      }
-
-      .brand-name {
-        font-size: 13px;
-        /* 14px → 13px */
-      }
-
-      .copyright {
-        font-size: 11px;
-        /* 12px → 11px */
-      }
-
-      .footer-message {
-        font-size: 11px;
-        /* 12px → 11px */
-      }
-    }
-
-    @media (max-width: 640px) {
-      .enhanced-simple-footer {
-        height: 26px;
-        /* 더욱 얇게 */
-      }
-
-      .enhanced-simple-footer .container {
-        justify-content: center;
-      }
-
-      .footer-message {
-        display: none;
-      }
-      
-    }
   </style>
 
 </head>
@@ -194,8 +103,7 @@
     <div id="nav"></div>
     <iframe id="content-frame" name="content-display-area" class="w-full" loading="lazy"></iframe>
 
-    <!-- 기존 푸터 삭제하고 이것으로 교체 -->
-    <footer class="enhanced-simple-footer">
+    <!-- <footer class="enhanced-simple-footer">
       <div class="container mx-auto flex justify-between items-center text-sm text-gray-600">
         <div class="font-medium">
           <span class="orbitron text-gray-800">100x FenoK</span>
@@ -204,6 +112,38 @@
         <div class="hidden sm:block text-gray-500">
           모든 정보는 투자 참고용이지만, 손실 나면 니 탓 수익 나면 내 탓
         </div>
+      </div>
+    </footer> -->
+
+    <!-- 기존 푸터 수정 -->
+    <footer class="enhanced-simple-footer bg-white border-t border-gray-200">
+      <div class="container mx-auto flex justify-between items-center text-sm">
+
+        <!-- 왼쪽: 브랜드 (클릭 가능하게 수정) -->
+        <div class="brand-section flex items-center space-x-3">
+          <div class="brand-icon">
+            <i class="fas fa-chart-line text-blue-500"></i>
+          </div>
+          <div class="brand-text-group">
+            <!-- 브랜드명을 클릭 가능한 버튼으로 변경 -->
+            <button class="brand-name orbitron footer-share-btn" id="footer-share-btn" data-tooltip="투자의 시작">
+              100x FenoK
+            </button>
+            <span class="copyright">© 2025</span>
+          </div>
+        </div>
+
+        <!-- 가운데: 상태 표시 -->
+        <div class="status-indicator hidden md:flex items-center space-x-2">
+          <div class="status-dot"></div>
+          <span class="status-text">alive</span>
+        </div>
+
+        <!-- 오른쪽: 메시지 -->
+        <div class="footer-message hidden sm:block">
+          모든 정보는 투자 참고용이지만, 손실 나면 니 탓 수익 나면 내 탓
+        </div>
+
       </div>
     </footer>
 
@@ -237,6 +177,53 @@
   if (window.top === window.self) {
     loadPage(initialPath || 'main.html');
   }
+
+  // 공유 버튼 기능 (수정된 버전)
+  const shareBtn = document.getElementById('footer-share-btn');
+
+  if (shareBtn) {
+    shareBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 현재 페이지 경로 가져오기 (loadPage.js에서 설정한 전역 변수 사용)
+      const currentPath = window.currentActivePage || 'main.html';
+
+      // 완전한 URL 구성
+      const baseURL = window.location.origin + window.location.pathname;
+      const completeURL = `${baseURL}?path=${currentPath}`;
+
+      // URL 복사
+      navigator.clipboard.writeText(completeURL).then(() => {
+        showCopyNotification('URL이 복사되었습니다!');
+      }).catch(() => {
+        // 복사 실패 시 대체 방법 (구형 브라우저 대응)
+        showCopyNotification('URL 복사에 실패했습니다');
+      });
+    });
+  }
+
+  // 복사 완료 알림 함수
+  function showCopyNotification(message) {
+    // 버튼에 시각적 피드백 추가
+    if (shareBtn) {
+      shareBtn.classList.add('copied');
+      shareBtn.title = message;
+
+      // 2초 후 원래 상태로 복원
+      setTimeout(() => {
+        shareBtn.classList.remove('copied');
+        shareBtn.title = '투자의 시작';
+      }, 2000);
+    }
+
+    // 간단한 알림 (선택사항)
+    console.log(message);
+  }
+
+
+
+
 </script>
 </body>
 

@@ -26,7 +26,6 @@ export function loadPage(pageUrl) {
 
   const normalize = url => url.replace(window.baseHref, '').replace(/^\.\//, '').replace(/^\//, '');
   const target = normalize(pageUrl);
-  currentActivePage = target;
 
   document.querySelectorAll('#nav a[data-path]').forEach(a => {
     const isActive = normalize(a.getAttribute('data-path')) === target;
