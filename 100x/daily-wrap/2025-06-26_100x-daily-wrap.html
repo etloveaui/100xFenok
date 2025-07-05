@@ -1,9 +1,4 @@
 <!DOCTYPE html><!-- 
-<script>
-if (window.top === window.self) {
-  window.location.href = "index.html?path=100x/daily-wrap/2025-06-26_100x-daily-wrap.html";
-}
-</script>
     ================================================================================
     LLM 및 개발자를 위한 100x Daily Wrap 페이지 제작 가이드 (FenoK's Philosophy)
     ================================================================================
@@ -63,6 +58,8 @@ if (window.top === window.self) {
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
+<script type="module" src="../../initBaseHref.js"></script>
+<div id="nav"></div>
     <!-- SPA shell(index.html) handles navigation -->
 
 
@@ -451,13 +448,7 @@ if (window.top === window.self) {
     </section>
 
     <!-- Footer -->
-    <footer class="py-12 px-6 bg-slate-50">
-        <div class="container mx-auto text-center text-slate-500">
-            <div class="text-xl font-bold mb-2 orbitron text-slate-800">El Fenomeno Kim</div>
-            <p class="mb-4 text-sm">The Ultimate Investment Knowledge Platform</p>
-            <p class="text-xs text-slate-400">© 2025 FenoK. 모든 정보는 투자 참고용이지만, 손실 나면 니 탓, 수익 나면 내 탓.<br>100x • QUANTUM POWERED</p>
-        </div>
-    </footer>
+    
 
     <!-- JavaScript: 페이지 로딩 후 차트를 동적으로 생성 -->
     <script defer="">
@@ -493,8 +484,6 @@ if (window.top === window.self) {
             }
         });
     </script>
-if (window.top === window.self) {
-}</script>
 
 
 </body></html>
