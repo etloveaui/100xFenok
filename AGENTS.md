@@ -50,6 +50,8 @@ This document outlines structural, behavioral, and coding conventions for Codex 
 - `data-path="..."` is used for internal SPA navigation.
 - Avoid `./` and `../` except for scripts or assets.
 - `<a>` tags used for routing must **always** include `data-path`.
+- All internal links should point to `index.html?path=...` rather than directly to HTML files.
+- `404.html` exists solely to redirect unknown URLs back to `index.html?path=...`.
 
 ---
 
