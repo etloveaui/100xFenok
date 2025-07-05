@@ -5,7 +5,7 @@
 /* 전체 네비게이션 바 스타일 */
 .enhanced-nav {
   font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(248,250,252,0.85) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(248, 250, 252, 0.85) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(226, 232, 240, 0.7);
@@ -98,7 +98,7 @@
   .brand-text {
     color: #1e293b !important;
   }
-  
+
   .logo-section:hover .brand-text {
     color: #3b82f6 !important;
   }
@@ -110,9 +110,147 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
-  
+
   .nav-item {
     font-size: 1rem;
     font-weight: 600 !important;
+  }
+}
+
+/* ========================================
+   세련된 플로팅 메뉴 - 통일된 블루 톤
+   ======================================== */
+
+.combined-floating-menu {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* 메인 토글 버튼 - 블루 톤 */
+.main-toggle-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.25); /* 통일된 블루 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 2px 12px rgba(59, 130, 246, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #3b82f6; /* 블루 아이콘 */
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-toggle-btn:hover {
+  background: rgba(59, 130, 246, 0.9); /* 호버 시 진한 블루 */
+  color: white;
+  transform: scale(1.08);
+  box-shadow: 
+    0 4px 20px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.main-toggle-btn.active {
+  background: rgba(59, 130, 246, 1);
+  color: white;
+  transform: rotate(45deg) scale(1.05);
+  box-shadow: 
+    0 6px 25px rgba(59, 130, 246, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+/* 서브 버튼 컨테이너 */
+.sub-buttons {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(15px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sub-buttons.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* 서브 버튼들 - 모두 같은 블루 톤 */
+.sub-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.2); /* 통일된 블루 배경 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 2px 10px rgba(59, 130, 246, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #3b82f6; /* 통일된 블루 아이콘 */
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* ========================================
+   왼쪽 공유 버튼 스타일 (수정된 버전)
+   ======================================== */
+
+/* 공유 버튼 컨테이너 - 왼쪽으로 배치 */
+.share-button {
+  position: absolute;
+  bottom: 4px; /* 메인 버튼과 같은 높이 */
+  left: -50px; /* 메인 버튼 왼쪽에 배치 */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-15px); /* 왼쪽에서 나오도록 */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 메뉴 활성화 시 공유 버튼 나타남 */
+.combined-floating-menu .main-toggle-btn.active ~ .share-button {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0); /* 제자리로 */
+  transition-delay: 0.15s; /* 다른 버튼들 다음에 나타남 */
+}
+
+/* 공유 버튼 특별 스타일 */
+.share-sub {
+  background: rgba(34, 197, 94, 0.2) !important; /* 녹색 톤 */
+  color: #22c55e !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+.share-sub:hover {
+  background: rgba(34, 197, 94, 0.9) !important;
+  color: white !important;
+  transform: translateX(6px) scale(1.15) !important; /* 왼쪽으로 더 나가도록 */
+  box-shadow: 
+    0 4px 15px rgba(34, 197, 94, 0.25),
+    0 0 0 1px rgba(34, 197, 94, 0.4) !important;
+}
+
+/* 모바일에서 위치 조정 */
+@media (max-width: 640px) {
+  .share-button {
+    left: -46px; /* 모바일에서는 더 가깝게 */
   }
 }
