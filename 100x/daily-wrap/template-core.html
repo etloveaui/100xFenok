@@ -68,26 +68,26 @@
     <!-- 핵심 지표 섹션 -->
     <section class="container mx-auto px-4 mb-8 md:mb-12">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <!-- [수정] 각 지표의 이름, 값, 변동률을 입력하세요. 양수일 경우 text-green-600, 음수일 경우 text-red-600 클래스를 사용하세요. -->
+            <!-- [수정] 각 지표의 이름, 값, 변동률을 입력하세요. 긍정적일 경우 text-green-600, 부정적일 경우 text-red-600 클래스를 사용하세요. -->
             <div class="bg-white rounded-lg p-4 text-center card-shadow">
                 <h4 class="text-sm font-semibold text-gray-500">S&amp;P 500</h4>
-                <p class="text-2xl font-bold text-green-600">[지수 값]</p>
-                <p class="text-sm font-semibold text-green-600">[+0.00%]</p>
+				<p class="text-2xl font-bold">[지수 값]</p>
+				<p class="text-sm font-semibold">[+0.00%]</p>
             </div>
             <div class="bg-white rounded-lg p-4 text-center card-shadow">
                 <h4 class="text-sm font-semibold text-gray-500">Nasdaq 100</h4>
-                <p class="text-2xl font-bold text-green-600">[지수 값]</p>
-                <p class="text-sm font-semibold text-green-600">[+0.00%]</p>
+				<p class="text-2xl font-bold">[지수 값]</p>
+				<p class="text-sm font-semibold">[+0.00%]</p>
             </div>
             <div class="bg-white rounded-lg p-4 text-center card-shadow">
                 <h4 class="text-sm font-semibold text-gray-500">VIX</h4>
-                <p class="text-2xl font-bold text-green-600">[지수 값]</p>
-                <p class="text-sm font-semibold text-green-600">[+0.00%]</p>
+				<p class="text-2xl font-bold">[지수 값]</p>
+				<p class="text-sm font-semibold">[-0.10%]</p>
             </div>
              <div class="bg-white rounded-lg p-4 text-center card-shadow">
                 <h4 class="text-sm font-semibold text-gray-500">10-Y Treasury</h4>
-                <p class="text-2xl font-bold text-red-600">[금리 값]</p>
-                <p class="text-sm font-semibold text-red-600">[-0bp]</p>
+				<p class="text-2xl font-bold">[금리 값]</p>
+				<p class="text-sm font-semibold">[-0.10%]</p>
             </div>
         </div>
     </section>
@@ -250,17 +250,17 @@
                         <div class="bg-white p-3 rounded-lg shadow-sm">
                             <p class="text-sm text-gray-900 font-bold mb-2">Fed Balance Sheet</p>
 							<p class="font-bold text-sm text-gray-400 mb-1">[Fed 금액]</p>
-                            <p class="font-bold text-lg text-red-600">[Fed 상태 축소, 중립, 개선]</p>
+                            <p class="font-bold text-lg">[Fed 상태 축소, 중립, 개선]</p>
                         </div>
                         <div class="bg-white p-3 rounded-lg shadow-sm">
                             <p class="text-sm text-gray-900 font-bold mb-2">TGA</p>
 							<p class="font-bold text-sm text-gray-400 mb-1">[TGA 금액]</p>
-                            <p class="font-bold text-lg text-gray-600">[TGA 상태 축소, 중립, 개선]</p>
+                            <p class="font-bold text-lg">[TGA 상태 축소, 중립, 개선]</p>
                         </div>
                         <div class="bg-white p-3 rounded-lg shadow-sm">
                             <p class="text-sm text-gray-900 font-bold mb-2">RRP</p>
 							<p class="font-bold text-sm text-gray-400 mb-1">[RRP 금액]</p>
-                            <p class="font-bold text-lg text-green-600">[RRP 상태 축소, 중립, 개선]</p>
+                            <p class="font-bold text-lg">[RRP 상태 축소, 중립, 개선]</p>
                         </div>
                     </div>
 					  <!-- [수정] Key Driver에 대한 설명을 입력하세요. -->
@@ -376,33 +376,33 @@
 						<!-- [수정] Major Indices & Volatility 자산의 데이터를 입력하세요. -->
 						<!-- [DAY 변화율], [Close], [YTD 변화율], [Note], [색상클래스] text-green-600 or text-red-600 지정 필요 -->						
 						<div x-show="tab === 'indices'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-chart-line text-blue-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">S&amp;P 500</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-microchip text-purple-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Nasdaq 100</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cubes text-gray-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Russell 2000</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-sort-amount-up-alt text-red-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">VIX</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[+X.XXpt]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-chart-line text-blue-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">S&amp;P 500</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-microchip text-purple-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Nasdaq 100</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cubes text-gray-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Russell 2000</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-sort-amount-up-alt text-red-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">VIX</span></div><div class="flex items-center"><span>[+X.XXpt]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
 						</div>
 						<!-- [수정] Fixed Income & Currencies 자산의 데이터를 입력하세요. -->
 						<!-- [DAY 변화율], [Close], [YTD 변화율], [Note], [색상클래스] text-green-600 or text-red-600 지정 필요 -->
 						<div x-show="tab === 'fixed_income_fx'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">2Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">10Y Treasury</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-dollar-sign text-teal-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">DXY (달러)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-won-sign text-amber-600 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">USD/KRW</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">2Y Treasury</span></div><div class="flex items-center"><span>[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">10Y Treasury</span></div><div class="flex items-center"><span>[-Xbp]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> [X.XX%] / <b>YTD:</b> <span class="na-value">-</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-dollar-sign text-teal-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">DXY (달러)</span></div><div class="flex items-center"><span>[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-won-sign text-amber-600 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">USD/KRW</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
 						</div>
 						<!-- [수정] Commodities 자산의 데이터를 입력하세요. -->
 						<!-- [DAY 변화율], [Close], [YTD 변화율], [Note], [색상클래스] text-green-600 or text-red-600 지정 필요 -->					
 						<div x-show="tab === 'commodities'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Gold (XAUUSD)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-coins text-slate-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Silver (SLV)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cog text-rose-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Copper (CPER)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-oil-can text-gray-800 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">WTI Oil</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-burn text-yellow-600 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Natural Gas (UNG)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-red-600">[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Gold (XAUUSD)</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-coins text-slate-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Silver (SLV)</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cog text-rose-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Copper (CPER)</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-oil-can text-gray-800 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">WTI Oil</span></div><div class="flex items-center"><span>[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-burn text-yellow-600 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Natural Gas (UNG)</span></div><div class="flex items-center"><span>[-X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[-X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
 						</div>
 						<!-- [수정] Digital Assets 자산의 데이터를 입력하세요. -->
 						<!-- [DAY 변화율], [Close], [YTD 변화율], [Note], [색상클래스] text-green-600 or text-red-600 지정 필요 -->
 						<div x-show="tab === 'digital_assets'" class="space-y-2">
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-bitcoin text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">BTC/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
-							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-ethereum text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">ETH/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span class="text-green-600">[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-bitcoin text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">BTC/USD</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-ethereum text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">ETH/USD</span></div><div class="flex items-center"><span>[+X.XX%]</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> [종가] / <b>YTD:</b> <span>[+X.XX%]</span></p><p class="mt-1 text-xs text-gray-600">[코멘트]</p></div></div>
 						</div>
 					</div>
 				</div>
@@ -427,21 +427,21 @@
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
 						<!-- [수정] S&P 500 vs. 10-Y Treasury  -->
 						<p class="text-sm font-semibold text-gray-700">S&amp;P 500 vs 10년물 금리</p>
-						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
+						<p class="text-3xl font-bold my-2 flex items-center justify-center">
 							<i class="fas fa-link-slash mr-2"></i> [Correlation]
 						</p>
 						<p class="text-xs text-gray-500">[Interpretation]</p>
 					</div>
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
 						<p class="text-sm font-semibold text-gray-700">S&amp;P 500 vs 금</p>
-						<p class="text-3xl font-bold my-2 text-gray-500 flex items-center justify-center">
+						<p class="text-3xl font-bold my-2 flex items-center justify-center">
 							<i class="fas fa-arrows-left-right-to-line mr-2"></i> [Correlation]
 						</p>
 						<p class="text-xs text-gray-500">[Interpretation]</p>
 					</div>
 					<div class="bg-white rounded-lg p-4 text-center shadow-md">
 						<p class="text-sm font-semibold text-gray-700">달러 vs S&amp;P 500</p>
-						<p class="text-3xl font-bold my-2 text-green-600 flex items-center justify-center">
+						<p class="text-3xl font-bold my-2 flex items-center justify-center">
 							<i class="fas fa-link mr-2"></i> [Correlation]
 						</p>
 						<p class="text-xs text-gray-500">[Interpretation]</p>
@@ -497,10 +497,10 @@
 						</div>
 						<div class="bg-gray-50 rounded-lg p-4">
 							<p class="text-sm text-gray-500">[투자은행(Bank)]</p>
-							<p class="font-bold text-lg">[종목명 (TICKER)] <span class="text-green-600 font-semibold ml-2">[Action 상향/하향/신규]</span></p>
+							<p class="font-bold text-lg">[종목명 (TICKER)] <span class="font-semibold ml-2">[Action 상향/하향/신규]</span></p>
 							<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
 								<span>목표가: <b class="text-gray-800">[목표가(New PT)]</b></span>
-								<span>상승여력: <b class="text-green-600">[상승여력(Upside %)]</b></span>
+								<span>상승여력: <b>[상승여력(Upside %)]</b></span>
 							</div>
 							<p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> [코멘트(Impact)]</p>
 						</div>
@@ -512,10 +512,10 @@
 						</div>
 						<div class="bg-gray-50 rounded-lg p-4">
 							<p class="text-sm text-gray-500">[투자은행(Bank)]</p>
-							<p class="font-bold text-lg">[종목명 (TICKER)] <span class="text-red-600 font-semibold ml-2">[Action 상향/하향/신규]</span></p>
+							<p class="font-bold text-lg">[종목명 (TICKER)] <span class="font-semibold ml-2">[Action 상향/하향/신규]</span></p>
 							 <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
 								<span>목표가: <b class="text-gray-800">[목표가(New PT)]</b></span>
-								<span>상승여력: <b class="text-red-600">[상승여력(Upside %)]</b></span>
+								<span>상승여력: <b>[상승여력(Upside %)]</b></span>
 							</div>
 							<p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> [코멘트(Impact)]</p>
 						</div>
@@ -568,7 +568,7 @@
 								<div class="flex items-center justify-between border-b border-blue-200 pb-3">
 									<span class="font-semibold text-blue-700">100x Reality Score:</span>
 									<!-- [수정] Reality Label 색상: 과열(text-red-600), 조정(text-orange-600), 중립(text-gray-600), 저평가(text-green-600) -->
-									<span class="font-bold text-lg text-blue-800">[Reality Score]/5 <span class="text-sm text-orange-600">([Reality Label])</span></span>
+									<span class="font-bold text-lg text-blue-800">[Reality Score]/5 <span class="text-sm">([Reality Label])</span></span>
 								</div>
 								
 								<!-- Action -->
@@ -1013,17 +1013,17 @@
 							<!-- 기본 정보 -->
 							<div class="bg-white rounded-lg p-3 border border-green-200">
 								<div class="grid grid-cols-2 gap-3">
-									<div><span class="font-semibold text-gray-700">진입:</span> <span class="text-green-700 font-bold">[진입가]</span></div>
-									<div><span class="font-semibold text-gray-700">목표:</span> <span class="text-green-700 font-bold">[목표가]</span></div>
-									<div><span class="font-semibold text-gray-700">손절:</span> <span class="text-red-600 font-bold">[손절가]</span></div>
-									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="text-gray-800 font-bold">[포지션 크기]</span></div>
+									<div><span class="font-semibold text-gray-700">진입:</span> <span class="font-bold">[진입가]</span></div>
+									<div><span class="font-semibold text-gray-700">목표:</span> <span class="font-bold">[목표가]</span></div>
+									<div><span class="font-semibold text-gray-700">손절:</span> <span class="font-bold">[손절가]</span></div>
+									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="font-bold">[포지션 크기]</span></div>
 								</div>
 							</div>
 							
 							<!-- 리스크/리워드 -->
 							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-green-200">
 								<span class="font-semibold text-gray-700">Risk/Reward:</span>
-								<span class="text-green-700 font-bold">[Risk/Reward 비율]</span>
+								<span class="font-bold">[Risk/Reward 비율]</span>
 							</div>
 							
 							<!-- 승률 -->
@@ -1058,25 +1058,24 @@
 							<!-- 기본 정보 -->
 							<div class="bg-white rounded-lg p-3 border border-blue-200">
 								<div class="grid grid-cols-2 gap-3">
-									<div><span class="font-semibold text-gray-700">진입:</span> <span class="text-blue-700 font-bold">[진입가]</span></div>
-									<div><span class="font-semibold text-gray-700">목표:</span> <span class="text-blue-700 font-bold">[목표가]</span></div>
-									<div><span class="font-semibold text-gray-700">손절:</span> <span class="text-red-600 font-bold">[손절가]</span></div>
-									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="text-gray-800 font-bold">[포지션 크기]</span></div>
+									<div><span class="font-semibold text-gray-700">진입:</span> <span class="font-bold">[진입가]</span></div>
+									<div><span class="font-semibold text-gray-700">목표:</span> <span class="font-bold">[목표가]</span></div>
+									<div><span class="font-semibold text-gray-700">손절:</span> <span class="font-bold">[손절가]</span></div>
+									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="font-bold">[포지션 크기]</span></div>
 								</div>
 							</div>
 							
 							<!-- 리스크/리워드 -->
 							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-blue-200">
 								<span class="font-semibold text-gray-700">Risk/Reward:</span>
-								<span class="text-blue-700 font-bold">[Risk/Reward 비율]</span>
+								<span class="font-bold">[Risk/Reward 비율]</span>
 							</div>
 							
 							<!-- 승률 -->
-							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-blue-200">
+							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-green-200">
 								<span class="font-semibold text-gray-700">승률:</span>
 								<span class="text-blue-600 font-bold">[Win Rate]%</span>
-							</div>
-							
+							</div>							
 							<!-- 촉매 -->
 							<div class="bg-white rounded-lg p-3 border border-blue-200">
 								<p class="font-semibold text-gray-700 mb-1">촉매:</p>
@@ -1103,17 +1102,17 @@
 							<!-- 기본 정보 -->
 							<div class="bg-white rounded-lg p-3 border border-red-200">
 								<div class="grid grid-cols-2 gap-3">
-									<div><span class="font-semibold text-gray-700">진입:</span> <span class="text-red-700 font-bold">[진입가]</span></div>
-									<div><span class="font-semibold text-gray-700">목표:</span> <span class="text-red-700 font-bold">[목표가]</span></div>
-									<div><span class="font-semibold text-gray-700">손절:</span> <span class="text-green-600 font-bold">[손절가]</span></div>
-									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="text-gray-800 font-bold">[포지션 크기]</span></div>
+									<div><span class="font-semibold text-gray-700">진입:</span> <span class="font-bold">[진입가]</span></div>
+									<div><span class="font-semibold text-gray-700">목표:</span> <span class="font-bold">[목표가]</span></div>
+									<div><span class="font-semibold text-gray-700">손절:</span> <span class="font-bold">[손절가]</span></div>
+									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="font-bold">[포지션 크기]</span></div>
 								</div>
 							</div>
 							
 							<!-- 리스크/리워드 -->
 							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-red-200">
 								<span class="font-semibold text-gray-700">Risk/Reward:</span>
-								<span class="text-red-700 font-bold">[Risk/Reward 비율]</span>
+								<span class="font-bold">[Risk/Reward 비율]</span>
 							</div>
 							
 							<!-- 승률 -->
@@ -1653,5 +1652,6 @@
         });
     </script>
 
-
-</body></html>
+	<script src="./daily-wrap-system/dynamic-colors.js"></script>
+</body>
+</html>
