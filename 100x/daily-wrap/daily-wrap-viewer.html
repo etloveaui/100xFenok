@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 렌더러에 의해 동적으로 채워질 제목 -->
+    <title>100x Daily Wrap</title>
+    
+    <!-- 외부 라이브러리 및 스타일시트 연결 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* 기본 스타일 */
+        body { font-family: 'Noto Sans KR', 'Roboto', sans-serif; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #e5e7eb; padding: 10px 14px; text-align: left; vertical-align: middle; }
+        th { background-color: #f9fafb; font-weight: 600; }
+        tbody tr:hover { background-color: #f3f4f6; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 500; }
+        .na-value { color: #9ca3af; font-style: italic;}
+        
+        /* 플립 카드 애니메이션용 스타일 */
+        .transform-style-3d { transform-style: preserve-3d; }
+		.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+		.rotate-y-180 { transform: rotateY(180deg); }
+
+        /* 로딩 스타일 */
+        #report-content-wrapper { visibility: hidden; }
+        .loading-placeholder { text-align: center; padding: 80px; font-size: 1.2rem; color: #999; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+
+    <!-- 데이터가 로드되기 전 표시될 플레이스홀더 -->
+    <div id="loading-indicator" class="loading-placeholder">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p class="mt-4">리포트를 불러오는 중입니다...</p>
+    </div>
+
+    <!-- 리포트 전체 콘텐츠를 감싸는 래퍼 -->
+    <div id="report-content-wrapper">
+
+        <!-- 헤더 -->
+        <header class="bg-slate-50 border-b border-slate-200">
+            <div class="container mx-auto px-4 py-8 md:py-10">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="text-center md:text-left">
+                        <h1 class="text-4xl md:text-5xl font-bold orbitron text-slate-800">100x Daily Wrap</h1>
+                        <p id="report-title-date" class="text-lg text-slate-500 mt-2"></p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-bullseye text-3xl text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-semibold text-blue-600">오늘의 핵심 논점</h2>
+                                <p id="todays-thesis-headline" class="text-lg font-semibold text-slate-700 mt-1"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- 핵심 지표 섹션 -->
+        <section class="container mx-auto px-4 my-8 md:my-12">
+            <div id="key-indicators-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- renderer.js에 의해 동적으로 채워짐 -->
+            </div>
+        </section>
+        
+        <!-- S01: 오늘의 논점 -->
+        <section id="s01-thesis" class="container mx-auto px-4 my-8 md:my-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s01-title" class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"></h2>
+                <div id="s01-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S02: 시장 동향 -->
+        <section id="s02-market-pulse" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s02-title" class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"></h2>
+                <div id="s02-content-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+                 <div id="s02-liquidity-indicator-container" class="mt-6">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S03: 멀티에셋 대시보드 -->
+        <section id="s03-multi-asset" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s03-title" class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"></h2>
+                <div id="s03-gainers-losers-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+                <div id="s03-performance-summary-container">
+                    <!-- renderer.js에 의해 동적으로 채워짐 (탭 및 아코디언 포함) -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S04: 상관관계 및 변동성 -->
+        <section id="s04-correlation" class="container mx-auto px-4 mb-8 md:mb-12">
+             <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s04-title" class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"></h2>
+                <div id="s04-content-container">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S05: 월스트리트 최신 정보 -->
+        <section id="s05-wall" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s05-title" class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"></h2>
+                <div id="s05-content-container">
+                    <!-- renderer.js에 의해 동적으로 채워짐 (타임라인 포함) -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S06: 기관 자금 흐름 -->
+        <section id="s06-flows" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s06-title" class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"></h2>
+                <div id="s06-content-container">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S07: 섹터 및 순환 동향 -->
+        <section id="s07-sector-pulse" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s07-title" class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"></h2>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">섹터 퍼포먼스 히트맵</h3>
+                    <div id="sector-heatmap" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-white">
+                        <!-- renderer.js가 이 곳을 채웁니다. -->
+                    </div>
+                </div>
+                <div id="s07-rotation-container" class="mt-8 pt-6 border-t border-gray-200">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S08: 100x Tech Radar -->
+        <section id="s08-tech-radar" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s08-title" class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"></h2>
+                <div id="s08-tickers-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8" style="perspective: 1000px;">
+                    <!-- renderer.js에 의해 동적으로 채워짐 (플립 카드) -->
+                </div>
+                <div id="s08-ecosystem-container" class="mt-8 pt-6 border-t border-gray-200">
+                     <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S09: 실전 매매 시그널 -->
+        <section id="s09-trade-signals" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s09-title" class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center"></h2>
+                <div id="s09-content-container">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S10: 내일의 주요 이벤트 -->
+        <section id="s10-catalysts" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s10-title" class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center"></h2>
+                <div id="s10-content-container">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- S11: 부록 -->
+        <section id="s11-appendix" class="container mx-auto px-4 mb-8 md:mb-12">
+            <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+                <h2 id="s11-title" class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center"></h2>
+                <div id="s11-content-container">
+                    <!-- renderer.js에 의해 동적으로 채워짐 -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 분리된 자체 스크립트 연결 -->
+    <!-- Alpine.js는 상호작용을 위해 먼저 로드될 수 있습니다. -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="./daily-wrap-system/renderer.js"></script>
+    <!-- <script src="./daily-wrap-system/interactions.js"></script> --> <!-- 필요 시 추가 상호작용 스크립트 -->
+
+</body>
+</html>
