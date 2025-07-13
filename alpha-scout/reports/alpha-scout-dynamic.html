@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; color: #1f2937; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .content-card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.07); padding: 2rem; }
+        .section-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; }
+        .section-subtitle { font-size: 1rem; color: #4b5563; margin-bottom: 2.5rem; }
+        .summary-highlight { text-align: center; margin-bottom: 3rem; }
+        .summary-title { font-size: 1.25rem; font-weight: 600; color: #4b5563; margin-bottom: 1rem; }
+        .summary-headline { font-size: 2.25rem; font-weight: 700; color: #111827; margin-bottom: 1rem; }
+        .summary-text { font-size: 1.125rem; color: #374151; max-width: 48rem; margin: auto; }
+        .stat-card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; text-align: center; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.07); }
+        .stat-label { font-size: 0.875rem; font-weight: 500; color: #6b7280; margin-bottom: 0.5rem; }
+        .stat-number { font-size: 1.875rem; font-weight: 700; }
+        .text-positive { color: #16a34a; }
+        .text-negative { color: #dc2626; }
+        .text-neutral { color: #4b5563; }
+        .sector-card { background-color: white; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1.5rem; transition: all 0.3s; }
+        .sector-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .sector-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .sector-card-title { font-size: 1.125rem; font-weight: 600; }
+        .sector-valuation-label { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 9999px; }
+        .sector-perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: center; }
+        .sector-perf-item .perf-label { font-size: 0.75rem; color: #6b7280; }
+        .sector-perf-item .perf-value { font-size: 1.25rem; font-weight: 700; }
+        .company-card { background-color: white; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1.5rem; display: flex; flex-direction: column; height: 100%; transition: box-shadow 0.3s, transform 0.3s; }
+        .company-card:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); transform: translateY(-4px); }
+        .ticker-symbol { font-size: 1.5rem; font-weight: 700; }
+        .company-name { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; }
+        .theme-badge { background-color: #eef2ff; color: #4338ca; font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.75rem; border-radius: 9999px; align-self: flex-start; }
+        .momentum-badge { background-color: #f0fdf4; color: #166534; font-size: 0.875rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 9999px; align-self: flex-start; }
+        .metric-minicard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+        .metric-minicard { background-color: #f9fafb; border: 1px solid #f3f4f6; border-radius: 0.5rem; padding: 1rem; text-align: center; }
+        .metric-minicard-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem; }
+        .metric-minicard-value { font-size: 1.25rem; font-weight: 600; }
+        .analysis-box { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #f3f4f6; }
+        .analysis-item { margin-bottom: 1rem; }
+        .analysis-item-title { font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: flex; align-items: center; }
+        .analysis-item-title .fa-check-circle { color: #6366f1; margin-right: 0.5rem; font-size: 0.875rem; }
+        .analysis-item-desc { font-size: 0.875rem; color: #4b5563; padding-left: 1.375rem; }
+        .expand-button { margin-top: auto; background-color: #f9fafb; border: 1px solid #e5e7eb; color: #374151; font-weight: 500; width: 100%; padding: 0.75rem; border-radius: 0.5rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; transition: background-color 0.2s; }
+        .expand-button:hover { background-color: #f3f4f6; }
+        .table-container { border: 1px solid #e5e7eb; border-radius: 0.75rem; overflow: hidden; }
+        .table-header { background-color: #f9fafb; }
+        .table-header th { color: #374151; }
+        .table-row:hover { background-color: #f9fafb; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body x-data="report" x-init="fetchData" x-cloak class="antialiased">
+
+    <header class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="container mx-auto px-6 py-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold orbitron text-gray-900 mb-2">100x Alpha Scout</h1>
+            <p class="text-lg text-gray-600 mt-2"><span x-text="reportDate"></span> | Premium Weekly Intelligence</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 my-16">
+        <!-- 금주의 시장 요약 -->
+        <section class="mb-20">
+            <div class="summary-highlight">
+                <h2 class="summary-title">금주의 시장 요약</h2>
+                <p class="summary-headline" x-text="marketSummary.headline"></p>
+                <p class="summary-text" x-text="marketSummary.summary"></p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="stat-card">
+                    <h4 class="stat-label">S&P 500 (주간)</h4>
+                    <p class="stat-number" :class="marketSummary.sp500.colorClass" x-text="marketSummary.sp500.changePercent + '%'"></p>
+                    <div class="text-sm text-gray-500" x-text="marketSummary.sp500.price"></div>
+                </div>
+                <div class="stat-card">
+                    <h4 class="stat-label">Nasdaq 100 (주간)</h4>
+                    <p class="stat-number" :class="marketSummary.nasdaq.colorClass" x-text="marketSummary.nasdaq.changePercent + '%'"></p>
+                    <div class="text-sm text-gray-500" x-text="marketSummary.nasdaq.price"></div>
+                </div>
+                <div class="stat-card">
+                    <h4 class="stat-label">10년물 국채금리</h4>
+                    <p class="stat-number" :class="marketSummary.tenYear.colorClass" x-text="marketSummary.tenYear.changeBp + 'bp'"></p>
+                    <div class="text-sm text-gray-500" x-text="marketSummary.tenYear.yield + '%'"></div>
+                </div>
+                <div class="stat-card">
+                    <h4 class="stat-label">VIX</h4>
+                    <p class="stat-number" :class="marketSummary.vix.colorClass" x-text="marketSummary.vix.changePercent + '%'"></p>
+                    <div class="text-sm text-gray-500" x-text="marketSummary.vix.price"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 주간 섹터 퍼포먼스 -->
+        <section class="mb-20">
+            <h2 class="section-title"><i class="fas fa-layer-group mr-3 text-blue-600"></i>주간 섹터 퍼포먼스</h2>
+            <p class="section-subtitle">주간 및 연초 대비 성과와 밸류에이션을 통해 섹터별 현황을 종합적으로 분석합니다.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="sector in sectors" :key="sector.name">
+                    <div class="sector-card">
+                        <div class="sector-card-header">
+                            <h3 class="sector-card-title" x-text="sector.name"></h3>
+                            <span class="sector-valuation-label" :class="[sector.valuation.bgClass, sector.valuation.textClass]" x-text="sector.valuation.label"></span>
+                        </div>
+                        <div class="sector-perf-grid">
+                            <div class="sector-perf-item"><p class="perf-label">주간 성과</p><p class="perf-value" :class="sector.weekly.colorClass" x-text="sector.weekly.perf + '%'"></p></div>
+                            <div class="sector-perf-item"><p class="perf-label">YTD 성과</p><p class="perf-value" :class="sector.ytd.colorClass" x-text="sector.ytd.perf + '%'"></p></div>
+                        </div>
+                        <div class="text-center mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-sm text-gray-500" x-text="sector.valuation.metricLabel"></p>
+                            <p class="text-lg font-semibold" x-text="sector.valuation.metricValue"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- 가치 투자 발굴 -->
+        <section class="mb-20">
+            <h2 class="section-title"><i class="fas fa-gem mr-3 text-indigo-600"></i>가치 투자 발굴: 저평가 우량주</h2>
+            <p class="section-subtitle">내재가치 대비 저평가된 기업을 발굴합니다. 강력한 펀더멘털과 매력적인 진입 가격을 가진 종목에 주목합니다.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <template x-for="stock in valuePicks" :key="stock.ticker">
+                    <div x-data="{ open: false }" class="company-card">
+                        <div>
+                            <div class="flex justify-between items-start mb-4">
+                                <div><p class="ticker-symbol" x-text="stock.ticker"></p><p class="company-name" x-text="stock.name"></p></div>
+                                <span class="theme-badge" x-text="stock.theme"></span>
+                            </div>
+                            <div class="metric-minicard-grid">
+                                <template x-for="metric in stock.metrics" :key="metric.label">
+                                    <div class="metric-minicard">
+                                        <p class="metric-minicard-label" x-text="metric.label"></p>
+                                        <p class="metric-minicard-value" x-text="metric.value"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div x-show="open" x-transition class="analysis-box">
+                            <template x-for="insight in stock.insights" :key="insight.title">
+                                <div class="analysis-item">
+                                    <h4 class="analysis-item-title"><i class="fas fa-check-circle"></i><span x-text="insight.title"></span></h4>
+                                    <p class="analysis-item-desc" x-text="insight.description"></p>
+                                </div>
+                            </template>
+                        </div>
+                        <button @click="open = !open" class="expand-button"><span x-text="open ? '간략히 보기' : '자세히 보기'"></span><i class="fas fa-chevron-down transition-transform" :class="open && 'rotate-180'"></i></button>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- 모멘텀 트래커 -->
+        <section class="mb-16">
+            <h2 class="section-title"><i class="fas fa-rocket mr-3 text-green-600"></i>모멘텀 트래커: 시장 주도주</h2>
+            <p class="section-subtitle">시장의 흐름을 주도하는 강력한 상승 동력을 가진 종목을 선별합니다. 기술적 지표와 수급을 함께 분석합니다.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <template x-for="stock in momentumPicks" :key="stock.ticker">
+                    <div x-data="{ open: false }" class="company-card">
+                        <div>
+                            <div class="flex justify-between items-start mb-4">
+                                <div><p class="ticker-symbol" x-text="stock.ticker"></p><p class="company-name" x-text="stock.name"></p></div>
+                                <span class="momentum-badge" x-text="'주간 ' + stock.performance + '%'"></span>
+                            </div>
+                            <div class="metric-minicard-grid">
+                                <template x-for="metric in stock.metrics" :key="metric.label">
+                                    <div class="metric-minicard">
+                                        <p class="metric-minicard-label" x-text="metric.label"></p>
+                                        <p class="metric-minicard-value" x-text="metric.value"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div x-show="open" x-transition class="analysis-box">
+                            <template x-for="insight in stock.insights" :key="insight.title">
+                                <div class="analysis-item">
+                                    <h4 class="analysis-item-title"><i class="fas fa-check-circle"></i><span x-text="insight.title"></span></h4>
+                                    <p class="analysis-item-desc" x-text="insight.description"></p>
+                                </div>
+                            </template>
+                        </div>
+                        <button @click="open = !open" class="expand-button"><span x-text="open ? '간략히 보기' : '자세히 보기'"></span><i class="fas fa-chevron-down transition-transform" :class="open && 'rotate-180'"></i></button>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- 월스트리트 컨센서스 -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-university mr-3 text-gray-500"></i>월스트리트 컨센서스: Top 10 IB 의견</h2>
+            <p class="section-subtitle">기관들의 최신 시각을 통해 시장의 컨센서스 변화를 확인합니다.</p>
+            <div class="table-container">
+                <table class="w-full text-sm min-w-[900px]">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="p-4 text-left font-semibold">순위</th><th class="p-4 text-left font-semibold">종목명</th><th class="p-4 text-left font-semibold">투자은행</th><th class="p-4 text-left font-semibold">날짜</th><th class="p-4 text-center font-semibold">의견</th><th class="p-4 text-right font-semibold">목표주가</th><th class="p-4 text-left font-semibold w-1/3">핵심 코멘트</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <template x-for="(opinion, index) in consensus" :key="index">
+                            <tr class="table-row">
+                                <td class="p-4 font-bold text-gray-500" x-text="index + 1"></td>
+                                <td class="p-4 font-bold" x-text="opinion.ticker"></td>
+                                <td class="p-4 text-gray-600" x-text="opinion.bank"></td>
+                                <td class="p-4 text-gray-600" x-text="opinion.date"></td>
+                                <td class="p-4 text-center"><span class="px-3 py-1 text-xs font-semibold rounded-full" :class="[opinion.bgClass, opinion.textClass]" x-text="opinion.change"></span></td>
+                                <td class="p-4 text-right font-semibold" x-text="opinion.targetPrice"></td>
+                                <td class="p-4 text-gray-600" x-text="opinion.comment"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+		
+		<!-- 다음 주 핵심 이벤트 -->
+        <section class="mt-20">
+            <h2 class="section-title"><i class="fas fa-calendar-alt mr-3 text-purple-600"></i>다음 주 핵심 이벤트</h2>
+            <p class="section-subtitle">시장의 단기 방향성에 영향을 미칠 수 있는 주요 경제 지표 발표, 기업 실적, 정책 이벤트를 미리 확인합니다.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="event in keyEvents" :key="event.title">
+                    <div class="bg-white p-6 rounded-lg border-l-4 shadow-sm hover:shadow-lg transition-shadow duration-300" :class="event.borderColorClass">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm font-semibold px-3 py-1 rounded-full" :class="[event.categoryBgClass, event.categoryTextClass]" x-text="event.category"></span>
+                            <span class="text-sm font-medium text-gray-500" x-text="event.date"></span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-3" x-text="event.title"></h3>
+                        <p class="text-sm text-gray-600">
+                            <strong class="text-gray-700">예상 영향:</strong> <span x-text="event.impact"></span>
+                        </p>
+                    </div>
+                </template>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('report', () => ({
+                reportDate: '',
+                marketSummary: {
+                    sp500: {},
+                    nasdaq: {},
+                    tenYear: {},
+                    vix: {}
+                },
+                sectors: [],
+                valuePicks: [],
+                momentumPicks: [],
+                consensus: [],
+                keyEvents: [],
+
+                fetchData() {
+                    // ===================================================================
+                    // ⚠️ 이 부분만 수정하세요! (Edit this line only!)
+                    // 불러올 데이터 파일의 경로를 지정합니다.
+                    // ===================================================================
+                    const dataSourceFile = './data/data-template.json';
+                    
+                    fetch(dataSourceFile)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('데이터 파일을 불러오는 데 실패했습니다: ' + response.statusText);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            this.reportDate = data.reportDate;
+                            this.marketSummary = data.marketSummary;
+                            this.sectors = data.sectors;
+                            this.valuePicks = data.valuePicks;
+                            this.momentumPicks = data.momentumPicks;
+                            this.consensus = data.consensus;
+                            this.keyEvents = data.keyEvents;
+                        })
+                        .catch(error => {
+                            console.error('데이터 처리 중 오류 발생:', error);
+                            // 사용자에게 오류 메시지를 보여주는 로직을 추가할 수 있습니다.
+                            document.body.innerHTML = `<div class="h-screen flex items-center justify-center text-center"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert"><strong class="font-bold">오류 발생!</strong><span class="block sm:inline"> 데이터 파일(${dataSourceFile})을 찾을 수 없거나 형식이 올바르지 않습니다. 경로를 확인해주세요.</span></div></div>`;
+                        });
+                }
+            }))
+        })
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>
