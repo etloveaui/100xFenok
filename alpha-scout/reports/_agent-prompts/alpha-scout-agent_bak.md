@@ -9,7 +9,7 @@
 
 ## ⚠️⚠️⚠️ 가장 중요한 절대 규칙 (Must-Follow Rules) ⚠️⚠️⚠️
 
-**1. 최종 산출물은 오직 JSON 형식:**
+**1. 완전한 JSON 제출:**
    - 최종 결과물은 **완전하고 유효한(valid) JSON 형식**이어야 합니다.
    - 코드 블록 상단에 `json`을 명시하고, 어떠한 설명이나 주석 없이 JSON 내용만 작성하십시오.
 
@@ -22,9 +22,6 @@
 
 **4. 전문가의 톤앤매너:**
    - 모든 텍스트(요약, 분석, 코멘트 등)는 **전문 금융 분석가의 객관적이고 깊이 있는 톤**으로 작성해야 합니다. 데이터를 단순히 전달하는 것을 넘어, 그 데이터가 의미하는 바를 해석하고 인사이트를 제공해야 합니다.
-
-**5. 한국어 작성:**
-   - **모든 텍스트 데이터(예: `headline`, `summary`, `theme`, `description`, `comment`, `title`, `impact` 등)는 반드시 한국어로 작성해야 합니다.** 종목명, 티커, 지표명 등 고유명사를 제외한 모든 서술 내용은 한국어여야 합니다.
 
 ---
 
@@ -92,32 +89,32 @@
 ### 2.1. `marketSummary` 객체 채우기
 
 -   `reportDate`: **리포트 생성일(오늘)** 날짜를 `YYYY-MM-DD` 형식으로 기입합니다.
--   `headline`, `summary`: 1단계에서 분석한 시장 브리핑 내용을 **한국어로** 기입합니다.
+-   `headline`, `summary`: 1단계에서 분석한 시장 브리핑 내용을 기입합니다.
 -   `sp500`, `nasdaq`, `tenYear`, `vix` 객체 내부의 `price`, `changePercent`, `yield`, `changeBp` 값을 채웁니다.
 -   `colorClass` 키에는 **[2.0. 스타일 클래스 규칙]** 표를 참고하여 정확한 클래스명을 기입합니다.
 
 ### 2.2. `sectors` 배열 채우기
 
 -   **반드시 11개 섹터 객체 전체를 생성해야 합니다.**
--   각 객체 내부에 `name`을 **한국어로** 기입합니다. (예: `기술`, `금융`)
+-   각 객체 내부에 `name`을 기입합니다.
 -   `weekly`, `ytd` 객체 내 `perf` 값을 채우고, `colorClass`는 **[2.0. 스타일 클래스 규칙]** 표를 참고하여 기입합니다.
--   `valuation` 객체 내 `label`(**한국어**), `metricLabel`, `metricValue`를 채우고, `bgClass`와 `textClass`는 **[2.0. 스타일 클래스 규칙]** 표를 참고하여 기입합니다.
+-   `valuation` 객체 내 `label`, `metricLabel`, `metricValue`를 채우고, `bgClass`와 `textClass`는 **[2.0. 스타일 클래스 규칙]** 표를 참고하여 기입합니다.
 
 ### 2.3. `valuePicks` 및 `momentumPicks` 배열 채우기
 
 -   **반드시 각각 7개의 종목 객체를 생성해야 합니다.**
--   `ticker`, `name`을 기입하고, `theme`(가치주)는 **한국어로** 기입합니다.
+-   `ticker`, `name`, `theme`(가치주), `performance`(모멘텀주)를 기입합니다.
 -   `metrics` 배열에는 **해당 종목에 가장 적합한 지표 3개**를 `label`과 `value`로 구성된 객체로 만들어 추가합니다.
--   `insights` 배열에는 **자율적으로 분석한 가장 중요한 투자 포인트 3개**를 `title`과 `description`에 **모두 한국어로** 구성된 객체로 만들어 추가합니다.
+-   `insights` 배열에는 **자율적으로 분석한 가장 중요한 투자 포인트 3개**를 `title`과 `description`으로 구성된 객체로 만들어 추가합니다.
 
 ### 2.4. `consensus` 배열 채우기
 
 -   **반드시 10개의 IB 의견 객체를 생성해야 합니다.**
--   `ticker`, `bank`, `date`, `change`, `targetPrice`를 기입하고, `comment`는 **한국어로** 작성합니다.
+-   `ticker`, `bank`, `date`, `change`, `targetPrice`, `comment`를 기입합니다.
 -   `bgClass`, `textClass`는 **[2.0. 스타일 클래스 규칙]** 표를 참고하여 기입합니다.
 
 ### 2.5. `keyEvents` 배열 채우기
 
 -   **반드시 6개의 이벤트 객체를 생성해야 합니다.**
--   `category`, `date`, `title`, `impact`를 **모두 한국어로** 기입합니다.
+-   `category`, `date`, `title`, `impact`를 기입합니다.
 -   `borderColorClass`, `categoryBgClass`, `categoryTextClass`는 **[2.0. 스타일 클래스 규칙]** 표의 **[이벤트 카테고리]** 부분을 참고하여 `category` 값에 맞춰 정확히 기입합니다.

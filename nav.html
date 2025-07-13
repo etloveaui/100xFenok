@@ -1,4 +1,4 @@
-<nav class="enhanced-nav container mx-auto px-4 sm:px-6 py-3">
+<!-- <nav class="enhanced-nav container mx-auto px-4 sm:px-6 py-3">
   <div class="flex justify-between items-center">
     <a href="index.html?path=main.html" data-path="main.html"
       class="logo-section flex items-center space-x-3 text-2xl group">
@@ -8,16 +8,66 @@
     </a>
 
     <div class="nav-links hidden md:flex items-center space-x-8">
-      <a href="index.html?path=ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html"
-        class="nav-item">무한매수법</a>
-      <a href="index.html?path=vr/vr-main.html" data-path="vr/vr-main.html" class="nav-item">VR</a>
-      <a href="index.html?path=tools/asset/multichart.html" data-path="tools/asset/multichart.html"
-        class="nav-item">멀티차트</a>
       <a href="index.html?path=100x/100x-main.html" data-path="100x/100x-main.html" class="nav-item">Daily Wrap</a>
+      <a href="index.html?path=alpha-scout/alpha-scout-main.html" data-path="alpha-scout/alpha-scout-main.html" class="nav-item">Alpha Scout</a>
+      <a href="index.html?path=tools/asset/multichart.html" data-path="tools/asset/multichart.html" class="nav-item">멀티차트</a>
+      <a href="index.html?path=posts/posts-main.html" data-path="posts/posts-main.html" class="nav-item">분석</a>  
+      <a href="index.html?path=ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html" class="nav-item">무한매수법</a>
+      <a href="index.html?path=vr/vr-main.html" data-path="vr/vr-main.html" class="nav-item">VR</a>
+    </div>
+  </div>
+</nav> -->
+
+<nav class="enhanced-nav container mx-auto px-4 sm:px-6 py-3">
+  <div class="flex justify-between items-center">
+    <!-- 로고 영역 -->
+    <a href="index.html?path=main.html" data-path="main.html"
+      class="logo-section flex items-center space-x-3 text-2xl group">
+      <img src="./favicon.svg" alt="100x FenoK Icon"
+        class="h-12 w-12 transition-transform duration-300 group-hover:rotate-[-10deg]">
+      <span class="brand-text">100x FenoK</span>
+    </a>
+
+    <!-- 메뉴 영역 -->
+    <div class="nav-links hidden md:flex items-center space-x-8">
+      
+      <!-- 🧠 100x Briefing 드롭다운 -->
+      <div class="relative group">
+        <button class="nav-item flex items-center gap-1">
+          100x Briefing
+          <i class="fas fa-caret-down text-xs mt-[1px]"></i>
+        </button>
+
+        <div
+          class="absolute top-full left-0 mt-2 bg-white shadow-lg border border-gray-200 rounded-xl opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 min-w-[180px] pointer-events-auto"
+          onmouseenter="this.classList.add('hovering')" onmouseleave="this.classList.remove('hovering')">
+          
+          <!-- Daily Wrap -->
+          <a href="index.html?path=100x/100x-main.html" data-path="100x/100x-main.html"
+            class="nav-item block w-full text-left px-5 py-2.5 text-sm text-gray-800 font-medium tracking-wide hover:bg-gray-50 transition-colors duration-150">
+            Daily Wrap
+          </a>
+          
+          <!-- Alpha Scout -->
+          <a href="index.html?path=alpha-scout/alpha-scout-main.html" data-path="alpha-scout/alpha-scout-main.html"
+            class="nav-item block w-full text-left px-5 py-2.5 text-sm text-gray-800 font-medium tracking-wide hover:bg-gray-50 transition-colors duration-150">
+            Alpha Scout
+          </a>
+        </div>
+      </div>
+
+
+
+      <!-- 나머지 메뉴는 그대로 -->
+      <a href="index.html?path=tools/asset/multichart.html" data-path="tools/asset/multichart.html" class="nav-item">멀티차트</a>
       <a href="index.html?path=posts/posts-main.html" data-path="posts/posts-main.html" class="nav-item">분석</a>
+      <a href="index.html?path=ib/ib-total-guide-calculator.html" data-path="ib/ib-total-guide-calculator.html" class="nav-item">무한매수법</a>
+      <a href="index.html?path=vr/vr-main.html" data-path="vr/vr-main.html" class="nav-item">VR</a>
     </div>
   </div>
 </nav>
+
+
 
 <div class="combined-floating-menu lg:hidden">
   <button class="main-toggle-btn" id="main-toggle">
