@@ -24,6 +24,15 @@ export function loadPage(pageUrl) {
   const fullUrl = `${resolvedUrl}?v=${siteVersion}`;
   document.getElementById('content-frame').src = fullUrl;
 
+  // ==========================================================
+  // ★ 아이폰 뒤로가기 수정을 위해 이 부분을 추가하세요.
+  // ==========================================================
+  const state = { path: pageUrl };
+  const title = ''; // 필요시 페이지 제목 설정
+  const url = '?path=' + pageUrl; // 주소창에 표시될 URL
+  history.pushState(state, title, url);
+  // ==========================================================
+
   const normalize = url => url.replace(window.baseHref, '').replace(/^\.\//, '').replace(/^\//, '');
   const target = normalize(pageUrl);
 
