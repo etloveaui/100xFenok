@@ -2,7 +2,8 @@ import { siteVersion } from './version.js';
 
 let currentActivePage = 'main.html';
 
-export function loadPage(pageUrl) {
+// 두 번째 파라미터(updateHistory)를 추가하고 기본값은 true로 설정
+export function loadPage(pageUrl, updateHistory = true) { 
   console.log("--- [Debug] Page Load Triggered ---");
   console.log("1. Clicked Path (pageUrl):", pageUrl);
   console.log("2. Base Href (window.baseHref):", window.baseHref);
@@ -27,10 +28,13 @@ export function loadPage(pageUrl) {
   // ==========================================================
   // ★ 아이폰 뒤로가기 수정을 위해 이 부분을 추가하세요.
   // ==========================================================
-  const state = { path: pageUrl };
-  const title = ''; // 필요시 페이지 제목 설정
-  const url = '?path=' + pageUrl; // 주소창에 표시될 URL
-  history.pushState(state, title, url);
+  // updateHistory가 true일 때만 방문 기록을 남김
+  if (updateHistory) {
+    const state = { path: pageUrl };
+    const title = ''; 
+    const url = '?path=' + pageUrl;
+    history.pushState(state, title, url);
+  }
   // ==========================================================
 
   const normalize = url => url.replace(window.baseHref, '').replace(/^\.\//, '').replace(/^\//, '');
@@ -52,3 +56,12 @@ export function getCurrentActivePage() {
 
 window.loadPage = loadPage;
 window.getCurrentActivePage = getCurrentActivePage; // 전역으로도 접근 가능
+
+// 이 코드를 loadPage.js 파일 맨 아래에 추가
+window.addEventListener('popstate', function(event) {
+  // 뒤로/앞으로 가기로 URL이 변경되었을 때
+  if (event.state && event.state.path) {
+    // 저장된 path로 페이지를 다시 로드 (단, 방문 기록은 남기지 않음)
+    loadPage(event.state.path, false);
+  }
+});
