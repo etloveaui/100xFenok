@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>수동 알림 발송 제어판</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-2xl font-bold mb-6 text-center">수동 푸시 알림 발송</h1>
+        <form id="notification-form" class="space-y-4">
+            <div>
+                <label for="secret" class="block text-sm font-medium text-gray-700">비밀 키</label>
+                <input type="password" id="secret" value="mySuperSecretKey1028" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm" required>
+            </div>
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700">알림 제목</label>
+                <input type="text" id="title" value="🔔 100x Daily Wrap 신규 리포트" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+            </div>
+            <div>
+                <label for="message" class="block text-sm font-medium text-gray-700">알림 내용</label>
+                <textarea id="message" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>새로운 리포트가 발행되었습니다. 확인해보세요!</textarea>
+            </div>
+            <div>
+                <label for="url" class="block text-sm font-medium text-gray-700">클릭 시 이동할 URL</label>
+                <input type="url" id="url" value="https://fenok.github.io/100x/?path=100x/100x-main.html" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+            </div>
+            <button type="submit" id="send-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                알림 발송
+            </button>
+        </form>
+        <div id="response" class="mt-4 text-xs text-center p-3 rounded-md"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('notification-form');
+        const sendBtn = document.getElementById('send-btn');
+        const responseDiv = document.getElementById('response');
+        const webhookUrl = "https://script.google.com/macros/s/AKfycbzf0d-fTar5T_-teRJjYWjIheazKkegE7ke8ipPtNRaApRyuqbkh5nL7Av198tr1C3lCw/exec";
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            sendBtn.disabled = true;
+            sendBtn.textContent = '보내는 중...';
+            responseDiv.textContent = '';
+            responseDiv.className = 'mt-4 text-xs text-center p-3 rounded-md';
+
+            const payload = {
+                secret: document.getElementById('secret').value,
+                title: document.getElementById('title').value,
+                message: document.getElementById('message').value,
+                url: document.getElementById('url').value
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Apps Script는 no-cors 모드로 호출해야 할 수 있습니다.
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                // no-cors 모드에서는 응답을 직접 읽을 수 없지만, 요청은 성공적으로 전송됩니다.
+                responseDiv.classList.add('bg-green-100', 'text-green-800');
+                responseDiv.textContent = '성공! 알림 발송 신호를 보냈습니다. (실제 응답은 브라우저 콘솔에서 확인하세요)';
+
+            } catch (error) {
+                responseDiv.classList.add('bg-red-100', 'text-red-800');
+                responseDiv.textContent = '오류 발생: ' + error.message;
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = '알림 발송';
+            }
+        });
+    </script>
+</body>
+</html>
