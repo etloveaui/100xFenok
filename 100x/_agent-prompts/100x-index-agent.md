@@ -76,7 +76,7 @@
 -   **`secret`**: **`mySuperSecretKey1028`** 라는 고정된 문자열을 사용합니다. (보안 키)
 -   **`title`**: 1단계에서 추출한 리포트의 `title` 값을 사용합니다.
 -   **`message`**: 1단계에서 추출한 리포트의 `summary` 값을 사용합니다. 요약이 길 경우, 가장 핵심적인 첫 문장만 사용합니다.
--   **`url`**: 1단계에서 생성한 리포트의 `path` 값을 `https://fenok.github.io/100x/` 와 조합하여 완전한 URL을 생성합니다.
+-   **`url`**: 1단계에서 생성한 리포트의 `path` 값을 `https://etloveaui.github.io/100x/` 와 조합하여 완전한 URL을 생성합니다.
 
 **API Body 생성 예시:**
 ```json
@@ -84,5 +84,5 @@
   "secret": "mySuperSecretKey1028",
   "title": "새로운 관세 정책이 시장에 미치는 영향 분석",
   "message": "새로운 관세 정책 발표 이후, 시장은 단기적인 변동성을 보였으나 장기적인 펀더멘털은 여전히 견고합니다.",
-  "url": "[https://fenok.github.io/100x/index.html?path=100x/daily-wrap/2025-07-17_100x-daily-wrap.html](https://fenok.github.io/100x/index.html?path=100x/daily-wrap/2025-07-17_100x-daily-wrap.html)"
+  "url": "[https://etloveaui.github.io/100x/index.html?path=100x/daily-wrap/2025-07-17_100x-daily-wrap.html](https://fenok.github.io/100x/index.html?path=100x/daily-wrap/2025-07-17_100x-daily-wrap.html)"
 }
