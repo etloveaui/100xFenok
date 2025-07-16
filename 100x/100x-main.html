@@ -6,11 +6,10 @@
     우리의 목표는 단순한 정보 전달을 넘어, 사용자가 복잡한 데이터를 쉽고 직관적으로 통찰할 수 있는 최상의 경험을 제공하는 것입니다.
     코드 길이에 제약을 두지 않고, 내용의 깊이와 시각적 완성도를 최우선으로 합니다.
 
-    [ v2.8 업데이트 노트 ]
-    - 사용자 피드백 반영: 가독성 향상을 위해 'Report Archive' 섹션의 테이블 레이아웃을 반응형 카드 레이아웃으로 전면 교체.
-    - 신규 리포트(2025-07-15) 추가 및 AGENT.MD v1.2 워크플로우에 따른 목록 재구성.
-    - 'Featured Reports' 섹션 업데이트: 2025-07-15 리포트가 메인 카드로, 2025-07-12 리포트는 작은 카드로 전환.
-    - 'Report Archive' 업데이트: 기존 Featured였던 2025-07-10 리포트가 아카이브 최상단에 추가됨.
+    [ v3.0 업데이트 노트 ]
+    - 기능 개선: JavaScript를 활용한 동적 페이지네이션 기능 구현. 페이지 새로고침 없이 아카이브 목록을 탐색할 수 있습니다.
+    - 코드 구조 개선: 페이지네이션 로직을 위한 ID(`archive-grid`, `pagination-container`)를 추가하여 스크립트의 안정성을 높였습니다.
+    - 사용자 경험(UX) 향상: 현재 페이지와 비활성화된 버튼(이전/다음)에 대한 시각적 피드백을 강화했습니다.
 
     1.  **반응형 설계 (Responsive First):**
         -   모든 컴포넌트는 모바일, 태블릿, PC 등 모든 디바이스에서 최적의 가독성과 사용성을 제공해야 합니다.
@@ -69,26 +68,26 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                <!-- 가장 최신 리포트 (2025-07-15) -->
+                <!-- 가장 최신 리포트 (2025-07-16) -->
                 <div class="lg:col-span-12 bg-white rounded-2xl p-8 card-shadow card-hover flex flex-col md:flex-row items-center gap-8">
                     <div class="md:w-2/3">
                         <div class="flex items-center gap-4 mb-3">
                            <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">최신 리포트</span>
-                           <div class="text-sm text-slate-500">2025년 7월 15일 (화요일)</div>
+                           <div class="text-sm text-slate-500">2025년 7월 16일 (수요일)</div>
                         </div>
                         <h2 class="text-3xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
-                            <a href="index.html?path=100x/daily-wrap/2025-07-15_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-07-15_100x-daily-wrap.html">고조되는 관세 불확실성 속, 기관 수요는 견고</a>
+                            <a href="index.html?path=100x/daily-wrap/2025-07-16_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-07-16_100x-daily-wrap.html">관세발 인플레이션 쇼크, 긴축적 유동성 환경과 맞물려 시장 변곡점 제시</a>
                         </h2>
                         <p class="text-slate-600 text-base leading-relaxed mb-5">
-                            트럼프 대통령이 EU와 멕시코에 대한 30% 관세 부과를 발표하며 무역 불확실성이 고조되고 있습니다. 이러한 환경 속에서도 이더리움 ETF로의 기록적인 자금 유입과 기관 투자자들의 강세 포지션은 견고한 수요를 보여주며, 시장이 상반된 신호 속에서 방향을 모색하고 있음을 시사합니다.
+                            6월 CPI 데이터에서 관세 전가 초기 효과가 나타나며 근원 상품 인플레이션이 급등했습니다. 연준의 긴축적 유동성 기조와 역레포 잔고 감소는 8월 관세 시행을 앞두고 금융 환경 긴축을 예고하며, 시장은 중요한 변곡점을 맞이하고 있습니다.
                         </p>
                         <div class="flex flex-wrap gap-2 mb-6">
-                            <span class="tag bg-red-100 text-red-800">관세 불확실성</span>
-                            <span class="tag bg-green-100 text-green-800">기관 수요</span>
-                            <span class="tag bg-blue-100 text-blue-800">이더리움 ETF</span>
-                            <span class="tag bg-yellow-100 text-yellow-800">무역 긴장</span>
+                            <span class="tag bg-red-100 text-red-800">관세 인플레이션</span>
+                            <span class="tag bg-yellow-100 text-yellow-800">CPI 급등</span>
+                            <span class="tag bg-blue-100 text-blue-800">연준 긴축</span>
+                            <span class="tag bg-purple-100 text-purple-800">금융 환경 긴축</span>
                         </div>
-                        <a href="index.html?path=100x/daily-wrap/2025-07-15_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-07-15_100x-daily-wrap.html" class="bg-slate-800 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-colors inline-flex items-center">
+                        <a href="index.html?path=100x/daily-wrap/2025-07-16_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-07-16_100x-daily-wrap.html" class="bg-slate-800 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-colors inline-flex items-center">
                             리포트 전체 보기<i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -97,7 +96,23 @@
                     </div>
                 </div>
 
-                <!-- 2번째 최신 리포트 (2025-07-12) -->
+                <!-- 2번째 최신 리포트 (2025-07-15) -->
+                <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
+                    <div class="text-sm text-slate-500 mb-2">2025년 7월 15일 (화요일)</div>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
+                        <a href="index.html?path=100x/daily-wrap/2025-07-15_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-07-15_100x-daily-wrap.html">고조되는 관세 불확실성 속, 기관 수요는 견고</a>
+                    </h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                        트럼프 대통령이 EU와 멕시코에 대한 30% 관세 부과를 발표하며 무역 불확실성이 고조되고 있습니다. 이러한 환경 속에서도 이더리움 ETF로의 기록적인 자금 유입과 기관 투자자들의 강세 포지션은 견고한 수요를 보여줍니다.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tag bg-red-100 text-red-800">관세 불확실성</span>
+                        <span class="tag bg-green-100 text-green-800">기관 수요</span>
+                        <span class="tag bg-blue-100 text-blue-800">이더리움 ETF</span>
+                    </div>
+                </div>
+                
+                <!-- 3번째 최신 리포트 (2025-07-12) -->
                 <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
                     <div class="text-sm text-slate-500 mb-2">2025년 7월 12일 (토)</div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
@@ -113,22 +128,6 @@
                     </div>
                 </div>
 
-                <!-- 3번째 최신 리포트 (2025-07-11) -->
-                <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
-                    <div class="text-sm text-slate-500 mb-2">2025년 7월 11일 (금요일)</div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
-                        <a href="index.html?path=100x/daily-wrap/2025-07-11_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-07-11_100x-daily-wrap.html">관세 위협에도 시장은 사상 최고치 경신, 높아지는 정책 회복탄력성</a>
-                    </h3>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                        고조되는 관세 위협에도 시장은 사상 최고치를 경신하며 정책 변동성에 대한 회복탄력성을 보였습니다. 이는 발표된 관세가 최종 정책이 아닌 협상 전술이라는 투자자들의 신뢰가 커지고 있음을 시사합니다.
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="tag bg-red-100 text-red-800">관세 위협</span>
-                        <span class="tag bg-green-100 text-green-800">시장 회복탄력성</span>
-                        <span class="tag bg-yellow-100 text-yellow-800">사상 최고치</span>
-                    </div>
-                </div>
-
             </div>
         </section>
 
@@ -137,7 +136,18 @@
             <div class="container mx-auto px-4">
                 <h2 class="text-3xl font-bold text-center mb-12 text-slate-900">리포트 아카이브</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="archive-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 2025-07-11 -->
+                    <div class="bg-white rounded-lg p-6 card-shadow card-hover flex flex-col">
+                        <p class="text-sm text-slate-500 mb-2">2025-07-11</p>
+                        <h3 class="text-lg font-bold text-slate-800 flex-grow">관세 위협에도 시장은 사상 최고치 경신, 높아지는 정책 회복탄력성</h3>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <span class="tag bg-red-100 text-red-800">관세 위협</span>
+                            <span class="tag bg-green-100 text-green-800">시장 회복탄력성</span>
+                            <span class="tag bg-yellow-100 text-yellow-800">사상 최고치</span>
+                        </div>
+                        <a href="index.html?path=100x/daily-wrap/2025-07-11_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-07-11_100x-daily-wrap.html" class="text-blue-600 hover:text-blue-800 font-semibold mt-4 inline-block">리포트 보기 →</a>
+                    </div>
                     <!-- 2025-07-10 -->
                     <div class="bg-white rounded-lg p-6 card-shadow card-hover flex flex-col">
                         <p class="text-sm text-slate-500 mb-2">2025-07-10</p>
@@ -174,7 +184,7 @@
                     <!-- 2025-07-01 -->
                     <div class="bg-white rounded-lg p-6 card-shadow card-hover flex flex-col">
                         <p class="text-sm text-slate-500 mb-2">2025-07-01</p>
-                        <h3 class="text-lg font-bold text-slate-800 flex-grow">무역 협상 낙관론에 힘입어 S&amp;P 500 사상 최고치 마감</h3>
+                        <h3 class="text-lg font-bold text-slate-800 flex-grow">무역 협상 낙관론에 힘입어 S&P 500 사상 최고치 마감</h3>
                         <div class="flex flex-wrap gap-2 mt-4">
                             <span class="tag bg-green-100 text-green-800">S&P 500 최고치</span>
                             <span class="tag bg-blue-100 text-blue-800">무역 협상</span>
@@ -234,7 +244,7 @@
                         </div>
                         <a href="index.html?path=100x/daily-wrap/2025-06-24_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-06-24_100x-daily-wrap.html" class="text-blue-600 hover:text-blue-800 font-semibold mt-4 inline-block">리포트 보기 →</a>
                     </div>
-                    <!-- 2025-06-21 -->
+                    <!-- 2025-06-21 (Pagination Item 11) -->
                     <div class="bg-white rounded-lg p-6 card-shadow card-hover flex flex-col">
                         <p class="text-sm text-slate-500 mb-2">2025-06-21</p>
                         <h3 class="text-lg font-bold text-slate-800 flex-grow">연준 내 분열을 활용한 커브 스티프닝 전략</h3>
@@ -245,12 +255,17 @@
                         <a href="index.html?path=100x/daily-wrap/2025-06-21_100x-daily-wrap.html" data-path="100x/daily-wrap/2025-06-21_100x-daily-wrap.html" class="text-blue-600 hover:text-blue-800 font-semibold mt-4 inline-block">리포트 보기 →</a>
                     </div>
                 </div>
+
+                <nav id="pagination-container" aria-label="Page navigation" class="flex justify-center mt-12">
+                    <!-- 페이지네이션 버튼은 스크립트에 의해 동적으로 생성됩니다. -->
+                </nav>
+
             </div>
         </section>
         
     </main>
 
-    <script defer="">
+    <script>
         // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -260,8 +275,8 @@
                 });
             });
         });
-    </script>
-    <script>
+
+        // For integration with parent frame
         document.querySelectorAll('a[data-path]').forEach(a => {
             a.addEventListener('click', e => {
                 const target = a.dataset.path;
@@ -271,7 +286,92 @@
                 }
             });
         });
-    </script>
 
+        // Dynamic Pagination Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const ITEMS_PER_PAGE = 10;
+            const archiveGrid = document.getElementById('archive-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+            
+            if (!archiveGrid || !paginationContainer) return;
+
+            const reportCards = Array.from(archiveGrid.children);
+            const totalItems = reportCards.length;
+            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+            let currentPage = 1;
+
+            function showPage(page) {
+                currentPage = page;
+                const startIndex = (page - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+
+                // 모든 카드를 숨김
+                reportCards.forEach(card => card.style.display = 'none');
+
+                // 현재 페이지의 카드만 표시
+                reportCards.slice(startIndex, endIndex).forEach(card => card.style.display = 'flex');
+
+                renderPaginationControls();
+            }
+
+            function renderPaginationControls() {
+                if (totalPages <= 1) {
+                    paginationContainer.innerHTML = '';
+                    return;
+                }
+                
+                let paginationHTML = '<ul class="inline-flex items-center -space-x-px">';
+
+                // '이전' 버튼
+                paginationHTML += `
+                    <li>
+                        <a href="#" data-page="${currentPage - 1}" class="px-3 py-2 ml-0 leading-tight text-slate-500 bg-white border border-slate-300 rounded-l-lg hover:bg-slate-100 hover:text-slate-700 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}">이전</a>
+                    </li>
+                `;
+
+                // 페이지 번호 버튼
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    const activeClasses = 'z-10 px-3 py-2 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700';
+                    const defaultClasses = 'px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 hover:bg-slate-100 hover:text-slate-700';
+                    paginationHTML += `
+                        <li>
+                            <a href="#" data-page="${i}" class="${isActive ? activeClasses : defaultClasses}">${i}</a>
+                        </li>
+                    `;
+                }
+
+                // '다음' 버튼
+                paginationHTML += `
+                    <li>
+                        <a href="#" data-page="${currentPage + 1}" class="px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 rounded-r-lg hover:bg-slate-100 hover:text-slate-700 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}">다음</a>
+                    </li>
+                `;
+
+                paginationHTML += '</ul>';
+                paginationContainer.innerHTML = paginationHTML;
+            }
+
+            paginationContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('a');
+
+                if (!target) return;
+
+                const page = parseInt(target.dataset.page);
+
+                if (isNaN(page) || page < 1 || page > totalPages) {
+                    return;
+                }
+                
+                if (currentPage === page) return;
+
+                showPage(page);
+            });
+
+            // 초기화
+            showPage(1);
+        });
+    </script>
 
 </body></html>
