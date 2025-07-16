@@ -30,7 +30,10 @@
     OneSignal.push(function() {
       OneSignal.init({
         appId: "cae7e21e-b682-4d41-a04-6137973552c0", // 여기에 제공해주신 App ID를 입력했습니다.
-        serviceWorkerPath: "onesignal/OneSignalSDKWorker.js" 
+        // --- 바로 이 부분들이 핵심입니다 ---
+        serviceWorkerPath: "/100xFenok/onesignal/OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: '/100xFenok/onesignal/' }
+        // ------------------------------------		
       });
     });
   </script>
