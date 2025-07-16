@@ -45,7 +45,7 @@
 -   데이터 업데이트가 완료되면, 아래 명시된 **구글 앱 스크립트 웹 앱 URL**로 `HTTP POST` 요청을 보냅니다.
 -   이 요청은 OneSignal을 통해 모든 구독자에게 알림을 발송하는 역할을 합니다.
 -   **API 호출 규칙:**
-    -   **URL:** `https://script.google.com/macros/s/AKfycbzf0d-fTar5T_-teRJjYWjIheazKkegE7ke8ipPtNRaApRyuqbkh5nL7Av198tr1C3lCw/exec`
+    -   **URL:** `https://script.google.com/macros/s/AKfycbzG4qY6YzY4ihgCFwqdfwzHK0assKctg27W6a7EAvrKzbjInH2ttl0Y6wfImUXKf8ZiGw/exec`
     -   **Method:** `POST`
     -   **Headers:** `Content-Type: application/json`
     -   **Body (Payload):** 아래 **'6. 알림 페이로드 생성 규칙'**을 참조하여 JSON 형식으로 구성합니다.
