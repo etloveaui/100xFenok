@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!-- 
+    ================================================================================
+    LLM 및 개발자를 위한 100x Alpha Scout 목록 페이지 제작 가이드 (FenoK's Philosophy)
+    ================================================================================
+    이 문서는 '100x Alpha Scout' 주간 리포트의 목록 페이지(메인)를 구성하기 위한 설계 철학과 지침입니다.
+    'Alpha Scout'는 단순한 시황 요약이 아닌, 깊이 있는 분석을 통해 '알파(초과수익)'를 찾는 것을 목표로 합니다.
+    따라서 이 페이지는 사용자가 각 리포트의 핵심 가치를 한눈에 파악하고, 숨겨진 투자 기회를 발견하는 여정을 시작하도록 돕는 관문 역할을 합니다.
+
+    [ v6.0 설계 철학 ]
+    -   **알파 직접 노출 구조 (Direct Alpha Showcase):** 최신 리포트 섹션에서 뉴스 형식의 헤드라인과 요약 문단을 완전히 제거했습니다. 
+        대신, 해당 주에 발굴한 '가치주', '모멘텀주', '기관 추천주' 각각의 핵심 정보를 담은 3개의 독립적인 카드를 전면에 배치합니다. 
+        이를 통해 사용자는 페이지 방문 즉시 "이번 주에 어떤 종목을 주목해야 하는가?"에 대한 답을 직관적으로 얻을 수 있습니다.
+    -   **차별화된 시각적 테마:** Daily Wrap의 블루 테마가 '신속함'과 '신뢰성'을 상징한다면, Alpha Scout는 퍼플/인디고 계열의 색상을 사용하여 '깊이', '통찰력', '프리미엄'의 이미지를 전달합니다.
+    -   **정보 밀도 높은 아카이브:** 과거 리포트 카드는 단순 키워드가 아닌, 해당 리포트의 핵심 발굴 종목(가치주, 모멘텀주, 기관 의견)의 '티커'를 직접 노출합니다. 
+        이를 통해 사용자는 스크롤만으로도 과거의 추천 종목 히스토리를 파악하고, 자신의 관심사와 일치하는 리포트를 쉽게 찾아볼 수 있습니다.
+    -   **확장성 고려:** 아카이브 리포트가 9개를 초과할 경우를 대비하여 페이지네이션(Pagination) 컴포넌트의 위치와 구조를 미리 설계해 둡니다.
+
+    1.  **반응형 설계 (Responsive First):**
+        -   모든 컴포넌트는 모바일, 태블릿, PC 등 모든 디바이스에서 최적의 가독성과 사용성을 제공해야 합니다.
+        -   Tailwind CSS의 반응형 분기점(`sm:`, `md:`, `lg:`)을 적극적으로 사용하여 유동적인 레이아웃을 구현합니다.
+
+    2.  **데이터 처리 및 표현 (Data Handling & Representation):**
+        -   **핵심 가치 전달:** 각 리포트 카드는 단순 제목이 아닌, 해당 주의 가장 중요한 '헤드라인'과 '핵심 발굴 종목'을 명확히 보여주어야 합니다.
+        -   **자연스러운 언어:** '가치주 발굴', '모멘텀 트래커' 등 리포트의 핵심 코너명을 사용하여 사용자가 내용을 쉽게 유추할 수 있도록 합니다.
+        -   **강조와 시각화:** 아이콘(`fas fa-gem`, `fas fa-rocket`, `fas fa-university`)과 색상 태그를 활용해 각 리포트의 성격을 시각적으로 구분하고 강조합니다.
+
+    3.  **구조와 시맨틱 (Structure & Semantics):**
+        -   페이지를 '최신 리포트 하이라이트(Featured Report)'와 '과거 리포트 아카이브(Report Archive)' 두 부분으로 명확히 나눕니다.
+        -   최신 리포트 섹션은 더 많은 공간을 할애하여 상세 정보를 제공하고, 아카이브는 그리드 시스템을 통해 일관성 있게 정돈된 형태로 보여줍니다.
+        -   모든 리포트 링크는 `index.html?path=` 구조와 `data-path` 속성을 사용하여 SPA(Single Page Application) 환경에서의 동적 로딩을 지원해야 합니다.
+           -   Alpha Scout 리포트는 `/reports/` 폴더에 `YYYY-MM-DD_100x-alpha-scout.html` 형식으로 저장됩니다. (예: `reports/2025-07-14_100x-alpha-scout.html`)
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100x Alpha Scout - 주간 투자 분석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; color: #1f2937; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card-hover { transition: all 0.3s ease-in-out; }
+        .card-hover:hover { transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .alpha-card { background: white; border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; height: 100%; }
+        .alpha-card-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; }
+        .alpha-card-ticker { font-size: 2rem; font-weight: 700; font-family: 'Orbitron', monospace; color: #1e293b; }
+        .alpha-card-name { font-size: 0.875rem; color: #64748b; margin-bottom: 1rem; }
+        .alpha-card-desc { font-size: 0.9rem; color: #475569; flex-grow: 1; }
+        .alpha-card-metric { font-size: 0.8rem; text-align: right; }
+        .alpha-card-metric strong { color: #1e293b; }
+    </style>
+</head>
+<body class="bg-slate-50">
+<script type="module" src="../initBaseHref.js"></script>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="container mx-auto p-6 md:p-12">
+        
+        <!-- 페이지 헤더 -->
+        <header class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-black mb-4 orbitron bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">100x Alpha Scout</h1>
+            <p class="text-lg text-slate-500 max-w-3xl mx-auto">가치와 모멘텀을 꿰뚫는 주간 프리미엄 투자 분석. 시장의 소음 속에서 진짜 신호를 찾아냅니다.</p>
+        </header>
+
+        <!-- 최신 리포트 하이라이트 섹션 (v6.0: 알파 카드 구조) -->
+        <section id="featured-report" class="mb-20">
+            <div class="text-center mb-8">
+                <span class="bg-indigo-600 text-white text-sm font-bold px-4 py-2 rounded-full uppercase">금주의 핵심 알파</span>
+                <p class="text-slate-500 mt-3">2025년 7월 14일 리포트</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 가치주 Pick 카드 -->
+                <div class="alpha-card card-shadow card-hover">
+                    <h3 class="alpha-card-title text-indigo-600"><i class="fas fa-gem fa-fw mr-2"></i>금주의 가치주</h3>
+                    <div class="text-center my-4">
+                        <p class="alpha-card-ticker">AMP</p>
+                        <p class="alpha-card-name">아메리프라이즈 파이낸셜</p>
+                    </div>
+                    <p class="alpha-card-desc">견고한 자사주 매입과 배당 성장을 통해 주주가치를 꾸준히 제고하고 있으며, 수수료 기반의 안정적인 수익 구조가 매력적입니다.</p>
+                    <div class="mt-4 pt-4 border-t border-slate-100 alpha-card-metric">
+                        P/E Ratio: <strong class="text-indigo-600">15.2x</strong>
+                    </div>
+                </div>
+                <!-- 모멘텀주 Pick 카드 -->
+                <div class="alpha-card card-shadow card-hover">
+                    <h3 class="alpha-card-title text-green-600"><i class="fas fa-rocket fa-fw mr-2"></i>금주의 모멘텀 주도주</h3>
+                    <div class="text-center my-4">
+                        <p class="alpha-card-ticker">NVDA</p>
+                        <p class="alpha-card-name">엔비디아</p>
+                    </div>
+                    <p class="alpha-card-desc">AI 칩에 대한 독점적 수요와 데이터센터 시장 지배력을 바탕으로, 지속적인 어닝 서프라이즈와 강력한 수급이 주가 상승을 견인하고 있습니다.</p>
+                    <div class="mt-4 pt-4 border-t border-slate-100 alpha-card-metric">
+                        주간 기관 순매수: <strong class="text-green-600">$2.1B</strong>
+                    </div>
+                </div>
+                <!-- 기관 Pick 카드 -->
+                <div class="alpha-card card-shadow card-hover">
+                    <h3 class="alpha-card-title text-amber-600"><i class="fas fa-university fa-fw mr-2"></i>금주의 기관 추천주</h3>
+                    <div class="text-center my-4">
+                        <p class="alpha-card-ticker">META</p>
+                        <p class="alpha-card-name">메타 플랫폼스</p>
+                    </div>
+                    <p class="alpha-card-desc">뱅크오브아메리카는 메타버스 투자가 초기 성과를 보이고 있으며, AI 기반 광고 효율 개선이 지속될 것이라며 신규 커버리지를 개시했습니다.</p>
+                    <div class="mt-4 pt-4 border-t border-slate-100 alpha-card-metric">
+                        목표주가: <strong class="text-amber-600">$650</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-12">
+                <a href="index.html?path=alpha-scout/reports/2025-07-14_100x-alpha-scout.html" data-path="alpha-scout/reports/2025-07-14_100x-alpha-scout.html" class="bg-slate-800 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center text-lg">
+                    전체 리포트 상세 분석 보기 <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- 리포트 아카이브 섹션 -->
+        <section id="report-archive">
+            <h2 class="text-3xl font-bold text-center mb-12 text-slate-900">과거 리포트 아카이브</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- 
+                    ================================================================================
+                    아카이브 카드 구조 가이드
+                    ================================================================================
+                    - 새로운 리포트가 발행될 때마다, 이 카드 구조를 복사하여 맨 앞에 추가합니다.
+                    - a 태그의 href와 data-path는 "reports/YYYY-MM-DD_100x-alpha-scout.html" 형식에 맞춰 수정합니다.
+                    - 날짜와 제목을 업데이트합니다.
+                    - 각 카테고리별 핵심 발굴 종목(티커)을 해당 리포트의 내용에 맞게 업데이트합니다.
+                      - 가치주 Pick: valuePicks 배열의 첫 번째 종목 티커
+                      - 모멘텀 Pick: momentumPicks 배열의 첫 번째 종목 티커
+                      - 기관 Pick: consensus 배열의 첫 번째 'Upgrade' 또는 'New' 의견을 받은 종목 티커
+                    - 현재는 발행된 리포트가 없어 'Coming Soon' 예시 카드만 남겨둡니다.
+                -->
+                
+                <!-- 아카이브 예시 카드 (실제 데이터가 있을 경우 아래와 같은 형태로 카드를 추가) -->
+                <!-- <a href="index.html?path=reports/2025-07-07_100x-alpha-scout.html" data-path="reports/2025-07-07_100x-alpha-scout.html" class="block bg-white rounded-xl p-6 card-shadow card-hover">
+                    <p class="text-sm text-slate-500 mb-2">2025년 7월 7일</p>
+                    <h3 class="font-bold text-lg text-slate-800 mb-4">고용지표 서프라이즈, 경기 연착륙 기대감 속 기회</h3>
+                    <div class="pt-4 border-t border-slate-100 space-y-3 text-sm">
+                        <p class="flex justify-between items-center text-slate-600">
+                            <span class="font-semibold flex items-center"><i class="fas fa-gem fa-fw mr-2 text-indigo-400"></i>가치주 Pick</span>
+                            <span class="font-mono bg-slate-100 px-2 py-0.5 rounded">GE</span>
+                        </p>
+                        <p class="flex justify-between items-center text-slate-600">
+                            <span class="font-semibold flex items-center"><i class="fas fa-rocket fa-fw mr-2 text-green-400"></i>모멘텀 Pick</span>
+                            <span class="font-mono bg-slate-100 px-2 py-0.5 rounded">CAT</span>
+                        </p>
+                        <p class="flex justify-between items-center text-slate-600">
+                            <span class="font-semibold flex items-center"><i class="fas fa-university fa-fw mr-2 text-amber-400"></i>기관 Pick</span>
+                            <span class="font-mono bg-slate-100 px-2 py-0.5 rounded">MS</span>
+                        </p>
+                    </div>
+                </a> -->
+
+                <!-- 아카이브 예시 카드 (Coming Soon) -->
+                <div class="block bg-white rounded-xl p-6 border-2 border-dashed border-slate-300 text-center">
+                    <div class="flex flex-col justify-center items-center h-full">
+                        <i class="fas fa-lightbulb text-4xl text-slate-400 mb-4"></i>
+                        <h3 class="font-bold text-lg text-slate-600 mb-2">다음 리포트 준비 중</h3>
+                        <p class="text-sm text-slate-500">매주 시장의 핵심 알파를 찾아 업데이트됩니다.</p>
+                    </div>
+                </div>
+                
+                <div class="block bg-white rounded-xl p-6 border-2 border-dashed border-slate-300 text-center opacity-50">
+                    <div class="flex flex-col justify-center items-center h-full">
+                        <i class="fas fa-lightbulb text-4xl text-slate-400 mb-4"></i>
+                        <h3 class="font-bold text-lg text-slate-600 mb-2">다음 리포트 준비 중</h3>
+                        <p class="text-sm text-slate-500">매주 시장의 핵심 알파를 찾아 업데이트됩니다.</p>
+                    </div>
+                </div>
+
+                <div class="block bg-white rounded-xl p-6 border-2 border-dashed border-slate-300 text-center opacity-50">
+                    <div class="flex flex-col justify-center items-center h-full">
+                        <i class="fas fa-lightbulb text-4xl text-slate-400 mb-4"></i>
+                        <h3 class="font-bold text-lg text-slate-600 mb-2">다음 리포트 준비 중</h3>
+                        <p class="text-sm text-slate-500">매주 시장의 핵심 알파를 찾아 업데이트됩니다.</p>
+                    </div>
+                </div>
+
+
+            </div>
+            
+            <!-- 
+                ================================================================================
+                페이지네이션 구조 가이드
+                ================================================================================
+                - 아카이브 리포트 카드의 총 개수가 9개를 초과하면, 아래 페이지네이션 컴포넌트의 주석을 해제하고 활성화합니다.
+                - 스크립트를 통해 현재 페이지를 표시하고, 이전/다음 페이지로 이동하는 로직을 구현할 수 있습니다.
+            
+            <nav class="flex items-center justify-center pt-16" aria-label="Pagination">
+                <a href="#" class="relative inline-flex items-center rounded-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0">
+                    <span class="sr-only">Previous</span>
+                    <i class="fas fa-chevron-left h-5 w-5"></i>
+                </a>
+                <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">1</a>
+                <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0">2</a>
+                <a href="#" class="relative inline-flex items-center rounded-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0">
+                    <span class="sr-only">Next</span>
+                    <i class="fas fa-chevron-right h-5 w-5"></i>
+                </a>
+            </nav>
+            -->
+
+        </section>
+        
+    </main>
+
+    <script>
+        // SPA 환경에서 페이지를 동적으로 로드하기 위한 스크립트
+        // data-path 속성을 가진 모든 링크에 클릭 이벤트를 추가합니다.
+        document.querySelectorAll('a[data-path]').forEach(a => {
+            a.addEventListener('click', e => {
+                const target = a.dataset.path;
+                // 부모 창(index.html)에 loadPage 함수가 있는지 확인하고, 있다면 실행합니다.
+                if (window.parent !== window && typeof parent.loadPage === 'function') {
+                    e.preventDefault(); // 기본 링크 이동을 막습니다.
+                    parent.loadPage(target);
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
