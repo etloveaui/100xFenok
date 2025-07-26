@@ -69,7 +69,7 @@
             <div class="container mx-auto px-4">
                 <h2 class="text-3xl font-bold text-center mb-12 text-slate-900">리포트 아카이브</h2>
                 
-                <div id="archive-grid" class="flex flex-wrap justify-center gap-6 min-h-[400px]">
+                <div id="archive-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]">
                     <!-- Archive Reports는 스크립트에 의해 동적으로 채워집니다. -->
                     <div class="flex justify-center items-center w-full">
                         <div class="loader"></div>
@@ -249,7 +249,7 @@
 
                         // [수정] 카드 크기 고정을 위해 고정 높이(h-64)와 flex 구조 사용
                         archiveHTML += `
-                            <div class="bg-white rounded-lg p-6 card-shadow card-hover flex flex-col w-full max-w-sm h-64">
+                            <div class="bg-white rounded-lg p-6 card-shadow card-hover flex flex-col w-full h-64">
                                 <div>
                                     <p class="text-sm text-slate-500 mb-2">${displayDate}</p>
                                     <h3 class="text-lg font-bold text-slate-800">${report.title}</h3>
