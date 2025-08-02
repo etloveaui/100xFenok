@@ -1,0 +1,334 @@
+<!DOCTYPE html><!-- 
+    ================================================================================
+    100x Daily Wrap 목록 페이지 (v5.6 - Final Layout & Date Fix)
+    ================================================================================
+    * 설계 철학:
+    이 페이지는 '개별 메타데이터 + 마스터 인덱스' 아키텍처를 기반으로 동작합니다.
+    1. 먼저 가벼운 'reports-index.json' 파일을 로드하여 전체 리포트 목록을 파악합니다.
+    2. 그 다음, 현재 페이지에 필요한 만큼의 개별 메타데이터 JSON 파일들만 동적으로 불러와 화면을 구성합니다.
+    이 방식을 통해 수백, 수천 개의 리포트가 쌓여도 초기 로딩 속도를 최상으로 유지하며,
+    데이터 파일 손상 위험을 최소화하여 안정성과 확장성을 극대화합니다.
+
+    [ v5.6 업데이트 노트 ]
+    - 아카이브 레이아웃 최종 수정: 카드에 고정 높이(h-64)를 적용하고 내부 컨텐츠를 flexbox로 정렬하여, 항목 수나 컨텐츠 길이에 상관없이 모든 카드의 크기가 동일하게 유지되도록 수정했습니다.
+    - 날짜 표시 로직 강화: 다양한 날짜 형식을 모두 인식하여 'YYYY-MM-DD'로 일관되게 표시하도록 수정했습니다.
+--><html lang="ko"><head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100x Daily Wrap - El Fenomeno Kim</title>
+    <meta name="description" content="100x Daily Wrap 리포트 아카이브 페이지입니다.">
+    <link rel="canonical" href="./100x-main.html">
+    <meta property="og:title" content="100x Daily Wrap - El Fenomeno Kim">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../favicon-96x96.png">
+    <meta name="theme-color" content="#0ea5e9">
+    <script type="module" src="../initBaseHref.js"></script>
+    <style>
+        * { font-family: 'Noto Sans KR', sans-serif; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .tag { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3b82f6; /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="container mx-auto p-6 md:p-12">
+        <!-- 최신 리포트 하이라이트 섹션 -->
+        <section id="featured-reports" class="mb-16">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl md:text-6xl font-black mb-4 orbitron bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-slate-800">100x Daily Wrap</h1>
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto">AI 기반 멀티에셋 분석으로 시장의 핵심 동인과 투자 기회를 매일 분석합니다.</p>
+            </div>
+
+            <div id="featured-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[300px] justify-center items-center">
+                <!-- Featured Reports는 스크립트에 의해 동적으로 채워집니다. -->
+                <div class="loader"></div>
+            </div>
+        </section>
+
+        <!-- 리포트 아카이브 섹션 (카드 레이아웃) -->
+        <section id="report-archive" class="py-16">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-12 text-slate-900">리포트 아카이브</h2>
+                
+                <div id="archive-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]">
+                    <!-- Archive Reports는 스크립트에 의해 동적으로 채워집니다. -->
+                    <div class="flex justify-center items-center w-full">
+                        <div class="loader"></div>
+                    </div>
+                </div>
+
+                <nav id="pagination-container" aria-label="Page navigation" class="flex justify-center mt-12">
+                    <!-- 페이지네이션 버튼은 스크립트에 의해 동적으로 생성됩니다. -->
+                </nav>
+
+            </div>
+        </section>
+        
+    </main>
+
+    <script>
+        // --- Dynamic Data Loading and Rendering Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- 설정 (Configuration) ---
+            const BASE_HREF = window.baseHref || './';
+            const DATA_FOLDER_PATH = `${BASE_HREF}100x/data/`;
+            const METADATA_PATH = `${DATA_FOLDER_PATH}metadata/`;
+            const INDEX_PATH = `${DATA_FOLDER_PATH}reports-index.json`;
+            const ITEMS_PER_PAGE = 9; 
+
+            // --- DOM 요소 (DOM Elements) ---
+            const featuredGrid = document.getElementById('featured-grid');
+            const archiveGrid = document.getElementById('archive-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+
+            // --- 상태 변수 (State Variables) ---
+            let reportIndex = [];
+            let featuredFilenames = [];
+            let archiveFilenames = [];
+            let totalPages = 0;
+            let currentPage = 1;
+
+            // --- 헬퍼 함수: 날짜 파싱 ---
+            function parseDate(dateString) {
+                if (!dateString) return '';
+
+                let parts = dateString.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+                if (parts) {
+                    return `${parts[1]}-${parts[2].padStart(2, '0')}-${parts[3].padStart(2, '0')}`;
+                }
+
+                const monthMap = {
+                    'January': '01', 'February': '02', 'March': '03', 'April': '04', 'May': '05', 'June': '06',
+                    'July': '07', 'August': '08', 'September': '09', 'October': '10', 'November': '11', 'December': '12'
+                };
+                parts = dateString.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+                if (parts && monthMap[parts[1]]) {
+                    return `${parts[3]}-${monthMap[parts[1]]}-${parts[2].padStart(2, '0')}`;
+                }
+                
+                if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+                    return dateString.split(' ')[0];
+                }
+
+                return dateString; 
+            }
+
+            // --- 데이터 로딩 및 초기 렌더링 ---
+            async function initialize() {
+                try {
+                    const response = await fetch(INDEX_PATH);
+                    if (!response.ok) throw new Error(`인덱스 파일(${INDEX_PATH})을 불러올 수 없습니다.`);
+                    
+                    reportIndex = await response.json();
+                    
+                    featuredFilenames = reportIndex.slice(0, 3);
+                    archiveFilenames = reportIndex.slice(3);
+                    totalPages = Math.ceil(archiveFilenames.length / ITEMS_PER_PAGE);
+
+                    await renderFeatured(featuredFilenames);
+                    await showArchivePage(1);
+
+                } catch (error) {
+                    console.error("초기화 실패:", error);
+                    featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">리포트 목록을 불러오는 데 실패했습니다.</p>`;
+                    archiveGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">아카이브를 불러오는 데 실패했습니다.</p>`;
+                }
+            }
+
+            // --- 추천 리포트 렌더링  <img src="../favicon_ver5.png" alt="Report visual" class="rounded-lg object-cover w-full h-full"> ---
+            async function renderFeatured(filenames) {
+                if (!featuredGrid || filenames.length === 0) {
+                    if(featuredGrid) featuredGrid.innerHTML = '<p class="text-slate-500 col-span-full text-center">추천 리포트가 없습니다.</p>';
+                    return;
+                }
+
+                try {
+                    const requests = filenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+                    const [latest, second, third] = reports;
+
+                    let featuredHTML = '';
+                    
+                    if (latest) {
+                        const tagsHTML = latest.keywords.map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${tag.name}</span>`).join('');
+                        featuredHTML += `
+                            <div class="lg:col-span-12 bg-white rounded-2xl p-8 card-shadow card-hover flex flex-col md:flex-row items-center gap-8">
+                                <div class="md:w-2/3">
+                                    <div class="flex items-center gap-4 mb-3">
+                                       <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">최신 리포트</span>
+                                       <div class="text-sm text-slate-500">${latest.date}</div>
+                                    </div>
+                                    <h2 class="text-3xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
+                                        <a href="#" data-path="${latest.path}">${latest.title}</a>
+                                    </h2>
+                                    <p class="text-slate-600 text-base leading-relaxed mb-5">${latest.summary}</p>
+                                    <div class="flex flex-wrap gap-2 mb-6">${tagsHTML}</div>
+                                    <a href="#" data-path="${latest.path}" class="bg-slate-800 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-colors inline-flex items-center">
+                                        리포트 전체 보기<i class="fas fa-arrow-right ml-2"></i>
+                                    </a>
+                                </div>
+                                <div class="hidden md:block md:w-1/3">
+                                    <img src="${BASE_HREF}favicon_ver5.png" alt="Report visual" class="rounded-lg object-cover w-full h-full">
+								</div>
+                            </div>`;
+                    }
+                    if (second) {
+                        const tagsHTML = second.keywords.map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${tag.name}</span>`).join('');
+                        featuredHTML += `
+                            <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
+                                <div class="text-sm text-slate-500 mb-2">${second.date}</div>
+                                <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
+                                    <a href="#" data-path="${second.path}">${second.title}</a>
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4">${second.summary}</p>
+                                <div class="flex flex-wrap gap-2">${tagsHTML}</div>
+                            </div>`;
+                    }
+                    if (third) {
+                         const tagsHTML = third.keywords.map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${tag.name}</span>`).join('');
+                        featuredHTML += `
+                            <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
+                                <div class="text-sm text-slate-500 mb-2">${third.date}</div>
+                                <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
+                                    <a href="#" data-path="${third.path}">${third.title}</a>
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4">${third.summary}</p>
+                                <div class="flex flex-wrap gap-2">${tagsHTML}</div>
+                            </div>`;
+                    }
+                    
+                    featuredGrid.innerHTML = featuredHTML;
+                } catch (error) {
+                    console.error("추천 리포트 렌더링 실패:", error);
+                    featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">추천 리포트를 불러오는 데 실패했습니다.</p>`;
+                }
+            }
+
+            // --- 아카이브 페이지 렌더링 ---
+            async function showArchivePage(page) {
+                currentPage = page;
+                const startIndex = (page - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const pageFilenames = archiveFilenames.slice(startIndex, endIndex);
+
+                archiveGrid.innerHTML = `<div class="w-full flex justify-center items-center"><div class="loader"></div></div>`;
+
+                if (pageFilenames.length === 0) {
+                    archiveGrid.innerHTML = `<p class="w-full text-center text-slate-500">아카이브된 리포트가 없습니다.</p>`;
+                    renderPaginationControls();
+                    return;
+                }
+
+                try {
+                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+
+                    let archiveHTML = '';
+                    reports.forEach(report => {
+                        const tagsHTML = report.keywords.map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${tag.name}</span>`).join('');
+                        const displayDate = parseDate(report.date);
+
+                        // [수정] 카드 크기 고정을 위해 고정 높이(h-64)와 flex 구조 사용
+                        archiveHTML += `
+                            <div class="bg-white rounded-lg p-6 card-shadow card-hover flex flex-col w-full h-64">
+                                <div>
+                                    <p class="text-sm text-slate-500 mb-2">${displayDate}</p>
+                                    <h3 class="text-lg font-bold text-slate-800">${report.title}</h3>
+                                </div>
+                                <div class="flex-grow"></div>
+                                <div>
+                                    <div class="flex flex-wrap gap-2 mt-4">${tagsHTML}</div>
+                                    <a href="#" data-path="${report.path}" class="text-blue-600 hover:text-blue-800 font-semibold mt-4 inline-block">리포트 보기 →</a>
+                                </div>
+                            </div>`;
+                    });
+                    archiveGrid.innerHTML = archiveHTML;
+
+                } catch (error) {
+                    console.error(`아카이브 페이지 ${page} 렌더링 실패:`, error);
+                    archiveGrid.innerHTML = `<p class="w-full text-center text-red-500">아카이브를 불러오는 데 실패했습니다.</p>`;
+                }
+                
+                renderPaginationControls();
+                setupDynamicLinks();
+            }
+
+            // --- 페이지네이션 컨트롤 렌더링 ---
+            function renderPaginationControls() {
+                if (totalPages <= 1) {
+                    paginationContainer.innerHTML = '';
+                    return;
+                }
+                
+                let paginationHTML = '<ul class="inline-flex items-center -space-x-px">';
+                paginationHTML += `<li><a href="#" data-page="${currentPage - 1}" class="px-3 py-2 ml-0 leading-tight text-slate-500 bg-white border border-slate-300 rounded-l-lg hover:bg-slate-100 hover:text-slate-700 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}">이전</a></li>`;
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    const activeClasses = 'z-10 px-3 py-2 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700';
+                    const defaultClasses = 'px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 hover:bg-slate-100 hover:text-slate-700';
+                    paginationHTML += `<li><a href="#" data-page="${i}" class="${isActive ? activeClasses : defaultClasses}">${i}</a></li>`;
+                }
+
+                paginationHTML += `<li><a href="#" data-page="${currentPage + 1}" class="px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 rounded-r-lg hover:bg-slate-100 hover:text-slate-700 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}">다음</a></li>`;
+                paginationHTML += '</ul>';
+                paginationContainer.innerHTML = paginationHTML;
+            }
+
+            // --- 이벤트 리스너 ---
+            paginationContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('a');
+                if (!target || target.classList.contains('cursor-not-allowed')) return;
+                const page = parseInt(target.dataset.page, 10);
+                if (isNaN(page) || page < 1 || page > totalPages || currentPage === page) return;
+                showArchivePage(page);
+                document.getElementById('report-archive').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // --- 동적 링크 이벤트 바인딩 ---
+            function setupDynamicLinks() {
+                document.querySelectorAll('a[data-path]').forEach(a => {
+                    if (a.dataset.bound) return;
+                    a.dataset.bound = 'true';
+                    
+                    a.addEventListener('click', e => {
+                        e.preventDefault();
+                        const path = a.dataset.path;
+                        const urlParams = new URLSearchParams(path.split('?')[1]);
+                        const finalPath = urlParams.get('path');
+                        
+                        if (window.parent && typeof window.parent.loadPage === 'function') {
+                            window.parent.loadPage(finalPath);
+                        } else if (typeof loadPage === 'function') {
+                            loadPage(finalPath);
+                        }
+                    });
+                });
+            }
+
+            // --- 실행 ---
+            initialize();
+        });
+    </script>
+
+</body></html>
