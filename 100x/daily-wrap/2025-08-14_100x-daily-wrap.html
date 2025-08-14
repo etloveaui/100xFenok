@@ -1,0 +1,1764 @@
+<!DOCTYPE html><!-- 
+    ================================================================================
+    100x Daily Wrap 전체 템플릿 (v2.0)
+    ================================================================================
+    * 사용 가이드:
+    1. 이 파일은 100x Daily Wrap 리포트 제작을 위한 완전한 템플릿입니다.
+    2. 원본 파일의 모든 구조와 디자인 요소를 보존하고 있습니다.
+    3. [괄호]로 표시된 부분과 예시 텍스트를 실제 데이터로 교체하여 사용하세요.
+    4. 각 섹션의 구조와 CSS 클래스는 디자인 일관성을 위해 수정하지 않는 것을 권장합니다.
+    5. 자바스크립트의 `sectorData` 배열에 해당 날짜의 섹터별 데이터를 입력하면 히트맵이 자동으로 생성됩니다.
+--><html lang="ko"><head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- [수정] 리포트 날짜에 맞게 제목을 수정하세요. -->
+    <title>100x Daily Wrap - 2025년 08월 14일</title>
+    <meta name="description" content="100x Daily Wrap 리포트 템플릿입니다.">
+    <style>
+        body { font-family: 'Noto Sans KR', 'Roboto', sans-serif; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #e5e7eb; padding: 10px 14px; text-align: left; vertical-align: middle; }
+        th { background-color: #f9fafb; font-weight: 600; }
+        tbody tr:hover { background-color: #f3f4f6; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 500; }
+        .na-value { color: #9ca3af; font-style: italic;}
+        .transform-style-3d { transform-style: preserve-3d; }
+		.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+		.rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+<script type="module" src="../../initBaseHref.js"></script>
+
+    <!-- 헤더: 리포트의 제목과 날짜, 핵심 헤드라인을 명확하게 전달 -->
+	<header class="bg-slate-50 border-b border-slate-200">
+		<div class="container mx-auto px-4 py-8 md:py-10">
+			<div class="grid md:grid-cols-2 gap-8 items-center">
+				
+				<div class="text-center md:text-left">
+					<h1 class="text-4xl md:text-5xl font-bold orbitron text-slate-800">100x Daily Wrap</h1>
+					<!-- [수정] 리포트 날짜와 요일을 입력하세요. -->
+					<p class="text-lg text-slate-500 mt-2">2025년 08월 14일 (목요일)</p>
+				</div>
+
+				<div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+					<div class="flex items-start space-x-4">
+						<div class="flex-shrink-0">
+							<i class="fas fa-bullseye text-3xl text-blue-500"></i>
+						</div>
+						<div>
+							<h2 class="text-sm font-semibold text-blue-600">오늘의 핵심 논점</h2>
+							<!-- [수정] 오늘의 가장 중요한 헤드라인(Today's Thesis)을 입력하세요. -->
+							<p class="text-lg font-semibold text-slate-700 mt-1">
+								시장은 양호한 인플레이션 데이터와 비둘기파적인 재무장관의 발언이 맞물려 기록적인 주가 상승을 견인하면서 공격적인 연준의 통화 완화 사이클을 받아들이고 있습니다. 이는 지속적인 서비스 인플레이션과 고조되는 관세 압력으로 인한 근원적인 스태그플레이션 리스크에도 불구하고 나타나는 현상입니다.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
+	
+    <!-- 핵심 지표 섹션 -->
+    <section class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- [수정] 각 지표의 이름, 값, 변동률을 입력하세요. 양수일 경우 text-green-600, 음수일 경우 text-red-600 클래스를 사용하세요. -->
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">S&amp;P 500</h4>
+                <p class="text-2xl font-bold text-green-600">6,466.58</p>
+                <p class="text-sm font-semibold text-green-600">+0.32%</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">Nasdaq 100</h4>
+                <p class="text-2xl font-bold text-green-600">21,713.14</p>
+                <p class="text-sm font-semibold text-green-600">+0.14%</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">VIX</h4>
+                <p class="text-2xl font-bold text-green-600">14.49</p>
+                <p class="text-sm font-semibold text-green-600">-1.60%</p>
+            </div>
+             <div class="bg-white rounded-lg p-4 text-center card-shadow">
+                <h4 class="text-sm font-semibold text-gray-500">10-Y Treasury</h4>
+                <p class="text-2xl font-bold text-red-600">4.233%</p>
+                <p class="text-sm font-semibold text-red-600">-6.0 bps</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- ===== S01: 오늘의 논점 (Executive Summary & Thesis) ===== -->
+	<section id="s01-thesis" class="container mx-auto px-4 my-8 md:my-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-receipt mr-3 text-blue-600"></i>오늘의 논점
+			</h2>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+				<!-- [수정] 각 요약 카드의 제목과 내용을 입력하세요. 아이콘(fas fa-*)과 배경색(bg-*-50), 테두리색(border-*-200)은 내용에 맞게 변경할 수 있습니다. -->
+				<div class="bg-green-50 p-6 rounded-lg border border-green-200 transition hover:shadow-lg hover:border-green-300">
+					<div class="flex items-start">
+						<i class="fas fa-chart-line text-2xl text-green-500 mr-4 mt-1"></i>
+						<div>
+							<h4 class="font-bold text-lg text-gray-800">시장 주도 요인</h4>
+							<p class="text-base text-gray-600 mt-1">
+								7월 CPI 보고서에 따르면 헤드라인 인플레이션은 전년 동기 대비 2.7%, 근원 인플레이션은 3.1%로 컨센서스를 하회했지만, 특히 4월 이후 2.7%에서 3.2%로 상승한 '슈퍼코어' 부문의 서비스 인플레이션 가속화를 감추고 있습니다.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-blue-50 p-6 rounded-lg border border-blue-200 transition hover:shadow-lg hover:border-blue-300">
+					<div class="flex items-start">
+						<i class="fas fa-water text-2xl text-blue-500 mr-4 mt-1"></i>
+						<div>
+							<h4 class="font-bold text-lg text-gray-800">100x 유동성 지표</h4>
+							<p class="text-base text-gray-600 mt-1">
+                                연준의 대차대조표 자산은 주간 0.03% 감소한 6조 6,410억 달러를 기록했으며, RRP(역레포) 시설은 572억 달러로 감소하여 비둘기파적 정책 전환 기대에도 불구하고 지속적인 양적 긴축을 시사합니다.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-purple-50 p-6 rounded-lg border border-purple-200 transition hover:shadow-lg hover:border-purple-300">
+					 <div class="flex items-start">
+						<i class="fas fa-link text-2xl text-purple-500 mr-4 mt-1"></i>
+						<div>
+							<h4 class="font-bold text-lg text-gray-800">주요 상관관계 변화</h4>
+							<p class="text-base text-gray-600 mt-1">
+                                금리 민감 섹터가 상승을 주도하면서 러셀 2000 지수가 2% 상승하는 등 소형주가 대형주를 이틀 연속 앞질렀으며, 이는 6월 초 이후 가장 광범위한 섹터 참여를 기록했습니다.
+							</p>
+						</div>
+					</div>
+				</div>
+				<div class="bg-indigo-50 p-6 rounded-lg border border-indigo-200 transition hover:shadow-lg">
+					<div class="flex items-start">
+						<i class="fas fa-lightbulb text-2xl text-indigo-500 mr-4 mt-1"></i>
+						<div>
+							<h4 class="font-bold text-lg text-gray-800">주목할 만한 시그널</h4>
+							<p class="text-base text-gray-600 mt-1">
+                                베센트 재무장관의 150-175bp 금리 인하 요구로 시장은 9월에 26.5bp 인하 확률을 96%로 가격에 반영하고 있으며, 만약 연준이 25bp만 인하할 경우 잠재적인 변동성을 야기할 수 있습니다.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+    <!-- ===== S02: 시장 동향 (Today's Market Pulse) ===== -->
+	<section id="s02-market-pulse" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-heartbeat mr-3 text-blue-600"></i>시장 동향
+			</h2>
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+				
+				<div>
+					<h3 class="text-xl font-bold mb-4">주요 변화 요인</h3>
+					<div class="space-y-4">
+						<!-- [수정] 시장 변화의 주요 요인(Key Change Drivers)들을 입력하세요. 아이콘과 내용을 수정합니다. -->
+						<div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-handshake text-green-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">양호한 CPI 데이터</p>
+								<p class="text-sm text-gray-600">7월 헤드라인 CPI는 전월 대비 0.2% 상승(컨센서스 2.8% 하회)했으며, 근원 상품(+0.21% MoM)에서 제한적인 관세 전가 효과를 보여 서비스 인플레이션 가속화에도 불구하고 연준에 비둘기파적 명분을 제공했습니다.</p>
+							</div>
+						</div>
+						<div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-stream text-blue-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">재무장관의 비둘기파적 압력</p>
+								<p class="text-sm text-gray-600">베센트는 FOMC에 9월 50bp를 포함, 총 150-175bp의 금리 인하를 촉구하며 공격적인 완화 기대감과 달러 약세를 촉발했습니다.</p>
+							</div>
+						</div>
+						<div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-sync-alt text-orange-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">실적 모멘텀</p>
+								<p class="text-sm text-gray-600">S&P 500 기업의 91%가 실적을 발표했으며, 이 중 82%가 평균 8.5% 상회하는 실적을 기록하여 성장률 전망치를 분기 말 3.8%에서 10.3%로 끌어올렸습니다.</p>
+							</div>
+						</div>
+						 <div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-dove text-purple-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">변동성 붕괴</p>
+								<p class="text-sm text-gray-600">VIX 지수는 14.49로 2024년 12월 이후 최저 수준을 기록했으며, 국채 내재 변동성은 3년 만에 최저치를 기록하여 변동성 타겟팅 펀드의 자금 유입이 예상됩니다.</p>
+							</div>
+						</div>
+						<div class="bg-gray-50 p-4 rounded-lg flex items-center space-x-4">
+							<i class="fas fa-exclamation-triangle text-red-500 fa-lg w-6 text-center"></i>
+							<div>
+								<p class="font-semibold text-gray-800">섹터 로테이션 가속화</p>
+								<p class="text-sm text-gray-600">화요일 S&P 500의 모든 섹터가 6월 이후 처음으로 동반 상승했으며, 소재(+1.90%), 헬스케어(+1.60%), 소비재(+1.37%)가 상승을 주도했습니다.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="bg-gray-50 p-6 rounded-lg border flex flex-col">
+					<h3 class="text-xl font-bold mb-4">핵심 기회 포인트</h3>
+					<!-- [수정] 현재 시장의 주요 기회 요소(Primary Opportunities)를 입력하세요. -->
+					<ul class="space-y-3 text-sm">
+						<li class="flex items-start">
+							<i class="fas fa-landmark text-indigo-500 w-5 text-center mr-3 mt-1"></i>
+							<div>
+								<b>정책 연계:</b> 잭슨홀(8월 21-23일)에서 연준의 정책 프레임워크가 FAIT(평균물가목표제)에서 대칭적 2% 목표로 변경될 것으로 예상 → 보다 공격적인 정책 정상화 사이클에 대비한 포지셔닝.
+							</div>
+						</li>
+						<li class="flex items-start">
+							<i class="fas fa-briefcase text-green-500 w-5 text-center mr-3 mt-1"></i>
+							<div>
+								<b>섹터 회전:</b> 금리 민감주인 소형주 러셀 2000이 2월 고점에 근접하며 우수한 성과를 보임 → 완화 기대감에 따라 지방 은행 및 주택 건설업체에 대한 투자 목표 설정.
+							</div>
+						</li>
+						<li class="flex items-start">
+							<i class="fas fa-route text-blue-500 w-5 text-center mr-3 mt-1"></i>
+							<div>
+								<b>거시 경제:</b> 달러 약세(연초 대비 -24%)가 신흥 시장 자산을 지지하며 2.5%의 성장 격차를 보임 → 자본 흐름의 혜택을 받는 대만, 한국, 칠레, 콜롬비아에 대한 배분.
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8 mt-6">
+            <h2 class="text-2xl md:text-2xl font-bold mb-6 text-gray-800 flex items-center">
+                <i class="fas fa-water mr-3 text-blue-600"></i>100x 유동성 지표
+            </h2>
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="font-semibold text-blue-800 text-lg">유동성 점수</p>
+					<!-- [수정] 100x Liquidity Indicator 유동성 지표 점수(1-10)와 상태(예: 중립, 긍정적)를 입력하세요. -->
+                    <span class="font-bold text-2xl text-blue-600">6.2 / 10 (강세)</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+					<!-- [수정] style의 width 값을 (점수 * 10)%로 설정하세요. 예: 6점 -> 60% -->
+                    <div class="bg-blue-500 h-3 rounded-full" style="width: 62%"></div>
+                </div>
+				<!-- [수정] 유동성 환경(Commentary)과 각각 Indicator Deconstruction 대한 설명을 입력하세요. -->
+                <p class="text-sm text-gray-700 mb-6">지속적인 양적 긴축(QT)에도 불구하고 유동성 여건은 여전히 양호합니다. 연준의 대차대조표 축소는 RRP(역레포) 시설의 인출과 비둘기파적 정책 전환 기대감에 따른 위험 자산으로의 자금 흐름으로 상쇄되고 있습니다.</p>
+                
+                <div>
+                    <h4 class="font-semibold text-gray-700 mb-3 border-b pb-2">상세 기여도</h4>
+					<!-- [수정] 각 수치를 입력하고 긍정적일 경우 text-green-600, 부정적일 경우 text-red-600, 중립일 경우 text-gray-600를 입력하세요. -->					
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-900 font-bold mb-2">Fed Balance Sheet</p>
+							<p class="font-bold text-sm text-gray-400 mb-1">6조 6,410억 달러</p>
+                            <p class="font-bold text-lg text-red-600">-1.2pt</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-900 font-bold mb-2">TGA</p>
+							<p class="font-bold text-sm text-gray-400 mb-1">2,910억 달러 적자</p>
+                            <p class="font-bold text-lg text-green-600">+2.1pt</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-900 font-bold mb-2">RRP</p>
+							<p class="font-bold text-sm text-gray-400 mb-1">572억 달러</p>
+                            <p class="font-bold text-lg text-green-600">+1.8pt</p>
+                        </div>
+                    </div>
+					  <!-- [수정] Key Driver에 대한 설명을 입력하세요. -->
+                     <p class="text-sm text-center mt-4"><b>Key Driver:</b> 재무장관의 비둘기파적 발언과 CPI 데이터가 결합되면서, 지속적인 서비스 인플레이션 리스크에도 불구하고 공격적인 완화 기대감을 견인하고 있습니다.</p>
+                </div>
+            </div>
+        </div>
+	</div>
+		
+		
+	</section>
+    
+    <!-- ===== S03: 멀티에셋 대시보드 (Multi-Asset Performance Dashboard) ===== -->
+    <section id="s03-multi-asset" class="container mx-auto px-4 mb-8 md:mb-12">
+        <div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-tachometer-alt mr-3 text-blue-600"></i>멀티에셋 퍼포먼스 대시보드
+			</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+			
+				<div>
+					<h3 class="text-xl font-bold mb-4 text-green-700 flex items-center">
+						<i class="fas fa-arrow-trend-up mr-2"></i>주요 상승 종목
+					</h3>
+					<div class="space-y-4">
+						<!-- [수정] 주요 상승 종목 정보를 3개(Top 3 U.S. Gainers)까지 입력하세요. (티커, 변동률, 상승 이유) -->
+						<div class="bg-green-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-green-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">1</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">Stanley Black & Decker (SWK) <span class="font-normal text-green-600 ml-2">+6.37%</span></p>
+								<p class="text-xs text-gray-500">연초 대비 25.98% 하락했음에도 급등하며 S&P 500 상승을 주도, 과매도 상태가 반등을 이끌었을 가능성 시사.</p>
+							</div>
+						</div>
+						<div class="bg-green-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-green-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">2</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">Gartner (IT) <span class="font-normal text-green-600 ml-2">+5.78%</span></p>
+								<p class="text-xs text-gray-500">연초 대비 52.49% 하락하며 고전하고 있어, 리서치 및 자문 분야에서 상당한 역풍을 맞고 있음을 나타냄.</p>
+							</div>
+						</div>
+						<div class="bg-green-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-green-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">3</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">Pool (POOL) <span class="font-normal text-green-600 ml-2">+5.72%</span></p>
+								<p class="text-xs text-gray-500">상승하며 상위 상승주에 합류했지만, 여전히 연초 대비 10.88% 하락한 상태.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div>
+					<h3 class="text-xl font-bold mb-4 text-red-700 flex items-center">
+						<i class="fas fa-arrow-trend-down mr-2"></i>주요 하락 종목
+					</h3>
+					<div class="space-y-4">
+						 <!-- [수정] 주요 하락 종목 정보를 3개(Top 3 U.S. Losers)까지 입력하세요. (티커, 변동률, 하락 이유)  -->
+						 <div class="bg-red-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-red-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">1</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">Raymond James Financial (RJF) <span class="font-normal text-red-600 ml-2">-2.69%</span></p>
+								<p class="text-xs text-gray-500">연초 대비 49.76%의 견조한 상승세에도 하락, 금융 부문에서의 차익 실현을 반영할 수 있음.</p>
+							</div>
+						</div>
+						 <div class="bg-red-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-red-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">2</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">Walmart (WMT) <span class="font-normal text-red-600 ml-2">-2.54%</span></p>
+								<p class="text-xs text-gray-500">연초 대비 51.28%의 견실한 수익률을 기록하며, 상당한 상승 후의 조정 국면임을 시사.</p>
+							</div>
+						</div>
+						 <div class="bg-red-50 p-4 rounded-lg flex items-center space-x-4 transition hover:shadow-md">
+							<div class="bg-red-500 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">3</div>
+							<div class="flex-1">
+								<p class="font-bold text-gray-800">Howmet Aerospace (HWM) <span class="font-normal text-red-600 ml-2">-2.27%</span></p>
+								<p class="text-xs text-gray-500">93.77%의 상승률로 하락 종목 중 가장 강력한 연초 대비 성과를 유지.</p>
+							</div>
+						</div>
+					</div>
+				</div>			
+            </div>
+			
+			<div class="overflow-x-auto">
+				<h3 class="text-xl font-bold mb-4">자산별 성과 요약</h3>
+				<!-- [수정] Multi-Asset Performanced을 입력하세요.-->
+				<div x-data="{ tab: 'indices' }" class="w-full">
+					<div class="border-b border-gray-200 mb-4 flex space-x-4 text-sm font-semibold">
+						<div class="flex space-x-4 text-sm font-semibold px-1 py-2">
+						  <button @click="tab = 'indices'" 
+						          :class="tab === 'indices' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'" 
+						          class="pb-1">
+						    지수
+						  </button>
+						  <button @click="tab = 'fixed_income_fx'" 
+						          :class="tab === 'fixed_income_fx' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'" 
+						          class="pb-1">
+						    채권·환율
+						  </button>
+						  <button @click="tab = 'commodities'" 
+						          :class="tab === 'commodities' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'" 
+						          class="pb-1">
+						    원자재
+						  </button>
+						  <button @click="tab = 'digital_assets'" 
+						          :class="tab === 'digital_assets' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'" 
+						          class="pb-1">
+						    디지털자산
+						  </button>
+						</div>						
+					</div>
+					<!-- [수정] 각 탭의 아코디언 메뉴에 해당 자산의 데이터를 입력하세요. -->
+					<div class="pt-5">						
+						<!-- [수정] Major Indices & Volatility 자산의 데이터를 입력하세요. -->
+						<!-- [DAY 변화율], [Close], [YTD 변화율], [Note], [색상클래스] text-green-600 or text-red-600 지정 필요 -->						
+						<div x-show="tab === 'indices'" class="space-y-2">
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-chart-line text-blue-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">S&amp;P 500</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.32%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 6,466.58 / <b>YTD:</b> <span class="text-green-600">+9.76%</span></p><p class="mt-1 text-xs text-gray-600">광범위한 섹터 참여와 연준의 완화 기대감에 힘입어 사상 최고치 경신</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-microchip text-purple-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Nasdaq 100</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.14%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 21,713.14 / <b>YTD:</b> <span class="text-green-600">+13.50%</span></p><p class="mt-1 text-xs text-gray-600">기술주에서 소형주로의 순환매에도 불구하고 새로운 종가 최고치 기록</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cubes text-gray-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Russell 2000 (IWM ETF)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+1.98%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 2,328.06 / <b>YTD:</b> <span class="text-green-600">+4.39%</span></p><p class="mt-1 text-xs text-gray-600">금리 민감 섹터 주도에 힘입어 5월 이후 최대 상승폭 기록</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-sort-amount-up-alt text-red-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">VIX</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-1.60%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 14.49 / <b>YTD:</b> <span class="text-red-600">-15.79%</span></p><p class="mt-1 text-xs text-gray-600">연준의 비둘기파적 전환에 변동성 붕괴하며 2025년 최저치 기록</p></div></div>
+						</div>
+						<!-- [수정] Fixed Income & Currencies 자산의 데이터를 입력하세요. -->
+						<!-- [DAY 변화율], [Close], [YTD 변화율], [Note], [색상클래스] text-green-600 or text-red-600 지정 필요 -->
+						<div x-show="tab === 'fixed_income_fx'" class="space-y-2">
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">2-Y UST Yield</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-4.8 bps</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> 3.683% / <b>YTD:</b> <span class="text-red-600">-67.4 bps</span></p><p class="mt-1 text-xs text-gray-600">재무장관의 비둘기파적 발언에 따른 급격한 하락</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-file-invoice-dollar text-indigo-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">10-Y UST Yield</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-6.0 bps</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>금리:</b> 4.233% / <b>YTD:</b> <span class="text-red-600">-42.8 bps</span></p><p class="mt-1 text-xs text-gray-600">공격적인 완화 기대감에 채권 랠리 가속화</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-dollar-sign text-teal-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">DXY</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-0.27%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 97.786 / <b>YTD:</b> <span class="text-red-600">-24.35%</span></p><p class="mt-1 text-xs text-gray-600">달러 약세가 심화되며 2주 만에 최저치 기록</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-won-sign text-amber-600 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">USD/KRW</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-0.76%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> 1,379.40 / <b>YTD:</b> <span class="text-red-600">-5.57%</span></p><p class="mt-1 text-xs text-gray-600">외국인 주식 매도 압력에도 불구하고 원화 강세</p></div></div>
+						</div>
+						<!-- [수정] Commodities 자산의 데이터를 입력하세요. -->
+						<!-- [DAY 변화율], [Close], [YTD 변화율], [Note], [색상클래스] text-green-600 or text-red-600 지정 필요 -->					
+						<div x-show="tab === 'commodities'" class="space-y-2">
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-ring text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Gold (GLD)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.30%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> $309.21 / <b>YTD:</b> <span class="text-green-600">+27.70%</span></p><p class="mt-1 text-xs text-gray-600">달러 약세가 귀금속을 지지하며 사상 최고치 영역 기록</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-coins text-slate-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Silver (SLV)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+1.71%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> $35.00 / <b>YTD:</b> <span class="text-green-600">+32.93%</span></p><p class="mt-1 text-xs text-gray-600">산업 수요와 안전자산 선호 흐름이 초과 성과를 견인</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-cog text-rose-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Copper (CPER)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-0.04%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> $4.4955/lb / <b>YTD:</b> <span class="text-green-600">+12.46%</span></p><p class="mt-1 text-xs text-gray-600">혼재된 수요 신호 속 최근 고점 부근에서 보합세</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-oil-can text-gray-800 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Oil (WTI)</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+0.11%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> $62.86/bbl / <b>YTD:</b> <span class="text-red-600">-18.14%</span></p><p class="mt-1 text-xs text-gray-600">과잉 공급 우려와 수요 약세 속 소폭 상승</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fas fa-burn text-yellow-600 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">Natural Gas (UNG)</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-1.05%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open && 'rotate-180'"></i></div></button><div x-show="open" x-transition class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> $2.80/MMBtu / <b>YTD:</b> <span class="text-red-600">-23.01%</span></p><p class="mt-1 text-xs text-gray-600">풍부한 공급과 온화한 날씨로 인한 지속적인 압박</p></div></div>
+						</div>
+						<!-- [수정] Digital Assets 자산의 데이터를 입력하세요. -->
+						<!-- [DAY 변화율], [Close], [YTD 변화율], [Note], [색상클래스] text-green-600 or text-red-600 지정 필요 -->
+						<div x-show="tab === 'digital_assets'" class="space-y-2">
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-bitcoin text-yellow-500 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">BTC/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-green-600">+2.62%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> $122,807.61</p><p class="mt-1 text-xs text-gray-600">기관 수요가 960억 달러의 거래량을 견인하며 사상 최고 종가 기록</p></div></div>
+							<div x-data="{ open: false }" class="border rounded-lg"><button @click="open = !open" class="w-full flex justify-between items-center p-4"><div class="flex items-center"><i class="fab fa-ethereum text-gray-400 w-6 text-center mr-3"></i><span class="font-semibold text-gray-800">ETH/USD</span></div><div class="flex items-center"><span class="font-bold text-lg text-red-600">-0.05%</span><i class="fas fa-chevron-down ml-4 transition-transform" :class="open &amp;&amp; 'rotate-180'"></i></div></button><div x-show="open" x-transition="" class="p-4 border-t bg-gray-50 text-sm"><p><b>종가:</b> $4,747.61</p><p class="mt-1 text-xs text-gray-600">월요일 10억 달러 ETF 유입 이정표 이후 사상 최고가에 근접</p></div></div>
+						</div>
+					</div>
+				</div>
+			</div>
+        </div>
+    </section>
+
+    <!-- ===== S04: 상관관계 및 변동성 (Correlation & Volatility Matrix) ===== -->
+	<section id="s04-correlation" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-wave-square mr-3 text-blue-600"></i>상관관계 및 변동성 매트릭스
+			</h2>
+			<div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+				<h3 class="text-xl font-bold mb-6 text-blue-800 flex items-center">
+					<i class="fas fa-project-diagram mr-2"></i>주요 자산 간 상관관계 (30일)
+				</h3>
+
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+					<!-- [수정] 각 자산 간의 상관관계 수치(Core Correlation Matrix)를 입력하세요. -->
+					<!-- [수정] 각 수치를 입력하고(Correlation) 긍정적일 경우 text-green-600, 부정적일 경우 text-red-600, 중립일 경우 text-gray-600를 입력하세요. -->
+					<div class="bg-white rounded-lg p-4 text-center shadow-md">
+						<!-- [수정] S&P 500 vs. 10-Y Treasury  -->
+						<p class="text-sm font-semibold text-gray-700">S&amp;P 500 vs 10년물 금리</p>
+						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
+							<i class="fas fa-link-slash mr-2"></i> -0.72
+						</p>
+						<p class="text-xs text-gray-500">연준의 완화 기대감 속에서 주식 랠리와 채권 강세가 동시에 나타나면서 강한 음의 상관관계</p>
+					</div>
+					<div class="bg-white rounded-lg p-4 text-center shadow-md">
+						<p class="text-sm font-semibold text-gray-700">S&amp;P 500 vs 금</p>
+						<p class="text-3xl font-bold my-2 text-green-600 flex items-center justify-center">
+							<i class="fas fa-link mr-2"></i> +0.45
+						</p>
+						<p class="text-xs text-gray-500">두 자산 모두 달러 약세와 비둘기파적 통화 정책의 혜택을 받으면서 완만한 양의 상관관계</p>
+					</div>
+					<div class="bg-white rounded-lg p-4 text-center shadow-md">
+						<p class="text-sm font-semibold text-gray-700">달러 vs S&amp;P 500</p>
+						<p class="text-3xl font-bold my-2 text-red-600 flex items-center justify-center">
+							<i class="fas fa-link-slash mr-2"></i> -0.68
+						</p>
+						<p class="text-xs text-gray-500">달러 하락이 주식 초과 성과를 뒷받침하면서 강한 역의 관계</p>
+					</div>
+				</div>
+				<h3 class="text-xl font-bold mb-4 mt-8 text-blue-800">
+					<i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>주목할 만한 이례 현상
+				</h3>
+				<div class="space-y-4 text-sm">
+					<!-- [수정] 특이사항(Anomaly Spotlight)에 대한 분석 내용을 입력하세요. -->
+					<div class="flex items-start">
+						<i class="fas fa-check-circle text-blue-600 mr-3 mt-1"></i>
+						<div>
+							<b class="text-blue-700">추세 이탈:</b> 
+							재무장관의 비둘기파적 발언이 주식과 채권의 동반 랠리를 이끌면서 S&P 500과 10년 만기 국채의 상관관계가 거의 중립 수준에서 급격히 음으로 전환되었습니다.
+						</div>
+					</div>
+					<div class="flex items-start">
+						<i class="fas fa-check-circle text-blue-600 mr-3 mt-1"></i>
+						<div>
+							<b class="text-blue-700">동조화 급등:</b>
+							금과 S&P 500의 상관관계는 두 자산 모두 공격적인 연준의 완화 기대감과 지속적인 달러 약세의 혜택을 받으면서 2020년 이후 최고 수준으로 급등했습니다.
+						</div>
+					</div>
+					<div class="flex items-start">
+						<i class="fas fa-check-circle text-blue-600 mr-3 mt-1"></i>
+						<div>
+							<b class="text-blue-700">역상관 심화:</b>
+							달러의 연초 대비 24% 하락이 광범위한 주가 상승을 견인하면서 DXY와 S&P 500의 상관관계는 6개월 만에 가장 부정적인 수치로 심화되었습니다.
+						</div>
+					</div>
+				</div>
+				
+				
+				<div class="mt-8 pt-6 border-t border-blue-200">
+					<h3 class="text-xl font-bold mb-4 text-indigo-800 flex items-center">
+						<i class="fas fa-magnifying-glass-chart mr-2"></i>100x 채권 시장 인사이트
+					</h3>
+					<div class="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
+						<div class="space-y-4 text-sm">
+							<div class="flex items-start">
+								<i class="fas fa-yin-yang text-indigo-500 fa-lg w-5 text-center mr-4 mt-1"></i>
+								<div>
+									<h4 class="font-bold text-gray-800">핵심 충돌 (Core Conflict)</h4>
+									<p class="text-gray-600">시장은 9월 금리 인하 확률을 100% 반영하고 있으나, 스콧 베센트 재무장관의 공격적인 50bp 인하 촉구와 같은 이례적인 공개 개입이 더해져 기대가 과열되고 있습니다. 이는 국채 입찰 부진과 회사채 발행 물량 부담으로 인한 금리 상승 압력과 상충하고 있습니다.</p>
+								</div>
+							</div>
+							<div class="flex items-start">
+								<i class="fas fa-chart-line text-indigo-500 fa-lg w-5 text-center mr-4 mt-1"></i>
+								<div>
+									<h4 class="font-bold text-gray-800">기술적 관점 (Technical View)</h4>
+									<p class="text-gray-600">10년물 국채 금리가 핵심 기술적 지지선인 4.25%를 하향 돌파하며 강세 신호를 보이고 있습니다. 모기지 리파이낸싱 활동이 증가하며 채권 시장의 듀레이션 수요를 자극하고 있어, 금리 하락 랠리를 더욱 지지하고 있습니다.</p>
+								</div>
+							</div>
+							<div class="flex items-start">
+								<i class="fas fa-user-tie text-indigo-500 fa-lg w-5 text-center mr-4 mt-1"></i>
+								<div>
+									<h4 class="font-bold text-gray-800">전략적 결론 (Strategic Conclusion)</h4>
+									<p class="text-gray-600">계속 실업수당 청구 건수가 2021년 말 이후 최고치를 기록하는 등 노동 시장 둔화 신호는 금리 인하 기대를 강화합니다. 그러나 일부 인플레이션 지표의 끈질긴 상승세는 정책 불확실성을 높입니다. 시장은 당분간 박스권 장세를 유지할 가능성이 높습니다.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>				
+				
+				
+				
+			</div>
+		</div>
+	</section>
+
+    <!-- ===== S05: 월스트리스 인텔리전스 (Fresh Wall Street Intelligence) ===== -->
+	<section id="s05-wall" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="far fa-lightbulb mr-3 text-blue-600"></i>월스트리트 최신 정보
+			</h2>
+			
+			<div>
+				<h3 class="text-xl font-bold mb-6">주요 투자은행 업데이트</h3>
+				
+			<div class="mb-8 space-y-3 text-sm">
+				<div class="flex items-start p-3 bg-green-50 rounded-lg">
+					<i class="fas fa-arrow-up text-green-500 w-4 text-center mr-3 mt-1"></i>
+					<div><b class="text-green-700">[주요 상향]</b> Goldman Sachs는 <b class="font-semibold">CACI</b>를 '매도'에서 '매수'로 이중 상향했으며, Deutsche Bank(PANW), BofA(LITE), JPMorgan(CPRI), Barclays(CTVA) 등 다수의 IB가 주요 종목의 투자의견을 상향 조정했습니다.</div>
+				</div>
+				<div class="flex items-start p-3 bg-red-50 rounded-lg">
+					<i class="fas fa-arrow-down text-red-500 w-4 text-center mr-3 mt-1"></i>
+					<div><b class="text-red-700">[주요 하향]</b> Oppenheimer(AI), Jefferies(ONON), Morgan Stanley(INSM), Wells Fargo(BRO) 등에서 실적 및 성장성 둔화 우려로 주요 기술주 및 금융주에 대한 투자의견 하향이 있었습니다.</div>
+				</div>
+				<div class="flex items-start p-3 bg-blue-50 rounded-lg">
+					<i class="fas fa-plus-circle text-blue-500 w-4 text-center mr-3 mt-1"></i>
+					<div><b class="text-blue-700">[신규 커버리지]</b> Citi는 <b class="font-semibold">Ategrity Specialty Insurance(ACGL)</b>에 대해 '매수/고위험' 등급으로 신규 커버리지를 개시했습니다.</div>
+				</div>
+			</div>
+
+
+				<div class="relative border-l-2 border-gray-200 pl-8 space-y-8">
+					
+					<!-- [수정] 투자은행 업데이트(Major IB Updates) 내용을 반복해서 추가/수정하세요. -->
+					<!-- 종류: 상향(green), 하향(red), 신규(blue) -->
+					<div class="relative">
+						<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-red-200 rounded-full ring-4 ring-white">
+							<i class="fas fa-arrow-down text-red-600"></i>
+						</div>
+						<div class="bg-gray-50 rounded-lg p-4">
+							<p class="text-sm text-gray-500">Goldman Sachs</p>
+							<p class="font-bold text-lg">CACI <span class="text-red-600 font-semibold ml-2">이중 등급 하향</span></p>
+							<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+								<span>목표가: <b class="text-gray-800">$544</b></span>
+								<span>상승여력: <b class="text-green-600">+33.6%</b></span>
+							</div>
+							<p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 트럼프 행정부 하에서 가장 좋은 위치에 있는 방위 산업 계약업체</p>
+						</div>
+					</div>
+
+					<div class="relative">
+						 <div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-green-200 rounded-full ring-4 ring-white">
+							<i class="fas fa-arrow-up text-green-600"></i>
+						</div>
+						<div class="bg-gray-50 rounded-lg p-4">
+							<p class="text-sm text-gray-500">Deutsche Bank</p>
+							<p class="font-bold text-lg">PANW <span class="text-green-600 font-semibold ml-2">상향</span></p>
+							 <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+								<span>목표가: <b class="text-gray-800">$220</b></span>
+								<span>상승여력: <b class="text-green-600">+10.0%</b></span>
+							</div>
+							<p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 주식 실적 부진을 감안할 때 투자자들의 우려는 과장됨</p>
+						</div>
+					</div>
+					<div class="relative">
+						<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-green-200 rounded-full ring-4 ring-white">
+						   <i class="fas fa-arrow-up text-green-600"></i>
+					   </div>
+					   <div class="bg-gray-50 rounded-lg p-4">
+						   <p class="text-sm text-gray-500">BofA</p>
+						   <p class="font-bold text-lg">LITE <span class="text-green-600 font-semibold ml-2">상향</span></p>
+							<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+							   <span>목표가: <b class="text-gray-800">$135</b></span>
+							   <span>상승여력: <b class="text-green-600">+73.1%</b></span>
+						   </div>
+						   <p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 개선된 전망과 함께 광학 부품의 뿌리로 다시 집중</p>
+					   </div>
+				   </div>
+				   <div class="relative">
+					<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-green-200 rounded-full ring-4 ring-white">
+					   <i class="fas fa-arrow-up text-green-600"></i>
+				   </div>
+				   <div class="bg-gray-50 rounded-lg p-4">
+					   <p class="text-sm text-gray-500">JPMorgan</p>
+					   <p class="font-bold text-lg">CPRI <span class="text-green-600 font-semibold ml-2">상향</span></p>
+						<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+						   <span>목표가: <b class="text-gray-800">$30</b></span>
+						   <span>상승여력: <b class="text-green-600">+25.0%</b></span>
+					   </div>
+					   <p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 2026 회계연도 내내 매출 개선 예상</p>
+				   </div>
+			   </div>
+			   <div class="relative">
+				<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-green-200 rounded-full ring-4 ring-white">
+				   <i class="fas fa-arrow-up text-green-600"></i>
+			   </div>
+			   <div class="bg-gray-50 rounded-lg p-4">
+				   <p class="text-sm text-gray-500">Barclays</p>
+				   <p class="font-bold text-lg">CTVA <span class="text-green-600 font-semibold ml-2">상향</span></p>
+					<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+					   <span>목표가: <b class="text-gray-800">$84</b></span>
+					   <span>상승여력: <b class="text-green-600">+12.0%</b></span>
+				   </div>
+				   <p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 라틴 아메리카 경작지 성장과 혁신이 수익성 증대</p>
+			   </div>
+		   </div>
+		   <div class="relative">
+			<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-red-200 rounded-full ring-4 ring-white">
+			   <i class="fas fa-arrow-down text-red-600"></i>
+		   </div>
+		   <div class="bg-gray-50 rounded-lg p-4">
+			   <p class="text-sm text-gray-500">Oppenheimer</p>
+			   <p class="font-bold text-lg">AI <span class="text-red-600 font-semibold ml-2">하향</span></p>
+				<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+				   <span>목표가: <b class="na-value">-</b></span>
+				   <span>상승여력: <b class="na-value">-</b></span>
+			   </div>
+			   <p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 1분기 실적이 매우 부진하여 전분기 대비 35%의 매출 감소를 의미</p>
+		   </div>
+	   </div>
+	   <div class="relative">
+		<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-red-200 rounded-full ring-4 ring-white">
+		   <i class="fas fa-arrow-down text-red-600"></i>
+	   </div>
+	   <div class="bg-gray-50 rounded-lg p-4">
+		   <p class="text-sm text-gray-500">Jefferies</p>
+		   <p class="font-bold text-lg">ONON <span class="text-red-600 font-semibold ml-2">하향</span></p>
+			<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+			   <span>목표가: <b class="text-gray-800">$40</b></span>
+			   <span>상승여력: <b class="text-red-600">-17.0%</b></span>
+		   </div>
+		   <p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 2025년은 회사의 최고 매출 성장률을 기록하는 해</p>
+	   </div>
+   </div>
+   <div class="relative">
+	<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-red-200 rounded-full ring-4 ring-white">
+	   <i class="fas fa-arrow-down text-red-600"></i>
+   </div>
+   <div class="bg-gray-50 rounded-lg p-4">
+	   <p class="text-sm text-gray-500">Morgan Stanley</p>
+	   <p class="font-bold text-lg">INSM <span class="text-red-600 font-semibold ml-2">하향</span></p>
+		<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+		   <span>목표가: <b class="text-gray-800">$126</b></span>
+		   <span>상승여력: <b class="text-green-600">+12.5%</b></span>
+	   </div>
+	   <p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 현재 가치 평가는 약물의 단기적 기회를 포착</p>
+   </div>
+</div>
+<div class="relative">
+	<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-red-200 rounded-full ring-4 ring-white">
+	   <i class="fas fa-arrow-down text-red-600"></i>
+   </div>
+   <div class="bg-gray-50 rounded-lg p-4">
+	   <p class="text-sm text-gray-500">Wells Fargo</p>
+	   <p class="font-bold text-lg">BRO <span class="text-red-600 font-semibold ml-2">하향</span></p>
+		<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+		   <span>목표가: <b class="text-gray-800">$101</b></span>
+		   <span>상승여력: <b class="text-red-600">-3.0%</b></span>
+	   </div>
+	   <p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 남부 지역 집중으로 인해 동종업계 대비 유기적 성장률 저조</p>
+   </div>
+</div>
+<div class="relative">
+	<div class="absolute -left-11 top-1 flex items-center justify-center w-6 h-6 bg-green-200 rounded-full ring-4 ring-white">
+	   <i class="fas fa-arrow-up text-green-600"></i>
+   </div>
+   <div class="bg-gray-50 rounded-lg p-4">
+	   <p class="text-sm text-gray-500">Citi</p>
+	   <p class="font-bold text-lg">AGL <span class="text-green-600 font-semibold ml-2">상향</span></p>
+		<div class="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
+		   <span>목표가: <b class="text-gray-800">A$11.35</b></span>
+		   <span>상승여력: <b class="na-value">-</b></span>
+	   </div>
+	   <p class="text-xs text-gray-600 mt-2"><b>코멘트:</b> 28 회계연도까지 배터리에서 2억 7천만 호주 달러의 EBITDA 기여에 대한 경영진의 확신에 따라 FY25 실적 부진 후 상향 조정</p>
+   </div>
+</div>
+					
+				</div>
+			</div>
+		
+
+			<div class="mt-10 pt-6 border-t border-gray-200">
+					<div>
+						<!-- [수정] 애널리스트 시각(Analyst's View) 내용을 반복해서 추가/수정하세요. -->
+						<h3 class="text-xl font-bold mb-4 text-gray-800">애널리스트 시각</h3>
+							<div class="space-y-3">
+								<!-- 강세 전망 뷰 (파란색 테마) -->
+								<div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+									<p class="text-sm font-medium text-gray-800">
+										<span class="font-semibold text-blue-700">•</span> 
+										골드만삭스는 S&P 500 기업의 91%가 실적을 발표하고 그 중 82%가 평균 8.5%의 예상을 상회하는 실적을 기록하며 성장률 전망치를 3.8%에서 10.3%로 끌어올린 것을 근거로 S&P 500 목표치를 6,600으로 상향 조정했습니다.
+									</p>
+								</div>
+								
+								<!-- 신중 전망 뷰 (주황색 테마) -->
+								<div class="bg-amber-50 p-4 rounded-lg border-l-4 border-amber-500">
+									<p class="text-sm font-medium text-gray-800">
+										<span class="font-semibold text-amber-700">•</span> 
+										모건스탠리는 4월 이후 S&P 500이 29% 상승했음에도 불구하고, 3개월 평균 일자리 창출이 35,000명으로 둔화되고 대형 기술주 외의 기업 실적이 고르지 않다는 점을 강조하며 주식 시장의 안일함을 경고했습니다.
+									</p>
+								</div>
+								
+								<!-- 약세 경고 뷰 (빨간색 테마) -->
+								<div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+									<p class="text-sm font-medium text-gray-800">
+										<span class="font-semibold text-red-700">•</span> 
+										리처드 번스타인 어드바이저는 컨센서스 낙관론에 반박하며, 상향 조정된 추정치에도 불구하고 이익 둔화를 예측하고 있습니다. 이는 애널리스트들이 31%의 이익 감소 전에 9% 성장을 예측했던 기술 버블 시기와 유사점을 지적합니다.
+									</p>
+								</div>
+							</div>
+					</div>
+					
+					<!-- [수정] 100x Market vs Street 내용을 추가/수정하세요. -->	
+					<div class="mt-10 pt-6 border-t border-gray-200">
+						<div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-lg">
+							<h3 class="font-bold text-blue-800 mb-4 flex items-center text-lg">
+								<i class="fas fa-balance-scale mr-2"></i>100x Market vs Street
+							</h3>
+							
+							<div class="space-y-4">
+								<!-- Reality Score 강조 -->
+								<div class="flex items-center justify-between border-b border-blue-200 pb-3">
+									<span class="font-semibold text-blue-700">100x Reality Score:</span>
+									<!-- [수정] Reality Label 색상: 과열(text-red-600), 조정(text-orange-600), 중립(text-gray-600), 저평가(text-green-600) -->
+									<span class="font-bold text-lg text-blue-800">4/5 <span class="text-sm text-orange-600">(높은 괴리)</span></span>
+								</div>
+								
+								<!-- Action -->
+								<div class="text-sm">
+									<span class="font-semibold text-blue-700">투자 대응 전략:</span> 
+									<span class="text-gray-700">시장이 150-175bp의 금리 인하를 가격에 반영하고 있는 반면, 연준은 4월 이후 2.7%에서 3.2%로 상승하는 지속적인 서비스 인플레이션에 직면해 있으므로 공격적인 완화 기대감을 축소해야 합니다. 9월에 26.5bp(96% 확률)가 아닌 25bp만 인하될 경우 변동성 기회가 발생할 수 있습니다.</span>
+								</div>
+								
+								<!-- Biggest Disconnect -->
+								<div class="text-sm">
+									<span class="font-semibold text-blue-700">주요 괴리 요인:</span> 
+									<span class="text-gray-700">월스트리트가 S&P 500 목표치를 6,600으로 사상 최고치로 올린 것과 대조적으로, BofA 펀드 매니저 설문조사에서는 기록적인 고평가 우려와 함께 기관들이 과도한 지표에도 불구하고 수익률을 쫓으면서 현금 수준이 25년 만에 최저치에 근접했음을 보여줍니다.</span>
+								</div>
+								
+								<!-- Market Says -->
+								<div class="text-sm">
+									<span class="font-semibold text-blue-700">시장 시그널:</span> 
+									<span class="text-gray-700">광범위한 섹터 참여와 VIX 지수가 2025년 최저치를 기록한 것은 지속 가능한 랠리를 시사하지만, 기본 데이터에 따르면 매그니피센트 7은 연간 26% 성장하는 반면 나머지 493개 S&P 500 주식은 거의 성장하지 않아 집중 위험을 감추고 있습니다.</span>
+								</div>
+							</div>
+						</div>
+					</div>					
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== S06: Institutional Money Flows ===== -->
+	<section id="s06-flows" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-water mr-3 text-blue-600"></i>기관 자금 흐름
+			</h2>
+			
+			<!-- 상단: 옵션 거래 & ETF 자금 흐름 -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+				<!-- 대규모 옵션 거래 -->
+				<div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6 border border-purple-200">
+					<h3 class="font-bold text-lg mb-4 flex items-center">
+						<i class="fas fa-chart-pie mr-2 text-purple-600"></i>대규모 옵션 거래
+					</h3>
+					<div class="space-y-4 text-sm">
+						<!-- [수정] 주요 옵션 거래(Large Options Trades) 내용을 입력하세요. -->
+						<div class="bg-white rounded-lg p-3 border-l-4 border-purple-500">
+							<p class="font-semibold text-gray-800">AES Corp (AES)</p>
+							<p class="text-gray-600 mt-1">예상 거래량의 <b class="text-purple-600">2.0배</b>에 달하는 <b class="text-purple-600">17,202건</b>의 콜옵션이 거래되었으며, 내재 변동성은 1포인트 이상 급등한 <b class="text-purple-600">43.39%</b>를 기록했습니다. 거래는 25년 8월 11일 콜과 26년 1월 13일 콜에 집중되어 총 10,100 계약에 달했습니다.</p>
+						</div>
+						<div class="bg-white rounded-lg p-3 border-l-4 border-purple-500">
+							<p class="font-semibold text-gray-800">Tempus AI (TEM)</p>
+							<p class="text-gray-600 mt-1">예상 거래량의 <b class="text-purple-600">2배</b>에 달하는 <b class="text-purple-600">45,265건</b>의 콜옵션이 거래되었으며, 내재 변동성은 1포인트 이상 급등한 <b class="text-purple-600">72.64%</b>를 기록했습니다. 거래는 25년 8월 70 콜과 25년 8월 75 콜에 집중되어 7,400 계약에 달했습니다.</p>
+						</div>
+						<div class="bg-white rounded-lg p-3 border-l-4 border-purple-500">
+							<p class="font-semibold text-gray-800">Apollo Global Management (APO)</p>
+							<p class="text-gray-600 mt-1">기관 순환매에 대비한 <b class="text-purple-600">대각선 콜 스프레드 포지셔닝</b>으로 옵션 활동이 급증했습니다.</p>
+						</div>
+						<div class="bg-white rounded-lg p-3 border-l-4 border-purple-500">
+							<p class="font-semibold text-gray-800">Five9 (FIVN)</p>
+							<p class="text-gray-600 mt-1">예상치인 0.65달러를 상회하는 0.76달러의 실적 발표 이후, 일평균 거래량 384건에서 <b class="text-purple-600">2,115% 증가</b>한 <b class="text-purple-600">8,504건</b>의 콜옵션이 매수되었습니다.</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- ETF 자금 흐름 -->
+				<div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6 border border-green-200">
+					<h3 class="font-bold text-lg mb-4 flex items-center">
+						<i class="fas fa-exchange-alt mr-2 text-green-600"></i>ETF 자금 흐름
+					</h3>
+					<div class="space-y-4 text-sm">
+						<!-- [수정] 주요 ETF 자금 흐름(ETF Flows) 내용을 입력하세요. -->
+						<div class="bg-white rounded-lg p-3 border-l-4 border-green-500">
+							<p class="font-semibold text-gray-800">BlackRock iShares Ethereum Trust (ETHA)</p>
+							<p class="text-gray-600 mt-1">8월 11일 하루 동안 <b class="text-green-600">6억 4천만 달러</b>의 기록적인 자금이 유입되어 <b class="text-green-600">149,168 ETH</b>가 추가되었으며, 총 보유량은 330만 ETH를 넘어섰고 순유입액은 100억 달러를 돌파했습니다.</p>
+						</div>
+						<div class="bg-white rounded-lg p-3 border-l-4 border-green-500">
+							<p class="font-semibold text-gray-800">이더리움 ETF 총계</p>
+							<p class="text-gray-600 mt-1">8월 11일 <b class="text-green-600">10억 1,900만 달러</b>의 순유입을 기록하며 출시 이후 최대 일일 유입을 기록했으며, 이는 비트코인 ETF의 1억 7,800만 달러 유입을 크게 상회했습니다.</p>
+						</div>
+						<div class="bg-white rounded-lg p-3 border-l-4 border-green-500">
+							<p class="font-semibold text-gray-800">iShares 7-10 Year Treasury Bond ETF (IEF)</p>
+							<p class="text-gray-600 mt-1">JP모건 체이스는 지분을 <b class="text-green-600">5.0% 늘려</b> 26억 8천만 달러 상당의 2,808만 주를 보유하게 되었으며, LPL 파이낸셜은 보유 지분을 <b class="text-green-600">18.2% 늘려</b> 4억 1,740만 달러로 확대했습니다.</p>
+						</div>
+						<div class="bg-white rounded-lg p-3 border-l-4 border-green-500">
+							<p class="font-semibold text-gray-800">미국 비트코인 현물 ETF</p>
+							<p class="text-gray-600 mt-1">8월 13일 ARK 21Shares Bitcoin ETF(3,660만 달러)와 Fidelity Wise Origin Bitcoin Fund(2,670만 달러) 주도로 총 <b class="text-green-600">8,690만 달러</b>가 유입되었습니다.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 하단: 다크풀 & 정치자금 (세로 배치) -->
+			<div class="bg-gray-50 p-6 rounded-lg lg:col-span-2">
+				<h3 class="font-bold text-lg mb-6 flex items-center">
+					<i class="fas fa-user-secret mr-2 text-gray-500"></i>다크 풀 및 정치 자금
+				</h3>
+				
+				<!-- 다크풀 매매 섹션 -->
+				<div class="mb-6">
+					<h4 class="font-semibold text-gray-700 mb-3 border-b border-gray-300 pb-2">다크 풀 매매</h4>
+					<div class="space-y-3">
+						<!-- [수정] 다크풀 거래 내용(Dark Pool) 2개 항목을 입력하세요. -->
+						<div class="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+							<p class="text-sm text-gray-600">
+								2025년 8월 13일 수요일 다크풀 활동은 주요 미국 주식에서 <b class="text-blue-600">141억 달러</b>의 명목 가치에 도달했으며, <b class="text-blue-700">SPY</b>가 23개 주문에 걸쳐 <span class="font-mono text-blue-600 font-semibold">36억 3천만 달러</span>(560만 주)로 선두를 달렸습니다.
+							</p>
+						</div>
+						<div class="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+							<p class="text-sm text-gray-600">
+								Latam Airlines(LTM)의 대규모 블록 오퍼링은 주당 42.49달러에서 43.00달러 사이의 가격으로 <b class="text-blue-600">1,500만 주</b>가 포함되었으며, 이는 약 <span class="font-mono text-blue-600 font-semibold">6억 3,700만 달러에서 6억 4,500만 달러</span>의 명목 가치를 나타냅니다.
+							</p>
+						</div>
+					</div>
+				</div>
+				
+				<!-- 정치자금 동향 섹션 -->
+				<div>
+					<h4 class="font-semibold text-gray-700 mb-3 border-b border-gray-300 pb-2">정치 자금 동향</h4>
+					<div class="bg-white rounded-lg p-4 border-l-4 border-amber-500">
+						<!-- [수정] 정치 자금(Political Donation Flows) 관련 내용을 입력하세요. -->
+						<p class="text-sm text-gray-600">
+							암호화폐 관련 슈퍼팩(Super PAC)들은 2024년 민주당 하원 의원들을 지원하기 위해 <b class="text-amber-600">3,000만 달러 이상</b>을 지출한 후, 디지털 자산 시장 구조 법안을 위한 로비 활동을 동원하는 '스탠드 위드 크립토(Stand With Crypto)'와 함께 중간선거를 위한 유사한 규모의 자금을 준비하고 있습니다.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+   
+    <!-- ===== S07: 섹터 순환 동향 (Sector Rotation Pulse) ===== -->
+	<section id="s07-sector-pulse" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center"><i class="fas fa-sync-alt mr-3 text-blue-600"></i>섹터 및 순환 동향</h2>
+			
+			<div>
+				<h3 class="text-xl font-bold mb-4">섹터 퍼포먼스 히트맵</h3>
+				<!-- 이 부분은 아래 스크립트에서 자동으로 생성됩니다. sectorData 배열만 수정하세요. -->
+				<div id="sector-heatmap" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-white">
+				</div>
+			</div>
+			
+			<!-- [수정] 섹터 순환 분석(Sector Rotation Views) 내용을 추가/수정하세요. -->
+			<div class="mt-8 pt-6 border-t border-gray-200">
+				<div>
+					<h3 class="text-xl font-bold mb-4 text-gray-800">섹터 로테이션</h3>
+					<div class="space-y-3">
+						<!-- 강세 섹터 뷰 (녹색 테마) -->
+						<div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+							<p class="text-sm font-medium text-gray-800">
+								<span class="font-semibold text-green-700">•</span> 
+								주택 건설 및 지역 은행을 포함한 금리 민감 섹터가 이틀 연속으로 시장 수익률을 상회하고 있으며, 연준의 금리 인하 기대감으로 대형 기술주에서 자금이 이동하면서 소형주는 이번 주에 4% 이상 상승했습니다.
+							</p>
+						</div>
+						
+						<!-- 중립 섹터 뷰 (파란색 테마) -->
+						<div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+							<p class="text-sm font-medium text-gray-800">
+								<span class="font-semibold text-blue-700">•</span> 
+								헬스케어는 7월에 55,000개의 일자리가 추가되었다는 강력한 고용 데이터와 함께 1.60%의 상승률로 방어주 리더로 부상하고 있으며, 기술주는 AI 모멘텀에도 불구하고 보합세를 보이며 피로 신호를 보이고 있습니다.
+							</p>
+						</div>
+						
+						<!-- 약세 섹터 뷰 (빨간색 테마) -->
+						<div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+							<p class="text-sm font-medium text-gray-800">
+								<span class="font-semibold text-red-700">•</span> 
+								소재 및 산업재는 인프라 지출 순풍의 혜택을 받고 있지만, 글로벌 공급망 위축은 제너럴 일렉트릭과 같은 산업주에 5.38% 하락하는 등 역풍을 만들고 있습니다.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- [수정] 100x Sector Signal 내용을 추가/수정하세요. -->
+			<div class="mt-8 pt-6 border-t border-gray-200">
+				<div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-lg">
+					<h3 class="font-bold text-blue-800 mb-4 flex items-center text-lg">
+						<i class="fas fa-arrows-spin mr-2"></i>100x Sector Signal
+					</h3>
+					
+					<div class="space-y-4">
+						<!-- Rotation Signal 점수 -->
+						<div class="flex items-center justify-between border-b border-blue-200 pb-3">
+							<span class="font-semibold text-blue-700">Rotation Signal:</span>
+							<!-- [수정] Rotation Signal 색상: 과열(text-red-600), 활발(text-orange-600), 보통(text-blue-600), 침체(text-gray-600) -->
+							<span class="font-bold text-lg text-blue-800">4/5 <span class="text-orange-600">(강함)</span></span>
+						</div>
+						
+						<!-- Signal Direction -->
+						<div class="text-sm">
+							<span class="font-semibold text-blue-700">시그널:</span> 
+							<span class="text-gray-700">대형 기술주에서 경기민감주 및 금리 민감 섹터로의 광범위한 로테이션</span>
+						</div>
+						
+						<!-- Strongest Mover -->
+						<div class="text-sm">
+							<span class="font-semibold text-blue-700">강한 섹터:</span> 
+							<span class="text-gray-700">소재 (+1.88%) - 인프라 수요와 원자재 강세가 시장 수익률 상회 견인</span>
+						</div>
+						
+						<!-- Rotation Pattern -->
+						<div class="text-sm">
+							<span class="font-semibold text-blue-700">순환 패턴:</span> 
+							<span class="text-gray-700">연준의 완화 사이클이 다가옴에 따라 성장주에서 가치주로의 전형적인 후기 사이클 로테이션</span>
+						</div>
+						
+						<!-- Trade Signal -->
+						<div class="text-sm">
+							<span class="font-semibold text-blue-700">거래 전략:</span> 
+							<span class="text-gray-700">9월 금리 인하를 앞두고 대형 기술주 비중을 줄이면서 소재, 헬스케어, 소형주 노출을 선호</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- =========================== -->
+	<!-- 100x TECH RADAR 섹션 (통합) -->
+	<!-- LLM 매핑: 12개 기술주 카드 + AI 생태계 분석 + 투자 관점 + 100x 인사이트 -->
+	<!-- =========================== -->
+	<section id="s08-tech-radar" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center">
+				<i class="fas fa-robot mr-3 text-blue-600"></i>100x Tech Radar
+			</h2>
+
+			<!-- =========================== -->
+			<!-- 12 KEY TICKERS TABLE (기존 유지) -->
+			<!-- [수정] 각 기술주 카드의 데이터를 입력하세요. (티커, 이름, 등락률, YTD, 뒷면 코멘트) -->
+			<!-- =========================== -->
+			<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8" style="perspective: 1000px;">
+				
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">PLTR</p><p class="text-xs text-gray-500">Palantir Technologies</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-1.39%</p><p class="text-xs text-green-600">YTD +143.78%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>최근의 강한 성과 이후 하락. 정부 및 상업 부문에서 회사의 AI 및 데이터 분석 플랫폼에 대한 강력한 수요를 반영한 놀라운 주가 상승 이후 차익 실현으로 보임.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">NVDA</p><p class="text-xs text-gray-500">NVIDIA Corp.</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-0.83%</p><p class="text-xs text-green-600">YTD +35.22%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>중국이 자국 기술 의존도 및 안보 우려로 H20 AI 칩 구매를 기피하면서 하락. 또한 미국 당국이 중국으로 향하는 첨단 칩에 추적 장치를 부착. AI 칩 스타트업 Rivos의 경쟁 압력도 존재.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">NFLX</p><p class="text-xs text-gray-500">Netflix, Inc.</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-1.70%</p><p class="text-xs text-green-600">YTD +35.13%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>견고한 펀더멘털에도 불구하고 하락. 성공적인 콘텐츠 전략과 가입자 증가를 보였으나, 기술주 로테이션과 연초 대비 강한 상승에 따른 차익 실현으로 하락한 것으로 보임.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">AVGO</p><p class="text-xs text-gray-500">Broadcom Inc.</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-1.20%</p><p class="text-xs text-green-600">YTD +33.32%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>견조한 펀더멘털에도 불구하고 하락. 주가는 역사적 또는 내재된 공정 가치를 훨씬 상회하는 약 49배의 주가수익비율로 거래되고 있어 AI 기반의 높은 기대치를 반영.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">META</p><p class="text-xs text-gray-500">Meta Platforms, Inc.</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-1.26%</p><p class="text-xs text-green-600">YTD +33.23%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>Threads 사용자 4억 명 돌파 후 52주 신고가 경신했으나 하락. AI 인프라 구축을 위한 루이지애나 데이터 센터 프로젝트에 290억 달러 자금 조달 확보에도 불구하고, 마이크로소프트의 공격적인 인재 영입으로 하락.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">CRWD</p><p class="text-xs text-gray-500">CrowdStrike Holdings</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-0.84%</p><p class="text-xs text-green-600">YTD +26.29%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>사이버 보안 주식들이 광범위한 기술주 로테이션과 밸류에이션 우려로 역풍을 맞으며 하락. 높은 밸류에이션과 경쟁 압력에 직면.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">MSFT</p><p class="text-xs text-gray-500">Microsoft Corp.</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-1.64%</p><p class="text-xs text-green-600">YTD +23.51%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>시스코, 블랙록과의 AI 인프라 투자 협력 등 긍정적 소식에도 불구하고 하락. GitHub CEO 사임 발표와 메타 AI 인재에 대한 공격적인 영입 경쟁이 하락 요인. 씨티는 SaaS 가격 정책 변경을 이유로 매수 등급 유지.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">GOOGL</p><p class="text-xs text-gray-500">Alphabet Inc.</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-0.68%</p><p class="text-xs text-green-600">YTD +6.69%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>Perplexity가 크롬 브라우저 인수를 위해 345억 달러를 제안했다는 미확인 보도 속에서 지속적인 반독점 문제와 규제 조사로 하락. D.A. Davidson은 알파벳의 완전한 분할을 주장.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-green-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-green-600"><div><p class="font-bold text-lg">AMZN</p><p class="text-xs text-gray-500">Amazon.com, Inc.</p></div><div class="text-right"><p class="text-lg font-bold text-green-600">+1.40%</p><p class="text-xs text-green-600">YTD +2.36%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>당일 식료품 및 신선식품 배송 서비스를 연말까지 2,300개 이상의 도시로 대폭 확장한다고 발표하며 상승. 씨티는 아마존의 생필품 부문 성공을 언급하며 매수 등급 유지.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-green-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-green-600"><div><p class="font-bold text-lg">AAPL</p><p class="text-xs text-gray-500">Apple Inc.</p></div><div class="text-right"><p class="text-lg font-bold text-green-600">+1.60%</p><p class="text-xs text-red-600">YTD -6.82%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>주요 공급업체인 폭스콘의 긍정적인 모멘텀에 힘입어 상승. 폭스콘은 AI 서버 사업 성장과 엔비디아와의 파트너십 덕분에 2분기 영업이익이 예상을 뛰어넘는 실적을 기록. BofA는 멀티 이어 업그레이드 사이클을 예상하며 매수 등급 유지.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-red-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-red-500"><div><p class="font-bold text-lg">TSLA</p><p class="text-xs text-gray-500">Tesla, Inc.</p></div><div class="text-right"><p class="text-lg font-bold text-red-600">-0.43%</p><p class="text-xs text-red-600">YTD -15.96%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>전기차 시장, 특히 픽업트럭 부문에서의 지속적인 도전 속에서 하락. 사이버트럭이 판매 열풍을 일으키지 못했으며, 소비자들은 가격 및 배터리 용량 문제로 전기 트럭 채택에 저항을 보임.</p></div></div></div>
+				<div x-data="{ flipped: false }" @click="flipped = !flipped" class="cursor-pointer h-48 group"><div class="relative w-full h-full transition-transform duration-500 transform-style-3d" :class="{ 'rotate-y-180': flipped }"><div class="absolute w-full h-full backface-hidden bg-green-50 rounded-lg shadow p-4 flex flex-col justify-between border-l-4 border-green-600"><div><p class="font-bold text-lg">NOW</p><p class="text-xs text-gray-500">ServiceNow, Inc.</p></div><div class="text-right"><p class="text-lg font-bold text-green-600">+1.16%</p><p class="text-xs text-red-600">YTD -18.57%</p></div></div><div class="absolute w-full h-full backface-hidden bg-gray-800 text-white rounded-lg shadow p-4 text-xs flex items-center justify-center rotate-y-180"><p>최근 약세에서 회복하며 상승. 기업 소프트웨어 회사는 느린 기업 지출과 장기화된 영업 사이클로 인한 역풍에 계속 직면하고 있음.</p></div></div></div>
+				
+			</div>
+
+			<!-- =========================== -->
+			<!-- AI ECOSYSTEM PULSE (새로운 구조) -->
+			<!-- [수정] AI 생태계 주요 동향 6개 항목을 입력하세요. -->
+			<!-- =========================== -->
+			<div class="mt-8 pt-6 border-t border-gray-200">
+				<div>
+					<h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center">
+						<i class="fas fa-network-wired mr-2 text-purple-600"></i>AI 생태계 동향
+					</h3>
+					
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						<!-- 스타트업 스포트라이트 Startup Spotlight -->
+						<div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border-l-4 border-purple-500">
+							<h4 class="font-semibold text-purple-700 mb-2 flex items-center">
+								<i class="fas fa-rocket mr-2"></i>스타트업 스포트라이트
+							</h4>
+							<p class="text-sm text-gray-700">Profound는 AI 마케팅 플랫폼으로 세쿼이아 캐피탈 주도의 시리즈 B에서 3,500만 달러를 유치했으며, August Health는 AI 기반 노인 요양 플랫폼으로 시리즈 B에서 2,900만 달러를 확보했습니다.</p>
+						</div>
+
+						<!-- 메가 펀딩 Mega Funding -->
+						<div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border-l-4 border-green-500">
+							<h4 class="font-semibold text-green-700 mb-2 flex items-center">
+								<i class="fas fa-dollar-sign mr-2"></i>메가 펀딩
+							</h4>
+							<p class="text-sm text-gray-700">OpenAI는 뉴럴링크와 경쟁하기 위해 8억 5,000만 달러 가치의 Merge Labs를 지원할 준비를 하고 있으며, Rivos는 엔비디아에 도전하기 위해 20억 달러 이상의 가치로 4억~5억 달러를 조달하고자 합니다.</p>
+						</div>
+
+						<!-- 기술 혁신 Tech Breakthrough -->
+						<div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
+							<h4 class="font-semibold text-blue-700 mb-2 flex items-center">
+								<i class="fas fa-flask mr-2"></i>기술 혁신
+							</h4>
+							<p class="text-sm text-gray-700">OpenAI는 표준 GPT와 추론 모델을 결합한 GPT-5를 출시했으며, 초기 테스터들은 코딩 및 창의적 글쓰기 능력이 더 강력해졌다고 보고했으며 기업용 가격은 월 최대 20,000달러에 달합니다.</p>
+						</div>
+
+						<!-- 정책 영향 Policy Impact -->
+						<div class="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-lg border-l-4 border-amber-500">
+							<h4 class="font-semibold text-amber-700 mb-2 flex items-center">
+								<i class="fas fa-landmark mr-2"></i>정책 영향
+							</h4>
+							<p class="text-sm text-gray-700">EU AI 법은 8월 2일부터 GPAI 모델에 대한 투명성 요구 사항과 함께 시행되었으며, 트럼프 행정부의 AI 실행 계획은 규제 장벽 제거를 우선시합니다.</p>
+						</div>
+
+						<!-- 전략적 제휴 Strategic Deal -->
+						<div class="bg-gradient-to-br from-teal-50 to-teal-100 p-4 rounded-lg border-l-4 border-teal-500">
+							<h4 class="font-semibold text-teal-700 mb-2 flex items-center">
+								<i class="fas fa-handshake mr-2"></i>전략적 제휴
+							</h4>
+							<p class="text-sm text-gray-700">마이크로소프트는 AI 인재 전쟁에서 수백만 달러의 제안으로 메타 엔지니어를 겨냥하고 있으며, 바이두는 AI 반도체 개발을 위해 DEEPX와 파트너십을 맺었습니다.</p>
+						</div>
+
+						<!-- 글로벌 경쟁 Global Competition -->
+						<div class="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border-l-4 border-red-500">
+							<h4 class="font-semibold text-red-700 mb-2 flex items-center">
+								<i class="fas fa-globe mr-2"></i>글로벌 경쟁
+							</h4>
+							<p class="text-sm text-gray-700">중국은 자국 대안을 장려하며 엔비디아 H20 칩 구매를 기피하고 있으며, 미국 당국은 중국으로 향하는 첨단 칩 선적에 추적 장치를 부착하고 있습니다.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- =========================== -->
+			<!-- AI INVESTMENT LENS (새로운 구조) -->
+			<!-- [수정] AI 투자 관점 3개 항목을 입력하세요. -->
+			<!-- =========================== -->
+			<div class="mt-8 pt-6 border-t border-gray-200">
+				<div>
+					<h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+						<i class="fas fa-search-dollar mr-2 text-indigo-600"></i>AI 투자 관점
+					</h3>
+					
+					<div class="space-y-4">
+						<!-- 최고 기회 Best Opportunity -->
+						<div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+							<h4 class="font-semibold text-green-700 mb-2 flex items-center">
+								<i class="fas fa-bullseye mr-2"></i>최고 기회
+							</h4>
+							<p class="text-sm text-gray-700">CoreWeave는 2분기 매출이 전년 동기 대비 207% 증가한 12억 달러를 기록하며 선도적인 AI 인프라 공급업체로 자리매김했으며, 하이퍼스케일러의 4-6개월에 비해 2.5개월의 배포 주기를 가진 전문 GPU-as-a-Service를 제공합니다.</p>
+						</div>
+
+						<!-- 핵심 리스크 Key Risk-->
+						<div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+							<h4 class="font-semibold text-orange-700 mb-2 flex items-center">
+								<i class="fas fa-exclamation-triangle mr-2"></i>핵심 리스크
+							</h4>
+							<p class="text-sm text-gray-700">AI 인프라 제공업체 전반에 걸친 높은 고객 집중도는 취약성을 야기하며, CoreWeave의 마이크로소프트 의존도와 소수의 하이퍼스케일 고객에 대한 광범위한 부문 의존도가 있습니다.</p>
+						</div>
+
+						<!-- 밸류에이션 경고 Valuation Alert-->
+						<div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+							<h4 class="font-semibold text-red-700 mb-2 flex items-center">
+								<i class="fas fa-chart-line-down mr-2"></i>밸류에이션 경고
+							</h4>
+							<p class="text-sm text-gray-700">기술 부문은 사상 최고치인 24.5배에 근접한 22.5배의 주가수익비율로 거래되고 있으며, 매그니피센트 7이 S&P 500의 35%를 차지하여 강력한 펀더멘털에도 불구하고 집중 리스크를 야기합니다.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- =========================== -->
+			<!-- 100x AI EDGE (새로운 구조) -->
+			<!-- [수정] 100x AI Edge 인사이트 3개 항목을 입력하세요. -->
+			<!-- =========================== -->
+			<div class="mt-8 pt-6 border-t border-gray-200">
+				<div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-lg">
+					<h3 class="font-bold text-blue-800 mb-4 flex items-center text-lg">
+						<i class="fas fa-brain mr-2"></i>100x AI Edge
+					</h3>
+					
+					<div class="space-y-4">
+						<!-- 100x Take -->
+						<div>
+							<h4 class="font-semibold text-blue-700 mb-2">100x Take:</h4>
+							<p class="text-sm text-gray-700">AI 인프라 군비 경쟁은 CoreWeave와 같은 전문 컴퓨팅 제공업체에 숨겨진 차익 거래 기회를 만들고 있습니다. 이들의 2.5개월 GPU 배포 우위와 20% 더 높은 활용률은 하이퍼스케일러가 범용 아키텍처 제약으로 인해 쉽게 복제할 수 없는 지속 가능한 경쟁 우위를 나타냅니다.</p>
+						</div>
+
+						<!-- Hidden Connection -->
+						<div>
+							<h4 class="font-semibold text-blue-700 mb-2">숨겨진 연결고리:</h4>
+							<p class="text-sm text-gray-700">마이크로소프트의 공격적인 메타 인재 영입은 OpenAI의 Merge Labs 지원과 동시에 이루어지며, 이는 애플의 앱스토어 지배력을 우회하고 AI 상호작용을 위한 직접적인 신경 경로를 만들 수 있는 뇌-컴퓨터 인터페이스 기능을 구축하려는 조정된 전략을 시사합니다.</p>
+						</div>
+
+						<!-- Overlooked Implication -->
+						<div>
+							<h4 class="font-semibold text-blue-700 mb-2">간과된 시사점:</h4>
+							<p class="text-sm text-gray-700">중국이 엔비디아의 규격 준수 H20 칩을 거부한 것은 주요 지정학적 AI 리스크를 워싱턴에서 베이징으로 이동시켜, 잠재적으로 중국 국내 AI 개발을 가속화하는 동시에 다른 시장에 예상치 못한 공급 가용성을 창출하여 글로벌 AI 칩 할당 역학을 근본적으로 변경합니다.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</section>
+
+			
+	<!-- =========================== -->
+	<!-- TODAY'S ACTIONABLE TRADE SIGNALS 섹션 (완전 재구성) -->
+	<!-- LLM 매핑: Live Trade Signals + Live Broker Alpha Scanner + 100x Signal Rank -->
+	<!-- =========================== -->
+	<section id="s09-trade-signals" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center">
+				<i class="fas fa-bullseye mr-3 text-blue-600"></i>실전 매매 시그널
+			</h2>
+
+			<!-- =========================== -->
+			<!-- LIVE TRADE SIGNALS (업데이트된 버전) -->
+			<!-- [수정] 실시간 거래 시그널 3개를 입력하세요. -->
+			<!-- =========================== -->
+			<div class="mb-10">
+				<h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center">
+					<i class="fas fa-satellite-dish mr-2 text-green-600"></i>실시간 트레이드
+				</h3>
+				
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+					<!-- Signal #1 -->
+					<div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-300 shadow-lg">
+						<div class="text-center mb-4">
+							<h4 class="font-bold text-green-800 text-lg mb-2">EUR/USD</h4>
+							<div class="bg-green-600 text-white rounded-full px-4 py-2 inline-block">
+								<i class="fas fa-arrow-up mr-2"></i>LONG
+							</div>
+						</div>
+						
+						<div class="space-y-3 text-sm">
+							<!-- 기본 정보 -->
+							<div class="bg-white rounded-lg p-3 border border-green-200">
+								<div class="grid grid-cols-2 gap-3">
+									<div><span class="font-semibold text-gray-700">진입:</span> <span class="text-green-700 font-bold">1.1700</span></div>
+									<div><span class="font-semibold text-gray-700">목표:</span> <span class="text-green-700 font-bold">1.1850</span></div>
+									<div><span class="font-semibold text-gray-700">손절:</span> <span class="text-red-600 font-bold">1.1685</span></div>
+									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="text-gray-800 font-bold">2.5%</span></div>
+								</div>
+							</div>
+							
+							<!-- 리스크/리워드 -->
+							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-green-200">
+								<span class="font-semibold text-gray-700">Risk/Reward:</span>
+								<span class="text-green-700 font-bold">1:10</span>
+							</div>
+							
+							<!-- 승률 -->
+							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-green-200">
+								<span class="font-semibold text-gray-700">승률:</span>
+								<span class="text-blue-600 font-bold">73%</span>
+							</div>
+							
+							<!-- 촉매 -->
+							<div class="bg-white rounded-lg p-3 border border-green-200">
+								<p class="font-semibold text-gray-700 mb-1">촉매:</p>
+								<p class="text-gray-600">연준의 금리 인하 기대감이 달러 약세를 주도하고, EUR/USD는 50일 이동평균선 위에서 상승 채널을 형성하며 강세 RVI 교차를 보임</p>
+							</div>
+							
+							<!-- 타임스탬프 -->
+							<div class="text-xs text-gray-500 text-center pt-2 border-t border-green-200">
+								생성시간: 2025-08-14T02:01:00Z
+							</div>
+						</div>
+					</div>
+
+					<!-- Signal #2 -->
+					<div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-300 shadow-lg">
+						<div class="text-center mb-4">
+							<h4 class="font-bold text-blue-800 text-lg mb-2">BTC/USD</h4>
+							<div class="bg-blue-600 text-white rounded-full px-4 py-2 inline-block">
+								<i class="fas fa-arrow-up mr-2"></i>LONG
+							</div>
+						</div>
+						
+						<div class="space-y-3 text-sm">
+							<!-- 기본 정보 -->
+							<div class="bg-white rounded-lg p-3 border border-blue-200">
+								<div class="grid grid-cols-2 gap-3">
+									<div><span class="font-semibold text-gray-700">진입:</span> <span class="text-blue-700 font-bold">121,000</span></div>
+									<div><span class="font-semibold text-gray-700">목표:</span> <span class="text-blue-700 font-bold">130,000</span></div>
+									<div><span class="font-semibold text-gray-700">손절:</span> <span class="text-red-600 font-bold">117,000</span></div>
+									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="text-gray-800 font-bold">3.0%</span></div>
+								</div>
+							</div>
+							
+							<!-- 리스크/리워드 -->
+							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-blue-200">
+								<span class="font-semibold text-gray-700">Risk/Reward:</span>
+								<span class="text-blue-700 font-bold">1:2.25</span>
+							</div>
+							
+							<!-- 승률 -->
+							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-blue-200">
+								<span class="font-semibold text-gray-700">승률:</span>
+								<span class="text-blue-600 font-bold">68%</span>
+							</div>
+							
+							<!-- 촉매 -->
+							<div class="bg-white rounded-lg p-3 border border-blue-200">
+								<p class="font-semibold text-gray-700 mb-1">촉매:</p>
+								<p class="text-gray-600">비트코인이 124,000달러를 돌파하며 사상 최고치를 경신했고, 24시간 동안 3.58% 상승했으며 9월에 기관 거래량이 돌아옴</p>
+							</div>
+							
+							<!-- 타임스탬프 -->
+							<div class="text-xs text-gray-500 text-center pt-2 border-t border-blue-200">
+								생성시간: 2025-08-14T02:01:00Z
+							</div>
+						</div>
+					</div>
+
+					<!-- Signal #3 -->
+					<div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-300 shadow-lg">
+						<div class="text-center mb-4">
+							<h4 class="font-bold text-blue-800 text-lg mb-2">ETH/USD</h4>
+							<div class="bg-blue-600 text-white rounded-full px-4 py-2 inline-block">
+								<i class="fas fa-arrow-up mr-2"></i>LONG
+							</div>
+						</div>
+						
+						<div class="space-y-3 text-sm">
+							<!-- 기본 정보 -->
+							<div class="bg-white rounded-lg p-3 border border-blue-200">
+								<div class="grid grid-cols-2 gap-3">
+									<div><span class="font-semibold text-gray-700">진입:</span> <span class="text-blue-700 font-bold">4,700</span></div>
+									<div><span class="font-semibold text-gray-700">목표:</span> <span class="text-blue-700 font-bold">5,000</span></div>
+									<div><span class="font-semibold text-gray-700">손절:</span> <span class="text-red-600 font-bold">4,300</span></div>
+									<div><span class="font-semibold text-gray-700">포지션:</span> <span class="text-gray-800 font-bold">2.0%</span></div>
+								</div>
+							</div>
+							
+							<!-- 리스크/리워드 -->
+							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-blue-200">
+								<span class="font-semibold text-gray-700">Risk/Reward:</span>
+								<span class="text-blue-700 font-bold">1:0.75</span>
+							</div>
+							
+							<!-- 승률 -->
+							<div class="flex justify-between items-center bg-white rounded-lg p-3 border border-blue-200">
+								<span class="font-semibold text-gray-700">승률:</span>
+								<span class="text-blue-600 font-bold">65%</span>
+							</div>
+							
+							<!-- 촉매 -->
+							<div class="bg-white rounded-lg p-3 border border-blue-200">
+								<p class="font-semibold text-gray-700 mb-1">촉매:</p>
+								<p class="text-gray-600">6억 6,300만 달러의 기관 ETF 유입으로 기록적인 네트워크 활동을 보였으며, 거래소 잔고 감소로 공급 압박이 발생</p>
+							</div>
+							
+							<!-- 타임스탬프 -->
+							<div class="text-xs text-gray-500 text-center pt-2 border-t border-blue-200">
+								생성시간: 2025-08-14T02:01:00Z
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- =========================== -->
+			<!-- LIVE BROKER ALPHA SCANNER (새로운 섹션) -->
+			<!-- [수정] 브로커 알파 스캐너 3개 항목을 입력하세요. -->
+			<!-- =========================== -->
+			<div class="mt-10 pt-8 border-t border-gray-200">
+				<div>
+					<h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center">
+						<i class="fas fa-radar-dish mr-2 text-purple-600"></i>기관 트레이드
+					</h3>
+					
+					<div class="space-y-4">
+						<!-- 🔥 가장 핫한 컨센서스 빌드 -->
+						<div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-6 border-l-4 border-orange-500">
+							<h4 class="font-bold text-orange-700 mb-3 flex items-center">
+								<i class="fas fa-fire mr-2"></i>기관 공통 매집 종목: CoreWeave (CRWV)
+							</h4>
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+								<div>
+									<p><span class="font-semibold text-gray-700">컨센서스 리포트 날짜:</span> <span class="text-gray-800">2025-08-13</span></p>
+									<p><span class="font-semibold text-gray-700">촉매:</span> <span class="text-gray-800">2분기 매출이 전년 동기 대비 207% 증가한 12억 달러를 기록하며 AI 인프라 리더십을 보였고, 전문 GPU-as-a-Service 배포 이점을 가짐</span></p>
+									<p><span class="font-semibold text-gray-700">서포트 레벨:</span> <span class="text-gray-800">3명의 애널리스트, 평균 39% 상승 여력</span></p>
+								</div>
+								<div>
+									<p><span class="font-semibold text-gray-700">최근 분석 변화:</span> <span class="text-green-600 font-bold">씨티는 2분기 손실에도 불구하고 26 회계연도 EV/매출 배수 7배를 언급하며 164달러 목표가로 매수 등급 유지</span></p>
+									<p><span class="font-semibold text-gray-700">핵심 리스크:</span> <span class="text-red-600">마이크로소프트에 대한 높은 고객 집중도와 높은 부채 부담이 취약점을 만듦</span></p>
+								</div>
+							</div>
+						</div>
+
+						<!-- ⚡ 프레시 업그레이드 얼럿 -->
+						<div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border-l-4 border-green-500">
+							<h4 class="font-bold text-green-700 mb-3 flex items-center">
+								<i class="fas fa-bolt mr-2"></i>최신 투자의견 상향 종목: Palo Alto Networks (PANW)
+							</h4>
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+								<div>
+									<p><span class="font-semibold text-gray-700">업그레이드 날짜:</span> <span class="text-gray-800">2025-08-13</span></p>
+									<p><span class="font-semibold text-gray-700">리서치 하우스:</span> <span class="text-green-600 font-bold">도이체방크 - 보유에서 매수로 상향 조정</span></p>
+									<p><span class="font-semibold text-gray-700">신규 목표가:</span> <span class="text-green-600 font-bold">220달러 (+10% 상승 여력)</span></p>
+								</div>
+								<div>
+									<p><span class="font-semibold text-gray-700">투자전략 변경사항:</span> <span class="text-gray-800">연초 대비 광범위한 사이버 공간 대비 15% 저조한 성과를 감안할 때 투자자 우려가 과도함</span></p>
+									<p><span class="font-semibold text-gray-700">적정 진입 시점:</span> <span class="text-gray-800">AI 보안 수요가 가속화됨에 따라 사이버 보안 부문 로테이션에 앞서</span></p>
+								</div>
+							</div>
+						</div>
+
+						<!-- 💎 히든 젬 디스커버리 -->
+						<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
+							<h4 class="font-bold text-blue-700 mb-3 flex items-center">
+								<i class="fas fa-gem mr-2"></i>숨은 수혜주 포착: CACI International (CACI)
+							</h4>
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+								<div>
+									<p><span class="font-semibold text-gray-700">리포트 날짜:</span> <span class="text-gray-800">2025-08-13</span></p>
+									<p><span class="font-semibold text-gray-700">타이밍 근거:</span> <span class="text-gray-800">골드만삭스가 "트럼프 행정부 하에서 방산 분야에서 가장 좋은 위치에 있다"고 언급하며 매도에서 매수로 이중 상향 조정</span></p>
+									<p><span class="font-semibold text-gray-700">애널리스트 분석:</span> <span class="text-blue-600 font-bold">544달러 목표 주가 (이전 목표 407달러에서 +33%)</span></p>
+								</div>
+								<div>
+									<p><span class="font-semibold text-gray-700">역발상 요소:</span> <span class="text-gray-800">매도에서 매수로의 전환은 국방 지출 우선순위에 대한 완전한 논지 반전을 나타냄</span></p>
+									<p><span class="font-semibold text-gray-700">투자 유효기간:</span> <span class="text-gray-800">트럼프 국방부 우선순위가 구체화되는 12-18개월</span></p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- =========================== -->
+			<!-- 100x SIGNAL RANK (새로운 섹션) -->
+			<!-- [수정] 100x Signal Rank 내용을 입력하세요. -->
+			<!-- =========================== -->
+			<div class="mt-10 pt-8 border-t border-gray-200">
+				<div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+					<h3 class="font-bold text-blue-800 mb-6 flex items-center text-lg">
+						<i class="fas fa-trophy mr-2"></i>100x Signal Rank
+					</h3>
+					
+					<!-- 최고 컨빅션 -->
+					<div class="bg-white rounded-lg p-6 shadow-sm mb-6">
+						<h4 class="font-bold text-blue-700 mb-4 flex items-center border-b border-gray-200 pb-3">
+							<i class="fas fa-crown mr-2 text-yellow-500"></i>최우선 투자 아이디어: EUR/USD 롱 브레이크아웃
+						</h4>
+						<div class="flex flex-col md:flex-row gap-6 mt-4">
+							<div class="flex-shrink-0 flex flex-col items-center justify-center bg-blue-50 p-4 rounded-lg w-full md:w-32">
+								<span class="text-sm font-semibold text-blue-700">100x Conviction</span>
+								<span class="font-black text-6xl text-blue-600 leading-tight">8.7</span>
+								<span class="text-lg font-bold text-blue-400">/ 10</span>
+							</div>
+							<div class="space-y-4 flex-1">
+								<div class="text-sm">
+									<span class="font-semibold text-blue-700">복합 시그널 해석:</span>
+									<p class="text-gray-700 mt-1">EUR/USD는 연준의 금리 인하 기대감으로 인한 체계적인 달러 약세로 지속적인 랠리를 보일 것으로 예상되며, 기술적 설정은 상승 채널 형성과 함께 주요 이동 평균선 위의 강세 모멘텀을 보여줍니다...</p>
+								</div>
+								<div class="text-sm">
+									<span class="font-semibold text-blue-700">근거 데이터:</span>
+									<p class="text-gray-700 mt-1">1.1700 수준의 상당한 옵션 만기가 가격 자석 역할을 하고, 연방기금 선물은 9월 인하 확률을 94-96%로 가격에 반영하며...</p>
+								</div>
+								<div class="text-sm">
+									<span class="font-semibold text-blue-700">타이밍:</span>
+									<p class="text-gray-700 mt-1">100x 분석은 1.1700 저항선이 지지선으로 전환되는 지점에서 15핍의 타이트한 손절매로 최적의 진입 시점을 식별하는 반면...</p>
+								</div>
+								<div class="text-sm">
+									<span class="font-semibold text-blue-700">리스크 요인:</span>
+									<p class="text-gray-700 mt-1">잠재적인 ECB의 비둘기파적 서프라이즈는 유로 강세를 약화시킬 수 있으며, 지속적인 핵심 서비스 인플레이션에 대한 매파적인 연준의 전환은 달러 약세를 되돌릴 것입니다...</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- 100x 브랜드 워터마크 -->
+					<div class="text-center pt-4 border-t border-blue-200">
+						<div class="text-xs text-blue-400 flex items-center justify-center">
+							<div class="w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mr-2"></div>
+							Powered by 100x Intelligence Engine
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</section>
+
+
+	<!-- =========================== -->
+	<!-- S10: 내일의 주요 이벤트 (Tomorrow's Catalysts) -->
+	<!-- LLM 매핑: Economic Calendar + Earnings Calendar + Corporate & Policy Events -->
+	<!-- =========================== -->
+	<section id="s10-catalysts" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center">
+				<i class="fas fa-calendar-check mr-3 text-blue-600"></i>내일의 주요 이벤트
+			</h2>
+			
+			<!-- =========================== -->
+			<!-- 10.1 ECONOMIC CALENDAR -->
+			<!-- [수정] 경제지표 캘린더 3개 항목을 입력하세요. -->
+			<!-- =========================== -->
+			<div class="mb-10">
+				<h3 class="text-xl font-bold mb-6 flex items-center">
+					<i class="fas fa-landmark mr-2 text-indigo-500"></i>경제지표 캘린더
+				</h3>
+				<div class="space-y-4">
+					<!-- 고중요도 지표 -->
+					<div class="border-l-4 border-red-500 rounded-lg p-4 transition-all hover:shadow-lg bg-red-50">
+						<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+							<div class="mb-3 sm:mb-0">
+								<p class="font-bold text-gray-900">소매판매 MoM (7월)</p>
+								<p class="text-sm text-gray-500">발표: 오전 8:30 ET (21:30 KST)</p>
+							</div>
+							<div class="flex space-x-4 text-right">
+								<div>
+									<p class="text-xs text-gray-500">컨센서스</p>
+									<p class="font-semibold text-base">0.5%</p>
+								</div>
+								<div>
+									<p class="text-xs text-gray-500">이전치</p>
+									<p class="font-semibold text-base">0.6%</p>
+								</div>
+							</div>
+						</div>
+						<p class="text-xs text-gray-600 mt-3 pt-3 border-t">
+							<b class="text-gray-700">해설:</b> <span class="na-value">-</span>
+						</p>
+					</div>
+					
+					<!-- 중중요도 지표 -->
+					<div class="border-l-4 border-amber-400 rounded-lg p-4 transition-all hover:shadow-lg bg-amber-50">
+						<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+							<div class="mb-3 sm:mb-0">
+								<p class="font-bold text-gray-900">산업생산 MoM (7월)</p>
+								<p class="text-sm text-gray-500">발표: 오전 9:15 ET (22:15 KST)</p>
+							</div>
+							<div class="flex space-x-4 text-right">
+								<div>
+									<p class="text-xs text-gray-500">컨센서스</p>
+									<p class="font-semibold text-base">0.0%</p>
+								</div>
+								<div>
+									<p class="text-xs text-gray-500">이전치</p>
+									<p class="font-semibold text-base">0.3%</p>
+								</div>
+							</div>
+						</div>
+						<p class="text-xs text-gray-600 mt-3 pt-3 border-t">
+							<b class="text-gray-700">해설:</b> <span class="na-value">-</span>
+						</p>
+					</div>
+					
+					<!-- 저중요도 지표 -->
+					<div class="border-l-4 border-gray-300 rounded-lg p-4 transition-all hover:shadow-lg bg-gray-50">
+						<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+							<div class="mb-3 sm:mb-0">
+								<p class="font-bold text-gray-900">미시간 소비자심리지수 예비치 (8월)</p>
+								<p class="text-sm text-gray-500">발표: 오전 10:00 ET (23:00 KST)</p>
+							</div>
+							<div class="flex space-x-4 text-right">
+								<div>
+									<p class="text-xs text-gray-500">컨센서스</p>
+									<p class="font-semibold text-base">62.0</p>
+								</div>
+								<div>
+									<p class="text-xs text-gray-500">이전치</p>
+									<p class="font-semibold text-base">61.7</p>
+								</div>
+							</div>
+						</div>
+						<p class="text-xs text-gray-600 mt-3 pt-3 border-t">
+							<b class="text-gray-700">해설:</b> <span class="na-value">-</span>
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- =========================== -->
+			<!-- 10.2 EARNINGS CALENDAR -->
+			<!-- [수정] 실적 캘린더 3개 기업을 입력하세요. -->
+			<!-- [수정] 발표 시점 색상: Pre-Market(bg-sky-200), After-Market(bg-pink-200), 정시(bg-green-200) -->
+			<!-- =========================== -->
+			<div class="mb-10">
+				<h3 class="text-xl font-bold mb-6 flex items-center">
+					<i class="fas fa-chart-line mr-2 text-teal-500"></i>실적 캘린더
+				</h3>
+				<div class="space-y-4">
+					<!-- 실적 발표 1 -->
+					<div class="border rounded-lg p-4 transition-all hover:shadow-lg hover:border-teal-200">
+						<div class="flex justify-between items-center mb-2">
+							<p class="font-bold text-gray-900">Deere & Company <span class="text-sm font-light text-gray-500">(DE)</span></p>
+							<span class="inline-block bg-sky-200 text-sky-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">장 시작 전</span>
+						</div>
+						<div class="flex justify-around text-center pt-2 border-t">
+							<div>
+								<p class="text-xs text-gray-500">EPS 컨센서스</p>
+								<p class="font-semibold text-lg">$4.59</p>
+							</div>
+							<div>
+								<p class="text-xs text-gray-500">매출 컨센서스</p>
+								<p class="font-semibold text-lg"><span class="na-value">-</span></p>
+							</div>
+							<div>
+								<p class="text-xs text-gray-500">예상 변동률</p>
+								<p class="font-semibold text-lg">4.8%</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- 실적 발표 2 -->
+					<div class="border rounded-lg p-4 transition-all hover:shadow-lg hover:border-teal-200">
+						<div class="flex justify-between items-center mb-2">
+							<p class="font-bold text-gray-900">Cisco Systems <span class="text-sm font-light text-gray-500">(CSCO)</span></p>
+							<span class="inline-block bg-pink-200 text-pink-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">장 마감 후</span>
+						</div>
+						<div class="flex justify-around text-center pt-2 border-t">
+							<div>
+								<p class="text-xs text-gray-500">EPS 컨센서스</p>
+								<p class="font-semibold text-lg">$0.98</p>
+							</div>
+							<div>
+								<p class="text-xs text-gray-500">매출 컨센서스</p>
+								<p class="font-semibold text-lg"><span class="na-value">-</span></p>
+							</div>
+							<div>
+								<p class="text-xs text-gray-500">예상 변동률</p>
+								<p class="font-semibold text-lg"><span class="na-value">-</span></p>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+			<!-- =========================== -->
+			<!-- 10.3 CORPORATE & POLICY EVENTS (신규 추가) -->
+			<!-- [수정] 기업 및 정책 이벤트 3개 항목을 입력하세요. -->
+			<!-- [수정] 이벤트 영향도 색상: 높음(border-red-500), 중간(border-orange-500), 낮음(border-gray-300) -->
+			<!-- =========================== -->
+			<div>
+				<h3 class="text-xl font-bold mb-6 flex items-center">
+					<i class="fas fa-bullhorn mr-2 text-purple-500"></i>기업 & 정책 이벤트
+				</h3>
+				<div class="space-y-4">
+					<!-- 고영향 이벤트 -->
+					<div class="border-l-4 border-red-500 rounded-lg p-4 transition-all hover:shadow-lg bg-red-50">
+						<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+							<div class="mb-3 sm:mb-0">
+								<p class="font-bold text-gray-900">잭슨홀 경제 심포지엄</p>
+								<p class="text-sm text-gray-500">8월 22일 • <span class="font-medium">Federal Reserve</span></p>
+							</div>
+							<div class="text-right">
+								<span class="inline-block bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+									높음
+								</span>
+							</div>
+						</div>
+						<p class="text-xs text-gray-600 mt-3 pt-3 border-t">
+							<b class="text-gray-700">예상 영향:</b> 파월 의장, 통화 정책 프레임워크 변경 발표 예상
+						</p>
+					</div>
+
+					<!-- 중영향 이벤트 -->
+					<div class="border-l-4 border-orange-500 rounded-lg p-4 transition-all hover:shadow-lg bg-orange-50">
+						<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+							<div class="mb-3 sm:mb-0">
+								<p class="font-bold text-gray-900">연준 무살렘 이사 CNBC 연설</p>
+								<p class="text-sm text-gray-500">오전 10:00 ET (23:00 KST) • <span class="font-medium">Federal Reserve</span></p>
+							</div>
+							<div class="text-right">
+								<span class="inline-block bg-orange-100 text-orange-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+									중간
+								</span>
+							</div>
+						</div>
+						<p class="text-xs text-gray-600 mt-3 pt-3 border-t">
+							<b class="text-gray-700">예상 영향:</b> 9월 회의를 앞둔 잠재적인 비둘기파적 신호
+						</p>
+					</div>
+
+					<!-- 저영향 이벤트 -->
+					<div class="border-l-4 border-gray-300 rounded-lg p-4 transition-all hover:shadow-lg bg-gray-50">
+						<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+							<div class="mb-3 sm:mb-0">
+								<p class="font-bold text-gray-900">CAISO 송전 계획 이행 가능성 마감일</p>
+								<p class="text-sm text-gray-500">8월 29일 • <span class="font-medium">California ISO</span></p>
+							</div>
+							<div class="text-right">
+								<span class="inline-block bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+									낮음
+								</span>
+							</div>
+						</div>
+						<p class="text-xs text-gray-600 mt-3 pt-3 border-t">
+							<b class="text-gray-700">예상 영향:</b> 에너지 부문 규제 준수 요건
+						</p>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</section>
+
+    
+	<!-- =========================== -->
+	<!-- S11: 부록 (Appendix) -->
+	<!-- LLM 매핑: 야간 선물 2개 + 차트 요약 2개 -->
+	<!-- =========================== -->
+	<section id="s11-appendix" class="container mx-auto px-4 mb-8 md:mb-12">
+		<div class="bg-white rounded-xl card-shadow p-6 md:p-8">
+			<h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 flex items-center">
+				<i class="fas fa-book-open mr-3 text-blue-600"></i>부록: 야간 선물 및 주요 차트
+			</h2>
+			
+			<!-- =========================== -->
+			<!-- 부록 A: 야간 선물 움직임 (2개만) -->
+			<!-- [수정] 야간 선물 데이터 2개를 입력하세요. -->
+			<!-- [수정] 변동률 색상: 상승(text-green-600, border-green-500), 하락(text-red-600, border-red-500) -->
+			<!-- =========================== -->
+			<div class="mb-10">
+				<h3 class="text-xl font-bold mb-6">부록 A: 야간 선물 움직임</h3>
+
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+					
+					<!-- 선물 1 -->
+					<div class="bg-white rounded-lg shadow p-4 border-l-4 border-red-500 flex flex-col" x-data="{ open: false }">
+						<div class="flex-grow">
+							<div class="flex justify-between items-start">
+								<span class="font-bold text-gray-800">S&P 500 Futures</span>
+								<span class="text-lg font-bold text-red-600">-0.12%</span>
+							</div>
+							<div class="text-sm text-gray-600 mt-1">최종가: 6,480.75</div>
+						</div>
+						<button @click="open = !open" class="text-sm text-blue-600 mt-3 pt-2 border-t border-gray-200 w-full text-left flex justify-between items-center">
+							<span>코멘트 보기</span>
+							<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+						</button>
+						<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
+							시장이 이익을 소화하면서 사상 최고치에서 소폭 하락
+						</div>
+					</div>
+
+					<!-- 선물 2 -->
+					<div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500 flex flex-col" x-data="{ open: false }">
+						<div class="flex-grow">
+							<div class="flex justify-between items-start">
+								<span class="font-bold text-gray-800">WTI Crude Oil</span>
+								<span class="text-lg font-bold text-green-600">+0.33%</span>
+							</div>
+							<div class="text-sm text-gray-600 mt-1">최종가: 62.85</div>
+						</div>
+						<button @click="open = !open" class="text-sm text-blue-600 mt-3 pt-2 border-t border-gray-200 w-full text-left flex justify-between items-center">
+							<span>코멘트 보기</span>
+							<i class="fas" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+						</button>
+						<div x-show="open" x-transition="" class="text-xs text-gray-500 mt-2">
+							과잉 공급 우려와 지정학적 리스크 프리미엄 속 기술적 회복
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+			<!-- =========================== -->
+			<!-- 부록 B: 주요 차트 요약 (2개만) -->
+			<!-- [수정] 차트 요약 2개를 입력하세요. -->
+			<!-- =========================== -->
+			<div>
+				<h3 class="text-xl font-bold mb-6">부록 B: 주요 차트 요약</h3>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<!-- S&P 500 차트 분석 -->
+					<div class="bg-white p-6 rounded-xl shadow border-t-4 border-blue-500">
+						<div class="flex items-center mb-3">
+							<i class="fas fa-chart-line text-xl text-blue-500 mr-3"></i>
+							<h4 class="font-bold text-gray-800">S&P 500 Daily Support/Resistance</h4>
+						</div>
+						<p class="text-sm text-gray-600 leading-relaxed">
+							지수는 6,466에서 사상 최고치 부근에서 거래되고 있으며, 주요 지지선은 6,400-6,450 구간, 저항 목표는 6,500입니다. 6,500 위에 쌓인 포지티브 감마 스트라이크는 금요일 만기까지 기계적인 상승 가능성을 시사합니다.
+						</p>
+					</div>
+
+					<!-- 10년물 금리 차트 분석 -->
+					<div class="bg-white p-6 rounded-xl shadow border-t-4 border-purple-500">
+						<div class="flex items-center mb-3">
+							<i class="fas fa-chart-area text-xl text-purple-500 mr-3"></i>
+							<h4 class="font-bold text-gray-800">10-Y Treasury Yield Trend</h4>
+						</div>
+						<p class="text-sm text-gray-600 leading-relaxed">
+							수익률은 4.235%로 하락했으며, 4.25% 수준 아래에서 강세 기술적 편향을 보입니다. 지지 목표는 4.18%(고용 보고서 발표 후 저점)이며, 저항선은 100일 이동평균선인 4.346%에 있습니다. 강세 스티프닝 커브는 연준의 완화 기대를 반영합니다.
+						</p>
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+	</section>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+	<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Chart.register(ChartDataLabels);
+
+            // [수정] 아래 sectorData 배열에 그날의 섹터별 데이터를 입력하세요.
+            // name: 섹터 이름, etf: 관련 ETF 티커, day: 당일 등락률, ytd: 연초 대비 등락률
+            const sectorData = [
+                { name: '소재', etf: 'XLB', day: 1.88, ytd: 8.13 },
+                { name: '헬스케어', etf: 'XLV', day: 1.60, ytd: -3.11 },
+                { name: '경기소비재', etf: 'XLY', day: 1.37, ytd: 2.45 },
+                { name: '에너지', etf: 'XLE', day: 1.16, ytd: -0.02 },
+                { name: '통신 서비스', etf: 'XLC', day: 0.78, ytd: 14.77 },
+                { name: '부동산', etf: 'XLRE', day: 0.66, ytd: 1.67 },
+                { name: '금융', etf: 'XLF', day: 0.57, ytd: 9.17 },
+                { name: '산업재', etf: 'XLI', day: 0.38, ytd: 15.73 },
+                { name: '유틸리티', etf: 'XLU', day: 0.22, ytd: 14.24 },
+                { name: '기술', etf: 'XLK', day: 0.04, ytd: 15.39 },
+				{ name: '필수소비재', etf: 'XLP', day: -0.44, ytd: 0.44 }
+            ];
+            
+            const heatmapContainer = document.getElementById('sector-heatmap');
+            if(heatmapContainer){
+                heatmapContainer.innerHTML = ''; // 기존 내용 초기화
+                sectorData.sort((a,b) => b.day - a.day).forEach(sector => {
+                    const value = sector.day;
+                    let bgColorClass = '';
+                    if (value > 0.75) bgColorClass = 'bg-green-600';
+                    else if (value > 0.25) bgColorClass = 'bg-green-500';
+                    else if (value >= 0) bgColorClass = 'bg-green-400';
+                    else if (value > -0.5) bgColorClass = 'bg-red-400';
+                    else bgColorClass = 'bg-red-600';
+
+                    const ytdColorClass = sector.ytd >= 0 ? 'text-green-300' : 'text-red-300';
+                    
+                    const cell = `
+                        <div class="p-4 rounded-lg ${bgColorClass} card-shadow text-white">
+                            <div class="font-bold text-base md:text-lg">${sector.name} (${sector.etf})</div>
+                            <div class="text-2xl font-black">${value.toFixed(2)}%</div>
+                            <div class="text-sm ${ytdColorClass}">(YTD ${sector.ytd.toFixed(2)}%)</div>
+                        </div>
+                    `;
+                    heatmapContainer.innerHTML += cell;
+                });
+            }
+
+            // SPA shell(index.html) provides navigation and footer
+        });
+    </script>
+
+
+</body></html>
