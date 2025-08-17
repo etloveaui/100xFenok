@@ -1,0 +1,50 @@
+name: Telegram Notification on New Report
+
+on:
+  push:
+    paths:
+      - '100x/daily-wrap/*.html'
+      - '100x Briefing/Briefing/*.html'
+      - 'alpha-scout/reports/*.html'
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        pip install requests python-dateutil
+        
+    - name: Create secrets file
+      run: |
+        mkdir -p secrets
+        echo "### Telegram Bot (100xFenok 알림용)" > secrets/my_sensitive_data.md
+        echo "- **Bot Token:** ${{ secrets.TELEGRAM_BOT_TOKEN }}" >> secrets/my_sensitive_data.md
+        
+    - name: Send notification for new Daily Wrap
+      if: contains(github.event.head_commit.message, 'daily-wrap') || contains(join(github.event.commits.*.modified, ' '), '100x/daily-wrap/')
+      run: |
+        python send_notification.py
+        
+    - name: Send notification for new Briefing
+      if: contains(join(github.event.commits.*.modified, ' '), '100x Briefing/Briefing/')
+      run: |
+        # Briefing용 알림 (확장 시)
+        echo "Briefing notification would be sent here"
+        
+    - name: Send notification for new Alpha Scout
+      if: contains(join(github.event.commits.*.modified, ' '), 'alpha-scout/reports/')
+      run: |
+        # Alpha Scout용 알림 (확장 시)
+        echo "Alpha Scout notification would be sent here"
