@@ -323,4 +323,84 @@
       initFloatingMenu();
     }
   })();
+
+  // ========================================
+  // 플로팅 버튼 글리치 수정 JavaScript (2025-08-17)
+  // ========================================
+  (function() {
+    'use strict';
+    
+    // 위치 보정 함수
+    function correctFloatingMenuPosition() {
+        const floatingMenu = document.querySelector('.combined-floating-menu');
+        if (!floatingMenu) return;
+        
+        const width = window.innerWidth;
+        
+        // 문제 구간 감지: 590px - 720px
+        const isProblemZone = width >= 590 && width <= 720;
+        
+        if (isProblemZone) {
+            // 강제 위치 보정
+            floatingMenu.style.position = 'fixed';
+            floatingMenu.style.bottom = '30px';
+            floatingMenu.style.right = '30px';
+            floatingMenu.style.zIndex = '9999';
+            floatingMenu.style.visibility = 'visible';
+            floatingMenu.style.opacity = '1';
+            floatingMenu.style.transform = 'none';
+        } else {
+            // 정상 구간에서는 원래 스타일 복원
+            floatingMenu.style.position = '';
+            floatingMenu.style.bottom = '';
+            floatingMenu.style.right = '';
+            floatingMenu.style.transform = '';
+        }
+        
+        // lg 브레이크포인트에서 숨김 처리
+        if (width >= 1024) {
+            floatingMenu.style.display = 'none';
+        } else {
+            floatingMenu.style.display = '';
+        }
+    }
+    
+    // 리사이즈 이벤트 핸들러 (디바운싱 적용)
+    let resizeTimeout;
+    function handleResize() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(correctFloatingMenuPosition, 16); // ~60fps
+    }
+    
+    // 초기화
+    function initPositionFix() {
+        correctFloatingMenuPosition();
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(correctFloatingMenuPosition, 500);
+        });
+        
+        // 주기적 체크 (안전 장치)
+        setInterval(() => {
+            const floatingMenu = document.querySelector('.combined-floating-menu');
+            if (floatingMenu) {
+                const rect = floatingMenu.getBoundingClientRect();
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                
+                // 화면 밖으로 나간 경우 감지 및 보정
+                if (rect.right > width || rect.bottom > height || rect.left < 0 || rect.top < 0) {
+                    correctFloatingMenuPosition();
+                }
+            }
+        }, 1000);
+    }
+    
+    // DOM 준비 시 실행
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPositionFix);
+    } else {
+        initPositionFix();
+    }
+  })();
 </script>
