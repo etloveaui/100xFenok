@@ -254,3 +254,80 @@
     left: -46px; /* 모바일에서는 더 가깝게 */
   }
 }
+
+/* ========================================
+   플로팅 버튼 글리치 수정 (2025-08-17)
+   ======================================== */
+
+/* 640px 전후 구간에서의 위치 보정 */
+@media (min-width: 600px) and (max-width: 680px) {
+    .combined-floating-menu {
+        /* 전환 구간에서 더 안전한 위치로 이동 */
+        bottom: 30px !important;
+        right: 30px !important;
+        /* 부드러운 전환을 위한 트랜지션 */
+        transition: all 0.3s ease !important;
+        /* 확실한 가시성 보장 */
+        visibility: visible !important;
+        opacity: 1 !important;
+        /* 최상위 z-index */
+        z-index: 9999 !important;
+        /* 포지셔닝 강제 */
+        position: fixed !important;
+    }
+    
+    /* 메인 버튼 크기 약간 축소하여 안전성 확보 */
+    .combined-floating-menu .main-toggle-btn {
+        width: 44px !important;
+        height: 44px !important;
+        /* 더 강한 그림자로 가시성 향상 */
+        box-shadow: 
+            0 4px 20px rgba(59, 130, 246, 0.25),
+            0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    /* 서브 버튼들도 조정 */
+    .combined-floating-menu .sub-btn {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    /* 공유 버튼 위치 조정 */
+    .combined-floating-menu .share-button {
+        left: -46px !important;
+    }
+}
+
+/* 추가 안전 장치: 590px-720px 구간 전체에 적용 */
+@media (min-width: 590px) and (max-width: 720px) {
+    .combined-floating-menu {
+        /* 컨테이너 경계와의 충돌 방지 */
+        margin-right: 0 !important;
+        margin-bottom: 0 !important;
+        /* 스택 컨텍스트 격리 */
+        contain: layout style !important;
+    }
+    
+    /* 푸터와의 상호작용 방지 */
+    .enhanced-simple-footer {
+        z-index: auto !important;
+    }
+}
+
+/* 극단적 케이스 대응: 정확히 640px에서 */
+@media (width: 640px) {
+    .combined-floating-menu {
+        bottom: 25px !important;
+        right: 25px !important;
+        transform: translateZ(0) !important; /* 하드웨어 가속 */
+    }
+}
+
+/* lg 브레이크포인트 직전 안전 장치 */
+@media (min-width: 1020px) and (max-width: 1024px) {
+    .combined-floating-menu {
+        /* lg:hidden 적용 직전 구간에서 페이드아웃 */
+        opacity: 0.3 !important;
+        transition: opacity 0.2s ease !important;
+    }
+}
