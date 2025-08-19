@@ -135,6 +135,14 @@ class TelegramNotifier:
     def _get_bot_token(self) -> Optional[str]:
         """텔레그램 봇 토큰 읽기"""
         try:
+            # GitHub Actions 환경에서는 환경변수 우선 사용
+            if 'GITHUB_ACTIONS' in os.environ:
+                token = os.environ.get('TELEGRAM_BOT_TOKEN')
+                if token:
+                    self.logger.info("Using bot token from environment variable")
+                    return token
+            
+            # 로컬 환경에서는 파일에서 읽기
             token_file = self.config['telegram']['bot_token_file']
             token_path = os.path.join(os.path.dirname(__file__), token_file)
             
