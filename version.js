@@ -1,1 +1,1 @@
-export const siteVersion = '20250822T1111';
+export const siteVersion = '20250823T1111';
