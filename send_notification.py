@@ -57,7 +57,19 @@ def show_usage():
 
 
 def main():
-    """메인 함수"""
+    """메인 함수 - 똑똑한 알림 시스템으로 업그레이드됨"""
+    
+    # GitHub Actions 환경이면 새로운 똑똑한 시스템 사용
+    if os.environ.get('GITHUB_ACTIONS'):
+        print("🚀 GitHub Actions 감지 - 똑똑한 알림 시스템으로 전환합니다...")
+        try:
+            from smart_notification_system import SmartNotificationSystem
+            system = SmartNotificationSystem()
+            success = system.process_github_action()
+            sys.exit(0 if success else 1)
+        except ImportError:
+            print("⚠️ 새 시스템을 찾을 수 없습니다. 기존 방식으로 진행합니다.")
+            # 기존 로직으로 폴백
     
     # 도움말 요청
     if len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h', 'help']:
@@ -74,6 +86,7 @@ def main():
             print(f"{service}: {status_text}")
         return
     
+    # 기존 호환성 유지
     trigger = DailyWrapNotificationTrigger()
     
     # 인수 없음 - 최신 리포트 알림
@@ -121,9 +134,9 @@ def main():
     
     # 결과 출력
     if success:
-        print("\n알림이 성공적으로 발송되었습니다!")
+        print("\n✅ 알림이 성공적으로 발송되었습니다!")
     else:
-        print("\n알림 발송에 실패했습니다.")
+        print("\n❌ 알림 발송에 실패했습니다.")
         sys.exit(1)
 
 
