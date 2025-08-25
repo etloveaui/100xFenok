@@ -27,17 +27,11 @@ jobs:
       run: |
         pip install requests python-dateutil
         
-    - name: Send notification for new Daily Wrap
+    - name: 🤖 똑똑한 알림 시스템 실행
       env:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         GITHUB_ACTIONS: true
       run: |
-        python send_notification.py
-        
-    - name: Send notification for new Briefing
-      run: |
-        echo "Briefing notification hook (placeholder)"
-        
-    - name: Send notification for new Alpha Scout
-      run: |
-        echo "Alpha Scout notification hook (placeholder)"
+        echo "=== 100xFenok 똑똑한 알림 시스템 ==="
+        echo "변경된 파일들을 자동 분석하여 적절한 알림을 발송합니다..."
+        python smart_notification_system.py --github-action
