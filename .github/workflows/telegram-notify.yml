@@ -13,6 +13,8 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # push 권한 추가
     
     steps:
     - name: Checkout repository
