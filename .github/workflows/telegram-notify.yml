@@ -35,8 +35,11 @@ jobs:
         echo "토큰을 안전하게 치환하여 배포용 웹 패널을 생성합니다..."
         # 백업 생성
         cp notification-control-panel-web.html notification-control-panel-web-template.html
-        # 토큰 치환
-        sed -i "s/\${TELEGRAM_BOT_TOKEN}/$TELEGRAM_BOT_TOKEN/g" notification-control-panel-web.html
+        # 토큰 치환 (더 안전한 방법)
+        sed -i "s/\\\${TELEGRAM_BOT_TOKEN}/$TELEGRAM_BOT_TOKEN/g" notification-control-panel-web.html
+        # 치환 확인
+        echo "토큰 치환 확인:"
+        grep -n "TELEGRAM_BOT_TOKEN" notification-control-panel-web.html | head -3
         echo "✅ 웹 패널 빌드 완료"
 
     - name: 🤖 똑똑한 알림 시스템 실행
