@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100xFenok 알림 컨트롤 패널 (독립실행)</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+        }
+        .success-animation {
+            animation: successPulse 0.6s ease-in-out;
+        }
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- 헤더 -->
+    <div class="gradient-bg text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-2">
+                    <i class="fas fa-bell mr-3"></i>100xFenok 알림 컨트롤 패널
+                </h1>
+                <p class="text-lg opacity-90">GitHub Pages용 독립실행 버전</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- 중요 안내 -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-8 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-semibold text-yellow-800">GitHub Pages 환경 안내</h3>
+                    <p class="text-yellow-700 mt-1">
+                        GitHub Pages는 정적 사이트 호스팅이므로 서버 기능이 작동하지 않습니다. 
+                        아래 명령어를 로컬 환경에서 실행해주세요.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 빠른 발송 섹션 -->
+        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-rocket text-blue-500 mr-2"></i>빠른 알림 발송 (명령어 복사)
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Daily Wrap -->
+                <div class="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+                    <div class="text-green-500 text-4xl mb-4 text-center">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">Daily Wrap</h3>
+                    <p class="text-sm text-gray-600 mb-4 text-center">최신 데일리 랩 리포트</p>
+                    <div class="code-block mb-4">
+                        python send_notification.py
+                    </div>
+                    <button onclick="copyToClipboard('python send_notification.py')" 
+                            class="w-full bg-green-500 text-white px-6 py-3 rounded-lg font-semibold btn-hover transition-all duration-300">
+                        <i class="fas fa-copy mr-2"></i>명령어 복사
+                    </button>
+                </div>
+
+                <!-- Alpha Scout -->
+                <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+                    <div class="text-purple-500 text-4xl mb-4 text-center">
+                        <i class="fas fa-crosshairs"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">Alpha Scout</h3>
+                    <p class="text-sm text-gray-600 mb-4 text-center">최신 알파 스카우트 분석</p>
+                    <div class="code-block mb-4">
+                        python smart_notification_system.py --file "alpha-scout/reports/[날짜]_100x-alpha-scout.html"
+                    </div>
+                    <button onclick="copyToClipboard('python smart_notification_system.py --file \"alpha-scout/reports/2025-08-24_100x-alpha-scout.html\"')" 
+                            class="w-full bg-purple-500 text-white px-6 py-3 rounded-lg font-semibold btn-hover transition-all duration-300">
+                        <i class="fas fa-copy mr-2"></i>명령어 복사
+                    </button>
+                </div>
+
+                <!-- Strategic Briefing -->
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                    <div class="text-blue-500 text-4xl mb-4 text-center">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">Strategic Briefing</h3>
+                    <p class="text-sm text-gray-600 mb-4 text-center">전략 브리핑 업데이트</p>
+                    <div class="code-block mb-4">
+                        python smart_notification_system.py --file "100x Briefing/Briefing/[날짜]_100x-briefing.html"
+                    </div>
+                    <button onclick="copyToClipboard('python smart_notification_system.py --file \"100x Briefing/Briefing/2025-08-03_100x-Strategic-Briefing.html\"')" 
+                            class="w-full bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold btn-hover transition-all duration-300">
+                        <i class="fas fa-copy mr-2"></i>명령어 복사
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 커스텀 알림 섹션 -->
+        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-edit text-orange-500 mr-2"></i>커스텀 알림 명령어 생성기
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">알림 제목</label>
+                        <input type="text" id="customTitle" placeholder="예: 긴급 시장 업데이트" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               oninput="generateCustomCommand()">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">메시지 내용</label>
+                        <textarea id="customMessage" rows="4" 
+                                  placeholder="여기에 알림 메시지를 작성하세요..." 
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  oninput="generateCustomCommand()"></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">생성된 명령어</label>
+                        <div id="generatedCommand" class="code-block min-h-[60px]">
+                            제목과 메시지를 입력하면 명령어가 생성됩니다.
+                        </div>
+                    </div>
+                    
+                    <button id="copyCustomBtn" onclick="copyGeneratedCommand()" disabled
+                            class="w-full bg-orange-500 text-white px-6 py-4 rounded-lg font-semibold text-lg btn-hover transition-all duration-300 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                        <i class="fas fa-copy mr-2"></i>커스텀 명령어 복사
+                    </button>
+                </div>
+                
+                <!-- 템플릿 선택 -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">빠른 템플릿</h3>
+                    <div class="space-y-3">
+                        <button onclick="loadTemplate('emergency')" 
+                                class="w-full text-left p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
+                            <div class="font-semibold text-red-800">🚨 긴급 알림</div>
+                            <div class="text-sm text-red-600">중요한 시장 변화나 긴급 상황</div>
+                        </button>
+                        
+                        <button onclick="loadTemplate('update')" 
+                                class="w-full text-left p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                            <div class="font-semibold text-green-800">📈 시장 업데이트</div>
+                            <div class="text-sm text-green-600">일반적인 시장 상황 업데이트</div>
+                        </button>
+                        
+                        <button onclick="loadTemplate('analysis')" 
+                                class="w-full text-left p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+                            <div class="font-semibold text-blue-800">🔍 심층 분석</div>
+                            <div class="text-sm text-blue-600">상세한 분석 리포트나 인사이트</div>
+                        </button>
+                        
+                        <button onclick="loadTemplate('opportunity')" 
+                                class="w-full text-left p-4 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors">
+                            <div class="font-semibold text-yellow-800">💡 투자 기회</div>
+                            <div class="text-sm text-yellow-600">새로운 투자 기회나 알파 신호</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사용 방법 안내 -->
+        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-question-circle text-blue-500 mr-2"></i>사용 방법
+            </h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">1. 로컬 환경에서 실행</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="code-block">
+cd C:\Users\eunta\multi-agent-workspace\projects\100xFenok
+[위에서 복사한 명령어 붙여넣기]
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">2. 서버 기반 실행 (권장)</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="code-block">
+cd C:\Users\eunta\multi-agent-workspace\projects\100xFenok
+start_notification_panel.bat
+# 브라우저에서 http://localhost:5000 접속
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">3. 시스템 테스트</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="code-block">
+python smart_notification_system.py --test
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 업데이트 정보 -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-400 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-semibold text-blue-800">최근 업데이트 (2025-08-26)</h3>
+                    <ul class="text-blue-700 mt-2 space-y-1">
+                        <li>• GitHub Actions 알림 실패 문제 완전 해결</li>
+                        <li>• 텔레그램 메시지 파싱 오류 수정</li>
+                        <li>• 웹 기반 컨트롤 패널 추가</li>
+                        <li>• 파일 감지 로직 3단계 강화</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 성공 알림 모달 -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-md mx-4 text-center success-animation">
+            <div class="text-green-500 text-6xl mb-4">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">복사 완료!</h3>
+            <p id="successMessage" class="text-gray-600 mb-6">명령어가 클립보드에 복사되었습니다.</p>
+            <button onclick="closeModal()" class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 템플릿 데이터
+        const templates = {
+            emergency: {
+                title: "긴급 시장 알림",
+                message: "중요한 시장 변화가 발생했습니다!\n\n[상황 설명]\n\n즉시 확인하시기 바랍니다.\n\n100xFenok 긴급알림"
+            },
+            update: {
+                title: "시장 업데이트",
+                message: "새로운 시장 분석이 업데이트되었습니다.\n\n주요 포인트:\n• [포인트 1]\n• [포인트 2]\n• [포인트 3]\n\n100xFenok 업데이트"
+            },
+            analysis: {
+                title: "심층 분석 리포트",
+                message: "새로운 심층 분석 리포트가 발행되었습니다!\n\n핵심 인사이트:\n[분석 내용 요약]\n\n상세 분석을 확인하세요.\n\n100xFenok 분석"
+            },
+            opportunity: {
+                title: "새로운 투자 기회",
+                message: "새로운 알파 기회가 포착되었습니다!\n\n기회 요약:\n[기회 설명]\n\n놓치지 마세요!\n\n100xFenok 알파신호"
+            }
+        };
+
+        let generatedCommandText = '';
+
+        // 클립보드 복사
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showSuccess('명령어가 클립보드에 복사되었습니다!');
+            } catch (err) {
+                console.error('클립보드 복사 실패:', err);
+                // fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showSuccess('명령어가 클립보드에 복사되었습니다!');
+            }
+        }
+
+        // 커스텀 명령어 생성
+        function generateCustomCommand() {
+            const title = document.getElementById('customTitle').value.trim();
+            const message = document.getElementById('customMessage').value.trim();
+            const commandDiv = document.getElementById('generatedCommand');
+            const copyBtn = document.getElementById('copyCustomBtn');
+            
+            if (title && message) {
+                // 따옴표 이스케이프
+                const escapedTitle = title.replace(/"/g, '\\"');
+                const escapedMessage = message.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+                
+                generatedCommandText = `python -c "from tools.notify_daily_wrap import DailyWrapNotificationTrigger; trigger = DailyWrapNotificationTrigger(); trigger.notify_custom('${escapedTitle}', '', '${escapedMessage}')"`;
+                
+                commandDiv.textContent = generatedCommandText;
+                copyBtn.disabled = false;
+            } else {
+                commandDiv.textContent = '제목과 메시지를 입력하면 명령어가 생성됩니다.';
+                copyBtn.disabled = true;
+                generatedCommandText = '';
+            }
+        }
+
+        // 생성된 명령어 복사
+        function copyGeneratedCommand() {
+            if (generatedCommandText) {
+                copyToClipboard(generatedCommandText);
+            }
+        }
+
+        // 템플릿 로드
+        function loadTemplate(templateType) {
+            const template = templates[templateType];
+            if (template) {
+                document.getElementById('customTitle').value = template.title;
+                document.getElementById('customMessage').value = template.message;
+                generateCustomCommand();
+            }
+        }
+
+        // 성공 모달 표시
+        function showSuccess(message) {
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successModal').classList.remove('hidden');
+            document.getElementById('successModal').classList.add('flex');
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            document.getElementById('successModal').classList.remove('flex');
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
