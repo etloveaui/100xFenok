@@ -181,11 +181,10 @@ class SmartNotificationSystem:
         try:
             import subprocess
             
-            # GitHub Actions 환경 개선: 여러 방법 시도
+            # GitHub Actions 환경 개선: 변경된 파일만 감지
             commands = [
                 ['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'],
                 ['git', 'diff', '--name-only', 'HEAD^', 'HEAD'],
-                ['git', 'show', '--name-only', '--format=', 'HEAD'],
                 ['git', 'diff', '--name-only', 'HEAD~1..HEAD']
             ]
             
