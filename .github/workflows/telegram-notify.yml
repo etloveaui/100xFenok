@@ -58,12 +58,7 @@ jobs:
         if git diff --staged --quiet; then
           echo "변경사항 없음 - 배포 건너뜀"
         else
-          git commit -m "🤖 Auto-update web panel with secure token
-
-🔒 Updated by GitHub Actions with secure token injection
-📅 $(date '+%Y-%m-%d %H:%M:%S')
-
-Co-Authored-By: GitHub Actions <action@github.com>"
+          git commit -m "🤖 Auto-update web panel with secure token - Updated by GitHub Actions $(date '+%Y-%m-%d %H:%M:%S')"
           git push
           echo "✅ 웹 패널 배포 완료"
         fi
