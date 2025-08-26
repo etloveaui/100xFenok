@@ -180,14 +180,30 @@ class SmartNotificationSystem:
         """git으로 변경된 파일 확인 (대안)"""
         try:
             import subprocess
-            result = subprocess.run(
+            
+            # GitHub Actions 환경 개선: 여러 방법 시도
+            commands = [
                 ['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'],
-                capture_output=True, text=True, cwd=self.project_root
-            )
-            if result.returncode == 0:
-                return result.stdout.strip().split('\n') if result.stdout.strip() else []
-        except Exception:
-            pass
+                ['git', 'diff', '--name-only', 'HEAD^', 'HEAD'],
+                ['git', 'show', '--name-only', '--format=', 'HEAD'],
+                ['git', 'diff', '--name-only', 'HEAD~1..HEAD']
+            ]
+            
+            for cmd in commands:
+                try:
+                    result = subprocess.run(
+                        cmd, capture_output=True, text=True, cwd=self.project_root
+                    )
+                    if result.returncode == 0 and result.stdout.strip():
+                        files = [f for f in result.stdout.strip().split('\n') if f]
+                        print(f"[DEBUG] git 명령어 성공 ({' '.join(cmd)}): {files}")
+                        return files
+                except Exception as e:
+                    print(f"[DEBUG] git 명령어 실패 ({' '.join(cmd)}): {e}")
+                    continue
+                    
+        except Exception as e:
+            print(f"[DEBUG] git 대체 감지 전체 실패: {e}")
         
         return []
     
