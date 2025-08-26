@@ -132,10 +132,13 @@ class SmartNotificationSystem:
     
     def _get_changed_files_from_github(self) -> List[str]:
         """GitHub Actions에서 변경된 파일 목록 가져오기"""
-        # 환경변수에서 변경된 파일 정보 확인
+        print("[DEBUG] GitHub Actions 환경에서 변경된 파일 감지 중...")
+        
+        # 1차: GitHub Event에서 파일 정보 추출
         github_event_path = os.environ.get('GITHUB_EVENT_PATH')
         if github_event_path and os.path.exists(github_event_path):
             try:
+                print(f"[DEBUG] GitHub Event 파일 읽는 중: {github_event_path}")
                 with open(github_event_path, 'r') as f:
                     event = json.load(f)
                 
@@ -145,12 +148,32 @@ class SmartNotificationSystem:
                     changed_files.extend(commit.get('added', []))
                     changed_files.extend(commit.get('modified', []))
                 
-                return list(set(changed_files))  # 중복 제거
+                if changed_files:
+                    print(f"[DEBUG] GitHub Event에서 {len(changed_files)}개 파일 발견: {changed_files}")
+                    return list(set(changed_files))  # 중복 제거
                 
             except Exception as e:
                 print(f"⚠️ GitHub 이벤트 파일 파싱 실패: {e}")
         
-        # 대안: git diff로 변경된 파일 확인
+        # 2차: GITHUB_SHA 환경변수 활용 
+        github_sha = os.environ.get('GITHUB_SHA')
+        if github_sha:
+            try:
+                import subprocess
+                print(f"[DEBUG] GITHUB_SHA 활용: {github_sha}")
+                result = subprocess.run(
+                    ['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', github_sha],
+                    capture_output=True, text=True, cwd=self.project_root
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    files = result.stdout.strip().split('\n')
+                    print(f"[DEBUG] git diff-tree로 {len(files)}개 파일 발견: {files}")
+                    return files
+            except Exception as e:
+                print(f"⚠️ git diff-tree 실패: {e}")
+        
+        # 3차: git diff로 변경된 파일 확인
+        print("[DEBUG] git diff로 대체 감지 시도...")
         return self._get_changed_files_from_git()
     
     def _get_changed_files_from_git(self) -> List[str]:
