@@ -13,7 +13,7 @@
  */
 
 // 설정 - PropertiesService 사용 권장
-const TELEGRAM_BOT_TOKEN = '7487542421:AAGMcKi8LSx-vMRKbJtIq5P2K-6w89HdJlU';
+const TELEGRAM_BOT_TOKEN = '7524488237:AAHqO35TON-hdu9HjstMfkZLHSa5NhaKww4';
 const CHAT_IDS = [
   '-1001513671466',  // 그룹 Chat ID
   '6443399098',      // 개인 Chat ID 1  
