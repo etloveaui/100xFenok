@@ -113,13 +113,10 @@ class SmartNotificationSystem:
             print(f"❌ 알림 발송 실패: {e}")
             return False
     
-    def process_github_action(self) -> bool:
+    def process_github_action(self, changed_files: List[str]) -> bool:
         """GitHub Actions 환경에서 변경된 파일 처리"""
-        # GitHub Actions에서 변경된 파일 정보 가져오기
-        changed_files = self._get_changed_files_from_github()
-        
         if not changed_files:
-            print("ℹ️ 변경된 파일이 없습니다.")
+            print("ℹ️ 변경된 파일이 없습니다. (워크플로우로부터 전달받음)")
             return True
         
         success_count = 0
@@ -129,82 +126,6 @@ class SmartNotificationSystem:
         
         print(f"✅ {success_count}/{len(changed_files)} 개 파일 알림 처리 완료")
         return success_count > 0
-    
-    def _get_changed_files_from_github(self) -> List[str]:
-        """GitHub Actions에서 변경된 파일 목록 가져오기"""
-        print("[DEBUG] GitHub Actions 환경에서 변경된 파일 감지 중...")
-        
-        # 1차: GitHub Event에서 파일 정보 추출
-        github_event_path = os.environ.get('GITHUB_EVENT_PATH')
-        if github_event_path and os.path.exists(github_event_path):
-            try:
-                print(f"[DEBUG] GitHub Event 파일 읽는 중: {github_event_path}")
-                with open(github_event_path, 'r') as f:
-                    event = json.load(f)
-                
-                # push 이벤트에서 변경된 파일들 추출
-                changed_files = []
-                for commit in event.get('commits', []):
-                    changed_files.extend(commit.get('added', []))
-                    changed_files.extend(commit.get('modified', []))
-                
-                if changed_files:
-                    print(f"[DEBUG] GitHub Event에서 {len(changed_files)}개 파일 발견: {changed_files}")
-                    return list(set(changed_files))  # 중복 제거
-                
-            except Exception as e:
-                print(f"⚠️ GitHub 이벤트 파일 파싱 실패: {e}")
-        
-        # 2차: GITHUB_SHA 환경변수 활용 
-        github_sha = os.environ.get('GITHUB_SHA')
-        if github_sha:
-            try:
-                import subprocess
-                print(f"[DEBUG] GITHUB_SHA 활용: {github_sha}")
-                result = subprocess.run(
-                    ['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', github_sha],
-                    capture_output=True, text=True, cwd=self.project_root
-                )
-                if result.returncode == 0 and result.stdout.strip():
-                    files = result.stdout.strip().split('\n')
-                    print(f"[DEBUG] git diff-tree로 {len(files)}개 파일 발견: {files}")
-                    return files
-            except Exception as e:
-                print(f"⚠️ git diff-tree 실패: {e}")
-        
-        # 3차: git diff로 변경된 파일 확인
-        print("[DEBUG] git diff로 대체 감지 시도...")
-        return self._get_changed_files_from_git()
-    
-    def _get_changed_files_from_git(self) -> List[str]:
-        """git으로 변경된 파일 확인 (대안)"""
-        try:
-            import subprocess
-            
-            # GitHub Actions 환경 개선: 변경된 파일만 감지
-            commands = [
-                ['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'],
-                ['git', 'diff', '--name-only', 'HEAD^', 'HEAD'],
-                ['git', 'diff', '--name-only', 'HEAD~1..HEAD']
-            ]
-            
-            for cmd in commands:
-                try:
-                    result = subprocess.run(
-                        cmd, capture_output=True, text=True, cwd=self.project_root
-                    )
-                    if result.returncode == 0 and result.stdout.strip():
-                        files = [f for f in result.stdout.strip().split('\n') if f]
-                        print(f"[DEBUG] git 명령어 성공 ({' '.join(cmd)}): {files}")
-                        return files
-                except Exception as e:
-                    print(f"[DEBUG] git 명령어 실패 ({' '.join(cmd)}): {e}")
-                    continue
-                    
-        except Exception as e:
-            print(f"[DEBUG] git 대체 감지 전체 실패: {e}")
-        
-        return []
     
     def _process_single_file(self, file_path: str) -> bool:
         """단일 파일 처리"""
@@ -263,6 +184,7 @@ def main():
     parser.add_argument('--test', action='store_true', help='시스템 테스트')
     parser.add_argument('--file', help='특정 파일 수동 처리')
     parser.add_argument('--github-action', action='store_true', help='GitHub Actions 모드')
+    parser.add_argument('--changed-files', help='(GitHub Actions 전용) 변경된 파일 목록')
     
     args = parser.parse_args()
     
@@ -281,9 +203,15 @@ def main():
         success = system.process_manual_file(args.file)
         sys.exit(0 if success else 1)
     
-    if args.github_action or os.environ.get('GITHUB_ACTIONS'):
+    if args.github_action:
         print("=== GitHub Actions 모드 ===")
-        success = system.process_github_action()
+        if not args.changed_files:
+            print("⚠️ --changed-files 인자가 필요합니다.")
+            sys.exit(1)
+
+        # 공백으로 구분된 파일 목록을 리스트로 변환
+        changed_files_list = args.changed_files.split()
+        success = system.process_github_action(changed_files_list)
         sys.exit(0 if success else 1)
     
     # 기본: 도움말 출력
