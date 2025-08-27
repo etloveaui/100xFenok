@@ -89,23 +89,50 @@ class SmartNotificationSystem:
             "hashtags": template.get("hashtags", [])
         }
     
+    def _escape_markdown_v2(self, text: str) -> str:
+        """텔레그램 MarkdownV2 파서를 위한 특수문자 이스케이프 처리"""
+        # 주의: 이스케이프할 문자 목록 - `_`, `*`, `[`, `]`, `(`, `)`, `~`, `` ` ``, `>`, `#`, `+`, `-`, `=`, `|`, `{`, `}`, `.`, `!`
+        # re.escape는 대부분의 문자를 이스케이프 처리하지만, 여기서는 명시적으로 처리합니다.
+        escape_chars = r'([_*\[\]()~`>#\+\-=|{}.!])'
+        return re.sub(escape_chars, r'\\\1', text)
+
     def send_notification(self, notification_data: Dict) -> bool:
-        """알림 발송 (기존 시스템 활용)"""
+        """알림 발송 (텔레그램 노티파이어 직접 호출)"""
         try:
-            # 기존 notify_daily_wrap 모듈 사용 (호환성)
+            # notifier 객체를 얻기 위해 기존 클래스 사용
             from notify_daily_wrap import DailyWrapNotificationTrigger
-            
             trigger = DailyWrapNotificationTrigger()
+            notifier = trigger.notifier
+
+            # MarkdownV2 형식에 맞게 메시지 본문 이스케이프 처리
+            message_to_send = self._escape_markdown_v2(notification_data["message"])
             
-            # 커스텀 알림으로 발송
-            success = trigger.notify_custom(
-                title=notification_data["title"],
-                file_path="",  # URL로 대체됨
-                summary=notification_data["message"]
-            )
+            # 제목은 로깅용으로만 사용되므로 이스케이프 불필요
+            title_for_log = notification_data["title"]
+
+            chat_ids = notifier.get_chat_ids()
+            if not chat_ids:
+                print("⚠️ Chat ID를 찾을 수 없어 알림을 보낼 수 없습니다.")
+                return False
+
+            success_count = 0
+            failed_count = 0
             
-            return success
+            for chat_id in chat_ids:
+                success, details = notifier.send_telegram_message(chat_id, message_to_send)
+                if success:
+                    success_count += 1
+                else:
+                    failed_count +=1
             
+            # 결과 로깅
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            result_details = f"Sent to {success_count} users, {failed_count} failed. Title: {title_for_log}"
+            overall_status = "Success" if failed_count == 0 else "Partial" if success_count > 0 else "Failed"
+            notifier.log_notification_result(timestamp, overall_status, result_details)
+
+            return failed_count == 0
+
         except ImportError:
             print("❌ 기존 알림 모듈을 찾을 수 없습니다.")
             return False
