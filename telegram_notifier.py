@@ -27,6 +27,7 @@ Usage:
 
 import os
 import json
+import re
 import requests
 import logging
 from datetime import datetime
@@ -251,7 +252,7 @@ class TelegramNotifier:
         payload = {
             'chat_id': chat_id,
             'text': message,
-            'parse_mode': 'Markdown',
+            'parse_mode': 'MarkdownV2',
             'disable_web_page_preview': False
         }
         
@@ -308,28 +309,44 @@ class TelegramNotifier:
         except Exception as e:
             self.logger.error(f"Failed to log to Google Sheets: {e}")
     
+    def _escape_markdown_v2(self, text: str) -> str:
+        """텔레그램 MarkdownV2 파서를 위한 특수문자 이스케이프 처리"""
+        escape_chars = r'([_*\[\]()~`>#\+\-=|{}.!])'
+        return re.sub(escape_chars, r'\\\1', text)
+
     def send_daily_wrap_notification(self, title: str, file_path: str, summary: str = "") -> bool:
         """
-        Daily Wrap 새 포스팅 알림 발송.
-        이제 이 함수는 summary를 완전한 메시지 본문으로 간주하고 그대로 전송합니다.
-        title과 file_path는 하위 호환성을 위해 유지되지만, 메시지 생성에는 사용되지 않습니다.
+        Daily Wrap 새 포스팅 알림 발송
         
         Args:
-            title (str): 리포트 제목 (로깅용)
-            file_path (str): 리포트 파일 경로 (사용되지 않음)
-            summary (str): 전송할 전체 메시지 본문
+            title (str): 리포트 제목
+            file_path (str): 리포트 파일 경로 (예: 100x/daily-wrap/2025-08-17_100x-daily-wrap.html)
+            summary (str): 리포트 요약 (선택사항)
             
         Returns:
             bool: 전체 발송 성공 여부
         """
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
-        # summary가 비어있으면 오류 처리
-        if not summary:
-            self.logger.error("Message summary (body) is empty. Cannot send notification.")
-            return False
+        # GitHub Pages URL 구성
+        base_url = "https://etloveaui.github.io/100xFenok/"
+        full_url = f"{base_url}?path={file_path}"
 
-        message = summary # summary를 전체 메시지로 사용
+        # 변수 이스케이프 처리
+        escaped_title = self._escape_markdown_v2(title)
+        escaped_summary = self._escape_markdown_v2(summary)
+
+        # 메시지 구성
+        message = f"""🚀 *{escaped_title}*
+
+{escaped_summary}
+
+🔗 [리포트 보기]({full_url})
+
+💡 오늘의 시장 인사이트와 투자 기회를 놓치지 마세요!
+
+---
+_100x FenoK | 투자의 시작_"""
 
         chat_ids = self.get_chat_ids()
         
@@ -342,6 +359,7 @@ class TelegramNotifier:
         failed_count = 0
         
         for chat_id in chat_ids:
+            # Markdown 대신 MarkdownV2 사용
             success, details = self.send_telegram_message(chat_id, message)
             if success:
                 success_count += 1
