@@ -367,12 +367,16 @@
                 button.textContent = '알림 발송 중...';
                 
                 let message;
+                const baseUrl = "https://etloveaui.github.io/100xFenok/";
                 if (type === 'daily_wrap') {
-                    message = `새로운 Daily Wrap 리포트가 업로드되었습니다!\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 링크: ${config.urlPattern.replace('{filename}', filename)}\n\n💡 오늘의 시장 인사이트를 확인하세요!\n\n100xFenok DailyWrap`;
+                    const fullUrl = `${baseUrl}?path=100x/daily-wrap/${filename}`;
+                    message = `새로운 Daily Wrap 리포트가 업로드되었습니다!\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 <a href="${fullUrl}">리포트 보기</a>\n\n💡 오늘의 시장 인사이트를 확인하세요!\n\n100xFenok DailyWrap`;
                 } else if (type === 'alpha_scout') {
-                    message = `새로운 Alpha Scout 분석 리포트가 발행되었습니다! 🎯\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 분석: ${config.urlPattern.replace('{filename}', filename)}\n\n🚀 알파 기회를 놓치지 마세요!\n\nAlphaScout 100xFenok`;
+                    const fullUrl = `${baseUrl}?path=alpha-scout/reports/${filename}`;
+                    message = `새로운 Alpha Scout 분석 리포트가 발행되었습니다! 🎯\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 <a href="${fullUrl}">분석 리포트 보기</a>\n\n🚀 알파 기회를 놓치지 마세요!\n\nAlphaScout 100xFenok`;
                 } else if (type === 'briefing') {
-                    message = `새로운 전략 브리핑이 발행되었습니다! 📋\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 브리핑: ${config.urlPattern.replace('{filename}', filename)}\n\n📈 전략적 인사이트를 확인하세요!\n\nBriefing 100xFenok`;
+                    const fullUrl = `${baseUrl}?path=100x%20Briefing/Briefing/${filename}`;
+                    message = `새로운 전략 브리핑이 발행되었습니다! 📋\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 <a href="${fullUrl}">브리핑 보기</a>\n\n📈 전략적 인사이트를 확인하세요!\n\nBriefing 100xFenok`;
                 }
                 
                 const results = await sendTelegramMessage(config.title, message);
