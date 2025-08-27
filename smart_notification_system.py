@@ -68,21 +68,17 @@ class SmartNotificationSystem:
         filename = Path(file_path).name
         date = self.extract_date_from_filename(filename) or datetime.now().strftime('%Y-%m-%d')
         
-        # URL 생성
-        url = config["url_template"].format(filename=filename)
-        
-        # 알림 메시지 생성
+        # 알림 메시지 생성 (URL 부분은 telegram_notifier에서 처리)
         template = config["notification_template"]
         message = template["message"].format(
             date=date,
-            url=url,
             filename=filename
         )
         
         return {
             "title": template["title"],
             "message": message,
-            "url": url,
+            "file_path": file_path, # file_path를 전달
             "date": date,
             "report_type": report_type,
             "report_name": config["name"],
@@ -97,10 +93,10 @@ class SmartNotificationSystem:
 
             trigger = DailyWrapNotificationTrigger()
             
-            # 커스텀 알림으로 발송
+            # 커스텀 알림으로 발송, file_path를 정확하게 전달
             success = trigger.notify_custom(
                 title=notification_data["title"],
-                file_path="",  # URL로 대체됨
+                file_path=notification_data["file_path"],
                 summary=notification_data["message"]
             )
             
