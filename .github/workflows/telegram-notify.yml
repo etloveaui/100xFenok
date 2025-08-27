@@ -19,6 +19,18 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        # tj-actions/changed-files가 전체 git 히스토리에 접근할 수 있도록 설정
+        fetch-depth: 0
+
+    - name: 📂 변경된 파일 감지
+      id: changed_files
+      uses: tj-actions/changed-files@v44
+      with:
+        files: |
+          100x/daily-wrap/*.html
+          100x Briefing/Briefing/*.html
+          alpha-scout/reports/*.html
       
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -45,13 +57,14 @@ jobs:
         echo "✅ 웹 패널 빌드 완료"
 
     - name: 🤖 똑똑한 알림 시스템 실행
+      if: steps.changed_files.outputs.any_changed == 'true'
       env:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         GITHUB_ACTIONS: true
       run: |
         echo "=== 100xFenok 똑똑한 알림 시스템 ==="
-        echo "변경된 파일들을 자동 분석하여 적절한 알림을 발송합니다..."
-        python smart_notification_system.py --github-action
+        echo "다음 파일에 대해 알림을 발송합니다: ${{ steps.changed_files.outputs.all_changed_files }}"
+        python smart_notification_system.py --github-action --changed-files "${{ steps.changed_files.outputs.all_changed_files }}"
 
     - name: 📤 업데이트된 웹 패널 배포
       if: success()
