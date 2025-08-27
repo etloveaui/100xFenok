@@ -62,6 +62,13 @@ class SmartNotificationSystem:
         match = re.search(date_pattern, filename)
         return match.group(1) if match else None
     
+    def _escape_markdown_v2(self, text: str) -> str:
+        """텔레그램 MarkdownV2 파서를 위한 특수문자 이스케이프 처리"""
+        # 주의: 이스케이프할 문자 목록 - `_`, `*`, `[`, `]`, `(`, `)`, `~`, `` ` ``, `>`, `#`, `+`, `-`, `=`, `|`, `{`, `}`, `.`, `!`
+        # re.escape는 대부분의 문자를 이스케이프 처리하지만, 여기서는 명시적으로 처리합니다.
+        escape_chars = r'([_*\[\]()~`>#\+\-=|{}.!])'
+        return re.sub(escape_chars, r'\\\1', text)
+
     def build_notification_data(self, report_type: str, file_path: str) -> Dict:
         """알림 데이터 구성"""
         config = self.config["report_types"][report_type]
@@ -71,30 +78,30 @@ class SmartNotificationSystem:
         # URL 생성
         url = config["url_template"].format(filename=filename)
         
+        # 템플릿에 삽입될 변수들을 이스케이프 처리
+        # 이렇게 하면 템플릿 자체의 마크다운 서식은 유지하면서 변수 내용의 특수문자만 안전하게 처리됨
+        escaped_date = self._escape_markdown_v2(date)
+        escaped_url = self._escape_markdown_v2(url)
+        escaped_filename = self._escape_markdown_v2(filename)
+
         # 알림 메시지 생성
         template = config["notification_template"]
+        # 이스케이프 처리된 변수들을 사용하여 메시지 포맷
         message = template["message"].format(
-            date=date,
-            url=url,
-            filename=filename
+            date=escaped_date,
+            url=escaped_url,
+            filename=escaped_filename
         )
         
         return {
-            "title": template["title"],
-            "message": message,
+            "title": template["title"], # 제목은 이스케이프하지 않음 (로깅용)
+            "message": message, # 최종 메시지는 서식이 적용된 상태
             "url": url,
             "date": date,
             "report_type": report_type,
             "report_name": config["name"],
             "hashtags": template.get("hashtags", [])
         }
-    
-    def _escape_markdown_v2(self, text: str) -> str:
-        """텔레그램 MarkdownV2 파서를 위한 특수문자 이스케이프 처리"""
-        # 주의: 이스케이프할 문자 목록 - `_`, `*`, `[`, `]`, `(`, `)`, `~`, `` ` ``, `>`, `#`, `+`, `-`, `=`, `|`, `{`, `}`, `.`, `!`
-        # re.escape는 대부분의 문자를 이스케이프 처리하지만, 여기서는 명시적으로 처리합니다.
-        escape_chars = r'([_*\[\]()~`>#\+\-=|{}.!])'
-        return re.sub(escape_chars, r'\\\1', text)
 
     def send_notification(self, notification_data: Dict) -> bool:
         """알림 발송 (텔레그램 노티파이어 직접 호출)"""
@@ -103,11 +110,8 @@ class SmartNotificationSystem:
             from notify_daily_wrap import DailyWrapNotificationTrigger
             trigger = DailyWrapNotificationTrigger()
             notifier = trigger.notifier
-
-            # MarkdownV2 형식에 맞게 메시지 본문 이스케이프 처리
-            message_to_send = self._escape_markdown_v2(notification_data["message"])
             
-            # 제목은 로깅용으로만 사용되므로 이스케이프 불필요
+            message_to_send = notification_data["message"]
             title_for_log = notification_data["title"]
 
             chat_ids = notifier.get_chat_ids()
