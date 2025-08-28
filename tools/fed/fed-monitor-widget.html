@@ -335,11 +335,45 @@
 
 <script>
   // Configuration
-  const API_KEY = '6dda7dc3956a2c1d6ac939133de115f1';
+  const API_KEY = (window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1');
   const DIRECT_URL = 'https://api.stlouisfed.org/fred/series/observations';
-  const IS_LOCAL = ['localhost','127.0.0.1'].includes(window.location.hostname);
-  const DEV_PROXY_URL = ((window.FRED_PROXY_URL || localStorage.getItem('FRED_PROXY_URL') || 'http://127.0.0.1:8787') + '/fred/series/observations');
+  const HOST = window.location.hostname || '';
+  const IS_LOCAL = ['localhost','127.0.0.1'].includes(HOST);
+  const USER_PROXY = (window.FRED_PROXY_URL || localStorage.getItem('FRED_PROXY_URL') || '');
+  // When local, allow local dev proxy path style. Otherwise try direct then CORS-friendly fallbacks.
+  const DEV_PROXY_URL = USER_PROXY ? (USER_PROXY.replace(/\/$/, '') + (USER_PROXY.includes('fred/series/observations') ? '' : '/fred/series/observations')) : 'http://127.0.0.1:8787/fred/series/observations';
   const BASE_URL = IS_LOCAL ? DEV_PROXY_URL : DIRECT_URL;
+
+  // Generic fetch with CORS fallbacks for GitHub Pages, etc.
+  async function fetchJsonWithCorsFallback(fullUrl) {
+    const proxies = [];
+    if (!IS_LOCAL && USER_PROXY) {
+      const u = USER_PROXY.replace(/\/$/, '');
+      if (u.includes('http') && !u.endsWith('/fred/series/observations')) {
+        proxies.push(u + '/' + fullUrl);
+      } else {
+        const qs = fullUrl.split('?')[1] || '';
+        proxies.push(u + (u.endsWith('/fred/series/observations') ? '' : '/fred/series/observations') + (qs ? ('?' + qs) : ''));
+      }
+    }
+    proxies.push('https://cors.isomorphic-git.org/' + fullUrl);
+    proxies.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(fullUrl));
+    proxies.push('https://thingproxy.freeboard.io/fetch/' + fullUrl);
+
+    const candidates = (!IS_LOCAL && /(github\.io|vercel\.app|netlify\.app)$/.test(HOST))
+      ? [ ...proxies ]
+      : [ fullUrl, ...proxies ];
+
+    for (const u of candidates) {
+      try {
+        const res = await fetch(u, { cache: 'no-store' });
+        if (res && res.ok) return await res.json();
+      } catch (e) {
+        // try next
+      }
+    }
+    throw new Error('All fetch attempts failed for ' + fullUrl);
+  }
   
   // Series IDs
   const SERIES = {
@@ -357,28 +391,45 @@
     RRPONTSYD: { current: null, previous: null }
   };
 
-  // Fetch data from FRED API
+  // Fetch latest numeric pair over last year (skip '.')
+  async function fetchLatestPair(seriesId){
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 365*24*60*60*1000).toISOString().split('T')[0];
+    const direct = `${DIRECT_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=asc`;
+    const data = await fetchJsonWithCorsFallback(direct);
+    const obs = Array.isArray(data?.observations) ? data.observations : [];
+    let current = null, previous = null;
+    for (let i = obs.length - 1; i >= 0; i--) {
+      const v = parseFloat(obs[i].value);
+      if (Number.isFinite(v)) {
+        if (current === null) current = v; else { previous = v; break; }
+      }
+    }
+    if (current !== null && previous === null) previous = current;
+    return { current, previous };
+  }
+
+  // Fetch data from FRED API (fast path) with CORS/NaN handling and robust fallback
   async function fetchRateData(seriesId) {
     try {
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      const url = `${BASE_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=desc&limit=2`;
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      if (data.observations && data.observations.length > 0) {
-        const current = parseFloat(data.observations[0].value);
-        const previous = data.observations.length > 1 ? parseFloat(data.observations[1].value) : current;
-        
-        return { current, previous };
+      const url = `${DIRECT_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=desc&limit=2`;
+      const data = await fetchJsonWithCorsFallback(url);
+      let current = null, previous = null;
+      if (data && Array.isArray(data.observations) && data.observations.length > 0) {
+        const c = parseFloat(data.observations[0].value);
+        const p = data.observations.length > 1 ? parseFloat(data.observations[1].value) : c;
+        current = Number.isFinite(c) ? c : null;
+        previous = Number.isFinite(p) ? p : current;
       }
-      
-      return { current: null, previous: null };
+      if (current == null || previous == null) {
+        return await fetchLatestPair(seriesId);
+      }
+      return { current, previous };
     } catch (error) {
       console.error(`Error fetching ${seriesId}:`, error);
-      return { current: null, previous: null };
+      try { return await fetchLatestPair(seriesId); } catch(e){ return { current: null, previous: null }; }
     }
   }
 
@@ -387,7 +438,7 @@
     const isRRP = rateType === 'RRPONTSYD';
     const elementPrefix = isRRP ? 'rrp' : rateType.toLowerCase();
     
-    if (data.current !== null) {
+    if (Number.isFinite(data.current)) {
       let value, decimal;
       
       if (isRRP) {
