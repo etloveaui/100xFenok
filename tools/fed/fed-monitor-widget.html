@@ -1,0 +1,576 @@
+<!-- Fed Monitor Widget Component -->
+<!-- 메인 페이지에 임베드용 전광판 컴포넌트 -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  .fed-monitor-container {
+    background: #0a0a0a;
+    border: 2px solid #1a1a1a;
+    border-radius: 12px;
+    padding: 16px 20px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .fed-monitor-container:hover {
+    border-color: #22c55e;
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.15);
+  }
+
+  .fed-monitor-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #22c55e, transparent);
+    animation: scan 3s linear infinite;
+    opacity: 0.5;
+  }
+
+  @keyframes scan {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(100px); }
+  }
+
+  .fed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .fed-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: #22c55e;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    border-radius: 20px;
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.2); }
+  }
+
+  .live-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ef4444;
+    letter-spacing: 1px;
+  }
+
+  .rates-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .rates-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rates-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .rate-card {
+    background: rgba(10, 10, 10, 0.8);
+    border: 1px solid #1a1a1a;
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .rate-card:hover {
+    background: rgba(34, 197, 94, 0.05);
+    border-color: #22c55e;
+  }
+
+  .rate-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .rate-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 800;
+    color: #22c55e;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+
+  .rate-decimal {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .rate-change {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .change-up {
+    color: #22c55e;
+  }
+
+  .change-down {
+    color: #ef4444;
+  }
+
+  .change-neutral {
+    color: #666;
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-led {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    position: relative;
+  }
+
+  .led-green {
+    background: #22c55e;
+    box-shadow: 0 0 10px #22c55e;
+  }
+
+  .led-yellow {
+    background: #eab308;
+    box-shadow: 0 0 10px #eab308;
+    animation: blink 1s infinite;
+  }
+
+  .led-red {
+    background: #ef4444;
+    box-shadow: 0 0 10px #ef4444;
+    animation: blink 0.5s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .status-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: #999;
+    letter-spacing: 1px;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 10, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .loader {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #1a1a1a;
+    border-top-color: #22c55e;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .update-time {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 1px;
+  }
+</style>
+
+<div class="fed-monitor-container" onclick="openFedDetail()">
+  <!-- Loading State -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader"></div>
+  </div>
+
+  <!-- Update Time -->
+  <div class="update-time" id="updateTime"></div>
+
+  <!-- Header -->
+  <div class="fed-header">
+    <div class="fed-title">
+      <span>FED RATES MONITOR</span>
+    </div>
+    <div class="live-indicator">
+      <div class="live-dot"></div>
+      <div class="live-text">LIVE</div>
+    </div>
+  </div>
+
+  <!-- Rates Grid -->
+  <div class="rates-grid" id="ratesGrid">
+    <!-- IORB -->
+    <div class="rate-card">
+      <div class="rate-label">IORB</div>
+      <div class="rate-value">
+        <span id="iorb-value">--</span>
+        <span class="rate-decimal" id="iorb-decimal">--</span>
+      </div>
+      <div class="rate-change" id="iorb-change">
+        <span>--</span>
+      </div>
+    </div>
+
+    <!-- EFFR -->
+    <div class="rate-card">
+      <div class="rate-label">EFFR</div>
+      <div class="rate-value">
+        <span id="effr-value">--</span>
+        <span class="rate-decimal" id="effr-decimal">--</span>
+      </div>
+      <div class="rate-change" id="effr-change">
+        <span>--</span>
+      </div>
+    </div>
+
+    <!-- SOFR -->
+    <div class="rate-card">
+      <div class="rate-label">SOFR</div>
+      <div class="rate-value">
+        <span id="sofr-value">--</span>
+        <span class="rate-decimal" id="sofr-decimal">--</span>
+      </div>
+      <div class="rate-change" id="sofr-change">
+        <span>--</span>
+      </div>
+    </div>
+
+    <!-- ON RRP -->
+    <div class="rate-card">
+      <div class="rate-label">ON RRP</div>
+      <div class="rate-value" style="font-size: 20px;">
+        <span id="rrp-value">--</span>
+        <span class="rate-decimal" style="font-size: 14px;" id="rrp-unit">B</span>
+      </div>
+      <div class="rate-change" id="rrp-change">
+        <span>--</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="status-led" id="statusLed"></div>
+      <div class="status-text" id="statusText">ANALYZING</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Configuration
+  const API_KEY = '6dda7dc3956a2c1d6ac939133de115f1';
+  const DIRECT_URL = 'https://api.stlouisfed.org/fred/series/observations';
+  const IS_LOCAL = ['localhost','127.0.0.1'].includes(window.location.hostname);
+  const DEV_PROXY_URL = ((window.FRED_PROXY_URL || localStorage.getItem('FRED_PROXY_URL') || 'http://127.0.0.1:8787') + '/fred/series/observations');
+  const BASE_URL = IS_LOCAL ? DEV_PROXY_URL : DIRECT_URL;
+  
+  // Series IDs
+  const SERIES = {
+    IORB: 'IORB',
+    EFFR: 'DFF',
+    SOFR: 'SOFR',
+    RRPONTSYD: 'RRPONTSYD'
+  };
+
+  // State
+  let ratesData = {
+    IORB: { current: null, previous: null },
+    EFFR: { current: null, previous: null },
+    SOFR: { current: null, previous: null },
+    RRPONTSYD: { current: null, previous: null }
+  };
+
+  // Fetch data from FRED API
+  async function fetchRateData(seriesId) {
+    try {
+      const endDate = new Date().toISOString().split('T')[0];
+      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      const url = `${BASE_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=desc&limit=2`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.observations && data.observations.length > 0) {
+        const current = parseFloat(data.observations[0].value);
+        const previous = data.observations.length > 1 ? parseFloat(data.observations[1].value) : current;
+        
+        return { current, previous };
+      }
+      
+      return { current: null, previous: null };
+    } catch (error) {
+      console.error(`Error fetching ${seriesId}:`, error);
+      return { current: null, previous: null };
+    }
+  }
+
+  // Update UI with rate data
+  function updateRateDisplay(rateType, data) {
+    const isRRP = rateType === 'RRPONTSYD';
+    const elementPrefix = isRRP ? 'rrp' : rateType.toLowerCase();
+    
+    if (data.current !== null) {
+      let value, decimal;
+      
+      if (isRRP) {
+        // Convert millions to billions
+        const billions = data.current / 1000;
+        value = Math.floor(billions).toString();
+        decimal = (billions % 1).toFixed(1).substring(2);
+        
+        document.getElementById(`${elementPrefix}-value`).textContent = value;
+        document.getElementById(`${elementPrefix}-unit`).textContent = `.${decimal}B`;
+      } else {
+        // Regular rate display
+        value = Math.floor(data.current).toString();
+        decimal = (data.current % 1).toFixed(2).substring(1);
+        
+        document.getElementById(`${elementPrefix}-value`).textContent = value;
+        document.getElementById(`${elementPrefix}-decimal`).textContent = decimal;
+      }
+      
+      // Update change indicator
+      const changeElement = document.getElementById(`${elementPrefix}-change`);
+      if (data.previous !== null) {
+        const change = data.current - data.previous;
+        const changeText = isRRP ? 
+          `${change > 0 ? '▲' : change < 0 ? '▼' : '■'} ${Math.abs(change / 1000).toFixed(1)}B` :
+          `${change > 0 ? '▲' : change < 0 ? '▼' : '■'} ${Math.abs(change).toFixed(2)}bp`;
+        
+        changeElement.innerHTML = `<span class="${change > 0 ? 'change-up' : change < 0 ? 'change-down' : 'change-neutral'}">${changeText}</span>`;
+      }
+    }
+  }
+
+  // Analyze risk status
+  function analyzeRiskStatus() {
+    const { IORB, EFFR, SOFR } = ratesData;
+    
+    if (!IORB.current || !EFFR.current || !SOFR.current) {
+      return { level: 'unknown', text: 'DATA PENDING' };
+    }
+    
+    // Check normal order: IORB > EFFR > SOFR
+    const normalOrder = IORB.current > EFFR.current && EFFR.current > SOFR.current;
+    const spread = IORB.current - SOFR.current;
+    
+    if (normalOrder && spread > 0.15) {
+      return { level: 'green', text: 'NORMAL' };
+    } else if (normalOrder && spread <= 0.15) {
+      return { level: 'yellow', text: 'CAUTION' };
+    } else {
+      return { level: 'red', text: 'WARNING' };
+    }
+  }
+
+  // Update status LED
+  function updateStatus() {
+    const status = analyzeRiskStatus();
+    const ledElement = document.getElementById('statusLed');
+    const textElement = document.getElementById('statusText');
+    
+    ledElement.className = 'status-led';
+    
+    switch (status.level) {
+      case 'green':
+        ledElement.classList.add('led-green');
+        break;
+      case 'yellow':
+        ledElement.classList.add('led-yellow');
+        break;
+      case 'red':
+        ledElement.classList.add('led-red');
+        break;
+      default:
+        ledElement.classList.add('led-yellow');
+    }
+    
+    textElement.textContent = status.text;
+  }
+
+  // Update timestamp
+  function updateTimestamp() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('ko-KR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+    document.getElementById('updateTime').textContent = `UPDATE ${timeString}`;
+  }
+
+  // Initialize and fetch all data
+  async function initialize() {
+    try {
+      // Fetch all data in parallel
+      const [iorb, effr, sofr, rrp] = await Promise.all([
+        fetchRateData(SERIES.IORB),
+        fetchRateData(SERIES.EFFR),
+        fetchRateData(SERIES.SOFR),
+        fetchRateData(SERIES.RRPONTSYD)
+      ]);
+      
+      // Store data
+      ratesData.IORB = iorb;
+      ratesData.EFFR = effr;
+      ratesData.SOFR = sofr;
+      ratesData.RRPONTSYD = rrp;
+      
+      // Update displays
+      updateRateDisplay('IORB', iorb);
+      updateRateDisplay('EFFR', effr);
+      updateRateDisplay('SOFR', sofr);
+      updateRateDisplay('RRPONTSYD', rrp);
+      
+      // Update status
+      updateStatus();
+      updateTimestamp();
+      
+      // Hide loading overlay
+      document.getElementById('loadingOverlay').style.display = 'none';
+      
+    } catch (error) {
+      console.error('Initialization error:', error);
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  }
+
+  // Initialize on load
+  initialize();
+
+  // Auto-refresh every 5 minutes
+  setInterval(initialize, 5 * 60 * 1000);
+
+  // Safe navigation to detail page across frames
+  function openFedDetail() {
+    const target = 'tools/fed/fed-rates-detail.html';
+    try {
+      if (window.top && typeof window.top.loadPage === 'function') {
+        window.top.loadPage(target);
+        return;
+      }
+      if (window.parent && typeof window.parent.loadPage === 'function') {
+        window.parent.loadPage(target);
+        return;
+      }
+    } catch (e) { /* ignore cross-frame issues */ }
+    // Fallback: hard navigate
+    const base = (window.top && window.top.baseHref) || (window.baseHref) || '/';
+    window.top ? window.top.location.assign(`${base}index.html?path=${target}`) : location.assign(`index.html?path=${target}`);
+  }
+</script>
+<script>
+// Post-process change indicators to ensure encoding-safe arrows and correct bp units
+(function() {
+  function safeUpdateChanges() {
+    try {
+      const store = (typeof ratesData !== 'undefined') ? ratesData : {};
+      const map = [
+        { key: 'IORB', isRRP: false },
+        { key: 'EFFR', isRRP: false },
+        { key: 'SOFR', isRRP: false },
+        { key: 'RRPONTSYD', isRRP: true }
+      ];
+
+      map.forEach(({ key, isRRP }) => {
+        const data = store[key];
+        if (!data || data.current == null || data.previous == null) return;
+        const change = data.current - data.previous;
+        const arrow = change > 0 ? '&uarr;' : change < 0 ? '&darr;' : '&rarr;';
+        const cls = change > 0 ? 'change-up' : change < 0 ? 'change-down' : 'change-neutral';
+        const idPrefix = isRRP ? 'rrp' : key.toLowerCase();
+        const text = isRRP
+          ? `${arrow} ${Math.abs(change / 1000).toFixed(1)}B`
+          : `${arrow} ${(Math.abs(change) * 100).toFixed(0)}bp`;
+
+        const el = document.getElementById(`${idPrefix}-change`);
+        if (el) el.innerHTML = `<span class="${cls}">${text}</span>`;
+      });
+    } catch (e) {
+      console.error('safeUpdateChanges error:', e);
+    }
+  }
+
+  // Run after initial initialize completes and slightly after each auto-refresh
+  window.addEventListener('load', () => setTimeout(safeUpdateChanges, 120));
+  setInterval(safeUpdateChanges, 5 * 60 * 1000 + 250);
+})();
+</script>
