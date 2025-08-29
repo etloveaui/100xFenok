@@ -338,8 +338,9 @@
   const API_KEY = (window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1');
   const DIRECT_URL = 'https://api.stlouisfed.org/fred/series/observations';
   const HOST = window.location.hostname || '';
-  const IS_LOCAL = ['localhost','127.0.0.1'].includes(HOST);
-  const USER_PROXY = (window.FRED_PROXY_URL || localStorage.getItem('FRED_PROXY_URL') || '');
+  const IS_LOCAL = ['localhost','127.0.0.1'].includes(HOST) || HOST.includes('127.0.0.1');
+  // const USER_PROXY = (window.FRED_PROXY_URL || localStorage.getItem('FRED_PROXY_URL') || '');
+  const USER_PROXY = 'https://fed-proxy.etloveaui.workers.dev/';
   // When local, allow local dev proxy path style. Otherwise try direct then CORS-friendly fallbacks.
   const DEV_PROXY_URL = USER_PROXY ? (USER_PROXY.replace(/\/$/, '') + (USER_PROXY.includes('fred/series/observations') ? '' : '/fred/series/observations')) : 'http://127.0.0.1:8787/fred/series/observations';
   const BASE_URL = IS_LOCAL ? DEV_PROXY_URL : DIRECT_URL;
