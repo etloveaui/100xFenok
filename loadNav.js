@@ -51,4 +51,77 @@ export async function loadNav(siteVersion, containerId = 'nav') {
         script.textContent = oldScript.textContent;
         oldScript.replaceWith(script);
     });
+
+    // ----- Post init tweaks -----
+    // 1) Rename menu label "분석" -> "Insights"
+    try {
+        navContainer.querySelectorAll('a.nav-item, a').forEach(a => {
+            const href = (a.getAttribute('href') || '') + (a.getAttribute('data-path') || '');
+            const text = (a.textContent || '').trim();
+            if (/posts\/posts-main\.html$/.test(href) && text === '분석') {
+                a.textContent = 'Insights';
+            }
+        });
+    } catch {}
+
+    // 2) Mobile dropdown fold logic (click to open, outside/ESC to close)
+    try {
+        const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+        const wrappers = Array.from(navContainer.querySelectorAll('.relative.group'));
+
+        function closeAll() {
+            wrappers.forEach(w => {
+                w.removeAttribute('data-open');
+                const menu = w.querySelector('div.absolute');
+                if (menu) { menu.style.opacity = ''; menu.style.visibility = ''; }
+            });
+        }
+
+        function toggleWrapper(w) {
+            const open = w.hasAttribute('data-open');
+            closeAll();
+            if (!open) {
+                w.setAttribute('data-open', '1');
+                const menu = w.querySelector('div.absolute');
+                if (menu) { menu.style.opacity = '1'; menu.style.visibility = 'visible'; }
+            }
+        }
+
+        function attach()
+        {
+            // Button click toggles
+            wrappers.forEach(w => {
+                const btn = w.querySelector('button.nav-item');
+                const menu = w.querySelector('div.absolute');
+                if (!btn || !menu) return;
+                btn.addEventListener('click', (e) => {
+                    if (!isMobile()) return; // desktop unaffected
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleWrapper(w);
+                });
+                // Menu item click closes
+                menu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => { if (isMobile()) closeAll(); });
+                });
+            });
+
+            // Outside click
+            document.addEventListener('click', (e) => {
+                if (!isMobile()) return;
+                if (!navContainer.contains(e.target)) closeAll();
+            });
+
+            // ESC key
+            document.addEventListener('keydown', (e) => {
+                if (!isMobile()) return;
+                if (e.key === 'Escape') closeAll();
+            });
+        }
+
+        attach();
+
+        // On resize, close all and keep desktop behavior intact
+        window.addEventListener('resize', () => { if (!isMobile()) closeAll(); });
+    } catch {}
 }
