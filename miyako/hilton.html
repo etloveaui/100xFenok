@@ -1,0 +1,2978 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>힐튼 오키나와 미야코 아일랜드 리조트 완전 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Mermaid diagram styling */
+        .mermaid-container {
+            display: flex;
+            justify-content: center;
+            min-height: 300px;
+            max-height: 800px;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mermaid-container .mermaid {
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            cursor: grab;
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .mermaid-container .mermaid svg {
+            max-width: 100%;
+            height: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .mermaid-container .mermaid:active {
+            cursor: grabbing;
+        }
+
+        .mermaid-container.zoomed .mermaid {
+            height: 100%;
+            width: 100%;
+            cursor: grab;
+        }
+
+        .mermaid-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mermaid-control-btn {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #374151;
+            font-size: 14px;
+            min-width: 36px;
+            height: 36px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mermaid-control-btn:hover {
+            background: #f8fafc;
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+    .mermaid-control-btn:active {
+        transform: scale(0.95);
+    }
+
+    @media (max-width: 1024px) {
+        .mermaid-control-btn:not(.reset-zoom) {
+            display: none;
+        }
+        .mermaid-controls {
+            top: auto;
+            bottom: 15px;
+            right: 15px;
+        }
+    }
+</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'ocean': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        'coral': {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        },
+                        'sand': {
+                            50: '#fdfcfb',
+                            100: '#fbf7f3',
+                            200: '#f5eee6',
+                            300: '#eee2d4',
+                            400: '#e4d4bd',
+                            500: '#d4b896',
+                            600: '#c4a277',
+                            700: '#b08d64',
+                            800: '#9a7a58',
+                            900: '#7d6449',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+  </head>
+
+  <body class="bg-sand-50 font-sans text-gray-900 leading-relaxed break-words">
+    <!-- Fixed Table of Contents -->
+    <nav id="toc" class="fixed left-0 top-0 h-screen w-80 bg-white shadow-xl z-50 overflow-y-auto border-r border-sand-200 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="font-serif text-xl font-semibold text-ocean-700">목차</h2>
+          <button id="toc-close" class="md:hidden text-gray-500 hover:text-ocean-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <ul class="space-y-3 text-sm">
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#executive-summary">Executive Summary</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#floor-map">층별 시설 안내</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#building-guide">구역별 가이드</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#activities">액티비티 &amp; 레저</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#dining">다이닝 &amp; 바</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#practical-tips">실전 팁</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="md:ml-80">
+      <!-- Toggle button for TOC on mobile -->
+      <button id="toc-toggle" class="fixed top-4 left-4 z-40 bg-white rounded-full p-3 shadow-lg md:hidden">
+        <i class="fas fa-bars text-ocean-600"></i>
+      </button>
+      <!-- Hero Section with Bento Grid -->
+      <header class="relative bg-gradient-to-br from-ocean-600 to-ocean-800 text-white overflow-hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div class="relative max-w-7xl mx-auto px-8 py-16">
+          <!-- Bento Grid Layout -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <!-- Main Title -->
+            <div class="lg:col-span-2 flex flex-col justify-center">
+              <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                힐튼 오키나와
+                <br />
+                <span class="text-coral-300">미야코 아일랜드</span>
+                <br />
+                리조트 완전 가이드
+              </h1>
+              <p class="text-lg sm:text-xl text-ocean-100 leading-relaxed max-w-2xl">
+                미야코지마의 최신 럭셔리 리조트를 완벽히 이해하고 최고의 휴가 경험을 위한 종합 가이드
+              </p>
+            </div>
+
+            <!-- Key Highlights Grid -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <div class="text-2xl font-bold text-coral-300">329</div>
+                <div class="text-sm text-ocean-100">객실 수</div>
+              </div>
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <div class="text-2xl font-bold text-coral-300">5</div>
+                <div class="text-sm text-ocean-100">수영장</div>
+              </div>
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <div class="text-2xl font-bold text-coral-300">4</div>
+                <div class="text-sm text-ocean-100">레스토랑 &amp; 바</div>
+              </div>
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <div class="text-2xl font-bold text-coral-300">2023</div>
+                <div class="text-sm text-ocean-100">오픈 연도</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Image -->
+          <div class="relative rounded-2xl overflow-hidden shadow-2xl">
+            <img alt="힐튼 오키나와 미야코 아일랜드 리조트 해변 전경" class="w-full h-80 object-cover" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="large" aspect="wide" color="blue" style="photo" query="힐튼 오키나와 미야코 아일랜드 리조트 해변 전경" referrerpolicy="no-referrer" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+            <div class="absolute bottom-6 left-6 right-6">
+              <div class="flex flex-wrap gap-4 text-sm">
+                <span class="bg-coral-500 px-3 py-1 rounded-full">전용 해변</span>
+                <span class="bg-coral-500 px-3 py-1 rounded-full">미야코 블루</span>
+                <span class="bg-coral-500 px-3 py-1 rounded-full">럭셔리 리조트</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Executive Summary -->
+      <section class="py-16 bg-white" id="executive-summary">
+        <div class="max-w-4xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-8">Executive Summary</h2>
+
+          <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <div class="space-y-6">
+              <h3 class="font-serif text-2xl font-semibold text-ocean-700">호텔 개요 및 주요 시설</h3>
+              <p class="text-gray-700 leading-relaxed">
+                힐튼 오키나와 미야코 아일랜드 리조트는 <strong>2023년 8월 26일</strong>에 그랜드 오픈한 최신 럭셔리 리조트로,
+                미야코 섬의 아름다운 자연경관과 현대적인 편의시설을 완벽하게 결합한 고급 숙박 시설입니다.
+              </p>
+              <div class="bg-sand-50 p-4 rounded-lg">
+                <ul class="space-y-2 text-sm">
+                  <li class="flex items-center"><i class="fas fa-bed text-coral-500 mr-2"></i> 총 <strong>329개의 객실</strong></li>
+                  <li class="flex items-center"><i class="fas fa-swimming-pool text-coral-500 mr-2"></i> <strong>5개의 수영장</strong> (실내외)</li>
+                  <li class="flex items-center"><i class="fas fa-utensils text-coral-500 mr-2"></i> <strong>4개의 레스토랑과 바</strong></li>
+                  <li class="flex items-center"><i class="fas fa-spa text-coral-500 mr-2"></i> 풀서비스 스파</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <h3 class="font-serif text-2xl font-semibold text-ocean-700">접근성 및 위치</h3>
+              <p class="text-gray-700 leading-relaxed">
+                미야코 공항에서 무료 셔틀버스를 운행하여 접근성이 뛰어나며, 가족, 커플, 비즈니스 여행객 모두에게 적합한 최고의 휴가 환경을 제공합니다.
+              </p>
+              <div class="bg-ocean-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium">미야코 공항</span>
+                  <span class="text-sm text-ocean-600">약 15분</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium">시모지시마 공항</span>
+                  <span class="text-sm text-ocean-600">약 25분</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Highlights Grid -->
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="text-center p-6 bg-gradient-to-br from-ocean-50 to-ocean-100 rounded-xl">
+              <div class="w-16 h-16 bg-ocean-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-water text-white text-2xl"></i>
+              </div>
+              <h4 class="font-serif text-lg font-semibold text-ocean-800 mb-2">전용 해변</h4>
+              <p class="text-sm text-gray-600">프라이빗한 해변에서 휴식을 즐길 수 있습니다</p>
+            </div>
+
+            <div class="text-center p-6 bg-gradient-to-br from-coral-50 to-coral-100 rounded-xl">
+              <div class="w-16 h-16 bg-coral-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-crown text-white text-2xl"></i>
+              </div>
+              <h4 class="font-serif text-lg font-semibold text-coral-800 mb-2">이그제큐티브 라운지</h4>
+              <p class="text-sm text-gray-600">7층 라운지에서 특별한 혜택을 누릴 수 있습니다</p>
+            </div>
+
+            <div class="text-center p-6 bg-gradient-to-br from-sand-100 to-sand-200 rounded-xl">
+              <div class="w-16 h-16 bg-sand-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-sun text-white text-2xl"></i>
+              </div>
+              <h4 class="font-serif text-lg font-semibold text-sand-800 mb-2">환상적인 석양</h4>
+              <p class="text-sm text-gray-600">모든 객실에서 미야코 블루와 석양을 감상</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Floor-by-Floor Map -->
+      <section class="py-16 bg-sand-50" id="floor-map">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">층별 시설 안내</h2>
+
+          <!-- Floor Overview with Mermaid -->
+          <div class="bg-white rounded-2xl p-8 shadow-lg mb-12">
+            <h3 class="font-serif text-2xl font-semibold text-ocean-700 mb-6 text-center">호텔 구조 도면</h3>
+            <div class="mermaid-container">
+              <div class="mermaid-controls">
+                <button class="mermaid-control-btn zoom-in" title="확대">
+                  <i class="fas fa-search-plus"></i>
+                </button>
+                <button class="mermaid-control-btn zoom-out" title="축소">
+                  <i class="fas fa-search-minus"></i>
+                </button>
+                <button class="mermaid-control-btn reset-zoom" title="원래 크기">
+                  <i class="fas fa-expand-arrows-alt"></i>
+                </button>
+                <button class="mermaid-control-btn fullscreen" title="전체 화면 보기">
+                  <i class="fas fa-expand"></i>
+                </button>
+              </div>
+              <div class="mermaid" id="hotel-floor-diagram">
+                graph TD
+                A["8층 - 루프탑"] --&gt; B["유나이 바
+                <br />Rooftop Bar"]
+                A --&gt; C["루프탑 채플"]
+
+                D["7층 - 이그제큐티브"] --&gt; E["이그제큐티브 라운지"]
+                D --&gt; F["이그제큐티브 풀
+                <br />성인 전용"]
+                D --&gt; G["이그제큐티브 룸"]
+                D --&gt; H["스위트 룸"]
+
+                I["3-6층 - 객실"] --&gt; J["디럭스 룸
+                <br />35㎡"]
+                I --&gt; K["프리미엄 룸
+                <br />오션뷰"]
+                I --&gt; L["일부 스위트 룸"]
+
+                M["2층 - 다이닝"] --&gt; N["이졸레타
+                <br />이탈리안 레스토랑"]
+                M --&gt; O["사료
+                <br />로비 라운지"]
+
+                P["1층 - 메인"] --&gt; Q["로비 &amp; 프론트 데스크"]
+                P --&gt; R["아주르
+                <br />올데이 다이닝"]
+                P --&gt; S["츠비라 스파"]
+                P --&gt; T["피트니스 센터
+                <br />24시간"]
+                P --&gt; U["실내 수영장"]
+                P --&gt; V["키즈 클럽"]
+
+                W["외부 시설"] --&gt; X["야외 수영장 3개"]
+                W --&gt; Y["전용 해변
+                <br />미야코 선셋 비치"]
+                W --&gt; Z["주차장
+                <br />300대 수용"]
+
+                style A fill:#f97316,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style D fill:#0ea5e9,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style I fill:#fbbf24,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style M fill:#10b981,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style P fill:#7c3aed,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style W fill:#059669,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style B fill:#fed7aa,stroke:#f97316,stroke-width:2px,color:#7c2d12,font-weight:600
+                style C fill:#fed7aa,stroke:#f97316,stroke-width:2px,color:#7c2d12,font-weight:600
+                style E fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
+                style F fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
+                style G fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
+                style H fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
+                style J fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
+                style K fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
+                style L fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
+                style N fill:#d1fae5,stroke:#10b981,stroke-width:2px,color:#065f46,font-weight:600
+                style O fill:#d1fae5,stroke:#10b981,stroke-width:2px,color:#065f46,font-weight:600
+                style Q fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style R fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style S fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style T fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style U fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style V fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style X fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
+                style Y fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
+                style Z fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
+              </div>
+            </div>
+            <div class="bg-sand-50 p-4 rounded-lg mt-4">
+              <p class="text-sm text-gray-600 mb-2">
+                <i class="fas fa-info-circle text-ocean-500 mr-2"></i>
+                <strong>사용 방법:</strong> 마우스로 드래그하여 이동, 버튼으로 확대/축소, 더블클릭으로 특정 영역 선택
+              </p>
+              <div class="flex items-center space-x-4 text-xs text-gray-500">
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-coral-500 rounded mr-2"></div>
+                  <span>루프탑 시설</span>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-ocean-500 rounded mr-2"></div>
+                  <span>이그제큐티브 시설</span>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-yellow-400 rounded mr-2"></div>
+                  <span>객실 층</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Floor Information -->
+          <div class="grid lg:grid-cols-2 gap-8">
+            <!-- 1st Floor -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+              <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center mr-3">
+                  <span class="text-white font-bold text-sm">1F</span>
+                </div>
+                <h3 class="font-serif text-xl font-semibold text-ocean-800">메인 로비 &amp; 핵심 부대시설</h3>
+              </div>
+              <img alt="호텔 로비 인테리어" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="힐튼 오키나와 미야코 리조트 로비" referrerpolicy="no-referrer" />
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <i class="fas fa-concierge-bell text-coral-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">로비 및 프론트 데스크</strong>
+                    <p class="text-sm text-gray-600">24시간 운영, 다국어 지원</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-utensils text-coral-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">아주르 (Azure)</strong>
+                    <p class="text-sm text-gray-600">올데이 다이닝, 조식 뷔페</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-dumbbell text-coral-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">피트니스 센터 &amp; 스파</strong>
+                    <p class="text-sm text-gray-600">24시간 운영, 전문 트리트먼트</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2nd Floor -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+              <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-coral-500 rounded-full flex items-center justify-center mr-3">
+                  <span class="text-white font-bold text-sm">2F</span>
+                </div>
+                <h3 class="font-serif text-xl font-semibold text-coral-800">다이닝 &amp; 라운지</h3>
+              </div>
+              <img alt="이졸레타 레스토랑 내부" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="이졸레타 레스토랑 내부" referrerpolicy="no-referrer" />
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <i class="fas fa-pizza-slice text-ocean-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">이졸레타 (Isoletta)</strong>
+                    <p class="text-sm text-gray-600">이탈리안 레스토랑, 화덕 피자</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-coffee text-ocean-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">사료 (Saryo)</strong>
+                    <p class="text-sm text-gray-600">로비 라운지, 전통 차 문화</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7th Floor -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+              <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                  <span class="text-white font-bold text-sm">7F</span>
+                </div>
+                <h3 class="font-serif text-xl font-semibold text-yellow-800">이그제큐티브 층</h3>
+              </div>
+              <img alt="호텔 이그제큐티브 라운지 인테리어" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="힐튼 리조트 이그제큐티브 라운지" referrerpolicy="no-referrer" />
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <i class="fas fa-crown text-yellow-600 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">이그제큐티브 라운지</strong>
+                    <p class="text-sm text-gray-600">전용 혜택, 조식, 칵테일 타임</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-swimming-pool text-yellow-600 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">이그제큐티브 풀</strong>
+                    <p class="text-sm text-gray-600">성인 전용, 프라이빗 수영장</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 8th Floor -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+              <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                  <span class="text-white font-bold text-sm">8F</span>
+                </div>
+                <h3 class="font-serif text-xl font-semibold text-purple-800">루프탑 바</h3>
+              </div>
+              <img alt="호텔 루프탑 바 전망" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="호텔 루프탑 바 전망" referrerpolicy="no-referrer" />
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <i class="fas fa-cocktail text-purple-600 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">유나이 (Yunai)</strong>
+                    <p class="text-sm text-gray-600">루프탑 바, 석양 전망</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-church text-purple-600 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">루프탑 채플</strong>
+                    <p class="text-sm text-gray-600">웨딩 및 특별 이벤트</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Building/Zone Guide -->
+      <section class="py-16 bg-white" id="building-guide">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">구역별 가이드</h2>
+
+          <div class="grid lg:grid-cols-2 gap-12">
+            <!-- Main Building -->
+            <div class="space-y-8">
+              <div class="bg-gradient-to-br from-ocean-50 to-ocean-100 rounded-2xl p-8">
+                <h3 class="font-serif text-2xl font-semibold text-ocean-800 mb-6">메인 빌딩</h3>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                  힐튼 오키나와 미야코 아일랜드 리조트는 <strong>단일 메인 빌딩</strong> 구조로 설계되었으며,
+                  모든 핵심 시설이 이 건물 내에 집중되어 있습니다.
+                </p>
+
+                <div class="space-y-4">
+                  <div class="flex items-start">
+                    <div class="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <i class="fas fa-building text-white text-sm"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800">로비, 레스토랑, 편의시설</h4>
+                      <p class="text-sm text-gray-600">1층에 모든 핵심 시설 집중</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start">
+                    <div class="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <i class="fas fa-route text-white text-sm"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800">객실 동선</h4>
+                      <p class="text-sm text-gray-600">3층부터 7층까지 직관적인 동선 설계</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start">
+                    <div class="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <i class="fas fa-universal-access text-white text-sm"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800">접근성</h4>
+                      <p class="text-sm text-gray-600">모든 시설이 가까운 거리에 위치</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Room Categories -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-4">객실 카테고리</h4>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center p-3 bg-sand-50 rounded-lg">
+                    <span class="font-medium">디럭스 룸</span>
+                    <span class="text-sm text-gray-600">35㎡, 3-6층</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-sand-50 rounded-lg">
+                    <span class="font-medium">프리미엄 룸</span>
+                    <span class="text-sm text-gray-600">오션뷰, 4-6층</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-sand-50 rounded-lg">
+                    <span class="font-medium">이그제큐티브 룸</span>
+                    <span class="text-sm text-gray-600">7층 전용</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-sand-50 rounded-lg">
+                    <span class="font-medium">스위트 룸</span>
+                    <span class="text-sm text-gray-600">70㎡+, 3-7층</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resort Layout Image -->
+            <div class="space-y-6">
+              <img alt="힐튼 오키나와 미야코 리조트 전경" class="w-full h-80 object-cover rounded-2xl shadow-lg" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="힐튼 오키나와 미야코 리조트 전경" referrerpolicy="no-referrer" />
+
+              <div class="bg-coral-50 rounded-xl p-6">
+                <h4 class="font-serif text-lg font-semibold text-coral-800 mb-4">건물 특징</h4>
+                <ul class="space-y-2 text-sm">
+                  <li class="flex items-center">
+                    <i class="fas fa-check-circle text-coral-500 mr-2"></i>
+                    단일 빌딩 구조로 이동 편리
+                  </li>
+                  <li class="flex items-center">
+                    <i class="fas fa-check-circle text-coral-500 mr-2"></i>
+                    엘리베이터 다수 운행 (대기 시간 짧음)
+                  </li>
+                  <li class="flex items-center">
+                    <i class="fas fa-check-circle text-coral-500 mr-2"></i>
+                    모든 객실 발코니에서 바다 전망
+                  </li>
+                  <li class="flex items-center">
+                    <i class="fas fa-check-circle text-coral-500 mr-2"></i>
+                    어르신과 어린이도 편리한 동선
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Activities & Leisure -->
+      <section class="py-16 bg-sand-50" id="activities">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">액티비티 &amp; 레저</h2>
+
+          <!-- Swimming Pools -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">수영장</h3>
+            <div class="grid md:grid-cols-3 gap-8">
+              <!-- Family Pool -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <img alt="호텔 가족용 야외 수영장" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" color="blue" style="photo" query="호텔 가족용 야외 수영장" referrerpolicy="no-referrer" />
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-3">가족풀</h4>
+                <p class="text-gray-600 text-sm mb-4">넓고 열려 있는 공간으로 가족 단위 투숙객이 함께 즐기기에 적합합니다.</p>
+                <div class="flex items-center text-sm">
+                  <i class="fas fa-users text-coral-500 mr-2"></i>
+                  <span class="text-gray-600">가족 단위 인기</span>
+                </div>
+              </div>
+
+              <!-- Kids Pool -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <img alt="호텔 키즈풀" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="호텔 키즈풀" referrerpolicy="no-referrer" />
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-3">키즈풀</h4>
+                <p class="text-gray-600 text-sm mb-4">얕고 안전하게 설계되어 어린아이들이 물놀이를 즐기기에 안전합니다.</p>
+                <div class="flex items-center text-sm">
+                  <i class="fas fa-child text-coral-500 mr-2"></i>
+                  <span class="text-gray-600">어린이 안전 시설</span>
+                </div>
+              </div>
+
+              <!-- Adult Pool -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <img alt="성인 전용 수영장" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="성인 전용 수영장" referrerpolicy="no-referrer" />
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-3">성인전용풀</h4>
+                <p class="text-gray-600 text-sm mb-4">조용하고 프라이빗한 분위기에서 휴식을 취하고 싶은 성인 투숙객을 위한 공간입니다.</p>
+                <div class="flex items-center text-sm">
+                  <i class="fas fa-user text-coral-500 mr-2"></i>
+                  <span class="text-gray-600">성인 전용</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spa & Wellness -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">스파 &amp; 웰니스</h3>
+            <div class="grid lg:grid-cols-2 gap-8">
+              <div class="bg-white rounded-xl p-8 shadow-lg">
+                <h4 class="font-serif text-2xl font-semibold text-gray-800 mb-4">츠비라 스파 (Tsubira)</h4>
+                <img alt="호텔 스파 시설 내부 모습" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="호텔 스파 시설" referrerpolicy="no-referrer" />
+                <p class="text-gray-700 leading-relaxed mb-4">
+                  미야코지마의 자연과 전통을 담은 특별한 트리트먼트를 제공합니다.
+                  천일염과 해조류 등 현지 재료를 사용한 프로그램이 인기입니다.
+                </p>
+                <div class="bg-ocean-50 p-4 rounded-lg">
+                  <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                      <span class="font-medium">운영 시간</span>
+                      <span class="text-ocean-600">오전 10시 - 오후 9시</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="font-medium">예약</span>
+                      <span class="text-ocean-600">사전 예약 필수</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-xl p-8 shadow-lg">
+                <h4 class="font-serif text-2xl font-semibold text-gray-800 mb-4">피트니스 센터</h4>
+                <img alt="호텔 피트니스 센터 내부" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="호텔 피트니스 센터 내부" referrerpolicy="no-referrer" />
+                <p class="text-gray-700 leading-relaxed mb-4">
+                  최신식 운동 기구가 갖추어진 24시간 운영 피트니스 센터.
+                  여행 중에도 일상 운동 루틴을 유지할 수 있습니다.
+                </p>
+                <div class="bg-coral-50 p-4 rounded-lg">
+                  <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                      <span class="font-medium">운영 시간</span>
+                      <span class="text-coral-600">24시간</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="font-medium">이용 가능 연령</span>
+                      <span class="text-coral-600">16세 이상</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kids Programs & Activities -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">키즈 프로그램 &amp; 기타 액티비티</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-child text-coral-600 text-2xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">키즈 클럽</h4>
+                <p class="text-sm text-gray-600">전문 스태프가 상주하는 안전한 놀이 공간</p>
+              </div>
+
+              <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-ocean-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-leaf text-ocean-600 text-2xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">요가 클래스</h4>
+                <p class="text-sm text-gray-600">해변에서 즐기는 아침 요가 프로그램</p>
+              </div>
+
+              <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-water text-yellow-600 text-2xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">해양 액티비티</h4>
+                <p class="text-sm text-gray-600">스노클링, 스탠드업 패들보드</p>
+              </div>
+
+              <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-umbrella-beach text-purple-600 text-2xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">전용 해변</h4>
+                <p class="text-sm text-gray-600">미야코 선셋 비치에서의 프라이빗 휴식</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dining & Bar -->
+      <section class="py-16 bg-white" id="dining">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">다이닝 &amp; 바</h2>
+
+          <!-- Main Restaurants -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">메인 레스토랑</h3>
+            <div class="grid lg:grid-cols-2 gap-12">
+              <!-- Azure -->
+              <div class="bg-gradient-to-br from-ocean-50 to-ocean-100 rounded-2xl p-8">
+                <div class="flex items-center mb-6">
+                  <img alt="아주르 레스토랑 로고" class="w-16 h-16 rounded-full mr-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="small" aspect="square" query="아주르 레스토랑 로고" referrerpolicy="no-referrer" />
+                  <div>
+                    <h4 class="font-serif text-2xl font-semibold text-ocean-800">아주르 (Azure)</h4>
+                    <p class="text-ocean-600">올데이 다이닝</p>
+                  </div>
+                </div>
+                <img alt="아주르 레스토랑 내부" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="아주르 레스토랑 내부" referrerpolicy="no-referrer" />
+                <p class="text-gray-700 leading-relaxed mb-4">
+                  호텔의 메인 올데이 다이닝 레스토랑으로, 신선한 해산물 뷔페와 오키나와 특산품을 맛볼 수 있습니다.
+                  조식, 중식, 석식 모두 제공됩니다.
+                </p>
+                <div class="bg-white p-4 rounded-lg">
+                  <h5 class="font-semibold text-gray-800 mb-2">인기 메뉴</h5>
+                  <ul class="text-sm space-y-1">
+                    <li>• 오믈렛 스테이션</li>
+                    <li>• 셰프 특제 미니 버거</li>
+                    <li>• 미야코 소바</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Isoletta -->
+              <div class="bg-gradient-to-br from-coral-50 to-coral-100 rounded-2xl p-8">
+                <div class="flex items-center mb-6">
+                  <img alt="이졸레타 레스토랑 로고" class="w-16 h-16 rounded-full mr-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="small" aspect="square" query="이졸레타 레스토랑 로고" referrerpolicy="no-referrer" />
+                  <div>
+                    <h4 class="font-serif text-2xl font-semibold text-coral-800">이졸레타 (Isoletta)</h4>
+                    <p class="text-coral-600">이탈리안 레스토랑</p>
+                  </div>
+                </div>
+                <img alt="화덕 피자를 굽는 모습" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-img.moonshot.cn/pub/icon/spinner.svg" size="medium" aspect="wide" style="photo" query="화덕 피자 요리" referrerpolicy="no-referrer" />
+                <p class="text-gray-700 leading-relaxed mb-4">
+                  정통 목재 화덕에서 구운 나폴리 피자가 특징인 이탈리안 레스토랑.
+                  다양한 파스타와 해산물 요리도 준비되어 있습니다.
+                </p>
+                <div class="bg-white p-4 rounded-lg">
+                  <h5 class="font-semibold text-gray-800 mb-2">특징</h5>
+                  <ul class="text-sm space-y-1">
+                    <li>• 저녁 시간만 운영</li>
+                    <li>• a la carte 및 코스 메뉴</li>
+                    <li>• 와인 리스트 풍부</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bars & Lounges -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">바 &amp; 라운지</h3>
+            <div class="grid md:grid-cols-2 gap-8">
+              <!-- Saryo -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-4">사료 (Saryo)</h4>
+                <p class="text-gray-600 mb-4">로비 라운지로, 전통 일본 차 문화를 현대적으로 재해석한 공간입니다.</p>
+                <div class="space-y-3">
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-clock text-ocean-500 mr-2"></i>
+                    <span class="text-gray-600">오전부터 늦은 저녁까지 운영</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-coffee text-ocean-500 mr-2"></i>
+                    <span class="text-gray-600">다양한 차와 전통 과자</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-wifi text-ocean-500 mr-2"></i>
+                    <span class="text-gray-600">무료 Wi-Fi 제공</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Yunai -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-4">유나이 (Yunai)</h4>
+                <p class="text-gray-600 mb-4">8층 루프탑 바로, 미야코지마의 석양과 오션뷰를 감상할 수 있습니다.</p>
+                <div class="space-y-3">
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-cocktail text-coral-500 mr-2"></i>
+                    <span class="text-gray-600">오리지널 칵테일 전문</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-sun text-coral-500 mr-2"></i>
+                    <span class="text-gray-600">석양 전망 최적의 장소</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-calendar text-coral-500 mr-2"></i>
+                    <span class="text-gray-600">사전 예약 추천</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Room Service -->
+          <div class="bg-gradient-to-r from-sand-100 to-sand-200 rounded-2xl p-8">
+            <h3 class="font-serif text-2xl font-semibold text-sand-800 mb-6 text-center">룸 서비스</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+              <div class="text-center">
+                <div class="w-12 h-12 bg-sand-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-clock text-white"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">24시간 서비스</h4>
+                <p class="text-sm text-gray-600">언제든지 객실에서 편안하게 식사 가능</p>
+              </div>
+
+              <div class="text-center">
+                <div class="w-12 h-12 bg-sand-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-utensils text-white"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">다양한 메뉴</h4>
+                <p class="text-sm text-gray-600">레스토랑 메뉴와 유사한 선택지 제공</p>
+              </div>
+
+              <div class="text-center">
+                <div class="w-12 h-12 bg-sand-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-mountain text-white"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">전망 감상</h4>
+                <p class="text-sm text-gray-600">객실에서 미야코 블루 감상하며 식사</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Practical Tips -->
+      <section class="py-16 bg-sand-50" id="practical-tips">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">실전 팁</h2>
+
+          <div class="grid lg:grid-cols-2 gap-12">
+            <!-- Left Column -->
+            <div class="space-y-8">
+              <!-- Check-in/Out -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-ocean-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">체크인/아웃</h3>
+                </div>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center p-3 bg-ocean-50 rounded-lg">
+                    <span class="font-medium">체크인</span>
+                    <span class="text-ocean-600">오후 3시</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-ocean-50 rounded-lg">
+                    <span class="font-medium">체크아웃</span>
+                    <span class="text-ocean-600">오전 11시</span>
+                  </div>
+                  <div class="text-sm text-gray-600 mt-4">
+                    <p>• 조기 체크인/레이트 체크아웃은 사전 문의 필요</p>
+                    <p>• 힐튼 오너스 회원 특전 가능</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reservation Required -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-coral-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-calendar-check text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">예약 필수 시설</h3>
+                </div>
+                <div class="space-y-4">
+                  <div class="border-l-4 border-coral-500 pl-4">
+                    <h4 class="font-semibold text-gray-800 mb-1">레스토랑</h4>
+                    <p class="text-sm text-gray-600">이졸레타, 유나이 바는 사전 예약 필수</p>
+                  </div>
+                  <div class="border-l-4 border-coral-500 pl-4">
+                    <h4 class="font-semibold text-gray-800 mb-1">스파</h4>
+                    <p class="text-sm text-gray-600">츠비라 스파는 사전 예약제 운영</p>
+                  </div>
+                  <div class="bg-coral-50 p-3 rounded-lg mt-4">
+                    <p class="text-sm text-coral-700">
+                      <i class="fas fa-exclamation-triangle mr-2"></i>
+                      특히 주말과 성수기는 빠른 예약 마감
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Congestion Avoidance -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-users text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">혼잡 시간대 회피</h3>
+                </div>
+                <div class="space-y-4">
+                  <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-yellow-800 mb-2">조식 러시</h4>
+                    <p class="text-sm text-yellow-700 mb-2">오전 8시 - 9시 30분 (가장 혼잡)</p>
+                    <p class="text-sm text-yellow-600">추천 시간: 오전 7시 30분 이전 또는 10시 이후</p>
+                  </div>
+                  <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-yellow-800 mb-2">수영장 피크타임</h4>
+                    <p class="text-sm text-yellow-700 mb-2">오후 1시 - 4시 (가장 혼잡)</p>
+                    <p class="text-sm text-yellow-600">추천 시간: 오전 10시 이전 또는 4시 30분 이후</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-8">
+              <!-- Optimal Routine -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-route text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">최적의 호텔 이용 루틴</h3>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-green-800 mb-1">체크인 당일</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-cocktail text-green-500 mr-2"></i>
+                      8층 유나이 바에서 석양 감상 → 2층 이졸레타에서 저녁 식사
+                    </p>
+                  </div>
+
+                  <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-green-800 mb-1">투숙 중</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-sun text-green-500 mr-2"></i>
+                      아침: 여유로운 조식 → 낮: 해변/수영장 휴식 → 오후: 스파 트리트먼트
+                    </p>
+                  </div>
+
+                  <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-green-800 mb-1">체크아웃 당일</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-gift text-green-500 mr-2"></i>
+                      마지막 해변 휴식 → 기념품 구매 → 로비 라운지에서 마무리
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Transportation -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-car text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">교통 정보</h3>
+                </div>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <div>
+                      <span class="font-medium">미야코 공항</span>
+                      <p class="text-xs text-gray-600">무료 셔틀버스 운행</p>
+                    </div>
+                    <span class="text-purple-600 font-semibold">15분</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <div>
+                      <span class="font-medium">시모지시마 공항</span>
+                      <p class="text-xs text-gray-600">유료 리무진 버스</p>
+                    </div>
+                    <span class="text-purple-600 font-semibold">25분</span>
+                  </div>
+                  <div class="p-3 bg-purple-50 rounded-lg">
+                    <span class="font-medium">주차</span>
+                    <p class="text-xs text-gray-600">무료 주차장 (300대 이상 수용)</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Special Services -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-star text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">특별 서비스</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                    <i class="fas fa-dog text-indigo-600 text-lg mb-2"></i>
+                    <p class="text-sm font-medium">반려동물 동반 가능</p>
+                  </div>
+                  <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                    <i class="fas fa-wifi text-indigo-600 text-lg mb-2"></i>
+                    <p class="text-sm font-medium">무료 Wi-Fi</p>
+                  </div>
+                  <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                    <i class="fas fa-concierge-bell text-indigo-600 text-lg mb-2"></i>
+                    <p class="text-sm font-medium">24시간 프론트</p>
+                  </div>
+                  <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                    <i class="fas fa-car text-indigo-600 text-lg mb-2"></i>
+                    <p class="text-sm font-medium">렌터카 데스크</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="bg-ocean-800 text-white py-12">
+        <div class="max-w-6xl mx-auto px-8">
+          <div class="grid md:grid-cols-3 gap-8">
+            <div>
+              <h3 class="font-serif text-xl font-semibold mb-4">힐튼 오키나와 미야코 아일랜드 리조트</h3>
+              <p class="text-ocean-200 text-sm leading-relaxed">
+                미야코지마의 최신 럭셔리 리조트로, 329개의 객실과 전용 해변, 5개의 수영장, 4개의 레스토랑 및 바를 갖춘 종합 휴양지입니다.
+              </p>
+            </div>
+
+            <div>
+              <h4 class="font-semibold mb-4">주요 시설</h4>
+              <ul class="space-y-2 text-sm text-ocean-200">
+                <li>• 329개 객실 (전용 발코니)</li>
+                <li>• 전용 해변 (미야코 선셋 비치)</li>
+                <li>• 실내외 5개 수영장</li>
+                <li>• 풀서비스 스파 (츠비라)</li>
+                <li>• 4개 레스토랑 및 바</li>
+                <li>• 이그제큐티브 라운지</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 class="font-semibold mb-4">연락처</h4>
+              <div class="space-y-2 text-sm text-ocean-200">
+                <p><i class="fas fa-phone mr-2"></i>프론트 데스크: 24시간</p>
+                <p><i class="fas fa-envelope mr-2"></i>예약: reservations@hilton.com</p>
+                <p><i class="fas fa-map-marker-alt mr-2"></i>미야코지마, 오키나와 현</p>
+                <p><i class="fas fa-plane mr-2"></i>미야코 공항: 15분 (무료 셔틀)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-ocean-700 mt-8 pt-8 text-center">
+            <p class="text-ocean-200 text-sm">
+              2023-2025 힐튼 오키나와 미야코 아일랜드 리조트. 모든 정보는 2025년 기준이며 변경될 수 있습니다.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+        // Initialize Mermaid with custom configuration
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#f0f9ff',
+                primaryTextColor: '#0c4a6e',
+                primaryBorderColor: '#0369a1',
+                lineColor: '#075985',
+                sectionBkgColor: '#ffffff',
+                altSectionBkgColor: '#f8fafc',
+                gridColor: '#e2e8f0',
+                secondaryColor: '#fff7ed',
+                tertiaryColor: '#fdfcfb',
+                background: '#ffffff',
+                mainBkg: '#ffffff',
+                secondBkg: '#f0f9ff',
+                tertiaryColor: '#f8fafc'
+            },
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 50,
+                rankSpacing: 50
+            },
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 13
+        });
+
+        // Initialize Mermaid Controls for zoom and pan
+        function initializeMermaidControls() {
+            const containers = document.querySelectorAll('.mermaid-container');
+
+            containers.forEach(container => {
+            const mermaidElement = container.querySelector('.mermaid');
+            let scale = 1;
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+
+            // 터치 관련 상태 추적
+            let isTouch = false;
+            let touchStartTime = 0;
+            let initialDistance = 0;
+            let initialScale = 1;
+            let isPinching = false;
+
+            // Zoom controls
+            const zoomInBtn = container.querySelector('.zoom-in');
+            const zoomOutBtn = container.querySelector('.zoom-out');
+            const resetBtn = container.querySelector('.reset-zoom');
+            const fullscreenBtn = container.querySelector('.fullscreen');
+
+            function updateTransform() {
+                mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+
+                if (scale > 1) {
+                container.classList.add('zoomed');
+                } else {
+                container.classList.remove('zoomed');
+                }
+
+                mermaidElement.style.cursor = isDragging ? 'grabbing' : 'grab';
+            }
+
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', () => {
+                scale = Math.min(scale * 1.25, 4);
+                updateTransform();
+                });
+            }
+
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', () => {
+                scale = Math.max(scale / 1.25, 0.3);
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+                updateTransform();
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+                });
+            }
+
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+                });
+            }
+
+            // Mouse Events
+            mermaidElement.addEventListener('mousedown', (e) => {
+                if (isTouch) return; // 터치 기기에서는 마우스 이벤트 무시
+
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                mermaidElement.style.cursor = 'grabbing';
+                updateTransform();
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && !isTouch) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseleave', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            // 터치 이벤트 핸들러
+            const getTouchDistance = (touch1, touch2) => {
+                return Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+                );
+            };
+
+            mermaidElement.addEventListener('touchstart', (e) => {
+                isTouch = true;
+                touchStartTime = Date.now();
+
+                if (e.touches.length === 1) {
+                // 단일 터치 - 드래그
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+
+                } else if (e.touches.length === 2) {
+                // 두 손가락 - 핀치 줌
+                isPinching = true;
+                isDragging = false;
+
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialDistance = getTouchDistance(touch1, touch2);
+                initialScale = scale;
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && isDragging && !isPinching) {
+                // 단일 터치 드래그
+                const touch = e.touches[0];
+                translateX = touch.clientX - startX;
+                translateY = touch.clientY - startY;
+                updateTransform();
+
+                } else if (e.touches.length === 2 && isPinching) {
+                // 두 손가락 핀치 줌
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = getTouchDistance(touch1, touch2);
+
+                if (initialDistance > 0) {
+                    const newScale = Math.min(Math.max(
+                    initialScale * (currentDistance / initialDistance),
+                    0.3
+                    ), 4);
+                    scale = newScale;
+                    updateTransform();
+                }
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchend', (e) => {
+                // 상태 초기화
+                if (e.touches.length === 0) {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+
+                // 마우스 이벤트를 다시 활성화하기 위한 지연
+                setTimeout(() => {
+                    isTouch = false;
+                }, 100);
+                } else if (e.touches.length === 1 && isPinching) {
+                // 두 손가락에서 한 손가락으로 변경 - 드래그 모드로 전환
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+                }
+
+                updateTransform();
+            });
+
+            mermaidElement.addEventListener('touchcancel', (e) => {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+
+                setTimeout(() => {
+                isTouch = false;
+                }, 100);
+
+                updateTransform();
+            });
+
+            // Enhanced wheel zoom with better center point handling
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = container.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = Math.min(Math.max(scale * delta, 0.3), 4);
+
+                // Adjust translation to zoom towards center
+                if (newScale !== scale) {
+                const scaleDiff = newScale / scale;
+                translateX = translateX * scaleDiff;
+                translateY = translateY * scaleDiff;
+                scale = newScale;
+
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+
+                updateTransform();
+                }
+            });
+
+            // Initialize display
+            updateTransform();
+            });
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight current section in TOC
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('#toc a[href^="#"]');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (window.scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('bg-ocean-100', 'text-ocean-700');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('bg-ocean-100', 'text-ocean-700');
+                }
+            });
+        });
+
+        // Toggle TOC on mobile
+        const toc = document.getElementById('toc');
+        const tocToggle = document.getElementById('toc-toggle');
+        const tocClose = document.getElementById('toc-close');
+        
+        function toggleTOC() {
+            toc.classList.toggle('-translate-x-full');
+        }
+        
+        if (tocToggle) {
+            tocToggle.addEventListener('click', toggleTOC);
+        }
+        
+        if (tocClose) {
+            tocClose.addEventListener('click', toggleTOC);
+        }
+        
+        // Close TOC when clicking on a link (mobile)
+        document.querySelectorAll('#toc a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    toggleTOC();
+                }
+            });
+        });
+        
+        // Initialize Mermaid controls
+        initializeMermaidControls();
+    </script>
+
+  </body>
+
+</html>
+<!DOCTYPE html><html lang="ko"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>힐튼 오키나와 미야코 아일랜드 리조트 완전 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Mermaid diagram styling */
+        .mermaid-container {
+            display: flex;
+            justify-content: center;
+            min-height: 300px;
+            max-height: 800px;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mermaid-container .mermaid {
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            cursor: grab;
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .mermaid-container .mermaid svg {
+            max-width: 100%;
+            height: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .mermaid-container .mermaid:active {
+            cursor: grabbing;
+        }
+
+        .mermaid-container.zoomed .mermaid {
+            height: 100%;
+            width: 100%;
+            cursor: grab;
+        }
+
+        .mermaid-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mermaid-control-btn {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #374151;
+            font-size: 14px;
+            min-width: 36px;
+            height: 36px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mermaid-control-btn:hover {
+            background: #f8fafc;
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+    .mermaid-control-btn:active {
+        transform: scale(0.95);
+    }
+
+    @media (max-width: 1024px) {
+        .mermaid-control-btn:not(.reset-zoom) {
+            display: none;
+        }
+        .mermaid-controls {
+            top: auto;
+            bottom: 15px;
+            right: 15px;
+        }
+    }
+</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'ocean': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        'coral': {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        },
+                        'sand': {
+                            50: '#fdfcfb',
+                            100: '#fbf7f3',
+                            200: '#f5eee6',
+                            300: '#eee2d4',
+                            400: '#e4d4bd',
+                            500: '#d4b896',
+                            600: '#c4a277',
+                            700: '#b08d64',
+                            800: '#9a7a58',
+                            900: '#7d6449',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+  </head>
+
+  <body class="bg-sand-50 font-sans text-gray-900 leading-relaxed break-words">
+    <!-- Fixed Table of Contents -->
+    <nav id="toc" class="fixed left-0 top-0 h-screen w-80 bg-white shadow-xl z-50 overflow-y-auto border-r border-sand-200 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="font-serif text-xl font-semibold text-ocean-700">목차</h2>
+          <button id="toc-close" class="md:hidden text-gray-500 hover:text-ocean-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <ul class="space-y-3 text-sm">
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#executive-summary">Executive Summary</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#floor-map">층별 시설 안내</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#building-guide">구역별 가이드</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#activities">액티비티 &amp; 레저</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#dining">다이닝 &amp; 바</a>
+          </li>
+          <li>
+            <a class="block py-2 px-3 text-gray-700 hover:text-ocean-600 hover:bg-sand-50 rounded transition-colors" href="#practical-tips">실전 팁</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="md:ml-80">
+      <!-- Toggle button for TOC on mobile -->
+      <button id="toc-toggle" class="fixed top-4 left-4 z-40 bg-white rounded-full p-3 shadow-lg md:hidden">
+        <i class="fas fa-bars text-ocean-600"></i>
+      </button>
+      <!-- Hero Section with Bento Grid -->
+      <header class="relative bg-gradient-to-br from-ocean-600 to-ocean-800 text-white overflow-hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div class="relative max-w-7xl mx-auto px-8 py-16">
+          <!-- Bento Grid Layout -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <!-- Main Title -->
+            <div class="lg:col-span-2 flex flex-col justify-center">
+              <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                힐튼 오키나와
+                <br/>
+                <span class="text-coral-300">미야코 아일랜드</span>
+                <br/>
+                리조트 완전 가이드
+              </h1>
+              <p class="text-lg sm:text-xl text-ocean-100 leading-relaxed max-w-2xl">
+                미야코지마의 최신 럭셔리 리조트를 완벽히 이해하고 최고의 휴가 경험을 위한 종합 가이드
+              </p>
+            </div>
+
+            <!-- Key Highlights Grid -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <div class="text-2xl font-bold text-coral-300">329</div>
+                <div class="text-sm text-ocean-100">객실 수</div>
+              </div>
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <div class="text-2xl font-bold text-coral-300">5</div>
+                <div class="text-sm text-ocean-100">수영장</div>
+              </div>
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <div class="text-2xl font-bold text-coral-300">4</div>
+                <div class="text-sm text-ocean-100">레스토랑 &amp; 바</div>
+              </div>
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <div class="text-2xl font-bold text-coral-300">2023</div>
+                <div class="text-sm text-ocean-100">오픈 연도</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Image -->
+          <div class="relative rounded-2xl overflow-hidden shadow-2xl">
+            <img alt="힐튼 오키나와 미야코 아일랜드 리조트 해변 전경" class="w-full h-80 object-cover" src="https://kimi-web-img.moonshot.cn/img/www.hilton.com/27a950325f747f21fef7d62b0309ca9756948687.jpg" size="large" aspect="wide" color="blue" style="photo" query="힐튼 오키나와 미야코 아일랜드 리조트 해변 전경" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+            <div class="absolute bottom-6 left-6 right-6">
+              <div class="flex flex-wrap gap-4 text-sm">
+                <span class="bg-coral-500 px-3 py-1 rounded-full">전용 해변</span>
+                <span class="bg-coral-500 px-3 py-1 rounded-full">미야코 블루</span>
+                <span class="bg-coral-500 px-3 py-1 rounded-full">럭셔리 리조트</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Executive Summary -->
+      <section class="py-16 bg-white" id="executive-summary">
+        <div class="max-w-4xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-8">Executive Summary</h2>
+
+          <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <div class="space-y-6">
+              <h3 class="font-serif text-2xl font-semibold text-ocean-700">호텔 개요 및 주요 시설</h3>
+              <p class="text-gray-700 leading-relaxed">
+                힐튼 오키나와 미야코 아일랜드 리조트는 <strong>2023년 8월 26일</strong>에 그랜드 오픈한 최신 럭셔리 리조트로,
+                미야코 섬의 아름다운 자연경관과 현대적인 편의시설을 완벽하게 결합한 고급 숙박 시설입니다.
+              </p>
+              <div class="bg-sand-50 p-4 rounded-lg">
+                <ul class="space-y-2 text-sm">
+                  <li class="flex items-center"><i class="fas fa-bed text-coral-500 mr-2"></i> 총 <strong>329개의 객실</strong></li>
+                  <li class="flex items-center"><i class="fas fa-swimming-pool text-coral-500 mr-2"></i> <strong>5개의 수영장</strong> (실내외)</li>
+                  <li class="flex items-center"><i class="fas fa-utensils text-coral-500 mr-2"></i> <strong>4개의 레스토랑과 바</strong></li>
+                  <li class="flex items-center"><i class="fas fa-spa text-coral-500 mr-2"></i> 풀서비스 스파</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <h3 class="font-serif text-2xl font-semibold text-ocean-700">접근성 및 위치</h3>
+              <p class="text-gray-700 leading-relaxed">
+                미야코 공항에서 무료 셔틀버스를 운행하여 접근성이 뛰어나며, 가족, 커플, 비즈니스 여행객 모두에게 적합한 최고의 휴가 환경을 제공합니다.
+              </p>
+              <div class="bg-ocean-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium">미야코 공항</span>
+                  <span class="text-sm text-ocean-600">약 15분</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium">시모지시마 공항</span>
+                  <span class="text-sm text-ocean-600">약 25분</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Highlights Grid -->
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="text-center p-6 bg-gradient-to-br from-ocean-50 to-ocean-100 rounded-xl">
+              <div class="w-16 h-16 bg-ocean-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-water text-white text-2xl"></i>
+              </div>
+              <h4 class="font-serif text-lg font-semibold text-ocean-800 mb-2">전용 해변</h4>
+              <p class="text-sm text-gray-600">프라이빗한 해변에서 휴식을 즐길 수 있습니다</p>
+            </div>
+
+            <div class="text-center p-6 bg-gradient-to-br from-coral-50 to-coral-100 rounded-xl">
+              <div class="w-16 h-16 bg-coral-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-crown text-white text-2xl"></i>
+              </div>
+              <h4 class="font-serif text-lg font-semibold text-coral-800 mb-2">이그제큐티브 라운지</h4>
+              <p class="text-sm text-gray-600">7층 라운지에서 특별한 혜택을 누릴 수 있습니다</p>
+            </div>
+
+            <div class="text-center p-6 bg-gradient-to-br from-sand-100 to-sand-200 rounded-xl">
+              <div class="w-16 h-16 bg-sand-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-sun text-white text-2xl"></i>
+              </div>
+              <h4 class="font-serif text-lg font-semibold text-sand-800 mb-2">환상적인 석양</h4>
+              <p class="text-sm text-gray-600">모든 객실에서 미야코 블루와 석양을 감상</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Floor-by-Floor Map -->
+      <section class="py-16 bg-sand-50" id="floor-map">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">층별 시설 안내</h2>
+
+          <!-- Floor Overview with Mermaid -->
+          <div class="bg-white rounded-2xl p-8 shadow-lg mb-12">
+            <h3 class="font-serif text-2xl font-semibold text-ocean-700 mb-6 text-center">호텔 구조 도면</h3>
+            <div class="mermaid-container">
+              <div class="mermaid-controls">
+                <button class="mermaid-control-btn zoom-in" title="확대">
+                  <i class="fas fa-search-plus"></i>
+                </button>
+                <button class="mermaid-control-btn zoom-out" title="축소">
+                  <i class="fas fa-search-minus"></i>
+                </button>
+                <button class="mermaid-control-btn reset-zoom" title="원래 크기">
+                  <i class="fas fa-expand-arrows-alt"></i>
+                </button>
+                <button class="mermaid-control-btn fullscreen" title="전체 화면 보기">
+                  <i class="fas fa-expand"></i>
+                </button>
+              </div>
+              <div class="mermaid" id="hotel-floor-diagram">
+                graph TD
+                A[&#34;8층 - 루프탑&#34;] --&gt; B[&#34;유나이 바
+                <br/>Rooftop Bar&#34;]
+                A --&gt; C[&#34;루프탑 채플&#34;]
+
+                D[&#34;7층 - 이그제큐티브&#34;] --&gt; E[&#34;이그제큐티브 라운지&#34;]
+                D --&gt; F[&#34;이그제큐티브 풀
+                <br/>성인 전용&#34;]
+                D --&gt; G[&#34;이그제큐티브 룸&#34;]
+                D --&gt; H[&#34;스위트 룸&#34;]
+
+                I[&#34;3-6층 - 객실&#34;] --&gt; J[&#34;디럭스 룸
+                <br/>35㎡&#34;]
+                I --&gt; K[&#34;프리미엄 룸
+                <br/>오션뷰&#34;]
+                I --&gt; L[&#34;일부 스위트 룸&#34;]
+
+                M[&#34;2층 - 다이닝&#34;] --&gt; N[&#34;이졸레타
+                <br/>이탈리안 레스토랑&#34;]
+                M --&gt; O[&#34;사료
+                <br/>로비 라운지&#34;]
+
+                P[&#34;1층 - 메인&#34;] --&gt; Q[&#34;로비 &amp; 프론트 데스크&#34;]
+                P --&gt; R[&#34;아주르
+                <br/>올데이 다이닝&#34;]
+                P --&gt; S[&#34;츠비라 스파&#34;]
+                P --&gt; T[&#34;피트니스 센터
+                <br/>24시간&#34;]
+                P --&gt; U[&#34;실내 수영장&#34;]
+                P --&gt; V[&#34;키즈 클럽&#34;]
+
+                W[&#34;외부 시설&#34;] --&gt; X[&#34;야외 수영장 3개&#34;]
+                W --&gt; Y[&#34;전용 해변
+                <br/>미야코 선셋 비치&#34;]
+                W --&gt; Z[&#34;주차장
+                <br/>300대 수용&#34;]
+
+                style A fill:#f97316,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style D fill:#0ea5e9,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style I fill:#fbbf24,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style M fill:#10b981,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style P fill:#7c3aed,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style W fill:#059669,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
+                style B fill:#fed7aa,stroke:#f97316,stroke-width:2px,color:#7c2d12,font-weight:600
+                style C fill:#fed7aa,stroke:#f97316,stroke-width:2px,color:#7c2d12,font-weight:600
+                style E fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
+                style F fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
+                style G fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
+                style H fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
+                style J fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
+                style K fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
+                style L fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
+                style N fill:#d1fae5,stroke:#10b981,stroke-width:2px,color:#065f46,font-weight:600
+                style O fill:#d1fae5,stroke:#10b981,stroke-width:2px,color:#065f46,font-weight:600
+                style Q fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style R fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style S fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style T fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style U fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style V fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
+                style X fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
+                style Y fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
+                style Z fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
+              </div>
+            </div>
+            <div class="bg-sand-50 p-4 rounded-lg mt-4">
+              <p class="text-sm text-gray-600 mb-2">
+                <i class="fas fa-info-circle text-ocean-500 mr-2"></i>
+                <strong>사용 방법:</strong> 마우스로 드래그하여 이동, 버튼으로 확대/축소, 더블클릭으로 특정 영역 선택
+              </p>
+              <div class="flex items-center space-x-4 text-xs text-gray-500">
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-coral-500 rounded mr-2"></div>
+                  <span>루프탑 시설</span>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-ocean-500 rounded mr-2"></div>
+                  <span>이그제큐티브 시설</span>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-yellow-400 rounded mr-2"></div>
+                  <span>객실 층</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Floor Information -->
+          <div class="grid lg:grid-cols-2 gap-8">
+            <!-- 1st Floor -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+              <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center mr-3">
+                  <span class="text-white font-bold text-sm">1F</span>
+                </div>
+                <h3 class="font-serif text-xl font-semibold text-ocean-800">메인 로비 &amp; 핵심 부대시설</h3>
+              </div>
+              <img alt="호텔 로비 인테리어" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/img1.daumcdn.net/72df84f3e77b8db44067c8301627faf826d20aa4" size="medium" aspect="wide" style="photo" query="힐튼 오키나와 미야코 리조트 로비" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <i class="fas fa-concierge-bell text-coral-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">로비 및 프론트 데스크</strong>
+                    <p class="text-sm text-gray-600">24시간 운영, 다국어 지원</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-utensils text-coral-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">아주르 (Azure)</strong>
+                    <p class="text-sm text-gray-600">올데이 다이닝, 조식 뷔페</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-dumbbell text-coral-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">피트니스 센터 &amp; 스파</strong>
+                    <p class="text-sm text-gray-600">24시간 운영, 전문 트리트먼트</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2nd Floor -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+              <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-coral-500 rounded-full flex items-center justify-center mr-3">
+                  <span class="text-white font-bold text-sm">2F</span>
+                </div>
+                <h3 class="font-serif text-xl font-semibold text-coral-800">다이닝 &amp; 라운지</h3>
+              </div>
+              <img alt="이졸레타 레스토랑 내부" class="w-full h-48 object-cover rounded-lg mb-4" src="https://fixedplaceholder" size="medium" aspect="wide" style="photo" query="이졸레타 레스토랑 내부" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <i class="fas fa-pizza-slice text-ocean-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">이졸레타 (Isoletta)</strong>
+                    <p class="text-sm text-gray-600">이탈리안 레스토랑, 화덕 피자</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-coffee text-ocean-500 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">사료 (Saryo)</strong>
+                    <p class="text-sm text-gray-600">로비 라운지, 전통 차 문화</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7th Floor -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+              <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                  <span class="text-white font-bold text-sm">7F</span>
+                </div>
+                <h3 class="font-serif text-xl font-semibold text-yellow-800">이그제큐티브 층</h3>
+              </div>
+              <img alt="호텔 이그제큐티브 라운지 인테리어" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/img.modetour.com/8906b56903d175ecd5799ba694feaf7236d2be4b.jpg" size="medium" aspect="wide" style="photo" query="힐튼 리조트 이그제큐티브 라운지" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <i class="fas fa-crown text-yellow-600 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">이그제큐티브 라운지</strong>
+                    <p class="text-sm text-gray-600">전용 혜택, 조식, 칵테일 타임</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-swimming-pool text-yellow-600 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">이그제큐티브 풀</strong>
+                    <p class="text-sm text-gray-600">성인 전용, 프라이빗 수영장</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 8th Floor -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+              <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                  <span class="text-white font-bold text-sm">8F</span>
+                </div>
+                <h3 class="font-serif text-xl font-semibold text-purple-800">루프탑 바</h3>
+              </div>
+              <img alt="호텔 루프탑 바 전망" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/offloadmedia.feverup.com/707b106d7e1dca797406d1016ddd97d92be3ef12.jpg" size="medium" aspect="wide" style="photo" query="호텔 루프탑 바 전망" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <i class="fas fa-cocktail text-purple-600 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">유나이 (Yunai)</strong>
+                    <p class="text-sm text-gray-600">루프탑 바, 석양 전망</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-church text-purple-600 mr-3 mt-1"></i>
+                  <div>
+                    <strong class="text-gray-800">루프탑 채플</strong>
+                    <p class="text-sm text-gray-600">웨딩 및 특별 이벤트</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Building/Zone Guide -->
+      <section class="py-16 bg-white" id="building-guide">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">구역별 가이드</h2>
+
+          <div class="grid lg:grid-cols-2 gap-12">
+            <!-- Main Building -->
+            <div class="space-y-8">
+              <div class="bg-gradient-to-br from-ocean-50 to-ocean-100 rounded-2xl p-8">
+                <h3 class="font-serif text-2xl font-semibold text-ocean-800 mb-6">메인 빌딩</h3>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                  힐튼 오키나와 미야코 아일랜드 리조트는 <strong>단일 메인 빌딩</strong> 구조로 설계되었으며,
+                  모든 핵심 시설이 이 건물 내에 집중되어 있습니다.
+                </p>
+
+                <div class="space-y-4">
+                  <div class="flex items-start">
+                    <div class="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <i class="fas fa-building text-white text-sm"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800">로비, 레스토랑, 편의시설</h4>
+                      <p class="text-sm text-gray-600">1층에 모든 핵심 시설 집중</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start">
+                    <div class="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <i class="fas fa-route text-white text-sm"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800">객실 동선</h4>
+                      <p class="text-sm text-gray-600">3층부터 7층까지 직관적인 동선 설계</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start">
+                    <div class="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <i class="fas fa-universal-access text-white text-sm"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800">접근성</h4>
+                      <p class="text-sm text-gray-600">모든 시설이 가까운 거리에 위치</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Room Categories -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-4">객실 카테고리</h4>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center p-3 bg-sand-50 rounded-lg">
+                    <span class="font-medium">디럭스 룸</span>
+                    <span class="text-sm text-gray-600">35㎡, 3-6층</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-sand-50 rounded-lg">
+                    <span class="font-medium">프리미엄 룸</span>
+                    <span class="text-sm text-gray-600">오션뷰, 4-6층</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-sand-50 rounded-lg">
+                    <span class="font-medium">이그제큐티브 룸</span>
+                    <span class="text-sm text-gray-600">7층 전용</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-sand-50 rounded-lg">
+                    <span class="font-medium">스위트 룸</span>
+                    <span class="text-sm text-gray-600">70㎡+, 3-7층</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resort Layout Image -->
+            <div class="space-y-6">
+              <img alt="힐튼 오키나와 미야코 리조트 전경" class="w-full h-80 object-cover rounded-2xl shadow-lg" src="https://kimi-web-img.moonshot.cn/img/www.hilton.com/27a950325f747f21fef7d62b0309ca9756948687.jpg" size="medium" aspect="wide" style="photo" query="힐튼 오키나와 미야코 리조트 전경" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+
+              <div class="bg-coral-50 rounded-xl p-6">
+                <h4 class="font-serif text-lg font-semibold text-coral-800 mb-4">건물 특징</h4>
+                <ul class="space-y-2 text-sm">
+                  <li class="flex items-center">
+                    <i class="fas fa-check-circle text-coral-500 mr-2"></i>
+                    단일 빌딩 구조로 이동 편리
+                  </li>
+                  <li class="flex items-center">
+                    <i class="fas fa-check-circle text-coral-500 mr-2"></i>
+                    엘리베이터 다수 운행 (대기 시간 짧음)
+                  </li>
+                  <li class="flex items-center">
+                    <i class="fas fa-check-circle text-coral-500 mr-2"></i>
+                    모든 객실 발코니에서 바다 전망
+                  </li>
+                  <li class="flex items-center">
+                    <i class="fas fa-check-circle text-coral-500 mr-2"></i>
+                    어르신과 어린이도 편리한 동선
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Activities &amp; Leisure -->
+      <section class="py-16 bg-sand-50" id="activities">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">액티비티 &amp; 레저</h2>
+
+          <!-- Swimming Pools -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">수영장</h3>
+            <div class="grid md:grid-cols-3 gap-8">
+              <!-- Family Pool -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <img alt="호텔 가족용 야외 수영장" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/img1.daumcdn.net/7244d824e8386053c72aba457f9938d33bcc0997" size="medium" aspect="wide" color="blue" style="photo" query="호텔 가족용 야외 수영장" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-3">가족풀</h4>
+                <p class="text-gray-600 text-sm mb-4">넓고 열려 있는 공간으로 가족 단위 투숙객이 함께 즐기기에 적합합니다.</p>
+                <div class="flex items-center text-sm">
+                  <i class="fas fa-users text-coral-500 mr-2"></i>
+                  <span class="text-gray-600">가족 단위 인기</span>
+                </div>
+              </div>
+
+              <!-- Kids Pool -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <img alt="호텔 키즈풀" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/yaimg.yanolja.com/3a7b52de19cc819651c0cd78f511de13ac077476.jpg" size="medium" aspect="wide" style="photo" query="호텔 키즈풀" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-3">키즈풀</h4>
+                <p class="text-gray-600 text-sm mb-4">얕고 안전하게 설계되어 어린아이들이 물놀이를 즐기기에 안전합니다.</p>
+                <div class="flex items-center text-sm">
+                  <i class="fas fa-child text-coral-500 mr-2"></i>
+                  <span class="text-gray-600">어린이 안전 시설</span>
+                </div>
+              </div>
+
+              <!-- Adult Pool -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <img alt="성인 전용 수영장" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/patio7.co.kr/3449cb36c22949e9a4c955a4faba70b2359a507a.jpg" size="medium" aspect="wide" style="photo" query="성인 전용 수영장" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-3">성인전용풀</h4>
+                <p class="text-gray-600 text-sm mb-4">조용하고 프라이빗한 분위기에서 휴식을 취하고 싶은 성인 투숙객을 위한 공간입니다.</p>
+                <div class="flex items-center text-sm">
+                  <i class="fas fa-user text-coral-500 mr-2"></i>
+                  <span class="text-gray-600">성인 전용</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spa &amp; Wellness -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">스파 &amp; 웰니스</h3>
+            <div class="grid lg:grid-cols-2 gap-8">
+              <div class="bg-white rounded-xl p-8 shadow-lg">
+                <h4 class="font-serif text-2xl font-semibold text-gray-800 mb-4">츠비라 스파 (Tsubira)</h4>
+                <img alt="호텔 스파 시설 내부 모습" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/img.lottehotel.com/d020a4911da3beacfb2066da058268c999f1c480.webp" size="medium" aspect="wide" style="photo" query="호텔 스파 시설" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                  미야코지마의 자연과 전통을 담은 특별한 트리트먼트를 제공합니다.
+                  천일염과 해조류 등 현지 재료를 사용한 프로그램이 인기입니다.
+                </p>
+                <div class="bg-ocean-50 p-4 rounded-lg">
+                  <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                      <span class="font-medium">운영 시간</span>
+                      <span class="text-ocean-600">오전 10시 - 오후 9시</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="font-medium">예약</span>
+                      <span class="text-ocean-600">사전 예약 필수</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-xl p-8 shadow-lg">
+                <h4 class="font-serif text-2xl font-semibold text-gray-800 mb-4">피트니스 센터</h4>
+                <img alt="호텔 피트니스 센터 내부" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/www.humblehousehotels.com/5cc3bf0289cc5cc5ad989dd9a57e5afcdcddd1dc.jpg" size="medium" aspect="wide" style="photo" query="호텔 피트니스 센터 내부" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                  최신식 운동 기구가 갖추어진 24시간 운영 피트니스 센터.
+                  여행 중에도 일상 운동 루틴을 유지할 수 있습니다.
+                </p>
+                <div class="bg-coral-50 p-4 rounded-lg">
+                  <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                      <span class="font-medium">운영 시간</span>
+                      <span class="text-coral-600">24시간</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="font-medium">이용 가능 연령</span>
+                      <span class="text-coral-600">16세 이상</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kids Programs &amp; Activities -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">키즈 프로그램 &amp; 기타 액티비티</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-child text-coral-600 text-2xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">키즈 클럽</h4>
+                <p class="text-sm text-gray-600">전문 스태프가 상주하는 안전한 놀이 공간</p>
+              </div>
+
+              <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-ocean-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-leaf text-ocean-600 text-2xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">요가 클래스</h4>
+                <p class="text-sm text-gray-600">해변에서 즐기는 아침 요가 프로그램</p>
+              </div>
+
+              <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-water text-yellow-600 text-2xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">해양 액티비티</h4>
+                <p class="text-sm text-gray-600">스노클링, 스탠드업 패들보드</p>
+              </div>
+
+              <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-umbrella-beach text-purple-600 text-2xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">전용 해변</h4>
+                <p class="text-sm text-gray-600">미야코 선셋 비치에서의 프라이빗 휴식</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dining &amp; Bar -->
+      <section class="py-16 bg-white" id="dining">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">다이닝 &amp; 바</h2>
+
+          <!-- Main Restaurants -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">메인 레스토랑</h3>
+            <div class="grid lg:grid-cols-2 gap-12">
+              <!-- Azure -->
+              <div class="bg-gradient-to-br from-ocean-50 to-ocean-100 rounded-2xl p-8">
+                <div class="flex items-center mb-6">
+                  <img alt="아주르 레스토랑 로고" class="w-16 h-16 rounded-full mr-4" src="https://kimi-web-img.moonshot.cn/img/images.getbento.com/f913cd9008988291a3813f437d540504ca73c1b2.png" size="small" aspect="square" query="아주르 레스토랑 로고" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                  <div>
+                    <h4 class="font-serif text-2xl font-semibold text-ocean-800">아주르 (Azure)</h4>
+                    <p class="text-ocean-600">올데이 다이닝</p>
+                  </div>
+                </div>
+                <img alt="아주르 레스토랑 내부" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/media-cdn.tripadvisor.com/fe993cc8f9d4938620d73a437e9a4508ca0bbf38.jpg" size="medium" aspect="wide" style="photo" query="아주르 레스토랑 내부" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                  호텔의 메인 올데이 다이닝 레스토랑으로, 신선한 해산물 뷔페와 오키나와 특산품을 맛볼 수 있습니다.
+                  조식, 중식, 석식 모두 제공됩니다.
+                </p>
+                <div class="bg-white p-4 rounded-lg">
+                  <h5 class="font-semibold text-gray-800 mb-2">인기 메뉴</h5>
+                  <ul class="text-sm space-y-1">
+                    <li>• 오믈렛 스테이션</li>
+                    <li>• 셰프 특제 미니 버거</li>
+                    <li>• 미야코 소바</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Isoletta -->
+              <div class="bg-gradient-to-br from-coral-50 to-coral-100 rounded-2xl p-8">
+                <div class="flex items-center mb-6">
+                  <img alt="이졸레타 레스토랑 로고" class="w-16 h-16 rounded-full mr-4" src="https://ark-content-generation-v2-cn-beijing.tos-cn-beijing.volces.com/doubao-seedream-3-0-t2i/021757100934832860709f8992798899d3f9babbf4f90d5f081bc.jpeg?X-Tos-Algorithm=TOS4-HMAC-SHA256&amp;X-Tos-Credential=AKLTYWJkZTExNjA1ZDUyNDc3YzhjNTM5OGIyNjBhNDcyOTQ%2F20250905%2Fcn-beijing%2Ftos%2Frequest&amp;X-Tos-Date=20250905T193537Z&amp;X-Tos-Expires=86400&amp;X-Tos-Signature=4a7d9f1455de3eae77501c9fc1f9af1254e9437889359e8bb544a3299cc36b4c&amp;X-Tos-SignedHeaders=host&amp;x-tos-process=image%2Fwatermark%2Cimage_YXNzZXRzL3dhdGVybWFyay5wbmc_eC10b3MtcHJvY2Vzcz1pbWFnZS9yZXNpemUsUF8xNg%3D%3D" size="small" aspect="square" query="이졸레타 레스토랑 로고" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                  <div>
+                    <h4 class="font-serif text-2xl font-semibold text-coral-800">이졸레타 (Isoletta)</h4>
+                    <p class="text-coral-600">이탈리안 레스토랑</p>
+                  </div>
+                </div>
+                <img alt="화덕 피자를 굽는 모습" class="w-full h-48 object-cover rounded-lg mb-4" src="https://kimi-web-img.moonshot.cn/img/pds.joongang.co.kr/f0a38116649159148c9dc59d82a0ae9737807cc3.jpg" size="medium" aspect="wide" style="photo" query="화덕 피자 요리" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                  정통 목재 화덕에서 구운 나폴리 피자가 특징인 이탈리안 레스토랑.
+                  다양한 파스타와 해산물 요리도 준비되어 있습니다.
+                </p>
+                <div class="bg-white p-4 rounded-lg">
+                  <h5 class="font-semibold text-gray-800 mb-2">특징</h5>
+                  <ul class="text-sm space-y-1">
+                    <li>• 저녁 시간만 운영</li>
+                    <li>• a la carte 및 코스 메뉴</li>
+                    <li>• 와인 리스트 풍부</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bars &amp; Lounges -->
+          <div class="mb-16">
+            <h3 class="font-serif text-3xl font-semibold text-ocean-700 mb-8 text-center">바 &amp; 라운지</h3>
+            <div class="grid md:grid-cols-2 gap-8">
+              <!-- Saryo -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-4">사료 (Saryo)</h4>
+                <p class="text-gray-600 mb-4">로비 라운지로, 전통 일본 차 문화를 현대적으로 재해석한 공간입니다.</p>
+                <div class="space-y-3">
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-clock text-ocean-500 mr-2"></i>
+                    <span class="text-gray-600">오전부터 늦은 저녁까지 운영</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-coffee text-ocean-500 mr-2"></i>
+                    <span class="text-gray-600">다양한 차와 전통 과자</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-wifi text-ocean-500 mr-2"></i>
+                    <span class="text-gray-600">무료 Wi-Fi 제공</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Yunai -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h4 class="font-serif text-xl font-semibold text-gray-800 mb-4">유나이 (Yunai)</h4>
+                <p class="text-gray-600 mb-4">8층 루프탑 바로, 미야코지마의 석양과 오션뷰를 감상할 수 있습니다.</p>
+                <div class="space-y-3">
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-cocktail text-coral-500 mr-2"></i>
+                    <span class="text-gray-600">오리지널 칵테일 전문</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-sun text-coral-500 mr-2"></i>
+                    <span class="text-gray-600">석양 전망 최적의 장소</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-calendar text-coral-500 mr-2"></i>
+                    <span class="text-gray-600">사전 예약 추천</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Room Service -->
+          <div class="bg-gradient-to-r from-sand-100 to-sand-200 rounded-2xl p-8">
+            <h3 class="font-serif text-2xl font-semibold text-sand-800 mb-6 text-center">룸 서비스</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+              <div class="text-center">
+                <div class="w-12 h-12 bg-sand-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-clock text-white"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">24시간 서비스</h4>
+                <p class="text-sm text-gray-600">언제든지 객실에서 편안하게 식사 가능</p>
+              </div>
+
+              <div class="text-center">
+                <div class="w-12 h-12 bg-sand-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-utensils text-white"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">다양한 메뉴</h4>
+                <p class="text-sm text-gray-600">레스토랑 메뉴와 유사한 선택지 제공</p>
+              </div>
+
+              <div class="text-center">
+                <div class="w-12 h-12 bg-sand-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-mountain text-white"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">전망 감상</h4>
+                <p class="text-sm text-gray-600">객실에서 미야코 블루 감상하며 식사</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Practical Tips -->
+      <section class="py-16 bg-sand-50" id="practical-tips">
+        <div class="max-w-6xl mx-auto px-8">
+          <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">실전 팁</h2>
+
+          <div class="grid lg:grid-cols-2 gap-12">
+            <!-- Left Column -->
+            <div class="space-y-8">
+              <!-- Check-in/Out -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-ocean-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">체크인/아웃</h3>
+                </div>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center p-3 bg-ocean-50 rounded-lg">
+                    <span class="font-medium">체크인</span>
+                    <span class="text-ocean-600">오후 3시</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-ocean-50 rounded-lg">
+                    <span class="font-medium">체크아웃</span>
+                    <span class="text-ocean-600">오전 11시</span>
+                  </div>
+                  <div class="text-sm text-gray-600 mt-4">
+                    <p>• 조기 체크인/레이트 체크아웃은 사전 문의 필요</p>
+                    <p>• 힐튼 오너스 회원 특전 가능</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reservation Required -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-coral-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-calendar-check text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">예약 필수 시설</h3>
+                </div>
+                <div class="space-y-4">
+                  <div class="border-l-4 border-coral-500 pl-4">
+                    <h4 class="font-semibold text-gray-800 mb-1">레스토랑</h4>
+                    <p class="text-sm text-gray-600">이졸레타, 유나이 바는 사전 예약 필수</p>
+                  </div>
+                  <div class="border-l-4 border-coral-500 pl-4">
+                    <h4 class="font-semibold text-gray-800 mb-1">스파</h4>
+                    <p class="text-sm text-gray-600">츠비라 스파는 사전 예약제 운영</p>
+                  </div>
+                  <div class="bg-coral-50 p-3 rounded-lg mt-4">
+                    <p class="text-sm text-coral-700">
+                      <i class="fas fa-exclamation-triangle mr-2"></i>
+                      특히 주말과 성수기는 빠른 예약 마감
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Congestion Avoidance -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-users text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">혼잡 시간대 회피</h3>
+                </div>
+                <div class="space-y-4">
+                  <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-yellow-800 mb-2">조식 러시</h4>
+                    <p class="text-sm text-yellow-700 mb-2">오전 8시 - 9시 30분 (가장 혼잡)</p>
+                    <p class="text-sm text-yellow-600">추천 시간: 오전 7시 30분 이전 또는 10시 이후</p>
+                  </div>
+                  <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-yellow-800 mb-2">수영장 피크타임</h4>
+                    <p class="text-sm text-yellow-700 mb-2">오후 1시 - 4시 (가장 혼잡)</p>
+                    <p class="text-sm text-yellow-600">추천 시간: 오전 10시 이전 또는 4시 30분 이후</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-8">
+              <!-- Optimal Routine -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-route text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">최적의 호텔 이용 루틴</h3>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-green-800 mb-1">체크인 당일</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-cocktail text-green-500 mr-2"></i>
+                      8층 유나이 바에서 석양 감상 → 2층 이졸레타에서 저녁 식사
+                    </p>
+                  </div>
+
+                  <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-green-800 mb-1">투숙 중</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-sun text-green-500 mr-2"></i>
+                      아침: 여유로운 조식 → 낮: 해변/수영장 휴식 → 오후: 스파 트리트먼트
+                    </p>
+                  </div>
+
+                  <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-green-800 mb-1">체크아웃 당일</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-gift text-green-500 mr-2"></i>
+                      마지막 해변 휴식 → 기념품 구매 → 로비 라운지에서 마무리
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Transportation -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-car text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">교통 정보</h3>
+                </div>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <div>
+                      <span class="font-medium">미야코 공항</span>
+                      <p class="text-xs text-gray-600">무료 셔틀버스 운행</p>
+                    </div>
+                    <span class="text-purple-600 font-semibold">15분</span>
+                  </div>
+                  <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <div>
+                      <span class="font-medium">시모지시마 공항</span>
+                      <p class="text-xs text-gray-600">유료 리무진 버스</p>
+                    </div>
+                    <span class="text-purple-600 font-semibold">25분</span>
+                  </div>
+                  <div class="p-3 bg-purple-50 rounded-lg">
+                    <span class="font-medium">주차</span>
+                    <p class="text-xs text-gray-600">무료 주차장 (300대 이상 수용)</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Special Services -->
+              <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-star text-white"></i>
+                  </div>
+                  <h3 class="font-serif text-xl font-semibold text-gray-800">특별 서비스</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                    <i class="fas fa-dog text-indigo-600 text-lg mb-2"></i>
+                    <p class="text-sm font-medium">반려동물 동반 가능</p>
+                  </div>
+                  <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                    <i class="fas fa-wifi text-indigo-600 text-lg mb-2"></i>
+                    <p class="text-sm font-medium">무료 Wi-Fi</p>
+                  </div>
+                  <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                    <i class="fas fa-concierge-bell text-indigo-600 text-lg mb-2"></i>
+                    <p class="text-sm font-medium">24시간 프론트</p>
+                  </div>
+                  <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                    <i class="fas fa-car text-indigo-600 text-lg mb-2"></i>
+                    <p class="text-sm font-medium">렌터카 데스크</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="bg-ocean-800 text-white py-12">
+        <div class="max-w-6xl mx-auto px-8">
+          <div class="grid md:grid-cols-3 gap-8">
+            <div>
+              <h3 class="font-serif text-xl font-semibold mb-4">힐튼 오키나와 미야코 아일랜드 리조트</h3>
+              <p class="text-ocean-200 text-sm leading-relaxed">
+                미야코지마의 최신 럭셔리 리조트로, 329개의 객실과 전용 해변, 5개의 수영장, 4개의 레스토랑 및 바를 갖춘 종합 휴양지입니다.
+              </p>
+            </div>
+
+            <div>
+              <h4 class="font-semibold mb-4">주요 시설</h4>
+              <ul class="space-y-2 text-sm text-ocean-200">
+                <li>• 329개 객실 (전용 발코니)</li>
+                <li>• 전용 해변 (미야코 선셋 비치)</li>
+                <li>• 실내외 5개 수영장</li>
+                <li>• 풀서비스 스파 (츠비라)</li>
+                <li>• 4개 레스토랑 및 바</li>
+                <li>• 이그제큐티브 라운지</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 class="font-semibold mb-4">연락처</h4>
+              <div class="space-y-2 text-sm text-ocean-200">
+                <p><i class="fas fa-phone mr-2"></i>프론트 데스크: 24시간</p>
+                <p><i class="fas fa-envelope mr-2"></i>예약: reservations@hilton.com</p>
+                <p><i class="fas fa-map-marker-alt mr-2"></i>미야코지마, 오키나와 현</p>
+                <p><i class="fas fa-plane mr-2"></i>미야코 공항: 15분 (무료 셔틀)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-ocean-700 mt-8 pt-8 text-center">
+            <p class="text-ocean-200 text-sm">
+              2023-2025 힐튼 오키나와 미야코 아일랜드 리조트. 모든 정보는 2025년 기준이며 변경될 수 있습니다.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+        // Initialize Mermaid with custom configuration
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#f0f9ff',
+                primaryTextColor: '#0c4a6e',
+                primaryBorderColor: '#0369a1',
+                lineColor: '#075985',
+                sectionBkgColor: '#ffffff',
+                altSectionBkgColor: '#f8fafc',
+                gridColor: '#e2e8f0',
+                secondaryColor: '#fff7ed',
+                tertiaryColor: '#fdfcfb',
+                background: '#ffffff',
+                mainBkg: '#ffffff',
+                secondBkg: '#f0f9ff',
+                tertiaryColor: '#f8fafc'
+            },
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 50,
+                rankSpacing: 50
+            },
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 13
+        });
+
+        // Initialize Mermaid Controls for zoom and pan
+        function initializeMermaidControls() {
+            const containers = document.querySelectorAll('.mermaid-container');
+
+            containers.forEach(container => {
+            const mermaidElement = container.querySelector('.mermaid');
+            let scale = 1;
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+
+            // 터치 관련 상태 추적
+            let isTouch = false;
+            let touchStartTime = 0;
+            let initialDistance = 0;
+            let initialScale = 1;
+            let isPinching = false;
+
+            // Zoom controls
+            const zoomInBtn = container.querySelector('.zoom-in');
+            const zoomOutBtn = container.querySelector('.zoom-out');
+            const resetBtn = container.querySelector('.reset-zoom');
+            const fullscreenBtn = container.querySelector('.fullscreen');
+
+            function updateTransform() {
+                mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+
+                if (scale > 1) {
+                container.classList.add('zoomed');
+                } else {
+                container.classList.remove('zoomed');
+                }
+
+                mermaidElement.style.cursor = isDragging ? 'grabbing' : 'grab';
+            }
+
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', () => {
+                scale = Math.min(scale * 1.25, 4);
+                updateTransform();
+                });
+            }
+
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', () => {
+                scale = Math.max(scale / 1.25, 0.3);
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+                updateTransform();
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+                });
+            }
+
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+                });
+            }
+
+            // Mouse Events
+            mermaidElement.addEventListener('mousedown', (e) => {
+                if (isTouch) return; // 터치 기기에서는 마우스 이벤트 무시
+
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                mermaidElement.style.cursor = 'grabbing';
+                updateTransform();
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && !isTouch) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseleave', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            // 터치 이벤트 핸들러
+            const getTouchDistance = (touch1, touch2) => {
+                return Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+                );
+            };
+
+            mermaidElement.addEventListener('touchstart', (e) => {
+                isTouch = true;
+                touchStartTime = Date.now();
+
+                if (e.touches.length === 1) {
+                // 단일 터치 - 드래그
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+
+                } else if (e.touches.length === 2) {
+                // 두 손가락 - 핀치 줌
+                isPinching = true;
+                isDragging = false;
+
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialDistance = getTouchDistance(touch1, touch2);
+                initialScale = scale;
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && isDragging && !isPinching) {
+                // 단일 터치 드래그
+                const touch = e.touches[0];
+                translateX = touch.clientX - startX;
+                translateY = touch.clientY - startY;
+                updateTransform();
+
+                } else if (e.touches.length === 2 && isPinching) {
+                // 두 손가락 핀치 줌
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = getTouchDistance(touch1, touch2);
+
+                if (initialDistance > 0) {
+                    const newScale = Math.min(Math.max(
+                    initialScale * (currentDistance / initialDistance),
+                    0.3
+                    ), 4);
+                    scale = newScale;
+                    updateTransform();
+                }
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchend', (e) => {
+                // 상태 초기화
+                if (e.touches.length === 0) {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+
+                // 마우스 이벤트를 다시 활성화하기 위한 지연
+                setTimeout(() => {
+                    isTouch = false;
+                }, 100);
+                } else if (e.touches.length === 1 && isPinching) {
+                // 두 손가락에서 한 손가락으로 변경 - 드래그 모드로 전환
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+                }
+
+                updateTransform();
+            });
+
+            mermaidElement.addEventListener('touchcancel', (e) => {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+
+                setTimeout(() => {
+                isTouch = false;
+                }, 100);
+
+                updateTransform();
+            });
+
+            // Enhanced wheel zoom with better center point handling
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = container.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = Math.min(Math.max(scale * delta, 0.3), 4);
+
+                // Adjust translation to zoom towards center
+                if (newScale !== scale) {
+                const scaleDiff = newScale / scale;
+                translateX = translateX * scaleDiff;
+                translateY = translateY * scaleDiff;
+                scale = newScale;
+
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+
+                updateTransform();
+                }
+            });
+
+            // Initialize display
+            updateTransform();
+            });
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight current section in TOC
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('#toc a[href^="#"]');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (window.scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('bg-ocean-100', 'text-ocean-700');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('bg-ocean-100', 'text-ocean-700');
+                }
+            });
+        });
+
+        // Toggle TOC on mobile
+        const toc = document.getElementById('toc');
+        const tocToggle = document.getElementById('toc-toggle');
+        const tocClose = document.getElementById('toc-close');
+        
+        function toggleTOC() {
+            toc.classList.toggle('-translate-x-full');
+        }
+        
+        if (tocToggle) {
+            tocToggle.addEventListener('click', toggleTOC);
+        }
+        
+        if (tocClose) {
+            tocClose.addEventListener('click', toggleTOC);
+        }
+        
+        // Close TOC when clicking on a link (mobile)
+        document.querySelectorAll('#toc a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    toggleTOC();
+                }
+            });
+        });
+        
+        // Initialize Mermaid controls
+        initializeMermaidControls();
+    </script>
+
+  
+
+</body></html>
