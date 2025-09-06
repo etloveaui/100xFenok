@@ -1,0 +1,2318 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>2025 미야코지마 여행 종합 준비 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.5.0/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --secondary: #475569;
+            --accent: #3b82f6;
+            --accent-light: #dbeafe;
+            --neutral: #f8fafc;
+            --neutral-light: #f1f5f9;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            color: var(--primary);
+            background: var(--neutral);
+        }
+        
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .hero-overlay {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(59, 130, 246, 0.1));
+        }
+        
+        .nav-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            z-index: 50;
+            overflow-y: auto;
+        }
+        
+        .content-margin {
+            margin-left: 280px;
+        }
+        
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        
+        .hero-text {
+            background: linear-gradient(135deg, var(--accent), #1e40af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .pull-quote {
+            border-left: 4px solid var(--accent);
+            background: var(--accent-light);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            font-style: italic;
+            font-size: 1.1rem;
+        }
+        
+        .mermaid-container {
+            display: flex;
+            justify-content: center;
+            min-height: 300px;
+            max-height: 800px;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mermaid-container .mermaid {
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            cursor: grab;
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .mermaid-container .mermaid svg {
+            max-width: 100%;
+            height: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .mermaid-container .mermaid:active {
+            cursor: grabbing;
+        }
+
+        .mermaid-container.zoomed .mermaid {
+            height: 100%;
+            width: 100%;
+            cursor: grab;
+        }
+
+        .mermaid-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mermaid-control-btn {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #374151;
+            font-size: 14px;
+            min-width: 36px;
+            height: 36px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mermaid-control-btn:hover {
+            background: #f8fafc;
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .mermaid-control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .citation {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px dotted var(--accent);
+        }
+        
+        .citation:hover {
+            background: var(--accent-light);
+        }
+        
+        .risk-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .risk-high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .risk-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .risk-low {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        @media (max-width: 1024px) {
+            .nav-fixed {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .nav-fixed.open {
+                transform: translateX(0);
+            }
+            
+            .content-margin {
+                margin-left: 0;
+            }
+            
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mermaid-control-btn:not(.reset-zoom) {
+                display: none;
+            }
+            .mermaid-controls {
+                top: auto;
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+            }
+        }
+        
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+            margin: 4rem 0;
+        }
+    </style>
+  </head>
+
+  <body>
+    <!-- Fixed Navigation -->
+    <nav class="nav-fixed">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-bold text-gray-900 serif">목차</h3>
+      </div>
+      <div class="p-4 space-y-2">
+        <a href="#executive-summary" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Executive Summary</a>
+        <a href="#methodology" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Research Methodology</a>
+        <a href="#insurance" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Insurance Analysis</a>
+        <a href="#communication" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Communication Options</a>
+        <a href="#finance" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Finance &amp; Currency</a>
+        <a href="#health" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Health &amp; Emergency</a>
+        <a href="#contacts" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Emergency Contacts</a>
+        <a href="#recommendations" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Recommendations</a>
+        <a href="#future-research" class="block px-4 py-2 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">Future Research</a>
+      </div>
+    </nav>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="lg:hidden fixed top-4 left-4 z-50 bg-white p-2 rounded-lg shadow-lg border" onclick="toggleNav()">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Main Content -->
+    <main class="content-margin">
+      <!-- Hero Section -->
+      <section class="relative min-h-screen flex items-center">
+        <div class="absolute inset-0">
+          <img src="https://kimi-web-img.moonshot.cn/img/cf.bstatic.com/9f49f1d8d09307f51f5e2c0ddd786216860b1d67.jpg" alt="미야코지마 섬의 해변과 오션뷰" class="w-full h-full object-cover" size="wallpaper" aspect="wide" style="photo" query="미야코지마 섬 풍경" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+          <div class="hero-overlay absolute inset-0"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-6">
+          <div class="bento-grid">
+            <div class="space-y-8">
+              <div class="space-y-4">
+                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold serif hero-text leading-tight">
+                  <em>2025 미야코지마 여행</em>
+                  <br/>
+                  <span class="text-white">종합 준비 가이드</span>
+                </h1>
+                <p class="text-xl text-gray-200 max-w-2xl">
+                  보험, 통신, 금융, 건강, 비상연락망의 5가지 핵심 분야를 심층 분석한 실행 가능한 준비 전략과 위험 대응책
+                </p>
+              </div>
+
+              <div class="flex flex-wrap gap-4">
+                <span class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                  <i class="fas fa-shield-alt mr-2"></i>보험 분석
+                </span>
+                <span class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                  <i class="fas fa-wifi mr-2"></i>통신 옵션
+                </span>
+                <span class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                  <i class="fas fa-yen-sign mr-2"></i>금융 전략
+                </span>
+                <span class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                  <i class="fas fa-heartbeat mr-2"></i>건강 대비
+                </span>
+                <span class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                  <i class="fas fa-phone mr-2"></i>비상연락망
+                </span>
+              </div>
+            </div>
+
+            <div class="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl">
+              <h3 class="text-2xl font-bold mb-6 serif">핵심 위험 요약</h3>
+              <div class="space-y-4">
+                <div class="flex items-start gap-3">
+                  <div class="w-3 h-3 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 class="font-semibold text-red-700">의료 공백</h4>
+                    <p class="text-sm text-gray-600">보험 미가입 상태로 고액 의료비 및 응급 이송 위험</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="w-3 h-3 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 class="font-semibold text-orange-700">통신 단절</h4>
+                    <p class="text-sm text-gray-600">현지 연락 수단 미비로 긴급 상황 대응 불가</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="w-3 h-3 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 class="font-semibold text-yellow-700">금융 위기</h4>
+                    <p class="text-sm text-gray-600">현금 부족 및 카드 사용 제약으로 경제적 곤경</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="font-semibold text-blue-700 mb-3">즉시 실행 권장사항</h4>
+                <ol class="space-y-2 text-sm">
+                  <li class="flex items-center gap-2">
+                    <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    여행자 보험 가입 및 건강 정보 정리
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    eSIM 또는 로밍 서비스 개통
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                    현금(엔화) 확보 및 비상연락망 구축
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Executive Summary -->
+      <section id="executive-summary" class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Executive Summary</h2>
+
+          <div class="prose prose-lg max-w-none">
+            <div class="pull-quote">
+              &#34;현재 보험 미가입, 통신수단 미비, 금융 준비 불완전, 건강 정보 부재, 비상연락망 공란 상태로 미야코지마 여행 시 심각한 리스크에 직면할 수 있습니다.&#34;
+            </div>
+
+            <h3 class="text-2xl font-bold serif mt-12 mb-6">1.1 주요 리스크 요약</h3>
+
+            <h4 class="text-xl font-semibold mb-4">
+              의료 공백: 보험 미가입 및 건강 정보 부재
+              <span class="risk-indicator risk-high">위험도: 높음</span>
+            </h4>
+            <p class="mb-6">
+              현재 보험에 가입되어 있지 않은 상태로 미야코지마 여행 시, <strong>심각한 의료 공백</strong>이 발생할 수 있습니다. 일본은 의료비가 높은 국가로, 사소한 부상이나 질병이라도 막대한 비용이 발생할 수 있습니다. 특히, 미야코지마는 외딴 섬으로, 심각한 응급 상황 발생 시 헬리콥터를 이용한 본토 이송이 필요할 수 있으며, 이 비용은 수십만 달러에 달할 수 있습니다. 또한, <strong>혈액형, 알레르기, 복용약 등의 건강 정보가 기재되어 있지 않으면</strong>, 응급 상황에서 의료진이 적절한 치료를 제공하는 데 어려움을 겪을 수 있어, 치료 지연 및 의료 사고의 위험이 증가합니다.
+            </p>
+
+            <h4 class="text-xl font-semibold mb-4">
+              통신 단절: 현지 연락 수단 미확보
+              <span class="risk-indicator risk-high">위험도: 높음</span>
+            </h4>
+            <p class="mb-6">
+              통신수단이 확보되어 있지 않은 상태로 여행 시, <strong>현지에서 완전히 연락이 단절</strong>될 수 있습니다. 이는 단순히 지도 앱이나 SNS 사용이 불가능한 수준을 넘어, <strong>긴급 상황 발생 시 구조 요청이 불가능</strong>한 심각한 상황으로 이어질 수 있습니다. 특히, 렌터카를 이용해 이동하는 미야코지마의 특성상, 사고 발생 시 즉각적인 신고가 어려워질 수 있으며, 가족 및 지인과의 연락도 두절되어, 안전 확인 및 비상 대응에 큰 차질이 생깁니다.
+            </p>
+
+            <h4 class="text-xl font-semibold mb-4">
+              금융 위기: 현금 부족 및 카드 사용 제약
+              <span class="risk-indicator risk-high">위험도: 높음</span>
+            </h4>
+            <p class="mb-6">
+              현금과 카드 준비가 불완전한 상태로 미야코지마를 방문하면, <strong>심각한 금융 위기</strong>에 빠질 수 있습니다. 미야코지마는 &#34;현금이 왕(Cash is King)&#34;인 지역으로, 많은 소규모 음식점, 상점, 주차장 등이 <strong>현금만을 고집</strong>합니다 <a href="#ref-363" class="citation">[363]</a>. 카드만으로는 필수적인 식사나 교통비를 지불할 수 없어, 여행이 중단될 수 있습니다. 또한, 지갑을 분실하거나 현금을 모두 소진했을 때, ATM을 찾기 어려울 수 있으며, 이는 즉각적인 경제적 곤경에 빠지는 결과를 초래합니다.
+            </p>
+
+            <h3 class="text-2xl font-bold serif mt-12 mb-6">1.2 최우선 3대 즉시 실행 권장사항</h3>
+
+            <div class="grid md:grid-cols-3 gap-6 my-8">
+              <div class="bg-blue-50 p-6 rounded-xl">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4">1</div>
+                <h4 class="font-bold text-lg mb-3">여행자 보험 가입 및 건강 정보 정리</h4>
+                <p class="text-sm text-gray-600">
+                  <strong>가장 시급한 조치는 여행자 보험 가입</strong>입니다. <strong>Auras Insurance</strong>와 같은 저렴하고 포괄적인 보험사를 통해, 하루 $1.50부터 시작하는 보험료로 의료비 및 긴급 의료 이송을 보장받을 수 있습니다 <a href="#ref-241" class="citation">[241]</a>. 동시에, <strong>개인의 건강 정보를 체계적으로 정리</strong>해야 합니다.
+                </p>
+              </div>
+
+              <div class="bg-blue-50 p-6 rounded-xl">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4">2</div>
+                <h4 class="font-bold text-lg mb-3">eSIM 또는 로밍 서비스 개통</h4>
+                <p class="text-sm text-gray-600">
+                  <strong>현지 통신 수단을 반드시 확보</strong>해야 합니다. <strong>eSIM</strong>은 비용 효율적이고 유연한 선택지로, <strong>Saily</strong>와 같은 제공업체를 통해 무제한 5G 데이터 플랜을 약 $33에 이용할 수 있습니다 <a href="#ref-281" class="citation">[281]</a>. 이는 노트북 테더링에도 충분하며, 도착하자마자 즉시 사용 가능합니다.
+                </p>
+              </div>
+
+              <div class="bg-blue-50 p-6 rounded-xl">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4">3</div>
+                <h4 class="font-bold text-lg mb-3">현금(엔화) 확보 및 비상연락망 구축</h4>
+                <p class="text-sm text-gray-600">
+                  <strong>출발 전 충분한 엔화 현금을 확보</strong>하는 것이 중요합니다. 미야코지마는 현금 중심 경제이므로, 첫날부터 사용할 수 있도록 한국에서 일정 금액을 환전하거나, 공항 도착 후 즉시 ATM에서 인출하는 것이 좋습니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Research Methodology -->
+      <section id="methodology" class="py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Research Methodology and Sources</h2>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-white p-8 rounded-xl shadow-sm">
+              <h3 class="text-2xl font-bold serif mb-6">2.1 Information Gathering Strategy</h3>
+
+              <h4 class="text-lg font-semibold mb-4">Multi-Source Approach</h4>
+              <p class="text-gray-600 mb-6">
+                본 보고서는 다양한 출처에서 정보를 수집하여 종합적인 분석을 제공합니다. 정부 및 비정부기구(NGO)의 공식 자료, 업계 전문가 의견, 뉴스 미디어 기사, 그리고 실제 여행자들의 커뮤니티 후기를 포함한 다각적인 접근 방식을 취했습니다.
+              </p>
+
+              <h4 class="text-lg font-semibold mb-4">Credibility Assessment</h4>
+              <p class="text-gray-600">
+                수집된 정보의 신뢰도를 확보하기 위해, <strong>권위(Authority)</strong>, <strong>최신성(Recency)</strong>, <strong>편향성(Bias)</strong>의 세 가지 기준을 적용했습니다. 보험사, 통신사, 금융기관의 공식 자료를 우선적으로 참고했으며, 최근 12개월 이내의 자료를 주로 사용했습니다.
+              </p>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-sm">
+              <h3 class="text-2xl font-bold serif mb-6">2.2 Key Sources</h3>
+
+              <div class="space-y-4">
+                <div class="border-l-4 border-blue-500 pl-4">
+                  <h5 class="font-semibold">Government and NGO Data</h5>
+                  <p class="text-sm text-gray-600">일본 국립관광청(JNTO), 미국 질병통제예방센터(CDC), 세계보건기구(WHO), 외교부 등의 공식 자료</p>
+                </div>
+
+                <div class="border-l-4 border-green-500 pl-4">
+                  <h5 class="font-semibold">Industry and Expert Opinions</h5>
+                  <p class="text-sm text-gray-600">Allianz, Auras, Saily, Airalo 등 주요 보험사와 eSIM 제공업체의 공식 가이드</p>
+                </div>
+
+                <div class="border-l-4 border-purple-500 pl-4">
+                  <h5 class="font-semibold">Community and User Reviews</h5>
+                  <p class="text-sm text-gray-600">트립어드바이저, 네이버 카페, 여행 블로그 등 실사용자 경험담</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Insurance Analysis -->
+      <section id="insurance" class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Insurance: 여행자 보험 분석 및 추천</h2>
+
+          <h3 class="text-2xl font-bold serif mb-8">3.1 Recommended Insurance Providers</h3>
+
+          <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-shield-alt text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">Auras Insurance</h4>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">일일 요금</span>
+                  <span class="font-bold text-blue-600">$1.50~</span>
+                </div>
+                <div class="text-sm text-gray-600">
+                  • 의료비, COVID-19 치료 포함
+                  <br/>
+                  • 24/7 지원 서비스
+                  <br/>
+                  • 14일 이내 100% 환불
+                </div>
+                <a href="#ref-241" class="citation text-xs">[241]</a>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-star text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">Allianz Global</h4>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">서비스 수준</span>
+                  <span class="font-bold text-green-600">프리미엄</span>
+                </div>
+                <div class="text-sm text-gray-600">
+                  • 24/7 고객 서비스
+                  <br/>
+                  • 빠른 청구 처리
+                  <br/>
+                  • 다양한 플랜 옵션
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-thumbs-up text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">Travelex</h4>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">평균 보험료</span>
+                  <span class="font-bold text-purple-600">$202</span>
+                </div>
+                <div class="text-sm text-gray-600">
+                  • 예산 여행자 적합
+                  <br/>
+                  • 자녀 무료 추가 가능
+                  <br/>
+                  • COVID-19 보장 포함
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8">3.2 Coverage Analysis</h3>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="space-y-6">
+              <h4 class="text-xl font-semibold">의료 및 응급 후송</h4>
+              <p class="text-gray-600">
+                미야코지마와 같은 외곽 지역에서는 의료 시설이 제한적일 수 있으므로, 심각한 의료 사고 발생 시 적절한 치료를 받기 위해 본토로의 후송이 필요할 수 있습니다. 대부분의 여행자 보험은 응급 의료비를 보장하며, 이는 외래 진료, 입원 치료, 수술, 그리고 약물 비용을 포함합니다 <a href="#ref-260" class="citation">[260]</a>.
+              </p>
+
+              <h4 class="text-xl font-semibold">여행 취소 및 수하물 손실</h4>
+              <p class="text-gray-600">
+                여행 취소 보장은 여행자가 예기치 못한 이유로 여행을 취소해야 할 경우, 이미 지불한 비용을 보상해줍니다. 일부 보험사는 <strong>&#34;무조건 여행 취소&#34; (CFAR)</strong> 옵션을 제공하여, 여행자가 어떤 이유로든 여행을 취소할 수 있도록 합니다 <a href="#ref-11" class="citation">[11]</a>.
+              </p>
+            </div>
+
+            <div class="space-y-6">
+              <h4 class="text-xl font-semibold">특정 위험: 해파리 및 알레르기</h4>
+              <p class="text-gray-600">
+                미야코지마 여행 시 특히 주의해야 할 건강 위험 중 하나는 <strong>해파리에 쏘이는 것</strong>입니다. 특히, <strong>하부 해파리 (Habu jellyfish)</strong>는 매우 독성이 강하여 심각한 부상을 유발할 수 있습니다 <a href="#ref-237" class="citation">[237]</a>. 또 다른 주요 위험은 <strong>음식 알레르기</strong>입니다. 특히 지마미 두부는 땅콩으로 만들어지므로, 땅콩 알레르기가 있는 여행자에게는 치명적일 수 있습니다.
+              </p>
+
+              <h4 class="text-xl font-semibold">비용 및 정책 맞춤화</h4>
+              <p class="text-gray-600">
+                여행자 보험의 비용은 여행 기간, 여행자 연령, 보장 범위, 보험사 등 다양한 요인에 따라 달라집니다. Auras Insurance는 <strong>하루 $1.50부터 시작하는 매우 경쟁력 있는 가격</strong>을 제공하여, 5일간의 미야코지마 여행의 경우, 기본적인 의료 보장만으로도 약 $7.50의 비용이 듭니다 <a href="#ref-202" class="citation">[202]</a>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Communication Options -->
+      <section id="communication" class="py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Communication: 현지 통신 수단 비교</h2>
+
+          <h3 class="text-2xl font-bold serif mb-8">3.3 eSIM vs. International Roaming</h3>
+
+          <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <div class="bg-white p-8 rounded-xl shadow-sm">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-sim-card text-white"></i>
+                </div>
+                <h4 class="text-xl font-bold text-blue-600">eSIM: 비용 효율적이고 유연한</h4>
+              </div>
+
+              <div class="space-y-4">
+                <div class="border-l-4 border-green-500 pl-4">
+                  <h5 class="font-semibold text-green-700">비용 절감</h5>
+                  <p class="text-sm text-gray-600">국제 로밍 요금에 비해 상당한 비용 절감. 10일 무제한 데이터 플랜 약 $33 <a href="#ref-281" class="citation">[281]</a>
+                  </p>
+                </div>
+
+                <div class="border-l-4 border-blue-500 pl-4">
+                  <h5 class="font-semibold text-blue-700">즉시 사용</h5>
+                  <p class="text-sm text-gray-600">출발 전 구매 및 설치 가능, 도착하자마자 즉시 연결</p>
+                </div>
+
+                <div class="border-l-4 border-purple-500 pl-4">
+                  <h5 class="font-semibold text-purple-700">유연성</h5>
+                  <p class="text-sm text-gray-600">다양한 데이터 패키지 선택 가능, 본국 SIM과 동시 사용 가능</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-sm">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-satellite-dish text-white"></i>
+                </div>
+                <h4 class="text-xl font-bold text-orange-600">로밍: 편리하지만 비쌈</h4>
+              </div>
+
+              <div class="space-y-4">
+                <div class="border-l-4 border-blue-500 pl-4">
+                  <h5 class="font-semibold text-blue-700">간편함</h5>
+                  <p class="text-sm text-gray-600">별도 설정 없이 기존 전화번호 그대로 사용 가능</p>
+                </div>
+
+                <div class="border-l-4 border-red-500 pl-4">
+                  <h5 class="font-semibold text-red-700">높은 비용</h5>
+                  <p class="text-sm text-gray-600">하루 $10-$15, 5일 여행 시 $50-$75 이상 소요</p>
+                </div>
+
+                <div class="border-l-4 border-yellow-500 pl-4">
+                  <h5 class="font-semibold text-yellow-700">서비스 품질</h5>
+                  <p class="text-sm text-gray-600">로밍 사용자는 네트워크에서 우선순위가 낮아 느린 속도 경험 가능</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8">3.4 Recommended eSIM Providers</h3>
+
+          <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-rocket text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">Saily</h4>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">10일 무제한</span>
+                  <span class="font-bold text-blue-600">$33.24</span>
+                </div>
+                <div class="text-sm text-gray-600">
+                  • 5G 네트워크 지원
+                  <br/>
+                  • 개인정보 보호 중점
+                  <br/>
+                  • 원탭 활성화
+                </div>
+                <a href="#ref-281" class="citation text-xs">[281]</a>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-globe text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">Airalo</h4>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">30일 20GB</span>
+                  <span class="font-bold text-green-600">$25</span>
+                </div>
+                <div class="text-sm text-gray-600">
+                  • 190개국 서비스
+                  <br/>
+                  • 데이터 전용 플랜
+                  <br/>
+                  • 신뢰할 수 있는 네트워크
+                </div>
+                <a href="#ref-290" class="citation text-xs">[290]</a>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-shopping-cart text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">MobiMatter</h4>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">30일 20GB</span>
+                  <span class="font-bold text-purple-600">$13.99</span>
+                </div>
+                <div class="text-sm text-gray-600">
+                  • 글로벌 마켓플레이스
+                  <br/>
+                  • 경쟁력 있는 가격
+                  <br/>
+                  • 다양한 제공업체
+                </div>
+                <a href="#ref-290" class="citation text-xs">[290]</a>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8">3.5 Connectivity for Laptop Use</h3>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+              <h4 class="text-lg font-semibold mb-4">모바일 기기 테더링</h4>
+              <p class="text-gray-600 mb-4">
+                스마트폰이 셀룰러 데이터 연결을 노트북이나 태블릿과 공유할 수 있도록 합니다. 대부분의 최신 스마트폰은 이 기능을 지원하며, 많은 eSIM 제공업체가 데이터 플랜의 일부로 테더링을 허용합니다 <a href="#ref-284" class="citation">[284]</a>.
+              </p>
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h5 class="font-semibold text-blue-800 mb-2">권장 데이터량</h5>
+                <p class="text-sm text-blue-700">5일 여행의 경우, 특히 노트북이 업무용이거나 스트리밍용으로 사용될 예정이라면, <strong>최소 10GB의 데이터</strong>가 있는 플랜이 권장됩니다.</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+              <h4 class="text-lg font-semibold mb-4">Pocket Wi-Fi 대여</h4>
+              <p class="text-gray-600 mb-4">
+                개인 Wi-Fi 핫스팟을 생성하는 작고 휴대용 장치로, 여러 기기가 동시에 연결될 수 있습니다. 커플이나 소규모 그룹에게 좋은 선택지입니다.
+              </p>
+              <div class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <h5 class="font-semibold text-green-600">장점</h5>
+                  <ul class="text-gray-600 mt-1 space-y-1">
+                    <li>• 배터리 소모 최소화</li>
+                    <li>• 안정적인 연결</li>
+                    <li>• 다중 기기 연결</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 class="font-semibold text-red-600">단점</h5>
+                  <ul class="text-gray-600 mt-1 space-y-1">
+                    <li>• 추가 대여 절차 필요</li>
+                    <li>• 분실/손상 시 추가 요금</li>
+                    <li>• 장비 배터리 관리 필요</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Finance &amp; Currency -->
+      <section id="finance" class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Finance: 현금 및 카드 사용 전략</h2>
+
+          <h3 class="text-2xl font-bold serif mb-8">3.6 Cash vs. Card in Miyako Island</h3>
+
+          <div class="pull-quote mb-12">
+            &#34;미야코지마에서 현금이 왕(Cash is King)입니다. 많은 소규모 음식점, 상점, 주차장 등이 신용카드를 받지 않습니다.&#34;
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl">
+              <h4 class="text-lg font-bold text-red-700 mb-4">현금의 중요성</h4>
+              <p class="text-gray-700 mb-4">
+                미야코지마 여행을 계획하는 여행자들에게는, 현지 경제가 <strong>현금 중심</strong>으로 운영된다는 점을 이해하는 것이 매우 중요합니다 <a href="#ref-363" class="citation">[363]</a>. 많은 소규모, 가족이 운영하는 음식점, 상점, 심지어 일부 주차장이 신용카드나 직불카드를 받지 않습니다.
+              </p>
+              <div class="bg-white p-4 rounded-lg">
+                <h5 class="font-semibold mb-2">현금이 필요한 상황</h5>
+                <ul class="text-sm text-gray-600 space-y-1">
+                  <li>• 현지 음식점 및 노점</li>
+                  <li>• 주차장 요금</li>
+                  <li>• 택시 요금</li>
+                  <li>• 기념품 구매</li>
+                  <li>• 자판기 사용</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-xl">
+              <h4 class="text-lg font-bold text-blue-700 mb-4">카드 사용 가능 장소</h4>
+              <p class="text-gray-700 mb-4">
+                미야코지마에서 현금이 지배적인 결제 수단이지만, <strong>신용카드는 점점 더 많은 대형, 확립된 사업체에서 받아들여지고</strong> 있습니다. 특히 국제 관광객을 대상으로 하는 사업체들이 그러합니다.
+              </p>
+              <div class="bg-white p-4 rounded-lg">
+                <h5 class="font-semibold mb-2">카드 사용 가능 곳</h5>
+                <ul class="text-sm text-gray-600 space-y-1">
+                  <li>• 주요 호텔 및 리조트</li>
+                  <li>• 대형 투어 운영자</li>
+                  <li>• 렌터카 회사</li>
+                  <li>• 면세점</li>
+                  <li>• 온라인 예약 플랫폼</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8">3.7 Japanese Yen (JPY) Denominations</h3>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-white border border-gray-200 rounded-xl p-6">
+              <h4 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                <i class="fas fa-money-bill text-green-600"></i>
+                지폐 종류
+              </h4>
+
+              <div class="space-y-4">
+                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div class="w-16 h-10 bg-gray-200 rounded flex items-center justify-center font-bold">¥10,000</div>
+                  <div>
+                    <div class="font-semibold">약 $67</div>
+                    <div class="text-sm text-gray-600">시부사와 에이이치 초상화</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div class="w-16 h-10 bg-gray-200 rounded flex items-center justify-center font-bold">¥5,000</div>
+                  <div>
+                    <div class="font-semibold">약 $33</div>
+                    <div class="text-sm text-gray-600">쓰다 우메코 초상화</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div class="w-16 h-10 bg-gray-200 rounded flex items-center justify-center font-bold">¥1,000</div>
+                  <div>
+                    <div class="font-semibold">약 $6</div>
+                    <div class="text-sm text-gray-600">기타사토 시바사부로 초상화</div>
+                  </div>
+                </div>
+              </div>
+              <p class="text-sm text-gray-600 mt-4">
+                2024년 새 지폐가 도입되었지만, 오래된 지폐도 법정 통화로 계속 유통됩니다 <a href="#ref-393" class="citation">[393]</a>.
+              </p>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-6">
+              <h4 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                <i class="fas fa-coins text-amber-600"></i>
+                동전 종류
+              </h4>
+
+              <div class="space-y-3">
+                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div class="w-10 h-10 bg-amber-200 rounded-full flex items-center justify-center font-bold">¥500</div>
+                  <div>
+                    <div class="font-semibold">약 $3</div>
+                    <div class="text-sm text-gray-600">니켈-황동 클래드 동전</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div class="w-10 h-10 bg-silver-200 rounded-full flex items-center justify-center font-bold">¥100</div>
+                  <div>
+                    <div class="font-semibold">약 $0.67</div>
+                    <div class="text-sm text-gray-600">백동 동전 (일본의 1달러)</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div class="w-10 h-10 bg-silver-200 rounded-full flex items-center justify-center font-bold">¥50</div>
+                  <div>
+                    <div class="font-semibold">약 $0.33</div>
+                    <div class="text-sm text-gray-600">구멍이 있는 백동 동전</div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-sm text-gray-600 mt-4">
+                10엔, 5엔, 1엔 동전도 있으며, 정확한 거스름돈을 받기 위해 필요합니다 <a href="#ref-382" class="citation">[382]</a>.
+              </p>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8 mt-12">3.8 Accessing Cash in Miyako</h3>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
+              <h4 class="text-lg font-bold mb-4">공항 및 편의점 ATM</h4>
+              <p class="text-gray-700 mb-4">
+                미야코지마에서 현금을 인출하는 가장 신뢰할 수 있는 방법은 <strong>공항과 편의점에 있는 ATM</strong>을 이용하는 것입니다. 미야코 공항에는 도착하는 승객이 이용할 수 있는 환전소와 ATM이 있습니다 <a href="#ref-353" class="citation">[353]</a>.
+              </p>
+
+              <div class="bg-white p-4 rounded-lg">
+                <h5 class="font-semibold mb-2">추천 ATM 위치</h5>
+                <ul class="text-sm text-gray-600 space-y-1">
+                  <li>• 미야코 공항 도착 홀</li>
+                  <li>• 7-Eleven 편의점</li>
+                  <li>• FamilyMart 편의점</li>
+                  <li>• Lawson 편의점</li>
+                  <li>• Aeon Bank ATM</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+              <h4 class="text-lg font-bold mb-4">환전 전략</h4>
+              <p class="text-gray-700 mb-4">
+                한국에서 미리 환전하거나 일본에 도착한 후 환전할 수 있습니다. 각각의 옵션에는 장단점이 있습니다 <a href="#ref-380" class="citation">[380]</a>.
+              </p>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white p-3 rounded">
+                  <h5 class="font-semibold text-sm mb-1">한국에서 환전</h5>
+                  <div class="text-xs text-gray-600">
+                    <div class="text-green-600">✓ 즉시 사용 가능</div>
+                    <div class="text-red-600">✗ 환율이 불리할 수 있음</div>
+                  </div>
+                </div>
+                <div class="bg-white p-3 rounded">
+                  <h5 class="font-semibold text-sm mb-1">일본에서 환전</h5>
+                  <div class="text-xs text-gray-600">
+                    <div class="text-green-600">✓ 경쟁력 있는 환율</div>
+                    <div class="text-red-600">✗ ATM 수수료 발생 가능</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Health &amp; Emergency -->
+      <section id="health" class="py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Health and Emergency Readiness</h2>
+
+          <h3 class="text-2xl font-bold serif mb-8">4.1 Recommended Vaccinations</h3>
+
+          <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-syringe text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">정기 예방접종</h4>
+              </div>
+              <div class="space-y-3 text-sm">
+                <div>
+                  <strong>MMR 백신</strong>
+                  <br/>
+                  홍역, 유행성이하염, 풍진
+                </div>
+                <div>
+                  <strong>DPT 백신</strong>
+                  <br/>
+                  디프테리아, 백일해, 파상풍
+                </div>
+                <p class="text-gray-600">
+                  CDC와 WHO는 이러한 예방접종을 최신 상태로 유지할 것을 강력히 권장합니다 <a href="#ref-148" class="citation">[148]</a>.
+                </p>
+              </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-liver text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">A형 및 B형 간염</h4>
+              </div>
+              <div class="space-y-3 text-sm">
+                <div>
+                  <strong>A형 간염</strong>
+                  <br/>
+                  오염된 음식과 물을 통해 전염
+                </div>
+                <div>
+                  <strong>B형 간염</strong>
+                  <br/>
+                  혈액과 기타 체액을 통해 전염
+                </div>
+                <p class="text-gray-600">
+                  일본 방문 시 계획된 활동에 따라 권장됩니다 <a href="#ref-124" class="citation">[124]</a>.
+                </p>
+              </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-bug text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">일본 뇌염 (JE)</h4>
+              </div>
+              <div class="space-y-3 text-sm">
+                <div>
+                  <strong>전염 시즌</strong>
+                  <br/>
+                  7월부터 11월까지
+                </div>
+                <div>
+                  <strong>전파 경로</strong>
+                  <br/>
+                  모기에 의해 전염
+                </div>
+                <div class="bg-orange-100 p-3 rounded">
+                  <strong class="text-orange-700">주의:</strong> 커플의 여행 일정이 9월 말에서 10월 초로, JE 전염 시즌에 해당하므로 백신 접종을 고려해야 합니다 <a href="#ref-148" class="citation">[148]</a>.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8">4.2 Local Health Risks and Precautions</h3>
+
+          <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-red-50 border border-red-200 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-fish text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold text-red-700">하부 해파리</h4>
+              </div>
+
+              <div class="space-y-3 text-sm">
+                <div>
+                  <strong>활동 시즌:</strong> 6월부터 9월
+                  <br/>
+                  <strong>위험 지역:</strong> 얕은 모래 지역
+                </div>
+
+                <div class="bg-white p-3 rounded">
+                  <strong class="text-red-700">응급 처치:</strong>
+                  <ol class="mt-2 space-y-1 text-xs">
+                    <li>1. 안전하게 물에서 나오기</li>
+                    <li>2. 식초(5% 아세트산) 부상 부위에 붓기</li>
+                    <li>3. 최소 30초 동안 그대로 두기</li>
+                    <li>4. 트위저로 촉수 제거</li>
+                    <li>5. 즉시 의료진 진료 받기</li>
+                  </ol>
+                </div>
+
+                <p class="text-red-600 font-semibold">
+                  절대로 민물, 알코올, 소변 사용 금지!
+                </p>
+              </div>
+              <a href="#ref-475" class="citation text-xs">[475]</a>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-exclamation-triangle text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold text-amber-700">음식 알레르기</h4>
+              </div>
+
+              <div class="space-y-3 text-sm">
+                <div>
+                  <strong>주의 음식:</strong> 지마미 두부
+                  <br/>
+                  <strong>주요 성분:</strong> 땅콩
+                </div>
+
+                <div class="bg-white p-3 rounded">
+                  <strong class="text-amber-700">알레르기 정보 전달</strong>
+                  <div class="mt-2 text-xs">
+                    <div>일본어: &#34;落花生アレルギーがあります&#34;</div>
+                    <div>발음: &#34;락카세이 알레르기가 아리마스&#34;</div>
+                  </div>
+                </div>
+
+                <div class="bg-red-100 p-3 rounded">
+                  <strong class="text-red-700">응급 처치</strong>
+                  <div class="text-xs mt-1">
+                    에피네프린 자동주사기(에피펜) 휴대 필수
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-orange-50 border border-orange-200 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-sun text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold text-orange-700">일사병 및 자외선</h4>
+              </div>
+
+              <div class="space-y-3 text-sm">
+                <div>
+                  <strong>9월 평균 기온:</strong> 29°C (84°F)
+                  <br/>
+                  <strong>최고 기온:</strong> 32°C (90°F)
+                </div>
+
+                <div class="bg-white p-3 rounded">
+                  <strong class="text-orange-700">예방 조치</strong>
+                  <ul class="mt-2 space-y-1 text-xs">
+                    <li>• SPF 30+ 자외선 차단제</li>
+                    <li>• 넓은 챙 모자, 선글라스</li>
+                    <li>• 충분한 수분 섭취</li>
+                    <li>• 정오 시간대 야외 활동 제한</li>
+                  </ul>
+                </div>
+
+                <div class="bg-red-100 p-3 rounded">
+                  <strong class="text-red-700">응급 상황 시</strong>
+                  <div class="text-xs mt-1">
+                    즉시 시원한 곳으로 이동, 119로 구조대 요청
+                  </div>
+                </div>
+              </div>
+              <a href="#ref-504" class="citation text-xs">[504]</a>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8">4.3 Preparing Personal Health Information</h3>
+
+          <div class="bg-white border-2 border-blue-500 rounded-xl p-8">
+            <h4 class="text-xl font-bold mb-6 flex items-center gap-3">
+              <i class="fas fa-id-card text-blue-600"></i>
+              의료 정보 카드 (Medical Info Card)
+            </h4>
+
+            <p class="text-gray-600 mb-6">
+              현재 건강 정보가 전혀 기재되어 있지 않은 상태이므로, <strong>포괄적인 &#34;의료 정보 카드&#34;를 만드는 것은 커플에게 가장 중요한 출발 전 과제</strong>입니다. 이 카드는 의료진이 응급 상황에서 필요로 하는 모든 필수 건강 데이터를 간결하고 읽기 쉬운 형식으로 담은 문서여야 합니다.
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <h5 class="font-semibold mb-3 text-blue-700">포함해야 할 정보 (영어/일본어)</h5>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between border-b pb-1">
+                    <span>전체 이름</span>
+                    <span class="text-gray-500">Full Name</span>
+                  </div>
+                  <div class="flex justify-between border-b pb-1">
+                    <span>생년월일</span>
+                    <span class="text-gray-500">Date of Birth</span>
+                  </div>
+                  <div class="flex justify-between border-b pb-1">
+                    <span>여권 번호</span>
+                    <span class="text-gray-500">Passport Number</span>
+                  </div>
+                  <div class="flex justify-between border-b pb-1">
+                    <span>비상 연락처</span>
+                    <span class="text-gray-500">Emergency Contact</span>
+                  </div>
+                  <div class="flex justify-between border-b pb-1">
+                    <span>알려진 알레르기</span>
+                    <span class="text-gray-500">Known Allergies</span>
+                  </div>
+                  <div class="flex justify-between border-b pb-1">
+                    <span>복용 중인 약물</span>
+                    <span class="text-gray-500">Current Medications</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>기저 질환</span>
+                    <span class="text-gray-500">Medical Conditions</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h5 class="font-semibold mb-3 text-blue-700">관리 및 보관 방법</h5>
+                <div class="space-y-3 text-sm text-gray-600">
+                  <div class="flex items-start gap-2">
+                    <i class="fas fa-wallet text-blue-500 mt-1"></i>
+                    <span>지갑에 넣거나 항상 휴대할 수 있는 곳에 보관</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <i class="fas fa-mobile-alt text-blue-500 mt-1"></i>
+                    <span>휴대폰에 디지털 사본 저장</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <i class="fas fa-share-alt text-blue-500 mt-1"></i>
+                    <span>신뢰할 수 있는 가족에게 정보 공유</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <i class="fas fa-language text-blue-500 mt-1"></i>
+                    <span>영어와 일본어로 모두 작성</span>
+                  </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h6 class="font-semibold text-blue-800 mb-2">일본어 번역 예시</h6>
+                  <div class="text-xs text-blue-700 space-y-1">
+                    <div>&#34;アレルギー: 落花生&#34; (알레르기: 땅콩)</div>
+                    <div>&#34;服用中の薬: [약물명]&#34; (복용 중인 약: [약물명])</div>
+                    <div>&#34;血液型: [혈액형]&#34; (혈액형: [혈액형])</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 grid md:grid-cols-2 gap-6">
+            <div class="bg-gray-50 p-6 rounded-xl">
+              <h4 class="font-semibold mb-4">혈액형 문서화 정책</h4>
+              <p class="text-sm text-gray-600 mb-3">
+                과거에는 일본인들이 자신의 혈액형을 아는 것이 일반적이었지만, 이 관행은 현저히 줄어들고 있습니다. 일본 의료진은 수혈 시 환자가 진술한 혈액형에 의존하지 않고 자체 검사를 수행합니다 <a href="#ref-52" class="citation">[52]</a>.
+              </p>
+              <div class="bg-white p-3 rounded text-xs text-gray-600">
+                <strong>결론:</strong> 혈액형 정보는 유용하지만 필수는 아님. 알레르기와 약물 정보가 더 중요합니다.
+              </div>
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-xl">
+              <h4 class="font-semibold mb-4">처방약 정책</h4>
+              <p class="text-sm text-gray-600 mb-3">
+                일본의 약물 관련 법률은 매우 엄격합니다. 예를 들어, Adderall은 일본으로 반입이 불법입니다. 여행 전에 주한 일본 대사관에 문의해야 합니다 <a href="#ref-507" class="citation">[507]</a>.
+              </p>
+              <div class="bg-white p-3 rounded text-xs text-gray-600">
+                <strong>필수 준비물:</strong> 의사의 영문 서신, 원래 용기, 처방전 사본
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Emergency Contacts -->
+      <section id="contacts" class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Emergency Contacts: 비상연락망 구축</h2>
+
+          <h3 class="text-2xl font-bold serif mb-8">5.1 Local Emergency Services</h3>
+
+          <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-red-100 border-2 border-red-500 p-6 rounded-xl text-center">
+              <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-white font-bold text-2xl">119</span>
+              </div>
+              <h4 class="text-xl font-bold mb-2">화재 · 구급차</h4>
+              <p class="text-sm text-gray-600 mb-4">
+                의료 비상 사태, 구급차 필요 시
+              </p>
+              <div class="bg-white p-3 rounded text-xs">
+                <strong>유용한 문구:</strong>
+                <br/>
+                &#34;救急車を呼んでください&#34;
+                <br/>
+                (규큐샤 오 욘데 쿠다사이)
+                <br/>
+                &#34;구급차를 불러주세요&#34;
+              </div>
+              <a href="#ref-472" class="citation text-xs">[472]</a>
+            </div>
+
+            <div class="bg-blue-100 border-2 border-blue-500 p-6 rounded-xl text-center">
+              <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-white font-bold text-2xl">110</span>
+              </div>
+              <h4 class="text-xl font-bold mb-2">경찰</h4>
+              <p class="text-sm text-gray-600 mb-4">
+                범죄, 사고 신고 시
+              </p>
+              <div class="bg-white p-3 rounded text-xs">
+                <strong>비상 상황:</strong>
+                <br/>
+                범죄, 사고, 분실물 신고
+                <br/>
+                긴급하지 않은 경우: #9110
+              </div>
+              <a href="#ref-472" class="citation text-xs">[472]</a>
+            </div>
+
+            <div class="bg-teal-100 border-2 border-teal-500 p-6 rounded-xl text-center">
+              <div class="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-white font-bold text-2xl">118</span>
+              </div>
+              <h4 class="text-xl font-bold mb-2">해상보안청</h4>
+              <p class="text-sm text-gray-600 mb-4">
+                해상 사고, 구조 요청 시
+              </p>
+              <div class="bg-white p-3 rounded text-xs">
+                <strong>해상 비상:</strong>
+                <br/>
+                보트 사고, 물에 빠진 사람
+                <br/>
+                위험한 해양 생물 발견
+              </div>
+              <a href="#ref-472" class="citation text-xs">[472]</a>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8">5.2 Medical Facilities</h3>
+
+          <div class="bg-white border-2 border-blue-500 rounded-xl p-8 mb-8">
+            <div class="flex items-center gap-4 mb-6">
+              <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-hospital text-white text-xl"></i>
+              </div>
+              <div>
+                <h4 class="text-xl font-bold">沖縄県立宮古病院</h4>
+                <p class="text-gray-600">오키나와 현립 미야코 병원</p>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <h5 class="font-semibold mb-3">병원 정보</h5>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span>연락처:</span>
+                    <span class="font-mono">0980-72-3151</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>위치:</span>
+                    <span>미야코지마 내 주요 의료 시설</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>서비스:</span>
+                    <span>경미한 부상부터 심각한 응급 상황까지</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h5 class="font-semibold mb-3">방문 방법</h5>
+                <div class="space-y-2 text-sm text-gray-600">
+                  <div class="flex items-start gap-2">
+                    <i class="fas fa-phone text-blue-500 mt-1"></i>
+                    <span>생명에 위협이 되는 상황: 119로 구급차 요청</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <i class="fas fa-car text-blue-500 mt-1"></i>
+                    <span>생명에 위협이 되지 않는 경우: 직접 방문 가능</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <i class="fas fa-credit-card text-blue-500 mt-1"></i>
+                    <span>신용카드 또는 충분한 현금 지참 필수</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <a href="#ref-22" class="citation text-xs">[22]</a>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8">5.3 Diplomatic and Tourist Support</h3>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-flag text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">주일 대한민국 대사관</h4>
+              </div>
+
+              <div class="space-y-4 text-sm">
+                <p class="text-gray-700">
+                  심각한 사고, 범죄, 자연 재해 등의 큰 비상 사태 발생 시, 대사관은 지원과 안내를 제공할 수 있습니다.
+                </p>
+
+                <div class="bg-white p-4 rounded-lg">
+                  <h5 class="font-semibold mb-2">제공 서비스</h5>
+                  <ul class="text-gray-600 space-y-1">
+                    <li>• 여권 재발급 지원</li>
+                    <li>• 가족 연락 대행</li>
+                    <li>• 법률 및 의료 정보 제공</li>
+                    <li>• 비상 사태 등록 서비스</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <i class="fas fa-headset text-white"></i>
+                </div>
+                <h4 class="text-lg font-bold">일본 방문자 핫라인</h4>
+              </div>
+
+              <div class="space-y-4 text-sm">
+                <div class="bg-white p-4 rounded-lg text-center">
+                  <div class="text-2xl font-bold text-blue-600 mb-2">050-3816-2787</div>
+                  <div class="text-xs text-gray-600">해외: +81-50-3816-2787</div>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex justify-between">
+                    <span>운영 시간:</span>
+                    <span class="font-semibold">24시간, 365일</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>지원 언어:</span>
+                    <span class="font-semibold">영어, 중국어, 한국어</span>
+                  </div>
+                </div>
+
+                <div class="bg-white p-3 rounded">
+                  <h5 class="font-semibold mb-2">서비스 내용</h5>
+                  <ul class="text-gray-600 space-y-1 text-xs">
+                    <li>• 일반 관광 정보</li>
+                    <li>• 응급 상황 지원</li>
+                    <li>• 의료 시설 정보</li>
+                    <li>• 자연 재해 업데이트</li>
+                  </ul>
+                </div>
+              </div>
+              <a href="#ref-478" class="citation text-xs">[478]</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Recommendations -->
+      <section id="recommendations" class="py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Recommendations: 실행 가능한 체크리스트</h2>
+
+          <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <div class="bg-white p-8 rounded-xl shadow-sm">
+              <h3 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <i class="fas fa-clock text-red-500"></i>
+                출발 전 2주: 시급한 준비
+              </h3>
+
+              <div class="space-y-4">
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1"/>
+                  <div>
+                    <strong>여행자 보험 가입</strong>
+                    <p class="text-sm text-gray-600">Auras Insurance 또는 Allianz Global 통해 의료 및 응급 후송 보장</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1"/>
+                  <div>
+                    <strong>eSIM 구매 및 설치</strong>
+                    <p class="text-sm text-gray-600">Saily를 통해 무제한 5G 데이터 플랜 확보</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1"/>
+                  <div>
+                    <strong>건강 정보 카드 작성</strong>
+                    <p class="text-sm text-gray-600">알레르기, 복용약, 기저 질환 등 영문/일문으로 작성</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1"/>
+                  <div>
+                    <strong>예방접종 확인</strong>
+                    <p class="text-sm text-gray-600">MMR, DPT 등 정기 예방접종 최신 상태 확인</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-sm">
+              <h3 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <i class="fas fa-suitcase text-blue-500"></i>
+                출발 전 1주: 최종 준비
+              </h3>
+
+              <div class="space-y-4">
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1"/>
+                  <div>
+                    <strong>엔화 현금 확보</strong>
+                    <p class="text-sm text-gray-600">한국에서 소액 환전 또는 ATM 인출 계획 수립</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1"/>
+                  <div>
+                    <strong>비상연락처 저장</strong>
+                    <p class="text-sm text-gray-600">119, 110, 118, JNTO 핫라인, 대사관 연락처</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1"/>
+                  <div>
+                    <strong>처방약 준비</strong>
+                    <p class="text-sm text-gray-600">충분한 양 준비, 의사 서신, 원래 용기 보관</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1"/>
+                  <div>
+                    <strong>여행 보험 증명서 출력</strong>
+                    <p class="text-sm text-gray-600">보험 증명서 및 연락처 하드카피 준비</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 border-2 border-blue-500 rounded-xl p-8">
+            <h3 class="text-xl font-bold mb-6 flex items-center gap-3">
+              <i class="fas fa-list-check text-blue-600"></i>
+              출발 당일 최종 확인 사항
+            </h3>
+
+            <div class="grid md:grid-cols-3 gap-6">
+              <div class="space-y-3">
+                <h4 class="font-semibold">문서</h4>
+                <div class="space-y-2 text-sm">
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>여권 (유효기간 확인)</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>항공권</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>숙박 예약 확인서</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>보험 증명서</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <h4 class="font-semibold">금융</h4>
+                <div class="space-y-2 text-sm">
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>엔화 현금 (¥50,000~100,000)</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>국제 카드 (Visa, Mastercard)</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>은행 해외 사용 알림</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <h4 class="font-semibold">기술</h4>
+                <div class="space-y-2 text-sm">
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>eSIM 활성화 확인</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>휴대폰 충전기</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>파워뱅크</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox"/>
+                    <span>어댑터 (일본 콘센트)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold serif mb-8 mt-12">긴급 상황 행동 플로우차트</h3>
+
+          <div class="bg-white border border-gray-200 rounded-xl p-8">
+            <div class="mermaid-container">
+              <div class="mermaid-controls">
+                <button class="mermaid-control-btn zoom-in" title="확대">
+                  <i class="fas fa-search-plus"></i>
+                </button>
+                <button class="mermaid-control-btn zoom-out" title="축소">
+                  <i class="fas fa-search-minus"></i>
+                </button>
+                <button class="mermaid-control-btn reset-zoom" title="초기화">
+                  <i class="fas fa-expand-arrows-alt"></i>
+                </button>
+                <button class="mermaid-control-btn fullscreen" title="전체 화면 보기">
+                  <i class="fas fa-expand"></i>
+                </button>
+              </div>
+              <div class="mermaid">
+                flowchart TD
+                A[&#34;긴급 상황 발생&#34;] --&gt; B{&#34;생명 위협 여부?&#34;}
+                B --&gt;|&#34;예&#34;| C[&#34;119에 전화&#34;]
+                B --&gt;|&#34;아니요&#34;| D{&#34;경찰 필요?&#34;}
+                C --&gt; E[&#34;구급차 출동&#34;]
+                D --&gt;|&#34;예&#34;| F[&#34;110에 전화&#34;]
+                D --&gt;|&#34;아니요&#34;| G{&#34;해상 사고?&#34;}
+                F --&gt; H[&#34;경찰 출동&#34;]
+                G --&gt;|&#34;예&#34;| I[&#34;118에 전화&#34;]
+                G --&gt;|&#34;아니요&#34;| J[&#34;JNTO 핫라인 050-3816-2787&#34;]
+                I --&gt; K[&#34;해상보안청 출동&#34;]
+                J --&gt; L[&#34;다국어 지원 안내&#34;]
+                E --&gt; M[&#34;병원 이송&#34;]
+                H --&gt; M
+                K --&gt; M
+                L --&gt; N[&#34;적절한 조치 안내&#34;]
+                M --&gt; O[&#34;치료 및 보험 처리&#34;]
+                N --&gt; O
+
+                style A fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#7f1d1d
+                style B fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#92400e
+                style C fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#7f1d1d
+                style E fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#7f1d1d
+                style F fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+                style H fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+                style I fill:#cffafe,stroke:#0891b2,stroke-width:2px,color:#164e63
+                style K fill:#cffafe,stroke:#0891b2,stroke-width:2px,color:#164e63
+                style J fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0c4a6e
+                style L fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0c4a6e
+                style M fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
+                style N fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
+                style O fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px,color:#581c87
+                style D fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#92400e
+                style G fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#92400e
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Future Research -->
+      <section id="future-research" class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-4xl font-bold serif mb-12 text-center">Future Research</h2>
+
+          <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+              <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-line text-blue-600"></i>
+                여행 중 모니터링 항목
+              </h3>
+
+              <div class="space-y-4">
+                <div class="bg-white p-4 rounded-lg">
+                  <h4 class="font-semibold mb-2">날씨 및 자연재해</h4>
+                  <p class="text-sm text-gray-600">
+                    태풍, 지진 등 자연재해 발생 시 상황 모니터링 및 대피 절차 확인
+                  </p>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg">
+                  <h4 class="font-semibold mb-2">현지 의료 서비스 품질</h4>
+                  <p class="text-sm text-gray-600">
+                    미야코지마 병원의 실제 서비스 품질, 대기 시간, 의료진 영어 능숙도 등
+                  </p>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg">
+                  <h4 class="font-semibold mb-2">통신 서비스 품질</h4>
+                  <p class="text-sm text-gray-600">
+                    eSIM 제공업체의 실제 네트워크 커버리지 및 속도 측정 데이터
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
+              <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="fas fa-lightbulb text-green-600"></i>
+                향후 개선 사항
+              </h3>
+
+              <div class="space-y-4">
+                <div class="bg-white p-4 rounded-lg">
+                  <h4 class="font-semibold mb-2">실시간 정보 업데이트</h4>
+                  <p class="text-sm text-gray-600">
+                    현지 상황 변화에 따른 실시간 정보 제공 시스템 구축
+                  </p>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg">
+                  <h4 class="font-semibold mb-2">개인화된 추천 시스템</h4>
+                  <p class="text-sm text-gray-600">
+                    여행자의 특정 조건(나이, 건강 상태, 예산 등)에 따른 맞춤형 준비 가이드
+                  </p>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg">
+                  <h4 class="font-semibold mb-2">비상 연락망 통합</h4>
+                  <p class="text-sm text-gray-600">
+                    한국의 가족과 일본 현지 지원 시스템을 연결하는 통합 연락망 구축
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 p-8 rounded-xl">
+            <h3 class="text-xl font-bold mb-6 text-center">지속적인 모니터링이 필요한 항목</h3>
+
+            <div class="grid md:grid-cols-4 gap-4">
+              <div class="text-center">
+                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-cloud-sun text-white text-xl"></i>
+                </div>
+                <h4 class="font-semibold mb-2">날씨</h4>
+                <p class="text-xs text-gray-600">태풍 경로, 강수량, 기온 변화</p>
+              </div>
+
+              <div class="text-center">
+                <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-virus text-white text-xl"></i>
+                </div>
+                <h4 class="font-semibold mb-2">건강</h4>
+                <p class="text-xs text-gray-600">전염병 발생, 해파리 출현</p>
+              </div>
+
+              <div class="text-center">
+                <div class="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-balance-scale text-white text-xl"></i>
+                </div>
+                <h4 class="font-semibold mb-2">법규</h4>
+                <p class="text-xs text-gray-600">입국 규정, 약물 통관 규칙</p>
+              </div>
+
+              <div class="text-center">
+                <div class="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-signal text-white text-xl"></i>
+                </div>
+                <h4 class="font-semibold mb-2">통신</h4>
+                <p class="text-xs text-gray-600">네트워크 상태, 서비스 변경</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 p-6 bg-blue-50 rounded-xl border-l-4 border-blue-500">
+            <h4 class="font-bold text-blue-800 mb-3">데이터 수집 및 피드백</h4>
+            <p class="text-blue-700 text-sm mb-4">
+              본 보고서는 현재까지의 정보를 바탕으로 작성되었습니다. 여행 중 경험한 실제 상황, 문제 해결 방법, 새로운 정보나 변동 사항 등을 지속적으로 수집하여 향후 보고서의 정확성과 실용성을 향상시키고자 합니다.
+            </p>
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <h5 class="font-semibold mb-2">피드백 항목</h5>
+                <ul class="space-y-1 text-blue-600">
+                  <li>• 보험 클레임 처리 경험</li>
+                  <li>• eSIM 서비스 품질</li>
+                  <li>• 현금 사용 빈도</li>
+                  <li>• 의료 시설 접근성</li>
+                </ul>
+              </div>
+              <div>
+                <h5 class="font-semibold mb-2">제안 방법</h5>
+                <ul class="space-y-1 text-blue-600">
+                  <li>• 여행 후 설문 조사</li>
+                  <li>• 실시간 모니터링 앱</li>
+                  <li>• 커뮤니티 피드백</li>
+                  <li>• 현지 정보 업데이트</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- References -->
+      <section class="py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-6">
+          <h2 class="text-2xl font-bold serif mb-8">References</h2>
+          <div class="grid gap-3 text-sm">
+            <div id="ref-10" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[10]</strong>
+              <a href="https://auras.insure/en-KR/travel-insurance-asia/japan/" class="citation">Auras Insurance - Japan Travel Insurance</a>
+            </div>
+            <div id="ref-11" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[11]</strong>
+              <a href="https://www.marketwatch.com/insurance-services/travel-insurance/japan/" class="citation">MarketWatch - Best Travel Insurance for Japan</a>
+            </div>
+            <div id="ref-22" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[22]</strong>
+              <a href="http://barifuri-okinawa.org/bfn/accessible_okinawa/emergency.html" class="citation">沖縄バリフリーネット - Emergency Information</a>
+            </div>
+            <div id="ref-52" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[52]</strong>
+              <a href="#" class="citation">NHK World-Japan - Declining Blood Type Documentation Practice</a>
+            </div>
+            <div id="ref-124" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[124]</strong>
+              <a href="https://travelhealthpro.org.uk/country/114/japan" class="citation">TravelHealthPro - Japan Health Advice</a>
+            </div>
+            <div id="ref-148" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[148]</strong>
+              <a href="https://www.passporthealthusa.com/destination-advice/japan/" class="citation">Passport Health USA - Japan Destination Advice</a>
+            </div>
+            <div id="ref-202" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[202]</strong>
+              <a href="https://auras.insure/en-KR/travel-insurance-asia/japan/" class="citation">Auras Insurance - Travel Insurance Details</a>
+            </div>
+            <div id="ref-206" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[206]</strong>
+              <a href="https://auras.insure/contact_us/" class="citation">Auras Insurance - Contact Information</a>
+            </div>
+            <div id="ref-237" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[237]</strong>
+              <a href="https://www.moneyhero.com.hk/blog/zh/%E6%BD%9B%E6%B0%B4%E4%BF%9D%E9%9A%AA-%E6%BD%9B%E6%B0%B4%E9%A2%A8%E9%9A%AA-%E6%97%85%E9%81%8A%E4%BF%9D%E9%9A%AA%E4%BF%9D%E9%9A%9C" class="citation">MoneyHero - Marine Sports Insurance</a>
+            </div>
+            <div id="ref-241" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[241]</strong>
+              <a href="https://auras.insure/en-KR/travel-insurance-asia/japan/" class="citation">Auras Insurance - Japan Coverage Details</a>
+            </div>
+            <div id="ref-250" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[250]</strong>
+              <a href="https://americanvisitorinsurance.com/travel-insurance/south-korea/travel-to-japan.asp" class="citation">American Visitor Insurance - Travel to Japan</a>
+            </div>
+            <div id="ref-260" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[260]</strong>
+              <a href="https://waegukins.com/healthcare-for-foreign-residents-in-south-korea-travel-insurance/" class="citation">Health Care for Foreign Residents</a>
+            </div>
+            <div id="ref-263" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[263]</strong>
+              <a href="https://auras.insure/en-JP/travel-insurance-asia/south-korea/" class="citation">Auras Insurance - South Korea Coverage</a>
+            </div>
+            <div id="ref-271" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[271]</strong>
+              <a href="https://digitalnomads.world/insurance/global-rescue-insurance-review/" class="citation">Global Rescue Insurance Review</a>
+            </div>
+            <div id="ref-281" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[281]</strong>
+              <a href="https://cybernews.com/best-esim-providers/esim-for-japan/" class="citation">CyberNews - Best eSIM for Japan</a>
+            </div>
+            <div id="ref-284" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[284]</strong>
+              <a href="https://chillaxsim.com/zh-hans/blogs/travel-esim/best-japan-esim-plans-for-travelers-5g-unlimited-budget-options-chillaxsim" class="citation">ChillaxSIM - Japan eSIM Plans</a>
+            </div>
+            <div id="ref-288" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[288]</strong>
+              <a href="https://ninjawifi.com/en/blog/how-to-get-an-esim-for-japan-a-complete-guide-for-travelers" class="citation">Ninja WiFi - eSIM Guide for Japan</a>
+            </div>
+            <div id="ref-290" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[290]</strong>
+              <a href="https://mobimatter.com/blog/best-esim-for-japan-a-comprehensive-guide-for-travelers/" class="citation">MobiMatter - Best eSIM for Japan Guide</a>
+            </div>
+            <div id="ref-317" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[317]</strong>
+              <a href="https://www.japan-guide.com/forum/quereadisplay.html?0+138467" class="citation">Japan Guide Forum - ATM Information</a>
+            </div>
+            <div id="ref-343" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[343]</strong>
+              <a href="https://www.tabione.com/sp/en/course_input/" class="citation">TabiOne - Tour Booking Platform</a>
+            </div>
+            <div id="ref-346" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[346]</strong>
+              <a href="https://www.hoteles.com/en/ho2915297792/hilton-okinawa-miyako-island-resort-miyakojima-japan/" class="citation">Hilton Okinawa Miyako Island Resort</a>
+            </div>
+            <div id="ref-348" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[348]</strong>
+              <a href="https://www.booking.com/hotel/jp/miyakojima-tokyu-resort.en-gb.html" class="citation">Booking.com - Miyakojima Tokyu Resort</a>
+            </div>
+            <div id="ref-352" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[352]</strong>
+              <a href="https://www.japan-guide.com/forum/quereadisplay.html?0+138467" class="citation">Japan Guide Forum - ATM Locations</a>
+            </div>
+            <div id="ref-353" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[353]</strong>
+              <a href="https://visitokinawajapan.com/plan-your-trip/useful-information/" class="citation">Visit Okinawa Japan - Useful Information</a>
+            </div>
+            <div id="ref-355" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[355]</strong>
+              <a href="https://www.japan.travel/en/plan/credit-cards/" class="citation">Japan Travel - Credit Card Information</a>
+            </div>
+            <div id="ref-361" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[361]</strong>
+              <a href="https://www.booking.com/hotel/jp/miyakojima-tokyu-resort.zh-tw.html" class="citation">Booking.com - Miyakojima Tokyu Resort (Chinese)</a>
+            </div>
+            <div id="ref-363" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[363]</strong>
+              <a href="https://the-savvytourist.com/miyakojima-beaches-3-day-itinerary/" class="citation">The Savvy Tourist - Miyakojima Itinerary</a>
+            </div>
+            <div id="ref-365" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[365]</strong>
+              <a href="https://lunitravels.com/miyako-island-family-travel-guide/" class="citation">Luni Travels - Miyako Island Family Guide</a>
+            </div>
+            <div id="ref-369" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[369]</strong>
+              <a href="https://www.therealjapan.com/essential-japan-travel-tips-for-first-time-visitors/" class="citation">The Real Japan - Essential Travel Tips</a>
+            </div>
+            <div id="ref-379" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[379]</strong>
+              <a href="https://www.japan-experience.com/plan-your-trip/to-know/traveling-japan/withdrawing-money" class="citation">Japan Experience - Withdrawing Money Guide</a>
+            </div>
+            <div id="ref-380" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[380]</strong>
+              <a href="https://www.japan.travel/en/plan/currency/" class="citation">Japan Travel - Currency Information</a>
+            </div>
+            <div id="ref-382" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[382]</strong>
+              <a href="https://www.thecurrencyshop.co.nz/guides/currency-in-japan" class="citation">The Currency Shop - Currency in Japan</a>
+            </div>
+            <div id="ref-385" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[385]</strong>
+              <a href="https://www.mint.go.jp/eng/buy-eng/coin-sets-eng/eng_2025anniv.html" class="citation">Japan Mint - 2025 Anniversary Coin Sets</a>
+            </div>
+            <div id="ref-386" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[386]</strong>
+              <a href="https://matcha-jp.com/en/1359" class="citation">Matcha JP - Japanese Currency Guide</a>
+            </div>
+            <div id="ref-387" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[387]</strong>
+              <a href="#" class="citation">Vietjet Air - Japanese Yen Information</a>
+            </div>
+            <div id="ref-390" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[390]</strong>
+              <a href="https://www.boj.or.jp/en/note_tfjgs/note/valid/issue.htm" class="citation">Bank of Japan - Valid Currency Issue</a>
+            </div>
+            <div id="ref-393" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[393]</strong>
+              <a href="https://livejapan.com/en/article-a0000946/" class="citation">Live Japan - Japanese Banknotes and Coins</a>
+            </div>
+            <div id="ref-418" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[418]</strong>
+              <a href="https://visitizumisanojpn.com/en/travel-safely-japan/" class="citation">Visit Izumisano - Travel Safely in Japan</a>
+            </div>
+            <div id="ref-462" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[462]</strong>
+              <a href="https://miyako-pipi.com/en/archives/7075" class="citation">Miyako Pipi - Emergency Information (English)</a>
+            </div>
+            <div id="ref-472" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[472]</strong>
+              <a href="https://visitokinawajapan.com/plan-your-trip/useful-information/enjoying-okinawa-safely/" class="citation">Visit Okinawa Japan - Safety Information</a>
+            </div>
+            <div id="ref-473" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[473]</strong>
+              <a href="#" class="citation">TriptoJapan - Police Consultation Service</a>
+            </div>
+            <div id="ref-475" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[475]</strong>
+              <a href="https://miyako-pipi.com/ko/archives/7075" class="citation">Miyako Pipi - Emergency Information (Korean)</a>
+            </div>
+            <div id="ref-478" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[478]</strong>
+              <a href="https://www.japan.travel/en/plan/hotline/" class="citation">Japan Travel - Visitor Hotline</a>
+            </div>
+            <div id="ref-480" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[480]</strong>
+              <a href="https://www.triptojapan.com/blog/feeling-ill-in-japan-here-s-what-tourists-can-do" class="citation">Trip to Japan - Feeling Ill in Japan</a>
+            </div>
+            <div id="ref-492" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[492]</strong>
+              <a href="https://theworldtravelindex.com/en/asia/japan/miyako-jima/is-miyako-jima-safe" class="citation">The World Travel Index - Miyako Jima Safety</a>
+            </div>
+            <div id="ref-504" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[504]</strong>
+              <a href="https://visitokinawajapan.com/plan-your-trip/when-to-visit-climate-seasons/okinawa-september/" class="citation">Visit Okinawa Japan - September Climate</a>
+            </div>
+            <div id="ref-507" class="p-3 bg-white rounded border-l-4 border-blue-500">
+              <strong>[507]</strong>
+              <a href="https://travel.state.gov/en/international-travel/travel-advisories/japan.html" class="citation">US State Department - Japan Travel Advisory</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="bg-slate-900 text-white py-12">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+          <p class="text-gray-400">
+            본 보고서는 2025년 9월 27일부터 10월 1일까지 미야코지마 여행을 준비하는 커플을 위한 종합 가이드입니다.
+            <br/>
+            모든 정보는 출처를 명시하였으며, 상황에 따라 변동될 수 있습니다.
+          </p>
+          <div class="mt-8 pt-8 border-t border-gray-700">
+            <p class="text-sm text-gray-500">
+              © 2025 Miyakojima Travel Guide. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <script>
+        // Toggle mobile navigation
+        function toggleNav() {
+            const nav = document.querySelector('.nav-fixed');
+            nav.classList.toggle('open');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const nav = document.querySelector('.nav-fixed');
+            const menuButton = document.querySelector('button[onclick="toggleNav()"]');
+            
+            // Check if the click is outside the navigation and the menu button
+            if (nav.classList.contains('open') && 
+                !nav.contains(event.target) && 
+                event.target !== menuButton) {
+                nav.classList.remove('open');
+            }
+        });
+
+        // Initialize Mermaid
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ 
+                startOnLoad: true,
+                theme: 'base',
+                themeVariables: {
+                    primaryColor: '#3b82f6',
+                    primaryTextColor: '#1e293b',
+                    primaryBorderColor: '#1e40af',
+                    lineColor: '#475569',
+                    secondaryColor: '#dbeafe',
+                    tertiaryColor: '#f8fafc',
+                    background: '#ffffff',
+                    mainBkg: '#ffffff',
+                    secondBkg: '#f8fafc',
+                    tertiaryBkg: '#f1f5f9'
+                }
+            });
+            
+            // Initialize mermaid controls for zoom and pan
+            initializeMermaidControls();
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+                
+                // Close mobile nav if open
+                const nav = document.querySelector('.nav-fixed');
+                if (nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                }
+            });
+        });
+
+        // Highlight active section in nav
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-fixed a[href^="#"]');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - 200)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('bg-blue-50', 'text-blue-600');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('bg-blue-50', 'text-blue-600');
+                }
+            });
+        });
+
+        // Initialize Mermaid with zoom and pan functionality
+        function initializeMermaidControls() {
+            const containers = document.querySelectorAll('.mermaid-container');
+
+            containers.forEach(container => {
+            const mermaidElement = container.querySelector('.mermaid');
+            let scale = 1;
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+
+            // 터치 관련 상태
+            let isTouch = false;
+            let touchStartTime = 0;
+            let initialDistance = 0;
+            let initialScale = 1;
+            let isPinching = false;
+
+            // Zoom controls
+            const zoomInBtn = container.querySelector('.zoom-in');
+            const zoomOutBtn = container.querySelector('.zoom-out');
+            const resetBtn = container.querySelector('.reset-zoom');
+            const fullscreenBtn = container.querySelector('.fullscreen');
+
+            function updateTransform() {
+                mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+
+                if (scale > 1) {
+                container.classList.add('zoomed');
+                } else {
+                container.classList.remove('zoomed');
+                }
+
+                mermaidElement.style.cursor = isDragging ? 'grabbing' : 'grab';
+            }
+
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', () => {
+                scale = Math.min(scale * 1.25, 4);
+                updateTransform();
+                });
+            }
+
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', () => {
+                scale = Math.max(scale / 1.25, 0.3);
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+                updateTransform();
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+                });
+            }
+
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+                });
+            }
+
+            // Mouse Events
+            mermaidElement.addEventListener('mousedown', (e) => {
+                if (isTouch) return; // 터치 기기에서는 마우스 이벤트 무시
+
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                mermaidElement.style.cursor = 'grabbing';
+                updateTransform();
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && !isTouch) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseleave', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            // 터치 이벤트와 마우스 이벤트의 충돌 방지
+            function setTouchMode() {
+                isTouch = true;
+                clearTimeout(touchStartTime);
+                touchStartTime = setTimeout(() => {
+                isTouch = false;
+                }, 100);
+            }
+
+            // 터치 이벤트 핸들러
+            function getTouchDistance(touch1, touch2) {
+                return Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+                );
+            }
+
+            mermaidElement.addEventListener('touchstart', (e) => {
+                setTouchMode();
+
+                if (e.touches.length === 1) {
+                // 단일 터치 - 드래그
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+
+                } else if (e.touches.length === 2) {
+                // 두 손가락 - 핀치 줌
+                isPinching = true;
+                isDragging = false;
+
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialDistance = getTouchDistance(touch1, touch2);
+                initialScale = scale;
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && isDragging && !isPinching) {
+                // 단일 터치 드래그
+                const touch = e.touches[0];
+                translateX = touch.clientX - startX;
+                translateY = touch.clientY - startY;
+                updateTransform();
+
+                } else if (e.touches.length === 2 && isPinching) {
+                // 두 손가락 핀치 줌
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = getTouchDistance(touch1, touch2);
+
+                if (initialDistance > 0) {
+                    const newScale = Math.min(Math.max(
+                    initialScale * (currentDistance / initialDistance),
+                    0.3
+                    ), 4);
+                    scale = newScale;
+                    updateTransform();
+                }
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchend', (e) => {
+                // Reset states
+                if (e.touches.length === 0) {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+                } else if (e.touches.length === 1 && isPinching) {
+                // 핀치에서 단일 터치로 변경
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+                }
+
+                setTouchMode();
+            });
+
+            mermaidElement.addEventListener('touchcancel', (e) => {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+                setTouchMode();
+            });
+
+            // Enhanced wheel zoom with better center point handling
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = container.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = Math.min(Math.max(scale * delta, 0.3), 4);
+
+                // Adjust translation to zoom towards center
+                if (newScale !== scale) {
+                const scaleDiff = newScale / scale;
+                translateX = translateX * scaleDiff;
+                translateY = translateY * scaleDiff;
+                scale = newScale;
+
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+
+                updateTransform();
+                }
+            });
+
+            // Initialize display
+            updateTransform();
+            });
+        }
+
+        // Add loading animation for images
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                img.addEventListener('load', function() {
+                    this.style.opacity = '1';
+                });
+                img.style.opacity = '0';
+                img.style.transition = 'opacity 0.3s ease';
+            });
+        });
+    </script>
+  
+
+</body></html>
