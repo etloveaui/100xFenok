@@ -6,110 +6,84 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
-        /* Mermaid diagram styling */
-        .mermaid-container {
-            display: flex;
-            justify-content: center;
-            min-height: 300px;
-            max-height: 800px;
-            background: #ffffff;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 30px;
-            margin: 30px 0;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            position: relative;
-            overflow: hidden;
+      /* Styles for the new interactive floor guide */
+      .floor-guide-tabs {
+        display: none;
+      }
+      @media (min-width: 768px) {
+        .floor-guide-tabs {
+          display: flex;
+          border-bottom: 1px solid #e4d4bd; /* sand-400 */
         }
+        .floor-guide-accordion {
+          display: none;
+        }
+      }
+      .floor-tab {
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+        color: #9a7a58; /* sand-800 */
+      }
+      .floor-tab:hover {
+        background-color: #fbf7f3; /* sand-100 */
+      }
+      .floor-tab.active {
+        color: #0369a1; /* ocean-700 */
+        border-bottom-color: #0ea5e9; /* ocean-500 */
+        font-weight: 600;
+      }
+      .floor-content {
+        display: none;
+        padding: 1.5rem;
+        background-color: #ffffff;
+        border: 1px solid #f5eee6; /* sand-200 */
+        border-top: none;
+        border-radius: 0 0 0.75rem 0.75rem;
+      }
+      .floor-content.active {
+        display: block;
+      }
 
-        .mermaid-container .mermaid {
-            width: 100%;
-            max-width: 100%;
-            height: 100%;
-            cursor: grab;
-            transition: transform 0.3s ease;
-            transform-origin: center center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            touch-action: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        .mermaid-container .mermaid svg {
-            max-width: 100%;
-            height: 100%;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .mermaid-container .mermaid:active {
-            cursor: grabbing;
-        }
-
-        .mermaid-container.zoomed .mermaid {
-            height: 100%;
-            width: 100%;
-            cursor: grab;
-        }
-
-        .mermaid-controls {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            display: flex;
-            gap: 10px;
-            z-index: 20;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 8px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .mermaid-control-btn {
-            background: #ffffff;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            padding: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #374151;
-            font-size: 14px;
-            min-width: 36px;
-            height: 36px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .mermaid-control-btn:hover {
-            background: #f8fafc;
-            border-color: #3b82f6;
-            color: #3b82f6;
-            transform: translateY(-1px);
-        }
-
-    .mermaid-control-btn:active {
-        transform: scale(0.95);
-    }
-
-    @media (max-width: 1024px) {
-        .mermaid-control-btn:not(.reset-zoom) {
-            display: none;
-        }
-        .mermaid-controls {
-            top: auto;
-            bottom: 15px;
-            right: 15px;
-        }
-    }
-</style>
+      /* Accordion styles */
+      .accordion-item {
+        border-bottom: 1px solid #e4d4bd; /* sand-400 */
+      }
+      .accordion-header {
+        width: 100%;
+        padding: 1rem;
+        background-color: #ffffff;
+        border: none;
+        text-align: left;
+        font-size: 1.125rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #075985; /* ocean-800 */
+      }
+      .accordion-header:hover {
+        background-color: #fbf7f3; /* sand-100 */
+      }
+      .accordion-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        background-color: #fdfcfb; /* sand-50 */
+      }
+      .accordion-content .content-inner {
+        padding: 1rem;
+      }
+      .accordion-icon {
+        transition: transform 0.3s ease;
+      }
+      .accordion-item.active .accordion-icon {
+        transform: rotate(180deg);
+      }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -325,114 +299,12 @@
         <div class="max-w-6xl mx-auto px-8">
           <h2 class="font-serif text-4xl font-bold text-ocean-800 mb-12 text-center">층별 시설 안내</h2>
 
-          <!-- Floor Overview with Mermaid -->
-          <div class="bg-white rounded-2xl p-8 shadow-lg mb-12">
-            <h3 class="font-serif text-2xl font-semibold text-ocean-700 mb-6 text-center">호텔 구조 도면</h3>
-            <div class="mermaid-container">
-              <div class="mermaid-controls">
-                <button class="mermaid-control-btn zoom-in" title="확대">
-                  <i class="fas fa-search-plus"></i>
-                </button>
-                <button class="mermaid-control-btn zoom-out" title="축소">
-                  <i class="fas fa-search-minus"></i>
-                </button>
-                <button class="mermaid-control-btn reset-zoom" title="원래 크기">
-                  <i class="fas fa-expand-arrows-alt"></i>
-                </button>
-                <button class="mermaid-control-btn fullscreen" title="전체 화면 보기">
-                  <i class="fas fa-expand"></i>
-                </button>
-              </div>
-              <div class="mermaid" id="hotel-floor-diagram">
-                graph TD
-                A[&#34;8층 - 루프탑&#34;] --&gt; B[&#34;유나이 바
-                <br/>Rooftop Bar&#34;]
-                A --&gt; C[&#34;루프탑 채플&#34;]
-
-                D[&#34;7층 - 이그제큐티브&#34;] --&gt; E[&#34;이그제큐티브 라운지&#34;]
-                D --&gt; F[&#34;이그제큐티브 풀
-                <br/>성인 전용&#34;]
-                D --&gt; G[&#34;이그제큐티브 룸&#34;]
-                D --&gt; H[&#34;스위트 룸&#34;]
-
-                I[&#34;3-6층 - 객실&#34;] --&gt; J[&#34;디럭스 룸
-                <br/>35㎡&#34;]
-                I --&gt; K[&#34;프리미엄 룸
-                <br/>오션뷰&#34;]
-                I --&gt; L[&#34;일부 스위트 룸&#34;]
-
-                M[&#34;2층 - 다이닝&#34;] --&gt; N[&#34;이졸레타
-                <br/>이탈리안 레스토랑&#34;]
-                M --&gt; O[&#34;사료
-                <br/>로비 라운지&#34;]
-
-                P[&#34;1층 - 메인&#34;] --&gt; Q[&#34;로비 &amp; 프론트 데스크&#34;]
-                P --&gt; R[&#34;아주르
-                <br/>올데이 다이닝&#34;]
-                P --&gt; S[&#34;츠비라 스파&#34;]
-                P --&gt; T[&#34;피트니스 센터
-                <br/>24시간&#34;]
-                P --&gt; U[&#34;실내 수영장&#34;]
-                P --&gt; V[&#34;키즈 클럽&#34;]
-
-                W[&#34;외부 시설&#34;] --&gt; X[&#34;야외 수영장 3개&#34;]
-                W --&gt; Y[&#34;전용 해변
-                <br/>미야코 선셋 비치&#34;]
-                W --&gt; Z[&#34;주차장
-                <br/>300대 수용&#34;]
-
-                style A fill:#f97316,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
-                style D fill:#0ea5e9,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
-                style I fill:#fbbf24,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
-                style M fill:#10b981,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
-                style P fill:#7c3aed,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
-                style W fill:#059669,stroke:#ffffff,stroke-width:3px,color:#ffffff,font-weight:bold
-                style B fill:#fed7aa,stroke:#f97316,stroke-width:2px,color:#7c2d12,font-weight:600
-                style C fill:#fed7aa,stroke:#f97316,stroke-width:2px,color:#7c2d12,font-weight:600
-                style E fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
-                style F fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
-                style G fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
-                style H fill:#dbeafe,stroke:#0ea5e9,stroke-width:2px,color:#1e40af,font-weight:600
-                style J fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
-                style K fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
-                style L fill:#fef3c7,stroke:#fbbf24,stroke-width:2px,color:#92400e,font-weight:600
-                style N fill:#d1fae5,stroke:#10b981,stroke-width:2px,color:#065f46,font-weight:600
-                style O fill:#d1fae5,stroke:#10b981,stroke-width:2px,color:#065f46,font-weight:600
-                style Q fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
-                style R fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
-                style S fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
-                style T fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
-                style U fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
-                style V fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6,font-weight:600
-                style X fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
-                style Y fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
-                style Z fill:#a7f3d0,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:600
-              </div>
-            </div>
-            <div class="bg-sand-50 p-4 rounded-lg mt-4">
-              <p class="text-sm text-gray-600 mb-2">
-                <i class="fas fa-info-circle text-ocean-500 mr-2"></i>
-                <strong>사용 방법:</strong> 마우스로 드래그하여 이동, 버튼으로 확대/축소, 더블클릭으로 특정 영역 선택
-              </p>
-              <div class="flex items-center space-x-4 text-xs text-gray-500">
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-coral-500 rounded mr-2"></div>
-                  <span>루프탑 시설</span>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-ocean-500 rounded mr-2"></div>
-                  <span>이그제큐티브 시설</span>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-yellow-400 rounded mr-2"></div>
-                  <span>객실 층</span>
-                </div>
-              </div>
-            </div>
+          <div id="floor-guide-interactive" class="w-full mx-auto">
+            <!-- Floor content will be injected here by JavaScript -->
           </div>
 
           <!-- Detailed Floor Information -->
-          <div class="grid lg:grid-cols-2 gap-8">
+          <div class="grid lg:grid-cols-2 gap-8 mt-12">
             <!-- 1st Floor -->
             <div class="bg-white rounded-xl p-6 shadow-lg">
               <div class="flex items-center mb-4">
@@ -1149,276 +1021,6 @@
     </div>
 
     <script>
-        // Initialize Mermaid with custom configuration
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'base',
-            themeVariables: {
-                primaryColor: '#f0f9ff',
-                primaryTextColor: '#0c4a6e',
-                primaryBorderColor: '#0369a1',
-                lineColor: '#075985',
-                sectionBkgColor: '#ffffff',
-                altSectionBkgColor: '#f8fafc',
-                gridColor: '#e2e8f0',
-                secondaryColor: '#fff7ed',
-                tertiaryColor: '#fdfcfb',
-                background: '#ffffff',
-                mainBkg: '#ffffff',
-                secondBkg: '#f0f9ff',
-                tertiaryColor: '#f8fafc'
-            },
-            flowchart: {
-                useMaxWidth: false,
-                htmlLabels: true,
-                curve: 'basis',
-                padding: 20,
-                nodeSpacing: 50,
-                rankSpacing: 50
-            },
-            fontFamily: 'Inter, sans-serif',
-            fontSize: 13
-        });
-
-        // Initialize Mermaid Controls for zoom and pan
-        function initializeMermaidControls() {
-            const containers = document.querySelectorAll('.mermaid-container');
-
-            containers.forEach(container => {
-            const mermaidElement = container.querySelector('.mermaid');
-            let scale = 1;
-            let isDragging = false;
-            let startX, startY, translateX = 0, translateY = 0;
-
-            // 터치 관련 상태 추적
-            let isTouch = false;
-            let touchStartTime = 0;
-            let initialDistance = 0;
-            let initialScale = 1;
-            let isPinching = false;
-
-            // Zoom controls
-            const zoomInBtn = container.querySelector('.zoom-in');
-            const zoomOutBtn = container.querySelector('.zoom-out');
-            const resetBtn = container.querySelector('.reset-zoom');
-            const fullscreenBtn = container.querySelector('.fullscreen');
-
-            function updateTransform() {
-                mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-
-                if (scale > 1) {
-                container.classList.add('zoomed');
-                } else {
-                container.classList.remove('zoomed');
-                }
-
-                mermaidElement.style.cursor = isDragging ? 'grabbing' : 'grab';
-            }
-
-            if (zoomInBtn) {
-                zoomInBtn.addEventListener('click', () => {
-                scale = Math.min(scale * 1.25, 4);
-                updateTransform();
-                });
-            }
-
-            if (zoomOutBtn) {
-                zoomOutBtn.addEventListener('click', () => {
-                scale = Math.max(scale / 1.25, 0.3);
-                if (scale <= 1) {
-                    translateX = 0;
-                    translateY = 0;
-                }
-                updateTransform();
-                });
-            }
-
-            if (resetBtn) {
-                resetBtn.addEventListener('click', () => {
-                scale = 1;
-                translateX = 0;
-                translateY = 0;
-                updateTransform();
-                });
-            }
-
-            if (fullscreenBtn) {
-                fullscreenBtn.addEventListener('click', () => {
-                if (container.requestFullscreen) {
-                    container.requestFullscreen();
-                } else if (container.webkitRequestFullscreen) {
-                    container.webkitRequestFullscreen();
-                } else if (container.msRequestFullscreen) {
-                    container.msRequestFullscreen();
-                }
-                });
-            }
-
-            // Mouse Events
-            mermaidElement.addEventListener('mousedown', (e) => {
-                if (isTouch) return; // 터치 기기에서는 마우스 이벤트 무시
-
-                isDragging = true;
-                startX = e.clientX - translateX;
-                startY = e.clientY - translateY;
-                mermaidElement.style.cursor = 'grabbing';
-                updateTransform();
-                e.preventDefault();
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isDragging && !isTouch) {
-                translateX = e.clientX - startX;
-                translateY = e.clientY - startY;
-                updateTransform();
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                if (isDragging && !isTouch) {
-                isDragging = false;
-                mermaidElement.style.cursor = 'grab';
-                updateTransform();
-                }
-            });
-
-            document.addEventListener('mouseleave', () => {
-                if (isDragging && !isTouch) {
-                isDragging = false;
-                mermaidElement.style.cursor = 'grab';
-                updateTransform();
-                }
-            });
-
-            // 터치 이벤트 핸들러
-            const getTouchDistance = (touch1, touch2) => {
-                return Math.hypot(
-                touch2.clientX - touch1.clientX,
-                touch2.clientY - touch1.clientY
-                );
-            };
-
-            mermaidElement.addEventListener('touchstart', (e) => {
-                isTouch = true;
-                touchStartTime = Date.now();
-
-                if (e.touches.length === 1) {
-                // 단일 터치 - 드래그
-                isPinching = false;
-                isDragging = true;
-
-                const touch = e.touches[0];
-                startX = touch.clientX - translateX;
-                startY = touch.clientY - translateY;
-
-                } else if (e.touches.length === 2) {
-                // 두 손가락 - 핀치 줌
-                isPinching = true;
-                isDragging = false;
-
-                const touch1 = e.touches[0];
-                const touch2 = e.touches[1];
-                initialDistance = getTouchDistance(touch1, touch2);
-                initialScale = scale;
-                }
-
-                e.preventDefault();
-            }, { passive: false });
-
-            mermaidElement.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1 && isDragging && !isPinching) {
-                // 단일 터치 드래그
-                const touch = e.touches[0];
-                translateX = touch.clientX - startX;
-                translateY = touch.clientY - startY;
-                updateTransform();
-
-                } else if (e.touches.length === 2 && isPinching) {
-                // 두 손가락 핀치 줌
-                const touch1 = e.touches[0];
-                const touch2 = e.touches[1];
-                const currentDistance = getTouchDistance(touch1, touch2);
-
-                if (initialDistance > 0) {
-                    const newScale = Math.min(Math.max(
-                    initialScale * (currentDistance / initialDistance),
-                    0.3
-                    ), 4);
-                    scale = newScale;
-                    updateTransform();
-                }
-                }
-
-                e.preventDefault();
-            }, { passive: false });
-
-            mermaidElement.addEventListener('touchend', (e) => {
-                // 상태 초기화
-                if (e.touches.length === 0) {
-                isDragging = false;
-                isPinching = false;
-                initialDistance = 0;
-
-                // 마우스 이벤트를 다시 활성화하기 위한 지연
-                setTimeout(() => {
-                    isTouch = false;
-                }, 100);
-                } else if (e.touches.length === 1 && isPinching) {
-                // 두 손가락에서 한 손가락으로 변경 - 드래그 모드로 전환
-                isPinching = false;
-                isDragging = true;
-
-                const touch = e.touches[0];
-                startX = touch.clientX - translateX;
-                startY = touch.clientY - translateY;
-                }
-
-                updateTransform();
-            });
-
-            mermaidElement.addEventListener('touchcancel', (e) => {
-                isDragging = false;
-                isPinching = false;
-                initialDistance = 0;
-
-                setTimeout(() => {
-                isTouch = false;
-                }, 100);
-
-                updateTransform();
-            });
-
-            // Enhanced wheel zoom with better center point handling
-            container.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const rect = container.getBoundingClientRect();
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-
-                const delta = e.deltaY > 0 ? 0.9 : 1.1;
-                const newScale = Math.min(Math.max(scale * delta, 0.3), 4);
-
-                // Adjust translation to zoom towards center
-                if (newScale !== scale) {
-                const scaleDiff = newScale / scale;
-                translateX = translateX * scaleDiff;
-                translateY = translateY * scaleDiff;
-                scale = newScale;
-
-                if (scale <= 1) {
-                    translateX = 0;
-                    translateY = 0;
-                }
-
-                updateTransform();
-                }
-            });
-
-            // Initialize display
-            updateTransform();
-            });
-        }
-
         // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -1481,10 +1083,189 @@
             });
         });
 
-        // Initialize Mermaid controls
-        initializeMermaidControls();
+        // Interactive Floor Guide Logic
+        const floorData = [
+            {
+                title: "8층 - 루프탑",
+                color: "coral",
+                items: [
+                    { name: "유나이 바", desc: "Rooftop Bar", icon: "fas fa-cocktail" },
+                    { name: "루프탑 채플", desc: "Rooftop Chapel", icon: "fas fa-church" }
+                ]
+            },
+            {
+                title: "7층 - 이그제큐티브",
+                color: "ocean",
+                items: [
+                    { name: "이그제큐티브 라운지", desc: "Exclusive lounge access", icon: "fas fa-crown" },
+                    { name: "이그제큐티브 풀", desc: "성인 전용", icon: "fas fa-swimming-pool" },
+                    { name: "이그제큐티브 룸", desc: "Executive rooms", icon: "fas fa-bed" },
+                    { name: "스위트 룸", desc: "Spacious suites", icon: "fas fa-person-booth" }
+                ]
+            },
+            {
+                title: "3-6층 - 객실",
+                color: "yellow",
+                items: [
+                    { name: "디럭스 룸", desc: "35㎡", icon: "fas fa-bed" },
+                    { name: "프리미엄 룸", desc: "오션뷰", icon: "fas fa-water" },
+                    { name: "일부 스위트 룸", desc: "Selected suites", icon: "fas fa-person-booth" }
+                ]
+            },
+            {
+                title: "2층 - 다이닝",
+                color: "green",
+                items: [
+                    { name: "이졸레타", desc: "이탈리안 레스토랑", icon: "fas fa-pizza-slice" },
+                    { name: "사료", desc: "로비 라운지", icon: "fas fa-coffee" }
+                ]
+            },
+            {
+                title: "1층 - 메인",
+                color: "purple",
+                items: [
+                    { name: "로비 & 프론트 데스크", desc: "Lobby & Front Desk", icon: "fas fa-concierge-bell" },
+                    { name: "아주르", desc: "올데이 다이닝", icon: "fas fa-utensils" },
+                    { name: "츠비라 스파", desc: "Tsubira Spa", icon: "fas fa-spa" },
+                    { name: "피트니스 센터", desc: "24시간", icon: "fas fa-dumbbell" },
+                    { name: "실내 수영장", desc: "Indoor Pool", icon: "fas fa-swimmer" },
+                    { name: "키즈 클럽", desc: "Kids Club", icon: "fas fa-child" }
+                ]
+            },
+            {
+                title: "외부 시설",
+                color: "teal",
+                items: [
+                    { name: "야외 수영장 3개", desc: "3 Outdoor Pools", icon: "fas fa-umbrella-beach" },
+                    { name: "전용 해변", desc: "미야코 선셋 비치", icon: "fas fa-umbrella-beach" },
+                    { name: "주차장", desc: "300대 수용", icon: "fas fa-car" }
+                ]
+            }
+        ];
+
+        const guideContainer = document.getElementById('floor-guide-interactive');
+
+        function createFloorGuide() {
+            const colorMap = {
+                coral: { bg: 'bg-coral-50', text: 'text-coral-800', border: 'border-coral-500', icon: 'text-coral-500' },
+                ocean: { bg: 'bg-ocean-50', text: 'text-ocean-800', border: 'border-ocean-500', icon: 'text-ocean-500' },
+                yellow: { bg: 'bg-yellow-50', text: 'text-yellow-800', border: 'border-yellow-500', icon: 'text-yellow-500' },
+                green: { bg: 'bg-green-50', text: 'text-green-800', border: 'border-green-500', icon: 'text-green-500' },
+                purple: { bg: 'bg-purple-50', text: 'text-purple-800', border: 'border-purple-500', icon: 'text-purple-500' },
+                teal: { bg: 'bg-teal-50', text: 'text-teal-800', border: 'border-teal-500', icon: 'text-teal-500' },
+            };
+
+            // Create Tabs for Desktop
+            const tabsHtml = `
+                <div class="floor-guide-tabs">
+                    ${floorData.map((floor, index) => `
+                        <button class="floor-tab ${index === 0 ? 'active' : ''}" data-target="floor-${index}">${floor.title}</button>
+                    `).join('')}
+                </div>
+            `;
+
+            // Create Content Panels
+            const contentHtml = `
+                <div class="floor-guide-content-wrapper">
+                    ${floorData.map((floor, index) => `
+                        <div id="floor-${index}" class="floor-content ${index === 0 ? 'active' : ''}">
+                            <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${floor.items.map(item => `
+                                    <li class="flex items-start p-4 rounded-lg transition-colors hover:bg-sand-50">
+                                        <i class="${item.icon} ${colorMap[floor.color].icon} text-xl w-8 text-center mr-4 mt-1"></i>
+                                        <div>
+                                            <h4 class="font-bold ${colorMap[floor.color].text}">${item.name}</h4>
+                                            <p class="text-sm text-gray-600">${item.desc}</p>
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Create Accordion for Mobile
+            const accordionHtml = `
+                <div class="floor-guide-accordion space-y-2">
+                    ${floorData.map((floor, index) => `
+                        <div class="accordion-item bg-white rounded-lg shadow-sm overflow-hidden ${index === 0 ? 'active' : ''}">
+                            <button class="accordion-header">
+                                <span>${floor.title}</span>
+                                <i class="fas fa-chevron-down accordion-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="content-inner">
+                                    <ul class="space-y-4">
+                                        ${floor.items.map(item => `
+                                            <li class="flex items-start">
+                                                <i class="${item.icon} ${colorMap[floor.color].icon} text-lg w-6 text-center mr-3 mt-1"></i>
+                                                <div>
+                                                    <h4 class="font-semibold ${colorMap[floor.color].text}">${item.name}</h4>
+                                                    <p class="text-sm text-gray-500">${item.desc}</p>
+                                                </div>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            guideContainer.innerHTML = tabsHtml + contentHtml + accordionHtml;
+        }
+
+        function initializeFloorGuide() {
+            createFloorGuide();
+
+            // Tab logic
+            const tabs = document.querySelectorAll('.floor-tab');
+            const contents = document.querySelectorAll('.floor-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.target).classList.add('active');
+                });
+            });
+
+            // Accordion logic
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            accordionItems.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                const content = item.querySelector('.accordion-content');
+
+                header.addEventListener('click', () => {
+                    const isActive = item.classList.contains('active');
+
+                    // Optional: close other accordions
+                    // accordionItems.forEach(i => {
+                    //    i.classList.remove('active');
+                    //    i.querySelector('.accordion-content').style.maxHeight = null;
+                    // });
+
+                    if (!isActive) {
+                        item.classList.add('active');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    } else {
+                        item.classList.remove('active');
+                        content.style.maxHeight = null;
+                    }
+                });
+
+                // Set initial state for the first item
+                if (item.classList.contains('active')) {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        }
+
+        initializeFloorGuide();
+
     </script>
-
-
-
 </body></html>
