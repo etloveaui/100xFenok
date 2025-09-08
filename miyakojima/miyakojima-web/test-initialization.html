@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미야코지마 앱 초기화 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .module-status {
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            background: white;
+        }
+        
+        .module-status.ready {
+            background: #e8f5e8;
+            border-color: #4caf50;
+        }
+        
+        .module-status.loading {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+        
+        .module-status.failed {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+        
+        .module-status.optional {
+            opacity: 0.7;
+        }
+        
+        .module-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .module-deps {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .module-error {
+            color: #f44336;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .console {
+            background: #1e1e1e;
+            color: #ffffff;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .log-info { color: #4fc3f7; }
+        .log-warn { color: #ffb74d; }
+        .log-error { color: #f44336; }
+        .log-success { color: #81c784; }
+        
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #2196f3;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .initialization-progress {
+            background: #f0f0f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #81c784);
+            transition: width 0.3s ease;
+        }
+        
+        .section {
+            display: none;
+            padding: 20px 0;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .nav-item {
+            padding: 8px 16px;
+            margin: 0 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #f0f0f0;
+        }
+        
+        .nav-item.active {
+            background: #2196f3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏝️ 미야코지마 앱 초기화 테스트</h1>
+        
+        <div class="initialization-progress">
+            <div class="progress-header">
+                <span>초기화 진행률: </span>
+                <span id="progress-text">0/0 모듈</span>
+                <span id="progress-percentage">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div id="current-module" class="current-module"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="refresh-status" class="btn-primary">상태 새로고침</button>
+            <button id="clear-console" class="btn-secondary">콘솔 지우기</button>
+            <button id="reinitialize" class="btn-secondary">다시 초기화</button>
+            <button id="export-log" class="btn-secondary">로그 내보내기</button>
+        </div>
+        
+        <!-- Navigation -->
+        <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+            <div class="nav-item active" data-section="status">모듈 상태</div>
+            <div class="nav-item" data-section="dashboard">대시보드</div>
+            <div class="nav-item" data-section="console">콘솔</div>
+        </div>
+        
+        <!-- Status Section -->
+        <div id="status-section" class="section active">
+            <h3>모듈 초기화 상태</h3>
+            <div id="status-grid" class="status-grid">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </div>
+        
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section">
+            <h3>앱 대시보드 (미니 버전)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                <div class="module-status">
+                    <div class="module-name">현재 위치</div>
+                    <div id="current-location">위치 확인 중...</div>
+                    <div id="location-detail" style="font-size: 12px; color: #666; margin-top: 4px;"></div>
+                </div>
+                
+                <div class="module-status">
+                    <div class="module-name">오늘 예산</div>
+                    <div id="today-budget">로딩 중...</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                        사용: <span id="today-spent">-</span>
+                    </div>
+                </div>
+                
+                <div class="module-status">
+                    <div class="module-name">추천 장소</div>
+                    <div id="recommendations-count">-</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">근처 POI</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button id="test-functions" class="btn-primary">기능 테스트</button>
+            </div>
+        </div>
+        
+        <!-- Console Section -->
+        <div id="console-section" class="section">
+            <h3>초기화 로그</h3>
+            <div id="console-output" class="console">
+                초기화 시작을 기다리는 중...
+            </div>
+        </div>
+    </div>
+
+    <!-- 스크립트 로딩 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/budget.js"></script>
+    <script src="js/location.js"></script>
+    <script src="js/poi.js"></script>
+    <script src="js/itinerary.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        // 콘솔 로그 캡처
+        const originalConsole = {
+            log: console.log,
+            info: console.info,
+            warn: console.warn,
+            error: console.error
+        };
+        
+        const consoleOutput = document.getElementById('console-output');
+        const logs = [];
+        
+        function formatTimestamp() {
+            return new Date().toLocaleTimeString();
+        }
+        
+        function addToConsole(level, args) {
+            const timestamp = formatTimestamp();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push({ timestamp, level, message: logEntry });
+            
+            const logElement = document.createElement('div');
+            logElement.className = `log-${level}`;
+            logElement.textContent = logEntry;
+            
+            if (consoleOutput) {
+                consoleOutput.appendChild(logElement);
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            }
+        }
+        
+        // 콘솔 오버라이드
+        console.log = (...args) => {
+            originalConsole.log.apply(console, args);
+            addToConsole('info', args);
+        };
+        
+        console.info = (...args) => {
+            originalConsole.info.apply(console, args);
+            addToConsole('info', args);
+        };
+        
+        console.warn = (...args) => {
+            originalConsole.warn.apply(console, args);
+            addToConsole('warn', args);
+        };
+        
+        console.error = (...args) => {
+            originalConsole.error.apply(console, args);
+            addToConsole('error', args);
+        };
+        
+        // 모듈 상태 업데이트
+        function updateModuleStatus() {
+            const statusGrid = document.getElementById('status-grid');
+            const progressText = document.getElementById('progress-text');
+            const progressPercentage = document.getElementById('progress-percentage');
+            const progressFill = document.getElementById('progress-fill');
+            const currentModuleSpan = document.getElementById('current-module');
+            
+            if (!window.debugApp) {
+                statusGrid.innerHTML = '<div class="module-status loading"><div class="module-name">초기화 대기 중...</div></div>';
+                return;
+            }
+            
+            const status = window.debugApp.getInitializationStatus();
+            const modules = window.debugApp.getModules();
+            
+            if (!status || !modules) {
+                statusGrid.innerHTML = '<div class="module-status loading"><div class="module-name">상태 정보 없음</div></div>';
+                return;
+            }
+            
+            statusGrid.innerHTML = '';
+            
+            let totalModules = 0;
+            let readyModules = 0;
+            let currentModule = '';
+            
+            for (const [name, moduleInfo] of modules) {
+                totalModules++;
+                
+                const moduleDiv = document.createElement('div');
+                moduleDiv.className = `module-status ${moduleInfo.status}`;
+                
+                if (moduleInfo.optional) {
+                    moduleDiv.classList.add('optional');
+                }
+                
+                if (moduleInfo.status === 'ready') {
+                    readyModules++;
+                } else if (moduleInfo.status === 'loading') {
+                    currentModule = name;
+                }
+                
+                moduleDiv.innerHTML = `
+                    <div class="module-name">
+                        ${name}
+                        ${moduleInfo.optional ? ' (선택적)' : ''}
+                        ${moduleInfo.status === 'loading' ? '<div class="spinner"></div>' : ''}
+                    </div>
+                    <div class="module-deps">
+                        ${moduleInfo.dependencies?.length ? 
+                            `의존성: ${moduleInfo.dependencies.join(', ')}` : 
+                            '의존성 없음'
+                        }
+                    </div>
+                    <div style="font-size: 12px; color: #666;">
+                        상태: ${moduleInfo.status}
+                        ${moduleInfo.retryCount > 0 ? ` (재시도: ${moduleInfo.retryCount})` : ''}
+                    </div>
+                    ${moduleInfo.error ? `<div class="module-error">오류: ${moduleInfo.error}</div>` : ''}
+                `;
+                
+                statusGrid.appendChild(moduleDiv);
+            }
+            
+            // 진행률 업데이트
+            const percentage = Math.round((readyModules / totalModules) * 100);
+            progressText.textContent = `${readyModules}/${totalModules} 모듈`;
+            progressPercentage.textContent = `${percentage}%`;
+            progressFill.style.width = `${percentage}%`;
+            
+            if (currentModule) {
+                currentModuleSpan.textContent = `현재 초기화 중: ${currentModule}`;
+            } else if (readyModules === totalModules) {
+                currentModuleSpan.textContent = '모든 모듈 초기화 완료!';
+                currentModuleSpan.style.color = '#4caf50';
+            }
+        }
+        
+        // 네비게이션
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const section = e.target.dataset.section;
+                    
+                    // 모든 네비게이션 아이템 비활성화
+                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                    // 모든 섹션 숨기기
+                    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+                    
+                    // 클릭된 네비게이션 활성화
+                    e.target.classList.add('active');
+                    // 해당 섹션 표시
+                    document.getElementById(`${section}-section`).classList.add('active');
+                });
+            });
+        }
+        
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            document.getElementById('refresh-status').addEventListener('click', updateModuleStatus);
+            
+            document.getElementById('clear-console').addEventListener('click', () => {
+                consoleOutput.innerHTML = '콘솔이 지워졌습니다.\n';
+                logs.length = 0;
+            });
+            
+            document.getElementById('reinitialize').addEventListener('click', () => {
+                if (window.debugApp) {
+                    window.debugApp.reinitialize();
+                } else {
+                    location.reload();
+                }
+            });
+            
+            document.getElementById('export-log').addEventListener('click', () => {
+                const logText = logs.map(log => log.message).join('\n');
+                const blob = new Blob([logText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `miyakojima-init-log-${new Date().toISOString().slice(0, 19)}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+            
+            document.getElementById('test-functions')?.addEventListener('click', testAppFunctions);
+        }
+        
+        // 앱 기능 테스트
+        function testAppFunctions() {
+            console.log('=== 앱 기능 테스트 시작 ===');
+            
+            try {
+                // 위치 테스트
+                if (window.locationManager) {
+                    console.log('✅ LocationManager 사용 가능');
+                    const locationInfo = window.locationManager.getCurrentLocationInfo();
+                    console.log('현재 위치 정보:', locationInfo);
+                } else {
+                    console.warn('⚠️ LocationManager 없음');
+                }
+                
+                // 예산 테스트
+                if (window.budgetManager) {
+                    console.log('✅ BudgetManager 사용 가능');
+                    const todayExpenses = window.budgetManager.getTodayExpenses();
+                    console.log('오늘 지출:', todayExpenses);
+                } else {
+                    console.warn('⚠️ BudgetManager 없음');
+                }
+                
+                // POI 테스트
+                if (window.poiManager) {
+                    console.log('✅ POIManager 사용 가능');
+                    console.log('POI 데이터:', window.poiManager.pois?.length || 0, '개');
+                } else {
+                    console.warn('⚠️ POIManager 없음');
+                }
+                
+                // 일정 테스트
+                if (window.itinerary) {
+                    console.log('✅ ItineraryManager 사용 가능');
+                    const stats = window.itinerary.getScheduleStats();
+                    console.log('일정 통계:', stats);
+                } else {
+                    console.warn('⚠️ ItineraryManager 없음');
+                }
+                
+                console.log('=== 테스트 완료 ===');
+                
+            } catch (error) {
+                console.error('테스트 중 오류:', error);
+            }
+        }
+        
+        // 정기적으로 상태 업데이트
+        function startStatusPolling() {
+            updateModuleStatus();
+            setInterval(updateModuleStatus, 1000);
+        }
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            setupNavigation();
+            setupEventListeners();
+            startStatusPolling();
+            
+            console.log('🏝️ 미야코지마 앱 테스트 페이지 초기화 완료');
+        });
+        
+        // 모듈 준비 이벤트 리스너
+        window.addEventListener('moduleReady', (event) => {
+            console.log(`✅ 모듈 준비 완료: ${event.detail.moduleName}`);
+            updateModuleStatus();
+        });
+    </script>
+</body>
+</html>
