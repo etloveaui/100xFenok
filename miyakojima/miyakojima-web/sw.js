@@ -5,19 +5,18 @@ const DATA_CACHE = 'data-v1';
 
 // Files to cache immediately
 const STATIC_FILES = [
-    '/',
-    '/index.html',
-    '/css/main.css',
-    '/css/mobile.css',
-    '/js/app.js',
-    '/js/config.js',
-    '/js/utils.js',
-    '/js/api.js',
-    '/js/budget.js',
-    '/js/location.js',
-    '/js/poi.js',
-    '/js/itinerary.js',
-    '/data/miyakojima_pois.json',
+    'index.html',
+    'css/main.css',
+    'css/mobile.css',
+    'js/app.js',
+    'js/config.js',
+    'js/utils.js',
+    'js/api.js',
+    'js/budget.js',
+    'js/location.js',
+    'js/poi.js',
+    'js/itinerary.js',
+    'data/miyakojima_pois.json',
     'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/2.1.5/tesseract.min.js'
 ];
