@@ -1,25 +1,48 @@
-const CACHE_NAME = 'miyakojima-travel-v1';
-const STATIC_CACHE = 'static-v1';
-const DYNAMIC_CACHE = 'dynamic-v1';
-const DATA_CACHE = 'data-v1';
+const CACHE_NAME = 'miyakojima-travel-v2.0';
+const STATIC_CACHE = 'static-v2';
+const DYNAMIC_CACHE = 'dynamic-v2';
+const DATA_CACHE = 'data-v2';
 
-// Files to cache immediately
+// GitHub Pages 최적화된 정적 파일 목록
 const STATIC_FILES = [
-    './index.html',
-    './css/main.css',
-    './css/mobile.css',
-    './js/app.js',
-    './js/config.js',
-    './js/utils.js',
-    './js/api.js',
-    './js/budget.js',
-    './js/location.js',
-    './js/poi.js',
-    './js/itinerary.js',
-    './data/miyakojima_pois.json',
-    'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap',
-    'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/2.1.5/tesseract.min.js'
+    '/',
+    '/index.html',
+    '/css/main.css',
+    '/css/mobile.css', 
+    '/css/animations.css',
+    '/js/app.js',
+    '/js/config.js',
+    '/js/utils.js',
+    '/js/storage.js',
+    '/js/api.js',
+    '/js/budget.js',
+    '/js/location.js',
+    '/js/poi.js',
+    '/js/itinerary.js',
+    '/js/dashboard.js',
+    '/js/chart.js',
+    '/manifest.json',
+    '/data/miyakojima_pois.json',
+    '/data/restaurants.json',
+    '/data/activities.json',
+    '/data/weather_data.json'
 ];
+
+// GitHub Pages 서브디렉토리 지원
+const getBasePath = () => {
+    const path = self.location.pathname;
+    const basePath = path.substring(0, path.lastIndexOf('/') + 1);
+    return basePath === '/' ? '' : basePath;
+};
+
+// 절대 경로로 변환
+const resolveUrl = (url) => {
+    if (url.startsWith('http') || url.startsWith('/')) {
+        return url;
+    }
+    const basePath = getBasePath();
+    return basePath + url.replace('./', '');
+};
 
 // API endpoints that should be cached
 const API_ENDPOINTS = [
@@ -36,7 +59,10 @@ self.addEventListener('install', event => {
         Promise.all([
             caches.open(STATIC_CACHE).then(cache => {
                 console.log('Caching static files');
-                return cache.addAll(STATIC_FILES.map(url => new Request(url, { mode: 'no-cors' })));
+                return cache.addAll(STATIC_FILES.map(url => {
+                    const fullUrl = resolveUrl(url);
+                    return new Request(fullUrl, { mode: 'same-origin' });
+                }));
             }),
             caches.open(DATA_CACHE).then(cache => {
                 console.log('Data cache ready');
@@ -140,7 +166,7 @@ async function handleStaticResource(request) {
         
         // Return offline fallback for HTML pages
         if (request.destination === 'document') {
-            return caches.match('/index.html');
+            return caches.match(resolveUrl('/index.html'));
         }
         
         // Return empty response for other resources
@@ -237,7 +263,7 @@ async function handleDynamicRequest(request) {
         }
         
         // Return offline page
-        return caches.match('/index.html');
+        return caches.match(resolveUrl('/index.html'));
     }
 }
 

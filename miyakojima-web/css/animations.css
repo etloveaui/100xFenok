@@ -1,0 +1,380 @@
+/* 미야코지마 웹 플랫폼 - 고급 애니메이션 */
+/* Advanced Animations for Miyakojima Web Platform */
+
+/* 글로벌 애니메이션 설정 */
+:root {
+    --elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 페이지 로드 애니메이션 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* 페이지 전환 애니메이션 */
+.section {
+    animation: fadeInUp 0.6s var(--smooth) both;
+}
+
+.section.active {
+    animation-delay: 0.1s;
+}
+
+/* 카드 애니메이션 */
+.dashboard-card {
+    animation: scaleIn 0.5s var(--elastic) both;
+    transition: transform 0.3s var(--smooth), box-shadow 0.3s var(--smooth);
+}
+
+.dashboard-card:nth-child(1) { animation-delay: 0.1s; }
+.dashboard-card:nth-child(2) { animation-delay: 0.2s; }
+.dashboard-card:nth-child(3) { animation-delay: 0.3s; }
+.dashboard-card:nth-child(4) { animation-delay: 0.4s; }
+.dashboard-card:nth-child(5) { animation-delay: 0.5s; }
+
+.dashboard-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* 버튼 리플 효과 */
+.btn-primary, .btn-secondary, .action-btn, .nav-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before, 
+.btn-secondary::before, 
+.action-btn::before, 
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:active::before, 
+.btn-secondary:active::before, 
+.action-btn:active::before, 
+.nav-btn:active::before {
+    width: 300px;
+    height: 300px;
+    animation: ripple 0.6s ease-out;
+}
+
+/* FAB 고급 애니메이션 */
+.fab-main {
+    transition: all 0.3s var(--elastic);
+}
+
+.fab-main:hover {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.fab-main.open {
+    transform: rotate(45deg);
+    background: linear-gradient(135deg, #ff5252, #f44336);
+}
+
+.fab-item {
+    transform: scale(0);
+    transition: all 0.3s var(--elastic);
+}
+
+.fab-menu.open .fab-item {
+    transform: scale(1);
+}
+
+.fab-menu.open .fab-item:nth-child(1) { transition-delay: 0.1s; }
+.fab-menu.open .fab-item:nth-child(2) { transition-delay: 0.2s; }
+.fab-menu.open .fab-item:nth-child(3) { transition-delay: 0.3s; }
+.fab-menu.open .fab-item:nth-child(4) { transition-delay: 0.4s; }
+
+.fab-item:hover {
+    transform: scale(1.2);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* 네비게이션 애니메이션 */
+.nav-btn {
+    position: relative;
+    transition: all 0.3s var(--smooth);
+}
+
+.nav-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: var(--primary-color);
+    transition: all 0.3s var(--smooth);
+    transform: translateX(-50%);
+    border-radius: 3px 3px 0 0;
+}
+
+.nav-btn.active::after {
+    width: 100%;
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    color: var(--primary-color);
+}
+
+/* 로딩 스켈레톤 애니메이션 */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        #f0f0f0 25%,
+        #e0e0e0 50%,
+        #f0f0f0 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+/* 토스트 고급 애니메이션 */
+.toast {
+    transform: translateX(100%);
+    transition: all 0.4s var(--elastic);
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    background: linear-gradient(135deg, #4caf50, #66bb6a);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.toast.error {
+    background: linear-gradient(135deg, #f44336, #ef5350);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.toast.warning {
+    background: linear-gradient(135deg, #ff9800, #ffb74d);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+.toast.info {
+    background: linear-gradient(135deg, #2196f3, #42a5f5);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+/* 모달 고급 애니메이션 */
+.modal {
+    backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    transform: scale(0.8) translateY(50px);
+    transition: all 0.4s var(--elastic);
+}
+
+.modal.active .modal-content {
+    transform: scale(1) translateY(0);
+}
+
+/* 마이크로 인터랙션 */
+.action-btn {
+    transition: all 0.2s var(--smooth);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.action-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* 프로그레스 바 애니메이션 */
+.progress-fill {
+    transition: width 1s var(--smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+/* 아이콘 회전 애니메이션 */
+.refresh-btn .icon {
+    transition: transform 0.3s var(--smooth);
+}
+
+.refresh-btn:hover .icon {
+    transform: rotate(180deg);
+}
+
+/* 글래스모피즘 효과 */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 홀로그램 효과 */
+.hologram {
+    background: linear-gradient(
+        45deg,
+        rgba(0, 188, 212, 0.1),
+        rgba(0, 188, 212, 0.3),
+        rgba(0, 188, 212, 0.1)
+    );
+    position: relative;
+}
+
+.hologram::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    animation: shimmer 3s infinite;
+}
+
+/* 텍스트 타이핑 효과 */
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink {
+    50% { border-color: transparent; }
+}
+
+.typing-text {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid var(--primary-color);
+    animation: typing 2s steps(40, end), blink 1s infinite;
+}
+
+/* 3D 효과 */
+.card-3d {
+    perspective: 1000px;
+    transition: transform 0.3s var(--smooth);
+}
+
+.card-3d:hover {
+    transform: rotateY(10deg) rotateX(5deg);
+}
+
+/* 미야코지마 테마 그라데이션 */
+.miyako-gradient {
+    background: linear-gradient(
+        135deg,
+        #00bcd4 0%,
+        #62efff 50%,
+        #ff9800 100%
+    );
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 반응형 애니메이션 비활성화 */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
