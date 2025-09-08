@@ -139,12 +139,6 @@ const CONFIG = {
         }
     },
     
-    // 디버그 설정
-    DEBUG: {
-        ENABLED: true,
-        LOG_LEVEL: 'info' // debug, info, warn, error
-    },
-
     // 캐싱 및 저장소 설정
     STORAGE: {
         PREFIX: 'miyakojima_',

@@ -713,7 +713,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 서비스 워커 등록 (PWA)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('sw.js')
             .then(registration => {
                 Logger.info('Service Worker 등록 성공:', registration);
             })
