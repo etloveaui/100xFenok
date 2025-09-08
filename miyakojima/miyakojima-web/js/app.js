@@ -421,10 +421,14 @@ class ModuleInitializer {
     }
     
     hideLoadingState() {
-        // 로딩 화면 숨기기
-        const loader = document.getElementById('loading-screen');
-        if (loader) {
-            loader.style.display = 'none';
+        // 로딩 화면 숨기기 (정적/동적 로더 모두 처리)
+        const staticLoader = document.getElementById('loading-screen');
+        if (staticLoader) {
+            staticLoader.style.display = 'none';
+        }
+        const dynamicLoader = document.getElementById('app-loader');
+        if (dynamicLoader) {
+            dynamicLoader.style.display = 'none';
         }
         
         // 메인 콘텐츠 표시
