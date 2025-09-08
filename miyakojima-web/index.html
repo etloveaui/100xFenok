@@ -16,6 +16,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/mobile.css">
+    <link rel="stylesheet" href="./css/animations.css">
     
     <!-- 무료 아이콘 (Feather Icons CDN 대체용 인라인 SVG) -->
     <style>
@@ -329,13 +330,19 @@
     <script src="./js/location.js"></script>
     <script src="./js/itinerary.js"></script>
     <script src="./js/poi.js"></script>
+    <script src="./js/dashboard.js"></script>
+    <script src="./js/chart.js"></script>
     <script src="./js/app.js"></script>
     
     <!-- Service Worker 등록 -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register('./sw.js')
+                const swPath = window.location.pathname.endsWith('/') ? 
+                    window.location.pathname + 'sw.js' : 
+                    window.location.pathname.replace(/\/[^/]*$/, '/sw.js');
+                
+                navigator.serviceWorker.register(swPath)
                     .then(function(registration) {
                         console.log('SW registered: ', registration);
                     })

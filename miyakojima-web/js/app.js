@@ -101,9 +101,25 @@ class ModuleInitializer {
             optional: true
         });
         
+        this.defineModule('dashboard', {
+            dependencies: ['config', 'utils', 'storage'],
+            checkReady: () => window.dynamicDashboard && window.DashboardStatus?.isReady,
+            initialize: () => window.DashboardStatus?.init(),
+            timeout: 15000,
+            optional: true
+        });
+        
+        this.defineModule('chart', {
+            dependencies: ['utils'],
+            checkReady: () => window.chartManager && window.ChartStatus?.isReady,
+            initialize: () => window.ChartStatus?.init(),
+            timeout: 5000,
+            optional: true
+        });
+        
         // Phase 4: 메인 애플리케이션 (모든 모듈 의존)
         this.defineModule('app', {
-            dependencies: ['config', 'utils', 'storage', 'budget', 'location', 'poi', 'itinerary'],
+            dependencies: ['config', 'utils', 'storage', 'budget', 'location', 'poi', 'itinerary', 'dashboard', 'chart'],
             checkReady: () => window.app && window.app.isInitialized,
             initialize: () => this.initializeMainApp(),
             timeout: 20000
@@ -569,16 +585,45 @@ class MiyakojimaApp {
     }
     
     setupEventListeners() {
-        // 네비게이션
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+        // 네비게이션 버튼 (수정됨)
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const section = e.currentTarget.dataset.section;
                 this.navigateToSection(section);
             });
         });
         
-        // 온라인/오프라인 이벤트
+        // 빠른 액션 버튼 추가
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const action = btn.id;
+                this.handleQuickAction(action);
+            });
+        });
+        
+        // FAB 메뉴 버튼 추가  
+        document.querySelectorAll('.fab-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const action = e.currentTarget.dataset.action;
+                this.handleFabAction(action);
+            });
+        });
+        
+        // FAB 메인 버튼 토글
+        const fabMain = document.getElementById('fab-main');
+        if (fabMain) {
+            fabMain.addEventListener('click', () => {
+                this.toggleFabMenu();
+            });
+        }
+        
+        // 모달 관련 이벤트
+        this.setupModalEvents();
+        
+        // 온라인/오프라인 이벤트 (기존 유지)
         window.addEventListener('online', () => {
             this.isOnline = true;
             this.updateConnectivityStatus();
@@ -614,6 +659,221 @@ class MiyakojimaApp {
         
         // URL 해시 업데이트
         window.location.hash = sectionName;
+    }
+    
+    handleQuickAction(action) {
+        Logger.info(`빠른 액션 실행: ${action}`);
+        
+        switch(action) {
+            case 'add-expense':
+                this.openModal('expense');
+                break;
+            case 'scan-receipt':
+                this.startReceiptScan();
+                break;
+            case 'nearby-pois':
+                this.showNearbyPOIs();
+                break;
+            case 'emergency-help':
+                this.showEmergencyHelp();
+                break;
+            default:
+                Logger.warn(`알 수 없는 빠른 액션: ${action}`);
+        }
+    }
+
+    handleFabAction(action) {
+        Logger.info(`FAB 액션 실행: ${action}`);
+        
+        switch(action) {
+            case 'expense':
+                this.openModal('expense');
+                break;
+            case 'camera':
+                this.openCamera();
+                break;
+            case 'location':
+                this.refreshLocation();
+                break;
+            case 'note':
+                this.openNotepad();
+                break;
+            default:
+                Logger.warn(`알 수 없는 FAB 액션: ${action}`);
+        }
+        
+        // FAB 메뉴 닫기
+        this.closeFabMenu();
+    }
+    
+    toggleFabMenu() {
+        const fabMenu = document.getElementById('fab-menu');
+        const fabMain = document.getElementById('fab-main');
+        
+        if (fabMenu && fabMain) {
+            const isOpen = fabMenu.classList.contains('open');
+            if (isOpen) {
+                this.closeFabMenu();
+            } else {
+                this.openFabMenu();
+            }
+        }
+    }
+    
+    openFabMenu() {
+        const fabMenu = document.getElementById('fab-menu');
+        const fabMain = document.getElementById('fab-main');
+        
+        if (fabMenu && fabMain) {
+            fabMenu.classList.add('open');
+            fabMain.classList.add('open');
+            fabMain.querySelector('.icon').innerHTML = `<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>`;
+        }
+    }
+    
+    closeFabMenu() {
+        const fabMenu = document.getElementById('fab-menu');
+        const fabMain = document.getElementById('fab-main');
+        
+        if (fabMenu && fabMain) {
+            fabMenu.classList.remove('open');
+            fabMain.classList.remove('open');
+            fabMain.querySelector('.icon').innerHTML = `<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>`;
+        }
+    }
+    
+    setupModalEvents() {
+        // 모든 모달 닫기 버튼
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const modal = e.target.closest('.modal');
+                if (modal) {
+                    this.closeModal(modal.id);
+                }
+            });
+        });
+        
+        // 모달 배경 클릭으로 닫기
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeModal(modal.id);
+                }
+            });
+        });
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeAllModals();
+            }
+        });
+    }
+    
+    openModal(modalName) {
+        const modal = document.getElementById(`${modalName}-modal`);
+        if (modal) {
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+            Logger.info(`모달 열림: ${modalName}`);
+        } else {
+            Logger.error(`모달을 찾을 수 없음: ${modalName}`);
+        }
+    }
+    
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.classList.remove('modal-open');
+            Logger.info(`모달 닫힘: ${modalId}`);
+        }
+    }
+    
+    closeAllModals() {
+        document.querySelectorAll('.modal.active').forEach(modal => {
+            modal.classList.remove('active');
+        });
+        document.body.classList.remove('modal-open');
+    }
+    
+    startReceiptScan() {
+        Logger.info('영수증 스캔 시작');
+        this.showToast('📸 영수증 스캔 기능은 곧 출시됩니다!', 'info');
+    }
+    
+    showNearbyPOIs() {
+        Logger.info('주변 장소 검색');
+        this.navigateToSection('poi');
+        this.showToast('📍 주변 장소를 검색중입니다...', 'info');
+    }
+    
+    showEmergencyHelp() {
+        Logger.info('응급 도움말 표시');
+        this.showToast('🚨 응급상황 시 119(소방서), 110(경찰)로 연락하세요', 'warning');
+    }
+    
+    openCamera() {
+        Logger.info('카메라 열기');
+        this.showToast('📷 카메라 기능은 곧 출시됩니다!', 'info');
+    }
+    
+    refreshLocation() {
+        Logger.info('위치 새로고침');
+        this.showToast('📍 현재 위치를 업데이트 중입니다...', 'info');
+        
+        if (this.modules.location && this.modules.location.getCurrentLocation) {
+            this.modules.location.getCurrentLocation().then(location => {
+                this.showToast('✅ 위치가 업데이트되었습니다', 'success');
+            }).catch(error => {
+                this.showToast('❌ 위치 업데이트에 실패했습니다', 'error');
+            });
+        }
+    }
+    
+    openNotepad() {
+        Logger.info('메모장 열기');
+        this.showToast('📝 메모장 기능은 곧 출시됩니다!', 'info');
+    }
+    
+    showToast(message, type = 'info', duration = 3000) {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <span class="toast-message">${message}</span>
+                <button class="toast-close">&times;</button>
+            </div>
+        `;
+        
+        // 닫기 버튼 이벤트
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            this.removeToast(toast);
+        });
+        
+        toastContainer.appendChild(toast);
+        
+        // 애니메이션을 위한 지연
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // 자동 제거
+        setTimeout(() => {
+            this.removeToast(toast);
+        }, duration);
+        
+        Logger.info(`토스트 표시: ${message}`);
+    }
+    
+    removeToast(toast) {
+        if (toast && toast.parentNode) {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.parentNode.removeChild(toast);
+            }, 300);
+        }
     }
     
     async loadUserData() {
