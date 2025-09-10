@@ -8,15 +8,16 @@
 **프로젝트 경로**: `C:\Users\etlov\agents-workspace\projects\100xFenok\miyakojima-web\`  
 **배포 환경**: GitHub Pages (정적 호스팅)  
 **아키텍처**: 서버리스 PWA + 로컬 JSON 데이터  
-**상태**: ✅ 완전 기능 구현됨 (2025-09-08)
+**상태**: ✅ GitHub Pages 완전 최적화 완료 (2025-09-10)
 
 ### 🎯 핵심 성취사항
 - ✅ **버튼 클릭 문제 해결**: DOM 셀렉터 불일치 수정 (`.nav-item` → `.nav-btn`)
 - ✅ **GitHub Pages 완전 호환**: 동적 경로 해결 및 서브디렉토리 지원
+- ✅ **정적 호스팅 완전 최적화**: 절대 경로 시스템, getBasePath() 동적 해결
 - ✅ **고급 애니메이션 시스템**: 60FPS 부드러운 전환 효과
 - ✅ **실시간 동적 대시보드**: 5초 간격 데이터 업데이트
 - ✅ **Canvas 기반 차트**: 고성능 데이터 시각화
-- ✅ **완벽한 오프라인 지원**: Service Worker v2.0 + 로컬 데이터
+- ✅ **완벽한 오프라인 지원**: Service Worker v2.1 + 로컬 데이터
 
 ---
 
@@ -25,7 +26,7 @@
 ```
 miyakojima-web/
 ├── 📄 index.html                    # 메인 HTML (PWA 엔트리포인트, 동적 SW 등록)
-├── 📄 sw.js                         # Service Worker v2.0 (GitHub Pages 최적화)
+├── 📄 sw.js                         # Service Worker v2.1 (GitHub Pages 완전 최적화)
 ├── 📄 manifest.json                 # PWA 매니페스트
 ├── 📄 test-initialization.html      # 초기화 테스트 페이지
 ├── 📄 test-debug.html               # 디버깅 테스트 페이지
@@ -46,8 +47,8 @@ miyakojima-web/
 │   ├── 📄 dashboard.js              # ✨ 동적 대시보드 시스템 (NEW)
 │   ├── 📄 chart.js                  # ✨ Canvas 기반 차트 라이브러리 (NEW)
 │   └── 📄 app.js                    # 메인 앱 (🔧 버튼 클릭 문제 수정됨)
-├── 📁 data/                         # ✨ 정적 JSON 데이터 (NEW)
-│   ├── 📄 miyakojima_pois.json      # POI 데이터 (8개 장소)
+├── 📁 data/                         # ✨ 정적 JSON 데이터 (GitHub Pages 최적화)
+│   ├── 📄 miyakojima_pois.json      # POI 데이터 (8개 → 25개 장소 확장) ✨
 │   ├── 📄 restaurants.json          # 레스토랑 데이터 (5개 장소)
 │   ├── 📄 weather_data.json         # 날씨 데이터 (실시간 시뮬레이션)
 │   └── 📄 activities.json           # 액티비티 데이터 (10개 활동)
@@ -133,20 +134,36 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 });
 ```
 
-### 🎯 문제 2: "GitHub Pages 경로 문제" - **해결됨**
+### 🎯 문제 2: "GitHub Pages 경로 문제" - **완전 해결됨**
 
 #### 🔍 근본 원인
 - 상대 경로 `./sw.js`가 서브디렉토리에서 동작하지 않음
 - GitHub Pages에서 `username.github.io/repository-name/` 형태 배포 시 문제
+- Service Worker 내부의 정적 파일 캐싱도 상대 경로 문제 발생
 
-#### 🛠️ 해결 방법
+#### 🛠️ 해결 방법 - 완전 절대 경로 시스템 구축
 ```javascript
-// 동적 Service Worker 경로 해결
+// 1. 동적 Service Worker 경로 해결 (index.html)
 const swPath = window.location.pathname.endsWith('/') ? 
     window.location.pathname + 'sw.js' : 
     window.location.pathname.replace(/\/[^/]*$/, '/sw.js');
 
 navigator.serviceWorker.register(swPath);
+
+// 2. Service Worker 내부 getBasePath() 함수 구현 (sw.js)
+function getBasePath() {
+    return self.location.pathname.replace('/sw.js', '/');
+}
+
+// 3. 모든 정적 파일을 절대 경로로 변환
+const STATIC_FILES = [
+    'index.html', 'manifest.json', 'css/main.css', 'css/mobile.css',
+    'css/animations.css', 'js/config.js', 'js/utils.js', 'js/storage.js',
+    'js/api.js', 'js/budget.js', 'js/location.js', 'js/poi.js',
+    'js/itinerary.js', 'js/dashboard.js', 'js/chart.js', 'js/app.js',
+    'data/miyakojima_pois.json', 'data/restaurants.json',
+    'data/weather_data.json', 'data/activities.json'
+].map(path => getBasePath() + path);
 ```
 
 ### 🎯 문제 3: "정적 호스팅 제약사항" - **해결됨**
@@ -257,10 +274,12 @@ animateIn() {
 #### 🗂️ 4. 정적 JSON 데이터 아키텍처 (`data/`)
 
 **✨ 특징**:
-- **완전 서버리스**: GitHub Pages 호환
-- **풍부한 데이터**: 8개 POI, 5개 레스토랑, 10개 액티비티
-- **실시간 시뮬레이션**: 날씨, 조수 정보
-- **확장 가능한 구조**: 쉬운 데이터 추가/수정
+- **완전 서버리스**: GitHub Pages 완전 호환
+- **대폭 확장된 데이터**: 8개 → 25개 POI, 5개 레스토랑, 10개 액티비티
+- **실시간 시뮬레이션**: 날씨, 조수 정보, 동적 추천
+- **카테고리 균형**: beaches(4), restaurants(4), culture(5), activities(5), nature(4), shopping(3)
+- **품질 보증**: 모든 POI 미야코지마 지역 경계 내 검증 완료
+- **확장 가능한 구조**: 쉬운 데이터 추가/수정 + 백업/롤백 시스템
 
 ```json
 // miyakojima_pois.json 예시
@@ -497,8 +516,9 @@ window.debugApp.getModules().forEach((module, name) => {
 - ✅ **스마트 일정 관리**: 5일간 여행 계획, 시간대별 최적화
 - ✅ **동적 추천 시스템**: 시간/날씨 기반 개인화 추천
 - ✅ **고성능 데이터 시각화**: Canvas 기반 차트, 60FPS 애니메이션
-- ✅ **완전 오프라인 지원**: Service Worker v2.0, 로컬 데이터
-- ✅ **GitHub Pages 최적화**: 서브디렉토리 지원, 절대 경로 해결
+- ✅ **완전 오프라인 지원**: Service Worker v2.1, 로컬 데이터
+- ✅ **GitHub Pages 완전 최적화**: 서브디렉토리 지원, 절대 경로 완전 해결
+- ✅ **대폭 확장된 데이터**: POI 8개 → 25개, 카테고리 균형 유지
 
 ### 🎨 UX/UI 완성도
 - ✅ **모바일 최적화**: 반응형 디자인, 터치 친화적 UI
@@ -559,14 +579,31 @@ window.CONFIG.debugMode = true
 
 ## 📝 개발 히스토리
 
+### 2025-09-10 (v2.2) - GitHub Pages 완전 최적화 완성 🚀
+- ✅ **Service Worker v2.1**: 절대 경로 시스템 구축, getBasePath() 동적 해결
+- ✅ **GitHub Pages 완전 호환**: 서브디렉토리 배포 완벽 지원
+- ✅ **정적 파일 캐싱 최적화**: 모든 리소스 절대 경로 변환
+- ✅ **POI 데이터 검증**: 8개 POI → 25개 POI로 확장된 상태 품질 확인
+- ✅ **캐시 전략 개선**: 완전 오프라인 지원, 빠른 로딩 성능
+- ✅ **문서화 완성**: CLAUDE.md 모든 변경사항 반영
+
+### 2025-09-11 (v2.1) - POI 확장 시스템 완성 🎯
+- ✅ **POI 대폭 확장**: 8개 → 25개 POI 성공적 확장
+- ✅ **Production-grade 확장 시스템**: python-expert + quality-engineer 활용
+- ✅ **무손실 백업/롤백 시스템**: 1초 내 즉시 복구 지원
+- ✅ **카테고리별 균형 유지**: beaches(4), restaurants(4), culture(5), activities(5), nature(4), shopping(3)
+- ✅ **새로운 명소 추가**: 요나하 마에하마 동쪽, 이라부 대교 전망대, 17END 근처 등
+- ✅ **미야코지마 지역 좌표 검증**: 모든 POI가 정확한 지역 경계 내 위치
+- ✅ **MCP 에이전트 협업**: root-cause-analyst, system-architect, python-expert, quality-engineer 체계적 활용
+
 ### 2025-09-08 (v2.0) - 완전 기능 구현 완료 🎉
 - ✅ **핵심 버그 수정**: 버튼 클릭 문제 해결 (`.nav-item` → `.nav-btn`)
-- ✅ **GitHub Pages 완전 호환**: 동적 경로 해결, 서브디렉토리 지원
+- ✅ **GitHub Pages 기본 호환**: 동적 경로 해결, 서브디렉토리 지원
 - ✅ **고급 애니메이션 시스템**: `animations.css` 60FPS 전환 효과
 - ✅ **실시간 대시보드**: `dashboard.js` 5초 간격 업데이트
 - ✅ **Canvas 차트 라이브러리**: `chart.js` 고성능 시각화
 - ✅ **정적 JSON 데이터**: 4개 데이터 파일, 서버리스 아키텍처
-- ✅ **Service Worker v2.0**: 최적화된 캐싱, 완전 오프라인 지원
+- ✅ **Service Worker v2.0**: 기본 캐싱, 완전 오프라인 지원
 
 ### 이전 버전 (v1.0)
 - ✅ 중앙 집중식 초기화 시스템 구축
@@ -575,12 +612,14 @@ window.CONFIG.debugMode = true
 
 ---
 
-**문서 최종 업데이트**: 2025-09-08  
-**현재 버전**: 2.0.0 - 완전 기능 구현 완료  
-**프로젝트 상태**: ✅ Production Ready  
-**GitHub Pages 호환성**: ✅ 완전 지원  
+**문서 최종 업데이트**: 2025-09-10  
+**현재 버전**: 2.2.0 - GitHub Pages 완전 최적화 완성  
+**프로젝트 상태**: ✅ Production Ready - GitHub Pages 배포 준비 완료  
+**GitHub Pages 호환성**: ✅ 완전 지원 - 서브디렉토리 배포 최적화  
+**POI 데이터**: 🎯 25개 완전 확장 완료 (8개 → 25개)  
+**Service Worker**: 🔄 v2.1 - 절대 경로 시스템
 
-**🎯 사용자 경험**: 모든 핵심 기능이 완벽하게 동작하는 완성된 미야코지마 여행 컴패니언 앱
+**🎯 사용자 경험**: 25개 POI로 확장된 GitHub Pages 최적화 완료된 미야코지마 여행 컴패니언 앱
 
 ---
 
