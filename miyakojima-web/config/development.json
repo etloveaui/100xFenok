@@ -1,0 +1,27 @@
+{
+  "logging": {
+    "level": "DEBUG",
+    "file": "./logs/dev_poi_expansion.log"
+  },
+  "backup": {
+    "auto_backup": true,
+    "compression": false,
+    "max_backups": 5
+  },
+  "validation": {
+    "strict_mode": false,
+    "fail_fast": true,
+    "quality_thresholds": {
+      "min_quality_score": 0.5
+    }
+  },
+  "performance": {
+    "memory_limit_mb": 256,
+    "timeout_seconds": 120,
+    "enable_profiling": true,
+    "batch_size": 25
+  },
+  "expansion_strategy": {
+    "quality_threshold": 0.5
+  }
+}
