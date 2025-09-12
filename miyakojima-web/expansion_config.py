@@ -23,8 +23,8 @@ class ExpansionConfig:
     log_dir: str = "logs"
     
     # Expansion settings
-    target_total_pois: int = 50
-    current_pois_count: int = 25
+    target_total_pois: int = 100  # Phase 3 target
+    current_pois_count: int = 50  # Updated after Phase 2 completion
     
     # Geographic bounds for Miyakojima
     lat_min: float = 24.6
@@ -33,12 +33,12 @@ class ExpansionConfig:
     lng_max: float = 125.5
     
     # Data quality settings
-    min_rating_threshold: float = 4.0
+    min_rating_threshold: float = 3.5  # Lowered for Phase 3 to expand candidate pool
     maintain_proportional_distribution: bool = True
     duplicate_distance_threshold: float = 0.001
     
     # Safety settings
-    max_pois_per_run: int = 30
+    max_pois_per_run: int = 50  # Updated for Phase 3: 50→100 POIs
     backup_retention_days: int = 30
     
     @property
