@@ -1,0 +1,25 @@
+2025-09-13 03:30:29,128 - __main__ - INFO - Phase 4 Expansion System initialized
+2025-09-13 03:30:29,128 - __main__ - INFO - Config: {'source_database_path': 'docs/knowledge/miyakojima_database.json', 'current_pois_path': 'data/miyakojima_pois.json', 'backup_dir': 'backups', 'log_dir': 'logs', 'target_total_pois': 100, 'current_pois_count': 64, 'lat_min': 24.6, 'lat_max': 24.9, 'lng_min': 125.1, 'lng_max': 125.5, 'min_rating_threshold': 3.5, 'maintain_proportional_distribution': True, 'duplicate_distance_threshold': 0.001, 'max_pois_per_run': 50, 'backup_retention_days': 30}
+2025-09-13 03:30:29,129 - __main__ - INFO - Starting Phase 4 expansion to 100 POIs...
+2025-09-13 03:30:29,129 - __main__ - INFO - Step 1: Loading current POI data...
+2025-09-13 03:30:29,130 - __main__ - INFO - Current POI count: 64
+2025-09-13 03:30:29,130 - __main__ - INFO - Current distribution: {'beaches': 10, 'culture': 10, 'activities': 15, 'restaurants': 12, 'nature': 8, 'shopping': 9}
+2025-09-13 03:30:29,130 - __main__ - INFO - Step 2: Loading source database and extracting candidates...
+2025-09-13 03:30:29,131 - enhanced_poi_extractor - INFO - Generating 11 additional POIs to supplement source data
+2025-09-13 03:30:29,131 - enhanced_poi_extractor - INFO - Generated 11 additional POIs
+2025-09-13 03:30:29,131 - enhanced_poi_extractor - INFO - Extracted 50 candidate POIs from source database
+2025-09-13 03:30:29,131 - __main__ - INFO - Enhanced extractor found 50 candidates
+2025-09-13 03:30:29,131 - __main__ - INFO - Step 3: Filtering duplicates...
+2025-09-13 03:30:29,132 - __main__ - INFO - After duplicate filtering: 43 candidates
+2025-09-13 03:30:29,133 - __main__ - INFO - Need to add 36 POIs
+2025-09-13 03:30:29,133 - __main__ - INFO - Step 4: Selecting balanced POIs...
+2025-09-13 03:30:29,133 - __main__ - INFO - Selected 4/6 POIs from beaches (available: 4)
+2025-09-13 03:30:29,133 - __main__ - INFO - Selected 5/6 POIs from culture (available: 5)
+2025-09-13 03:30:29,133 - __main__ - INFO - Selected 9/9 POIs from activities (available: 19)
+2025-09-13 03:30:29,133 - __main__ - INFO - Selected 6/6 POIs from restaurants (available: 9)
+2025-09-13 03:30:29,133 - __main__ - INFO - Selected 3/4 POIs from nature (available: 3)
+2025-09-13 03:30:29,133 - __main__ - INFO - Selected 3/5 POIs from shopping (available: 3)
+2025-09-13 03:30:29,133 - __main__ - INFO - Still need 6 more POIs, generating additional synthetic POIs...
+2025-09-13 03:30:29,133 - __main__ - INFO - Generated 6 final synthetic POIs
+2025-09-13 03:30:29,133 - __main__ - INFO - Selection distribution: {'beaches': 5, 'culture': 6, 'activities': 10, 'restaurants': 7, 'nature': 4, 'shopping': 4}
+2025-09-13 03:30:29,133 - __main__ - INFO - Dry run mode - no changes made
