@@ -23,8 +23,8 @@ class ExpansionConfig:
     log_dir: str = "logs"
     
     # Expansion settings
-    target_total_pois: int = 100  # Phase 3 target
-    current_pois_count: int = 50  # Updated after Phase 2 completion
+    target_total_pois: int = 100  # Phase 4 target: Final expansion to 100 POIs
+    current_pois_count: int = 64  # Updated after Phase 3 completion
     
     # Geographic bounds for Miyakojima
     lat_min: float = 24.6
@@ -38,7 +38,7 @@ class ExpansionConfig:
     duplicate_distance_threshold: float = 0.001
     
     # Safety settings
-    max_pois_per_run: int = 50  # Updated for Phase 3: 50→100 POIs
+    max_pois_per_run: int = 50  # Phase 4: Allows adding 36 more POIs (64→100)
     backup_retention_days: int = 30
     
     @property
