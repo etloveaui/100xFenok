@@ -63,13 +63,23 @@ class POIManager {
             } else {
                 // POI 파일에서 로드
                 const response = await fetch('./data/miyakojima_pois.json');
-                this.pois = await response.json();
-                
+                const poiData = await response.json();
+
+                // 새로운 데이터 구조 처리 (v4.0.0+)
+                if (poiData.pois && Array.isArray(poiData.pois)) {
+                    this.pois = poiData.pois;
+                    Logger.info('POI 데이터 파일에서 로드됨:', this.pois.length + '개 (v' + poiData.version + ')');
+                } else if (Array.isArray(poiData)) {
+                    // 이전 버전 호환성
+                    this.pois = poiData;
+                    Logger.info('POI 데이터 파일에서 로드됨:', this.pois.length + '개 (레거시 형식)');
+                } else {
+                    throw new Error('POI 데이터 형식이 올바르지 않습니다');
+                }
+
                 // 캐시에 저장
                 const expiration = Date.now() + CONFIG.STORAGE.CACHE_DURATION.POI;
                 StorageUtils.set(CONFIG.STORAGE.CACHE_KEYS.POI_DATA, this.pois, expiration);
-                
-                Logger.info('POI 데이터 파일에서 로드됨:', this.pois.length + '개');
             }
             
             // POI 데이터 전처리
