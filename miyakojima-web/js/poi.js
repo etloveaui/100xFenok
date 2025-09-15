@@ -693,17 +693,17 @@ class POIManager {
                     
                     <div class="poi-actions-large">
                         ${this.userLocation ? `
-                            <button class="btn-primary" onclick="window.poiManager.startNavigation('${poiId}')">
+                            <button class="btn-primary" onclick="window.poiManager.startNavigation(${JSON.stringify(poiId)})">
                                 길찾기 시작
                             </button>
                         ` : ''}
                         
-                        <button class="btn-secondary" onclick="window.poiManager.addToItinerary('${poiId}')">
+                        <button class="btn-secondary" onclick="window.poiManager.addToItinerary(${JSON.stringify(poiId)})">
                             일정에 추가
                         </button>
                         
                         ${!this.visited.includes(poiId) ? `
-                            <button class="btn-secondary" onclick="window.poiManager.markAsVisited('${poiId}')">
+                            <button class="btn-secondary" onclick="window.poiManager.markAsVisited(${JSON.stringify(poiId)})">
                                 방문 완료
                             </button>
                         ` : '<span class="visited-badge">방문 완료</span>'}
