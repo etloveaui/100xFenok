@@ -15,7 +15,7 @@ class DynamicDashboard {
     }
 
     async initialize() {
-        Logger.info('동적 대시보드 초기화 시작');
+        console.log('ℹ️ 동적 대시보드 초기화 시작');
         
         // 초기 데이터 로드
         await this.loadInitialData();
@@ -26,7 +26,7 @@ class DynamicDashboard {
         // 이벤트 리스너 설정
         this.setupEventListeners();
         
-        Logger.info('동적 대시보드 초기화 완료');
+        console.log('ℹ️ 동적 대시보드 초기화 완료');
     }
 
     async loadInitialData() {
@@ -85,7 +85,7 @@ class DynamicDashboard {
     }
 
     async fullDataRefresh() {
-        Logger.info('전체 데이터 새로고침');
+        console.log('ℹ️ 전체 데이터 새로고침');
         
         // 위치 재확인
         await this.updateLocation();
@@ -432,7 +432,7 @@ class DynamicDashboard {
         // 즉시 UI 업데이트
         this.renderBudgetOverview();
         
-        Logger.info(`예산 업데이트: +${spent}엔 (${category})`);
+        console.log(`ℹ️ 예산 업데이트: +${spent}엔 (${category})`);
     }
 
     // 실시간 모드 토글
@@ -444,7 +444,7 @@ class DynamicDashboard {
             window.app.showToast(`🔄 실시간 업데이트가 ${status}되었습니다`, 'info');
         }
         
-        Logger.info(`실시간 모드: ${status}`);
+        console.log(`ℹ️ 실시간 모드: ${status}`);
     }
 
     // 정리
@@ -471,9 +471,9 @@ window.DashboardStatus = {
                 detail: { moduleName: 'dashboard' }
             }));
             
-            Logger.info('동적 대시보드 모듈 초기화 완료');
+            console.log('ℹ️ 동적 대시보드 모듈 초기화 완료');
         } catch (error) {
-            Logger.error('동적 대시보드 초기화 실패:', error);
+            console.error('❌ 동적 대시보드 초기화 실패:', error);
             throw error;
         }
     }

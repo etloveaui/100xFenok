@@ -31,8 +31,8 @@ const CONFIG = {
     APIS: {
         // Google Maps APIs (무료 한도 내)
         GOOGLE_MAPS: {
-            API_KEY: import.meta?.env?.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY',
-            PROJECT_ID: import.meta?.env?.VITE_GOOGLE_PROJECT_ID || 'miyakojima-poi-sync',
+            API_KEY: 'AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY',
+            PROJECT_ID: 'miyakojima-poi-sync',
             JAVASCRIPT_API_URL: 'https://maps.googleapis.com/maps/api/js',
             DIRECTIONS_API_URL: 'https://maps.googleapis.com/maps/api/directions/json',
             PLACES_API_URL: 'https://maps.googleapis.com/maps/api/place',
@@ -42,7 +42,7 @@ const CONFIG = {
 
         // Gemini AI API (무료 250 requests/day)
         GEMINI: {
-            API_KEY: import.meta?.env?.VITE_GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY',
+            API_KEY: 'AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY',
             BASE_URL: 'https://generativelanguage.googleapis.com/v1/models',
             MODEL: 'gemini-2.5-flash',
             CACHE_DURATION: 1800000 // 30분 캐시
@@ -57,7 +57,7 @@ const CONFIG = {
         // 날씨 API (무료 1,000 requests/day) - API 키 필요
         WEATHER: {
             URL: 'https://api.openweathermap.org/data/2.5',
-            API_KEY: import.meta?.env?.VITE_OPENWEATHER_API_KEY || 'YOUR_OPENWEATHER_API_KEY',
+            API_KEY: '62c85ff5eff6e712643db50c03ec5beb',
             CACHE_DURATION: 1800000 // 30분 캐시
         },
 
@@ -66,6 +66,41 @@ const CONFIG = {
             URL: 'https://api.opencagedata.com/geocode/v1/json',
             API_KEY: 'YOUR_OPENCAGE_API_KEY',
             CACHE_DURATION: 86400000 // 24시간 캐시
+        },
+
+        // Google Translation API (무료 500,000자/월) - 여행 필수 기능
+        TRANSLATION: {
+            API_KEY: 'AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY',
+            BASE_URL: 'https://translation.googleapis.com/language/translate/v2',
+            SOURCE_LANG: 'ko',
+            TARGET_LANGS: ['ja', 'en'], // 일본어, 영어
+            CACHE_DURATION: 86400000 // 24시간 캐시 (번역 결과)
+        },
+
+        // Google Speech-to-Text API (무료 60분/월) - 음성 명령
+        SPEECH_TO_TEXT: {
+            API_KEY: 'AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY',
+            BASE_URL: 'https://speech.googleapis.com/v1/speech:recognize',
+            LANGUAGE_CODES: ['ko-KR', 'ja-JP'], // 한국어, 일본어
+            SAMPLE_RATE: 16000
+        },
+
+        // Google Text-to-Speech API (무료 400만자/월) - 음성 안내
+        TEXT_TO_SPEECH: {
+            API_KEY: 'AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY',
+            BASE_URL: 'https://texttospeech.googleapis.com/v1/text:synthesize',
+            VOICES: {
+                ko: { languageCode: 'ko-KR', name: 'ko-KR-Standard-A' },
+                ja: { languageCode: 'ja-JP', name: 'ja-JP-Standard-A' }
+            }
+        },
+
+        // Google Vision AI (무료 1,000개 이미지/월) - 사진 분석
+        VISION_AI: {
+            API_KEY: 'AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY',
+            BASE_URL: 'https://vision.googleapis.com/v1/images:annotate',
+            FEATURES: ['LABEL_DETECTION', 'LANDMARK_DETECTION', 'TEXT_DETECTION'],
+            MAX_RESULTS: 10
         }
     },
     
@@ -239,6 +274,24 @@ const CONFIG = {
         GAS_BACKEND: {
             per_minute: 20,
             per_hour: 1200
+        },
+
+        // Google Cloud AI APIs (추가)
+        TRANSLATION: {
+            monthly: 500000, // 문자 단위
+            daily: 16666    // 월간 한도를 30일로 나눈 값
+        },
+        SPEECH_TO_TEXT: {
+            monthly: 60,    // 분 단위
+            daily: 2        // 월간 한도를 30일로 나눈 값
+        },
+        TEXT_TO_SPEECH: {
+            monthly: 4000000, // 문자 단위 (표준)
+            daily: 133333     // 월간 한도를 30일로 나눈 값
+        },
+        VISION_AI: {
+            monthly: 1000,    // 이미지 단위
+            daily: 33         // 월간 한도를 30일로 나눈 값
         }
     },
     
@@ -354,11 +407,10 @@ window.ConfigStatus = {
     }
 };
 
-// 중앙 초기화 시스템에 의해 호출됨 (DOMContentLoaded 제거)
-// document.addEventListener('DOMContentLoaded', () => {
-//     validateConfig();
-//     logConfigInfo();
-// });
+// ConfigStatus 즉시 초기화 실행
+if (typeof window !== 'undefined') {
+    window.ConfigStatus.init();
+}
 
 // 설정 내보내기 (ES6 모듈 지원 시)
 if (typeof module !== 'undefined' && module.exports) {
