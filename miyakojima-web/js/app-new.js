@@ -4,6 +4,7 @@ import { poiManager } from './modules/poi.js';
 import { budgetManager } from './modules/budget.js';
 import { itineraryManager } from './modules/itinerary.js';
 import { diningManager } from './modules/dining.js';
+import { weatherWidget } from './modules/weather-widget.js';
 
 export class App {
     constructor() {
@@ -54,7 +55,8 @@ export class App {
                 this.initializePOIManager().catch(err => ({ error: 'poi', reason: err })),
                 this.initializeBudgetManager().catch(err => ({ error: 'budget', reason: err })),
                 this.initializeItineraryManager().catch(err => ({ error: 'itinerary', reason: err })),
-                this.initializeDiningManager().catch(err => ({ error: 'dining', reason: err }))
+                this.initializeDiningManager().catch(err => ({ error: 'dining', reason: err })),
+                this.initializeWeatherWidget().catch(err => ({ error: 'weather', reason: err }))
             ];
 
             const results = await Promise.allSettled(modulePromises);
@@ -62,7 +64,7 @@ export class App {
             // 실패한 모듈들 로깅
             results.forEach((result, index) => {
                 if (result.status === 'rejected' || (result.value && result.value.error)) {
-                    const moduleName = ['POI', 'Budget', 'Itinerary', 'Dining'][index];
+                    const moduleName = ['POI', 'Budget', 'Itinerary', 'Dining', 'Weather'][index];
                     console.warn(`⚠️ ${moduleName} 모듈 초기화 실패:`, result.reason || result.value.reason);
                 }
             });
@@ -123,6 +125,17 @@ export class App {
             console.log('✅ 다이닝 매니저 등록 완료');
         } catch (error) {
             console.error('다이닝 매니저 초기화 실패:', error);
+            throw error;
+        }
+    }
+
+    async initializeWeatherWidget() {
+        try {
+            await weatherWidget.initialize();
+            this.modules.set('weather', weatherWidget);
+            console.log('✅ 날씨 위젯 등록 완료');
+        } catch (error) {
+            console.error('날씨 위젯 초기화 실패:', error);
             throw error;
         }
     }
