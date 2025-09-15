@@ -162,37 +162,55 @@ class WeatherWidget {
         return match ? match[1] : dateStr.slice(-1);
     }
 
+    // 🎨 완전히 새로운 토글 방식 - 오버레이 방식으로 변환
     toggleDetails() {
+        const weatherCard = this.container.closest('.weather-card');
         const detailsEl = this.container.querySelector('#weather-details');
         const expandBtn = this.container.querySelector('#weather-expand-btn');
 
-        if (!detailsEl || !expandBtn) return;
+        if (!weatherCard || !detailsEl || !expandBtn) return;
 
         this.isExpanded = !this.isExpanded;
 
+        // 🔧 inline display: none 스타일 제거 (CSS 오버레이가 작동하도록)
+        detailsEl.style.removeProperty('display');
+
         if (this.isExpanded) {
-            detailsEl.style.display = 'block';
+            // 카드에 expanded 클래스 추가하여 오버레이 활성화
+            weatherCard.classList.add('expanded');
             expandBtn.classList.add('expanded');
             expandBtn.setAttribute('aria-label', '날씨 상세 정보 닫기');
 
-            // 부드러운 애니메이션을 위해 약간의 지연
-            requestAnimationFrame(() => {
-                detailsEl.style.opacity = '1';
-            });
+            // 닫기 버튼이 없으면 추가
+            if (!detailsEl.querySelector('.weather-close-btn')) {
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'weather-close-btn';
+                closeBtn.innerHTML = '✕';
+                closeBtn.setAttribute('aria-label', '닫기');
+                closeBtn.onclick = () => this.closeDetails();
+                detailsEl.insertBefore(closeBtn, detailsEl.firstChild);
+            }
         } else {
-            detailsEl.style.opacity = '0';
-            expandBtn.classList.remove('expanded');
-            expandBtn.setAttribute('aria-label', '날씨 상세 정보 보기');
-
-            setTimeout(() => {
-                detailsEl.style.display = 'none';
-            }, 300);
+            this.closeDetails();
         }
 
         // 상태 변경 이벤트 발생
         this.container.dispatchEvent(new CustomEvent('weatherToggle', {
             detail: { expanded: this.isExpanded }
         }));
+    }
+
+    // 🚪 새로운 닫기 기능
+    closeDetails() {
+        const weatherCard = this.container.closest('.weather-card');
+        const expandBtn = this.container.querySelector('#weather-expand-btn');
+
+        if (!weatherCard || !expandBtn) return;
+
+        this.isExpanded = false;
+        weatherCard.classList.remove('expanded');
+        expandBtn.classList.remove('expanded');
+        expandBtn.setAttribute('aria-label', '날씨 상세 정보 보기');
     }
 
     showFullForecast() {
