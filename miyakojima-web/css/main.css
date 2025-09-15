@@ -740,3 +740,92 @@ body {
 .p-sm { padding: var(--spacing-sm); }
 .p-md { padding: var(--spacing-md); }
 .p-lg { padding: var(--spacing-lg); }
+
+/* POI 및 지도 스타일 */
+.poi-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    height: calc(100vh - 200px);
+}
+
+.poi-map {
+    width: 100%;
+    height: 300px;
+    min-height: 300px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.poi-map:empty::before {
+    content: "지도 로딩 중...";
+}
+
+.poi-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.poi-card {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.poi-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.poi-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.poi-icon {
+    font-size: var(--font-xl);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 188, 212, 0.1);
+    border-radius: 50%;
+}
+
+.poi-info h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--font-md);
+    font-weight: 600;
+}
+
+.poi-category {
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    margin: 0;
+}
+
+.no-results {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+}
+
+.results-count {
+    padding: var(--spacing-sm) 0;
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
