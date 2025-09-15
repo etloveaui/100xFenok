@@ -138,50 +138,53 @@ class DynamicDashboard {
 
     async updateWeather() {
         try {
-            // 미야코지마 좌표 (위치가 없으면 기본값 사용)
-            const lat = this.currentData.location.lat || 24.7045;
-            const lng = this.currentData.location.lng || 125.2772;
+            console.log('🌤️ weather.js 서비스를 통해 날씨 데이터 가져오는 중...');
 
-            const apiKey = window.CONFIG.APIS.WEATHER.API_KEY;
-            const url = `${window.CONFIG.APIS.WEATHER.URL}/weather?lat=${lat}&lon=${lng}&appid=${apiKey}&units=metric&lang=kr`;
-
-            console.log('🌤️ 실제 날씨 데이터 가져오는 중...', { lat, lng });
-
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`날씨 API 오류: ${response.status}`);
+            // weather.js의 weatherService 사용
+            if (!window.weatherService) {
+                // weatherService가 없으면 동적으로 로드
+                console.log('📦 weatherService 로딩 중...');
+                await import('./modules/weather.js');
             }
 
-            const data = await response.json();
+            // weatherService 초기화 및 데이터 가져오기
+            const weatherData = await window.weatherService.initialize();
 
-            // 날씨 아이콘 매핑
-            const iconMap = {
-                '01d': '☀️', '01n': '🌙', // clear sky
-                '02d': '⛅', '02n': '⛅', // few clouds
-                '03d': '☁️', '03n': '☁️', // scattered clouds
-                '04d': '☁️', '04n': '☁️', // broken clouds
-                '09d': '🌦️', '09n': '🌧️', // shower rain
-                '10d': '🌦️', '10n': '🌧️', // rain
-                '11d': '⛈️', '11n': '⛈️', // thunderstorm
-                '13d': '❄️', '13n': '❄️', // snow
-                '50d': '🌫️', '50n': '🌫️'  // mist
-            };
+            // 현재 날씨 데이터 설정
+            if (weatherData.current) {
+                this.currentData.weather = {
+                    temp: weatherData.current.temp,
+                    condition: weatherData.current.condition,
+                    icon: weatherData.current.icon,
+                    humidity: weatherData.current.humidity,
+                    feelsLike: weatherData.current.feelsLike,
+                    windSpeed: weatherData.current.windSpeed,
+                    visibility: weatherData.current.visibility,
+                    pressure: weatherData.current.pressure,
+                    sunrise: weatherData.current.sunrise,
+                    sunset: weatherData.current.sunset
+                };
+            }
 
-            this.currentData.weather = {
-                temp: Math.round(data.main.temp),
-                condition: data.weather[0].description,
-                icon: iconMap[data.weather[0].icon] || '🌤️',
-                humidity: data.main.humidity,
-                feelsLike: Math.round(data.main.feels_like),
-                windSpeed: data.wind.speed,
-                visibility: data.visibility / 1000, // km로 변환
-                pressure: data.main.pressure
-            };
+            // 5일간 예보 데이터 설정
+            if (weatherData.forecast) {
+                this.currentData.forecast = weatherData.forecast;
+            }
 
-            console.log('✅ 실제 날씨 데이터 로드 완료:', this.currentData.weather);
+            // 여행자 맞춤 조언 생성
+            if (weatherData.current && weatherData.forecast) {
+                this.currentData.travelAdvice = window.weatherService.getTravelAdvice(
+                    weatherData.current,
+                    weatherData.forecast
+                );
+            }
+
+            console.log('✅ weather.js를 통한 날씨 데이터 로드 완료');
+            console.log('현재 날씨:', this.currentData.weather);
+            console.log('5일 예보:', this.currentData.forecast);
 
         } catch (error) {
-            console.warn('⚠️ 날씨 API 실패, 기본값 사용:', error.message);
+            console.warn('⚠️ weather.js 서비스 실패, 기본값 사용:', error.message);
 
             // API 실패 시 기본값 사용
             const defaultWeather = [
@@ -199,6 +202,15 @@ class DynamicDashboard {
                 visibility: 10,
                 pressure: 1013
             };
+
+            // 기본 5일 예보도 설정
+            this.currentData.forecast = [
+                { dateKr: '월', icon: '☁️', temp: { max: 27, min: 26 } },
+                { dateKr: '화', icon: '☁️', temp: { max: 32, min: 29 } },
+                { dateKr: '수', icon: '☁️', temp: { max: 30, min: 29 } },
+                { dateKr: '목', icon: '⛅', temp: { max: 28, min: 24 } },
+                { dateKr: '금', icon: '🌦️', temp: { max: 26, min: 23 } }
+            ];
         }
     }
 

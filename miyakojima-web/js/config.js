@@ -77,3 +77,5 @@ class ConfigManager {
 }
 
 export const CONFIG = new ConfigManager();
+export { ConfigManager };
+export default ConfigManager;

@@ -92,10 +92,59 @@ async function safeInitialize() {
     }
 }
 
+// D-Day 카운터 업데이트 함수
+function updateDDayCounter() {
+    const ddayElement = document.getElementById('dday-counter');
+    if (!ddayElement) return;
+
+    // 여행 시작일: 2025년 9월 27일
+    const travelStartDate = new Date('2025-09-27');
+    const travelEndDate = new Date('2025-10-01');
+    const today = new Date();
+
+    // 시간 차이를 일 단위로 계산
+    const diffTime = travelStartDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let displayText = '';
+    let badgeClass = 'dday-badge';
+
+    if (diffDays > 0) {
+        // 여행 전
+        displayText = `D-${diffDays}`;
+        ddayElement.className = `${badgeClass} dday-before`;
+    } else if (diffDays === 0) {
+        // 여행 당일
+        displayText = 'D-DAY';
+        ddayElement.className = `${badgeClass} dday-today`;
+    } else {
+        // 여행 중 또는 여행 후 체크
+        const endDiffTime = travelEndDate - today;
+        const endDiffDays = Math.ceil(endDiffTime / (1000 * 60 * 60 * 24));
+
+        if (endDiffDays >= 0) {
+            // 여행 중
+            displayText = '여행 중';
+            ddayElement.className = `${badgeClass} dday-during`;
+        } else {
+            // 여행 후
+            displayText = '추억 속';
+            ddayElement.className = `${badgeClass} dday-after`;
+        }
+    }
+
+    ddayElement.textContent = displayText;
+    console.log(`📅 D-Day 업데이트: ${displayText}`);
+}
+
 // DOM 로드 완료 후 안전하게 초기화
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', safeInitialize);
+    document.addEventListener('DOMContentLoaded', () => {
+        safeInitialize();
+        updateDDayCounter(); // D-Day 카운터 초기화
+    });
 } else {
     // 이미 로드된 경우 즉시 실행
     safeInitialize();
+    updateDDayCounter(); // D-Day 카운터 초기화
 }

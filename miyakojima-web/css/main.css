@@ -618,15 +618,55 @@ body {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* 반응형 디자인 */
+/* 헤더 높이 제한 - UI 최적화 (모든 기기) */
+.header {
+    max-height: 60vh; /* 뷰포트 높이의 60% 이하로 제한 */
+    overflow-y: auto; /* 필요시 스크롤 */
+}
+
+.weather-details {
+    max-height: 300px; /* 상세 정보 최대 높이 제한 */
+    overflow-y: auto; /* 넘치면 스크롤 */
+}
+
+/* 반응형 디자인 - 모바일 우선 최적화 */
 @media (max-width: 768px) {
+    /* 헤더를 더 컴팩트하게 */
+    .header {
+        max-height: 45vh; /* 모바일에서 더 제한적 */
+        padding: var(--spacing-sm);
+    }
+
     .weather-card {
         max-width: 100%;
         min-width: auto;
+        margin: 0 var(--spacing-xs);
+    }
+
+    /* 날씨 상세 정보를 더 컴팩트하게 */
+    .weather-details {
+        max-height: 180px; /* 모바일에서 더 컴팩트 */
+        padding: var(--spacing-xs);
     }
 
     .weather-details-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    /* 모바일 폰트 크기 최적화 */
+    .weather-detail-item {
+        font-size: 11px;
+        padding: 2px;
+    }
+
+    .weather-detail-value {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .weather-detail-label {
+        font-size: 10px;
     }
 
     .weather-temp {
@@ -635,6 +675,22 @@ body {
 
     .weather-icon-large {
         font-size: 2rem;
+    }
+
+    /* 여행 팁과 예보를 더 컴팩트하게 */
+    .weather-advice h4,
+    .weather-forecast h4 {
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .advice-items {
+        gap: var(--spacing-xs);
+    }
+
+    .advice-item {
+        font-size: 11px;
+        padding: 2px 6px;
     }
 
     .forecast-modal-content {
@@ -1304,6 +1360,77 @@ body {
     margin: 0;
 }
 
+/* POI 필터링 및 검색 스타일 */
+.search-filters {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+}
+
+.filter-row {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: var(--font-md);
+    transition: all var(--transition-speed);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+}
+
+.search-btn {
+    padding: 12px;
+    background: var(--color-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-btn:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+}
+
+.filter-select {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    min-width: 140px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+}
+
 .no-results {
     text-align: center;
     padding: var(--spacing-xl);
@@ -1314,4 +1441,131 @@ body {
     padding: var(--spacing-sm) 0;
     color: var(--text-secondary);
     font-size: var(--font-sm);
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .header {
+        max-height: 55vh;
+    }
+
+    .weather-details {
+        max-height: 250px;
+    }
+
+    .weather-details-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .weather-detail-item {
+        font-size: 12px;
+    }
+
+    .weather-detail-value {
+        font-size: 14px;
+    }
+}
+
+/* 데스크톱 최적화 */
+@media (min-width: 1025px) {
+    .header {
+        max-height: 40vh; /* 데스크톱에서는 더 여유롭게 */
+    }
+
+    .weather-details {
+        max-height: 350px;
+    }
+
+    .weather-details-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* D-Day 카운터 스타일 */
+.dday-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 3px 10px rgba(255, 107, 107, 0.4);
+    margin: 0 8px;
+    animation: ddayPulse 2s ease-in-out infinite;
+    letter-spacing: 0.5px;
+}
+
+/* D-Day 배지 애니메이션 */
+@keyframes ddayPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(255, 107, 107, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.6);
+    }
+}
+
+/* D-Day 상태별 색상 */
+.dday-badge.dday-before {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    box-shadow: 0 3px 10px rgba(255, 107, 107, 0.4);
+}
+
+.dday-badge.dday-today {
+    background: linear-gradient(135deg, #ffd93d, #ff9500);
+    box-shadow: 0 3px 10px rgba(255, 217, 61, 0.6);
+    animation: ddayToday 1.5s ease-in-out infinite;
+}
+
+.dday-badge.dday-during {
+    background: linear-gradient(135deg, #4ecdc4, #44a08d);
+    box-shadow: 0 3px 10px rgba(78, 205, 196, 0.4);
+    animation: ddayDuring 3s ease-in-out infinite;
+}
+
+.dday-badge.dday-after {
+    background: linear-gradient(135deg, #a8a8a8, #7d7d7d);
+    box-shadow: 0 3px 10px rgba(168, 168, 168, 0.3);
+    animation: none;
+}
+
+/* D-Day 당일 특별 애니메이션 */
+@keyframes ddayToday {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(255, 217, 61, 0.6);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 5px 20px rgba(255, 217, 61, 0.8);
+    }
+}
+
+/* 여행 중 애니메이션 */
+@keyframes ddayDuring {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        box-shadow: 0 3px 10px rgba(78, 205, 196, 0.4);
+    }
+    25% {
+        transform: scale(1.02) rotate(1deg);
+        box-shadow: 0 4px 12px rgba(78, 205, 196, 0.5);
+    }
+    75% {
+        transform: scale(1.02) rotate(-1deg);
+        box-shadow: 0 4px 12px rgba(78, 205, 196, 0.5);
+    }
+}
+
+/* 모바일에서 D-Day 배지 최적화 */
+@media (max-width: 768px) {
+    .dday-badge {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        margin: 0 4px;
+    }
 }
