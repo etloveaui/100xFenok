@@ -6,35 +6,60 @@
  */
 class BudgetManager {
     constructor() {
-        this.dailyBudget = CONFIG.BUDGET.DAILY_TOTAL;
+        this.realBudgetData = null;
+        this.dailyBudget = 20000; // JPY 기본값, 실제 데이터 로드 후 업데이트
         this.categories = CONFIG.BUDGET.CATEGORIES;
         this.currentDate = DateUtils.formatDate(new Date());
         this.expenses = [];
         this.alerts = CONFIG.BUDGET.ALERTS;
-        
+
         this.init();
     }
     
     async init() {
         Logger.info('예산 관리자 초기화 중...');
-        
-        // 로컬 저장소에서 예산 데이터 로드
+
+        // 실제 예산 데이터 로드
+        await this.loadRealBudgetData();
+
+        // 로컬 저장소에서 지출 데이터 로드
         await this.loadBudgetData();
-        
+
         // UI 이벤트 리스너 설정
         this.setupEventListeners();
-        
+
         // 초기 UI 업데이트
         await this.updateUI();
-        
+
         // 정기 동기화 설정 (5분마다)
         setInterval(() => this.syncWithBackend(), 5 * 60 * 1000);
-        
+
         Logger.info('예산 관리자 초기화 완료');
     }
     
     /**
-     * 로컬 저장소에서 예산 데이터 로드
+     * 실제 예산 데이터 로드
+     */
+    async loadRealBudgetData() {
+        try {
+            const response = await fetch('./data/budget_data.json');
+            if (response.ok) {
+                this.realBudgetData = await response.json();
+
+                // 실제 예산으로 업데이트
+                if (this.realBudgetData.financial_info?.daily_budget) {
+                    this.dailyBudget = this.realBudgetData.financial_info.daily_budget;
+                }
+
+                Logger.info('실제 예산 데이터 로드 완료:', this.realBudgetData.grand_total || '데이터 확인됨');
+            }
+        } catch (error) {
+            Logger.warn('실제 예산 데이터 로드 실패, 기본값 사용:', error);
+        }
+    }
+
+    /**
+     * 로컬 저장소에서 지출 데이터 로드
      */
     async loadBudgetData() {
         try {
@@ -477,7 +502,12 @@ class BudgetManager {
         const totalSpent = todayExpenses.reduce((sum, expense) => sum + expense.amount, 0);
         const remaining = this.dailyBudget - totalSpent;
         const percentage = NumberUtils.calculatePercentage(totalSpent, this.dailyBudget);
-        
+
+        // 실제 예산 정보 표시
+        if (this.realBudgetData) {
+            this.updateRealBudgetInfo();
+        }
+
         // 요소 업데이트
         const spentElement = DOMUtils.$('#today-spent');
         const remainingElement = DOMUtils.$('#today-remaining');
@@ -724,21 +754,72 @@ class BudgetManager {
     }
     
     /**
+     * 실제 예산 정보 업데이트
+     */
+    updateRealBudgetInfo() {
+        if (!this.realBudgetData) return;
+
+        const budgetInfoElement = DOMUtils.$('#real-budget-info');
+        if (budgetInfoElement && this.realBudgetData.payment_split_summary) {
+            const summary = this.realBudgetData.payment_split_summary;
+            budgetInfoElement.innerHTML = `
+                <div class="real-budget-summary">
+                    <h4>실제 예산 현황</h4>
+                    <div class="budget-split">
+                        <div class="person-budget">
+                            <strong>김은태 (페노메노)</strong>
+                            <p>지불: ${summary.kim_euntai?.total_paid || 'N/A'}</p>
+                            <p>현금: ${summary.kim_euntai?.cash_available || 'N/A'} JPY</p>
+                            <p>카드: ${summary.kim_euntai?.card || 'N/A'}</p>
+                        </div>
+                        <div class="person-budget">
+                            <strong>정유민 (모나)</strong>
+                            <p>지불: ${summary.jeong_yumin?.total_paid || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="total-budget">
+                        <strong>총 지출: ${summary.grand_total?.total_krw_paid || 'N/A'}</strong>
+                        <p>남은 결제: ${summary.grand_total?.pending_jpy_payments || 'N/A'}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 확정된 활동 정보 표시
+        const activitiesElement = DOMUtils.$('#confirmed-activities');
+        if (activitiesElement && this.realBudgetData.expense_categories?.activities?.yabiji_tour) {
+            const tour = this.realBudgetData.expense_categories.activities.yabiji_tour;
+            activitiesElement.innerHTML = `
+                <div class="confirmed-activity">
+                    <h5>확정 활동</h5>
+                    <div class="activity-item">
+                        <strong>야비지 투어</strong>
+                        <p>날짜: ${tour.date}</p>
+                        <p>금액: ${tour.amount}</p>
+                        <p>상태: ${tour.status}</p>
+                        <p>세부사항: ${tour.details}</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    /**
      * 토스트 알림 표시
      */
     showToast(message, type = 'info') {
         const container = DOMUtils.$('#toast-container');
         if (!container) return;
-        
+
         const toast = DOMUtils.createElement('div', `toast ${type}`, `
             <span>${message}</span>
         `);
-        
+
         container.appendChild(toast);
-        
+
         // 애니메이션
         setTimeout(() => toast.classList.add('show'), 100);
-        
+
         // 자동 제거
         setTimeout(() => {
             toast.classList.remove('show');

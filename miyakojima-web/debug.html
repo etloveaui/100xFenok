@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디버그 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>미야코지마 웹앱 디버그</h1>
+    <div id="status">로딩 중...</div>
+    <div id="logs"></div>
+
+    <script type="module">
+        const logContainer = document.getElementById('logs');
+        const statusDiv = document.getElementById('status');
+
+        function log(message, type = 'log') {
+            console.log(message);
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logContainer.appendChild(div);
+        }
+
+        async function testComponents() {
+            try {
+                log('1. CONFIG 테스트 시작');
+                const { CONFIG } = await import('./js/config.js');
+                await CONFIG.initialize();
+                log('✅ CONFIG 로드 성공', 'success');
+
+                log('2. DataService 테스트 시작');
+                const { DataService } = await import('./js/services/data.js');
+                log('✅ DataService 모듈 로드 성공', 'success');
+
+                log('3. DataService 초기화 시작');
+                await DataService.initialize();
+                log('✅ DataService 초기화 성공', 'success');
+
+                log('4. App 모듈 테스트 시작');
+                const { App } = await import('./js/app-new.js');
+                log('✅ App 모듈 로드 성공', 'success');
+
+                log('5. App 인스턴스 생성');
+                const app = new App();
+                log('✅ App 인스턴스 생성 성공', 'success');
+
+                statusDiv.textContent = '✅ 모든 모듈이 정상적으로 로드되었습니다!';
+                statusDiv.style.color = 'green';
+
+            } catch (error) {
+                log(`❌ 오류 발생: ${error.message}`, 'error');
+                log(`스택 트레이스: ${error.stack}`, 'error');
+                statusDiv.textContent = `❌ 오류: ${error.message}`;
+                statusDiv.style.color = 'red';
+            }
+        }
+
+        // 즉시 테스트 시작
+        testComponents();
+    </script>
+</body>
+</html>

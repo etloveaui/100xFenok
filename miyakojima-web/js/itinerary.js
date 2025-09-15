@@ -1,15 +1,17 @@
 class ItineraryManager {
     constructor() {
+        this.realItineraryData = null;
         this.currentItinerary = {};
         this.scheduleItems = [];
         this.isEditing = false;
         this.selectedDate = new Date();
-        
+
         this.init();
     }
 
     async init() {
         try {
+            await this.loadRealItineraryData();
             await this.loadItineraryData();
             this.setupEventListeners();
             this.initializeCalendar();
@@ -59,12 +61,84 @@ class ItineraryManager {
     }
 
     initializeCalendar() {
-        // Set to trip start date if available
-        const tripStart = new Date('2025-09-27');
-        if (tripStart > new Date()) {
-            this.selectedDate = tripStart;
+        // 실제 여행 시작일로 설정
+        if (this.realItineraryData?.trip_overview?.dates) {
+            const tripStartDate = this.realItineraryData.trip_overview.dates.split(' ~ ')[0];
+            const tripStart = new Date(tripStartDate);
+            if (tripStart) {
+                this.selectedDate = tripStart;
+            }
+        } else {
+            // 기본 여행 시작일
+            const tripStart = new Date('2025-09-27');
+            if (tripStart > new Date()) {
+                this.selectedDate = tripStart;
+            }
         }
         this.updateCalendar();
+    }
+
+    async loadRealItineraryData() {
+        try {
+            const response = await fetch('./data/itinerary_data.json');
+            if (response.ok) {
+                this.realItineraryData = await response.json();
+
+                // 실제 여행 일정으로 초기화
+                this.processRealItinerary();
+
+                Logger.info('실제 일정 데이터 로드 완룉:', Object.keys(this.realItineraryData.daily_schedule).length + '일');
+            }
+        } catch (error) {
+            Logger.warn('실제 일정 데이터 로드 실패, 기본값 사용:', error);
+        }
+    }
+
+    processRealItinerary() {
+        if (!this.realItineraryData?.daily_schedule) return;
+
+        // 실제 여행 일정을 앱에서 사용할 수 있는 형식으로 변환
+        Object.entries(this.realItineraryData.daily_schedule).forEach(([dayKey, dayData]) => {
+            const dateKey = dayData.date;
+
+            if (!this.currentItinerary[dateKey]) {
+                this.currentItinerary[dateKey] = {
+                    date: dateKey,
+                    theme: dayData.theme,
+                    accommodation: dayData.accommodation,
+                    items: []
+                };
+            }
+
+            // 스케줄 아이템 제작
+            Object.entries(dayData.schedule).forEach(([timeKey, activity]) => {
+                const scheduleItem = {
+                    id: `${dateKey}_${timeKey}_${Date.now()}`,
+                    date: dateKey,
+                    time: timeKey,
+                    title: activity.activity,
+                    location: activity.location || '',
+                    type: activity.type || 'general',
+                    description: activity.notes || activity.note || '',
+                    status: activity.status || 'planned',
+                    realData: true // 실제 데이터 표시
+                };
+
+                // 예약 확정 정보 추가
+                if (activity.reservation_number) {
+                    scheduleItem.description += ` (예약번호: ${activity.reservation_number})`;
+                }
+                if (activity.cost) {
+                    scheduleItem.description += ` - 비용: ${activity.cost}`;
+                }
+                if (activity.includes) {
+                    scheduleItem.description += ` - 포함: ${Array.isArray(activity.includes) ? activity.includes.join(', ') : activity.includes}`;
+                }
+
+                this.scheduleItems.push(scheduleItem);
+                this.currentItinerary[dateKey].items.push(scheduleItem);
+            });
+        });
     }
 
     async loadItineraryData() {

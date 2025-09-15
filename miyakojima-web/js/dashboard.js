@@ -108,8 +108,15 @@ class DynamicDashboard {
     async updateLocation() {
         if (navigator.geolocation) {
             return new Promise((resolve) => {
+                // 5초 타임아웃 설정
+                const timeout = setTimeout(() => {
+                    console.warn('⚠️ GPS 타임아웃 - 기본 위치 사용');
+                    resolve();
+                }, 5000);
+
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
+                        clearTimeout(timeout);
                         this.currentData.location = {
                             lat: position.coords.latitude,
                             lng: position.coords.longitude,
@@ -118,25 +125,81 @@ class DynamicDashboard {
                         resolve();
                     },
                     () => {
+                        clearTimeout(timeout);
                         // GPS 실패 시 기본 위치 사용
+                        console.warn('⚠️ GPS 실패 - 기본 위치 사용');
                         resolve();
-                    }
+                    },
+                    { timeout: 5000 }  // 5초 타임아웃 설정
                 );
             });
         }
     }
 
     async updateWeather() {
-        // 실제 날씨 API 대신 시뮬레이션
-        const weatherConditions = [
-            { temp: 26, condition: 'sunny', icon: '☀️', humidity: 65 },
-            { temp: 24, condition: 'cloudy', icon: '⛅', humidity: 75 },
-            { temp: 22, condition: 'rainy', icon: '🌧️', humidity: 85 },
-            { temp: 28, condition: 'hot', icon: '🌞', humidity: 60 }
-        ];
-        
-        const randomWeather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
-        this.currentData.weather = randomWeather;
+        try {
+            // 미야코지마 좌표 (위치가 없으면 기본값 사용)
+            const lat = this.currentData.location.lat || 24.7045;
+            const lng = this.currentData.location.lng || 125.2772;
+
+            const apiKey = window.CONFIG.APIS.WEATHER.API_KEY;
+            const url = `${window.CONFIG.APIS.WEATHER.URL}/weather?lat=${lat}&lon=${lng}&appid=${apiKey}&units=metric&lang=kr`;
+
+            console.log('🌤️ 실제 날씨 데이터 가져오는 중...', { lat, lng });
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`날씨 API 오류: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // 날씨 아이콘 매핑
+            const iconMap = {
+                '01d': '☀️', '01n': '🌙', // clear sky
+                '02d': '⛅', '02n': '⛅', // few clouds
+                '03d': '☁️', '03n': '☁️', // scattered clouds
+                '04d': '☁️', '04n': '☁️', // broken clouds
+                '09d': '🌦️', '09n': '🌧️', // shower rain
+                '10d': '🌦️', '10n': '🌧️', // rain
+                '11d': '⛈️', '11n': '⛈️', // thunderstorm
+                '13d': '❄️', '13n': '❄️', // snow
+                '50d': '🌫️', '50n': '🌫️'  // mist
+            };
+
+            this.currentData.weather = {
+                temp: Math.round(data.main.temp),
+                condition: data.weather[0].description,
+                icon: iconMap[data.weather[0].icon] || '🌤️',
+                humidity: data.main.humidity,
+                feelsLike: Math.round(data.main.feels_like),
+                windSpeed: data.wind.speed,
+                visibility: data.visibility / 1000, // km로 변환
+                pressure: data.main.pressure
+            };
+
+            console.log('✅ 실제 날씨 데이터 로드 완료:', this.currentData.weather);
+
+        } catch (error) {
+            console.warn('⚠️ 날씨 API 실패, 기본값 사용:', error.message);
+
+            // API 실패 시 기본값 사용
+            const defaultWeather = [
+                { temp: 26, condition: '맑음', icon: '☀️', humidity: 65 },
+                { temp: 24, condition: '흐림', icon: '⛅', humidity: 75 },
+                { temp: 22, condition: '비', icon: '🌧️', humidity: 85 },
+                { temp: 28, condition: '매우 맑음', icon: '🌞', humidity: 60 }
+            ];
+
+            const randomWeather = defaultWeather[Math.floor(Math.random() * defaultWeather.length)];
+            this.currentData.weather = {
+                ...randomWeather,
+                feelsLike: randomWeather.temp + Math.floor(Math.random() * 4 - 2),
+                windSpeed: Math.random() * 5,
+                visibility: 10,
+                pressure: 1013
+            };
+        }
     }
 
     simulateWeatherChange() {

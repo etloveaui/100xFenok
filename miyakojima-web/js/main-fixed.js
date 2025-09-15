@@ -1,0 +1,91 @@
+// js/main-fixed.js - 안전한 초기화 버전
+async function safeInitialize() {
+    const updateProgress = (percent, message) => {
+        const progressFill = document.getElementById('progress-fill');
+        const loadingText = document.querySelector('.loading-content p');
+
+        if (progressFill) {
+            progressFill.style.width = `${percent}%`;
+        }
+        if (loadingText) {
+            loadingText.textContent = message;
+        }
+    };
+
+    const hideLoadingScreen = () => {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 300);
+        }
+    };
+
+    const showError = (message) => {
+        const loadingContent = document.querySelector('.loading-content');
+        if (loadingContent) {
+            loadingContent.innerHTML = `
+                <div class="error-content">
+                    <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                    <h3>초기화 오류</h3>
+                    <p>${message}</p>
+                    <button onclick="location.reload()" style="
+                        margin-top: 20px;
+                        padding: 10px 20px;
+                        background: #f44336;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    ">페이지 새로고침</button>
+                </div>
+            `;
+        }
+    };
+
+    try {
+        console.log('🔄 안전한 앱 초기화 시작...');
+        updateProgress(10, '모듈 로딩 중...');
+
+        // 1. CONFIG 초기화
+        const { CONFIG } = await import('./config.js');
+        await CONFIG.initialize();
+        console.log('✅ CONFIG 초기화 완료');
+        updateProgress(25, 'CONFIG 로딩 완료...');
+
+        // 2. DataService 초기화
+        const { DataService } = await import('./services/data.js');
+        console.log('✅ DataService 모듈 로드 완료');
+        updateProgress(40, 'DataService 초기화 중...');
+
+        await DataService.initialize();
+        console.log('✅ DataService 초기화 완료');
+        updateProgress(60, 'App 모듈 로딩 중...');
+
+        // 3. App 초기화
+        const { App } = await import('./app-new.js');
+        console.log('✅ App 모듈 로드 완료');
+        updateProgress(80, 'App 초기화 중...');
+
+        const app = new App();
+        window.app = app;
+        await app.start();
+        console.log('✅ App 시작 완료');
+
+        updateProgress(100, '초기화 완료!');
+        setTimeout(hideLoadingScreen, 500);
+
+        console.log('✅ 전체 초기화 완료');
+    } catch (error) {
+        console.error('❌ 초기화 실패:', error);
+        showError(`앱을 시작할 수 없습니다: ${error.message}`);
+    }
+}
+
+// DOM 로드 완료 후 초기화
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', safeInitialize);
+} else {
+    safeInitialize();
+}
