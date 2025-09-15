@@ -1,7 +1,8 @@
 // 미야코지마 웹 플랫폼 - 설정 파일
 // Miyakojima Web Platform - Configuration
 
-const CONFIG = {
+// CONFIG를 전역 객체로 정의
+window.CONFIG = {
     // 프로젝트 정보
     APP_NAME: '미야코지마 여행 컴패니언',
     APP_VERSION: '1.0.0',
@@ -382,6 +383,9 @@ function logConfigInfo() {
 // 전역 접근 가능하도록 설정
 window.CONFIG = CONFIG;
 window.validateConfig = validateConfig;
+
+// CONFIG를 전역으로 직접 참조 (즉시 사용 가능)
+const CONFIG = window.CONFIG;
 
 // 모듈 상태 관리
 window.ConfigStatus = {
