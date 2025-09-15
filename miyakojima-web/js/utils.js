@@ -494,6 +494,143 @@ const DeviceUtils = {
 
 
 /**
+ * API 사용량 추적 유틸리티
+ */
+class APIUsageTracker {
+    constructor() {
+        this.usage = this.loadUsage();
+        this.today = this.getTodayKey();
+        this.initDailyReset();
+    }
+
+    // 오늘 날짜 키 생성
+    getTodayKey() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    // 사용량 데이터 로드
+    loadUsage() {
+        const stored = StorageUtils.get('api_usage') || {};
+        return stored;
+    }
+
+    // 사용량 데이터 저장
+    saveUsage() {
+        StorageUtils.set('api_usage', this.usage, null);
+    }
+
+    // 일일 리셋 체크
+    initDailyReset() {
+        if (!this.usage[this.today]) {
+            // 새로운 날 - 모든 카운터 리셋
+            this.usage = {
+                [this.today]: {}
+            };
+            this.saveUsage();
+            Logger.info('API 사용량 일일 리셋 완료');
+        }
+    }
+
+    // API 호출 전 한도 체크
+    canUseAPI(apiType) {
+        const todayUsage = this.usage[this.today] || {};
+        const currentCount = todayUsage[apiType] || 0;
+        const limit = CONFIG.RATE_LIMITS[apiType]?.daily || 999999;
+
+        return currentCount < limit;
+    }
+
+    // API 사용량 기록
+    recordUsage(apiType, count = 1) {
+        if (!this.usage[this.today]) {
+            this.usage[this.today] = {};
+        }
+
+        const current = this.usage[this.today][apiType] || 0;
+        this.usage[this.today][apiType] = current + count;
+
+        this.saveUsage();
+
+        // 한도 경고 체크
+        this.checkWarnings(apiType);
+
+        Logger.log(`API 사용량 기록: ${apiType} (+${count})`);
+    }
+
+    // 한도 경고 체크
+    checkWarnings(apiType) {
+        const current = this.usage[this.today][apiType] || 0;
+        const limit = CONFIG.RATE_LIMITS[apiType]?.daily || 999999;
+        const percentage = current / limit;
+
+        if (percentage >= 0.9) {
+            Logger.warn(`⚠️ ${apiType} API 사용량 90% 초과! (${current}/${limit})`);
+            this.showUsageWarning(apiType, current, limit);
+        } else if (percentage >= 0.8) {
+            Logger.warn(`⚠️ ${apiType} API 사용량 80% 도달 (${current}/${limit})`);
+        }
+    }
+
+    // 사용량 경고 UI 표시
+    showUsageWarning(apiType, current, limit) {
+        if (window.Toast) {
+            window.Toast.show(
+                `⚠️ ${apiType} API 한도 임박\n${current}/${limit} 사용됨`,
+                'warning',
+                5000
+            );
+        }
+    }
+
+    // 현재 사용량 조회
+    getUsage(apiType) {
+        return this.usage[this.today]?.[apiType] || 0;
+    }
+
+    // 남은 한도 조회
+    getRemainingLimit(apiType) {
+        const current = this.getUsage(apiType);
+        const limit = CONFIG.RATE_LIMITS[apiType]?.daily || 999999;
+        return Math.max(0, limit - current);
+    }
+
+    // 전체 사용량 현황
+    getUsageReport() {
+        const report = {};
+        const todayUsage = this.usage[this.today] || {};
+
+        Object.keys(CONFIG.RATE_LIMITS).forEach(apiType => {
+            const current = todayUsage[apiType] || 0;
+            const limit = CONFIG.RATE_LIMITS[apiType].daily;
+            report[apiType] = {
+                current,
+                limit,
+                remaining: limit - current,
+                percentage: Math.round((current / limit) * 100)
+            };
+        });
+
+        return report;
+    }
+
+    // API 호출 래퍼 (자동 추적)
+    async trackAPI(apiType, apiCall) {
+        if (!this.canUseAPI(apiType)) {
+            throw new Error(`${apiType} API 일일 한도 초과`);
+        }
+
+        try {
+            const result = await apiCall();
+            this.recordUsage(apiType);
+            return result;
+        } catch (error) {
+            Logger.error(`${apiType} API 호출 실패:`, error);
+            throw error;
+        }
+    }
+}
+
+/**
  * 레거시 Utils 호환성 객체 (itinerary.js 호환용)
  */
 const Utils = {
@@ -520,6 +657,7 @@ window.NetworkUtils = NetworkUtils;
 window.AnimationUtils = AnimationUtils;
 window.FormUtils = FormUtils;
 window.DeviceUtils = DeviceUtils;
+window.APIUsageTracker = APIUsageTracker;
 window.Utils = Utils;
 
 // 모듈 상태 관리

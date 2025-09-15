@@ -84,6 +84,18 @@ class ModuleInitializer {
             timeout: 15000,
             optional: true
         });
+
+        this.defineModule('maps', {
+            dependencies: ['config', 'utils', 'location'],
+            checkReady: () => window.GoogleMapsManager && window.MapsStatus?.isReady,
+            initialize: async () => {
+                if (window.MapsStatus) {
+                    await window.MapsStatus.init();
+                }
+            },
+            timeout: 25000,
+            optional: true
+        });
         
         this.defineModule('poi', {
             dependencies: ['config', 'utils', 'storage'],
