@@ -3,7 +3,7 @@
 
 // 스프레드시트 ID들 - 실제 배포시 설정 필요
 const SPREADSHEET_CONFIG = {
-  MASTER_SHEET_ID: 'YOUR_MASTER_SPREADSHEET_ID', // 메인 데이터 시트
+  MASTER_SHEET_ID: '1VvRRQKvE6FksGc3Vj4DLLlYB1_d7YqSsQ-xgAhmwZ1g', // 메인 데이터 시트
   BUDGET_SHEET_NAME: 'Budget',
   ITINERARY_SHEET_NAME: 'Itinerary', 
   POI_SHEET_NAME: 'POI_UserData',

@@ -1,5 +1,4 @@
 // js/modules/weather.js - 완전한 날씨 시스템
-import { ConfigManager } from '../config.js';
 
 class WeatherService {
     constructor() {

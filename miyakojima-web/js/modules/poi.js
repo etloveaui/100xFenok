@@ -7,7 +7,9 @@ class POIManager {
         this.filteredPOIs = [];
         this.currentCategory = 'all';
         this.currentSearchTerm = '';
+        this.currentSortBy = 'default';
         this.categories = {};
+        this.userLocation = null; // 사용자 위치
         this.initialized = false;
     }
 
@@ -28,6 +30,12 @@ class POIManager {
 
             // 초기 필터링된 목록 설정
             this.filteredPOIs = [...this.pois];
+
+            // 사용자 위치 설정 (미야코지마 중심)
+            this.userLocation = {
+                lat: 24.7392,  // 미야코지마 중심부
+                lng: 125.2814
+            };
 
             // UI 초기화
             this.initializeUI();
@@ -51,11 +59,30 @@ class POIManager {
             });
         }
 
+        // 정렬 필터 이벤트 리스너
+        const sortFilter = document.getElementById('sort-filter');
+        if (sortFilter) {
+            sortFilter.addEventListener('change', (e) => {
+                this.sortBy(e.target.value);
+            });
+        }
+
         // 검색 이벤트 리스너
         const searchInput = document.getElementById('poi-search');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 this.searchPOIs(e.target.value);
+            });
+        }
+
+        // 검색 버튼 이벤트
+        const searchBtn = document.getElementById('poi-search-btn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                const searchInput = document.getElementById('poi-search');
+                if (searchInput) {
+                    this.searchPOIs(searchInput.value);
+                }
             });
         }
     }
@@ -67,6 +94,11 @@ class POIManager {
 
     searchPOIs(searchTerm) {
         this.currentSearchTerm = searchTerm.toLowerCase();
+        this.applyFilters();
+    }
+
+    sortBy(sortType) {
+        this.currentSortBy = sortType;
         this.applyFilters();
     }
 
@@ -95,8 +127,35 @@ class POIManager {
             );
         }
 
+        // 정렬 적용
+        filtered = this.applySorting(filtered);
+
         this.filteredPOIs = filtered;
         this.renderPOIList();
+    }
+
+    applySorting(pois) {
+        switch (this.currentSortBy) {
+            case 'name':
+                return pois.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+            case 'distance':
+                if (this.userLocation) {
+                    return pois.sort((a, b) => {
+                        const distA = this.calculateDistance(
+                            this.userLocation.lat, this.userLocation.lng,
+                            a.coordinates.lat, a.coordinates.lng
+                        );
+                        const distB = this.calculateDistance(
+                            this.userLocation.lat, this.userLocation.lng,
+                            b.coordinates.lat, b.coordinates.lng
+                        );
+                        return distA - distB;
+                    });
+                }
+                return pois;
+            default:
+                return pois;
+        }
     }
 
     renderPOIList() {
@@ -117,42 +176,65 @@ class POIManager {
             return;
         }
 
-        container.innerHTML = this.filteredPOIs.map(poi => `
-            <div class="poi-item" data-id="${poi.id}">
-                <div class="poi-header">
-                    <h3 class="poi-name">${poi.name}</h3>
-                    <span class="poi-category">${this.getCategoryLabel(poi.category)}</span>
+        container.innerHTML = this.filteredPOIs.map(poi => {
+            let distanceText = '';
+            if (this.userLocation && poi.coordinates) {
+                const distance = this.calculateDistance(
+                    this.userLocation.lat, this.userLocation.lng,
+                    poi.coordinates.lat, poi.coordinates.lng
+                );
+                distanceText = `<span class="poi-distance">${distance.toFixed(1)}km</span>`;
+            }
+
+            return `
+                <div class="poi-item" data-id="${poi.id}">
+                    <div class="poi-header">
+                        <div class="poi-title-group">
+                            <h3 class="poi-name">${poi.name}</h3>
+                            <span class="poi-category">${this.getCategoryLabel(poi.category)}</span>
+                        </div>
+                        ${distanceText}
+                    </div>
+                    <p class="poi-description">${poi.description || poi.nameEn || ''}</p>
+                    <div class="poi-features">
+                        ${(poi.features || []).map(feature =>
+                            `<span class="feature-tag">${feature}</span>`
+                        ).join('')}
+                    </div>
+                    <div class="poi-meta">
+                        <span class="open-hours">
+                            <svg class="meta-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12,6 12,12 16,14"></polyline></svg>
+                            ${poi.openHours || '운영시간 확인필요'}
+                        </span>
+                        ${poi.address ? `
+                        <span class="poi-address">
+                            <svg class="meta-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            ${poi.address.split(',')[0]}
+                        </span>` : ''}
+                    </div>
+                    <div class="poi-actions">
+                        <button class="btn-primary" onclick="poiManager.showDetails('${poi.id}')">
+                            <svg class="btn-icon"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path></svg>
+                            상세보기
+                        </button>
+                        <button class="btn-secondary" onclick="poiManager.getDirections(${poi.coordinates.lat}, ${poi.coordinates.lng})">
+                            <svg class="btn-icon"><path d="M5 12h14m-7-7 7 7-7 7"></path></svg>
+                            길찾기
+                        </button>
+                    </div>
                 </div>
-                <p class="poi-description">${poi.description || ''}</p>
-                <div class="poi-features">
-                    ${(poi.features || []).map(feature =>
-                        `<span class="feature-tag">${feature}</span>`
-                    ).join('')}
-                </div>
-                <div class="poi-meta">
-                    <span class="open-hours">${poi.openHours || '운영시간 확인필요'}</span>
-                </div>
-                <div class="poi-actions">
-                    <button class="btn-primary" onclick="poiManager.showDetails('${poi.id}')">
-                        상세보기
-                    </button>
-                    <button class="btn-secondary" onclick="poiManager.getDirections(${poi.coordinates.lat}, ${poi.coordinates.lng})">
-                        길찾기
-                    </button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     getCategoryLabel(category) {
         const categoryLabels = {
+            'beaches': '해변',
             'nature': '자연 경관',
-            'dining': '식당/카페',
-            'shopping': '쇼핑',
-            'culture': '문화 명소',
-            'marine': '해양 활동',
-            'beach': '해변',
-            'sightseeing': '관광지'
+            'restaurants': '음식점',
+            'activities': '액티비티',
+            'culture': '문화',
+            'shopping': '쇼핑'
         };
         return categoryLabels[category] || category;
     }
