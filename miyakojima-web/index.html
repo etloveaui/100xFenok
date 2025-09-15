@@ -320,30 +320,39 @@
         <svg class="icon"><circle cx="12" cy="12" r="2"></circle><path d="m4.93 4.93 14.14 14.14"></path></svg>
     </div>
 
-    <!-- JavaScript - 의존성 순서 중요 -->
+    <!-- Google Maps API 콜백 방식 로딩 -->
+    <script>
+        window.initGoogleMaps = function() {
+            window.googleMapsLoaded = true;
+            console.log('✅ Google Maps API 로드 완료');
+        };
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY&callback=initGoogleMaps"></script>
+
+    <!-- JavaScript - 모듈 타입 제거하고 일반 스크립트로 변경 -->
     <!-- Phase 1: 기본 설정 -->
-    <script type="module" src="./js/config.js"></script>
-    <script type="module" src="./js/utils.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/utils.js"></script>
 
     <!-- Phase 2: 저장소 및 API -->
-    <script type="module" src="./js/storage.js"></script>
-    <script type="module" src="./js/api.js"></script>
+    <script src="./js/storage.js"></script>
+    <script src="./js/api.js"></script>
 
     <!-- Phase 3: 핵심 모듈 -->
-    <script type="module" src="./js/modules/navigation.js"></script>
-    <script type="module" src="./js/modules/share.js"></script>
+    <script src="./js/modules/navigation.js"></script>
+    <script src="./js/modules/share.js"></script>
 
     <!-- Phase 4: 비즈니스 로직 모듈 -->
-    <script type="module" src="./js/budget.js"></script>
-    <script type="module" src="./js/location.js"></script>
-    <script type="module" src="./js/maps.js"></script>
-    <script type="module" src="./js/itinerary.js"></script>
-    <script type="module" src="./js/poi.js"></script>
-    <script type="module" src="./js/dashboard.js"></script>
-    <script type="module" src="./js/chart.js"></script>
+    <script src="./js/budget.js"></script>
+    <script src="./js/location.js"></script>
+    <script src="./js/maps.js"></script>
+    <script src="./js/itinerary.js"></script>
+    <script src="./js/poi.js"></script>
+    <script src="./js/dashboard.js"></script>
+    <script src="./js/chart.js"></script>
 
     <!-- Phase 5: 메인 애플리케이션 -->
-    <script type="module" src="./js/app.js"></script>
+    <script src="./js/app.js"></script>
 
     <!-- Service Worker 등록 -->
     <script>
