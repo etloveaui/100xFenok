@@ -45,8 +45,31 @@ class POIManager {
         
         // 초기 UI 업데이트
         await this.updateUI();
+
+        // Google Maps 초기화 (지도가 로드된 경우)
+        this.initializeMap();
         
         Logger.info('POI 관리자 초기화 완료:', this.pois.length + '개 POI 로드됨');
+    }
+
+    /**
+     * Google Maps 초기화
+     */
+    initializeMap() {
+        // Google Maps가 로드되었는지 확인
+        if (window.googleMapsLoaded && window.MapsStatus && window.MapsStatus.manager) {
+            Logger.info('Google Maps이 이미 초기화됨');
+            return;
+        }
+
+        // Google Maps 로드 대기
+        if (window.googleMapsLoaded && window.MapsStatus) {
+            window.MapsStatus.init().catch(error => {
+                Logger.error('Google Maps 초기화 실패:', error);
+            });
+        } else {
+            Logger.warn('Google Maps API가 아직 로드되지 않음');
+        }
     }
     
     /**
@@ -125,7 +148,7 @@ class POIManager {
             poi.personalization_score = this.calculatePersonalizationScore(poi);
             
             // 혼잡도 현재 시간 기준 설정 (필드가 없으면 기본값 사용)
-            if (poi.crowd_level) {
+            if (poi.crowd_level && typeof poi.crowd_level === 'object') {
                 const currentHour = new Date().getHours();
                 if (currentHour < 12) {
                     poi.current_crowd_level = poi.crowd_level.morning || 5;
