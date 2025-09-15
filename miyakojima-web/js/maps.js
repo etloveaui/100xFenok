@@ -203,10 +203,25 @@ class GoogleMapsManager {
     // POI 마커 생성
     createPOIMarkers(pois) {
         pois.forEach(poi => {
-            if (poi.coordinates && poi.coordinates.length === 2) {
-                const [lat, lng] = poi.coordinates;
-                const category = poi.category || 'other';
-                const icon = this.categoryIcons[category] || this.categoryIcons.nature_views;
+            if (!poi.coordinates) return;
+
+            // 좌표 형태 확인 (배열 또는 객체)
+            let lat, lng;
+            if (Array.isArray(poi.coordinates) && poi.coordinates.length === 2) {
+                // 이전 형태: [lat, lng]
+                lat = poi.coordinates[0];
+                lng = poi.coordinates[1];
+            } else if (poi.coordinates.lat && poi.coordinates.lng) {
+                // 새로운 형태: {lat: x, lng: y}
+                lat = poi.coordinates.lat;
+                lng = poi.coordinates.lng;
+            } else {
+                console.warn('POI 좌표 형식이 올바르지 않음:', poi.id);
+                return;
+            }
+
+            const category = poi.category || 'other';
+            const icon = this.categoryIcons[category] || this.categoryIcons.nature_views;
 
                 const marker = new google.maps.Marker({
                     position: { lat, lng },
