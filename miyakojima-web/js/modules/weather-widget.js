@@ -162,42 +162,145 @@ class WeatherWidget {
         return match ? match[1] : dateStr.slice(-1);
     }
 
-    // 🎨 완전히 새로운 토글 방식 - 오버레이 방식으로 변환
+    // 🎨 완전히 새로운 토글 방식 - 모달 팝업 방식
     toggleDetails() {
-        const weatherCard = this.container.closest('.weather-card');
-        const detailsEl = this.container.querySelector('#weather-details');
         const expandBtn = this.container.querySelector('#weather-expand-btn');
 
-        if (!weatherCard || !detailsEl || !expandBtn) return;
-
-        this.isExpanded = !this.isExpanded;
-
-        // 🔧 inline display: none 스타일 제거 (CSS 오버레이가 작동하도록)
-        detailsEl.style.removeProperty('display');
-
         if (this.isExpanded) {
-            // 카드에 expanded 클래스 추가하여 오버레이 활성화
-            weatherCard.classList.add('expanded');
-            expandBtn.classList.add('expanded');
-            expandBtn.setAttribute('aria-label', '날씨 상세 정보 닫기');
-
-            // 닫기 버튼이 없으면 추가
-            if (!detailsEl.querySelector('.weather-close-btn')) {
-                const closeBtn = document.createElement('button');
-                closeBtn.className = 'weather-close-btn';
-                closeBtn.innerHTML = '✕';
-                closeBtn.setAttribute('aria-label', '닫기');
-                closeBtn.onclick = () => this.closeDetails();
-                detailsEl.insertBefore(closeBtn, detailsEl.firstChild);
-            }
+            this.hideDetails();
         } else {
-            this.closeDetails();
+            this.showDetails();
         }
 
-        // 상태 변경 이벤트 발생
-        this.container.dispatchEvent(new CustomEvent('weatherToggle', {
-            detail: { expanded: this.isExpanded }
-        }));
+        if (expandBtn) {
+            expandBtn.classList.toggle('expanded', this.isExpanded);
+            expandBtn.setAttribute('aria-label', this.isExpanded ? '날씨 상세 정보 닫기' : '날씨 상세 정보 보기');
+        }
+    }
+
+    showDetails() {
+        // 기존 모달 제거
+        this.hideDetails();
+
+        // 모달 생성
+        const modal = document.createElement('div');
+        modal.id = 'weather-details-modal';
+        modal.className = 'weather-details';
+
+        const modalContent = document.createElement('div');
+        modalContent.className = 'weather-details-content';
+
+        // 닫기 버튼
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'weather-close-btn';
+        closeBtn.innerHTML = '✕';
+        closeBtn.onclick = () => this.hideDetails();
+        modalContent.appendChild(closeBtn);
+
+        // 상세 날씨 내용
+        const detailsHTML = this.renderDetailsContent();
+        modalContent.insertAdjacentHTML('beforeend', detailsHTML);
+
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // 모달 배경 클릭시 닫기
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hideDetails();
+            }
+        });
+
+        // ESC 키로 닫기
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.hideDetails();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+
+        // 애니메이션을 위한 디레이
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+        });
+
+        this.isExpanded = true;
+    }
+
+    hideDetails() {
+        const modal = document.getElementById('weather-details-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+        this.isExpanded = false;
+    }
+
+    renderDetailsContent() {
+        if (!this.weatherData) return '<p>날씨 데이터를 불러올 수 없습니다.</p>';
+
+        return `
+            <h2 style="text-align: center; margin-bottom: 20px;">🌤️ 상세 날씨 정보</h2>
+
+            <div class="weather-details-grid">
+                <div class="weather-detail-item">
+                    <span class="weather-detail-icon">🌡️</span>
+                    <span class="weather-detail-label">현재 온도</span>
+                    <span class="weather-detail-value">${this.weatherData.temp}°C</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="weather-detail-icon">🎆</span>
+                    <span class="weather-detail-label">체감 온도</span>
+                    <span class="weather-detail-value">${this.weatherData.feelsLike}°C</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="weather-detail-icon">💧</span>
+                    <span class="weather-detail-label">습도</span>
+                    <span class="weather-detail-value">${this.weatherData.humidity}%</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="weather-detail-icon">🌬️</span>
+                    <span class="weather-detail-label">풍속</span>
+                    <span class="weather-detail-value">${this.weatherData.windSpeed} m/s</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="weather-detail-icon">☁️</span>
+                    <span class="weather-detail-label">구름량</span>
+                    <span class="weather-detail-value">${this.weatherData.clouds}%</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="weather-detail-icon">🕶️</span>
+                    <span class="weather-detail-label">가시거리</span>
+                    <span class="weather-detail-value">${(this.weatherData.visibility / 1000).toFixed(1)} km</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="weather-detail-icon">🌅</span>
+                    <span class="weather-detail-label">일출</span>
+                    <span class="weather-detail-value">${this.weatherData.sunrise}</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="weather-detail-icon">🌆</span>
+                    <span class="weather-detail-label">일몰</span>
+                    <span class="weather-detail-value">${this.weatherData.sunset}</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <h3 style="margin-bottom: 15px;">📅 5일 날씨 예보</h3>
+                <div class="forecast-preview-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                    ${this.forecastData ? this.forecastData.slice(0, 5).map(day => `
+                        <div style="text-align: center; padding: 10px; background: #f5f5f5; border-radius: 8px;">
+                            <div style="font-size: 24px;">${day.icon}</div>
+                            <div style="font-size: 12px; margin: 5px 0;">${day.dateKr.split(' ')[0]}</div>
+                            <div style="font-weight: bold;">${day.temp.max}°/${day.temp.min}°</div>
+                        </div>
+                    `).join('') : '<p>예보 데이터 없음</p>'}
+                </div>
+            </div>
+        `;
     }
 
     // 🚪 새로운 닫기 기능

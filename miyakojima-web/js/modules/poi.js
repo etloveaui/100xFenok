@@ -217,7 +217,7 @@ class POIManager {
                             <svg class="btn-icon"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path></svg>
                             상세보기
                         </button>
-                        <button class="btn-secondary" onclick="poiManager.getDirections(${poi.coordinates.lat}, ${poi.coordinates.lng})">
+                        <button class="btn-secondary" onclick="poiManager.getDirections(${poi.coordinates.lat}, ${poi.coordinates.lng}, '${poi.name.replace(/'/g, "\\'")}')">
                             <svg class="btn-icon"><path d="M5 12h14m-7-7 7 7-7 7"></path></svg>
                             길찾기
                         </button>
@@ -284,7 +284,7 @@ class POIManager {
                         </div>
                     </div>
                     <div class="modal-actions">
-                        <button class="btn-primary" onclick="poiManager.getDirections(${poi.coordinates.lat}, ${poi.coordinates.lng})">
+                        <button class="btn-primary" onclick="poiManager.getDirections(${poi.coordinates.lat}, ${poi.coordinates.lng}, '${poi.name.replace(/'/g, "\\'")}')">
                             길찾기
                         </button>
                         <button class="btn-secondary" onclick="this.closest('.modal').remove()">
@@ -304,10 +304,73 @@ class POIManager {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
 
-    getDirections(lat, lng) {
-        // Google Maps 길찾기 열기
-        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-        window.open(url, '_blank');
+    async getDirections(lat, lng, poiName = '') {
+        try {
+            // 먼저 사용자의 현재 위치를 가져오기
+            const userLocation = await this.getCurrentLocation();
+
+            if (userLocation) {
+                // 현재 위치가 있으면 현재 위치에서 목적지까지 길찾기
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${lat},${lng}&travelmode=driving`;
+                window.open(url, '_blank');
+
+                // 구글맵 매니저가 있으면 지도에도 경로 표시
+                if (window.app && window.app.modules.get('maps')) {
+                    const mapsManager = window.app.modules.get('maps');
+                    mapsManager.showRoute(userLocation, {lat, lng}, poiName);
+                }
+            } else {
+                // 현재 위치를 가져올 수 없으면 기본 동작
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+                window.open(url, '_blank');
+            }
+        } catch (error) {
+            console.error('길찾기 실행 중 오류:', error);
+            // 오류 발생시 기본 동작
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            window.open(url, '_blank');
+        }
+    }
+
+    // 사용자의 현재 위치 가져오기
+    async getCurrentLocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                console.warn('Geolocation API를 지원하지 않는 브라우저입니다.');
+                resolve(null);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const location = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+
+                    // 사용자 위치 업데이트
+                    this.userLocation = location;
+                    console.log('✅ 현재 위치 획득:', location);
+                    resolve(location);
+                },
+                (error) => {
+                    console.warn('위치 정보를 가져올 수 없습니다:', error.message);
+                    // 실패시 미야코지마 중심 좌표 반환
+                    const defaultLocation = {
+                        lat: 24.7392,
+                        lng: 125.2814
+                    };
+                    this.userLocation = defaultLocation;
+                    resolve(defaultLocation);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
+        });
     }
 
     // 주변 POI 찾기 (현재 위치 기준)

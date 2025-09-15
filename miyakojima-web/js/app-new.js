@@ -6,6 +6,8 @@ import { itineraryManager } from './modules/itinerary.js';
 import { diningManager } from './modules/dining.js';
 import { weatherWidget } from './modules/weather-widget.js';
 import { GoogleMapsManager } from './maps.js';
+import { locationService } from './services/location.js';
+import { locationUI } from './modules/location-ui.js';
 
 export class App {
     constructor() {
@@ -58,7 +60,8 @@ export class App {
                 this.initializeItineraryManager().catch(err => ({ error: 'itinerary', reason: err })),
                 this.initializeDiningManager().catch(err => ({ error: 'dining', reason: err })),
                 this.initializeWeatherWidget().catch(err => ({ error: 'weather', reason: err })),
-                this.initializeGoogleMapsManager().catch(err => ({ error: 'maps', reason: err }))
+                this.initializeGoogleMapsManager().catch(err => ({ error: 'maps', reason: err })),
+                this.initializeLocationService().catch(err => ({ error: 'location', reason: err }))
             ];
 
             const results = await Promise.allSettled(modulePromises);
@@ -66,7 +69,7 @@ export class App {
             // 실패한 모듈들 로깅
             results.forEach((result, index) => {
                 if (result.status === 'rejected' || (result.value && result.value.error)) {
-                    const moduleName = ['POI', 'Budget', 'Itinerary', 'Dining', 'Weather', 'Maps'][index];
+                    const moduleName = ['POI', 'Budget', 'Itinerary', 'Dining', 'Weather', 'Maps', 'Location'][index];
                     console.warn(`⚠️ ${moduleName} 모듈 초기화 실패:`, result.reason || result.value.reason);
                 }
             });
@@ -150,6 +153,37 @@ export class App {
             console.log('✅ 구글맵 매니저 등록 완료');
         } catch (error) {
             console.error('구글맵 매니저 초기화 실패:', error);
+            throw error;
+        }
+    }
+
+    async initializeLocationService() {
+        try {
+            // 위치 UI 초기화
+            locationUI.initialize();
+            window.locationUI = locationUI; // 전역에서 접근 가능하도록
+
+            // 위치 서비스 시작
+            locationService.startTracking();
+            this.modules.set('location', locationService);
+            console.log('✅ 위치 추적 서비스 등록 완료');
+
+            // 위치 업데이트 구독
+            locationService.subscribe((event, data) => {
+                if (event === 'update') {
+                    console.log('📍 현재 위치 업데이트:', data);
+                    // POI 매니저에 위치 업데이트
+                    if (this.modules.get('poi')) {
+                        this.modules.get('poi').userLocation = data;
+                    }
+                    // UI 상태 업데이트
+                    locationUI.updateStatusIndicator('active');
+                } else if (event === 'error') {
+                    locationUI.updateStatusIndicator('error');
+                }
+            });
+        } catch (error) {
+            console.error('위치 서비스 초기화 실패:', error);
             throw error;
         }
     }
