@@ -861,7 +861,13 @@ class POIManager {
      * UI 업데이트
      */
     async updateUI() {
-        await this.filterAndUpdatePOIs();
+        // 초기화 시에는 모든 POI 표시
+        if (this.filteredPOIs.length === 0 && this.pois.length > 0) {
+            this.filteredPOIs = [...this.pois];
+            this.filteredPOIs.sort((a, b) => b.personalization_score - a.personalization_score);
+        }
+
+        await this.updatePOIListUI();
         this.updateRecommendationUI();
     }
     
