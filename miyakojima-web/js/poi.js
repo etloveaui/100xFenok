@@ -498,7 +498,7 @@ class POIManager {
                 
                 <div class="poi-details">
                     <div class="poi-hours">
-                        <strong>운영시간:</strong> ${poi.contact.hours}
+                        <strong>운영시간:</strong> ${poi.openHours || poi.contact?.hours || '정보 없음'}
                     </div>
                     
                     ${poi.amenities && poi.amenities.length > 0 ? `
@@ -666,7 +666,7 @@ class POIManager {
                                 <strong>주소:</strong> ${poi.address}
                             </div>
                             <div class="contact-item">
-                                <strong>운영시간:</strong> ${poi.contact.hours}
+                                <strong>운영시간:</strong> ${poi.openHours || poi.contact?.hours || '정보 없음'}
                             </div>
                             ${poi.contact.phone ? `
                                 <div class="contact-item">
