@@ -1,0 +1,70 @@
+GOOGLE SHEETS DEBUG ANALYSIS SUMMARY
+====================================
+
+ISSUE: download_from_sheets.py fails with "POI ID is required" error
+STATUS: Upload worked (100 POIs), but download fails due to column mapping
+
+EXPECTED COLUMNS (from sheets_config.py):
+1.  id                    11. website
+2.  name_ko              12. opening_hours
+3.  name_local           13. price_level
+4.  category_primary     14. parking_notes
+5.  island               15. seasonality_best_time
+6.  address_raw          16. description_short
+7.  postal_code          17. tags
+8.  lat                  18. weather_dependent
+9.  lng                  19. accessibility_level
+10. phone                20. rating
+
+REQUIRED FIELDS: id, name_ko, name_local, category_primary, lat, lng
+
+LIKELY CAUSE:
+The download script uses get_all_records() which converts row 1 to dictionary keys.
+If headers don't exactly match POI_COLUMNS, the 'id' field can't be found.
+
+DEBUGGING STEPS:
+1. Run debug_download.py to see actual vs expected column headers
+2. Check if credentials.json exists in sheets_integration folder
+3. Compare actual sheet headers with POI_COLUMNS list
+
+QUICK FIXES:
+Option 1 - Column Mapping (add to download script):
+```python
+COLUMN_MAPPING = {
+    # Map actual header name to expected name
+    'ID': 'id',                    # if sheet has 'ID' instead of 'id'
+    'Name (Korean)': 'name_ko',    # if sheet has different format
+    'Latitude': 'lat',             # if sheet has full names
+    'Longitude': 'lng',
+}
+
+def map_columns(record):
+    mapped = {}
+    for key, value in record.items():
+        mapped_key = COLUMN_MAPPING.get(key, key)
+        mapped[mapped_key] = value
+    return mapped
+```
+
+Option 2 - Fix Headers (run once):
+```python
+client = GoogleSheetsClient()
+client.upload_headers()  # Overwrites row 1 with correct headers
+```
+
+Option 3 - Update POI_COLUMNS:
+If sheet headers are correct, update sheets_config.py POI_COLUMNS to match.
+
+FILES CREATED:
+- debug_download.py: Full debug script (needs credentials.json)
+- mock_debug_analysis.py: Analysis without credentials
+- debug_sheets_standalone.py: Direct sheets access debug
+
+NEXT STEPS:
+1. Ensure credentials.json is in sheets_integration directory
+2. Run: python debug_download.py
+3. Apply the appropriate fix based on debug output
+4. Test download again
+
+The debug script will show exactly which columns exist vs which are expected,
+making it easy to create the correct mapping or fix the headers.

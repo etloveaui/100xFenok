@@ -29,20 +29,39 @@ const CONFIG = {
     
     // 무료 외부 API 설정
     APIS: {
+        // Google Maps APIs (무료 한도 내)
+        GOOGLE_MAPS: {
+            API_KEY: import.meta?.env?.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY',
+            PROJECT_ID: import.meta?.env?.VITE_GOOGLE_PROJECT_ID || 'miyakojima-poi-sync',
+            JAVASCRIPT_API_URL: 'https://maps.googleapis.com/maps/api/js',
+            DIRECTIONS_API_URL: 'https://maps.googleapis.com/maps/api/directions/json',
+            PLACES_API_URL: 'https://maps.googleapis.com/maps/api/place',
+            GEOCODING_API_URL: 'https://maps.googleapis.com/maps/api/geocode/json',
+            CACHE_DURATION: 3600000 // 1시간 캐시
+        },
+
+        // Gemini AI API (무료 250 requests/day)
+        GEMINI: {
+            API_KEY: import.meta?.env?.VITE_GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY',
+            BASE_URL: 'https://generativelanguage.googleapis.com/v1/models',
+            MODEL: 'gemini-2.5-flash',
+            CACHE_DURATION: 1800000 // 30분 캐시
+        },
+
         // 환율 API (무료 1,500 requests/month)
         EXCHANGE_RATE: {
             URL: 'https://api.exchangerate-api.com/v4/latest/JPY',
             CACHE_DURATION: 3600000 // 1시간 캐시
         },
-        
+
         // 날씨 API (무료 1,000 requests/day) - API 키 필요
         WEATHER: {
             URL: 'https://api.openweathermap.org/data/2.5',
-            API_KEY: 'YOUR_OPENWEATHER_API_KEY',
+            API_KEY: import.meta?.env?.VITE_OPENWEATHER_API_KEY || 'YOUR_OPENWEATHER_API_KEY',
             CACHE_DURATION: 1800000 // 30분 캐시
         },
-        
-        // 지오코딩 API (무료 2,500 requests/day) - API 키 필요  
+
+        // 지오코딩 API (무료 2,500 requests/day) - API 키 필요
         GEOCODING: {
             URL: 'https://api.opencagedata.com/geocode/v1/json',
             API_KEY: 'YOUR_OPENCAGE_API_KEY',
@@ -180,6 +199,31 @@ const CONFIG = {
     
     // 무료 할당량 모니터링
     RATE_LIMITS: {
+        // Google Maps APIs (일일 기준, 여유분 10% 남김)
+        MAPS_JAVASCRIPT: {
+            daily: 933,     // 28,000/월 ÷ 30일
+            monthly: 28000
+        },
+        DIRECTIONS: {
+            daily: 83,      // 2,500/월 ÷ 30일
+            monthly: 2500
+        },
+        PLACES: {
+            daily: 83,      // 2,500/월 ÷ 30일
+            monthly: 2500
+        },
+        MAPS_GEOCODING: {
+            daily: 1333,    // 40,000/월 ÷ 30일
+            monthly: 40000
+        },
+
+        // Gemini AI API
+        GEMINI: {
+            daily: 250,     // 무료 250 requests/day
+            per_minute: 10, // RPM 한도
+            tokens_per_minute: 250000 // TPM 한도
+        },
+
         EXCHANGE_RATE: {
             daily: 50,      // 1500/월 ÷ 30일
             monthly: 1500
@@ -189,7 +233,7 @@ const CONFIG = {
             hourly: 40
         },
         GEOCODING: {
-            daily: 2250,    // 여유분 250 남김  
+            daily: 2250,    // 여유분 250 남김
             hourly: 100
         },
         GAS_BACKEND: {
