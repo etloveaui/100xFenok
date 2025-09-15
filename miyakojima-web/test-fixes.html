@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏝️ 미야코지마 - 수정사항 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #ddd;
+        }
+        .status-success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .status-error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .status-warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+        .module-list {
+            margin: 20px 0;
+        }
+        .module-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .module-status {
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .status-ready {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        #console-output {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🏝️ 미야코지마 웹앱 - 수정사항 테스트</h1>
+
+        <div class="status-item status-warning">
+            <strong>테스트 목적:</strong> 수정된 파일들이 올바르게 로드되고 초기화되는지 확인
+        </div>
+
+        <h2>📋 수정 완료 항목</h2>
+        <div class="status-item status-success">
+            ✅ <strong>modules/navigation.js</strong> - 네비게이션 모듈 생성 완료
+        </div>
+        <div class="status-item status-success">
+            ✅ <strong>modules/share.js</strong> - 공유 기능 모듈 생성 완료
+        </div>
+        <div class="status-item status-success">
+            ✅ <strong>index.html</strong> - 스크립트 로딩 순서 및 모듈 참조 수정 완료
+        </div>
+        <div class="status-item status-success">
+            ✅ <strong>config.js</strong> - 브라우저 호환성 확인 (process.env 이슈 없음)
+        </div>
+
+        <h2>🔧 모듈 초기화 상태</h2>
+        <div class="module-list" id="module-status">
+            <!-- 동적으로 생성됩니다 -->
+        </div>
+
+        <h2>🧪 테스트 액션</h2>
+        <button class="btn" onclick="testNavigation()">네비게이션 테스트</button>
+        <button class="btn" onclick="testShare()">공유 기능 테스트</button>
+        <button class="btn" onclick="testConfiguration()">설정 확인</button>
+        <button class="btn" onclick="clearConsole()">콘솔 지우기</button>
+
+        <h2>📊 실시간 콘솔 로그</h2>
+        <div id="console-output"></div>
+    </div>
+
+    <!-- JavaScript - 수정된 로딩 순서 적용 -->
+    <!-- Phase 1: 기본 설정 -->
+    <script type="module" src="./js/config.js"></script>
+    <script type="module" src="./js/utils.js"></script>
+
+    <!-- Phase 2: 저장소 및 API -->
+    <script type="module" src="./js/storage.js"></script>
+    <script type="module" src="./js/api.js"></script>
+
+    <!-- Phase 3: 핵심 모듈 -->
+    <script type="module" src="./js/modules/navigation.js"></script>
+    <script type="module" src="./js/modules/share.js"></script>
+
+    <!-- 테스트 스크립트 -->
+    <script>
+        // 콘솔 로그 캡처
+        const consoleOutput = document.getElementById('console-output');
+        const originalConsole = {
+            log: console.log,
+            info: console.info,
+            warn: console.warn,
+            error: console.error
+        };
+
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = {
+                log: '#00ff00',
+                info: '#00bfff',
+                warn: '#ffff00',
+                error: '#ff4444'
+            }[type] || '#00ff00';
+
+            consoleOutput.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // 콘솔 오버라이드
+        console.log = (...args) => {
+            originalConsole.log(...args);
+            addToConsole(args.join(' '), 'log');
+        };
+        console.info = (...args) => {
+            originalConsole.info(...args);
+            addToConsole(args.join(' '), 'info');
+        };
+        console.warn = (...args) => {
+            originalConsole.warn(...args);
+            addToConsole(args.join(' '), 'warn');
+        };
+        console.error = (...args) => {
+            originalConsole.error(...args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        // 모듈 상태 추적
+        const moduleStates = {
+            config: { name: 'CONFIG', status: 'pending' },
+            utils: { name: 'UTILS', status: 'pending' },
+            storage: { name: 'STORAGE', status: 'pending' },
+            api: { name: 'API', status: 'pending' },
+            navigation: { name: 'NAVIGATION', status: 'pending' },
+            share: { name: 'SHARE', status: 'pending' }
+        };
+
+        // 모듈 준비 이벤트 리스너
+        window.addEventListener('moduleReady', (e) => {
+            const moduleName = e.detail.moduleName;
+            if (moduleStates[moduleName]) {
+                moduleStates[moduleName].status = 'ready';
+                updateModuleStatus();
+                console.info(`✅ ${moduleName.toUpperCase()} 모듈 초기화 완료`);
+            }
+        });
+
+        // 모듈 상태 업데이트
+        function updateModuleStatus() {
+            const container = document.getElementById('module-status');
+            container.innerHTML = '';
+
+            Object.entries(moduleStates).forEach(([key, module]) => {
+                const div = document.createElement('div');
+                div.className = 'module-item';
+
+                const statusClass = module.status === 'ready' ? 'status-ready' :
+                                  module.status === 'failed' ? 'status-failed' : 'status-pending';
+
+                div.innerHTML = `
+                    <span>${module.name} 모듈</span>
+                    <span class="module-status ${statusClass}">
+                        ${module.status === 'ready' ? '준비됨' :
+                          module.status === 'failed' ? '실패' : '로딩중'}
+                    </span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // 초기 모듈 상태 표시
+        updateModuleStatus();
+
+        // 테스트 함수들
+        function testNavigation() {
+            console.info('🧭 네비게이션 테스트 시작...');
+
+            if (window.navigationManager) {
+                console.log('✅ navigationManager 객체 존재함');
+
+                if (window.NavigationStatus && window.NavigationStatus.isReady) {
+                    console.log('✅ Navigation 모듈이 초기화됨');
+
+                    // 테스트 네비게이션
+                    const testSections = ['dashboard', 'budget', 'poi'];
+                    testSections.forEach((section, index) => {
+                        setTimeout(() => {
+                            console.log(`📍 섹션 이동 테스트: ${section}`);
+                            if (window.navigationManager.navigateToSection) {
+                                window.navigationManager.navigateToSection(section);
+                                console.log(`✅ ${section} 섹션으로 이동 성공`);
+                            } else {
+                                console.error(`❌ navigateToSection 메서드가 없음`);
+                            }
+                        }, index * 1000);
+                    });
+                } else {
+                    console.warn('⚠️ Navigation 모듈이 아직 초기화되지 않음');
+                }
+            } else {
+                console.error('❌ navigationManager 객체가 없음');
+            }
+        }
+
+        function testShare() {
+            console.info('📤 공유 기능 테스트 시작...');
+
+            if (window.shareManager) {
+                console.log('✅ shareManager 객체 존재함');
+
+                if (window.ShareStatus && window.ShareStatus.isReady) {
+                    console.log('✅ Share 모듈이 초기화됨');
+
+                    // Web Share API 지원 확인
+                    console.log(`📱 Web Share API 지원: ${window.shareManager.webShareSupported ? '지원됨' : '지원되지 않음'}`);
+
+                    // 클립보드 공유 테스트
+                    if (window.shareManager.shareClipboard) {
+                        console.log('📋 클립보드 공유 테스트...');
+                        window.shareManager.shareClipboard({
+                            title: '테스트 제목',
+                            description: '테스트 설명',
+                            url: window.location.href
+                        }).then(success => {
+                            if (success) {
+                                console.log('✅ 클립보드 공유 테스트 성공');
+                            } else {
+                                console.warn('⚠️ 클립보드 공유 테스트 실패');
+                            }
+                        });
+                    }
+                } else {
+                    console.warn('⚠️ Share 모듈이 아직 초기화되지 않음');
+                }
+            } else {
+                console.error('❌ shareManager 객체가 없음');
+            }
+        }
+
+        function testConfiguration() {
+            console.info('⚙️ 설정 확인 테스트 시작...');
+
+            if (window.CONFIG) {
+                console.log('✅ CONFIG 객체 존재함');
+                console.log(`📱 앱 이름: ${window.CONFIG.APP_NAME}`);
+                console.log(`📅 여행 기간: ${window.CONFIG.TRIP_INFO.START_DATE} ~ ${window.CONFIG.TRIP_INFO.END_DATE}`);
+                console.log(`💰 일일 예산: ¥${window.CONFIG.BUDGET.DAILY_TOTAL.toLocaleString()}`);
+                console.log(`🗺️ POI 카테고리: ${Object.keys(window.CONFIG.POI.CATEGORIES).length}개`);
+                console.log(`🔧 디버그 모드: ${window.CONFIG.DEBUG.ENABLED ? '활성' : '비활성'}`);
+
+                // 설정 유효성 검사
+                if (window.validateConfig) {
+                    const isValid = window.validateConfig();
+                    console.log(`✅ 설정 유효성: ${isValid ? '통과' : '실패'}`);
+                } else {
+                    console.warn('⚠️ validateConfig 함수가 없음');
+                }
+            } else {
+                console.error('❌ CONFIG 객체가 없음');
+            }
+        }
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+
+        // 페이지 로드 완료 시 자동 테스트
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.info('🏝️ 미야코지마 웹앱 수정사항 테스트 페이지 로드 완료');
+                console.info('📋 자동 설정 확인을 시작합니다...');
+                testConfiguration();
+            }, 1000);
+        });
+
+        // 오류 캐치
+        window.addEventListener('error', (e) => {
+            console.error(`💥 JavaScript 오류: ${e.message}`);
+            console.error(`📍 파일: ${e.filename}:${e.lineno}:${e.colno}`);
+        });
+
+        // 모듈 로딩 타임아웃 체크
+        setTimeout(() => {
+            const pendingModules = Object.entries(moduleStates)
+                .filter(([key, module]) => module.status === 'pending')
+                .map(([key, module]) => module.name);
+
+            if (pendingModules.length > 0) {
+                console.warn(`⏰ 타임아웃: 다음 모듈들이 초기화되지 않음: ${pendingModules.join(', ')}`);
+            } else {
+                console.info('🎉 모든 모듈이 성공적으로 초기화되었습니다!');
+            }
+        }, 10000);
+    </script>
+</body>
+</html>

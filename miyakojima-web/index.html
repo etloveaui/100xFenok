@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="미야코지마 여행 스마트 컴패니언 - 실시간 예산 추적, GPS 기반 추천, 스마트 일정 관리">
     <title>🏝️ 미야코지마 여행 컴패니언</title>
-    
+
     <!-- PWA 설정 -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#00bcd4">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="미야코지마 컴패니언">
-    
+
     <!-- CSS -->
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/mobile.css">
-    
+
     <!-- 무료 아이콘 (Feather Icons CDN 대체용 인라인 SVG) -->
     <style>
         .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
@@ -49,7 +49,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 네비게이션 -->
         <nav class="main-nav">
             <button class="nav-btn active" data-section="dashboard">
@@ -185,18 +185,18 @@
                     <button class="btn-secondary" id="export-budget">내보내기</button>
                 </div>
             </div>
-            
+
             <div class="budget-content">
                 <!-- 예산 차트 -->
                 <div class="budget-chart-container">
                     <canvas id="budget-chart" width="400" height="200"></canvas>
                 </div>
-                
+
                 <!-- 카테고리별 예산 -->
                 <div class="budget-categories" id="budget-categories">
                     <!-- 동적으로 생성 -->
                 </div>
-                
+
                 <!-- 최근 지출 내역 -->
                 <div class="recent-expenses">
                     <h3>최근 지출</h3>
@@ -219,7 +219,7 @@
                     <button class="date-btn" data-date="2025-10-01">01일</button>
                 </div>
             </div>
-            
+
             <div class="itinerary-content">
                 <div class="timeline" id="itinerary-timeline">
                     <!-- 동적으로 생성 -->
@@ -243,7 +243,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="poi-content">
                 <div class="poi-map" id="poi-map">
                     <!-- 지도가 여기에 로드됩니다 -->
@@ -269,7 +269,7 @@
     </div>
 
     <!-- 모달들 -->
-    
+
     <!-- 지출 추가 모달 -->
     <div id="expense-modal" class="modal">
         <div class="modal-content">
@@ -320,18 +320,31 @@
         <svg class="icon"><circle cx="12" cy="12" r="2"></circle><path d="m4.93 4.93 14.14 14.14"></path></svg>
     </div>
 
-    <!-- JavaScript -->
+    <!-- JavaScript - 의존성 순서 중요 -->
+    <!-- Phase 1: 기본 설정 -->
     <script type="module" src="./js/config.js"></script>
     <script type="module" src="./js/utils.js"></script>
+
+    <!-- Phase 2: 저장소 및 API -->
     <script type="module" src="./js/storage.js"></script>
     <script type="module" src="./js/api.js"></script>
+
+    <!-- Phase 3: 핵심 모듈 -->
+    <script type="module" src="./js/modules/navigation.js"></script>
+    <script type="module" src="./js/modules/share.js"></script>
+
+    <!-- Phase 4: 비즈니스 로직 모듈 -->
     <script type="module" src="./js/budget.js"></script>
     <script type="module" src="./js/location.js"></script>
     <script type="module" src="./js/maps.js"></script>
     <script type="module" src="./js/itinerary.js"></script>
     <script type="module" src="./js/poi.js"></script>
+    <script type="module" src="./js/dashboard.js"></script>
+    <script type="module" src="./js/chart.js"></script>
+
+    <!-- Phase 5: 메인 애플리케이션 -->
     <script type="module" src="./js/app.js"></script>
-    
+
     <!-- Service Worker 등록 -->
     <script>
         if ('serviceWorker' in navigator) {
