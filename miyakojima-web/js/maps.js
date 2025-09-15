@@ -1,6 +1,9 @@
 // 미야코지마 웹 플랫폼 - Google Maps 통합
 // Google Maps Integration for Miyakojima Web Platform
 
+import { CONFIG } from './config.js';
+import { Logger } from './utils.js';
+
 /**
  * Google Maps 관리자 클래스
  */
@@ -42,10 +45,10 @@ class GoogleMapsManager {
                 throw new Error('Google Maps API가 로드되지 않았습니다');
             }
 
-            // 지도 컨테이너 확인
-            const mapContainer = document.getElementById('google-map');
+            // 지도 컨테이너 확인 (poi-map 사용)
+            const mapContainer = document.getElementById('poi-map');
             if (!mapContainer) {
-                throw new Error('지도 컨테이너를 찾을 수 없습니다');
+                throw new Error('지도 컨테이너(poi-map)를 찾을 수 없습니다');
             }
 
             // 지도 생성
@@ -167,7 +170,7 @@ class GoogleMapsManager {
             }
 
             // 카테고리별 마커 아이콘
-            const category = CONFIG.POI.CATEGORIES[poi.category] || {};
+            const category = CONFIG.config?.POI?.CATEGORIES?.[poi.category] || {};
             const markerIcon = this.getMarkerIcon(category);
 
             // 마커 생성
@@ -204,7 +207,7 @@ class GoogleMapsManager {
      * 정보창 콘텐츠 생성
      */
     createInfoWindowContent(poi, lat, lng) {
-        const category = CONFIG.POI.CATEGORIES[poi.category] || {};
+        const category = CONFIG.config?.POI?.CATEGORIES?.[poi.category] || {};
 
         try {
             const infoContent = `
@@ -579,3 +582,7 @@ if (typeof google !== 'undefined' && google.maps) {
 }
 
 Logger.info('Google Maps 모듈 로드 완료');
+
+// ES6 모듈 export
+export { GoogleMapsManager };
+export default GoogleMapsManager;
