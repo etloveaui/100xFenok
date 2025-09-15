@@ -43,9 +43,73 @@
                     <span id="current-date">2025.9.27-10.1 (4박5일)</span>
                     <span id="day-counter">페노메노♥모나 미야코지마</span>
                 </div>
-                <div class="weather-widget" id="weather-widget">
-                    <span class="weather-icon">☀️</span>
-                    <span class="weather-temp">26°C</span>
+                <div class="weather-card" id="weather-card">
+                    <div class="weather-current" id="weather-current">
+                        <div class="weather-temp-info">
+                            <span class="weather-temp" id="current-temp">26°C</span>
+                            <span class="weather-feels" id="feels-like">체감 28°C</span>
+                        </div>
+                        <div class="weather-icon-container">
+                            <span class="weather-icon-large" id="weather-icon">☀️</span>
+                            <span class="weather-condition" id="weather-condition">맑음</span>
+                        </div>
+                        <button class="weather-expand-btn" id="weather-expand-btn" aria-label="날씨 상세 정보">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="weather-details" id="weather-details" style="display: none;">
+                        <div class="weather-details-grid">
+                            <div class="weather-detail-item">
+                                <span class="detail-icon">💨</span>
+                                <span class="detail-label">바람</span>
+                                <span class="detail-value" id="wind-speed">3.2 m/s</span>
+                            </div>
+                            <div class="weather-detail-item">
+                                <span class="detail-icon">💧</span>
+                                <span class="detail-label">습도</span>
+                                <span class="detail-value" id="humidity">65%</span>
+                            </div>
+                            <div class="weather-detail-item">
+                                <span class="detail-icon">👁️</span>
+                                <span class="detail-label">가시거리</span>
+                                <span class="detail-value" id="visibility">10km</span>
+                            </div>
+                            <div class="weather-detail-item">
+                                <span class="detail-icon">🌅</span>
+                                <span class="detail-label">일출</span>
+                                <span class="detail-value" id="sunrise">06:30</span>
+                            </div>
+                            <div class="weather-detail-item">
+                                <span class="detail-icon">🌇</span>
+                                <span class="detail-label">일몰</span>
+                                <span class="detail-value" id="sunset">19:15</span>
+                            </div>
+                            <div class="weather-detail-item">
+                                <span class="detail-icon">📊</span>
+                                <span class="detail-label">기압</span>
+                                <span class="detail-value" id="pressure">1013 hPa</span>
+                            </div>
+                        </div>
+
+                        <div class="travel-advice" id="travel-advice">
+                            <h4>🧳 여행 팁</h4>
+                            <div class="advice-items" id="advice-items">
+                                <span class="advice-item">🧴 선크림 필수</span>
+                                <span class="advice-item">🏖️ 해변 활동 좋음</span>
+                            </div>
+                        </div>
+
+                        <div class="forecast-preview" id="forecast-preview">
+                            <h4>📅 5일 예보</h4>
+                            <div class="forecast-items" id="forecast-items">
+                                <!-- 5일 예보 항목들이 여기에 동적으로 생성됩니다 -->
+                            </div>
+                            <button class="forecast-full-btn" id="forecast-full-btn">전체 예보 보기</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
