@@ -105,20 +105,66 @@ class GoogleMapsManager {
      * 현재 위치 마커 생성
      */
     createCurrentLocationMarker() {
+        // SVG를 안전하게 인코딩
+        const svgString = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#4285f4">
+                <circle cx="12" cy="12" r="8"/>
+                <circle cx="12" cy="12" r="3" fill="white"/>
+            </svg>
+        `;
+
+        const dataUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString.trim());
+
         this.currentLocationMarker = new google.maps.Marker({
             map: this.map,
             title: '현재 위치',
             icon: {
-                url: 'data:image/svg+xml;base64,' + btoa(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#4285f4">
-                        <circle cx="12" cy="12" r="8"/>
-                        <circle cx="12" cy="12" r="3" fill="white"/>
-                    </svg>
-                `),
+                url: dataUrl,
                 scaledSize: new google.maps.Size(24, 24),
                 anchor: new google.maps.Point(12, 12)
             }
         });
+
+        // 정확도 원 생성
+        this.accuracyCircle = new google.maps.Circle({
+            map: this.map,
+            fillColor: '#4285F4',
+            fillOpacity: 0.2,
+            strokeColor: '#4285F4',
+            strokeOpacity: 0.5,
+            strokeWeight: 1,
+            center: this.center,
+            radius: 100
+        });
+    }
+
+    /**
+     * 현재 위치 업데이트
+     */
+    updateCurrentLocation(location) {
+        if (!this.currentLocationMarker || !this.map) return;
+
+        const position = new google.maps.LatLng(location.lat, location.lng);
+
+        // 마커 위치 업데이트
+        this.currentLocationMarker.setPosition(position);
+        this.currentLocationMarker.setMap(this.map);
+
+        // 정확도 원 업데이트
+        if (this.accuracyCircle && location.accuracy) {
+            this.accuracyCircle.setCenter(position);
+            this.accuracyCircle.setRadius(location.accuracy);
+            this.accuracyCircle.setMap(this.map);
+        }
+
+        // 첫 위치 업데이트시 지도 중심 이동
+        if (!this.hasInitialLocationSet) {
+            this.map.setCenter(position);
+            this.map.setZoom(15);
+            this.hasInitialLocationSet = true;
+        }
+
+        Logger.info('현재 위치 업데이트:', location);
     }
 
     /**
@@ -236,13 +282,19 @@ class GoogleMapsManager {
         const color = category.color || '#ff6b6b';
         const icon = category.icon || '📍';
 
+        // SVG를 UTF-8로 인코딩하여 data URL로 변환
+        const svgString = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="12" fill="${color}" stroke="white" stroke-width="2"/>
+                <text x="16" y="20" text-anchor="middle" font-size="16" fill="white">${icon}</text>
+            </svg>
+        `;
+
+        // encodeURIComponent를 사용하여 안전하게 인코딩
+        const dataUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString.trim());
+
         return {
-            url: 'data:image/svg+xml;base64,' + btoa(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                    <circle cx="16" cy="16" r="12" fill="${color}" stroke="white" stroke-width="2"/>
-                    <text x="16" y="20" text-anchor="middle" font-size="12" fill="white">${icon}</text>
-                </svg>
-            `),
+            url: dataUrl,
             scaledSize: new google.maps.Size(32, 32),
             anchor: new google.maps.Point(16, 16)
         };
@@ -373,6 +425,72 @@ class GoogleMapsManager {
         }
 
         Logger.info('길찾기 경로 지우기 완료');
+    }
+
+    /**
+     * 경로를 지도에 표시 (POI 매니저에서 호출)
+     */
+    showRoute(origin, destination, destinationName = '') {
+        if (!this.isInitialized || !this.directionsService || !this.directionsRenderer) {
+            Logger.warn('Google Maps가 아직 초기화되지 않았습니다');
+            return;
+        }
+
+        const request = {
+            origin: new google.maps.LatLng(origin.lat, origin.lng),
+            destination: new google.maps.LatLng(destination.lat, destination.lng),
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.METRIC,
+            avoidHighways: false,
+            avoidTolls: false
+        };
+
+        this.directionsService.route(request, (result, status) => {
+            if (status === google.maps.DirectionsStatus.OK) {
+                this.directionsRenderer.setDirections(result);
+
+                // 경로 정보 표시
+                const route = result.routes[0];
+                const leg = route.legs[0];
+
+                // 토스트 메시지로 간단히 표시
+                const message = `${destinationName}까지: ${leg.distance.text}, 약 ${leg.duration.text}`;
+                this.showToast(message);
+
+                Logger.info(`경로 표시 완료: ${message}`);
+            } else {
+                Logger.error('경로 표시 실패:', status);
+            }
+        });
+    }
+
+    /**
+     * 토스트 메시지 표시
+     */
+    showToast(message, duration = 3000) {
+        const toast = document.createElement('div');
+        toast.className = 'map-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            z-index: 10000;
+            font-size: 14px;
+            animation: slideUp 0.3s ease;
+        `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideDown 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
     }
 
     /**
