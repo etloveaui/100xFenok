@@ -97,26 +97,46 @@ class POIManager {
     preprocessPOIData() {
         this.pois.forEach(poi => {
             // 거리 계산 (사용자 위치가 있는 경우)
-            if (this.userLocation) {
+            if (this.userLocation && poi.coordinates) {
+                // 좌표 형태 확인 (배열 또는 객체)
+                let lat, lng;
+                if (Array.isArray(poi.coordinates)) {
+                    // 이전 형태: [lat, lng]
+                    lat = poi.coordinates[0];
+                    lng = poi.coordinates[1];
+                } else if (poi.coordinates.lat && poi.coordinates.lng) {
+                    // 새로운 형태: {lat: x, lng: y}
+                    lat = poi.coordinates.lat;
+                    lng = poi.coordinates.lng;
+                } else {
+                    Logger.warn('POI 좌표 형식이 올바르지 않음:', poi.id);
+                    return;
+                }
+
                 poi.distance = LocationUtils.calculateDistance(
                     this.userLocation.lat,
                     this.userLocation.lng,
-                    poi.coordinates.lat,
-                    poi.coordinates.lng
+                    lat,
+                    lng
                 );
             }
             
             // 개인화 점수 계산
             poi.personalization_score = this.calculatePersonalizationScore(poi);
             
-            // 혼잡도 현재 시간 기준 설정
-            const currentHour = new Date().getHours();
-            if (currentHour < 12) {
-                poi.current_crowd_level = poi.crowd_level.morning;
-            } else if (currentHour < 18) {
-                poi.current_crowd_level = poi.crowd_level.afternoon;
+            // 혼잡도 현재 시간 기준 설정 (필드가 없으면 기본값 사용)
+            if (poi.crowd_level) {
+                const currentHour = new Date().getHours();
+                if (currentHour < 12) {
+                    poi.current_crowd_level = poi.crowd_level.morning || 5;
+                } else if (currentHour < 18) {
+                    poi.current_crowd_level = poi.crowd_level.afternoon || 7;
+                } else {
+                    poi.current_crowd_level = poi.crowd_level.evening || 6;
+                }
             } else {
-                poi.current_crowd_level = poi.crowd_level.evening;
+                // 기본 혼잡도 설정
+                poi.current_crowd_level = Math.floor(Math.random() * 5) + 3; // 3-7 사이 랜덤
             }
         });
     }
