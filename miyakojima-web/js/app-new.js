@@ -1,9 +1,9 @@
 // js/app-new.js
 import { Logger, DOMUtils } from './utils.js';
-import { POIManager } from './modules/poi.js';
-import { BudgetManager } from './modules/budget.js';
-import { ItineraryManager } from './modules/itinerary.js';
-import { DiningManager } from './modules/dining.js';
+import { poiManager } from './modules/poi.js';
+import { budgetManager } from './modules/budget.js';
+import { itineraryManager } from './modules/itinerary.js';
+import { diningManager } from './modules/dining.js';
 
 export class App {
     constructor() {
@@ -85,8 +85,8 @@ export class App {
 
     async initializePOIManager() {
         try {
-            await POIManager.initialize();
-            this.modules.set('poi', POIManager);
+            await poiManager.initialize();
+            this.modules.set('poi', poiManager);
             console.log('✅ POI 매니저 등록 완료');
         } catch (error) {
             console.error('POI 매니저 초기화 실패:', error);
@@ -96,8 +96,8 @@ export class App {
 
     async initializeBudgetManager() {
         try {
-            await BudgetManager.initialize();
-            this.modules.set('budget', BudgetManager);
+            await budgetManager.initialize();
+            this.modules.set('budget', budgetManager);
             console.log('✅ 예산 매니저 등록 완료');
         } catch (error) {
             console.error('예산 매니저 초기화 실패:', error);
@@ -107,8 +107,8 @@ export class App {
 
     async initializeItineraryManager() {
         try {
-            await ItineraryManager.initialize();
-            this.modules.set('itinerary', ItineraryManager);
+            await itineraryManager.initialize();
+            this.modules.set('itinerary', itineraryManager);
             console.log('✅ 일정 매니저 등록 완료');
         } catch (error) {
             console.error('일정 매니저 초기화 실패:', error);
@@ -118,8 +118,8 @@ export class App {
 
     async initializeDiningManager() {
         try {
-            await DiningManager.initialize();
-            this.modules.set('dining', DiningManager);
+            await diningManager.initialize();
+            this.modules.set('dining', diningManager);
             console.log('✅ 다이닝 매니저 등록 완료');
         } catch (error) {
             console.error('다이닝 매니저 초기화 실패:', error);
