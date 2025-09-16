@@ -656,15 +656,26 @@
 
 .main-nav {
   display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   justify-content: center;
   gap: 8px;
   padding: 15px 20px 5px;
   background: rgba(255, 255, 255, 0.05);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  visibility: visible !important;
-  opacity: 1 !important;
   z-index: 100;
   position: relative;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 60px !important;
+  flex-wrap: wrap;
+}
+
+/* 강제 표시 규칙 */
+nav.main-nav {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .nav-btn {
@@ -821,4 +832,49 @@
   .trip-countdown {
     transition: none;
   }
+}
+
+/* ==========================================================================
+   네비게이션 탭 강제 표시 - 최우선순위 스타일
+   ========================================================================== */
+
+/* 절대적으로 표시되어야 하는 네비게이션 */
+.main-nav,
+nav.main-nav {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 60px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 15px 20px 5px !important;
+  margin: 0 !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* 절대적으로 표시되어야 하는 탭 버튼들 */
+.nav-btn,
+button.nav-btn,
+.main-nav .nav-btn {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10000 !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 20px !important;
+  border-radius: 25px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  cursor: pointer !important;
+  min-width: 100px !important;
+  flex-shrink: 0 !important;
 }

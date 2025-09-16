@@ -6,6 +6,101 @@
     <meta name="description" content="미야코지마 여행 스마트 컴패니언 - 실시간 예산 추적, GPS 기반 추천, 스마트 일정 관리">
     <title>🏝️ Miyako Travel Assistant v2.3.0</title>
 
+    <!-- 네비게이션 개선된 디자인 CSS -->
+    <style>
+        /* 네비게이션 컨테이너 - 깔끔한 배경 */
+        .main-nav {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 99999 !important;
+            background: linear-gradient(135deg, rgba(0, 188, 212, 0.95), rgba(0, 150, 200, 0.95)) !important;
+            backdrop-filter: blur(20px) !important;
+            padding: 12px 20px !important;
+            justify-content: center !important;
+            gap: 12px !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 65px !important;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* 모든 탭 버튼 기본 스타일 */
+        .nav-btn {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 99999 !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 10px 18px !important;
+            border-radius: 20px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            border: 2px solid transparent !important;
+            cursor: pointer !important;
+            min-width: 100px !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            text-shadow: none !important;
+        }
+
+        /* 활성화된 탭 - 선명한 흰색 배경 */
+        .nav-btn.active,
+        button.nav-btn.active,
+        .nav-btn.btn-primary {
+            background: #ffffff !important;
+            color: #00bcd4 !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+            transform: translateY(-2px) !important;
+            border-color: #ffffff !important;
+        }
+
+        /* 비활성 탭 - 반투명 흰색 */
+        .nav-btn:not(.active),
+        button.nav-btn:not(.active),
+        .nav-btn.btn-secondary {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* 호버 효과 */
+        .nav-btn:not(.active):hover {
+            background: rgba(255, 255, 255, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* SVG 아이콘 스타일 */
+        .nav-btn svg,
+        .nav-btn .icon {
+            width: 18px !important;
+            height: 18px !important;
+            stroke: currentColor !important;
+            stroke-width: 2 !important;
+            fill: none !important;
+        }
+
+        .nav-btn.active svg,
+        .nav-btn.active .icon {
+            stroke: #00bcd4 !important;
+        }
+
+        .nav-btn:not(.active) svg,
+        .nav-btn:not(.active) .icon {
+            stroke: #ffffff !important;
+        }
+
+        /* 클릭 효과 */
+        .nav-btn:active {
+            transform: scale(0.98) !important;
+        }
+    </style>
+
     <!-- PWA 설정 -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#00bcd4">
@@ -84,27 +179,27 @@
                 </div>
             </div>
         </div>
-
-        <!-- 네비게이션 -->
-        <nav class="main-nav">
-            <button class="btn-primary nav-btn active" data-section="dashboard">
-                <svg class="icon"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path></svg>
-                대시보드
-            </button>
-            <button class="btn-secondary nav-btn" data-section="budget">
-                <svg class="icon"><path d="M12 1v22m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                예산
-            </button>
-            <button class="btn-secondary nav-btn" data-section="itinerary">
-                <svg class="icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                일정
-            </button>
-            <button class="btn-secondary nav-btn" data-section="poi">
-                <svg class="icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                장소
-            </button>
-        </nav>
     </header>
+
+    <!-- 네비게이션 - 헤더 밖에 독립적으로 배치 -->
+    <nav class="main-nav" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
+        <button class="btn-primary nav-btn active" data-section="dashboard" style="display: flex !important; visibility: visible !important;">
+            <svg class="icon"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path></svg>
+            대시보드
+        </button>
+        <button class="btn-secondary nav-btn" data-section="budget" style="display: flex !important; visibility: visible !important;">
+            <svg class="icon"><path d="M12 1v22m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            예산
+        </button>
+        <button class="btn-secondary nav-btn" data-section="itinerary" style="display: flex !important; visibility: visible !important;">
+            <svg class="icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            일정
+        </button>
+        <button class="btn-secondary nav-btn" data-section="poi" style="display: flex !important; visibility: visible !important;">
+            <svg class="icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            장소
+        </button>
+    </nav>
 
     <!-- 메인 컨테이너 -->
     <main id="main-content" class="main-container" role="main">
