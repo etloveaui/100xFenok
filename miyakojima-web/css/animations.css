@@ -95,14 +95,13 @@
 }
 
 /* 버튼 리플 효과 */
-.btn-primary, .btn-secondary, .action-btn, .nav-btn {
+.btn-primary, .btn-secondary, .nav-btn {
     position: relative;
     overflow: hidden;
 }
 
-.btn-primary::before, 
-.btn-secondary::before, 
-.action-btn::before, 
+.btn-primary::before,
+.btn-secondary::before,
 .nav-btn::before {
     content: '';
     position: absolute;
@@ -116,9 +115,8 @@
     transition: width 0.6s, height 0.6s;
 }
 
-.btn-primary:active::before, 
-.btn-secondary:active::before, 
-.action-btn:active::before, 
+.btn-primary:active::before,
+.btn-secondary:active::before,
 .nav-btn:active::before {
     width: 300px;
     height: 300px;
@@ -244,17 +242,7 @@
 }
 
 /* 마이크로 인터랙션 */
-.action-btn {
-    transition: all 0.2s var(--smooth);
-}
-
-.action-btn:hover {
-    transform: translateY(-2px) scale(1.02);
-}
-
-.action-btn:active {
-    transform: translateY(0) scale(0.98);
-}
+/* .action-btn 스타일 제거됨 - Shadcn UI 버튼 사용 */
 
 /* 프로그레스 바 애니메이션 */
 .progress-fill {
