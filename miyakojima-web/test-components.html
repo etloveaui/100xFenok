@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadcn UI 컴포넌트 무결성 테스트</title>
+
+    <!-- 컴포넌트 스타일 -->
+    <link rel="stylesheet" href="./components/ui/styles.css">
+
+    <style>
+        body {
+            font-family: var(--font-sans);
+            margin: 0;
+            padding: 20px;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+
+        .test-section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            background-color: hsl(var(--card));
+        }
+
+        .test-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: hsl(var(--primary));
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .test-item {
+            padding: 1rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: calc(var(--radius) - 2px);
+            background-color: hsl(var(--background));
+        }
+
+        .error-log {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            max-width: 400px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #ff4444;
+            color: white;
+            padding: 1rem;
+            border-radius: var(--radius);
+            display: none;
+            z-index: 9999;
+        }
+
+        .success-log {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #22c55e;
+            color: white;
+            padding: 1rem;
+            border-radius: var(--radius);
+            display: none;
+            z-index: 9999;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .progress-container {
+            width: 100%;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle">
+        <div id="theme-switch-container"></div>
+    </div>
+
+    <h1>🧪 Shadcn UI 컴포넌트 무결성 테스트</h1>
+    <p>모든 컴포넌트의 기본 기능과 오류 발생 여부를 확인합니다.</p>
+
+    <!-- 1. Button 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">1. Button 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <p>기본 버튼들:</p>
+                <div id="button-default"></div>
+                <div id="button-destructive"></div>
+                <div id="button-outline"></div>
+                <div id="button-secondary"></div>
+                <div id="button-ghost"></div>
+                <div id="button-link"></div>
+            </div>
+            <div class="test-item">
+                <p>크기 버튼들:</p>
+                <div id="button-sm"></div>
+                <div id="button-lg"></div>
+                <div id="button-icon"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Card 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">2. Card 컴포넌트</div>
+        <div class="test-grid">
+            <div id="card-simple"></div>
+            <div id="card-complete"></div>
+            <div id="card-with-action"></div>
+        </div>
+    </div>
+
+    <!-- 3. Input 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">3. Input 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <div id="input-text"></div>
+                <div id="input-email"></div>
+                <div id="input-password"></div>
+            </div>
+            <div class="test-item">
+                <div id="form-field-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Badge 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">4. Badge 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <p>기본 배지들:</p>
+                <div id="badge-container" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Progress 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">5. Progress 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <p>기본 프로그레스:</p>
+                <div id="progress-basic" class="progress-container"></div>
+                <button id="progress-update">진행률 업데이트</button>
+            </div>
+            <div class="test-item">
+                <p>원형 프로그레스:</p>
+                <div id="progress-circular"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Tabs 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">6. Tabs 컴포넌트</div>
+        <div id="tabs-container"></div>
+    </div>
+
+    <!-- 7. Switch 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">7. Switch 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <div id="switch-basic"></div>
+                <div id="switch-with-label"></div>
+                <div id="switch-setting"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Toast 테스트 버튼들 -->
+    <div class="test-section">
+        <div class="test-title">8. Toast 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <p>Toast 알림 테스트:</p>
+                <button id="toast-success">성공 Toast</button>
+                <button id="toast-error">오류 Toast</button>
+                <button id="toast-warning">경고 Toast</button>
+                <button id="toast-info">정보 Toast</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. Dropdown 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">9. Dropdown 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <button id="dropdown-trigger">드롭다운 열기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10. Tooltip 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">10. Tooltip 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <button id="tooltip-trigger">마우스를 올려보세요</button>
+                <button id="tooltip-interactive">인터랙티브 툴팁</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 11. Modal 컴포넌트 테스트 -->
+    <div class="test-section">
+        <div class="test-title">11. Modal 컴포넌트</div>
+        <div class="test-grid">
+            <div class="test-item">
+                <button id="modal-basic">기본 모달</button>
+                <button id="modal-alert">Alert 모달</button>
+                <button id="modal-confirm">Confirm 모달</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 로그 영역 -->
+    <div id="error-log" class="error-log">
+        <h4>❌ 오류 로그</h4>
+        <div id="error-content"></div>
+    </div>
+
+    <div id="success-log" class="success-log">
+        <h4>✅ 성공 로그</h4>
+        <div id="success-content"></div>
+    </div>
+
+    <script type="module">
+        // 전역 오류 캐처
+        const errorLog = document.getElementById('error-log');
+        const errorContent = document.getElementById('error-content');
+        const successLog = document.getElementById('success-log');
+        const successContent = document.getElementById('success-content');
+
+        let errorCount = 0;
+        let successCount = 0;
+
+        function logError(component, error) {
+            errorCount++;
+            errorContent.innerHTML += `<div><strong>${component}:</strong> ${error.message}</div>`;
+            errorLog.style.display = 'block';
+            console.error(`[${component}] 오류:`, error);
+        }
+
+        function logSuccess(component, message = '정상 작동') {
+            successCount++;
+            successContent.innerHTML += `<div><strong>${component}:</strong> ${message}</div>`;
+            successLog.style.display = 'block';
+            console.log(`[${component}] 성공:`, message);
+        }
+
+        window.addEventListener('error', (event) => {
+            logError('전역', event.error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            logError('Promise', event.reason);
+        });
+
+        try {
+            // 컴포넌트 임포트 및 테스트
+            import('./components/ui/index.js').then(async (UI) => {
+                const { Button, Card, Input, FormField, Badge, Progress, Tabs, Switch, Toast, DropdownMenu, Tooltip, Modal, Theme, QuickCreate } = UI;
+
+                // 테마 토글 스위치 설정
+                try {
+                    const themeSwitch = Switch.createThemeToggle('#theme-switch-container');
+                    logSuccess('Theme Switch', '테마 토글 스위치 생성됨');
+                } catch (error) {
+                    logError('Theme Switch', error);
+                }
+
+                // 1. Button 테스트
+                try {
+                    Button.create({ container: '#button-default', text: 'Default', variant: 'default' });
+                    Button.create({ container: '#button-destructive', text: 'Destructive', variant: 'destructive' });
+                    Button.create({ container: '#button-outline', text: 'Outline', variant: 'outline' });
+                    Button.create({ container: '#button-secondary', text: 'Secondary', variant: 'secondary' });
+                    Button.create({ container: '#button-ghost', text: 'Ghost', variant: 'ghost' });
+                    Button.create({ container: '#button-link', text: 'Link', variant: 'link' });
+
+                    Button.create({ container: '#button-sm', text: 'Small', size: 'sm' });
+                    Button.create({ container: '#button-lg', text: 'Large', size: 'lg' });
+                    Button.create({ container: '#button-icon', text: '🔍', size: 'icon' });
+
+                    logSuccess('Button', '모든 variant 및 크기 생성됨');
+                } catch (error) {
+                    logError('Button', error);
+                }
+
+                // 2. Card 테스트
+                try {
+                    Card.create({ container: '#card-simple' });
+
+                    Card.createComplete({
+                        container: '#card-complete',
+                        title: '완전한 카드',
+                        description: '설명이 포함된 카드입니다',
+                        content: '이것은 카드의 내용입니다.',
+                        footer: '카드 푸터'
+                    });
+
+                    Card.createComplete({
+                        container: '#card-with-action',
+                        title: '액션 카드',
+                        content: '버튼이 있는 카드입니다.',
+                        action: {
+                            text: '클릭하세요',
+                            onClick: () => Toast.success('카드 액션 클릭됨!')
+                        }
+                    });
+
+                    logSuccess('Card', '모든 카드 타입 생성됨');
+                } catch (error) {
+                    logError('Card', error);
+                }
+
+                // 3. Input 테스트
+                try {
+                    new Input(Input.create({ container: '#input-text', placeholder: '텍스트 입력', type: 'text' }));
+                    new Input(Input.create({ container: '#input-email', placeholder: '이메일 입력', type: 'email' }));
+                    new Input(Input.create({ container: '#input-password', placeholder: '비밀번호 입력', type: 'password' }));
+
+                    FormField.create({
+                        container: '#form-field-container',
+                        label: '이름',
+                        placeholder: '이름을 입력하세요',
+                        description: '실명을 입력해주세요',
+                        required: true
+                    });
+
+                    logSuccess('Input', '모든 입력 타입 생성됨');
+                } catch (error) {
+                    logError('Input', error);
+                }
+
+                // 4. Badge 테스트
+                try {
+                    const container = document.getElementById('badge-container');
+                    container.appendChild(Badge.create({ text: 'Default', variant: 'default' }));
+                    container.appendChild(Badge.create({ text: 'Secondary', variant: 'secondary' }));
+                    container.appendChild(Badge.create({ text: 'Destructive', variant: 'destructive' }));
+                    container.appendChild(Badge.create({ text: 'Outline', variant: 'outline' }));
+                    container.appendChild(Badge.createCount(42));
+                    container.appendChild(Badge.createStatus('success'));
+
+                    logSuccess('Badge', '모든 배지 타입 생성됨');
+                } catch (error) {
+                    logError('Badge', error);
+                }
+
+                // 5. Progress 테스트
+                try {
+                    const progress = Progress.create({
+                        container: '#progress-basic',
+                        value: 50,
+                        showLabel: true
+                    });
+
+                    document.getElementById('progress-update').addEventListener('click', () => {
+                        const newValue = Math.floor(Math.random() * 100);
+                        progress.animateTo(newValue, 1000);
+                    });
+
+                    Progress.createCircular('#progress-circular', { size: 100 });
+
+                    logSuccess('Progress', '진행률 바 생성됨');
+                } catch (error) {
+                    logError('Progress', error);
+                }
+
+                // 6. Tabs 테스트
+                try {
+                    Tabs.create({
+                        container: '#tabs-container',
+                        tabs: [
+                            { value: 'tab1', label: '탭 1', content: '첫 번째 탭의 내용입니다.' },
+                            { value: 'tab2', label: '탭 2', content: '두 번째 탭의 내용입니다.' },
+                            { value: 'tab3', label: '탭 3', content: '세 번째 탭의 내용입니다.' }
+                        ],
+                        defaultValue: 'tab1'
+                    });
+
+                    logSuccess('Tabs', '탭 컴포넌트 생성됨');
+                } catch (error) {
+                    logError('Tabs', error);
+                }
+
+                // 7. Switch 테스트
+                try {
+                    Switch.create({
+                        container: '#switch-basic',
+                        onCheckedChange: (checked) => Toast.info(`스위치: ${checked ? 'ON' : 'OFF'}`)
+                    });
+
+                    Switch.createWithLabel('#switch-with-label', '알림 받기');
+
+                    Switch.createSettingSwitch('#switch-setting', 'dark-mode', {
+                        title: '다크 모드',
+                        description: '어두운 테마를 사용합니다'
+                    });
+
+                    logSuccess('Switch', '스위치 컴포넌트 생성됨');
+                } catch (error) {
+                    logError('Switch', error);
+                }
+
+                // 8. Toast 테스트
+                try {
+                    document.getElementById('toast-success').addEventListener('click', () => {
+                        Toast.success('성공 메시지입니다!');
+                    });
+
+                    document.getElementById('toast-error').addEventListener('click', () => {
+                        Toast.error('오류 메시지입니다!');
+                    });
+
+                    document.getElementById('toast-warning').addEventListener('click', () => {
+                        Toast.warning('경고 메시지입니다!');
+                    });
+
+                    document.getElementById('toast-info').addEventListener('click', () => {
+                        Toast.info('정보 메시지입니다!');
+                    });
+
+                    logSuccess('Toast', '토스트 버튼 이벤트 등록됨');
+                } catch (error) {
+                    logError('Toast', error);
+                }
+
+                // 9. Dropdown 테스트
+                try {
+                    new DropdownMenu('#dropdown-trigger', {
+                        items: [
+                            { label: '편집', onClick: () => Toast.info('편집 클릭됨') },
+                            { label: '복사', onClick: () => Toast.info('복사 클릭됨') },
+                            { type: 'separator' },
+                            { label: '삭제', onClick: () => Toast.warning('삭제 클릭됨') }
+                        ]
+                    });
+
+                    logSuccess('Dropdown', '드롭다운 메뉴 생성됨');
+                } catch (error) {
+                    logError('Dropdown', error);
+                }
+
+                // 10. Tooltip 테스트
+                try {
+                    new Tooltip('#tooltip-trigger', {
+                        content: '이것은 기본 툴팁입니다',
+                        position: 'top'
+                    });
+
+                    new Tooltip('#tooltip-interactive', {
+                        content: '<strong>HTML</strong> 콘텐츠가 포함된 인터랙티브 툴팁입니다',
+                        interactive: true,
+                        maxWidth: '200px'
+                    });
+
+                    logSuccess('Tooltip', '툴팁 컴포넌트 생성됨');
+                } catch (error) {
+                    logError('Tooltip', error);
+                }
+
+                // 11. Modal 테스트
+                try {
+                    document.getElementById('modal-basic').addEventListener('click', () => {
+                        Modal.create({
+                            title: '기본 모달',
+                            content: '이것은 기본 모달의 내용입니다.',
+                            footer: true
+                        }).open();
+                    });
+
+                    document.getElementById('modal-alert').addEventListener('click', () => {
+                        Modal.alert('이것은 알림 모달입니다!');
+                    });
+
+                    document.getElementById('modal-confirm').addEventListener('click', () => {
+                        Modal.confirm('정말로 실행하시겠습니까?').then(result => {
+                            if (result) {
+                                Toast.success('확인을 선택했습니다');
+                            } else {
+                                Toast.info('취소를 선택했습니다');
+                            }
+                        });
+                    });
+
+                    logSuccess('Modal', '모달 컴포넌트 생성됨');
+                } catch (error) {
+                    logError('Modal', error);
+                }
+
+                // 최종 결과 표시
+                setTimeout(() => {
+                    if (errorCount === 0) {
+                        successContent.innerHTML += `<hr><div><strong>🎉 모든 테스트 통과!</strong> (${successCount}개 성공)</div>`;
+                        Toast.success(`모든 컴포넌트가 정상 작동합니다! (${successCount}개 성공)`);
+                    } else {
+                        Toast.error(`${errorCount}개의 오류가 발견되었습니다.`);
+                    }
+                }, 1000);
+
+            }).catch(error => {
+                logError('모듈 로드', error);
+            });
+
+        } catch (error) {
+            logError('전체', error);
+        }
+    </script>
+</body>
+</html>
