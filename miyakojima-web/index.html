@@ -47,13 +47,18 @@
                         <span class="d-day-number" id="dday-number">-11</span>
                     </div>
                     <div class="couple-names">
-                        <span class="traveler">Fenomeno</span>
+                        <span class="traveler clickable-name" onclick="showLoveBubble()">Fenomeno</span>
                         <span class="heart">♥</span>
                         <span class="traveler">Mona</span>
                     </div>
+                    <!-- 사랑 말풍선 -->
+                    <div class="love-bubble" id="love-bubble">
+                        <div class="bubble-content">모나 사랑해 💕</div>
+                        <div class="bubble-arrow"></div>
+                    </div>
                 </div>
 
-                <!-- 중앙: 로고 -->
+                <!-- 중앙: 로고만 -->
                 <div class="header-center">
                     <h1 class="main-title clickable" onclick="goToDashboard()">
                         🏝️ Miyako Travel Assistant
@@ -63,11 +68,16 @@
                 <!-- 우측: 날씨 카드 -->
                 <div class="header-right">
                     <div class="weather-simple" onclick="openWeatherDetails()">
-                        <div class="weather-location">미야코지마</div>
-                        <div class="weather-main">
-                            <span class="weather-temp" id="simple-temp">26°C</span>
-                            <span class="weather-icon" id="weather-icon">☀️</span>
-                            <span class="weather-condition" id="simple-condition">맑음</span>
+                        <div class="weather-top-row">
+                            <div class="weather-location" id="location-name">현재 위치</div>
+                            <div class="current-time" id="current-time">--:--</div>
+                        </div>
+                        <div class="weather-main-row">
+                            <div class="weather-icon-large" id="weather-icon">🌤️</div>
+                            <div class="weather-info">
+                                <div class="weather-temp" id="simple-temp">--°C</div>
+                                <div class="weather-condition" id="simple-condition">로딩 중</div>
+                            </div>
                         </div>
                         <div class="weather-hint">자세히 보기 ›</div>
                     </div>

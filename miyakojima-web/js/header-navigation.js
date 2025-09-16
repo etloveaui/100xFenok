@@ -120,32 +120,151 @@ function showToast(message, type = 'info', duration = 3000) {
    ========================================================================== */
 
 /**
- * 간소화된 날씨 카드 업데이트
- * 기존 날씨 API 데이터를 간단한 형태로 표시
+ * 간소화된 날씨 카드 업데이트 - GPS 현재 위치 기반
+ * 현재 위치의 날씨 데이터를 가져와서 표시
  */
 function updateSimpleWeather() {
   const tempElement = document.getElementById('simple-temp');
   const conditionElement = document.getElementById('simple-condition');
   const iconElement = document.getElementById('weather-icon');
+  const timeElement = document.getElementById('current-time');
+  const locationElement = document.getElementById('location-name');
 
-  // 기존 날씨 데이터가 있는 경우 사용
-  if (window.currentWeatherData && tempElement && conditionElement && iconElement) {
-    const temp = Math.round(window.currentWeatherData.main.temp);
-    const weatherMain = window.currentWeatherData.weather[0].main;
-    const condition = getKoreanWeatherCondition(weatherMain);
+  // GPS 기반 현재 위치 날씨 가져오기
+  getCurrentLocationWeather().then(weatherData => {
+    if (weatherData && tempElement && conditionElement && iconElement) {
+      const temp = Math.round(weatherData.main.temp);
+      const weatherMain = weatherData.weather[0].main;
+      const condition = getKoreanWeatherCondition(weatherMain);
 
-    // 현재 시간이 밤인지 확인 (일몰/일출 시간 기준)
+      // 현재 시간이 밤인지 확인 (일몰/일출 시간 기준)
+      const now = new Date();
+      const currentHour = now.getHours();
+      const isNight = currentHour < 6 || currentHour > 19;
+
+      const weatherIcon = getWeatherIcon(weatherMain, isNight);
+
+      // 온도와 날씨 조건 업데이트
+      tempElement.textContent = `${temp}°C`;
+      iconElement.textContent = weatherIcon;
+      conditionElement.textContent = condition;
+
+      // 현재 위치 지명 업데이트
+      updateLocationName(weatherData.coord.lat, weatherData.coord.lon);
+
+      console.log(`🌡️ GPS 기반 날씨 업데이트: ${temp}°C, ${weatherIcon} ${condition}`);
+    }
+  }).catch(error => {
+    console.warn('GPS 날씨 로드 실패, 기존 데이터 사용:', error);
+
+    // GPS 실패 시 기존 날씨 데이터 사용
+    if (window.currentWeatherData && tempElement && conditionElement && iconElement) {
+      const temp = Math.round(window.currentWeatherData.main.temp);
+      const weatherMain = window.currentWeatherData.weather[0].main;
+      const condition = getKoreanWeatherCondition(weatherMain);
+      const now = new Date();
+      const currentHour = now.getHours();
+      const isNight = currentHour < 6 || currentHour > 19;
+      const weatherIcon = getWeatherIcon(weatherMain, isNight);
+
+      tempElement.textContent = `${temp}°C`;
+      iconElement.textContent = weatherIcon;
+      conditionElement.textContent = condition;
+    }
+  });
+
+  // 실시간 시계 업데이트
+  updateCurrentTime();
+}
+
+/**
+ * GPS 좌표를 지명으로 변환 (Reverse Geocoding)
+ * @param {number} lat - 위도
+ * @param {number} lon - 경도
+ */
+async function updateLocationName(lat, lon) {
+  const locationElement = document.getElementById('location-name');
+  if (!locationElement) return;
+
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=62c85ff5eff6e712643db50c03ec5beb`
+    );
+
+    if (response.ok) {
+      const locationData = await response.json();
+      if (locationData && locationData.length > 0) {
+        const location = locationData[0];
+        const cityName = location.local_names?.ko || location.name;
+        const countryName = location.country === 'KR' ? '' : ` ${location.country}`;
+        locationElement.textContent = `${cityName}${countryName}`;
+        console.log(`📍 위치 업데이트: ${cityName}${countryName}`);
+      }
+    }
+  } catch (error) {
+    console.warn('위치 이름 변환 실패:', error);
+    locationElement.textContent = '현재 위치';
+  }
+}
+
+/**
+ * GPS를 사용해서 현재 위치의 날씨 가져오기
+ * @returns {Promise} 현재 위치 날씨 데이터
+ */
+function getCurrentLocationWeather() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation이 지원되지 않습니다'));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        try {
+          // OpenWeatherMap API 호출
+          const apiKey = '62c85ff5eff6e712643db50c03ec5beb';
+          const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`
+          );
+
+          if (!response.ok) {
+            throw new Error(`날씨 API 호출 실패: ${response.status}`);
+          }
+
+          const weatherData = await response.json();
+          resolve(weatherData);
+        } catch (error) {
+          reject(error);
+        }
+      },
+      (error) => {
+        reject(new Error(`GPS 위치 접근 실패: ${error.message}`));
+      },
+      {
+        timeout: 10000,
+        maximumAge: 300000, // 5분 캐시
+        enableHighAccuracy: false
+      }
+    );
+  });
+}
+
+/**
+ * 실시간 시계 표시 업데이트
+ */
+function updateCurrentTime() {
+  const timeElement = document.getElementById('current-time');
+  if (timeElement) {
     const now = new Date();
-    const currentHour = now.getHours();
-    const isNight = currentHour < 6 || currentHour > 19;
-
-    const weatherIcon = getWeatherIcon(weatherMain, isNight);
-
-    tempElement.textContent = `${temp}°C`;
-    iconElement.textContent = weatherIcon;
-    conditionElement.textContent = condition;
-
-    console.log(`🌡️ 날씨 업데이트: ${temp}°C, ${weatherIcon} ${condition}`);
+    const timeString = now.toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    timeElement.textContent = timeString;
   }
 }
 
@@ -248,10 +367,14 @@ function initializeHeaderNavigation() {
     setInterval(updateDDayCounter, 24 * 60 * 60 * 1000);
   }, msUntilMidnight);
 
-  // 날씨 데이터 업데이트 (기존 API와 연동)
-  if (window.currentWeatherData) {
-    updateSimpleWeather();
-  }
+  // 날씨 데이터 업데이트 (GPS 기반)
+  updateSimpleWeather();
+
+  // 실시간 시계 업데이트 (1분마다)
+  setInterval(updateCurrentTime, 60000);
+
+  // 날씨 데이터 주기적 업데이트 (10분마다)
+  setInterval(updateSimpleWeather, 600000);
 
   // 날씨 데이터 변경 감지를 위한 이벤트 리스너
   if (window.addEventListener) {
@@ -273,7 +396,117 @@ if (document.readyState === 'loading') {
   initializeHeaderNavigation();
 }
 
+/* ==========================================================================
+   빠른액션 버튼 기능들
+   ========================================================================== */
+
+/**
+ * 예산 현황 빠른보기
+ */
+function showBudgetOverview() {
+  const dropdown = document.getElementById('quick-dropdown');
+  const content = document.getElementById('dropdown-content');
+
+  content.innerHTML = `
+    <div style="font-weight: 600; margin-bottom: 8px; color: #00bcd4;">💰 예산 현황</div>
+    <div>총 예산: 500,000원</div>
+    <div>사용한 금액: 120,000원</div>
+    <div>남은 금액: 380,000원</div>
+    <div style="margin-top: 8px; font-size: 12px; color: #64748b;">상세보기는 예산탭에서</div>
+  `;
+
+  showQuickDropdown();
+  setTimeout(hideQuickDropdown, 3000);
+}
+
+/**
+ * 오늘 일정 빠른보기
+ */
+function showTodaySchedule() {
+  const dropdown = document.getElementById('quick-dropdown');
+  const content = document.getElementById('dropdown-content');
+
+  const today = new Date().toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long'
+  });
+
+  content.innerHTML = `
+    <div style="font-weight: 600; margin-bottom: 8px; color: #00bcd4;">📅 ${today}</div>
+    <div>09:00 - 호텔 체크아웃</div>
+    <div>10:30 - 이라부대교 관광</div>
+    <div>14:00 - 해변 스노클링</div>
+    <div style="margin-top: 8px; font-size: 12px; color: #64748b;">상세보기는 일정탭에서</div>
+  `;
+
+  showQuickDropdown();
+  setTimeout(hideQuickDropdown, 3000);
+}
+
+/**
+ * 주변 장소 빠른보기
+ */
+function showNearbyPOI() {
+  const dropdown = document.getElementById('quick-dropdown');
+  const content = document.getElementById('dropdown-content');
+
+  content.innerHTML = `
+    <div style="font-weight: 600; margin-bottom: 8px; color: #00bcd4;">📍 주변 장소</div>
+    <div>🏖️ 요나마 해변 (1.2km)</div>
+    <div>🍜 현지 식당 (800m)</div>
+    <div>⛽ 주유소 (2.1km)</div>
+    <div style="margin-top: 8px; font-size: 12px; color: #64748b;">상세보기는 장소탭에서</div>
+  `;
+
+  showQuickDropdown();
+  setTimeout(hideQuickDropdown, 3000);
+}
+
+/**
+ * 빠른액션 드롭다운 표시
+ */
+function showQuickDropdown() {
+  const dropdown = document.getElementById('quick-dropdown');
+  dropdown.classList.add('show');
+}
+
+/**
+ * 빠른액션 드롭다운 숨김
+ */
+function hideQuickDropdown() {
+  const dropdown = document.getElementById('quick-dropdown');
+  dropdown.classList.remove('show');
+}
+
+/**
+ * 사랑 말풍선 표시
+ */
+function showLoveBubble() {
+  const bubble = document.getElementById('love-bubble');
+  if (!bubble) return;
+
+  // 기존 애니메이션 중단
+  bubble.classList.remove('show');
+
+  // 잠시 후 애니메이션 시작
+  setTimeout(() => {
+    bubble.classList.add('show');
+
+    // 2초 후 자동 숨김
+    setTimeout(() => {
+      bubble.classList.remove('show');
+    }, 2000);
+  }, 100);
+
+  console.log('💕 사랑 말풍선 표시!');
+}
+
 // 글로벌 함수로 등록 (HTML onclick에서 사용)
 window.goToDashboard = goToDashboard;
 window.openWeatherDetails = openWeatherDetails;
 window.showToast = showToast;
+window.showBudgetOverview = showBudgetOverview;
+window.showTodaySchedule = showTodaySchedule;
+window.showNearbyPOI = showNearbyPOI;
+window.showLoveBubble = showLoveBubble;
