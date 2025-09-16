@@ -82,6 +82,13 @@ async function safeInitialize() {
         // 잠시 기다린 후 로딩 스크린 숨기기
         setTimeout(() => {
             hideLoadingScreen();
+
+            // 앱 완전 초기화 후 네비게이션 표시
+            const navContainer = document.querySelector('.main-nav');
+            if (navContainer) {
+                navContainer.classList.add('ready');
+                console.log('✅ 네비게이션 표시됨');
+            }
         }, 500);
 
         console.log('🎉 미야코지마 앱 초기화 완료!');
