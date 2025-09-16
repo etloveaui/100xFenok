@@ -153,12 +153,25 @@ export class App {
 
     async initializeGoogleMapsManager() {
         try {
-            const googleMapsManager = new GoogleMapsManager();
-            await googleMapsManager.initialize();
-            this.modules.set('maps', googleMapsManager);
+            if (!this.googleMapsManager) {
+                this.googleMapsManager = new GoogleMapsManager();
+            }
+
+            if (typeof window !== "undefined") {
+                window.app = window.app || this;
+                window.app.googleMapsManager = this.googleMapsManager;
+            }
+
+            await this.googleMapsManager.initialize();
+            this.modules.set('maps', this.googleMapsManager);
             console.log('✅ 구글맵 매니저 등록 완료');
         } catch (error) {
             console.error('구글맵 매니저 초기화 실패:', error);
+
+            if (typeof window !== "undefined" && window.app) {
+                window.app.googleMapsManager = this.googleMapsManager;
+            }
+
             throw error;
         }
     }

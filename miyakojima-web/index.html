@@ -16,6 +16,7 @@
     <!-- 🏝️ Miyako Design System - Unified CSS -->
     <link rel="stylesheet" href="./css/miyako-design-system.css">
     <link rel="stylesheet" href="./css/main-optimized.css">
+    <link rel="stylesheet" href="./css/header-optimized.css">
 
     <!-- 아이콘 시스템은 miyako-design-system.css에서 처리 -->
 </head>
@@ -33,87 +34,38 @@
         </div>
     </div>
 
-    <!-- 메인 헤더 -->
-    <header class="main-header">
+    <!-- 메인 헤더 - 최적화됨 -->
+    <header class="main-header optimized">
         <div class="header-content">
-            <div class="app-header">
-                <div class="version-info">v2.3.0-Complete</div>
-                <h1>🏝️ Miyako Travel Assistant</h1>
+            <!-- 클릭 가능한 로고 -->
+            <h1 class="main-title clickable" onclick="goToDashboard()">
+                🏝️ Miyako Travel Assistant
+            </h1>
+
+            <!-- 재설계된 여행 정보 -->
+            <div class="trip-header">
+                <div class="trip-dates">2025.09.27 - 10.01</div>
+                <div class="trip-duration">4박 5일</div>
+                <div class="trip-countdown">
+                    <span class="d-day-label">D</span>
+                    <span class="d-day-number" id="dday-number">-11</span>
+                </div>
+                <div class="trip-title">
+                    <span class="traveler">Fenomeno</span>
+                    <span class="heart">♥</span>
+                    <span class="traveler">Mona</span>
+                </div>
+                <div class="trip-subtitle">Miyakojima Journey</div>
             </div>
-            <div class="header-info">
-                <div class="date-info">
-                    <span id="current-date">2025.9.27-10.1 (4박5일)</span>
-                    <span id="dday-counter" class="dday-badge">D-12</span>
-                    <span id="day-counter">Fenomeno♥Mona Miyakojima Journey</span>
+
+            <!-- 간소화된 날씨 카드 -->
+            <div class="weather-simple" onclick="openWeatherDetails()">
+                <div class="weather-location">미야코지마</div>
+                <div class="weather-main">
+                    <span class="weather-temp" id="simple-temp">26°C</span>
+                    <span class="weather-condition" id="simple-condition">맑음</span>
                 </div>
-                <div class="weather-card" id="weather-card">
-                    <div class="weather-current" id="weather-current">
-                        <div class="weather-temp-info">
-                            <span class="weather-temp" id="current-temp">26°C</span>
-                            <span class="weather-feels" id="feels-like">체감 28°C</span>
-                        </div>
-                        <div class="weather-icon-container">
-                            <span class="weather-icon-large" id="weather-icon">☀️</span>
-                            <span class="weather-condition" id="weather-condition">맑음</span>
-                        </div>
-                        <button class="btn-ghost btn-icon" id="weather-expand-btn" aria-label="날씨 상세 정보">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M7 10l5 5 5-5z"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="weather-details" id="weather-details">
-                        <div class="weather-details-grid">
-                            <div class="weather-detail-item">
-                                <span class="detail-icon">💨</span>
-                                <span class="detail-label">바람</span>
-                                <span class="detail-value" id="wind-speed">3.2 m/s</span>
-                            </div>
-                            <div class="weather-detail-item">
-                                <span class="detail-icon">💧</span>
-                                <span class="detail-label">습도</span>
-                                <span class="detail-value" id="humidity">65%</span>
-                            </div>
-                            <div class="weather-detail-item">
-                                <span class="detail-icon">👁️</span>
-                                <span class="detail-label">가시거리</span>
-                                <span class="detail-value" id="visibility">10km</span>
-                            </div>
-                            <div class="weather-detail-item">
-                                <span class="detail-icon">🌅</span>
-                                <span class="detail-label">일출</span>
-                                <span class="detail-value" id="sunrise">06:30</span>
-                            </div>
-                            <div class="weather-detail-item">
-                                <span class="detail-icon">🌇</span>
-                                <span class="detail-label">일몰</span>
-                                <span class="detail-value" id="sunset">19:15</span>
-                            </div>
-                            <div class="weather-detail-item">
-                                <span class="detail-icon">📊</span>
-                                <span class="detail-label">기압</span>
-                                <span class="detail-value" id="pressure">1013 hPa</span>
-                            </div>
-                        </div>
-
-                        <div class="travel-advice" id="travel-advice">
-                            <h4>🧳 여행 팁</h4>
-                            <div class="advice-items" id="advice-items">
-                                <span class="advice-item">🧴 선크림 필수</span>
-                                <span class="advice-item">🏖️ 해변 활동 좋음</span>
-                            </div>
-                        </div>
-
-                        <div class="forecast-preview" id="forecast-preview">
-                            <h4>📅 5일 예보</h4>
-                            <div class="forecast-items" id="forecast-items">
-                                <!-- 5일 예보 항목들이 여기에 동적으로 생성됩니다 -->
-                            </div>
-                            <button class="btn-secondary btn-sm" id="forecast-full-btn">전체 예보 보기</button>
-                        </div>
-                    </div>
-                </div>
+                <div class="weather-hint">자세히 보기 ›</div>
             </div>
         </div>
 
@@ -436,6 +388,7 @@
     <!-- 🏝️ Miyako UI System -->
     <script type="module" src="js/performance-monitor.js"></script>
     <script type="module" src="js/ui-components.js"></script>
+    <script type="module" src="js/header-navigation.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

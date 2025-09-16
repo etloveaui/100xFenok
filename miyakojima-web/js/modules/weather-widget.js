@@ -8,6 +8,7 @@ class WeatherWidget {
         this.weatherData = null;
         this.forecastData = null;
         this.initialized = false;
+        this.updateInterval = null;
     }
 
     async initialize() {
@@ -442,8 +443,12 @@ class WeatherWidget {
     }
 
     startPeriodicUpdate() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+        }
+
         // 5분마다 날씨 데이터 업데이트
-        setInterval(() => {
+        this.updateInterval = setInterval(() => {
             this.refresh();
         }, 5 * 60 * 1000);
     }
@@ -451,6 +456,7 @@ class WeatherWidget {
     destroy() {
         if (this.updateInterval) {
             clearInterval(this.updateInterval);
+            this.updateInterval = null;
         }
         this.initialized = false;
     }

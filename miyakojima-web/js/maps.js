@@ -39,6 +39,11 @@ class GoogleMapsManager {
      * Google Maps 초기화
      */
     async initialize() {
+        if (this.isInitialized) {
+            Logger.info('Google Maps 이미 초기화됨');
+            return true;
+        }
+
         try {
             // Google Maps API 로드 확인
             if (typeof google === 'undefined' || !google.maps) {
