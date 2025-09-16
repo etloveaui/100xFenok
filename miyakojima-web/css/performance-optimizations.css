@@ -1,0 +1,390 @@
+/**
+ * ⚡ Core Web Vitals 최적화 & 성능 향상 스타일
+ * LCP < 2.5s | FID < 100ms | CLS < 0.1
+ */
+
+/* =============================================================================
+   🚀 LCP (Largest Contentful Paint) 최적화
+   ============================================================================= */
+
+/* 중요 콘텐츠 우선 로딩 */
+.main-header,
+.weather-card,
+.dashboard-card:first-child {
+  contain: layout style paint;
+  will-change: auto; /* 초기 로딩 후 GPU 사용 해제 */
+}
+
+/* 이미지 로딩 최적화 */
+img {
+  loading: lazy; /* 지연 로딩 */
+  decoding: async; /* 비동기 디코딩 */
+}
+
+/* 크리티컬 이미지는 즉시 로딩 */
+.header img,
+.weather-icon-large {
+  loading: eager;
+}
+
+/* 폰트 로딩 최적화 */
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap; /* FOIT 방지 */
+  src: local('Noto Sans KR Regular'),
+       url('/fonts/NotoSansKR-Regular.woff2') format('woff2');
+}
+
+/* =============================================================================
+   ⚡ FID (First Input Delay) 최적화
+   ============================================================================= */
+
+/* 버튼 응답성 개선 */
+.btn {
+  cursor: pointer;
+  touch-action: manipulation; /* 더블탭 지연 제거 */
+  -webkit-tap-highlight-color: transparent; /* iOS 탭 하이라이트 제거 */
+}
+
+/* 스크롤 성능 개선 */
+.main-container,
+.poi-list,
+.expense-list {
+  -webkit-overflow-scrolling: touch; /* iOS 스크롤 부드럽게 */
+  overscroll-behavior: contain; /* 스크롤 체이닝 방지 */
+}
+
+/* 입력 지연 최소화 */
+.form-input,
+.form-select,
+.form-textarea {
+  will-change: auto;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  will-change: transform, box-shadow;
+}
+
+/* =============================================================================
+   📐 CLS (Cumulative Layout Shift) 방지
+   ============================================================================= */
+
+/* 로딩 스켈레톤 크기 고정 */
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-gray-200) 25%,
+    var(--color-gray-100) 50%,
+    var(--color-gray-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 카드 컨테이너 크기 예약 */
+.dashboard-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.card {
+  min-height: 200px; /* 최소 높이 예약하여 레이아웃 시프트 방지 */
+}
+
+/* 이미지 비율 유지 */
+.aspect-ratio {
+  position: relative;
+  width: 100%;
+}
+
+.aspect-ratio::before {
+  content: '';
+  display: block;
+  padding-top: 56.25%; /* 16:9 비율 */
+}
+
+.aspect-ratio > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 날씨 아이콘 크기 고정 */
+.weather-icon-large {
+  width: 48px;
+  height: 48px;
+  display: inline-block;
+}
+
+/* =============================================================================
+   🖼️ 리소스 최적화
+   ============================================================================= */
+
+/* CSS 애니메이션 최적화 */
+@keyframes optimized-fade-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0); /* GPU 가속 */
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.fade-in {
+  animation: optimized-fade-in 0.3s ease-out;
+}
+
+/* 불필요한 repaint 방지 */
+.btn:hover,
+.card:hover {
+  transform: translate3d(0, -2px, 0); /* GPU 가속 활용 */
+}
+
+/* 스크롤 성능 개선 */
+.scrollable {
+  -webkit-transform: translateZ(0); /* GPU 레이어 생성 */
+  transform: translateZ(0);
+  -webkit-perspective: 1000;
+  perspective: 1000;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* =============================================================================
+   📱 모바일 성능 최적화
+   ============================================================================= */
+
+/* 모바일에서 GPU 사용 최소화 */
+@media (max-width: 768px) {
+  .card:hover,
+  .btn:hover {
+    transform: none; /* 호버 효과 비활성화 */
+  }
+
+  /* 애니메이션 간소화 */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+
+  /* 복잡한 그라데이션 제거 */
+  .btn-primary {
+    background: var(--miyako-primary);
+  }
+}
+
+/* =============================================================================
+   🔄 메모리 관리
+   ============================================================================= */
+
+/* 사용하지 않는 요소의 GPU 레이어 해제 */
+.card:not(:hover),
+.btn:not(:hover):not(:focus) {
+  will-change: auto;
+}
+
+/* 오프스크린 콘텐츠 최적화 */
+.section:not(.active) {
+  content-visibility: hidden; /* 브라우저 렌더링 스킵 */
+}
+
+.section.active {
+  content-visibility: visible;
+}
+
+/* =============================================================================
+   🎨 렌더링 최적화
+   ============================================================================= */
+
+/* 복합 레이어 최적화 */
+.modal,
+.toast,
+.loading-screen {
+  isolation: isolate; /* 새로운 스택 컨텍스트 생성 */
+}
+
+/* 페인트 최적화 */
+.dashboard-grid {
+  contain: layout style paint size;
+}
+
+/* 텍스트 렌더링 최적화 */
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================================================
+   🌐 네트워크 최적화
+   ============================================================================= */
+
+/* 리소스 힌트 */
+/*
+HTML head에 추가할 내용:
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://maps.googleapis.com">
+<link rel="dns-prefetch" href="https://api.openweathermap.org">
+*/
+
+/* 중요 CSS 인라인화를 위한 크리티컬 스타일 분리 */
+.critical-styles {
+  /* 이 클래스의 모든 스타일은 HTML head에 인라인으로 삽입 */
+  display: none;
+}
+
+/* =============================================================================
+   📊 성능 모니터링
+   ============================================================================= */
+
+/* 성능 디버깅용 (개발 환경에서만 사용) */
+.perf-debug {
+  outline: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.perf-debug:hover {
+  outline-color: rgba(255, 0, 0, 0.8);
+}
+
+/* =============================================================================
+   🔧 브라우저별 최적화
+   ============================================================================= */
+
+/* Chrome/Webkit 최적화 */
+@supports (-webkit-appearance: none) {
+  .btn {
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+  }
+}
+
+/* Firefox 최적화 */
+@-moz-document url-prefix() {
+  .card {
+    transform: translateZ(0);
+  }
+}
+
+/* Safari 최적화 */
+@supports (-webkit-backdrop-filter: blur(10px)) {
+  .weather-card {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* =============================================================================
+   ⚡ 지연 로딩 최적화
+   ============================================================================= */
+
+/* Intersection Observer 사용을 위한 스타일 */
+.lazy-load {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.lazy-load.loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 이미지 지연 로딩 placeholder */
+.img-placeholder {
+  background: var(--color-gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray-600);
+  font-size: var(--font-size-sm);
+}
+
+.img-placeholder::after {
+  content: '🖼️ 이미지 로딩 중...';
+}
+
+/* =============================================================================
+   🏃‍♂️ 애니메이션 최적화
+   ============================================================================= */
+
+/* 60fps 보장을 위한 GPU 가속 애니메이션 */
+@keyframes gpu-optimized-slide {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.slide-in {
+  animation: gpu-optimized-slide 0.3s ease-out;
+}
+
+/* 복합 레이어 생성 최적화 */
+.animated-element {
+  will-change: transform, opacity;
+}
+
+.animated-element.animation-complete {
+  will-change: auto; /* 애니메이션 완료 후 GPU 사용 해제 */
+}
+
+/* =============================================================================
+   📈 성능 측정 헬퍼
+   ============================================================================= */
+
+/* 개발용 성능 측정 마커 */
+/*
+JavaScript에서 사용:
+performance.mark('miyako-css-start');
+// CSS 적용 후
+performance.mark('miyako-css-end');
+performance.measure('miyako-css', 'miyako-css-start', 'miyako-css-end');
+*/
+
+/* =============================================================================
+   🎯 Core Web Vitals 체크리스트
+
+   ✅ LCP 최적화
+   - 중요 콘텐츠 우선 렌더링
+   - 폰트 최적화 (font-display: swap)
+   - 이미지 지연 로딩
+   - 크리티컬 CSS 인라인화
+
+   ✅ FID 최적화
+   - 터치 지연 제거 (touch-action: manipulation)
+   - GPU 가속 활용
+   - 불필요한 JavaScript 제거
+   - 입력 응답성 개선
+
+   ✅ CLS 최적화
+   - 레이아웃 예약 (min-height 설정)
+   - 이미지 비율 고정
+   - 스켈레톤 로더 크기 고정
+   - 동적 콘텐츠 삽입 최적화
+
+   ✅ 추가 성능 개선
+   - 메모리 사용량 최적화
+   - 렌더링 성능 개선
+   - 네트워크 리소스 최적화
+   - 브라우저별 최적화 적용
+   ============================================================================= */

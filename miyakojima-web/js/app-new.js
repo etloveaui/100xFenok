@@ -16,6 +16,7 @@ export class App {
         this.currentSection = 'dashboard';
         this.retryAttempts = 0;
         this.maxRetries = 3;
+        this.googleMapsManager = null;
     }
 
     // initialize 메서드 추가 - start와 동일한 기능
