@@ -8,25 +8,25 @@
 
     <!-- 네비게이션 개선된 디자인 CSS -->
     <style>
-        /* 네비게이션 컨테이너 - 깔끔한 배경 */
+        /* 네비게이션 컨테이너 - 컴팩트한 디자인 */
         .main-nav {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
+            display: none;
+            visibility: hidden;
+            opacity: 0;
             position: relative !important;
             z-index: 99999 !important;
             background: linear-gradient(135deg, rgba(0, 188, 212, 0.95), rgba(0, 150, 200, 0.95)) !important;
             backdrop-filter: blur(20px) !important;
-            padding: 12px 20px !important;
+            padding: 8px 16px !important;
             justify-content: center !important;
-            gap: 12px !important;
+            gap: 8px !important;
             width: 100% !important;
             height: auto !important;
-            min-height: 65px !important;
+            min-height: 50px !important;
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1) !important;
         }
 
-        /* 모든 탭 버튼 기본 스타일 */
+        /* 모든 탭 버튼 기본 스타일 - 더 작고 깔끔하게 */
         .nav-btn {
             display: flex !important;
             visibility: visible !important;
@@ -34,70 +34,90 @@
             position: relative !important;
             z-index: 99999 !important;
             align-items: center !important;
-            gap: 8px !important;
-            padding: 10px 18px !important;
-            border-radius: 20px !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            border: 2px solid transparent !important;
+            gap: 6px !important;
+            padding: 8px 14px !important;
+            border-radius: 16px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            border: 1px solid transparent !important;
             cursor: pointer !important;
-            min-width: 100px !important;
+            min-width: 80px !important;
+            max-width: 95px !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             text-shadow: none !important;
+            white-space: nowrap !important;
         }
 
-        /* 활성화된 탭 - 선명한 흰색 배경 */
+        /* 활성화된 탭 - 진한 흰색 배경과 선명한 텍스트 */
         .nav-btn.active,
         button.nav-btn.active,
         .nav-btn.btn-primary {
             background: #ffffff !important;
-            color: #00bcd4 !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
-            transform: translateY(-2px) !important;
-            border-color: #ffffff !important;
+            color: #0d47a1 !important;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25) !important;
+            transform: translateY(-1px) !important;
+            border-color: rgba(13, 71, 161, 0.2) !important;
+            font-weight: 800 !important;
         }
 
-        /* 비활성 탭 - 반투명 흰색 */
+        /* 비활성 탭 - 따뜻하고 세련된 디자인 */
         .nav-btn:not(.active),
         button.nav-btn:not(.active),
         .nav-btn.btn-secondary {
-            background: rgba(255, 255, 255, 0.2) !important;
-            color: #ffffff !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+            background: rgba(255, 255, 255, 0.25) !important;
+            color: #1a365d !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            text-shadow: none !important;
+            font-weight: 600 !important;
+            backdrop-filter: blur(8px) !important;
         }
 
-        /* 호버 효과 */
+        /* 호버 효과 - 따뜻하고 부드럽게 */
         .nav-btn:not(.active):hover {
-            background: rgba(255, 255, 255, 0.3) !important;
-            border-color: rgba(255, 255, 255, 0.5) !important;
+            background: rgba(255, 255, 255, 0.35) !important;
+            border-color: rgba(255, 255, 255, 0.7) !important;
             transform: translateY(-1px) !important;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+            box-shadow: 0 4px 16px rgba(26, 54, 93, 0.15) !important;
+            color: #0d47a1 !important;
         }
 
-        /* SVG 아이콘 스타일 */
+        .nav-btn:not(.active):hover svg,
+        .nav-btn:not(.active):hover .icon {
+            stroke: #0d47a1 !important;
+        }
+
+        /* SVG 아이콘 스타일 - 작게 */
         .nav-btn svg,
         .nav-btn .icon {
-            width: 18px !important;
-            height: 18px !important;
+            width: 16px !important;
+            height: 16px !important;
             stroke: currentColor !important;
-            stroke-width: 2 !important;
+            stroke-width: 2.5 !important;
             fill: none !important;
         }
 
         .nav-btn.active svg,
         .nav-btn.active .icon {
-            stroke: #00bcd4 !important;
+            stroke: #0d47a1 !important;
         }
 
         .nav-btn:not(.active) svg,
         .nav-btn:not(.active) .icon {
-            stroke: #ffffff !important;
+            stroke: #1a365d !important;
+            filter: none !important;
         }
 
         /* 클릭 효과 */
         .nav-btn:active {
             transform: scale(0.98) !important;
+        }
+
+        /* 네비게이션 준비됨 상태 */
+        .main-nav.ready {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            transition: opacity 0.3s ease-in-out !important;
         }
     </style>
 
@@ -142,14 +162,9 @@
                         <span class="d-day-number" id="dday-number">-11</span>
                     </div>
                     <div class="couple-names">
-                        <span class="traveler clickable-name" onclick="showLoveBubble()">Fenomeno</span>
+                        <span class="traveler">Fenomeno</span>
                         <span class="heart">♥</span>
                         <span class="traveler">Mona</span>
-                    </div>
-                    <!-- 사랑 말풍선 -->
-                    <div class="love-bubble" id="love-bubble">
-                        <div class="bubble-content">모나 사랑해 💕</div>
-                        <div class="bubble-arrow"></div>
                     </div>
                 </div>
 

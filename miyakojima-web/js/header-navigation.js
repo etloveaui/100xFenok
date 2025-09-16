@@ -479,28 +479,6 @@ function hideQuickDropdown() {
   dropdown.classList.remove('show');
 }
 
-/**
- * 사랑 말풍선 표시
- */
-function showLoveBubble() {
-  const bubble = document.getElementById('love-bubble');
-  if (!bubble) return;
-
-  // 기존 애니메이션 중단
-  bubble.classList.remove('show');
-
-  // 잠시 후 애니메이션 시작
-  setTimeout(() => {
-    bubble.classList.add('show');
-
-    // 2초 후 자동 숨김
-    setTimeout(() => {
-      bubble.classList.remove('show');
-    }, 2000);
-  }, 100);
-
-  console.log('💕 사랑 말풍선 표시!');
-}
 
 // 글로벌 함수로 등록 (HTML onclick에서 사용)
 window.goToDashboard = goToDashboard;
