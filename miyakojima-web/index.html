@@ -37,35 +37,41 @@
     <!-- 메인 헤더 - 최적화됨 -->
     <header class="main-header optimized">
         <div class="header-content">
-            <!-- 클릭 가능한 로고 -->
-            <h1 class="main-title clickable" onclick="goToDashboard()">
-                🏝️ Miyako Travel Assistant
-            </h1>
+            <!-- 3분할 레이아웃: 좌측(D-Day) - 중앙(로고) - 우측(날씨) -->
+            <div class="header-layout">
+                <!-- 좌측: D-Day 및 여행 정보 -->
+                <div class="header-left">
+                    <div class="trip-dates">2025.09.27</div>
+                    <div class="trip-countdown">
+                        <span class="d-day-label">D</span>
+                        <span class="d-day-number" id="dday-number">-11</span>
+                    </div>
+                    <div class="couple-names">
+                        <span class="traveler">Fenomeno</span>
+                        <span class="heart">♥</span>
+                        <span class="traveler">Mona</span>
+                    </div>
+                </div>
 
-            <!-- 재설계된 여행 정보 -->
-            <div class="trip-header">
-                <div class="trip-dates">2025.09.27 - 10.01</div>
-                <div class="trip-duration">4박 5일</div>
-                <div class="trip-countdown">
-                    <span class="d-day-label">D</span>
-                    <span class="d-day-number" id="dday-number">-11</span>
+                <!-- 중앙: 로고 -->
+                <div class="header-center">
+                    <h1 class="main-title clickable" onclick="goToDashboard()">
+                        🏝️ Miyako Travel Assistant
+                    </h1>
                 </div>
-                <div class="trip-title">
-                    <span class="traveler">Fenomeno</span>
-                    <span class="heart">♥</span>
-                    <span class="traveler">Mona</span>
-                </div>
-                <div class="trip-subtitle">Miyakojima Journey</div>
-            </div>
 
-            <!-- 간소화된 날씨 카드 -->
-            <div class="weather-simple" onclick="openWeatherDetails()">
-                <div class="weather-location">미야코지마</div>
-                <div class="weather-main">
-                    <span class="weather-temp" id="simple-temp">26°C</span>
-                    <span class="weather-condition" id="simple-condition">맑음</span>
+                <!-- 우측: 날씨 카드 -->
+                <div class="header-right">
+                    <div class="weather-simple" onclick="openWeatherDetails()">
+                        <div class="weather-location">미야코지마</div>
+                        <div class="weather-main">
+                            <span class="weather-temp" id="simple-temp">26°C</span>
+                            <span class="weather-icon" id="weather-icon">☀️</span>
+                            <span class="weather-condition" id="simple-condition">맑음</span>
+                        </div>
+                        <div class="weather-hint">자세히 보기 ›</div>
+                    </div>
                 </div>
-                <div class="weather-hint">자세히 보기 ›</div>
             </div>
         </div>
 
@@ -389,6 +395,7 @@
     <script type="module" src="js/performance-monitor.js"></script>
     <script type="module" src="js/ui-components.js"></script>
     <script type="module" src="js/header-navigation.js"></script>
+    <script type="module" src="js/tab-navigation.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

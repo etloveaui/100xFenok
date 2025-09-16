@@ -126,16 +126,26 @@ function showToast(message, type = 'info', duration = 3000) {
 function updateSimpleWeather() {
   const tempElement = document.getElementById('simple-temp');
   const conditionElement = document.getElementById('simple-condition');
+  const iconElement = document.getElementById('weather-icon');
 
   // 기존 날씨 데이터가 있는 경우 사용
-  if (window.currentWeatherData && tempElement && conditionElement) {
+  if (window.currentWeatherData && tempElement && conditionElement && iconElement) {
     const temp = Math.round(window.currentWeatherData.main.temp);
-    const condition = getKoreanWeatherCondition(window.currentWeatherData.weather[0].main);
+    const weatherMain = window.currentWeatherData.weather[0].main;
+    const condition = getKoreanWeatherCondition(weatherMain);
+
+    // 현재 시간이 밤인지 확인 (일몰/일출 시간 기준)
+    const now = new Date();
+    const currentHour = now.getHours();
+    const isNight = currentHour < 6 || currentHour > 19;
+
+    const weatherIcon = getWeatherIcon(weatherMain, isNight);
 
     tempElement.textContent = `${temp}°C`;
+    iconElement.textContent = weatherIcon;
     conditionElement.textContent = condition;
 
-    console.log(`🌡️ 날씨 업데이트: ${temp}°C, ${condition}`);
+    console.log(`🌡️ 날씨 업데이트: ${temp}°C, ${weatherIcon} ${condition}`);
   }
 }
 
@@ -157,6 +167,27 @@ function getKoreanWeatherCondition(condition) {
     'Haze': '연무'
   };
   return conditions[condition] || '날씨';
+}
+
+/**
+ * 날씨 상태별 아이콘 가져오기
+ * @param {string} condition - 영어 날씨 상태
+ * @param {boolean} isNight - 밤인지 여부 (선택적)
+ * @returns {string} 해당하는 이모지 아이콘
+ */
+function getWeatherIcon(condition, isNight = false) {
+  const icons = {
+    'Clear': isNight ? '🌙' : '☀️',
+    'Clouds': isNight ? '☁️' : '☁️',
+    'Rain': '🌧️',
+    'Drizzle': '🌦️',
+    'Snow': '❄️',
+    'Thunderstorm': '⛈️',
+    'Mist': '🌫️',
+    'Fog': '🌫️',
+    'Haze': '🌫️'
+  };
+  return icons[condition] || '🌤️';
 }
 
 /* ==========================================================================
