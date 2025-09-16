@@ -41,11 +41,11 @@
   cursor: pointer;
   transition: all 0.3s ease;
   user-select: none;
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: white;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  margin-bottom: 20px;
+  margin: 0;
   text-align: center;
 }
 
@@ -164,9 +164,6 @@
    ========================================================================== */
 
 .weather-simple {
-  position: absolute;
-  top: 20px;
-  right: 20px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
   padding: 16px 20px;
@@ -200,7 +197,7 @@
 .weather-main {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 8px;
 }
 
@@ -209,6 +206,11 @@
   font-weight: 800;
   color: #1e293b;
   font-family: 'SF Pro Display', monospace;
+}
+
+.weather-icon {
+  font-size: 16px;
+  margin: 0 2px;
 }
 
 .weather-condition {
@@ -277,7 +279,7 @@
 }
 
 /* ==========================================================================
-   헤더 콘텐츠 레이아웃 최적화
+   헤더 콘텐츠 3분할 레이아웃
    ========================================================================== */
 
 .header-content {
@@ -285,10 +287,97 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  padding: 15px 20px;
+  z-index: 10;
+}
+
+.header-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  height: 70%;
+}
+
+/* 좌측: D-Day 정보 */
+.header-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10px;
+}
+
+/* 중앙: 로고 */
+.header-center {
+  flex: 2;
+  display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
-  z-index: 10;
+  padding-top: 20px;
+}
+
+/* 좌측 D-Day 정보 스타일링 */
+.header-left .trip-dates {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.header-left .trip-countdown {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header-left .d-day-label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 1px;
+}
+
+.header-left .d-day-number {
+  font-size: 14px;
+  font-weight: 800;
+  font-family: 'SF Pro Display', monospace;
+}
+
+.header-left .couple-names {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-left .traveler {
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-left .heart {
+  font-size: 16px;
+  color: #ff6b6b;
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+/* 우측: 날씨 */
+.header-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding-top: 5px;
 }
 
 @media (max-width: 768px) {
@@ -317,6 +406,97 @@
   .main-title.clickable {
     font-size: 1.5rem;
     margin-bottom: 15px;
+  }
+}
+
+/* ==========================================================================
+   탭 네비게이션 개선된 스타일
+   ========================================================================== */
+
+.main-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px 20px 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  min-width: 100px;
+  justify-content: center;
+}
+
+/* Active 탭 스타일 */
+.nav-btn.active {
+  background: rgba(255, 255, 255, 0.95);
+  color: #00bcd4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Inactive 탭 스타일 */
+.nav-btn:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Hover 효과 */
+.nav-btn:not(.active):hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 아이콘 스타일 */
+.nav-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* 반응형 탭 */
+@media (max-width: 768px) {
+  .main-nav {
+    gap: 6px;
+    padding: 12px 15px 5px;
+  }
+
+  .nav-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-width: 80px;
+  }
+
+  .nav-btn .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-nav {
+    gap: 4px;
+    padding: 10px;
+  }
+
+  .nav-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-width: 70px;
+    gap: 6px;
   }
 }
 
