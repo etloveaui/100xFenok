@@ -97,17 +97,31 @@ function updateDDayCounter() {
     const ddayElement = document.getElementById('dday-counter');
     if (!ddayElement) return;
 
-    // 여행 시작일: 2025년 9월 27일
-    const travelStartDate = new Date('2025-09-27');
-    const travelEndDate = new Date('2025-10-01');
-    const today = new Date();
+    const parseTripDate = (dateStr, fallback) => {
+        if (typeof dateStr === 'string') {
+            const parts = dateStr.split('-').map(Number);
+            if (parts.length === 3 && parts.every(num => !Number.isNaN(num))) {
+                return new Date(parts[0], parts[1] - 1, parts[2]);
+            }
+        }
+        return fallback;
+    };
 
-    // 시간 차이를 일 단위로 계산
-    const diffTime = travelStartDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const defaultStart = new Date(2025, 8, 27);
+    const defaultEnd = new Date(2025, 9, 1);
+    const tripInfo = (typeof window !== 'undefined' && window.CONFIG && window.CONFIG.TRIP_INFO) ? window.CONFIG.TRIP_INFO : null;
+    const travelStartDate = parseTripDate(tripInfo?.START_DATE, defaultStart);
+    const travelEndDate = parseTripDate(tripInfo?.END_DATE, defaultEnd);
+
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const msPerDay = 1000 * 60 * 60 * 24;
+
+    const diffTime = travelStartDate.getTime() - todayMidnight.getTime();
+    const diffDays = Math.ceil(diffTime / msPerDay);
 
     let displayText = '';
-    let badgeClass = 'dday-badge';
+    const badgeClass = 'dday-badge';
 
     if (diffDays > 0) {
         // 여행 전
@@ -119,8 +133,8 @@ function updateDDayCounter() {
         ddayElement.className = `${badgeClass} dday-today`;
     } else {
         // 여행 중 또는 여행 후 체크
-        const endDiffTime = travelEndDate - today;
-        const endDiffDays = Math.ceil(endDiffTime / (1000 * 60 * 60 * 24));
+        const endDiffTime = travelEndDate.getTime() - todayMidnight.getTime();
+        const endDiffDays = Math.ceil(endDiffTime / msPerDay);
 
         if (endDiffDays >= 0) {
             // 여행 중

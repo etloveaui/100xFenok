@@ -11,10 +11,13 @@ class WeatherService {
         this.initialized = false;
     }
 
-    async initialize() {
-        if (this.initialized) {
+    async initialize(force = false) {
+        if (this.initialized && !force) {
             console.log('✅ 날씨 서비스 이미 초기화됨');
-            return;
+            return {
+                current: this.currentWeather,
+                forecast: this.forecast
+            };
         }
 
         try {
@@ -306,7 +309,8 @@ class WeatherService {
     async refresh() {
         console.log('🔄 날씨 데이터 새로고침...');
         this.cache.clear();
-        return await this.initialize();
+        this.initialized = false;
+        return await this.initialize(true);
     }
 }
 
