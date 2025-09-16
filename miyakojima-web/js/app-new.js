@@ -18,6 +18,11 @@ export class App {
         this.maxRetries = 3;
     }
 
+    // initialize 메서드 추가 - start와 동일한 기능
+    async initialize() {
+        return await this.start();
+    }
+
     async start() {
         try {
             console.log('🚀 앱 시작...');

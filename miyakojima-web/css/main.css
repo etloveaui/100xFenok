@@ -159,54 +159,45 @@ body {
     font-size: var(--font-sm);
 }
 
-/* 새로운 날씨 카드 시스템 - 블러 제거하고 명확한 배경 적용 */
-/* 🌟 완전히 새로운 아름다운 날씨 카드 - 늘어나지 않고 모달로 변환 */
+/* 🌟 간단하고 깔끔한 날씨 카드 (재설계) */
 .weather-card {
-    position: relative;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-    border-radius: 24px;
-    padding: 0;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    max-width: 320px;
-    min-width: 240px;
-    overflow: hidden;
-    transform-origin: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: var(--spacing-md);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    max-width: 280px;
+    min-width: 200px;
+    cursor: pointer;
 }
 
 .weather-card:hover {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.15));
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
-    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
 }
 
 .weather-current {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-sm);
-    cursor: pointer;
 }
 
 .weather-temp-info {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
 }
 
 .weather-temp {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: white;
-    line-height: 1;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
 }
 
 .weather-feels {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
     margin-top: 2px;
 }
 
@@ -214,18 +205,17 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: var(--spacing-xs);
 }
 
 .weather-icon-large {
-    font-size: 2.2rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: weatherFloat 3s ease-in-out infinite;
+    font-size: 2rem;
+    opacity: 0.8;
 }
 
 .weather-condition {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
     text-align: center;
     font-weight: 500;
 }
@@ -709,8 +699,9 @@ body {
 
 /* 헤더 높이 제한 - UI 최적화 (모든 기기) */
 .header {
-    max-height: 60vh; /* 뷰포트 높이의 60% 이하로 제한 */
+    max-height: 25vh; /* 뷰포트 높이의 25%로 대폭 축소 */
     overflow-y: auto; /* 필요시 스크롤 */
+    padding: var(--spacing-sm) var(--spacing-md); /* 패딩 축소 */
 }
 
 .weather-details {
@@ -722,8 +713,8 @@ body {
 @media (max-width: 768px) {
     /* 헤더를 더 컴팩트하게 */
     .header {
-        max-height: 45vh; /* 모바일에서 더 제한적 */
-        padding: var(--spacing-sm);
+        max-height: 20vh; /* 모바일에서 20%로 더욱 축소 */
+        padding: var(--spacing-xs) var(--spacing-sm); /* 모바일 패딩 더욱 축소 */
     }
 
     .weather-card {
@@ -1551,7 +1542,7 @@ body {
 /* 태블릿 최적화 */
 @media (min-width: 769px) and (max-width: 1024px) {
     .header {
-        max-height: 55vh;
+        max-height: 22vh; /* 태블릿에서 22% */
     }
 
     .weather-details {
@@ -1574,7 +1565,7 @@ body {
 /* 데스크톱 최적화 */
 @media (min-width: 1025px) {
     .header {
-        max-height: 40vh; /* 데스크톱에서는 더 여유롭게 */
+        max-height: 25vh; /* 데스크톱에서도 25%로 제한 */
     }
 
     .weather-card {
