@@ -13,20 +13,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="미야코지마 컴패니언">
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="./css/main.css">
-    <link rel="stylesheet" href="./css/poi-styles.css">
-    <link rel="stylesheet" href="./css/mobile.css">
+    <!-- 🏝️ Miyako Design System - Unified CSS -->
+    <link rel="stylesheet" href="./css/miyako-design-system.css">
+    <link rel="stylesheet" href="./css/main-optimized.css">
 
-    <!-- Shadcn UI Components -->
-    <link rel="stylesheet" href="./components/ui/styles.css">
-
-    <!-- 무료 아이콘 (Feather Icons CDN 대체용 인라인 SVG) -->
-    <style>
-        .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
-    </style>
+    <!-- 아이콘 시스템은 miyako-design-system.css에서 처리 -->
 </head>
 <body>
+    <!-- ♿ 접근성: 메인 콘텐츠로 건너뛰기 -->
+    <a href="#main-content" class="skip-link">메인 콘텐츠로 건너뛰기</a>
     <!-- 로딩 스크린 -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
@@ -61,7 +56,7 @@
                             <span class="weather-icon-large" id="weather-icon">☀️</span>
                             <span class="weather-condition" id="weather-condition">맑음</span>
                         </div>
-                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8 weather-expand-btn" id="weather-expand-btn" aria-label="날씨 상세 정보">
+                        <button class="btn-ghost btn-icon" id="weather-expand-btn" aria-label="날씨 상세 정보">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M7 10l5 5 5-5z"/>
                             </svg>
@@ -115,7 +110,7 @@
                             <div class="forecast-items" id="forecast-items">
                                 <!-- 5일 예보 항목들이 여기에 동적으로 생성됩니다 -->
                             </div>
-                            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 py-2 forecast-full-btn" id="forecast-full-btn">전체 예보 보기</button>
+                            <button class="btn-secondary btn-sm" id="forecast-full-btn">전체 예보 보기</button>
                         </div>
                     </div>
                 </div>
@@ -124,19 +119,19 @@
 
         <!-- 네비게이션 -->
         <nav class="main-nav">
-            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 nav-btn active" data-section="dashboard">
+            <button class="btn-primary nav-btn active" data-section="dashboard">
                 <svg class="icon"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path></svg>
                 대시보드
             </button>
-            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 nav-btn" data-section="budget">
+            <button class="btn-secondary nav-btn" data-section="budget">
                 <svg class="icon"><path d="M12 1v22m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 예산
             </button>
-            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 nav-btn" data-section="itinerary">
+            <button class="btn-secondary nav-btn" data-section="itinerary">
                 <svg class="icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 일정
             </button>
-            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 nav-btn" data-section="poi">
+            <button class="btn-secondary nav-btn" data-section="poi">
                 <svg class="icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                 장소
             </button>
@@ -144,12 +139,12 @@
     </header>
 
     <!-- 메인 컨테이너 -->
-    <main class="main-container">
+    <main id="main-content" class="main-container" role="main">
         <!-- 대시보드 섹션 -->
         <section id="dashboard-section" class="section active">
             <div class="dashboard-grid">
                 <!-- 예산 현황 카드 -->
-                <div class="dashboard-card budget-overview">
+                <div class="card dashboard-card budget-overview">
                     <div class="card-header">
                         <h3>💰 오늘 예산 현황</h3>
                         <span class="budget-status" id="budget-status">양호</span>
@@ -172,10 +167,10 @@
                 </div>
 
                 <!-- 현재 위치 카드 -->
-                <div class="dashboard-card location-card">
+                <div class="card dashboard-card location-card">
                     <div class="card-header">
                         <h3>📍 현재 위치</h3>
-                        <button id="refresh-location" class="btn-icon">
+                        <button id="refresh-location" class="btn-ghost btn-icon">
                             <svg class="icon"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="m3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                         </button>
                     </div>
@@ -186,7 +181,7 @@
                 </div>
 
                 <!-- 다음 목적지 카드 -->
-                <div class="dashboard-card next-destination">
+                <div class="card dashboard-card next-destination">
                     <div class="card-header">
                         <h3>🎯 다음 목적지</h3>
                         <span class="eta" id="next-eta">15분</span>
@@ -195,17 +190,17 @@
                         <h4 id="next-destination-name">요나하 마에하마 비치</h4>
                         <p id="next-destination-desc">동양 최고의 해변, 일몰 명소</p>
                         <div class="destination-actions">
-                            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2" id="start-navigation">길찾기 시작</button>
-                            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" id="change-destination">변경</button>
+                            <button class="btn-primary" id="start-navigation" data-action="start-navigation">길찾기 시작</button>
+                            <button class="btn-secondary" id="change-destination" data-action="change-destination">변경</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- 오늘의 추천 카드 -->
-                <div class="dashboard-card recommendations">
+                <div class="card dashboard-card recommendations">
                     <div class="card-header">
                         <h3>✨ 오늘의 추천</h3>
-                        <button id="refresh-recommendations" class="btn-icon">
+                        <button id="refresh-recommendations" class="btn-ghost btn-icon">
                             <svg class="icon"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="m3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                         </button>
                     </div>
@@ -222,24 +217,24 @@
                 </div>
 
                 <!-- 빠른 액션 카드 -->
-                <div class="dashboard-card quick-actions">
+                <div class="card dashboard-card quick-actions">
                     <div class="card-header">
                         <h3>🚀 빠른 액션</h3>
                     </div>
                     <div class="action-buttons">
-                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2" id="add-expense">
+                        <button class="btn-primary" id="add-expense" data-action="add-expense">
                             <svg class="icon"><path d="M12 1v22m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                             지출 추가
                         </button>
-                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2" id="scan-receipt">
+                        <button class="btn-secondary" id="scan-receipt" data-action="scan-receipt">
                             <svg class="icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21,15 16,10 5,21"></polyline></svg>
                             영수증 스캔
                         </button>
-                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2" id="nearby-pois">
+                        <button class="btn-secondary" id="nearby-pois" data-action="nearby-pois">
                             <svg class="icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                             주변 장소
                         </button>
-                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" id="emergency-help">
+                        <button class="btn-ghost" id="emergency-help" data-action="emergency-help">
                             <svg class="icon"><path d="m13 2-2 2.5h-4l2 2.5-2 2.5h4l2 2.5 2-2.5h4l-2-2.5 2-2.5h-4l-2-2.5z"></path></svg>
                             도움말
                         </button>
@@ -294,11 +289,11 @@
             <div class="section-header">
                 <h2>📅 일정 관리</h2>
                 <div class="date-selector">
-                    <button class="date-btn active" data-date="2025-09-27">27일</button>
-                    <button class="date-btn" data-date="2025-09-28">28일</button>
-                    <button class="date-btn" data-date="2025-09-29">29일</button>
-                    <button class="date-btn" data-date="2025-09-30">30일</button>
-                    <button class="date-btn" data-date="2025-10-01">01일</button>
+                    <button class="btn-primary date-btn active" data-date="2025-09-27">27일</button>
+                    <button class="btn-secondary date-btn" data-date="2025-09-28">28일</button>
+                    <button class="btn-secondary date-btn" data-date="2025-09-29">29일</button>
+                    <button class="btn-secondary date-btn" data-date="2025-09-30">30일</button>
+                    <button class="btn-secondary date-btn" data-date="2025-10-01">01일</button>
                 </div>
             </div>
 
@@ -316,7 +311,7 @@
                 <div class="search-filters">
                     <div class="filter-row">
                         <input type="search" id="poi-search" placeholder="장소 검색..." class="search-input">
-                        <button id="poi-search-btn" class="search-btn">
+                        <button id="poi-search-btn" class="btn-primary btn-icon">
                             <svg class="icon"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
                         </button>
                     </div>
@@ -352,25 +347,25 @@
 
     <!-- 플로팅 액션 버튼 -->
     <div class="fab-container">
-        <button class="fab-main" id="fab-main">
+        <button class="fab-main btn-primary" id="fab-main" aria-label="빠른 액션 메뉴">
             <svg class="icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
-        <div class="fab-menu" id="fab-menu">
-            <button class="fab-item" data-action="expense">💰</button>
-            <button class="fab-item" data-action="camera">📸</button>
-            <button class="fab-item" data-action="location">📍</button>
-            <button class="fab-item" data-action="note">📝</button>
+        <div class="fab-menu" id="fab-menu" role="menu">
+            <button class="fab-item" data-action="expense" aria-label="지출 추가">💰</button>
+            <button class="fab-item" data-action="camera" aria-label="카메라">📸</button>
+            <button class="fab-item" data-action="location" aria-label="위치 확인">📍</button>
+            <button class="fab-item" data-action="note" aria-label="메모 작성">📝</button>
         </div>
     </div>
 
     <!-- 모달들 -->
 
     <!-- 지출 추가 모달 -->
-    <div id="expense-modal" class="modal">
+    <div id="expense-modal" class="modal" aria-labelledby="modal-title" aria-describedby="modal-description">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>지출 추가</h3>
-                <button class="modal-close">&times;</button>
+                <h3 id="modal-title">지출 추가</h3>
+                <button class="modal-close" aria-label="모달 닫기">&times;</button>
             </div>
             <form id="expense-form">
                 <div class="form-group">
@@ -398,7 +393,7 @@
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" id="cancel-expense">취소</button>
-                    <button type="submit" class="btn-primary">추가</button>
+                    <button type="submit" class="btn-primary" data-action="submit-expense">추가</button>
                 </div>
             </form>
         </div>
@@ -438,7 +433,9 @@
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY&libraries=places,geometry&callback=initGoogleMaps">
     </script>
 
-    <!-- ES6 모듈로 진입 -->
+    <!-- 🏝️ Miyako UI System -->
+    <script type="module" src="js/performance-monitor.js"></script>
+    <script type="module" src="js/ui-components.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
