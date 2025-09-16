@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="미야코지마 여행 스마트 컴패니언 - 실시간 예산 추적, GPS 기반 추천, 스마트 일정 관리">
-    <title>🏝️ Miyako Travel Assistant v2.1.0</title>
+    <title>🏝️ Miyako Travel Assistant v2.2.0</title>
 
     <!-- PWA 설정 -->
     <link rel="manifest" href="./manifest.json">
@@ -17,6 +17,9 @@
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/poi-styles.css">
     <link rel="stylesheet" href="./css/mobile.css">
+
+    <!-- Shadcn UI Components -->
+    <link rel="stylesheet" href="./components/ui/styles.css">
 
     <!-- 무료 아이콘 (Feather Icons CDN 대체용 인라인 SVG) -->
     <style>
@@ -39,7 +42,7 @@
     <header class="main-header">
         <div class="header-content">
             <div class="app-header">
-                <div class="version-info">v2.1.0-GPS</div>
+                <div class="version-info">v2.2.0-UI</div>
                 <h1>🏝️ Miyako Travel Assistant</h1>
             </div>
             <div class="header-info">
@@ -58,7 +61,7 @@
                             <span class="weather-icon-large" id="weather-icon">☀️</span>
                             <span class="weather-condition" id="weather-condition">맑음</span>
                         </div>
-                        <button class="weather-expand-btn" id="weather-expand-btn" aria-label="날씨 상세 정보">
+                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8 weather-expand-btn" id="weather-expand-btn" aria-label="날씨 상세 정보">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M7 10l5 5 5-5z"/>
                             </svg>
@@ -112,7 +115,7 @@
                             <div class="forecast-items" id="forecast-items">
                                 <!-- 5일 예보 항목들이 여기에 동적으로 생성됩니다 -->
                             </div>
-                            <button class="forecast-full-btn" id="forecast-full-btn">전체 예보 보기</button>
+                            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 py-2 forecast-full-btn" id="forecast-full-btn">전체 예보 보기</button>
                         </div>
                     </div>
                 </div>
@@ -121,19 +124,19 @@
 
         <!-- 네비게이션 -->
         <nav class="main-nav">
-            <button class="nav-btn active" data-section="dashboard">
+            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 nav-btn active" data-section="dashboard">
                 <svg class="icon"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path></svg>
                 대시보드
             </button>
-            <button class="nav-btn" data-section="budget">
+            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 nav-btn" data-section="budget">
                 <svg class="icon"><path d="M12 1v22m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 예산
             </button>
-            <button class="nav-btn" data-section="itinerary">
+            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 nav-btn" data-section="itinerary">
                 <svg class="icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 일정
             </button>
-            <button class="nav-btn" data-section="poi">
+            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 nav-btn" data-section="poi">
                 <svg class="icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                 장소
             </button>
@@ -192,8 +195,8 @@
                         <h4 id="next-destination-name">요나하 마에하마 비치</h4>
                         <p id="next-destination-desc">동양 최고의 해변, 일몰 명소</p>
                         <div class="destination-actions">
-                            <button class="btn-primary" id="start-navigation">길찾기 시작</button>
-                            <button class="btn-secondary" id="change-destination">변경</button>
+                            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2" id="start-navigation">길찾기 시작</button>
+                            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" id="change-destination">변경</button>
                         </div>
                     </div>
                 </div>
@@ -224,19 +227,19 @@
                         <h3>🚀 빠른 액션</h3>
                     </div>
                     <div class="action-buttons">
-                        <button class="action-btn" id="add-expense">
+                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2" id="add-expense">
                             <svg class="icon"><path d="M12 1v22m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                             지출 추가
                         </button>
-                        <button class="action-btn" id="scan-receipt">
+                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2" id="scan-receipt">
                             <svg class="icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21,15 16,10 5,21"></polyline></svg>
                             영수증 스캔
                         </button>
-                        <button class="action-btn" id="nearby-pois">
+                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2" id="nearby-pois">
                             <svg class="icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                             주변 장소
                         </button>
-                        <button class="action-btn" id="emergency-help">
+                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" id="emergency-help">
                             <svg class="icon"><path d="m13 2-2 2.5h-4l2 2.5-2 2.5h4l2 2.5 2-2.5h4l-2-2.5 2-2.5h-4l-2-2.5z"></path></svg>
                             도움말
                         </button>
