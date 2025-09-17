@@ -353,8 +353,12 @@ function updateDDayCounter() {
 function initializeHeaderNavigation() {
   console.log('🏝️ 헤더 네비게이션 시스템 초기화 중...');
 
-  // D-Day 카운터 초기 설정 및 실시간 업데이트
-  updateDDayCounter();
+  try {
+    // D-Day 카운터 초기 설정 및 실시간 업데이트
+    updateDDayCounter();
+  } catch (error) {
+    console.error('❌ D-Day 카운터 초기화 실패:', error);
+  }
 
   // 매일 자정에 D-Day 카운터 업데이트
   const now = new Date();
@@ -367,8 +371,16 @@ function initializeHeaderNavigation() {
     setInterval(updateDDayCounter, 24 * 60 * 60 * 1000);
   }, msUntilMidnight);
 
-  // 날씨 데이터 업데이트 (GPS 기반)
-  updateSimpleWeather();
+  // 날씨 데이터 업데이트 (GPS 기반) - 지연 실행으로 앱 초기화 후 실행
+  setTimeout(() => {
+    console.log('🌤️ 날씨 정보 로드 시작...');
+    try {
+      updateSimpleWeather();
+      updateCurrentTime();
+    } catch (error) {
+      console.error('❌ 날씨/시간 초기화 실패:', error);
+    }
+  }, 1000);
 
   // 실시간 시계 업데이트 (1분마다)
   setInterval(updateCurrentTime, 60000);
