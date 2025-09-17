@@ -34,11 +34,18 @@
             opacity: 1 !important;
         }
 
-        /* 모든 탭 버튼 기본 스타일 - 더 작고 깔끔하게 */
-        .nav-btn {
+        /* ready 상태에서 버튼들도 표시 */
+        .main-nav.ready .nav-btn {
             display: flex !important;
             visibility: visible !important;
             opacity: 1 !important;
+        }
+
+        /* 모든 탭 버튼 기본 스타일 - 더 작고 깔끔하게 */
+        .nav-btn {
+            display: none;
+            visibility: hidden;
+            opacity: 0;
             position: relative !important;
             z-index: 10 !important;
             align-items: center !important;
