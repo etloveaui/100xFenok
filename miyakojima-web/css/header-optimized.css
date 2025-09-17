@@ -238,17 +238,17 @@
 }
 
 .weather-location {
-  font-size: 10px;
-  color: #64748b;
+  font-size: 14px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
   font-weight: 600;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.3px;
   flex: 1;
 }
 
 .current-time {
   font-size: 16px;
-  color: #1e293b;
+  color: white !important;
   font-weight: 800;
   font-family: 'SF Pro Display', monospace;
   text-align: right;
@@ -328,15 +328,41 @@
 }
 
 /* 모바일 반응형 (360px-767px) */
-@media (max-width: 767px) {
-  .header-layout {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
+/* ⚡ 핵심 수정: 767px와 768px 충돌 해결 - 일관된 레이아웃 적용 */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 15px;
   }
 
-  .header-left, .header-right {
+  .header-layout {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    gap: 10px;
+  }
+
+  .header-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important;
     justify-content: center;
+  }
+
+  .header-center {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .header-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end !important;
+    align-items: flex-start;
   }
 
   .weather-simple {
@@ -354,9 +380,16 @@
   }
 
   .current-time {
-    font-size: 14px;
+    font-size: 14px !important;
+    font-weight: 600;
   }
 
+  /* ✅ 위치 텍스트 크기 수정 - 용인시 글씨 크기 정상화 */
+  .weather-location {
+    font-size: 14px !important;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+  }
 
   .main-title.clickable {
     font-size: 1.4rem;
@@ -583,11 +616,7 @@
   padding-top: 5px;
 }
 
-@media (max-width: 768px) {
-  .header-content {
-    padding: 15px;
-  }
-}
+/* 중복된 768px 미디어 쿼리 제거됨 - 위쪽으로 통합 */
 
 @media (max-width: 480px) {
   .header-content {
