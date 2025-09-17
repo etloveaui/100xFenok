@@ -21,8 +21,9 @@ class WeatherWidget {
             console.log('🎨 날씨 위젯 초기화 시작...');
 
             if (!this.container) {
-                console.warn('⚠️ 날씨 위젯 컨테이너를 찾을 수 없습니다');
-                return;
+                console.warn('⚠️ 날씨 위젯 컨테이너(#weather-card)를 찾을 수 없습니다. 날씨 위젯 초기화 건너뜀');
+                // 컨테이너가 없어도 오류 발생하지 않도록 정상 리턴
+                return { current: null, forecast: null };
             }
 
             // 날씨 서비스에서 데이터 가져오기

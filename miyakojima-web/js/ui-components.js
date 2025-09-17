@@ -573,7 +573,8 @@ export {
    🎮 Development Helpers
    ============================================================================= */
 
-if (process.env.NODE_ENV === 'development') {
+// 개발 모드 확인 (브라우저 환경)
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   window.MiyakoUI.debug = {
     showToast: (message, type) => window.MiyakoUI.showToast(message, type),
     getComponents: () => Array.from(document.querySelectorAll('[data-miyako-component]')),
