@@ -8,6 +8,43 @@
 
     <!-- 네비게이션 개선된 디자인 CSS -->
     <style>
+        /* 🔥 Critical CSS - 헤더 레이아웃 강제 고정 (초기 로드 문제 해결) */
+        .header-layout {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            text-align: left !important;
+        }
+
+        .header-left {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+            text-align: left !important;
+        }
+
+        .header-left .couple-names {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            gap: 8px !important;
+        }
+
+        .header-center {
+            flex: 2 !important;
+            text-align: center !important;
+        }
+
+        .header-right {
+            flex: 1 !important;
+            text-align: right !important;
+        }
+
+
         /* 네비게이션 컨테이너 - 컴팩트한 디자인 */
         .main-nav {
             display: none;
