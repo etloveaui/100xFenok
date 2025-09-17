@@ -499,4 +499,4 @@ window.showToast = showToast;
 window.showBudgetOverview = showBudgetOverview;
 window.showTodaySchedule = showTodaySchedule;
 window.showNearbyPOI = showNearbyPOI;
-window.showLoveBubble = showLoveBubble;
+// window.showLoveBubble = showLoveBubble; // showLoveBubble 함수가 정의되지 않음
