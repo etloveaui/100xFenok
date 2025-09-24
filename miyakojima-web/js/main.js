@@ -66,16 +66,17 @@ async function safeInitialize() {
         console.log('✅ DataService 초기화 완료');
         updateProgress(60, 'App 모듈 로딩 중...');
 
-        // 3. App 초기화
-        console.log('📦 App 모듈 로딩...');
-        const { App } = await import('./app-new.js');
-        console.log('✅ App 모듈 로드 완료');
-        updateProgress(80, 'App 초기화 중...');
+        // 3. UI 컴포넌트 직접 초기화 (App 클래스 없이)
+        console.log('📦 UI 컴포넌트 초기화...');
+        updateProgress(80, 'UI 초기화 중...');
 
-        const app = new App();
-        window.app = app;
-        await app.start();
-        console.log('✅ App 시작 완료');
+        // 네비게이션 준비 상태로 설정
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+            mainNav.classList.add('ready');
+        }
+
+        console.log('✅ UI 초기화 완료');
 
         updateProgress(100, '초기화 완료!');
 
