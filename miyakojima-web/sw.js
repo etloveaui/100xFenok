@@ -1,25 +1,23 @@
-const CACHE_NAME = 'miyakojima-travel-v1';
-const STATIC_CACHE = 'static-v1';
-const DYNAMIC_CACHE = 'dynamic-v1';
-const DATA_CACHE = 'data-v1';
+const CACHE_NAME = 'miyakojima-travel-v6';
+const STATIC_CACHE = 'static-v6';
+const DYNAMIC_CACHE = 'dynamic-v6';
+const DATA_CACHE = 'data-v6';
 
-// Files to cache immediately
+// Files to cache immediately - 상대 경로 사용
 const STATIC_FILES = [
-    '/',
-    '/index.html',
-    '/css/main.css',
-    '/css/mobile.css',
-    '/js/app.js',
-    '/js/config.js',
-    '/js/utils.js',
-    '/js/api.js',
-    '/js/budget.js',
-    '/js/location.js',
-    '/js/poi.js',
-    '/js/itinerary.js',
-    '/data/miyakojima_pois.json',
-    'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap',
-    'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/2.1.5/tesseract.min.js'
+    './',
+    './index.html',
+    './css/main-optimized.css',
+    './css/mobile.css',
+    './js/main.js',
+    './js/config.js',
+    './js/utils.js',
+    './js/api.js',
+    './js/budget.js',
+    './js/location.js',
+    './js/poi.js',
+    './js/itinerary.js',
+    './data/miyakojima_pois.json'
 ];
 
 // API endpoints that should be cached
@@ -32,12 +30,27 @@ const API_ENDPOINTS = [
 // Install event - cache static resources
 self.addEventListener('install', event => {
     console.log('Service Worker installing');
-    
+
     event.waitUntil(
         Promise.all([
-            caches.open(STATIC_CACHE).then(cache => {
+            caches.open(STATIC_CACHE).then(async cache => {
                 console.log('Caching static files');
-                return cache.addAll(STATIC_FILES.map(url => new Request(url, { mode: 'no-cors' })));
+                // 개별적으로 캐싱하여 실패한 파일 건너뛰기
+                const promises = STATIC_FILES.map(async url => {
+                    try {
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            await cache.put(url, response);
+                            console.log('Cached:', url);
+                        } else {
+                            console.warn('Failed to cache:', url, response.status);
+                        }
+                    } catch (error) {
+                        console.warn('Error caching:', url, error.message);
+                    }
+                });
+                await Promise.all(promises);
+                return Promise.resolve();
             }),
             caches.open(DATA_CACHE).then(cache => {
                 console.log('Data cache ready');
@@ -131,7 +144,7 @@ async function handleStaticResource(request) {
         
         // If not in cache, fetch and cache
         const response = await fetch(request);
-        if (response.status === 200) {
+        if (response.status === 200 && request.method === 'GET') {
             const cache = await caches.open(STATIC_CACHE);
             cache.put(request, response.clone());
         }
@@ -155,7 +168,7 @@ async function handleAPIRequest(request) {
         // Try network first
         const response = await fetch(request);
         
-        if (response.status === 200) {
+        if (response.status === 200 && request.method === 'GET') {
             // Cache successful responses
             const cache = await caches.open(DATA_CACHE);
             cache.put(request, response.clone());
@@ -196,7 +209,7 @@ async function handleDataRequest(request) {
         
         // If not in cache, fetch and cache
         const response = await fetch(request);
-        if (response.status === 200) {
+        if (response.status === 200 && request.method === 'GET') {
             const cache = await caches.open(DATA_CACHE);
             cache.put(request, response.clone());
         }
@@ -246,7 +259,7 @@ async function handleDynamicRequest(request) {
 async function updateDataInBackground(request) {
     try {
         const response = await fetch(request);
-        if (response.status === 200) {
+        if (response.status === 200 && request.method === 'GET') {
             const cache = await caches.open(DATA_CACHE);
             await cache.put(request, response);
         }
