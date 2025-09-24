@@ -159,6 +159,37 @@ function updateDDayCounter() {
     console.log(`📅 D-Day 업데이트: ${displayText}`);
 }
 
+// Service Worker 완전 재등록
+if ('serviceWorker' in navigator) {
+    // 기존 Service Worker 완전 제거
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+            registration.unregister();
+            console.log('🗑️ 기존 Service Worker 제거됨');
+        });
+    });
+
+    // 새 Service Worker 등록 (상대 경로 사용)
+    setTimeout(() => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+                console.log('✅ 새 Service Worker 등록 완료');
+                // 즉시 활성화 강제
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed') {
+                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('❌ Service Worker 등록 실패:', error);
+            });
+    }, 1000);
+}
+
 // DOM 로드 완료 후 안전하게 초기화
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
