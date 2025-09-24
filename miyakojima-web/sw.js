@@ -222,13 +222,13 @@ async function handleDataRequest(request) {
 async function handleDynamicRequest(request) {
     try {
         const response = await fetch(request);
-        
-        // Cache successful responses
-        if (response.status === 200) {
+
+        // Only cache GET requests (POST requests can't be cached)
+        if (response.status === 200 && request.method === 'GET') {
             const cache = await caches.open(DYNAMIC_CACHE);
             cache.put(request, response.clone());
         }
-        
+
         return response;
     } catch (error) {
         // Try cache first

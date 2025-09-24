@@ -176,14 +176,13 @@
     <!-- PWA 설정 -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#00bcd4">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="미야코지마 컴패니언">
 
     <!-- 🏝️ Miyako Design System - Unified CSS -->
     <link rel="stylesheet" href="./css/miyako-design-system.css">
     <link rel="stylesheet" href="./css/main-optimized.css">
-    <link rel="stylesheet" href="./css/header-optimized.css">
 
     <!-- 아이콘 시스템은 miyako-design-system.css에서 처리 -->
 </head>
@@ -558,9 +557,23 @@
         };
     </script>
 
-    <!-- Google Maps JavaScript API -->
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY&libraries=places,geometry&callback=initGoogleMaps">
+    <!-- Google Maps JavaScript API - Optimized Loading -->
+    <script>
+        // Modern Google Maps API 로딩 (성능 최적화)
+        function loadGoogleMapsAPI() {
+            const script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyB4vV_c6bHMk0CZUSZe58paVa41MGzP4sY&libraries=places,geometry&loading=async&callback=initGoogleMaps';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+
+        // DOM 로드 후 Maps API 로드
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadGoogleMapsAPI);
+        } else {
+            loadGoogleMapsAPI();
+        }
     </script>
 
     <!-- 🏝️ Miyako UI System -->
