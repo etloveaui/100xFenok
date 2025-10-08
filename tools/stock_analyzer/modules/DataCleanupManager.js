@@ -168,7 +168,7 @@ class DataCleanupManager {
             return null;
         }
 
-        const cleanedItem = { ...item };
+        let cleanedItem = { ...item };
         let fieldsFixed = 0;
 
         // 각 필드 정제

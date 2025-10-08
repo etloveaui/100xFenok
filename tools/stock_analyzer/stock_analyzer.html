@@ -121,7 +121,7 @@
         /* 멀티라인 텍스트 자르기 (Webkit 기반 브라우저) */
         .line-clamp-2 {
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             line-height: 1.2em;
@@ -130,7 +130,7 @@
         
         .line-clamp-1 {
             display: -webkit-box;
-            -webkit-line-clamp: 1;
+            line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -440,12 +440,12 @@
             height: 4px;
             background: transparent;
             outline: none;
-            -webkit-appearance: none;
+            appearance: none;
             pointer-events: none;
         }
 
         .range-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
+            appearance: none;
             appearance: none;
             width: 18px;
             height: 18px;
@@ -494,6 +494,107 @@
 
         .range-max {
             z-index: 2;
+        }
+
+        /* Task 5: 다중 선택 드롭다운 스타일 */
+        .multiselect-container {
+            position: relative;
+        }
+
+        .multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .multiselect-option {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.15s;
+        }
+
+        .multiselect-option:hover {
+            background-color: #eff6ff;
+        }
+
+        .multiselect-option:last-child {
+            border-bottom: none;
+        }
+
+        .multiselect-option label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .multiselect-option input[type="checkbox"] {
+            margin-right: 0.5rem;
+            accent-color: #3b82f6;
+        }
+
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin: 0.125rem;
+        }
+
+        .selected-tag button {
+            margin-left: 0.25rem;
+            color: #3b82f6;
+            transition: color 0.15s;
+        }
+
+        .selected-tag button:hover {
+            color: #1e40af;
+        }
+
+        /* 필터 상태 표시 개선 */
+        #filter-status {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #0ea5e9;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-active #filter-status {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-color: #10b981;
+        }
+
+        /* 성능 최적화 표시 */
+        .performance-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .performance-indicator.show {
+            opacity: 1;
         }
     </style>
 </head>
@@ -616,23 +717,47 @@
                     </div>
                 </div>
 
-                <!-- 고급 필터 패널 (기존) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- 거래소 필터 -->
+                <!-- 고급 카테고리 필터 (다중 선택 지원) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- 거래소 다중 선택 필터 -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">거래소</label>
-                        <select id="exchange-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="">모든 거래소</option>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-building text-blue-600 mr-1"></i>거래소 (다중 선택)
+                        </label>
+                        <div class="relative">
+                            <div id="exchange-multiselect" class="w-full min-h-[40px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
+                                <span class="text-gray-500">거래소 선택...</span>
+                            </div>
+                            <div id="exchange-dropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto hidden">
+                                <!-- 동적으로 생성됩니다 -->
+                            </div>
+                        </div>
+                        <div id="exchange-selected" class="mt-2 flex flex-wrap gap-1">
+                            <!-- 선택된 거래소 태그들이 여기에 표시됩니다 -->
+                        </div>
                     </div>
                     
-                    <!-- 업종 필터 (기존 개선) -->
+                    <!-- 업종 다중 선택 필터 -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">업종</label>
-                        <select id="industry-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="">모든 업종</option>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-industry text-purple-600 mr-1"></i>업종 (다중 선택)
+                        </label>
+                        <div class="relative">
+                            <div id="industry-multiselect" class="w-full min-h-[40px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
+                                <span class="text-gray-500">업종 선택...</span>
+                            </div>
+                            <div id="industry-dropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto hidden">
+                                <!-- 동적으로 생성됩니다 -->
+                            </div>
+                        </div>
+                        <div id="industry-selected" class="mt-2 flex flex-wrap gap-1">
+                            <!-- 선택된 업종 태그들이 여기에 표시됩니다 -->
+                        </div>
                     </div>
+                </div>
+
+                <!-- 수치 범위 필터 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     
                     <!-- 시가총액 범위 -->
                     <div>
@@ -722,6 +847,12 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Task 6: 성능 최적화 표시기 -->
+                <div id="performance-indicator" class="performance-indicator">
+                    <i class="fas fa-tachometer-alt mr-1"></i>
+                    <span id="performance-text">필터 처리 중...</span>
+                </div>
             </div>
 
             <!-- Section 1.5: Search and Controls -->
@@ -766,18 +897,7 @@
                         </select>
                     </div>
                     
-                    <!-- View Type Toggle (Table/Card) -->
-                    <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium text-gray-700">표시 방식:</label>
-                        <div class="flex bg-gray-100 rounded-lg p-1">
-                            <button id="table-view-btn" class="px-3 py-1 rounded-md text-sm font-medium transition-colors bg-white text-gray-900 shadow-sm">
-                                <i class="fas fa-table mr-1"></i>테이블
-                            </button>
-                            <button id="card-view-btn" class="px-3 py-1 rounded-md text-sm font-medium transition-colors text-gray-600 hover:text-gray-900">
-                                <i class="fas fa-th-large mr-1"></i>카드
-                            </button>
-                        </div>
-                    </div>
+                    <!-- 표시 방식 선택 제거됨 - 테이블 뷰만 지원 -->
                     
                     <!-- Reset Button -->
                     <button 
@@ -1058,30 +1178,16 @@
         </main>
     </div>
 
-    <!-- 오류 처리 시스템 (가장 먼저 로드) -->
+    <!-- 핵심 매니저들만 로드 (6개) -->
     <script src="./modules/ErrorFixManager.js"></script>
-    
-    <!-- 데이터 정제 시스템 -->
     <script src="./modules/DataCleanupManager.js"></script>
-    
-    <script src="./modules/DataExpansionManager.js"></script>
     <script src="./modules/ColumnManager.js"></script>
-    <script src="./modules/CardViewManager.js"></script>
-    <script src="./modules/AdvancedFilterManager.js"></script>
-    <script src="./modules/ScrollManager.js"></script>
-    <script src="./modules/ChartManager.js"></script>
-    <script src="./modules/AdvancedChartManager.js"></script>
-    <script src="./modules/ResponsiveManager.js"></script>
     <script src="./modules/FilterManager.js"></script>
-    <script src="./modules/PerformanceManager.js"></script>
+    <script src="./modules/PaginationManager.js"></script>
     <script src="./modules/LoadingManager.js"></script>
-    <script src="./modules/TestManager.js"></script>
-    <script src="./modules/AdvancedSearchManager.js"></script>
     
-    <!-- 검색 및 필터 개선 시스템 -->
-    <script src="./modules/SearchEnhancementManager.js"></script>
-    <script src="./modules/PortfolioManager.js"></script>
-    <script src="./modules/DashboardManager.js"></script>
+    <!-- 새로운 고급 필터 시스템 -->
+    <script src="./modules/AdvancedFilter.js"></script>
     <script src="./stock_analyzer_enhanced.js"></script>
     
     <!-- PWA Service Worker -->
