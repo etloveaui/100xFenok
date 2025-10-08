@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>47개 지표 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-2xl font-bold mb-4">47개 지표 데이터 테스트</h1>
+        
+        <div id="status" class="mb-4 p-4 bg-blue-100 rounded">
+            데이터 로딩 중...
+        </div>
+        
+        <div id="summary" class="mb-4 p-4 bg-green-100 rounded hidden">
+            <!-- 요약 정보가 여기에 표시됩니다 -->
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table id="dataTable" class="w-full bg-white rounded shadow">
+                <thead id="tableHeader" class="bg-gray-200">
+                    <!-- 헤더가 여기에 생성됩니다 -->
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 데이터가 여기에 생성됩니다 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let columnConfig = {};
+        let metadata = {};
+
+        async function loadAndTest() {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                statusDiv.textContent = '강화된 데이터 로딩 중...';
+                
+                // 데이터 로드
+                const [dataRes, configRes] = await Promise.all([
+                    fetch('./data/enhanced_summary_data.json'),
+                    fetch('./data/column_config.json')
+                ]);
+
+                if (!dataRes.ok) {
+                    throw new Error(`데이터 로드 실패: ${dataRes.status}`);
+                }
+
+                const enhancedData = await dataRes.json();
+                
+                if (configRes.ok) {
+                    columnConfig = await configRes.json();
+                }
+
+                // 데이터 추출
+                if (enhancedData.companies && Array.isArray(enhancedData.companies)) {
+                    allData = enhancedData.companies;
+                    metadata = enhancedData.metadata || {};
+                } else {
+                    throw new Error('데이터 형식이 올바르지 않습니다');
+                }
+
+                statusDiv.textContent = `✅ 로딩 완료: ${allData.length}개 기업, ${metadata.total_columns || 47}개 지표`;
+                
+                // 요약 정보 표시
+                showSummary();
+                
+                // 테이블 렌더링 (처음 10개만)
+                renderTable(allData.slice(0, 10));
+
+            } catch (error) {
+                statusDiv.textContent = `❌ 오류: ${error.message}`;
+                console.error('로딩 오류:', error);
+            }
+        }
+
+        function showSummary() {
+            const summaryDiv = document.getElementById('summary');
+            
+            if (allData.length > 0) {
+                const sample = allData[0];
+                const availableColumns = Object.keys(sample).filter(key => 
+                    !['searchIndex', 'categories'].includes(key)
+                );
+                
+                summaryDiv.innerHTML = `
+                    <h3 class="font-bold mb-2">데이터 요약</h3>
+                    <p><strong>총 기업 수:</strong> ${allData.length.toLocaleString()}개</p>
+                    <p><strong>사용 가능한 지표:</strong> ${availableColumns.length}개</p>
+                    <p><strong>카테고리:</strong> ${Object.keys(columnConfig.categories || {}).length}개</p>
+                    <p><strong>주요 지표:</strong> ${availableColumns.slice(0, 10).join(', ')}...</p>
+                `;
+                summaryDiv.classList.remove('hidden');
+            }
+        }
+
+        function renderTable(data) {
+            const header = document.getElementById('tableHeader');
+            const body = document.getElementById('tableBody');
+            
+            if (data.length === 0) return;
+
+            // 기본 컬럼 정의
+            const columns = [
+                { key: 'Ticker', label: '티커' },
+                { key: 'corpName', label: '회사명' },
+                { key: 'exchange', label: '거래소' },
+                { key: 'industry', label: '업종' },
+                { key: 'MarketCapUSD', label: '시가총액(M$)' },
+                { key: 'PER', label: 'PER' },
+                { key: 'PBR', label: 'PBR' },
+                { key: 'ROE', label: 'ROE(%)' },
+                { key: 'OPM', label: '영업이익률(%)' },
+                { key: 'SalesGrowth1Y', label: '매출성장률1Y(%)' }
+            ];
+
+            // 헤더 생성
+            header.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.className = 'px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider';
+                th.textContent = col.label;
+                headerRow.appendChild(th);
+            });
+            header.appendChild(headerRow);
+
+            // 데이터 행 생성
+            body.innerHTML = '';
+            data.forEach((company, index) => {
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.className = 'px-3 py-2 text-sm text-gray-900';
+                    
+                    let value = company[col.key];
+                    
+                    // 값 포맷팅
+                    if (value === null || value === undefined) {
+                        td.textContent = '-';
+                    } else if (typeof value === 'number') {
+                        if (col.key === 'MarketCapUSD') {
+                            td.textContent = value >= 1000 ? `${(value/1000).toFixed(1)}B` : `${value.toFixed(0)}M`;
+                        } else if (col.key.includes('Growth') || col.key === 'ROE' || col.key === 'OPM') {
+                            td.textContent = `${value.toFixed(2)}%`;
+                        } else {
+                            td.textContent = value.toFixed(2);
+                        }
+                    } else {
+                        td.textContent = value.toString();
+                    }
+                    
+                    row.appendChild(td);
+                });
+                
+                body.appendChild(row);
+            });
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', loadAndTest);
+    </script>
+</body>
+</html>
