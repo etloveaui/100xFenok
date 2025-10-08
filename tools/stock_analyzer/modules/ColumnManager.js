@@ -1,5 +1,5 @@
 /**
- * ColumnManager - 32개 지표 컬럼 표시 및 관리 시스템
+ * ColumnManager - 다중 지표 컬럼 표시 및 관리 시스템
  */
 
 class ColumnManager {
@@ -14,7 +14,7 @@ class ColumnManager {
         this.currentViewMode = 'basic';
         this.columnVisibility = new Map();
         
-        console.log('📊 ColumnManager 초기화 - 32개 지표 지원');
+        console.log('📊 ColumnManager 초기화 - 다중 지표 지원');
     }
 
     /**
@@ -95,7 +95,7 @@ class ColumnManager {
     }
 
     /**
-     * 전체 32개 지표 컬럼 정의
+     * 전체 지표 컬럼 정의
      */
     getAllColumnDefinitions() {
         return [
@@ -238,11 +238,11 @@ class ColumnManager {
      */
     initialize() {
         this.addViewModeSelector();
-        console.log('✅ ColumnManager 초기화 완료 - 32개 지표 지원');
+        console.log('✅ ColumnManager 초기화 완료 - 다중 지표 지원');
     }
 }
 
 // 전역 인스턴스 생성
 window.columnManager = new ColumnManager();
 
-console.log('✅ ColumnManager 로드 완료 - 32개 지표 컬럼 시스템');
+console.log('✅ ColumnManager 로드 완료 - 지표 컬럼 시스템');

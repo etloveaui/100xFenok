@@ -275,4 +275,4 @@ class PaginationManager {
     }
 }
 
-export default PaginationManager;
+// export default PaginationManager; // ES6 모듈 제거 - 브라우저 호환성

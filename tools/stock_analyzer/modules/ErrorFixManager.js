@@ -306,7 +306,7 @@ class ErrorFixManager {
         
         try {
             // 주요 매니저들 재초기화
-            if (window.loadingManager) {
+            if (window.loadingManager && typeof window.loadingManager.hideLoading === 'function') {
                 window.loadingManager.hideLoading();
             }
             

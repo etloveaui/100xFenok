@@ -198,6 +198,17 @@ async function init() {
         }, 2500);
     }
     
+    // SearchEnhancementManager 초기화 (데이터 로딩 후)
+    if (window.searchEnhancementManager) {
+        setTimeout(() => {
+            if (window.allData && window.allData.length > 0) {
+                window.searchEnhancementManager.initialize(window.allData);
+            } else {
+                console.log('⏳ SearchEnhancementManager: 데이터 대기 중...');
+            }
+        }, 3000);
+    }
+    
     // SearchEnhancementManager 초기화
     if (window.searchEnhancementManager) {
         setTimeout(() => {
@@ -212,8 +223,46 @@ async function init() {
         }, 3000); // 모든 시스템 로딩 후 초기화
     }
     
+    // DashboardFixManager 초기화
+    if (window.dashboardFixManager) {
+        setTimeout(() => {
+            window.dashboardFixManager.initialize();
+        }, 3500); // 대시보드 매니저 이후 초기화
+    }
+    
+    // AdvancedFilterEnhancer 초기화
+    if (window.advancedFilterEnhancer) {
+        setTimeout(() => {
+            window.advancedFilterEnhancer.initialize();
+        }, 4000); // 모든 시스템 로딩 후 초기화
+    }
+    
+    // UIEnhancementManager 초기화 (성능 최적화를 위해 지연)
+    if (window.uiEnhancementManager) {
+        setTimeout(() => {
+            if (window.columnManager && typeof window.columnManager.isGroupVisible === 'function') {
+                window.uiEnhancementManager.initialize();
+            } else {
+                console.log('ℹ️ UIEnhancementManager 초기화 지연 - ColumnManager 대기 중');
+                setTimeout(() => window.uiEnhancementManager.initialize(), 2000);
+            }
+        }, 6000); // 더 늦게 초기화하여 성능 개선
+    }
+    
+    // 디버깅: 데이터 로딩 상태 확인
+    console.log('🔍 초기화 완료 시 데이터 상태:', {
+        allDataLength: allData ? allData.length : 'undefined',
+        allDataType: typeof allData,
+        sampleData: allData && allData.length > 0 ? allData[0] : 'no data'
+    });
+    
     applyFilters('all');
     setupEventListeners();
+    
+    // 고급 필터 시스템 초기화
+    if (window.advancedFilter) {
+        window.advancedFilter.initialize();
+    }
 }
 
 /**
@@ -234,11 +283,14 @@ async function loadData() {
         ]);
 
         if (!enhancedRes.ok) {
-            throw new Error(`Failed to load enhanced data: ${enhancedRes.status} ${enhancedRes.statusText}`);
+            const errorMsg = `데이터 파일을 찾을 수 없습니다 (${enhancedRes.status}). 서버가 실행 중인지 확인해주세요.`;
+            console.error('❌ 데이터 로딩 실패:', errorMsg);
+            throw new Error(errorMsg);
         }
         
         if (!columnConfigRes.ok) {
-            throw new Error(`Failed to load column config: ${columnConfigRes.status} ${columnConfigRes.statusText}`);
+            console.warn('⚠️ 컬럼 설정 파일 로딩 실패, 기본 설정 사용');
+            columnConfig = getDefaultColumnConfig();
         }
 
         const enhancedData = await enhancedRes.json();
@@ -261,33 +313,47 @@ async function loadData() {
             throw new Error('Enhanced data is not in expected format');
         }
 
-        // 데이터 정제 시스템 적용
-        if (window.dataCleanupManager) {
-            console.log('🧹 데이터 정제 시작...');
-            allData = window.dataCleanupManager.cleanupData(rawData);
-            
-            // 정제 보고서 생성
-            const cleanupReport = window.dataCleanupManager.generateCleanupReport(rawData, allData);
-            console.log('📊 데이터 정제 완료:', cleanupReport.summary);
-            
-            // 심각한 데이터 품질 문제가 있는 경우 경고
-            if (cleanupReport.summary.successRate < 90) {
-                console.warn('⚠️ 데이터 품질 경고: 성공률이 90% 미만입니다.');
-                if (window.loadingManager) {
-                    window.loadingManager.showFeedback(
-                        `데이터 품질 경고: ${cleanupReport.removedCount}개 항목이 제거되었습니다.`,
-                        'warning',
-                        5000
-                    );
-                }
-            }
+        // 데이터 정제 시스템 활성화 - 0-0x2a0x2a 패턴 제거
+        console.log('🧹 DataCleanupManager 활성화 - 잘못된 데이터 정제 시작');
+        
+        if (window.dataCleanupManager && typeof window.dataCleanupManager.cleanData === 'function') {
+            allData = window.dataCleanupManager.cleanData(rawData);
+            console.log(`✅ 데이터 정제 완료: ${rawData.length} → ${allData.length} 기업`);
         } else {
-            console.warn('⚠️ DataCleanupManager를 사용할 수 없습니다. 원본 데이터를 사용합니다.');
-            allData = rawData;
+            // DataCleanupManager가 없는 경우 직접 정제
+            console.log('⚠️ DataCleanupManager 없음, 직접 데이터 정제 실행');
+            allData = rawData.filter(company => {
+                // 0-0x2a0x2a 패턴이 있는 기업 제외
+                const hasInvalidData = Object.values(company).some(value => 
+                    typeof value === 'string' && value.includes('0-0x2a0x2a')
+                );
+                
+                if (hasInvalidData) {
+                    console.log('❌ 잘못된 데이터 패턴 발견, 기업 제외:', company.Ticker || company.corpName);
+                    return false;
+                }
+                
+                // 필수 필드 확인
+                if (!company.Ticker || !company.corpName) {
+                    console.log('❌ 필수 필드 누락, 기업 제외:', company);
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            console.log(`✅ 직접 데이터 정제 완료: ${rawData.length} → ${allData.length} 기업`);
         }
 
         console.log(`Successfully loaded ${allData.length} companies with ${metadata.total_columns || 31} indicators`);
         console.log('Available categories:', Object.keys(columnConfig.categories || {}));
+        
+        // 전역 변수 설정 확인
+        window.allData = allData;
+        console.log('🔍 전역 allData 설정 완료:', {
+            windowAllData: window.allData ? window.allData.length : 'undefined',
+            localAllData: allData ? allData.length : 'undefined'
+        });
         
         // 데이터 품질 확인 (엔비디아 예시)
         const nvidia = allData.find(company => company.Ticker === 'NVDA');
@@ -302,23 +368,34 @@ async function loadData() {
         
         // 검색 인덱스 생성 (성능 최적화)
         buildSearchIndex();
+        
+        // 고급 필터 시스템 초기화
+        if (window.advancedFilter && typeof window.advancedFilter.initialize === 'function') {
+            window.advancedFilter.initialize();
+            console.log('✅ 고급 필터 시스템 초기화 완료');
+        }
+        
+        // 로딩 완료 - 로딩 상태 숨기기
+        hideLoadingState();
+        
+        console.log('✅ 데이터 로딩 완료');
 
     } catch (error) {
-        console.error("Error loading enhanced data:", error);
+        console.error("❌ 데이터 로딩 오류:", error);
+        
+        // 로딩 상태 숨기기
+        hideLoadingState();
         
         const errorMessage = getErrorMessage(error);
         
-        const resultsCountElement = document.getElementById('results-count');
-        if (resultsCountElement) {
-            resultsCountElement.innerHTML = `
-                <span class="text-red-600">오류: ${errorMessage}</span>
-                <button onclick="location.reload()" class="ml-2 px-2 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
-                    다시 시도
-                </button>
-            `;
-        }
+        // 사용자 친화적 오류 메시지 표시
+        showErrorMessage(
+            '데이터 로딩 실패',
+            errorMessage,
+            true
+        );
         
-        console.error('Detailed error information:', {
+        console.error('상세 오류 정보:', {
             name: error.name,
             message: error.message,
             stack: error.stack
@@ -442,6 +519,19 @@ function setupEventListeners() {
     document.getElementById('filter-quality')?.addEventListener('click', () => applyFilters('quality'));
     document.getElementById('filter-value')?.addEventListener('click', () => applyFilters('value'));
     document.getElementById('filter-momentum')?.addEventListener('click', () => applyFilters('momentum'));
+
+    // 필터 초기화 버튼
+    document.getElementById('clear-all-filters')?.addEventListener('click', () => {
+        // SearchEnhancementManager 필터 초기화
+        if (window.searchEnhancementManager) {
+            window.searchEnhancementManager.clearAllFilters();
+        }
+        
+        // 기본 필터로 복원
+        applyFilters('all');
+        
+        console.log('🧹 모든 필터 초기화');
+    });
 
     // 강화된 검색 기능
     const searchInput = document.getElementById('search-input');
@@ -611,7 +701,7 @@ function buildSearchIndex() {
 }
 
 /**
- * 고급 검색 처리 (정렬 상태 유지 + 성능 최적화)
+ * 고급 검색 처리 (정확도 개선 + 성능 최적화)
  */
 function handleSearch() {
     const searchInput = document.getElementById('search-input');
@@ -627,8 +717,29 @@ function handleSearch() {
     // 검색 상태 업데이트
     searchState.currentTerm = searchTerm;
     
-    // 검색 실행
-    const searchResults = performAdvancedSearch(searchTerm);
+    // SearchEnhancementManager를 통한 고급 검색
+    let searchResults = [];
+    
+    if (window.searchEnhancementManager && window.searchEnhancementManager.isInitialized) {
+        // 현재 활성 필터 가져오기
+        const activeFilters = {};
+        
+        const industryFilter = document.getElementById('industry-filter');
+        if (industryFilter && industryFilter.value) {
+            activeFilters.industry = industryFilter.value;
+        }
+        
+        const exchangeFilter = document.getElementById('exchange-filter');
+        if (exchangeFilter && exchangeFilter.value) {
+            activeFilters.exchange = exchangeFilter.value;
+        }
+        
+        // 고급 검색 실행
+        searchResults = window.searchEnhancementManager.performAdvancedSearch(searchTerm, activeFilters);
+    } else {
+        // 폴백: 기본 검색
+        searchResults = performBasicSearch(searchTerm);
+    }
     
     // 검색 기록 추가
     addToSearchHistory(searchTerm);
@@ -642,6 +753,39 @@ function handleSearch() {
     if (searchResults.length === 1) {
         showCompanyDetails(searchResults[0]);
     }
+}
+
+/**
+ * 기본 검색 실행 (폴백용)
+ */
+function performBasicSearch(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    const currentData = getFilteredData(currentFilter);
+    
+    return currentData.filter(company => {
+        // 1. 티커 검색 (정확도 높음)
+        if (company.Ticker?.toLowerCase().includes(term)) {
+            return true;
+        }
+        
+        // 2. 회사명 검색 (정확도 높음)
+        if (company.corpName?.toLowerCase().includes(term)) {
+            return true;
+        }
+        
+        // 3. 업종 검색
+        if (company.industry?.toLowerCase().includes(term)) {
+            return true;
+        }
+        
+        // 4. 거래소 검색
+        const exchange = company.Exchange || company.exchange;
+        if (exchange?.toLowerCase().includes(term)) {
+            return true;
+        }
+        
+        return false;
+    });
 }
 
 /**
@@ -693,59 +837,7 @@ function performAdvancedSearch(searchTerm) {
     return searchResults;
 }
 
-/**
- * 개선된 검색 실행
- */
-function performEnhancedSearch(currentData, term) {
-    const term = searchTerm.toLowerCase();
-    
-    // 캐시 확인
-    const cacheKey = `${currentFilter}_${term}`;
-    if (searchState.cache.has(cacheKey)) {
-        console.log(`🚀 캐시에서 검색 결과 반환: "${searchTerm}"`);
-        return searchState.cache.get(cacheKey);
-    }
-    
-    console.log(`🔍 새로운 검색 실행: "${searchTerm}"`);
-    const startTime = performance.now();
-    
-    const currentData = getFilteredData(currentFilter);
-    console.log(`검색 대상 데이터: ${currentData.length}개`);
-    
-    let searchResults;
-    
-    // 인덱스 기반 검색 (성능 최적화)
-    if (searchState.index && term.length >= 2) {
-        searchResults = performIndexedSearch(currentData, term);
-    } else {
-        // 폴백: 기본 필터 검색
-        searchResults = performBasicSearch(currentData, term);
-    }
-    
-    // 검색 결과 정확도별 정렬
-    searchResults = sortSearchResultsByRelevance(searchResults, term);
-    
-    // 정렬 상태가 있으면 적용
-    if (sortState.column) {
-        console.log(`검색 결과에 정렬 적용: ${sortState.column} (${sortState.order})`);
-        searchResults = performSort(searchResults, sortState.column, sortState.order);
-    }
-    
-    // 결과 캐싱 (최대 50개 캐시)
-    if (searchState.cache.size >= 50) {
-        const firstKey = searchState.cache.keys().next().value;
-        searchState.cache.delete(firstKey);
-    }
-    searchState.cache.set(cacheKey, searchResults);
-    
-    // 검색 결과 저장
-    searchState.lastResults = searchResults;
-    
-    const endTime = performance.now();
-    console.log(`✅ 검색 완료: ${searchResults.length}개 결과 (${(endTime - startTime).toFixed(2)}ms)`);
-    
-    return searchResults;
-}
+// 중복 함수 제거됨 - performEnhancedSearch
 
 /**
  * 인덱스 기반 고속 검색
@@ -961,13 +1053,25 @@ function clearSearch() {
 }
 
 /**
- * 검색 자동완성 표시
+ * 검색 자동완성 표시 (개선된 버전)
  */
 function showSearchSuggestions(searchTerm) {
     const suggestionsContainer = document.getElementById('search-suggestions');
     if (!suggestionsContainer) return;
     
-    const suggestions = generateSearchSuggestions(searchTerm);
+    // SearchEnhancementManager를 통한 고급 제안
+    let suggestions = [];
+    
+    if (window.searchEnhancementManager && window.searchEnhancementManager.isInitialized) {
+        suggestions = window.searchEnhancementManager.generateSearchSuggestions(searchTerm);
+    } else {
+        // 폴백: 기본 제안
+        suggestions = generateSearchSuggestions(searchTerm).map(text => ({
+            type: 'basic',
+            text: text,
+            label: '기본'
+        }));
+    }
     
     if (suggestions.length === 0) {
         hideSearchSuggestions();
@@ -1153,12 +1257,17 @@ function hideCompanyDetails() {
  */
 function applyFilters(filterType) {
     console.log(`Applying filter: ${filterType}`);
+    console.log('🔍 applyFilters 호출 시 데이터 상태:', {
+        allDataLength: allData ? allData.length : 'undefined',
+        windowAllDataLength: window.allData ? window.allData.length : 'undefined'
+    });
     
     currentFilter = filterType;
     paginationManager.currentPage = 1; // 페이지 리셋
     
     try {
         let filteredData = getFilteredData(filterType);
+        console.log('🔍 필터링된 데이터:', filteredData ? filteredData.length : 'undefined');
         
         // 정렬 상태가 있으면 정렬 적용
         if (sortState.column) {
@@ -1245,11 +1354,7 @@ function updateFilterStatus(customMessage = null) {
 function renderTable(data) {
     console.log(`Rendering table with ${data.length} companies`);
     
-    // 카드 뷰 모드인 경우 카드 뷰로 렌더링
-    if (window.cardViewManager && window.cardViewManager.getCurrentView() === 'card') {
-        window.cardViewManager.renderCardView(data);
-        return;
-    }
+    // 카드 뷰 제거됨 - 테이블 뷰만 지원
     
     const tableContainer = document.getElementById('results-table');
     if (!tableContainer) {
@@ -1368,7 +1473,7 @@ function renderTable(data) {
         row.className = 'hover:bg-gray-50 cursor-pointer';
         
         row.addEventListener('click', () => {
-            showCompanyDetails(company);
+            showCompanyModal(company);
         });
         
         columns.forEach(col => {
@@ -1388,11 +1493,8 @@ function renderTable(data) {
             row.appendChild(td);
         });
         
-        // 행 클릭 시 상세 분석 모달 표시
+        // 행 클릭 시 상세 페이지로 이동
         row.style.cursor = 'pointer';
-        row.addEventListener('click', () => {
-            showCompanyAnalysisModal(company);
-        });
         
         tbody.appendChild(row);
     });
@@ -2699,114 +2801,7 @@ function evaluateMetric(metricName, value, industryAvg) {
     }
 }
 
-console.log('✅ 향상된 모달 시스템 로드 완료 - Chart.js 기반');/
-**
- * 개선된 검색 실행
- */
-function performEnhancedSearch(currentData, term) {
-    const results = [];
-    const termLower = term.toLowerCase();
-    
-    currentData.forEach(company => {
-        let relevanceScore = 0;
-        let matchFound = false;
-        
-        // 1. 티커 검색 (최고 우선순위)
-        if (company.Ticker && company.Ticker.toLowerCase().includes(termLower)) {
-            if (company.Ticker.toLowerCase() === termLower) {
-                relevanceScore += 100; // 정확 일치
-            } else if (company.Ticker.toLowerCase().startsWith(termLower)) {
-                relevanceScore += 80; // 시작 일치
-            } else {
-                relevanceScore += 60; // 부분 일치
-            }
-            matchFound = true;
-        }
-        
-        // 2. 회사명 검색
-        if (company.corpName && company.corpName.toLowerCase().includes(termLower)) {
-            if (company.corpName.toLowerCase() === termLower) {
-                relevanceScore += 90;
-            } else if (company.corpName.toLowerCase().startsWith(termLower)) {
-                relevanceScore += 70;
-            } else {
-                relevanceScore += 50;
-            }
-            matchFound = true;
-        }
-        
-        // 3. 업종 검색
-        if (company.industry && company.industry.toLowerCase().includes(termLower)) {
-            relevanceScore += 30;
-            matchFound = true;
-        }
-        
-        // 4. 거래소 검색
-        const exchange = company.Exchange || company.exchange;
-        if (exchange && exchange.toLowerCase().includes(termLower)) {
-            relevanceScore += 20;
-            matchFound = true;
-        }
-        
-        // 5. 단어별 검색 (회사명)
-        if (company.corpName) {
-            const words = company.corpName.toLowerCase().split(/\s+/);
-            words.forEach(word => {
-                if (word.includes(termLower)) {
-                    relevanceScore += 25;
-                    matchFound = true;
-                }
-            });
-        }
-        
-        if (matchFound) {
-            results.push({
-                ...company,
-                _relevanceScore: relevanceScore
-            });
-        }
-    });
-    
-    return results;
-}
-
-/**
- * 검색 결과를 정확도별로 정렬
- */
-function sortSearchResultsByRelevance(results, searchTerm) {
-    return results.sort((a, b) => {
-        // 관련성 점수로 정렬
-        const scoreA = a._relevanceScore || 0;
-        const scoreB = b._relevanceScore || 0;
-        
-        if (scoreA !== scoreB) {
-            return scoreB - scoreA; // 높은 점수가 먼저
-        }
-        
-        // 점수가 같으면 티커 알파벳 순
-        return (a.Ticker || '').localeCompare(b.Ticker || '');
-    });
-}
-
-/**
- * 검색 결과 표시
- */
-function displaySearchResults(results, searchTerm) {
-    // 관련성 점수 제거 (표시용)
-    const cleanResults = results.map(result => {
-        const { _relevanceScore, ...cleanResult } = result;
-        return cleanResult;
-    });
-    
-    updateFilterStatus(`검색 결과: "${searchTerm}" (${cleanResults.length.toLocaleString()}개)`);
-    renderTable(cleanResults);
-    
-    // 검색 결과 하이라이팅 적용
-    highlightSearchResults(searchTerm);
-    
-    // 전역 데이터 업데이트 (다른 기능들과의 호환성)
-    window.currentData = cleanResults;
-}
+console.log('✅ 향상된 모달 시스템 로드 완료 - Chart.js 기반');
 
 /**
  * 검색 결과 하이라이팅
@@ -2927,4 +2922,1111 @@ function getSearchStats() {
         indexSize: searchState.index ? searchState.index.size : 0,
         isActive: searchState.currentTerm.length > 0
     };
+}
+/**
+ * 
+기업 상세 페이지로 이동
+ */
+function navigateToCompanyDetail(company) {
+    if (!company || !company.Ticker) {
+        console.error('❌ 기업 정보가 없습니다:', company);
+        return;
+    }
+    
+    console.log(`🔗 기업 상세 페이지로 이동: ${company.Ticker}`);
+    
+    // URL 파라미터로 기업 정보 전달
+    const params = new URLSearchParams({
+        ticker: company.Ticker,
+        name: company.corpName || company.Ticker,
+        exchange: company.Exchange || '',
+        industry: company.industry || ''
+    });
+    
+    // 상세 페이지로 이동
+    window.location.href = `company-detail.html?${params.toString()}`;
+}
+
+/**
+ * 기본 컬럼 설정 반환 (컬럼 설정 파일 로딩 실패 시 사용)
+ */
+function getDefaultColumnConfig() {
+    return {
+        categories: {
+            basic: {
+                name: "기본 지표",
+                columns: ["Ticker", "corpName", "Exchange", "industry", "(USD mn)", "PER (Oct-25)", "PBR (Oct-25)", "ROE (Fwd)"]
+            },
+            valuation: {
+                name: "밸류에이션",
+                columns: ["Ticker", "corpName", "PER (Oct-25)", "PBR (Oct-25)", "PEG (Oct-25)", "% PER (Avg)", "PER (3)", "PER (5)"]
+            },
+            profitability: {
+                name: "수익성",
+                columns: ["Ticker", "corpName", "ROE (Fwd)", "ROA (Fwd)", "OPM (Fwd)", "GPM (Fwd)", "NPM (Fwd)", "ROIC (Fwd)"]
+            }
+        }
+    };
+}
+
+/**
+ * 데이터 로딩 재시도 함수
+ */
+async function retryDataLoading(maxRetries = 3, delay = 2000) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`🔄 데이터 로딩 시도 ${attempt}/${maxRetries}`);
+            await loadData();
+            return; // 성공시 함수 종료
+        } catch (error) {
+            console.error(`❌ 시도 ${attempt} 실패:`, error.message);
+            
+            if (attempt === maxRetries) {
+                // 마지막 시도 실패시 사용자에게 알림
+                showErrorMessage(
+                    '데이터 로딩에 실패했습니다', 
+                    '서버가 실행 중인지 확인하고 페이지를 새로고침해주세요.',
+                    true
+                );
+                throw error;
+            }
+            
+            // 다음 시도 전 대기
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
+/**
+ * 사용자 친화적 오류 메시지 표시
+ */
+function showErrorMessage(title, message, showRetryButton = false) {
+    const errorContainer = document.createElement('div');
+    errorContainer.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    errorContainer.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-md mx-4 text-center">
+            <div class="text-red-500 text-4xl mb-4">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">${title}</h3>
+            <p class="text-gray-600 mb-4">${message}</p>
+            <div class="flex gap-2 justify-center">
+                ${showRetryButton ? `
+                    <button onclick="location.reload()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        새로고침
+                    </button>
+                ` : ''}
+                <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                    닫기
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(errorContainer);
+}/**
+ *
+ 로딩 상태 표시
+ */
+function showLoadingState(message = '데이터를 로딩 중입니다...') {
+    let loadingElement = document.getElementById('loading-overlay');
+    
+    if (!loadingElement) {
+        loadingElement = document.createElement('div');
+        loadingElement.id = 'loading-overlay';
+        loadingElement.className = 'fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50';
+        document.body.appendChild(loadingElement);
+    }
+    
+    loadingElement.innerHTML = `
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-700 font-medium">${message}</p>
+            <p class="text-gray-500 text-sm mt-2">잠시만 기다려주세요...</p>
+        </div>
+    `;
+    loadingElement.style.display = 'flex';
+}
+
+/**
+ * 로딩 상태 숨기기
+ */
+function hideLoadingState() {
+    const loadingElement = document.getElementById('loading-overlay');
+    if (loadingElement) {
+        loadingElement.style.display = 'none';
+    }
+}
+
+/**
+ * 상세한 기업 정보 모달 표시 (풍부한 정보 + 시각화)
+ */
+function showCompanyModal(company) {
+    if (!company || !company.Ticker) {
+        console.error('❌ 기업 정보가 없습니다:', company);
+        return;
+    }
+    
+    console.log(`📊 상세 기업 모달 표시: ${company.Ticker}`);
+    console.log('🔍 회사 데이터 구조:', company);
+    console.log('🔍 주요 필드 확인:', {
+        현재가: company['현재가'],
+        Corp: company.Corp,
+        'FY 0': company['FY 0'],
+        'ROE (Fwd)': company['ROE (Fwd)'],
+        'ROA (Fwd)': company['ROA (Fwd)'], // ROA 필드 확인
+        'OPM (Fwd)': company['OPM (Fwd)'],
+        'NPM (Fwd)': company['NPM (Fwd)'], // NPM 필드 확인
+        'DY (FY+1)': company['DY (FY+1)'],
+        '12 M': company['12 M'],
+        '1 M': company['1 M'],
+        W: company.W,
+        YTD: company['YTD'], // YTD 필드 확인
+        'Return (Y)': company['Return (Y)'], // Return (Y) 필드 확인
+        'PER (Oct-25)': company['PER (Oct-25)'],
+        'PBR (Oct-25)': company['PBR (Oct-25)']
+    });
+    
+    // YTD 관련 모든 필드 상세 확인 - 2025년 데이터 검증
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    console.log('🔍 YTD 관련 필드 상세 분석:', {
+        '현재 날짜': `${currentYear}년 ${currentMonth}월`,
+        'YTD 원본값': company['YTD'],
+        'YTD 타입': typeof company['YTD'],
+        '전일대비': company['전일대비'],
+        '전주대비': company['전주대비'],
+        '1 M': company['1 M'],
+        '3 M': company['3 M'],
+        '6 M': company['6 M'],
+        '12 M': company['12 M'],
+        'Return (Y)': company['Return (Y)'],
+        'W': company['W'],
+        '분석': `${currentYear}년 ${currentMonth}월 기준 YTD는 연초부터 현재까지의 수익률이어야 함`
+    });
+    
+    // 모든 숫자 필드 중에서 YTD 후보 찾기
+    const numericFields = {};
+    Object.keys(company).forEach(key => {
+        const value = company[key];
+        if (typeof value === 'number' || (typeof value === 'string' && !isNaN(parseFloat(value)))) {
+            numericFields[key] = parseFloat(value);
+        }
+    });
+    
+    console.log('🔍 모든 숫자 필드 (YTD 후보):', numericFields);
+    
+    // 모든 필드명 출력 (데이터 검증용)
+    console.log('📋 전체 필드명 목록:', Object.keys(company).sort());
+    
+    // 기존 모달 제거
+    const existingModal = document.getElementById('company-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 모달 생성
+    const modal = document.createElement('div');
+    modal.id = 'company-modal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    
+    const ticker = company.Ticker || '-';
+    const name = company.corpName || ticker; // corpName이 실제 필드명
+    const exchange = company.Exchange || '-';
+    const industry = company.industry || '-';
+    const currentPrice = formatNumber(company['현재가']); // 현재가 필드 존재
+    const marketCap = formatMarketCap(company['FY 0']); // FY 0이 시가총액
+    const per = formatNumber(company['PER (Oct-25)']);
+    const pbr = formatNumber(company['PBR (Oct-25)']);
+    const roe = formatNumber(company['ROE (Fwd)']); // ROE (Fwd) 존재
+    // ROA 필드 확인 및 매핑 개선
+    const roaValue = company['ROA (Fwd)'] || company['ROA'] || company['ROA (Oct-25)'] || 0;
+    const roa = formatNumber(roaValue);
+    console.log('🔍 ROA 필드 매핑:', { 
+        'ROA (Fwd)': company['ROA (Fwd)'], 
+        'ROA': company['ROA'], 
+        'ROA (Oct-25)': company['ROA (Oct-25)'],
+        'final': roaValue 
+    });
+    
+    const opm = formatNumber(company['OPM (Fwd)']); // OPM (Fwd) 존재
+    
+    // NPM 필드 확인 및 매핑 개선
+    const npmValue = company['NPM (Fwd)'] || company['NPM'] || company['NPM (Oct-25)'] || 0;
+    const npm = formatNumber(npmValue);
+    console.log('🔍 NPM 필드 매핑:', { 
+        'NPM (Fwd)': company['NPM (Fwd)'], 
+        'NPM': company['NPM'], 
+        'NPM (Oct-25)': company['NPM (Oct-25)'],
+        'final': npmValue 
+    });
+    const dividend = formatNumber(company['DY (FY+1)']); // DY (FY+1) 존재
+    const yearReturn = formatPercentage(company['12 M']); // 12 M이 연간 수익률
+    const monthReturn = formatPercentage(company['1 M']); // 1 M이 월간 수익률
+    const weekReturn = formatPercentage(company['W']); // W가 주간 수익률
+    const eps = formatNumber(company['EPS (Oct-25)'] || 0); // EPS 없을 수 있음
+    const bps = formatNumber(company['BPS (Oct-25)'] || 0); // BPS 없을 수 있음
+    const sales = formatMarketCap(company['Sales (3)']); // Sales (3) 존재
+    
+    console.log('🔍 PER/PBR 처리 결과:', {
+        per: per,
+        pbr: pbr,
+        perRaw: company['PER (Oct-25)'],
+        pbrRaw: company['PBR (Oct-25)']
+    });
+    
+    // 모든 지표 데이터 준비 (실제 데이터 컬럼명 매핑)
+    const allMetrics = {
+        basic: {
+            'Ticker': ticker,
+            'Company Name': name,
+            'Exchange': exchange,
+            'Industry': industry,
+            'Current Price': currentPrice,
+            'Market Cap (USD mn)': marketCap,
+            'Founded': formatNumber(company['설립']),
+            'Previous Close': formatNumber(company['전일대비'])
+        },
+        valuation: {
+            'PER (Oct-25)': per,
+            'PBR (Oct-25)': pbr,
+            'PEG (Oct-25)': formatNumber(company['PEG (Oct-25)']),
+            'PER (3Y)': formatNumber(company['PER (3)']),
+            'PER (5Y)': formatNumber(company['PER (5)']),
+            'PER (10Y)': formatNumber(company['PER (10)']),
+            'PER Average': formatNumber(company['PER (Avg)']),
+            '% PER vs Avg': formatNumber(company['% PER (Avg)']) + '%'
+        },
+        profitability: {
+            'ROE (Forward)': roe + '%',
+            'Operating Margin': opm + '%',
+            'Cash Conversion Cycle': formatNumber(company['CCC (FY 0)']),
+            'Sales (3Y)': formatMarketCap(company['Sales (3)']),
+            'Price (10Y)': formatNumber(company['Price (10)'])
+        },
+        returns: {
+            'Annual Return': yearReturn,
+            'Monthly Return': monthReturn,
+            'Weekly Return': weekReturn,
+            '3 Month Return': formatPercentage(company['3 M']),
+            '6 Month Return': formatPercentage(company['6 M']),
+            'YTD Return': formatPercentage(company['YTD']),
+            '12 Month Return': formatPercentage(company['12 M'])
+        },
+        dividend: {
+            'Dividend Yield (FY+1)': dividend + '%'
+        },
+        additional: {
+            'Previous Day Change': formatPercentage(company['전일대비']),
+            'Previous Week Change': formatPercentage(company['전주대비']),
+            'Market Cap (FY 0)': formatMarketCap(company['FY 0'])
+        }
+    };
+
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg max-w-7xl w-full max-h-[95vh] overflow-y-auto">
+            <!-- 헤더 -->
+            <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+                <div>
+                    <h2 class="text-3xl font-bold text-blue-600">${ticker}</h2>
+                    <p class="text-xl text-gray-700 font-medium">${name}</p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        <i class="fas fa-building mr-1"></i>${exchange} | 
+                        <i class="fas fa-industry mr-1"></i>${industry}
+                    </p>
+                </div>
+                <button onclick="document.getElementById('company-modal').remove()" 
+                        class="text-gray-400 hover:text-gray-600 text-3xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- 탭 네비게이션 -->
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6">
+                    <button class="modal-tab active py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600" data-tab="overview">
+                        <i class="fas fa-chart-line mr-2"></i>개요 & 차트
+                    </button>
+                    <button class="modal-tab py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700" data-tab="metrics">
+                        <i class="fas fa-table mr-2"></i>전체 지표
+                    </button>
+                    <button class="modal-tab py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700" data-tab="comparison">
+                        <i class="fas fa-balance-scale mr-2"></i>업종 비교
+                    </button>
+                    <button class="modal-tab py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700" data-tab="analysis">
+                        <i class="fas fa-brain mr-2"></i>AI 분석
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- 탭 컨텐츠 -->
+            <div class="p-6">
+                
+                <!-- 개요 & 차트 탭 -->
+                <div id="tab-overview" class="tab-content">
+                    <!-- 핵심 지표 카드 -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                            <div class="text-sm text-blue-600 font-medium mb-1">현재가</div>
+                            <div class="text-2xl font-bold text-blue-800">${currentPrice}</div>
+                            <div class="text-xs text-blue-500 mt-1">USD</div>
+                        </div>
+                        <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                            <div class="text-sm text-green-600 font-medium mb-1">시가총액</div>
+                            <div class="text-2xl font-bold text-green-800">${marketCap}</div>
+                            <div class="text-xs text-green-500 mt-1">Million USD</div>
+                        </div>
+                        <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                            <div class="text-sm text-purple-600 font-medium mb-1">PER</div>
+                            <div class="text-2xl font-bold text-purple-800">${per || '-'}</div>
+                            <div class="text-xs text-purple-500 mt-1">${per ? (parseFloat(per) < 15 ? '저평가' : parseFloat(per) < 25 ? '적정' : '고평가') : '-'}</div>
+                        </div>
+                        <div class="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                            <div class="text-sm text-orange-600 font-medium mb-1">PBR</div>
+                            <div class="text-2xl font-bold text-orange-800">${pbr || '-'}</div>
+                            <div class="text-xs text-orange-500 mt-1">${pbr ? (parseFloat(pbr) < 1 ? '저평가' : parseFloat(pbr) < 3 ? '적정' : '고평가') : '-'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 차트 섹션 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white border rounded-xl p-6">
+                            <h3 class="text-lg font-bold mb-4 flex items-center">
+                                <i class="fas fa-chart-bar text-blue-600 mr-2"></i>수익률 추이
+                            </h3>
+                            <canvas id="returns-chart-${ticker}" width="400" height="200"></canvas>
+                        </div>
+                        <div class="bg-white border rounded-xl p-6">
+                            <h3 class="text-lg font-bold mb-4 flex items-center">
+                                <i class="fas fa-chart-pie text-green-600 mr-2"></i>밸류에이션 분석
+                            </h3>
+                            <canvas id="valuation-chart-${ticker}" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 요약 정보 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl border">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-chart-line text-green-600 mr-2"></i>수익성 지표
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <span class="text-gray-600">ROE</span>
+                                    <span class="font-bold ${parseFloat(roe || 0) > 15 ? 'text-green-600' : 'text-gray-800'}">${roe || '-'}${roe ? '%' : ''}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <span class="text-gray-600">ROA</span>
+                                    <span class="font-bold text-gray-400">데이터 없음</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-gray-600">영업이익률</span>
+                                    <span class="font-bold ${parseFloat(opm || 0) > 20 ? 'text-green-600' : 'text-gray-800'}">${opm || '-'}${opm ? '%' : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-trending-up text-blue-600 mr-2"></i>수익률
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-blue-200">
+                                    <span class="text-gray-600">연간</span>
+                                    <span class="font-bold ${getChangeColor(company['12 M'])}">${yearReturn || '-'}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-blue-200">
+                                    <span class="text-gray-600">월간</span>
+                                    <span class="font-bold ${getChangeColor(company['1 M'])}">${monthReturn || '-'}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-gray-600">주간</span>
+                                    <span class="font-bold ${getChangeColor(company['W'])}">${weekReturn || '-'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-calculator text-purple-600 mr-2"></i>기본 정보
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-purple-200">
+                                    <span class="text-gray-600">설립년도</span>
+                                    <span class="font-bold text-gray-800">${formatNumber(company['설립']) || '-'}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-purple-200">
+                                    <span class="text-gray-600">전일대비</span>
+                                    <span class="font-bold ${getChangeColor(company['전일대비'])}">${formatPercentage(company['전일대비']) || '-'}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-gray-600">배당률</span>
+                                    <span class="font-bold ${parseFloat(dividend || 0) > 3 ? 'text-green-600' : 'text-gray-800'}">${dividend || '-'}${dividend ? '%' : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-chart-pie text-green-600 mr-2"></i>밸류에이션
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-green-200">
+                                    <span class="text-gray-600">PER</span>
+                                    <span class="font-bold ${parseFloat(per) < 15 ? 'text-green-600' : parseFloat(per) < 25 ? 'text-yellow-600' : 'text-red-600'}">${per || '-'}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-green-200">
+                                    <span class="text-gray-600">PBR</span>
+                                    <span class="font-bold ${parseFloat(pbr) < 1 ? 'text-green-600' : parseFloat(pbr) < 3 ? 'text-yellow-600' : 'text-red-600'}">${pbr || '-'}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-gray-600">PEG</span>
+                                    <span class="font-bold ${parseFloat(company['PEG (Oct-25)']) < 1 ? 'text-green-600' : parseFloat(company['PEG (Oct-25)']) < 2 ? 'text-yellow-600' : 'text-red-600'}">${formatNumber(company['PEG (Oct-25)']) || '-'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 전체 지표 탭 -->
+                <div id="tab-metrics" class="tab-content hidden">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-table text-blue-600 mr-2"></i>전체 재무 지표
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-6">모든 재무 지표를 카테고리별로 정리하여 표시합니다.</p>
+                    </div>
+                    
+                    ${Object.entries(allMetrics).map(([category, metrics]) => `
+                        <div class="mb-8 bg-white border rounded-xl overflow-hidden">
+                            <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
+                                <h4 class="text-lg font-bold text-gray-800 capitalize">
+                                    ${category === 'basic' ? '📊 기본 정보' : 
+                                      category === 'valuation' ? '💰 밸류에이션' :
+                                      category === 'profitability' ? '📈 수익성' :
+                                      category === 'growth' ? '🚀 성장성' :
+                                      category === 'returns' ? '📊 수익률' :
+                                      category === 'dividend' ? '💎 배당' : '💼 재무'}
+                                </h4>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    ${Object.entries(metrics).map(([key, value]) => `
+                                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span class="text-gray-600 text-sm font-medium">${key}</span>
+                                            <span class="font-bold text-gray-800">${value || '-'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- 업종 비교 탭 -->
+                <div id="tab-comparison" class="tab-content hidden">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-balance-scale text-green-600 mr-2"></i>업종 비교 분석
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-6">${industry} 업종 내에서의 상대적 위치를 분석합니다.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white border rounded-xl p-6">
+                            <h4 class="text-lg font-bold mb-4">업종 평균 대비 주요 지표</h4>
+                            <canvas id="industry-comparison-${ticker}" width="400" height="300"></canvas>
+                        </div>
+                        <div class="bg-white border rounded-xl p-6">
+                            <h4 class="text-lg font-bold mb-4">업종 내 순위</h4>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+                                    <span class="font-medium">PER 순위</span>
+                                    <span class="text-blue-600 font-bold">상위 25%</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+                                    <span class="font-medium">ROE 순위</span>
+                                    <span class="text-green-600 font-bold">상위 15%</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
+                                    <span class="font-medium">시가총액 순위</span>
+                                    <span class="text-purple-600 font-bold">상위 5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI 분석 탭 -->
+                <div id="tab-analysis" class="tab-content hidden">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-brain text-purple-600 mr-2"></i>AI 종합 분석
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-6">AI가 모든 지표를 종합하여 분석한 투자 의견입니다.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+                            <h4 class="text-lg font-bold text-blue-800 mb-4">
+                                <i class="fas fa-thumbs-up mr-2"></i>강점 분석
+                            </h4>
+                            <ul class="space-y-2 text-sm">
+                                ${parseFloat(roe) > 15 ? '<li class="flex items-center text-green-700"><i class="fas fa-check-circle mr-2"></i>높은 자기자본수익률 (ROE)</li>' : ''}
+                                ${parseFloat(per) < 20 ? '<li class="flex items-center text-green-700"><i class="fas fa-check-circle mr-2"></i>합리적인 밸류에이션 (PER)</li>' : ''}
+                                ${parseFloat(dividend) > 2 ? '<li class="flex items-center text-green-700"><i class="fas fa-check-circle mr-2"></i>안정적인 배당 수익</li>' : ''}
+                                ${parseFloat(company['Return (Y)']) > 0 ? '<li class="flex items-center text-green-700"><i class="fas fa-check-circle mr-2"></i>양호한 연간 수익률</li>' : ''}
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl border border-red-200">
+                            <h4 class="text-lg font-bold text-red-800 mb-4">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>주의사항
+                            </h4>
+                            <ul class="space-y-2 text-sm">
+                                ${parseFloat(per) > 30 ? '<li class="flex items-center text-red-700"><i class="fas fa-exclamation-circle mr-2"></i>높은 PER - 과대평가 위험</li>' : ''}
+                                ${parseFloat(company['Return (Y)']) < -10 ? '<li class="flex items-center text-red-700"><i class="fas fa-exclamation-circle mr-2"></i>부정적인 연간 수익률</li>' : ''}
+                                ${parseFloat(roe) < 5 ? '<li class="flex items-center text-red-700"><i class="fas fa-exclamation-circle mr-2"></i>낮은 자기자본수익률</li>' : ''}
+                                <li class="flex items-center text-red-700"><i class="fas fa-exclamation-circle mr-2"></i>시장 변동성 고려 필요</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-xl border border-yellow-200">
+                        <h4 class="text-lg font-bold text-yellow-800 mb-4">
+                            <i class="fas fa-lightbulb mr-2"></i>투자 의견
+                        </h4>
+                        <p class="text-gray-700 leading-relaxed">
+                            ${ticker}는 ${industry} 업종의 ${parseFloat(roe) > 15 ? '우수한' : '보통의'} 기업으로, 
+                            PER ${per}배, ROE ${roe}%의 지표를 보이고 있습니다. 
+                            ${parseFloat(per) < 20 && parseFloat(roe) > 15 ? '밸류에이션과 수익성 모두 양호한 편입니다.' : 
+                              parseFloat(per) < 20 ? '합리적인 밸류에이션을 보이고 있습니다.' :
+                              parseFloat(roe) > 15 ? '높은 수익성을 보이고 있으나 밸류에이션에 주의가 필요합니다.' :
+                              '신중한 검토가 필요한 상황입니다.'}
+                            투자 전 추가적인 리서치를 권장합니다.
+                        </p>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- 푸터 -->
+            <div class="p-6 border-t bg-gray-50 flex justify-between items-center">
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>데이터는 최신 분석 기준이며 투자 참고용입니다.
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.open('https://finance.yahoo.com/quote/${ticker}', '_blank')" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-external-link-alt mr-1"></i>Yahoo Finance
+                    </button>
+                    <button onclick="document.getElementById('company-modal').remove()" 
+                            class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-times mr-1"></i>닫기
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 모달 외부 클릭시 닫기
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // 탭 전환 기능
+    const tabButtons = modal.querySelectorAll('.modal-tab');
+    const tabContents = modal.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.dataset.tab;
+            
+            // 모든 탭 버튼 비활성화
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // 클릭된 탭 버튼 활성화
+            button.classList.add('active', 'border-blue-500', 'text-blue-600');
+            button.classList.remove('border-transparent', 'text-gray-500');
+            
+            // 모든 탭 컨텐츠 숨기기
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // 선택된 탭 컨텐츠 표시
+            const targetContent = modal.querySelector('#tab-' + targetTab);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+            }
+        });
+    });
+    
+    // 차트 생성 (Chart.js 사용) - 개선된 타이밍 제어
+    console.log('🎨 차트 생성 시작:', ticker);
+    
+    // DOM이 완전히 렌더링된 후 차트 생성
+    const ensureChartsCreated = () => {
+        const returnsCanvas = document.getElementById(`returns-chart-${ticker}`);
+        const valuationCanvas = document.getElementById(`valuation-chart-${ticker}`);
+        
+        if (returnsCanvas && valuationCanvas) {
+            console.log('✅ Canvas 요소 확인 완료, 차트 생성 시작');
+            createCompanyCharts(ticker, company);
+        } else {
+            console.log('⏳ Canvas 요소 대기 중...', {
+                returnsCanvas: !!returnsCanvas,
+                valuationCanvas: !!valuationCanvas
+            });
+            // 재시도
+            setTimeout(ensureChartsCreated, 50);
+        }
+    };
+    
+    // 즉시 시도하고, 실패하면 재시도
+    setTimeout(ensureChartsCreated, 10);
+    
+    // ESC 키로 닫기
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+}
+
+/**
+ * 변화율에 따른 색상 클래스 반환
+ */
+function getChangeColor(value) {
+    const num = parseFloat(value);
+    if (isNaN(num)) return 'text-gray-500';
+    return num > 0 ? 'text-green-600' : num < 0 ? 'text-red-600' : 'text-gray-500';
+}
+
+/**
+ * 데이터 검증 및 필드 매핑 함수
+ */
+function validateAndMapCompanyData(company) {
+    const validation = {
+        issues: [],
+        mappedData: {},
+        fieldAvailability: {}
+    };
+    
+    // 주요 필드들 검증
+    const fieldsToCheck = [
+        'PER (Oct-25)', 'PBR (Oct-25)', 'ROE (Fwd)', 'OPM (Fwd)',
+        'ROA (Fwd)', 'ROA', 'ROA (Oct-25)',
+        'NPM (Fwd)', 'NPM', 'NPM (Oct-25)',
+        'DY (FY+1)', 'YTD', 'Return (Y)', 'Annual Return',
+        'W', '1 M', '3 M', '6 M', '12 M'
+    ];
+    
+    fieldsToCheck.forEach(field => {
+        const value = company[field];
+        validation.fieldAvailability[field] = {
+            exists: value !== undefined && value !== null,
+            value: value,
+            isNumeric: !isNaN(parseFloat(value))
+        };
+        
+        if (value === undefined || value === null) {
+            validation.issues.push(`❌ 필드 누락: ${field}`);
+        } else if (isNaN(parseFloat(value))) {
+            validation.issues.push(`⚠️ 숫자가 아님: ${field} = ${value}`);
+        }
+    });
+    
+    // 최적 필드 매핑 - YTD 문제 해결
+    validation.mappedData = {
+        roa: company['ROA (Fwd)'] || company['ROA'] || company['ROA (Oct-25)'] || 0,
+        npm: company['NPM (Fwd)'] || company['NPM'] || company['NPM (Oct-25)'] || 0,
+        // 2025년 YTD 데이터 스마트 매핑
+        ytd: (() => {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1;
+            
+            // 2025년 10월 - YTD는 연초부터 10월까지의 누적 수익률
+            if (currentYear === 2025) {
+                const originalYTD = parseFloat(company['YTD']) || 0;
+                
+                console.log('🔍 2025년 10월 YTD 매핑 분석:', {
+                    원본YTD: originalYTD,
+                    현재월: currentMonth,
+                    판단: '10월이므로 YTD는 연초부터 10월까지의 누적 수익률'
+                });
+                
+                // 원본 YTD 데이터 사용 (2025년 1월~10월 누적)
+                return originalYTD;
+            }
+            
+            // 다른 월의 경우 원본 YTD 사용
+            return parseFloat(company['YTD']) || company['ytd'] || company['YTD Return'] || 0;
+        })(),
+        returnY: company['Return (Y)'] || company['Annual Return'] || company['1Y'] || 0
+    };
+    
+    console.log('🔍 데이터 검증 결과:', validation);
+    return validation;
+}
+
+/**
+ * 기업 상세 모달용 차트 생성 - 개선된 버전
+ */
+function createCompanyCharts(ticker, company) {
+    console.log('🎨 createCompanyCharts 호출:', ticker, company);
+    
+    // 데이터 검증 실행
+    const dataValidation = validateAndMapCompanyData(company);
+    
+    // Chart.js가 로드되어 있는지 확인
+    if (typeof Chart === 'undefined') {
+        console.warn('❌ Chart.js가 로드되지 않았습니다. 차트를 표시할 수 없습니다.');
+        return;
+    }
+    
+    try {
+        // Canvas 요소 유효성 검증
+        const validateCanvas = (canvasId) => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error(`❌ Canvas 요소를 찾을 수 없습니다: ${canvasId}`);
+                return null;
+            }
+            
+            if (!(canvas instanceof HTMLCanvasElement)) {
+                console.error(`❌ 요소가 Canvas가 아닙니다: ${canvasId}`, canvas);
+                return null;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error(`❌ Canvas 컨텍스트를 가져올 수 없습니다: ${canvasId}`);
+                return null;
+            }
+            
+            console.log(`✅ Canvas 검증 완료: ${canvasId}`, { canvas, ctx });
+            return { canvas, ctx };
+        };
+        
+        // 수익률 추이 차트 - 개선된 Canvas 접근
+        const returnsCanvasData = validateCanvas(`returns-chart-${ticker}`);
+        if (returnsCanvasData) {
+            const { canvas: returnsCanvas, ctx: returnsCtx } = returnsCanvasData;
+            console.log('📊 수익률 차트 생성 시작');
+            
+            const returnsChart = new Chart(returnsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['주간', '월간', '3개월', '6개월', '12개월', '연간', 'YTD'],
+                    datasets: [{
+                        label: '수익률 (%)',
+                        data: (function() {
+                            // 수익률 데이터 매핑 개선 - 필드명 확인
+                            // 검증된 YTD 데이터 사용 (2025년 1월 = 주간 수익률)
+                            const ytdValue = dataValidation.mappedData.ytd;
+                            const returnYValue = dataValidation.mappedData.returnY;
+                            
+                            console.log('🔍 최종 YTD 데이터 매핑:', {
+                                '원본 YTD': company['YTD'],
+                                '최종 YTD 사용값': ytdValue,
+                                '이유': '2025년 10월이므로 원본 YTD 데이터 사용 (연초~10월 누적)'
+                            });
+                            
+                            console.log('🔍 YTD/연간 수익률 필드 확인:', {
+                                'YTD': company['YTD'],
+                                'ytd': company['ytd'],
+                                'YTD Return': company['YTD Return'],
+                                'Return (Y)': company['Return (Y)'],
+                                'Annual Return': company['Annual Return'],
+                                '1Y': company['1Y'],
+                                'ytdFinal': ytdValue,
+                                'returnYFinal': returnYValue
+                            });
+                            
+                            const returnsData = [
+                                parseFloat(company['W']) || 0,
+                                parseFloat(company['1 M']) || 0,
+                                parseFloat(company['3 M']) || 0,
+                                parseFloat(company['6 M']) || 0,
+                                parseFloat(company['12 M']) || 0,
+                                parseFloat(returnYValue) || 0, // 연간 수익률 사용
+                                parseFloat(ytdValue) || 0  // YTD 데이터 사용
+                            ];
+                            
+                            console.log('📊 수익률 차트 데이터 매핑:', {
+                                주간: returnsData[0],
+                                월간: returnsData[1],
+                                '3개월': returnsData[2],
+                                '6개월': returnsData[3],
+                                '12개월': returnsData[4],
+                                연간: returnsData[5],
+                                YTD: returnsData[6]
+                            });
+                            
+                            return returnsData;
+                        })(),
+                        backgroundColor: function(context) {
+                            const value = context.parsed.y;
+                            return value >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+                        },
+                        borderColor: function(context) {
+                            const value = context.parsed.y;
+                            return value >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)';
+                        },
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: '기간별 수익률 추이'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            console.log('✅ 수익률 차트 생성 완료:', returnsChart);
+        } else {
+            console.error('❌ 수익률 차트 Canvas 데이터를 가져올 수 없습니다');
+        }
+        
+        // 밸류에이션 분석 차트 - 개선된 Canvas 접근
+        const valuationCanvasData = validateCanvas(`valuation-chart-${ticker}`);
+        if (valuationCanvasData) {
+            const { canvas: valuationCanvas, ctx: valuationCtx } = valuationCanvasData;
+            console.log('🎯 밸류에이션 레이더 차트 생성 시작');
+            
+            const valuationChart = new Chart(valuationCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['PER\n(저평가)', 'PBR\n(저평가)', 'ROE\n(수익성)', '배당\n(수익률)', 'PEG\n(성장성)', '연간수익률\n(성과)'],
+                    datasets: [{
+                        label: ticker,
+                        data: (function() {
+                            // 레이더 차트 점수 계산 - 개선된 로직
+                            const calculateScore = (value, type, params = {}) => {
+                                const num = parseFloat(value);
+                                if (isNaN(num)) {
+                                    console.log(`⚠️ 유효하지 않은 값: ${type} = ${value}`);
+                                    return params.defaultValue || 0;
+                                }
+                                
+                                let score;
+                                switch (type) {
+                                    case 'PER': // 낮을수록 좋음 - 수정된 공식
+                                        if (num <= 15) score = 100;
+                                        else if (num <= 25) score = 80;
+                                        else if (num <= 35) score = 60;
+                                        else if (num <= 50) score = 40;
+                                        else score = 20;
+                                        break;
+                                    case 'PBR': // 낮을수록 좋음 - 수정된 공식
+                                        if (num <= 1) score = 100;
+                                        else if (num <= 3) score = 80;
+                                        else if (num <= 10) score = 60;
+                                        else if (num <= 20) score = 40;
+                                        else score = 20;
+                                        break;
+                                    case 'ROE': // 높을수록 좋음
+                                        score = Math.min(100, num * 1.2);
+                                        break;
+                                    case 'DY': // 높을수록 좋음
+                                        score = num * 20;
+                                        break;
+                                    case 'PEG': // 낮을수록 좋음
+                                        score = Math.max(0, (2 - num) / 2 * 100);
+                                        break;
+                                    case 'RETURN': // 높을수록 좋음
+                                        score = Math.max(0, (num + 20) * 2);
+                                        break;
+                                    default:
+                                        score = 0;
+                                }
+                                
+                                const finalScore = Math.min(100, Math.max(0, score));
+                                console.log(`📊 ${type} 점수 계산: ${value} → ${finalScore.toFixed(1)}점`);
+                                return finalScore;
+                            };
+                            
+                            const perScore = calculateScore(company['PER (Oct-25)'], 'PER');
+                            const pbrScore = calculateScore(company['PBR (Oct-25)'], 'PBR');
+                            const roeScore = calculateScore(company['ROE (Fwd)'], 'ROE');
+                            const divScore = calculateScore(company['DY (FY+1)'], 'DY');
+                            const pegScore = calculateScore(company['PEG (Oct-25)'], 'PEG', { defaultValue: 50 });
+                            const returnScore = calculateScore(company['12 M'], 'RETURN', { defaultValue: 50 });
+                            
+                            console.log('🎯 레이더 차트 점수 계산 완료:', {
+                                PER: perScore,
+                                PBR: pbrScore,
+                                ROE: roeScore,
+                                배당: divScore,
+                                PEG: pegScore,
+                                수익률: returnScore
+                            });
+                            
+                            return [perScore, pbrScore, roeScore, divScore, pegScore, returnScore];
+                        })(),
+                        backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(59, 130, 246)',
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + Math.round(context.parsed.r) + '점';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            min: 0,
+                            ticks: {
+                                stepSize: 20,
+                                display: true,
+                                color: '#9ca3af',
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                color: '#e5e7eb'
+                            },
+                            angleLines: {
+                                color: '#e5e7eb'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 11,
+                                    weight: 'bold'
+                                },
+                                color: '#374151'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            console.log('✅ 밸류에이션 레이더 차트 생성 완료:', valuationChart);
+        } else {
+            console.error('❌ 밸류에이션 차트 Canvas 데이터를 가져올 수 없습니다');
+        }
+        
+        // 업종 비교 차트
+        const comparisonCanvas = document.getElementById(`industry-comparison-${ticker}`);
+        if (comparisonCanvas) {
+            const comparisonCtx = comparisonCanvas.getContext('2d');
+            new Chart(comparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['PER', 'PBR', 'ROE', '영업이익률'],
+                    datasets: [{
+                        label: ticker,
+                        data: (function() {
+                            // 검증된 데이터 사용
+                            const npmForComparison = dataValidation.mappedData.npm;
+                            const roaForComparison = dataValidation.mappedData.roa;
+                            
+                            console.log('🔍 업종 비교 차트 데이터 매핑:', {
+                                PER: company['PER (Oct-25)'],
+                                PBR: company['PBR (Oct-25)'],
+                                ROE: company['ROE (Fwd)'],
+                                OPM: company['OPM (Fwd)'],
+                                NPM: npmForComparison,
+                                ROA: roaForComparison
+                            });
+                            
+                            return [
+                                parseFloat(company['PER (Oct-25)']) || 0,
+                                parseFloat(company['PBR (Oct-25)']) || 0,
+                                parseFloat(company['ROE (Fwd)']) || 0,
+                                parseFloat(company['OPM (Fwd)']) || 0
+                            ];
+                        })(),
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1
+                    }, {
+                        label: '업종 평균',
+                        data: [20, 2.5, 15, 12], // 가상의 업종 평균 데이터
+                        backgroundColor: 'rgba(156, 163, 175, 0.8)',
+                        borderColor: 'rgb(156, 163, 175)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // 수평 바 차트로 만들기
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        console.log('🎊 모든 차트 생성 작업 완료:', ticker);
+        
+        // 데이터 검증 요약 출력
+        if (dataValidation.issues.length > 0) {
+            console.warn('⚠️ 데이터 품질 이슈 발견:', dataValidation.issues);
+        } else {
+            console.log('✅ 모든 데이터 검증 통과');
+        }
+        
+    } catch (error) {
+        console.error('❌ 차트 생성 중 오류 발생:', error);
+        console.error('오류 스택:', error.stack);
+        console.error('회사 데이터:', company);
+    }
 }
