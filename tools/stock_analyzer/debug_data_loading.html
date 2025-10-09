@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 로딩 디버그 도구</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .section {
+            background: #2d2d2d;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error { border-left-color: #f44336; }
+        .warning { border-left-color: #ff9800; }
+        h1 { color: #4CAF50; }
+        h2 { color: #66bb6a; margin-top: 0; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 8px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        button:hover { background: #45a049; }
+        button.danger { background: #f44336; }
+        button.danger:hover { background: #da190b; }
+        pre {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 8px 0;
+            display: inline-block;
+        }
+        .status.ok { background: #4CAF50; }
+        .status.error { background: #f44336; }
+        .status.pending { background: #ff9800; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Stock Analyzer 데이터 로딩 디버그 도구</h1>
+
+    <div class="section warning">
+        <h2>⚠️ 현재 문제</h2>
+        <p>SyntaxError: Unexpected token 'N' 오류 발생</p>
+        <p>"데이터 로딩 실패" 모달 계속 표시</p>
+    </div>
+
+    <div class="section">
+        <h2>1️⃣ Service Worker 상태 확인</h2>
+        <button onclick="checkServiceWorker()">Service Worker 확인</button>
+        <button class="danger" onclick="unregisterServiceWorker()">Service Worker 제거 (캐시 클리어)</button>
+        <div id="swStatus"></div>
+    </div>
+
+    <div class="section">
+        <h2>2️⃣ 데이터 파일 직접 로딩 테스트</h2>
+        <button onclick="testDataLoading()">데이터 로딩 테스트</button>
+        <button onclick="testDataLoadingNoCache()">캐시 무시 로딩 테스트</button>
+        <div id="dataStatus"></div>
+    </div>
+
+    <div class="section">
+        <h2>3️⃣ 브라우저 캐시 클리어</h2>
+        <button onclick="clearAllCaches()">모든 캐시 삭제</button>
+        <button onclick="clearSpecificCache()">데이터 캐시만 삭제</button>
+        <div id="cacheStatus"></div>
+    </div>
+
+    <div class="section">
+        <h2>4️⃣ 서버 응답 확인</h2>
+        <button onclick="checkServerResponse()">서버 응답 헤더 확인</button>
+        <div id="serverStatus"></div>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const log = (message, type = 'info') => {
+            const results = document.getElementById('results');
+            const entry = document.createElement('div');
+            entry.className = 'section';
+            if (type === 'error') entry.classList.add('error');
+            if (type === 'warning') entry.classList.add('warning');
+            entry.innerHTML = `<pre>${message}</pre>`;
+            results.appendChild(entry);
+            console.log(message);
+        };
+
+        async function checkServiceWorker() {
+            const container = document.getElementById('swStatus');
+
+            if (!('serviceWorker' in navigator)) {
+                container.innerHTML = '<div class="status error">Service Worker 미지원</div>';
+                return;
+            }
+
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+
+                if (registrations.length === 0) {
+                    container.innerHTML = '<div class="status ok">✅ Service Worker 없음 (정상)</div>';
+                    log('Service Worker가 등록되어 있지 않습니다.', 'info');
+                } else {
+                    let html = '<div class="status error">⚠️ Service Worker 발견:</div><pre>';
+                    registrations.forEach((reg, i) => {
+                        html += `\nRegistration ${i + 1}:\n`;
+                        html += `  Scope: ${reg.scope}\n`;
+                        html += `  Active: ${reg.active ? 'Yes' : 'No'}\n`;
+                        html += `  Waiting: ${reg.waiting ? 'Yes' : 'No'}\n`;
+                    });
+                    html += '</pre>';
+                    container.innerHTML = html;
+                    log('Service Worker가 활성화되어 있습니다. 캐시 문제의 원인일 수 있습니다.', 'warning');
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="status error">❌ 오류: ${error.message}</div>`;
+                log(`Service Worker 확인 실패: ${error.message}`, 'error');
+            }
+        }
+
+        async function unregisterServiceWorker() {
+            const container = document.getElementById('swStatus');
+
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+
+                if (registrations.length === 0) {
+                    container.innerHTML = '<div class="status ok">Service Worker가 없습니다</div>';
+                    return;
+                }
+
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+
+                container.innerHTML = '<div class="status ok">✅ Service Worker 제거 완료. 페이지를 새로고침하세요.</div>';
+                log('Service Worker가 제거되었습니다. Ctrl + Shift + R로 페이지를 새로고침하세요.', 'info');
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } catch (error) {
+                container.innerHTML = `<div class="status error">❌ 제거 실패: ${error.message}</div>`;
+                log(`Service Worker 제거 실패: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDataLoading() {
+            const container = document.getElementById('dataStatus');
+            container.innerHTML = '<div class="status pending">⏳ 로딩 중...</div>';
+
+            try {
+                const response = await fetch('./data/enhanced_summary_data_clean.json');
+
+                container.innerHTML = `
+                    <div class="status ${response.ok ? 'ok' : 'error'}">
+                        HTTP ${response.status} ${response.statusText}
+                    </div>
+                    <pre>Content-Type: ${response.headers.get('Content-Type')}
+Content-Length: ${response.headers.get('Content-Length')}
+Cache-Control: ${response.headers.get('Cache-Control')}</pre>
+                `;
+
+                if (!response.ok) {
+                    log(`❌ HTTP ${response.status}: ${response.statusText}`, 'error');
+                    return;
+                }
+
+                const text = await response.text();
+                log(`✅ 파일 로딩 성공 (${text.length} bytes)`, 'info');
+
+                // JSON 파싱 테스트
+                try {
+                    const data = JSON.parse(text);
+                    log(`✅ JSON 파싱 성공\n총 기업 수: ${data.metadata?.total_companies}\n데이터 배열: ${data.data?.length}개`, 'info');
+
+                    // 첫 번째 레코드 미리보기
+                    if (data.data && data.data.length > 0) {
+                        log(`첫 번째 레코드:\n${JSON.stringify(data.data[0], null, 2)}`, 'info');
+                    }
+                } catch (parseError) {
+                    log(`❌ JSON 파싱 실패: ${parseError.message}\n\n첫 100자:\n${text.substring(0, 100)}`, 'error');
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="status error">❌ 로딩 실패: ${error.message}</div>`;
+                log(`❌ 데이터 로딩 실패: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDataLoadingNoCache() {
+            const container = document.getElementById('dataStatus');
+            container.innerHTML = '<div class="status pending">⏳ 캐시 무시 로딩 중...</div>';
+
+            try {
+                const timestamp = new Date().getTime();
+                const response = await fetch(`./data/enhanced_summary_data_clean.json?v=${timestamp}`, {
+                    cache: 'no-cache',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache'
+                    }
+                });
+
+                container.innerHTML = `
+                    <div class="status ${response.ok ? 'ok' : 'error'}">
+                        캐시 무시 로딩: HTTP ${response.status}
+                    </div>
+                `;
+
+                if (response.ok) {
+                    const text = await response.text();
+                    const data = JSON.parse(text);
+                    log(`✅ 캐시 무시 로딩 성공\n총 기업: ${data.metadata?.total_companies}\n데이터: ${data.data?.length}개`, 'info');
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="status error">❌ 실패: ${error.message}</div>`;
+                log(`❌ 캐시 무시 로딩 실패: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearAllCaches() {
+            const container = document.getElementById('cacheStatus');
+
+            try {
+                const cacheNames = await caches.keys();
+
+                if (cacheNames.length === 0) {
+                    container.innerHTML = '<div class="status ok">캐시가 없습니다</div>';
+                    return;
+                }
+
+                for (const cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                }
+
+                container.innerHTML = `<div class="status ok">✅ ${cacheNames.length}개 캐시 삭제 완료</div>`;
+                log(`✅ 모든 캐시 삭제 완료: ${cacheNames.join(', ')}`, 'info');
+            } catch (error) {
+                container.innerHTML = `<div class="status error">❌ 오류: ${error.message}</div>`;
+                log(`❌ 캐시 삭제 실패: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearSpecificCache() {
+            const container = document.getElementById('cacheStatus');
+
+            try {
+                const cacheNames = await caches.keys();
+                const dataCaches = cacheNames.filter(name =>
+                    name.includes('data') || name.includes('stock-analyzer')
+                );
+
+                if (dataCaches.length === 0) {
+                    container.innerHTML = '<div class="status ok">데이터 캐시가 없습니다</div>';
+                    return;
+                }
+
+                for (const cacheName of dataCaches) {
+                    await caches.delete(cacheName);
+                }
+
+                container.innerHTML = `<div class="status ok">✅ ${dataCaches.length}개 데이터 캐시 삭제</div>`;
+                log(`✅ 데이터 캐시 삭제 완료: ${dataCaches.join(', ')}`, 'info');
+            } catch (error) {
+                container.innerHTML = `<div class="status error">❌ 오류: ${error.message}</div>`;
+                log(`❌ 캐시 삭제 실패: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkServerResponse() {
+            const container = document.getElementById('serverStatus');
+            container.innerHTML = '<div class="status pending">⏳ 서버 확인 중...</div>';
+
+            try {
+                const response = await fetch('./data/enhanced_summary_data_clean.json', {
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                });
+
+                let html = `<div class="status ${response.ok ? 'ok' : 'error'}">HTTP ${response.status}</div><pre>`;
+
+                html += '응답 헤더:\n';
+                response.headers.forEach((value, key) => {
+                    html += `${key}: ${value}\n`;
+                });
+                html += '</pre>';
+
+                container.innerHTML = html;
+
+                log(`서버 응답 확인:\nStatus: ${response.status}\nHeaders:\n${Array.from(response.headers.entries()).map(([k,v]) => `  ${k}: ${v}`).join('\n')}`, 'info');
+            } catch (error) {
+                container.innerHTML = `<div class="status error">❌ 서버 응답 없음: ${error.message}</div>`;
+                log(`❌ 서버 확인 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 페이지 로드 시 자동 확인
+        window.addEventListener('load', () => {
+            log('=== 디버그 도구 시작 ===', 'info');
+            log(`현재 URL: ${window.location.href}`, 'info');
+            log(`User Agent: ${navigator.userAgent}`, 'info');
+            checkServiceWorker();
+        });
+    </script>
+</body>
+</html>

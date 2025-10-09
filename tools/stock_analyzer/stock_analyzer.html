@@ -1020,6 +1020,8 @@
                 </div>
             </div>
 
+            <div class="mt-8" id="deployment-dashboard"></div>
+
             <!-- 포트폴리오 탭 내용 -->
             <div id="portfolio-content" class="tab-content hidden">
                 <div class="dashboard-card text-center py-12">
@@ -1147,30 +1149,78 @@
                 </button>
             </div>
             
-            <!-- 비교 기업 선택 -->
-            <div class="dashboard-card mb-6">
-                <h4 class="text-lg font-bold mb-4">비교할 기업 선택 (최대 4개)</h4>
-                <div id="compare-selection-area" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- 선택된 기업들이 여기에 표시됩니다 -->
-                </div>
-            </div>
-            
-            <!-- 비교 차트 영역 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- 오버레이 레이더 차트 -->
+            <div class="space-y-6 deep-compare-container">
+                <!-- 비교 헤더 -->
                 <div class="dashboard-card">
-                    <h4 class="text-lg font-bold mb-4">핵심 지표 비교</h4>
-                    <div class="chart-container" style="height: 350px;">
-                        <canvas id="compare-radar-chart"></canvas>
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-900">비교할 대상을 선택하세요</h4>
+                            <p class="text-sm text-gray-500">최대 4개까지 선택할 수 있습니다. 검색하거나 드래그하여 비교 영역에 추가하세요.</p>
+                        </div>
+                        <div class="compare-mode-selector flex gap-2">
+                            <button class="mode-btn px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white shadow" data-mode="companies">기업 비교</button>
+                            <button class="mode-btn px-3 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-mode="sectors">업종 비교</button>
+                            <button class="mode-btn px-3 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-mode="countries">시장 비교</button>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- 상대 성과 바 차트 -->
-                <div class="dashboard-card">
-                    <h4 class="text-lg font-bold mb-4">상대 성과 분석</h4>
-                    <div class="chart-container" style="height: 350px;">
-                        <canvas id="compare-performance-chart"></canvas>
+
+                <!-- 선택 및 비교 작업 영역 -->
+                <div class="comparison-workspace grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <!-- 선택 패널 -->
+                    <div class="selection-panel dashboard-card space-y-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900 mb-2">비교 대상 검색</h4>
+                            <div class="relative">
+                                <input id="compare-search" type="text" placeholder="기업명, 티커, 업종으로 검색..." class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="grid gap-3 max-h-96 overflow-y-auto pr-1 available-items" id="available-items">
+                            <!-- 검색 결과가 여기에 표시됩니다 -->
+                        </div>
                     </div>
+
+                    <!-- 드래그 앤 드롭 영역 -->
+                    <div class="comparison-area xl:col-span-2 space-y-4">
+                        <div class="dashboard-card">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">비교 영역</h4>
+                            <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-center">
+                                <div class="drop-zone border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition" data-slot="1">
+                                    <div class="drop-placeholder text-gray-400">
+                                        <i class="fas fa-plus text-3xl mb-2"></i>
+                                        <p>여기에 대상을 드롭하세요</p>
+                                    </div>
+                                </div>
+                                <div class="vs-indicator text-3xl font-bold text-gray-400">VS</div>
+                                <div class="drop-zone border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition" data-slot="2">
+                                    <div class="drop-placeholder text-gray-400">
+                                        <i class="fas fa-plus text-3xl mb-2"></i>
+                                        <p>또는 한 번 더 드롭하세요</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center mt-4">
+                                <div class="text-xs text-gray-500">Tip: 검색 결과를 드래그하거나 카드의 "제거" 버튼으로 목록을 조정하세요.</div>
+                                <div class="flex gap-2">
+                                    <button class="add-comparison-btn px-3 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 transition">추천 대상 추가</button>
+                                    <button class="clear-all-btn px-3 py-2 text-sm rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition">전체 초기화</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">선택된 비교 대상</h4>
+                            <div id="compare-selection-area" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- 선택된 기업 카드가 여기 표시됩니다 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 비교 결과 -->
+                <div class="comparison-results" id="comparison-results">
+                    <!-- DeepCompareLayout이 이 영역을 채웁니다 -->
                 </div>
             </div>
         </div>
@@ -1188,6 +1238,36 @@
     
     <!-- 새로운 고급 필터 시스템 -->
     <script src="./modules/AdvancedFilter.js"></script>
+    
+    <!-- DeepCompare 모듈 -->
+    <script src="./modules/DeepCompare/ComparisonEngine.js"></script>
+    <script src="./modules/DeepCompare/components/ComparisonLayout.js"></script>
+    <script src="./modules/DeepCompare/components/DragAndDrop.js"></script>
+    <script src="./modules/DeepCompare/components/SelectionSearch.js"></script>
+    <script src="./modules/DeepCompare/visualizations/BubbleChart.js"></script>
+    <script src="./modules/DeepCompare/visualizations/RadarChart.js"></script>
+    <script src="./modules/DeepCompare/DeepCompare.js"></script>
+
+    <!-- Collaborative testing suite -->
+    <script src="./testing/ModuleTestRunner.js"></script>
+    <script src="./testing/IntegrationTests.js"></script>
+    <script src="./testing/reporters/DefaultReporter.js"></script>
+    <script src="./testing/CollaborativeTestSuite.js"></script>
+    <script src="./testing/registerBuiltinTests.js"></script>
+
+    <!-- Deployment system -->
+    <script src="./deployment/CanaryDeployment.js"></script>
+    <script src="./deployment/AutoRollback.js"></script>
+    <script src="./deployment/HealthMonitor.js"></script>
+    <script src="./deployment/DeploymentDashboard.js"></script>
+    <script src="./deployment/SmartDeploymentSystem.js"></script>
+
+    <!-- PortfolioBuilder 모듈 -->
+    <script src="./modules/PortfolioBuilder/Portfolio.js"></script>
+    <script src="./modules/PortfolioBuilder/PortfolioOptimizer.js"></script>
+    <script src="./modules/PortfolioBuilder/RiskAnalyzer.js"></script>
+    <script src="./modules/PortfolioBuilder/components/Layout.js"></script>
+    <script src="./modules/PortfolioBuilder/PortfolioBuilder.js"></script>
     <script src="./stock_analyzer_enhanced.js"></script>
     
     <!-- PWA Service Worker -->

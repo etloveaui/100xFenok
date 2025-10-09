@@ -1,0 +1,378 @@
+/**
+ * Momentum Heatmap Styles
+ *
+ * D3.js 트리맵 기반 모멘텀 히트맵 스타일
+ */
+
+/* CSS Variables */
+:root {
+    --momentum-positive: #10b981;
+    --momentum-negative: #ef4444;
+    --momentum-neutral: #6b7280;
+    --color-primary: #2563eb;
+    --color-background: #ffffff;
+    --color-background-secondary: #f9fafb;
+    --color-text: #1f2937;
+    --color-text-secondary: #6b7280;
+    --color-border: #e5e7eb;
+    --color-highlight: #3b82f6;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+
+[data-theme="dark"] {
+    --momentum-positive: #34d399;
+    --momentum-negative: #f87171;
+    --momentum-neutral: #4b5563;
+    --color-primary: #3b82f6;
+    --color-background: #1f2937;
+    --color-background-secondary: #111827;
+    --color-text: #f3f4f6;
+    --color-text-secondary: #9ca3af;
+    --color-border: #374151;
+    --color-highlight: #60a5fa;
+}
+
+/* Container */
+.momentum-heatmap {
+    width: 100%;
+    padding: var(--spacing-lg);
+    background-color: var(--color-background-secondary);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header */
+.heatmap-header {
+    margin-bottom: var(--spacing-lg);
+}
+
+.heatmap-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--color-text);
+}
+
+.heatmap-subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+/* Controls */
+.heatmap-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--color-background);
+    border-radius: var(--radius-md);
+}
+
+/* View Switcher */
+.view-switcher {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.view-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 14px;
+}
+
+.view-btn:hover {
+    background-color: var(--color-background-secondary);
+    border-color: var(--color-primary);
+}
+
+.view-btn.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.view-icon {
+    font-size: 18px;
+}
+
+/* Time Filter */
+.time-filter {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.filter-label {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-right: var(--spacing-sm);
+}
+
+.period-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 13px;
+}
+
+.period-btn:hover {
+    background-color: var(--color-background-secondary);
+}
+
+.period-btn.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+/* Treemap Container */
+.treemap-container {
+    background-color: var(--color-background);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.treemap-renderer {
+    width: 100%;
+    height: 600px;
+}
+
+.treemap-svg {
+    display: block;
+    max-width: 100%;
+}
+
+/* Treemap Cells */
+.treemap-cell {
+    transition: opacity var(--transition-slow);
+}
+
+.cell-rect {
+    transition: all var(--transition-normal);
+}
+
+.cell-text-name,
+.cell-text-momentum {
+    transition: all var(--transition-normal);
+}
+
+/* Drilldown Panel */
+.drilldown-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-width: 90%;
+    background-color: var(--color-background);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: fadeInScale var(--transition-normal);
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.drilldown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.drilldown-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.drilldown-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.drilldown-close:hover {
+    background-color: var(--color-background-secondary);
+    color: var(--color-text);
+}
+
+.drilldown-body {
+    padding: var(--spacing-md);
+}
+
+.drilldown-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.drilldown-row:last-child {
+    border-bottom: none;
+}
+
+.row-label {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+.row-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.row-value.positive {
+    color: var(--momentum-positive);
+}
+
+.row-value.negative {
+    color: var(--momentum-negative);
+}
+
+/* Tooltip */
+.momentum-tooltip {
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    max-width: 250px;
+}
+
+.tooltip-header {
+    padding-bottom: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 14px;
+}
+
+.tooltip-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.tooltip-row .positive {
+    color: var(--momentum-positive);
+}
+
+.tooltip-row .negative {
+    color: var(--momentum-negative);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .heatmap-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .view-switcher,
+    .time-filter {
+        justify-content: center;
+    }
+
+    .treemap-renderer {
+        height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .momentum-heatmap {
+        padding: var(--spacing-md);
+    }
+
+    .heatmap-title {
+        font-size: 24px;
+    }
+
+    .view-btn,
+    .period-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    .view-icon {
+        font-size: 16px;
+    }
+
+    .treemap-renderer {
+        height: 400px;
+    }
+
+    .drilldown-panel {
+        width: 90%;
+    }
+}
+
+/* Print */
+@media print {
+    .momentum-heatmap {
+        background-color: white;
+        color: black;
+    }
+
+    .heatmap-controls {
+        display: none;
+    }
+
+    .drilldown-panel,
+    .momentum-tooltip {
+        display: none !important;
+    }
+}

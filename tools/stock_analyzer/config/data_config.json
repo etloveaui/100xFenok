@@ -1,0 +1,21 @@
+{
+    "output_dir": "C:/Users/etlov/agents-workspace/projects/100xFenok/tools/stock_analyzer/data",
+    "important_fields": ["Ticker", "corpName"],
+    "numeric_patterns": [
+        "per", "pbr", "roe", "price", "return", "ratio", "rate", "growth", "margin",
+        "cap", "volume", "sales", "revenue", "income", "profit",
+        "debt", "equity", "asset", "liability"
+    ],
+    "field_patterns": {
+        "Ticker": ["ticker", "symbol"],
+        "corpName": ["company.*name", "corp.*name", "name"],
+        "Exchange": ["exchange", "market"],
+        "industry": ["industry", "sector"],
+        "(USD mn)": ["market.*cap", "mcap"],
+        "Price (Oct-25)": ["price.*oct", "current.*price"],
+        "PER (Oct-25)": ["per.*oct", "pe.*ratio"],
+        "PBR (Oct-25)": ["pbr.*oct", "pb.*ratio"],
+        "ROE (Fwd)": ["roe.*fwd", "roe.*forward"],
+        "Return (Y)": ["return.*y", "annual.*return"]
+    }
+}
