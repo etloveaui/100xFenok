@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>캐시 완전 초기화 도구</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 50px auto; background: #1a1a1a; color: #fff; }
+        button { background: #ff4444; color: white; padding: 20px 40px; margin: 10px; border: none; font-size: 18px; cursor: pointer; }
+        button:hover { background: #ff6666; }
+        .success { background: #44ff44; color: #000; padding: 20px; margin: 20px 0; }
+        pre { background: #333; padding: 20px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚨 Stock Analyzer 캐시 완전 초기화</h1>
+
+    <button onclick="nuclearOption()">🔴 Nuclear Option - 모든 캐시 삭제</button>
+
+    <div id="log"></div>
+
+    <script>
+        const log = (msg, isSuccess = false) => {
+            const el = document.createElement('div');
+            el.className = isSuccess ? 'success' : '';
+            el.innerHTML = `<pre>${new Date().toLocaleTimeString()}: ${msg}</pre>`;
+            document.getElementById('log').appendChild(el);
+        };
+
+        async function nuclearOption() {
+            log('🚀 시작: 완전 초기화...');
+
+            try {
+                // 1. Service Worker 제거
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const reg of registrations) {
+                        await reg.unregister();
+                        log(`✅ Service Worker 제거: ${reg.scope}`);
+                    }
+                }
+
+                // 2. 모든 캐시 삭제
+                if ('caches' in window) {
+                    const names = await caches.keys();
+                    for (const name of names) {
+                        await caches.delete(name);
+                        log(`✅ 캐시 삭제: ${name}`);
+                    }
+                }
+
+                // 3. localStorage 클리어
+                localStorage.clear();
+                log('✅ localStorage 클리어');
+
+                // 4. sessionStorage 클리어
+                sessionStorage.clear();
+                log('✅ sessionStorage 클리어');
+
+                // 5. IndexedDB 삭제
+                if ('indexedDB' in window) {
+                    const databases = await indexedDB.databases();
+                    for (const db of databases) {
+                        indexedDB.deleteDatabase(db.name);
+                        log(`✅ IndexedDB 삭제: ${db.name}`);
+                    }
+                }
+
+                log('✨ 완전 초기화 완료!', true);
+
+                // 6. 새 탭에서 메인 페이지 열기
+                setTimeout(() => {
+                    log('🔄 3초 후 메인 페이지로 이동...', true);
+                    setTimeout(() => {
+                        window.open('http://localhost:8001/stock_analyzer.html', '_blank');
+                    }, 3000);
+                }, 1000);
+
+            } catch (error) {
+                log(`❌ 오류: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

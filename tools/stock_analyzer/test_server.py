@@ -31,9 +31,9 @@ def main():
     
     # 필수 파일 확인
     required_files = [
-        'data/enhanced_summary_data.json',
+        'data/enhanced_summary_data_clean.json',
         'data/column_config.json',
-        'simple_test.html'
+        'stock_analyzer.html'
     ]
     
     missing_files = []
@@ -48,7 +48,7 @@ def main():
         return
     
     # 데이터 파일 크기 확인
-    data_file = DIRECTORY / 'data/enhanced_summary_data.json'
+    data_file = DIRECTORY / 'data/enhanced_summary_data_clean.json'
     if data_file.exists():
         size_mb = data_file.stat().st_size / 1024 / 1024
         print(f"📊 데이터 파일 크기: {size_mb:.1f}MB")

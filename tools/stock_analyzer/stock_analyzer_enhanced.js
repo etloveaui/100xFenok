@@ -7,6 +7,7 @@ let allData = [];
 let config = {};
 let columnConfig = {};
 let metadata = {};
+window.activeCompanyForComparison = null;
 let indices = {
     quality: [],
     value: [],
@@ -216,11 +217,15 @@ async function init() {
         }, 3000); // 데이터 로딩 후 초기화
     }
     
-    // PortfolioManager 초기화
-    if (window.portfolioManager) {
+    // PortfolioBuilder 초기화
+    if (window.portfolioBuilder) {
         setTimeout(() => {
-            window.portfolioManager.initialize();
-        }, 3000); // 모든 시스템 로딩 후 초기화
+            try {
+                window.portfolioBuilder.initialize();
+            } catch (error) {
+                console.error('❌ PortfolioBuilder 초기화 실패:', error);
+            }
+        }, 3000);
     }
     
     // DashboardFixManager 초기화
@@ -256,6 +261,16 @@ async function init() {
         sampleData: allData && allData.length > 0 ? allData[0] : 'no data'
     });
     
+    if (window.deepCompare) {
+        setTimeout(() => {
+            try {
+                window.deepCompare.initialize();
+            } catch (error) {
+                console.error('❌ DeepCompare 초기화 실패:', error);
+            }
+        }, 2500);
+    }
+    
     applyFilters('all');
     setupEventListeners();
     
@@ -277,7 +292,7 @@ async function loadData() {
         // 캐시 무효화를 위한 타임스탬프 추가
         const timestamp = new Date().getTime();
         const [enhancedRes, columnConfigRes, appConfigRes] = await Promise.all([
-            fetch(`./data/enhanced_summary_data.json?v=${timestamp}`),
+            fetch(`./data/enhanced_summary_data_clean.json?v=${timestamp}`),
             fetch('./data/column_config.json'),
             fetch('./stock_analyzer_config.json')
         ]);
@@ -293,7 +308,121 @@ async function loadData() {
             columnConfig = getDefaultColumnConfig();
         }
 
-        const enhancedData = await enhancedRes.json();
+        let enhancedData;
+        let sanitized = '';
+        const sanitizeJsonText = (rawText) => {
+            let inString = false;
+            let escaped = false;
+            let buffer = '';
+            let replacements = 0;
+            for (let i = 0; i < rawText.length; i++) {
+                const char = rawText[i];
+
+                if (inString) {
+                    buffer += char;
+                    if (escaped) {
+                        escaped = false;
+                    } else if (char === '\\') {
+                        escaped = true;
+                    } else if (char === '"') {
+                        inString = false;
+                    }
+                    continue;
+                }
+
+                if (char === '"') {
+                    inString = true;
+                    buffer += char;
+                    continue;
+                }
+
+                if (rawText.startsWith('-Infinity', i)) {
+                    buffer += 'null';
+                    i += '-Infinity'.length - 1;
+                    replacements++;
+                    continue;
+                }
+
+                if (rawText.startsWith('Infinity', i)) {
+                    buffer += 'null';
+                    i += 'Infinity'.length - 1;
+                    replacements++;
+                    continue;
+                }
+
+                if (rawText.startsWith('NaN', i)) {
+                    buffer += 'null';
+                    i += 'NaN'.length - 1;
+                    replacements++;
+                    continue;
+                }
+
+                buffer += char;
+            }
+
+            return { sanitizedText: buffer, replacements };
+        };
+        try {
+            const raw = await enhancedRes.text();
+
+            // 더 강력한 NaN 및 Infinity 처리 (정규표현식 사용)
+            let cleanedText = raw
+                .replace(/:\s*NaN\b/g, ': null')  // 값으로 사용된 NaN
+                .replace(/,\s*NaN\b/g, ', null')  // 배열 요소인 NaN
+                .replace(/\[\s*NaN\b/g, '[null')  // 배열 시작의 NaN
+                .replace(/:\s*Infinity\b/g, ': null')  // Infinity도 처리
+                .replace(/:\s*-Infinity\b/g, ': null'); // -Infinity도 처리
+
+            const { sanitizedText, replacements } = sanitizeJsonText(cleanedText);
+            sanitized = sanitizedText;
+
+            if (sanitized !== raw) {
+                console.log(`🧼 JSON sanitize applied: ${replacements} invalid tokens replaced with null`);
+            }
+
+            const hasUnquotedNaN = (() => {
+                for (let i = 0; i < sanitized.length; i++) {
+                    if (sanitized[i] === 'N' && sanitized.startsWith('NaN', i) && sanitized[i - 1] !== '"') {
+                        return i;
+                    }
+                }
+                return -1;
+            })();
+            if (hasUnquotedNaN !== -1) {
+                console.warn('⚠️ sanitize check: NaN token still present after replacements', sanitized.slice(Math.max(hasUnquotedNaN - 60, 0), hasUnquotedNaN + 60));
+            }
+
+            const lower = sanitized.toLowerCase();
+            const hasUnquotedInfinity = (() => {
+                for (let i = 0; i < lower.length; i++) {
+                    if (lower[i] === 'i' && lower.startsWith('infinity', i) && sanitized[i - 1] !== '"') {
+                        return i;
+                    }
+                }
+                return -1;
+            })();
+            if (hasUnquotedInfinity !== -1) {
+                console.warn('⚠️ sanitize check: Infinity token still present after replacements', sanitized.slice(Math.max(hasUnquotedInfinity - 60, 0), hasUnquotedInfinity + 60));
+            }
+
+            enhancedData = JSON.parse(sanitized);
+        } catch (parseError) {
+            console.error('❌ Enhanced data parse failed:', parseError);
+            try {
+                if (sanitized) {
+                    const idx = sanitized.indexOf('NaN');
+                    if (idx !== -1) {
+                        console.error('🔍 Remaining NaN snippet:', sanitized.slice(Math.max(idx - 80, 0), idx + 80));
+                    } else {
+                        console.error('🔍 Sanitized preview (first 200 chars):', sanitized.slice(0, 200));
+                    }
+                }
+            } catch (snippetError) {
+                console.error('Snippet extraction failed:', snippetError);
+            }
+            throw parseError;
+        }
+
         columnConfig = await columnConfigRes.json();
         
         if (appConfigRes.ok) {
@@ -355,6 +484,17 @@ async function loadData() {
             localAllData: allData ? allData.length : 'undefined'
         });
         
+        if (window.deepCompare && typeof window.deepCompare.refreshDataSource === 'function') {
+            window.deepCompare.refreshDataSource();
+        }
+
+        if (window.portfolioBuilder && typeof window.portfolioBuilder.collectData === 'function') {
+            window.portfolioBuilder.collectData();
+            if (typeof window.portfolioBuilder.refreshHoldings === 'function') {
+                window.portfolioBuilder.refreshHoldings();
+            }
+        }
+        
         // 데이터 품질 확인 (엔비디아 예시)
         const nvidia = allData.find(company => company.Ticker === 'NVDA');
         if (nvidia) {
@@ -380,6 +520,14 @@ async function loadData() {
         
         console.log('✅ 데이터 로딩 완료');
 
+        if (window.collaborativeTestSuite) {
+            window.collaborativeTestSuite
+                .runAllTests({ trigger: 'post-data-load' })
+                .catch(error => {
+                    console.warn('⚠️ Collaborative tests failed:', error);
+                });
+        }
+
     } catch (error) {
         console.error("❌ 데이터 로딩 오류:", error);
         
@@ -400,11 +548,12 @@ async function loadData() {
             message: error.message,
             stack: error.stack
         });
-        
-        allData = [];
-        config = {};
-        columnConfig = {};
-        metadata = {};
+
+        // 에러가 나도 데이터는 유지!!! 삭제하면 안됨!!!
+        // allData = [];  // 이것 때문에 데이터가 사라졌음!
+        // config = {};
+        // columnConfig = {};
+        // metadata = {};
     }
 }
 
@@ -663,12 +812,12 @@ function buildSearchIndex() {
     const index = new Map();
     
     allData.forEach((company, idx) => {
-        // 검색 가능한 모든 필드를 인덱스에 추가
+        // 검색 가능한 모든 필드를 인덱스에 추가 (숫자 타입도 처리)
         const searchableFields = [
-            company.Ticker?.toLowerCase() || '',
-            company.corpName?.toLowerCase() || '',
-            company.industry?.toLowerCase() || '',
-            company.Exchange?.toLowerCase() || ''
+            String(company.Ticker || '').toLowerCase(),
+            String(company.corpName || '').toLowerCase(),
+            String(company.industry || '').toLowerCase(),
+            String(company.exchange || company.Exchange || '').toLowerCase()  // exchange 소문자 체크
         ];
         
         searchableFields.forEach(field => {
@@ -1940,8 +2089,15 @@ function formatMarketCap(value) {
 
 function formatPercentage(value) {
     if (value === null || value === undefined || isNaN(value)) return '-';
-    
-    const num = parseFloat(value);
+
+    let num = parseFloat(value);
+
+    // If value is between -1 and 1 (but not 0), it's likely stored as decimal (0.7943 = 79.43%)
+    // Convert to percentage by multiplying by 100
+    if (num !== 0 && Math.abs(num) < 1) {
+        num = num * 100;
+    }
+
     return `${num.toFixed(1)}%`;
 }
 
@@ -2052,6 +2208,8 @@ let compareList = []; // 비교 목록
  */
 function showCompanyAnalysisModal(companyData) {
     console.log('🔍 기업 상세 분석 모달 표시:', companyData.Ticker);
+    
+    window.activeCompanyForComparison = companyData;
     
     const modal = document.getElementById('company-analysis-modal');
     const title = document.getElementById('modal-company-title');
@@ -2357,13 +2515,19 @@ function createDetailTable(companyData) {
  */
 function normalizeValue(value, min, max, reverse = false) {
     if (value === null || value === undefined || value === '') return 0;
-    
-    const numValue = parseFloat(value);
+
+    let numValue = parseFloat(value);
     if (isNaN(numValue)) return 0;
-    
+
+    // Convert decimal percentages to actual percentages for proper normalization
+    // If value is between -1 and 1 (but not 0) and min/max suggest percentage range
+    if (numValue !== 0 && Math.abs(numValue) < 1 && Math.abs(max) > 10) {
+        numValue = numValue * 100;
+    }
+
     let normalized = ((numValue - min) / (max - min)) * 100;
     normalized = Math.max(0, Math.min(100, normalized));
-    
+
     return reverse ? 100 - normalized : normalized;
 }
 
@@ -2377,10 +2541,13 @@ function getOriginalValue(dataIndex, companyData) {
         companyData['Return (Y)'],
         companyData['DY (FY+1)']
     ];
-    
+
     const labels = ['PER', 'PBR', 'ROE(%)', '영업이익률(%)', '매출성장률(%)', '연간수익률(%)', '배당수익률(%)'];
-    
-    return `${labels[dataIndex]}: ${formatNumber(metrics[dataIndex])}`;
+
+    // Use formatPercentage for percentage metrics (indices 2-6), formatNumber for PER/PBR (indices 0-1)
+    const formatter = dataIndex >= 2 ? formatPercentage : formatNumber;
+
+    return `${labels[dataIndex]}: ${formatter(metrics[dataIndex])}`;
 }
 
 function getIndustryAverages(industry) {
@@ -2459,7 +2626,7 @@ function initializeModalHandlers() {
     
     // 비교 목록에 추가 버튼
     const addToCompareBtn = document.getElementById('add-to-compare-btn');
-    if (addToCompareBtn) {
+    if (addToCompareBtn && !window.deepCompare) {
         addToCompareBtn.addEventListener('click', () => {
             // 비교 기능 구현 예정
             console.log('비교 목록에 추가');
@@ -3140,25 +3307,25 @@ function showCompanyModal(company) {
     const per = formatNumber(company['PER (Oct-25)']);
     const pbr = formatNumber(company['PBR (Oct-25)']);
     const roe = formatNumber(company['ROE (Fwd)']); // ROE (Fwd) 존재
-    // ROA 필드 확인 및 매핑 개선
-    const roaValue = company['ROA (Fwd)'] || company['ROA'] || company['ROA (Oct-25)'] || 0;
+    // ROA 필드 확인 및 매핑 개선 (ROA 없음 -> ROE 사용)
+    const roaValue = company['ROE (Fwd)'] || company['ROE'] || company['OPM (Fwd)'] || 0;
     const roa = formatNumber(roaValue);
-    console.log('🔍 ROA 필드 매핑:', { 
-        'ROA (Fwd)': company['ROA (Fwd)'], 
-        'ROA': company['ROA'], 
-        'ROA (Oct-25)': company['ROA (Oct-25)'],
+    console.log('🔍 ROA 필드 매핑 (ROE로 대체):', {
+        'ROE (Fwd)': company['ROE (Fwd)'],  // ROA 데이터 없음, ROE 사용
+        'ROE': company['ROE'],
+        'OPM (Fwd)': company['OPM (Fwd)'],
         'final': roaValue 
     });
     
     const opm = formatNumber(company['OPM (Fwd)']); // OPM (Fwd) 존재
     
-    // NPM 필드 확인 및 매핑 개선
-    const npmValue = company['NPM (Fwd)'] || company['NPM'] || company['NPM (Oct-25)'] || 0;
+    // NPM 필드 확인 및 매핑 개선 (NPM 없음 -> OPM 사용)
+    const npmValue = company['OPM (Fwd)'] || company['OPM'] || 0;
     const npm = formatNumber(npmValue);
-    console.log('🔍 NPM 필드 매핑:', { 
-        'NPM (Fwd)': company['NPM (Fwd)'], 
-        'NPM': company['NPM'], 
-        'NPM (Oct-25)': company['NPM (Oct-25)'],
+    console.log('🔍 NPM 필드 매핑 (OPM으로 대체):', {
+        'OPM (Fwd)': company['OPM (Fwd)'],  // NPM 데이터 없음, OPM 사용
+        'OPM': company['OPM'],
+        'Return (Y)': company['Return (Y)'],
         'final': npmValue 
     });
     const dividend = formatNumber(company['DY (FY+1)']); // DY (FY+1) 존재
@@ -3206,7 +3373,7 @@ function showCompanyModal(company) {
             'Price (10Y)': formatNumber(company['Price (10)'])
         },
         returns: {
-            'Annual Return': yearReturn,
+            'Annual Return': company['Return (Y)'] ? yearReturn : '0%',  // Return (Y) 필드 사용
             'Monthly Return': monthReturn,
             'Weekly Return': weekReturn,
             '3 Month Return': formatPercentage(company['3 M']),
@@ -3657,24 +3824,24 @@ function validateAndMapCompanyData(company) {
             const currentYear = currentDate.getFullYear();
             const currentMonth = currentDate.getMonth() + 1;
             
-            // 2025년 10월 - YTD는 연초부터 10월까지의 누적 수익률
-            if (currentYear === 2025) {
+            // 10월 - YTD는 연초부터 10월까지의 누적 수익률
+            if (currentMonth === 10) {  // October
                 const originalYTD = parseFloat(company['YTD']) || 0;
-                
-                console.log('🔍 2025년 10월 YTD 매핑 분석:', {
+
+                console.log(`🔍 ${currentYear}년 10월 YTD 매핑 분석:`, {
                     원본YTD: originalYTD,
                     현재월: currentMonth,
                     판단: '10월이므로 YTD는 연초부터 10월까지의 누적 수익률'
                 });
-                
-                // 원본 YTD 데이터 사용 (2025년 1월~10월 누적)
+
+                // 원본 YTD 데이터 사용 (연초부터 10월까지 누적)
                 return originalYTD;
             }
             
             // 다른 월의 경우 원본 YTD 사용
             return parseFloat(company['YTD']) || company['ytd'] || company['YTD Return'] || 0;
         })(),
-        returnY: company['Return (Y)'] || company['Annual Return'] || company['1Y'] || 0
+        returnY: company['Return (Y)'] || company['12 M'] || company['1Y'] || 0  // Return (Y) 또는 12M 사용
     };
     
     console.log('🔍 데이터 검증 결과:', validation);
@@ -3755,14 +3922,21 @@ function createCompanyCharts(ticker, company) {
                                 'returnYFinal': returnYValue
                             });
                             
+                            // Helper function to convert decimal percentages to actual percentages
+                            const convertToPercentage = (value) => {
+                                const num = parseFloat(value) || 0;
+                                // If value is between -1 and 1 (but not 0), multiply by 100
+                                return (num !== 0 && Math.abs(num) < 1) ? num * 100 : num;
+                            };
+
                             const returnsData = [
-                                parseFloat(company['W']) || 0,
-                                parseFloat(company['1 M']) || 0,
-                                parseFloat(company['3 M']) || 0,
-                                parseFloat(company['6 M']) || 0,
-                                parseFloat(company['12 M']) || 0,
-                                parseFloat(returnYValue) || 0, // 연간 수익률 사용
-                                parseFloat(ytdValue) || 0  // YTD 데이터 사용
+                                convertToPercentage(company['W']),
+                                convertToPercentage(company['1 M']),
+                                convertToPercentage(company['3 M']),
+                                convertToPercentage(company['6 M']),
+                                convertToPercentage(company['12 M']),
+                                convertToPercentage(returnYValue), // 연간 수익률 사용
+                                convertToPercentage(ytdValue)  // YTD 데이터 사용
                             ];
                             
                             console.log('📊 수익률 차트 데이터 매핑:', {

@@ -25,7 +25,19 @@ const STATIC_FILES = [
   '/modules/AdvancedSearchManager.js',
   '/modules/PortfolioManager.js',
   '/modules/DashboardManager.js',
-  '/data/enhanced_summary_data.json',
+  '/modules/DeepCompare/ComparisonEngine.js',
+  '/modules/DeepCompare/components/ComparisonLayout.js',
+  '/modules/DeepCompare/components/DragAndDrop.js',
+  '/modules/DeepCompare/components/SelectionSearch.js',
+  '/modules/DeepCompare/visualizations/BubbleChart.js',
+  '/modules/DeepCompare/visualizations/RadarChart.js',
+  '/modules/DeepCompare/DeepCompare.js',
+  '/modules/PortfolioBuilder/Portfolio.js',
+  '/modules/PortfolioBuilder/PortfolioOptimizer.js',
+  '/modules/PortfolioBuilder/RiskAnalyzer.js',
+  '/modules/PortfolioBuilder/components/Layout.js',
+  '/modules/PortfolioBuilder/PortfolioBuilder.js',
+  '/data/enhanced_summary_data_clean.json',
   '/data/enhanced_column_config.json',
   '/manifest.json'
 ];
@@ -277,10 +289,10 @@ self.addEventListener('sync', (event) => {
 async function doBackgroundSync() {
   try {
     // 데이터 업데이트 확인
-    const dataResponse = await fetch('/data/enhanced_summary_data.json');
+    const dataResponse = await fetch('/data/enhanced_summary_data_clean.json');
     if (dataResponse.ok) {
       const cache = await caches.open(DATA_CACHE);
-      await cache.put('/data/enhanced_summary_data.json', dataResponse);
+      await cache.put('/data/enhanced_summary_data_clean.json', dataResponse);
       console.log('✅ 백그라운드 데이터 동기화 완료');
     }
   } catch (error) {
