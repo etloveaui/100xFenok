@@ -270,7 +270,44 @@ async function init() {
             }
         }, 2500);
     }
-    
+
+    // EconomicDashboard 초기화
+    if (window.EconomicDashboard) {
+        setTimeout(async () => {
+            try {
+                const container = document.getElementById('economic-dashboard-container');
+                if (container) {
+                    const dashboard = new window.EconomicDashboard();
+                    await dashboard.init();
+                    dashboard.render(container);
+                    console.log('✅ EconomicDashboard 초기화 완료');
+                }
+            } catch (error) {
+                console.error('❌ EconomicDashboard 초기화 실패:', error);
+            }
+        }, 3500);
+    }
+
+    // MomentumHeatmap 초기화
+    if (window.MomentumHeatmap) {
+        setTimeout(async () => {
+            try {
+                const container = document.getElementById('momentum-heatmap-container');
+                if (container) {
+                    const heatmap = new window.MomentumHeatmap();
+                    await heatmap.init();
+                    const heatmapElement = heatmap.render();
+                    if (heatmapElement) {
+                        container.appendChild(heatmapElement);
+                        console.log('✅ MomentumHeatmap 초기화 완료');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ MomentumHeatmap 초기화 실패:', error);
+            }
+        }, 4000);
+    }
+
     applyFilters('all');
     setupEventListeners();
     
@@ -278,6 +315,76 @@ async function init() {
     if (window.advancedFilter) {
         window.advancedFilter.initialize();
     }
+
+    // 탭 전환 시스템 초기화
+    setupTabSwitching();
+}
+
+/**
+ * 탭 전환 시스템 설정
+ */
+function setupTabSwitching() {
+    const tabButtons = {
+        screener: document.getElementById('tab-screener'),
+        dashboard: document.getElementById('tab-dashboard'),
+        portfolio: document.getElementById('tab-portfolio')
+    };
+
+    const tabContents = {
+        screener: document.getElementById('screener-content'),
+        dashboard: document.getElementById('dashboard-content'),
+        portfolio: document.getElementById('portfolio-content')
+    };
+
+    // 탭 전환 함수
+    function switchTab(tabName) {
+        // 모든 탭 버튼 비활성화
+        Object.values(tabButtons).forEach(btn => {
+            if (btn) {
+                btn.classList.remove('active', 'text-blue-600', 'border-blue-500');
+                btn.classList.add('text-gray-500', 'border-transparent');
+            }
+        });
+
+        // 모든 탭 콘텐츠 숨김
+        Object.values(tabContents).forEach(content => {
+            if (content) {
+                content.classList.add('hidden');
+            }
+        });
+
+        // 선택된 탭 활성화
+        const activeButton = tabButtons[tabName];
+        const activeContent = tabContents[tabName];
+
+        if (activeButton) {
+            activeButton.classList.add('active', 'text-blue-600', 'border-blue-500');
+            activeButton.classList.remove('text-gray-500', 'border-transparent');
+        }
+
+        if (activeContent) {
+            activeContent.classList.remove('hidden');
+        }
+
+        console.log(`✅ 탭 전환: ${tabName}`);
+    }
+
+    // 탭 버튼 클릭 이벤트 등록
+    if (tabButtons.screener) {
+        tabButtons.screener.addEventListener('click', () => switchTab('screener'));
+    }
+
+    if (tabButtons.dashboard) {
+        tabButtons.dashboard.addEventListener('click', () => switchTab('dashboard'));
+    }
+
+    if (tabButtons.portfolio) {
+        tabButtons.portfolio.addEventListener('click', () => switchTab('portfolio'));
+    }
+
+    switchTab('screener');
+    console.log('✅ 탭 전환 시스템 초기화 완료');
+    window.switchStockAnalyzerTab = switchTab;
 }
 
 /**
@@ -291,22 +398,34 @@ async function loadData() {
     try {
         // 캐시 무효화를 위한 타임스탬프 추가
         const timestamp = new Date().getTime();
-        const [enhancedRes, columnConfigRes, appConfigRes] = await Promise.all([
-            fetch(`./data/enhanced_summary_data_clean.json?v=${timestamp}`),
-            fetch('./data/column_config.json'),
-            fetch('./stock_analyzer_config.json')
-        ]);
+        const dataSources = [
+            `./data/enhanced_summary_data_clean.json?v=${timestamp}`,
+            `./data/enhanced_summary_data.json?v=${timestamp}`
+        ];
 
-        if (!enhancedRes.ok) {
-            const errorMsg = `데이터 파일을 찾을 수 없습니다 (${enhancedRes.status}). 서버가 실행 중인지 확인해주세요.`;
+        let enhancedRes = null;
+        let dataSourceUsed = null;
+        for (const src of dataSources) {
+            try {
+                const response = await fetch(src, { cache: 'no-store' });
+                if (response.ok) {
+                    enhancedRes = response;
+                    dataSourceUsed = src.split('?')[0];
+                    break;
+                }
+            } catch (fetchError) {
+                console.warn(`⚠️ 데이터 소스 요청 실패 (${src}):`, fetchError);
+            }
+        }
+
+        if (!enhancedRes) {
+            const errorMsg = '데이터 파일을 찾을 수 없습니다. 서버가 실행 중인지 확인해주세요.';
             console.error('❌ 데이터 로딩 실패:', errorMsg);
             throw new Error(errorMsg);
         }
-        
-        if (!columnConfigRes.ok) {
-            console.warn('⚠️ 컬럼 설정 파일 로딩 실패, 기본 설정 사용');
-            columnConfig = getDefaultColumnConfig();
-        }
+
+        const columnConfigPromise = fetch('./data/column_config.json');
+        const appConfigPromise = fetch('./stock_analyzer_config.json');
 
         let enhancedData;
         let sanitized = '';
@@ -423,13 +542,18 @@ async function loadData() {
             throw parseError;
         }
 
-        columnConfig = await columnConfigRes.json();
-        
-        if (appConfigRes.ok) {
-            config = await appConfigRes.json();
+        const columnConfigRes = await columnConfigPromise;
+        if (columnConfigRes.ok) {
+            columnConfig = await columnConfigRes.json();
         } else {
-            config = {};
+            console.warn('⚠️ 컬럼 설정 파일 로딩 실패, 기본 설정 사용');
+            columnConfig = getDefaultColumnConfig();
         }
+
+        const appConfigRes = await appConfigPromise;
+        config = appConfigRes.ok ? await appConfigRes.json() : {};
+
+        console.log('📂 사용된 데이터 소스:', dataSourceUsed);
 
         let rawData;
         if (enhancedData.companies && Array.isArray(enhancedData.companies)) {
@@ -493,6 +617,10 @@ async function loadData() {
             if (typeof window.portfolioBuilder.refreshHoldings === 'function') {
                 window.portfolioBuilder.refreshHoldings();
             }
+        }
+
+        if (window.smartAnalytics && typeof window.smartAnalytics.setDataset === 'function') {
+            window.smartAnalytics.setDataset(allData);
         }
         
         // 데이터 품질 확인 (엔비디아 예시)
@@ -635,15 +763,36 @@ function renderScreenerPanel() {
     const screenerPanel = document.getElementById('screener-panel');
     if (!screenerPanel) return;
 
-    // 실제 데이터 기반으로 개수 계산 (자동 반영)
+    const totalCount = allData.length;
     const qualityCount = getFilteredData('quality').length;
     const valueCount = getFilteredData('value').length;
     const momentumCount = getFilteredData('momentum').length;
-    
+
     screenerPanel.innerHTML = `
+        <h2 class="text-lg font-bold text-gray-700 mb-4">
+            <i class="fas fa-filter text-blue-600 mr-2"></i>
+            고급 필터링 시스템
+            <span id="filter-result-count" class="text-sm font-normal text-gray-600 ml-2">${totalCount.toLocaleString()}개 기업</span>
+        </h2>
+
+        <div class="flex flex-wrap gap-3 mb-4">
+            <button id="open-deep-compare-btn" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+                <i class="fas fa-balance-scale"></i>
+                기업 비교 (DeepCompare)
+            </button>
+            <button id="open-smart-analytics-btn" class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">
+                <i class="fas fa-brain"></i>
+                AI 스마트 분석
+            </button>
+            <button id="open-portfolio-builder-btn" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 transition">
+                <i class="fas fa-briefcase"></i>
+                스마트 포트폴리오 빌더
+            </button>
+        </div>
+
         <div class="flex flex-wrap gap-2 mb-4">
             <button id="filter-all" class="filter-btn px-4 py-2 rounded-lg border transition-colors duration-200">
-                전체 (${allData.length.toLocaleString()})
+                전체 (${totalCount.toLocaleString()})
             </button>
             <button id="filter-quality" class="filter-btn px-4 py-2 rounded-lg border transition-colors duration-200">
                 퀄리티 (${qualityCount.toLocaleString()})
@@ -655,7 +804,42 @@ function renderScreenerPanel() {
                 모멘텀 (${momentumCount.toLocaleString()})
             </button>
         </div>
-        <div id="filter-status" class="text-sm text-gray-600 mb-4"></div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">투자 전략 필터</label>
+            <div id="qvm-filters" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div id="filter-status" class="mb-4 text-sm text-gray-600">필터 없음</div>
+
+        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
+            <h4 class="text-sm font-bold text-blue-800 mb-2">💡 필터 사용 가이드</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div><strong>거래소:</strong> NASDAQ, NYSE 등 상장 거래소별 필터</div>
+                <div><strong>업종:</strong> 반도체, 소프트웨어 등 산업별 필터</div>
+                <div><strong>시가총액:</strong> 대형주/중형주/소형주 구분 (백만달러)</div>
+                <div><strong>PER:</strong> 저평가 종목 발굴 (15 이하 권장)</div>
+                <div><strong>PBR:</strong> 자산 대비 가치 평가 (1-3 적정)</div>
+                <div><strong>ROE:</strong> 자기자본수익률 (15% 이상 우량)</div>
+            </div>
+        </div>
+
+        <div id="preset-filters-container" class="mb-6"></div>
+
+        <div class="mb-6">
+            <h3 class="text-md font-bold text-gray-700 mb-3">
+                <i class="fas fa-sliders-h text-green-600 mr-2"></i>
+                범위 필터
+            </h3>
+            <div id="range-filters-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <button id="clear-all-filters" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                <i class="fas fa-undo mr-2"></i>필터 초기화
+            </button>
+            <span class="text-xs text-gray-500">필터를 적용하면 결과가 즉시 갱신됩니다.</span>
+        </div>
     `;
 }
 
@@ -771,11 +955,207 @@ function setupEventListeners() {
             renderTable(currentData);
         });
     }
+
+    const compareModal = document.getElementById('company-compare-modal');
+    const openDeepCompareBtn = document.getElementById('open-deep-compare-btn');
+    if (openDeepCompareBtn) {
+        openDeepCompareBtn.addEventListener('click', () => {
+            openDeepCompareModal(window.activeCompanyForComparison);
+        });
+    }
+
+    document.getElementById('close-compare-modal-btn')?.addEventListener('click', () => {
+        compareModal?.classList.remove('active');
+    });
+
+    compareModal?.addEventListener('click', (event) => {
+        if (event.target === compareModal) {
+            compareModal.classList.remove('active');
+        }
+    });
+
+    const smartAnalyticsBtn = document.getElementById('open-smart-analytics-btn');
+    if (smartAnalyticsBtn) {
+        smartAnalyticsBtn.addEventListener('click', () => {
+            openSmartAnalyticsModal();
+        });
+    }
+
+    const smartAnalyticsModal = document.getElementById('smart-analytics-modal');
+    document.getElementById('close-smart-analytics-btn')?.addEventListener('click', () => {
+        smartAnalyticsModal?.classList.remove('active');
+    });
+
+    smartAnalyticsModal?.addEventListener('click', (event) => {
+        if (event.target === smartAnalyticsModal) {
+            smartAnalyticsModal.classList.remove('active');
+        }
+    });
+
+    const openPortfolioBuilderBtn = document.getElementById('open-portfolio-builder-btn');
+    if (openPortfolioBuilderBtn) {
+        openPortfolioBuilderBtn.addEventListener('click', () => {
+            if (typeof window.switchStockAnalyzerTab === 'function') {
+                window.switchStockAnalyzerTab('portfolio');
+            }
+            document.getElementById('portfolio-content')?.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    const addToCompareBtn = document.getElementById('add-to-compare-btn');
+    if (addToCompareBtn) {
+        addToCompareBtn.addEventListener('click', () => {
+            if (!window.deepCompare) {
+                console.warn('DeepCompare 모듈이 로드되지 않았습니다.');
+                return;
+            }
+            window.deepCompare.initialize();
+            if (window.activeCompanyForComparison) {
+                window.deepCompare.addEntityFromCompany(window.activeCompanyForComparison);
+            }
+            openDeepCompareModal(window.activeCompanyForComparison);
+        });
+    }
 }
 
 /**
  * 디바운스 함수
  */
+function openDeepCompareModal(preselectedCompany) {
+    const modal = document.getElementById('company-compare-modal');
+    if (!modal || !window.deepCompare) {
+        console.warn('DeepCompare 모듈이 활성화되어 있지 않습니다.');
+        return;
+    }
+
+    try {
+        window.deepCompare.initialize();
+        window.deepCompare.refreshDataSource();
+
+        if (preselectedCompany) {
+            window.deepCompare.addEntityFromCompany(preselectedCompany);
+        } else if (!window.deepCompare.selected.length && Array.isArray(window.allData)) {
+            window.allData.slice(0, 2).forEach(company => {
+                window.deepCompare.addEntityFromCompany(company);
+            });
+        }
+
+        modal.classList.add('active');
+    } catch (error) {
+        console.error('DeepCompare 모달을 여는 중 오류:', error);
+    }
+}
+
+async function openSmartAnalyticsModal() {
+    if (smartAnalyticsModalBusy) return;
+
+    const modal = document.getElementById('smart-analytics-modal');
+    const content = document.getElementById('smart-analytics-content');
+    if (!modal || !content) {
+        console.warn('SmartAnalytics 모달 요소를 찾을 수 없습니다.');
+        return;
+    }
+
+    modal.classList.add('active');
+    content.innerHTML = `
+        <div class="flex items-center gap-2 text-purple-700">
+            <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></span>
+            AI 분석을 준비 중입니다...
+        </div>
+    `;
+
+    if (!window.smartAnalytics) {
+        content.innerHTML = '<p class="text-red-600">SmartAnalytics 모듈을 찾을 수 없습니다.</p>';
+        return;
+    }
+
+    smartAnalyticsModalBusy = true;
+    try {
+        if (!window.smartAnalytics.initialized) {
+            await window.smartAnalytics.initialize();
+        }
+
+        const contextData = typeof getFilteredData === 'function' ? getFilteredData(currentFilter) : window.allData;
+        if (Array.isArray(contextData)) {
+            window.smartAnalytics.setDataset(contextData);
+        }
+
+        const analyses = await window.smartAnalytics.analyzeTopCompanies(5);
+        if (!analyses.length) {
+            content.innerHTML = '<p class="text-gray-600">분석 가능한 데이터가 없습니다.</p>';
+            return;
+        }
+
+        content.innerHTML = renderSmartAnalyticsContent(analyses);
+    } catch (error) {
+        console.error('SmartAnalytics 실행 오류:', error);
+        content.innerHTML = `<p class="text-red-600">AI 분석 중 오류가 발생했습니다: ${error.message}</p>`;
+    } finally {
+        smartAnalyticsModalBusy = false;
+    }
+}
+
+function renderSmartAnalyticsContent(analyses) {
+    const dataset = window.smartAnalytics?.dataset || [];
+    const companyLookup = new Map(dataset.map(company => [company.Ticker, company]));
+
+    const cards = analyses.map(result => {
+        const companyInfo = companyLookup.get(result.company) || {};
+        const corpName = companyInfo.corpName || result.company;
+        const industry = companyInfo.industry || '정보 없음';
+        const exchange = companyInfo.exchange || companyInfo.Exchange || '-';
+        const currentMomentum = typeof result.currentMomentum === 'number' ? result.currentMomentum.toFixed(2) : 'N/A';
+        const predictedMomentum = typeof result.predictedMomentum === 'number' ? result.predictedMomentum.toFixed(2) : 'N/A';
+        const confidence = typeof result.confidence === 'number' ? `${(result.confidence * 100).toFixed(1)}%` : 'N/A';
+        const signals = Array.isArray(result.signals) && result.signals.length ? result.signals.join(', ') : '신호 없음';
+        const risks = Array.isArray(result.riskFactors) && result.riskFactors.length ? result.riskFactors.join(', ') : '위험 요인이 감지되지 않았습니다.';
+        const opportunities = Array.isArray(result.opportunities) && result.opportunities.length ? result.opportunities.join(', ') : '기회 요인이 감지되지 않았습니다.';
+
+        return `
+            <div class="border border-purple-200 rounded-xl bg-purple-50 p-4 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+                    <div>
+                        <div class="text-sm font-semibold text-purple-900">${result.company} · ${corpName}</div>
+                        <div class="text-xs text-purple-700">${industry} · ${exchange}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-purple-600">예상 모멘텀</div>
+                        <div class="text-lg font-bold text-purple-900">${predictedMomentum}</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-purple-800">
+                    <div>
+                        <div class="font-semibold">현재 모멘텀</div>
+                        <div>${currentMomentum}</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold">예측 모멘텀</div>
+                        <div>${predictedMomentum}</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold">신뢰도</div>
+                        <div>${confidence}</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold">신호</div>
+                        <div>${signals}</div>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-purple-800">
+                    <div class="font-semibold mb-1">리스크 요인</div>
+                    <p class="text-purple-700 leading-relaxed">${risks}</p>
+                </div>
+                <div class="mt-3 text-xs text-purple-800">
+                    <div class="font-semibold mb-1">기회 요인</div>
+                    <p class="text-purple-700 leading-relaxed">${opportunities}</p>
+                </div>
+            </div>
+        `;
+    });
+
+    return `<div class="space-y-4">${cards.join('')}</div>`;
+}
+
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -801,6 +1181,8 @@ let searchState = {
     cache: new Map(), // 검색 결과 캐싱
     index: null // 검색 인덱스
 };
+
+let smartAnalyticsModalBusy = false;
 
 /**
  * 검색 인덱스 생성 (성능 최적화)
@@ -1483,6 +1865,10 @@ function updateFilterStatus(customMessage = null) {
     
     if (customMessage) {
         statusElement.textContent = customMessage;
+        const countElement = document.getElementById('filter-result-count');
+        if (countElement) {
+            countElement.textContent = `${allData.length.toLocaleString()}개 기업`;
+        }
         return;
     }
     
@@ -1495,6 +1881,11 @@ function updateFilterStatus(customMessage = null) {
     
     const filteredData = getFilteredData(currentFilter);
     statusElement.textContent = `현재 필터: ${filterNames[currentFilter]} (${filteredData.length.toLocaleString()}개 기업)`;
+
+    const resultCountElement = document.getElementById('filter-result-count');
+    if (resultCountElement) {
+        resultCountElement.textContent = `${filteredData.length.toLocaleString()}개 기업`;
+    }
 }
 
 /**
@@ -2624,14 +3015,6 @@ function initializeModalHandlers() {
         });
     }
     
-    // 비교 목록에 추가 버튼
-    const addToCompareBtn = document.getElementById('add-to-compare-btn');
-    if (addToCompareBtn && !window.deepCompare) {
-        addToCompareBtn.addEventListener('click', () => {
-            // 비교 기능 구현 예정
-            console.log('비교 목록에 추가');
-        });
-    }
 }
 
 // 초기화 시 모달 핸들러 등록
@@ -3165,31 +3548,58 @@ async function retryDataLoading(maxRetries = 3, delay = 2000) {
 }
 
 /**
- * 사용자 친화적 오류 메시지 표시
+ * 사용자 친화적 오류 메시지 표시 (논블로킹 배너 형식)
  */
 function showErrorMessage(title, message, showRetryButton = false) {
-    const errorContainer = document.createElement('div');
-    errorContainer.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-    errorContainer.innerHTML = `
-        <div class="bg-white rounded-lg p-6 max-w-md mx-4 text-center">
-            <div class="text-red-500 text-4xl mb-4">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">${title}</h3>
-            <p class="text-gray-600 mb-4">${message}</p>
-            <div class="flex gap-2 justify-center">
-                ${showRetryButton ? `
-                    <button onclick="location.reload()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        새로고침
+    // 기존 에러 배너 제거
+    const existingBanner = document.getElementById('error-banner');
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+
+    // 논블로킹 상단 배너로 변경 (탭 클릭 가능하도록)
+    const errorBanner = document.createElement('div');
+    errorBanner.id = 'error-banner';
+    errorBanner.className = 'fixed top-0 left-0 right-0 bg-red-50 border-b-2 border-red-500 shadow-lg z-40 transform -translate-y-full transition-transform duration-300';
+    errorBanner.innerHTML = `
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="text-red-500 text-2xl">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-red-900">${title}</h3>
+                        <p class="text-xs text-red-700">${message}</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    ${showRetryButton ? `
+                        <button onclick="location.reload()" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
+                            <i class="fas fa-sync-alt mr-1"></i>새로고침
+                        </button>
+                    ` : ''}
+                    <button onclick="document.getElementById('error-banner').remove()" class="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-times mr-1"></i>닫기
                     </button>
-                ` : ''}
-                <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-                    닫기
-                </button>
+                </div>
             </div>
         </div>
     `;
-    document.body.appendChild(errorContainer);
+    document.body.appendChild(errorBanner);
+
+    // 슬라이드 다운 애니메이션
+    setTimeout(() => {
+        errorBanner.style.transform = 'translateY(0)';
+    }, 10);
+
+    // 10초 후 자동 닫기 (사용자가 탭을 사용할 수 있도록)
+    setTimeout(() => {
+        if (errorBanner.parentNode) {
+            errorBanner.style.transform = 'translateY(-100%)';
+            setTimeout(() => errorBanner.remove(), 300);
+        }
+    }, 10000);
 }/**
  *
  로딩 상태 표시

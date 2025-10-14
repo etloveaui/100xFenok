@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Fix Testing - Stock Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .test-case {
+            border-left: 4px solid #3b82f6;
+            transition: all 0.3s;
+        }
+        .test-case:hover {
+            border-left-color: #1e40af;
+            transform: translateX(4px);
+        }
+        .pass { border-left-color: #22c55e !important; }
+        .fail { border-left-color: #ef4444 !important; }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-vial text-blue-600 mr-2"></i>
+                Modal Blocking Fix - Test Suite
+            </h1>
+            <p class="text-gray-600 mb-4">
+                이 페이지로 모달 차단 문제 수정을 테스트하세요.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-sm text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <strong>테스트 방법:</strong> 각 버튼을 클릭하여 수정사항이 제대로 작동하는지 확인하세요.
+                </p>
+            </div>
+        </div>
+
+        <!-- Test Cases -->
+        <div class="space-y-4">
+            <!-- Test 1: Error Banner (Non-Blocking) -->
+            <div class="test-case bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">
+                            Test 1: 논블로킹 에러 배너
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            에러 배너가 상단에 표시되고, 아래 버튼들을 클릭할 수 있어야 합니다.
+                        </p>
+                    </div>
+                    <span id="test1-status" class="text-gray-400">
+                        <i class="fas fa-clock"></i>
+                    </span>
+                </div>
+                <button id="test1-trigger" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>에러 배너 표시
+                </button>
+                <div class="mt-4 flex gap-2">
+                    <button class="test-button px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+                        클릭 가능 테스트 1
+                    </button>
+                    <button class="test-button px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+                        클릭 가능 테스트 2
+                    </button>
+                    <button class="test-button px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+                        클릭 가능 테스트 3
+                    </button>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                    ✅ Pass: 에러 배너가 표시되고 위 버튼들을 클릭할 수 있음<br>
+                    ❌ Fail: 에러 배너가 전체 화면을 덮거나 버튼을 클릭할 수 없음
+                </p>
+            </div>
+
+            <!-- Test 2: Tab Navigation -->
+            <div class="test-case bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">
+                            Test 2: 탭 네비게이션
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            에러 상태에서도 탭을 전환할 수 있어야 합니다.
+                        </p>
+                    </div>
+                    <span id="test2-status" class="text-gray-400">
+                        <i class="fas fa-clock"></i>
+                    </span>
+                </div>
+                <div class="border-b border-gray-200 mb-4">
+                    <nav class="-mb-px flex space-x-8">
+                        <button id="test-tab-1" class="test-tab-button active py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                            탭 1
+                        </button>
+                        <button id="test-tab-2" class="test-tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            탭 2
+                        </button>
+                        <button id="test-tab-3" class="test-tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            탭 3
+                        </button>
+                    </nav>
+                </div>
+                <div id="test-tab-content" class="p-4 bg-gray-50 rounded">
+                    <p class="text-sm text-gray-700">탭 1 내용</p>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                    ✅ Pass: 에러 배너가 있어도 탭 전환이 가능함<br>
+                    ❌ Fail: 탭을 클릭할 수 없음
+                </p>
+            </div>
+
+            <!-- Test 3: Auto-Dismiss -->
+            <div class="test-case bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">
+                            Test 3: 자동 닫기
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            에러 배너가 10초 후 자동으로 닫혀야 합니다.
+                        </p>
+                    </div>
+                    <span id="test3-status" class="text-gray-400">
+                        <i class="fas fa-clock"></i>
+                    </span>
+                </div>
+                <button id="test3-trigger" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
+                    <i class="fas fa-stopwatch mr-2"></i>10초 카운트다운 시작
+                </button>
+                <div id="test3-timer" class="mt-4 hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="text-4xl font-bold text-purple-600" id="countdown">10</div>
+                        <div class="text-sm text-gray-600">
+                            초 후 배너 자동 닫기
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                    ✅ Pass: 10초 후 배너가 자동으로 사라짐<br>
+                    ❌ Fail: 배너가 사라지지 않거나 수동으로 닫아야 함
+                </p>
+            </div>
+
+            <!-- Test 4: Loading State -->
+            <div class="test-case bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">
+                            Test 4: 로딩 상태 UI
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            데이터 없이도 대시보드가 로딩 메시지를 표시해야 합니다.
+                        </p>
+                    </div>
+                    <span id="test4-status" class="text-gray-400">
+                        <i class="fas fa-clock"></i>
+                    </span>
+                </div>
+                <button id="test4-trigger" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                    <i class="fas fa-spinner mr-2"></i>로딩 메시지 표시
+                </button>
+                <div id="test4-result" class="mt-4 hidden">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
+                        <div class="text-blue-500 text-5xl mb-4">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">대시보드 준비 중</h3>
+                        <p class="text-blue-700 mb-4">데이터를 로딩하고 있습니다. 잠시만 기다려주세요.</p>
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                    ✅ Pass: 로딩 메시지와 스피너가 표시됨<br>
+                    ❌ Fail: 빈 화면 또는 에러만 표시됨
+                </p>
+            </div>
+        </div>
+
+        <!-- Overall Status -->
+        <div class="mt-8 bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-clipboard-check text-green-600 mr-2"></i>
+                테스트 결과
+            </h2>
+            <div id="overall-status" class="space-y-2">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">📊</span>
+                    <span class="text-gray-700">테스트를 실행하여 결과를 확인하세요.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-yellow-900 mb-2">
+                <i class="fas fa-lightbulb mr-2"></i>
+                테스트 가이드
+            </h3>
+            <ol class="list-decimal list-inside space-y-1 text-sm text-yellow-800">
+                <li>각 테스트 섹션의 버튼을 순서대로 클릭하세요.</li>
+                <li>Pass/Fail 기준에 따라 동작을 확인하세요.</li>
+                <li>에러 배너가 나타나면 다른 버튼들을 클릭해보세요 (클릭 가능해야 함).</li>
+                <li>Test 3에서는 10초 동안 기다렸다가 배너가 자동으로 사라지는지 확인하세요.</li>
+                <li>모든 테스트 통과 시 실제 stock_analyzer.html에서도 확인하세요.</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Error Banner
+        document.getElementById('test1-trigger').addEventListener('click', () => {
+            showTestErrorBanner();
+            document.getElementById('test1-status').innerHTML = '<i class="fas fa-check-circle text-green-600"></i>';
+            document.querySelector('#test1-trigger').closest('.test-case').classList.add('pass');
+        });
+
+        // Test 2: Tab Navigation
+        const tabButtons = document.querySelectorAll('.test-tab-button');
+        const tabContents = ['탭 1 내용', '탭 2 내용', '탭 3 내용'];
+
+        tabButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'text-blue-600', 'border-blue-500');
+                    btn.classList.add('text-gray-500', 'border-transparent');
+                });
+                button.classList.add('active', 'text-blue-600', 'border-blue-500');
+                button.classList.remove('text-gray-500', 'border-transparent');
+
+                document.getElementById('test-tab-content').innerHTML =
+                    `<p class="text-sm text-gray-700">${tabContents[index]}</p>`;
+
+                document.getElementById('test2-status').innerHTML = '<i class="fas fa-check-circle text-green-600"></i>';
+                document.querySelector('#test-tab-1').closest('.test-case').classList.add('pass');
+            });
+        });
+
+        // Test 3: Auto-Dismiss
+        document.getElementById('test3-trigger').addEventListener('click', () => {
+            const timer = document.getElementById('test3-timer');
+            const countdown = document.getElementById('countdown');
+            timer.classList.remove('hidden');
+
+            let seconds = 10;
+            const interval = setInterval(() => {
+                seconds--;
+                countdown.textContent = seconds;
+
+                if (seconds === 0) {
+                    clearInterval(interval);
+                    timer.classList.add('hidden');
+                    document.getElementById('test3-status').innerHTML = '<i class="fas fa-check-circle text-green-600"></i>';
+                    document.querySelector('#test3-trigger').closest('.test-case').classList.add('pass');
+
+                    // Remove error banner if exists
+                    const banner = document.getElementById('error-banner');
+                    if (banner) {
+                        banner.style.transform = 'translateY(-100%)';
+                        setTimeout(() => banner.remove(), 300);
+                    }
+                }
+            }, 1000);
+
+            showTestErrorBanner();
+        });
+
+        // Test 4: Loading State
+        document.getElementById('test4-trigger').addEventListener('click', () => {
+            const result = document.getElementById('test4-result');
+            result.classList.remove('hidden');
+            document.getElementById('test4-status').innerHTML = '<i class="fas fa-check-circle text-green-600"></i>';
+            document.querySelector('#test4-trigger').closest('.test-case').classList.add('pass');
+        });
+
+        // Helper: Show test error banner
+        function showTestErrorBanner() {
+            const existingBanner = document.getElementById('error-banner');
+            if (existingBanner) existingBanner.remove();
+
+            const banner = document.createElement('div');
+            banner.id = 'error-banner';
+            banner.className = 'fixed top-0 left-0 right-0 bg-red-50 border-b-2 border-red-500 shadow-lg z-40 transform -translate-y-full transition-transform duration-300';
+            banner.innerHTML = `
+                <div class="max-w-7xl mx-auto px-4 py-3">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="text-red-500 text-2xl">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-red-900">테스트 에러 배너</h3>
+                                <p class="text-xs text-red-700">이 배너가 보이는 동안 아래 버튼들을 클릭할 수 있어야 합니다.</p>
+                            </div>
+                        </div>
+                        <button onclick="document.getElementById('error-banner').remove()" class="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors">
+                            <i class="fas fa-times mr-1"></i>닫기
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(banner);
+            setTimeout(() => banner.style.transform = 'translateY(0)', 10);
+        }
+
+        // Test buttons
+        document.querySelectorAll('.test-button').forEach(button => {
+            button.addEventListener('click', () => {
+                button.classList.add('bg-green-200');
+                button.innerHTML = '<i class="fas fa-check mr-1"></i>' + button.textContent.trim();
+                setTimeout(() => {
+                    button.classList.remove('bg-green-200');
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>

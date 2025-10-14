@@ -84,13 +84,42 @@ class DashboardManager {
         // 대시보드 탭으로 전환 시 차트 업데이트
         if (tabName === 'dashboard') {
             setTimeout(() => {
-                this.updateDashboardCharts();
-                // 고급 차트 생성
-                if (window.allData && window.allData.length > 0) {
+                // 데이터가 없으면 안내 메시지 표시
+                if (!window.allData || window.allData.length === 0) {
+                    this.showDataLoadingMessage();
+                } else {
+                    this.updateDashboardCharts();
                     this.createAdvancedCharts();
                 }
             }, 100);
         }
+    }
+
+    /**
+     * 데이터 로딩 안내 메시지 표시
+     */
+    showDataLoadingMessage() {
+        const dashboardContent = document.getElementById('dashboard-content');
+        if (!dashboardContent) return;
+
+        const messageHTML = `
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
+                <div class="text-blue-500 text-5xl mb-4">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="text-xl font-bold text-blue-900 mb-2">대시보드 준비 중</h3>
+                <p class="text-blue-700 mb-4">데이터를 로딩하고 있습니다. 잠시만 기다려주세요.</p>
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        `;
+
+        // 차트 컨테이너에 메시지 삽입
+        const chartContainers = dashboardContent.querySelectorAll('.dashboard-card');
+        chartContainers.forEach(container => {
+            if (!container.querySelector('.bg-blue-50')) {
+                container.innerHTML = messageHTML;
+            }
+        });
     }
 
     /**
@@ -99,6 +128,13 @@ class DashboardManager {
     calculateMarketOverview() {
         if (!window.allData || window.allData.length === 0) {
             console.log('⏳ 데이터 로딩 대기 중... (시장 개요 계산)');
+            // 데이터가 없어도 기본값으로 UI 표시
+            this.marketData.totalCompanies = 0;
+            this.marketData.avgPER = 0;
+            this.marketData.avgROE = 0;
+            this.marketData.totalMarketCap = 0;
+            this.updateMarketOverviewCards();
+
             // 1초 후 재시도
             setTimeout(() => {
                 this.calculateMarketOverview();

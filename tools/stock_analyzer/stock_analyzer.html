@@ -658,6 +658,21 @@
                     고급 필터링 시스템
                     <span id="filter-result-count" class="text-sm font-normal text-gray-600 ml-2">1,250개 기업</span>
                 </h2>
+
+                <div class="flex flex-wrap gap-3 mb-4">
+                    <button id="open-deep-compare-btn" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+                        <i class="fas fa-balance-scale"></i>
+                        기업 비교 (DeepCompare)
+                    </button>
+                    <button id="open-smart-analytics-btn" class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">
+                        <i class="fas fa-brain"></i>
+                        AI 스마트 분석
+                    </button>
+                    <button id="open-portfolio-builder-btn" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 transition">
+                        <i class="fas fa-briefcase"></i>
+                        스마트 포트폴리오 빌더
+                    </button>
+                </div>
                 
                 <!-- 필터 상태 표시 -->
                 <div id="filter-status" class="mb-4">
@@ -939,6 +954,12 @@
 
             <!-- 대시보드 탭 내용 -->
             <div id="dashboard-content" class="tab-content hidden">
+                <!-- EconomicDashboard 컨테이너 -->
+                <div id="economic-dashboard-container" class="mb-8"></div>
+
+                <!-- MomentumHeatmap 컨테이너 -->
+                <div id="momentum-heatmap-container" class="mb-8"></div>
+
                 <!-- 시장 개요 카드 -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                     <div class="dashboard-card text-center">
@@ -1022,13 +1043,10 @@
 
             <div class="mt-8" id="deployment-dashboard"></div>
 
-            <!-- 포트폴리오 탭 내용 -->
+            <!-- 포트폴리오 탭 내용 (PortfolioBuilder 통합) -->
             <div id="portfolio-content" class="tab-content hidden">
-                <div class="dashboard-card text-center py-12">
-                    <i class="fas fa-briefcase text-6xl text-gray-300 mb-4"></i>
-                    <h3 class="text-xl font-bold text-gray-600 mb-2">포트폴리오 기능</h3>
-                    <p class="text-gray-500">향후 업데이트 예정입니다.</p>
-                </div>
+                <!-- PortfolioBuilder가 여기에 렌더링됩니다 -->
+                <div id="portfolio-builder-container"></div>
             </div>
         </main>
     </div>
@@ -1132,6 +1150,24 @@
                 <button id="export-analysis-btn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
                     <i class="fas fa-download mr-2"></i>분석 결과 내보내기
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Analytics 모달 -->
+    <div id="smart-analytics-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 960px;">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">
+                    <i class="fas fa-brain text-purple-600 mr-2"></i>
+                    AI 스마트 분석
+                </h3>
+                <button id="close-smart-analytics-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-700 transition-colors">
+                    &times;
+                </button>
+            </div>
+            <div id="smart-analytics-content" class="space-y-4 text-sm text-gray-700">
+                <p class="text-gray-500">AI 분석을 준비 중입니다. 잠시만 기다려 주세요...</p>
             </div>
         </div>
     </div>
@@ -1255,6 +1291,10 @@
     <script src="./testing/CollaborativeTestSuite.js"></script>
     <script src="./testing/registerBuiltinTests.js"></script>
 
+    <!-- SmartAnalytics 모듈 -->
+    <script src="./modules/SmartAnalytics/MomentumAI.js"></script>
+    <script src="./modules/SmartAnalytics/SmartAnalytics.js"></script>
+
     <!-- Deployment system -->
     <script src="./deployment/CanaryDeployment.js"></script>
     <script src="./deployment/AutoRollback.js"></script>
@@ -1268,6 +1308,20 @@
     <script src="./modules/PortfolioBuilder/RiskAnalyzer.js"></script>
     <script src="./modules/PortfolioBuilder/components/Layout.js"></script>
     <script src="./modules/PortfolioBuilder/PortfolioBuilder.js"></script>
+
+    <!-- EconomicDashboard 모듈 -->
+    <script src="./modules/EconomicDashboard/EventSystem.js"></script>
+    <script src="./modules/EconomicDashboard/DataSkeleton.js"></script>
+    <script src="./modules/EconomicDashboard/UIFramework.js"></script>
+    <script src="./modules/EconomicDashboard/EconomicDashboard.js"></script>
+
+    <!-- MomentumHeatmap 모듈 -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="./modules/MomentumHeatmap/EventSystem.js"></script>
+    <script src="./modules/MomentumHeatmap/DataSkeleton.js"></script>
+    <script src="./modules/MomentumHeatmap/UIFramework.js"></script>
+    <script src="./modules/MomentumHeatmap/MomentumHeatmap.js"></script>
+
     <script src="./stock_analyzer_enhanced.js"></script>
     
     <!-- PWA Service Worker -->

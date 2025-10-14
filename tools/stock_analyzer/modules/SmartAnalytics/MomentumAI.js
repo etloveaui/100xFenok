@@ -21,3 +21,8 @@ class MomentumAI {
         return { momentum: Math.random() * 100 - 50, confidence: Math.random() };
     }
 }
+
+if (!window.MomentumAI) {
+    window.MomentumAI = MomentumAI;
+    console.log('✅ MomentumAI 로드 완료');
+}
