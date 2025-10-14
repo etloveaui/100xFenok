@@ -2,8 +2,10 @@ class SmartAnalytics {
     constructor() {
         this.aiEngine = new MomentumAI();
         this.analysisCache = new Map();
+        this.dataset = [];
+        this.initialized = false;
     }
-    
+
     async initialize() {
         // AI 모델 로드
         await this.aiEngine.loadModel();
@@ -13,6 +15,8 @@ class SmartAnalytics {
         
         // 실시간 분석 시작
         this.startRealTimeAnalysis();
+
+        this.initialized = true;
     }
 
     createAnalyticsDashboard() {
@@ -70,4 +74,36 @@ class SmartAnalytics {
         console.log(`Identifying opportunities for ${company.corpName}`)
         return [];
     }
+
+    setDataset(companies = []) {
+        if (!Array.isArray(companies)) return;
+        this.dataset = companies;
+    }
+
+    async analyzeTopCompanies(limit = 5) {
+        if (!this.dataset || this.dataset.length === 0) return [];
+
+        const sortable = this.dataset
+            .filter(company => typeof company["Return (Y)"] === "number")
+            .sort((a, b) => (b["Return (Y)"] || 0) - (a["Return (Y)"] || 0));
+
+        const targetCompanies = sortable.slice(0, Math.max(1, limit));
+
+        const analyses = [];
+        for (const company of targetCompanies) {
+            try {
+                const result = await this.analyzeCompanyMomentum(company);
+                analyses.push(result);
+            } catch (error) {
+                console.warn(`SmartAnalytics 분석 실패 (${company.Ticker}):`, error);
+            }
+        }
+
+        return analyses.sort((a, b) => (b.predictedMomentum || 0) - (a.predictedMomentum || 0));
+    }
+}
+
+if (!window.smartAnalytics) {
+    window.smartAnalytics = new SmartAnalytics();
+    console.log('✅ SmartAnalytics 모듈 로드 완료');
 }

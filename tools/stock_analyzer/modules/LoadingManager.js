@@ -416,10 +416,10 @@ class LoadingManager {
     updateLoadingUI() {
         // 현재 활성 로딩 상태에 따라 UI 업데이트
         const hasActiveLoading = this.currentOperations.size > 0;
-        
-        // 페이지 인터랙션 비활성화/활성화
-        document.body.style.pointerEvents = hasActiveLoading ? 'none' : 'auto';
-        
+
+        // 탭 네비게이션은 항상 활성화 유지 (데이터 없어도 탭 전환 가능)
+        // 전역 포인터 이벤트 비활성화 제거 - 특정 요소만 비활성화
+
         // 로딩 중인 요소들에 시각적 피드백
         this.updateLoadingElements();
     }
