@@ -960,6 +960,20 @@
                 <!-- MomentumHeatmap 컨테이너 -->
                 <div id="momentum-heatmap-container" class="mb-8"></div>
 
+                <!-- Momentum 분석 섹션 (Phase 2) -->
+                <div id="momentum-analysis-section" class="mb-8">
+                    <div class="dashboard-card">
+                        <h3 class="text-xl font-bold mb-4">
+                            <i class="fas fa-rocket text-orange-600 mr-2"></i>
+                            모멘텀 분석
+                            <button id="open-momentum-detail-btn" class="float-right text-sm bg-orange-100 text-orange-600 px-3 py-1 rounded hover:bg-orange-200 transition-colors">
+                                <i class="fas fa-expand-alt mr-1"></i>상세 분석
+                            </button>
+                        </h3>
+                        <div id="momentum-company-container"></div>
+                    </div>
+                </div>
+
                 <!-- 시장 개요 카드 -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                     <div class="dashboard-card text-center">
@@ -1321,6 +1335,15 @@
     <script src="./modules/MomentumHeatmap/DataSkeleton.js"></script>
     <script src="./modules/MomentumHeatmap/UIFramework.js"></script>
     <script src="./modules/MomentumHeatmap/MomentumHeatmap.js"></script>
+
+    <!-- Momentum 모듈 (Phase 2) -->
+    <script src="./modules/Momentum/MomentumCalculator.js"></script>
+    <script src="./modules/Momentum/RankingEngine.js"></script>
+    <script src="./modules/Momentum/FilterEngine.js"></script>
+    <script src="./modules/Momentum/MomentumVisualizer.js"></script>
+    <script src="./modules/Momentum/CompanyDetailView.js"></script>
+    <script src="./modules/Momentum/CompanyComparison.js"></script>
+    <script src="./modules/Momentum/M_Company.js"></script>
 
     <script src="./stock_analyzer_enhanced.js"></script>
     

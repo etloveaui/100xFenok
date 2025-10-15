@@ -308,6 +308,41 @@ async function init() {
         }, 4000);
     }
 
+    // Momentum 모듈 초기화 (Phase 2)
+    if (window.M_Company) {
+        setTimeout(async () => {
+            try {
+                const container = document.getElementById('momentum-company-container');
+                if (container && window.allData && window.allData.length > 0) {
+                    // M_Company 인스턴스 생성 및 초기화
+                    window.momentumCompany = new window.M_Company({
+                        autoUpdate: true,
+                        updateInterval: 60000,
+                        theme: 'light'
+                    });
+
+                    // 데이터 로드
+                    await window.momentumCompany.loadData(window.allData);
+
+                    // 초기 렌더링
+                    window.momentumCompany.render(container);
+
+                    console.log('✅ Momentum 모듈 (M_Company) 초기화 완료');
+
+                    // 상세 분석 버튼 이벤트
+                    const detailBtn = document.getElementById('open-momentum-detail-btn');
+                    if (detailBtn) {
+                        detailBtn.addEventListener('click', () => {
+                            window.momentumCompany.showDetailView();
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Momentum 모듈 초기화 실패:', error);
+            }
+        }, 4500);
+    }
+
     applyFilters('all');
     setupEventListeners();
     

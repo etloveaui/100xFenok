@@ -1,0 +1,255 @@
+{
+  "field_mappings": {
+    "Ticker": "Ticker",
+    "종목명": "corpName",
+    "ISIN": "ISIN",
+    "CUSIP": "CUSIP",
+    "거래소": "exchange",
+    "업종": "industry",
+    "Country": "country",
+    "GICS Sector": "gicsSector",
+    "GICS Industry": "gicsIndustry",
+    "GICS SubIndustry": "gicsSubIndustry",
+
+    "PER (Oct-25)": "perCurrent",
+    "PBR (Oct-25)": "pbrCurrent",
+    "PSR (Oct-25)": "psrCurrent",
+    "EV/EBITDA (Oct-25)": "evEbitdaCurrent",
+    "PEG (Oct-25)": "pegCurrent",
+    "PCF (Oct-25)": "pcfCurrent",
+    "P/B (Oct-25)": "pbCurrent",
+
+    "ROE (Fwd)": "roeFwd",
+    "ROA (Fwd)": "roaFwd",
+    "OPM (Fwd)": "opmFwd",
+    "NPM (Fwd)": "npmFwd",
+    "GPM (Fwd)": "gpmFwd",
+    "ROIC (Fwd)": "roicFwd",
+
+    "Sales (CAGR3)": "salesCagr3",
+    "EBIT (CAGR3)": "ebitCagr3",
+    "NI (CAGR3)": "niCagr3",
+    "EPS (CAGR3)": "epsCagr3",
+    "Sales Growth (YoY)": "salesGrowthYoY",
+    "EBIT Growth (YoY)": "ebitGrowthYoY",
+    "NI Growth (YoY)": "niGrowthYoY",
+
+    "D/E (Oct-25)": "debtEquityRatio",
+    "Current Ratio (Oct-25)": "currentRatio",
+    "Quick Ratio (Oct-25)": "quickRatio",
+    "Interest Coverage (Oct-25)": "interestCoverage",
+    "Asset Turnover (Oct-25)": "assetTurnover",
+
+    "Price": "currentPrice",
+    "52W High": "high52Week",
+    "52W Low": "low52Week",
+    "YTD": "returnYTD",
+    "1 M": "return1M",
+    "3 M": "return3M",
+    "6 M": "return6M",
+    "Return (Y)": "return1Y",
+    "Return (3Y)": "return3Y",
+    "Return (5Y)": "return5Y",
+
+    "W": "returnWeekly",
+    "M": "returnMonthly",
+    "Q": "returnQuarterly",
+    "실적모멘텀": "earningsMomentum",
+    "주가모멘텀": "priceMomentum",
+    "Volume Momentum": "volumeMomentum",
+
+    "시가총액 ($M)": "marketCapMillions",
+    "Enterprise Value ($M)": "enterpriseValueMillions",
+    "DY (FY+1)": "dividendYieldFwd",
+    "EPS (FY+1)": "epsFwd",
+    "DPS (FY+1)": "dpsFwd",
+    "Beta": "beta",
+    "Shares Outstanding (M)": "sharesOutstanding",
+    "Float (M)": "float",
+
+    "Revenue ($M)": "revenueMillions",
+    "EBITDA ($M)": "ebitdaMillions",
+    "Net Income ($M)": "netIncomeMillions",
+    "Free Cash Flow ($M)": "fcfMillions",
+    "Total Debt ($M)": "totalDebtMillions",
+    "Cash ($M)": "cashMillions"
+  },
+
+  "data_types": {
+    "Ticker": "string",
+    "corpName": "string",
+    "ISIN": "string",
+    "CUSIP": "string",
+    "exchange": "string",
+    "industry": "string",
+    "country": "string",
+    "gicsSector": "string",
+    "gicsIndustry": "string",
+    "gicsSubIndustry": "string",
+
+    "currentPrice": "float",
+    "marketCapMillions": "float",
+    "enterpriseValueMillions": "float",
+
+    "perCurrent": "float",
+    "pbrCurrent": "float",
+    "psrCurrent": "float",
+    "evEbitdaCurrent": "float",
+    "pegCurrent": "float",
+    "pcfCurrent": "float",
+
+    "roeFwd": "float",
+    "roaFwd": "float",
+    "opmFwd": "float",
+    "npmFwd": "float",
+    "gpmFwd": "float",
+    "roicFwd": "float",
+
+    "salesCagr3": "float",
+    "ebitCagr3": "float",
+    "niCagr3": "float",
+    "epsCagr3": "float",
+
+    "debtEquityRatio": "float",
+    "currentRatio": "float",
+    "quickRatio": "float",
+    "interestCoverage": "float",
+
+    "returnYTD": "float",
+    "return1M": "float",
+    "return3M": "float",
+    "return6M": "float",
+    "return1Y": "float",
+
+    "beta": "float",
+    "sharesOutstanding": "float",
+    "float": "float",
+
+    "revenueMillions": "float",
+    "ebitdaMillions": "float",
+    "netIncomeMillions": "float",
+    "fcfMillions": "float",
+    "totalDebtMillions": "float",
+    "cashMillions": "float"
+  },
+
+  "validation_rules": {
+    "required_fields": [
+      "Ticker",
+      "corpName"
+    ],
+
+    "numeric_ranges": {
+      "perCurrent": [-1000, 1000],
+      "pbrCurrent": [-100, 100],
+      "roeFwd": [-200, 200],
+      "returnYTD": [-100, 1000],
+      "debtEquityRatio": [0, 1000],
+      "currentRatio": [0, 20],
+      "beta": [-5, 5]
+    },
+
+    "pattern_validation": {
+      "Ticker": "^[A-Z0-9\\.\\-]{1,10}$",
+      "ISIN": "^[A-Z]{2}[A-Z0-9]{9}[0-9]$",
+      "CUSIP": "^[A-Z0-9]{9}$"
+    },
+
+    "enum_validation": {
+      "exchange": [
+        "NYSE", "NASDAQ", "AMEX", "LSE", "TSE", "HKSE",
+        "SSE", "SZSE", "TSX", "ASX", "NSE", "BSE",
+        "KOSPI", "KOSDAQ", "Euronext", "SGX", "Other"
+      ]
+    }
+  },
+
+  "data_cleaning": {
+    "remove_patterns": [
+      "0-0x2a0x2a",
+      "#N/A",
+      "#REF!",
+      "#DIV/0!",
+      "#VALUE!",
+      "#NAME?",
+      "#NULL!",
+      "#NUM!",
+      "N.M.",
+      "N.A.",
+      "n/a"
+    ],
+
+    "default_values": {
+      "string": "",
+      "float": null,
+      "int": null,
+      "boolean": false
+    },
+
+    "percentage_fields": [
+      "roeFwd", "roaFwd", "opmFwd", "npmFwd", "gpmFwd",
+      "returnYTD", "return1M", "return3M", "return6M", "return1Y",
+      "salesCagr3", "ebitCagr3", "niCagr3", "epsCagr3",
+      "dividendYieldFwd"
+    ],
+
+    "multiplier_fields": {
+      "marketCapMillions": 1000000,
+      "enterpriseValueMillions": 1000000,
+      "revenueMillions": 1000000,
+      "sharesOutstanding": 1000000
+    }
+  },
+
+  "output": {
+    "pretty_print": true,
+    "minify": false,
+    "encoding": "utf-8",
+    "date_format": "%Y-%m-%d",
+    "include_metadata": true,
+    "include_quality_metrics": true,
+
+    "file_naming": {
+      "pattern": "{original_name}_{timestamp}.json",
+      "timestamp_format": "%Y%m%d",
+      "lowercase": false
+    },
+
+    "metadata_fields": [
+      "source_file",
+      "conversion_timestamp",
+      "record_count",
+      "skipped_rows",
+      "quality_score",
+      "converter_version"
+    ]
+  },
+
+  "performance": {
+    "chunk_size": 1000,
+    "parallel_processing": false,
+    "memory_limit_mb": 500,
+    "max_file_size_mb": 100,
+    "compression": false
+  },
+
+  "quality_thresholds": {
+    "min_completeness": 70,
+    "min_records": 1,
+    "max_null_rate": 50,
+    "required_coverage": [
+      "Ticker",
+      "corpName",
+      "currentPrice",
+      "marketCapMillions"
+    ]
+  },
+
+  "reporting": {
+    "generate_summary": true,
+    "log_level": "INFO",
+    "error_details": true,
+    "validation_report": true,
+    "quality_report": true
+  }
+}
