@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analyzer - Core Module Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .test-controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        #test-output {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            max-height: 600px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .test-passed {
+            color: #48bb78;
+        }
+
+        .test-failed {
+            color: #f56565;
+        }
+
+        .test-info {
+            color: #4299e1;
+        }
+
+        .test-warning {
+            color: #ed8936;
+        }
+
+        .module-error-boundary {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+
+        .error-container {
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: #742a2a;
+            margin: 10px 0;
+        }
+
+        .error-actions {
+            margin-top: 20px;
+        }
+
+        .btn-retry, .btn-dismiss {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-retry:hover {
+            background: #e53e3e;
+        }
+
+        .module-fatal-error {
+            background: #1a202c;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .fatal-container {
+            text-align: center;
+        }
+
+        .fatal-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .error-details {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .error-details pre {
+            background: #2d3748;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .status-bar {
+            background: #edf2f7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-idle {
+            background: #cbd5e0;
+        }
+
+        .status-running {
+            background: #4299e1;
+            animation: pulse 1s infinite;
+        }
+
+        .status-complete {
+            background: #48bb78;
+        }
+
+        .status-error {
+            background: #f56565;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .test-summary {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .test-summary h3 {
+            color: #22543d;
+            margin-top: 0;
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2f855a;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #68d391;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Stock Analyzer Core Module Tests</h1>
+
+        <div class="status-bar">
+            <div>
+                <span class="status-indicator status-idle" id="status-indicator"></span>
+                <span id="status-text">Ready to run tests</span>
+            </div>
+            <div id="test-time"></div>
+        </div>
+
+        <div class="test-controls">
+            <button id="run-all-btn" onclick="runAllTests()">▶️ Run All Tests</button>
+            <button id="run-unit-btn" onclick="runUnitTests()">🔧 Run Unit Tests</button>
+            <button id="run-integration-btn" onclick="runIntegrationTests()">🔗 Run Integration Tests</button>
+            <button id="clear-btn" onclick="clearOutput()">🧹 Clear Output</button>
+        </div>
+
+        <div id="test-output"></div>
+
+        <div id="test-summary" class="test-summary" style="display: none;">
+            <h3>📊 Test Summary</h3>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="total-tests">0</span>
+                    <span class="stat-label">Total</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="passed-tests">0</span>
+                    <span class="stat-label">Passed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="failed-tests">0</span>
+                    <span class="stat-label">Failed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="success-rate">0%</span>
+                    <span class="stat-label">Success Rate</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Core modules -->
+    <script src="../modules/Core/EventBus.js"></script>
+    <script src="../modules/Core/StateManager.js"></script>
+    <script src="../modules/Core/DataProvider.js"></script>
+    <script src="../modules/Core/ModuleRegistry.js"></script>
+    <script src="../modules/Core/NavigationService.js"></script>
+    <script src="../modules/Core/ErrorBoundary.js"></script>
+    <script src="../modules/Core/PerformanceMonitor.js"></script>
+
+    <!-- Load test files -->
+    <script src="core/core.integration.test.js"></script>
+
+    <script>
+        const output = document.getElementById('test-output');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const testTime = document.getElementById('test-time');
+        let startTime;
+
+        // Override console.log for test output
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.log = function(...args) {
+            originalLog(...args);
+            const message = args.join(' ');
+
+            let className = 'test-info';
+            if (message.includes('✅')) className = 'test-passed';
+            else if (message.includes('❌')) className = 'test-failed';
+            else if (message.includes('⚠️')) className = 'test-warning';
+
+            output.innerHTML += `<span class="${className}">${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        };
+
+        console.error = function(...args) {
+            originalError(...args);
+            const message = args.join(' ');
+            output.innerHTML += `<span class="test-failed">${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        };
+
+        console.warn = function(...args) {
+            originalWarn(...args);
+            const message = args.join(' ');
+            output.innerHTML += `<span class="test-warning">${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        };
+
+        function updateStatus(status, text) {
+            statusIndicator.className = `status-indicator status-${status}`;
+            statusText.textContent = text;
+        }
+
+        function updateTime() {
+            if (!startTime) return;
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            testTime.textContent = `Elapsed: ${elapsed}s`;
+        }
+
+        async function runAllTests() {
+            clearOutput();
+            updateStatus('running', 'Running all tests...');
+            startTime = Date.now();
+            const timer = setInterval(updateTime, 100);
+
+            // Disable buttons during test
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+            try {
+                const tests = new CoreIntegrationTests();
+                await tests.runAll();
+
+                // Update summary
+                const passed = tests.testResults.filter(r => r.status === 'passed').length;
+                const failed = tests.testResults.filter(r => r.status === 'failed').length;
+                const total = tests.testResults.length;
+                const successRate = ((passed / total) * 100).toFixed(1);
+
+                document.getElementById('total-tests').textContent = total;
+                document.getElementById('passed-tests').textContent = passed;
+                document.getElementById('failed-tests').textContent = failed;
+                document.getElementById('success-rate').textContent = successRate + '%';
+                document.getElementById('test-summary').style.display = 'block';
+
+                if (failed === 0) {
+                    updateStatus('complete', 'All tests passed! 🎉');
+                } else {
+                    updateStatus('error', `${failed} test(s) failed`);
+                }
+            } catch (error) {
+                console.error('Test runner error:', error);
+                updateStatus('error', 'Test execution failed');
+            } finally {
+                clearInterval(timer);
+                document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+            }
+        }
+
+        async function runUnitTests() {
+            clearOutput();
+            updateStatus('running', 'Running unit tests...');
+            console.log('🔧 Unit tests not yet implemented. Use integration tests for now.');
+            updateStatus('complete', 'Unit tests complete');
+        }
+
+        async function runIntegrationTests() {
+            await runAllTests();
+        }
+
+        function clearOutput() {
+            output.innerHTML = '';
+            document.getElementById('test-summary').style.display = 'none';
+            testTime.textContent = '';
+        }
+
+        // Auto-run tests if URL parameter is set
+        if (window.location.search.includes('autorun')) {
+            setTimeout(runAllTests, 1000);
+        }
+    </script>
+</body>
+</html>

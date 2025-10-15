@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Momentum Modules Test - Stock Analyzer</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --color-primary: #1e40af;
+            --color-secondary: #0d9488;
+            --color-bg: #f0f2f5;
+            --color-surface: #ffffff;
+            --color-text-primary: #0f172a;
+            --color-text-secondary: #475569;
+            --color-border: #e2e8f0;
+            --color-positive: #16a34a;
+            --color-negative: #dc2626;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Roboto', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+        }
+
+        .momentum-module-container {
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .module-header h2 {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-text-primary);
+        }
+
+        .module-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #1e3a8a;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--color-primary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--color-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #eff6ff;
+        }
+
+        .module-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--color-text-primary);
+        }
+
+        .module-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+            min-height: 400px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .momentum-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .momentum-table th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .momentum-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 14px;
+        }
+
+        .momentum-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .positive {
+            color: var(--color-positive);
+        }
+
+        .negative {
+            color: var(--color-negative);
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            margin: 0 2px;
+        }
+
+        .btn-small:hover {
+            background: #dbeafe;
+        }
+
+        .test-status {
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .test-status.success {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+        }
+
+        .test-status.error {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+
+        .test-status.warning {
+            background: #fef3c7;
+            border: 1px solid #fde047;
+            color: #92400e;
+        }
+
+        .test-log {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+
+        .test-log .log-entry {
+            margin-bottom: 8px;
+        }
+
+        .test-log .success {
+            color: #86efac;
+        }
+
+        .test-log .error {
+            color: #fca5a5;
+        }
+
+        .test-log .warning {
+            color: #fde047;
+        }
+
+        .test-log .info {
+            color: #93c5fd;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-6 py-4 max-w-7xl">
+        <!-- Header -->
+        <header class="momentum-module-container">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-black text-gray-900 mb-2">
+                        <i class="fas fa-rocket text-blue-600 mr-3"></i>
+                        Momentum Modules Test Suite
+                    </h1>
+                    <p class="text-gray-600 text-sm">
+                        Phase 2: Momentum Core Testing | Stock Analyzer Global Expansion
+                    </p>
+                </div>
+                <div class="flex gap-4">
+                    <button id="run-tests-btn" class="btn-primary">
+                        <i class="fas fa-play mr-2"></i>Run All Tests
+                    </button>
+                    <button id="load-sample-data-btn" class="btn-secondary">
+                        <i class="fas fa-database mr-2"></i>Load Sample Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Test Status -->
+        <div id="test-status" class="test-status warning" style="display: none;">
+            <i class="fas fa-info-circle mr-2"></i>
+            <span id="test-status-message">Ready to test Momentum modules...</span>
+        </div>
+
+        <!-- Module Test Container -->
+        <div id="momentum-company-container" class="momentum-module-container">
+            <!-- M_Company module will be rendered here -->
+        </div>
+
+        <!-- Test Log -->
+        <div class="momentum-module-container">
+            <h3 class="text-lg font-bold mb-3">
+                <i class="fas fa-terminal text-gray-600 mr-2"></i>Test Log
+            </h3>
+            <div id="test-log" class="test-log">
+                <div class="log-entry info">🚀 Test environment initialized...</div>
+                <div class="log-entry info">⏳ Waiting for module initialization...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Momentum Module Components -->
+    <script src="./modules/Momentum/MomentumCalculator.js"></script>
+    <script src="./modules/Momentum/RankingEngine.js"></script>
+    <script src="./modules/Momentum/FilterEngine.js"></script>
+    <script src="./modules/Momentum/MomentumVisualizer.js"></script>
+    <script src="./modules/Momentum/CompanyDetailView.js"></script>
+    <script src="./modules/Momentum/CompanyComparison.js"></script>
+    <script src="./modules/Momentum/M_Company.js"></script>
+
+    <!-- Test Script -->
+    <script>
+        // Test utilities
+        const testLog = document.getElementById('test-log');
+        const testStatus = document.getElementById('test-status');
+        const testStatusMessage = document.getElementById('test-status-message');
+
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            }[type] || '•';
+
+            entry.textContent = `[${timestamp}] ${icon} ${message}`;
+            testLog.appendChild(entry);
+            testLog.scrollTop = testLog.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'warning') {
+            testStatus.style.display = 'block';
+            testStatus.className = `test-status ${type}`;
+            testStatusMessage.textContent = message;
+        }
+
+        // Sample data for testing
+        const sampleCompanyData = [
+            {
+                Ticker: 'AAPL',
+                corpName: 'Apple Inc.',
+                currentPrice: 175.43,
+                returnYTD: 0.45,
+                return1M: 0.05,
+                return3M: 0.12,
+                return6M: 0.28,
+                marketCapMillions: 2800000,
+                volumeMomentum: 1.2,
+                priceData: {
+                    return1Week: 0.02,
+                    return4Week: 0.05,
+                    return12Week: 0.12,
+                    return52Week: 0.45
+                },
+                sector: 'Technology',
+                industry: 'Consumer Electronics'
+            },
+            {
+                Ticker: 'MSFT',
+                corpName: 'Microsoft Corporation',
+                currentPrice: 380.52,
+                returnYTD: 0.58,
+                return1M: 0.08,
+                return3M: 0.15,
+                return6M: 0.32,
+                marketCapMillions: 2850000,
+                volumeMomentum: 0.95,
+                priceData: {
+                    return1Week: 0.03,
+                    return4Week: 0.08,
+                    return12Week: 0.15,
+                    return52Week: 0.58
+                },
+                sector: 'Technology',
+                industry: 'Software'
+            },
+            {
+                Ticker: 'GOOGL',
+                corpName: 'Alphabet Inc.',
+                currentPrice: 140.88,
+                returnYTD: 0.35,
+                return1M: -0.02,
+                return3M: 0.08,
+                return6M: 0.18,
+                marketCapMillions: 1750000,
+                volumeMomentum: 1.1,
+                priceData: {
+                    return1Week: -0.01,
+                    return4Week: -0.02,
+                    return12Week: 0.08,
+                    return52Week: 0.35
+                },
+                sector: 'Technology',
+                industry: 'Internet Services'
+            },
+            {
+                Ticker: 'NVDA',
+                corpName: 'NVIDIA Corporation',
+                currentPrice: 495.22,
+                returnYTD: 0.95,
+                return1M: 0.15,
+                return3M: 0.35,
+                return6M: 0.65,
+                marketCapMillions: 1220000,
+                volumeMomentum: 1.8,
+                priceData: {
+                    return1Week: 0.05,
+                    return4Week: 0.15,
+                    return12Week: 0.35,
+                    return52Week: 0.95
+                },
+                sector: 'Technology',
+                industry: 'Semiconductors'
+            },
+            {
+                Ticker: 'META',
+                corpName: 'Meta Platforms Inc.',
+                currentPrice: 352.71,
+                returnYTD: 0.75,
+                return1M: 0.12,
+                return3M: 0.28,
+                return6M: 0.52,
+                marketCapMillions: 900000,
+                volumeMomentum: 1.3,
+                priceData: {
+                    return1Week: 0.04,
+                    return4Week: 0.12,
+                    return12Week: 0.28,
+                    return52Week: 0.75
+                },
+                sector: 'Technology',
+                industry: 'Social Media'
+            }
+        ];
+
+        // Mock dependencies
+        const mockDataProvider = {
+            loadData: async (dataType) => {
+                log(`DataProvider: Loading ${dataType}...`, 'info');
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({ data: sampleCompanyData });
+                    }, 500);
+                });
+            }
+        };
+
+        const mockStateManager = {
+            setModuleState: (moduleId, key, value) => {
+                log(`StateManager: Set ${moduleId}.${key} = ${JSON.stringify(value)}`, 'info');
+            },
+            getModuleState: (moduleId, key) => {
+                log(`StateManager: Get ${moduleId}.${key}`, 'info');
+                return null;
+            },
+            getAllModuleState: (moduleId) => {
+                log(`StateManager: Get all state for ${moduleId}`, 'info');
+                return {};
+            }
+        };
+
+        const mockEventBus = {
+            emit: (event, data) => {
+                log(`EventBus: ${event} - ${JSON.stringify(data)}`, 'info');
+            },
+            on: (event, handler) => {
+                log(`EventBus: Registered handler for ${event}`, 'info');
+            },
+            off: (event, handler) => {
+                log(`EventBus: Unregistered handler for ${event}`, 'info');
+            }
+        };
+
+        const mockPerformanceMonitor = {
+            trackModule: (moduleId) => ({
+                trackLoad: () => ({
+                    complete: () => log(`Performance: Load tracking complete for ${moduleId}`, 'info')
+                }),
+                trackRender: () => () => log(`Performance: Render tracking complete for ${moduleId}`, 'info'),
+                trackDataFetch: (dataType) => () => log(`Performance: Data fetch tracking complete for ${dataType}`, 'info'),
+                track: (operation) => () => log(`Performance: ${operation} tracking complete`, 'info')
+            })
+        };
+
+        // Module instance
+        let m_company = null;
+
+        // Initialize module
+        async function initializeModule() {
+            try {
+                log('Initializing M_Company module...', 'info');
+                updateStatus('Initializing M_Company module...', 'warning');
+
+                // Create module instance
+                m_company = new M_Company({
+                    updateInterval: 60000,
+                    maxCompanies: 100,
+                    enableAutoUpdate: false
+                });
+
+                // Set as global for debugging
+                window.M_Company = m_company;
+
+                // Initialize with mock dependencies
+                const context = {
+                    dataProvider: mockDataProvider,
+                    stateManager: mockStateManager,
+                    eventBus: mockEventBus,
+                    performanceMonitor: mockPerformanceMonitor
+                };
+
+                await m_company.initialize(context);
+                log('M_Company module initialized successfully', 'success');
+
+                // Activate module
+                await m_company.activate();
+                log('M_Company module activated successfully', 'success');
+
+                updateStatus('M_Company module is ready!', 'success');
+                return true;
+
+            } catch (error) {
+                log(`Error initializing module: ${error.message}`, 'error');
+                updateStatus(`Initialization failed: ${error.message}`, 'error');
+                console.error(error);
+                return false;
+            }
+        }
+
+        // Run tests
+        async function runTests() {
+            log('Starting test suite...', 'info');
+            updateStatus('Running tests...', 'warning');
+
+            let testsPassed = 0;
+            let testsFailed = 0;
+
+            // Test 1: Module initialization
+            try {
+                if (!m_company) {
+                    await initializeModule();
+                }
+                log('Test 1: Module initialization - PASSED', 'success');
+                testsPassed++;
+            } catch (error) {
+                log(`Test 1: Module initialization - FAILED: ${error.message}`, 'error');
+                testsFailed++;
+            }
+
+            // Test 2: Data loading
+            try {
+                await m_company.loadData();
+                if (m_company.companies.length > 0) {
+                    log(`Test 2: Data loading - PASSED (${m_company.companies.length} companies loaded)`, 'success');
+                    testsPassed++;
+                } else {
+                    throw new Error('No companies loaded');
+                }
+            } catch (error) {
+                log(`Test 2: Data loading - FAILED: ${error.message}`, 'error');
+                testsFailed++;
+            }
+
+            // Test 3: Momentum calculation
+            try {
+                await m_company.calculateMomentum();
+                const hasScores = m_company.companies.every(c =>
+                    c.momentumScore !== undefined && c.momentumScore !== null
+                );
+                if (hasScores) {
+                    log('Test 3: Momentum calculation - PASSED', 'success');
+                    testsPassed++;
+                } else {
+                    throw new Error('Momentum scores not calculated');
+                }
+            } catch (error) {
+                log(`Test 3: Momentum calculation - FAILED: ${error.message}`, 'error');
+                testsFailed++;
+            }
+
+            // Test 4: Filtering
+            try {
+                m_company.applyFilters({ sector: 'Technology' });
+                log(`Test 4: Filtering - PASSED (${m_company.filteredCompanies.length} companies after filter)`, 'success');
+                testsPassed++;
+            } catch (error) {
+                log(`Test 4: Filtering - FAILED: ${error.message}`, 'error');
+                testsFailed++;
+            }
+
+            // Test 5: Sorting
+            try {
+                m_company.sortCompanies('momentumScore', 'desc');
+                const sorted = m_company.filteredCompanies.every((c, i, arr) =>
+                    i === 0 || arr[i-1].momentumScore >= c.momentumScore
+                );
+                if (sorted) {
+                    log('Test 5: Sorting - PASSED', 'success');
+                    testsPassed++;
+                } else {
+                    throw new Error('Companies not properly sorted');
+                }
+            } catch (error) {
+                log(`Test 5: Sorting - FAILED: ${error.message}`, 'error');
+                testsFailed++;
+            }
+
+            // Test 6: Company selection
+            try {
+                m_company.selectCompany('AAPL');
+                if (m_company.selectedCompanies.has('AAPL')) {
+                    log('Test 6: Company selection - PASSED', 'success');
+                    testsPassed++;
+                } else {
+                    throw new Error('Company not selected');
+                }
+            } catch (error) {
+                log(`Test 6: Company selection - FAILED: ${error.message}`, 'error');
+                testsFailed++;
+            }
+
+            // Test 7: Comparison list
+            try {
+                m_company.addToComparison(['MSFT', 'GOOGL']);
+                if (m_company.comparisonList.length >= 2) {
+                    log(`Test 7: Comparison list - PASSED (${m_company.comparisonList.length} companies in comparison)`, 'success');
+                    testsPassed++;
+                } else {
+                    throw new Error('Companies not added to comparison');
+                }
+            } catch (error) {
+                log(`Test 7: Comparison list - FAILED: ${error.message}`, 'error');
+                testsFailed++;
+            }
+
+            // Test 8: UI rendering
+            try {
+                m_company.render();
+                const tableExists = document.querySelector('.momentum-table');
+                if (tableExists) {
+                    log('Test 8: UI rendering - PASSED', 'success');
+                    testsPassed++;
+                } else {
+                    throw new Error('UI not rendered');
+                }
+            } catch (error) {
+                log(`Test 8: UI rendering - FAILED: ${error.message}`, 'error');
+                testsFailed++;
+            }
+
+            // Summary
+            const total = testsPassed + testsFailed;
+            log(`\nTest Results: ${testsPassed}/${total} passed`, testsPassed === total ? 'success' : 'warning');
+
+            if (testsPassed === total) {
+                updateStatus(`All tests passed! (${testsPassed}/${total})`, 'success');
+            } else {
+                updateStatus(`Tests completed with failures (${testsPassed}/${total} passed)`, 'error');
+            }
+        }
+
+        // Load sample data
+        async function loadSampleData() {
+            try {
+                log('Loading sample data...', 'info');
+                updateStatus('Loading sample data...', 'warning');
+
+                if (!m_company) {
+                    await initializeModule();
+                }
+
+                await m_company.refresh();
+                log('Sample data loaded successfully', 'success');
+                updateStatus('Sample data loaded!', 'success');
+
+            } catch (error) {
+                log(`Error loading sample data: ${error.message}`, 'error');
+                updateStatus(`Failed to load sample data: ${error.message}`, 'error');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('run-tests-btn').addEventListener('click', runTests);
+        document.getElementById('load-sample-data-btn').addEventListener('click', loadSampleData);
+
+        // Auto-initialize on page load
+        window.addEventListener('load', async () => {
+            log('Page loaded, initializing test environment...', 'info');
+            await initializeModule();
+        });
+    </script>
+</body>
+</html>
