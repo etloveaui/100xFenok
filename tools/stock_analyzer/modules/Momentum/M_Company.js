@@ -579,6 +579,12 @@ class M_Company {
     render() {
         console.log('🎨 Rendering M_Company module...');
 
+        // Container null check
+        if (!this.container) {
+            console.warn('⚠️ M_Company container not found, skipping render');
+            return;
+        }
+
         const renderTracker = this.performanceMonitor?.trackModule(this.id).trackRender();
 
         try {

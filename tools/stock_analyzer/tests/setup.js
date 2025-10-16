@@ -1,24 +1,42 @@
 /**
- * Vitest 전역 설정
+ * Vitest Global Test Setup
+ * Runs before all tests
  */
 
-// Mock crypto.randomUUID for Node.js < 19
-if (!globalThis.crypto) {
-  globalThis.crypto = {
-    randomUUID: () => {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0;
-        const v = c === 'x' ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      });
-    }
-  };
-}
+import { vi } from 'vitest';
 
-// Mock console methods for cleaner test output
-globalThis.console = {
-  ...console,
-  log: () => {}, // Suppress logs during tests
-  warn: () => {},
-  error: console.error // Keep errors visible
+// Mock fetch API for all tests
+global.fetch = vi.fn();
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn()
 };
+global.localStorage = localStorageMock;
+
+// Mock console methods to reduce test output noise
+global.console = {
+  ...console,
+  log: vi.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn() // Keep error for debugging
+};
+
+// Setup DOM environment
+beforeEach(() => {
+  // Reset DOM
+  document.body.innerHTML = '';
+
+  // Reset mocks
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  // Cleanup
+  vi.restoreAllMocks();
+});

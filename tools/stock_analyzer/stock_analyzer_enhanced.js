@@ -147,6 +147,18 @@ async function init() {
         }, 1500); // 데이터 로딩 후 충분한 시간 대기
     }
     
+    // GrowthAnalytics 초기화 (Sprint 4)
+    if (window.growthAnalytics) {
+        setTimeout(async () => {
+            const success = await window.growthAnalytics.initialize();
+            if (success) {
+                console.log('[Init] GrowthAnalytics 초기화 완료');
+            } else {
+                console.warn('[Init] GrowthAnalytics 초기화 실패');
+            }
+        }, 2000); // 데이터 로딩 후 초기화
+    }
+
     // ScrollManager 초기화
     if (window.scrollManager) {
         setTimeout(() => {
@@ -458,8 +470,9 @@ async function loadData() {
         // 캐시 무효화를 위한 타임스탬프 추가
         const timestamp = new Date().getTime();
         const dataSources = [
-            `./data/enhanced_summary_data_clean.json?v=${timestamp}`,
-            `./data/enhanced_summary_data.json?v=${timestamp}`
+            `./data/enhanced_summary_data_full.json?v=${timestamp}`,  // 6175개 기업 (M_Company.csv 원본)
+            `./data/enhanced_summary_data_clean.json?v=${timestamp}`, // 1249개 기업 (백업)
+            `./data/enhanced_summary_data.json?v=${timestamp}`        // 1251개 기업 (백업)
         ];
 
         let enhancedRes = null;
