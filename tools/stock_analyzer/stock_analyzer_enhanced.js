@@ -280,6 +280,10 @@ async function init() {
                     const dashboard = new window.EconomicDashboard();
                     await dashboard.init();
                     dashboard.render(container);
+
+                    // 전역 인스턴스로 저장 (탭 전환 시 resize 용)
+                    window.economicDashboardInstance = dashboard;
+
                     console.log('✅ EconomicDashboard 초기화 완료');
                 }
             } catch (error) {
@@ -399,6 +403,26 @@ function setupTabSwitching() {
 
         if (activeContent) {
             activeContent.classList.remove('hidden');
+        }
+
+        // 대시보드 탭 전환 시 차트 Lazy Initialization + 크기 재조정
+        if (tabName === 'dashboard') {
+            // ✅ Lazy Initialization: 차트가 보이는 시점에 초기화
+            requestAnimationFrame(() => {
+                if (window.economicDashboardInstance) {
+                    // Step 1: Ensure all charts initialized
+                    if (typeof window.economicDashboardInstance.ensureAllChartsInitialized === 'function') {
+                        window.economicDashboardInstance.ensureAllChartsInitialized();
+                    }
+
+                    // Step 2: Resize charts
+                    if (typeof window.economicDashboardInstance.resizeCharts === 'function') {
+                        window.economicDashboardInstance.resizeCharts();
+                    }
+
+                    console.log('📊 대시보드 차트 Lazy Init + Resize 완료');
+                }
+            });
         }
 
         console.log(`✅ 탭 전환: ${tabName}`);
@@ -632,6 +656,74 @@ async function loadData() {
             
             console.log(`✅ 직접 데이터 정제 완료: ${rawData.length} → ${allData.length} 기업`);
         }
+
+        // ✅ SPRINT 2 TASK 2.4: Validation & Auto-Correction Pipeline
+        console.log('\n🔍 ===== DATA VALIDATION PIPELINE START =====');
+
+        if (window.dataCleanupManager && typeof window.dataCleanupManager.generateValidationReport === 'function') {
+            // Step 1: Generate Validation Report
+            const validationReport = window.dataCleanupManager.generateValidationReport(allData);
+
+            // Step 2: Check if corrections are needed
+            const totalIssues = validationReport.formatIssues.percentageAsDecimal.length +
+                              validationReport.formatIssues.stringNumbers.length +
+                              validationReport.formatIssues.nullInfinity.length;
+
+            if (totalIssues > 0) {
+                console.log(`⚠️ ${totalIssues}개 포맷 문제 발견 - Auto-Correction 시작...`);
+
+                // Step 3: Auto-Correct with high confidence issues only
+                const correctionResult = window.dataCleanupManager.autoCorrectFormats(
+                    allData,
+                    validationReport.formatIssues,
+                    {
+                        dryRun: false,              // 실제 수정 실행
+                        autoApprove: false,         // Medium confidence는 수동 승인 필요
+                        confidenceThreshold: 'high' // High confidence만 자동 수정
+                    }
+                );
+
+                // Step 4: Update allData with corrected data
+                allData = correctionResult.correctedData;
+                window.allData = allData;
+
+                console.log('✅ Auto-Correction 완료:', correctionResult.summary);
+                console.log(`  - Applied: ${correctionResult.corrections.applied.length} corrections`);
+                console.log(`  - Skipped: ${correctionResult.corrections.skipped.length} corrections (manual review needed)`);
+
+                // Step 5: Show summary of skipped corrections (medium confidence)
+                if (correctionResult.corrections.skipped.length > 0) {
+                    console.log('\n⚠️ MANUAL REVIEW REQUIRED:');
+                    correctionResult.corrections.skipped.forEach((skip, idx) => {
+                        if (idx < 5) { // Show first 5 only
+                            console.log(`  ${idx + 1}. [${skip.type}] ${skip.ticker} - ${skip.field}: ${skip.value}`);
+                            console.log(`     Reason: ${skip.reason}`);
+                        }
+                    });
+                    if (correctionResult.corrections.skipped.length > 5) {
+                        console.log(`  ... and ${correctionResult.corrections.skipped.length - 5} more`);
+                    }
+                }
+
+                // Step 6: Re-run validation to confirm corrections
+                console.log('\n🔄 Re-validating after corrections...');
+                const postCorrectionReport = window.dataCleanupManager.generateValidationReport(allData);
+
+                const remainingIssues = postCorrectionReport.formatIssues.percentageAsDecimal.length +
+                                      postCorrectionReport.formatIssues.stringNumbers.length +
+                                      postCorrectionReport.formatIssues.nullInfinity.length;
+
+                console.log(`✅ Post-Correction Quality Score: ${postCorrectionReport.qualityMetrics.qualityScore}`);
+                console.log(`   Remaining High-Priority Issues: ${remainingIssues}`);
+
+            } else {
+                console.log('✅ No format issues detected - data quality excellent!');
+            }
+        } else {
+            console.warn('⚠️ DataCleanupManager validation methods not available - skipping validation pipeline');
+        }
+
+        console.log('===== DATA VALIDATION PIPELINE END =====\n');
 
         console.log(`Successfully loaded ${allData.length} companies with ${metadata.total_columns || 31} indicators`);
         console.log('Available categories:', Object.keys(columnConfig.categories || {}));
@@ -3751,18 +3843,22 @@ function showCompanyModal(company) {
     const marketCap = formatMarketCap(company['FY 0']); // FY 0이 시가총액
     const per = formatNumber(company['PER (Oct-25)']);
     const pbr = formatNumber(company['PBR (Oct-25)']);
-    const roe = formatNumber(company['ROE (Fwd)']); // ROE (Fwd) 존재
+    // ROE/OPM은 이미 퍼센티지 단위로 저장되어 있음 (1.8 = 180%)
+    const roeValue = parseFloat(company['ROE (Fwd)']);
+    const roe = isNaN(roeValue) ? '-' : `${roeValue.toFixed(1)}%`;
     // ROA 필드 확인 및 매핑 개선 (ROA 없음 -> ROE 사용)
     const roaValue = company['ROE (Fwd)'] || company['ROE'] || company['OPM (Fwd)'] || 0;
-    const roa = formatNumber(roaValue);
+    const roa = isNaN(roaValue) ? '-' : `${parseFloat(roaValue).toFixed(1)}%`;
     console.log('🔍 ROA 필드 매핑 (ROE로 대체):', {
         'ROE (Fwd)': company['ROE (Fwd)'],  // ROA 데이터 없음, ROE 사용
         'ROE': company['ROE'],
         'OPM (Fwd)': company['OPM (Fwd)'],
-        'final': roaValue 
+        'final': roaValue
     });
-    
-    const opm = formatNumber(company['OPM (Fwd)']); // OPM (Fwd) 존재
+
+    // OPM도 이미 퍼센티지 단위로 저장되어 있음 (0.31 = 31%)
+    const opmValue = parseFloat(company['OPM (Fwd)']);
+    const opm = isNaN(opmValue) ? '-' : `${(opmValue * 100).toFixed(1)}%`; // OPM은 소수점 (0.31 = 31%)
     
     // NPM 필드 확인 및 매핑 개선 (NPM 없음 -> OPM 사용)
     const npmValue = company['OPM (Fwd)'] || company['OPM'] || 0;
@@ -3926,7 +4022,7 @@ function showCompanyModal(company) {
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600">ROE</span>
-                                    <span class="font-bold ${parseFloat(roe || 0) > 15 ? 'text-green-600' : 'text-gray-800'}">${roe || '-'}${roe ? '%' : ''}</span>
+                                    <span class="font-bold ${parseFloat(roe || 0) > 15 ? 'text-green-600' : 'text-gray-800'}">${roe || '-'}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600">ROA</span>
@@ -3934,7 +4030,7 @@ function showCompanyModal(company) {
                                 </div>
                                 <div class="flex justify-between items-center py-2">
                                     <span class="text-gray-600">영업이익률</span>
-                                    <span class="font-bold ${parseFloat(opm || 0) > 20 ? 'text-green-600' : 'text-gray-800'}">${opm || '-'}${opm ? '%' : ''}</span>
+                                    <span class="font-bold ${parseFloat(opm || 0) > 20 ? 'text-green-600' : 'text-gray-800'}">${opm || '-'}</span>
                                 </div>
                             </div>
                         </div>
