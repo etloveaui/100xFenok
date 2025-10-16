@@ -1278,6 +1278,22 @@
         </main>
     </div>
 
+    <!-- ================================================ -->
+    <!-- STEP 1: CORE FOUNDATION (가장 먼저 로드) -->
+    <!-- ================================================ -->
+    <script src="./core/EventSystem.js"></script>
+    <script src="./core/DataSkeleton.js"></script>
+    <script src="./core/UIFramework.js"></script>
+    <script src="./core/ModuleRegistry.js"></script>
+    <script src="./core/ErrorBoundary.js"></script>
+    <script src="./core/DataProvider.js"></script>
+    <script src="./core/StateManager.js"></script>
+    <script src="./core/PerformanceMonitor.js"></script>
+    <script src="./core/NavigationService.js"></script>
+
+    <!-- ================================================ -->
+    <!-- STEP 2: BASIC MANAGERS -->
+    <!-- ================================================ -->
     <!-- 핵심 매니저들만 로드 (6개) -->
     <script src="./modules/ErrorFixManager.js"></script>
     <script src="./modules/DataCleanupManager.js"></script>
@@ -1323,17 +1339,11 @@
     <script src="./modules/PortfolioBuilder/components/Layout.js"></script>
     <script src="./modules/PortfolioBuilder/PortfolioBuilder.js"></script>
 
-    <!-- EconomicDashboard 모듈 -->
-    <script src="./modules/EconomicDashboard/EventSystem.js"></script>
-    <script src="./modules/EconomicDashboard/DataSkeleton.js"></script>
-    <script src="./modules/EconomicDashboard/UIFramework.js"></script>
+    <!-- EconomicDashboard 모듈 (중복 제거) -->
     <script src="./modules/EconomicDashboard/EconomicDashboard.js"></script>
 
-    <!-- MomentumHeatmap 모듈 -->
+    <!-- MomentumHeatmap 모듈 (중복 제거) -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="./modules/MomentumHeatmap/EventSystem.js"></script>
-    <script src="./modules/MomentumHeatmap/DataSkeleton.js"></script>
-    <script src="./modules/MomentumHeatmap/UIFramework.js"></script>
     <script src="./modules/MomentumHeatmap/MomentumHeatmap.js"></script>
 
     <!-- Momentum 모듈 (Phase 2) -->
