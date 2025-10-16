@@ -493,7 +493,7 @@ export default class EconomicDashboard {
                         component.updateData(this.dataCache.treasuryRates);
                         break;
                     case 'alertCenter':
-                        component.updateAlerts(this.state.activeAlerts);
+                        // alertCenter는 이벤트 기반으로 자동 업데이트됨 (skip)
                         break;
                 }
             } catch (error) {
@@ -609,10 +609,10 @@ export default class EconomicDashboard {
             this.state.activeAlerts.shift();
         }
 
-        // 알림 센터 업데이트
+        // 알림 센터에 새 알림 추가
         const alertCenter = this.components.get('alertCenter');
-        if (alertCenter) {
-            alertCenter.updateAlerts(this.state.activeAlerts);
+        if (alertCenter && alert) {
+            alertCenter.addAlert(alert);
         }
     }
 

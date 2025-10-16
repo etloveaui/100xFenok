@@ -682,9 +682,12 @@ class M_Company {
      * @private
      */
     updateStatistics() {
-        // Update counts
-        document.getElementById('mc-total-count').textContent = this.companies.length;
-        document.getElementById('mc-filtered-count').textContent = this.filteredCompanies.length;
+        // Update counts (with null checks)
+        const totalCountEl = document.getElementById('mc-total-count');
+        const filteredCountEl = document.getElementById('mc-filtered-count');
+
+        if (totalCountEl) totalCountEl.textContent = this.companies.length;
+        if (filteredCountEl) filteredCountEl.textContent = this.filteredCompanies.length;
 
         // Find top gainer/loser
         if (this.filteredCompanies.length > 0) {
@@ -695,10 +698,13 @@ class M_Company {
             const topGainer = sorted[0];
             const topLoser = sorted[sorted.length - 1];
 
-            document.getElementById('mc-top-gainer').textContent =
+            const topGainerEl = document.getElementById('mc-top-gainer');
+            const topLoserEl = document.getElementById('mc-top-loser');
+
+            if (topGainerEl) topGainerEl.textContent =
                 topGainer ? `${topGainer.Ticker} (${this.formatPercent(topGainer.returnYTD)})` : '-';
 
-            document.getElementById('mc-top-loser').textContent =
+            if (topLoserEl) topLoserEl.textContent =
                 topLoser ? `${topLoser.Ticker} (${this.formatPercent(topLoser.returnYTD)})` : '-';
         }
     }
