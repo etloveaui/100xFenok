@@ -147,15 +147,23 @@ class M_Company {
 
     /**
      * Load company data
+     * @param {Array} data - Optional company data array (if not using DataProvider)
      */
-    async loadData() {
+    async loadData(data = null) {
         const loadTracker = this.performanceMonitor?.trackModule(this.id).trackDataFetch('companies');
 
         try {
             console.log('📥 Loading company data...');
 
-            // Load from DataProvider
-            const rawData = await this.dataProvider.loadData('companies');
+            // Load from provided data or DataProvider
+            let rawData;
+            if (data) {
+                rawData = data;
+            } else if (this.dataProvider) {
+                rawData = await this.dataProvider.loadData('companies');
+            } else {
+                throw new Error('No data source available');
+            }
 
             // Process and validate data
             if (Array.isArray(rawData)) {

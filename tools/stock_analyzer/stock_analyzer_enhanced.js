@@ -4474,16 +4474,22 @@ function createCompanyCharts(ticker, company) {
                                         else score = 20;
                                         break;
                                     case 'ROE': // 높을수록 좋음
-                                        score = Math.min(100, num * 1.2);
+                                        // ROE가 0.7943 (decimal)로 저장된 경우 → 79.43%로 변환
+                                        let roePercent = (num > 0 && num < 1) ? num * 100 : num;
+                                        score = Math.min(100, roePercent * 1.2);
                                         break;
-                                    case 'DY': // 높을수록 좋음
-                                        score = num * 20;
+                                    case 'DY': // 높을수록 좋음 (배당수익률)
+                                        // DY가 0.05 (decimal)로 저장된 경우 → 5%로 변환
+                                        let dyPercent = (num > 0 && num < 1) ? num * 100 : num;
+                                        score = dyPercent * 20;
                                         break;
                                     case 'PEG': // 낮을수록 좋음
                                         score = Math.max(0, (2 - num) / 2 * 100);
                                         break;
-                                    case 'RETURN': // 높을수록 좋음
-                                        score = Math.max(0, (num + 20) * 2);
+                                    case 'RETURN': // 높을수록 좋음 (수익률)
+                                        // RETURN이 0.35 (decimal)로 저장된 경우 → 35%로 변환
+                                        let returnPercent = (num > -1 && num < 1 && num !== 0) ? num * 100 : num;
+                                        score = Math.max(0, (returnPercent + 20) * 2);
                                         break;
                                     default:
                                         score = 0;
