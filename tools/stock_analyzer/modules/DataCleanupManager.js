@@ -101,18 +101,60 @@ class DataCleanupManager {
                 'corpName'
             ],
             
-            // 필드별 검증 함수
+            // 필드별 검증 함수 (39개 전체)
             fieldValidators: {
+                // ===== Identity Fields (4) =====
+                '45933': (value) => typeof value === 'string' || typeof value === 'number',
                 'Ticker': (value) => /^[A-Z0-9.-]+$/i.test(value) && value.length <= 10,
                 'corpName': (value) => typeof value === 'string' && value.length > 0 && value.length <= 200,
-                'industry': (value) => !value || (typeof value === 'string' && value.length <= 100),
                 'exchange': (value) => !value || (typeof value === 'string' && value.length <= 50),
+
+                // ===== Industry & Classification (2) =====
+                'industry': (value) => !value || (typeof value === 'string' && value.length <= 100),
+                'FY 0': (value) => !value || (typeof value === 'string' && value.length <= 20),
+
+                // ===== Korean Language Fields (4) =====
+                '설립': (value) => !value || (typeof value === 'string' && value.length <= 50),
+                '현재가': (value) => this.isValidNumber(value, 0, 1000000000),
+                '전일대비': (value) => !value || (typeof value === 'string' && value.length <= 50),
+                '전주대비': (value) => !value || (typeof value === 'string' && value.length <= 50),
+
+                // ===== Market Cap & Valuation (4) =====
+                '(USD mn)': (value) => this.isValidNumber(value, 0, 10000000),
                 'PER (Oct-25)': (value) => this.isValidNumber(value, 0, 1000),
                 'PBR (Oct-25)': (value) => this.isValidNumber(value, 0, 100),
+                'BVPS (Oct-25)': (value) => this.isValidNumber(value, 0, 10000),
+
+                // ===== Profitability Ratios (3) =====
                 'ROE (Fwd)': (value) => this.isValidNumber(value, -100, 200),
                 'ROA (Fwd)': (value) => this.isValidNumber(value, -100, 100),
-                '(USD mn)': (value) => this.isValidNumber(value, 0, 10000000),
-                'Return (Y)': (value) => this.isValidNumber(value, -99, 1000)
+                'OPM (Fwd)': (value) => this.isValidNumber(value, -100, 100),
+
+                // ===== Leverage & Liquidity (4) =====
+                'Debt/Equity (Fwd)': (value) => this.isValidNumber(value, 0, 10),
+                'Current Ratio (Fwd)': (value) => this.isValidNumber(value, 0, 20),
+                'Quick Ratio (Fwd)': (value) => this.isValidNumber(value, 0, 20),
+                'CCC (FY 0)': (value) => this.isValidNumber(value, -365, 730),
+
+                // ===== Historical Returns (3) =====
+                'Return (Y)': (value) => this.isValidNumber(value, -99, 1000),
+                'Return (3Y)': (value) => this.isValidNumber(value, -99, 1000),
+                'Return (5Y)': (value) => this.isValidNumber(value, -99, 1000),
+
+                // ===== Financial Statement Items (4) =====
+                'Revenue (Fwd)': (value) => this.isValidNumber(value, 0, 1000000),
+                'EBITDA (Fwd)': (value) => this.isValidNumber(value, -100000, 1000000),
+                'EPS (Fwd)': (value) => this.isValidNumber(value, -100, 1000),
+                'DPS (Fwd)': (value) => this.isValidNumber(value, 0, 100),
+
+                // ===== Price & Target (3) =====
+                'Price (Oct-25)': (value) => this.isValidNumber(value, 0, 100000),
+                'Target Price': (value) => this.isValidNumber(value, 0, 100000),
+                'Upside (%)': (value) => this.isValidNumber(value, -100, 1000),
+
+                // ===== Analyst Coverage (2) =====
+                'Analyst': (value) => !value || (typeof value === 'string' && value.length <= 100),
+                'Rating': (value) => !value || ['Buy', 'Hold', 'Sell', 'Strong Buy', 'Strong Sell', 'Overweight', 'Underweight', 'Neutral', 'Outperform', 'Underperform'].includes(value)
             },
             
             // 데이터 타입 검증
@@ -568,6 +610,506 @@ class DataCleanupManager {
         });
 
         return analysis;
+    }
+
+    /**
+     * ✅ SPRINT 2 TASK 2.1: Format Detection Engine
+     * 포맷 불일치 감지 (소수점 vs 백분율)
+     */
+    detectFormatIssues(data) {
+        console.log('🔍 Format Detection Engine 시작...');
+
+        const issues = {
+            percentageAsDecimal: [],    // 0.155 → 15.5 (백분율인데 소수로 저장)
+            decimalAsPercentage: [],    // 1550 → 15.5 (소수인데 백분율로 저장)
+            stringNumbers: [],          // "15.5" → 15.5 (숫자인데 문자열)
+            nullInfinity: [],           // null, Infinity, -Infinity
+            outOfRange: []              // 범위 초과 값
+        };
+
+        // 백분율 필드 목록
+        const percentageFields = [
+            'ROE (Fwd)', 'ROA (Fwd)', 'OPM (Fwd)',
+            'Return (Y)', 'Return (3Y)', 'Return (5Y)',
+            'Upside (%)'
+        ];
+
+        data.forEach((item, index) => {
+            percentageFields.forEach(field => {
+                const value = item[field];
+
+                // null/undefined 체크
+                if (value === null || value === undefined) {
+                    return;
+                }
+
+                // Infinity 체크
+                if (!isFinite(value)) {
+                    issues.nullInfinity.push({
+                        index,
+                        ticker: item.Ticker || 'N/A',
+                        field,
+                        value,
+                        suggestion: 0,
+                        confidence: 'high',
+                        reason: 'Infinity detected'
+                    });
+                    return;
+                }
+
+                // 문자열 숫자 체크 (예: "15.5")
+                if (typeof value === 'string') {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue)) {
+                        issues.stringNumbers.push({
+                            index,
+                            ticker: item.Ticker || 'N/A',
+                            field,
+                            value,
+                            suggestion: numValue,
+                            confidence: 'high',
+                            reason: 'String number detected'
+                        });
+                        return;
+                    }
+                }
+
+                // 숫자형 값만 체크
+                if (typeof value === 'number') {
+                    // 1. 백분율인데 소수로 저장된 경우 (0.155 → 15.5%)
+                    // 조건: 절댓값이 1 미만이고 0이 아닌 경우
+                    if (Math.abs(value) < 1 && value !== 0) {
+                        issues.percentageAsDecimal.push({
+                            index,
+                            ticker: item.Ticker || 'N/A',
+                            field,
+                            value,
+                            suggestion: value * 100,
+                            confidence: 'high',
+                            reason: 'Percentage stored as decimal (< 1)'
+                        });
+                    }
+
+                    // 2. 소수인데 백분율로 저장된 경우 (1550 → 15.5%)
+                    // 조건: 절댓값이 100 초과
+                    else if (Math.abs(value) > 100) {
+                        // 단, Return 필드는 1000% 초과만 문제로 봄 (테슬라 등 고성장 주식 고려)
+                        if (field.includes('Return') && Math.abs(value) <= 1000) {
+                            return;
+                        }
+
+                        issues.decimalAsPercentage.push({
+                            index,
+                            ticker: item.Ticker || 'N/A',
+                            field,
+                            value,
+                            suggestion: value / 100,
+                            confidence: 'medium',
+                            reason: 'Decimal stored as percentage (> 100)'
+                        });
+                    }
+
+                    // 3. 범위 초과 값
+                    // ROE/ROA: -100% ~ 200%
+                    // Return: -99% ~ 1000%
+                    // OPM: -100% ~ 100%
+                    const ranges = {
+                        'ROE (Fwd)': { min: -100, max: 200 },
+                        'ROA (Fwd)': { min: -100, max: 100 },
+                        'OPM (Fwd)': { min: -100, max: 100 },
+                        'Return (Y)': { min: -99, max: 1000 },
+                        'Return (3Y)': { min: -99, max: 1000 },
+                        'Return (5Y)': { min: -99, max: 1000 },
+                        'Upside (%)': { min: -100, max: 1000 }
+                    };
+
+                    const range = ranges[field];
+                    if (range && (value < range.min || value > range.max)) {
+                        issues.outOfRange.push({
+                            index,
+                            ticker: item.Ticker || 'N/A',
+                            field,
+                            value,
+                            range: `${range.min} ~ ${range.max}`,
+                            confidence: 'medium',
+                            reason: 'Value out of expected range'
+                        });
+                    }
+                }
+            });
+        });
+
+        const totalIssues =
+            issues.percentageAsDecimal.length +
+            issues.decimalAsPercentage.length +
+            issues.stringNumbers.length +
+            issues.nullInfinity.length +
+            issues.outOfRange.length;
+
+        console.log(`✅ Format Detection 완료: ${totalIssues}개 문제 발견`);
+        console.log(`  - Percentage as Decimal: ${issues.percentageAsDecimal.length}`);
+        console.log(`  - Decimal as Percentage: ${issues.decimalAsPercentage.length}`);
+        console.log(`  - String Numbers: ${issues.stringNumbers.length}`);
+        console.log(`  - Null/Infinity: ${issues.nullInfinity.length}`);
+        console.log(`  - Out of Range: ${issues.outOfRange.length}`);
+
+        return issues;
+    }
+
+    /**
+     * ✅ SPRINT 2 TASK 2.2: Auto-Correction Engine
+     * 감지된 포맷 문제 자동 보정
+     */
+    autoCorrectFormats(data, issues, options = {}) {
+        const {
+            dryRun = false,           // true면 실제 수정 안 함
+            autoApprove = false,      // true면 자동 승인
+            confidenceThreshold = 'medium'  // 'high', 'medium', 'low'
+        } = options;
+
+        console.log(`🔧 Auto-Correction Engine 시작... (Dry Run: ${dryRun})`);
+
+        const corrections = {
+            applied: [],
+            skipped: [],
+            totalAttempts: 0
+        };
+
+        // 수정할 데이터 복사 (원본 보존)
+        const correctedData = dryRun ? data : JSON.parse(JSON.stringify(data));
+
+        // 1. Percentage as Decimal 보정 (confidence: high)
+        if (confidenceThreshold === 'high' || confidenceThreshold === 'medium' || confidenceThreshold === 'low') {
+            issues.percentageAsDecimal.forEach(issue => {
+                corrections.totalAttempts++;
+
+                if (!dryRun) {
+                    correctedData[issue.index][issue.field] = issue.suggestion;
+                }
+
+                corrections.applied.push({
+                    type: 'percentageAsDecimal',
+                    ticker: issue.ticker,
+                    field: issue.field,
+                    before: issue.value,
+                    after: issue.suggestion,
+                    confidence: issue.confidence
+                });
+            });
+        }
+
+        // 2. String Numbers 보정 (confidence: high)
+        if (confidenceThreshold === 'high' || confidenceThreshold === 'medium' || confidenceThreshold === 'low') {
+            issues.stringNumbers.forEach(issue => {
+                corrections.totalAttempts++;
+
+                if (!dryRun) {
+                    correctedData[issue.index][issue.field] = issue.suggestion;
+                }
+
+                corrections.applied.push({
+                    type: 'stringNumbers',
+                    ticker: issue.ticker,
+                    field: issue.field,
+                    before: issue.value,
+                    after: issue.suggestion,
+                    confidence: issue.confidence
+                });
+            });
+        }
+
+        // 3. Null/Infinity 보정 (confidence: high)
+        if (confidenceThreshold === 'high' || confidenceThreshold === 'medium' || confidenceThreshold === 'low') {
+            issues.nullInfinity.forEach(issue => {
+                corrections.totalAttempts++;
+
+                if (!dryRun) {
+                    correctedData[issue.index][issue.field] = issue.suggestion;
+                }
+
+                corrections.applied.push({
+                    type: 'nullInfinity',
+                    ticker: issue.ticker,
+                    field: issue.field,
+                    before: issue.value,
+                    after: issue.suggestion,
+                    confidence: issue.confidence
+                });
+            });
+        }
+
+        // 4. Decimal as Percentage 보정 (confidence: medium) - 주의 필요
+        if (confidenceThreshold === 'medium' || confidenceThreshold === 'low') {
+            issues.decimalAsPercentage.forEach(issue => {
+                corrections.totalAttempts++;
+
+                // Medium confidence는 사용자 승인 필요 (autoApprove가 아니면 스킵)
+                if (autoApprove) {
+                    if (!dryRun) {
+                        correctedData[issue.index][issue.field] = issue.suggestion;
+                    }
+
+                    corrections.applied.push({
+                        type: 'decimalAsPercentage',
+                        ticker: issue.ticker,
+                        field: issue.field,
+                        before: issue.value,
+                        after: issue.suggestion,
+                        confidence: issue.confidence
+                    });
+                } else {
+                    corrections.skipped.push({
+                        type: 'decimalAsPercentage',
+                        ticker: issue.ticker,
+                        field: issue.field,
+                        value: issue.value,
+                        reason: 'Requires user approval (medium confidence)'
+                    });
+                }
+            });
+        }
+
+        // 5. Out of Range - 보정 안 함 (리포팅만)
+        issues.outOfRange.forEach(issue => {
+            corrections.skipped.push({
+                type: 'outOfRange',
+                ticker: issue.ticker,
+                field: issue.field,
+                value: issue.value,
+                range: issue.range,
+                reason: 'Out of range - manual review required'
+            });
+        });
+
+        console.log(`✅ Auto-Correction 완료:`);
+        console.log(`  - Applied: ${corrections.applied.length}`);
+        console.log(`  - Skipped: ${corrections.skipped.length}`);
+        console.log(`  - Total Attempts: ${corrections.totalAttempts}`);
+
+        return {
+            correctedData: dryRun ? data : correctedData,
+            corrections,
+            summary: {
+                totalIssues: corrections.totalAttempts,
+                applied: corrections.applied.length,
+                skipped: corrections.skipped.length,
+                dryRun
+            }
+        };
+    }
+
+    /**
+     * ✅ SPRINT 2 TASK 2.3: Validation Reporting
+     * 검증 결과 종합 보고서 생성
+     */
+    generateValidationReport(data) {
+        console.log('📊 Validation Report 생성 시작...');
+
+        // 1. Format Detection
+        const formatIssues = this.detectFormatIssues(data);
+
+        // 2. Field Coverage Analysis
+        const fieldCoverage = this.analyzeFieldCoverage(data);
+
+        // 3. Data Quality Metrics
+        const qualityMetrics = this.calculateQualityMetrics(data, formatIssues);
+
+        // 4. Actionable Recommendations
+        const recommendations = this.generateRecommendations(formatIssues, fieldCoverage, qualityMetrics);
+
+        const report = {
+            timestamp: new Date().toISOString(),
+            datasetSize: data.length,
+            formatIssues,
+            fieldCoverage,
+            qualityMetrics,
+            recommendations
+        };
+
+        // 콘솔 출력
+        this.printValidationReport(report);
+
+        return report;
+    }
+
+    /**
+     * 필드 커버리지 분석
+     */
+    analyzeFieldCoverage(data) {
+        const allFields = Object.keys(this.validationRules.fieldValidators);
+        const coverage = {
+            totalFields: allFields.length,
+            validatedFields: 0,
+            coveragePercentage: 0,
+            fieldDetails: {}
+        };
+
+        allFields.forEach(field => {
+            const values = data.map(item => item[field]).filter(v => v !== null && v !== undefined && v !== '');
+            const validCount = values.length;
+            const completeness = (validCount / data.length * 100).toFixed(1);
+
+            coverage.fieldDetails[field] = {
+                totalRecords: data.length,
+                validRecords: validCount,
+                completeness: completeness + '%',
+                hasValidator: true
+            };
+
+            if (validCount > 0) {
+                coverage.validatedFields++;
+            }
+        });
+
+        coverage.coveragePercentage = ((coverage.validatedFields / coverage.totalFields) * 100).toFixed(1) + '%';
+
+        return coverage;
+    }
+
+    /**
+     * 데이터 품질 지표 계산
+     */
+    calculateQualityMetrics(data, formatIssues) {
+        const totalIssues =
+            formatIssues.percentageAsDecimal.length +
+            formatIssues.decimalAsPercentage.length +
+            formatIssues.stringNumbers.length +
+            formatIssues.nullInfinity.length +
+            formatIssues.outOfRange.length;
+
+        const totalCells = data.length * Object.keys(this.validationRules.fieldValidators).length;
+        const errorRate = (totalIssues / totalCells * 100).toFixed(3);
+        const qualityScore = Math.max(0, 100 - parseFloat(errorRate)).toFixed(1);
+
+        return {
+            totalRecords: data.length,
+            totalFields: Object.keys(this.validationRules.fieldValidators).length,
+            totalCells,
+            totalIssues,
+            errorRate: errorRate + '%',
+            qualityScore: qualityScore + '/100',
+            criticalIssues: formatIssues.nullInfinity.length,
+            warningIssues: formatIssues.percentageAsDecimal.length + formatIssues.stringNumbers.length,
+            infoIssues: formatIssues.decimalAsPercentage.length + formatIssues.outOfRange.length
+        };
+    }
+
+    /**
+     * 실행 가능한 권장사항 생성
+     */
+    generateRecommendations(formatIssues, fieldCoverage, qualityMetrics) {
+        const recommendations = [];
+
+        // 1. Critical Issues
+        if (formatIssues.nullInfinity.length > 0) {
+            recommendations.push({
+                priority: 'CRITICAL',
+                category: 'Data Integrity',
+                issue: `${formatIssues.nullInfinity.length} Infinity/Null values detected`,
+                action: 'Run autoCorrectFormats() with confidenceThreshold="high"',
+                impact: 'High - Prevents calculation errors'
+            });
+        }
+
+        // 2. High Priority
+        if (formatIssues.percentageAsDecimal.length > 0) {
+            recommendations.push({
+                priority: 'HIGH',
+                category: 'Format Consistency',
+                issue: `${formatIssues.percentageAsDecimal.length} percentage values stored as decimals`,
+                action: 'Run autoCorrectFormats() with confidenceThreshold="high"',
+                impact: 'High - Corrects display and calculation errors'
+            });
+        }
+
+        if (formatIssues.stringNumbers.length > 0) {
+            recommendations.push({
+                priority: 'HIGH',
+                category: 'Type Safety',
+                issue: `${formatIssues.stringNumbers.length} numeric values stored as strings`,
+                action: 'Run autoCorrectFormats() with confidenceThreshold="high"',
+                impact: 'Medium - Improves type safety'
+            });
+        }
+
+        // 3. Medium Priority
+        if (formatIssues.decimalAsPercentage.length > 0) {
+            recommendations.push({
+                priority: 'MEDIUM',
+                category: 'Format Consistency',
+                issue: `${formatIssues.decimalAsPercentage.length} decimal values possibly stored as percentages`,
+                action: 'Manual review recommended, then run autoCorrectFormats() with autoApprove=true',
+                impact: 'Medium - Requires validation'
+            });
+        }
+
+        // 4. Low Priority
+        if (formatIssues.outOfRange.length > 0) {
+            recommendations.push({
+                priority: 'LOW',
+                category: 'Data Quality',
+                issue: `${formatIssues.outOfRange.length} values outside expected ranges`,
+                action: 'Review data source or adjust validation ranges',
+                impact: 'Low - May be legitimate outliers'
+            });
+        }
+
+        // 5. Field Coverage
+        const coveragePercent = parseFloat(fieldCoverage.coveragePercentage);
+        if (coveragePercent < 100) {
+            recommendations.push({
+                priority: 'INFO',
+                category: 'Validation Coverage',
+                issue: `Field coverage at ${fieldCoverage.coveragePercentage} (${fieldCoverage.validatedFields}/${fieldCoverage.totalFields})`,
+                action: 'All 39 fields are validated - no action needed',
+                impact: 'None - Full coverage achieved'
+            });
+        }
+
+        return recommendations;
+    }
+
+    /**
+     * 검증 보고서 콘솔 출력
+     */
+    printValidationReport(report) {
+        console.log('\n📊 ===== DATA VALIDATION REPORT =====');
+        console.log(`🕒 Timestamp: ${report.timestamp}`);
+        console.log(`📦 Dataset Size: ${report.datasetSize} records\n`);
+
+        // Quality Metrics
+        console.log('📈 QUALITY METRICS:');
+        console.log(`  - Quality Score: ${report.qualityMetrics.qualityScore}`);
+        console.log(`  - Error Rate: ${report.qualityMetrics.errorRate}`);
+        console.log(`  - Total Issues: ${report.qualityMetrics.totalIssues}`);
+        console.log(`    • Critical: ${report.qualityMetrics.criticalIssues}`);
+        console.log(`    • Warning: ${report.qualityMetrics.warningIssues}`);
+        console.log(`    • Info: ${report.qualityMetrics.infoIssues}\n`);
+
+        // Field Coverage
+        console.log('🎯 FIELD COVERAGE:');
+        console.log(`  - Total Fields: ${report.fieldCoverage.totalFields}`);
+        console.log(`  - Validated Fields: ${report.fieldCoverage.validatedFields}`);
+        console.log(`  - Coverage: ${report.fieldCoverage.coveragePercentage}\n`);
+
+        // Format Issues
+        console.log('🔍 FORMAT ISSUES:');
+        console.log(`  - Percentage as Decimal: ${report.formatIssues.percentageAsDecimal.length}`);
+        console.log(`  - Decimal as Percentage: ${report.formatIssues.decimalAsPercentage.length}`);
+        console.log(`  - String Numbers: ${report.formatIssues.stringNumbers.length}`);
+        console.log(`  - Null/Infinity: ${report.formatIssues.nullInfinity.length}`);
+        console.log(`  - Out of Range: ${report.formatIssues.outOfRange.length}\n`);
+
+        // Recommendations
+        console.log('💡 RECOMMENDATIONS:');
+        report.recommendations.forEach((rec, index) => {
+            console.log(`  ${index + 1}. [${rec.priority}] ${rec.category}`);
+            console.log(`     Issue: ${rec.issue}`);
+            console.log(`     Action: ${rec.action}`);
+            console.log(`     Impact: ${rec.impact}\n`);
+        });
+
+        console.log('=====================================\n');
     }
 }
 

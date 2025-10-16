@@ -99,8 +99,9 @@ export default class TreasuryRateCurve {
         `;
         container.appendChild(legend);
 
-        // 차트 초기화
-        setTimeout(() => this.initChart(), 0);
+        // ✅ Lazy Initialization: 탭 활성화 시에만 초기화
+        // setTimeout(() => this.initChart(), 0); // 제거
+        this._needsInitialization = true;
 
         return container;
     }
@@ -423,6 +424,24 @@ export default class TreasuryRateCurve {
     }
 
     /**
+     * 차트가 필요한 경우 초기화 (Lazy Initialization)
+     */
+    ensureInitialized() {
+        if (this._needsInitialization && !this.chart && this.isVisible()) {
+            this.initChart();
+            this._needsInitialization = false;
+            console.log('✅ TreasuryRateCurve Lazy Initialization 완료');
+        }
+    }
+
+    /**
+     * 차트 가시성 확인
+     */
+    isVisible() {
+        return this.canvas && this.canvas.offsetParent !== null;
+    }
+
+    /**
      * 테마 변경
      */
     setTheme(newTheme) {
@@ -447,6 +466,16 @@ export default class TreasuryRateCurve {
 
         // 곡선 상태 업데이트
         this.updateCurveStatus();
+    }
+
+    /**
+     * 차트 크기 재조정
+     */
+    resize() {
+        if (this.chart && typeof this.chart.resize === 'function') {
+            this.chart.resize();
+            console.log('📊 TreasuryRateCurve resize 완료');
+        }
     }
 
     /**

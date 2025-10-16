@@ -695,6 +695,55 @@ export default class EconomicDashboard {
     }
 
     /**
+     * 모든 차트 Lazy Initialization
+     */
+    ensureAllChartsInitialized() {
+        console.log('🔄 EconomicDashboard 차트 Lazy Initialization 시작...');
+
+        this.components.forEach((component, name) => {
+            // ✅ Lazy Init: ensureInitialized() 메서드가 있으면 호출
+            if (component.ensureInitialized && typeof component.ensureInitialized === 'function') {
+                try {
+                    component.ensureInitialized();
+                } catch (error) {
+                    console.error(`❌ ${name} ensureInitialized 실패:`, error);
+                }
+            }
+        });
+
+        console.log('✅ EconomicDashboard 차트 Lazy Initialization 완료');
+    }
+
+    /**
+     * 모든 차트 크기 재조정
+     */
+    resizeCharts() {
+        console.log('📊 EconomicDashboard 차트 크기 재조정 시작...');
+
+        this.components.forEach((component, name) => {
+            // ✅ Step 1: Ensure initialized first
+            if (component.ensureInitialized && typeof component.ensureInitialized === 'function') {
+                try {
+                    component.ensureInitialized();
+                } catch (error) {
+                    console.error(`❌ ${name} ensureInitialized 실패:`, error);
+                }
+            }
+
+            // ✅ Step 2: Resize after initialization
+            if (component.resize && typeof component.resize === 'function') {
+                try {
+                    component.resize();
+                } catch (error) {
+                    console.error(`❌ ${name} resize 실패:`, error);
+                }
+            }
+        });
+
+        console.log('✅ EconomicDashboard 차트 크기 재조정 완료');
+    }
+
+    /**
      * 대시보드 파괴
      */
     destroy() {
