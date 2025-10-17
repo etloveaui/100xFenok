@@ -5441,6 +5441,11 @@ async function renderCorrelationAnalyticsCharts() {
     console.log('[Correlation] 차트 렌더링 완료 ✅');
 }
 
+// Expose Sprint 5 rendering functions globally for testing
+window.renderSprint5Analytics = renderSprint5Analytics;
+window.renderCFOAnalyticsCharts = renderCFOAnalyticsCharts;
+window.renderCorrelationAnalyticsCharts = renderCorrelationAnalyticsCharts;
+
 // ============================================================================
 // Performance Monitoring Utilities
 // ============================================================================
