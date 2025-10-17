@@ -106,8 +106,8 @@ test.describe('CFOAnalytics Module - Cash Flow Data Retrieval', () => {
     expect(cfoData).toHaveProperty('exchange');
     expect(cfoData).toHaveProperty('sector');
     expect(cfoData).toHaveProperty('ccc'); // Cash Conversion Cycle
-    expect(cfoData).toHaveProperty('opm'); // Operating Profit Margin
-    expect(cfoData).toHaveProperty('roe');
+    expect(cfoData).toHaveProperty('opm_fwd'); // Operating Profit Margin (Forward)
+    expect(cfoData).toHaveProperty('roe_fwd'); // Return on Equity (Forward)
   });
 
   test('getCompanyCFO() should return null for invalid ticker', async ({ page }) => {
@@ -147,7 +147,7 @@ test.describe('CFOAnalytics Module - Cash Flow Data Retrieval', () => {
 
     // Verify all companies meet the threshold
     highCFOCompanies.forEach(company => {
-      expect(company.cfo).toBeGreaterThanOrEqual(10000);
+      expect(company.cfoValue).toBeGreaterThanOrEqual(10000);
       expect(company).toHaveProperty('ticker');
       expect(company).toHaveProperty('corp');
       expect(company).toHaveProperty('sector');
@@ -155,7 +155,7 @@ test.describe('CFOAnalytics Module - Cash Flow Data Retrieval', () => {
 
     // Verify companies are sorted by CFO (descending)
     if (highCFOCompanies.length > 1) {
-      expect(highCFOCompanies[0].cfo).toBeGreaterThanOrEqual(highCFOCompanies[1].cfo);
+      expect(highCFOCompanies[0].cfoValue).toBeGreaterThanOrEqual(highCFOCompanies[1].cfoValue);
     }
   });
 });
@@ -180,7 +180,8 @@ test.describe('CFOAnalytics Module - Cash Flow Health Score', () => {
       const firstTicker = window.cfoAnalytics.cfoData?.[0]?.Ticker;
       if (!firstTicker) return null;
 
-      return window.cfoAnalytics.getCFOHealthScore(firstTicker);
+      const result = window.cfoAnalytics.getCFOHealthScore(firstTicker);
+      return result?.totalScore || null;
     });
 
     expect(healthScore).not.toBeNull();
@@ -200,9 +201,12 @@ test.describe('CFOAnalytics Module - Cash Flow Health Score', () => {
 
       if (!testCompany) return null;
 
+      const healthResult = window.cfoAnalytics.getCFOHealthScore(testCompany.Ticker);
+
       return {
         ticker: testCompany.Ticker,
-        score: window.cfoAnalytics.getCFOHealthScore(testCompany.Ticker),
+        score: healthResult?.totalScore || 0,
+        breakdown: healthResult?.breakdown || null,
         ccc: parseFloat(testCompany['CCC (FY 0)']),
         opm: parseFloat(testCompany['OPM (Fwd)']),
         roe: parseFloat(testCompany['ROE (Fwd)'])
@@ -211,6 +215,7 @@ test.describe('CFOAnalytics Module - Cash Flow Health Score', () => {
 
     expect(scoreComponents).not.toBeNull();
     expect(scoreComponents.score).toBeGreaterThan(0);
+    expect(scoreComponents.breakdown).not.toBeNull();
   });
 
   test('getSectorCFOAverages() should return sector aggregated data', async ({ page }) => {
@@ -226,8 +231,8 @@ test.describe('CFOAnalytics Module - Cash Flow Health Score', () => {
     const firstSector = sectorData[0];
     expect(firstSector).toHaveProperty('sector');
     expect(firstSector).toHaveProperty('count');
-    expect(firstSector).toHaveProperty('avgCFO');
-    expect(firstSector).toHaveProperty('avgCCC');
+    expect(firstSector).toHaveProperty('cfo_fy0_avg');
+    expect(firstSector).toHaveProperty('ccc_avg');
 
     // Verify data is sorted by count (descending)
     if (sectorData.length > 1) {
@@ -271,20 +276,21 @@ test.describe('CFOAnalytics Module - Chart Data Generation', () => {
   });
 
   test('getSectorCFOHeatmapData() should generate sector heatmap data', async ({ page }) => {
-    // Test: getSectorCFOHeatmapData should return heatmap format
+    // Test: getSectorCFOHeatmapData should return heatmap format (array of objects)
     const heatmapData = await page.evaluate(() => {
       return window.cfoAnalytics.getSectorCFOHeatmapData();
     });
 
-    expect(heatmapData).toHaveProperty('labels');
-    expect(heatmapData).toHaveProperty('avgCFO');
-    expect(heatmapData).toHaveProperty('avgCCC');
-    expect(Array.isArray(heatmapData.labels)).toBeTruthy();
-    expect(heatmapData.labels.length).toBeGreaterThan(5); // Multiple sectors
+    expect(Array.isArray(heatmapData)).toBeTruthy();
+    expect(heatmapData.length).toBeGreaterThan(5); // Multiple sectors
 
-    // Verify data arrays match label length
-    expect(heatmapData.avgCFO.length).toBe(heatmapData.labels.length);
-    expect(heatmapData.avgCCC.length).toBe(heatmapData.labels.length);
+    // Verify data structure of first item
+    const firstItem = heatmapData[0];
+    expect(firstItem).toHaveProperty('sector');
+    expect(firstItem).toHaveProperty('cfo');
+    expect(firstItem).toHaveProperty('ccc');
+    expect(firstItem).toHaveProperty('opm');
+    expect(firstItem).toHaveProperty('count');
   });
 
   test('getCFOvsROEScatterData() should generate scatter plot data', async ({ page }) => {
@@ -294,17 +300,22 @@ test.describe('CFOAnalytics Module - Chart Data Generation', () => {
     });
 
     expect(scatterData).not.toBeNull();
-    expect(Array.isArray(scatterData)).toBeTruthy();
-    expect(scatterData.length).toBeGreaterThan(0);
-    expect(scatterData.length).toBeLessThanOrEqual(50);
+    expect(scatterData).toHaveProperty('datasets');
+    expect(Array.isArray(scatterData.datasets)).toBeTruthy();
+    expect(scatterData.datasets.length).toBeGreaterThan(0);
 
     // Verify scatter data point structure
-    scatterData.forEach(point => {
-      expect(point).toHaveProperty('ticker');
-      expect(point).toHaveProperty('corp');
-      expect(point).toHaveProperty('cfo');
-      expect(point).toHaveProperty('roe');
-      expect(point).toHaveProperty('marketCap');
+    const dataset = scatterData.datasets[0];
+    expect(dataset).toHaveProperty('data');
+    expect(Array.isArray(dataset.data)).toBeTruthy();
+    expect(dataset.data.length).toBeGreaterThan(0);
+    expect(dataset.data.length).toBeLessThanOrEqual(50);
+
+    // Verify each data point has x, y, r properties
+    dataset.data.forEach(point => {
+      expect(point).toHaveProperty('x');
+      expect(point).toHaveProperty('y');
+      expect(point).toHaveProperty('r');
     });
   });
 });
