@@ -1053,6 +1053,90 @@
                     </div>
                 </div>
 
+                <!-- Sprint 5 Analytics 대시보드 -->
+                <div id="sprint5-analytics-dashboard" class="mb-8">
+                    <div class="dashboard-card mb-6">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-900">
+                            <i class="fas fa-chart-line text-green-600 mr-2"></i>
+                            Sprint 5 Analytics - 현금흐름 & 상관관계 분석
+                        </h2>
+                    </div>
+
+                    <!-- Cash Flow Analytics 섹션 -->
+                    <div class="dashboard-card mb-6">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                            <i class="fas fa-money-bill-wave text-green-500 mr-2"></i>
+                            Cash Flow Analytics
+                        </h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                            <!-- 통계 카드 3개 -->
+                            <div class="text-center p-4 bg-green-50 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-2">Total Companies</div>
+                                <div class="text-3xl font-bold text-green-600" id="cfo-total">1,264</div>
+                            </div>
+                            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-2">Positive FCF</div>
+                                <div class="text-3xl font-bold text-blue-600" id="cfo-positive">-</div>
+                            </div>
+                            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-2">Avg CCC</div>
+                                <div class="text-3xl font-bold text-purple-600" id="cfo-avg-ccc">-</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-md font-semibold mb-2">Sector CFO Heatmap</h4>
+                                <canvas id="cfo-sector-heatmap-chart"></canvas>
+                            </div>
+                            <div>
+                                <h4 class="text-md font-semibold mb-2">Top Cash Flow Companies</h4>
+                                <canvas id="cfo-top-companies-chart"></canvas>
+                            </div>
+                            <div>
+                                <h4 class="text-md font-semibold mb-2">CFO vs ROE Scatter</h4>
+                                <canvas id="cfo-roe-scatter-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Correlation Analytics 섹션 -->
+                    <div class="dashboard-card mb-6">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                            <i class="fas fa-project-diagram text-indigo-500 mr-2"></i>
+                            Correlation Analytics
+                        </h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                            <!-- 통계 카드 3개 -->
+                            <div class="text-center p-4 bg-indigo-50 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-2">Total Companies</div>
+                                <div class="text-3xl font-bold text-indigo-600" id="corr-total">1,249</div>
+                            </div>
+                            <div class="text-center p-4 bg-pink-50 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-2">Low Correlation Pairs</div>
+                                <div class="text-3xl font-bold text-pink-600" id="corr-low-pairs">-</div>
+                            </div>
+                            <div class="text-center p-4 bg-orange-50 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-2">Clusters Identified</div>
+                                <div class="text-3xl font-bold text-orange-600" id="corr-clusters">5</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-md font-semibold mb-2">Correlation Heatmap (Top 30)</h4>
+                                <canvas id="corr-heatmap-chart"></canvas>
+                            </div>
+                            <div>
+                                <h4 class="text-md font-semibold mb-2">Sector Correlation</h4>
+                                <canvas id="corr-sector-chart"></canvas>
+                            </div>
+                            <div>
+                                <h4 class="text-md font-semibold mb-2">Cluster Scatter Plot</h4>
+                                <canvas id="corr-cluster-scatter-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Momentum 분석 섹션 (Phase 2) -->
                 <div id="momentum-analysis-section" class="mb-8">
                     <div class="dashboard-card">
@@ -1435,6 +1519,23 @@
         if (typeof EPSAnalytics !== 'undefined') {
             window.epsAnalytics = new EPSAnalytics(window.dataManager || {});
             console.log('[HTML] EPSAnalytics 인스턴스 생성');
+        }
+    </script>
+
+    <!-- Sprint 5 Analytics 모듈 -->
+    <script src="./modules/CFOAnalytics.js"></script>
+    <script src="./modules/CorrelationEngine.js"></script>
+    <script>
+        // CFOAnalytics 인스턴스 생성
+        if (typeof CFOAnalytics !== 'undefined') {
+            window.cfoAnalytics = new CFOAnalytics(window.dataManager || {});
+            console.log('[HTML] CFOAnalytics 인스턴스 생성');
+        }
+
+        // CorrelationEngine 인스턴스 생성
+        if (typeof CorrelationEngine !== 'undefined') {
+            window.correlationEngine = new CorrelationEngine(window.dataManager || {});
+            console.log('[HTML] CorrelationEngine 인스턴스 생성');
         }
     </script>
 

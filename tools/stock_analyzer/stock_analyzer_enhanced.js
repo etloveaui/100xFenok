@@ -229,6 +229,30 @@ async function init() {
         );
     }
 
+    // CFOAnalytics 초기화 (Sprint 5)
+    if (window.cfoAnalytics) {
+        asyncInits.push(
+            window.cfoAnalytics.initialize()
+                .then(success => {
+                    if (success) console.log('✅ CFOAnalytics 초기화 완료');
+                    else console.warn('⚠️ CFOAnalytics 초기화 실패');
+                })
+                .catch(e => console.error('❌ CFOAnalytics:', e))
+        );
+    }
+
+    // CorrelationEngine 초기화 (Sprint 5)
+    if (window.correlationEngine) {
+        asyncInits.push(
+            window.correlationEngine.initialize()
+                .then(success => {
+                    if (success) console.log('✅ CorrelationEngine 초기화 완료');
+                    else console.warn('⚠️ CorrelationEngine 초기화 실패');
+                })
+                .catch(e => console.error('❌ CorrelationEngine:', e))
+        );
+    }
+
     if (window.scrollManager) {
         asyncInits.push(
             Promise.resolve().then(() => {
@@ -389,6 +413,9 @@ async function init() {
 
     // Phase 4.5: Sprint 4 Analytics 대시보드 렌더링
     await renderSprint4Analytics();
+
+    // Phase 4.6: Sprint 5 Analytics 대시보드 렌더링
+    await renderSprint5Analytics();
 
     // Phase 5: 데이터 상태 확인
     console.log('🔍 초기화 완료 시 데이터 상태:', {
@@ -5107,6 +5134,311 @@ async function renderEPSAnalyticsCharts() {
             });
         }
     }
+}
+
+// ============================================================================
+// Sprint 5 Analytics Dashboard Rendering
+// ============================================================================
+
+/**
+ * Sprint 5 Analytics 대시보드 렌더링
+ */
+async function renderSprint5Analytics() {
+    console.log('[Sprint 5] 대시보드 렌더링 시작...');
+
+    // 초기화 확인
+    if (!window.cfoAnalytics?.initialized ||
+        !window.correlationEngine?.initialized) {
+        console.warn('[Sprint 5] Analytics 모듈이 완전히 초기화되지 않았습니다.');
+        return;
+    }
+
+    try {
+        await renderCFOAnalyticsCharts();
+        await renderCorrelationAnalyticsCharts();
+        console.log('[Sprint 5] 대시보드 렌더링 완료 ✅');
+    } catch (error) {
+        console.error('[Sprint 5] 대시보드 렌더링 오류:', error);
+    }
+}
+
+/**
+ * CFO Analytics 차트 렌더링
+ */
+async function renderCFOAnalyticsCharts() {
+    console.log('[CFO] 차트 렌더링 시작...');
+
+    // 1. Sector CFO Heatmap
+    const sectorHeatmap = window.cfoAnalytics.getSectorCFOHeatmapData();
+    const ctx1 = document.getElementById('cfo-sector-heatmap-chart');
+    if (ctx1 && sectorHeatmap) {
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: sectorHeatmap.labels,
+                datasets: [
+                    {
+                        label: 'Avg CFO (FY 0)',
+                        data: sectorHeatmap.avgCFO,
+                        backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Avg CCC',
+                        data: sectorHeatmap.avgCCC,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2,
+                        yAxisID: 'y2'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: 'Sector Cash Flow Analysis' },
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'CFO (USD mn)' } },
+                    y2: {
+                        position: 'right',
+                        beginAtZero: true,
+                        title: { display: true, text: 'CCC (Days)' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Top Cash Flow Companies
+    const topCompanies = window.cfoAnalytics.getHighCashFlowCompanies(1000, 'FY 0');
+    const ctx2 = document.getElementById('cfo-top-companies-chart');
+    if (ctx2 && topCompanies && topCompanies.length > 0) {
+        const top10 = topCompanies.slice(0, 10);
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: top10.map(c => c.corp),
+                datasets: [{
+                    label: 'Cash Flow (FY 0)',
+                    data: top10.map(c => c.cfo),
+                    backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: 'Top 10 Cash Flow Companies' },
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { beginAtZero: true, title: { display: true, text: 'CFO (USD mn)' } }
+                }
+            }
+        });
+    }
+
+    // 3. CFO vs ROE Scatter
+    const scatterData = window.cfoAnalytics.getCFOvsROEScatterData(100);
+    const ctx3 = document.getElementById('cfo-roe-scatter-chart');
+    if (ctx3 && scatterData) {
+        new Chart(ctx3, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Companies',
+                    data: scatterData.map(item => ({
+                        x: item.cfo,
+                        y: item.roe * 100,
+                        r: Math.sqrt(item.marketCap) / 50
+                    })),
+                    backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                    borderColor: 'rgba(34, 197, 94, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: 'Cash Flow vs ROE (Size = Market Cap)' },
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const item = scatterData[context.dataIndex];
+                                return [
+                                    `Corp: ${item.corp}`,
+                                    `CFO: ${item.cfo.toFixed(0)} USD mn`,
+                                    `ROE: ${(item.roe * 100).toFixed(1)}%`,
+                                    `Market Cap: ${item.marketCap.toFixed(0)} USD mn`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Cash Flow (FY 0, USD mn)' } },
+                    y: { title: { display: true, text: 'ROE Forward (%)' } }
+                }
+            }
+        });
+    }
+
+    // Update stats cards
+    const cfoData = window.cfoAnalytics.cfoData;
+    if (cfoData) {
+        const positiveFCF = cfoData.filter(c => {
+            const cfo = parseFloat(c['FY 0']);
+            return !isNaN(cfo) && cfo > 0;
+        }).length;
+
+        const cccValues = cfoData
+            .map(c => parseFloat(c['CCC (FY 0)']))
+            .filter(v => !isNaN(v));
+        const avgCCC = cccValues.length > 0
+            ? (cccValues.reduce((sum, v) => sum + v, 0) / cccValues.length).toFixed(1)
+            : '-';
+
+        document.getElementById('cfo-positive').textContent = positiveFCF.toLocaleString();
+        document.getElementById('cfo-avg-ccc').textContent = avgCCC + ' days';
+    }
+
+    console.log('[CFO] 차트 렌더링 완료 ✅');
+}
+
+/**
+ * Correlation Analytics 차트 렌더링
+ */
+async function renderCorrelationAnalyticsCharts() {
+    console.log('[Correlation] 차트 렌더링 시작...');
+
+    // 1. Correlation Heatmap (Top 30 companies)
+    const heatmapData = window.correlationEngine.getCorrelationHeatmapData(null, 30);
+    const ctx1 = document.getElementById('corr-heatmap-chart');
+    if (ctx1 && heatmapData) {
+        // Use bar chart to represent correlation strength
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: heatmapData.labels,
+                datasets: [{
+                    label: 'Avg Correlation',
+                    data: heatmapData.avgCorrelations,
+                    backgroundColor: heatmapData.avgCorrelations.map(val =>
+                        val > 0.7 ? 'rgba(239, 68, 68, 0.6)' :
+                        val > 0.3 ? 'rgba(251, 146, 60, 0.6)' :
+                        val > -0.3 ? 'rgba(34, 197, 94, 0.6)' :
+                        'rgba(59, 130, 246, 0.6)'
+                    )
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: 'Average Correlation Strength' },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        min: -1,
+                        max: 1,
+                        title: { display: true, text: 'Correlation Coefficient' }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Sector Correlation
+    const sectorCorr = window.correlationEngine.getSectorCorrelation();
+    const ctx2 = document.getElementById('corr-sector-chart');
+    if (ctx2 && sectorCorr && sectorCorr.length > 0) {
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: sectorCorr.map(s => s.sector),
+                datasets: [
+                    {
+                        label: 'Intra-Sector Correlation',
+                        data: sectorCorr.map(s => s.intraCorrelation),
+                        backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Inter-Sector Correlation',
+                        data: sectorCorr.map(s => s.interCorrelation),
+                        backgroundColor: 'rgba(236, 72, 153, 0.6)',
+                        borderColor: 'rgba(236, 72, 153, 1)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: 'Sector Correlation Analysis' },
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: {
+                        min: -1,
+                        max: 1,
+                        title: { display: true, text: 'Correlation' }
+                    }
+                }
+            }
+        });
+    }
+
+    // 3. Cluster Scatter Plot
+    const clusterData = window.correlationEngine.getClusterScatterData(5);
+    const ctx3 = document.getElementById('corr-cluster-scatter-chart');
+    if (ctx3 && clusterData) {
+        const colors = [
+            'rgba(239, 68, 68, 0.6)',
+            'rgba(59, 130, 246, 0.6)',
+            'rgba(34, 197, 94, 0.6)',
+            'rgba(251, 146, 60, 0.6)',
+            'rgba(168, 85, 247, 0.6)'
+        ];
+
+        const datasets = clusterData.clusters.map((cluster, idx) => ({
+            label: `Cluster ${idx + 1}`,
+            data: cluster.points.map(p => ({ x: p.x, y: p.y })),
+            backgroundColor: colors[idx % colors.length],
+            borderColor: colors[idx % colors.length].replace('0.6', '1')
+        }));
+
+        new Chart(ctx3, {
+            type: 'scatter',
+            data: { datasets },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: 'Correlation-Based Clustering (K-means)' },
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Component 1' } },
+                    y: { title: { display: true, text: 'Component 2' } }
+                }
+            }
+        });
+    }
+
+    // Update stats cards
+    const lowPairs = window.correlationEngine.findLowCorrelationPairs(-0.3, 0.3);
+    if (lowPairs) {
+        document.getElementById('corr-low-pairs').textContent = lowPairs.length.toLocaleString();
+    }
+
+    console.log('[Correlation] 차트 렌더링 완료 ✅');
 }
 
 // ============================================================================
