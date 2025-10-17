@@ -159,6 +159,7 @@ async function init() {
     });
 
     // Phase 3: 비동기 초기화 (병렬 실행 - setTimeout 제거!)
+    performance.mark('analytics-init-start');
     const asyncInits = [];
 
     // 데이터 의존 모듈들
@@ -171,36 +172,58 @@ async function init() {
         );
     }
 
+    // GrowthAnalytics 초기화 with performance monitoring
     if (window.growthAnalytics) {
+        performance.mark('growth-init-start');
         asyncInits.push(
             window.growthAnalytics.initialize()
                 .then(success => {
-                    if (success) console.log('✅ GrowthAnalytics 초기화 완료');
-                    else console.warn('⚠️ GrowthAnalytics 초기화 실패');
+                    performance.mark('growth-init-end');
+                    performance.measure('growth-init-duration', 'growth-init-start', 'growth-init-end');
+                    const measure = performance.getEntriesByName('growth-init-duration')[0];
+                    console.log(`✅ GrowthAnalytics 초기화: ${measure.duration.toFixed(2)}ms`);
+                    if (measure.duration > 1500) {
+                        console.warn(`⚠️ GrowthAnalytics slow init: ${measure.duration.toFixed(2)}ms > 1500ms`);
+                    }
+                    return success;
                 })
                 .catch(e => console.error('❌ GrowthAnalytics:', e))
         );
     }
 
-    // RankingAnalytics 초기화 (Sprint 4)
+    // RankingAnalytics 초기화 (Sprint 4) with performance monitoring
     if (window.rankingAnalytics) {
+        performance.mark('ranking-init-start');
         asyncInits.push(
             window.rankingAnalytics.initialize()
                 .then(success => {
-                    if (success) console.log('✅ RankingAnalytics 초기화 완료');
-                    else console.warn('⚠️ RankingAnalytics 초기화 실패');
+                    performance.mark('ranking-init-end');
+                    performance.measure('ranking-init-duration', 'ranking-init-start', 'ranking-init-end');
+                    const measure = performance.getEntriesByName('ranking-init-duration')[0];
+                    console.log(`✅ RankingAnalytics 초기화: ${measure.duration.toFixed(2)}ms`);
+                    if (measure.duration > 1500) {
+                        console.warn(`⚠️ RankingAnalytics slow init: ${measure.duration.toFixed(2)}ms > 1500ms`);
+                    }
+                    return success;
                 })
                 .catch(e => console.error('❌ RankingAnalytics:', e))
         );
     }
 
-    // EPSAnalytics 초기화 (Sprint 4)
+    // EPSAnalytics 초기화 (Sprint 4) with performance monitoring
     if (window.epsAnalytics) {
+        performance.mark('eps-init-start');
         asyncInits.push(
             window.epsAnalytics.initialize()
                 .then(success => {
-                    if (success) console.log('✅ EPSAnalytics 초기화 완료');
-                    else console.warn('⚠️ EPSAnalytics 초기화 실패');
+                    performance.mark('eps-init-end');
+                    performance.measure('eps-init-duration', 'eps-init-start', 'eps-init-end');
+                    const measure = performance.getEntriesByName('eps-init-duration')[0];
+                    console.log(`✅ EPSAnalytics 초기화: ${measure.duration.toFixed(2)}ms`);
+                    if (measure.duration > 1500) {
+                        console.warn(`⚠️ EPSAnalytics slow init: ${measure.duration.toFixed(2)}ms > 1500ms`);
+                    }
+                    return success;
                 })
                 .catch(e => console.error('❌ EPSAnalytics:', e))
         );
@@ -353,7 +376,16 @@ async function init() {
     // Phase 4: 모든 비동기 초기화 병렬 실행
     await Promise.all(asyncInits);
 
+    performance.mark('analytics-init-end');
+    performance.measure('analytics-init-total', 'analytics-init-start', 'analytics-init-end');
+    const analyticsInitMeasure = performance.getEntriesByName('analytics-init-total')[0];
+
     console.log(`🎉 전체 초기화 완료: ${(performance.now() - startTime).toFixed(2)}ms`);
+    console.log(`📊 Analytics 병렬 초기화: ${analyticsInitMeasure.duration.toFixed(2)}ms`);
+
+    if (analyticsInitMeasure.duration > 3000) {
+        console.warn(`⚠️ Analytics 병렬 초기화 slow: ${analyticsInitMeasure.duration.toFixed(2)}ms > 3000ms`);
+    }
 
     // Phase 4.5: Sprint 4 Analytics 대시보드 렌더링
     await renderSprint4Analytics();
@@ -4777,6 +4809,7 @@ function createCompanyCharts(ticker, company) {
  */
 async function renderSprint4Analytics() {
     console.log('[Sprint 4] Analytics 대시보드 렌더링 시작...');
+    performance.mark('sprint4-dashboard-start');
 
     try {
         // 모든 Analytics 모듈이 초기화되었는지 확인
@@ -4787,16 +4820,51 @@ async function renderSprint4Analytics() {
             return;
         }
 
-        // 1. Growth Analytics 차트
+        // 1. Growth Analytics 차트 with performance monitoring
+        performance.mark('growth-charts-start');
         await renderGrowthAnalyticsCharts();
+        performance.mark('growth-charts-end');
+        performance.measure('growth-charts-duration', 'growth-charts-start', 'growth-charts-end');
+        const growthMeasure = performance.getEntriesByName('growth-charts-duration')[0];
+        console.log(`📈 Growth 차트 렌더링: ${growthMeasure.duration.toFixed(2)}ms`);
+        if (growthMeasure.duration > 500) {
+            console.warn(`⚠️ Growth 차트 slow render: ${growthMeasure.duration.toFixed(2)}ms > 500ms`);
+        }
 
-        // 2. Ranking Analytics 차트
+        // 2. Ranking Analytics 차트 with performance monitoring
+        performance.mark('ranking-charts-start');
         await renderRankingAnalyticsCharts();
+        performance.mark('ranking-charts-end');
+        performance.measure('ranking-charts-duration', 'ranking-charts-start', 'ranking-charts-end');
+        const rankingMeasure = performance.getEntriesByName('ranking-charts-duration')[0];
+        console.log(`🏆 Ranking 차트 렌더링: ${rankingMeasure.duration.toFixed(2)}ms`);
+        if (rankingMeasure.duration > 500) {
+            console.warn(`⚠️ Ranking 차트 slow render: ${rankingMeasure.duration.toFixed(2)}ms > 500ms`);
+        }
 
-        // 3. EPS Analytics 차트
+        // 3. EPS Analytics 차트 with performance monitoring
+        performance.mark('eps-charts-start');
         await renderEPSAnalyticsCharts();
+        performance.mark('eps-charts-end');
+        performance.measure('eps-charts-duration', 'eps-charts-start', 'eps-charts-end');
+        const epsMeasure = performance.getEntriesByName('eps-charts-duration')[0];
+        console.log(`💰 EPS 차트 렌더링: ${epsMeasure.duration.toFixed(2)}ms`);
+        if (epsMeasure.duration > 500) {
+            console.warn(`⚠️ EPS 차트 slow render: ${epsMeasure.duration.toFixed(2)}ms > 500ms`);
+        }
+
+        // Total dashboard rendering measurement
+        performance.mark('sprint4-dashboard-end');
+        performance.measure('sprint4-dashboard-total', 'sprint4-dashboard-start', 'sprint4-dashboard-end');
 
         console.log('[Sprint 4] ✅ Analytics 대시보드 렌더링 완료');
+
+        // Log performance summary
+        logPerformanceSummary();
+
+        // Monitor memory usage
+        monitorMemoryUsage();
+
     } catch (error) {
         console.error('[Sprint 4] ❌ 대시보드 렌더링 실패:', error);
     }
@@ -5040,3 +5108,226 @@ async function renderEPSAnalyticsCharts() {
         }
     }
 }
+
+// ============================================================================
+// Performance Monitoring Utilities
+// ============================================================================
+
+/**
+ * Performance history for trend analysis
+ */
+const performanceHistory = [];
+
+/**
+ * Log comprehensive performance summary
+ */
+function logPerformanceSummary() {
+    console.log('\n📊 ═══════════════════════════════════════════════════════');
+    console.log('📊 Sprint 4 Performance Summary');
+    console.log('📊 ═══════════════════════════════════════════════════════');
+
+    const metrics = {
+        'analytics-init-total': performance.getEntriesByName('analytics-init-total')[0],
+        'eps-init-duration': performance.getEntriesByName('eps-init-duration')[0],
+        'growth-init-duration': performance.getEntriesByName('growth-init-duration')[0],
+        'ranking-init-duration': performance.getEntriesByName('ranking-init-duration')[0],
+        'sprint4-dashboard-total': performance.getEntriesByName('sprint4-dashboard-total')[0],
+        'growth-charts-duration': performance.getEntriesByName('growth-charts-duration')[0],
+        'ranking-charts-duration': performance.getEntriesByName('ranking-charts-duration')[0],
+        'eps-charts-duration': performance.getEntriesByName('eps-charts-duration')[0]
+    };
+
+    // Analytics Initialization Metrics
+    console.log('\n📈 Analytics Initialization:');
+    if (metrics['analytics-init-total']) {
+        console.log(`  Total Parallel Init: ${metrics['analytics-init-total'].duration.toFixed(2)}ms (target: <3000ms)`);
+        trackPerformanceTrend('analytics-init-total', metrics['analytics-init-total'].duration, 3000);
+    }
+    if (metrics['eps-init-duration']) {
+        console.log(`  ├─ EPSAnalytics: ${metrics['eps-init-duration'].duration.toFixed(2)}ms (target: <1500ms)`);
+    }
+    if (metrics['growth-init-duration']) {
+        console.log(`  ├─ GrowthAnalytics: ${metrics['growth-init-duration'].duration.toFixed(2)}ms (target: <1500ms)`);
+    }
+    if (metrics['ranking-init-duration']) {
+        console.log(`  └─ RankingAnalytics: ${metrics['ranking-init-duration'].duration.toFixed(2)}ms (target: <1500ms)`);
+    }
+
+    // Dashboard Rendering Metrics
+    console.log('\n🎨 Dashboard Rendering:');
+    if (metrics['sprint4-dashboard-total']) {
+        console.log(`  Total Dashboard: ${metrics['sprint4-dashboard-total'].duration.toFixed(2)}ms (target: <2000ms)`);
+        trackPerformanceTrend('sprint4-dashboard-total', metrics['sprint4-dashboard-total'].duration, 2000);
+    }
+    if (metrics['growth-charts-duration']) {
+        console.log(`  ├─ Growth Charts: ${metrics['growth-charts-duration'].duration.toFixed(2)}ms (target: <500ms)`);
+    }
+    if (metrics['ranking-charts-duration']) {
+        console.log(`  ├─ Ranking Charts: ${metrics['ranking-charts-duration'].duration.toFixed(2)}ms (target: <500ms)`);
+    }
+    if (metrics['eps-charts-duration']) {
+        console.log(`  └─ EPS Charts: ${metrics['eps-charts-duration'].duration.toFixed(2)}ms (target: <500ms)`);
+    }
+
+    // Performance warnings
+    const warnings = [];
+    if (metrics['analytics-init-total']?.duration > 3000) {
+        warnings.push(`Analytics init slow: ${metrics['analytics-init-total'].duration.toFixed(2)}ms > 3000ms`);
+    }
+    if (metrics['sprint4-dashboard-total']?.duration > 2000) {
+        warnings.push(`Dashboard render slow: ${metrics['sprint4-dashboard-total'].duration.toFixed(2)}ms > 2000ms`);
+    }
+    if (metrics['eps-init-duration']?.duration > 1500) {
+        warnings.push(`EPSAnalytics init slow: ${metrics['eps-init-duration'].duration.toFixed(2)}ms > 1500ms`);
+    }
+    if (metrics['growth-init-duration']?.duration > 1500) {
+        warnings.push(`GrowthAnalytics init slow: ${metrics['growth-init-duration'].duration.toFixed(2)}ms > 1500ms`);
+    }
+    if (metrics['ranking-init-duration']?.duration > 1500) {
+        warnings.push(`RankingAnalytics init slow: ${metrics['ranking-init-duration'].duration.toFixed(2)}ms > 1500ms`);
+    }
+
+    // Chart rendering warnings
+    if (metrics['growth-charts-duration']?.duration > 500) {
+        warnings.push(`Growth charts slow: ${metrics['growth-charts-duration'].duration.toFixed(2)}ms > 500ms`);
+    }
+    if (metrics['ranking-charts-duration']?.duration > 500) {
+        warnings.push(`Ranking charts slow: ${metrics['ranking-charts-duration'].duration.toFixed(2)}ms > 500ms`);
+    }
+    if (metrics['eps-charts-duration']?.duration > 500) {
+        warnings.push(`EPS charts slow: ${metrics['eps-charts-duration'].duration.toFixed(2)}ms > 500ms`);
+    }
+
+    // Display warnings or success
+    console.log('\n⚡ Performance Status:');
+    if (warnings.length > 0) {
+        console.warn('  ⚠️ Performance Warnings:');
+        warnings.forEach(w => console.warn(`    - ${w}`));
+    } else {
+        console.log('  ✅ All performance targets met!');
+    }
+
+    console.log('📊 ═══════════════════════════════════════════════════════\n');
+}
+
+/**
+ * Monitor memory usage and detect leaks
+ */
+function monitorMemoryUsage() {
+    if (performance.memory) {
+        const used = performance.memory.usedJSHeapSize / 1048576; // MB
+        const total = performance.memory.totalJSHeapSize / 1048576;
+        const limit = performance.memory.jsHeapSizeLimit / 1048576;
+
+        console.log('\n💾 Memory Usage:');
+        console.log(`  Used: ${used.toFixed(2)}MB / ${total.toFixed(2)}MB`);
+        console.log(`  Limit: ${limit.toFixed(2)}MB`);
+        console.log(`  Usage: ${((used / limit) * 100).toFixed(1)}%`);
+
+        if (used > 100) {
+            console.warn(`  ⚠️ High memory usage: ${used.toFixed(2)}MB (consider optimization)`);
+        }
+
+        if (used > 200) {
+            console.error(`  🚨 Critical memory usage: ${used.toFixed(2)}MB (potential leak!)`);
+        }
+
+        if ((used / limit) > 0.8) {
+            console.error(`  🚨 Approaching memory limit: ${((used / limit) * 100).toFixed(1)}%`);
+        }
+    } else {
+        console.log('💾 Memory monitoring not available in this browser');
+    }
+}
+
+/**
+ * Track performance trends and detect degradation
+ * @param {string} metricName - Name of the metric
+ * @param {number} duration - Current duration in ms
+ * @param {number} threshold - Performance threshold in ms
+ */
+function trackPerformanceTrend(metricName, duration, threshold) {
+    performanceHistory.push({
+        metric: metricName,
+        duration: duration,
+        timestamp: Date.now()
+    });
+
+    // Keep last 10 measurements only
+    if (performanceHistory.length > 10) {
+        performanceHistory.shift();
+    }
+
+    // Filter measurements for this specific metric
+    const metricHistory = performanceHistory.filter(entry => entry.metric === metricName);
+
+    if (metricHistory.length >= 5) {
+        // Check if performance is degrading (last 5 measurements)
+        const recent = metricHistory.slice(-5);
+        const avgRecent = recent.reduce((sum, e) => sum + e.duration, 0) / recent.length;
+
+        // Alert if average exceeds threshold by 20%
+        if (avgRecent > threshold * 1.2) {
+            console.warn(`⚠️ Performance degradation detected: ${metricName}`);
+            console.warn(`  Average: ${avgRecent.toFixed(2)}ms > ${(threshold * 1.2).toFixed(2)}ms (threshold +20%)`);
+            console.warn(`  Recent measurements: ${recent.map(e => e.duration.toFixed(0)).join(', ')}ms`);
+        }
+
+        // Trend analysis: compare first half vs second half
+        if (metricHistory.length >= 10) {
+            const firstHalf = metricHistory.slice(0, 5);
+            const secondHalf = metricHistory.slice(-5);
+            const avgFirst = firstHalf.reduce((sum, e) => sum + e.duration, 0) / firstHalf.length;
+            const avgSecond = secondHalf.reduce((sum, e) => sum + e.duration, 0) / secondHalf.length;
+
+            const degradationPercent = ((avgSecond - avgFirst) / avgFirst) * 100;
+
+            if (degradationPercent > 15) {
+                console.warn(`📉 Performance trending worse: ${metricName}`);
+                console.warn(`  Degradation: +${degradationPercent.toFixed(1)}% over time`);
+                console.warn(`  First 5 avg: ${avgFirst.toFixed(2)}ms → Last 5 avg: ${avgSecond.toFixed(2)}ms`);
+            } else if (degradationPercent < -15) {
+                console.log(`📈 Performance trending better: ${metricName}`);
+                console.log(`  Improvement: ${Math.abs(degradationPercent).toFixed(1)}% over time`);
+            }
+        }
+    }
+}
+
+/**
+ * Get all performance entries for debugging
+ */
+function getPerformanceReport() {
+    const report = {
+        marks: performance.getEntriesByType('mark'),
+        measures: performance.getEntriesByType('measure'),
+        history: performanceHistory,
+        memory: performance.memory ? {
+            used: (performance.memory.usedJSHeapSize / 1048576).toFixed(2) + 'MB',
+            total: (performance.memory.totalJSHeapSize / 1048576).toFixed(2) + 'MB',
+            limit: (performance.memory.jsHeapSizeLimit / 1048576).toFixed(2) + 'MB'
+        } : null
+    };
+
+    console.log('📊 Complete Performance Report:', report);
+    return report;
+}
+
+/**
+ * Clear all performance marks and measures
+ */
+function clearPerformanceMetrics() {
+    performance.clearMarks();
+    performance.clearMeasures();
+    performanceHistory.length = 0;
+    console.log('🧹 Performance metrics cleared');
+}
+
+// Expose performance utilities globally for debugging
+window.performanceUtils = {
+    logSummary: logPerformanceSummary,
+    monitorMemory: monitorMemoryUsage,
+    getReport: getPerformanceReport,
+    clearMetrics: clearPerformanceMetrics,
+    getHistory: () => performanceHistory
+};
