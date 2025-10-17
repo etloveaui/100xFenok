@@ -16,6 +16,15 @@ class CorrelationEngine {
         this.correlationMatrix = null;
         this.initialized = false;
         this.cache = new Map();
+
+        // Performance optimization: Indexed structure for O(n) lookups
+        this.correlationIndex = {
+            veryLow: [],    // < -0.5
+            low: [],        // -0.5 to -0.1
+            neutral: [],    // -0.1 to 0.1
+            medium: [],     // 0.1 to 0.5
+            high: []        // > 0.5
+        };
     }
 
     /**
@@ -107,11 +116,21 @@ class CorrelationEngine {
     /**
      * Build full correlation matrix from price data
      * Creates NxN matrix of correlation coefficients
+     * Populates correlationIndex for O(n) lookups
      */
     buildCorrelationMatrix() {
         const tickers = this.correlationData.map(d => d.Ticker);
         const n = tickers.length;
         this.correlationMatrix = new Map();
+
+        // Reset correlation index
+        this.correlationIndex = {
+            veryLow: [],
+            low: [],
+            neutral: [],
+            medium: [],
+            high: []
+        };
 
         // Build price history map
         const priceHistory = new Map();
@@ -141,9 +160,26 @@ class CorrelationEngine {
                         this.correlationMatrix.set(ticker2, new Map());
                     }
                     this.correlationMatrix.get(ticker2).set(ticker1, corr);
+
+                    // Index correlation pair for O(n) lookups
+                    const pair = { ticker1, ticker2, correlation: corr };
+
+                    if (corr < -0.5) {
+                        this.correlationIndex.veryLow.push(pair);
+                    } else if (corr < -0.1) {
+                        this.correlationIndex.low.push(pair);
+                    } else if (corr <= 0.1) {
+                        this.correlationIndex.neutral.push(pair);
+                    } else if (corr <= 0.5) {
+                        this.correlationIndex.medium.push(pair);
+                    } else {
+                        this.correlationIndex.high.push(pair);
+                    }
                 }
             }
         }
+
+        console.log(`[CorrelationEngine] Index built: veryLow=${this.correlationIndex.veryLow.length}, low=${this.correlationIndex.low.length}, neutral=${this.correlationIndex.neutral.length}, medium=${this.correlationIndex.medium.length}, high=${this.correlationIndex.high.length}`);
     }
 
     /**
@@ -245,34 +281,61 @@ class CorrelationEngine {
     /**
      * Find stock pairs with low correlation
      * Good for portfolio diversification
+     * Optimized with indexed structure for O(n) performance
      */
     findLowCorrelationPairs(minCorrelation = -0.3, maxCorrelation = 0.3) {
-        const pairs = [];
-        const tickers = Array.from(this.correlationMatrix.keys());
+        // Determine which index buckets to search based on correlation range
+        const candidates = [];
 
-        for (let i = 0; i < tickers.length; i++) {
-            for (let j = i + 1; j < tickers.length; j++) {
-                const ticker1 = tickers[i];
-                const ticker2 = tickers[j];
-                const corr = this.correlationMatrix.get(ticker1)?.get(ticker2) || 0;
-
-                if (corr >= minCorrelation && corr <= maxCorrelation) {
-                    const data1 = this.correlationData.find(d => d.Ticker === ticker1);
-                    const data2 = this.correlationData.find(d => d.Ticker === ticker2);
-
-                    pairs.push({
-                        ticker1,
-                        ticker2,
-                        company1: data1?.Corp || ticker1,
-                        company2: data2?.Corp || ticker2,
-                        sector1: data1?.sector || 'Unknown',
-                        sector2: data2?.sector || 'Unknown',
-                        correlation: corr,
-                        absoluteCorrelation: Math.abs(corr)
-                    });
-                }
-            }
+        // veryLow: < -0.5
+        if (minCorrelation < -0.5 || maxCorrelation < -0.5) {
+            candidates.push(...this.correlationIndex.veryLow);
         }
+
+        // low: -0.5 to -0.1
+        if ((minCorrelation >= -0.5 && minCorrelation < -0.1) ||
+            (maxCorrelation >= -0.5 && maxCorrelation < -0.1) ||
+            (minCorrelation < -0.5 && maxCorrelation >= -0.1)) {
+            candidates.push(...this.correlationIndex.low);
+        }
+
+        // neutral: -0.1 to 0.1
+        if ((minCorrelation >= -0.1 && minCorrelation <= 0.1) ||
+            (maxCorrelation >= -0.1 && maxCorrelation <= 0.1) ||
+            (minCorrelation < -0.1 && maxCorrelation > 0.1)) {
+            candidates.push(...this.correlationIndex.neutral);
+        }
+
+        // medium: 0.1 to 0.5
+        if ((minCorrelation > 0.1 && minCorrelation <= 0.5) ||
+            (maxCorrelation > 0.1 && maxCorrelation <= 0.5) ||
+            (minCorrelation <= 0.1 && maxCorrelation > 0.5)) {
+            candidates.push(...this.correlationIndex.medium);
+        }
+
+        // high: > 0.5
+        if (minCorrelation > 0.5 || maxCorrelation > 0.5) {
+            candidates.push(...this.correlationIndex.high);
+        }
+
+        // Filter candidates to exact range and enrich with company data
+        const pairs = candidates
+            .filter(pair => pair.correlation >= minCorrelation && pair.correlation <= maxCorrelation)
+            .map(pair => {
+                const data1 = this.correlationData.find(d => d.Ticker === pair.ticker1);
+                const data2 = this.correlationData.find(d => d.Ticker === pair.ticker2);
+
+                return {
+                    ticker1: pair.ticker1,
+                    ticker2: pair.ticker2,
+                    company1: data1?.Corp || pair.ticker1,
+                    company2: data2?.Corp || pair.ticker2,
+                    sector1: data1?.sector || 'Unknown',
+                    sector2: data2?.sector || 'Unknown',
+                    correlation: pair.correlation,
+                    absoluteCorrelation: Math.abs(pair.correlation)
+                };
+            });
 
         return pairs.sort((a, b) => a.absoluteCorrelation - b.absoluteCorrelation);
     }
