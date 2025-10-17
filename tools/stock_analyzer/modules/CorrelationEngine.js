@@ -28,11 +28,11 @@ class CorrelationEngine {
         try {
             const integratedData = await this.loadIntegratedData();
 
-            if (!integratedData?.technical?.T_Correlation) {
+            if (!integratedData?.data?.technical?.T_Correlation) {
                 throw new Error('T_Correlation data not found in integrated data');
             }
 
-            this.correlationData = integratedData.technical.T_Correlation;
+            this.correlationData = integratedData.data.technical.T_Correlation;
             this.enrichCorrelationData();
             this.buildCorrelationMatrix();
             this.initialized = true;
