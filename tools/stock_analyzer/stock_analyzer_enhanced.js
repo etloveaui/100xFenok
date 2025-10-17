@@ -1,3 +1,6 @@
+// XSS 방어: DOMPurify 사용
+import DOMPurify from 'dompurify';
+
 document.addEventListener('DOMContentLoaded', () => {
     init();
 });
@@ -120,194 +123,201 @@ const ERROR_MESSAGES = {
  * 애플리케이션 초기화
  */
 async function init() {
-    console.log("Stock Analyzer Enhanced Initializing...");
+    console.log("🚀 Stock Analyzer Enhanced Initializing...");
+    const startTime = performance.now();
+
+    // Phase 1: 데이터 로딩 (순차 실행 필요)
     await loadData();
     await loadScreenerIndices();
     renderScreenerPanel();
-    
-    // ColumnManager 초기화
-    if (window.columnManager) {
-        window.columnManager.initialize();
-    }
-    
-    // CardViewManager 초기화
-    if (window.cardViewManager) {
-        window.cardViewManager.initialize();
-    }
-    
-    // AdvancedFilterManager 초기화 (데이터 로딩 후)
-    if (window.advancedFilterManager) {
-        setTimeout(() => {
-            if (window.allData && window.allData.length > 0) {
-                window.advancedFilterManager.initialize();
-            } else {
-                console.log('⏳ 데이터 로딩 완료 대기 중... AdvancedFilterManager 초기화 지연');
-                setTimeout(() => window.advancedFilterManager.initialize(), 2000);
-            }
-        }, 1500); // 데이터 로딩 후 충분한 시간 대기
-    }
-    
-    // GrowthAnalytics 초기화 (Sprint 4)
-    if (window.growthAnalytics) {
-        setTimeout(async () => {
-            const success = await window.growthAnalytics.initialize();
-            if (success) {
-                console.log('[Init] GrowthAnalytics 초기화 완료');
-            } else {
-                console.warn('[Init] GrowthAnalytics 초기화 실패');
-            }
-        }, 2000); // 데이터 로딩 후 초기화
-    }
 
-    // ScrollManager 초기화
-    if (window.scrollManager) {
-        setTimeout(() => {
-            window.scrollManager.initialize();
-        }, 1000); // 테이블 렌더링 후 초기화
-    }
-    
-    // DashboardManager 초기화
-    if (window.dashboardManager) {
-        setTimeout(() => {
-            window.dashboardManager.initialize();
-        }, 1500); // 데이터 로딩 후 초기화
-    }
-    
-    // ResponsiveManager 초기화
-    if (window.responsiveManager) {
-        window.responsiveManager.initialize();
-    }
-    
-    // FilterManager 초기화
-    if (window.filterManager) {
-        setTimeout(() => {
-            window.filterManager.initialize(window.allData);
-        }, 2000); // 데이터 로딩 후 초기화
-    }
-    
-    // PerformanceManager 초기화
-    if (window.performanceManager) {
-        window.performanceManager.startMonitoring();
-    }
-    
-    // LoadingManager 초기화
-    if (window.loadingManager) {
-        window.loadingManager.initialize();
-    }
-    
-    // TestManager 초기화
-    if (window.testManager) {
-        window.testManager.initialize();
-    }
-    
-    // AdvancedSearchManager 초기화 (데이터 로딩 후)
-    if (window.advancedSearchManager) {
-        setTimeout(() => {
-            if (window.allData && window.allData.length > 0) {
-                window.advancedSearchManager.initialize(window.allData);
-            } else {
-                console.log('⏳ AdvancedSearchManager: 데이터 대기 중...');
-            }
-        }, 2500);
-    }
-    
-    // SearchEnhancementManager 초기화 (데이터 로딩 후)
-    if (window.searchEnhancementManager) {
-        setTimeout(() => {
-            if (window.allData && window.allData.length > 0) {
-                window.searchEnhancementManager.initialize(window.allData);
-            } else {
-                console.log('⏳ SearchEnhancementManager: 데이터 대기 중...');
-            }
-        }, 3000);
-    }
-    
-    // SearchEnhancementManager 초기화
-    if (window.searchEnhancementManager) {
-        setTimeout(() => {
-            window.searchEnhancementManager.initialize(window.allData);
-        }, 3000); // 데이터 로딩 후 초기화
-    }
-    
-    // PortfolioBuilder 초기화
-    if (window.portfolioBuilder) {
-        setTimeout(() => {
+    console.log(`📊 데이터 로딩 완료: ${(performance.now() - startTime).toFixed(2)}ms`);
+
+    // Phase 2: 즉시 초기화 가능한 모듈들 (동기 실행)
+    const syncModules = [
+        { name: 'ColumnManager', instance: window.columnManager },
+        { name: 'CardViewManager', instance: window.cardViewManager },
+        { name: 'ResponsiveManager', instance: window.responsiveManager },
+        { name: 'PerformanceManager', instance: window.performanceManager },
+        { name: 'LoadingManager', instance: window.loadingManager },
+        { name: 'TestManager', instance: window.testManager }
+    ];
+
+    syncModules.forEach(({ name, instance }) => {
+        if (instance) {
             try {
-                window.portfolioBuilder.initialize();
+                if (name === 'PerformanceManager') {
+                    instance.startMonitoring();
+                } else {
+                    instance.initialize();
+                }
+                console.log(`✅ ${name} 초기화 완료`);
             } catch (error) {
-                console.error('❌ PortfolioBuilder 초기화 실패:', error);
+                console.error(`❌ ${name} 초기화 실패:`, error);
             }
-        }, 3000);
-    }
-    
-    // DashboardFixManager 초기화
-    if (window.dashboardFixManager) {
-        setTimeout(() => {
-            window.dashboardFixManager.initialize();
-        }, 3500); // 대시보드 매니저 이후 초기화
-    }
-    
-    // AdvancedFilterEnhancer 초기화
-    if (window.advancedFilterEnhancer) {
-        setTimeout(() => {
-            window.advancedFilterEnhancer.initialize();
-        }, 4000); // 모든 시스템 로딩 후 초기화
-    }
-    
-    // UIEnhancementManager 초기화 (성능 최적화를 위해 지연)
-    if (window.uiEnhancementManager) {
-        setTimeout(() => {
-            if (window.columnManager && typeof window.columnManager.isGroupVisible === 'function') {
-                window.uiEnhancementManager.initialize();
-            } else {
-                console.log('ℹ️ UIEnhancementManager 초기화 지연 - ColumnManager 대기 중');
-                setTimeout(() => window.uiEnhancementManager.initialize(), 2000);
-            }
-        }, 6000); // 더 늦게 초기화하여 성능 개선
-    }
-    
-    // 디버깅: 데이터 로딩 상태 확인
-    console.log('🔍 초기화 완료 시 데이터 상태:', {
-        allDataLength: allData ? allData.length : 'undefined',
-        allDataType: typeof allData,
-        sampleData: allData && allData.length > 0 ? allData[0] : 'no data'
+        }
     });
-    
-    if (window.deepCompare) {
-        setTimeout(() => {
-            try {
-                window.deepCompare.initialize();
-            } catch (error) {
-                console.error('❌ DeepCompare 초기화 실패:', error);
-            }
-        }, 2500);
+
+    // Phase 3: 비동기 초기화 (병렬 실행 - setTimeout 제거!)
+    const asyncInits = [];
+
+    // 데이터 의존 모듈들
+    if (window.advancedFilterManager && window.allData?.length > 0) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.advancedFilterManager.initialize();
+                console.log('✅ AdvancedFilterManager 초기화 완료');
+            }).catch(e => console.error('❌ AdvancedFilterManager:', e))
+        );
     }
 
-    // EconomicDashboard 초기화
+    if (window.growthAnalytics) {
+        asyncInits.push(
+            window.growthAnalytics.initialize()
+                .then(success => {
+                    if (success) console.log('✅ GrowthAnalytics 초기화 완료');
+                    else console.warn('⚠️ GrowthAnalytics 초기화 실패');
+                })
+                .catch(e => console.error('❌ GrowthAnalytics:', e))
+        );
+    }
+
+    // RankingAnalytics 초기화 (Sprint 4)
+    if (window.rankingAnalytics) {
+        asyncInits.push(
+            window.rankingAnalytics.initialize()
+                .then(success => {
+                    if (success) console.log('✅ RankingAnalytics 초기화 완료');
+                    else console.warn('⚠️ RankingAnalytics 초기화 실패');
+                })
+                .catch(e => console.error('❌ RankingAnalytics:', e))
+        );
+    }
+
+    // EPSAnalytics 초기화 (Sprint 4)
+    if (window.epsAnalytics) {
+        asyncInits.push(
+            window.epsAnalytics.initialize()
+                .then(success => {
+                    if (success) console.log('✅ EPSAnalytics 초기화 완료');
+                    else console.warn('⚠️ EPSAnalytics 초기화 실패');
+                })
+                .catch(e => console.error('❌ EPSAnalytics:', e))
+        );
+    }
+
+    if (window.scrollManager) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.scrollManager.initialize();
+                console.log('✅ ScrollManager 초기화 완료');
+            }).catch(e => console.error('❌ ScrollManager:', e))
+        );
+    }
+
+    if (window.dashboardManager) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.dashboardManager.initialize();
+                console.log('✅ DashboardManager 초기화 완료');
+            }).catch(e => console.error('❌ DashboardManager:', e))
+        );
+    }
+
+    if (window.filterManager && window.allData) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.filterManager.initialize(window.allData);
+                console.log('✅ FilterManager 초기화 완료');
+            }).catch(e => console.error('❌ FilterManager:', e))
+        );
+    }
+
+    if (window.advancedSearchManager && window.allData?.length > 0) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.advancedSearchManager.initialize(window.allData);
+                console.log('✅ AdvancedSearchManager 초기화 완료');
+            }).catch(e => console.error('❌ AdvancedSearchManager:', e))
+        );
+    }
+
+    if (window.searchEnhancementManager && window.allData?.length > 0) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.searchEnhancementManager.initialize(window.allData);
+                console.log('✅ SearchEnhancementManager 초기화 완료');
+            }).catch(e => console.error('❌ SearchEnhancementManager:', e))
+        );
+    }
+
+    if (window.portfolioBuilder) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.portfolioBuilder.initialize();
+                console.log('✅ PortfolioBuilder 초기화 완료');
+            }).catch(e => console.error('❌ PortfolioBuilder:', e))
+        );
+    }
+
+    if (window.dashboardFixManager) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.dashboardFixManager.initialize();
+                console.log('✅ DashboardFixManager 초기화 완료');
+            }).catch(e => console.error('❌ DashboardFixManager:', e))
+        );
+    }
+
+    if (window.advancedFilterEnhancer) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.advancedFilterEnhancer.initialize();
+                console.log('✅ AdvancedFilterEnhancer 초기화 완료');
+            }).catch(e => console.error('❌ AdvancedFilterEnhancer:', e))
+        );
+    }
+
+    if (window.uiEnhancementManager) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                if (window.columnManager && typeof window.columnManager.isGroupVisible === 'function') {
+                    window.uiEnhancementManager.initialize();
+                    console.log('✅ UIEnhancementManager 초기화 완료');
+                } else {
+                    console.warn('⚠️ UIEnhancementManager: ColumnManager 준비 안됨');
+                }
+            }).catch(e => console.error('❌ UIEnhancementManager:', e))
+        );
+    }
+
+    if (window.deepCompare) {
+        asyncInits.push(
+            Promise.resolve().then(() => {
+                window.deepCompare.initialize();
+                console.log('✅ DeepCompare 초기화 완료');
+            }).catch(e => console.error('❌ DeepCompare:', e))
+        );
+    }
+
     if (window.EconomicDashboard) {
-        setTimeout(async () => {
-            try {
+        asyncInits.push(
+            (async () => {
                 const container = document.getElementById('economic-dashboard-container');
                 if (container) {
                     const dashboard = new window.EconomicDashboard();
                     await dashboard.init();
                     dashboard.render(container);
-
-                    // 전역 인스턴스로 저장 (탭 전환 시 resize 용)
                     window.economicDashboardInstance = dashboard;
-
                     console.log('✅ EconomicDashboard 초기화 완료');
                 }
-            } catch (error) {
-                console.error('❌ EconomicDashboard 초기화 실패:', error);
-            }
-        }, 3500);
+            })().catch(e => console.error('❌ EconomicDashboard:', e))
+        );
     }
 
-    // MomentumHeatmap 초기화
     if (window.MomentumHeatmap) {
-        setTimeout(async () => {
-            try {
+        asyncInits.push(
+            (async () => {
                 const container = document.getElementById('momentum-heatmap-container');
                 if (container) {
                     const heatmap = new window.MomentumHeatmap();
@@ -318,56 +328,50 @@ async function init() {
                         console.log('✅ MomentumHeatmap 초기화 완료');
                     }
                 }
-            } catch (error) {
-                console.error('❌ MomentumHeatmap 초기화 실패:', error);
-            }
-        }, 4000);
+            })().catch(e => console.error('❌ MomentumHeatmap:', e))
+        );
     }
 
-    // Momentum 모듈 초기화 (Phase 2)
     if (window.M_Company) {
-        setTimeout(async () => {
-            try {
+        asyncInits.push(
+            (async () => {
                 const container = document.getElementById('momentum-company-container');
-                if (container && window.allData && window.allData.length > 0) {
-                    // M_Company 인스턴스 생성 및 초기화
+                if (container && window.allData?.length > 0) {
                     window.momentumCompany = new window.M_Company({
                         autoUpdate: true,
                         updateInterval: 60000,
                         theme: 'light'
                     });
-
-                    // 데이터 로드
                     await window.momentumCompany.loadData(window.allData);
-
-                    // 초기 렌더링
                     window.momentumCompany.render(container);
-
-                    console.log('✅ Momentum 모듈 (M_Company) 초기화 완료');
-
-                    // 상세 분석 버튼 이벤트
-                    const detailBtn = document.getElementById('open-momentum-detail-btn');
-                    if (detailBtn) {
-                        detailBtn.addEventListener('click', () => {
-                            window.momentumCompany.showDetailView();
-                        });
-                    }
+                    console.log('✅ M_Company (Momentum) 초기화 완료');
                 }
-            } catch (error) {
-                console.error('❌ Momentum 모듈 초기화 실패:', error);
-            }
-        }, 4500);
+            })().catch(e => console.error('❌ M_Company:', e))
+        );
     }
 
-    applyFilters('all');
-    setupEventListeners();
-    
-    // 고급 필터 시스템 초기화
+    // Phase 4: 모든 비동기 초기화 병렬 실행
+    await Promise.all(asyncInits);
+
+    console.log(`🎉 전체 초기화 완료: ${(performance.now() - startTime).toFixed(2)}ms`);
+
+    // Phase 4.5: Sprint 4 Analytics 대시보드 렌더링
+    await renderSprint4Analytics();
+
+    // Phase 5: 데이터 상태 확인
+    console.log('🔍 초기화 완료 시 데이터 상태:', {
+        allDataLength: allData ? allData.length : 'undefined',
+        allDataType: typeof allData,
+        sampleData: allData && allData.length > 0 ? allData[0] : 'no data'
+    });
+
+    // Phase 6: 고급 필터 및 이벤트 리스너
     if (window.advancedFilter) {
         window.advancedFilter.initialize();
     }
 
-    // 탭 전환 시스템 초기화
+    applyFilters('all');
+    setupEventListeners();
     setupTabSwitching();
 }
 
@@ -1646,7 +1650,8 @@ function highlightSearchResults(searchTerm) {
         if (text && text.toLowerCase().includes(term)) {
             const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
             const highlightedText = text.replace(regex, '<mark class="bg-yellow-200 px-1 rounded">$1</mark>');
-            cell.innerHTML = highlightedText;
+            // XSS 방어: DOMPurify로 sanitize
+            cell.innerHTML = DOMPurify.sanitize(highlightedText);
         }
     });
 }
@@ -1781,7 +1786,8 @@ function showSearchSuggestions(searchTerm) {
         });
     }
     
-    suggestionsContainer.innerHTML = suggestionsHTML;
+    // XSS 방어: DOMPurify로 sanitize
+    suggestionsContainer.innerHTML = DOMPurify.sanitize(suggestionsHTML);
     suggestionsContainer.classList.remove('hidden');
 }
 
@@ -3510,7 +3516,8 @@ function highlightSearchResults(searchTerm) {
         if (text && text.toLowerCase().includes(term)) {
             const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
             const highlightedText = text.replace(regex, '<mark class="bg-yellow-200 px-1 rounded">$1</mark>');
-            cell.innerHTML = highlightedText;
+            // XSS 방어: DOMPurify로 sanitize
+            cell.innerHTML = DOMPurify.sanitize(highlightedText);
         }
     });
 }
@@ -4762,5 +4769,274 @@ function createCompanyCharts(ticker, company) {
         console.error('❌ 차트 생성 중 오류 발생:', error);
         console.error('오류 스택:', error.stack);
         console.error('회사 데이터:', company);
+    }
+}
+
+/**
+ * Sprint 4 Analytics 대시보드 렌더링
+ */
+async function renderSprint4Analytics() {
+    console.log('[Sprint 4] Analytics 대시보드 렌더링 시작...');
+
+    try {
+        // 모든 Analytics 모듈이 초기화되었는지 확인
+        if (!window.growthAnalytics?.initialized ||
+            !window.rankingAnalytics?.initialized ||
+            !window.epsAnalytics?.initialized) {
+            console.warn('[Sprint 4] Analytics 모듈이 완전히 초기화되지 않았습니다.');
+            return;
+        }
+
+        // 1. Growth Analytics 차트
+        await renderGrowthAnalyticsCharts();
+
+        // 2. Ranking Analytics 차트
+        await renderRankingAnalyticsCharts();
+
+        // 3. EPS Analytics 차트
+        await renderEPSAnalyticsCharts();
+
+        console.log('[Sprint 4] ✅ Analytics 대시보드 렌더링 완료');
+    } catch (error) {
+        console.error('[Sprint 4] ❌ 대시보드 렌더링 실패:', error);
+    }
+}
+
+/**
+ * Growth Analytics 차트 렌더링
+ */
+async function renderGrowthAnalyticsCharts() {
+    // 섹터별 평균 성장률 차트
+    const sectorData = window.growthAnalytics.getSectorGrowthAverages();
+    if (sectorData && sectorData.length > 0) {
+        const ctx = document.getElementById('growth-sector-chart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sectorData.map(s => s.sector),
+                    datasets: [
+                        {
+                            label: '매출 성장률 (%)',
+                            data: sectorData.map(s => s.avgSalesGrowth),
+                            backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                            borderColor: 'rgba(34, 197, 94, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: '영업이익 성장률 (%)',
+                            data: sectorData.map(s => s.avgOperatingProfitGrowth),
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: false },
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: '성장률 (%)' } }
+                    }
+                }
+            });
+        }
+    }
+
+    // 고성장 기업 Top 20 차트
+    const topCompanies = window.growthAnalytics.getHighGrowthCompanies(20, 'salesGrowth');
+    if (topCompanies && topCompanies.length > 0) {
+        const ctx = document.getElementById('growth-top-companies-chart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: topCompanies.map(c => c.ticker),
+                    datasets: [{
+                        label: '매출 성장률 (%)',
+                        data: topCompanies.map(c => c.growth),
+                        backgroundColor: 'rgba(168, 85, 247, 0.6)',
+                        borderColor: 'rgba(168, 85, 247, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        title: { display: false },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, title: { display: true, text: '성장률 (%)' } }
+                    }
+                }
+            });
+        }
+    }
+}
+
+/**
+ * Ranking Analytics 차트 렌더링
+ */
+async function renderRankingAnalyticsCharts() {
+    // 통계 카드 업데이트
+    const rankData = window.rankingAnalytics.rankData;
+    if (rankData) {
+        document.getElementById('ranking-total').textContent = rankData.length.toLocaleString();
+
+        const top100Count = rankData.filter(r => {
+            const qualityRank = window.rankingAnalytics.parseRank(r['Quality']);
+            return qualityRank !== null && qualityRank <= 100;
+        }).length;
+        document.getElementById('ranking-top-100').textContent = top100Count.toLocaleString();
+
+        const sectors = new Set(rankData.map(r => r.WI26).filter(s => s));
+        document.getElementById('ranking-quality').textContent = `${sectors.size}개`;
+    }
+
+    // Quality/Value/Momentum 순위 분포 차트 (예: Top 100, 101-300, 301-500, 500+)
+    const qualityTop = window.rankingAnalytics.getTopRankedCompanies('quality', 100).length;
+    const valueTop = window.rankingAnalytics.getTopRankedCompanies('value', 100).length;
+    const momentumTop = window.rankingAnalytics.getTopRankedCompanies('momentum', 100).length;
+
+    const ctx1 = document.getElementById('ranking-distribution-chart');
+    if (ctx1) {
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['Quality', 'Value', 'Momentum'],
+                datasets: [{
+                    label: 'Top 100 기업 수',
+                    data: [qualityTop, valueTop, momentumTop],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.6)',
+                        'rgba(59, 130, 246, 0.6)',
+                        'rgba(251, 191, 36, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(251, 191, 36, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: false },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: '기업 수' } }
+                }
+            }
+        });
+    }
+
+    // 섹터별 평균 순위 차트
+    const sectorRanks = window.rankingAnalytics.getSectorRankDistribution('quality');
+    if (sectorRanks && sectorRanks.length > 0) {
+        const top10Sectors = sectorRanks.slice(0, 10);
+        const ctx2 = document.getElementById('ranking-sector-chart');
+        if (ctx2) {
+            new Chart(ctx2, {
+                type: 'horizontalBar',
+                data: {
+                    labels: top10Sectors.map(s => s.sector),
+                    datasets: [{
+                        label: '평균 Quality 순위',
+                        data: top10Sectors.map(s => s.averageRank),
+                        backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        title: { display: false },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            reverse: true,
+                            title: { display: true, text: '평균 순위 (낮을수록 우수)' }
+                        }
+                    }
+                }
+            });
+        }
+    }
+}
+
+/**
+ * EPS Analytics 차트 렌더링
+ */
+async function renderEPSAnalyticsCharts() {
+    // ROE vs EPS Growth 산점도
+    const roeEpsData = window.epsAnalytics.getROEvsEPSGrowthData(50);
+    if (roeEpsData && roeEpsData.datasets && roeEpsData.datasets.length > 0) {
+        const ctx1 = document.getElementById('eps-roe-scatter-chart');
+        if (ctx1) {
+            new Chart(ctx1, {
+                type: 'scatter',
+                data: roeEpsData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: false },
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'ROE (%)' } },
+                        y: { title: { display: true, text: 'EPS Growth (%)' } }
+                    }
+                }
+            });
+        }
+    }
+
+    // 섹터별 EPS 히트맵 (간단한 바 차트로 표현)
+    const sectorEPS = window.epsAnalytics.getSectorEPSAverages();
+    if (sectorEPS && sectorEPS.length > 0) {
+        const top10 = sectorEPS.slice(0, 10);
+        const ctx2 = document.getElementById('eps-sector-heatmap-chart');
+        if (ctx2) {
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(s => s.sector),
+                    datasets: [{
+                        label: '평균 EPS ($)',
+                        data: top10.map(s => s.avgEPS),
+                        backgroundColor: 'rgba(139, 92, 246, 0.6)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: false },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Average EPS ($)' } }
+                    }
+                }
+            });
+        }
     }
 }
