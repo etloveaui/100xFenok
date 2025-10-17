@@ -960,6 +960,99 @@
                 <!-- MomentumHeatmap 컨테이너 -->
                 <div id="momentum-heatmap-container" class="mb-8"></div>
 
+                <!-- Sprint 4 Analytics 대시보드 -->
+                <div id="sprint4-analytics-dashboard" class="mb-8">
+                    <div class="dashboard-card mb-6">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-900">
+                            <i class="fas fa-chart-pie text-indigo-600 mr-2"></i>
+                            Sprint 4 Analytics - 성장/순위/EPS 통합 분석
+                        </h2>
+                        <p class="text-sm text-gray-600">
+                            1,252개 기업의 성장 지표, 순위 변화, EPS 분석을 통합한 고급 대시보드
+                        </p>
+                    </div>
+
+                    <!-- Growth Analytics 섹션 -->
+                    <div class="dashboard-card mb-6">
+                        <h3 class="text-xl font-bold mb-4">
+                            <i class="fas fa-chart-line text-green-600 mr-2"></i>
+                            Growth Analytics - 성장 지표 분석
+                        </h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-lg font-semibold mb-3">섹터별 평균 성장률</h4>
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="growth-sector-chart"></canvas>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-3">고성장 기업 Top 20</h4>
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="growth-top-companies-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ranking Analytics 섹션 -->
+                    <div class="dashboard-card mb-6">
+                        <h3 class="text-xl font-bold mb-4">
+                            <i class="fas fa-trophy text-yellow-600 mr-2"></i>
+                            Ranking Analytics - 순위 분석
+                        </h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600" id="ranking-total">1,252</div>
+                                <div class="text-sm text-gray-600">전체 순위 데이터</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-green-600" id="ranking-top-100">247</div>
+                                <div class="text-sm text-gray-600">Top 100 기업</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-purple-600" id="ranking-quality">12개</div>
+                                <div class="text-sm text-gray-600">업종 분석</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-lg font-semibold mb-3">Quality/Value/Momentum 순위 분포</h4>
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="ranking-distribution-chart"></canvas>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-3">섹터별 평균 순위</h4>
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="ranking-sector-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EPS Analytics 섹션 -->
+                    <div class="dashboard-card mb-6">
+                        <h3 class="text-xl font-bold mb-4">
+                            <i class="fas fa-dollar-sign text-indigo-600 mr-2"></i>
+                            EPS Analytics - 주당순이익 분석
+                        </h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-lg font-semibold mb-3">ROE vs EPS Growth 산점도</h4>
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="eps-roe-scatter-chart"></canvas>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-3">섹터별 EPS 히트맵</h4>
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="eps-sector-heatmap-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Momentum 분석 섹션 (Phase 2) -->
                 <div id="momentum-analysis-section" class="mb-8">
                     <div class="dashboard-card">
@@ -1320,6 +1413,30 @@
     <!-- SmartAnalytics 모듈 -->
     <script src="./modules/SmartAnalytics/MomentumAI.js"></script>
     <script src="./modules/SmartAnalytics/SmartAnalytics.js"></script>
+
+    <!-- Sprint 4 Analytics 모듈 -->
+    <script src="./modules/GrowthAnalytics.js"></script>
+    <script src="./modules/RankingAnalytics.js"></script>
+    <script src="./modules/EPSAnalytics.js"></script>
+    <script>
+        // GrowthAnalytics 인스턴스 생성
+        if (typeof GrowthAnalytics !== 'undefined') {
+            window.growthAnalytics = new GrowthAnalytics(window.dataManager || {});
+            console.log('[HTML] GrowthAnalytics 인스턴스 생성');
+        }
+
+        // RankingAnalytics 인스턴스 생성
+        if (typeof RankingAnalytics !== 'undefined') {
+            window.rankingAnalytics = new RankingAnalytics(window.dataManager || {});
+            console.log('[HTML] RankingAnalytics 인스턴스 생성');
+        }
+
+        // EPSAnalytics 인스턴스 생성
+        if (typeof EPSAnalytics !== 'undefined') {
+            window.epsAnalytics = new EPSAnalytics(window.dataManager || {});
+            console.log('[HTML] EPSAnalytics 인스턴스 생성');
+        }
+    </script>
 
     <!-- Deployment system -->
     <script src="./deployment/CanaryDeployment.js"></script>
