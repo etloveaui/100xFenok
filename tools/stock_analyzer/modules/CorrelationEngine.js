@@ -45,18 +45,37 @@ class CorrelationEngine {
     }
 
     /**
-     * Load global_scouter_integrated.json
+     * Load global_scouter_integrated.json with retry logic
+     * Retry mechanism handles timing issues during concurrent initialization
      */
     async loadIntegratedData() {
-        try {
-            const response = await fetch('./data/global_scouter_integrated.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        const maxRetries = 3;
+        const retryDelay = 1000; // 1 second
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                // Use absolute path for more reliable fetching
+                const response = await fetch('/data/global_scouter_integrated.json');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log(`[CorrelationEngine] Loaded integrated data successfully (attempt ${attempt})`);
+                return data;
+
+            } catch (error) {
+                console.warn(`[CorrelationEngine] Attempt ${attempt}/${maxRetries} failed:`, error.message);
+
+                if (attempt < maxRetries) {
+                    console.log(`[CorrelationEngine] Retrying in ${retryDelay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                } else {
+                    console.error(`[CorrelationEngine] Failed after ${maxRetries} attempts`);
+                    throw new Error(`Failed to load integrated data after ${maxRetries} attempts: ${error.message}`);
+                }
             }
-            return await response.json();
-        } catch (error) {
-            console.error('Error loading integrated data:', error);
-            throw error;
         }
     }
 
