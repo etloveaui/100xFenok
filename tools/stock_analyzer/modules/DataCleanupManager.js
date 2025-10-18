@@ -48,7 +48,7 @@ class DataCleanupManager {
             // 수치 필드 정제 규칙
             numericFields: [
                 'PER (Oct-25)',
-                'PBR (Oct-25)', 
+                'PBR (Oct-25)',
                 'ROE (Fwd)',
                 'ROA (Fwd)',
                 'Debt/Equity (Fwd)',
@@ -65,7 +65,13 @@ class DataCleanupManager {
                 'BVPS (Oct-25)',
                 'Price (Oct-25)',
                 'Target Price',
-                'Upside (%)'
+                'Upside (%)',
+                // Sprint 4 Module 2: Performance metrics (absolute returns)
+                'W',
+                '1 M',
+                '3 M',
+                '6 M',
+                '12 M'
             ],
             
             // 백분율 필드
@@ -75,7 +81,13 @@ class DataCleanupManager {
                 'Return (Y)',
                 'Return (3Y)',
                 'Return (5Y)',
-                'Upside (%)'
+                'Upside (%)',
+                // Sprint 4 Module 2: Performance returns (displayed as %)
+                'W',
+                '1 M',
+                '3 M',
+                '6 M',
+                '12 M'
             ],
             
             // 문자열 필드
@@ -85,7 +97,9 @@ class DataCleanupManager {
                 'industry',
                 'exchange',
                 'Analyst',
-                'Rating'
+                'Rating',
+                // Sprint 4 Module 2: Company info
+                '결산'  // Fiscal year end month
             ]
         };
     }
@@ -154,7 +168,17 @@ class DataCleanupManager {
 
                 // ===== Analyst Coverage (2) =====
                 'Analyst': (value) => !value || (typeof value === 'string' && value.length <= 100),
-                'Rating': (value) => !value || ['Buy', 'Hold', 'Sell', 'Strong Buy', 'Strong Sell', 'Overweight', 'Underweight', 'Neutral', 'Outperform', 'Underperform'].includes(value)
+                'Rating': (value) => !value || ['Buy', 'Hold', 'Sell', 'Strong Buy', 'Strong Sell', 'Overweight', 'Underweight', 'Neutral', 'Outperform', 'Underperform'].includes(value),
+
+                // ===== Sprint 4 Module 2: Company Info (1) =====
+                '결산': (value) => !value || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].includes(value),
+
+                // ===== Sprint 4 Module 2: Performance Metrics - Absolute Returns (5) =====
+                'W': (value) => this.isValidNumber(value, -1.0, 3.0),
+                '1 M': (value) => this.isValidNumber(value, -1.0, 3.0),
+                '3 M': (value) => this.isValidNumber(value, -1.0, 3.0),
+                '6 M': (value) => this.isValidNumber(value, -1.0, 3.0),
+                '12 M': (value) => this.isValidNumber(value, -1.0, 3.0)
             },
             
             // 데이터 타입 검증
@@ -1074,6 +1098,7 @@ class DataCleanupManager {
      */
     printValidationReport(report) {
         console.log('\n📊 ===== DATA VALIDATION REPORT =====');
+        console.log('✅ Sprint 4 Module 2: ValidationAnalytics - Enhanced Coverage');
         console.log(`🕒 Timestamp: ${report.timestamp}`);
         console.log(`📦 Dataset Size: ${report.datasetSize} records\n`);
 
