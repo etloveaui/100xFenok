@@ -21,6 +21,55 @@
 
 ---
 
+## 🚀 에이전트/모드/MCP 활용 전략
+
+### 병렬 실행 계획
+
+**Task 1.5-1.7 (병렬 가능)**:
+```yaml
+동시 투입:
+  - Task 1.5: @frontend-architect (HTML Integration, 30분)
+  - Task 1.6: @quality-engineer + Playwright (Testing, 2시간)
+  - Task 1.7: @technical-writer + Context7 (Documentation, 1시간)
+
+예상 효과: 3일 → 3-4시간 (90% 단축)
+```
+
+**각 Module 첫 Task (분석)**:
+```yaml
+분석 작업:
+  - Task 2.1: @root-cause-analyst + Sequential (Field Coverage)
+  - Task 3.1: @root-cause-analyst + Sequential (S_Mylist Analysis)
+  - Task 4.1: @root-cause-analyst + Sequential (A_Compare Analysis)
+
+병렬 가능: Module 1 완료 후 3개 동시 진행
+```
+
+### MCP 서버 활용 매핑
+
+| Task 유형 | 추천 MCP | 이유 |
+|----------|---------|------|
+| 데이터 분석 | Sequential | 체계적 구조 분석 |
+| 테스트 작성 | Playwright | 실제 브라우저 E2E |
+| API 문서 | Context7 | 문서 패턴 참조 |
+| 메모리 관리 | Serena | 세션 간 컨텍스트 |
+
+### 에이전트 배정 원칙
+
+**복잡도 기반**:
+- 0.0-0.3: 직접 처리 (에이전트 불필요)
+- 0.4-0.6: 도메인 에이전트 (선택)
+- 0.7-0.9: 전문 에이전트 (권장)
+- 0.9-1.0: 다중 에이전트 (필수)
+
+**Task별 복잡도**:
+- Schema Analysis: 0.5 (중간)
+- Class Design: 0.7 (높음) → @system-architect
+- Index Implementation: 0.8 (높음) → @performance-engineer
+- Testing: 0.6 (중간) → @quality-engineer
+
+---
+
 ## 🎯 Phase 1 모듈 우선순위 배경
 
 ### Why These 4 Modules First?
@@ -61,9 +110,13 @@ M_Company.json (6,179 companies) 로딩 및 O(1) 검색 제공
 
 ### Tasks
 
-#### Task 1.1: Data Schema Analysis ⏳
+#### Task 1.1: Data Schema Analysis ✅
 **기간**: 1일
-**담당**: Claude (root-cause-analyst)
+**담당**: Claude
+**에이전트**: @root-cause-analyst (데이터 구조 분석)
+**Mode**: --think (구조적 분석)
+**MCP**: Sequential (체계적 필드 분류)
+**병렬 가능**: No (독립 작업)
 
 **작업 내용**:
 - M_Company.json 구조 분석 (39 fields)
@@ -81,9 +134,13 @@ M_Company.json (6,179 companies) 로딩 및 O(1) 검색 제공
 
 ---
 
-#### Task 1.2: Provider Class Design ⏳
+#### Task 1.2: Provider Class Design ✅
 **기간**: 1일
-**담당**: Claude (system-architect)
+**담당**: Claude
+**에이전트**: @system-architect (클래스 아키텍처)
+**Mode**: --task-manage (구조화된 설계)
+**MCP**: Sequential (아키텍처 패턴 분석)
+**병렬 가능**: No (Task 1.1 의존)
 
 **작업 내용**:
 - CompanyMasterProvider 클래스 설계
@@ -130,9 +187,13 @@ class CompanyMasterProvider extends BaseAnalytics {
 
 ---
 
-#### Task 1.3: Index Structure Implementation ⏳
+#### Task 1.3: Index Structure Implementation ✅
 **기간**: 2일
-**담당**: Claude (performance-engineer)
+**담당**: Claude
+**에이전트**: @performance-engineer (O(n) 최적화)
+**Mode**: --orchestrate (성능 우선)
+**MCP**: Sequential (인덱스 구조 분석)
+**병렬 가능**: No (Task 1.2 의존)
 
 **작업 내용**:
 - companyMap 구현 (ticker → company, O(1))
@@ -175,9 +236,13 @@ buildIndexes() {
 
 ---
 
-#### Task 1.4: Core Methods Implementation ⏳
+#### Task 1.4: Core Methods Implementation ✅
 **기간**: 3일
-**담당**: Claude (python-expert / general)
+**담당**: Claude
+**에이전트**: @backend-architect (메서드 구현)
+**Mode**: --task-manage (체계적 구현)
+**MCP**: None (직접 구현)
+**병렬 가능**: No (Task 1.3 의존)
 
 **작업 내용**:
 - getCompanyByTicker() 구현
@@ -227,7 +292,11 @@ searchByName(query) {
 
 #### Task 1.5: HTML Integration ⏳
 **기간**: 1일
-**담당**: Claude (frontend-architect)
+**담당**: Claude
+**에이전트**: @frontend-architect (UI 통합)
+**Mode**: None (단순 통합)
+**MCP**: None (HTML 수정)
+**병렬 가능**: Yes (Task 1.6, 1.7과 독립)
 
 **작업 내용**:
 - stock_analyzer.html에 스크립트 추가
@@ -261,7 +330,11 @@ async function loadAllAnalytics() {
 
 #### Task 1.6: Unit Testing ⏳
 **기간**: 2일
-**담당**: Claude (quality-engineer)
+**담당**: Claude
+**에이전트**: @quality-engineer (테스트 전문)
+**Mode**: --task-manage (체계적 테스트)
+**MCP**: Playwright (E2E 테스트)
+**병렬 가능**: Yes (Task 1.5, 1.7과 독립)
 
 **작업 내용**:
 - tests/modules/company-master-provider.spec.js 작성
@@ -329,7 +402,11 @@ test.describe('CompanyMasterProvider', () => {
 
 #### Task 1.7: Documentation ⏳
 **기간**: 1일
-**담당**: Claude (technical-writer)
+**담당**: Claude
+**에이전트**: @technical-writer (문서 전문)
+**Mode**: None (문서 작성)
+**MCP**: Context7 (API 문서 패턴)
+**병렬 가능**: Yes (Task 1.5, 1.6과 독립)
 
 **작업 내용**:
 - CompanyMasterProvider API 문서 작성
@@ -382,6 +459,11 @@ Returns all companies in industry.
 
 #### Task 2.1: Field Coverage Analysis ⏳
 **기간**: 1일
+**담당**: Claude
+**에이전트**: @root-cause-analyst (커버리지 분석)
+**Mode**: --think (체계적 분석)
+**MCP**: Sequential (필드 분류 및 우선순위)
+**병렬 가능**: No (Module 1 완료 필요)
 
 **작업 내용**:
 - 39개 필드 분류 (identity, financial, valuation, etc.)
