@@ -214,6 +214,7 @@
 
     <!-- Sprint 4 Phase 1 Modules -->
     <script src="modules/CompanyMasterProvider.js"></script>
+    <script src="modules/DataCleanupManager.js"></script>
 
     <!-- Sprint 5 Analytics Modules -->
     <script src="modules/CFOAnalytics.js"></script>
@@ -275,6 +276,17 @@
                     } else {
                         console.warn('⚠️ CompanyMasterProvider failed to load');
                     }
+                }
+
+                // Initialize Sprint 4 Module 2: ValidationAnalytics
+                if (typeof DataCleanupManager !== 'undefined' && window.companyMaster && window.companyMaster.companies) {
+                    window.dataCleanupManager = new DataCleanupManager();
+                    // Generate validation report for M_Company.json data
+                    const validationReport = window.dataCleanupManager.generateValidationReport(window.companyMaster.companies);
+                    window.validationReport = validationReport;
+                    console.log(`✅ DataCleanupManager initialized with validation report`);
+                    console.log(`   - Quality Score: ${validationReport.qualityMetrics.qualityScore}`);
+                    console.log(`   - Coverage: ${validationReport.fieldCoverage.coveragePercentage}`);
                 }
 
                 // Initialize Sprint 5 modules
