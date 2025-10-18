@@ -550,26 +550,6 @@ const testData = allData; // 전체 1,249개 사용
 
 ---
 
-## 🎯 Sprint 5 Week 3 진행 상황
-
-### ✅ 완료 항목
-- CorrelationEngine O(n) 최적화 (10/18 05:56)
-- CFOAnalytics 모듈 구현 (10/18 01:02)
-- 데이터 변환 완료 (M_Company, T_CFO, T_Correlation)
-- HTML/JS 파일 올바른 경로 복사 (10/18 12:38)
-
-### 🔄 진행 중
-- 테스트 데이터 슬라이싱 제거 (5개 위치)
-- 테스트 인프라 설정 (global-setup/teardown)
-- 전체 테스트 실행 (108 tests, 전체 데이터셋)
-
-### 📊 목표
-- 108/108 tests passing (100%)
-- 1,249 companies 전체 데이터로 테스트
-- 10,000 companies 확장 준비 완료
-
----
-
 ## 📝 작업 체크리스트
 
 ### 작업 시작 전 필수 확인
@@ -595,6 +575,27 @@ const testData = allData; // 전체 1,249개 사용
 - [ ] 잘못된 경로 파일 제거 완료
 - [ ] 테스트 전체 통과
 - [ ] CLAUDE.md 업데이트
+
+### Task 완료 시 필수 확인 ⚠️ CRITICAL
+- [ ] SPRINT4_MASTER_PLAN.md 즉시 업데이트
+  - Task 상태: ⏳ → ✅
+  - 완료 기준 체크박스: [ ] → [x]
+  - Git commit hash 기록
+- [ ] 관련 문서 생성/업데이트
+  - API 문서 (Task x.7)
+  - 테스트 결과 (Task x.6)
+  - 분석 결과 (Task x.1)
+- [ ] 임시 파일 정리
+  - playwright-report/ 삭제
+  - test-results/ 삭제
+  - 디버깅 파일 삭제
+
+### Module 완료 시 필수 확인 (회고)
+- [ ] 모든 Task 완료 표시 확인
+- [ ] MASTER_PLAN 전체 체크박스 검증
+- [ ] MODULE_RETROSPECTIVE.md 생성
+- [ ] Git commit (회고)
+- [ ] 사용하지 않는 파일 정리
 
 ---
 
