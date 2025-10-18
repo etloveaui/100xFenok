@@ -437,19 +437,57 @@ Analyst Coverage (2):
 
 ---
 
-## 🔮 향후 작업 (Sprint 4)
+## 📊 Sprint 4: 데이터 통합 완성 (진행 중 🔄)
+**목표**: 6,176개 전체 기업 + 모든 Analytics 모듈 활성화
+**시작일**: 2025-10-18
+**문서 위치**: `docs/Sprint4_DataIntegration/`
+
+### 핵심 문제
+- global_scouter_integrated.json에 `data.technical` 섹션 누락
+- 5개 Analytics 모듈 (EPS, Growth, Ranking, CFO, Correlation) 모두 실패
+- 개별 T_*.json 파일들 로딩 안 됨
+- js/analytics/ vs modules/ 중복 모듈
+
+### Phase 0: As-Is Analysis ✅
+**완료일**: 2025-10-18
+
+**생성 문서 (5개):**
+- `SPRINT4_DATA_INTEGRATION_ANALYSIS.md` (24KB - 핵심 분석)
+- `SPRINT4_DATA_FLOW_DIAGRAM.md` (36KB - 시각화)
+- `SPRINT4_INTEGRATION_SUMMARY.md` (9KB - 요약)
+- `DATA_SCHEMA_REFERENCE.md` (15KB - 스키마)
+- `INTEGRATION_SCRIPT_DESIGN.md` (19KB - 스크립트)
+
+**발견사항:**
+- 현재 데이터 흐름: global_scouter_integrated.json만 로딩
+- 구조: `{ metadata, data: { main: [...] } }` ← technical 섹션 없음
+- 모든 모듈이 `data.technical.T_XXX` 기대
+- 개별 T_*.json (5개) 파일 미사용 → 삭제 가능
+- 예상 작업 시간: **1시간**
+
+### Phase 1: To-Be Design ⏳
+**목표**: 통합 JSON 구조 설계 및 스크립트 작성
+
+**계획:**
+- global_scouter_integrated.json 재구조화
+- data.technical 섹션 추가
+- 모든 T_*.json 통합
+- 중복 모듈 정리
+
+### Phase 2: Master Plan ⏳
+**목표**: 상세 Task 체크리스트 작성
+
+### Phase 3: Implementation ⏳
+**목표**: 통합 실행 및 검증
+
+---
+
+## 🔮 향후 작업 (Sprint 5+)
 
 ### 목표
-- [ ] Task 2.7 완료 (Deployment & Monitoring)
-- [ ] 티커 수량 불일치 해결
-- [ ] 테스트 재실행 (Sprint 5 Week 3)
+- [ ] Sprint 4 완료 후 전체 테스트
 - [ ] 사용자 인수 테스트
 - [ ] Production 배포
-
-### 예상 시간
-- Sprint 3 완료: 2시간
-- Sprint 4 완료: 3시간
-- **Total**: 5시간
 
 ---
 
