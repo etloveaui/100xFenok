@@ -465,20 +465,54 @@ Analyst Coverage (2):
 - 개별 T_*.json (5개) 파일 미사용 → 삭제 가능
 - 예상 작업 시간: **1시간**
 
-### Phase 1: To-Be Design ⏳
-**목표**: 통합 JSON 구조 설계 및 스크립트 작성
+### Phase 1: To-Be Design ✅
+**완료일**: 2025-10-18
+**Git Commit**: 6989879 (in progress)
 
-**계획:**
-- global_scouter_integrated.json 재구조화
-- data.technical 섹션 추가
-- 모든 T_*.json 통합
-- 중복 모듈 정리
+**생성 문서 (1개):**
+- `SPRINT4_TO_BE_DESIGN.md` (70+ sections, comprehensive architecture)
+
+**핵심 결정:**
+- ✅ **Option 1 선택**: HTML 수정 (개별 JSON 로딩)
+- ❌ Option 2 거부: 통합 JSON (매주 업데이트 복잡)
+- 개별 JSON이 PRIMARY 소스 (매주 덮어쓰기)
+- 22개 CSV 전체 활용 계획 (현재 5개 → 목표 22개)
+
+**To-Be 아키텍처:**
+- 각 Analytics 모듈이 개별 JSON 직접 로딩
+- 매주 워크플로우: Excel → CSV → JSON (덮어쓰기)
+- BaseAnalytics 패턴 확장
+- 3단계 개발 로드맵:
+  - 🔴 Phase 1 (Critical): 5개 모듈 (8주)
+  - 🟡 Phase 2 (High): 6개 모듈 (11주)
+  - 🟢 Phase 3 (Medium): 6개 모듈 (9주)
+- 총 17개 신규 모듈 개발 필요 (28주)
+
+**성능 목표:**
+- 초기 로딩: < 5초 (22 modules)
+- Ticker 조회: O(1) < 10ms
+- Industry 필터: O(n) < 100ms
 
 ### Phase 2: Master Plan ⏳
-**목표**: 상세 Task 체크리스트 작성
+**목표**: 상세 Task 체크리스트 작성 (Phase 1 모듈부터)
+
+**계획:**
+- Task 2.1: CompanyMasterProvider 개발 (2주)
+- Task 2.2: ValidationAnalytics 개발 (2주)
+- Task 2.3: WatchlistManager 개발 (2주)
+- Task 2.4: ComparisonEngine 개발 (2주)
+- Task 2.5: HTML Integration (1주)
+- Task 2.6: Testing Infrastructure (1주)
 
 ### Phase 3: Implementation ⏳
-**목표**: 통합 실행 및 검증
+**목표**: Phase 1 모듈 (Critical 5개) 구현 및 검증
+
+**예상 기간**: 8주
+**완료 기준**:
+- 4개 신규 모듈 구현
+- 전체 데이터셋 테스트 (6,179 companies)
+- O(n) 성능 최적화
+- Dashboard UI 통합
 
 ---
 
