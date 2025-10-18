@@ -277,6 +277,102 @@ CorrelationEngine.js   → fetch('data/T_Correlation.json')
 
 ---
 
+## 📊 Stock Analyzer 프로젝트 구조
+
+### 전체 데이터 현황 (22 CSV files)
+
+**데이터 위치**: `data/csv/`
+
+**카테고리별 분류:**
+- **Master (M_*)**: 기업 및 ETF 마스터 데이터 (2개)
+- **Technical (T_*)**: 기술적 분석 및 지표 (10개)
+- **Advanced (A_*)**: 고급 분석 및 예측 (5개)
+- **Screening (S_*)**: 스크리닝 도구 및 관심종목 (3개)
+- **Economic (E_*)**: 경제 지표 (1개)
+- **Special**: 문서 및 대형주 분석 (1개)
+
+**전체 데이터 규모**: ~15,000+ 기업 레코드, ~8.4 MB
+
+### 현재 개발 현황
+
+**구현 완료 (15% 커버리지)**:
+```
+✅ modules/EPSAnalytics.js        → T_EPS_C.csv
+✅ modules/GrowthAnalytics.js     → T_Growth_C.csv
+✅ modules/RankingAnalytics.js    → T_Rank.csv
+✅ modules/CFOAnalytics.js        → T_CFO.csv
+✅ modules/CorrelationEngine.js   → T_Correlation.csv
+```
+
+**필요 개발 (85% 남음)**:
+- 🔴 Phase 1 (Critical): 5개 모듈 (8주)
+- 🟡 Phase 2 (High): 6개 모듈 (11주)
+- 🟢 Phase 3 (Medium): 6개 모듈 (9주)
+
+**상세 로드맵**: `docs/Sprint4_DataIntegration/FULL_DATA_ANALYSIS_AND_ROADMAP.md` 참조
+
+### Analytics 모듈 개발 패턴
+
+**모든 모듈은 동일한 패턴 따름:**
+
+1. **데이터 프로바이더 생성**
+   - CSV 로딩 및 파싱
+   - 데이터 검증
+   - 캐싱 메커니즘
+
+2. **Analytics 클래스 구현**
+   - `BaseAnalytics` 확장
+   - 분석 메서드 구현
+   - 성능 최적화 (O(n) 알고리즘)
+
+3. **테스트 작성**
+   - 단위 테스트 (Jest)
+   - E2E 테스트 (Playwright)
+   - 전체 데이터셋으로 검증
+
+4. **UI 통합**
+   - HTML에서 개별 JSON 로딩
+   - Dashboard 탭 추가
+   - 차트 및 테이블 렌더링
+
+### 우선순위 가이드
+
+**새 기능 개발 시 반드시 확인:**
+
+1. `FULL_DATA_ANALYSIS_AND_ROADMAP.md` 확인
+   - Part 1: CSV 데이터 구조
+   - Part 2: Feature 매핑 (CSV → 기능)
+   - Part 3: 개발 우선순위
+
+2. Phase 1 (Critical) 먼저:
+   - CompanyMasterProvider.js (기반)
+   - ValidationAnalytics.js (품질)
+   - WatchlistManager.js (사용자 기능)
+   - ComparisonEngine.js (핵심 기능)
+
+3. 기존 패턴 따르기:
+   - 개별 JSON 파일 직접 로딩
+   - BaseAnalytics 확장
+   - 전체 데이터셋 테스트
+
+### ⚠️ 절대 원칙
+
+**데이터 파일 관리:**
+- ❌ 개별 T_*.json 파일 삭제 금지
+- ❌ CSV → JSON 변환 스크립트 함부로 수정 금지
+- ❌ 데이터 구조 임의 변경 금지
+- ✅ 매주 업데이트 워크플로우 유지
+
+**개발 원칙:**
+- ❌ 테스트 데이터 슬라이싱 금지
+- ❌ Phase 무시하고 즉흥 개발 금지
+- ❌ 기존 모듈 패턴 무시 금지
+- ✅ 전체 데이터셋으로 검증
+- ✅ SPEC_DRIVEN_WORKFLOW 준수
+- ✅ FULL_DATA_ANALYSIS_AND_ROADMAP.md 기준
+
+---
+
 ## 🚨 일반적인 실수 방지
 
 ### 실수 1: 잘못된 경로에서 작업

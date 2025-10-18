@@ -285,37 +285,37 @@ class CorrelationEngine {
      */
     findLowCorrelationPairs(minCorrelation = -0.3, maxCorrelation = 0.3) {
         // Determine which index buckets to search based on correlation range
-        const candidates = [];
+        let candidates = [];
 
         // veryLow: < -0.5
         if (minCorrelation < -0.5 || maxCorrelation < -0.5) {
-            candidates.push(...this.correlationIndex.veryLow);
+            candidates = candidates.concat(this.correlationIndex.veryLow);
         }
 
         // low: -0.5 to -0.1
         if ((minCorrelation >= -0.5 && minCorrelation < -0.1) ||
             (maxCorrelation >= -0.5 && maxCorrelation < -0.1) ||
             (minCorrelation < -0.5 && maxCorrelation >= -0.1)) {
-            candidates.push(...this.correlationIndex.low);
+            candidates = candidates.concat(this.correlationIndex.low);
         }
 
         // neutral: -0.1 to 0.1
         if ((minCorrelation >= -0.1 && minCorrelation <= 0.1) ||
             (maxCorrelation >= -0.1 && maxCorrelation <= 0.1) ||
             (minCorrelation < -0.1 && maxCorrelation > 0.1)) {
-            candidates.push(...this.correlationIndex.neutral);
+            candidates = candidates.concat(this.correlationIndex.neutral);
         }
 
         // medium: 0.1 to 0.5
         if ((minCorrelation > 0.1 && minCorrelation <= 0.5) ||
             (maxCorrelation > 0.1 && maxCorrelation <= 0.5) ||
             (minCorrelation <= 0.1 && maxCorrelation > 0.5)) {
-            candidates.push(...this.correlationIndex.medium);
+            candidates = candidates.concat(this.correlationIndex.medium);
         }
 
         // high: > 0.5
         if (minCorrelation > 0.5 || maxCorrelation > 0.5) {
-            candidates.push(...this.correlationIndex.high);
+            candidates = candidates.concat(this.correlationIndex.high);
         }
 
         // Filter candidates to exact range and enrich with company data
@@ -554,6 +554,9 @@ class CorrelationEngine {
                 .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))
                 .slice(0, limit)
                 .map(d => d.Ticker);
+        } else {
+            // Apply limit even when tickers are provided
+            tickers = tickers.slice(0, limit);
         }
 
         const matrix = [];
@@ -644,13 +647,13 @@ class CorrelationEngine {
 
         switch (riskTolerance) {
             case 'conservative':
-                // Equal weight - lowest risk
-                weights = new Array(n).fill(1 / n);
+                // Inverse correlation weight - maximize diversification, lowest risk
+                weights = this.calculateInverseCorrelationWeights(tickers);
                 break;
 
             case 'aggressive':
-                // Inverse correlation weight
-                weights = this.calculateInverseCorrelationWeights(tickers);
+                // Equal weight - higher risk tolerance
+                weights = new Array(n).fill(1 / n);
                 break;
 
             case 'moderate':

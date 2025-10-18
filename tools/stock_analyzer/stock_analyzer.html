@@ -3,1633 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>100xFenok Stock Analyzer - Professional Stock Analysis Tool</title>
-    <meta name="description" content="Professional stock analysis and portfolio management tool with advanced filtering, charts, and real-time data">
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#3b82f6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="StockAnalyzer">
-    <meta name="msapplication-TileColor" content="#3b82f6">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="./manifest.json">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <title>Stock Analytics Dashboard - Sprint 4</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
     <style>
-        :root {
-            --color-primary: #1e40af;
-            --color-secondary: #0d9488;
-            --color-bg: #f0f2f5;
-            --color-surface: #ffffff;
-            --color-text-primary: #0f172a;
-            --color-text-secondary: #475569;
-            --color-border: #e2e8f0;
-            --color-positive: #16a34a;
-            --color-negative: #dc2626;
-        }
-        
-        body { 
-            font-family: 'Noto Sans KR', 'Roboto', sans-serif; 
-            background-color: var(--color-bg);
-            color: var(--color-text-primary);
-        }
-        .orbitron { font-family: 'Orbitron', monospace; }
-        
-        /* 전문 금융 대시보드 스타일 */
-        .dashboard-card {
-            background-color: var(--color-surface);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            border: 1px solid var(--color-border);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        
-        .sparkline-canvas { 
-            width: 100px !important; 
-            height: 30px !important; 
-        }
-        
-        /* 모달 스타일 */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.6); 
-            display: flex; align-items: center; justify-content: center;
-            z-index: 100; opacity: 0; visibility: hidden; 
-            transition: all 0.3s ease;
-        }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content {
-            background-color: white; padding: 2rem; border-radius: 1rem;
-            width: 90%; max-width: 900px; max-height: 90vh;
-            overflow-y: auto; transform: scale(0.95); 
-            transition: transform 0.3s ease;
-        }
-        .modal-overlay.active .modal-content { transform: scale(1); }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* 컬럼 최소 너비 설정 (가독성 개선) */
-        .min-w-16 { min-width: 4rem; }
-        .min-w-18 { min-width: 4.5rem; }
-        .min-w-20 { min-width: 5rem; }
-        .min-w-22 { min-width: 5.5rem; }
-        .min-w-24 { min-width: 6rem; }
-        .min-w-32 { min-width: 8rem; }
-        
-        /* 컬럼 헤더 텍스트 최적화 */
-        th {
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
-        
-        /* 테이블 셀 패딩 최적화 */
-        .data-table th, .data-table td {
-            padding: 0.5rem 0.75rem;
-        }
-        
-        /* 카드 뷰 텍스트 오버플로우 처리 */
-        .company-card {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            hyphens: auto;
-        }
-        
-        .company-card h3 {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 100%;
-        }
-        
-        .company-card .truncate {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        /* 멀티라인 텍스트 자르기 (Webkit 기반 브라우저) */
-        .line-clamp-2 {
-            display: -webkit-box;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            line-height: 1.2em;
-            max-height: 2.4em;
-        }
-        
-        .line-clamp-1 {
-            display: -webkit-box;
-            line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        /* 카드 크기 고정 */
-        .company-card {
-            min-height: 280px;
-            max-height: 320px;
-            width: 100%;
-            max-width: 300px;
-            margin: 0 auto;
-        }
-        
-        /* 카드 내부 요소 크기 제한 */
-        .company-card .text-xs,
-        .company-card .text-sm {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 100%;
-        }
-        
-        /* 툴팁 스타일 */
-        .company-card [title]:hover {
-            position: relative;
-        }
-        
-        .company-card [title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            z-index: 1000;
-            pointer-events: none;
-            max-width: 200px;
-            word-wrap: break-word;
-            white-space: normal;
-        }
-        
-        /* 반응형 카드 그리드 */
-        @media (max-width: 640px) {
-            .company-card {
-                max-width: 100%;
-                min-height: 260px;
-            }
-        }
-        
-        @media (min-width: 641px) and (max-width: 768px) {
-            .company-card {
-                max-width: 280px;
-            }
-        }
-        
-        /* 고정 컬럼 그림자 효과 */
-        .sticky {
-            position: sticky;
-            z-index: 10;
-        }
-        
-        .sticky.shadow-sm {
-            box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-        }
-        
-        /* 테이블 헤더 고정 */
-        thead th {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background: #f9fafb;
-        }
-        
-        /* 고정 컬럼의 헤더는 더 높은 z-index */
-        thead th.sticky {
-            z-index: 40;
-        }
-        
-        /* 가로 스크롤 UX 개선 */
-        .table-container {
-            position: relative;
-        }
-        
-        .top-scrollbar {
-            overflow-x: auto;
-            overflow-y: hidden;
-            height: 20px;
-            background: #f3f4f6;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-        
-        .top-scrollbar-content {
-            height: 1px;
-            background: transparent;
-        }
-        
-        .scroll-indicator {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid #3b82f6;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 12px;
-            color: #3b82f6;
-            z-index: 50;
-            pointer-events: none;
-        }
-        
-        .column-groups {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .column-group-btn {
-            padding: 4px 12px;
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .column-group-btn:hover {
-            background: #e5e7eb;
-        }
-        
-        .column-group-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        
-        .column-group-btn.essential {
-            border: 2px solid #f59e0b;
-        }
-        
-        .column-group-btn.essential.active {
-            background: #f59e0b;
-            border-color: #f59e0b;
-        }
-        
-        .column-group-help {
-            position: fixed;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            max-width: 300px;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .column-group-help.show {
-            display: block;
-        }
-        
-        .filter-preset-btn {
-            padding: 6px 12px;
-            background: white;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .filter-preset-btn:hover {
-            background: #f3f4f6;
-            border-color: #3b82f6;
-        }
-        
-        .filter-preset-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        
-        .tab-button {
-            transition: all 0.2s;
-        }
-        
-        .tab-button.active {
-            color: #2563eb !important;
-            border-color: #2563eb !important;
-        }
-        
-        .tab-content {
-            display: block;
-        }
-        
-        .tab-content.hidden {
-            display: none;
-        }
-
-        /* 반응형 차트 스타일 */
-        @media (max-width: 768px) {
-            /* 모바일 최적화 */
-            .chart-container {
-                height: 250px !important;
-            }
-            
-            .dashboard-card {
-                padding: 1rem;
-                margin-bottom: 1rem;
-            }
-            
-            .dashboard-card h3 {
-                font-size: 1rem;
-                margin-bottom: 0.75rem;
-            }
-            
-            /* 모바일에서 차트 내보내기 버튼 숨김 */
-            .dashboard-card button {
-                display: none;
-            }
-            
-            /* 모바일 터치 최적화 */
-            canvas {
-                touch-action: pan-x pan-y;
-            }
-            
-            /* 모바일에서 그리드 1열로 */
-            .grid.lg\\:grid-cols-2 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (min-width: 769px) and (max-width: 1024px) {
-            /* 태블릿 최적화 */
-            .chart-container {
-                height: 300px !important;
-            }
-            
-            .dashboard-card {
-                padding: 1.25rem;
-            }
-            
-            .dashboard-card h3 {
-                font-size: 1.125rem;
-            }
-        }
-
-        @media (min-width: 1025px) {
-            /* 데스크톱 최적화 */
-            .chart-container {
-                height: 400px !important;
-            }
-            
-            .dashboard-card {
-                padding: 1.5rem;
-            }
-            
-            .dashboard-card h3 {
-                font-size: 1.25rem;
-            }
-        }
-
-        /* 고해상도 디스플레이 최적화 */
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            canvas {
-                image-rendering: -webkit-optimize-contrast;
-                image-rendering: crisp-edges;
-            }
-        }
-
-        /* 터치 디바이스 최적화 */
-        @media (hover: none) and (pointer: coarse) {
-            /* 터치 디바이스에서 호버 효과 제거 */
-            .dashboard-card:hover {
-                transform: none;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            }
-            
-            /* 터치 친화적 버튼 크기 */
-            button {
-                min-height: 44px;
-                min-width: 44px;
-            }
-        }
-
-        /* 범위 슬라이더 스타일 */
-        .range-slider-container {
-            position: relative;
-            height: 20px;
-            margin: 10px 0;
-        }
-
-        .range-slider {
-            position: absolute;
-            width: 100%;
-            height: 4px;
-            background: transparent;
-            outline: none;
-            appearance: none;
-            pointer-events: none;
-        }
-
-        .range-slider::-webkit-slider-thumb {
-            appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            background: #3b82f6;
-            border-radius: 50%;
-            cursor: pointer;
-            pointer-events: all;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .range-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            background: #3b82f6;
-            border-radius: 50%;
-            cursor: pointer;
-            pointer-events: all;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .range-track {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #e5e7eb;
-            border-radius: 2px;
-            transform: translateY(-50%);
-        }
-
-        .range-fill {
-            position: absolute;
-            top: 50%;
-            height: 4px;
-            background: #3b82f6;
-            border-radius: 2px;
-            transform: translateY(-50%);
-        }
-
-        .range-min {
-            z-index: 1;
-        }
-
-        .range-max {
-            z-index: 2;
-        }
-
-        /* Task 5: 다중 선택 드롭다운 스타일 */
-        .multiselect-container {
-            position: relative;
-        }
-
-        .multiselect-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            z-index: 50;
-            max-height: 240px;
-            overflow-y: auto;
-        }
-
-        .multiselect-option {
-            padding: 0.5rem 0.75rem;
-            cursor: pointer;
-            border-bottom: 1px solid #f3f4f6;
-            transition: background-color 0.15s;
-        }
-
-        .multiselect-option:hover {
-            background-color: #eff6ff;
-        }
-
-        .multiselect-option:last-child {
-            border-bottom: none;
-        }
-
-        .multiselect-option label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .multiselect-option input[type="checkbox"] {
-            margin-right: 0.5rem;
-            accent-color: #3b82f6;
-        }
-
-        .selected-tag {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.5rem;
-            background-color: #dbeafe;
-            color: #1e40af;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin: 0.125rem;
-        }
-
-        .selected-tag button {
-            margin-left: 0.25rem;
-            color: #3b82f6;
-            transition: color 0.15s;
-        }
-
-        .selected-tag button:hover {
-            color: #1e40af;
-        }
-
-        /* 필터 상태 표시 개선 */
-        #filter-status {
-            padding: 0.75rem;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 1px solid #0ea5e9;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .filter-active #filter-status {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            border-color: #10b981;
-        }
-
-        /* 성능 최적화 표시 */
-        .performance-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.75rem;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .performance-indicator.show {
-            opacity: 1;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .chart-container { position: relative; height: 300px; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <h1 class="text-2xl font-bold text-gray-800">Stock Analytics Dashboard</h1>
+            <p class="text-sm text-gray-500">Sprint 4 - Integrated Analytics System</p>
+        </div>
+    </header>
 
-    <div class="container mx-auto px-6 py-4 max-w-7xl">
-        <!-- 전문 금융 대시보드 헤더 -->
-        <header class="dashboard-card mb-6">
-            <div class="flex justify-between items-center flex-wrap">
-                <div class="header-main">
-                    <h1 class="text-3xl font-black text-gray-900 mb-2">
-                        <i class="fas fa-chart-line text-blue-600 mr-3"></i>
-                        AI 주식 투자 분석 종합 대시보드
-                    </h1>
-                    <p class="text-gray-600 text-sm">
-                        Global Scouter 데이터 기반 | 1,250개 기업 지표 분석 | 
-                        최종 업데이트: <span id="last-updated">2025-10-08</span>
-                    </p>
-                </div>
-                <div class="header-stats flex gap-6 mt-4 lg:mt-0">
-                    <div class="text-center">
-                        <div class="text-xs text-gray-500">총 기업 수</div>
-                        <div class="text-xl font-bold text-blue-600">1,250</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-xs text-gray-500">분석 지표</div>
-                        <div class="text-xl font-bold text-green-600">32개</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-xs text-gray-500">데이터 소스</div>
-                        <div class="text-xl font-bold text-purple-600">Global</div>
-                    </div>
-                </div>
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex space-x-8">
+                <button class="tab-btn py-4 px-2 border-b-2 border-blue-500 text-blue-600 font-medium" data-tab="dashboard">
+                    Dashboard
+                </button>
+                <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="growth">
+                    Growth Analytics
+                </button>
+                <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="ranking">
+                    Ranking Analytics
+                </button>
+                <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="eps">
+                    EPS Analytics
+                </button>
             </div>
-        </header>
+        </div>
+    </nav>
 
-        <main>
-            <!-- 탭 네비게이션 -->
-            <div class="mb-6">
-                <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-8">
-                        <button id="tab-screener" class="tab-button active py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
-                            <i class="fas fa-filter mr-2"></i>스크리닝
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Dashboard Tab -->
+        <div id="dashboard-content" class="tab-content active">
+            <!-- Controls -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center gap-4">
+                        <label class="text-sm font-medium text-gray-700">업종:</label>
+                        <select id="industry-select" class="border rounded px-3 py-2 text-sm">
+                            <option value="all">전체</option>
+                            <option value="tech">IT/기술</option>
+                            <option value="finance">금융</option>
+                            <option value="healthcare">헬스케어</option>
+                            <option value="energy">에너지</option>
+                        </select>
+                        <button id="refresh-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                            새로고침
                         </button>
-                        <button id="tab-dashboard" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                            <i class="fas fa-chart-line mr-2"></i>대시보드
-                        </button>
-                        <button id="tab-portfolio" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                            <i class="fas fa-briefcase mr-2"></i>포트폴리오
-                        </button>
-                    </nav>
-                </div>
-            </div>
-
-            <!-- 스크리닝 탭 내용 -->
-            <div id="screener-content" class="tab-content">
-                <!-- Section 1: Screener Control Panel -->
-                <div id="screener-panel" class="bg-white p-4 rounded-lg shadow-md mb-6">
-                <h2 class="text-lg font-bold text-gray-700 mb-4">
-                    <i class="fas fa-filter text-blue-600 mr-2"></i>
-                    고급 필터링 시스템
-                    <span id="filter-result-count" class="text-sm font-normal text-gray-600 ml-2">1,250개 기업</span>
-                </h2>
-
-                <div class="flex flex-wrap gap-3 mb-4">
-                    <button id="open-deep-compare-btn" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-                        <i class="fas fa-balance-scale"></i>
-                        기업 비교 (DeepCompare)
-                    </button>
-                    <button id="open-smart-analytics-btn" class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">
-                        <i class="fas fa-brain"></i>
-                        AI 스마트 분석
-                    </button>
-                    <button id="open-portfolio-builder-btn" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 transition">
-                        <i class="fas fa-briefcase"></i>
-                        스마트 포트폴리오 빌더
-                    </button>
-                </div>
-                
-                <!-- 필터 상태 표시 -->
-                <div id="filter-status" class="mb-4">
-                    <span class="text-gray-500">필터 없음</span>
-                </div>
-                
-                <!-- 기본 QVM 필터 -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">투자 전략 필터</label>
-                    <div id="qvm-filters" class="flex flex-wrap gap-2">
-                        <!-- QVM 필터 버튼들이 여기에 동적으로 추가됩니다 -->
-                    </div>
-                </div>
-                
-                <!-- 필터 사용 가이드 -->
-                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 class="text-sm font-bold text-blue-800 mb-2">💡 필터 사용 가이드</h4>
-                    <div class="text-xs text-blue-700 grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div><strong>거래소:</strong> NASDAQ, NYSE 등 상장 거래소별 필터</div>
-                        <div><strong>업종:</strong> 반도체, 소프트웨어 등 산업별 필터</div>
-                        <div><strong>시가총액:</strong> 대형주/중형주/소형주 구분 (백만달러)</div>
-                        <div><strong>PER:</strong> 저평가 종목 발굴 (15 이하 권장)</div>
-                        <div><strong>PBR:</strong> 자산 대비 가치 평가 (1-3 적정)</div>
-                        <div><strong>ROE:</strong> 자기자본수익률 (15% 이상 우량)</div>
-                    </div>
-                </div>
-                
-                <!-- 프리셋 필터 -->
-                <div id="preset-filters-container" class="mb-6">
-                    <!-- FilterManager에서 동적으로 생성됩니다 -->
-                </div>
-                
-                <!-- 범위 필터 -->
-                <div class="mb-6">
-                    <h3 class="text-md font-bold text-gray-700 mb-3">
-                        <i class="fas fa-sliders-h text-green-600 mr-2"></i>
-                        범위 필터
-                    </h3>
-                    <div id="range-filters-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- FilterManager에서 동적으로 생성됩니다 -->
-                    </div>
-                </div>
-                
-                <!-- 카테고리 필터 -->
-                <div class="mb-6">
-                    <h3 class="text-md font-bold text-gray-700 mb-3">
-                        <i class="fas fa-tags text-purple-600 mr-2"></i>
-                        카테고리 필터
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div id="industry-filter-container">
-                            <!-- FilterManager에서 동적으로 생성됩니다 -->
-                        </div>
-                        <div id="exchange-filter-container">
-                            <!-- FilterManager에서 동적으로 생성됩니다 -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 고급 카테고리 필터 (다중 선택 지원) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- 거래소 다중 선택 필터 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-building text-blue-600 mr-1"></i>거래소 (다중 선택)
-                        </label>
-                        <div class="relative">
-                            <div id="exchange-multiselect" class="w-full min-h-[40px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
-                                <span class="text-gray-500">거래소 선택...</span>
-                            </div>
-                            <div id="exchange-dropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto hidden">
-                                <!-- 동적으로 생성됩니다 -->
-                            </div>
-                        </div>
-                        <div id="exchange-selected" class="mt-2 flex flex-wrap gap-1">
-                            <!-- 선택된 거래소 태그들이 여기에 표시됩니다 -->
-                        </div>
-                    </div>
-                    
-                    <!-- 업종 다중 선택 필터 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-industry text-purple-600 mr-1"></i>업종 (다중 선택)
-                        </label>
-                        <div class="relative">
-                            <div id="industry-multiselect" class="w-full min-h-[40px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
-                                <span class="text-gray-500">업종 선택...</span>
-                            </div>
-                            <div id="industry-dropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto hidden">
-                                <!-- 동적으로 생성됩니다 -->
-                            </div>
-                        </div>
-                        <div id="industry-selected" class="mt-2 flex flex-wrap gap-1">
-                            <!-- 선택된 업종 태그들이 여기에 표시됩니다 -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 수치 범위 필터 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    
-                    <!-- 시가총액 범위 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">시가총액 (백만달러)</label>
-                        <div class="flex gap-2">
-                            <input type="number" id="market-cap-min" placeholder="최소" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            <input type="number" id="market-cap-max" placeholder="최대" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                        </div>
-                    </div>
-                    
-                    <!-- PER 범위 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">PER 범위</label>
-                        <div class="flex gap-2">
-                            <input type="number" id="per-min" placeholder="최소" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            <input type="number" id="per-max" placeholder="최대" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 추가 수치 필터 -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <!-- PBR 범위 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">PBR 범위</label>
-                        <div class="flex gap-2">
-                            <input type="number" id="pbr-min" placeholder="최소" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            <input type="number" id="pbr-max" placeholder="최대" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                        </div>
-                    </div>
-                    
-                    <!-- ROE 범위 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ROE 범위 (%)</label>
-                        <div class="flex gap-2">
-                            <input type="number" id="roe-min" placeholder="최소" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            <input type="number" id="roe-max" placeholder="최대" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                        </div>
-                    </div>
-                    
-                    <!-- 배당수익률 범위 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">배당수익률 (%)</label>
-                        <div class="flex gap-2">
-                            <input type="number" id="dividend-min" placeholder="최소" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            <input type="number" id="dividend-max" placeholder="최대" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 필터 프리셋 -->
-                <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <h4 class="text-sm font-bold text-gray-800 mb-2">🎯 인기 필터 조합</h4>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="filter-preset-btn" data-preset="nasdaq-tech">
-                            📱 나스닥 기술주
-                        </button>
-                        <button class="filter-preset-btn" data-preset="value-stocks">
-                            💎 저PER 가치주
-                        </button>
-                        <button class="filter-preset-btn" data-preset="dividend-stocks">
-                            💰 고배당 주식
-                        </button>
-                        <button class="filter-preset-btn" data-preset="large-cap">
-                            🏢 대형주 안정성
-                        </button>
-                        <button class="filter-preset-btn" data-preset="growth-stocks">
-                            🚀 고성장 주식
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- 필터 액션 버튼 -->
-                <div class="flex justify-between items-center mt-4 pt-4 border-t">
-                    <div id="filter-status" class="text-sm text-gray-600">
-                        <!-- 현재 필터 상태가 여기에 표시됩니다 -->
                     </div>
                     <div class="flex gap-2">
-                        <button id="apply-filters" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-search mr-2"></i>필터 적용
+                        <button id="export-csv-btn" class="px-4 py-2 border rounded hover:bg-gray-50 text-sm">
+                            CSV 내보내기
                         </button>
-                        <button id="clear-all-filters" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                            <i class="fas fa-undo mr-2"></i>전체 초기화
-                        </button>
-                        <button id="save-filter-preset" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                            <i class="fas fa-save mr-2"></i>현재 필터 저장
+                        <button id="export-png-btn" class="px-4 py-2 border rounded hover:bg-gray-50 text-sm">
+                            PNG 내보내기
                         </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Task 6: 성능 최적화 표시기 -->
-                <div id="performance-indicator" class="performance-indicator">
-                    <i class="fas fa-tachometer-alt mr-1"></i>
-                    <span id="performance-text">필터 처리 중...</span>
+            <!-- Row 1: Overview Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <!-- Growth Card -->
+                <div class="stat-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-600">평균 성장률</h3>
+                        <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline">
+                        <p id="growth-avg" class="text-3xl font-bold text-gray-900">--</p>
+                        <span class="ml-2 text-sm text-gray-500">%</span>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">최근 분기 대비</p>
+                </div>
+
+                <!-- Ranking Card -->
+                <div class="stat-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-600">Top 10 기업 수</h3>
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline">
+                        <p id="ranking-top10" class="text-3xl font-bold text-gray-900">--</p>
+                        <span class="ml-2 text-sm text-gray-500">개</span>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">선정 업종 내</p>
+                </div>
+
+                <!-- EPS Card -->
+                <div class="stat-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-600">평균 EPS</h3>
+                        <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline">
+                        <p id="eps-avg" class="text-3xl font-bold text-gray-900">--</p>
+                        <span class="ml-2 text-sm text-gray-500">원</span>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">최근 분기 기준</p>
                 </div>
             </div>
 
-            <!-- Section 1.5: Search and Controls -->
-            <div class="bg-white p-4 rounded-lg shadow-md mb-6">
-                <div class="flex flex-col sm:flex-row gap-4 items-center">
-                    <!-- Enhanced Search Box -->
-                    <div class="flex-1 relative">
-                        <input 
-                            type="text" 
-                            id="search-input" 
-                            placeholder="티커, 회사명, 업종, 거래소로 검색... (예: NVDA, Apple, 반도체)" 
-                            class="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            autocomplete="off"
-                        >
-                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        
-                        <!-- 검색 초기화 버튼 -->
-                        <button 
-                            id="clear-search" 
-                            class="absolute right-3 top-2 text-gray-400 hover:text-gray-600 hidden"
-                            title="검색 초기화"
-                        >
-                            <i class="fas fa-times"></i>
-                        </button>
-                        
-                        <!-- 검색 자동완성 드롭다운 -->
-                        <div id="search-suggestions" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-b-lg shadow-lg z-10 hidden max-h-48 overflow-y-auto">
-                            <!-- 자동완성 항목들이 여기에 동적으로 추가됩니다 -->
-                        </div>
-                    </div>
-                    
-                    <!-- View Mode Selector -->
-                    <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium text-gray-700">표시 모드:</label>
-                        <select id="view-mode" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="basic">기본 지표 (8개)</option>
-                            <option value="valuation">밸류에이션 (8개)</option>
-                            <option value="profitability">수익성 (6개)</option>
-                            <option value="performance">수익률 (8개)</option>
-                            <option value="comprehensive">종합 지표 (15개)</option>
-                            <option value="all">전체 지표 (32개)</option>
-                        </select>
-                    </div>
-                    
-                    <!-- 표시 방식 선택 제거됨 - 테이블 뷰만 지원 -->
-                    
-                    <!-- Reset Button -->
-                    <button 
-                        id="reset-filters" 
-                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                    >
-                        <i class="fas fa-undo mr-2"></i>초기화
-                    </button>
-                </div>
-            </div>
-
-            <!-- Section 2: Data Grid / Table -->
-            <div id="data-grid-container" class="bg-white p-4 rounded-lg shadow-md">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-gray-700">
-                        <i class="fas fa-chart-bar text-blue-600 mr-2"></i>
-                        스크리닝 결과 (47개 지표 활용)
-                    </h2>
-                    <div id="results-count" class="text-sm font-medium text-gray-500"></div>
-                </div>
-                
-                <div id="results-table" class="overflow-x-auto custom-scrollbar">
-                    <!-- Table will be dynamically inserted here -->
-                </div>
-                
-                <!-- Pagination Controls -->
-                <div id="pagination-controls" class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <!-- Pagination info and controls will be dynamically inserted here -->
-                </div>
-            </div>
-
-            <!-- Section 3: Detail View (Initially Hidden) -->
-            <div id="detail-view-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 hidden">
-                <div id="detail-view-content" class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
-                    <!-- Detailed content will be dynamically inserted here -->
-                </div>
-            </div>
-            </div>
-
-            <!-- 대시보드 탭 내용 -->
-            <div id="dashboard-content" class="tab-content hidden">
-                <!-- EconomicDashboard 컨테이너 -->
-                <div id="economic-dashboard-container" class="mb-8"></div>
-
-                <!-- MomentumHeatmap 컨테이너 -->
-                <div id="momentum-heatmap-container" class="mb-8"></div>
-
-                <!-- Sprint 4 Analytics 대시보드 -->
-                <div id="sprint4-analytics-dashboard" class="mb-8">
-                    <div class="dashboard-card mb-6">
-                        <h2 class="text-2xl font-bold mb-4 text-gray-900">
-                            <i class="fas fa-chart-pie text-indigo-600 mr-2"></i>
-                            Sprint 4 Analytics - 성장/순위/EPS 통합 분석
-                        </h2>
-                        <p class="text-sm text-gray-600">
-                            1,252개 기업의 성장 지표, 순위 변화, EPS 분석을 통합한 고급 대시보드
-                        </p>
-                    </div>
-
-                    <!-- Growth Analytics 섹션 -->
-                    <div class="dashboard-card mb-6">
-                        <h3 class="text-xl font-bold mb-4">
-                            <i class="fas fa-chart-line text-green-600 mr-2"></i>
-                            Growth Analytics - 성장 지표 분석
-                        </h3>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="text-lg font-semibold mb-3">섹터별 평균 성장률</h4>
-                                <div class="chart-container" style="height: 350px;">
-                                    <canvas id="growth-sector-chart"></canvas>
-                                </div>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-semibold mb-3">고성장 기업 Top 20</h4>
-                                <div class="chart-container" style="height: 350px;">
-                                    <canvas id="growth-top-companies-chart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Ranking Analytics 섹션 -->
-                    <div class="dashboard-card mb-6">
-                        <h3 class="text-xl font-bold mb-4">
-                            <i class="fas fa-trophy text-yellow-600 mr-2"></i>
-                            Ranking Analytics - 순위 분석
-                        </h3>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                            <div class="text-center">
-                                <div class="text-3xl font-bold text-blue-600" id="ranking-total">1,252</div>
-                                <div class="text-sm text-gray-600">전체 순위 데이터</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-3xl font-bold text-green-600" id="ranking-top-100">247</div>
-                                <div class="text-sm text-gray-600">Top 100 기업</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-3xl font-bold text-purple-600" id="ranking-quality">12개</div>
-                                <div class="text-sm text-gray-600">업종 분석</div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="text-lg font-semibold mb-3">Quality/Value/Momentum 순위 분포</h4>
-                                <div class="chart-container" style="height: 350px;">
-                                    <canvas id="ranking-distribution-chart"></canvas>
-                                </div>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-semibold mb-3">섹터별 평균 순위</h4>
-                                <div class="chart-container" style="height: 350px;">
-                                    <canvas id="ranking-sector-chart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- EPS Analytics 섹션 -->
-                    <div class="dashboard-card mb-6">
-                        <h3 class="text-xl font-bold mb-4">
-                            <i class="fas fa-dollar-sign text-indigo-600 mr-2"></i>
-                            EPS Analytics - 주당순이익 분석
-                        </h3>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="text-lg font-semibold mb-3">ROE vs EPS Growth 산점도</h4>
-                                <div class="chart-container" style="height: 350px;">
-                                    <canvas id="eps-roe-scatter-chart"></canvas>
-                                </div>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-semibold mb-3">섹터별 EPS 히트맵</h4>
-                                <div class="chart-container" style="height: 350px;">
-                                    <canvas id="eps-sector-heatmap-chart"></canvas>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Row 2: Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Growth Chart -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">성장률 분석</h3>
+                    <div class="chart-container">
+                        <canvas id="growth-chart"></canvas>
                     </div>
                 </div>
 
-                <!-- Sprint 5 Analytics 대시보드 -->
-                <div id="sprint5-analytics-dashboard" class="mb-8">
-                    <div class="dashboard-card mb-6">
-                        <h2 class="text-2xl font-bold mb-4 text-gray-900">
-                            <i class="fas fa-chart-line text-green-600 mr-2"></i>
-                            Sprint 5 Analytics - 현금흐름 & 상관관계 분석
-                        </h2>
-                    </div>
-
-                    <!-- Cash Flow Analytics 섹션 -->
-                    <div class="dashboard-card mb-6">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                            <i class="fas fa-money-bill-wave text-green-500 mr-2"></i>
-                            Cash Flow Analytics
-                        </h3>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                            <!-- 통계 카드 3개 -->
-                            <div class="text-center p-4 bg-green-50 rounded-lg">
-                                <div class="text-sm text-gray-600 mb-2">Total Companies</div>
-                                <div class="text-3xl font-bold text-green-600" id="cfo-total">1,264</div>
-                            </div>
-                            <div class="text-center p-4 bg-blue-50 rounded-lg">
-                                <div class="text-sm text-gray-600 mb-2">Positive FCF</div>
-                                <div class="text-3xl font-bold text-blue-600" id="cfo-positive">-</div>
-                            </div>
-                            <div class="text-center p-4 bg-purple-50 rounded-lg">
-                                <div class="text-sm text-gray-600 mb-2">Avg CCC</div>
-                                <div class="text-3xl font-bold text-purple-600" id="cfo-avg-ccc">-</div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="text-md font-semibold mb-2">Sector CFO Heatmap</h4>
-                                <canvas id="cfo-sector-heatmap-chart"></canvas>
-                            </div>
-                            <div>
-                                <h4 class="text-md font-semibold mb-2">Top Cash Flow Companies</h4>
-                                <canvas id="cfo-top-companies-chart"></canvas>
-                            </div>
-                            <div>
-                                <h4 class="text-md font-semibold mb-2">CFO vs ROE Scatter</h4>
-                                <canvas id="cfo-roe-scatter-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Correlation Analytics 섹션 -->
-                    <div class="dashboard-card mb-6">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                            <i class="fas fa-project-diagram text-indigo-500 mr-2"></i>
-                            Correlation Analytics
-                        </h3>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                            <!-- 통계 카드 3개 -->
-                            <div class="text-center p-4 bg-indigo-50 rounded-lg">
-                                <div class="text-sm text-gray-600 mb-2">Total Companies</div>
-                                <div class="text-3xl font-bold text-indigo-600" id="corr-total">1,249</div>
-                            </div>
-                            <div class="text-center p-4 bg-pink-50 rounded-lg">
-                                <div class="text-sm text-gray-600 mb-2">Low Correlation Pairs</div>
-                                <div class="text-3xl font-bold text-pink-600" id="corr-low-pairs">-</div>
-                            </div>
-                            <div class="text-center p-4 bg-orange-50 rounded-lg">
-                                <div class="text-sm text-gray-600 mb-2">Clusters Identified</div>
-                                <div class="text-3xl font-bold text-orange-600" id="corr-clusters">5</div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="text-md font-semibold mb-2">Correlation Heatmap (Top 30)</h4>
-                                <canvas id="corr-heatmap-chart"></canvas>
-                            </div>
-                            <div>
-                                <h4 class="text-md font-semibold mb-2">Sector Correlation</h4>
-                                <canvas id="corr-sector-chart"></canvas>
-                            </div>
-                            <div>
-                                <h4 class="text-md font-semibold mb-2">Cluster Scatter Plot</h4>
-                                <canvas id="corr-cluster-scatter-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Momentum 분석 섹션 (Phase 2) -->
-                <div id="momentum-analysis-section" class="mb-8">
-                    <div class="dashboard-card">
-                        <h3 class="text-xl font-bold mb-4">
-                            <i class="fas fa-rocket text-orange-600 mr-2"></i>
-                            모멘텀 분석
-                            <button id="open-momentum-detail-btn" class="float-right text-sm bg-orange-100 text-orange-600 px-3 py-1 rounded hover:bg-orange-200 transition-colors">
-                                <i class="fas fa-expand-alt mr-1"></i>상세 분석
-                            </button>
-                        </h3>
-                        <div id="momentum-company-container"></div>
-                    </div>
-                </div>
-
-                <!-- 시장 개요 카드 -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                    <div class="dashboard-card text-center">
-                        <div class="text-3xl font-bold text-blue-600" id="total-companies">1,250</div>
-                        <div class="text-sm text-gray-600">총 기업 수</div>
-                    </div>
-                    <div class="dashboard-card text-center">
-                        <div class="text-3xl font-bold text-green-600" id="avg-per">22.5</div>
-                        <div class="text-sm text-gray-600">평균 PER</div>
-                    </div>
-                    <div class="dashboard-card text-center">
-                        <div class="text-3xl font-bold text-purple-600" id="avg-roe">15.2%</div>
-                        <div class="text-sm text-gray-600">평균 ROE</div>
-                    </div>
-                    <div class="dashboard-card text-center">
-                        <div class="text-3xl font-bold text-orange-600" id="total-market-cap">$2.5T</div>
-                        <div class="text-sm text-gray-600">총 시가총액</div>
-                    </div>
-                </div>
-
-                <!-- 차트 영역 -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <!-- 밸류에이션 매트릭스 -->
-                    <div class="dashboard-card">
-                        <h3 class="text-lg font-bold mb-4">
-                            <i class="fas fa-chart-scatter text-blue-600 mr-2"></i>
-                            밸류에이션 매트릭스 (PER vs PBR)
-                            <button class="float-right text-sm bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition-colors" onclick="window.advancedChartManager?.exportChart('valuation-matrix-chart')">
-                                <i class="fas fa-download mr-1"></i>내보내기
-                            </button>
-                        </h3>
-                        <div class="chart-container" style="height: 400px;">
-                            <canvas id="valuation-matrix-chart" title="클릭하여 기업 상세 정보 보기"></canvas>
-
-                        </div>
-                    </div>
-
-                    <!-- 섹터별 성과 히트맵 -->
-                    <div class="dashboard-card">
-                        <h3 class="text-lg font-bold mb-4">
-                            <i class="fas fa-th text-green-600 mr-2"></i>
-                            섹터별 수익률 분포
-                            <button class="float-right text-sm bg-green-100 text-green-600 px-2 py-1 rounded hover:bg-green-200 transition-colors" onclick="window.advancedChartManager?.exportChart('sector-performance-chart')">
-                                <i class="fas fa-download mr-1"></i>내보내기
-                            </button>
-                        </h3>
-                        <div class="chart-container" style="height: 400px;">
-                            <canvas id="sector-performance-chart" title="클릭하여 해당 업종으로 필터링"></canvas>
-                        <div class="mt-2 text-xs text-gray-500 text-center">
-                            💡 업종 바를 클릭하면 해당 업종으로 자동 필터링됩니다
-                        </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TOP/WORST 종목 -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- TOP 10 종목 -->
-                    <div class="dashboard-card">
-                        <h3 class="text-lg font-bold mb-4">
-                            <i class="fas fa-trophy text-yellow-500 mr-2"></i>
-                            TOP 10 수익률
-                        </h3>
-                        <div id="top-performers" class="space-y-2">
-                            <!-- 동적으로 생성됩니다 -->
-                        </div>
-                    </div>
-
-                    <!-- WORST 10 종목 -->
-                    <div class="dashboard-card">
-                        <h3 class="text-lg font-bold mb-4">
-                            <i class="fas fa-arrow-down text-red-500 mr-2"></i>
-                            WORST 10 수익률
-                        </h3>
-                        <div id="worst-performers" class="space-y-2">
-                            <!-- 동적으로 생성됩니다 -->
-                        </div>
+                <!-- Ranking Chart -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">순위 변화</h3>
+                    <div class="chart-container">
+                        <canvas id="ranking-chart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8" id="deployment-dashboard"></div>
-
-            <!-- 포트폴리오 탭 내용 (PortfolioBuilder 통합) -->
-            <div id="portfolio-content" class="tab-content hidden">
-                <!-- PortfolioBuilder가 여기에 렌더링됩니다 -->
-                <div id="portfolio-builder-container"></div>
-            </div>
-        </main>
-    </div>
-
-    <!-- 개별 기업 상세 분석 모달 (Chart.js 기반 고도화) -->
-    <div id="company-analysis-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h3 id="modal-company-title" class="text-2xl font-bold text-gray-900"></h3>
-                    <p id="modal-company-subtitle" class="text-gray-600 text-sm"></p>
-                </div>
-                <button id="close-modal-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-700 transition-colors">
-                    &times;
-                </button>
-            </div>
-            
-            <!-- 핵심 지표 요약 카드 -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="dashboard-card text-center">
-                    <div class="text-2xl font-bold text-blue-600" id="modal-per">-</div>
-                    <div class="text-sm text-gray-600">PER</div>
-                </div>
-                <div class="dashboard-card text-center">
-                    <div class="text-2xl font-bold text-green-600" id="modal-pbr">-</div>
-                    <div class="text-sm text-gray-600">PBR</div>
-                </div>
-                <div class="dashboard-card text-center">
-                    <div class="text-2xl font-bold text-purple-600" id="modal-roe">-</div>
-                    <div class="text-sm text-gray-600">ROE</div>
-                </div>
-                <div class="dashboard-card text-center">
-                    <div class="text-2xl font-bold text-orange-600" id="modal-market-cap">-</div>
-                    <div class="text-sm text-gray-600">시가총액</div>
-                </div>
-            </div>
-            
-            <!-- 차트 및 상세 정보 그리드 -->
+            <!-- Row 3: EPS + Combined -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- 레이더 차트 (주요 지표) -->
-                <div class="dashboard-card">
-                    <h4 class="text-lg font-bold mb-4 text-gray-800">
-                        <i class="fas fa-radar-chart text-blue-600 mr-2"></i>
-                        핵심 지표 분석
-                    </h4>
-                    <div class="chart-container" style="height: 300px;">
-                        <canvas id="radar-chart" title="클릭하여 지표 설명 보기"></canvas>
+                <!-- EPS Chart -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">EPS 추이</h3>
+                    <div class="chart-container">
+                        <canvas id="eps-chart"></canvas>
+                    </div>
+                </div>
 
-                    </div>
-                </div>
-                
-                <!-- 업종 평균 비교 바 차트 -->
-                <div class="dashboard-card">
-                    <h4 class="text-lg font-bold mb-4 text-gray-800">
-                        <i class="fas fa-chart-bar text-green-600 mr-2"></i>
-                        업종 평균 대비 비교
-                    </h4>
-                    <div class="chart-container" style="height: 300px;">
-                        <canvas id="comparison-bar-chart" title="업종 평균과 비교"></canvas>
-                        <div class="mt-2 text-xs text-gray-500 text-center">
-                            💡 파란색이 선택 기업, 회색이 업종 평균입니다
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 상세 지표 테이블 -->
-                <div class="dashboard-card lg:col-span-2">
-                    <h4 class="text-lg font-bold mb-4 text-gray-800">
-                        <i class="fas fa-table text-purple-600 mr-2"></i>
-                        지표 상세 분석
-                    </h4>
-                    <div class="overflow-x-auto">
-                        <table id="modal-detail-table" class="w-full text-sm">
-                            <thead>
-                                <tr class="bg-gray-50">
-                                    <th class="px-4 py-2 text-left">카테고리</th>
-                                    <th class="px-4 py-2 text-left">지표</th>
-                                    <th class="px-4 py-2 text-right">값</th>
-                                    <th class="px-4 py-2 text-right">업종 평균</th>
-                                    <th class="px-4 py-2 text-center">평가</th>
-                                </tr>
-                            </thead>
-                            <tbody id="modal-detail-tbody">
-                                <!-- 상세 지표들이 여기에 동적으로 추가됩니다 -->
-                            </tbody>
-                        </table>
+                <!-- Combined Chart -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">통합 비교</h3>
+                    <div class="chart-container">
+                        <canvas id="combined-chart"></canvas>
                     </div>
                 </div>
             </div>
-            
-            <!-- 모달 하단 액션 버튼 -->
-            <div class="flex justify-between items-center mt-6 pt-4 border-t">
-                <div class="flex gap-2">
-                    <button id="add-to-compare-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>비교 목록에 추가
-                    </button>
-                    <button id="add-to-portfolio-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                        <i class="fas fa-briefcase mr-2"></i>포트폴리오에 추가
+        </div>
+
+        <!-- Growth Analytics Tab -->
+        <div id="growth-content" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">성장률 상세 분석</h2>
+                <div id="growth-details"></div>
+            </div>
+        </div>
+
+        <!-- Ranking Analytics Tab -->
+        <div id="ranking-content" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">순위 상세 분석</h2>
+                <div id="ranking-details"></div>
+            </div>
+        </div>
+
+        <!-- EPS Analytics Tab -->
+        <div id="eps-content" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">EPS 상세 분석</h2>
+                <div id="eps-details"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Company Detail Modal -->
+    <div id="company-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 id="modal-title" class="text-2xl font-bold text-gray-800"></h2>
+                    <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                 </div>
-                <button id="export-analysis-btn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
-                    <i class="fas fa-download mr-2"></i>분석 결과 내보내기
-                </button>
+                <div id="modal-content"></div>
             </div>
         </div>
     </div>
 
-    <!-- Smart Analytics 모달 -->
-    <div id="smart-analytics-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 960px;">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">
-                    <i class="fas fa-brain text-purple-600 mr-2"></i>
-                    AI 스마트 분석
-                </h3>
-                <button id="close-smart-analytics-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-700 transition-colors">
-                    &times;
-                </button>
-            </div>
-            <div id="smart-analytics-content" class="space-y-4 text-sm text-gray-700">
-                <p class="text-gray-500">AI 분석을 준비 중입니다. 잠시만 기다려 주세요...</p>
-            </div>
-        </div>
-    </div>
+    <!-- Scripts -->
+    <!-- Sprint 4 Analytics Modules -->
+    <script src="js/analytics/GrowthAnalytics.js"></script>
+    <script src="js/analytics/RankingAnalytics.js"></script>
+    <script src="js/analytics/EPSAnalytics.js"></script>
+    <script src="js/DashboardManager.js"></script>
 
-    <!-- 여러 기업 비교 모달 -->
-    <div id="company-compare-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 1200px;">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">
-                    <i class="fas fa-balance-scale text-blue-600 mr-2"></i>
-                    기업 비교 분석
-                </h3>
-                <button id="close-compare-modal-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-700 transition-colors">
-                    &times;
-                </button>
-            </div>
-            
-            <div class="space-y-6 deep-compare-container">
-                <!-- 비교 헤더 -->
-                <div class="dashboard-card">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div>
-                            <h4 class="text-lg font-bold text-gray-900">비교할 대상을 선택하세요</h4>
-                            <p class="text-sm text-gray-500">최대 4개까지 선택할 수 있습니다. 검색하거나 드래그하여 비교 영역에 추가하세요.</p>
-                        </div>
-                        <div class="compare-mode-selector flex gap-2">
-                            <button class="mode-btn px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white shadow" data-mode="companies">기업 비교</button>
-                            <button class="mode-btn px-3 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-mode="sectors">업종 비교</button>
-                            <button class="mode-btn px-3 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-mode="countries">시장 비교</button>
-                        </div>
-                    </div>
-                </div>
+    <!-- Sprint 5 Analytics Modules -->
+    <script src="modules/CFOAnalytics.js"></script>
+    <script src="modules/CorrelationEngine.js"></script>
 
-                <!-- 선택 및 비교 작업 영역 -->
-                <div class="comparison-workspace grid grid-cols-1 xl:grid-cols-3 gap-6">
-                    <!-- 선택 패널 -->
-                    <div class="selection-panel dashboard-card space-y-4">
-                        <div>
-                            <h4 class="text-lg font-semibold text-gray-900 mb-2">비교 대상 검색</h4>
-                            <div class="relative">
-                                <input id="compare-search" type="text" placeholder="기업명, 티커, 업종으로 검색..." class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            </div>
-                        </div>
-                        <div class="grid gap-3 max-h-96 overflow-y-auto pr-1 available-items" id="available-items">
-                            <!-- 검색 결과가 여기에 표시됩니다 -->
-                        </div>
-                    </div>
-
-                    <!-- 드래그 앤 드롭 영역 -->
-                    <div class="comparison-area xl:col-span-2 space-y-4">
-                        <div class="dashboard-card">
-                            <h4 class="text-lg font-semibold text-gray-900 mb-4">비교 영역</h4>
-                            <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                                <div class="drop-zone border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition" data-slot="1">
-                                    <div class="drop-placeholder text-gray-400">
-                                        <i class="fas fa-plus text-3xl mb-2"></i>
-                                        <p>여기에 대상을 드롭하세요</p>
-                                    </div>
-                                </div>
-                                <div class="vs-indicator text-3xl font-bold text-gray-400">VS</div>
-                                <div class="drop-zone border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition" data-slot="2">
-                                    <div class="drop-placeholder text-gray-400">
-                                        <i class="fas fa-plus text-3xl mb-2"></i>
-                                        <p>또는 한 번 더 드롭하세요</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex justify-between items-center mt-4">
-                                <div class="text-xs text-gray-500">Tip: 검색 결과를 드래그하거나 카드의 "제거" 버튼으로 목록을 조정하세요.</div>
-                                <div class="flex gap-2">
-                                    <button class="add-comparison-btn px-3 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 transition">추천 대상 추가</button>
-                                    <button class="clear-all-btn px-3 py-2 text-sm rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition">전체 초기화</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="dashboard-card">
-                            <h4 class="text-lg font-semibold text-gray-900 mb-3">선택된 비교 대상</h4>
-                            <div id="compare-selection-area" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <!-- 선택된 기업 카드가 여기 표시됩니다 -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 비교 결과 -->
-                <div class="comparison-results" id="comparison-results">
-                    <!-- DeepCompareLayout이 이 영역을 채웁니다 -->
-                </div>
-            </div>
-        </div>
-    </div>
-        </main>
-    </div>
-
-    <!-- ================================================ -->
-    <!-- STEP 1: CORE FOUNDATION (가장 먼저 로드) -->
-    <!-- ================================================ -->
-    <script type="module" src="./core/EventSystem.js"></script>
-    <script type="module" src="./core/DataSkeleton.js"></script>
-    <script type="module" src="./core/UIFramework.js"></script>
-    <script src="./core/ModuleRegistry.js"></script>
-    <script type="module" src="./core/LegacyBridge.js"></script>
-
-    <!-- ================================================ -->
-    <!-- STEP 2: BASIC MANAGERS -->
-    <!-- ================================================ -->
-    <!-- 핵심 매니저들만 로드 (6개) -->
-    <script src="./modules/ErrorFixManager.js"></script>
-    <script src="./modules/DataCleanupManager.js"></script>
-    <script src="./modules/ColumnManager.js"></script>
-    <script src="./modules/FilterManager.js"></script>
-    <script src="./modules/PaginationManager.js"></script>
-    <script src="./modules/LoadingManager.js"></script>
-    
-    <!-- 새로운 고급 필터 시스템 -->
-    <script src="./modules/AdvancedFilter.js"></script>
-    
-    <!-- DeepCompare 모듈 -->
-    <script src="./modules/DeepCompare/ComparisonEngine.js"></script>
-    <script src="./modules/DeepCompare/components/ComparisonLayout.js"></script>
-    <script src="./modules/DeepCompare/components/DragAndDrop.js"></script>
-    <script src="./modules/DeepCompare/components/SelectionSearch.js"></script>
-    <script src="./modules/DeepCompare/visualizations/BubbleChart.js"></script>
-    <script src="./modules/DeepCompare/visualizations/RadarChart.js"></script>
-    <script src="./modules/DeepCompare/DeepCompare.js"></script>
-
-    <!-- Collaborative testing suite -->
-    <script src="./testing/ModuleTestRunner.js"></script>
-    <script src="./testing/IntegrationTests.js"></script>
-    <script src="./testing/reporters/DefaultReporter.js"></script>
-    <script src="./testing/CollaborativeTestSuite.js"></script>
-    <script src="./testing/registerBuiltinTests.js"></script>
-
-    <!-- SmartAnalytics 모듈 -->
-    <script src="./modules/SmartAnalytics/MomentumAI.js"></script>
-    <script src="./modules/SmartAnalytics/SmartAnalytics.js"></script>
-
-    <!-- Sprint 4 Analytics 모듈 -->
-    <script src="./modules/GrowthAnalytics.js"></script>
-    <script src="./modules/RankingAnalytics.js"></script>
-    <script src="./modules/EPSAnalytics.js"></script>
     <script>
-        // GrowthAnalytics 인스턴스 생성
-        if (typeof GrowthAnalytics !== 'undefined') {
-            window.growthAnalytics = new GrowthAnalytics(window.dataManager || {});
-            console.log('[HTML] GrowthAnalytics 인스턴스 생성');
+        /**
+         * Load global data from JSON file
+         * Sets window.allData for tests and application use
+         */
+        async function loadData() {
+            try {
+                console.log('Loading data from global_scouter_integrated.json...');
+                const response = await fetch('data/global_scouter_integrated.json');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const jsonData = await response.json();
+                window.allData = jsonData.data.main;
+
+                console.log(`✅ Loaded ${window.allData.length} companies from global_scouter_integrated.json`);
+                console.log(`Metadata:`, jsonData.metadata);
+
+                return window.allData;
+            } catch (error) {
+                console.error('❌ Failed to load data:', error);
+                window.allData = [];
+                throw error;
+            }
         }
 
-        // RankingAnalytics 인스턴스 생성
-        if (typeof RankingAnalytics !== 'undefined') {
-            window.rankingAnalytics = new RankingAnalytics(window.dataManager || {});
-            console.log('[HTML] RankingAnalytics 인스턴스 생성');
-        }
+        // Initialize dashboard after data loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Load data first
+                await loadData();
 
-        // EPSAnalytics 인스턴스 생성
-        if (typeof EPSAnalytics !== 'undefined') {
-            window.epsAnalytics = new EPSAnalytics(window.dataManager || {});
-            console.log('[HTML] EPSAnalytics 인스턴스 생성');
-        }
-    </script>
+                // Create dataManager for Sprint 5 modules
+                window.dataManager = {
+                    companies: window.allData.map(item => ({
+                        ticker: item.Ticker,
+                        name: item.Corp,
+                        sector: item.WI26 || 'Unknown',
+                        marketCap: parseFloat(item['(USD mn)']) || 0
+                    }))
+                };
 
-    <!-- Sprint 5 Analytics 모듈 -->
-    <script src="./modules/CFOAnalytics.js"></script>
-    <script src="./modules/CorrelationEngine.js"></script>
-    <script>
-        // CFOAnalytics 인스턴스 생성
-        if (typeof CFOAnalytics !== 'undefined') {
-            window.cfoAnalytics = new CFOAnalytics(window.dataManager || {});
-            console.log('[HTML] CFOAnalytics 인스턴스 생성');
-        }
+                console.log(`✅ DataManager created with ${window.dataManager.companies.length} companies`);
 
-        // CorrelationEngine 인스턴스 생성
-        if (typeof CorrelationEngine !== 'undefined') {
-            window.correlationEngine = new CorrelationEngine(window.dataManager || {});
-            console.log('[HTML] CorrelationEngine 인스턴스 생성');
-        }
-    </script>
+                // Initialize Sprint 5 modules
+                if (typeof CorrelationEngine !== 'undefined') {
+                    window.correlationEngine = new CorrelationEngine(window.dataManager);
+                    await window.correlationEngine.initialize();
+                    console.log('✅ CorrelationEngine initialized');
+                }
 
-    <!-- Deployment system -->
-    <script src="./deployment/CanaryDeployment.js"></script>
-    <script src="./deployment/AutoRollback.js"></script>
-    <script src="./deployment/HealthMonitor.js"></script>
-    <script src="./deployment/DeploymentDashboard.js"></script>
-    <script src="./deployment/SmartDeploymentSystem.js"></script>
+                if (typeof CFOAnalytics !== 'undefined') {
+                    window.cfoAnalytics = new CFOAnalytics(window.dataManager);
+                    await window.cfoAnalytics.initialize();
+                    console.log('✅ CFOAnalytics initialized');
+                }
 
-    <!-- PortfolioBuilder 모듈 -->
-    <script src="./modules/PortfolioBuilder/Portfolio.js"></script>
-    <script src="./modules/PortfolioBuilder/PortfolioOptimizer.js"></script>
-    <script src="./modules/PortfolioBuilder/RiskAnalyzer.js"></script>
-    <script src="./modules/PortfolioBuilder/components/Layout.js"></script>
-    <script src="./modules/PortfolioBuilder/PortfolioBuilder.js"></script>
+                // Initialize dashboard
+                window.dashboardManager = new DashboardManager();
+                window.dashboardManager.initialize();
 
-    <!-- EconomicDashboard 모듈 (ES6 Module) -->
-    <script type="module" src="./modules/EconomicDashboard/EconomicDashboard.js"></script>
+                console.log('✅ Dashboard initialized successfully');
+            } catch (error) {
+                console.error('❌ Failed to initialize dashboard:', error);
+                // Show error to user
+                const main = document.querySelector('main');
+                if (main) {
+                    main.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                            <h2 class="text-2xl font-bold text-red-800 mb-2">Data Loading Error</h2>
+                            <p class="text-red-600">Failed to load stock data. Please check console for details.</p>
+                            <p class="text-sm text-red-500 mt-2">${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+        });
 
-    <!-- MomentumHeatmap 모듈 (ES6 Module) -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script type="module" src="./modules/MomentumHeatmap/MomentumHeatmap.js"></script>
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tab = e.target.dataset.tab;
 
-    <!-- Momentum 모듈 (Phase 2) -->
-    <script src="./modules/Momentum/MomentumCalculator.js"></script>
-    <script src="./modules/Momentum/RankingEngine.js"></script>
-    <script src="./modules/Momentum/FilterEngine.js"></script>
-    <script src="./modules/Momentum/MomentumVisualizer.js"></script>
-    <script src="./modules/Momentum/CompanyDetailView.js"></script>
-    <script src="./modules/Momentum/CompanyComparison.js"></script>
-    <script src="./modules/Momentum/M_Company.js"></script>
-
-    <script src="./stock_analyzer_enhanced.js"></script>
-    
-    <!-- PWA Service Worker -->
-    <script>
-        // Service Worker 등록
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then((registration) => {
-                        console.log('✅ Service Worker 등록 성공:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.error('❌ Service Worker 등록 실패:', error);
-                    });
-            });
-        }
-
-        // PWA 설치 프롬프트
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            // 설치 버튼 표시
-            setTimeout(() => {
-                const installBtn = document.createElement('button');
-                installBtn.id = 'pwa-install-btn';
-                installBtn.className = 'fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors z-50';
-                installBtn.innerHTML = '<i class="fas fa-download mr-2"></i>앱 설치';
-                
-                document.body.appendChild(installBtn);
-                
-                installBtn.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        
-                        if (outcome === 'accepted') {
-                            console.log('✅ PWA 설치 승인');
-                        }
-                        
-                        deferredPrompt = null;
-                        installBtn.remove();
-                    }
+                // Update buttons
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('border-blue-500', 'text-blue-600');
+                    b.classList.add('border-transparent', 'text-gray-500');
                 });
-            }, 10000); // 10초 후 표시
-        });
+                e.target.classList.remove('border-transparent', 'text-gray-500');
+                e.target.classList.add('border-blue-500', 'text-blue-600');
 
-        // 온라인/오프라인 상태 감지
-        window.addEventListener('online', () => {
-            console.log('🌐 온라인 상태');
-            if (window.loadingManager) {
-                window.loadingManager.showFeedback('온라인 상태로 전환되었습니다.', 'success', 2000);
-            }
-        });
-
-        window.addEventListener('offline', () => {
-            console.log('📴 오프라인 상태');
-            if (window.loadingManager) {
-                window.loadingManager.showFeedback('오프라인 모드입니다. 캐시된 데이터를 사용합니다.', 'warning', 3000);
-            }
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${tab}-content`).classList.add('active');
+            });
         });
     </script>
 </body>
