@@ -94,7 +94,7 @@ test.describe('CorrelationEngine Module - Correlation Matrix', () => {
 
   test('getCorrelationMatrix() should return symmetric matrix', async ({ page }) => {
     const isSymmetric = await page.evaluate(() => {
-      const tickers = window.correlationEngine.correlationData.slice(0, 10).map(c => c.Ticker);
+      const tickers = window.correlationEngine.correlationData.map(c => c.Ticker);
       const matrix = window.correlationEngine.getCorrelationMatrix(tickers);
 
       // Check symmetry: corr(A,B) should equal corr(B,A)
@@ -118,7 +118,7 @@ test.describe('CorrelationEngine Module - Correlation Matrix', () => {
 
   test('Correlation matrix diagonal should be 1.0 (self-correlation)', async ({ page }) => {
     const diagonalIsOne = await page.evaluate(() => {
-      const tickers = window.correlationEngine.correlationData.slice(0, 10).map(c => c.Ticker);
+      const tickers = window.correlationEngine.correlationData.map(c => c.Ticker);
       const matrix = window.correlationEngine.getCorrelationMatrix(tickers);
 
       // Check diagonal: corr(A,A) = 1.0
@@ -136,7 +136,8 @@ test.describe('CorrelationEngine Module - Correlation Matrix', () => {
 
   test('Correlation values should be in -1.0 to 1.0 range', async ({ page }) => {
     const valuesInRange = await page.evaluate(() => {
-      const tickers = window.correlationEngine.correlationData.slice(0, 20).map(c => c.Ticker);
+      // Test with full dataset - verify system handles all 1,249 companies
+      const tickers = window.correlationEngine.correlationData.map(c => c.Ticker);
       const matrix = window.correlationEngine.getCorrelationMatrix(tickers);
 
       for (const tickerA of tickers) {
@@ -170,6 +171,7 @@ test.describe('CorrelationEngine Module - Diversified Portfolio', () => {
 
   test('findLowCorrelationPairs() should return pairs within correlation range', async ({ page }) => {
     const pairs = await page.evaluate(() => {
+      // Full dataset test with O(n) optimized algorithm
       return window.correlationEngine.findLowCorrelationPairs(-0.3, 0.3);
     });
 
@@ -188,7 +190,7 @@ test.describe('CorrelationEngine Module - Diversified Portfolio', () => {
 
   test('buildDiversifiedPortfolio() should select stocks with low average correlation', async ({ page }) => {
     const portfolio = await page.evaluate(() => {
-      const allTickers = window.correlationEngine.correlationData.slice(0, 50).map(c => c.Ticker);
+      const allTickers = window.correlationEngine.correlationData.map(c => c.Ticker);
       return window.correlationEngine.buildDiversifiedPortfolio(allTickers, 10);
     });
 
@@ -327,7 +329,8 @@ test.describe('CorrelationEngine Module - Portfolio Optimization', () => {
 
   test('optimizePortfolio() should return weights that sum to 1.0', async ({ page }) => {
     const optimization = await page.evaluate(() => {
-      const tickers = window.correlationEngine.correlationData.slice(0, 10).map(c => c.Ticker);
+      // Use first 20 tickers for portfolio optimization (reasonable portfolio size for this algorithm)
+      const tickers = window.correlationEngine.correlationData.slice(0, 20).map(c => c.Ticker);
       return window.correlationEngine.optimizePortfolio(tickers, 'moderate');
     });
 
@@ -348,7 +351,8 @@ test.describe('CorrelationEngine Module - Portfolio Optimization', () => {
 
   test('Conservative portfolio should have lower risk than aggressive', async ({ page }) => {
     const comparison = await page.evaluate(() => {
-      const tickers = window.correlationEngine.correlationData.slice(0, 10).map(c => c.Ticker);
+      // Use 20 tickers for portfolio comparison (reasonable for optimization algorithm)
+      const tickers = window.correlationEngine.correlationData.slice(0, 20).map(c => c.Ticker);
       const conservative = window.correlationEngine.optimizePortfolio(tickers, 'conservative');
       const aggressive = window.correlationEngine.optimizePortfolio(tickers, 'aggressive');
 
@@ -384,8 +388,9 @@ test.describe('CorrelationEngine Module - Chart Data Generation', () => {
 
   test('getCorrelationHeatmapData() should generate heatmap format', async ({ page }) => {
     const heatmapData = await page.evaluate(() => {
-      const tickers = window.correlationEngine.correlationData.slice(0, 30).map(c => c.Ticker);
-      return window.correlationEngine.getCorrelationHeatmapData(tickers, 30);
+      // Full dataset heatmap generation test
+      const tickers = window.correlationEngine.correlationData.map(c => c.Ticker);
+      return window.correlationEngine.getCorrelationHeatmapData(tickers, 50);
     });
 
     expect(heatmapData).toHaveProperty('labels');
@@ -393,7 +398,7 @@ test.describe('CorrelationEngine Module - Chart Data Generation', () => {
     expect(Array.isArray(heatmapData.labels)).toBeTruthy();
     expect(Array.isArray(heatmapData.data)).toBeTruthy();
     expect(heatmapData.labels.length).toBeGreaterThan(0);
-    expect(heatmapData.labels.length).toBeLessThanOrEqual(30);
+    expect(heatmapData.labels.length).toBeLessThanOrEqual(50); // Match limit parameter
 
     // Verify data has x, y, v properties
     heatmapData.data.forEach(item => {

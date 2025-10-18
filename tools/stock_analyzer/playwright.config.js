@@ -8,6 +8,10 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
 
+  // Global setup and teardown
+  globalSetup: './tests/global-setup.ts',
+  globalTeardown: './tests/global-teardown.ts',
+
   // Timeout configuration
   timeout: 60000, // 60 seconds per test
   expect: {
