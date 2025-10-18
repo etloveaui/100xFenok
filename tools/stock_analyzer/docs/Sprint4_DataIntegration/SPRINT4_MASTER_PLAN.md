@@ -9,15 +9,32 @@
 
 ## 📋 Executive Summary
 
-**범위**: Phase 1 모듈 (Critical) 3개 구현 (1개 취소)
-**기간**: 6주 (Module 1, 2, 4 개발)
-**완료 기준**: 3/22 모듈 구현, 전체 데이터셋 테스트, Dashboard UI 통합
+**현재 상황**: ⏸️ Phase 0 - 전체 데이터 재검토 단계
 
-**모듈 목록**:
-1. ✅ CompanyMasterProvider (M_Company.json, 6,176 companies) - 완료
-2. ✅ ValidationAnalytics (데이터 품질 검증) - 완료
-3. ❌ ~~WatchlistManager (S_Mylist.json)~~ - 취소 (불필요 데이터)
-4. ⏳ ComparisonEngine (A_Compare.json, 496 comparisons) - 다음 목표
+**배경**:
+- Module 1 (CompanyMasterProvider): ✅ 완료 (2025-10-19)
+- Module 2 (ValidationAnalytics): ✅ 완료 (2025-10-19)
+- Module 3 (WatchlistManager): ❌ 취소 (불필요 데이터)
+- Module 4+: ⏸️ **Phase 0 완료 후 재평가**
+
+**발견된 문제**:
+1. ❌ 전체 22개 시트 상세 분석 미완료
+2. ❌ xlsb → CSV 변환 검증 안 됨
+3. ❌ 베이스 vs 계산 구분 불명확
+4. ❌ 필수 vs 선택 우선순위 미확정
+5. ❌ 개발 방향 재설정 필요
+
+**Phase 0 목표** (1주일):
+- 22개 시트 전수 분석 및 명문화
+- 변환 파이프라인 검증 및 개선
+- 필수 시트 선별 및 우선순위 확정
+- 올바른 개발 로드맵 재작성
+- Module 1,2 검증 및 조정
+
+**Phase 0 완료 후**:
+- Module 4+ 재정의
+- 필수 시트만 선별 개발
+- 체계적 단계별 진행
 
 ---
 
@@ -95,11 +112,225 @@
 - **취소 이유**: S_Mylist.json 불필요 (중복, 미사용, 분석 가치 없음)
 - **상태**: 취소 (2025-10-19)
 
-**ComparisonEngine** (Advanced Feature): ⏳ 다음 목표
+**ComparisonEngine** (Advanced Feature): ⏸️ Phase 0 완료 후 재평가
 - **이유**: 고급 분석 기능 (기업 비교)
 - **의존성**: CompanyMasterProvider, ValidationAnalytics
 - **가치**: 496 comparison pairs 제공
-- **우선순위**: 🔴 Critical #3 (재조정)
+- **상태**: Phase 0 완료 후 필요성 재검토
+
+---
+
+## 🔍 Phase 0: 전체 데이터 재검토 ⏳
+
+### 목표
+22개 시트 완전 분석 + 변환 검증 + 올바른 로드맵
+
+### 기간
+1주일 (Task 0.1 ~ 0.6)
+
+### 배경
+Module 1,2 개발 후 다음 문제 발견:
+- xlsb → CSV 변환 검증 안 됨
+- A_, T_, S_ 계열 시트 목적 불명확
+- 베이스 데이터 vs 계산 결과물 구분 필요
+- 필수 vs 선택 우선순위 미확정
+- 전체 22개 시트 중 2개만 파악됨
+
+→ **개발 중단, Phase 0 선행 필요**
+
+### Tasks
+
+#### Task 0.1: 전체 시트 데이터 분석 ⏳
+**기간**: 2일
+**담당**: Claude
+**에이전트**: @root-cause-analyst (데이터 구조 전수 분석)
+**Mode**: --think-hard (복잡한 분석)
+**MCP**: Sequential (체계적 필드 분류)
+**병렬 가능**: No (독립 작업)
+
+**작업 내용**:
+- 22개 CSV 파일 전수 분석 (레코드, 필드, 샘플)
+- M_Company 기준 관계 분석 (공통 필드, 레코드 수)
+- 베이스 vs 계산 분류 (M_ vs A_/T_/S_)
+- ReadMe.csv 설명 vs 실제 데이터 대조
+
+**완료 기준**:
+- [ ] 22개 시트 모두 분석
+- [ ] 베이스 vs 계산 분류 완료
+- [ ] 필드 관계도 작성
+
+**산출물**:
+- `SHEET_ANALYSIS_REPORT.md` (상세 분석)
+
+---
+
+#### Task 0.2: xlsb → CSV 변환 검증 ⏳
+**기간**: 1일
+**담당**: Claude
+**에이전트**: @quality-engineer (변환 검증)
+**Mode**: --task-manage (체계적 검증)
+**MCP**: None (직접 검증)
+**병렬 가능**: No (Task 0.1 완료 후)
+
+**작업 내용**:
+- 5개 주차 xlsb 샘플 테스트 (20250912~20251010)
+- 시트 수/레코드 수/필드명/인코딩 검증
+- 주차별 일관성 검증 (시트 구조 변경)
+
+**완료 기준**:
+- [ ] 5개 주차 모두 변환 테스트
+- [ ] 검증 통과 or 문제점 명시
+- [ ] 수정 필요 사항 리스트업
+
+**산출물**:
+- `CONVERSION_VALIDATION_REPORT.md` (주차별 비교)
+
+---
+
+#### Task 0.3: 변환 스크립트 개선 ⏳
+**기간**: 1일
+**담당**: Claude
+**Mode**: None (스크립트 작성)
+**MCP**: None
+**병렬 가능**: No (Task 0.2 완료 후)
+
+**작업 내용**:
+- xlsb → CSV 스크립트 작성/개선
+- 22-23개 시트만 명시적 추출 (수백/수천개 잡다한 시트 필터링)
+- 유연성 개선 (시트명 변경, 필드 추가/삭제 대응)
+- 검증 로직 내장 (레코드/필드 체크, 인코딩 검증)
+
+**완료 기준**:
+- [ ] 5개 주차 모두 성공
+- [ ] 검증 리포트 자동 생성
+- [ ] 명확한 에러 메시지
+
+**산출물**:
+- `validated_xlsb_to_csv.py` (신규 or 개선)
+
+---
+
+#### Task 0.4: 필수 시트 선별 및 우선순위 ⏳
+**기간**: 1일
+**담당**: Claude
+**에이전트**: @system-architect (전략 수립)
+**Mode**: --think-hard (우선순위 결정)
+**MCP**: Sequential (아키텍처 분석)
+**병렬 가능**: No (Task 0.1 완료 후)
+
+**작업 내용**:
+- 시트 분류 (🔴 Critical / 🟡 High / 🟢 Medium / ⚪ Low)
+- 우선순위 결정 기준 수립
+- 개발 로드맵 작성 (Phase 1/2/3)
+- Module 재정의
+
+**완료 기준**:
+- [ ] 22개 시트 우선순위 확정
+- [ ] Phase 1 시트 5개 이하 선별
+- [ ] 로드맵 3단계 작성
+
+**산출물**:
+- `SHEET_PRIORITY_MATRIX.md` (우선순위 매트릭스)
+
+---
+
+#### Task 0.5: 명문화 - 완전한 데이터 레퍼런스 ⏳
+**기간**: 1일
+**담당**: Claude
+**에이전트**: @technical-writer (전문 문서화)
+**Mode**: --task-manage (체계적 작성)
+**MCP**: Context7 (문서 패턴)
+**병렬 가능**: Yes (Task 0.4와 병렬 가능)
+
+**작업 내용**:
+- DATA_COMPLETE_ANALYSIS.md 작성 (2,000+ lines 예상)
+  - Part 1: 전체 개요 (ReadMe 기반)
+  - Part 2: 시트별 상세 (22개 각각)
+  - Part 3: 관계도 (dependency map)
+  - Part 4: 변환 파이프라인
+  - Part 5: 개발 로드맵
+- 시각화 (시트 관계도, 우선순위 매트릭스, 타임라인)
+
+**완료 기준**:
+- [ ] 22개 시트 모두 문서화
+- [ ] 관계도 완성
+- [ ] 로드맵 명확화
+- [ ] MASTER_PLAN.md 업데이트
+
+**산출물**:
+- `DATA_COMPLETE_ANALYSIS.md` (완전한 레퍼런스)
+
+**시트 문서 템플릿**:
+```markdown
+## [시트명]
+
+**목적**: [ReadMe 설명]
+**레코드**: [n개]
+**필드**: [n개]
+**분류**: [베이스 / 계산]
+**우선순위**: [Critical / High / Medium / Low]
+**의존성**: [다른 시트와 관계]
+**계산 필드**: [있으면 리스트]
+**개발 계획**: [언제, 어떻게]
+```
+
+---
+
+#### Task 0.6: Module 1,2 검증 및 조정 ⏳
+**기간**: 1일
+**담당**: Claude
+**Mode**: None (검증 작업)
+**MCP**: Playwright (E2E 재테스트)
+**병렬 가능**: No (Task 0.3 완료 후)
+
+**작업 내용**:
+- Module 1 (CompanyMasterProvider) 검증
+  - M_Company.json 변환 재확인
+  - 필드 누락 없는지 체크
+  - 테스트 재실행 (33 tests)
+- Module 2 (ValidationAnalytics) 검증
+  - 31개 validator 재확인
+  - 데이터 품질 스코어 재계산
+  - 테스트 재실행 (26 tests)
+- 필요 시 수정 및 재테스트
+
+**완료 기준**:
+- [ ] Module 1,2 검증 완료
+- [ ] 테스트 모두 통과
+- [ ] 문서 업데이트
+
+**산출물**:
+- `MODULE1_VALIDATION_REPORT.md`
+- `MODULE2_VALIDATION_REPORT.md`
+- 수정 사항 (있으면)
+
+---
+
+### Phase 0 완료 기준
+
+- [x] Task 0.1: 전체 시트 데이터 분석
+- [ ] Task 0.2: xlsb → CSV 변환 검증
+- [ ] Task 0.3: 변환 스크립트 개선
+- [ ] Task 0.4: 필수 시트 선별 및 우선순위
+- [ ] Task 0.5: 명문화 - 완전한 데이터 레퍼런스
+- [ ] Task 0.6: Module 1,2 검증 및 조정
+
+**산출물 요약**:
+- SHEET_ANALYSIS_REPORT.md
+- CONVERSION_VALIDATION_REPORT.md
+- validated_xlsb_to_csv.py
+- SHEET_PRIORITY_MATRIX.md
+- DATA_COMPLETE_ANALYSIS.md (2,000+ lines)
+- MODULE1_VALIDATION_REPORT.md
+- MODULE2_VALIDATION_REPORT.md
+
+**타임라인**:
+- Day 1-2: Task 0.1 (전체 시트 분석)
+- Day 3: Task 0.2 (변환 검증)
+- Day 4: Task 0.3 (스크립트 개선)
+- Day 5: Task 0.4 (우선순위 결정) + Task 0.5 (명문화) 병렬
+- Day 6: Task 0.5 완료 (명문화)
+- Day 7: Task 0.6 (Module 1,2 검증)
 
 ---
 
@@ -738,138 +969,56 @@ class WatchlistManager extends BaseAnalytics {
 
 ---
 
-## 📊 Module 4: ComparisonEngine
+## 📊 Module 4: [TBD] ⏸️ Phase 0 완료 후 결정
 
-### 목표
-A_Compare.json (496 comparison pairs) 로딩 + 기업 비교 UI
+### 현재 상태
+⏸️ Phase 0 전체 데이터 분석 후 재정의 예정
 
-### 기간
-2주 (Task 4.1 ~ 4.7)
+### 배경
+- 당초 계획: ComparisonEngine (A_Compare.json, 493 records)
+- 발견: A_Company.json (1,250 records, 2.1MB) 우선순위 높을 가능성
+- 결론: Phase 0 완료 후 필수 시트 선별하여 Module 4+ 확정
 
-### Tasks
+### 후보
+1. **A_Company.json**: 개별 기업 심화 분석 (성장성/밸류에이션)
+   - 레코드: 1,250개 (M_Company의 부분집합)
+   - 필드: 50개 (33 공통 + 17 계산)
+   - 분류: 계산 결과물
 
-#### Task 4.1: A_Compare Data Analysis ⏳
-**기간**: 1일
+2. **A_Compare.json**: 기업 간 비교 (동일 업종 수익/비용구조)
+   - 레코드: 493개
+   - 필드: 68개
+   - 분류: 계산 결과물
 
-**작업 내용**:
-- A_Compare.json 구조 분석
-- 496 comparison pairs 확인
-- CompanyMasterProvider 연동 방안
+3. **T_EPS_C.json, T_Growth_C.json**: 기술 지표
+   - 레코드: 각 1,250개
+   - 필드: 40개, 49개
+   - 분류: 계산 결과물
 
-**완료 기준**:
-- [ ] 데이터 구조 문서화
-- [ ] 연동 방안 확정
+4. **기타**: Phase 0 분석 결과에 따라 추가
 
----
+### Tasks (대기)
+Task 4.1-4.7: Phase 0 완료 후 작성 예정
 
-#### Task 4.2: ComparisonEngine Class Design ⏳
-**기간**: 1일
-
-**작업 내용**:
-- ComparisonEngine 클래스 설계
-- 비교 메서드 정의 (2개 기업, N개 기업)
-- 차트 렌더링 방안
-
-**완료 기준**:
-- [ ] 클래스 구조 정의
-- [ ] 메서드 시그니처 정의
-
-**Class Skeleton**:
-```javascript
-class ComparisonEngine extends BaseAnalytics {
-  constructor() {
-    super();
-  }
-
-  async loadFromJSON(jsonPath) { }
-  processData(rawData) { }
-
-  // Comparison
-  compare(ticker1, ticker2, companyMaster) { }
-  compareMultiple(tickers, companyMaster) { }
-
-  // Analysis
-  findSimilarCompanies(ticker, companyMaster, limit = 5) { }
-
-  // UI
-  renderComparisonTable(comparison) { }
-  renderComparisonChart(comparison) { }
-}
-```
-
----
-
-#### Task 4.3: Core Methods Implementation ⏳
-**기간**: 3일
-
-**작업 내용**:
-- compare() 구현 (2개 기업)
-- compareMultiple() 구현 (N개 기업)
-- findSimilarCompanies() 구현
-
-**완료 기준**:
-- [ ] 3개 메서드 구현
-- [ ] 39개 필드 비교 지원
-
----
-
-#### Task 4.4: UI Rendering ⏳
-**기간**: 2일
-
-**작업 내용**:
-- renderComparisonTable() 구현
-- renderComparisonChart() 구현 (Chart.js)
-- Dashboard에 Comparison 탭 추가
-
-**완료 기준**:
-- [ ] 테이블 렌더링 동작
-- [ ] 차트 렌더링 동작
-
----
-
-#### Task 4.5: HTML Integration ⏳
-**기간**: 1일
-
-**작업 내용**:
-- stock_analyzer.html에 모듈 추가
-- Dashboard 탭 생성
-- 간단한 테스트
-
-**완료 기준**:
-- [ ] 모듈 로딩 확인
-- [ ] UI 동작 확인
-
----
-
-#### Task 4.6: Testing ⏳
-**기간**: 2일
-
-**작업 내용**:
-- tests/modules/comparison-engine.spec.js 작성
-- 496 comparison pairs 테스트
-- UI 테스트
-
-**완료 기준**:
-- [ ] 15+ test cases
-- [ ] 100% pass rate
-
----
-
-#### Task 4.7: Documentation ⏳
-**기간**: 1일
-
-**작업 내용**:
-- ComparisonEngine API 문서
-- 사용 가이드
-- Git commit
-
-**완료 기준**:
-- [ ] API 문서 완성
-- [ ] MASTER_PLAN.md 업데이트
+**Phase 0 완료 시점에 결정할 사항**:
+- [ ] 필수 시트 5개 선별
+- [ ] Module 4, 5, 6 재정의
+- [ ] 각 Module Task 작성
+- [ ] 타임라인 재조정
 
 ---
 
 ## 📊 전체 진행 추적
+
+### Phase 0: 전체 데이터 재검토 ⏳
+- [ ] Task 0.1: 전체 시트 데이터 분석 (2일)
+- [ ] Task 0.2: xlsb → CSV 변환 검증 (1일)
+- [ ] Task 0.3: 변환 스크립트 개선 (1일)
+- [ ] Task 0.4: 필수 시트 선별 및 우선순위 (1일)
+- [ ] Task 0.5: 명문화 - 완전한 데이터 레퍼런스 (1일)
+- [ ] Task 0.6: Module 1,2 검증 및 조정 (1일)
+
+**목표**: 22개 시트 완전 파악 + 올바른 로드맵 + Module 1,2 검증
 
 ### Module Completion Checklist
 
@@ -901,14 +1050,10 @@ class ComparisonEngine extends BaseAnalytics {
 - [x] ~~Task 3.7: Documentation~~ (취소)
 **취소 이유**: S_Mylist.json 불필요 (중복, 미사용, 분석 가치 없음)
 
-#### Module 4: ComparisonEngine ⏳
-- [ ] Task 4.1: A_Compare Data Analysis
-- [ ] Task 4.2: ComparisonEngine Class Design
-- [ ] Task 4.3: Core Methods Implementation
-- [ ] Task 4.4: UI Rendering
-- [ ] Task 4.5: HTML Integration
-- [ ] Task 4.6: Testing
-- [ ] Task 4.7: Documentation
+#### Module 4: [TBD] ⏸️ Phase 0 완료 후 결정
+- [ ] Phase 0 완료 후 필수 시트 선별
+- [ ] Module 4 재정의
+- [ ] Task 4.1-4.7 작성 예정
 
 ---
 
