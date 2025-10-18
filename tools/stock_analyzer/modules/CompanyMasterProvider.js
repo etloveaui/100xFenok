@@ -245,7 +245,7 @@ class CompanyMasterProvider {
      * @returns {Array} 검색 결과 배열
      */
     searchByName(query) {
-        if (!query || query.length < 2) {
+        if (!query || typeof query !== 'string' || query.length < 2) {
             console.warn('[CompanyMasterProvider] Query too short (min 2 chars)');
             return [];
         }
@@ -254,7 +254,7 @@ class CompanyMasterProvider {
 
         const lowerQuery = query.toLowerCase();
         return this.companies.filter(c =>
-            c.corp.toLowerCase().includes(lowerQuery)
+            c.corp && c.corp.toLowerCase().includes(lowerQuery)
         );
     }
 

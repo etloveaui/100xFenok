@@ -212,6 +212,9 @@
     <script src="js/analytics/EPSAnalytics.js"></script>
     <script src="js/DashboardManager.js"></script>
 
+    <!-- Sprint 4 Phase 1 Modules -->
+    <script src="modules/CompanyMasterProvider.js"></script>
+
     <!-- Sprint 5 Analytics Modules -->
     <script src="modules/CFOAnalytics.js"></script>
     <script src="modules/CorrelationEngine.js"></script>
@@ -261,6 +264,18 @@
                 };
 
                 console.log(`✅ DataManager created with ${window.dataManager.companies.length} companies`);
+
+                // Initialize Sprint 4 Phase 1 modules
+                if (typeof CompanyMasterProvider !== 'undefined') {
+                    window.companyMaster = new CompanyMasterProvider();
+                    const loaded = await window.companyMaster.loadFromJSON('data/M_Company.json');
+                    if (loaded) {
+                        const stats = window.companyMaster.getStatistics();
+                        console.log(`✅ CompanyMasterProvider initialized: ${stats.totalCompanies} companies, ${stats.totalIndustries} industries`);
+                    } else {
+                        console.warn('⚠️ CompanyMasterProvider failed to load');
+                    }
+                }
 
                 // Initialize Sprint 5 modules
                 if (typeof CorrelationEngine !== 'undefined') {
