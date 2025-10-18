@@ -380,22 +380,74 @@ Analyst Coverage (2):
 
 ---
 
-## 🔮 다음 Sprint (Sprint 3)
+---
 
-### 목표
-- [ ] Task 2.7 완료 (Deployment & Monitoring)
-- [ ] 사용자 인수 테스트
-- [ ] Production 배포
-- [ ] 성능 모니터링
+### Sprint 3: 파일 정리 및 문서 체계화 (진행 중 🔄)
+**목표**: 잘못된 경로 파일 정리 + docs 폴더 정리 (47개 → 10개)
 
-### 예상 시간
-- Deployment: 1시간
-- User Testing: 1시간
-- Documentation: 1시간
-- **Total**: 3시간
+#### Task 3.1: As-Is Analysis ✅
+- **파일**: `CLEANUP_ANALYSIS.md` (작성 완료)
+- **분석 항목**:
+  - 잘못된 경로 파일 현황 (20251015_Stock_Prompt_Claude, Global_Scouter)
+  - docs 폴더 47개 파일 분류
+  - 티커 수량 불일치 조사 계획 (1,249 vs 6,000)
+- **결과**: 이동/삭제/유지 기준 수립
+
+#### Task 3.2: 폴더 상세 조사 ✅
+- [x] 20251015_Stock_Prompt_Claude 문서 6개 내용 확인
+- [x] Global_Scouter 문서 2개 내용 확인
+- [x] docs 폴더 내 7개 서브폴더 확인
+- [x] 티커 수량 실제 카운트 (M_Company: 6,176개, T_Correlation: 1,249개)
+- **발견**: 티커 수량 미스터리 해결 - M_Company 6,176개(전체), T_Correlation 1,249개(상관관계 서브셋)
+
+#### Task 3.3: Cleanup Plan 작성 ✅
+- [x] CLEANUP_PLAN.md 생성 (Phase 1 - To-Be Design)
+- [x] 파일 이동/삭제 체크리스트 (572 lines)
+- [x] Git 안전장치 계획 (Pre-cleanup checkpoint)
+- [x] 검증 방법 (데이터 무결성 + 테스트 실행)
+- **파일**: `CLEANUP_PLAN.md` (상세 실행 계획)
+
+#### Task 3.4: 파일 정리 실행 (진행 중 🔄)
+- [ ] Git checkpoint 생성
+- [ ] 20251015_Stock_Prompt_Claude 폴더 삭제 (중복 파일)
+- [ ] Global_Scouter 유용 문서 2개 이동 → 폴더 삭제
+- [ ] docs 루트 핵심 8개 확정 (USER_GUIDE 이동 포함)
+- [ ] docs/reports/ 생성 및 Sprint 보고서 9개 이동
+- [ ] docs/archives/ 생성 및 참고 문서 10개 이동
+- [ ] 불필요 문서 11개 삭제 (emergency_fix, 대화.txt, 중복 등)
+- [ ] 서브폴더 6개 정리 (user, workflows, architecture, bugfixes, phase0, phase1)
+
+#### Task 3.5: 검증 및 Git Commit (예정)
+- [ ] 테스트 실행 (정상 작동 확인)
+- [ ] docs 폴더 10개 이하 확인
+- [ ] 잘못된 경로 삭제 확인
+- [ ] Git commit
+
+**Sprint 3 진행 상황**:
+- ✅ Task 3.1 완료 (CLEANUP_ANALYSIS.md)
+- ✅ Task 3.2 완료 (조사 완료 - 티커 수량 미스터리 해결)
+- ✅ Task 3.3 완료 (CLEANUP_PLAN.md)
+- 🔄 Task 3.4 진행 중 (파일 정리 실행)
+- ⏳ Task 3.5 대기
 
 ---
 
-**최종 업데이트**: 2025-10-17
-**상태**: Phase 3 Implementation 95% 완료
-**다음 단계**: Task 2.7 Deployment & Monitoring
+## 🔮 향후 작업 (Sprint 4)
+
+### 목표
+- [ ] Task 2.7 완료 (Deployment & Monitoring)
+- [ ] 티커 수량 불일치 해결
+- [ ] 테스트 재실행 (Sprint 5 Week 3)
+- [ ] 사용자 인수 테스트
+- [ ] Production 배포
+
+### 예상 시간
+- Sprint 3 완료: 2시간
+- Sprint 4 완료: 3시간
+- **Total**: 5시간
+
+---
+
+**최종 업데이트**: 2025-10-18
+**상태**: Sprint 3 Task 3.1 완료, Task 3.2 진행 중
+**다음 단계**: 폴더 상세 조사
