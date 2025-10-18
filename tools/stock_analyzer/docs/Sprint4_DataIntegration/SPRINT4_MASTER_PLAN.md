@@ -232,13 +232,15 @@ Module 1,2 개발 후 다음 문제 발견:
 
 ---
 
-#### Task 0.4: 필수 시트 선별 및 우선순위 ⏳
+#### Task 0.4: 필수 시트 선별 및 우선순위 ✅
 **기간**: 1일
 **담당**: Claude
 **에이전트**: @system-architect (전략 수립)
 **Mode**: --think-hard (우선순위 결정)
 **MCP**: Sequential (아키텍처 분석)
 **병렬 가능**: No (Task 0.1 완료 후)
+**완료 시각**: 2025-10-19
+**Git Commit**: [pending]
 
 **작업 내용**:
 - 시트 분류 (🔴 Critical / 🟡 High / 🟢 Medium / ⚪ Low)
@@ -247,12 +249,18 @@ Module 1,2 개발 후 다음 문제 발견:
 - Module 재정의
 
 **완료 기준**:
-- [ ] 22개 시트 우선순위 확정
-- [ ] Phase 1 시트 5개 이하 선별
-- [ ] 로드맵 3단계 작성
+- [x] 22개 시트 우선순위 확정 → 4축 평가 (의존성, 가치, 유형, 복잡도)
+- [x] Phase 1 시트 5개 이하 선별 → A_Company, T_Chk, A_Compare, E_Indicators, A_ETFs
+- [x] 로드맵 3단계 작성 → Phase 1 (10-13주), Phase 2 (10-12주), Phase 3 (5-7주)
 
 **산출물**:
-- `SHEET_PRIORITY_MATRIX.md` (우선순위 매트릭스)
+- `SHEET_PRIORITY_MATRIX.md` (2,800+ lines, 우선순위 매트릭스)
+
+**주요 성과**:
+- ✅ 1,250 Records Pattern 발견 (Core Universe 정의)
+- ✅ 4축 평가 프레임워크 (의존성, 가치, 유형, 복잡도)
+- ✅ Module 4-8 재정의 (각 7-task 패턴, 2-3주)
+- ✅ 3단계 로드맵 (25-32주, 6-8개월)
 
 ---
 
@@ -333,7 +341,7 @@ Module 1,2 개발 후 다음 문제 발견:
 - [x] Task 0.1: 전체 시트 데이터 분석
 - [x] Task 0.2: xlsb → CSV 변환 검증
 - [x] Task 0.3: 변환 스크립트 개선
-- [ ] Task 0.4: 필수 시트 선별 및 우선순위
+- [x] Task 0.4: 필수 시트 선별 및 우선순위
 - [ ] Task 0.5: 명문화 - 완전한 데이터 레퍼런스
 - [ ] Task 0.6: Module 1,2 검증 및 조정
 
@@ -342,8 +350,8 @@ Module 1,2 개발 후 다음 문제 발견:
 - CONVERSION_VALIDATION_REPORT_FINAL.md (✅ 완료)
 - TASK_0.2_SUMMARY.md (✅ 완료)
 - scripts/xlsb_to_csv_converter.py (✅ 완료, 280 lines)
-- SHEET_PRIORITY_MATRIX.md (⏳ 대기)
-- DATA_COMPLETE_ANALYSIS.md (⏳ 대기, 2,000+ lines)
+- SHEET_PRIORITY_MATRIX.md (✅ 완료, 2,800+ lines)
+- DATA_COMPLETE_ANALYSIS.md (⏳ 대기, 5,000+ lines)
 - MODULE1_VALIDATION_REPORT.md (⏳ 대기)
 - MODULE2_VALIDATION_REPORT.md (⏳ 대기)
 
@@ -1037,12 +1045,12 @@ Task 4.1-4.7: Phase 0 완료 후 작성 예정
 - [x] Task 0.1: 전체 시트 데이터 분석 (2일) ✅ 2025-10-19
 - [x] Task 0.2: xlsb → CSV 변환 검증 (1일) ✅ 2025-10-19
 - [x] Task 0.3: 변환 스크립트 개선 (1일) ✅ 2025-10-19
-- [ ] Task 0.4: 필수 시트 선별 및 우선순위 (1일)
+- [x] Task 0.4: 필수 시트 선별 및 우선순위 (1일) ✅ 2025-10-19
 - [ ] Task 0.5: 명문화 - 완전한 데이터 레퍼런스 (1일)
 - [ ] Task 0.6: Module 1,2 검증 및 조정 (1일)
 
 **목표**: 22개 시트 완전 파악 + 올바른 로드맵 + Module 1,2 검증
-**진행**: 3/6 tasks 완료 (50%)
+**진행**: 4/6 tasks 완료 (66.7%)
 
 ### Module Completion Checklist
 
