@@ -195,6 +195,88 @@ fenomeno_projects/Global_Scouter/Global_Scouter_20251003/
 
 ---
 
+## 🔄 주간 데이터 업데이트 워크플로우
+
+### 매주 반복 작업 프로세스
+
+**사용자가 매주 수행:**
+
+1. **엑셀 다운로드**
+   ```
+   Global_Scouter_YYMMDD.xlsx (1개 파일)
+   └── 시트별 데이터 포함 (M_Company, T_EPS_C, T_Growth_C, T_Rank, T_CFO, T_Correlation 등)
+   ```
+
+2. **Python 변환 스크립트 실행**
+   ```bash
+   cd C:/Users/etlov/agents-workspace/projects/100xFenok/tools/stock_analyzer
+   python scripts/simple_csv_converter.py
+   ```
+
+3. **자동 처리 (스크립트가 수행)**
+   - 엑셀 → CSV 쪼개기 (시트별)
+   - CSV → JSON 변환
+   - 개별 JSON 파일 생성:
+     - `data/M_Company.json`
+     - `data/T_EPS_C.json`
+     - `data/T_Growth_C.json`
+     - `data/T_Rank.json`
+     - `data/T_CFO.json`
+     - `data/T_Correlation.json`
+
+4. **결과**
+   - 기존 JSON 파일 덮어쓰기 ✅
+   - 시스템 자동 반영 (HTML 리로드 시)
+
+### 파일 명명 규칙
+
+**중요:** 엑셀 시트명 = JSON 파일명
+
+```
+엑셀 시트          →  CSV 파일            →  JSON 파일
+M_Company       →  M_Company.csv      →  M_Company.json
+T_EPS_C         →  T_EPS_C.csv        →  T_EPS_C.json
+T_Growth_C      →  T_Growth_C.csv     →  T_Growth_C.json
+T_Rank          →  T_Rank.csv         →  T_Rank.json
+T_CFO           →  T_CFO.csv          →  T_CFO.json
+T_Correlation   →  T_Correlation.csv  →  T_Correlation.json
+```
+
+### 데이터 로딩 구조
+
+**시스템이 개별 JSON 파일 직접 로딩:**
+
+```javascript
+// HTML에서 각 분석 모듈이 개별 JSON 로딩
+EPSAnalytics.js        → fetch('data/T_EPS_C.json')
+GrowthAnalytics.js     → fetch('data/T_Growth_C.json')
+RankingAnalytics.js    → fetch('data/T_Rank.json')
+CFOAnalytics.js        → fetch('data/T_CFO.json')
+CorrelationEngine.js   → fetch('data/T_Correlation.json')
+```
+
+**장점:**
+- 매주 업데이트 시 파일 덮어쓰기만 하면 끝
+- 자동화 간단 (스크립트 1회 실행)
+- 추가 통합 작업 불필요
+
+### ⚠️ 절대 금지
+
+**개별 JSON 파일 삭제 금지:**
+- ❌ T_EPS_C.json 삭제
+- ❌ T_Growth_C.json 삭제
+- ❌ T_Rank.json 삭제
+- ❌ T_CFO.json 삭제
+- ❌ T_Correlation.json 삭제
+
+**이유:** 매주 업데이트 워크플로우에 필수
+
+**통합 JSON (선택):**
+- `global_scouter_integrated.json`: 편의용 (선택)
+- 개별 JSON이 메인 소스
+
+---
+
 ## 🚨 일반적인 실수 방지
 
 ### 실수 1: 잘못된 경로에서 작업
