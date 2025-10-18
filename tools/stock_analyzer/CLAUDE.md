@@ -65,6 +65,128 @@ C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
 
 ---
 
+## 🚀 작업 시작 전 필수 체크리스트
+
+**⚠️ CRITICAL**: 모든 Task 시작 전 반드시 3단계 확인!
+
+### Step 1: Sub-agent 투입 가능성 확인 ✅
+
+**복잡도 평가 후 에이전트 선택:**
+
+| 작업 유형 | 추천 에이전트 | 투입 조건 |
+|----------|-------------|----------|
+| **아키텍처 설계** | @system-architect | 새 모듈, 구조 설계 |
+| **성능 최적화** | @performance-engineer | O(n²) → O(n), 병목 해결 |
+| **근본 원인 분석** | @root-cause-analyst | 버그, 실패 원인 추적 |
+| **테스트 작성** | @quality-engineer | 단위/E2E 테스트 |
+| **코드 리팩토링** | @refactoring-expert | 코드 정리, 기술 부채 |
+| **문서 작성** | @technical-writer | API 문서, 가이드 |
+| **프론트엔드** | @frontend-architect | UI/UX, 컴포넌트 |
+| **백엔드** | @backend-architect | API, 데이터 처리 |
+| **보안 검토** | @security-engineer | 취약점, 보안 |
+
+**투입 기준**:
+- 복잡도 > 0.7 → Task 에이전트 필수
+- 3개 이상 파일 수정 → 전문 에이전트
+- 성능 critical → @performance-engineer
+- 신규 모듈 → @system-architect + 도메인 전문가
+
+### Step 2: Mode 선택 ✅
+
+**작업 특성에 맞는 Mode 활성화:**
+
+| Mode | 활성화 조건 | 효과 |
+|------|----------|------|
+| **--task-manage** | 3단계 이상 작업 | 체계적 관리, TodoWrite 자동 |
+| **--orchestrate** | 병렬 가능 작업 | 도구 최적화, 병렬 실행 |
+| **--think-hard** | 복잡한 분석 | 깊은 사고, ~10K tokens |
+| **--ultrathink** | Critical 결정 | 최대 분석, ~32K tokens |
+| **--uc** | Context > 75% | 압축 통신, 30-50% 절약 |
+| **--delegate** | >7 dirs OR >50 files | Sub-agent 병렬 처리 |
+| **--loop** | 반복 개선 | 검증 → 개선 사이클 |
+
+**선택 가이드**:
+```
+단순 작업 (1-2 파일): Mode 없이 진행
+중간 작업 (3-5 파일): --task-manage
+복잡 작업 (5+ 파일): --orchestrate + --task-manage
+대규모 작업 (10+ 파일): --delegate + --orchestrate
+```
+
+### Step 3: MCP 서버 활용 ✅
+
+**작업별 최적 MCP 서버:**
+
+| MCP 서버 | 사용 시점 | 장점 |
+|---------|---------|------|
+| **Sequential** | 구조적 분석, 다단계 추론 | 체계적 사고, 증거 기반 |
+| **Context7** | 패턴/문서 참조 | 공식 문서, 베스트 프랙티스 |
+| **Serena** | 메모리 지속, 심볼 작업 | 세션 간 컨텍스트 유지 |
+| **Playwright** | 브라우저 테스트 | 실제 브라우저 E2E |
+| **Morphllm** | 대량 코드 변환 | 패턴 기반 일괄 수정 |
+| **Magic** | UI 컴포넌트 생성 | 21st.dev 패턴 |
+
+**활용 예시**:
+```
+Task 1.3 (Index 구현):
+  - Sequential: O(n) 구조 분석
+  - @performance-engineer: 최적화
+
+Task 1.6 (테스팅):
+  - Playwright: E2E 테스트
+  - @quality-engineer: 테스트 작성
+
+Task 1.7 (문서):
+  - Context7: API 문서 패턴
+  - @technical-writer: 문서 작성
+```
+
+### Step 4: 병렬 실행 가능성 평가 ✅
+
+**독립 작업 감지 → 병렬 제안:**
+
+```yaml
+병렬 가능 조건:
+  - 작업 간 의존성 없음
+  - 파일 충돌 없음
+  - 독립적인 검증 가능
+
+병렬 실행 예시:
+  동시 투입:
+    - Task A: @system-architect (설계)
+    - Task B: @quality-engineer (테스트)
+    - Task C: @technical-writer (문서)
+
+  결과: 3일 → 1일 완료
+```
+
+### 체크리스트 템플릿
+
+**매 Task 시작 전 확인:**
+
+```markdown
+## Task X.Y 시작 전 체크
+
+### ✅ Sub-agent
+- [ ] 복잡도 평가: [0.0 - 1.0]
+- [ ] 선택 에이전트: @___
+- [ ] 투입 이유: ___
+
+### ✅ Mode
+- [ ] Mode 선택: --___
+- [ ] 선택 이유: ___
+
+### ✅ MCP
+- [ ] MCP 서버: ___
+- [ ] 사용 목적: ___
+
+### ✅ 병렬
+- [ ] 병렬 가능 작업: ___
+- [ ] 예상 시간 절감: ___
+```
+
+---
+
 ## 📂 디렉터리 구조
 
 ```
