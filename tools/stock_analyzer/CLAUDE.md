@@ -1,7 +1,25 @@
-# CLAUDE.md - Stock Analyzer 프로젝트 가이드
+# CLAUDE.md - Stock Analyzer 핵심 가이드
 
-**작성일**: 2025년 10월 18일
-**목적**: Claude Code 작업 시 필수 준수사항 및 경로 명시
+**작성일**: 2025년 10월 19일
+**최종 업데이트**: 2025년 10월 19일
+**목적**: Claude Code 작업 시 필수 준수사항
+
+---
+
+## 🚀 QUICK REFERENCE
+
+### 필수 파일 읽기 트리거
+
+**매 세션 시작 시 필수**:
+1. ✅ **CLAUDE.md** (이 파일) - 핵심 원칙
+2. ✅ **docs/CLAUDE_PROTOCOLS.md** - 세션 시작 프로토콜 실행
+3. ✅ **docs/Sprint*_*/SPRINT*_MASTER_PLAN.md** - 현재 작업 파악
+
+**파일 작업 전 필수**:
+- ✅ **docs/CLAUDE_PROTOCOLS.md** - 파일 작업 검증 프로토콜
+
+**프로젝트 참조 필요 시**:
+- ✅ **docs/PROJECT_REFERENCE.md** - 디렉터리 구조, 데이터, 워크플로우
 
 ---
 
@@ -14,8 +32,8 @@ C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
 **⚠️ CRITICAL**: 이 경로에서만 작업. 다른 경로 절대 사용 금지.
 
 **잘못된 경로 (절대 사용 금지)**:
-- ❌ `fenomeno_projects/Global_Scouter`
-- ❌ `fenomeno_projects/20251015_Stock_Prompt_Claude`
+- ❌ `fenomeno_projects/`
+- ❌ `fenomeno_knowledge/`
 - ❌ 기타 모든 상대 경로
 
 ---
@@ -23,49 +41,50 @@ C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
 ## 📋 프로젝트 개요
 
 **Stock Analyzer - 100xFenok Project**
-- Sprint 4: Analytics 모듈 (Growth, Ranking, EPS)
-- Sprint 5: CFO Analytics + CorrelationEngine
+- Sprint 4: 5개 모듈 완료 (93/93 tests, 100%)
+- Sprint 5: 2개 모듈 구현 완료 ⚠️ **테스팅 미완** (20/85, 24%)
+- Sprint 6: 2개 모듈 계획 (EconomicIndicators, ETFAnalytics)
 - 목표: 10,000개 기업까지 확장 가능한 시스템
 
 ---
 
-## 🔒 사용자 절대 원칙
+## 🔒 사용자 절대 원칙 (4개)
 
 ### 원칙 1: 테스트 철학
 **"테스트란 모두 원활하게 되는지를 체크하는 것"**
 
 - ✅ 전체 데이터셋으로 테스트 (1,249개 → 10,000개 확장)
-- ❌ 데이터 축소/슬라이싱 절대 금지
-- ❌ `.slice()` 사용하여 테스트 데이터 줄이기 금지
-- 테스트 실패 시: 데이터를 줄이지 말고 **시스템을 고쳐서 통과시킨다**
+- ❌ 데이터 축소/슬라이싱 절대 금지 (`.slice()` 사용 금지)
+- ❌ 테스트 실패 시 데이터 줄이기 금지
+- ✅ 테스트 실패 → **시스템을 고쳐서 통과시킨다**
 
 ### 원칙 2: 확장성 우선
 **"10,000개까지 확장하되 중단 없이 진행"**
 
-- 아키텍처는 로딩/성능이 느려지지 않게 설계
-- 모듈이 많아져도 적절하게 동작하게 만들기
-- 안되면 되게 하는 시스템을 만드는 것이 중요
-- 요구사항을 줄이는 것이 아니라 시스템을 개선
+- ✅ 아키텍처는 로딩/성능이 느려지지 않게 설계
+- ✅ 모듈이 많아져도 적절하게 동작하게 만들기
+- ✅ 안되면 되게 하는 시스템을 만드는 것
+- ❌ 요구사항을 줄이는 것이 아니라 시스템을 개선
 
 ### 원칙 3: 완전한 이해 후 실행
 **"모든 계획, 모든 워크플로우, 모든 상황, 모든 문서 파악"**
 
-- 작업 전 브리핑 필수
-- 문제점 파악 절차 수립 (워크플로우)
-- 계획 없는 즉흥 작업 금지
-- SuperClaude SC 에이전트 워크플로우 준수
+- ✅ 작업 전 브리핑 필수
+- ✅ 문제점 파악 절차 수립 (워크플로우)
+- ❌ 계획 없는 즉흥 작업 금지
+- ✅ SuperClaude SC 에이전트 워크플로우 준수
 
 ### 원칙 4: 절대 원칙 준수
 **"어떤 상황에서건 내가 하라는 절대 원칙대로 하라"**
 
-- 편의성/속도를 이유로 원칙 위반 금지
-- 테스트 실패 → 데이터 줄이기 대신 시스템 개선
-- 성능 문제 → 요구사항 축소 대신 O(n) 최적화
-- 복잡도 증가 → 기능 제거 대신 아키텍처 개선
+- ❌ 편의성/속도를 이유로 원칙 위반 금지
+- ✅ 테스트 실패 → 데이터 줄이기 대신 시스템 개선
+- ✅ 성능 문제 → 요구사항 축소 대신 O(n) 최적화
+- ✅ 복잡도 증가 → 기능 제거 대신 아키텍처 개선
 
 ---
 
-## 🔍 Phase 0 원칙 (데이터 분석 우선)
+## 🔍 Phase 0 원칙 (5개)
 
 **⚠️ CRITICAL**: 신규 프로젝트 또는 대규모 데이터 작업 시작 전 필수 확인
 
@@ -78,19 +97,6 @@ C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
 - ❌ 일부 샘플만 보고 전체 구조 추정
 - ❌ 데이터 관계 불명확한 상태에서 개발 시작
 
-**예시**:
-```yaml
-잘못된 접근:
-  - M_Company.json만 분석
-  - A_, T_, S_ 시트는 나중에 파악
-  - 개발하다가 발견되면 그때 처리
-
-올바른 접근:
-  - 전체 22개 시트 전수 분석
-  - 베이스 vs 계산 구분
-  - 필수 시트 5개 선별 후 개발 시작
-```
-
 ### 원칙 2: 변환 파이프라인 검증
 **"원본 → 중간 → 최종 정확성 보장"**
 
@@ -98,22 +104,6 @@ C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
 - ✅ 여러 버전/주차 샘플 테스트
 - ✅ 자동 검증 로직 (레코드 수, 필드 수, 인코딩)
 - ❌ 한 번만 변환하고 검증 안 함
-- ❌ 변환 스크립트 신뢰만 하고 결과 확인 안 함
-
-**검증 항목**:
-```yaml
-필수 검증:
-  - 시트 수 일치 (원본 vs CSV)
-  - 레코드 수 일치 (엑셀 vs CSV)
-  - 필드명 정확성 (한글 깨짐 없음)
-  - 날짜 포맷 보존
-  - 수식 vs 값 처리 확인
-
-여러 버전 테스트:
-  - 최소 3개 주차 샘플
-  - 시트 구조 변경 감지
-  - 필드 추가/삭제 자동 대응
-```
 
 ### 원칙 3: 명문화 최우선
 **"완전한 레퍼런스 작성 = 미래 시간 절약"**
@@ -122,27 +112,6 @@ C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
 - ✅ 향후 참조 가능한 상세 문서
 - ✅ 의사결정 근거 기록
 - ❌ 머릿속 이해만으로 진행
-- ❌ 간단한 메모만 남기고 개발
-
-**명문화 대상**:
-```yaml
-필수 문서:
-  - DATA_COMPLETE_ANALYSIS.md (2,000+ lines)
-    - 각 데이터 소스 상세 (목적, 구조, 관계)
-    - 베이스 vs 계산 분류
-    - 필드별 의미 및 검증 규칙
-    - 데이터 관계도 (dependency map)
-
-  - SHEET_PRIORITY_MATRIX.md
-    - 필수 vs 선택 분류
-    - 개발 우선순위
-    - 단계별 로드맵
-
-목적:
-  - 세션 간 컨텍스트 유지
-  - 팀원 온보딩 (미래의 나 포함)
-  - 의사결정 추적
-```
 
 ### 원칙 4: 성급한 개발 금지
 **"Phase 0 생략 = 미래 2배 시간 낭비"**
@@ -151,25 +120,13 @@ C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
 - ✅ Phase 0 → Phase 1 → Phase 2 순차 진행
 - ❌ 데이터 일부만 파악하고 바로 코딩
 - ❌ "개발하면서 알아가자" 접근
-- ❌ Phase 0 생략하고 Module 개발
 
-**Phase 0 필수 조건**:
-```yaml
-다음 중 하나라도 해당되면 Phase 0 필수:
-
+**Phase 0 필수 조건** (하나라도 해당 시):
 1. 신규 프로젝트 시작
 2. 데이터 소스 > 5개
 3. 데이터 관계 불명확
 4. 변환 파이프라인 미검증
 5. 전체 데이터 구조 미파악
-
-Phase 0 완료 기준:
-  - [ ] 모든 데이터 소스 분석 완료
-  - [ ] 변환 파이프라인 검증 완료
-  - [ ] 완전한 레퍼런스 문서 작성
-  - [ ] 개발 우선순위 확정
-  - [ ] 단계별 로드맵 작성
-```
 
 ### 원칙 5: 계획 먼저, 문서 먼저
 **"계획 업데이트 → 개발 → 회고 사이클"**
@@ -180,32 +137,13 @@ Phase 0 완료 기준:
 - ❌ 개발 먼저 하고 나중에 문서
 - ❌ 계획 무시하고 즉흥 작업
 
-**예시 (이번 Sprint 4)**:
-```yaml
-발견: "Module 3 불필요, A_Company > A_Compare 우선순위"
-
-❌ 잘못된 대응:
-  - 바로 Module 4 개발 시작
-  - 계획은 나중에 업데이트
-
-✅ 올바른 대응:
-  1. 개발 중단
-  2. Phase 0 필요성 인식
-  3. MASTER_PLAN.md 업데이트
-  4. CLAUDE.md 원칙 추가
-  5. Git commit (문서)
-  6. Phase 0 Task 0.1 시작
-```
-
 ---
 
 ## 🚀 작업 시작 전 필수 체크리스트
 
-**⚠️ CRITICAL**: 모든 Task 시작 전 반드시 3단계 확인!
+**⚠️ CRITICAL**: 모든 Task 시작 전 반드시 4단계 확인!
 
 ### Step 1: Sub-agent 투입 가능성 확인 ✅
-
-**복잡도 평가 후 에이전트 선택:**
 
 | 작업 유형 | 추천 에이전트 | 투입 조건 |
 |----------|-------------|----------|
@@ -215,901 +153,103 @@ Phase 0 완료 기준:
 | **테스트 작성** | @quality-engineer | 단위/E2E 테스트 |
 | **코드 리팩토링** | @refactoring-expert | 코드 정리, 기술 부채 |
 | **문서 작성** | @technical-writer | API 문서, 가이드 |
-| **프론트엔드** | @frontend-architect | UI/UX, 컴포넌트 |
-| **백엔드** | @backend-architect | API, 데이터 처리 |
-| **보안 검토** | @security-engineer | 취약점, 보안 |
 
 **투입 기준**:
 - 복잡도 > 0.7 → Task 에이전트 필수
 - 3개 이상 파일 수정 → 전문 에이전트
 - 성능 critical → @performance-engineer
-- 신규 모듈 → @system-architect + 도메인 전문가
 
 ### Step 2: Mode 선택 ✅
-
-**작업 특성에 맞는 Mode 활성화:**
 
 | Mode | 활성화 조건 | 효과 |
 |------|----------|------|
 | **--task-manage** | 3단계 이상 작업 | 체계적 관리, TodoWrite 자동 |
 | **--orchestrate** | 병렬 가능 작업 | 도구 최적화, 병렬 실행 |
 | **--think-hard** | 복잡한 분석 | 깊은 사고, ~10K tokens |
-| **--ultrathink** | Critical 결정 | 최대 분석, ~32K tokens |
-| **--uc** | Context > 75% | 압축 통신, 30-50% 절약 |
 | **--delegate** | >7 dirs OR >50 files | Sub-agent 병렬 처리 |
-| **--loop** | 반복 개선 | 검증 → 개선 사이클 |
-
-**선택 가이드**:
-```
-단순 작업 (1-2 파일): Mode 없이 진행
-중간 작업 (3-5 파일): --task-manage
-복잡 작업 (5+ 파일): --orchestrate + --task-manage
-대규모 작업 (10+ 파일): --delegate + --orchestrate
-```
 
 ### Step 3: MCP 서버 활용 ✅
-
-**작업별 최적 MCP 서버:**
 
 | MCP 서버 | 사용 시점 | 장점 |
 |---------|---------|------|
 | **Sequential** | 구조적 분석, 다단계 추론 | 체계적 사고, 증거 기반 |
-| **Context7** | 패턴/문서 참조 | 공식 문서, 베스트 프랙티스 |
-| **Serena** | 메모리 지속, 심볼 작업 | 세션 간 컨텍스트 유지 |
 | **Playwright** | 브라우저 테스트 | 실제 브라우저 E2E |
-| **Morphllm** | 대량 코드 변환 | 패턴 기반 일괄 수정 |
-| **Magic** | UI 컴포넌트 생성 | 21st.dev 패턴 |
-
-**활용 예시**:
-```
-Task 1.3 (Index 구현):
-  - Sequential: O(n) 구조 분석
-  - @performance-engineer: 최적화
-
-Task 1.6 (테스팅):
-  - Playwright: E2E 테스트
-  - @quality-engineer: 테스트 작성
-
-Task 1.7 (문서):
-  - Context7: API 문서 패턴
-  - @technical-writer: 문서 작성
-```
+| **Context7** | 패턴/문서 참조 | 공식 문서, 베스트 프랙티스 |
 
 ### Step 4: 병렬 실행 가능성 평가 ✅
 
-**독립 작업 감지 → 병렬 제안:**
-
-```yaml
-병렬 가능 조건:
-  - 작업 간 의존성 없음
-  - 파일 충돌 없음
-  - 독립적인 검증 가능
-
-병렬 실행 예시:
-  동시 투입:
-    - Task A: @system-architect (설계)
-    - Task B: @quality-engineer (테스트)
-    - Task C: @technical-writer (문서)
-
-  결과: 3일 → 1일 완료
-```
-
-### 체크리스트 템플릿
-
-**매 Task 시작 전 확인:**
-
-```markdown
-## Task X.Y 시작 전 체크
-
-### ✅ Sub-agent
-- [ ] 복잡도 평가: [0.0 - 1.0]
-- [ ] 선택 에이전트: @___
-- [ ] 투입 이유: ___
-
-### ✅ Mode
-- [ ] Mode 선택: --___
-- [ ] 선택 이유: ___
-
-### ✅ MCP
-- [ ] MCP 서버: ___
-- [ ] 사용 목적: ___
-
-### ✅ 병렬
-- [ ] 병렬 가능 작업: ___
-- [ ] 예상 시간 절감: ___
-```
+**병렬 가능 조건**:
+- 작업 간 의존성 없음
+- 파일 충돌 없음
+- 독립적인 검증 가능
 
 ---
 
-## 📂 디렉터리 구조
-
-```
-C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer/
-├── CLAUDE.md                   # 이 파일 - 필수 가이드
-├── stock_analyzer.html         # 메인 HTML
-├── playwright.config.js        # Playwright 설정 (포트 8080)
-├── package.json                # Node.js 의존성
-│
-├── modules/                    # 핵심 모듈 (25개)
-│   ├── CorrelationEngine.js   # O(n) 최적화 완료 (34K)
-│   ├── CFOAnalytics.js        # CFO 분석 (24K)
-│   ├── EPSAnalytics.js        # EPS 분석 (17K)
-│   ├── GrowthAnalytics.js     # 성장률 분석 (13K)
-│   └── RankingAnalytics.js    # 순위 분석 (15K)
-│
-├── data/                       # JSON 데이터
-│   ├── global_scouter_integrated.json  # 통합 데이터
-│   ├── M_Company.json         # 6,176 companies
-│   ├── T_CFO.json             # 1,264 companies
-│   ├── T_Correlation.json     # 1,249 companies
-│   └── [20+ other JSON files]
-│
-├── tests/                      # E2E 테스트 (Playwright)
-│   ├── sprint4-*.spec.js      # Sprint 4 tests (52+)
-│   ├── sprint5-*.spec.js      # Sprint 5 tests (108+)
-│   ├── global-setup.ts        # 테스트 전역 설정
-│   ├── global-teardown.ts     # 테스트 정리
-│   └── README.md              # 테스트 가이드
-│
-├── scripts/                    # 변환/유틸리티 스크립트
-│   ├── simple_csv_converter.py
-│   ├── fix_csv_conversion.py
-│   └── csv_pipeline.sh/bat
-│
-├── js/                         # 프론트엔드 JavaScript
-│   ├── analytics/
-│   └── DashboardManager.js
-│
-├── core/                       # 코어 시스템
-│   ├── DataSkeleton.js
-│   ├── EventSystem.js
-│   └── UIFramework.js
-│
-└── docs/                       # 문서
-    ├── PHASE2_REPORT.md
-    ├── PHASE3_REPORT.md
-    └── README.md
-```
-
----
-
-## 🔧 핵심 기술 스택
-
-- **Frontend**: Vanilla JavaScript, Chart.js 4.4.0, Tailwind CSS
-- **Testing**: Playwright (E2E), 6 browsers (chromium, firefox, webkit, mobile)
-- **Data**: JSON (converted from CSV), 6,176 companies dataset
-- **Performance**: O(n) optimized algorithms, <3s initialization target
-- **Server**: Python http.server (port 8080)
-
----
-
-## ⚡ 성능 최적화 원칙
-
-### CorrelationEngine O(n) 최적화 (완료)
-```javascript
-// 5-bucket indexed structure for O(n) lookups
-correlationIndex = {
-    veryLow: [],    // < -0.5
-    low: [],        // -0.5 to -0.1
-    neutral: [],    // -0.1 to 0.1
-    medium: [],     // 0.1 to 0.5
-    high: []        // > 0.5
-}
-```
-
-**성능 목표**:
-- 1,249 companies: 현재 기준 (<3초 초기화)
-- 10,000 companies: 목표 (<5초 초기화)
-- findLowCorrelationPairs: O(n) bucket filtering (<2초)
-
----
-
-## 🧪 테스트 실행
-
-### 전체 테스트 실행
-```bash
-cd C:/Users/etlov/agents-workspace/projects/100xFenok/tools/stock_analyzer
-npx playwright test
-```
-
-### 특정 테스트 실행
-```bash
-npx playwright test tests/sprint5-correlation-engine.spec.js
-npx playwright test tests/sprint5-cfo-analytics.spec.js
-```
-
-### 테스트 데이터 원칙
-```javascript
-// ❌ 절대 금지
-const tickers = correlationData.slice(0, 10).map(c => c.Ticker);
-
-// ✅ 올바른 방법
-const tickers = correlationData.map(c => c.Ticker);
-```
-
-**이유**: 테스트는 실제 환경(1,249개 → 10,000개)에서 시스템이 원활하게 작동하는지 검증하는 것
-
----
-
-## 📊 데이터 현황
-
-### JSON 데이터 (변환 완료)
-| 파일 | 레코드 수 | 상태 | 용도 |
-|------|----------|------|------|
-| M_Company.json | 6,176 | ✅ | 기업 마스터 데이터 |
-| T_CFO.json | 1,264 | ✅ | CFO 분석 |
-| T_Correlation.json | 1,249 | ✅ | 상관관계 분석 |
-| T_EPS_C.json | - | ✅ | EPS 분석 |
-| T_Growth_C.json | - | ✅ | 성장률 분석 |
-| T_Rank.json | - | ✅ | 순위 분석 |
-
-### RAW 데이터 위치 (참조용)
-```
-fenomeno_projects/Global_Scouter/Global_Scouter_20251003/
-```
-**용도**: CSV 원본 보관, 재변환 필요 시에만 참조
-
----
-
-## 🔄 주간 데이터 업데이트 워크플로우
-
-### 매주 반복 작업 프로세스
-
-**사용자가 매주 수행:**
-
-1. **엑셀 다운로드**
-   ```
-   Global_Scouter_YYMMDD.xlsx (1개 파일)
-   └── 시트별 데이터 포함 (M_Company, T_EPS_C, T_Growth_C, T_Rank, T_CFO, T_Correlation 등)
-   ```
-
-2. **Python 변환 스크립트 실행**
-   ```bash
-   cd C:/Users/etlov/agents-workspace/projects/100xFenok/tools/stock_analyzer
-   python scripts/simple_csv_converter.py
-   ```
-
-3. **자동 처리 (스크립트가 수행)**
-   - 엑셀 → CSV 쪼개기 (시트별)
-   - CSV → JSON 변환
-   - 개별 JSON 파일 생성:
-     - `data/M_Company.json`
-     - `data/T_EPS_C.json`
-     - `data/T_Growth_C.json`
-     - `data/T_Rank.json`
-     - `data/T_CFO.json`
-     - `data/T_Correlation.json`
-
-4. **결과**
-   - 기존 JSON 파일 덮어쓰기 ✅
-   - 시스템 자동 반영 (HTML 리로드 시)
-
-### 파일 명명 규칙
-
-**중요:** 엑셀 시트명 = JSON 파일명
-
-```
-엑셀 시트          →  CSV 파일            →  JSON 파일
-M_Company       →  M_Company.csv      →  M_Company.json
-T_EPS_C         →  T_EPS_C.csv        →  T_EPS_C.json
-T_Growth_C      →  T_Growth_C.csv     →  T_Growth_C.json
-T_Rank          →  T_Rank.csv         →  T_Rank.json
-T_CFO           →  T_CFO.csv          →  T_CFO.json
-T_Correlation   →  T_Correlation.csv  →  T_Correlation.json
-```
-
-### 데이터 로딩 구조
-
-**시스템이 개별 JSON 파일 직접 로딩:**
-
-```javascript
-// HTML에서 각 분석 모듈이 개별 JSON 로딩
-EPSAnalytics.js        → fetch('data/T_EPS_C.json')
-GrowthAnalytics.js     → fetch('data/T_Growth_C.json')
-RankingAnalytics.js    → fetch('data/T_Rank.json')
-CFOAnalytics.js        → fetch('data/T_CFO.json')
-CorrelationEngine.js   → fetch('data/T_Correlation.json')
-```
-
-**장점:**
-- 매주 업데이트 시 파일 덮어쓰기만 하면 끝
-- 자동화 간단 (스크립트 1회 실행)
-- 추가 통합 작업 불필요
-
-### ⚠️ 절대 금지
-
-**개별 JSON 파일 삭제 금지:**
-- ❌ T_EPS_C.json 삭제
-- ❌ T_Growth_C.json 삭제
-- ❌ T_Rank.json 삭제
-- ❌ T_CFO.json 삭제
-- ❌ T_Correlation.json 삭제
-
-**이유:** 매주 업데이트 워크플로우에 필수
-
-**통합 JSON (선택):**
-- `global_scouter_integrated.json`: 편의용 (선택)
-- 개별 JSON이 메인 소스
-
----
-
-## 🗑️ 불필요 시트 제거 프로세스
-
-### 발견 시 즉시 조치 (문서/프로세스만)
-
-**⚠️ CRITICAL**: 파일/코드 삭제는 즉시 하지 않음! 문서화만 먼저!
-
-#### Step 1: 가치 분석 (즉시)
-```yaml
-질문:
-  1. 다른 시트와 중복되는가? (M_Company.json 등)
-  2. 실제로 사용자가 등록/사용한 데이터인가?
-  3. 분석적 가치가 있는가? (비교, 연관 분석 등)
-  4. 단순 저장 용도인가?
-
-판단:
-  - 중복 + 미사용 + 분석 가치 없음 → 제거 대상
-  - 그 외 → 유지 또는 재검토
-```
-
-#### Step 2: 문서 업데이트 (즉시)
-```yaml
-1. SPRINT4_MASTER_PLAN.md:
-   - 관련 Module 상태: ⏳ → ❌ CANCELLED
-   - 취소 이유 명시
-   - Task 목록 유지 (참고용)
-
-2. CLAUDE.md:
-   - 불필요 시트 목록 기록 (아래 섹션)
-   - 데이터 현황 테이블 갱신은 보류
-
-3. 제거 예정 목록 작성:
-   - 시트명 기록
-   - 제거 이유 기록
-   - 전체 재정리 시 처리
-```
-
-#### Step 3: 실제 삭제 작업 보류 (나중에)
-```yaml
-⏳ 전체 재정리 시 일괄 처리:
-
-언제:
-  - 불필요 시트 3개 이상 누적
-  - Sprint 완료 시점
-  - 데이터 구조 대규모 변경 시
-
-작업:
-  1. Python 스크립트 수정 (EXCLUDE_SHEETS 추가)
-  2. data/*.json, csv 삭제
-  3. 코드 로직 제거 (있으면)
-  4. 테스트 코드 제거 (있으면)
-  5. 데이터 재생성 및 검증
-  6. 문서 최종 갱신
-
-이유:
-  - 여러 시트 동시 처리가 효율적
-  - 스크립트 한 번만 수정
-  - 실수 방지 (꼬임 방지)
-```
-
-### 제거 예정 시트 목록
-
-**현재 제거 예정:**
-```yaml
-1. S_Mylist (관심종목)
-   - 이유: 사용자 미등록, M_Company.json과 중복, 분석 가치 없음
-   - 관련 Module: Sprint 4 Module 3 (WatchlistManager) CANCELLED
-   - 발견일: 2025-10-19
-   - 상태: 문서 업데이트 완료, 실제 삭제 대기 중
-```
-
-**재정리 트리거:**
-- [ ] 불필요 시트 3개 누적
-- [ ] Sprint 4 완료
-- [ ] 데이터 구조 변경 필요
-
----
-
-## 📊 Stock Analyzer 프로젝트 구조
-
-### 전체 데이터 현황 (22 CSV files)
-
-**데이터 위치**: `data/csv/`
-
-**카테고리별 분류:**
-- **Master (M_*)**: 기업 및 ETF 마스터 데이터 (2개)
-- **Technical (T_*)**: 기술적 분석 및 지표 (10개)
-- **Advanced (A_*)**: 고급 분석 및 예측 (5개)
-- **Screening (S_*)**: 스크리닝 도구 및 관심종목 (3개)
-- **Economic (E_*)**: 경제 지표 (1개)
-- **Special**: 문서 및 대형주 분석 (1개)
-
-**전체 데이터 규모**: ~15,000+ 기업 레코드, ~8.4 MB
-
-### 현재 개발 현황
-
-**구현 완료 (15% 커버리지)**:
-```
-✅ modules/EPSAnalytics.js        → T_EPS_C.csv
-✅ modules/GrowthAnalytics.js     → T_Growth_C.csv
-✅ modules/RankingAnalytics.js    → T_Rank.csv
-✅ modules/CFOAnalytics.js        → T_CFO.csv
-✅ modules/CorrelationEngine.js   → T_Correlation.csv
-```
-
-**필요 개발 (85% 남음)**:
-- 🔴 Phase 1 (Critical): 5개 모듈 (8주)
-- 🟡 Phase 2 (High): 6개 모듈 (11주)
-- 🟢 Phase 3 (Medium): 6개 모듈 (9주)
-
-**상세 로드맵**: `docs/Sprint4_DataIntegration/FULL_DATA_ANALYSIS_AND_ROADMAP.md` 참조
-
-### Analytics 모듈 개발 패턴
-
-**모든 모듈은 동일한 패턴 따름:**
-
-1. **데이터 프로바이더 생성**
-   - CSV 로딩 및 파싱
-   - 데이터 검증
-   - 캐싱 메커니즘
-
-2. **Analytics 클래스 구현**
-   - `BaseAnalytics` 확장
-   - 분석 메서드 구현
-   - 성능 최적화 (O(n) 알고리즘)
-
-3. **테스트 작성**
-   - 단위 테스트 (Jest)
-   - E2E 테스트 (Playwright)
-   - 전체 데이터셋으로 검증
-
-4. **UI 통합**
-   - HTML에서 개별 JSON 로딩
-   - Dashboard 탭 추가
-   - 차트 및 테이블 렌더링
-
-### 우선순위 가이드
-
-**새 기능 개발 시 반드시 확인:**
-
-1. `FULL_DATA_ANALYSIS_AND_ROADMAP.md` 확인
-   - Part 1: CSV 데이터 구조
-   - Part 2: Feature 매핑 (CSV → 기능)
-   - Part 3: 개발 우선순위
-
-2. Phase 1 (Critical) 먼저:
-   - CompanyMasterProvider.js (기반)
-   - ValidationAnalytics.js (품질)
-   - WatchlistManager.js (사용자 기능)
-   - ComparisonEngine.js (핵심 기능)
-
-3. 기존 패턴 따르기:
-   - 개별 JSON 파일 직접 로딩
-   - BaseAnalytics 확장
-   - 전체 데이터셋 테스트
-
-### ⚠️ 절대 원칙
-
-**데이터 파일 관리:**
-- ❌ 개별 T_*.json 파일 삭제 금지
-- ❌ CSV → JSON 변환 스크립트 함부로 수정 금지
-- ❌ 데이터 구조 임의 변경 금지
-- ✅ 매주 업데이트 워크플로우 유지
-
-**개발 원칙:**
-- ❌ 테스트 데이터 슬라이싱 금지
-- ❌ Phase 무시하고 즉흥 개발 금지
-- ❌ 기존 모듈 패턴 무시 금지
+## 🚨 금지 사항 요약
+
+### 경로 관련
+- ❌ fenomeno_projects/, fenomeno_knowledge/ 작업
+- ❌ 상대 경로 사용
+- ✅ 절대 경로만 사용
+
+### 테스트 관련
+- ❌ `.slice()` 사용하여 테스트 데이터 줄이기
+- ❌ 테스트 실패 시 데이터 축소
+- ❌ 테스트 skip, disable
 - ✅ 전체 데이터셋으로 검증
-- ✅ SPEC_DRIVEN_WORKFLOW 준수
-- ✅ FULL_DATA_ANALYSIS_AND_ROADMAP.md 기준
+- ✅ 시스템 개선으로 통과
+
+### 파일 작업 관련
+- ❌ 폴더 전체 삭제 (rm -rf)
+- ❌ 사용자 확인 없이 삭제
+- ❌ 백업 없이 대량 삭제
+- ✅ 파일별 선택 삭제
+- ✅ 사용자 명시적 확인
+
+### 개발 관련
+- ❌ Phase 0 생략
+- ❌ 계획 없는 즉흥 작업
+- ❌ 문서 분석만 하고 생성 안 함
+- ❌ MASTER_PLAN 업데이트 누락
+- ✅ 계획 → 문서 → 개발 순서
+- ✅ 작업 완료 즉시 MASTER_PLAN 업데이트
 
 ---
 
-## 🚨 일반적인 실수 방지
+## 📚 관련 문서 (필수 읽기)
 
-### 실수 1: 잘못된 경로에서 작업
-```bash
-# ❌ 절대 금지
-cd fenomeno_projects/Global_Scouter
-npm test
+### 세션 시작 시 필수
+1. **CLAUDE.md** (이 파일)
+2. **docs/CLAUDE_PROTOCOLS.md**
+   - 세션 시작 프로토콜 (5 steps)
+   - 파일 작업 검증 프로토콜 (3 steps)
+   - MASTER_PLAN 업데이트 프로토콜
+3. **현재 Sprint MASTER_PLAN.md**
+   - docs/Sprint4_DataIntegration/SPRINT4_MASTER_PLAN.md
+   - docs/Sprint5_*/SPRINT5_MASTER_PLAN.md (있으면)
+   - docs/Sprint6_EconomicETF/SPRINT6_MASTER_PLAN.md
 
-# ✅ 올바른 방법
-cd C:/Users/etlov/agents-workspace/projects/100xFenok/tools/stock_analyzer
-npm test
-```
-
-### 실수 2: 테스트 데이터 축소
-```javascript
-// ❌ 절대 금지 - 테스트 실패 시 데이터 줄이기
-const testData = allData.slice(0, 100);
-
-// ✅ 올바른 방법 - 알고리즘 최적화로 전체 데이터 처리
-const testData = allData; // 전체 1,249개 사용
-// O(n²) → O(n) 최적화로 성능 개선
-```
-
-### 실수 3: 계획 없는 즉흥 작업
-```yaml
-# ❌ 잘못된 접근
-- 바로 코딩 시작
-- 에러 발생하면 임기응변
-- 테스트 실패하면 데이터 줄이기
-
-# ✅ 올바른 접근
-1. 모든 상황/문서/워크플로우 파악
-2. 브리핑 작성
-3. 문제점 분석 절차 수립
-4. SC 에이전트 워크플로우 따라 실행
-5. 테스트 실패 → 시스템 개선 (데이터 축소 ❌)
-```
-
-### 실수 4: 성능 문제 시 요구사항 축소
-```yaml
-# ❌ 잘못된 해결
-문제: "10,000개 처리 시 느림"
-해결: "1,000개만 처리하도록 제한"
-
-# ✅ 올바른 해결
-문제: "10,000개 처리 시 느림"
-해결:
-  - O(n²) → O(n) 알고리즘 최적화
-  - 인덱싱 구조 도입 (correlationIndex)
-  - 캐싱 전략 적용
-  - 청크 단위 처리
-```
+### 작업 중 참조
+- **docs/PROJECT_REFERENCE.md** - 프로젝트 구조, 데이터, 워크플로우
+- **docs/Sprint*_DataIntegration/FULL_DATA_ANALYSIS_AND_ROADMAP.md** - 전체 로드맵
 
 ---
 
-## 📝 작업 체크리스트
-
-### 작업 시작 전 필수 확인
-- [ ] 올바른 경로에서 작업 중인지 확인 (`pwd` 실행)
-- [ ] 브리핑 작성 완료
-- [ ] 문제점 파악 절차 수립
-- [ ] SC 에이전트 워크플로우 확인
-
-### 코드 수정 시 필수 확인
-- [ ] 테스트 데이터 슬라이싱(`.slice()`) 없음
-- [ ] 전체 데이터셋으로 테스트
-- [ ] O(n) 최적화 적용 (성능 중요 부분)
-- [ ] 10,000개 확장 고려
-
-### 테스트 실행 시 필수 확인
-- [ ] 올바른 경로에서 실행
-- [ ] 전체 테스트 실행 (일부만 ❌)
-- [ ] 실패 시 시스템 개선 (데이터 축소 ❌)
-- [ ] 성능 메트릭 확인
-
-### Git Commit 전 필수 확인
-- [ ] 올바른 경로의 변경사항만 포함
-- [ ] 잘못된 경로 파일 제거 완료
-- [ ] 테스트 전체 통과
-- [ ] CLAUDE.md 업데이트
-
-### Task 완료 시 필수 확인 ⚠️ CRITICAL
-- [ ] SPRINT4_MASTER_PLAN.md 즉시 업데이트
-  - Task 상태: ⏳ → ✅
-  - 완료 기준 체크박스: [ ] → [x]
-  - Git commit hash 기록
-- [ ] 관련 문서 생성/업데이트
-  - API 문서 (Task x.7)
-  - 테스트 결과 (Task x.6)
-  - 분석 결과 (Task x.1)
-- [ ] 임시 파일 정리
-  - playwright-report/ 삭제
-  - test-results/ 삭제
-  - 디버깅 파일 삭제
-
-### Module 완료 시 필수 확인 (회고)
-- [ ] 모든 Task 완료 표시 확인
-- [ ] MASTER_PLAN 전체 체크박스 검증
-- [ ] MODULE_RETROSPECTIVE.md 생성
-- [ ] Git commit (회고)
-- [ ] 사용하지 않는 파일 정리
-
----
-
-## 📁 문서 체계 원칙
-
-### 트리 구조 (MASTER_PLAN.md = 루트)
-
-**모든 작업은 MASTER_PLAN.md를 중심으로 트리 구조 유지:**
-
-```
-MASTER_PLAN.md (최상위 인덱스)
-└── Sprint X: [작업명]
-    ├── Phase 0: As-Is Analysis [✅/🔄/⏳]
-    │   └── 📄 [SPRINT_X_ANALYSIS.md]
-    ├── Phase 1: To-Be Design [✅/🔄/⏳]
-    │   └── 📄 [SPRINT_X_DESIGN.md]
-    ├── Phase 2: Master Plan [✅/🔄/⏳]
-    │   └── Task 체크리스트 (MASTER_PLAN.md 내)
-    └── Phase 3: Implementation [✅/🔄/⏳]
-        ├── Task X.1: [작업명] [✅/🔄/⏳]
-        ├── Task X.2: [작업명] [✅/🔄/⏳]
-        └── Task X.3: [작업명] [✅/🔄/⏳]
-```
-
-**상태 표시:**
-- ✅ 완료
-- 🔄 진행 중
-- ⏳ 대기
-
-### 문서 배치 규칙
-
-**Sprint별 폴더 구조:**
-```
-docs/
-├── MASTER_PLAN.md (전체 인덱스 - 항상 최신)
-├── ARCHITECTURE_BLUEPRINT.md (핵심)
-├── API_SPECIFICATION.md (핵심)
-├── DEPLOYMENT_GUIDE.md (핵심)
-├── TESTING_QUICK_START.md (핵심)
-├── USER_GUIDE.md (핵심)
-│
-├── Sprint1_XXX/
-│   ├── SPRINT1_ANALYSIS.md (Phase 0)
-│   └── SPRINT1_DESIGN.md (Phase 1)
-├── Sprint2_XXX/
-│   ├── SPRINT2_ANALYSIS.md
-│   └── SPRINT2_DESIGN.md
-├── Sprint3_FileCleanup/
-│   ├── CLEANUP_ANALYSIS.md
-│   └── CLEANUP_PLAN.md
-├── Sprint4_DataIntegration/
-│   ├── DATA_INTEGRATION_ANALYSIS.md (Phase 0)
-│   └── DATA_INTEGRATION_DESIGN.md (Phase 1)
-│
-├── reports/ (Sprint 완료 보고서만)
-└── archives/ (참고 문서 보관)
-```
-
-### 즉시 정리 원칙
-
-**작업 중 계속 정리 (파일 방치 금지):**
-
-1. **재생성 파일**
-   - 새 버전 생성 → 이전 버전 즉시 삭제
-   - 예: global_scouter_integrated.json 재생성 → 기존 파일 삭제
-
-2. **통합 완료 시**
-   - 개별 파일 통합 → 개별 파일 삭제 여부 결정
-   - 예: 모든 T_*.json → 통합 JSON에 포함 → 개별 파일 삭제
-
-3. **임시 파일**
-   - 테스트 결과물 (playwright-report/, test-results/) → 즉시 삭제
-   - 변환 품질 리포트 (conversion_quality_*.json) → 즉시 삭제
-   - 디버깅 로그, 임시 스크립트 → 즉시 삭제
-
-4. **Phase 완료 시**
-   - 해당 Phase 문서들 → Sprint 폴더로 이동
-   - 불필요해진 문서 → 즉시 삭제
-   - MASTER_PLAN.md 업데이트 (완료 표시)
-
-5. **Sprint 완료 시**
-   - Sprint 보고서 → reports/ 폴더로 이동
-   - 참고 문서 → archives/ 폴더로 이동
-   - 핵심 문서만 docs 루트에 유지
-
-### 문서 작성 원칙
-
-**모든 Phase별 문서는:**
-- 작업 목적 명확히
-- 발견사항 기록
-- 다음 Phase 연결고리 제시
-- MASTER_PLAN.md에서 링크 연결
-
-**MASTER_PLAN.md 관리:**
-- 모든 Sprint/Phase/Task 상태 추적
-- 완료 시각, Git commit hash 기록
-- 다음 작업 명확히 표시
-
----
-
-## 🔗 관련 문서
-
-- `README.md`: 프로젝트 전체 개요
-- `tests/README.md`: 테스트 가이드
-- `docs/MASTER_PLAN.md`: 전체 작업 트리 인덱스
-- `docs/reports/`: Sprint 완료 보고서
-- `docs/archives/`: 참고 문서
-
----
-
-## 🎓 학습 및 참고
-
-### SuperClaude SC 에이전트
-- `@root-cause-analyst`: 근본 원인 분석
-- `@performance-engineer`: 성능 최적화
-- `@quality-engineer`: 테스트 및 품질 보증
-- `@refactoring-expert`: 코드 리팩토링
-- `@system-architect`: 시스템 아키텍처 설계
-
-### 성능 최적화 패턴
-- **Indexed Structures**: O(n²) → O(n) 최적화
-- **Caching**: 반복 계산 방지
-- **Chunking**: 대용량 데이터 분할 처리
-- **Lazy Loading**: 필요 시점에만 로딩
-
----
-
-## 🔒 재발방지 자동화 시스템
-
-**목적**: 반복적 실수 방지를 위한 강제 체크리스트 시스템
-
-### 세션 시작 프로토콜 (자동 실행)
-
-**⚠️ CRITICAL**: 모든 세션 시작 시 반드시 실행!
-
-```yaml
-SESSION_START_CHECKLIST:
-
-  Step 1: 경로 확인 (필수)
-    - pwd 실행 및 출력
-    - 예상: C:/Users/etlov/agents-workspace/projects/100xFenok/tools/stock_analyzer
-    - 불일치 시: 즉시 중단, 올바른 경로로 이동
-
-  Step 2: CLAUDE.md 읽기 (필수)
-    - Read: C:/Users/etlov/agents-workspace/projects/100xFenok/tools/stock_analyzer/CLAUDE.md
-    - 전체 원칙 재확인
-    - 변경사항 파악
-
-  Step 3: MASTER_PLAN 상태 파악 (필수)
-    - Read: docs/Sprint4_DataIntegration/SPRINT4_MASTER_PLAN.md (첫 100 lines)
-    - 현재 진행 중인 Task 확인
-    - 다음 Task 확인
-    - 완료 기준 확인
-
-  Step 4: Git 상태 확인 (필수)
-    - git status 실행
-    - 변경된 파일 확인
-    - Untracked 파일 확인
-    - Commits ahead 확인
-
-  Step 5: 브리핑 작성 (필수)
-    - 현재 상황 요약
-    - 다음 작업 목록
-    - 예상 소요 시간
-    - 사용자에게 보고
-```
-
-**자동화 규칙**:
-- 세션 시작 시 자동으로 Step 1-5 순차 실행
-- 하나라도 실패 시 즉시 중단
-- 브리핑 없이 작업 시작 금지
-
----
-
-### 파일 작업 검증 프로토콜 (3단계)
-
-**⚠️ CRITICAL**: 파일/폴더 생성/수정/삭제 전 반드시 실행!
-
-```yaml
-FILE_OPERATION_PROTOCOL:
-
-  Step 1: 경로 검증 (필수)
-    명령어:
-      - pwd (현재 위치 확인)
-      - 절대 경로 확인
-      - 프로젝트 폴더 내부 확인
-
-    확인사항:
-      - ✅ C:/Users/etlov/agents-workspace/projects/100xFenok/tools/stock_analyzer
-      - ❌ fenomeno_knowledge
-      - ❌ fenomeno_projects
-      - ❌ 기타 모든 경로
-
-  Step 2: 내용 검증 (필수)
-    명령어:
-      - ls -la [대상 폴더]
-      - wc -l [대상 파일] (파일 삭제 시)
-      - du -sh [대상 폴더] (폴더 삭제 시)
-
-    확인사항:
-      - 파일 개수
-      - 파일 크기
-      - 백업 파일 여부
-      - 중요 파일 존재 여부
-
-  Step 3: 사용자 확인 (필수)
-    출력 형식:
-      "📋 파일 작업 확인
-      경로: [절대 경로]
-      작업: [생성/수정/삭제]
-      대상: [파일/폴더명]
-      개수: X개 파일
-      크기: XXX MB
-
-      계속하시겠습니까? (Y/N)"
-
-    대기:
-      - 사용자 명시적 확인 필요
-      - Y 입력 후 진행
-      - N 입력 시 즉시 중단
-```
-
-**금지 사항**:
-- ❌ 폴더 전체 삭제 (rm -rf 금지)
-- ❌ 파일별 확인 없이 일괄 삭제
-- ❌ 사용자 확인 없이 진행
-- ✅ 파일별 선택 삭제만 허용
-
----
-
-### MASTER_PLAN 업데이트 프로토콜
-
-**⚠️ CRITICAL**: 모든 Task 시작/완료 시 반드시 실행!
-
-```yaml
-MASTER_PLAN_UPDATE_PROTOCOL:
-
-  Before Work (작업 시작 전):
-    1. Read MASTER_PLAN.md
-       - 현재 Task 상태 확인 (⏳/🔄/✅)
-       - 완료 기준 재확인
-       - 다음 Task 파악
-
-    2. TodoWrite 생성
-       - 현재 Task를 in_progress로 표시
-       - 세부 작업 항목 나열
-       - 예상 소요 시간 기록
-
-    3. 작업 시작
-
-  During Work (작업 진행 중):
-    - TodoWrite 실시간 업데이트
-    - 중간 체크포인트 기록 (30분마다)
-    - 발견사항 즉시 메모
-
-  After Work (작업 완료 후):
-    1. MASTER_PLAN.md 즉시 업데이트
-       - Task 상태: ⏳ → ✅
-       - 완료 시각 기록
-       - Git commit hash 기록
-       - 완료 기준 체크박스 표시
-
-    2. 관련 문서 생성/업데이트
-       - API 문서 (필요 시)
-       - 회고 문서 (Module 완료 시)
-       - 분석 문서 (필요 시)
-
-    3. TodoWrite 완료 표시
-       - 현재 Task를 completed로 변경
-       - 다음 Task를 in_progress로 변경
-
-    4. 임시 파일 즉시 정리
-       - playwright-report/ 삭제
-       - test-results/ 삭제
-       - temp_*.txt 삭제
-```
-
-**자동화 규칙**:
-- Task 시작 = MASTER_PLAN Read 필수
-- Task 완료 = MASTER_PLAN Edit 필수
-- 중간에 MASTER_PLAN 업데이트 안 하면 경고
-
----
-
-### 재발방지 체크리스트
-
-**매 작업 시작 전 자가 점검:**
-
-```markdown
-## ✅ 재발방지 체크리스트
+## ⚡ 작업 체크리스트 (간단)
 
 ### 세션 시작 시
 - [ ] pwd 확인 (올바른 경로?)
-- [ ] CLAUDE.md 읽기 완료
+- [ ] CLAUDE.md 읽기
+- [ ] CLAUDE_PROTOCOLS.md → 세션 시작 프로토콜 실행
 - [ ] MASTER_PLAN 현재 상태 파악
 - [ ] Git status 확인
-- [ ] 브리핑 작성 완료
+- [ ] 브리핑 작성
 
 ### 파일 작업 시
+- [ ] CLAUDE_PROTOCOLS.md → 파일 작업 검증 프로토콜 실행
 - [ ] 경로 검증 (pwd)
 - [ ] 내용 확인 (ls -la)
 - [ ] 사용자 확인 요청
-- [ ] 파일별 선택 작업 (폴더 전체 ❌)
 
 ### Task 작업 시
 - [ ] MASTER_PLAN Read (시작 전)
@@ -1117,81 +257,29 @@ MASTER_PLAN_UPDATE_PROTOCOL:
 - [ ] MASTER_PLAN Edit (완료 후)
 - [ ] 임시 파일 정리
 
-### 문서 작업 시
-- [ ] Read before Edit
-- [ ] 분석만 하지 말고 실제 문서 생성
-- [ ] Git commit 전 검증
-```
+### Git Commit 전
+- [ ] 테스트 전체 통과
+- [ ] 문서 업데이트 완료
+- [ ] 잘못된 경로 파일 제거
+- [ ] CLAUDE.md/PROTOCOLS 준수 확인
 
 ---
 
-### 위반 사례 및 대응
+## 🎓 SuperClaude SC 에이전트
 
-**Case 1: 잘못된 경로에서 파일 생성**
-```yaml
-문제: fenomeno_knowledge/에 프로젝트 파일 생성
-원인: 세션 시작 시 pwd 확인 안 함
-대응:
-  - 즉시 중단
-  - pwd 실행
-  - 올바른 경로로 이동
-  - 작업 재시작
-```
-
-**Case 2: 폴더 전체 삭제**
-```yaml
-문제: docs/ 폴더 전체 삭제
-원인: 내용 확인 없이 rm -rf 실행
-대응:
-  - 즉시 중단
-  - ls -la로 내용 확인
-  - 사용자 확인 요청
-  - 파일별 선택 삭제
-```
-
-**Case 3: MASTER_PLAN 업데이트 누락**
-```yaml
-문제: Task 완료 후 MASTER_PLAN 미업데이트
-원인: 작업 완료 후 업데이트 프로토콜 누락
-대응:
-  - 즉시 MASTER_PLAN Read
-  - Task 상태 업데이트
-  - Git commit hash 기록
-  - 완료 기준 체크
-```
-
-**Case 4: 문서 분석만 하고 생성 안 함**
-```yaml
-문제: 브리핑만 하고 실제 문서 작업 안 함
-원인: "분석만 하지 말고 문서작업까지" 원칙 무시
-대응:
-  - 분석 완료 후 즉시 문서 생성
-  - Write/Edit 도구 사용
-  - Git commit으로 검증
-```
-
----
-
-### 강제 실행 규칙
-
-**위반 시 자동 중단**:
-1. 세션 시작 시 pwd 확인 안 함 → 즉시 중단
-2. 파일 작업 시 사용자 확인 없음 → 즉시 중단
-3. MASTER_PLAN 읽지 않고 Task 시작 → 즉시 중단
-4. 문서 분석만 하고 생성 안 함 → 경고 후 중단
-
-**자가 모니터링**:
-- 매 30분마다 체크리스트 재확인
-- 위반 발생 시 즉시 자가 경고
-- 반복 위반 시 세션 재시작
+- `@root-cause-analyst`: 근본 원인 분석
+- `@performance-engineer`: 성능 최적화
+- `@quality-engineer`: 테스트 및 품질 보증
+- `@system-architect`: 시스템 아키텍처 설계
+- `@technical-writer`: API 문서, 가이드
 
 ---
 
 **최종 업데이트**: 2025년 10월 19일
 **작성자**: Claude Code (Sonnet 4.5)
 **프로젝트**: Stock Analyzer - 100xFenok
-**Sprint**: Sprint 5 Week 3
+**Sprint**: Sprint 5 (테스팅 미완) → Sprint 6 준비
 
 ---
 
-**⚠️ 이 문서를 반드시 읽고 준수하세요!**
+**⚠️ 매 세션 시작 시 이 문서 + CLAUDE_PROTOCOLS.md 필수 읽기!**
