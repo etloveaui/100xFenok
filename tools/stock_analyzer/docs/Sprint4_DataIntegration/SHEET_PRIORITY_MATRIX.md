@@ -22,7 +22,7 @@
 **제외된 시트**:
 - M_Company (✅ Module 1 완료)
 - T_EPS_C, T_Growth_C, T_Rank (✅ Sprint 4 완료)
-- T_CFO, T_Correlation (✅ Sprint 5 완료)
+- T_CFO, T_Correlation (🔄 Sprint 5 구현완료, 테스팅 미완)
 - S_Mylist (❌ Cancelled)
 
 **개발 로드맵**:
@@ -2368,7 +2368,7 @@ Sprint 4 Done (T_EPS_C, T_Growth_C, T_Rank)
   ├─→ Module 16 (T_EPS_H) [P3]
   └─→ Module 17 (T_Growth_H) [P3]
 
-Sprint 5 Done (T_CFO, T_Correlation) [✅]
+Sprint 5 In Progress (T_CFO, T_Correlation) [🔄 구현완료, 테스팅 미완]
 ```
 
 **의존성 해석**:
