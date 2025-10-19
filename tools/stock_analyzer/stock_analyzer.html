@@ -216,6 +216,15 @@
     <script src="modules/CompanyMasterProvider.js"></script>
     <script src="modules/DataCleanupManager.js"></script>
 
+    <!-- Sprint 4 Module 4: CompanyAnalyticsProvider -->
+    <script src="modules/CompanyAnalyticsProvider.js"></script>
+
+    <!-- Sprint 4 Module 5: EPSMonitoringProvider -->
+    <script src="modules/EPSMonitoringProvider.js"></script>
+
+    <!-- Sprint 4 Module 6: IndustryCostAnalytics -->
+    <script src="modules/IndustryCostAnalytics.js"></script>
+
     <!-- Sprint 5 Analytics Modules -->
     <script src="modules/CFOAnalytics.js"></script>
     <script src="modules/CorrelationEngine.js"></script>
@@ -287,6 +296,55 @@
                     console.log(`✅ DataCleanupManager initialized with validation report`);
                     console.log(`   - Quality Score: ${validationReport.qualityMetrics.qualityScore}`);
                     console.log(`   - Coverage: ${validationReport.fieldCoverage.coveragePercentage}`);
+                }
+
+                // Initialize Sprint 4 Module 4: CompanyAnalyticsProvider
+                if (typeof CompanyAnalyticsProvider !== 'undefined') {
+                    window.companyAnalytics = new CompanyAnalyticsProvider();
+                    const loaded = await window.companyAnalytics.loadFromJSON('data/A_Company.json');
+                    if (loaded) {
+                        const stats = window.companyAnalytics.getStatistics();
+                        console.log(`✅ CompanyAnalyticsProvider initialized: ${stats.totalCompanies} companies`);
+                        console.log(`   - Avg PEG: ${stats.avgPEG?.toFixed(2)}`);
+                        console.log(`   - Median Return: ${(stats.medianReturn * 100)?.toFixed(2)}%`);
+                        console.log(`   - Avg Growth: ${(stats.avgGrowth * 100)?.toFixed(2)}%`);
+
+                        // Show valuation distribution
+                        const dist = stats.valuationDistribution;
+                        console.log(`   - PEG Distribution: undervalued(${dist.pegBuckets.undervalued}), fair(${dist.pegBuckets.fair}), overvalued(${dist.pegBuckets.overvalued})`);
+                    } else {
+                        console.warn('⚠️ CompanyAnalyticsProvider failed to load');
+                    }
+                }
+
+                // Initialize Sprint 4 Module 5: EPSMonitoringProvider
+                if (typeof EPSMonitoringProvider !== 'undefined') {
+                    window.epsMonitoring = new EPSMonitoringProvider();
+                    const loaded = await window.epsMonitoring.loadFromJSON('data/T_Chk.json');
+                    if (loaded) {
+                        const sentiment = window.epsMonitoring.getMarketSentiment();
+                        console.log(`✅ EPSMonitoringProvider initialized: ${window.epsMonitoring.data.length} companies (${window.epsMonitoring.activeCompanies.length} active)`);
+                        console.log(`   - Market Sentiment: ${sentiment.sentiment} (↑${sentiment.upgrades} ↓${sentiment.downgrades} ↔${sentiment.stable})`);
+                        console.log(`   - Upgrade Rate: ${(sentiment.upgradeRate * 100).toFixed(1)}%`);
+                        console.log(`   - Time-series: ${window.epsMonitoring.dateFields.length} snapshots (${window.epsMonitoring.metadata.dateRange || '371 days'})`);
+                    } else {
+                        console.warn('⚠️ EPSMonitoringProvider failed to load');
+                    }
+                }
+
+                // Initialize Sprint 4 Module 6: IndustryCostAnalytics
+                if (typeof IndustryCostAnalytics !== 'undefined') {
+                    window.industryCost = new IndustryCostAnalytics();
+                    const loaded = await window.industryCost.loadFromJSON('data/A_Compare.json');
+                    if (loaded) {
+                        const stats = window.industryCost.getMarketStatistics();
+                        console.log(`✅ IndustryCostAnalytics initialized: ${window.industryCost.validCompanies.length} valid companies (${window.industryCost.metadata.filterRatio})`);
+                        console.log(`   - Industries: ${window.industryCost.industryGroups.size}`);
+                        console.log(`   - Avg ROE: ${(stats.averages['ROE (Fwd)'] * 100).toFixed(1)}%`);
+                        console.log(`   - Avg OPM: ${(stats.averages['OPM (Fwd)'] * 100).toFixed(1)}%`);
+                    } else {
+                        console.warn('⚠️ IndustryCostAnalytics failed to load');
+                    }
                 }
 
                 // Initialize Sprint 5 modules
