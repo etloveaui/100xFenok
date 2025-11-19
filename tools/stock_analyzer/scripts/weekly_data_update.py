@@ -115,20 +115,41 @@ class GlobalScouterDataProcessor:
             # DataFrame to dict
             data_dict = df.to_dict(orient='records')
 
-            # NaN/Infinity 정리
+            # NaN/Infinity 및 잘못된 컬럼명 정리 (Pre-Sanitization)
             clean_data = []
+            
+            # 무시할 컬럼명 패턴 (Excel 날짜 숫자 등)
+            invalid_column_patterns = ['45933', '45926', '45903', '45841', '45750', '45653', '45568', 'NaN', 'Unnamed']
+            
             for record in data_dict:
                 clean_record = {}
                 for key, value in record.items():
+                    # 1. 컬럼명 검증
+                    str_key = str(key)
+                    if any(pattern in str_key for pattern in invalid_column_patterns):
+                        continue # 잘못된 컬럼은 건너뜀
+                        
+                    if str_key == 'nan':
+                        continue
+
+                    # 2. 값 검증 (NaN, Infinity -> None)
                     if pd.isna(value):
                         clean_record[key] = None
                     elif isinstance(value, float) and (value == float('inf') or value == float('-inf')):
                         clean_record[key] = None
+                    elif isinstance(value, str):
+                        # 문자열 "NaN", "Infinity" 처리
+                        lower_val = value.lower()
+                        if lower_val == 'nan' or 'infinity' in lower_val:
+                            clean_record[key] = None
+                        else:
+                            clean_record[key] = value
                     else:
                         clean_record[key] = value
+                        
                 clean_data.append(clean_record)
 
-            print(f'✅ {csv_filename}: {len(clean_data)}개 레코드')
+            print(f'✅ {csv_filename}: {len(clean_data)}개 레코드 (Pre-Sanitized)')
             return clean_data
 
         except Exception as e:
@@ -174,11 +195,31 @@ class GlobalScouterDataProcessor:
         companies = []
         for record in data_dict:
             company = {}
+            # 무시할 컬럼명 패턴 (Excel 날짜 숫자 등)
+            invalid_column_patterns = ['45933', '45926', '45903', '45841', '45750', '45653', '45568', 'NaN', 'Unnamed']
+
             for key, value in record.items():
+                # 컬럼명 검증 (M_Company 전용)
+                str_key = str(key)
+                
+                # 1. 패턴 기반 필터링
+                if any(pattern in str_key for pattern in invalid_column_patterns):
+                    continue
+                
+                # 2. 정확한 일치 필터링
+                if str_key in ['NaN', 'nan', 'Unnamed: 0']:
+                    continue
+                    
                 if pd.isna(value):
                     company[key] = None
                 elif isinstance(value, float) and (value == float('inf') or value == float('-inf')):
                     company[key] = None
+                elif isinstance(value, str):
+                     lower_val = value.lower()
+                     if lower_val == 'nan' or 'infinity' in lower_val:
+                         company[key] = None
+                     else:
+                         company[key] = value
                 else:
                     company[key] = value
 
@@ -271,10 +312,58 @@ class GlobalScouterDataProcessor:
             'timestamp': self.timestamp
         }
 
+def load_config():
+    """config.json 파일 로드"""
+    # 현재 스크립트 위치 기준: .../tools/stock_analyzer/scripts/weekly_data_update.py
+    # config.json 위치: .../Global_Scouter/config.json
+    # 상대 경로로 찾기 시도
+    
+    current_dir = Path(__file__).resolve().parent
+    # 1. Global_Scouter 폴더 찾기 (상대 경로 탐색)
+    # agents-workspace/00_my_data/01_El_Fenomono/20_Codebase/Global_Scouter/config.json
+    # agents-workspace/00_my_data/01_El_Fenomono/20_Codebase/100xFenok/tools/stock_analyzer/scripts/weekly_data_update.py
+    
+    # scripts -> stock_analyzer -> tools -> 100xFenok -> 20_Codebase -> Global_Scouter
+    potential_paths = [
+        current_dir.parents[4] / 'Global_Scouter' / 'config.json', # 예상 경로
+        Path(r'C:\Users\etlov\agents-workspace\00_my_data\01_El_Fenomono\20_Codebase\Global_Scouter\config.json'), # 절대 경로 (Windows)
+        Path(r'\\wsl.localhost\Ubuntu\home\etlov\agents-workspace\00_my_data\01_El_Fenomono\20_Codebase\Global_Scouter\config.json') # 절대 경로 (WSL)
+    ]
+    
+    for path in potential_paths:
+        if path.exists():
+            print(f'✅ 설정 파일 발견: {path}')
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f'❌ 설정 파일 읽기 실패: {e}')
+    
+    print('⚠️ 설정 파일을 찾을 수 없습니다. 기본 경로를 사용합니다.')
+    return None
+
 def main():
-    # 경로 설정
-    source_dir = Path(r'C:\Users\etlov\agents-workspace\fenomeno_projects\Global_Scouter\Global_Scouter_20251003')
-    output_dir = Path(r'C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer\data')
+    # 설정 로드
+    config = load_config()
+    
+    if config:
+        source_dir = Path(config.get('source_dir', r'C:\Users\etlov\agents-workspace\fenomeno_projects\Global_Scouter\Global_Scouter_20251003'))
+        output_dir = Path(config.get('output_dir', r'C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer\data'))
+    else:
+        # Fallback (기존 하드코딩 경로 유지 - 하위 호환성)
+        source_dir = Path(r'C:\Users\etlov\agents-workspace\fenomeno_projects\Global_Scouter\Global_Scouter_20251003')
+        output_dir = Path(r'C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer\data')
+
+    print(f'📂 Source: {source_dir}')
+    print(f'📂 Output: {output_dir}')
+
+    if not source_dir.exists():
+        print(f'❌ 소스 디렉토리가 존재하지 않습니다: {source_dir}')
+        return 1
+        
+    if not output_dir.exists():
+        print(f'⚠️ 출력 디렉토리가 존재하지 않아 생성합니다: {output_dir}')
+        output_dir.mkdir(parents=True, exist_ok=True)
 
     # 프로세서 실행
     processor = GlobalScouterDataProcessor(source_dir, output_dir)
