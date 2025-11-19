@@ -562,118 +562,12 @@ async function loadData() {
         const columnConfigPromise = fetch('./data/column_config.json');
         const appConfigPromise = fetch('./stock_analyzer_config.json');
 
-        let enhancedData;
-        let sanitized = '';
-        const sanitizeJsonText = (rawText) => {
-            let inString = false;
-            let escaped = false;
-            let buffer = '';
-            let replacements = 0;
-            for (let i = 0; i < rawText.length; i++) {
-                const char = rawText[i];
-
-                if (inString) {
-                    buffer += char;
-                    if (escaped) {
-                        escaped = false;
-                    } else if (char === '\\') {
-                        escaped = true;
-                    } else if (char === '"') {
-                        inString = false;
-                    }
-                    continue;
-                }
-
-                if (char === '"') {
-                    inString = true;
-                    buffer += char;
-                    continue;
-                }
-
-                if (rawText.startsWith('-Infinity', i)) {
-                    buffer += 'null';
-                    i += '-Infinity'.length - 1;
-                    replacements++;
-                    continue;
-                }
-
-                if (rawText.startsWith('Infinity', i)) {
-                    buffer += 'null';
-                    i += 'Infinity'.length - 1;
-                    replacements++;
-                    continue;
-                }
-
-                if (rawText.startsWith('NaN', i)) {
-                    buffer += 'null';
-                    i += 'NaN'.length - 1;
-                    replacements++;
-                    continue;
-                }
-
-                buffer += char;
-            }
-
-            return { sanitizedText: buffer, replacements };
-        };
         try {
-            const raw = await enhancedRes.text();
-
-            // 더 강력한 NaN 및 Infinity 처리 (정규표현식 사용)
-            let cleanedText = raw
-                .replace(/:\s*NaN\b/g, ': null')  // 값으로 사용된 NaN
-                .replace(/,\s*NaN\b/g, ', null')  // 배열 요소인 NaN
-                .replace(/\[\s*NaN\b/g, '[null')  // 배열 시작의 NaN
-                .replace(/:\s*Infinity\b/g, ': null')  // Infinity도 처리
-                .replace(/:\s*-Infinity\b/g, ': null'); // -Infinity도 처리
-
-            const { sanitizedText, replacements } = sanitizeJsonText(cleanedText);
-            sanitized = sanitizedText;
-
-            if (sanitized !== raw) {
-                console.log(`🧼 JSON sanitize applied: ${replacements} invalid tokens replaced with null`);
-            }
-
-            const hasUnquotedNaN = (() => {
-                for (let i = 0; i < sanitized.length; i++) {
-                    if (sanitized[i] === 'N' && sanitized.startsWith('NaN', i) && sanitized[i - 1] !== '"') {
-                        return i;
-                    }
-                }
-                return -1;
-            })();
-            if (hasUnquotedNaN !== -1) {
-                console.warn('⚠️ sanitize check: NaN token still present after replacements', sanitized.slice(Math.max(hasUnquotedNaN - 60, 0), hasUnquotedNaN + 60));
-            }
-
-            const lower = sanitized.toLowerCase();
-            const hasUnquotedInfinity = (() => {
-                for (let i = 0; i < lower.length; i++) {
-                    if (lower[i] === 'i' && lower.startsWith('infinity', i) && sanitized[i - 1] !== '"') {
-                        return i;
-                    }
-                }
-                return -1;
-            })();
-            if (hasUnquotedInfinity !== -1) {
-                console.warn('⚠️ sanitize check: Infinity token still present after replacements', sanitized.slice(Math.max(hasUnquotedInfinity - 60, 0), hasUnquotedInfinity + 60));
-            }
-
-            enhancedData = JSON.parse(sanitized);
+            // Server-Side Pre-Sanitization이 적용되었으므로 바로 JSON 파싱
+            enhancedData = await enhancedRes.json();
+            console.log('✅ Enhanced data parsed successfully (Server-Side Sanitized)');
         } catch (parseError) {
             console.error('❌ Enhanced data parse failed:', parseError);
-            try {
-                if (sanitized) {
-                    const idx = sanitized.indexOf('NaN');
-                    if (idx !== -1) {
-                        console.error('🔍 Remaining NaN snippet:', sanitized.slice(Math.max(idx - 80, 0), idx + 80));
-                    } else {
-                        console.error('🔍 Sanitized preview (first 200 chars):', sanitized.slice(0, 200));
-                    }
-                }
-            } catch (snippetError) {
-                console.error('Snippet extraction failed:', snippetError);
-            }
             throw parseError;
         }
 

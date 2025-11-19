@@ -63,8 +63,8 @@ class CorrelationEngine {
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                // Use absolute path for more reliable fetching
-                const response = await fetch('/data/global_scouter_integrated.json');
+                // Use relative path for portability
+                const response = await fetch('data/global_scouter_integrated.json');
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -745,8 +745,8 @@ class CorrelationEngine {
         for (let i = 0; i < points; i++) {
             const riskLevel = i / (points - 1);
             const riskTolerance = riskLevel < 0.33 ? 'conservative'
-                                : riskLevel < 0.67 ? 'moderate'
-                                : 'aggressive';
+                : riskLevel < 0.67 ? 'moderate'
+                    : 'aggressive';
 
             const portfolio = this.optimizePortfolio(tickers, riskTolerance);
             const weights = portfolio.slice(0, -1).map(p => p.weight);
@@ -803,10 +803,10 @@ class CorrelationEngine {
                 <h4>Diversification Candidates</h4>
                 <ul>
                     ${diversifiers.map(d => {
-                        const other = d.ticker1 === ticker ? d.ticker2 : d.ticker1;
-                        const otherName = d.ticker1 === ticker ? d.company2 : d.company1;
-                        return `<li>${otherName} (${other}) - Correlation: ${d.correlation.toFixed(3)}</li>`;
-                    }).join('')}
+            const other = d.ticker1 === ticker ? d.ticker2 : d.ticker1;
+            const otherName = d.ticker1 === ticker ? d.company2 : d.company1;
+            return `<li>${otherName} (${other}) - Correlation: ${d.correlation.toFixed(3)}</li>`;
+        }).join('')}
                 </ul>
             </div>
         `;
