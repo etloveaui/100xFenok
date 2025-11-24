@@ -1,345 +1,483 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<!-- Fed Rates Detail Page -->
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-  :root { color-scheme: dark; }
-  body { margin: 0; background: #0a0a0a; color: #e5e7eb; font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
-  .page { max-width: 1080px; margin: 0 auto; padding: 20px; }
-  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .title { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #22c55e; display: flex; align-items: center; gap: 12px; }
-  .back { color: #9ca3af; font-size: 13px; cursor: pointer; border: 1px solid #1f2937; padding: 6px 10px; border-radius: 8px; background: #0b0b0b; }
-  .back:hover { border-color: #374151; color: #d1d5db; }
-  .live { display: flex; align-items: center; gap: 8px; }
-  .live-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse 2s infinite; }
-  .live-text { font-family: 'Orbitron', monospace; font-size: 11px; color: #ef4444; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.2)} }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fed Watch Dashboard | 100x FenoK</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f8fafc;
+    }
 
-  .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
-  .update { font-family: 'Orbitron', monospace; font-size: 11px; color: #6b7280; letter-spacing: 1px; }
+    .orbitron {
+      font-family: 'Orbitron', sans-serif;
+    }
 
-  .grid { display:grid; grid-template-columns: repeat(2,1fr); gap:16px; }
-  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    /* Premium Card Style from Daily Wrap */
+    .card-shadow {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
 
-  .card { background: #0b0b0b; border: 1px solid #1f2937; border-radius: 12px; padding: 14px; }
-  .card:hover { border-color: #22c55e33; }
-  .card-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-  .label { font-family:'Orbitron',monospace; font-size:12px; color:#9ca3af; letter-spacing:1px; }
-  .value { font-family:'Orbitron',monospace; font-size:34px; color:#22c55e; font-weight:800; letter-spacing:1px; text-shadow: 0 0 10px rgba(34, 197, 94, .4); display:flex; align-items:baseline; gap:2px; }
-  .decimal { font-size:20px; color:#a7f3d0; }
-  .change { margin-top:6px; font-family:'Orbitron',monospace; font-size:11px; }
-  .change-up{color:#22c55e} .change-down{color:#ef4444} .change-neutral{color:#6b7280}
-  .chart { height: 160px; margin-top: 10px; }
-  .status-bar { display:flex; align-items:center; gap:10px; margin-top: 16px; padding-top: 12px; border-top:1px solid #1f2937; }
-  .status-led{width:12px;height:12px;border-radius:50%;box-shadow:0 0 10px #22c55e;background:#22c55e}
-  .status-yellow{background:#eab308;box-shadow:0 0 10px #eab308;animation: blink 1s infinite;}
-  .status-red{background:#ef4444;box-shadow:0 0 10px #ef4444;animation: blink .6s infinite;}
-  @keyframes blink {0%,100%{opacity:1} 50%{opacity:.3}}
+    .card-shadow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
 
-  .section { background:#0b0b0b; border:1px solid #1f2937; border-radius:12px; padding:14px; margin-top:16px; }
-  .section h3 { margin:0 0 8px; font-family:'Orbitron',monospace; font-size:13px; letter-spacing:1px; color:#93c5fd; }
-  .note { font-size:12px; color:#9ca3af }
-</style>
+    /* Tab Animation */
+    .tab-btn {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: #2563eb;
+      /* Blue-600 */
+      transition: width 0.3s ease;
+    }
+
+    .tab-btn.active {
+      color: #2563eb;
+    }
+
+    .tab-btn.active::after {
+      width: 100%;
+    }
+
+    /* Chart Area */
+    .chart-area {
+      height: 100px;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      border: 3px solid #e5e7eb;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Custom Scrollbar for Tabs */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
-<body>
 
-<div class="page">
-  <div class="header">
-    <div class="title">FED RATES DETAIL</div>
-    <div class="live">
-      <div class="live-dot"></div>
-      <div class="live-text">LIVE</div>
+<body class="text-slate-800">
+
+  <!-- Header Section -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
+          <i class="fas fa-landmark text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold orbitron text-slate-900 tracking-tight">FED WATCH</h1>
+          <p class="text-xs text-slate-500 font-medium">Real-time Monetary Policy Monitor</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div
+          class="hidden md:flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-600">
+          <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+          LIVE DATA
+        </div>
+        <div id="updateTime" class="text-xs orbitron text-slate-400">--:--</div>
+      </div>
     </div>
-  </div>
-  <div class="topbar">
-    <div class="update" id="updateTime">UPDATE --:--</div>
-  </div>
+  </header>
 
-  <div class="grid">
-    <!-- IORB -->
-    <div class="card">
-      <div class="card-title"><div class="label">IORB</div><div class="change" id="iorb-change">--</div></div>
-      <div class="value"><span id="iorb-value">--</span><span class="decimal" id="iorb-decimal">--</span></div>
-      <div class="chart">
-        <svg id="iorb-chart" width="100%" height="160" viewBox="0 0 300 160"></svg>
+  <!-- Main Content -->
+  <main class="max-w-5xl mx-auto px-4 py-8 pb-24">
+
+    <!-- Tab Navigation -->
+    <div class="flex space-x-8 border-b border-slate-200 mb-8 overflow-x-auto hide-scrollbar">
+      <button onclick="switchTab('rates')"
+        class="tab-btn active pb-3 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">
+        RATES & YIELDS
+      </button>
+      <button onclick="switchTab('liquidity')"
+        class="tab-btn pb-3 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">
+        LIQUIDITY
+      </button>
+      <button onclick="switchTab('inflation')"
+        class="tab-btn pb-3 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">
+        INFLATION
+      </button>
+    </div>
+
+    <!-- Tab: RATES -->
+    <div id="tab-rates" class="tab-content active space-y-6">
+
+      <!-- Status Banner -->
+      <div class="bg-white rounded-xl card-shadow p-5 border-l-4 border-blue-500 flex items-start gap-4">
+        <div class="mt-1 text-blue-500">
+          <i class="fas fa-info-circle text-xl"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 text-sm mb-1">MARKET STATUS</h3>
+          <div class="flex items-center gap-2">
+            <div id="statusLed" class="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
+            <p id="statusText" class="text-sm font-semibold orbitron text-slate-600">ANALYZING...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <!-- IORB Card -->
+        <div class="bg-white rounded-xl card-shadow p-6 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <h4 class="text-xs font-bold text-slate-400 tracking-wider">POLICY RATE</h4>
+              <h3 class="text-lg font-bold text-slate-800">IORB</h3>
+            </div>
+            <div id="iorb-change" class="text-sm font-bold orbitron bg-slate-50 px-2 py-1 rounded">--</div>
+          </div>
+          <div class="flex items-baseline gap-1 mt-2">
+            <span id="iorb-value" class="text-4xl font-bold orbitron text-slate-900">--</span>
+            <span id="iorb-decimal" class="text-xl font-semibold orbitron text-slate-400">--</span>
+            <span class="text-sm text-slate-400 ml-1">%</span>
+          </div>
+          <div class="chart-area mt-4">
+            <svg id="iorb-chart" width="100%" height="100%" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
+        <!-- EFFR Card -->
+        <div class="bg-white rounded-xl card-shadow p-6 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <h4 class="text-xs font-bold text-slate-400 tracking-wider">EFFECTIVE RATE</h4>
+              <h3 class="text-lg font-bold text-slate-800">EFFR</h3>
+            </div>
+            <div id="effr-change" class="text-sm font-bold orbitron bg-slate-50 px-2 py-1 rounded">--</div>
+          </div>
+          <div class="flex items-baseline gap-1 mt-2">
+            <span id="effr-value" class="text-4xl font-bold orbitron text-slate-900">--</span>
+            <span id="effr-decimal" class="text-xl font-semibold orbitron text-slate-400">--</span>
+            <span class="text-sm text-slate-400 ml-1">%</span>
+          </div>
+          <div class="chart-area mt-4">
+            <svg id="effr-chart" width="100%" height="100%" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
+        <!-- SOFR Card -->
+        <div class="bg-white rounded-xl card-shadow p-6 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <h4 class="text-xs font-bold text-slate-400 tracking-wider">SECURED RATE</h4>
+              <h3 class="text-lg font-bold text-slate-800">SOFR</h3>
+            </div>
+            <div id="sofr-change" class="text-sm font-bold orbitron bg-slate-50 px-2 py-1 rounded">--</div>
+          </div>
+          <div class="flex items-baseline gap-1 mt-2">
+            <span id="sofr-value" class="text-4xl font-bold orbitron text-slate-900">--</span>
+            <span id="sofr-decimal" class="text-xl font-semibold orbitron text-slate-400">--</span>
+            <span class="text-sm text-slate-400 ml-1">%</span>
+          </div>
+          <div class="chart-area mt-4">
+            <svg id="sofr-chart" width="100%" height="100%" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
+        <!-- ON RRP Card -->
+        <div class="bg-white rounded-xl card-shadow p-6 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <h4 class="text-xs font-bold text-slate-400 tracking-wider">LIQUIDITY DRAIN</h4>
+              <h3 class="text-lg font-bold text-slate-800">ON RRP</h3>
+            </div>
+            <div id="rrp-change" class="text-sm font-bold orbitron bg-slate-50 px-2 py-1 rounded">--</div>
+          </div>
+          <div class="flex items-baseline gap-1 mt-2">
+            <span class="text-2xl font-bold text-slate-400 mr-1">$</span>
+            <span id="rrp-value" class="text-4xl font-bold orbitron text-slate-900">--</span>
+            <span id="rrp-unit" class="text-xl font-semibold orbitron text-slate-400">--</span>
+          </div>
+          <div class="chart-area mt-4">
+            <svg id="rrp-chart" width="100%" height="100%" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- EFFR -->
-    <div class="card">
-      <div class="card-title"><div class="label">EFFR</div><div class="change" id="effr-change">--</div></div>
-      <div class="value"><span id="effr-value">--</span><span class="decimal" id="effr-decimal">--</span></div>
-      <div class="chart">
-        <svg id="effr-chart" width="100%" height="160" viewBox="0 0 300 160"></svg>
+    <!-- Tab: LIQUIDITY (Placeholder) -->
+    <div id="tab-liquidity" class="tab-content hidden">
+      <div class="bg-white rounded-xl card-shadow p-12 text-center border border-dashed border-slate-300">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-500 rounded-full mb-4">
+          <i class="fas fa-water text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">Liquidity Dashboard</h3>
+        <p class="text-slate-500 mt-2 text-sm">TGA, Bank Reserves, and Net Liquidity tracking coming soon.</p>
       </div>
     </div>
 
-    <!-- SOFR -->
-    <div class="card">
-      <div class="card-title"><div class="label">SOFR</div><div class="change" id="sofr-change">--</div></div>
-      <div class="value"><span id="sofr-value">--</span><span class="decimal" id="sofr-decimal">--</span></div>
-      <div class="chart">
-        <svg id="sofr-chart" width="100%" height="160" viewBox="0 0 300 160"></svg>
+    <!-- Tab: INFLATION (Placeholder) -->
+    <div id="tab-inflation" class="tab-content hidden">
+      <div class="bg-white rounded-xl card-shadow p-12 text-center border border-dashed border-slate-300">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-red-50 text-red-500 rounded-full mb-4">
+          <i class="fas fa-chart-line text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">Inflation Dashboard</h3>
+        <p class="text-slate-500 mt-2 text-sm">CPI, PCE, and Breakeven Inflation rates coming soon.</p>
       </div>
     </div>
 
-    <!-- ON RRP -->
-    <div class="card">
-      <div class="card-title"><div class="label">ON RRP</div><div class="change" id="rrp-change">--</div></div>
-      <div class="value" style="font-size:26px"><span id="rrp-value">--</span><span class="decimal" id="rrp-unit">B</span></div>
-      <div class="chart">
-        <svg id="rrp-chart" width="100%" height="160" viewBox="0 0 300 160"></svg>
-      </div>
-    </div>
-  </div>
+  </main>
 
-  <div class="section">
-    <h3>상태 분석</h3>
-    <div class="status-bar">
-      <div class="status-led" id="statusLed"></div>
-      <div class="note" id="statusText">ANALYZING</div>
-    </div>
-    <div class="note">규칙: 정상 순서 IORB &gt; EFFR &gt; SOFR, 스프레드(IORB−SOFR) 기준.</div>
-  </div>
+  <!-- Logic Script -->
+  <script>
+    // --- Logic Ported from fed-monitor-widget.html ---
+    const API_KEY = (window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1');
+    const DIRECT_URL = 'https://api.stlouisfed.org/fred/series/observations';
+    const HOST = window.location.hostname || '';
+    const IS_LOCAL = ['localhost', '127.0.0.1'].includes(HOST) || HOST.includes('127.0.0.1');
+    const USER_PROXY = 'https://fed-proxy.etloveaui.workers.dev/';
 
-  <div class="section">
-    <h3>설명</h3>
-    <div class="note">데이터 출처: FRED API. 5분 주기로 자동 갱신됩니다.</div>
-  </div>
-</div>
-
-<script>
-  const API_KEY = '6dda7dc3956a2c1d6ac939133de115f1';
-  const DIRECT_URL = 'https://api.stlouisfed.org/fred/series/observations';
-  const IS_LOCAL = ['localhost','127.0.0.1'].includes(window.location.hostname);
-  const DEV_PROXY_URL = ((window.FRED_PROXY_URL || localStorage.getItem('FRED_PROXY_URL') || 'http://127.0.0.1:8787') + '/fred/series/observations');
-  const BASE_URL = IS_LOCAL ? DEV_PROXY_URL : DIRECT_URL;
-  const SERIES = { IORB: 'IORB', EFFR: 'DFF', SOFR: 'SOFR', RRPONTSYD: 'RRPONTSYD' };
-
-  const store = {
-    IORB: { current: null, previous: null, series: [] },
-    EFFR: { current: null, previous: null, series: [] },
-    SOFR: { current: null, previous: null, series: [] },
-    RRPONTSYD: { current: null, previous: null, series: [] }
-  };
-
-  function fmtRate(val){
-    const v = Math.floor(val).toString();
-    const d = (val % 1).toFixed(2).substring(1);
-    return [v, d];
-  }
-
-  function drawSpark(svgId, values){
-    const svg = document.getElementById(svgId);
-    if (!svg || !values || values.length < 2) return;
-    const w = 300, h = 160, p = 12;
-    const min = Math.min(...values), max = Math.max(...values);
-    const xr = (i)=> p + (w - 2*p) * (i/(values.length - 1));
-    const yr = (v)=> h - p - (h - 2*p) * ((v - min) / Math.max(1e-9, (max - min)));
-    let d = '';
-    values.forEach((v, i)=>{ d += (i? ' L':'M') + xr(i) + ' ' + yr(v); });
-    svg.innerHTML = `<path d="${d}" fill="none" stroke="#22c55e" stroke-width="2" />` +
-      `<line x1="${p}" y1="${yr(values[values.length-1])}" x2="${w-p}" y2="${yr(values[values.length-1])}" stroke="#1f2937" stroke-dasharray="3,3" />`;
-  }
-
-  async function fetchSeries(seriesId, days=90){
-    const end = new Date();
-    const start = new Date(Date.now() - days*24*60*60*1000);
-    const endDate = end.toISOString().split('T')[0];
-    const startDate = start.toISOString().split('T')[0];
-    const url = `${BASE_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=asc`;
-    const res = await fetch(url);
-    const json = await res.json();
-    const obs = (json.observations||[]).map(o=> parseFloat(o.value)).filter(v=>!isNaN(v));
-    const cur = obs.length? obs[obs.length-1] : null;
-    const prev = obs.length>1? obs[obs.length-2] : cur;
-    return { series: obs, current: cur, previous: prev };
-  }
-
-  // Fast path: fetch latest numeric and previous numeric (skip '.' etc.)
-  async function fetchLatestPair(seriesId){
-    const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date(Date.now() - 365*24*60*60*1000).toISOString().split('T')[0];
-    // Ascending order, then scan from the end to find latest numeric values
-    const url = `${BASE_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=asc`;
-    const res = await fetch(url);
-    const json = await res.json();
-    const obs = Array.isArray(json?.observations) ? json.observations : [];
-    let current = null, previous = null;
-    for (let i = obs.length - 1; i >= 0; i--) {
-      const v = parseFloat(obs[i].value);
-      if (!isNaN(v)) {
-        if (current === null) { current = v; }
-        else { previous = v; break; }
+    async function fetchJsonWithCorsFallback(fullUrl) {
+      const proxies = [];
+      if (!IS_LOCAL && USER_PROXY) {
+        const u = USER_PROXY.replace(/\/$/, '');
+        if (u.includes('http') && !u.endsWith('/fred/series/observations')) {
+          proxies.push(u + '/' + fullUrl);
+        } else {
+          const qs = fullUrl.split('?')[1] || '';
+          proxies.push(u + (u.endsWith('/fred/series/observations') ? '' : '/fred/series/observations') + (qs ? ('?' + qs) : ''));
+        }
       }
-    }
-    if (current !== null && previous === null) previous = current;
-    return { current, previous };
-  }
+      proxies.push('https://cors.isomorphic-git.org/' + fullUrl);
+      proxies.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(fullUrl));
+      proxies.push('https://thingproxy.freeboard.io/fetch/' + fullUrl);
 
-  // Widget-equivalent fetch (fallback)
-  async function fetchRateData(seriesId) {
-    try {
+      const candidates = (!IS_LOCAL && /(github\.io|vercel\.app|netlify\.app)$/.test(HOST))
+        ? [...proxies]
+        : [fullUrl, ...proxies];
+
+      for (const u of candidates) {
+        try {
+          const res = await fetch(u, { cache: 'no-store' });
+          if (res && res.ok) return await res.json();
+        } catch (e) { /* try next */ }
+      }
+      throw new Error('All fetch attempts failed');
+    }
+
+    const SERIES = { IORB: 'IORB', EFFR: 'DFF', SOFR: 'SOFR', RRP: 'RRPONTSYD' };
+    const store = { IORB: {}, EFFR: {}, SOFR: {}, RRP: {} };
+
+    async function fetchLatestPair(seriesId) {
       const endDate = new Date().toISOString().split('T')[0];
-      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const url = `${BASE_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=desc&limit=2`;
-      const response = await fetch(url);
-      const data = await response.json();
-      if (data.observations && data.observations.length > 0) {
-        const current = parseFloat(data.observations[0].value);
-        const previous = data.observations.length > 1 ? parseFloat(data.observations[1].value) : current;
-        return { current: isNaN(current) ? null : current, previous: isNaN(previous) ? null : previous };
+      const startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const url = `${DIRECT_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=asc`;
+
+      try {
+        const data = await fetchJsonWithCorsFallback(url);
+        const obs = Array.isArray(data?.observations) ? data.observations : [];
+        const history = obs.map(o => parseFloat(o.value)).filter(v => Number.isFinite(v));
+
+        let current = null, previous = null;
+        if (history.length > 0) current = history[history.length - 1];
+        if (history.length > 1) previous = history[history.length - 2];
+        if (current !== null && previous === null) previous = current;
+
+        return { current, previous, history };
+      } catch (e) {
+        return { current: null, previous: null, history: [] };
       }
-      return { current: null, previous: null };
-    } catch (err) {
-      console.error('Fallback fetch error for', seriesId, err);
-      return { current: null, previous: null };
     }
-  }
 
-  function setChange(elId, delta, isRRP=false){
-    const arrow = delta > 0 ? '&uarr;' : delta < 0 ? '&darr;' : '&rarr;';
-    const cls = delta > 0 ? 'change-up' : delta < 0 ? 'change-down' : 'change-neutral';
-    const text = isRRP ? `${arrow} ${Math.abs(delta/1000).toFixed(1)}B` : `${arrow} ${(Math.abs(delta)*100).toFixed(0)}bp`;
-    const el = document.getElementById(elId);
-    if (el) el.innerHTML = `<span class="${cls}">${text}</span>`;
-  }
+    function fmt(val) {
+      if (val == null) return ['--', '--'];
+      const v = Math.floor(val).toString();
+      const d = (val % 1).toFixed(2).substring(1);
+      return [v, d];
+    }
 
-  function analyze(){
-    const { IORB, EFFR, SOFR } = store;
-    if (!IORB.current || !EFFR.current || !SOFR.current) return { level:'yellow', text:'DATA PENDING' };
-    const normal = IORB.current > EFFR.current && EFFR.current > SOFR.current;
-    const spread = IORB.current - SOFR.current;
-    if (normal && spread > 0.15) return { level:'green', text:'NORMAL' };
-    if (normal && spread <= 0.15) return { level:'yellow', text:'CAUTION' };
-    return { level:'red', text:'WARNING' };
-  }
+    function updateCard(key, data, isRRP = false) {
+      const prefix = key.toLowerCase();
 
-  function updateStatus(){
-    const s = analyze();
-    const led = document.getElementById('statusLed');
-    const t = document.getElementById('statusText');
-    if (led){ led.className = 'status-led'; if (s.level==='yellow') led.classList.add('status-yellow'); if (s.level==='red') led.classList.add('status-red'); }
-    if (t) t.textContent = s.text;
-  }
+      // Value
+      if (isRRP) {
+        if (data.current) {
+          const billions = data.current / 1000; // Assuming data is in billions if raw is millions, but FRED RRP is usually Billions. Wait, RRPONTSYD is Billions.
+          // Actually RRPONTSYD is Billions of Dollars. So raw 2000 = 2000B.
+          // Let's check raw value magnitude. If > 1000, likely B.
+          // Wait, RRPONTSYD unit is Billions of Dollars. So 2300 means $2.3T? No.
+          // Let's assume raw value is Billions.
+          const val = data.current;
+          document.getElementById(`${prefix}-value`).textContent = Math.floor(val).toLocaleString();
+          document.getElementById(`${prefix}-unit`).textContent = `.${(val % 1).toFixed(1).substring(2)}B`;
+        }
+      } else {
+        const [v, d] = fmt(data.current);
+        document.getElementById(`${prefix}-value`).textContent = v;
+        document.getElementById(`${prefix}-decimal`).textContent = d;
+      }
 
-  function updateTime(){
-    const now = new Date();
-    const ts = now.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit',hour12:false});
-    document.getElementById('updateTime').textContent = `UPDATE ${ts}`;
-  }
+      // Change
+      if (data.current != null && data.previous != null) {
+        const delta = data.current - data.previous;
+        const el = document.getElementById(`${prefix}-change`);
+        const isUp = delta > 0;
+        const isDown = delta < 0;
 
-  async function init(){
-    try {
-      console.log('[FED DETAIL] init start. BASE_URL=', BASE_URL);
-      // 1) Quick values first
-      const [lIorb, lEffr, lSofr, lRrp] = await Promise.all([
-        fetchLatestPair(SERIES.IORB),
-        fetchLatestPair(SERIES.EFFR),
-        fetchLatestPair(SERIES.SOFR),
-        fetchLatestPair(SERIES.RRPONTSYD)
-      ]);
+        el.className = `text-sm font-bold orbitron px-2 py-1 rounded ${isUp ? 'bg-green-100 text-green-700' : isDown ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'}`;
 
-      Object.assign(store.IORB, lIorb);
-      Object.assign(store.EFFR, lEffr);
-      Object.assign(store.SOFR, lSofr);
-      Object.assign(store.RRPONTSYD, lRrp);
+        const arrow = isUp ? '▲' : isDown ? '▼' : '-';
+        const txt = isRRP
+          ? `${arrow} ${Math.abs(delta).toFixed(1)}`
+          : `${arrow} ${(Math.abs(delta) * 100).toFixed(0)}bp`;
+        el.textContent = txt;
+      }
 
-      if (lIorb.current!=null){ const [v,d]=fmtRate(lIorb.current); document.getElementById('iorb-value').textContent=v; document.getElementById('iorb-decimal').textContent=d; setChange('iorb-change', lIorb.current-lIorb.previous); }
-      if (lEffr.current!=null){ const [v,d]=fmtRate(lEffr.current); document.getElementById('effr-value').textContent=v; document.getElementById('effr-decimal').textContent=d; setChange('effr-change', lEffr.current-lEffr.previous); }
-      if (lSofr.current!=null){ const [v,d]=fmtRate(lSofr.current); document.getElementById('sofr-value').textContent=v; document.getElementById('sofr-decimal').textContent=d; setChange('sofr-change', lSofr.current-lSofr.previous); }
-      if (lRrp.current!=null){ const billions = lRrp.current/1000; document.getElementById('rrp-value').textContent = Math.floor(billions).toString(); document.getElementById('rrp-unit').textContent = `.${(billions%1).toFixed(1).substring(2)}B`; setChange('rrp-change', lRrp.current-lRrp.previous, true); }
+      // Chart
+      if (data.history.length > 0) {
+        drawChart(`${prefix}-chart`, data.history);
+      }
+    }
 
-      updateStatus();
-      updateTime();
+    function drawChart(svgId, values) {
+      const svg = document.getElementById(svgId);
+      if (!svg || values.length < 2) return;
 
-      // If any value is still null, try widget-style fallback just for numbers
-      const needFallback = [
-        { key: 'IORB', data: lIorb },
-        { key: 'EFFR', data: lEffr },
-        { key: 'SOFR', data: lSofr },
-        { key: 'RRPONTSYD', data: lRrp }
-      ].some(x => !x.data || x.data.current == null);
+      const w = 300, h = 100;
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = max - min || 1;
 
-      if (needFallback) {
-        console.log('[FED DETAIL] fallback using widget-style fetch');
-        const [wIorb, wEffr, wSofr, wRrp] = await Promise.all([
-          fetchRateData(SERIES.IORB),
-          fetchRateData(SERIES.EFFR),
-          fetchRateData(SERIES.SOFR),
-          fetchRateData(SERIES.RRPONTSYD)
+      // Area Path
+      let dArea = `M0,${h} `;
+      const points = values.map((v, i) => {
+        const x = (i / (values.length - 1)) * w;
+        const y = h - ((v - min) / range) * (h - 20) - 10; // Padding
+        dArea += `L${x},${y} `;
+        return `${x},${y}`;
+      });
+      dArea += `L${w},${h} Z`;
+
+      // Line Path
+      const dLine = `M${points[0]} ` + points.slice(1).map(p => `L${p}`).join(' ');
+
+      // Gradient ID
+      const gradId = 'grad-' + svgId;
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#2563eb;stop-opacity:0.2" />
+            <stop offset="100%" style="stop-color:#2563eb;stop-opacity:0" />
+          </linearGradient>
+        </defs>
+        <path d="${dArea}" fill="url(#${gradId})" />
+        <path d="${dLine}" fill="none" stroke="#2563eb" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        <circle cx="${points[points.length - 1].split(',')[0]}" cy="${points[points.length - 1].split(',')[1]}" r="3" fill="#2563eb" stroke="white" stroke-width="2"/>
+      `;
+    }
+
+    function updateStatus() {
+      const { IORB, SOFR } = store;
+      if (!IORB.current || !SOFR.current) return;
+
+      const spread = IORB.current - SOFR.current;
+      const spreadBp = Math.round(spread * 100);
+      const led = document.getElementById('statusLed');
+      const txt = document.getElementById('statusText');
+
+      if (spreadBp < 0) {
+        led.className = 'w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';
+        txt.textContent = `WARNING: INVERSION (${spreadBp}bp)`;
+        txt.className = 'text-sm font-bold orbitron text-red-600';
+      } else if (spreadBp <= 5) {
+        led.className = 'w-2.5 h-2.5 rounded-full bg-yellow-500';
+        txt.textContent = `CAUTION: NARROW SPREAD (${spreadBp}bp)`;
+        txt.className = 'text-sm font-bold orbitron text-yellow-600';
+      } else {
+        led.className = 'w-2.5 h-2.5 rounded-full bg-green-500';
+        txt.textContent = `NORMAL: HEALTHY SPREAD (${spreadBp}bp)`;
+        txt.className = 'text-sm font-bold orbitron text-green-600';
+      }
+    }
+
+    async function init() {
+      try {
+        const [iorb, effr, sofr, rrp] = await Promise.all([
+          fetchLatestPair(SERIES.IORB),
+          fetchLatestPair(SERIES.EFFR),
+          fetchLatestPair(SERIES.SOFR),
+          fetchLatestPair(SERIES.RRP)
         ]);
 
-        if (wIorb.current!=null){ const [v,d]=fmtRate(wIorb.current); document.getElementById('iorb-value').textContent=v; document.getElementById('iorb-decimal').textContent=d; setChange('iorb-change', wIorb.current-wIorb.previous); Object.assign(store.IORB, wIorb); }
-        if (wEffr.current!=null){ const [v,d]=fmtRate(wEffr.current); document.getElementById('effr-value').textContent=v; document.getElementById('effr-decimal').textContent=d; setChange('effr-change', wEffr.current-wEffr.previous); Object.assign(store.EFFR, wEffr); }
-        if (wSofr.current!=null){ const [v,d]=fmtRate(wSofr.current); document.getElementById('sofr-value').textContent=v; document.getElementById('sofr-decimal').textContent=d; setChange('sofr-change', wSofr.current-wSofr.previous); Object.assign(store.SOFR, wSofr); }
-        if (wRrp.current!=null){ const billions = wRrp.current/1000; document.getElementById('rrp-value').textContent = Math.floor(billions).toString(); document.getElementById('rrp-unit').textContent = `.${(billions%1).toFixed(1).substring(2)}B`; setChange('rrp-change', wRrp.current-wRrp.previous, true); Object.assign(store.RRPONTSYD, wRrp); }
+        store.IORB = iorb;
+        store.EFFR = effr;
+        store.SOFR = sofr;
+        store.RRP = rrp;
+
+        updateCard('IORB', iorb);
+        updateCard('EFFR', effr);
+        updateCard('SOFR', sofr);
+        updateCard('RRP', rrp, true);
 
         updateStatus();
-        updateTime();
-      }
 
-      // 2) Then fetch longer series for charts (can be parallel, no UI block)
-      const [sIorb, sEffr, sSofr, sRrp] = await Promise.all([
-        fetchSeries(SERIES.IORB, 365),
-        fetchSeries(SERIES.EFFR, 365),
-        fetchSeries(SERIES.SOFR, 365),
-        fetchSeries(SERIES.RRPONTSYD, 365)
-      ]);
+        const now = new Date();
+        document.getElementById('updateTime').textContent = `UPDATED ${now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
 
-      Object.assign(store.IORB, sIorb);
-      Object.assign(store.EFFR, sEffr);
-      Object.assign(store.SOFR, sSofr);
-      Object.assign(store.RRPONTSYD, sRrp);
-
-      if (sIorb.series.length) {
-        drawSpark('iorb-chart', sIorb.series);
-        if (store.IORB.current == null && sIorb.current != null) {
-          const [v,d]=fmtRate(sIorb.current); document.getElementById('iorb-value').textContent=v; document.getElementById('iorb-decimal').textContent=d; setChange('iorb-change', sIorb.current - (sIorb.previous ?? sIorb.current));
-        }
+      } catch (e) {
+        console.error('Init failed', e);
       }
-      if (sEffr.series.length) {
-        drawSpark('effr-chart', sEffr.series);
-        if (store.EFFR.current == null && sEffr.current != null) {
-          const [v,d]=fmtRate(sEffr.current); document.getElementById('effr-value').textContent=v; document.getElementById('effr-decimal').textContent=d; setChange('effr-change', sEffr.current - (sEffr.previous ?? sEffr.current));
-        }
-      }
-      if (sSofr.series.length) {
-        drawSpark('sofr-chart', sSofr.series);
-        if (store.SOFR.current == null && sSofr.current != null) {
-          const [v,d]=fmtRate(sSofr.current); document.getElementById('sofr-value').textContent=v; document.getElementById('sofr-decimal').textContent=d; setChange('sofr-change', sSofr.current - (sSofr.previous ?? sSofr.current));
-        }
-      }
-      if (sRrp.series.length) {
-        drawSpark('rrp-chart', sRrp.series.map(v=>v/1000));
-        if (store.RRPONTSYD.current == null && sRrp.current != null) {
-          const billions = sRrp.current/1000; document.getElementById('rrp-value').textContent = Math.floor(billions).toString(); document.getElementById('rrp-unit').textContent = `.${(billions%1).toFixed(1).substring(2)}B`; setChange('rrp-change', sRrp.current - (sRrp.previous ?? sRrp.current), true);
-        }
-      }
-
-      console.log('[FED DETAIL] init done.');
-    } catch (e) {
-      console.error('[FED DETAIL] init error', e);
-      const t = document.getElementById('statusText');
-      if (t) t.textContent = 'ERROR: DATA FETCH FAILED';
     }
-  }
 
-  // Robust init triggers (in case of timing issues)
-  let __fedDetailStarted = false;
-  function startDetail() {
-    if (__fedDetailStarted) return;
-    __fedDetailStarted = true;
-    init().catch(e=>console.error('[FED DETAIL] init failure', e));
-  }
-  document.addEventListener('DOMContentLoaded', startDetail);
-  window.addEventListener('load', startDetail);
-  setTimeout(startDetail, 200);
-  setInterval(init, 5*60*1000);
-</script>
- 
+    window.switchTab = function (tabName) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabName));
+      if (btn) btn.classList.add('active');
+
+      const content = document.getElementById(`tab-${tabName}`);
+      if (content) {
+        content.classList.remove('hidden');
+        content.classList.add('active');
+      }
+    }
+
+    init();
+    setInterval(init, 300000);
+  </script>
 </body>
+
 </html>
