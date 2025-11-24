@@ -4,6 +4,11 @@ let currentActivePage = 'main.html';
 
 // 두 번째 파라미터(updateHistory)를 추가하고 기본값은 true로 설정
 export function loadPage(pageUrl, updateHistory = true) {
+  const frame = document.getElementById('content-frame');
+  if (!frame) {
+    console.error("Content frame not found!");
+    return;
+  }
   console.log("--- [Debug] Page Load Triggered ---");
   console.log("1. Clicked Path (pageUrl):", pageUrl);
   console.log("2. Base Href (window.baseHref):", window.baseHref);
@@ -26,19 +31,25 @@ export function loadPage(pageUrl, updateHistory = true) {
   frame.src = fullUrl;
 
   // 5. 상태 업데이트
-  currentActivePage = path;
-  window.currentActivePage = path; // window 객체에도 저장
+  currentActivePage = pageUrl;
+  window.currentActivePage = pageUrl; // window 객체에도 저장
 
   // 6. 히스토리 관리
-  if (path !== 'main.html') {
-    const newUrl = `${window.location.pathname}?path=${path}`;
-    window.history.pushState({ path }, '', newUrl);
-  } else {
-    window.history.pushState({ path }, '', window.location.pathname);
+  if (updateHistory) {
+    if (pageUrl !== 'main.html') {
+      const newUrl = `${window.location.pathname}?path=${pageUrl}`;
+      window.history.pushState({ path: pageUrl }, '', newUrl);
+    } else {
+      window.history.pushState({ path: pageUrl }, '', window.location.pathname);
+    }
   }
 
   // 7. 네비게이션 활성 상태 업데이트
-  updateActiveNav(path);
+  updateActiveNav(pageUrl);
+}
+
+function getCurrentActivePage() {
+  return currentActivePage;
 }
 
 function updateActiveNav(path) {
