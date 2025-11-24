@@ -23,11 +23,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="nav.css">
   <script type="module" src="initBaseHref.js"></script>
-    <!-- OneSignal Push Notification Script -->
+  <!-- OneSignal Push Notification Script -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function() {
+    OneSignal.push(function () {
       OneSignal.init({
         appId: "cae7e21e-b682-4d41-a04-6137973552c0", // 여기에 제공해주신 App ID를 입력했습니다.
         // --- 바로 이 부분들이 핵심입니다 ---
@@ -81,34 +81,33 @@
    푸터 공유 버튼 스타일
    ======================================== */
 
-.footer-share-btn[data-tooltip] {
-  position: relative;
-}
+    .footer-share-btn[data-tooltip] {
+      position: relative;
+    }
 
-.footer-share-btn[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 120%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 400;
-  white-space: nowrap;
-  z-index: 9999;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  display: block;
-}
+    .footer-share-btn[data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 400;
+      white-space: nowrap;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      display: block;
+    }
 
-.footer-share-btn[data-tooltip]:hover::after {
-  opacity: 1;
-}
-
+    .footer-share-btn[data-tooltip]:hover::after {
+      opacity: 1;
+    }
   </style>
 
 </head>
@@ -171,6 +170,8 @@
   const { siteVersion } = await import(`${window.baseHref}version.js`);
   const { loadNav } = await import(`${window.baseHref}loadNav.js`);
   const { loadPage } = await import(`${window.baseHref}loadPage.js`);
+  const { showToast } = await import(`${window.baseHref}notification-manager.js`);
+
   // Inject nav dynamically
   if (window.top === window.self) {
     await loadNav(siteVersion);
@@ -210,36 +211,28 @@
 
       // URL 복사
       navigator.clipboard.writeText(completeURL).then(() => {
-        showCopyNotification('URL이 복사되었습니다!');
+        showToast('URL이 복사되었습니다!', 'success');
       }).catch(() => {
         // 복사 실패 시 대체 방법 (구형 브라우저 대응)
-        showCopyNotification('URL 복사에 실패했습니다');
+        showToast('URL 복사에 실패했습니다', 'error');
       });
     });
-  }
-
-  // 복사 완료 알림 함수
-  function showCopyNotification(message) {
-    // 버튼에 시각적 피드백 추가
-    if (shareBtn) {
-      shareBtn.classList.add('copied');
-      shareBtn.title = message;
-
-      // 2초 후 원래 상태로 복원
-      setTimeout(() => {
-        shareBtn.classList.remove('copied');
-        shareBtn.title = '투자의 시작';
-      }, 2000);
-    }
-
-    // 간단한 알림 (선택사항)
-    console.log(message);
   }
 
 
 
 
 </script>
+<!-- Global Loading Spinner -->
+<div id="global-spinner"
+  class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] hidden flex items-center justify-center transition-opacity duration-300">
+  <div class="text-center">
+    <div class="inline-block w-12 h-12 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mb-4">
+    </div>
+    <p class="text-slate-600 font-bold text-sm animate-pulse">LOADING...</p>
+  </div>
+</div>
+
 </body>
 
 </html>
