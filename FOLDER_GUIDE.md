@@ -38,6 +38,25 @@
 
 ---
 
+## 📁 /100x Briefing/
+
+| 항목           | 설명                         |
+| ------------ | -------------------------- |
+| `Briefing/`  | Strategic Briefing 리포트 폴더 |
+
+---
+
+## 📁 /alpha-scout/
+
+| 항목                 | 설명                                    |
+| ------------------ | ------------------------------------- |
+| `alpha-scout-main.html` | Alpha Scout 메인 페이지                |
+| `_agent-prompts/`  | 에이전트 프롬프트                         |
+| `data/`            | 리포트 인덱스 및 요약 메타데이터              |
+| `reports/`         | 개별 리포트 HTML 및 상세 데이터             |
+
+---
+
 ## 📁 /posts/
 
 | 항목           | 설명                         |
@@ -70,16 +89,26 @@
 
 | 항목                | 설명                      |
 | ----------------- | ----------------------- |
-| `multichart.html` | 기술 지표 멀티 차트 도구 (단일 파일)  |
-| `index.html`      | 도구 목록 페이지 (향후 자동 생성 가능) |
+| `fed/`            | Fed Monitor 위젯 및 상세 페이지 |
+| `asset/`          | Multichart 도구           |
+| `stock_analyzer/` | Stock Analyzer 도구       |
+| `index.html`      | 도구 목록 페이지               |
 
 ---
 
-## 📁 /preview/
+## 📁 /_legacy/
 
-* 루트 구조 전체를 복제한 디버깅용 디렉토리
-* 상대 경로만 다르고 파일 구조는 루트와 1:1로 일치해야 함
-* 모든 수정 사항은 preview/에도 동기화 필요
+보류/중단된 기능을 보관하는 폴더. 향후 재사용 가능성이 있어 삭제하지 않고 보존.
+
+| 항목           | 상태 | 설명                                              |
+| ------------ | ---- | ------------------------------------------------- |
+| `onesignal/` | 중단 | 정적 페이지에서 푸시 알림 불가. 서버 이전 시 재사용 예정 |
+
+---
+
+## 📁 /_verification_screenshots/
+
+UI 검증용 스크린샷 보관 폴더. 반응형 테스트(Mobile/Tablet/Desktop) 결과 저장.
 
 ---
 
@@ -95,5 +124,9 @@
 1. 모든 콘텐츠 페이지는 `<script type="module" src="../initBaseHref.js"></script>`를 포함하고 `<body>` 시작부에 `<div id="nav"></div>`를 배치한다 (nav와 footer는 index.html/404.html에만 존재)
 2. `_agent-prompts/` 폴더는 폴더별 기능 단위로만 존재해야 함
 3. `version.js`는 HTML/JS/CSS 수정 시 반드시 갱신
-4. preview 디렉토리는 항상 루트와 경로만 다르게 복사되어야 함
+4. `_legacy/` 폴더에는 중단된 기능만 보관 (README.md로 상태 명시)
 5. favicon/og\:image는 모든 페이지에서 동일한 root 상대경로로 표시돼야 함
+
+---
+
+*Last Updated: 2025-11-25*
