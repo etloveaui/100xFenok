@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Deploy Check</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0f172a;
+      color: #22c55e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 400px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 14px;
+      margin: 0 0 16px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .status {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+    .timestamp {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .version {
+      font-size: 16px;
+      color: #3b82f6;
+      font-weight: bold;
+      padding: 8px;
+      background: #1e3a5f;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .hash {
+      font-size: 10px;
+      color: #475569;
+      margin-top: 16px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Deploy Check</h1>
+    <div class="status">DEPLOYED</div>
+    <div class="timestamp">Updated: <span id="ts">--</span></div>
+    <div class="version" id="version">v2025.1127.1</div>
+    <div class="hash">Build: macro-monitor-phase1</div>
+  </div>
+  <script>
+    // Display current time
+    document.getElementById('ts').textContent = new Date().toISOString();
+
+    // Version from build (can be updated by script)
+    const version = 'v2025.1127.1';
+    document.getElementById('version').textContent = version;
+
+    // Log for automation
+    console.log('DEPLOY_CHECK_VERSION=' + version);
+  </script>
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Macro Monitor - Detail</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #64748b;
+      text-decoration: none;
+    }
+
+    .back-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-title i {
+      color: #3b82f6;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .update-info {
+      font-size: 12px;
+      color: #94a3b8;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title i {
+      color: #3b82f6;
+    }
+
+    .card-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .card-badge.live {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .card-badge.coming {
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+
+    /* Chart Containers */
+    .chart-area {
+      height: 250px;
+      position: relative;
+    }
+
+    .chart-area canvas {
+      max-width: 100%;
+    }
+
+    /* Placeholder for Future Indicators */
+    .placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      background: #f8fafc;
+      border-radius: 12px;
+      color: #94a3b8;
+      gap: 12px;
+    }
+
+    .placeholder i {
+      font-size: 32px;
+      opacity: 0.5;
+    }
+
+    .placeholder-text {
+      font-size: 13px;
+    }
+
+    /* Current Values Grid */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .value-item {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .value-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .value-number {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Signal Thresholds Legend */
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .legend-color.danger { background: rgba(239, 68, 68, 0.3); }
+    .legend-color.caution { background: rgba(249, 115, 22, 0.3); }
+    .legend-color.warning { background: rgba(234, 179, 8, 0.3); }
+    .legend-color.normal { background: rgba(34, 197, 94, 0.3); }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .page-title {
+        font-size: 20px;
+      }
+
+      .chart-area {
+        height: 200px;
+      }
+
+      .values-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .value-number {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <a class="back-btn" onclick="goBack()" title="Back">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title">
+          <i class="fas fa-chart-area"></i>
+          Macro Monitor
+        </h1>
+      </div>
+      <div class="header-right">
+        <span class="update-info" id="updateTime">Updated: --:--</span>
+      </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- SOFR-IORB Spread (Full Width) -->
+      <div class="card full-width">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fas fa-chart-line"></i>
+            SOFR-IORB Spread (90D)
+          </div>
+          <span class="card-badge live">LIVE</span>
+        </div>
+        <div class="chart-area">
+          <canvas id="spreadChart"></canvas>
+        </div>
+        <div class="values-grid">
+          <div class="value-item">
+            <div class="value-label">IORB</div>
+            <div class="value-number" id="iorbValue">--</div>
+          </div>
+          <div class="value-item">
+            <div class="value-label">SOFR</div>
+            <div class="value-number" id="sofrValue">--</div>
+          </div>
+          <div class="value-item">
+            <div class="value-label">SPREAD</div>
+            <div class="value-number" id="spreadValue">--</div>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-color danger"></div>
+            <span>30bp+ (Danger)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color caution"></div>
+            <span>10-30bp (Caution)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color warning"></div>
+            <span>0-10bp (Warning)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color normal"></div>
+            <span>&lt;0bp (Normal)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slot 1: Treasury Rates (Coming Soon) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fas fa-landmark"></i>
+            Treasury Rates
+          </div>
+          <span class="card-badge coming">COMING SOON</span>
+        </div>
+        <div class="placeholder">
+          <i class="fas fa-chart-bar"></i>
+          <span class="placeholder-text">10Y, 2Y, T10Y2Y Spread</span>
+        </div>
+      </div>
+
+      <!-- Slot 2: VIX (Coming Soon) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fas fa-bolt"></i>
+            Volatility Index
+          </div>
+          <span class="card-badge coming">COMING SOON</span>
+        </div>
+        <div class="placeholder">
+          <i class="fas fa-wave-square"></i>
+          <span class="placeholder-text">VIX Index</span>
+        </div>
+      </div>
+
+      <!-- Slot 3: Fear & Greed (Coming Soon) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fas fa-face-meh"></i>
+            Market Sentiment
+          </div>
+          <span class="card-badge coming">COMING SOON</span>
+        </div>
+        <div class="placeholder">
+          <i class="fas fa-gauge-high"></i>
+          <span class="placeholder-text">Fear & Greed Index (CNN)</span>
+        </div>
+      </div>
+
+      <!-- Slot 4: M2 / Liquidity (Coming Soon) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fas fa-water"></i>
+            Liquidity
+          </div>
+          <span class="card-badge coming">COMING SOON</span>
+        </div>
+        <div class="placeholder">
+          <i class="fas fa-chart-area"></i>
+          <span class="placeholder-text">M2, RB/GDP, ON RRP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration (same as widget)
+    const API_KEY = (window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1');
+    const DIRECT_URL = 'https://api.stlouisfed.org/fred/series/observations';
+    const HOST = window.location.hostname || '';
+    const IS_LOCAL = ['localhost', '127.0.0.1'].includes(HOST) || HOST.includes('127.0.0.1');
+    const USER_PROXY = 'https://fed-proxy.etloveaui.workers.dev/';
+
+    // CORS fallback fetch
+    async function fetchJsonWithCorsFallback(fullUrl) {
+      const proxies = [];
+      if (!IS_LOCAL && USER_PROXY) {
+        const u = USER_PROXY.replace(/\/$/, '');
+        proxies.push(u + '/' + fullUrl);
+      }
+      proxies.push('https://cors.isomorphic-git.org/' + fullUrl);
+      proxies.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(fullUrl));
+
+      const candidates = (!IS_LOCAL && /(github\.io|vercel\.app|netlify\.app)$/.test(HOST))
+        ? [...proxies]
+        : [fullUrl, ...proxies];
+
+      for (const u of candidates) {
+        try {
+          const res = await fetch(u, { cache: 'no-store' });
+          if (res && res.ok) return await res.json();
+        } catch (e) { }
+      }
+      throw new Error('All fetch attempts failed');
+    }
+
+    // Fetch series data
+    async function fetchSeriesData(seriesId, days = 90) {
+      const endDate = new Date().toISOString().split('T')[0];
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const url = `${DIRECT_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=asc`;
+
+      const data = await fetchJsonWithCorsFallback(url);
+      const obs = Array.isArray(data?.observations) ? data.observations : [];
+
+      return obs
+        .filter(o => o.value !== '.' && !isNaN(parseFloat(o.value)))
+        .map(o => ({
+          date: o.date,
+          value: parseFloat(o.value)
+        }));
+    }
+
+    // Calculate spread data
+    function calculateSpreadData(sofrData, iorbData) {
+      const iorbMap = new Map(iorbData.map(d => [d.date, d.value]));
+      return sofrData
+        .filter(s => iorbMap.has(s.date))
+        .map(s => ({
+          date: s.date,
+          sofr: s.value,
+          iorb: iorbMap.get(s.date),
+          spread: Math.round((s.value - iorbMap.get(s.date)) * 100)
+        }));
+    }
+
+    // Create Chart
+    let spreadChart = null;
+
+    function createSpreadChart(spreadData) {
+      const ctx = document.getElementById('spreadChart').getContext('2d');
+
+      if (spreadChart) spreadChart.destroy();
+
+      const labels = spreadData.map(d => d.date);
+      const values = spreadData.map(d => d.spread);
+
+      const zonePlugin = {
+        id: 'zonePlugin',
+        beforeDraw: (chart) => {
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          const yScale = chart.scales.y;
+
+          // Danger zone (30bp+)
+          const dangerY = yScale.getPixelForValue(30);
+          if (dangerY > chartArea.top) {
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+            ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, dangerY - chartArea.top);
+          }
+
+          // Caution zone (10-30bp)
+          const cautionY = yScale.getPixelForValue(10);
+          const dangerBottom = Math.max(dangerY, chartArea.top);
+          if (cautionY > dangerBottom) {
+            ctx.fillStyle = 'rgba(249, 115, 22, 0.1)';
+            ctx.fillRect(chartArea.left, dangerBottom, chartArea.right - chartArea.left, cautionY - dangerBottom);
+          }
+
+          // Warning zone (0-10bp)
+          const warningY = yScale.getPixelForValue(0);
+          const cautionBottom = Math.max(cautionY, chartArea.top);
+          if (warningY > cautionBottom) {
+            ctx.fillStyle = 'rgba(234, 179, 8, 0.1)';
+            ctx.fillRect(chartArea.left, cautionBottom, chartArea.right - chartArea.left, warningY - cautionBottom);
+          }
+        }
+      };
+
+      spreadChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'SOFR-IORB Spread (bp)',
+            data: values,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 1,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+              padding: 10,
+              callbacks: {
+                title: (items) => items[0].label,
+                label: (item) => `Spread: ${item.raw}bp`
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: true,
+              grid: { display: false },
+              ticks: {
+                maxTicksLimit: 8,
+                font: { size: 10 },
+                color: '#94a3b8'
+              }
+            },
+            y: {
+              display: true,
+              grid: { color: '#f1f5f9' },
+              ticks: {
+                font: { size: 10 },
+                color: '#94a3b8',
+                callback: (value) => value + 'bp'
+              }
+            }
+          }
+        },
+        plugins: [zonePlugin]
+      });
+    }
+
+    // Update UI
+    function updateUI(spreadData) {
+      if (!spreadData || spreadData.length === 0) return;
+
+      const latest = spreadData[spreadData.length - 1];
+
+      document.getElementById('iorbValue').textContent = latest.iorb.toFixed(2) + '%';
+      document.getElementById('sofrValue').textContent = latest.sofr.toFixed(2) + '%';
+      document.getElementById('spreadValue').textContent = latest.spread + 'bp';
+
+      document.getElementById('updateTime').textContent =
+        'Updated: ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    // Initialize
+    async function initialize() {
+      try {
+        const [sofrData, iorbData] = await Promise.all([
+          fetchSeriesData('SOFR', 90),
+          fetchSeriesData('IORB', 90)
+        ]);
+
+        const spreadData = calculateSpreadData(sofrData, iorbData);
+
+        if (spreadData.length > 0) {
+          createSpreadChart(spreadData);
+          updateUI(spreadData);
+        }
+      } catch (error) {
+        console.error('Detail page init error:', error);
+      }
+    }
+
+    // Navigation
+    function goBack() {
+      try {
+        if (window.top && typeof window.top.loadPage === 'function') {
+          window.top.loadPage('main.html');
+          return;
+        }
+        if (window.parent && typeof window.parent.loadPage === 'function') {
+          window.parent.loadPage('main.html');
+          return;
+        }
+      } catch (e) { }
+      history.back();
+    }
+
+    // Start
+    initialize();
+  </script>
+</body>
+</html>
