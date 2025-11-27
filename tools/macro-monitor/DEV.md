@@ -111,10 +111,42 @@ Chart.js 렌더링
 
 ---
 
-## Change Log
+## Recent Changes (코드 변경 상세)
+
+> 새 세션에서 "어디 수정했지?" 바로 파악용
+
+### 2025-11-27 작업 내역
+
+**widget.html 변경사항**:
+| Line | 변경 | 내용 |
+|------|------|------|
+| CSS | `.widget-content` | `flex-direction: column` (차트↑ 값↓ 배치) |
+| CSS | `.values-section` | `display: flex; gap: 10px` (가로 배치) |
+| CSS | `.value-box` | `white-space: nowrap` (줄바꿈 방지) |
+| CSS | `.value-unit` | inline `<span>` (% 줄바꿈 방지) |
+| JS | `tension` | `0.3 → 0` (직선 그래프) |
+| JS | `fill` | `true → false` (배경 채우기 제거) |
+| JS | `linePlugin` | 시그널 라인 플러그인 추가 (0bp, 10bp, 30bp) |
+| JS | `borderColor` | `#1d4ed8` (진한 파란색) |
+
+**main.html 변경사항**:
+| Line | 변경 | 내용 |
+|------|------|------|
+| 125 | iframe height | `200px → 280px` |
+| 100 | What's New | `"미완성" → "Coming Soon"` |
+
+**nav.html 변경사항**:
+| Line | 변경 | 내용 |
+|------|------|------|
+| - | 메뉴 링크 | Fed Monitor → Macro Monitor |
+
+---
+
+## Change Log (요약)
 
 | Date | Change |
 |------|--------|
-| 2025-11-27 | DEV.md 생성, Phase 1 진행 중 |
+| 2025-11-27 | 위젯 디자인 전면 개편 (직선 그래프, 시그널 라인, 레이아웃 변경) |
+| 2025-11-27 | DEV.md 생성 |
 | 2025-11-26 | fed → macro-monitor 폴더 이름 변경 |
 | 2025-11-25 | 위젯/상세 페이지 기본 구현 |
