@@ -1,0 +1,644 @@
+<!-- Macro Monitor Widget - SOFR-IORB Spread (Compact Design) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .macro-widget {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    max-width: 100%;
+  }
+
+  .macro-widget:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Header */
+  .widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .widget-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .widget-title h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.3px;
+  }
+
+  .widget-title .subtitle {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .status-badge.normal {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .status-badge.warning {
+    background: #fef3c7;
+    color: #b45309;
+  }
+
+  .status-badge.caution {
+    background: #fed7aa;
+    color: #c2410c;
+  }
+
+  .status-badge.danger {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Main Content - 차트 위, 값들 아래 배치 */
+  .widget-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Chart */
+  .chart-section {
+    width: 100%;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 100px;
+  }
+
+  .chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Values - 가로 배치 */
+  .values-section {
+    display: flex;
+    gap: 10px;
+  }
+
+  .value-box {
+    flex: 1;
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .value-box.spread {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+
+  .value-box.spread.negative {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+  }
+
+  .value-box.spread.warning {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+  }
+
+  .value-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .value-number {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .value-number.positive { color: #16a34a; }
+  .value-number.negative { color: #dc2626; }
+  .value-number.warning-val { color: #d97706; }
+
+  .value-unit {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9ca3af;
+  }
+
+  /* Footer */
+  .widget-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f3f4f6;
+  }
+
+  .signal-legend {
+    display: flex;
+    gap: 12px;
+    font-size: 10px;
+    color: #9ca3af;
+  }
+
+  .signal-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .signal-line {
+    width: 12px;
+    height: 2px;
+  }
+
+  .signal-line.zero { background: #9ca3af; }
+  .signal-line.warn { background: #fbbf24; }
+  .signal-line.danger { background: #ef4444; }
+
+  .update-time {
+    font-size: 10px;
+    color: #d1d5db;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Loading */
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    z-index: 10;
+  }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive: Tablet */
+  @media (max-width: 768px) {
+    .macro-widget {
+      padding: 14px 16px;
+    }
+
+    .chart-container {
+      height: 90px;
+    }
+
+    .value-number {
+      font-size: 15px;
+    }
+  }
+
+  /* Responsive: Mobile */
+  @media (max-width: 480px) {
+    .macro-widget {
+      padding: 12px 14px;
+    }
+
+    .widget-header {
+      margin-bottom: 10px;
+    }
+
+    .widget-title h3 {
+      font-size: 13px;
+    }
+
+    .widget-title .subtitle {
+      display: none;
+    }
+
+    .status-badge {
+      padding: 3px 8px;
+      font-size: 10px;
+    }
+
+    .widget-content {
+      gap: 10px;
+    }
+
+    .chart-container {
+      height: 80px;
+    }
+
+    .values-section {
+      gap: 8px;
+    }
+
+    .value-box {
+      padding: 6px 8px;
+    }
+
+    .value-number {
+      font-size: 14px;
+    }
+
+    .value-label {
+      font-size: 8px;
+    }
+
+    .value-unit {
+      font-size: 9px;
+    }
+
+    .signal-legend {
+      gap: 8px;
+      font-size: 9px;
+    }
+
+    .widget-footer {
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+  }
+</style>
+
+<div class="macro-widget" onclick="openMacroDetail()" role="button" aria-label="Macro Monitor 상세보기">
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <div class="widget-header">
+    <div class="widget-title">
+      <h3>SOFR-IORB 스프레드</h3>
+      <span class="subtitle">유동성 지표</span>
+    </div>
+    <div class="status-badge normal" id="statusBadge">
+      <span class="status-dot"></span>
+      <span id="statusText">정상</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="widget-content">
+    <!-- Chart -->
+    <div class="chart-section">
+      <div class="chart-container">
+        <canvas id="spreadChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Values -->
+    <div class="values-section">
+      <div class="value-box spread" id="spreadBox">
+        <div class="value-label">Spread</div>
+        <div class="value-number" id="spreadValue">--<span class="value-unit">bp</span></div>
+      </div>
+      <div class="value-box">
+        <div class="value-label">SOFR</div>
+        <div class="value-number" id="sofrValue">--<span class="value-unit">%</span></div>
+      </div>
+      <div class="value-box">
+        <div class="value-label">IORB</div>
+        <div class="value-number" id="iorbValue">--<span class="value-unit">%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="widget-footer">
+    <div class="signal-legend">
+      <div class="signal-item">
+        <div class="signal-line zero"></div>
+        <span>0bp</span>
+      </div>
+      <div class="signal-item">
+        <div class="signal-line warn"></div>
+        <span>10bp 주의</span>
+      </div>
+      <div class="signal-item">
+        <div class="signal-line danger"></div>
+        <span>30bp 위험</span>
+      </div>
+    </div>
+    <div class="update-time" id="updateTime">--:--</div>
+  </div>
+</div>
+
+<script>
+  // Config
+  const API_KEY = window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1';
+  const DIRECT_URL = 'https://api.stlouisfed.org/fred/series/observations';
+  const HOST = window.location.hostname || '';
+  const IS_LOCAL = ['localhost', '127.0.0.1'].includes(HOST) || HOST.includes('127.0.0.1') || HOST.includes('5500');
+  const USER_PROXY = 'https://fed-proxy.etloveaui.workers.dev';
+
+  // Thresholds (bp)
+  const THRESHOLDS = { WARNING: 0, CAUTION: 10, DANGER: 30 };
+
+  // CORS Fallback Fetch
+  async function fetchWithFallback(fullUrl) {
+    const proxies = [
+      USER_PROXY + '/' + fullUrl,
+      'https://cors.isomorphic-git.org/' + fullUrl,
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(fullUrl)
+    ];
+
+    // Local에서는 프록시만 사용
+    const candidates = IS_LOCAL ? proxies : [fullUrl, ...proxies];
+
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.ok) return await res.json();
+      } catch (e) { /* continue */ }
+    }
+    throw new Error('All fetch failed');
+  }
+
+  // Fetch FRED Data
+  async function fetchSeriesData(seriesId, days = 60) {
+    const end = new Date().toISOString().split('T')[0];
+    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    const url = `${DIRECT_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+
+    const data = await fetchWithFallback(url);
+    return (data?.observations || [])
+      .filter(o => o.value !== '.' && !isNaN(parseFloat(o.value)))
+      .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+  }
+
+  // Calculate Spread
+  function calcSpread(sofr, iorb) {
+    const iorbMap = new Map(iorb.map(d => [d.date, d.value]));
+    return sofr
+      .filter(s => iorbMap.has(s.date))
+      .map(s => ({
+        date: s.date,
+        sofr: s.value,
+        iorb: iorbMap.get(s.date),
+        spread: Math.round((s.value - iorbMap.get(s.date)) * 100)
+      }));
+  }
+
+  // Get Signal Level
+  function getSignal(bp) {
+    if (bp >= THRESHOLDS.DANGER) return 'danger';
+    if (bp >= THRESHOLDS.CAUTION) return 'caution';
+    if (bp >= THRESHOLDS.WARNING) return 'warning';
+    return 'normal';
+  }
+
+  // Create Chart
+  let chart = null;
+
+  function createChart(data) {
+    const ctx = document.getElementById('spreadChart').getContext('2d');
+    if (chart) chart.destroy();
+
+    const labels = data.map(d => d.date);
+    const values = data.map(d => d.spread);
+
+    // 심플한 0선 + 신호선 플러그인
+    const linePlugin = {
+      id: 'signalLines',
+      afterDraw: (c) => {
+        const { ctx, chartArea: a, scales: { y } } = c;
+        if (!a) return;
+
+        // 0bp 기준선 (검은 실선)
+        const y0 = y.getPixelForValue(0);
+        if (y0 >= a.top && y0 <= a.bottom) {
+          ctx.save();
+          ctx.strokeStyle = '#374151';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.left, y0);
+          ctx.lineTo(a.right, y0);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // 10bp 주의선 (주황 점선)
+        const y10 = y.getPixelForValue(10);
+        if (y10 >= a.top && y10 <= a.bottom) {
+          ctx.save();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(a.left, y10);
+          ctx.lineTo(a.right, y10);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // 30bp 위험선 (빨강 점선)
+        const y30 = y.getPixelForValue(30);
+        if (y30 >= a.top && y30 <= a.bottom) {
+          ctx.save();
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(a.left, y30);
+          ctx.lineTo(a.right, y30);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    };
+
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          borderColor: '#1d4ed8',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          fill: false,
+          tension: 0,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#1d4ed8',
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleFont: { size: 10, weight: '500' },
+            bodyFont: { size: 12, weight: '600' },
+            padding: 10,
+            cornerRadius: 6,
+            displayColors: false,
+            callbacks: {
+              title: (items) => items[0]?.label || '',
+              label: (item) => `${item.raw >= 0 ? '+' : ''}${item.raw}bp`
+            }
+          }
+        },
+        scales: {
+          x: {
+            display: true,
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              maxTicksLimit: 5,
+              font: { size: 9 },
+              color: '#6b7280'
+            }
+          },
+          y: {
+            display: true,
+            grid: {
+              color: '#e5e7eb',
+              drawTicks: false
+            },
+            border: { display: false },
+            ticks: {
+              font: { size: 9 },
+              color: '#6b7280',
+              padding: 8,
+              callback: v => v + 'bp'
+            }
+          }
+        }
+      },
+      plugins: [linePlugin]
+    });
+  }
+
+  // Update UI
+  function updateUI(data) {
+    if (!data?.length) return;
+
+    const latest = data[data.length - 1];
+    const bp = latest.spread;
+    const signal = getSignal(bp);
+
+    // Spread Value
+    const spreadEl = document.getElementById('spreadValue');
+    spreadEl.textContent = (bp >= 0 ? '+' : '') + bp;
+    spreadEl.className = 'value-number ' + (
+      bp >= THRESHOLDS.DANGER ? 'negative' :
+      bp >= THRESHOLDS.CAUTION ? 'warning-val' :
+      bp >= THRESHOLDS.WARNING ? 'warning-val' :
+      'positive'
+    );
+
+    // Spread Box
+    const spreadBox = document.getElementById('spreadBox');
+    spreadBox.className = 'value-box spread ' + (
+      bp >= THRESHOLDS.CAUTION ? 'negative' :
+      bp >= THRESHOLDS.WARNING ? 'warning' : ''
+    );
+
+    // Rate Values
+    document.getElementById('sofrValue').textContent = latest.sofr.toFixed(2);
+    document.getElementById('iorbValue').textContent = latest.iorb.toFixed(2);
+
+    // Status Badge
+    const badge = document.getElementById('statusBadge');
+    const statusText = document.getElementById('statusText');
+
+    badge.className = 'status-badge ' + signal;
+    statusText.textContent =
+      signal === 'danger' ? '위험' :
+      signal === 'caution' ? '경계' :
+      signal === 'warning' ? '주의' : '정상';
+
+    // Timestamp
+    document.getElementById('updateTime').textContent =
+      new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+
+  // Initialize
+  async function init() {
+    try {
+      const [sofr, iorb] = await Promise.all([
+        fetchSeriesData('SOFR', 60),
+        fetchSeriesData('IORB', 60)
+      ]);
+
+      const spread = calcSpread(sofr, iorb);
+
+      if (spread.length) {
+        createChart(spread);
+        updateUI(spread);
+      }
+    } catch (e) {
+      console.error('Macro Monitor error:', e);
+      document.getElementById('statusText').textContent = '오류';
+    } finally {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  }
+
+  init();
+
+  // Navigation
+  function openMacroDetail() {
+    const target = 'tools/macro-monitor/detail.html';
+    try {
+      if (window.top?.loadPage) { window.top.loadPage(target); return; }
+      if (window.parent?.loadPage) { window.parent.loadPage(target); return; }
+    } catch (e) {}
+    const base = window.top?.baseHref || window.baseHref || '/';
+    (window.top || window).location.assign(`${base}index.html?path=${target}`);
+  }
+</script>
