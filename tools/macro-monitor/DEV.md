@@ -4,44 +4,63 @@
 
 ## Purpose
 
-SOFR-IORB 스프레드 등 유동성 지표를 실시간으로 표시하는 위젯 및 상세 페이지.
+유동성 지표(SOFR-IORB 등)를 실시간으로 표시하는 위젯 및 상세 페이지.
 
 ---
 
-## Files
+## Folder Structure
 
-| File | Role |
-|------|------|
-| `widget.html` | 메인 페이지 임베드용 위젯 (iframe) |
-| `detail.html` | 클릭 시 상세 분석 페이지 |
+```
+tools/macro-monitor/
+├── DEV.md                    ← 이 파일
+├── widgets/                  ← 카드형 위젯 (main.html iframe용)
+│   ├── sofr-iorb.html        ← SOFR-IORB 스프레드
+│   ├── treasury.html         ← [Phase 3] 10Y-2Y Treasury
+│   ├── vix.html              ← [Phase 3] VIX
+│   └── ...
+├── details/                  ← 상세 페이지 (클릭 시 이동)
+│   ├── sofr-iorb.html        ← SOFR-IORB 상세
+│   ├── treasury.html         ← [Phase 3] Treasury 상세
+│   └── ...
+└── shared/                   ← [Phase 3+] 공통 모듈
+    ├── chart-config.js       ← Chart.js 공통 설정
+    ├── api-fetch.js          ← CORS 프록시/API 호출
+    └── styles.css            ← 공통 스타일
+```
+
+### 새 지표 추가 시
+1. `widgets/[지표명].html` 생성
+2. `details/[지표명].html` 생성
+3. `main.html`에 iframe 추가
+4. 지표 3개 이상 시 `shared/` 공통 모듈화 검토
 
 ---
 
 ## Current Implementation
 
-### Widget (widget.html)
-- **데이터 소스**: FRED API (SOFR, IORB)
-- **CORS 우회**: Cloudflare Worker → isomorphic-git → allorigins (폴백 체인)
-- **차트**: Chart.js (직선 스타일, tension: 0)
-- **시그널 라인**: 0bp (기준), 10bp (주의), 30bp (위험)
-- **레이아웃**: 차트 상단 + 값 하단 가로 배치
-- **iframe 높이**: 280px (main.html)
+### Widget (widgets/sofr-iorb.html)
+- **디자인**: 카드형 (1/3 그리드)
+- **데이터**: FRED API (SOFR, IORB)
+- **CORS 우회**: Cloudflare Worker → isomorphic-git → allorigins
+- **차트**: Chart.js 미니 차트 (no axes, fill, tension: 0)
+- **상태**: 스프레드에 따라 정상/주의/경계/위험
+- **클릭**: details/sofr-iorb.html로 이동
 
-### Detail (detail.html)
-- 확장된 차트 뷰
-- 기간 선택 (1M/3M/6M/1Y)
-- 상세 설명 및 해석
+### Detail (details/sofr-iorb.html)
+- **디자인**: 밝은 테마 풀 페이지
+- **히어로**: SOFR / Spread (크게) / IORB
+- **차트**: 90일 데이터, 직선 그래프 (tension: 0)
+- **시그널 라인**: 0bp (기준), 10bp (주의), 30bp (위험)
+- **Info Grid**: 지표 설명 카드 4개
 
 ---
 
-## Technical Decisions
+## File References
 
-| 결정 | 이유 |
+| 파일 | 경로 |
 |------|------|
-| Chart.js | 가볍고 빠름, 복잡한 시각화 불필요 |
-| tension: 0 | 직선 스타일로 데이터 변화 명확히 표시 |
-| Google Sheets (예정) | CORS 우회 + 캐싱 + 확장성 |
-| 시그널 라인 | 컬러 존 대신 라인으로 더 깔끔한 UI |
+| main.html iframe | `./tools/macro-monitor/widgets/sofr-iorb.html` |
+| widget → detail | `tools/macro-monitor/details/sofr-iorb.html` |
 
 ---
 
@@ -61,34 +80,40 @@ Chart.js 렌더링
 
 ---
 
-## Known Issues
+## Technical Decisions
 
-- [ ] PC 버전 카드 레이아웃 미세 조정 필요
-- [ ] 로딩 속도 개선 (캐싱 미구현)
-- [ ] Google Sheets 인프라 미구축
+| 결정 | 이유 |
+|------|------|
+| Chart.js | 가볍고 빠름, 복잡한 시각화 불필요 |
+| tension: 0 | 직선 스타일로 데이터 변화 명확히 표시 |
+| widgets/details 분리 | 확장성: 지표 추가 시 패턴 명확 |
+| 밝은 테마 | 사이트 전체 톤과 통일 |
+| shared/ 지연 생성 | 지표 3개 이상 시 공통화 (YAGNI) |
 
 ---
 
 ## Phase Checklist
 
-### Phase 1: Widget Card UI
-- [x] 위젯 기본 레이아웃
-- [x] 직선 그래프 스타일
-- [x] 시그널 라인 (0bp, 10bp, 30bp)
-- [x] 값 표시 (Spread, SOFR, IORB)
-- [x] iframe 높이 조정 (280px)
-- [ ] 반응형 최종 점검
+### Phase 1: Widget Card UI ✅
+- [x] 위젯 카드형 재설계 (1/3 크기)
+- [x] 직선 그래프 스타일 (tension: 0)
+- [x] 상태 표시 (정상/주의/경계/위험)
+- [x] iframe 높이 (280px)
+- [x] 폴더 구조 정리 (widgets/, details/)
+- [x] detail 밝은 테마 적용
 
 ### Phase 2: Graph Enhancement
 - [ ] Chart.js 설정 최적화
-- [ ] 기간별 데이터 표시
+- [ ] 기간별 데이터 표시 (1M/3M/6M)
 - [ ] 스프레드 시각화 개선
 
 ### Phase 3: Indicator Expansion (FRED)
-- [ ] 10Y/2Y Treasury
-- [ ] T10Y2Y Spread
-- [ ] VIX
-- [ ] M2
+- [ ] Treasury Spread (10Y-2Y)
+  - widgets/treasury.html
+  - details/treasury.html
+- [ ] VIX Index
+- [ ] M2 Liquidity
+- [ ] shared/ 공통 모듈 생성
 
 ### Phase 4: Google Sheets Infrastructure
 - [ ] Sheet 구조 설계
@@ -101,52 +126,20 @@ Chart.js 렌더링
 
 ---
 
-## References
+## Known Issues
 
-| Document | Path |
-|----------|------|
-| Master Plan | `docs/planning/macro-monitor-plan.md` |
-| Data Sources | `docs/references/data-sources.md` |
-| Site Architecture | `docs/manuals/site-architecture.md` |
+- [ ] 로컬 환경 CORS 문제 (배포 후 정상)
+- [ ] 로딩 속도 개선 (캐싱 미구현)
+- [ ] Google Sheets 인프라 미구축
 
 ---
 
-## Recent Changes (코드 변경 상세)
-
-> 새 세션에서 "어디 수정했지?" 바로 파악용
-
-### 2025-11-27 작업 내역
-
-**widget.html 변경사항**:
-| Line | 변경 | 내용 |
-|------|------|------|
-| CSS | `.widget-content` | `flex-direction: column` (차트↑ 값↓ 배치) |
-| CSS | `.values-section` | `display: flex; gap: 10px` (가로 배치) |
-| CSS | `.value-box` | `white-space: nowrap` (줄바꿈 방지) |
-| CSS | `.value-unit` | inline `<span>` (% 줄바꿈 방지) |
-| JS | `tension` | `0.3 → 0` (직선 그래프) |
-| JS | `fill` | `true → false` (배경 채우기 제거) |
-| JS | `linePlugin` | 시그널 라인 플러그인 추가 (0bp, 10bp, 30bp) |
-| JS | `borderColor` | `#1d4ed8` (진한 파란색) |
-
-**main.html 변경사항**:
-| Line | 변경 | 내용 |
-|------|------|------|
-| 125 | iframe height | `200px → 280px` |
-| 100 | What's New | `"미완성" → "Coming Soon"` |
-
-**nav.html 변경사항**:
-| Line | 변경 | 내용 |
-|------|------|------|
-| - | 메뉴 링크 | Fed Monitor → Macro Monitor |
-
----
-
-## Change Log (요약)
+## Change Log
 
 | Date | Change |
 |------|--------|
-| 2025-11-27 | 위젯 디자인 전면 개편 (직선 그래프, 시그널 라인, 레이아웃 변경) |
-| 2025-11-27 | DEV.md 생성 |
+| 2025-11-28 | 폴더 구조 정리 (widgets/, details/), fed/ 삭제 |
+| 2025-11-28 | detail 밝은 테마 적용 |
+| 2025-11-27 | 위젯 카드형 재설계, 문서 정리 |
 | 2025-11-26 | fed → macro-monitor 폴더 이름 변경 |
 | 2025-11-25 | 위젯/상세 페이지 기본 구현 |

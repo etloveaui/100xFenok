@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOFR-IORB Spread | Macro Monitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #64748b;
+      text-decoration: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .back-btn:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+      transform: translateX(-2px);
+    }
+
+    .page-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #4ade80;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .update-time {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* Main Card */
+    .main-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      margin-bottom: 24px;
+    }
+
+    /* Value Display */
+    .value-hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      padding: 24px 0 32px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+
+    .metric-box {
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .metric-value.highlight {
+      font-size: 48px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .metric-value.positive { color: #4ade80; }
+    .metric-value.negative { color: #f87171; }
+    .metric-value.warning { color: #fbbf24; }
+
+    .metric-unit {
+      font-size: 14px;
+      color: #64748b;
+      margin-left: 4px;
+    }
+
+    /* Chart Area */
+    .chart-section {
+      margin-bottom: 20px;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .chart-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    .period-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: #64748b;
+      background: rgba(255,255,255,0.05);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .chart-container {
+      height: 280px;
+      position: relative;
+    }
+
+    .chart-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Signal Legend */
+    .signal-legend {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .signal-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .signal-line {
+      width: 24px;
+      height: 2px;
+      border-radius: 1px;
+    }
+
+    .signal-line.zero { background: #94a3b8; }
+    .signal-line.caution { background: #fbbf24; border-style: dashed; }
+    .signal-line.danger { background: #f87171; border-style: dashed; }
+
+    /* Info Cards Grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .info-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .info-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eff6ff;
+      border-radius: 10px;
+      color: #3b82f6;
+      font-size: 14px;
+    }
+
+    .info-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .info-desc {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .page-title { font-size: 18px; }
+
+      .main-card { padding: 20px; border-radius: 20px; }
+
+      .value-hero {
+        flex-direction: column;
+        gap: 20px;
+        padding: 16px 0 24px;
+      }
+
+      .metric-value.highlight { font-size: 40px; }
+      .metric-value { font-size: 24px; }
+
+      .chart-container { height: 220px; }
+
+      .signal-legend {
+        flex-wrap: wrap;
+        gap: 12px 20px;
+      }
+
+      .info-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <a class="back-btn" onclick="goBack()" title="돌아가기">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+          <h1 class="page-title">SOFR-IORB SPREAD</h1>
+          <p class="page-subtitle">Liquidity Stress Indicator</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-badge" id="statusBadge">
+          <span class="status-dot"></span>
+          <span id="statusText">정상</span>
+        </div>
+        <span class="update-time" id="updateTime">--:--</span>
+      </div>
+    </div>
+
+    <!-- Main Chart Card -->
+    <div class="main-card">
+      <!-- Value Hero Section -->
+      <div class="value-hero">
+        <div class="metric-box">
+          <div class="metric-label">SOFR</div>
+          <div class="metric-value" id="sofrValue">--<span class="metric-unit">%</span></div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Spread</div>
+          <div class="metric-value highlight" id="spreadValue">--<span class="metric-unit">bp</span></div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">IORB</div>
+          <div class="metric-value" id="iorbValue">--<span class="metric-unit">%</span></div>
+        </div>
+      </div>
+
+      <!-- Chart Section -->
+      <div class="chart-section">
+        <div class="chart-header">
+          <span class="chart-title">Spread History</span>
+          <span class="period-badge">90 DAYS</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="spreadChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Signal Legend -->
+      <div class="signal-legend">
+        <div class="signal-item">
+          <div class="signal-line zero"></div>
+          <span>0bp (기준선)</span>
+        </div>
+        <div class="signal-item">
+          <div class="signal-line caution"></div>
+          <span>10bp (주의)</span>
+        </div>
+        <div class="signal-item">
+          <div class="signal-line danger"></div>
+          <span>30bp (위험)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-header">
+          <div class="info-icon"><i class="fas fa-info-circle"></i></div>
+          <span class="info-title">SOFR란?</span>
+        </div>
+        <p class="info-desc">Secured Overnight Financing Rate. 미국 국채를 담보로 한 익일물 레포 금리로, 달러 시장의 실제 자금 조달 비용을 반영합니다.</p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-header">
+          <div class="info-icon"><i class="fas fa-university"></i></div>
+          <span class="info-title">IORB란?</span>
+        </div>
+        <p class="info-desc">Interest on Reserve Balances. 연준이 은행 지급준비금에 지급하는 금리로, 연준의 목표 금리 하한선 역할을 합니다.</p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-header">
+          <div class="info-icon"><i class="fas fa-chart-line"></i></div>
+          <span class="info-title">스프레드 의미</span>
+        </div>
+        <p class="info-desc">SOFR &gt; IORB이면 시장에 유동성 스트레스가 있음을 의미합니다. 스프레드가 확대될수록 달러 조달 압박이 심화됩니다.</p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-header">
+          <div class="info-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <span class="info-title">시그널 해석</span>
+        </div>
+        <p class="info-desc"><strong>0bp 이하</strong>: 정상 | <strong>0-10bp</strong>: 주의 관찰 | <strong>10-30bp</strong>: 경계 | <strong>30bp+</strong>: 유동성 위기 경고</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration (same as widget)
+    const API_KEY = (window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1');
+    const DIRECT_URL = 'https://api.stlouisfed.org/fred/series/observations';
+    const HOST = window.location.hostname || '';
+    const IS_LOCAL = ['localhost', '127.0.0.1'].includes(HOST) || HOST.includes('127.0.0.1');
+    const USER_PROXY = 'https://fed-proxy.etloveaui.workers.dev/';
+
+    // CORS fallback fetch
+    async function fetchJsonWithCorsFallback(fullUrl) {
+      const proxies = [];
+      if (!IS_LOCAL && USER_PROXY) {
+        const u = USER_PROXY.replace(/\/$/, '');
+        proxies.push(u + '/' + fullUrl);
+      }
+      proxies.push('https://cors.isomorphic-git.org/' + fullUrl);
+      proxies.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(fullUrl));
+
+      const candidates = (!IS_LOCAL && /(github\.io|vercel\.app|netlify\.app)$/.test(HOST))
+        ? [...proxies]
+        : [fullUrl, ...proxies];
+
+      for (const u of candidates) {
+        try {
+          const res = await fetch(u, { cache: 'no-store' });
+          if (res && res.ok) return await res.json();
+        } catch (e) { }
+      }
+      throw new Error('All fetch attempts failed');
+    }
+
+    // Fetch series data
+    async function fetchSeriesData(seriesId, days = 90) {
+      const endDate = new Date().toISOString().split('T')[0];
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const url = `${DIRECT_URL}?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${startDate}&observation_end=${endDate}&sort_order=asc`;
+
+      const data = await fetchJsonWithCorsFallback(url);
+      const obs = Array.isArray(data?.observations) ? data.observations : [];
+
+      return obs
+        .filter(o => o.value !== '.' && !isNaN(parseFloat(o.value)))
+        .map(o => ({
+          date: o.date,
+          value: parseFloat(o.value)
+        }));
+    }
+
+    // Calculate spread data
+    function calculateSpreadData(sofrData, iorbData) {
+      const iorbMap = new Map(iorbData.map(d => [d.date, d.value]));
+      return sofrData
+        .filter(s => iorbMap.has(s.date))
+        .map(s => ({
+          date: s.date,
+          sofr: s.value,
+          iorb: iorbMap.get(s.date),
+          spread: Math.round((s.value - iorbMap.get(s.date)) * 100)
+        }));
+    }
+
+    // Create Chart
+    let spreadChart = null;
+
+    function createSpreadChart(spreadData) {
+      const ctx = document.getElementById('spreadChart').getContext('2d');
+
+      if (spreadChart) spreadChart.destroy();
+
+      const labels = spreadData.map(d => d.date);
+      const values = spreadData.map(d => d.spread);
+
+      const signalLinesPlugin = {
+        id: 'signalLines',
+        afterDraw: (chart) => {
+          const { ctx, chartArea: a, scales: { y } } = chart;
+          if (!a) return;
+
+          // 0bp 기준선 (회색 실선)
+          const y0 = y.getPixelForValue(0);
+          if (y0 >= a.top && y0 <= a.bottom) {
+            ctx.save();
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(a.left, y0);
+            ctx.lineTo(a.right, y0);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // 10bp 주의선 (주황 점선)
+          const y10 = y.getPixelForValue(10);
+          if (y10 >= a.top && y10 <= a.bottom) {
+            ctx.save();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(a.left, y10);
+            ctx.lineTo(a.right, y10);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // 30bp 위험선 (빨강 점선)
+          const y30 = y.getPixelForValue(30);
+          if (y30 >= a.top && y30 <= a.bottom) {
+            ctx.save();
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(a.left, y30);
+            ctx.lineTo(a.right, y30);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      };
+
+      spreadChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'SOFR-IORB Spread (bp)',
+            data: values,
+            borderColor: '#2563eb',
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
+            fill: false,
+            tension: 0,
+            pointRadius: 0,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: '#2563eb',
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+              padding: 10,
+              callbacks: {
+                title: (items) => items[0].label,
+                label: (item) => `Spread: ${item.raw}bp`
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: true,
+              grid: { display: false },
+              ticks: {
+                maxTicksLimit: 8,
+                font: { size: 10 },
+                color: '#94a3b8'
+              }
+            },
+            y: {
+              display: true,
+              grid: { color: '#f1f5f9' },
+              ticks: {
+                font: { size: 10 },
+                color: '#64748b',
+                callback: (value) => value + 'bp'
+              }
+            }
+          }
+        },
+        plugins: [signalLinesPlugin]
+      });
+    }
+
+    // Update UI
+    function updateUI(spreadData) {
+      if (!spreadData || spreadData.length === 0) return;
+
+      const latest = spreadData[spreadData.length - 1];
+      const spread = latest.spread;
+
+      // Values
+      document.getElementById('iorbValue').innerHTML = latest.iorb.toFixed(2) + '<span class="metric-unit">%</span>';
+      document.getElementById('sofrValue').innerHTML = latest.sofr.toFixed(2) + '<span class="metric-unit">%</span>';
+      document.getElementById('spreadValue').innerHTML = spread + '<span class="metric-unit">bp</span>';
+
+      // Status badge update based on spread
+      const statusBadge = document.getElementById('statusBadge');
+      const statusText = document.getElementById('statusText');
+      const spreadEl = document.getElementById('spreadValue');
+
+      // Remove all status classes first
+      spreadEl.classList.remove('positive', 'negative', 'warning');
+
+      if (spread >= 30) {
+        statusBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+        statusBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        statusBadge.style.color = '#f87171';
+        statusBadge.querySelector('.status-dot').style.background = '#f87171';
+        statusText.textContent = '위험';
+        spreadEl.classList.add('negative');
+      } else if (spread >= 10) {
+        statusBadge.style.background = 'rgba(251, 191, 36, 0.15)';
+        statusBadge.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+        statusBadge.style.color = '#fbbf24';
+        statusBadge.querySelector('.status-dot').style.background = '#fbbf24';
+        statusText.textContent = '경계';
+        spreadEl.classList.add('warning');
+      } else if (spread > 0) {
+        statusBadge.style.background = 'rgba(251, 191, 36, 0.15)';
+        statusBadge.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+        statusBadge.style.color = '#fbbf24';
+        statusBadge.querySelector('.status-dot').style.background = '#fbbf24';
+        statusText.textContent = '주의';
+      } else {
+        // Normal (spread <= 0)
+        statusBadge.style.background = 'rgba(34, 197, 94, 0.15)';
+        statusBadge.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+        statusBadge.style.color = '#4ade80';
+        statusBadge.querySelector('.status-dot').style.background = '#4ade80';
+        statusText.textContent = '정상';
+        spreadEl.classList.add('positive');
+      }
+
+      document.getElementById('updateTime').textContent =
+        new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    // Initialize
+    async function initialize() {
+      try {
+        const [sofrData, iorbData] = await Promise.all([
+          fetchSeriesData('SOFR', 90),
+          fetchSeriesData('IORB', 90)
+        ]);
+
+        const spreadData = calculateSpreadData(sofrData, iorbData);
+
+        if (spreadData.length > 0) {
+          createSpreadChart(spreadData);
+          updateUI(spreadData);
+        }
+      } catch (error) {
+        console.error('Detail page init error:', error);
+      }
+    }
+
+    // Navigation
+    function goBack() {
+      try {
+        if (window.top && typeof window.top.loadPage === 'function') {
+          window.top.loadPage('main.html');
+          return;
+        }
+        if (window.parent && typeof window.parent.loadPage === 'function') {
+          window.parent.loadPage('main.html');
+          return;
+        }
+      } catch (e) { }
+      history.back();
+    }
+
+    // Start
+    initialize();
+  </script>
+</body>
+</html>
