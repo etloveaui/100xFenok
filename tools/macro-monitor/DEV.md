@@ -123,6 +123,19 @@ Chart.js 렌더링
 - [x] 위젯-디테일 데이터 공유 패턴
 - [x] **설계 문서**: `CookBook/docs/ARCHITECTURE.md`
 
+### Phase 2.6: Command Center ✅ (2025-11-29)
+- [x] `index.html` Command Center 대시보드 생성
+- [x] Bento Box 레이아웃 (PC 3열, 태블릿 2열, 모바일 1열)
+- [x] 카테고리 탭 필터링 (All/Liquidity/Rates/Sentiment)
+- [x] 6개 위젯 카드 (1 라이브 + 5 Coming Soon)
+- [x] `nav.html` 메뉴 연결
+
+### Phase 2.7: Main Page Compact Hero Banner ✅ (2025-11-29)
+- [x] Coming Soon 카드 2개 제거
+- [x] Liquidity Stress 위젯 1개 중앙 정렬
+- [x] max-width: 600px (모바일/태블릿), 500px (PC)
+- [x] CTA 버튼: "More Macro Indicators (+5 Coming Soon)"
+
 ### Phase 3: Indicator Expansion (FRED)
 - [ ] Treasury Spread (10Y-2Y)
   - widgets/treasury.html
@@ -154,6 +167,8 @@ Chart.js 렌더링
 
 | Date | Change |
 |------|--------|
+| 2025-11-29 | **main.html Compact Hero Banner** (1위젯 + CTA) |
+| 2025-11-29 | **Command Center** index.html 대시보드 생성 |
 | 2025-11-29 | **위젯 시스템 아키텍처 설계** (docs/ARCHITECTURE.md) |
 | 2025-11-29 | 설명 카드 PC 특화 (기본 펼침/버튼 숨김/글씨 +2px) |
 | 2025-11-29 | 하단 설명 카드 3개 구현 (동적 상태/FRED 링크/인라인 확장) |
