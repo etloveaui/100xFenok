@@ -123,11 +123,10 @@
 
     </header>
 
-    <!-- Macro Monitor 카드 그리드 -->
-    <section class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-8">
-
-      <!-- Liquidity Stress Widget (A-3 신호등 스타일) -->
-      <div class="rounded-2xl shadow-lg overflow-hidden card-hover">
+    <!-- Macro Monitor Compact Hero Banner -->
+    <section class="flex flex-col items-center mb-8">
+      <!-- 위젯 컨테이너: 중앙 정렬 + max-width 제한 -->
+      <div class="w-full max-w-[600px] lg:max-w-[500px] rounded-2xl shadow-lg overflow-hidden card-hover">
         <iframe
           src="./tools/macro-monitor/widgets/liquidity-stress.html"
           style="width: 100%; height: 280px; border: none;"
@@ -137,32 +136,13 @@
         </iframe>
       </div>
 
-      <!-- Coming Soon 카드 1 - Treasury Rates (클릭 시 Command Center로 이동) -->
-      <a href="index.html?path=tools/macro-monitor/index.html" class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl shadow-lg flex flex-col card-hover cursor-pointer" style="min-height: 280px;">
-        <div class="flex-1 flex flex-col items-center justify-center p-6">
-          <div class="w-16 h-16 rounded-full bg-white/60 backdrop-blur flex items-center justify-center mb-4 shadow-sm">
-            <i class="fas fa-chart-line text-2xl text-indigo-400"></i>
-          </div>
-          <h3 class="text-lg font-bold text-slate-800 mb-1 orbitron">Treasury Spread</h3>
-          <p class="text-xs text-slate-500 text-center mb-4">10Y-2Y Yield Curve</p>
-          <span class="px-4 py-1.5 bg-white/70 backdrop-blur text-slate-600 rounded-full text-xs font-medium shadow-sm">Coming Soon</span>
-        </div>
-        <div class="h-1 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
+      <!-- CTA 버튼: Command Center로 이동 -->
+      <a href="index.html?path=tools/macro-monitor/index.html"
+        class="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-full shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200">
+        <span>More Macro Indicators</span>
+        <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">+5 Coming Soon</span>
+        <i class="fas fa-arrow-right"></i>
       </a>
-
-      <!-- Coming Soon 카드 2 - Volatility Index (클릭 시 Command Center로 이동) -->
-      <a href="index.html?path=tools/macro-monitor/index.html" class="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 rounded-2xl shadow-lg flex flex-col card-hover cursor-pointer" style="min-height: 280px;">
-        <div class="flex-1 flex flex-col items-center justify-center p-6">
-          <div class="w-16 h-16 rounded-full bg-white/60 backdrop-blur flex items-center justify-center mb-4 shadow-sm">
-            <i class="fas fa-bolt text-2xl text-teal-400"></i>
-          </div>
-          <h3 class="text-lg font-bold text-slate-800 mb-1 orbitron">VIX Index</h3>
-          <p class="text-xs text-slate-500 text-center mb-4">Market Fear Gauge</p>
-          <span class="px-4 py-1.5 bg-white/70 backdrop-blur text-slate-600 rounded-full text-xs font-medium shadow-sm">Coming Soon</span>
-        </div>
-        <div class="h-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400"></div>
-      </a>
-
     </section>
 
     <section class="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-8">
