@@ -46,12 +46,18 @@ tools/macro-monitor/
 - **상태**: 스프레드에 따라 정상/주의/경계/위험
 - **클릭**: details/sofr-iorb.html로 이동
 
-### Detail (details/sofr-iorb.html)
-- **디자인**: 밝은 테마 풀 페이지
-- **히어로**: SOFR / Spread (크게) / IORB
-- **차트**: 90일 데이터, 직선 그래프 (tension: 0)
-- **시그널 라인**: 0bp (기준), 10bp (주의), 30bp (위험)
-- **Info Grid**: 지표 설명 카드 4개
+### Detail (details/sofr-iorb4.html) ⭐ 최신 완성본
+- **디자인**: 밝은 테마 풀 페이지, 반응형 하이브리드
+- **반응형 레이아웃**:
+  - PC (≥900px): 듀얼 축 차트
+  - 태블릿 (600-899px): 탭 전환 + 버튼 기간
+  - 모바일 (<600px): 탭 전환 + 스와이프 기간
+- **차트 개선**:
+  - Gradient Fill, Glow Effect, Enhanced Tooltip
+  - Threshold Backgrounds, Point Hover
+- **기간 옵션**: 1M/3M/6M/1Y/3Y/MAX (기본: 1Y)
+- **임계선**: 좌측 배치, 반투명 배경
+- **Info Grid**: 지표 설명 카드 (내용 정리 예정)
 
 ---
 
@@ -102,10 +108,12 @@ Chart.js 렌더링
 - [x] 폴더 구조 정리 (widgets/, details/)
 - [x] detail 밝은 테마 적용
 
-### Phase 2: Graph Enhancement
-- [ ] Chart.js 설정 최적화
-- [ ] 기간별 데이터 표시 (1M/3M/6M)
-- [ ] 스프레드 시각화 개선
+### Phase 2: Graph Enhancement ✅ (2025-11-29)
+- [x] Chart.js 설정 최적화 (5가지 개선)
+- [x] 기간별 데이터 표시 (1M/3M/6M/1Y/3Y/MAX)
+- [x] 스프레드 시각화 개선 (Gradient, Glow, Tooltip)
+- [x] 반응형 하이브리드 레이아웃
+- [x] 임계선 라벨 좌측 + 반투명
 
 ### Phase 3: Indicator Expansion (FRED)
 - [ ] Treasury Spread (10Y-2Y)
@@ -138,6 +146,10 @@ Chart.js 렌더링
 
 | Date | Change |
 |------|--------|
+| 2025-11-29 | 반응형 하이브리드 레이아웃 (PC/태블릿/모바일) |
+| 2025-11-29 | 차트 개선 5가지 (Gradient, Glow, Tooltip, Background, Hover) |
+| 2025-11-29 | 기간 옵션 확장 (1Y 기본, 3Y/MAX 추가) |
+| 2025-11-29 | 임계선 라벨 좌측 + 반투명 |
 | 2025-11-28 | 폴더 구조 정리 (widgets/, details/), fed/ 삭제 |
 | 2025-11-28 | detail 밝은 테마 적용 |
 | 2025-11-27 | 위젯 카드형 재설계, 문서 정리 |
