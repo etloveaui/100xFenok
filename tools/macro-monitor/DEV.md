@@ -114,6 +114,14 @@ Chart.js 렌더링
 - [x] 스프레드 시각화 개선 (Gradient, Glow, Tooltip)
 - [x] 반응형 하이브리드 레이아웃
 - [x] 임계선 라벨 좌측 + 반투명
+- [x] 하단 설명 카드 3개 (현재 상태/지표 설명/중요성)
+
+### Phase 2.5: Widget System Architecture ✅ (2025-11-29)
+- [x] 공통 캐싱/API 레이어 설계
+- [x] 확장 가능한 위젯 구조 (10~30개 대응)
+- [x] 매크로 모니터 메인 페이지 구조
+- [x] 위젯-디테일 데이터 공유 패턴
+- [x] **설계 문서**: `CookBook/docs/ARCHITECTURE.md`
 
 ### Phase 3: Indicator Expansion (FRED)
 - [ ] Treasury Spread (10Y-2Y)
@@ -146,6 +154,9 @@ Chart.js 렌더링
 
 | Date | Change |
 |------|--------|
+| 2025-11-29 | **위젯 시스템 아키텍처 설계** (docs/ARCHITECTURE.md) |
+| 2025-11-29 | 설명 카드 PC 특화 (기본 펼침/버튼 숨김/글씨 +2px) |
+| 2025-11-29 | 하단 설명 카드 3개 구현 (동적 상태/FRED 링크/인라인 확장) |
 | 2025-11-29 | 반응형 하이브리드 레이아웃 (PC/태블릿/모바일) |
 | 2025-11-29 | 차트 개선 5가지 (Gradient, Glow, Tooltip, Background, Hover) |
 | 2025-11-29 | 기간 옵션 확장 (1Y 기본, 3Y/MAX 추가) |

@@ -1,0 +1,425 @@
+<!-- Macro Monitor Widget - Liquidity Stress (A-3 신호등 스타일) -->
+<!-- 캐시 기반: API 호출 없음, Detail에서 저장한 localStorage 데이터 읽기 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+
+<!-- DataManager 인라인 정의 (iframe 호환) -->
+<script>
+class MacroDataManager {
+  constructor() {
+    this.prefix = 'macro_';
+    this.ttl = 30 * 60 * 1000;
+  }
+  saveWidgetData(widgetId, data) {
+    try {
+      localStorage.setItem(this.prefix + widgetId, JSON.stringify({
+        data, timestamp: Date.now(), expires: Date.now() + this.ttl
+      }));
+      return true;
+    } catch (e) { return false; }
+  }
+  getWidgetData(widgetId) {
+    try {
+      const cached = localStorage.getItem(this.prefix + widgetId);
+      if (!cached) return null;
+      const { data, expires } = JSON.parse(cached);
+      return Date.now() > expires ? null : data;
+    } catch (e) { return null; }
+  }
+}
+const DataManager = new MacroDataManager();
+</script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: transparent; }
+
+  .card-widget {
+    height: 100%;
+    min-height: 260px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    padding: 20px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-widget:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+  }
+
+  /* Header */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  /* 종합 상태 - 신호등 */
+  .overall-status {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 0;
+  }
+
+  .status-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+
+  .status-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* 상태별 색상 */
+  .status-normal .status-label { color: #16a34a; }
+  .status-caution .status-label { color: #ca8a04; }
+  .status-high_stress .status-label, .status-warning .status-label { color: #ea580c; }
+  .status-critical .status-label, .status-danger .status-label { color: #dc2626; }
+
+  /* Tier 카드 */
+  .tier-row {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+  }
+
+  .tier-card {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .tier-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .tier-emoji {
+    font-size: 14px;
+  }
+
+  .tier-status-text {
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Tier 상태 색상 */
+  .tier-normal .tier-status-text { color: #16a34a; }
+  .tier-caution .tier-status-text { color: #ca8a04; }
+  .tier-warning .tier-status-text { color: #ea580c; }
+  .tier-danger .tier-status-text { color: #dc2626; }
+
+  .tier-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+  }
+
+  .tier-unit {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .tier-label {
+    font-size: 9px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+
+  /* Loading */
+  .loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    z-index: 10;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-text {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 캐시 없음 상태 */
+  .no-cache {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+  }
+
+  .no-cache-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .no-cache-text {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .no-cache-hint {
+    font-size: 10px;
+    margin-top: 4px;
+    color: #cbd5e1;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .card-widget { padding: 16px; min-height: 240px; }
+    .card-title { font-size: 12px; }
+    .status-icon { font-size: 40px; }
+    .status-label { font-size: 16px; }
+    .tier-value { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card-widget" onclick="openDetail()" style="position: relative;">
+  <div class="loading" id="loader">
+    <div class="spinner"></div>
+    <div class="loading-text">데이터 로딩 중...</div>
+  </div>
+
+  <!-- Header -->
+  <div class="card-header">
+    <div class="card-title">Liquidity Stress</div>
+  </div>
+
+  <!-- 메인 컨텐츠 (캐시 있을 때) -->
+  <div id="mainContent" style="display: none; flex: 1; display: flex; flex-direction: column;">
+    <!-- 종합 상태 신호등 -->
+    <div class="overall-status status-normal" id="overallStatus">
+      <div class="status-icon" id="statusIcon">🟢</div>
+      <div class="status-label" id="statusLabel">Normal</div>
+    </div>
+
+    <!-- Tier 카드들 -->
+    <div class="tier-row">
+      <!-- Tier 1: Spread -->
+      <div class="tier-card tier-normal" id="tier1Card">
+        <div class="tier-status">
+          <span class="tier-emoji" id="tier1Emoji">🟢</span>
+          <span class="tier-status-text" id="tier1StatusText">정상</span>
+        </div>
+        <div class="tier-value">
+          <span id="tier1Value">+15</span>
+          <span class="tier-unit" id="tier1Unit">bp</span>
+        </div>
+        <div class="tier-label">Spread</div>
+      </div>
+
+      <!-- Tier 2: RB/GDP -->
+      <div class="tier-card tier-normal" id="tier2Card">
+        <div class="tier-status">
+          <span class="tier-emoji" id="tier2Emoji">🟢</span>
+          <span class="tier-status-text" id="tier2StatusText">정상</span>
+        </div>
+        <div class="tier-value">
+          <span id="tier2Value">9.5</span>
+          <span class="tier-unit" id="tier2Unit">%</span>
+        </div>
+        <div class="tier-label">RB/GDP</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 캐시 없음 상태 -->
+  <div class="no-cache" id="noCache" style="display: none;">
+    <div class="no-cache-icon">📊</div>
+    <div class="no-cache-text">데이터 없음</div>
+    <div class="no-cache-hint">클릭하여 상세 페이지에서 로드</div>
+  </div>
+</div>
+
+<script>
+  const WIDGET_ID = 'liquidity-stress';
+  const DETAIL_PATH = 'tools/macro-monitor/details/liquidity-stress.html';
+
+  // 상태별 이모지
+  const STATUS_EMOJI = {
+    normal: '🟢',
+    caution: '🟡',
+    warning: '🟠',
+    high_stress: '🟠',
+    danger: '🔴',
+    critical: '🔴'
+  };
+
+  function renderWidget(data) {
+    const mainContent = document.getElementById('mainContent');
+    const noCache = document.getElementById('noCache');
+
+    if (!data) {
+      mainContent.style.display = 'none';
+      noCache.style.display = 'flex';
+      return;
+    }
+
+    mainContent.style.display = 'flex';
+    noCache.style.display = 'none';
+
+    // 종합 상태
+    const overallStatus = document.getElementById('overallStatus');
+    overallStatus.className = 'overall-status status-' + data.overallStatus;
+    document.getElementById('statusIcon').textContent = STATUS_EMOJI[data.overallStatus] || '🟢';
+    document.getElementById('statusLabel').textContent = data.overallLabel || 'Normal';
+
+    // Tier 1
+    const tier1 = data.tier1;
+    if (tier1) {
+      document.getElementById('tier1Card').className = 'tier-card tier-' + tier1.status;
+      document.getElementById('tier1Emoji').textContent = STATUS_EMOJI[tier1.status] || '🟢';
+      document.getElementById('tier1StatusText').textContent = tier1.label || '정상';
+      document.getElementById('tier1Value').textContent = (tier1.value >= 0 ? '+' : '') + tier1.value;
+      document.getElementById('tier1Unit').textContent = tier1.unit || 'bp';
+    }
+
+    // Tier 2
+    const tier2 = data.tier2;
+    if (tier2) {
+      document.getElementById('tier2Card').className = 'tier-card tier-' + tier2.status;
+      document.getElementById('tier2Emoji').textContent = STATUS_EMOJI[tier2.status] || '🟢';
+      document.getElementById('tier2StatusText').textContent = tier2.label || '정상';
+      document.getElementById('tier2Value').textContent = tier2.value;
+      document.getElementById('tier2Unit').textContent = tier2.unit || '%';
+    }
+  }
+
+  async function init() {
+    const loader = document.getElementById('loader');
+
+    try {
+      // 캐시에서 데이터 읽기
+      let data = null;
+      if (typeof DataManager !== 'undefined') {
+        data = DataManager.getWidgetData(WIDGET_ID);
+      }
+
+      if (data) {
+        renderWidget(data);
+      } else {
+        // 캐시 없음 - hidden iframe으로 Detail 로드 시도
+        await loadDetailInBackground();
+
+        // 다시 캐시 확인
+        if (typeof DataManager !== 'undefined') {
+          data = DataManager.getWidgetData(WIDGET_ID);
+        }
+        renderWidget(data);
+      }
+    } catch (e) {
+      console.error('[Widget] Init error:', e);
+      renderWidget(null);
+    } finally {
+      loader.style.display = 'none';
+    }
+  }
+
+  // Detail 페이지를 백그라운드에서 로드하여 캐시 생성
+  function loadDetailInBackground() {
+    return new Promise((resolve) => {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = '../details/liquidity-stress.html';
+
+      const timeout = setTimeout(() => {
+        iframe.remove();
+        resolve();
+      }, 5000); // 5초 타임아웃
+
+      iframe.onload = () => {
+        // Detail이 로드되면 캐시가 저장됨
+        setTimeout(() => {
+          clearTimeout(timeout);
+          iframe.remove();
+          resolve();
+        }, 1500); // 1.5초 대기 (API 호출 완료 대기)
+      };
+
+      iframe.onerror = () => {
+        clearTimeout(timeout);
+        iframe.remove();
+        resolve();
+      };
+
+      document.body.appendChild(iframe);
+    });
+  }
+
+  // 캐시 업데이트 이벤트 리스닝
+  window.addEventListener('macro-data-updated', (e) => {
+    if (e.detail.widgetId === WIDGET_ID) {
+      renderWidget(e.detail.data);
+    }
+  });
+
+  // 상세 페이지 열기
+  function openDetail() {
+    try {
+      if (window.top?.loadPage) { window.top.loadPage(DETAIL_PATH); return; }
+      if (window.parent?.loadPage) { window.parent.loadPage(DETAIL_PATH); return; }
+    } catch(e) {}
+    const base = window.top?.baseHref || '/';
+    (window.top||window).location.assign(`${base}index.html?path=${DETAIL_PATH}`);
+  }
+
+  // 초기화
+  init();
+</script>
+</body>
+</html>

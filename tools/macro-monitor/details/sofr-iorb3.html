@@ -160,14 +160,199 @@
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; font-weight: 500; }
     .legend-color { width: 12px; height: 12px; border-radius: 3px; }
 
-    .risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
-    .risk-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; transition: transform 0.2s; }
-    .risk-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-    .rc-icon { font-size: 16px; margin-bottom: 12px; color: #64748b; }
-    .rc-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; }
-    .rc-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
-    .rc-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
-    .text-red { color: #ef4444; } .text-orange { color: #f59e0b; } .bg-red-light { background: #fef2f2; border-color: #fecaca; }
+    /* ===== 설명 카드 섹션 ===== */
+    .info-cards-section {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .info-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      border-left: 4px solid #10b981;
+      transition: all 0.2s ease;
+    }
+    .info-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .info-card.normal { border-left-color: #10b981; }
+    .info-card.caution { border-left-color: #f59e0b; }
+    .info-card.warning { border-left-color: #f97316; }
+    .info-card.danger { border-left-color: #ef4444; }
+
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .info-card-icon {
+      font-size: 18px;
+    }
+    .info-card-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .info-expand-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: #f1f5f9;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+    .info-expand-btn:hover {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .info-expand-btn i {
+      transition: transform 0.3s ease;
+    }
+    .info-card.expanded .info-expand-btn i {
+      transform: rotate(180deg);
+    }
+
+    .info-card-summary {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+    }
+    .info-value {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      color: #2563eb;
+    }
+
+    .info-card-detail {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, margin-top 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .info-card.expanded .info-card-detail {
+      max-height: 500px;
+      margin-top: 16px;
+      opacity: 1;
+    }
+
+    .info-detail-section {
+      padding: 12px 0;
+      border-top: 1px solid #f1f5f9;
+    }
+    .info-detail-section:first-child {
+      padding-top: 0;
+      border-top: none;
+    }
+    .info-detail-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .info-detail-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .info-detail-list li {
+      font-size: 12px;
+      color: #475569;
+      padding: 4px 0;
+      line-height: 1.4;
+    }
+    .info-detail-list.numbered {
+      list-style: decimal;
+      padding-left: 16px;
+    }
+    .info-detail-text {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .status-legend li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-dot-mini {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .status-dot-mini.normal { background: #10b981; }
+    .status-dot-mini.caution { background: #f59e0b; }
+    .status-dot-mini.warning { background: #f97316; }
+    .status-dot-mini.danger { background: #ef4444; }
+
+    .info-links {
+      display: flex;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+      margin-top: 12px;
+    }
+    .info-links a {
+      font-size: 11px;
+      color: #2563eb;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .info-links a:hover {
+      text-decoration: underline;
+    }
+
+    /* 설명 카드 반응형 - 모바일/태블릿 */
+    @media (max-width: 899px) {
+      .info-cards-section {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 설명 카드 반응형 - PC (≥900px): 기본 펼침 + 글씨 크기 증가 */
+    @media (min-width: 900px) {
+      .info-card-detail {
+        max-height: 500px;
+        opacity: 1;
+        margin-top: 16px;
+      }
+      .info-expand-btn {
+        display: none;
+      }
+      .info-card-title {
+        font-size: 15px;
+      }
+      .info-card-summary {
+        font-size: 15px;
+      }
+      .info-detail-title {
+        font-size: 12px;
+      }
+      .info-detail-list li {
+        font-size: 14px;
+      }
+      .info-detail-text {
+        font-size: 14px;
+      }
+      .info-links a {
+        font-size: 13px;
+      }
+    }
 
     /* ===== 듀얼 게이지 (안C-1: 세그먼트형) ===== */
     .dual-gauge-section {
@@ -490,35 +675,102 @@
     </div>
   </section>
 
-  <div class="risk-grid">
-    <div class="risk-card bg-red-light">
-      <div class="rc-icon text-red"><i class="fas fa-skull-crossbones"></i></div>
-      <div class="rc-title text-red">LCLoR (Crash Line)</div>
-      <div class="rc-val text-red" id="lclorDisplay">--</div>
-      <div class="rc-desc"><strong>최저 적정 지급준비금</strong>.<br>GDP의 10% (약 $2.9T) 붕괴 시 위험.</div>
+  <!-- ===== 설명 카드 섹션 (3개) ===== -->
+  <div class="info-cards-section">
+    <!-- 카드 1: 현재 상태 (동적) -->
+    <div class="info-card" id="statusCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">📊</div>
+        <div class="info-card-title">현재 상태</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('statusCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary" id="statusSummary">
+        데이터 로딩 중...
+      </div>
+      <div class="info-card-detail" id="statusDetail">
+        <div class="info-detail-section">
+          <div class="info-detail-title">현재 수치</div>
+          <ul class="info-detail-list">
+            <li>스프레드: <strong id="detailSpread">--</strong>bp</li>
+            <li>지준/GDP 비율: <strong id="detailRbGdp">--</strong>%</li>
+          </ul>
+        </div>
+        <div class="info-detail-section">
+          <div class="info-detail-title">위험 수준 기준</div>
+          <ul class="info-detail-list status-legend">
+            <li><span class="status-dot-mini normal"></span> 정상: &lt;10bp</li>
+            <li><span class="status-dot-mini caution"></span> 주의: 10-20bp</li>
+            <li><span class="status-dot-mini warning"></span> 경계: 20-30bp</li>
+            <li><span class="status-dot-mini danger"></span> 위험: &gt;30bp</li>
+          </ul>
+        </div>
+        <div class="info-links">
+          <a href="https://fred.stlouisfed.org/series/SOFR" target="_blank" rel="noopener">📊 SOFR 데이터 (FRED)</a>
+          <a href="https://fred.stlouisfed.org/series/IORB" target="_blank" rel="noopener">📊 IORB 데이터 (FRED)</a>
+        </div>
+      </div>
     </div>
-    <div class="risk-card">
-      <div class="rc-icon text-orange"><i class="fas fa-exclamation-triangle"></i></div>
-      <div class="rc-title text-orange">Stress Threshold</div>
-      <div class="rc-val text-orange">Spread > 30bp</div>
-      <div class="rc-desc">금리 발작 구간.<br>시스템 리스크 발생 신호.</div>
-    </div>
-    <div class="risk-card">
-      <div class="rc-icon"><i class="fas fa-history"></i></div>
-      <div class="rc-title">Repo Crisis 2019</div>
-      <div class="rc-val">275bp</div>
-      <div class="rc-desc">통제 불능 상태의 역사적 고점.<br>현재 상황과 비교용.</div>
-    </div>
-  </div>
 
-  <div class="concept-grid">
-    <div class="concept-card">
-      <div class="cc-head"><div class="cc-icon"><i class="fas fa-wave-square"></i></div><div class="cc-title">SOFR (시장 금리)</div></div>
-      <div class="cc-body">미국 국채 담보 대출 금리. <strong>Reserves(연료)</strong>가 LCLoR(바닥)을 치면 급등합니다.</div>
+    <!-- 카드 2: 이 지표가 뭔가요? -->
+    <div class="info-card" id="whatCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">💡</div>
+        <div class="info-card-title">이 지표가 뭔가요?</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('whatCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary">
+        단기 자금시장의 건강도를 보여주는 체온계입니다
+      </div>
+      <div class="info-card-detail" id="whatDetail">
+        <div class="info-detail-section">
+          <ul class="info-detail-list">
+            <li><strong>SOFR</strong> (담보부 익일물 금리): 국채를 담보로 하룻밤 빌리는 금리</li>
+            <li><strong>IORB</strong> (지준 이자율): 연준이 은행 지준에 주는 이자</li>
+            <li><strong>스프레드</strong> = SOFR - IORB</li>
+          </ul>
+        </div>
+        <div class="info-detail-section">
+          <p class="info-detail-text">
+            정상 상황에서 SOFR는 IORB보다 약간 낮습니다(음수 스프레드).<br>
+            단기 자금시장에 문제가 생기면 SOFR가 급등하며 스프레드가 양수로 전환됩니다.
+          </p>
+        </div>
+      </div>
     </div>
-    <div class="concept-card">
-      <div class="cc-head"><div class="cc-icon"><i class="fas fa-landmark"></i></div><div class="cc-title">IORB (정책 금리)</div></div>
-      <div class="cc-body">은행이 연준에 돈을 맡길 때 받는 이자. 금리의 '바닥' 역할.</div>
+
+    <!-- 카드 3: 왜 중요한가요? -->
+    <div class="info-card" id="whyCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">🎯</div>
+        <div class="info-card-title">왜 중요한가요?</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('whyCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary">
+        연준 정책 전환 시점을 가장 먼저 알려주는 신호등입니다
+      </div>
+      <div class="info-card-detail" id="whyDetail">
+        <div class="info-detail-section">
+          <div class="info-detail-title">핵심 메커니즘</div>
+          <ol class="info-detail-list numbered">
+            <li>단기 시장에 레버리지 집중</li>
+            <li>지준 고갈 시 스프레드 급등</li>
+            <li>연준이 완화정책 전환 압박받음</li>
+          </ol>
+        </div>
+        <div class="info-detail-section">
+          <div class="info-detail-title">역사적 사례</div>
+          <ul class="info-detail-list">
+            <li><strong>2019년 9월</strong>: 스프레드 급등 → 연준 긴급 개입</li>
+            <li><strong>2020년 3월</strong>: 코로나 충격 → 무제한 QE 실시</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1031,6 +1283,9 @@
     updateSpreadGauge(spread);
     updateRbGdpGauge(rbGdpRatio);
 
+    // 설명 카드 업데이트
+    updateInfoCards(spread, rbGdpRatio);
+
     // 헤더 상태 뱃지 (더 심각한 상태 표시)
     const badge = document.getElementById('statusBadge');
     const text = document.getElementById('statusText');
@@ -1085,6 +1340,41 @@
     btn.classList.add('active');
     init(days);
   };
+
+  // ===== 설명 카드 토글 함수 =====
+  window.toggleInfoCard = function(cardId) {
+    const card = document.getElementById(cardId);
+    card.classList.toggle('expanded');
+  };
+
+  // ===== 설명 카드 동적 업데이트 =====
+  function updateInfoCards(spread, rbGdpRatio) {
+    // 상태 판정
+    let statusText, statusClass;
+    if (spread < 10) {
+      statusText = '단기 자금시장은 안정적입니다';
+      statusClass = 'normal';
+    } else if (spread < 20) {
+      statusText = '⚠️ 단기 금리에 상승 압력이 감지됩니다';
+      statusClass = 'caution';
+    } else if (spread < 30) {
+      statusText = '⚠️ 단기 시장 경색 징후가 나타나고 있습니다';
+      statusClass = 'warning';
+    } else {
+      statusText = '🚨 단기 자금시장에 심각한 문제가 발생했습니다';
+      statusClass = 'danger';
+    }
+
+    // 카드 1: 상태 카드 업데이트
+    const statusCard = document.getElementById('statusCard');
+    statusCard.className = 'info-card ' + statusClass;
+
+    document.getElementById('statusSummary').innerHTML = statusText;
+
+    // 확장 영역 상세 수치
+    document.getElementById('detailSpread').textContent = spread.toFixed(1);
+    document.getElementById('detailRbGdp').textContent = rbGdpRatio.toFixed(1);
+  }
 
   // 초기화
   init(365);  // 기본값: 1Y
