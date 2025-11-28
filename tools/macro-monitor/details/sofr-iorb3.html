@@ -1,0 +1,428 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquidity Crisis Monitor | 100xFenok</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex; justify-content: center;
+    }
+    .container { width: 100%; max-width: 1000px; padding: 32px 20px; }
+    
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; color: #64748b; cursor: pointer; transition: all 0.2s ease; }
+    .back-btn:hover { background: #f1f5f9; color: #0f172a; transform: translateY(-1px); }
+    .title-group h1 { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .title-group p { font-size: 13px; color: #64748b; font-weight: 500; }
+    
+    .header-right { text-align: right; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .status-dot { width: 8px; height: 8px; background: #166534; border-radius: 50%; animation: pulse 2s infinite; }
+    .update-time { display: block; margin-top: 6px; font-family: 'Orbitron', sans-serif; font-size: 11px; color: #94a3b8; }
+
+    .dashboard-card { background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); padding: 32px; margin-bottom: 24px; }
+    
+    .metrics-row { display: flex; justify-content: space-around; align-items: center; padding-bottom: 32px; border-bottom: 1px solid #f1f5f9; margin-bottom: 24px; }
+    .metric-item { text-align: center; }
+    .metric-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .metric-val { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 700; color: #334155; }
+    .metric-val.main { font-size: 42px; background: linear-gradient(135deg, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .metric-unit { font-size: 12px; color: #94a3b8; margin-left: 2px; }
+
+    .chart-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .chart-title { font-size: 14px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 8px; }
+    .period-selector { display: flex; gap: 4px; background: #f8fafc; padding: 4px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .p-btn { border: none; background: none; padding: 6px 12px; font-size: 11px; font-weight: 600; color: #64748b; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+    .p-btn:hover { background: #fff; color: #0f172a; }
+    .p-btn.active { background: #ffffff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    
+    .chart-wrapper { position: relative; height: 340px; width: 100%; }
+    
+    .custom-legend { display: flex; justify-content: center; gap: 24px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; font-weight: 500; }
+    .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+
+    .risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+    .risk-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; transition: transform 0.2s; }
+    .risk-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+    .rc-icon { font-size: 16px; margin-bottom: 12px; color: #64748b; }
+    .rc-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; }
+    .rc-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+    .rc-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
+    .text-red { color: #ef4444; } .text-orange { color: #f59e0b; } .bg-red-light { background: #fef2f2; border-color: #fecaca; }
+
+    .concept-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .concept-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; }
+    .cc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .cc-icon { width: 32px; height: 32px; background: #eff6ff; color: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .cc-title { font-size: 13px; font-weight: 700; color: #1e293b; }
+    .cc-body { font-size: 12px; color: #64748b; line-height: 1.5; }
+
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .header-right { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+      .metrics-row { flex-direction: column; gap: 24px; }
+      .chart-controls { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .period-selector { width: 100%; justify-content: space-between; }
+      .p-btn { flex: 1; text-align: center; }
+      .risk-grid, .concept-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+      <div class="title-group">
+        <h1>Liquidity Monitor</h1>
+        <p>System Seizure Risk (Reserves vs LCLoR)</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-badge" id="statusBadge"><span class="status-dot"></span> <span id="statusText">System Normal</span></div>
+      <span class="update-time" id="updateTime">Last Update: --:--</span>
+    </div>
+  </header>
+
+  <section class="dashboard-card">
+    <div class="metrics-row">
+      <div class="metric-item">
+        <div class="metric-label">Market Rate (SOFR)</div>
+        <div class="metric-val" id="sofrVal">--<span class="metric-unit">%</span></div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">Stress Level (Spread)</div>
+        <div class="metric-val main" id="spreadVal">--<span class="metric-unit">bp</span></div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">Reserves (Fuel)</div>
+        <div class="metric-val" id="resVal">--<span class="metric-unit">T</span></div>
+      </div>
+    </div>
+
+    <div class="chart-controls">
+      <div class="chart-title"><i class="fas fa-chart-line"></i> Risk Convergence (Spread vs Reserves)</div>
+      <div class="period-selector">
+        <button class="p-btn" onclick="updatePeriod(30, this)">1M</button>
+        <button class="p-btn active" onclick="updatePeriod(90, this)">3M</button>
+        <button class="p-btn" onclick="updatePeriod(180, this)">6M</button>
+        <button class="p-btn" onclick="updatePeriod(365, this)">1Y</button>
+        <button class="p-btn" onclick="updatePeriod(1095, this)">Max</button>
+      </div>
+    </div>
+
+    <div class="chart-wrapper">
+      <canvas id="liquidityChart"></canvas>
+    </div>
+
+    <div class="custom-legend">
+      <div class="legend-item"><div class="legend-color" style="background: #2563eb;"></div><span>Spread (Left: 경보)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981;"></div><span>Reserves (Right: 보유 유동성)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #ef4444; height: 2px;"></div><span>LCLoR (Right: 폭발 임계점)</span></div>
+    </div>
+  </section>
+
+  <div class="risk-grid">
+    <div class="risk-card bg-red-light">
+      <div class="rc-icon text-red"><i class="fas fa-skull-crossbones"></i></div>
+      <div class="rc-title text-red">LCLoR (Crash Line)</div>
+      <div class="rc-val text-red" id="lclorDisplay">--</div>
+      <div class="rc-desc"><strong>최저 적정 지급준비금</strong>.<br>GDP의 10% (약 $2.9T) 붕괴 시 위험.</div>
+    </div>
+    <div class="risk-card">
+      <div class="rc-icon text-orange"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="rc-title text-orange">Stress Threshold</div>
+      <div class="rc-val text-orange">Spread > 30bp</div>
+      <div class="rc-desc">금리 발작 구간.<br>시스템 리스크 발생 신호.</div>
+    </div>
+    <div class="risk-card">
+      <div class="rc-icon"><i class="fas fa-history"></i></div>
+      <div class="rc-title">Repo Crisis 2019</div>
+      <div class="rc-val">275bp</div>
+      <div class="rc-desc">통제 불능 상태의 역사적 고점.<br>현재 상황과 비교용.</div>
+    </div>
+  </div>
+
+  <div class="concept-grid">
+    <div class="concept-card">
+      <div class="cc-head"><div class="cc-icon"><i class="fas fa-wave-square"></i></div><div class="cc-title">SOFR (시장 금리)</div></div>
+      <div class="cc-body">미국 국채 담보 대출 금리. <strong>Reserves(연료)</strong>가 LCLoR(바닥)을 치면 급등합니다.</div>
+    </div>
+    <div class="concept-card">
+      <div class="cc-head"><div class="cc-icon"><i class="fas fa-landmark"></i></div><div class="cc-title">IORB (정책 금리)</div></div>
+      <div class="cc-body">은행이 연준에 돈을 맡길 때 받는 이자. 금리의 '바닥' 역할.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CONFIG = {
+    apiKey: (window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1'),
+    proxy: 'https://fed-proxy.etloveaui.workers.dev/',
+    colors: { spread: '#2563eb', reservesFill: 'rgba(16, 185, 129, 0.15)', reservesLine: '#10b981', lclor: '#ef4444', grid: '#f1f5f9' }
+  };
+
+  async function fetchData(url) {
+    const candidates = [url, CONFIG.proxy + (url.startsWith('http') ? url : ''), 'https://cors.isomorphic-git.org/' + url];
+    for (const u of candidates) {
+      try { const res = await fetch(u); if (res.ok) return await res.json(); } catch (e) {}
+    }
+    return null;
+  }
+
+  async function getSeries(seriesId, days) {
+    const lookback = seriesId === 'GDP' ? 1095 : days;
+    const end = new Date().toISOString().split('T')[0];
+    const start = new Date(Date.now() - lookback * 86400000).toISOString().split('T')[0];
+    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+    
+    const json = await fetchData(url);
+    if (!json || !json.observations) return [];
+    return json.observations.filter(o => o.value !== '.').map(o => ({ date: o.date, val: parseFloat(o.value) }));
+  }
+
+  // --- 3. DATA PROCESSING (High-Precision Logic) ---
+  // ★★★ 핵심 로직 수정: 단위 변환 (Billions -> Trillions) ★★★
+  // ★★★ 핵심 수정: mergeData 함수 (Billions -> Trillions 변환 적용) ★★★
+  function mergeData(sofr, iorb, reserves, gdp) {
+    // 1. 데이터 매핑
+    const iorbMap = new Map(iorb.map(d => [d.date, d.val]));
+    const resMap = new Map(reserves.map(d => [d.date, d.val]));
+    const gdpMap = new Map(gdp.map(d => [d.date, d.val]));
+
+    // 2. 초기값 설정 (데이터가 없을 경우를 대비한 기본값: 단위 10억 달러)
+    // 예: 3200 = 3.2조 달러
+    let lastRes = reserves.length > 0 ? reserves[0].val : 3200; 
+    let lastGdp = gdp.length > 0 ? gdp[0].val : 28000;          
+
+    const timeline = sofr.map(s => {
+      const d = s.date;
+      
+      // 3. 최신 데이터 갱신 (Forward Fill)
+      if (resMap.has(d)) lastRes = resMap.get(d);
+      if (gdpMap.has(d)) lastGdp = gdpMap.get(d);
+
+      if (iorbMap.get(d) === undefined) return null;
+
+      // ★★★ [단위 변환 핵심] ★★★ 
+      // 원본 데이터(Billions)를 1000으로 나누어 Trillions(조 달러)로 만듦
+      // 예: 3200 -> 3.2
+      const reservesTrillion = lastRes / 1000;
+      
+      // LCLoR = GDP의 10% -> 역시 1000으로 나눔
+      // 예: GDP 28000 -> 10%는 2800 -> 나누기 1000 -> 2.8
+      const lclorTrillion = (lastGdp * 0.10) / 1000;
+
+      return {
+        date: d,
+        spread: Math.round((s.val - iorbMap.get(d)) * 100),
+        reserves: reservesTrillion, // 차트에 3.2로 전달됨
+        lclor: lclorTrillion        // 차트에 2.8로 전달됨
+      };
+    }).filter(d => d !== null);
+
+    // 상단 UI 표시용 최신값 (단위: T)
+    const currentLclor = (lastGdp * 0.10) / 1000;
+
+    return { timeline, latestLclor: currentLclor };
+  }
+  
+  let myChart = null;
+
+  function renderChart(dataObj) {
+    const ctx = document.getElementById('liquidityChart').getContext('2d');
+    if (myChart) myChart.destroy();
+
+    const dates = dataObj.timeline.map(d => d.date);
+    const spreads = dataObj.timeline.map(d => d.spread);
+    const reserves = dataObj.timeline.map(d => d.reserves);
+    const lclorLine = dataObj.timeline.map(d => d.lclor);
+
+    // [CRITICAL FIX] Zoom Logic based on Corrected Units
+    // The numbers are now small (e.g. 3.0 vs 2.8), so the gap is numeric small but meaningful.
+    // Scale min should be slightly below LCLoR to show the "crash line".
+    const allVals = [...reserves, dataObj.lclor];
+    const minVal = Math.min(...allVals); 
+    const maxVal = Math.max(...allVals);
+    
+    // Tight Zoom: Start axis at 95% of the lowest value to visually amplify the gap
+    const yRightMin = minVal * 0.90; 
+    const yRightMax = maxVal * 1.05;
+
+    myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: 'Spread (Left)',
+            data: spreads,
+            borderColor: CONFIG.colors.spread,
+            borderWidth: 2,
+            tension: 0,
+            pointRadius: 0,
+            yAxisID: 'y_left',
+            order: 1
+          },
+          {
+            label: 'Reserves (Right)',
+            data: reserves,
+            borderColor: CONFIG.colors.reservesLine,
+            backgroundColor: CONFIG.colors.reservesFill,
+            borderWidth: 1.5,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            yAxisID: 'y_right',
+            order: 2
+          },
+          {
+            label: 'LCLoR (Right)',
+            data: lclorLine,
+            borderColor: CONFIG.colors.lclor,
+            borderWidth: 2,
+            borderDash: [4, 4],
+            pointRadius: 0,
+            fill: false,
+            yAxisID: 'y_right',
+            order: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleFont: { family: 'Inter', size: 12 },
+            bodyFont: { family: 'Orbitron', size: 13 },
+            callbacks: {
+              label: (ctx) => {
+                let val = ctx.raw;
+                if (ctx.dataset.yAxisID === 'y_left') return `Spread: ${val} bp`;
+                // Now val is already in Trillions, so just format it
+                return `${ctx.dataset.label.split('(')[0]}: $${val.toFixed(2)}T`;
+              }
+            }
+          },
+          zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
+          y_left: {
+            type: 'linear', position: 'left',
+            grid: { color: CONFIG.colors.grid },
+            ticks: { callback: v => v + 'bp', color: CONFIG.colors.spread, font: { weight: 'bold', size: 10 } }
+          },
+          y_right: {
+            type: 'linear', position: 'right',
+            min: yRightMin, max: yRightMax, // Force the chart to focus on the 2.8T - 3.2T range
+            grid: { display: false },
+            ticks: { callback: v => '$' + v.toFixed(2) + 'T', color: '#10b981', font: { size: 10 } }
+          }
+        }
+      },
+      plugins: [{
+        id: 'dangerZone',
+        beforeDraw: (chart) => {
+          const { ctx, chartArea: { top, bottom, left, right }, scales: { y_left } } = chart;
+          const yLimit = y_left.getPixelForValue(30);
+          if (yLimit > top) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.05)';
+            ctx.fillRect(left, top, right - left, yLimit - top);
+            ctx.restore();
+          }
+        }
+      }]
+    });
+  }
+
+  function updateUI(dataObj) {
+    const last = dataObj.timeline[dataObj.timeline.length - 1];
+    const spread = last.spread;
+    
+    // Values are now already in Trillions, so direct display
+    const resT = last.reserves.toFixed(2);
+    const lclorT = dataObj.lclor.toFixed(2);
+    
+    document.getElementById('sofrVal').innerHTML = `${window.lastSofr || '--'}<span class="metric-unit">%</span>`;
+    document.getElementById('spreadVal').innerHTML = `${spread}<span class="metric-unit">bp</span>`;
+    document.getElementById('resVal').innerHTML = `$${resT}<span class="metric-unit">T</span>`;
+
+    const badge = document.getElementById('statusBadge');
+    const text = document.getElementById('statusText');
+    const spreadEl = document.getElementById('spreadVal');
+    
+    let status = 'normal';
+    if (spread >= 30) status = 'danger'; else if (spread >= 10) status = 'warning';
+
+    if (status === 'danger') {
+      badge.style.cssText = 'background:#fee2e2; border-color:#fecaca; color:#dc2626';
+      badge.querySelector('.status-dot').style.background = '#dc2626';
+      text.innerText = 'LIQUIDITY CRISIS';
+      spreadEl.style.color = '#dc2626';
+    } else if (status === 'warning') {
+      badge.style.cssText = 'background:#fef3c7; border-color:#fde68a; color:#d97706';
+      badge.querySelector('.status-dot').style.background = '#d97706';
+      text.innerText = 'Stress Watch';
+      spreadEl.style.color = '#d97706';
+    } else {
+      badge.style.cssText = 'background:#dcfce7; border-color:#bbf7d0; color:#166534';
+      badge.querySelector('.status-dot').style.background = '#166534';
+      text.innerText = 'System Normal';
+      spreadEl.style.color = '#334155';
+    }
+
+    document.getElementById('lclorDisplay').innerText = `$${lclorT}T`;
+    document.getElementById('updateTime').innerText = `Data: ${last.date}`;
+  }
+
+  async function init(days = 90) {
+    const [sofr, iorb, res, gdp] = await Promise.all([
+      getSeries('SOFR', days),
+      getSeries('IORB', days),
+      getSeries('WRESBAL', days),
+      getSeries('GDP', days)
+    ]);
+
+    if (!sofr.length) return;
+    
+    window.lastSofr = sofr[sofr.length-1].val.toFixed(2);
+
+    const processed = mergeData(sofr, iorb, res, gdp);
+    renderChart(processed);
+    updateUI(processed);
+  }
+
+  window.updatePeriod = (days, btn) => {
+    document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    init(days);
+  };
+
+  init(90);
+</script>
+</body>
+</html>
