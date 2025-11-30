@@ -325,7 +325,17 @@
   <!-- 카드 그리드 -->
   <div class="card-grid" id="cardGrid">
 
-    <!-- 1. Liquidity Stress (라이브 위젯) -->
+    <!-- 1. Liquidity Flow (Layer 2 - 라이브 위젯) -->
+    <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/liquidity-flow.html')">
+      <iframe
+        src="widgets/liquidity-flow.html"
+        scrolling="no"
+        loading="lazy"
+        title="Liquidity Flow Monitor">
+      </iframe>
+    </div>
+
+    <!-- 2. Liquidity Stress (라이브 위젯 - Layer 1) -->
     <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/liquidity-stress.html')">
       <iframe
         src="widgets/liquidity-stress.html"
@@ -335,7 +345,7 @@
       </iframe>
     </div>
 
-    <!-- 2. Treasury Spread (10Y-2Y) - Coming Soon -->
+    <!-- 3. Treasury Spread (10Y-2Y) - Coming Soon -->
     <div class="indicator-card coming-soon category-rates fade-in" data-category="rates">
       <div class="cs-icon">📈</div>
       <h3 class="cs-title">Treasury Spread</h3>
@@ -350,7 +360,7 @@
       <p class="cs-description">10Y-2Y 국채 스프레드로 경기 침체 신호 감지</p>
     </div>
 
-    <!-- 3. VIX Index - Coming Soon -->
+    <!-- 4. VIX Index - Coming Soon -->
     <div class="indicator-card coming-soon category-sentiment fade-in" data-category="sentiment">
       <div class="cs-icon">⚡</div>
       <h3 class="cs-title">VIX Index</h3>
@@ -365,7 +375,7 @@
       <p class="cs-description">변동성 지수로 시장 공포 심리 측정</p>
     </div>
 
-    <!-- 4. Fear & Greed - Coming Soon -->
+    <!-- 5. Fear & Greed - Coming Soon -->
     <div class="indicator-card coming-soon category-sentiment fade-in" data-category="sentiment">
       <div class="cs-icon">🎭</div>
       <h3 class="cs-title">Fear & Greed</h3>
@@ -380,7 +390,7 @@
       <p class="cs-description">CNN 공포탐욕지수로 투자심리 파악</p>
     </div>
 
-    <!-- 5. M2 Liquidity - Coming Soon -->
+    <!-- 6. M2 Liquidity - Coming Soon -->
     <div class="indicator-card coming-soon category-liquidity fade-in" data-category="liquidity">
       <div class="cs-icon">💰</div>
       <h3 class="cs-title">M2 Liquidity</h3>
@@ -395,7 +405,7 @@
       <p class="cs-description">통화 공급량 추이로 유동성 환경 분석</p>
     </div>
 
-    <!-- 6. PE Ratio (S&P 500) - Coming Soon -->
+    <!-- 7. PE Ratio (S&P 500) - Coming Soon -->
     <div class="indicator-card coming-soon category-rates fade-in" data-category="rates">
       <div class="cs-icon">📊</div>
       <h3 class="cs-title">PE Ratio (S&P 500)</h3>

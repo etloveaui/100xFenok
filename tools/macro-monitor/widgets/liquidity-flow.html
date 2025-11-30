@@ -1,0 +1,555 @@
+<!-- Macro Monitor Widget - Liquidity Flow (A+C 하이브리드) -->
+<!-- 캐시 기반: API 호출 없음, Detail에서 저장한 localStorage 데이터 읽기 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+
+<!-- DataManager 인라인 정의 (iframe 호환) -->
+<script>
+class MacroDataManager {
+  constructor() {
+    this.prefix = 'macro_';
+    this.ttl = 30 * 60 * 1000;
+  }
+  saveWidgetData(widgetId, data) {
+    try {
+      localStorage.setItem(this.prefix + widgetId, JSON.stringify({
+        data, timestamp: Date.now(), expires: Date.now() + this.ttl
+      }));
+      return true;
+    } catch (e) { return false; }
+  }
+  getWidgetData(widgetId) {
+    try {
+      const cached = localStorage.getItem(this.prefix + widgetId);
+      if (!cached) return null;
+      const { data, expires } = JSON.parse(cached);
+      return Date.now() > expires ? null : data;
+    } catch (e) { return null; }
+  }
+}
+const DataManager = new MacroDataManager();
+</script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: transparent; }
+
+  .card-widget {
+    height: 100%;
+    min-height: 280px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    padding: 16px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-widget:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .title-icon { font-size: 16px; }
+
+  .title {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .overall-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-positive { background: #dcfce7; color: #16a34a; }
+  .badge-neutral { background: #fef9c3; color: #ca8a04; }
+  .badge-negative { background: #fee2e2; color: #dc2626; }
+
+  /* Net Flow Hero */
+  .net-flow-hero {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .net-flow-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .net-flow-label {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .net-flow-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .net-flow-value.positive { color: #4ade80; }
+  .net-flow-value.negative { color: #f87171; }
+
+  .net-flow-right {
+    text-align: right;
+    font-size: 10px;
+    color: #94a3b8;
+  }
+
+  .net-flow-trend {
+    font-size: 18px;
+    margin-bottom: 2px;
+  }
+
+  /* Indicator Grid (2x2) */
+  .indicator-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    flex: 1;
+  }
+
+  .indicator-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .indicator-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .indicator-emoji { font-size: 12px; }
+
+  .indicator-name {
+    font-size: 9px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .indicator-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .indicator-unit {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .view-details {
+    font-size: 10px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  /* Loading */
+  .loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    z-index: 10;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-text {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 캐시 없음 상태 */
+  .no-cache {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+  }
+
+  .no-cache-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .no-cache-text {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .no-cache-hint {
+    font-size: 10px;
+    margin-top: 4px;
+    color: #cbd5e1;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .card-widget { padding: 14px; min-height: 260px; }
+    .title { font-size: 12px; }
+    .net-flow-value { font-size: 20px; }
+    .indicator-value { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card-widget" onclick="openDetail()" style="position: relative;">
+  <div class="loading" id="loader">
+    <div class="spinner"></div>
+    <div class="loading-text">데이터 로딩 중...</div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="title-row">
+      <span class="title-icon">💧</span>
+      <span class="title">Liquidity Flow</span>
+    </div>
+    <div class="overall-badge badge-positive" id="overallBadge">
+      <span id="overallEmoji">🟢</span>
+      <span id="overallLabel">EXPANDING</span>
+    </div>
+  </div>
+
+  <!-- 메인 컨텐츠 (캐시 있을 때) -->
+  <div id="mainContent" style="display: none; flex: 1; display: flex; flex-direction: column;">
+    <!-- Net Flow Hero -->
+    <div class="net-flow-hero">
+      <div class="net-flow-left">
+        <span class="net-flow-label">Net Liquidity Flow</span>
+        <span class="net-flow-value positive" id="netFlowValue">+$234B</span>
+      </div>
+      <div class="net-flow-right">
+        <div class="net-flow-trend" id="netFlowTrend">📈</div>
+        <div id="netFlowDesc">Expanding</div>
+      </div>
+    </div>
+
+    <!-- Indicator Grid (2x2) -->
+    <div class="indicator-grid">
+      <!-- M2 Growth -->
+      <div class="indicator-card" id="m2Card">
+        <div class="indicator-status">
+          <span class="indicator-emoji" id="m2Emoji">🟢</span>
+          <span class="indicator-name">M2 Growth</span>
+        </div>
+        <div class="indicator-value">
+          <span id="m2Value">+4.2</span>
+          <span class="indicator-unit">% YoY</span>
+        </div>
+      </div>
+
+      <!-- TGA Balance -->
+      <div class="indicator-card" id="tgaCard">
+        <div class="indicator-status">
+          <span class="indicator-emoji" id="tgaEmoji">🟢</span>
+          <span class="indicator-name">TGA Balance</span>
+        </div>
+        <div class="indicator-value">
+          <span id="tgaValue">$720</span>
+          <span class="indicator-unit">B</span>
+        </div>
+      </div>
+
+      <!-- RRP Balance -->
+      <div class="indicator-card" id="rrpCard">
+        <div class="indicator-status">
+          <span class="indicator-emoji" id="rrpEmoji">🟢</span>
+          <span class="indicator-name">RRP Balance</span>
+        </div>
+        <div class="indicator-value">
+          <span id="rrpValue">$45</span>
+          <span class="indicator-unit">B</span>
+        </div>
+      </div>
+
+      <!-- Stablecoin -->
+      <div class="indicator-card" id="scCard">
+        <div class="indicator-status">
+          <span class="indicator-emoji" id="scEmoji">🟢</span>
+          <span class="indicator-name">Stablecoin</span>
+        </div>
+        <div class="indicator-value">
+          <span id="scValue">$180</span>
+          <span class="indicator-unit">B</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 캐시 없음 상태 -->
+  <div class="no-cache" id="noCache" style="display: none;">
+    <div class="no-cache-icon">💧</div>
+    <div class="no-cache-text">데이터 없음</div>
+    <div class="no-cache-hint">클릭하여 상세 페이지에서 로드</div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="view-details">
+      <span>View Details</span>
+      <span>→</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const WIDGET_ID = 'liquidity-flow';
+  const DETAIL_PATH = 'tools/macro-monitor/details/liquidity-flow.html';
+
+  // 상태별 이모지
+  const STATUS_EMOJI = {
+    positive: '🟢',
+    neutral: '🟡',
+    negative: '🔴'
+  };
+
+  // Net Flow 상태 판단 (십억 달러 기준)
+  function getNetFlowStatus(netFlow) {
+    if (netFlow > 50) return 'positive';
+    if (netFlow < -50) return 'negative';
+    return 'neutral';
+  }
+
+  // M2 Growth 상태 판단 (%)
+  function getM2Status(m2Growth) {
+    if (m2Growth > 3) return 'positive';
+    if (m2Growth < 0) return 'negative';
+    return 'neutral';
+  }
+
+  // TGA 상태 판단 (낮을수록 유동성 풀림)
+  function getTgaStatus(tga) {
+    if (tga < 500) return 'positive';   // 낮음 = 지출 → 유동성+
+    if (tga > 800) return 'negative';   // 높음 = 흡수 → 유동성-
+    return 'neutral';
+  }
+
+  // RRP 상태 판단 (낮을수록 유동성 풀림)
+  function getRrpStatus(rrp) {
+    if (rrp < 100) return 'positive';   // 소진됨 = 유동성 시장에
+    if (rrp > 500) return 'negative';   // 높음 = 유동성 흡수
+    return 'neutral';
+  }
+
+  // Stablecoin 상태 판단
+  function getScStatus(sc) {
+    if (sc > 150) return 'positive';    // 성장세
+    if (sc < 100) return 'negative';
+    return 'neutral';
+  }
+
+  function renderWidget(data) {
+    const mainContent = document.getElementById('mainContent');
+    const noCache = document.getElementById('noCache');
+
+    if (!data) {
+      mainContent.style.display = 'none';
+      noCache.style.display = 'flex';
+      return;
+    }
+
+    mainContent.style.display = 'flex';
+    noCache.style.display = 'none';
+
+    // Net Flow
+    const netFlow = data.netFlow || 0;
+    const netFlowStatus = getNetFlowStatus(netFlow);
+    const netFlowEl = document.getElementById('netFlowValue');
+    netFlowEl.textContent = (netFlow >= 0 ? '+' : '') + '$' + Math.round(netFlow) + 'B';
+    netFlowEl.className = 'net-flow-value ' + netFlowStatus;
+
+    document.getElementById('netFlowTrend').textContent = netFlow >= 0 ? '📈' : '📉';
+    document.getElementById('netFlowDesc').textContent = netFlow >= 0 ? 'Expanding' : 'Contracting';
+
+    // Overall Badge
+    const badge = document.getElementById('overallBadge');
+    badge.className = 'overall-badge badge-' + netFlowStatus;
+    document.getElementById('overallEmoji').textContent = STATUS_EMOJI[netFlowStatus];
+    document.getElementById('overallLabel').textContent = netFlow >= 50 ? 'EXPANDING' : (netFlow <= -50 ? 'CONTRACTING' : 'NEUTRAL');
+
+    // M2 Growth
+    const m2Growth = data.m2Growth || 0;
+    const m2Status = getM2Status(m2Growth);
+    document.getElementById('m2Emoji').textContent = STATUS_EMOJI[m2Status];
+    document.getElementById('m2Value').textContent = (m2Growth >= 0 ? '+' : '') + m2Growth.toFixed(1);
+
+    // TGA
+    const tga = data.tga || 0;
+    const tgaStatus = getTgaStatus(tga);
+    document.getElementById('tgaEmoji').textContent = STATUS_EMOJI[tgaStatus];
+    document.getElementById('tgaValue').textContent = '$' + Math.round(tga);
+
+    // RRP
+    const rrp = data.rrp || 0;
+    const rrpStatus = getRrpStatus(rrp);
+    document.getElementById('rrpEmoji').textContent = STATUS_EMOJI[rrpStatus];
+    document.getElementById('rrpValue').textContent = '$' + Math.round(rrp);
+
+    // Stablecoin
+    const sc = data.stablecoinMcap || 0;
+    const scStatus = getScStatus(sc);
+    document.getElementById('scEmoji').textContent = STATUS_EMOJI[scStatus];
+    document.getElementById('scValue').textContent = '$' + Math.round(sc);
+  }
+
+  async function init() {
+    const loader = document.getElementById('loader');
+
+    try {
+      // 캐시에서 데이터 읽기
+      let data = null;
+      if (typeof DataManager !== 'undefined') {
+        data = DataManager.getWidgetData(WIDGET_ID);
+      }
+
+      if (data) {
+        renderWidget(data);
+      } else {
+        // 캐시 없음 - hidden iframe으로 Detail 로드 시도
+        await loadDetailInBackground();
+
+        // 다시 캐시 확인
+        if (typeof DataManager !== 'undefined') {
+          data = DataManager.getWidgetData(WIDGET_ID);
+        }
+        renderWidget(data);
+      }
+    } catch (e) {
+      console.error('[Widget] Init error:', e);
+      renderWidget(null);
+    } finally {
+      loader.style.display = 'none';
+    }
+  }
+
+  // Detail 페이지를 백그라운드에서 로드하여 캐시 생성
+  function loadDetailInBackground() {
+    return new Promise((resolve) => {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = '../details/liquidity-flow.html';
+
+      const timeout = setTimeout(() => {
+        iframe.remove();
+        resolve();
+      }, 8000); // 8초 타임아웃 (FRED API 호출 시간 고려)
+
+      iframe.onload = () => {
+        // Detail이 로드되면 캐시가 저장됨
+        setTimeout(() => {
+          clearTimeout(timeout);
+          iframe.remove();
+          resolve();
+        }, 3000); // 3초 대기 (API 호출 완료 대기)
+      };
+
+      iframe.onerror = () => {
+        clearTimeout(timeout);
+        iframe.remove();
+        resolve();
+      };
+
+      document.body.appendChild(iframe);
+    });
+  }
+
+  // 캐시 업데이트 이벤트 리스닝
+  window.addEventListener('macro-data-updated', (e) => {
+    if (e.detail.widgetId === WIDGET_ID) {
+      renderWidget(e.detail.data);
+    }
+  });
+
+  // 상세 페이지 열기
+  function openDetail() {
+    try {
+      if (window.top?.loadPage) { window.top.loadPage(DETAIL_PATH); return; }
+      if (window.parent?.loadPage) { window.parent.loadPage(DETAIL_PATH); return; }
+    } catch(e) {}
+    const base = window.top?.baseHref || '/';
+    (window.top||window).location.assign(`${base}index.html?path=${DETAIL_PATH}`);
+  }
+
+  // 초기화
+  init();
+</script>
+</body>
+</html>

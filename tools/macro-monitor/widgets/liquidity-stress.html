@@ -68,7 +68,12 @@ const DataManager = new MacroDataManager();
     font-size: 13px;
     font-weight: 700;
     color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
+
+  .title-icon { font-size: 14px; }
 
   /* 종합 상태 - 신호등 */
   .overall-status {
@@ -237,7 +242,7 @@ const DataManager = new MacroDataManager();
 
   <!-- Header -->
   <div class="card-header">
-    <div class="card-title">Liquidity Stress</div>
+    <div class="card-title"><span class="title-icon">⚡</span> Liquidity Stress</div>
   </div>
 
   <!-- 메인 컨텐츠 (캐시 있을 때) -->

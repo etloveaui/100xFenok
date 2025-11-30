@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquidity Flow Monitor | 100xFenok</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+  <!-- DataManager (인라인) -->
+  <script>
+  class MacroDataManager {
+    constructor() { this.prefix = 'macro_'; this.ttl = 30 * 60 * 1000; }
+    saveWidgetData(widgetId, data) {
+      try {
+        localStorage.setItem(this.prefix + widgetId, JSON.stringify({
+          data, timestamp: Date.now(), expires: Date.now() + this.ttl
+        }));
+        window.dispatchEvent(new CustomEvent('macro-data-updated', { detail: { widgetId, data } }));
+        return true;
+      } catch (e) { console.error('[DataManager] Save failed:', e); return false; }
+    }
+    getWidgetData(widgetId) {
+      try {
+        const cached = localStorage.getItem(this.prefix + widgetId);
+        if (!cached) return null;
+        const { data, expires } = JSON.parse(cached);
+        return Date.now() > expires ? null : data;
+      } catch (e) { return null; }
+    }
+  }
+  const DataManager = new MacroDataManager();
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex; justify-content: center;
+    }
+    .container { width: 100%; max-width: 1000px; padding: 32px 20px; }
+
+    /* ===== Header ===== */
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; color: #64748b; cursor: pointer; transition: all 0.2s ease; }
+    .back-btn:hover { background: #f1f5f9; color: #0f172a; transform: translateY(-1px); }
+    .title-group h1 { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .title-group p { font-size: 13px; color: #64748b; font-weight: 500; }
+
+    .header-right { text-align: right; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .status-dot { width: 8px; height: 8px; background: #166534; border-radius: 50%; animation: pulse 2s infinite; }
+    .update-time { display: block; margin-top: 6px; font-family: 'Orbitron', sans-serif; font-size: 11px; color: #94a3b8; }
+
+    /* ===== Signal Matrix (4개 지표) ===== */
+    .signal-matrix {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+    .signal-card {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .signal-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .signal-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .signal-icon.green { background: #dcfce7; color: #16a34a; }
+    .signal-icon.yellow { background: #fef9c3; color: #ca8a04; }
+    .signal-icon.red { background: #fee2e2; color: #dc2626; }
+    .signal-icon.gray { background: #f1f5f9; color: #94a3b8; }
+
+    .signal-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .signal-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .signal-unit {
+      font-size: 12px;
+      color: #64748b;
+      margin-left: 2px;
+    }
+    .signal-status {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+    .signal-status.normal { background: #dcfce7; color: #166534; }
+    .signal-status.caution { background: #fef9c3; color: #854d0e; }
+    .signal-status.danger { background: #fee2e2; color: #991b1b; }
+
+    /* ===== Net Flow Summary ===== */
+    .net-flow-hero {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .net-flow-label {
+      font-size: 13px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .net-flow-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .net-flow-value.positive { color: #4ade80; }
+    .net-flow-value.negative { color: #f87171; }
+    .net-flow-trend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .net-flow-trend i {
+      font-size: 16px;
+    }
+    .net-flow-trend.up i { color: #4ade80; }
+    .net-flow-trend.down i { color: #f87171; }
+
+    /* ===== Chart Section ===== */
+    .dashboard-card {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    /* 탭 네비게이션 */
+    .chart-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+    }
+    .chart-tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .chart-tab:hover { color: #1e293b; }
+    .chart-tab.active {
+      background: #ffffff;
+      color: #2563eb;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .chart-title { font-size: 14px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 8px; }
+    .period-selector { display: flex; gap: 4px; background: #f8fafc; padding: 4px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .p-btn { border: none; background: none; padding: 6px 12px; font-size: 11px; font-weight: 600; color: #64748b; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+    .p-btn:hover { background: #fff; color: #0f172a; }
+    .p-btn.active { background: #ffffff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .chart-wrapper { position: relative; height: 340px; width: 100%; }
+
+    .custom-legend { display: flex; justify-content: center; gap: 24px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; font-weight: 500; }
+    .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+
+    /* ===== Info Cards ===== */
+    .info-cards-section {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .info-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      border-left: 4px solid #10b981;
+      transition: all 0.2s ease;
+    }
+    .info-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .info-card.inflow { border-left-color: #10b981; }
+    .info-card.neutral { border-left-color: #f59e0b; }
+    .info-card.outflow { border-left-color: #ef4444; }
+
+    .info-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .info-card-icon { font-size: 18px; }
+    .info-card-title { flex: 1; font-size: 13px; font-weight: 700; color: #334155; }
+    .info-expand-btn {
+      width: 28px; height: 28px;
+      border: none; background: #f1f5f9;
+      border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #64748b; transition: all 0.2s;
+    }
+    .info-expand-btn:hover { background: #e2e8f0; color: #334155; }
+    .info-expand-btn i { transition: transform 0.3s ease; }
+    .info-card.expanded .info-expand-btn i { transform: rotate(180deg); }
+
+    .info-card-summary { font-size: 13px; color: #475569; line-height: 1.5; }
+    .info-value { font-family: 'Orbitron', sans-serif; font-weight: 600; color: #2563eb; }
+
+    .info-card-detail {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease, margin-top 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .info-card.expanded .info-card-detail { max-height: 500px; margin-top: 16px; opacity: 1; }
+
+    .info-detail-section { padding: 12px 0; border-top: 1px solid #f1f5f9; }
+    .info-detail-section:first-child { padding-top: 0; border-top: none; }
+    .info-detail-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .info-detail-list { list-style: none; padding: 0; margin: 0; }
+    .info-detail-list li { font-size: 12px; color: #475569; padding: 4px 0; line-height: 1.4; }
+    .info-detail-text { font-size: 12px; color: #475569; line-height: 1.6; margin: 0; }
+
+    .info-links { display: flex; gap: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; margin-top: 12px; }
+    .info-links a { font-size: 11px; color: #2563eb; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .info-links a:hover { text-decoration: underline; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 899px) {
+      .matrix-grid { grid-template-columns: repeat(3, 1fr); }
+      .info-cards-section { grid-template-columns: 1fr; }
+      .net-flow-hero { flex-direction: column; text-align: center; gap: 12px; }
+    }
+    @media (max-width: 599px) {
+      .matrix-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 599px) {
+      .container { padding: 16px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .header-right { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+      .chart-tabs { flex-wrap: wrap; }
+      .chart-tab { font-size: 11px; padding: 10px 12px; }
+      .period-selector { display: none; }
+      .chart-wrapper { height: 280px; }
+    }
+    @media (min-width: 900px) {
+      .info-card-detail { max-height: 500px; opacity: 1; margin-top: 16px; }
+      .info-expand-btn { display: none; }
+      .info-card-title { font-size: 15px; }
+      .info-card-summary { font-size: 15px; }
+      .info-detail-list li { font-size: 14px; }
+    }
+
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+      <div class="title-group">
+        <h1>Liquidity Flow Monitor</h1>
+        <p>M2 | TGA | RRP | Stablecoin - 유동성 흐름 분석</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-badge" id="statusBadge"><span class="status-dot"></span> <span id="statusText">Analyzing...</span></div>
+      <span class="update-time" id="updateTime">Last Update: --:--</span>
+    </div>
+  </header>
+
+  <!-- ===== Signal Matrix (4개 지표) ===== -->
+  <section class="signal-matrix">
+    <div class="matrix-grid">
+      <!-- M2 Growth -->
+      <div class="signal-card" id="m2Card">
+        <div class="signal-icon gray" id="m2Icon"><i class="fas fa-coins"></i></div>
+        <div class="signal-label">M2 Growth</div>
+        <div class="signal-value" id="m2Value">--<span class="signal-unit">%</span></div>
+        <div class="signal-status" id="m2Status">Loading</div>
+      </div>
+      <!-- TGA Balance -->
+      <div class="signal-card" id="tgaCard">
+        <div class="signal-icon gray" id="tgaIcon"><i class="fas fa-landmark"></i></div>
+        <div class="signal-label">TGA Balance</div>
+        <div class="signal-value" id="tgaValue">--<span class="signal-unit">$B</span></div>
+        <div class="signal-status" id="tgaStatus">Loading</div>
+      </div>
+      <!-- RRP Balance -->
+      <div class="signal-card" id="rrpCard">
+        <div class="signal-icon gray" id="rrpIcon"><i class="fas fa-exchange-alt"></i></div>
+        <div class="signal-label">RRP Balance</div>
+        <div class="signal-value" id="rrpValue">--<span class="signal-unit">$B</span></div>
+        <div class="signal-status" id="rrpStatus">Loading</div>
+      </div>
+      <!-- Stablecoin/M2 -->
+      <div class="signal-card" id="scCard">
+        <div class="signal-icon gray" id="scIcon"><i class="fab fa-bitcoin"></i></div>
+        <div class="signal-label">Crypto Rotation</div>
+        <div class="signal-value" id="scValue">--<span class="signal-unit">%</span></div>
+        <div class="signal-status" id="scStatus">Loading</div>
+      </div>
+      <!-- Policy Stance -->
+      <div class="signal-card" id="policyCard">
+        <div class="signal-icon gray" id="policyIcon"><i class="fas fa-balance-scale"></i></div>
+        <div class="signal-label">Policy Stance</div>
+        <div class="signal-value" id="policyValue">--<span class="signal-unit"></span></div>
+        <div class="signal-status" id="policyStatus">Loading</div>
+      </div>
+    </div>
+
+    <!-- Net Flow Summary -->
+    <div class="net-flow-hero">
+      <div>
+        <div class="net-flow-label">Weekly Net Liquidity Flow</div>
+        <div class="net-flow-value" id="netFlowValue">$--B</div>
+      </div>
+      <div class="net-flow-trend" id="netFlowTrend">
+        <i class="fas fa-arrow-right"></i>
+        <span id="netFlowDesc">Calculating...</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Chart Section ===== -->
+  <section class="dashboard-card">
+    <!-- 탭 네비게이션 -->
+    <div class="chart-tabs" id="chartTabs">
+      <button class="chart-tab active" data-tab="netflow" onclick="switchTab('netflow', this)">
+        <i class="fas fa-water"></i> Net Flow
+      </button>
+      <button class="chart-tab" data-tab="credit" onclick="switchTab('credit', this)">
+        <i class="fas fa-chart-line"></i> Credit Flow
+      </button>
+      <button class="chart-tab" data-tab="policy" onclick="switchTab('policy', this)">
+        <i class="fas fa-university"></i> Policy Flow
+      </button>
+      <button class="chart-tab" data-tab="details" onclick="switchTab('details', this)">
+        <i class="fas fa-th"></i> Details
+      </button>
+    </div>
+
+    <div class="chart-controls">
+      <div class="chart-title"><i class="fas fa-chart-bar"></i> <span id="chartTitleText">Net Liquidity Flow</span></div>
+      <div class="period-selector">
+        <button class="p-btn" onclick="updatePeriod(30, this)">1M</button>
+        <button class="p-btn" onclick="updatePeriod(90, this)">3M</button>
+        <button class="p-btn active" onclick="updatePeriod(180, this)">6M</button>
+        <button class="p-btn" onclick="updatePeriod(365, this)">1Y</button>
+        <button class="p-btn" onclick="updatePeriod(730, this)">2Y</button>
+      </div>
+    </div>
+
+    <div class="chart-wrapper" id="chartWrapper">
+      <canvas id="mainChart"></canvas>
+    </div>
+
+    <div class="custom-legend" id="chartLegend">
+      <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Inflow (+)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>Outflow (-)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #94a3b8; height: 2px;"></div><span>4-Week MA</span></div>
+    </div>
+  </section>
+
+  <!-- ===== Info Cards ===== -->
+  <div class="info-cards-section">
+    <!-- 카드 1: 현재 상태 -->
+    <div class="info-card inflow" id="statusCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">📊</div>
+        <div class="info-card-title">현재 유동성 상태</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('statusCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary" id="statusSummary">
+        데이터 로딩 중...
+      </div>
+      <div class="info-card-detail">
+        <div class="info-detail-section">
+          <div class="info-detail-title">주간 변화</div>
+          <ul class="info-detail-list" id="weeklyChanges">
+            <li>M2: --</li>
+            <li>TGA: --</li>
+            <li>RRP: --</li>
+          </ul>
+        </div>
+        <div class="info-links">
+          <a href="https://fred.stlouisfed.org/series/M2SL" target="_blank"><i class="fas fa-external-link-alt"></i> M2 (FRED)</a>
+          <a href="https://fred.stlouisfed.org/series/WTREGEN" target="_blank"><i class="fas fa-external-link-alt"></i> TGA (FRED)</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카드 2: 이 지표가 뭔가요? -->
+    <div class="info-card neutral" id="whatCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">💡</div>
+        <div class="info-card-title">Net Flow가 뭔가요?</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('whatCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary">
+        시장에 실제로 풀리는 돈의 양을 추적합니다
+      </div>
+      <div class="info-card-detail">
+        <div class="info-detail-section">
+          <ul class="info-detail-list">
+            <li><strong>M2</strong>: 통화공급량 (신용창출)</li>
+            <li><strong>TGA</strong>: 재무부 계좌 (정부지출)</li>
+            <li><strong>RRP</strong>: 역레포 (유동성 흡수)</li>
+          </ul>
+        </div>
+        <div class="info-detail-section">
+          <p class="info-detail-text">
+            <strong>Net Flow</strong> = M2 변화 + TGA 방출 + RRP 감소<br>
+            양수면 시장에 돈이 풀리고, 음수면 돈이 빠지는 중입니다.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카드 3: 왜 중요한가요? -->
+    <div class="info-card neutral" id="whyCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">🎯</div>
+        <div class="info-card-title">왜 중요한가요?</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('whyCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary">
+        유동성은 모든 자산 가격의 연료입니다
+      </div>
+      <div class="info-card-detail">
+        <div class="info-detail-section">
+          <div class="info-detail-title">핵심 메커니즘</div>
+          <ul class="info-detail-list">
+            <li>유동성 증가 → 위험자산 상승</li>
+            <li>유동성 감소 → 위험자산 하락</li>
+            <li>RRP 소진 → QT 종료 압력</li>
+          </ul>
+        </div>
+        <div class="info-detail-section">
+          <div class="info-detail-title">Crypto Rotation</div>
+          <p class="info-detail-text">
+            M2 증가분 대비 스테이블코인 증가분의 비율.<br>
+            10% 이상이면 크립토 시장으로 자금이 적극 유입 중.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== CONFIG =====
+  const CONFIG = {
+    fredApiKey: '6dda7dc3956a2c1d6ac939133de115f1',
+    proxy: 'https://fed-proxy.etloveaui.workers.dev/',
+    defiLlamaUrl: 'https://stablecoins.llama.fi/stablecoins?includePrices=false',
+    colors: {
+      inflow: '#10b981',
+      outflow: '#ef4444',
+      ma: '#94a3b8',
+      m2: '#3b82f6',
+      tga: '#8b5cf6',
+      rrp: '#f59e0b',
+      stablecoin: '#06b6d4'
+    }
+  };
+
+  // ===== DATA FETCH =====
+  async function fetchData(url) {
+    const candidates = [
+      url,
+      CONFIG.proxy + (url.startsWith('http') ? url : ''),
+      'https://cors.isomorphic-git.org/' + url
+    ];
+    for (const u of candidates) {
+      try {
+        const res = await fetch(u);
+        if (res.ok) return await res.json();
+      } catch (e) { console.log('[Fetch] Failed:', u); }
+    }
+    return null;
+  }
+
+  async function getFredSeries(seriesId, days) {
+    const end = new Date().toISOString().split('T')[0];
+    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.fredApiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+
+    const json = await fetchData(url);
+    if (!json?.observations) return [];
+    return json.observations
+      .filter(o => o.value !== '.')
+      .map(o => ({ date: o.date, val: parseFloat(o.value) }));
+  }
+
+  async function getStablecoinData() {
+    const json = await fetchData(CONFIG.defiLlamaUrl);
+    if (!json?.peggedAssets) return null;
+
+    // 총 스테이블코인 시총 계산
+    const total = json.peggedAssets.reduce((sum, asset) => {
+      const circulating = asset.circulating?.peggedUSD || 0;
+      return sum + circulating;
+    }, 0);
+
+    return { totalMarketCap: total / 1e9 }; // billions
+  }
+
+  // ===== DATA PROCESSING =====
+  function processData(m2, tga, rrp, stablecoin) {
+    // M2: Monthly → Weekly (forward fill)
+    // TGA: Weekly (WTREGEN)
+    // RRP: Daily → Weekly average (RRPONTSYD)
+
+    // 공통 날짜 기준: TGA (주간 데이터)
+    const tgaMap = new Map(tga.map(d => [d.date, d.val]));
+    const m2Map = new Map(m2.map(d => [d.date, d.val]));
+    const rrpMap = new Map(rrp.map(d => [d.date, d.val]));
+
+    let lastM2 = m2.length > 0 ? m2[0].val : 21000; // billions default
+    let lastRrp = rrp.length > 0 ? rrp[0].val : 0;
+
+    const timeline = tga.map(t => {
+      const d = t.date;
+
+      // M2: forward fill (월간 → 주간)
+      if (m2Map.has(d)) lastM2 = m2Map.get(d);
+
+      // RRP: forward fill (일간 → 주간)
+      if (rrpMap.has(d)) lastRrp = rrpMap.get(d);
+
+      return {
+        date: d,
+        m2: lastM2,              // billions
+        tga: t.val / 1000,       // millions → billions
+        rrp: lastRrp / 1000      // millions → billions
+      };
+    });
+
+    // 주간 변화량 계산
+    const weeklyData = [];
+    for (let i = 1; i < timeline.length; i++) {
+      const prev = timeline[i - 1];
+      const curr = timeline[i];
+
+      const m2Delta = curr.m2 - prev.m2;
+      const tgaDelta = -(curr.tga - prev.tga);  // TGA 감소 = 시장 유입
+      const rrpDelta = -(curr.rrp - prev.rrp);  // RRP 감소 = 시장 유입
+      const netFlow = m2Delta + tgaDelta + rrpDelta;
+
+      weeklyData.push({
+        date: curr.date,
+        m2: curr.m2,
+        tga: curr.tga,
+        rrp: curr.rrp,
+        m2Delta,
+        tgaDelta,
+        rrpDelta,
+        netFlow
+      });
+    }
+
+    // 4주 이동평균
+    for (let i = 0; i < weeklyData.length; i++) {
+      const start = Math.max(0, i - 3);
+      const slice = weeklyData.slice(start, i + 1);
+      weeklyData[i].ma4 = slice.reduce((s, d) => s + d.netFlow, 0) / slice.length;
+    }
+
+    // M2 YoY% 계산 (52주 전 대비)
+    const scMcap = stablecoin?.totalMarketCap || 0;
+    for (let i = 0; i < weeklyData.length; i++) {
+      // 약 52주(1년) 전 데이터 찾기
+      const yearAgoIdx = Math.max(0, i - 52);
+      const m2Now = weeklyData[i].m2;
+      const m2YearAgo = weeklyData[yearAgoIdx].m2;
+      weeklyData[i].m2YoY = ((m2Now - m2YearAgo) / m2YearAgo) * 100;
+
+      // SC/M2 비율 (현재 스테이블코인 시총 / M2)
+      weeklyData[i].scM2Ratio = (scMcap / m2Now) * 100;
+    }
+
+    return {
+      timeline: weeklyData,
+      stablecoinMcap: scMcap
+    };
+  }
+
+  // ===== CHART =====
+  let mainChart = null;
+  let currentTab = 'netflow';
+  let currentPeriod = 180;
+  let processedData = null;
+
+  window.switchTab = function(tab, btn) {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = tab;
+
+    const titles = {
+      netflow: 'Net Liquidity Flow',
+      credit: 'Credit Flow (M2 + Stablecoin)',
+      policy: 'Policy Flow (TGA + RRP)',
+      details: 'Individual Components'
+    };
+    document.getElementById('chartTitleText').textContent = titles[tab];
+
+    if (processedData) renderChart(processedData);
+  };
+
+  window.updatePeriod = function(days, btn) {
+    document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = days;
+    init(days);
+  };
+
+  function renderChart(data) {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    if (mainChart) mainChart.destroy();
+
+    const dates = data.timeline.map(d => d.date);
+
+    let datasets = [];
+    let annotations = {};
+    let legendHtml = '';
+
+    if (currentTab === 'netflow') {
+      // Net Flow 차트: 막대 (양/음) + MA 선
+      datasets = [
+        {
+          label: 'Net Flow',
+          data: data.timeline.map(d => d.netFlow),
+          backgroundColor: data.timeline.map(d => d.netFlow >= 0 ? CONFIG.colors.inflow : CONFIG.colors.outflow),
+          borderRadius: 4,
+          type: 'bar',
+          order: 2
+        },
+        {
+          label: '4-Week MA',
+          data: data.timeline.map(d => d.ma4),
+          borderColor: CONFIG.colors.ma,
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 0,
+          type: 'line',
+          order: 1
+        }
+      ];
+      annotations = {
+        zeroLine: {
+          type: 'line',
+          yMin: 0, yMax: 0,
+          borderColor: '#64748b',
+          borderWidth: 1,
+          borderDash: [4, 4]
+        }
+      };
+      legendHtml = `
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.inflow};"></div><span>Inflow (+)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.outflow};"></div><span>Outflow (-)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.ma}; height: 2px;"></div><span>4-Week MA</span></div>
+      `;
+    } else if (currentTab === 'credit') {
+      // Credit Flow: M2 YoY% 선 + Stablecoin YoY% 점선 + SC/M2 비율 면적
+      const m2YoY = data.timeline.map(d => d.m2YoY || 0);
+      const scM2Ratio = data.timeline.map(d => d.scM2Ratio || 0);
+
+      datasets = [
+        {
+          label: 'SC/M2 Ratio',
+          data: scM2Ratio,
+          backgroundColor: 'rgba(6, 182, 212, 0.15)',
+          borderColor: 'transparent',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          yAxisID: 'y1',
+          order: 3
+        },
+        {
+          label: 'M2 YoY%',
+          data: m2YoY,
+          borderColor: CONFIG.colors.m2,
+          borderWidth: 3,
+          tension: 0.3,
+          pointRadius: 0,
+          fill: false,
+          yAxisID: 'y',
+          order: 1
+        },
+        {
+          label: 'SC/M2 %',
+          data: scM2Ratio,
+          borderColor: CONFIG.colors.stablecoin,
+          borderWidth: 2,
+          borderDash: [6, 4],
+          tension: 0.3,
+          pointRadius: 0,
+          fill: false,
+          yAxisID: 'y1',
+          order: 2
+        }
+      ];
+      legendHtml = `
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.m2};"></div><span>M2 YoY%</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.stablecoin}; border: 1px dashed ${CONFIG.colors.stablecoin};"></div><span>SC/M2 Ratio</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: rgba(6, 182, 212, 0.3);"></div><span>Crypto Allocation</span></div>
+      `;
+    } else if (currentTab === 'policy') {
+      // Policy Flow: TGA + RRP 선 + Combined Delta 막대
+      const policyDelta = data.timeline.map(d => d.tgaDelta + d.rrpDelta);
+
+      datasets = [
+        {
+          label: 'Policy Delta',
+          data: policyDelta,
+          backgroundColor: policyDelta.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
+          borderRadius: 3,
+          type: 'bar',
+          yAxisID: 'y1',
+          order: 3
+        },
+        {
+          label: 'TGA ($B)',
+          data: data.timeline.map(d => d.tga),
+          borderColor: CONFIG.colors.tga,
+          borderWidth: 2.5,
+          tension: 0.3,
+          pointRadius: 0,
+          yAxisID: 'y',
+          order: 1
+        },
+        {
+          label: 'RRP ($B)',
+          data: data.timeline.map(d => d.rrp),
+          borderColor: CONFIG.colors.rrp,
+          borderWidth: 2.5,
+          tension: 0.3,
+          pointRadius: 0,
+          yAxisID: 'y',
+          order: 2
+        }
+      ];
+      legendHtml = `
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.tga};"></div><span>TGA Balance</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.rrp};"></div><span>RRP Balance</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: rgba(16, 185, 129, 0.6);"></div><span>Policy Delta (+/-)</span></div>
+      `;
+    } else if (currentTab === 'details') {
+      // Details: 각 컴포넌트 델타
+      datasets = [
+        {
+          label: 'M2 Δ',
+          data: data.timeline.map(d => d.m2Delta),
+          borderColor: CONFIG.colors.m2,
+          borderWidth: 2,
+          tension: 0,
+          pointRadius: 0
+        },
+        {
+          label: 'TGA Δ',
+          data: data.timeline.map(d => d.tgaDelta),
+          borderColor: CONFIG.colors.tga,
+          borderWidth: 2,
+          tension: 0,
+          pointRadius: 0
+        },
+        {
+          label: 'RRP Δ',
+          data: data.timeline.map(d => d.rrpDelta),
+          borderColor: CONFIG.colors.rrp,
+          borderWidth: 2,
+          tension: 0,
+          pointRadius: 0
+        }
+      ];
+      annotations = {
+        zeroLine: {
+          type: 'line',
+          yMin: 0, yMax: 0,
+          borderColor: '#64748b',
+          borderWidth: 1,
+          borderDash: [4, 4]
+        }
+      };
+      legendHtml = `
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.m2};"></div><span>M2 Delta</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.tga};"></div><span>TGA Delta</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.rrp};"></div><span>RRP Delta</span></div>
+      `;
+    }
+
+    document.getElementById('chartLegend').innerHTML = legendHtml;
+
+    // 탭별 scales 설정
+    let scales = {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+      y: {
+        grid: { color: '#f1f5f9' },
+        ticks: { callback: v => '$' + v.toFixed(0) + 'B', font: { size: 10 } }
+      }
+    };
+
+    if (currentTab === 'credit') {
+      scales = {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+        y: {
+          type: 'linear',
+          position: 'left',
+          grid: { color: '#f1f5f9' },
+          ticks: { callback: v => v.toFixed(1) + '%', color: CONFIG.colors.m2, font: { size: 10, weight: 'bold' } },
+          title: { display: true, text: 'M2 YoY%', color: CONFIG.colors.m2 }
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          grid: { display: false },
+          ticks: { callback: v => v.toFixed(2) + '%', color: CONFIG.colors.stablecoin, font: { size: 10 } },
+          title: { display: true, text: 'SC/M2 Ratio', color: CONFIG.colors.stablecoin }
+        }
+      };
+    } else if (currentTab === 'policy') {
+      scales = {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+        y: {
+          type: 'linear',
+          position: 'left',
+          grid: { color: '#f1f5f9' },
+          ticks: { callback: v => '$' + v.toFixed(0) + 'B', font: { size: 10 } },
+          title: { display: true, text: 'Balance ($B)' }
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          grid: { display: false },
+          ticks: { callback: v => (v >= 0 ? '+' : '') + v.toFixed(0) + 'B', font: { size: 10 } },
+          title: { display: true, text: 'Weekly Delta' }
+        }
+      };
+    }
+
+    mainChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: dates, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleFont: { family: 'Inter', size: 13, weight: '600' },
+            bodyFont: { family: 'Orbitron', size: 13 },
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: {
+              label: ctx => {
+                const val = ctx.raw;
+                if (currentTab === 'credit') {
+                  return ` ${ctx.dataset.label}: ${val.toFixed(2)}%`;
+                }
+                return ` ${ctx.dataset.label}: $${val.toFixed(1)}B`;
+              }
+            }
+          },
+          annotation: { annotations }
+        },
+        scales: scales
+      }
+    });
+  }
+
+  // ===== UI UPDATE =====
+  function updateSignalMatrix(data) {
+    const last = data.timeline[data.timeline.length - 1];
+    const prev = data.timeline.length > 1 ? data.timeline[data.timeline.length - 2] : last;
+
+    // M2 Growth (YoY 근사: 52주 전 대비)
+    const m2First = data.timeline[0]?.m2 || last.m2;
+    const m2Growth = ((last.m2 - m2First) / m2First) * 100 * (365 / currentPeriod);
+    updateSignalCard('m2', m2Growth.toFixed(1), '%',
+      m2Growth >= 5 ? 'green' : m2Growth >= 2 ? 'yellow' : 'red',
+      m2Growth >= 5 ? '확장' : m2Growth >= 2 ? '보통' : '긴축');
+
+    // TGA Balance
+    const tgaVal = last.tga;
+    updateSignalCard('tga', tgaVal.toFixed(0), '$B',
+      tgaVal > 800 ? 'red' : tgaVal > 400 ? 'yellow' : 'green',
+      tgaVal > 800 ? '흡수중' : tgaVal > 400 ? '보통' : '방출중');
+
+    // RRP Balance
+    const rrpVal = last.rrp;
+    updateSignalCard('rrp', rrpVal.toFixed(0), '$B',
+      rrpVal > 500 ? 'yellow' : rrpVal > 100 ? 'green' : 'green',
+      rrpVal > 500 ? '과잉' : rrpVal > 100 ? '보통' : '소진');
+
+    // Crypto Rotation (Stablecoin 증가율 vs M2 증가율)
+    const scMcap = data.stablecoinMcap;
+    const cryptoRotation = m2Growth > 0 ? (scMcap / last.m2) * 100 : 0;
+    updateSignalCard('sc', cryptoRotation.toFixed(1), '%',
+      cryptoRotation >= 10 ? 'green' : cryptoRotation >= 5 ? 'yellow' : 'red',
+      cryptoRotation >= 10 ? '유입' : cryptoRotation >= 5 ? '보통' : '이탈');
+
+    // Policy Stance = (TGA_trend + RRP_trend) / 2
+    // TGA 감소 = 방출(+1), RRP 감소 = 방출(+1)
+    // 4주 트렌드 기준
+    const weeksBack = Math.min(4, data.timeline.length - 1);
+    const tga4wAgo = data.timeline[data.timeline.length - 1 - weeksBack]?.tga || last.tga;
+    const rrp4wAgo = data.timeline[data.timeline.length - 1 - weeksBack]?.rrp || last.rrp;
+    const tgaTrend = (tga4wAgo - last.tga) / tga4wAgo * 100;  // 감소하면 양수
+    const rrpTrend = (rrp4wAgo - last.rrp) / Math.max(rrp4wAgo, 1) * 100;
+    const policyStance = (tgaTrend + rrpTrend) / 2;
+
+    let policyLabel, policyColor, policyStatus;
+    if (policyStance > 5) {
+      policyLabel = '완화';
+      policyColor = 'green';
+      policyStatus = 'Easing';
+    } else if (policyStance > -5) {
+      policyLabel = '중립';
+      policyColor = 'yellow';
+      policyStatus = 'Neutral';
+    } else {
+      policyLabel = '긴축';
+      policyColor = 'red';
+      policyStatus = 'Tightening';
+    }
+    updateSignalCard('policy', policyStatus, '',
+      policyColor,
+      policyLabel);
+
+    // Net Flow
+    const netFlow = last.netFlow;
+    const netFlowEl = document.getElementById('netFlowValue');
+    netFlowEl.textContent = `$${netFlow >= 0 ? '+' : ''}${netFlow.toFixed(0)}B`;
+    netFlowEl.className = 'net-flow-value ' + (netFlow >= 0 ? 'positive' : 'negative');
+
+    const trendEl = document.getElementById('netFlowTrend');
+    const trendIcon = trendEl.querySelector('i');
+    const trendDesc = document.getElementById('netFlowDesc');
+
+    if (netFlow > 50) {
+      trendEl.className = 'net-flow-trend up';
+      trendIcon.className = 'fas fa-arrow-up';
+      trendDesc.textContent = '유동성 확장 중';
+    } else if (netFlow < -50) {
+      trendEl.className = 'net-flow-trend down';
+      trendIcon.className = 'fas fa-arrow-down';
+      trendDesc.textContent = '유동성 축소 중';
+    } else {
+      trendEl.className = 'net-flow-trend';
+      trendIcon.className = 'fas fa-minus';
+      trendDesc.textContent = '중립 상태';
+    }
+
+    // Status Badge
+    updateStatusBadge(netFlow, m2Growth);
+
+    // Info Cards
+    updateInfoCards(last, prev);
+
+    // Update time
+    document.getElementById('updateTime').textContent = `Data: ${last.date}`;
+  }
+
+  function updateSignalCard(id, value, unit, color, status) {
+    document.getElementById(`${id}Value`).innerHTML = `${value}<span class="signal-unit">${unit}</span>`;
+
+    const icon = document.getElementById(`${id}Icon`);
+    icon.className = 'signal-icon ' + color;
+
+    const statusEl = document.getElementById(`${id}Status`);
+    statusEl.textContent = status;
+    statusEl.className = 'signal-status ' + (color === 'green' ? 'normal' : color === 'yellow' ? 'caution' : 'danger');
+  }
+
+  function updateStatusBadge(netFlow, m2Growth) {
+    const badge = document.getElementById('statusBadge');
+    const text = document.getElementById('statusText');
+
+    let status = 'normal';
+    if (netFlow > 100 && m2Growth >= 5) status = 'inflow';
+    else if (netFlow < -100 || m2Growth < 2) status = 'outflow';
+
+    if (status === 'inflow') {
+      badge.style.cssText = 'background:#dcfce7; border-color:#bbf7d0; color:#166534';
+      badge.querySelector('.status-dot').style.background = '#166534';
+      text.textContent = 'Liquidity Expanding';
+    } else if (status === 'outflow') {
+      badge.style.cssText = 'background:#fee2e2; border-color:#fecaca; color:#dc2626';
+      badge.querySelector('.status-dot').style.background = '#dc2626';
+      text.textContent = 'Liquidity Contracting';
+    } else {
+      badge.style.cssText = 'background:#fef9c3; border-color:#fde68a; color:#ca8a04';
+      badge.querySelector('.status-dot').style.background = '#ca8a04';
+      text.textContent = 'Neutral Flow';
+    }
+  }
+
+  function updateInfoCards(last, prev) {
+    const statusCard = document.getElementById('statusCard');
+    const summary = document.getElementById('statusSummary');
+    const weeklyChanges = document.getElementById('weeklyChanges');
+
+    const netFlow = last.netFlow;
+    if (netFlow > 50) {
+      statusCard.className = 'info-card inflow';
+      summary.innerHTML = `주간 <span class="info-value">$${netFlow.toFixed(0)}B</span> 순유입 - 유동성 확장 중`;
+    } else if (netFlow < -50) {
+      statusCard.className = 'info-card outflow';
+      summary.innerHTML = `주간 <span class="info-value">$${Math.abs(netFlow).toFixed(0)}B</span> 순유출 - 유동성 축소 중`;
+    } else {
+      statusCard.className = 'info-card neutral';
+      summary.innerHTML = `주간 변동 <span class="info-value">$${netFlow.toFixed(0)}B</span> - 중립 상태`;
+    }
+
+    weeklyChanges.innerHTML = `
+      <li>M2: <strong>${last.m2Delta >= 0 ? '+' : ''}${last.m2Delta.toFixed(1)}B</strong></li>
+      <li>TGA: <strong>${last.tgaDelta >= 0 ? '+' : ''}${last.tgaDelta.toFixed(1)}B</strong> (방출)</li>
+      <li>RRP: <strong>${last.rrpDelta >= 0 ? '+' : ''}${last.rrpDelta.toFixed(1)}B</strong> (방출)</li>
+    `;
+  }
+
+  window.toggleInfoCard = function(cardId) {
+    document.getElementById(cardId).classList.toggle('expanded');
+  };
+
+  // ===== CACHE =====
+  function saveWidgetCache(data) {
+    if (typeof DataManager === 'undefined') return;
+
+    const last = data.timeline[data.timeline.length - 1];
+    const m2First = data.timeline[0]?.m2 || last.m2;
+    const m2Growth = ((last.m2 - m2First) / m2First) * 100 * (365 / currentPeriod);
+
+    const widgetData = {
+      netFlow: last.netFlow,
+      m2Growth: m2Growth,
+      tga: last.tga,
+      rrp: last.rrp,
+      stablecoinMcap: data.stablecoinMcap,
+      updated: new Date().toISOString()
+    };
+
+    DataManager.saveWidgetData('liquidity-flow', widgetData);
+    console.log('[Detail] Widget cache saved:', widgetData);
+  }
+
+  // ===== INIT =====
+  async function init(days = 180) {
+    try {
+      const [m2, tga, rrp, sc] = await Promise.all([
+        getFredSeries('M2SL', days + 365),  // M2: YoY 계산을 위해 +1년
+        getFredSeries('WTREGEN', days),     // TGA: 주간
+        getFredSeries('RRPONTSYD', days),   // RRP: 일간
+        getStablecoinData()                 // Stablecoin: 현재 시총
+      ]);
+
+      if (!tga.length) {
+        console.error('[Init] TGA data not available');
+        return;
+      }
+
+      processedData = processData(m2, tga, rrp, sc);
+      renderChart(processedData);
+      updateSignalMatrix(processedData);
+      saveWidgetCache(processedData);
+
+    } catch (e) {
+      console.error('[Init] Error:', e);
+    }
+  }
+
+  // Start
+  init(180);
+</script>
+</body>
+</html>
