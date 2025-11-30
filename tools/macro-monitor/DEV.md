@@ -55,16 +55,33 @@ tools/macro-monitor/
 │   ├── liquidity-stress.html ← Layer 1 상세
 │   ├── liquidity-flow.html   ← Layer 2 상세
 │   └── ...
-└── shared/                   ← 공통 모듈 (현재 인라인됨)
-    ├── data-manager.js       ← 캐시 엔진 (현재 각 파일에 인라인)
-    └── constants.js          ← 상수 정의
+└── shared/                   ← 공통 모듈 ⚠️ 현재 미사용
+    ├── data-manager.js       ← 캐시 엔진 (❌ 미사용, 각 파일에 인라인됨)
+    └── constants.js          ← 상수 정의 (❌ 미사용)
 ```
+
+### ⚠️ 공통 모듈 현황 (리팩토링 필요)
+
+**현재 문제**:
+- `MacroDataManager` 클래스가 **4개 파일에 중복 인라인**
+  - `widgets/liquidity-stress.html`
+  - `widgets/liquidity-flow.html`
+  - `details/liquidity-stress.html`
+  - `details/liquidity-flow.html`
+- `shared/data-manager.js` 파일은 존재하지만 **사용하지 않음**
+- 원인: iframe 컨텍스트에서 외부 스크립트 로딩 실패 문제 (2025-11-29 버그)
+
+**해결 방안 (Layer 3 전 진행 예정)**:
+1. ES Module로 전환 (`type="module"` + `import`)
+2. 또는 빌드 도구로 번들링
+
+**리팩토링 시점**: **Layer 3 개발 전 최우선 작업**
 
 ### 새 지표 추가 시
 1. `details/[지표명].html` 생성 (API 호출 + 캐시 저장)
 2. `widgets/[지표명].html` 생성 (캐시 읽기 전용)
 3. `index.html` Command Center에 iframe 추가
-4. 지표 3개 이상 시 `shared/` 공통 모듈화 검토
+4. **공통 모듈 import** (리팩토링 후)
 
 ---
 
@@ -234,7 +251,7 @@ Widget 로드 시 → DataManager.getWidgetData() 읽기
 | tension: 0 | 직선 스타일로 데이터 변화 명확히 표시 |
 | widgets/details 분리 | 확장성: 지표 추가 시 패턴 명확 |
 | 밝은 테마 | 사이트 전체 톤과 통일 |
-| shared/ 지연 생성 | 지표 3개 이상 시 공통화 (YAGNI) |
+| ~~shared/ 지연 생성~~ | ~~지표 3개 이상 시 공통화 (YAGNI)~~ → **Layer 3 전 리팩토링 예정** |
 
 ---
 
