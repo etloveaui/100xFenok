@@ -154,7 +154,10 @@ class MacroDataManager {
 // 싱글톤 인스턴스
 const DataManager = new MacroDataManager();
 
-// ES Module / Script 호환
+// ES Module export (브라우저용)
+export { MacroDataManager, DataManager };
+
+// CommonJS 호환 (Node.js 테스트용)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { MacroDataManager, DataManager };
 }

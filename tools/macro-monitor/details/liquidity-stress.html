@@ -12,29 +12,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
 
-  <!-- Macro Monitor DataManager (인라인) -->
-  <script>
-  class MacroDataManager {
-    constructor() { this.prefix = 'macro_'; this.ttl = 30 * 60 * 1000; }
-    saveWidgetData(widgetId, data) {
-      try {
-        localStorage.setItem(this.prefix + widgetId, JSON.stringify({
-          data, timestamp: Date.now(), expires: Date.now() + this.ttl
-        }));
-        window.dispatchEvent(new CustomEvent('macro-data-updated', { detail: { widgetId, data } }));
-        return true;
-      } catch (e) { console.error('[DataManager] Save failed:', e); return false; }
-    }
-    getWidgetData(widgetId) {
-      try {
-        const cached = localStorage.getItem(this.prefix + widgetId);
-        if (!cached) return null;
-        const { data, expires } = JSON.parse(cached);
-        return Date.now() > expires ? null : data;
-      } catch (e) { return null; }
-    }
-  }
-  const DataManager = new MacroDataManager();
+  <!-- DataManager ES Module import -->
+  <script type="module">
+    import { DataManager } from '../shared/data-manager.js';
+    window.DataManager = DataManager;  // 전역 노출 (비모듈 스크립트 호환)
   </script>
   
   <style>
