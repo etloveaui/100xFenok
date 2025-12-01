@@ -122,16 +122,76 @@ const url = 'https://fed-proxy.etloveaui.workers.dev/fred/series/observations?..
 - 반응형 하이브리드 레이아웃
 - 기간 옵션: 1M/3M/6M/1Y/3Y/MAX
 
-### Layer 2: Liquidity Flow 💧
-**Widget** (`widgets/liquidity-flow.html`)
-- Net Flow Hero + 2x2 Indicator Grid
-- 4개 지표 신호등 (M2, TGA, RRP, Stablecoin)
-- 캐시 기반 + 백그라운드 Detail 로드
+### Layer 2: Liquidity Flow 💧 (v2.1 완료 ✅)
 
-**Detail** (`details/liquidity-flow.html`)
-- 5개 신호 매트릭스 (M2, TGA, RRP, Crypto, Policy Stance)
-- 4탭 차트 (Net Flow / Credit Flow / Policy Flow / Details)
-- API: FRED (M2SL, WTREGEN, RRPONTSYD) + DefiLlama
+#### 핵심 변경: Net Liquidity 정식 공식
+```
+Net Liquidity = Fed Balance Sheet (WALCL) - TGA - RRP
+```
+- 이전: `M2Δ + TGA방출 + RRP감소` (근사치)
+- 변경: Fed 공식 적용 (WALCL 데이터 추가)
+
+#### v2.1 정합성 수정 (2025-12-01, Gemini 협업)
+| 항목 | 문제 | 해결 |
+|------|------|------|
+| 변수명 불일치 | `m2Growth` → `0.0%` 표시 | `m2YoY`로 매핑 |
+| 상태 판단 로직 | Widget vs Detail 불일치 | AND 조건 통일 |
+| 단위 변환 | B/T 혼선 → SC/M2 `0.00%` | 방어적 변환 로직 |
+| Neutral 아이콘 | 📈 → ➡️ | 범위별 아이콘 수정 |
+
+#### Overall 상태 판단 기준 (Widget-Detail 동일)
+```javascript
+// Expanding: Net Liq > 50 AND M2 YoY >= 4
+// Contracting: Net Liq < -50 OR M2 YoY < 2
+// Neutral: 그 외
+```
+
+#### Signal Matrix: 5개 → 3개
+| # | 지표 | Primary | Subtext |
+|---|------|---------|---------|
+| 1 | M2 | YoY% | $22.3T (총량) |
+| 2 | Net Liquidity | $5.8T | Δ +$39B |
+| 3 | Stablecoin | $226B | SC/M2 % |
+
+- 카드 정렬: 규모 순 (M2 → Net Liq → SC)
+- ❌ 제거: TGA, RRP, Policy Stance (Net Liquidity에 통합)
+- ✅ SC는 M2에 미포함 → 별도 유지
+
+#### Detail 탭: 3개 (v2 통합)
+| 탭 | 내용 | 변경사항 |
+|----|------|----------|
+| **Liquidity Pulse** | Stacked Bar (Fed BS, -TGA, -RRP) + Net Liq Δ 선 | Components 통합 |
+| Credit Flow | M2 YoY% + M2 총량 면적 | 유지 |
+| Crypto Bridge | SC 총량 + SC/M2 Ratio (이중축) | SC Total 추가 |
+
+- ❌ 제거: Components 탭 (Liquidity Pulse로 통합, 중복 제거)
+
+#### 임계값
+| 지표 | 🟢 | 🟡 | 🔴 |
+|------|----|----|----|
+| M2 YoY | ≥6% | 2-6% | <2% |
+| Net Liquidity Δ | >$50B | ±$50B | <-$50B |
+| SC Total | ≥$350B | $250-350B | <$250B |
+
+#### API 소스
+| 지표 | API | FRED Code |
+|------|-----|-----------|
+| Fed Balance Sheet | FRED | WALCL |
+| M2 | FRED | M2SL |
+| TGA | FRED | WTREGEN |
+| RRP | FRED | RRPONTSYD |
+| Stablecoin | DefiLlama | stablecoins |
+
+**Widget** (`widgets/liquidity-flow.html`) - v2.1 완료 ✅
+- Net Liquidity Hero + 3개 지표 (1x3 그리드)
+- 지표: M2 ($T + YoY%), Net Liq ($T + Δ$B), SC ($B + SC/M2%)
+- 캐시 기반 + 백그라운드 Detail 로드
+- 단위 변환: `>100 ? B→T 변환 : 그대로`
+
+**Detail** (`details/liquidity-flow.html`) - v2.1 완료 ✅
+- 3개 Signal Matrix (M2, Net Liquidity, SC)
+- 3탭 차트 (Liquidity Pulse / Credit Flow / Crypto Bridge)
+- saveWidgetCache: m2YoY, m2Total, netLiquidity, netLiquidityDelta, stablecoinMcap
 
 ---
 
