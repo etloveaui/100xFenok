@@ -55,27 +55,28 @@ tools/macro-monitor/
 │   ├── liquidity-stress.html ← Layer 1 상세
 │   ├── liquidity-flow.html   ← Layer 2 상세
 │   └── ...
-└── shared/                   ← 공통 모듈 ⚠️ 현재 미사용
-    ├── data-manager.js       ← 캐시 엔진 (❌ 미사용, 각 파일에 인라인됨)
-    └── constants.js          ← 상수 정의 (❌ 미사용)
+└── shared/                   ← 공통 모듈 (ES Module)
+    ├── data-manager.js       ← 캐시 엔진 (ES Module export)
+    └── constants.js          ← 상수 정의 (ES Module export)
 ```
 
-### ⚠️ 공통 모듈 현황 (리팩토링 필요)
+### ✅ 공통 모듈 ES Module 전환 완료 (2025-12-01, 테스트 전)
 
-**현재 문제**:
-- `MacroDataManager` 클래스가 **4개 파일에 중복 인라인**
-  - `widgets/liquidity-stress.html`
-  - `widgets/liquidity-flow.html`
-  - `details/liquidity-stress.html`
-  - `details/liquidity-flow.html`
-- `shared/data-manager.js` 파일은 존재하지만 **사용하지 않음**
-- 원인: iframe 컨텍스트에서 외부 스크립트 로딩 실패 문제 (2025-11-29 버그)
+**변경 내용**:
+- `shared/data-manager.js`: `export { MacroDataManager, DataManager }` 추가
+- `shared/constants.js`: `export { MACRO_CONSTANTS }` 추가
+- 4개 HTML 파일: 인라인 코드 제거 → `import` 사용
 
-**해결 방안 (Layer 3 전 진행 예정)**:
-1. ES Module로 전환 (`type="module"` + `import`)
-2. 또는 빌드 도구로 번들링
+**사용 패턴**:
+```html
+<!-- ES Module import -->
+<script type="module">
+  import { DataManager } from '../shared/data-manager.js';
+  window.DataManager = DataManager;  // 전역 노출
+</script>
+```
 
-**리팩토링 시점**: **Layer 3 개발 전 최우선 작업**
+**상태**: ⏳ 로컬 테스트 대기
 
 ### 새 지표 추가 시
 1. `details/[지표명].html` 생성 (API 호출 + 캐시 저장)
@@ -442,26 +443,4 @@ Crypto_Rotation = (Stablecoin_delta / M2_delta) * 100
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2025-12-01 | **Liquidity Flow Widget 완성**: Detail 캐시 연동, 2x2 그리드 레이아웃 (NetFlow Hero + 4지표), Command Center 라이브 위젯 연결 |
-| 2025-12-01 | **6-Sense Model 설계**: 매크로 스코어링 시스템 (-6~+6), 6가지 지표 데이터 매핑 (philosophy.md에 상세) |
-| 2025-12-01 | **위젯 로드맵 추가**: 2-Tier 시스템 (Compact/Standard), Liquidity Flow Widget 설계, main.html 방향 |
-| 2025-12-01 | **Layer 2 구현 완료**: Detail 페이지 (~1000줄), 5개 신호 (M2, TGA, RRP, Crypto, Policy Stance), 4탭 차트 |
-| 2025-11-30 | **Detail 설계 확정**: Signal-First Hybrid (4탭), Crypto Rotation 신호, Weekly 주기 통일 |
-| 2025-11-30 | **관리자 모드 계획 추가**: footer "alive" 진입 (상세 추후 논의) |
-| 2025-11-30 | **방향성 재정립**: 3-Layer 아키텍처, 설계 철학 정의, Phase 3 재구성 |
-| 2025-11-29 | **main.html Compact Hero Banner** (1위젯 + CTA) |
-| 2025-11-29 | **Command Center** index.html 대시보드 생성 |
-| 2025-11-29 | **위젯 시스템 아키텍처 설계** (docs/ARCHITECTURE.md) |
-| 2025-11-29 | 설명 카드 PC 특화 (기본 펼침/버튼 숨김/글씨 +2px) |
-| 2025-11-29 | 하단 설명 카드 3개 구현 (동적 상태/FRED 링크/인라인 확장) |
-| 2025-11-29 | 반응형 하이브리드 레이아웃 (PC/태블릿/모바일) |
-| 2025-11-29 | 차트 개선 5가지 (Gradient, Glow, Tooltip, Background, Hover) |
-| 2025-11-29 | 기간 옵션 확장 (1Y 기본, 3Y/MAX 추가) |
-| 2025-11-29 | 임계선 라벨 좌측 + 반투명 |
-| 2025-11-28 | 폴더 구조 정리 (widgets/, details/), fed/ 삭제 |
-| 2025-11-28 | detail 밝은 테마 적용 |
-| 2025-11-27 | 위젯 카드형 재설계, 문서 정리 |
-| 2025-11-26 | fed → macro-monitor 폴더 이름 변경 |
-| 2025-11-25 | 위젯/상세 페이지 기본 구현 |
+> 상세 이력: `CookBook/docs/CHANGELOG.md` 참조

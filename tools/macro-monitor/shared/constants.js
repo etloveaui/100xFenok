@@ -78,7 +78,10 @@ const MACRO_CONSTANTS = {
   }
 };
 
-// ES Module / Script 호환
+// ES Module export (브라우저용)
+export { MACRO_CONSTANTS };
+
+// CommonJS 호환 (Node.js 테스트용)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = MACRO_CONSTANTS;
 }
