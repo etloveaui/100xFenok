@@ -601,20 +601,20 @@
             <div class="gauge-status status-normal" id="rbGdpStatus">정상</div>
           </div>
         </div>
-        <!-- 세그먼트 바: RB/GDP 역순 (8% 위험 → 11%+ 정상) -->
+        <!-- 세그먼트 바: RB/GDP (8% 미만 위험 → 12%+ 정상) - Fed 기준, 범위 6-14% -->
         <div class="segment-bar">
-          <div class="segment seg-danger"></div>
-          <div class="segment seg-warning"></div>
-          <div class="segment seg-caution"></div>
-          <div class="segment seg-normal"></div>
+          <div class="segment seg-danger" style="flex: 2;"></div>
+          <div class="segment seg-warning" style="flex: 2;"></div>
+          <div class="segment seg-caution" style="flex: 2;"></div>
+          <div class="segment seg-normal" style="flex: 2;"></div>
           <div class="gauge-marker" id="rbGdpMarker" style="left: 50%;"></div>
         </div>
         <div class="segment-labels">
-          <span>≤8%</span>
-          <span>9%</span>
+          <span>6%</span>
+          <span>8%</span>
           <span>10%</span>
-          <span>11%</span>
-          <span>12%+</span>
+          <span>12%</span>
+          <span>14%+</span>
         </div>
         <div class="zone-labels">
           <div class="zone-label zone-danger" id="rbGdpZone0">위험</div>
@@ -668,8 +668,8 @@
     <div class="custom-legend">
       <div class="legend-item"><div class="legend-color" style="background: #2563eb;"></div><span>Spread</span></div>
       <div class="legend-item"><div class="legend-color" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981;"></div><span>Reserves</span></div>
-      <div class="legend-item"><div class="legend-color" style="background: #eab308; height: 2px; border: 1px dashed #eab308;"></div><span>11% 주의</span></div>
-      <div class="legend-item"><div class="legend-color" style="background: #ef4444; height: 2px; border: 1px dashed #ef4444;"></div><span>10% 경계</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #22c55e; height: 2px; border: 1px dashed #22c55e;"></div><span>12% 정상</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #eab308; height: 2px; border: 1px dashed #eab308;"></div><span>10% 주의</span></div>
       <div class="legend-item"><div class="legend-color" style="background: #dc2626;"></div><span>8% 위험</span></div>
     </div>
 
@@ -800,7 +800,7 @@
     const lookback = seriesId === 'GDP' ? 1095 : days;
     const end = new Date().toISOString().split('T')[0];
     const start = new Date(Date.now() - lookback * 86400000).toISOString().split('T')[0];
-    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+    const url = `https://fed-proxy.etloveaui.workers.dev/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
     
     const json = await fetchData(url);
     if (!json || !json.observations) return [];
@@ -946,14 +946,14 @@
     const spreads = dataObj.timeline.map(d => d.spread);
     const reserves = dataObj.timeline.map(d => d.reserves);
 
-    // 기준선 값 계산
+    // 기준선 값 계산 (Fed 기준: 12%+ 정상, 10% 주의, 8% 위험)
     const gdpT = dataObj.latestLclor / 0.10;
-    const line11pct = gdpT * 0.11;
+    const line12pct = gdpT * 0.12;
     const line10pct = dataObj.latestLclor;
     const line8pct = gdpT * 0.08;
 
     // y축 범위 계산
-    const allVals = [...reserves, dataObj.latestLclor, line8pct, line11pct];
+    const allVals = [...reserves, dataObj.latestLclor, line8pct, line12pct];
     const minVal = Math.min(...allVals);
     const maxVal = Math.max(...allVals);
     const yRightMin = minVal * 0.95;
@@ -1030,7 +1030,7 @@
           ticks: { callback: v => '$' + v.toFixed(2) + 'T', color: '#10b981', font: { size: 10 } }
         }
       };
-      annotations = getFullAnnotations(line11pct, line10pct, line8pct, yRightMin, yRightMax);
+      annotations = getFullAnnotations(line12pct, line10pct, line8pct, yRightMin, yRightMax);
 
     } else if (effectiveMetric === 'spread') {
       // Spread Only (전체 Y축 활용)
@@ -1112,21 +1112,21 @@
           title: { display: true, text: 'Reserves ($T)', font: { size: 12, weight: '600' }, color: '#10b981' }
         }
       };
-      // Reserves 임계선 - 모바일: 좌측 + 반투명
+      // Reserves 임계선 - 모바일: 좌측 + 반투명 (Fed 기준: 12%+ 정상, 10-12% 주의, 8-10% 경계, <8% 위험)
       annotations = {
-        zone11: { type: 'box', yScaleID: 'y', yMin: line11pct, yMax: yRightMax, backgroundColor: 'rgba(134, 239, 172, 0.12)', borderWidth: 0 },
-        zone10: { type: 'box', yScaleID: 'y', yMin: line10pct, yMax: line11pct, backgroundColor: 'rgba(253, 224, 71, 0.10)', borderWidth: 0 },
-        zone9: { type: 'box', yScaleID: 'y', yMin: line8pct, yMax: line10pct, backgroundColor: 'rgba(253, 186, 116, 0.10)', borderWidth: 0 },
-        zone8: { type: 'box', yScaleID: 'y', yMin: yRightMin, yMax: line8pct, backgroundColor: 'rgba(252, 165, 165, 0.12)', borderWidth: 0 },
-        line11: {
-          type: 'line', yMin: line11pct, yMax: line11pct, yScaleID: 'y',
+        zone12: { type: 'box', yScaleID: 'y', yMin: line12pct, yMax: yRightMax, backgroundColor: 'rgba(134, 239, 172, 0.12)', borderWidth: 0 },
+        zone10: { type: 'box', yScaleID: 'y', yMin: line10pct, yMax: line12pct, backgroundColor: 'rgba(253, 224, 71, 0.10)', borderWidth: 0 },
+        zone8: { type: 'box', yScaleID: 'y', yMin: line8pct, yMax: line10pct, backgroundColor: 'rgba(253, 186, 116, 0.10)', borderWidth: 0 },
+        zoneDanger: { type: 'box', yScaleID: 'y', yMin: yRightMin, yMax: line8pct, backgroundColor: 'rgba(252, 165, 165, 0.12)', borderWidth: 0 },
+        line12: {
+          type: 'line', yMin: line12pct, yMax: line12pct, yScaleID: 'y',
           borderColor: '#22c55e', borderWidth: 2, borderDash: [6, 4],
-          label: { display: true, content: `11% 정상`, position: 'start', backgroundColor: 'rgba(220, 252, 231, 0.85)', color: '#166534', font: { size: 10, weight: 'bold' }, padding: 4 }
+          label: { display: true, content: `12% 정상`, position: 'start', backgroundColor: 'rgba(220, 252, 231, 0.85)', color: '#166534', font: { size: 10, weight: 'bold' }, padding: 4 }
         },
         line10: {
           type: 'line', yMin: line10pct, yMax: line10pct, yScaleID: 'y',
           borderColor: '#eab308', borderWidth: 2, borderDash: [6, 4],
-          label: { display: true, content: `10% 경계`, position: 'start', backgroundColor: 'rgba(254, 249, 195, 0.85)', color: '#854d0e', font: { size: 10, weight: 'bold' }, padding: 4 }
+          label: { display: true, content: `10% 주의`, position: 'start', backgroundColor: 'rgba(254, 249, 195, 0.85)', color: '#854d0e', font: { size: 10, weight: 'bold' }, padding: 4 }
         },
         line8: {
           type: 'line', yMin: line8pct, yMax: line8pct, yScaleID: 'y',
@@ -1192,22 +1192,22 @@
     });
   }
 
-  // ===== PC용 Annotation 설정 (듀얼 축) =====
-  function getFullAnnotations(line11pct, line10pct, line8pct, yRightMin, yRightMax) {
+  // ===== PC용 Annotation 설정 (듀얼 축) - Fed 기준: 12%+ 정상, 10-12% 주의, 8-10% 경계, <8% 위험 =====
+  function getFullAnnotations(line12pct, line10pct, line8pct, yRightMin, yRightMax) {
     return {
-      zone11: { type: 'box', yScaleID: 'y_right', yMin: line11pct, yMax: yRightMax, backgroundColor: 'rgba(134, 239, 172, 0.08)', borderWidth: 0 },
-      zone10: { type: 'box', yScaleID: 'y_right', yMin: line10pct, yMax: line11pct, backgroundColor: 'rgba(253, 224, 71, 0.08)', borderWidth: 0 },
-      zone9: { type: 'box', yScaleID: 'y_right', yMin: line8pct, yMax: line10pct, backgroundColor: 'rgba(253, 186, 116, 0.08)', borderWidth: 0 },
-      zone8: { type: 'box', yScaleID: 'y_right', yMin: yRightMin, yMax: line8pct, backgroundColor: 'rgba(252, 165, 165, 0.12)', borderWidth: 0 },
-      line11: {
-        type: 'line', yMin: line11pct, yMax: line11pct, yScaleID: 'y_right',
-        borderColor: '#eab308', borderWidth: 2, borderDash: [8, 4],
-        label: { display: true, content: `11% 주의 $${line11pct.toFixed(2)}T`, position: 'start', backgroundColor: '#fef9c3', color: '#854d0e', font: { size: 10, weight: 'bold' }, padding: 4 }
+      zone12: { type: 'box', yScaleID: 'y_right', yMin: line12pct, yMax: yRightMax, backgroundColor: 'rgba(134, 239, 172, 0.08)', borderWidth: 0 },
+      zone10: { type: 'box', yScaleID: 'y_right', yMin: line10pct, yMax: line12pct, backgroundColor: 'rgba(253, 224, 71, 0.08)', borderWidth: 0 },
+      zone8: { type: 'box', yScaleID: 'y_right', yMin: line8pct, yMax: line10pct, backgroundColor: 'rgba(253, 186, 116, 0.08)', borderWidth: 0 },
+      zoneDanger: { type: 'box', yScaleID: 'y_right', yMin: yRightMin, yMax: line8pct, backgroundColor: 'rgba(252, 165, 165, 0.12)', borderWidth: 0 },
+      line12: {
+        type: 'line', yMin: line12pct, yMax: line12pct, yScaleID: 'y_right',
+        borderColor: '#22c55e', borderWidth: 2, borderDash: [8, 4],
+        label: { display: true, content: `12% 정상 $${line12pct.toFixed(2)}T`, position: 'start', backgroundColor: '#dcfce7', color: '#166534', font: { size: 10, weight: 'bold' }, padding: 4 }
       },
       line10: {
         type: 'line', yMin: line10pct, yMax: line10pct, yScaleID: 'y_right',
-        borderColor: '#ef4444', borderWidth: 2, borderDash: [8, 4],
-        label: { display: true, content: `10% 경계 $${line10pct.toFixed(2)}T`, position: 'start', backgroundColor: '#fee2e2', color: '#991b1b', font: { size: 10, weight: 'bold' }, padding: 4 }
+        borderColor: '#eab308', borderWidth: 2, borderDash: [8, 4],
+        label: { display: true, content: `10% 주의 $${line10pct.toFixed(2)}T`, position: 'start', backgroundColor: '#fef9c3', color: '#854d0e', font: { size: 10, weight: 'bold' }, padding: 4 }
       },
       line8: {
         type: 'line', yMin: line8pct, yMax: line8pct, yScaleID: 'y_right',
@@ -1246,11 +1246,11 @@
   }
 
   function updateRbGdpGauge(rbGdpRatio) {
-    // RB/GDP 상태 판정 (역순): 11%+ 정상, 10-11 주의, 9-10 경계, 8이하 위험
+    // RB/GDP 상태 판정 (Fed 기준): 12%+ 정상, 10-12% 주의, 8-10% 경계, <8% 위험
     let status, statusClass, zoneIdx;
-    if (rbGdpRatio >= 11) { status = '정상'; statusClass = 'status-normal'; zoneIdx = 3; }
+    if (rbGdpRatio >= 12) { status = '정상'; statusClass = 'status-normal'; zoneIdx = 3; }
     else if (rbGdpRatio >= 10) { status = '주의'; statusClass = 'status-caution'; zoneIdx = 2; }
-    else if (rbGdpRatio >= 9) { status = '경계'; statusClass = 'status-warning'; zoneIdx = 1; }
+    else if (rbGdpRatio >= 8) { status = '경계'; statusClass = 'status-warning'; zoneIdx = 1; }
     else { status = '위험'; statusClass = 'status-danger'; zoneIdx = 0; }
 
     // 값 업데이트
@@ -1261,8 +1261,9 @@
     statusEl.textContent = status;
     statusEl.className = 'gauge-status ' + statusClass;
 
-    // 마커 위치 (8-12% 범위를 0-100%로 매핑)
-    const pct = Math.max(0, Math.min(100, (rbGdpRatio - 8) / 4 * 100));
+    // 마커 위치 (6-14% 범위를 0-100%로 매핑)
+    // 6%=0%, 8%=25%, 10%=50%, 12%=75%, 14%=100%
+    const pct = Math.max(0, Math.min(100, (rbGdpRatio - 6) / 8 * 100));
     document.getElementById('rbGdpMarker').style.left = pct + '%';
 
     // 활성 구간 표시
@@ -1296,11 +1297,11 @@
     const badge = document.getElementById('statusBadge');
     const text = document.getElementById('statusText');
 
-    // 두 지표 중 더 심각한 상태 선택
+    // 두 지표 중 더 심각한 상태 선택 (Fed 기준: 12%+ 정상, 10-12% 주의, 8-10% 경계, <8% 위험)
     let overallStatus = 'normal';
-    if (spread >= 30 || rbGdpRatio < 9) overallStatus = 'danger';
+    if (spread >= 30 || rbGdpRatio < 8) overallStatus = 'danger';
     else if (spread >= 20 || rbGdpRatio < 10) overallStatus = 'warning';
-    else if (spread >= 10 || rbGdpRatio < 11) overallStatus = 'caution';
+    else if (spread >= 10 || rbGdpRatio < 12) overallStatus = 'caution';
 
     if (overallStatus === 'danger') {
       badge.style.cssText = 'background:#fee2e2; border-color:#fecaca; color:#dc2626';
@@ -1333,9 +1334,8 @@
 
     // Tier1 상태 (Spread)
     const tier1Status = spread >= 30 ? 'danger' : spread >= 20 ? 'warning' : spread >= 10 ? 'caution' : 'normal';
-    // Tier2 상태 (RB/GDP) - 역순: 높을수록 정상
-    // >= 11%: 정상, >= 10%: 주의, >= 9%: 경계, < 9%: 위험
-    const tier2Status = rbGdpRatio >= 11 ? 'normal' : rbGdpRatio >= 10 ? 'caution' : rbGdpRatio >= 9 ? 'warning' : 'danger';
+    // Tier2 상태 (RB/GDP) - Fed 기준: 12%+ 정상, 10-12% 주의, 8-10% 경계, <8% 위험
+    const tier2Status = rbGdpRatio >= 12 ? 'normal' : rbGdpRatio >= 10 ? 'caution' : rbGdpRatio >= 8 ? 'warning' : 'danger';
 
     // 종합 상태 라벨
     const overallLabels = {

@@ -60,7 +60,7 @@ tools/macro-monitor/
     └── constants.js          ← 상수 정의 (ES Module export)
 ```
 
-### ✅ 공통 모듈 ES Module 전환 완료 (2025-12-01, 테스트 전)
+### ✅ 공통 모듈 ES Module 전환 완료 (2025-12-01)
 
 **변경 내용**:
 - `shared/data-manager.js`: `export { MacroDataManager, DataManager }` 추가
@@ -76,7 +76,30 @@ tools/macro-monitor/
 </script>
 ```
 
-**상태**: ⏳ 로컬 테스트 대기
+**상태**: ✅ 로컬 + 배포 환경 모두 정상 작동 확인
+
+### 🔴 Known Issue: FRED API CORS
+
+**문제**: Detail 페이지에서 `api.stlouisfed.org` 직접 호출 → CORS 에러
+```
+Access to fetch at 'https://api.stlouisfed.org/...' from origin 'https://etloveaui.github.io'
+has been blocked by CORS policy
+```
+
+**해결 방안**: Cloudflare Worker 프록시 사용
+```javascript
+// Before (현재 - CORS 에러)
+const url = 'https://api.stlouisfed.org/fred/series/observations?...';
+
+// After (수정 필요)
+const url = 'https://fed-proxy.etloveaui.workers.dev/fred/series/observations?...';
+```
+
+**수정 대상 파일**:
+- `details/liquidity-stress.html`
+- `details/liquidity-flow.html`
+
+**상태**: ⏳ 대기 (ACTIVE_TASKS.md 4-0.5 참조)
 
 ### 새 지표 추가 시
 1. `details/[지표명].html` 생성 (API 호출 + 캐시 저장)

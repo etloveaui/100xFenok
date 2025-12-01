@@ -143,10 +143,10 @@ class MacroDataManager {
    * @returns {string} - 상태 키
    */
   static getRatioStatus(ratioPercent) {
+    // Fed 기준: 8% 미만 위험(2019 위기), 8-10% 경계, 10-12% 주의, 12%+ 정상
     if (ratioPercent < 8) return 'danger';
-    if (ratioPercent < 9) return 'warning';
-    if (ratioPercent < 10) return 'caution';
-    if (ratioPercent < 11) return 'caution';
+    if (ratioPercent < 10) return 'warning';
+    if (ratioPercent < 12) return 'caution';
     return 'normal';
   }
 }
