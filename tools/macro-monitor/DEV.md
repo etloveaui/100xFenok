@@ -454,6 +454,43 @@ Crypto_Rotation = (Stablecoin_delta / M2_delta) * 100
   - [x] Policy Stance 신호 추가 (5개 지표 완성)
 - [ ] 3-4: Widget 연동 (캐시 기반)
 
+### Phase 3.5: Liquidity Flow v3 - 4탭 재편 (계획)
+
+> **상태**: 📋 설계 완료, 구현 대기
+> **배경**: 재정 지배(Fiscal Dominance) 패러다임 반영
+> **참조**: `docs/planning/macro-monitor-philosophy.md` 섹션 4.3, 4.7
+
+#### 핵심 변경: 3탭 → 4탭
+
+| 현재 (v2.1) | 재편 (v3) | 변경 내용 |
+|------------|----------|----------|
+| Liquidity Pulse | **Fed Policy** | WALCL, RRP 유지 + SRF 추가 |
+| - | **Treasury Policy** | TGA 이동 + T-Bill 비중 추가 |
+| Credit Flow | **Credit Expansion** | 그대로 |
+| Crypto Bridge | **Dollar Flow** | 달러 인덱스(DTWEXBGS) 추가 |
+
+#### 새 지표 3개
+
+| 지표 | 소스 | API | 비용 | 상태 |
+|------|------|-----|------|------|
+| **달러 인덱스** | FRED: DTWEXBGS | ✅ 무료 | 무료 | 🟢 바로 가능 |
+| **T-Bill 비중** | Treasury Fiscal Data | ✅ 무료 | 무료 | 🟡 계산 필요 |
+| **SRF 사용량** | NY Fed Operations | 🔴 크롤링 | 무료 | 🔴 Apps Script |
+
+#### 구현 시 선행 작업
+
+1. **API 검증**: DTWEXBGS, Treasury API 실제 호출 테스트
+2. **인프라**: SRF 크롤링 시 Google Sheets + Apps Script
+3. **UI**: 4탭 레이아웃 재설계
+
+#### 체크리스트
+
+- [ ] 3.5-0: 달러 인덱스 API 검증
+- [ ] 3.5-1: T-Bill 비중 데이터 소스 확정
+- [ ] 3.5-2: SRF 크롤링 가능 여부 판단
+- [ ] 3.5-3: Detail 페이지 4탭 재설계
+- [ ] 3.5-4: Widget 캐시 구조 수정
+
 ### Phase 4: Layer 3 - Foundation (펀더멘털)
 
 #### 4-A: Banking Health (금융 건전성)
