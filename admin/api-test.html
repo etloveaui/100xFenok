@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Test - 100x FenoK</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    .card { background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+    pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; font-size: 0.875rem; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .status-dot.success { background: #22c55e; }
+    .status-dot.error { background: #ef4444; }
+    .status-dot.pending { background: #f59e0b; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body class="text-gray-800 p-4 sm:p-8">
+
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-plug text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold orbitron">API Test</h1>
+          <p class="text-gray-500 text-sm">Apps Script 연결 테스트</p>
+        </div>
+      </div>
+      <a href="index.html" class="text-gray-500 hover:text-blue-600 text-sm">
+        <i class="fas fa-arrow-left mr-1"></i> Admin
+      </a>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="card rounded-2xl p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold flex items-center">
+          <i class="fas fa-server text-blue-500 mr-2"></i>
+          Connection Status
+        </h2>
+        <div class="flex items-center space-x-2">
+          <div id="status-dot" class="status-dot pending"></div>
+          <span id="status-text" class="text-sm text-gray-500">대기 중...</span>
+        </div>
+      </div>
+      <button id="btn-ping" class="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity">
+        <i class="fas fa-satellite-dish mr-2"></i>Ping 테스트
+      </button>
+    </div>
+
+    <!-- Read Test -->
+    <div class="card rounded-2xl p-6 mb-6">
+      <h2 class="font-semibold mb-4 flex items-center">
+        <i class="fas fa-download text-green-500 mr-2"></i>
+        Read Test
+      </h2>
+      <div class="flex gap-3 mb-4">
+        <input type="text" id="read-sheet" value="Config" placeholder="시트 이름"
+          class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
+        <button id="btn-read" class="px-6 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors">
+          읽기
+        </button>
+      </div>
+      <pre id="read-result" class="hidden"></pre>
+    </div>
+
+    <!-- Write Test -->
+    <div class="card rounded-2xl p-6 mb-6">
+      <h2 class="font-semibold mb-4 flex items-center">
+        <i class="fas fa-upload text-purple-500 mr-2"></i>
+        Write Test
+      </h2>
+      <div class="space-y-3 mb-4">
+        <input type="text" id="write-sheet" value="Config" placeholder="시트 이름"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500">
+        <input type="text" id="write-data" placeholder="데이터 (쉼표로 구분: 값1, 값2, 값3)"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500">
+        <button id="btn-write" class="w-full py-3 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors">
+          <i class="fas fa-pen mr-2"></i>쓰기
+        </button>
+      </div>
+      <pre id="write-result" class="hidden"></pre>
+    </div>
+
+    <!-- Response Log -->
+    <div class="card rounded-2xl p-6">
+      <h2 class="font-semibold mb-4 flex items-center">
+        <i class="fas fa-terminal text-gray-500 mr-2"></i>
+        Response Log
+      </h2>
+      <pre id="log" class="min-h-[100px]">// 결과가 여기에 표시됩니다</pre>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzC9PqvKlqcs1m2PRhDl0im_kVpKY1DuluQaiNI1TyIJWQIQBjwI3k5f7hNumKw_fihYA/exec';
+
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const log = document.getElementById('log');
+
+    function updateStatus(status, text) {
+      statusDot.className = 'status-dot ' + status;
+      statusText.textContent = text;
+    }
+
+    function appendLog(message) {
+      const time = new Date().toLocaleTimeString();
+      log.textContent = `[${time}] ${JSON.stringify(message, null, 2)}`;
+    }
+
+    // Ping
+    document.getElementById('btn-ping').addEventListener('click', async () => {
+      updateStatus('pending', '연결 중...');
+      try {
+        const res = await fetch(API_URL + '?action=ping');
+        const data = await res.json();
+        if (data.success) {
+          updateStatus('success', '연결됨 ✓');
+        } else {
+          updateStatus('error', '실패');
+        }
+        appendLog(data);
+      } catch(e) {
+        updateStatus('error', '에러');
+        appendLog({ error: e.message });
+      }
+    });
+
+    // Read
+    document.getElementById('btn-read').addEventListener('click', async () => {
+      const sheet = document.getElementById('read-sheet').value || 'Config';
+      const resultEl = document.getElementById('read-result');
+      try {
+        const res = await fetch(API_URL + '?action=read&sheet=' + encodeURIComponent(sheet));
+        const data = await res.json();
+        resultEl.classList.remove('hidden');
+        resultEl.textContent = JSON.stringify(data, null, 2);
+        appendLog(data);
+      } catch(e) {
+        resultEl.classList.remove('hidden');
+        resultEl.textContent = 'Error: ' + e.message;
+        appendLog({ error: e.message });
+      }
+    });
+
+    // Write
+    document.getElementById('btn-write').addEventListener('click', async () => {
+      const sheet = document.getElementById('write-sheet').value || 'Config';
+      const dataStr = document.getElementById('write-data').value;
+      const row = dataStr.split(',').map(s => s.trim());
+      const resultEl = document.getElementById('write-result');
+
+      if (!dataStr) {
+        alert('데이터를 입력하세요');
+        return;
+      }
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'write', sheet: sheet, row: row })
+        });
+        const data = await res.json();
+        resultEl.classList.remove('hidden');
+        resultEl.textContent = JSON.stringify(data, null, 2);
+        appendLog(data);
+        document.getElementById('write-data').value = '';
+      } catch(e) {
+        resultEl.classList.remove('hidden');
+        resultEl.textContent = 'Error: ' + e.message;
+        appendLog({ error: e.message });
+      }
+    });
+  </script>
+
+</body>
+</html>
