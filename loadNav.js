@@ -44,13 +44,15 @@ export async function loadNav(siteVersion, containerId = 'nav') {
     }
 
     const navContainer = document.getElementById(containerId);
+
+    // nav.html은 이제 HTML만 포함 (script는 navScript.js로 분리)
     navContainer.innerHTML = doc.body.innerHTML;
-    navContainer.querySelectorAll('script').forEach(oldScript => {
-        const script = document.createElement('script');
-        Array.from(oldScript.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
-        script.textContent = oldScript.textContent;
-        oldScript.replaceWith(script);
-    });
+
+    // navScript.js 동적 로드
+    const navScript = document.createElement('script');
+    navScript.src = `${window.baseHref}navScript.js?v=${siteVersion}`;
+    navScript.async = false;
+    document.body.appendChild(navScript);
 
     // ----- Post init tweaks -----
     // 1) Rename menu label "분석" -> "Insights"
