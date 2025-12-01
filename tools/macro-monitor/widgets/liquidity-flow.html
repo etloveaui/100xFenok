@@ -117,11 +117,11 @@
     margin-bottom: 2px;
   }
 
-  /* Indicator Grid (2x2) */
+  /* Indicator Grid (1x3) - v2 */
   .indicator-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
     flex: 1;
   }
 
@@ -165,6 +165,12 @@
     font-size: 10px;
     color: #64748b;
     font-weight: 500;
+  }
+
+  .indicator-sub {
+    font-size: 9px;
+    color: #94a3b8;
+    margin-top: 2px;
   }
 
   /* Footer */
@@ -281,57 +287,44 @@
       </div>
     </div>
 
-    <!-- Indicator Grid (2x2) -->
-    <div class="indicator-grid">
-      <!-- M2 Growth -->
+    <!-- Indicator Grid (1x3) - v2: M2, SC, Net Liq -->
+	<div class="indicator-grid">
       <div class="indicator-card" id="m2Card">
         <div class="indicator-status">
           <span class="indicator-emoji" id="m2Emoji">🟢</span>
-          <span class="indicator-name">M2 Growth</span>
+          <span class="indicator-name">M2</span>
         </div>
         <div class="indicator-value">
-          <span id="m2Value">+4.2</span>
-          <span class="indicator-unit">% YoY</span>
+          <span id="m2Value">$22.3</span>
+          <span class="indicator-unit">T</span>
         </div>
+        <div class="indicator-sub" id="m2Sub">+5.9% YoY</div>
       </div>
 
-      <!-- TGA Balance -->
-      <div class="indicator-card" id="tgaCard">
+      <div class="indicator-card" id="nlCard">
         <div class="indicator-status">
-          <span class="indicator-emoji" id="tgaEmoji">🟢</span>
-          <span class="indicator-name">TGA Balance</span>
+          <span class="indicator-emoji" id="nlEmoji">🟢</span>
+          <span class="indicator-name">Net Liq</span>
         </div>
         <div class="indicator-value">
-          <span id="tgaValue">$720</span>
-          <span class="indicator-unit">B</span>
+          <span id="nlValue">$5.8</span>
+          <span class="indicator-unit">T</span>
         </div>
+        <div class="indicator-sub" id="nlSub">Δ +$39B</div>
       </div>
 
-      <!-- RRP Balance -->
-      <div class="indicator-card" id="rrpCard">
-        <div class="indicator-status">
-          <span class="indicator-emoji" id="rrpEmoji">🟢</span>
-          <span class="indicator-name">RRP Balance</span>
-        </div>
-        <div class="indicator-value">
-          <span id="rrpValue">$45</span>
-          <span class="indicator-unit">B</span>
-        </div>
-      </div>
-
-      <!-- Stablecoin -->
       <div class="indicator-card" id="scCard">
         <div class="indicator-status">
           <span class="indicator-emoji" id="scEmoji">🟢</span>
           <span class="indicator-name">Stablecoin</span>
         </div>
         <div class="indicator-value">
-          <span id="scValue">$180</span>
+          <span id="scValue">$226</span>
           <span class="indicator-unit">B</span>
         </div>
+        <div class="indicator-sub" id="scSub">SC/M2 1.02%</div>
       </div>
     </div>
-  </div>
 
   <!-- 캐시 없음 상태 -->
   <div class="no-cache" id="noCache" style="display: none;">
@@ -374,25 +367,18 @@
     return 'neutral';
   }
 
-  // TGA 상태 판단 (낮을수록 유동성 풀림)
-  function getTgaStatus(tga) {
-    if (tga < 500) return 'positive';   // 낮음 = 지출 → 유동성+
-    if (tga > 800) return 'negative';   // 높음 = 흡수 → 유동성-
-    return 'neutral';
-  }
-
-  // RRP 상태 판단 (낮을수록 유동성 풀림)
-  function getRrpStatus(rrp) {
-    if (rrp < 100) return 'positive';   // 소진됨 = 유동성 시장에
-    if (rrp > 500) return 'negative';   // 높음 = 유동성 흡수
-    return 'neutral';
-  }
-
-  // Stablecoin 상태 판단
+  // Stablecoin 상태 판단 (v2: $350B 이상 양호)
   function getScStatus(sc) {
-    if (sc > 150) return 'positive';    // 성장세
-    if (sc < 100) return 'negative';
-    return 'neutral';
+    if (sc >= 350) return 'positive';
+    if (sc >= 250) return 'neutral';
+    return 'negative';
+  }
+
+  // Net Liquidity 절대값 상태 (v2)
+  function getNlStatus(nl) {
+    if (nl >= 6) return 'positive';     // $6T 이상
+    if (nl >= 5) return 'neutral';      // $5-6T
+    return 'negative';                   // $5T 미만
   }
 
   function renderWidget(data) {
@@ -408,45 +394,92 @@
     mainContent.style.display = 'flex';
     noCache.style.display = 'none';
 
-    // Net Flow
-    const netFlow = data.netFlow || 0;
-    const netFlowStatus = getNetFlowStatus(netFlow);
+    // 1. 데이터 파싱 및 단위 보정
+    const netFlow = data.netLiquidityDelta || data.netFlow || 0; // Delta 우선 ($B)
+    const m2YoY = data.m2YoY || 0;
+    
+    // M2: 입력값이 1000 이상이면 Billions로 간주하여 Trillions로 변환
+    let m2Raw = data.m2Total || 22298; 
+    const m2TotalT = m2Raw > 100 ? m2Raw / 1000 : m2Raw; // 표시용 (T)
+    const m2TotalB = m2Raw > 100 ? m2Raw : m2Raw * 1000; // 계산용 (B)
+
+    // Net Liq: 입력값이 1000 이상이면 Billions로 간주하여 Trillions로 변환
+    let nlRaw = data.netLiquidity || 5649;
+    const nlTotalT = nlRaw > 100 ? nlRaw / 1000 : nlRaw;
+
+    const sc = data.stablecoinMcap || 0; // Billions
+
+    // 2. Net Flow Hero 섹션 (상단) - 로직 엄격화 (±50 기준) 및 아이콘 수정
+    const netFlowStatus = getNetFlowStatus(netFlow); 
     const netFlowEl = document.getElementById('netFlowValue');
+    
+    // 값 표시
     netFlowEl.textContent = (netFlow >= 0 ? '+' : '') + '$' + Math.round(netFlow) + 'B';
     netFlowEl.className = 'net-flow-value ' + netFlowStatus;
 
-    document.getElementById('netFlowTrend').textContent = netFlow >= 0 ? '📈' : '📉';
-    document.getElementById('netFlowDesc').textContent = netFlow >= 0 ? 'Expanding' : 'Contracting';
+    // 텍스트 및 아이콘 표시 (범위 로직 통일: ±50)
+    // ★ 수정된 부분: Neutral일 때 화살표 아이콘 변경
+    let flowText = 'Neutral';
+    let flowIcon = '➡️'; 
 
-    // Overall Badge
-    const badge = document.getElementById('overallBadge');
-    badge.className = 'overall-badge badge-' + netFlowStatus;
-    document.getElementById('overallEmoji').textContent = STATUS_EMOJI[netFlowStatus];
-    document.getElementById('overallLabel').textContent = netFlow >= 50 ? 'EXPANDING' : (netFlow <= -50 ? 'CONTRACTING' : 'NEUTRAL');
+    if (netFlow > 50) {
+      flowText = 'Expanding';
+      flowIcon = '📈';
+    } else if (netFlow < -50) {
+      flowText = 'Contracting';
+      flowIcon = '📉';
+    }
 
-    // M2 Growth
-    const m2Growth = data.m2Growth || 0;
-    const m2Status = getM2Status(m2Growth);
+    document.getElementById('netFlowDesc').textContent = flowText;
+    document.getElementById('netFlowTrend').textContent = flowIcon;
+
+    // 3. M2 Card (UI 위계 변경: Total이 메인)
+    const m2Status = getM2Status(m2YoY);
     document.getElementById('m2Emoji').textContent = STATUS_EMOJI[m2Status];
-    document.getElementById('m2Value').textContent = (m2Growth >= 0 ? '+' : '') + m2Growth.toFixed(1);
+    // Main: Total ($T)
+    document.getElementById('m2Value').textContent = '$' + m2TotalT.toFixed(1);
+    document.getElementById('m2Sub').textContent = (m2YoY >= 0 ? '+' : '') + m2YoY.toFixed(1) + '% YoY';
 
-    // TGA
-    const tga = data.tga || 0;
-    const tgaStatus = getTgaStatus(tga);
-    document.getElementById('tgaEmoji').textContent = STATUS_EMOJI[tgaStatus];
-    document.getElementById('tgaValue').textContent = '$' + Math.round(tga);
+    // 4. Net Liq Card
+    const nlStatus = getNlStatus(nlTotalT);
+    document.getElementById('nlEmoji').textContent = STATUS_EMOJI[nlStatus];
+    document.getElementById('nlValue').textContent = '$' + nlTotalT.toFixed(2);
+    document.getElementById('nlSub').textContent = 'Δ ' + (netFlow >= 0 ? '+' : '') + '$' + Math.round(netFlow) + 'B';
 
-    // RRP
-    const rrp = data.rrp || 0;
-    const rrpStatus = getRrpStatus(rrp);
-    document.getElementById('rrpEmoji').textContent = STATUS_EMOJI[rrpStatus];
-    document.getElementById('rrpValue').textContent = '$' + Math.round(rrp);
-
-    // Stablecoin
-    const sc = data.stablecoinMcap || 0;
+    // 5. Stablecoin Card
+    const scM2Ratio = m2TotalB > 0 ? (sc / m2TotalB * 100).toFixed(2) : '0.00';
     const scStatus = getScStatus(sc);
     document.getElementById('scEmoji').textContent = STATUS_EMOJI[scStatus];
     document.getElementById('scValue').textContent = '$' + Math.round(sc);
+    document.getElementById('scSub').textContent = 'SC/M2 ' + scM2Ratio + '%';
+
+    // 6. Overall Badge (디테일 페이지와 로직 100% 일치)
+    let overallStatus = 'NEUTRAL';
+    let overallEmoji = '🟡';
+    let badgeClass = 'neutral';
+    
+    // 조건: Net Liq > 50 AND M2 > 4
+    if (netFlow > 50 && m2YoY >= 4) {
+      overallStatus = 'EXPANDING';
+      overallEmoji = '🟢';
+      badgeClass = 'positive';
+    } else if (netFlow < -50 || m2YoY < 2) {
+      overallStatus = 'CONTRACTING';
+      overallEmoji = '🔴';
+      badgeClass = 'negative';
+    }
+
+    const badge = document.getElementById('overallBadge');
+    badge.className = 'overall-badge badge-' + badgeClass;
+    document.getElementById('overallEmoji').textContent = overallEmoji;
+    document.getElementById('overallLabel').textContent = overallStatus;
+
+    // 타임스탬프 업데이트
+    if(data.updated) {
+        const date = new Date(data.updated);
+        const timeEl = document.getElementById('updateTime');
+        if(timeEl) timeEl.textContent = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
   }
 
   async function init() {
