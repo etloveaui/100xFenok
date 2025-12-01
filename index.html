@@ -23,21 +23,23 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="nav.css">
   <script type="module" src="initBaseHref.js"></script>
-  <!-- OneSignal Push Notification Script -->
+  <!--
+    OneSignal Push Notification (비활성화)
+    - 정적 사이트에서 사용 불가
+    - 추후 서버 환경 구축 시 활성화 예정
+
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(function () {
       OneSignal.init({
-        appId: "cae7e21e-b682-4d41-a04-6137973552c0", // 여기에 제공해주신 App ID를 입력했습니다.
-        // --- 바로 이 부분들이 핵심입니다 ---
+        appId: "cae7e21e-b682-4d41-a04-6137973552c0",
         serviceWorkerPath: "/100xFenok/OneSignalSDKWorker.js",
         serviceWorkerParam: { scope: '/100xFenok/' }
-        // ------------------------------------		
       });
     });
   </script>
-  <!-- End OneSignal Script -->
+  -->
 
 
   <style>
