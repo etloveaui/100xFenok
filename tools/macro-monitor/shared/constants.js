@@ -38,12 +38,12 @@ const MACRO_CONSTANTS = {
     DANGER: 30     // 30bp 이상 위험
   },
 
-  // Tier 2: Reserves/GDP 임계값 (%)
+  // Tier 2: Reserves/GDP 임계값 (%) - Fed 기준
   RATIO_THRESHOLDS: {
-    NORMAL: 11,    // 11% 초과 정상
-    CAUTION: 10,   // 10~11% 주의
-    WARNING: 9,    // 9~10% 경계
-    DANGER: 8      // 8% 미만 위험
+    NORMAL: 12,    // 12% 이상 정상 (충분)
+    CAUTION: 10,   // 10~12% 주의 (권장선 근접)
+    WARNING: 8,    // 8~10% 경계 (Ample 하단)
+    DANGER: 8      // 8% 미만 위험 (2019년 7%에서 위기)
   },
 
   // 상태 라벨 (한글)

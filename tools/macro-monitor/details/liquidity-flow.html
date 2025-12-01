@@ -525,7 +525,7 @@
   async function getFredSeries(seriesId, days) {
     const end = new Date().toISOString().split('T')[0];
     const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.fredApiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+    const url = `https://fed-proxy.etloveaui.workers.dev/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.fredApiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
 
     const json = await fetchData(url);
     if (!json?.observations) return [];
