@@ -1,4 +1,4 @@
-<!-- Macro Monitor Widget - Liquidity Stress (A-3 신호등 스타일) -->
+<!-- 100x Market Radar Widget - Liquidity Stress (A-3 신호등 스타일) -->
 <!-- 캐시 기반: API 호출 없음, Detail에서 저장한 localStorage 데이터 읽기 -->
 <!DOCTYPE html>
 <html lang="ko">
@@ -6,10 +6,14 @@
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
-<!-- DataManager ES Module import -->
+<!-- Constants & DataManager ES Module import -->
 <script type="module">
   import { DataManager } from '../shared/data-manager.js';
-  window.DataManager = DataManager;  // 전역 노출 (비모듈 스크립트 호환)
+  import { ICONS, COLORS, LABELS } from '../shared/constants.js';
+  window.DataManager = DataManager;
+  window.ICONS = ICONS;
+  window.COLORS = COLORS;
+  window.LABELS = LABELS;
 </script>
 
 <style>
@@ -77,11 +81,11 @@
     letter-spacing: 1px;
   }
 
-  /* 상태별 색상 */
-  .status-normal .status-label { color: #16a34a; }
-  .status-caution .status-label { color: #ca8a04; }
-  .status-high_stress .status-label, .status-warning .status-label { color: #ea580c; }
-  .status-critical .status-label, .status-danger .status-label { color: #dc2626; }
+  /* 상태별 색상 - constants.js COLORS.STATUS 참조 */
+  .status-normal .status-label { color: var(--color-positive, #16a34a); }
+  .status-caution .status-label { color: var(--color-neutral, #ca8a04); }
+  .status-high_stress .status-label, .status-warning .status-label { color: var(--color-warning, #ea580c); }
+  .status-critical .status-label, .status-danger .status-label { color: var(--color-negative, #dc2626); }
 
   /* Tier 카드 */
   .tier-row {
@@ -117,11 +121,11 @@
     font-weight: 600;
   }
 
-  /* Tier 상태 색상 */
-  .tier-normal .tier-status-text { color: #16a34a; }
-  .tier-caution .tier-status-text { color: #ca8a04; }
-  .tier-warning .tier-status-text { color: #ea580c; }
-  .tier-danger .tier-status-text { color: #dc2626; }
+  /* Tier 상태 색상 - constants.js COLORS.STATUS 참조 */
+  .tier-normal .tier-status-text { color: var(--color-positive, #16a34a); }
+  .tier-caution .tier-status-text { color: var(--color-neutral, #ca8a04); }
+  .tier-warning .tier-status-text { color: var(--color-warning, #ea580c); }
+  .tier-danger .tier-status-text { color: var(--color-negative, #dc2626); }
 
   .tier-value {
     font-family: 'Orbitron', monospace;
@@ -274,14 +278,14 @@
   const WIDGET_ID = 'liquidity-stress';
   const DETAIL_PATH = 'tools/macro-monitor/details/liquidity-stress.html';
 
-  // 상태별 이모지
-  const STATUS_EMOJI = {
-    normal: '🟢',
-    caution: '🟡',
-    warning: '🟠',
-    high_stress: '🟠',
-    danger: '🔴',
-    critical: '🔴'
+  // 상태별 이모지 - constants.js ICONS.STRESS 사용 (fallback 포함)
+  const getStatusEmoji = (status) => {
+    if (typeof ICONS !== 'undefined' && ICONS.STRESS) {
+      return ICONS.STRESS[status] || ICONS.STRESS.normal;
+    }
+    // Fallback
+    const fallback = { normal: '🟢', caution: '🟡', warning: '🟠', high_stress: '🟠', danger: '🔴', critical: '🔴' };
+    return fallback[status] || '🟢';
   };
 
   function renderWidget(data) {
@@ -300,14 +304,14 @@
     // 종합 상태
     const overallStatus = document.getElementById('overallStatus');
     overallStatus.className = 'overall-status status-' + data.overallStatus;
-    document.getElementById('statusIcon').textContent = STATUS_EMOJI[data.overallStatus] || '🟢';
+    document.getElementById('statusIcon').textContent = getStatusEmoji(data.overallStatus);
     document.getElementById('statusLabel').textContent = data.overallLabel || 'Normal';
 
     // Tier 1
     const tier1 = data.tier1;
     if (tier1) {
       document.getElementById('tier1Card').className = 'tier-card tier-' + tier1.status;
-      document.getElementById('tier1Emoji').textContent = STATUS_EMOJI[tier1.status] || '🟢';
+      document.getElementById('tier1Emoji').textContent = getStatusEmoji(tier1.status);
       document.getElementById('tier1StatusText').textContent = tier1.label || '정상';
       document.getElementById('tier1Value').textContent = (tier1.value >= 0 ? '+' : '') + tier1.value;
       document.getElementById('tier1Unit').textContent = tier1.unit || 'bp';
@@ -317,7 +321,7 @@
     const tier2 = data.tier2;
     if (tier2) {
       document.getElementById('tier2Card').className = 'tier-card tier-' + tier2.status;
-      document.getElementById('tier2Emoji').textContent = STATUS_EMOJI[tier2.status] || '🟢';
+      document.getElementById('tier2Emoji').textContent = getStatusEmoji(tier2.status);
       document.getElementById('tier2StatusText').textContent = tier2.label || '정상';
       document.getElementById('tier2Value').textContent = tier2.value;
       document.getElementById('tier2Unit').textContent = tier2.unit || '%';
