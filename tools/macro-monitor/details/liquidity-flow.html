@@ -11,10 +11,13 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
 
-  <!-- DataManager ES Module import -->
+  <!-- Constants & DataManager ES Module import -->
   <script type="module">
     import { DataManager } from '../shared/data-manager.js';
-    window.DataManager = DataManager;  // 전역 노출 (비모듈 스크립트 호환)
+    import { THRESHOLDS, COLORS } from '../shared/constants.js';
+    window.DataManager = DataManager;
+    window.THRESHOLDS = THRESHOLDS;
+    window.COLORS = COLORS;
   </script>
 
   <style>
@@ -513,18 +516,45 @@
 </div>
 
 <script>
+  // ===== 임계값 헬퍼 - constants.js THRESHOLDS 사용 (fallback 포함) =====
+  const getThreshold = (category, level) => {
+    if (typeof THRESHOLDS !== 'undefined' && THRESHOLDS[category]) {
+      return THRESHOLDS[category][level];
+    }
+    // Fallback values
+    const fallback = {
+      M2_YOY: { POSITIVE: 6, NEUTRAL: 2, NEGATIVE: 2 },
+      NET_LIQUIDITY: { POSITIVE: 50, NEUTRAL: 50, NEGATIVE: -50 },
+      STABLECOIN: { POSITIVE: 350, NEUTRAL: 250, NEGATIVE: 250 },
+      OVERALL: { EXPANDING: { netLiq: 50, m2YoY: 4 }, CONTRACTING: { netLiq: -50, m2YoY: 2 } }
+    };
+    return fallback[category]?.[level];
+  };
+
+  // 색상 헬퍼 - constants.js COLORS 사용 (fallback 포함)
+  const getColor = (category, key) => {
+    if (typeof COLORS !== 'undefined' && COLORS[category]) {
+      return COLORS[category][key];
+    }
+    // Fallback
+    const fallback = {
+      CHART: { M2: '#3b82f6', NET_LIQ: '#10b981', TGA: '#f59e0b', RRP: '#ef4444' }
+    };
+    return fallback[category]?.[key];
+  };
+
   // ===== CONFIG =====
   const CONFIG = {
     fredApiKey: '6dda7dc3956a2c1d6ac939133de115f1',
     proxy: 'https://fed-proxy.etloveaui.workers.dev/',
     defiLlamaUrl: 'https://stablecoins.llama.fi/stablecoins?includePrices=false',
     colors: {
-      inflow: '#10b981',
+      inflow: getColor('CHART', 'NET_LIQ') || '#10b981',
       outflow: '#ef4444',
       ma: '#94a3b8',
-      m2: '#3b82f6',
-      tga: '#8b5cf6',
-      rrp: '#f59e0b',
+      m2: getColor('CHART', 'M2') || '#3b82f6',
+      tga: getColor('CHART', 'TGA') || '#8b5cf6',
+      rrp: getColor('CHART', 'RRP') || '#f59e0b',
       stablecoin: '#06b6d4'
     }
   };
@@ -1008,47 +1038,48 @@
     const recentWeeks = Math.min(8, len);
     const sparkSlice = data.timeline.slice(-recentWeeks);
 
-    // ===== 1. M2 (Total이 메인, YoY가 서브) =====
-    // 수정: 위계 변경 (Total $T <-> YoY %)
+    // ===== 1. M2 (Total이 메인, YoY가 서브) - constants.js THRESHOLDS.M2_YOY 사용 =====
+    const M2_TH = { POSITIVE: getThreshold('M2_YOY', 'POSITIVE'), NEUTRAL: getThreshold('M2_YOY', 'NEUTRAL') };
     const m2YoY = last.m2YoY || 0;
-    const m2TotalT = last.m2 / 1000; // Billions -> Trillions
-    
+    const m2TotalT = last.m2 / 1000;
+
     updateSignalCard('m2', m2TotalT.toFixed(1), 'T',
-      m2YoY >= 6 ? 'green' : m2YoY >= 2 ? 'yellow' : 'red',
-      m2YoY >= 6 ? '확장' : m2YoY >= 2 ? '보통' : '긴축',
+      m2YoY >= M2_TH.POSITIVE ? 'green' : m2YoY >= M2_TH.NEUTRAL ? 'yellow' : 'red',
+      m2YoY >= M2_TH.POSITIVE ? '확장' : m2YoY >= M2_TH.NEUTRAL ? '보통' : '긴축',
       {
         trend: last.m2 - prev.m2,
-        subtext: `${m2YoY >= 0 ? '+' : ''}${m2YoY.toFixed(1)}% YoY`, // 서브: 변화율
+        subtext: `${m2YoY >= 0 ? '+' : ''}${m2YoY.toFixed(1)}% YoY`,
         sparkData: sparkSlice.map(d => d.m2YoY || 0)
       });
 
-    // ===== 2. Fed Net Liquidity (정식 공식: WALCL - TGA - RRP) =====
-    // 임계값: >$50B 🟢, ±$50B 🟡, <-$50B 🔴
+    // ===== 2. Fed Net Liquidity - constants.js THRESHOLDS.NET_LIQUIDITY 사용 =====
+    const NL_TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
     const netLiq = last.netLiquidity;
     const netLiqDelta = last.netLiquidityDelta;
     updateSignalCard('netLiq', (netLiq / 1000).toFixed(2), '$T',
-      netLiqDelta > 50 ? 'green' : netLiqDelta > -50 ? 'yellow' : 'red',
-      netLiqDelta > 50 ? '확장' : netLiqDelta > -50 ? '중립' : '수축',
+      netLiqDelta > NL_TH.POSITIVE ? 'green' : netLiqDelta > NL_TH.NEGATIVE ? 'yellow' : 'red',
+      netLiqDelta > NL_TH.POSITIVE ? '확장' : netLiqDelta > NL_TH.NEGATIVE ? '중립' : '수축',
       {
         trend: netLiqDelta,
         subtext: `Δ ${netLiqDelta >= 0 ? '+' : ''}$${netLiqDelta.toFixed(0)}B`,
         sparkData: sparkSlice.map(d => d.netLiquidity)
       });
 
-    // ===== 3. Stablecoin =====
-    // 임계값: ≥$350B 🟢, $250-350B 🟡, <$250B 🔴
+    // ===== 3. Stablecoin - constants.js THRESHOLDS.STABLECOIN 사용 =====
+    const SC_TH = { POSITIVE: getThreshold('STABLECOIN', 'POSITIVE'), NEUTRAL: getThreshold('STABLECOIN', 'NEUTRAL') };
     const scMcap = data.stablecoinMcap;
     const scM2Ratio = (scMcap / last.m2) * 100;
     updateSignalCard('sc', scMcap.toFixed(0), '$B',
-      scMcap >= 350 ? 'green' : scMcap >= 250 ? 'yellow' : 'red',
-      scMcap >= 350 ? '양호' : scMcap >= 250 ? '보통' : '주의',
+      scMcap >= SC_TH.POSITIVE ? 'green' : scMcap >= SC_TH.NEUTRAL ? 'yellow' : 'red',
+      scMcap >= SC_TH.POSITIVE ? '양호' : scMcap >= SC_TH.NEUTRAL ? '보통' : '주의',
       {
         trend: 0,  
         subtext: `SC/M2 ${scM2Ratio.toFixed(2)}%`,
         sparkData: sparkSlice.map(d => d.scM2Ratio || scM2Ratio)
       });
 
-    // ===== Hero Section: Weekly Net Liquidity Delta =====
+    // ===== Hero Section: Weekly Net Liquidity Delta - constants.js THRESHOLDS 사용 =====
+    const HERO_TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
     const netLiqDeltaVal = last.netLiquidityDelta;
     const netFlowEl = document.getElementById('netFlowValue');
     netFlowEl.textContent = `$${netLiqDeltaVal >= 0 ? '+' : ''}${netLiqDeltaVal.toFixed(0)}B`;
@@ -1058,11 +1089,11 @@
     const trendIcon = trendEl.querySelector('i');
     const trendDesc = document.getElementById('netFlowDesc');
 
-    if (netLiqDeltaVal > 50) {
+    if (netLiqDeltaVal > HERO_TH.POSITIVE) {
       trendEl.className = 'net-flow-trend up';
       trendIcon.className = 'fas fa-arrow-up';
       trendDesc.textContent = '유동성 확장 중';
-    } else if (netLiqDeltaVal < -50) {
+    } else if (netLiqDeltaVal < HERO_TH.NEGATIVE) {
       trendEl.className = 'net-flow-trend down';
       trendIcon.className = 'fas fa-arrow-down';
       trendDesc.textContent = '유동성 축소 중';
@@ -1163,14 +1194,19 @@
     ctx.fill();
   }
 
+  // constants.js THRESHOLDS.OVERALL 사용
   function updateStatusBadge(netLiqDelta, m2YoY) {
     const badge = document.getElementById('statusBadge');
     const text = document.getElementById('statusText');
 
-    // 새 기준: Net Liquidity Delta >$50B 확장, <-$50B 수축, M2 YoY 참고
+    const OVERALL_TH = {
+      EXPANDING: getThreshold('OVERALL', 'EXPANDING'),
+      CONTRACTING: getThreshold('OVERALL', 'CONTRACTING')
+    };
+
     let status = 'normal';
-    if (netLiqDelta > 50 && m2YoY >= 4) status = 'inflow';
-    else if (netLiqDelta < -50 || m2YoY < 2) status = 'outflow';
+    if (netLiqDelta > OVERALL_TH.EXPANDING.netLiq && m2YoY >= OVERALL_TH.EXPANDING.m2YoY) status = 'inflow';
+    else if (netLiqDelta < OVERALL_TH.CONTRACTING.netLiq || m2YoY < OVERALL_TH.CONTRACTING.m2YoY) status = 'outflow';
 
     if (status === 'inflow') {
       badge.style.cssText = 'background:#dcfce7; border-color:#bbf7d0; color:#166534';
@@ -1187,17 +1223,19 @@
     }
   }
 
+  // constants.js THRESHOLDS.NET_LIQUIDITY 사용
   function updateInfoCards(last, prev) {
     const statusCard = document.getElementById('statusCard');
     const summary = document.getElementById('statusSummary');
     const weeklyChanges = document.getElementById('weeklyChanges');
 
-    // ★ Net Liquidity 정식 공식 사용
+    const INFO_TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
     const netLiqDelta = last.netLiquidityDelta;
-    if (netLiqDelta > 50) {
+
+    if (netLiqDelta > INFO_TH.POSITIVE) {
       statusCard.className = 'info-card inflow';
       summary.innerHTML = `주간 <span class="info-value">+$${netLiqDelta.toFixed(0)}B</span> 순유입 - 유동성 확장 중`;
-    } else if (netLiqDelta < -50) {
+    } else if (netLiqDelta < INFO_TH.NEGATIVE) {
       statusCard.className = 'info-card outflow';
       summary.innerHTML = `주간 <span class="info-value">-$${Math.abs(netLiqDelta).toFixed(0)}B</span> 순유출 - 유동성 축소 중`;
     } else {

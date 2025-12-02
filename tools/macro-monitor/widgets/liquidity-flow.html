@@ -1,4 +1,4 @@
-<!-- Macro Monitor Widget - Liquidity Flow (A+C 하이브리드) -->
+<!-- 100x Market Radar Widget - Liquidity Flow (A+C 하이브리드) -->
 <!-- 캐시 기반: API 호출 없음, Detail에서 저장한 localStorage 데이터 읽기 -->
 <!DOCTYPE html>
 <html lang="ko">
@@ -6,10 +6,14 @@
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
-<!-- DataManager ES Module import -->
+<!-- Constants & DataManager ES Module import -->
 <script type="module">
   import { DataManager } from '../shared/data-manager.js';
-  window.DataManager = DataManager;  // 전역 노출 (비모듈 스크립트 호환)
+  import { THRESHOLDS, ICONS, COLORS } from '../shared/constants.js';
+  window.DataManager = DataManager;
+  window.THRESHOLDS = THRESHOLDS;
+  window.ICONS = ICONS;
+  window.COLORS = COLORS;
 </script>
 
 <style>
@@ -67,9 +71,10 @@
     font-weight: 600;
   }
 
-  .badge-positive { background: #dcfce7; color: #16a34a; }
-  .badge-neutral { background: #fef9c3; color: #ca8a04; }
-  .badge-negative { background: #fee2e2; color: #dc2626; }
+  /* 배지 색상 - constants.js COLORS.BADGE, COLORS.STATUS 참조 */
+  .badge-positive { background: var(--badge-positive, #dcfce7); color: var(--color-positive, #16a34a); }
+  .badge-neutral { background: var(--badge-neutral, #fef9c3); color: var(--color-neutral, #ca8a04); }
+  .badge-negative { background: var(--badge-negative, #fee2e2); color: var(--color-negative, #dc2626); }
 
   /* Net Flow Hero */
   .net-flow-hero {
@@ -346,39 +351,67 @@
   const WIDGET_ID = 'liquidity-flow';
   const DETAIL_PATH = 'tools/macro-monitor/details/liquidity-flow.html';
 
-  // 상태별 이모지
-  const STATUS_EMOJI = {
-    positive: '🟢',
-    neutral: '🟡',
-    negative: '🔴'
+  // 상태별 이모지 - constants.js ICONS.SIGNAL 사용 (fallback 포함)
+  const getStatusEmoji = (status) => {
+    if (typeof ICONS !== 'undefined' && ICONS.SIGNAL) {
+      const map = { positive: 'POSITIVE', neutral: 'NEUTRAL', negative: 'NEGATIVE' };
+      return ICONS.SIGNAL[map[status]] || ICONS.SIGNAL.POSITIVE;
+    }
+    // Fallback
+    const fallback = { positive: '🟢', neutral: '🟡', negative: '🔴' };
+    return fallback[status] || '🟢';
   };
 
-  // Net Flow 상태 판단 (십억 달러 기준)
+  // 임계값 헬퍼 - constants.js THRESHOLDS 사용 (fallback 포함)
+  const getThreshold = (category, level) => {
+    if (typeof THRESHOLDS !== 'undefined' && THRESHOLDS[category]) {
+      return THRESHOLDS[category][level];
+    }
+    // Fallback values
+    const fallback = {
+      NET_LIQUIDITY: { POSITIVE: 50, NEGATIVE: -50 },
+      M2_YOY: { POSITIVE: 6, NEUTRAL: 2 },
+      STABLECOIN: { POSITIVE: 350, NEUTRAL: 250 },
+      NET_LIQ_TRILLION: { POSITIVE: 6, NEUTRAL: 5 },
+      OVERALL: { EXPANDING: { netLiq: 50, m2YoY: 4 }, CONTRACTING: { netLiq: -50, m2YoY: 2 } }
+    };
+    return fallback[category]?.[level];
+  };
+
+  // Net Flow 상태 판단 - constants.js THRESHOLDS.NET_LIQUIDITY 사용
   function getNetFlowStatus(netFlow) {
-    if (netFlow > 50) return 'positive';
-    if (netFlow < -50) return 'negative';
+    const posThreshold = getThreshold('NET_LIQUIDITY', 'POSITIVE');
+    const negThreshold = getThreshold('NET_LIQUIDITY', 'NEGATIVE');
+    if (netFlow > posThreshold) return 'positive';
+    if (netFlow < negThreshold) return 'negative';
     return 'neutral';
   }
 
-  // M2 Growth 상태 판단 (%)
+  // M2 Growth 상태 판단 - constants.js THRESHOLDS.M2_YOY 사용
   function getM2Status(m2Growth) {
-    if (m2Growth > 3) return 'positive';
-    if (m2Growth < 0) return 'negative';
+    const posThreshold = getThreshold('M2_YOY', 'POSITIVE');
+    const neutralThreshold = getThreshold('M2_YOY', 'NEUTRAL');
+    if (m2Growth >= posThreshold) return 'positive';
+    if (m2Growth < neutralThreshold) return 'negative';
     return 'neutral';
   }
 
-  // Stablecoin 상태 판단 (v2: $350B 이상 양호)
+  // Stablecoin 상태 판단 - constants.js THRESHOLDS.STABLECOIN 사용
   function getScStatus(sc) {
-    if (sc >= 350) return 'positive';
-    if (sc >= 250) return 'neutral';
+    const posThreshold = getThreshold('STABLECOIN', 'POSITIVE');
+    const neutralThreshold = getThreshold('STABLECOIN', 'NEUTRAL');
+    if (sc >= posThreshold) return 'positive';
+    if (sc >= neutralThreshold) return 'neutral';
     return 'negative';
   }
 
-  // Net Liquidity 절대값 상태 (v2)
+  // Net Liquidity 절대값 상태 - constants.js THRESHOLDS.NET_LIQ_TRILLION 사용
   function getNlStatus(nl) {
-    if (nl >= 6) return 'positive';     // $6T 이상
-    if (nl >= 5) return 'neutral';      // $5-6T
-    return 'negative';                   // $5T 미만
+    const posThreshold = getThreshold('NET_LIQ_TRILLION', 'POSITIVE');
+    const neutralThreshold = getThreshold('NET_LIQ_TRILLION', 'NEUTRAL');
+    if (nl >= posThreshold) return 'positive';
+    if (nl >= neutralThreshold) return 'neutral';
+    return 'negative';
   }
 
   function renderWidget(data) {
@@ -435,37 +468,40 @@
 
     // 3. M2 Card (UI 위계 변경: Total이 메인)
     const m2Status = getM2Status(m2YoY);
-    document.getElementById('m2Emoji').textContent = STATUS_EMOJI[m2Status];
+    document.getElementById('m2Emoji').textContent = getStatusEmoji(m2Status);
     // Main: Total ($T)
     document.getElementById('m2Value').textContent = '$' + m2TotalT.toFixed(1);
     document.getElementById('m2Sub').textContent = (m2YoY >= 0 ? '+' : '') + m2YoY.toFixed(1) + '% YoY';
 
     // 4. Net Liq Card
     const nlStatus = getNlStatus(nlTotalT);
-    document.getElementById('nlEmoji').textContent = STATUS_EMOJI[nlStatus];
+    document.getElementById('nlEmoji').textContent = getStatusEmoji(nlStatus);
     document.getElementById('nlValue').textContent = '$' + nlTotalT.toFixed(2);
     document.getElementById('nlSub').textContent = 'Δ ' + (netFlow >= 0 ? '+' : '') + '$' + Math.round(netFlow) + 'B';
 
     // 5. Stablecoin Card
     const scM2Ratio = m2TotalB > 0 ? (sc / m2TotalB * 100).toFixed(2) : '0.00';
     const scStatus = getScStatus(sc);
-    document.getElementById('scEmoji').textContent = STATUS_EMOJI[scStatus];
+    document.getElementById('scEmoji').textContent = getStatusEmoji(scStatus);
     document.getElementById('scValue').textContent = '$' + Math.round(sc);
     document.getElementById('scSub').textContent = 'SC/M2 ' + scM2Ratio + '%';
 
-    // 6. Overall Badge (디테일 페이지와 로직 100% 일치)
+    // 6. Overall Badge - constants.js THRESHOLDS.OVERALL 사용
+    const expandingCfg = getThreshold('OVERALL', 'EXPANDING');
+    const contractingCfg = getThreshold('OVERALL', 'CONTRACTING');
+
     let overallStatus = 'NEUTRAL';
-    let overallEmoji = '🟡';
+    let overallEmoji = getStatusEmoji('neutral');
     let badgeClass = 'neutral';
-    
-    // 조건: Net Liq > 50 AND M2 > 4
-    if (netFlow > 50 && m2YoY >= 4) {
+
+    // 조건: THRESHOLDS.OVERALL.EXPANDING / CONTRACTING 사용
+    if (netFlow > expandingCfg.netLiq && m2YoY >= expandingCfg.m2YoY) {
       overallStatus = 'EXPANDING';
-      overallEmoji = '🟢';
+      overallEmoji = getStatusEmoji('positive');
       badgeClass = 'positive';
-    } else if (netFlow < -50 || m2YoY < 2) {
+    } else if (netFlow < contractingCfg.netLiq || m2YoY < contractingCfg.m2YoY) {
       overallStatus = 'CONTRACTING';
-      overallEmoji = '🔴';
+      overallEmoji = getStatusEmoji('negative');
       badgeClass = 'negative';
     }
 

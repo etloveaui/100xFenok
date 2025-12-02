@@ -12,10 +12,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
 
-  <!-- DataManager ES Module import -->
+  <!-- Constants & DataManager ES Module import -->
   <script type="module">
     import { DataManager } from '../shared/data-manager.js';
-    window.DataManager = DataManager;  // 전역 노출 (비모듈 스크립트 호환)
+    import { THRESHOLDS, COLORS, LABELS } from '../shared/constants.js';
+    window.DataManager = DataManager;
+    window.THRESHOLDS = THRESHOLDS;
+    window.COLORS = COLORS;
+    window.LABELS = LABELS;
   </script>
   
   <style>
@@ -782,10 +786,41 @@
 </div>
 
 <script>
+  // 임계값 헬퍼 - constants.js THRESHOLDS 사용 (fallback 포함)
+  const getThreshold = (category, level) => {
+    if (typeof THRESHOLDS !== 'undefined' && THRESHOLDS[category]) {
+      return THRESHOLDS[category][level];
+    }
+    // Fallback values
+    const fallback = {
+      SPREAD: { NORMAL: 10, CAUTION: 20, WARNING: 30, DANGER: 30 },
+      RESERVES_GDP: { NORMAL: 12, CAUTION: 10, WARNING: 8, DANGER: 8 }
+    };
+    return fallback[category]?.[level];
+  };
+
+  // 색상 헬퍼 - constants.js COLORS 사용 (fallback 포함)
+  const getColor = (category, key) => {
+    if (typeof COLORS !== 'undefined' && COLORS[category]) {
+      return COLORS[category][key];
+    }
+    // Fallback
+    const fallback = {
+      CHART: { SPREAD: '#2563eb', RESERVES: '#10b981' }
+    };
+    return fallback[category]?.[key];
+  };
+
   const CONFIG = {
     apiKey: (window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1'),
     proxy: 'https://fed-proxy.etloveaui.workers.dev/',
-    colors: { spread: '#2563eb', reservesFill: 'rgba(16, 185, 129, 0.15)', reservesLine: '#10b981', lclor: '#ef4444', grid: '#f1f5f9' }
+    colors: {
+      spread: getColor('CHART', 'SPREAD') || '#2563eb',
+      reservesFill: 'rgba(16, 185, 129, 0.15)',
+      reservesLine: getColor('CHART', 'RESERVES') || '#10b981',
+      lclor: '#ef4444',
+      grid: '#f1f5f9'
+    }
   };
 
   async function fetchData(url) {
@@ -1217,13 +1252,18 @@
     };
   }
 
-  // ===== 게이지 업데이트 함수들 =====
+  // ===== 게이지 업데이트 함수들 - constants.js THRESHOLDS.SPREAD 사용 =====
   function updateSpreadGauge(spread) {
-    // Spread 상태 판정: 0-10 정상, 10-20 주의, 20-30 경계, 30+ 위험
+    const TH = {
+      NORMAL: getThreshold('SPREAD', 'NORMAL'),
+      CAUTION: getThreshold('SPREAD', 'CAUTION'),
+      WARNING: getThreshold('SPREAD', 'WARNING')
+    };
+
     let status, statusClass, zoneIdx;
-    if (spread < 10) { status = '정상'; statusClass = 'status-normal'; zoneIdx = 0; }
-    else if (spread < 20) { status = '주의'; statusClass = 'status-caution'; zoneIdx = 1; }
-    else if (spread < 30) { status = '경계'; statusClass = 'status-warning'; zoneIdx = 2; }
+    if (spread < TH.NORMAL) { status = '정상'; statusClass = 'status-normal'; zoneIdx = 0; }
+    else if (spread < TH.CAUTION) { status = '주의'; statusClass = 'status-caution'; zoneIdx = 1; }
+    else if (spread < TH.WARNING) { status = '경계'; statusClass = 'status-warning'; zoneIdx = 2; }
     else { status = '위험'; statusClass = 'status-danger'; zoneIdx = 3; }
 
     // 값 업데이트
@@ -1245,12 +1285,18 @@
     }
   }
 
+  // constants.js THRESHOLDS.RESERVES_GDP 사용
   function updateRbGdpGauge(rbGdpRatio) {
-    // RB/GDP 상태 판정 (Fed 기준): 12%+ 정상, 10-12% 주의, 8-10% 경계, <8% 위험
+    const TH = {
+      NORMAL: getThreshold('RESERVES_GDP', 'NORMAL'),
+      CAUTION: getThreshold('RESERVES_GDP', 'CAUTION'),
+      WARNING: getThreshold('RESERVES_GDP', 'WARNING')
+    };
+
     let status, statusClass, zoneIdx;
-    if (rbGdpRatio >= 12) { status = '정상'; statusClass = 'status-normal'; zoneIdx = 3; }
-    else if (rbGdpRatio >= 10) { status = '주의'; statusClass = 'status-caution'; zoneIdx = 2; }
-    else if (rbGdpRatio >= 8) { status = '경계'; statusClass = 'status-warning'; zoneIdx = 1; }
+    if (rbGdpRatio >= TH.NORMAL) { status = '정상'; statusClass = 'status-normal'; zoneIdx = 3; }
+    else if (rbGdpRatio >= TH.CAUTION) { status = '주의'; statusClass = 'status-caution'; zoneIdx = 2; }
+    else if (rbGdpRatio >= TH.WARNING) { status = '경계'; statusClass = 'status-warning'; zoneIdx = 1; }
     else { status = '위험'; statusClass = 'status-danger'; zoneIdx = 0; }
 
     // 값 업데이트
@@ -1297,11 +1343,22 @@
     const badge = document.getElementById('statusBadge');
     const text = document.getElementById('statusText');
 
-    // 두 지표 중 더 심각한 상태 선택 (Fed 기준: 12%+ 정상, 10-12% 주의, 8-10% 경계, <8% 위험)
+    // 두 지표 중 더 심각한 상태 선택 - constants.js THRESHOLDS 사용
+    const SPREAD_TH = {
+      NORMAL: getThreshold('SPREAD', 'NORMAL'),
+      CAUTION: getThreshold('SPREAD', 'CAUTION'),
+      WARNING: getThreshold('SPREAD', 'WARNING')
+    };
+    const RGDP_TH = {
+      NORMAL: getThreshold('RESERVES_GDP', 'NORMAL'),
+      CAUTION: getThreshold('RESERVES_GDP', 'CAUTION'),
+      WARNING: getThreshold('RESERVES_GDP', 'WARNING')
+    };
+
     let overallStatus = 'normal';
-    if (spread >= 30 || rbGdpRatio < 8) overallStatus = 'danger';
-    else if (spread >= 20 || rbGdpRatio < 10) overallStatus = 'warning';
-    else if (spread >= 10 || rbGdpRatio < 12) overallStatus = 'caution';
+    if (spread >= SPREAD_TH.WARNING || rbGdpRatio < RGDP_TH.WARNING) overallStatus = 'danger';
+    else if (spread >= SPREAD_TH.CAUTION || rbGdpRatio < RGDP_TH.CAUTION) overallStatus = 'warning';
+    else if (spread >= SPREAD_TH.NORMAL || rbGdpRatio < RGDP_TH.NORMAL) overallStatus = 'caution';
 
     if (overallStatus === 'danger') {
       badge.style.cssText = 'background:#fee2e2; border-color:#fecaca; color:#dc2626';
@@ -1328,14 +1385,25 @@
     saveWidgetCache(spread, rbGdpRatio, overallStatus, last.date);
   }
 
-  // ===== Widget 캐시 저장 함수 =====
+  // ===== Widget 캐시 저장 함수 - constants.js THRESHOLDS 사용 =====
   function saveWidgetCache(spread, rbGdpRatio, overallStatus, date) {
     if (typeof DataManager === 'undefined') return;
 
-    // Tier1 상태 (Spread)
-    const tier1Status = spread >= 30 ? 'danger' : spread >= 20 ? 'warning' : spread >= 10 ? 'caution' : 'normal';
-    // Tier2 상태 (RB/GDP) - Fed 기준: 12%+ 정상, 10-12% 주의, 8-10% 경계, <8% 위험
-    const tier2Status = rbGdpRatio >= 12 ? 'normal' : rbGdpRatio >= 10 ? 'caution' : rbGdpRatio >= 8 ? 'warning' : 'danger';
+    const SPREAD_TH = {
+      NORMAL: getThreshold('SPREAD', 'NORMAL'),
+      CAUTION: getThreshold('SPREAD', 'CAUTION'),
+      WARNING: getThreshold('SPREAD', 'WARNING')
+    };
+    const RGDP_TH = {
+      NORMAL: getThreshold('RESERVES_GDP', 'NORMAL'),
+      CAUTION: getThreshold('RESERVES_GDP', 'CAUTION'),
+      WARNING: getThreshold('RESERVES_GDP', 'WARNING')
+    };
+
+    // Tier1 상태 (Spread) - THRESHOLDS.SPREAD 사용
+    const tier1Status = spread >= SPREAD_TH.WARNING ? 'danger' : spread >= SPREAD_TH.CAUTION ? 'warning' : spread >= SPREAD_TH.NORMAL ? 'caution' : 'normal';
+    // Tier2 상태 (RB/GDP) - THRESHOLDS.RESERVES_GDP 사용
+    const tier2Status = rbGdpRatio >= RGDP_TH.NORMAL ? 'normal' : rbGdpRatio >= RGDP_TH.CAUTION ? 'caution' : rbGdpRatio >= RGDP_TH.WARNING ? 'warning' : 'danger';
 
     // 종합 상태 라벨
     const overallLabels = {
@@ -1403,17 +1471,23 @@
     card.classList.toggle('expanded');
   };
 
-  // ===== 설명 카드 동적 업데이트 =====
+  // ===== 설명 카드 동적 업데이트 - constants.js THRESHOLDS.SPREAD 사용 =====
   function updateInfoCards(spread, rbGdpRatio) {
+    const TH = {
+      NORMAL: getThreshold('SPREAD', 'NORMAL'),
+      CAUTION: getThreshold('SPREAD', 'CAUTION'),
+      WARNING: getThreshold('SPREAD', 'WARNING')
+    };
+
     // 상태 판정
     let statusText, statusClass;
-    if (spread < 10) {
+    if (spread < TH.NORMAL) {
       statusText = '단기 자금시장은 안정적입니다';
       statusClass = 'normal';
-    } else if (spread < 20) {
+    } else if (spread < TH.CAUTION) {
       statusText = '⚠️ 단기 금리에 상승 압력이 감지됩니다';
       statusClass = 'caution';
-    } else if (spread < 30) {
+    } else if (spread < TH.WARNING) {
       statusText = '⚠️ 단기 시장 경색 징후가 나타나고 있습니다';
       statusClass = 'warning';
     } else {
