@@ -16,10 +16,12 @@
   <script type="module">
     import { DataManager } from '../shared/data-manager.js';
     import { THRESHOLDS, COLORS, LABELS } from '../shared/constants.js';
+    import { getRecessionAnnotations } from '../shared/chart-annotations.js';
     window.DataManager = DataManager;
     window.THRESHOLDS = THRESHOLDS;
     window.COLORS = COLORS;
     window.LABELS = LABELS;
+    window.getRecessionAnnotations = getRecessionAnnotations;
   </script>
   
   <style>
@@ -1171,6 +1173,43 @@
       };
     }
 
+    // ===== 리세션 음영 추가 =====
+    const chartStart = dates[0];
+    const chartEnd = dates[dates.length - 1];
+    console.log('[Chart] 날짜 범위:', chartStart, '~', chartEnd);
+
+    if (typeof getRecessionAnnotations === 'function') {
+      const recessionAnnotations = getRecessionAnnotations(chartStart, chartEnd, { showLabel: true });
+      console.log('[Chart] 리세션 annotations:', Object.keys(recessionAnnotations).length, '개');
+
+      if (Object.keys(recessionAnnotations).length === 0) {
+        console.log('[Chart] 해당 기간에 리세션 없음 (COVID는 2020-02~04)');
+      }
+
+      // Category 축에서는 라벨과 정확히 일치해야 함 → 가장 가까운 날짜로 매핑
+      const findClosestLabel = (targetDate) => {
+        const target = new Date(targetDate).getTime();
+        let closest = dates[0];
+        let minDiff = Math.abs(new Date(dates[0]).getTime() - target);
+        for (const d of dates) {
+          const diff = Math.abs(new Date(d).getTime() - target);
+          if (diff < minDiff) { minDiff = diff; closest = d; }
+        }
+        return closest;
+      };
+
+      // 리세션 날짜를 차트 라벨에 맞게 조정
+      Object.entries(recessionAnnotations).forEach(([key, val]) => {
+        const mappedMin = findClosestLabel(val.xMin);
+        const mappedMax = findClosestLabel(val.xMax);
+        console.log(`[Chart] ${key}: ${val.xMin} → ${mappedMin}, ${val.xMax} → ${mappedMax}`);
+        recessionAnnotations[key].xMin = mappedMin;
+        recessionAnnotations[key].xMax = mappedMax;
+      });
+
+      annotations = { ...annotations, ...recessionAnnotations };
+    }
+
     myChart = new Chart(ctx, {
       type: 'line',
       data: { labels: dates, datasets: datasets },
@@ -1506,9 +1545,23 @@
     document.getElementById('detailRbGdp').textContent = rbGdpRatio.toFixed(1);
   }
 
-  // 초기화
-  init(365);  // 기본값: 1Y
-  setupSwipeGesture();  // 모바일 스와이프 설정
+  // 초기화 - ES Module 로드 완료 대기
+  function startApp() {
+    if (typeof getRecessionAnnotations === 'function') {
+      console.log('[Init] getRecessionAnnotations loaded ✓');
+      init(365);  // 기본값: 1Y
+      setupSwipeGesture();  // 모바일 스와이프 설정
+    } else {
+      console.log('[Init] Waiting for ES modules...');
+      setTimeout(startApp, 50);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+  } else {
+    startApp();
+  }
 </script>
 </body>
 </html>

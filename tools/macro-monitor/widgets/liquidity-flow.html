@@ -292,18 +292,18 @@
       </div>
     </div>
 
-    <!-- Indicator Grid (1x3) - v2: M2, SC, Net Liq -->
+    <!-- Indicator Grid (1x3) - v2.1: % 변화율이 메인 -->
 	<div class="indicator-grid">
       <div class="indicator-card" id="m2Card">
         <div class="indicator-status">
           <span class="indicator-emoji" id="m2Emoji">🟢</span>
-          <span class="indicator-name">M2</span>
+          <span class="indicator-name">M2 YoY</span>
         </div>
         <div class="indicator-value">
-          <span id="m2Value">$22.3</span>
-          <span class="indicator-unit">T</span>
+          <span id="m2Value">+5.9</span>
+          <span class="indicator-unit">%</span>
         </div>
-        <div class="indicator-sub" id="m2Sub">+5.9% YoY</div>
+        <div class="indicator-sub" id="m2Sub">$22.3T</div>
       </div>
 
       <div class="indicator-card" id="nlCard">
@@ -312,22 +312,22 @@
           <span class="indicator-name">Net Liq</span>
         </div>
         <div class="indicator-value">
-          <span id="nlValue">$5.8</span>
-          <span class="indicator-unit">T</span>
+          <span id="nlValue">+39</span>
+          <span class="indicator-unit">$B</span>
         </div>
-        <div class="indicator-sub" id="nlSub">Δ +$39B</div>
+        <div class="indicator-sub" id="nlSub">$5.8T</div>
       </div>
 
       <div class="indicator-card" id="scCard">
         <div class="indicator-status">
           <span class="indicator-emoji" id="scEmoji">🟢</span>
-          <span class="indicator-name">Stablecoin</span>
+          <span class="indicator-name">SC/M2</span>
         </div>
         <div class="indicator-value">
-          <span id="scValue">$226</span>
-          <span class="indicator-unit">B</span>
+          <span id="scValue">1.02</span>
+          <span class="indicator-unit">%</span>
         </div>
-        <div class="indicator-sub" id="scSub">SC/M2 1.02%</div>
+        <div class="indicator-sub" id="scSub">$226B</div>
       </div>
     </div>
 
@@ -396,22 +396,23 @@
     return 'neutral';
   }
 
-  // Stablecoin 상태 판단 - constants.js THRESHOLDS.STABLECOIN 사용
-  function getScStatus(sc) {
+  // Stablecoin 상태 판단 - SC/M2 비율 기준 (리서치 문서 참조)
+  // THRESHOLDS.STABLECOIN: POSITIVE 1.5%, NEUTRAL 1.0%
+  function getScStatus(scM2Ratio) {
     const posThreshold = getThreshold('STABLECOIN', 'POSITIVE');
     const neutralThreshold = getThreshold('STABLECOIN', 'NEUTRAL');
-    if (sc >= posThreshold) return 'positive';
-    if (sc >= neutralThreshold) return 'neutral';
+    if (scM2Ratio >= posThreshold) return 'positive';
+    if (scM2Ratio >= neutralThreshold) return 'neutral';
     return 'negative';
   }
 
-  // Net Liquidity 절대값 상태 - constants.js THRESHOLDS.NET_LIQ_TRILLION 사용
-  function getNlStatus(nl) {
-    const posThreshold = getThreshold('NET_LIQ_TRILLION', 'POSITIVE');
-    const neutralThreshold = getThreshold('NET_LIQ_TRILLION', 'NEUTRAL');
-    if (nl >= posThreshold) return 'positive';
-    if (nl >= neutralThreshold) return 'neutral';
-    return 'negative';
+  // Net Liquidity 주간 변화($B) 상태 - constants.js THRESHOLDS.NET_LIQUIDITY 사용
+  function getNlStatus(deltaB) {
+    const posThreshold = getThreshold('NET_LIQUIDITY', 'POSITIVE');  // +$50B
+    const negThreshold = getThreshold('NET_LIQUIDITY', 'NEGATIVE');  // -$50B
+    if (deltaB > posThreshold) return 'positive';   // 상승
+    if (deltaB < negThreshold) return 'negative';   // 하락
+    return 'neutral';  // 횡보
   }
 
   function renderWidget(data) {
@@ -450,57 +451,55 @@
     netFlowEl.textContent = (netFlow >= 0 ? '+' : '') + '$' + Math.round(netFlow) + 'B';
     netFlowEl.className = 'net-flow-value ' + netFlowStatus;
 
-    // 텍스트 및 아이콘 표시 (범위 로직 통일: ±50)
-    // ★ 수정된 부분: Neutral일 때 화살표 아이콘 변경
-    let flowText = 'Neutral';
-    let flowIcon = '➡️'; 
+    // 텍스트 및 아이콘 표시 (용어 통일: 상승/횡보/하락)
+    let flowText = '횡보';
+    let flowIcon = '➡️';
 
     if (netFlow > 50) {
-      flowText = 'Expanding';
+      flowText = '상승';
       flowIcon = '📈';
     } else if (netFlow < -50) {
-      flowText = 'Contracting';
+      flowText = '하락';
       flowIcon = '📉';
     }
 
     document.getElementById('netFlowDesc').textContent = flowText;
     document.getElementById('netFlowTrend').textContent = flowIcon;
 
-    // 3. M2 Card (UI 위계 변경: Total이 메인)
+    // 3. M2 Card (% 변화율이 메인, 절대값이 서브)
     const m2Status = getM2Status(m2YoY);
     document.getElementById('m2Emoji').textContent = getStatusEmoji(m2Status);
-    // Main: Total ($T)
-    document.getElementById('m2Value').textContent = '$' + m2TotalT.toFixed(1);
-    document.getElementById('m2Sub').textContent = (m2YoY >= 0 ? '+' : '') + m2YoY.toFixed(1) + '% YoY';
+    document.getElementById('m2Value').textContent = (m2YoY >= 0 ? '+' : '') + m2YoY.toFixed(1);  // YoY%가 메인
+    document.getElementById('m2Sub').textContent = '$' + m2TotalT.toFixed(1) + 'T';  // 절대값이 서브
 
-    // 4. Net Liq Card
-    const nlStatus = getNlStatus(nlTotalT);
+    // 4. Net Liq Card (주간 변화가 메인, 절대값이 서브)
+    const nlStatus = getNlStatus(netFlow);  // 주간 변화 기준 상태 판단
     document.getElementById('nlEmoji').textContent = getStatusEmoji(nlStatus);
-    document.getElementById('nlValue').textContent = '$' + nlTotalT.toFixed(2);
-    document.getElementById('nlSub').textContent = 'Δ ' + (netFlow >= 0 ? '+' : '') + '$' + Math.round(netFlow) + 'B';
+    document.getElementById('nlValue').textContent = (netFlow >= 0 ? '+' : '') + Math.round(netFlow);  // Δ$B가 메인
+    document.getElementById('nlSub').textContent = '$' + nlTotalT.toFixed(2) + 'T';  // 절대값이 서브
 
-    // 5. Stablecoin Card
-    const scM2Ratio = m2TotalB > 0 ? (sc / m2TotalB * 100).toFixed(2) : '0.00';
-    const scStatus = getScStatus(sc);
+    // 5. Stablecoin Card (SC/M2 비율이 메인, 시총이 서브)
+    const scM2RatioNum = m2TotalB > 0 ? (sc / m2TotalB * 100) : 0;
+    const scStatus = getScStatus(scM2RatioNum);  // 비율 기준 상태 판단
     document.getElementById('scEmoji').textContent = getStatusEmoji(scStatus);
-    document.getElementById('scValue').textContent = '$' + Math.round(sc);
-    document.getElementById('scSub').textContent = 'SC/M2 ' + scM2Ratio + '%';
+    document.getElementById('scValue').textContent = scM2RatioNum.toFixed(2);  // 비율이 메인
+    document.getElementById('scSub').textContent = '$' + Math.round(sc) + 'B';  // 시총이 서브
 
-    // 6. Overall Badge - constants.js THRESHOLDS.OVERALL 사용
+    // 6. Overall Badge - 용어 통일: 상승/횡보/하락
     const expandingCfg = getThreshold('OVERALL', 'EXPANDING');
     const contractingCfg = getThreshold('OVERALL', 'CONTRACTING');
 
-    let overallStatus = 'NEUTRAL';
+    let overallStatus = '횡보';
     let overallEmoji = getStatusEmoji('neutral');
     let badgeClass = 'neutral';
 
     // 조건: THRESHOLDS.OVERALL.EXPANDING / CONTRACTING 사용
     if (netFlow > expandingCfg.netLiq && m2YoY >= expandingCfg.m2YoY) {
-      overallStatus = 'EXPANDING';
+      overallStatus = '상승';
       overallEmoji = getStatusEmoji('positive');
       badgeClass = 'positive';
     } else if (netFlow < contractingCfg.netLiq || m2YoY < contractingCfg.m2YoY) {
-      overallStatus = 'CONTRACTING';
+      overallStatus = '하락';
       overallEmoji = getStatusEmoji('negative');
       badgeClass = 'negative';
     }

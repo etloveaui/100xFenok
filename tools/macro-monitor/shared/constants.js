@@ -20,9 +20,10 @@ export const THRESHOLDS = Object.freeze({
     NEGATIVE: -50   // < -$50B: 적색
   },
   STABLECOIN: {
-    POSITIVE: 350,  // >= $350B: 녹색
-    NEUTRAL: 250,   // $250-350B: 황색
-    NEGATIVE: 250   // < $250B: 적색
+    // SC/M2 비율 기준 (%) - 리서치 문서 참조
+    POSITIVE: 1.5,  // >= 1.5%: 녹색 (강한 유입)
+    NEUTRAL: 1.0,   // 1.0-1.5%: 황색 (보통)
+    NEGATIVE: 1.0   // < 1.0%: 적색 (유출/이탈)
   },
   NET_LIQ_TRILLION: {
     POSITIVE: 6,    // >= $6T: 녹색
