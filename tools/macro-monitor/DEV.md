@@ -2,6 +2,7 @@
 
 > 기능별 개발 메모. CLAUDE.md에서 이 기능 작업 시 참조.
 > **설계 철학**: `docs/planning/macro-monitor-philosophy.md` 필독
+> **검증 체크리스트**: `docs/manuals/chart-dev-checklist.md` (차트 작업 시 필수)
 
 ## Purpose
 
@@ -37,8 +38,10 @@ tools/macro-monitor/
 │   ├── liquidity-stress.html
 │   └── liquidity-flow.html
 └── shared/                   ← 공통 모듈 (ES Module)
-    ├── data-manager.js
-    └── constants.js
+    ├── data-manager.js       ← 캐시 + stale + NumberFormat
+    ├── constants.js          ← THRESHOLDS, COLORS, ICONS
+    ├── recession-data.js     ← NBER 리세션 기간
+    └── chart-annotations.js  ← 차트 annotation
 ```
 
 ### ✅ 인프라 완료 (2025-12-01)
@@ -47,7 +50,7 @@ tools/macro-monitor/
 |------|-----|
 | CORS 프록시 | `https://fed-proxy.etloveaui.workers.dev/` |
 | FRED API Key | `6dda7dc3956a2c1d6ac939133de115f1` |
-| 캐시 TTL | 30분 (localStorage) |
+| 캐시 TTL | 30분 fresh / 6시간 stale (localStorage) |
 | Admin | `admin/DEV.md` 참조 |
 
 ---
@@ -92,12 +95,22 @@ tools/macro-monitor/
 ### 캐시 연동 패턴
 
 ```javascript
-// Widget: 캐시 읽기만
-const data = DataManager.getWidgetData('widget-id');
+// Widget: 캐시 + stale 상태 읽기
+const { data, isStale, ageMs } = DataManager.getWidgetDataWithStale('widget-id');
+if (isStale) showStaleWarning(MacroDataManager.formatAge(ageMs));
 if (!data) await loadDetailInBackground();
 
 // Detail: API 호출 + 캐시 저장
 DataManager.saveWidgetData('widget-id', processedData);
+```
+
+### 숫자 포맷팅 유틸
+
+```javascript
+MacroDataManager.formatCurrency(22300000000000, { unit: 'T' }); // "$22.3T"
+MacroDataManager.formatCurrency(39000000000, { sign: true });   // "+$39.0B"
+MacroDataManager.formatPercent(5.91, { sign: true });           // "+5.91%"
+MacroDataManager.formatNumber(39, { sign: true, suffix: '$B' });// "+39$B"
 ```
 
 ### ⚠️ 절대 금지
