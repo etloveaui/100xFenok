@@ -8,9 +8,10 @@
 
 <!-- Constants & DataManager ES Module import -->
 <script type="module">
-  import { DataManager } from '../shared/data-manager.js';
+  import { DataManager, MacroDataManager } from '../shared/data-manager.js';
   import { THRESHOLDS, ICONS, COLORS } from '../shared/constants.js';
   window.DataManager = DataManager;
+  window.MacroDataManager = MacroDataManager;
   window.THRESHOLDS = THRESHOLDS;
   window.ICONS = ICONS;
   window.COLORS = COLORS;
@@ -249,6 +250,24 @@
     color: #cbd5e1;
   }
 
+  /* Stale Data 경고 배너 */
+  .stale-warning {
+    background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #92400e;
+  }
+
+  .stale-warning-icon { font-size: 12px; }
+  .stale-warning-text { font-weight: 500; }
+  .stale-warning-age { color: #b45309; font-weight: 600; }
+
   /* Responsive */
   @media (max-width: 480px) {
     .card-widget { padding: 14px; min-height: 260px; }
@@ -276,6 +295,13 @@
       <span id="overallEmoji">🟢</span>
       <span id="overallLabel">EXPANDING</span>
     </div>
+  </div>
+
+  <!-- Stale Data 경고 배너 -->
+  <div class="stale-warning" id="staleWarning" style="display: none;">
+    <span class="stale-warning-icon">⚠️</span>
+    <span class="stale-warning-text">오래된 데이터</span>
+    <span class="stale-warning-age" id="staleAge">6시간 전</span>
   </div>
 
   <!-- 메인 컨텐츠 (캐시 있을 때) -->
@@ -519,32 +545,61 @@
 
   async function init() {
     const loader = document.getElementById('loader');
+    const staleWarning = document.getElementById('staleWarning');
 
     try {
-      // 캐시에서 데이터 읽기
-      let data = null;
-      if (typeof DataManager !== 'undefined') {
-        data = DataManager.getWidgetData(WIDGET_ID);
+      // 캐시에서 데이터 + stale 상태 읽기
+      let cacheResult = { data: null, isStale: true, ageMs: 0 };
+      if (typeof DataManager !== 'undefined' && DataManager.getWidgetDataWithStale) {
+        cacheResult = DataManager.getWidgetDataWithStale(WIDGET_ID);
+      } else if (typeof DataManager !== 'undefined') {
+        // fallback: 기존 메서드 사용
+        cacheResult.data = DataManager.getWidgetData(WIDGET_ID);
+        cacheResult.isStale = false;
       }
 
-      if (data) {
-        renderWidget(data);
+      if (cacheResult.data) {
+        renderWidget(cacheResult.data);
+
+        // Stale 경고 표시 (6시간 초과)
+        if (cacheResult.isStale && cacheResult.ageMs > 0) {
+          const ageText = typeof MacroDataManager !== 'undefined'
+            ? MacroDataManager.formatAge(cacheResult.ageMs)
+            : formatAgeSimple(cacheResult.ageMs);
+          document.getElementById('staleAge').textContent = ageText;
+          staleWarning.style.display = 'flex';
+        } else {
+          staleWarning.style.display = 'none';
+        }
       } else {
         // 캐시 없음 - hidden iframe으로 Detail 로드 시도
         await loadDetailInBackground();
 
         // 다시 캐시 확인
-        if (typeof DataManager !== 'undefined') {
-          data = DataManager.getWidgetData(WIDGET_ID);
+        if (typeof DataManager !== 'undefined' && DataManager.getWidgetDataWithStale) {
+          cacheResult = DataManager.getWidgetDataWithStale(WIDGET_ID);
+        } else if (typeof DataManager !== 'undefined') {
+          cacheResult.data = DataManager.getWidgetData(WIDGET_ID);
         }
-        renderWidget(data);
+        renderWidget(cacheResult.data);
+        staleWarning.style.display = 'none'; // 새로 로드한 데이터는 fresh
       }
     } catch (e) {
       console.error('[Widget] Init error:', e);
       renderWidget(null);
+      staleWarning.style.display = 'none';
     } finally {
       loader.style.display = 'none';
     }
+  }
+
+  // Fallback age formatter (MacroDataManager.formatAge 없을 때)
+  function formatAgeSimple(ageMs) {
+    const minutes = Math.floor(ageMs / 60000);
+    if (minutes < 60) return `${minutes}분 전`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    return `${Math.floor(hours / 24)}일 전`;
   }
 
   // Detail 페이지를 백그라운드에서 로드하여 캐시 생성

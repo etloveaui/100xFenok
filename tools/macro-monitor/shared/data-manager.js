@@ -7,7 +7,8 @@
 class MacroDataManager {
   constructor() {
     this.prefix = 'macro_';
-    this.ttl = 30 * 60 * 1000; // 30분
+    this.ttl = 30 * 60 * 1000; // 30분 (fresh)
+    this.staleTtl = 6 * 60 * 60 * 1000; // 6시간 (stale 경고 임계값)
   }
 
   /**
@@ -101,6 +102,65 @@ class MacroDataManager {
   }
 
   /**
+   * 데이터가 stale 상태인지 확인 (6시간 경과)
+   * @param {string} widgetId - 위젯 ID
+   * @returns {boolean} - stale 여부
+   */
+  isStale(widgetId) {
+    const cached = localStorage.getItem(this.prefix + widgetId);
+    if (!cached) return true;
+
+    try {
+      const { timestamp } = JSON.parse(cached);
+      return Date.now() - timestamp > this.staleTtl;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  /**
+   * Widget에서 호출 - 캐시 데이터 + stale 상태 함께 반환
+   * expired(30분)되어도 삭제하지 않고, stale 여부만 표시
+   * @param {string} widgetId - 위젯 ID
+   * @returns {object} - { data, isStale, isFresh, ageMs }
+   */
+  getWidgetDataWithStale(widgetId) {
+    try {
+      const cached = localStorage.getItem(this.prefix + widgetId);
+      if (!cached) return { data: null, isStale: true, isFresh: false, ageMs: 0 };
+
+      const { data, timestamp, expires } = JSON.parse(cached);
+      const now = Date.now();
+      const ageMs = now - timestamp;
+
+      return {
+        data,
+        isStale: ageMs > this.staleTtl,  // 6시간 초과
+        isFresh: now <= expires,          // 30분 이내
+        ageMs
+      };
+    } catch (e) {
+      console.error('[MacroDataManager] Read with stale failed:', e);
+      return { data: null, isStale: true, isFresh: false, ageMs: 0 };
+    }
+  }
+
+  /**
+   * 데이터 나이를 사람이 읽기 쉬운 형태로 변환
+   * @param {number} ageMs - 밀리초
+   * @returns {string} - "5분 전", "2시간 전" 등
+   */
+  static formatAge(ageMs) {
+    const minutes = Math.floor(ageMs / 60000);
+    if (minutes < 1) return '방금 전';
+    if (minutes < 60) return `${minutes}분 전`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    const days = Math.floor(hours / 24);
+    return `${days}일 전`;
+  }
+
+  /**
    * 종합 상태 계산 (Tier1 + Tier2 기반)
    * @param {string} tier1Status - Tier1 상태 (normal/caution/warning/danger)
    * @param {string} tier2Status - Tier2 상태
@@ -148,6 +208,78 @@ class MacroDataManager {
     if (ratioPercent < 10) return 'warning';
     if (ratioPercent < 12) return 'caution';
     return 'normal';
+  }
+
+  // =========================================
+  // Intl.NumberFormat 유틸리티
+  // =========================================
+
+  /**
+   * 통화 형식 포맷 (예: $22.3T, +$39B)
+   * @param {number} value - 값
+   * @param {object} options - { sign: boolean, unit: 'T'|'B'|'M'|'auto', decimals: number }
+   * @returns {string}
+   */
+  static formatCurrency(value, options = {}) {
+    const { sign = false, unit = 'auto', decimals = 1 } = options;
+
+    let absValue = Math.abs(value);
+    let suffix = '';
+
+    // 단위 결정
+    if (unit === 'auto') {
+      if (absValue >= 1e12) { absValue /= 1e12; suffix = 'T'; }
+      else if (absValue >= 1e9) { absValue /= 1e9; suffix = 'B'; }
+      else if (absValue >= 1e6) { absValue /= 1e6; suffix = 'M'; }
+      else if (absValue >= 1e3) { absValue /= 1e3; suffix = 'K'; }
+    } else {
+      const unitMap = { 'T': 1e12, 'B': 1e9, 'M': 1e6, 'K': 1e3 };
+      if (unitMap[unit]) { absValue /= unitMap[unit]; suffix = unit; }
+    }
+
+    const formatted = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    }).format(absValue);
+
+    const prefix = sign ? (value >= 0 ? '+$' : '-$') : '$';
+    return `${prefix}${formatted}${suffix}`;
+  }
+
+  /**
+   * 퍼센트 형식 포맷 (예: +1.02%, -0.5%)
+   * @param {number} value - 값 (이미 % 단위)
+   * @param {object} options - { sign: boolean, decimals: number }
+   * @returns {string}
+   */
+  static formatPercent(value, options = {}) {
+    const { sign = false, decimals = 2 } = options;
+
+    const formatted = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    }).format(Math.abs(value));
+
+    const prefix = sign ? (value >= 0 ? '+' : '-') : (value < 0 ? '-' : '');
+    return `${prefix}${formatted}%`;
+  }
+
+  /**
+   * 일반 숫자 형식 포맷 (예: +39, -12.5)
+   * @param {number} value - 값
+   * @param {object} options - { sign: boolean, decimals: number, suffix: string }
+   * @returns {string}
+   */
+  static formatNumber(value, options = {}) {
+    const { sign = false, decimals = 0, suffix = '' } = options;
+
+    const formatted = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    }).format(Math.abs(value));
+
+    const prefix = sign ? (value >= 0 ? '+' : '-') : (value < 0 ? '-' : '');
+    return `${prefix}${formatted}${suffix}`;
   }
 }
 
