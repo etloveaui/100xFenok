@@ -48,6 +48,36 @@ export const THRESHOLDS = Object.freeze({
   OVERALL: {
     EXPANDING: { netLiq: 50, m2YoY: 4 },      // Net > 50 AND M2 >= 4
     CONTRACTING: { netLiq: -50, m2YoY: 2 }   // Net < -50 OR M2 < 2
+  },
+
+  // Banking Health (4-A)
+  // 연체율 DRALACBN - 낮을수록 건전 (2008 GFC: 4.90%, 현재: ~1.5%)
+  DELINQUENCY: {
+    NORMAL: 2,      // < 2%: 정상 (역사적 저점 수준)
+    CAUTION: 3,     // 2-3%: 주의
+    WARNING: 4,     // 3-4%: 경계
+    DANGER: 4       // >= 4%: 위험 (GFC 수준 접근)
+  },
+  // Tier 1 자본비율 BOGZ1FL010000016Q - 높을수록 건전 (규제 최소: 6%, 현재: ~14%)
+  TIER1_RATIO: {
+    NORMAL: 12,     // >= 12%: 정상 (강건)
+    CAUTION: 10,    // 10-12%: 주의
+    WARNING: 8,     // 8-10%: 경계 (규제 근접)
+    DANGER: 8       // < 8%: 위험
+  },
+  // 예대율 (TOTLL/DPSACBW027SBOG) - 적정 범위 유지 (현재: ~71%, 과거 고점: ~99%)
+  // 참고: 2021년 저점 59.42%, 현재 71.73%, 1999년 고점 99.58%
+  LOAN_DEPOSIT: {
+    NORMAL_HIGH: 85,   // > 85%: 과열 (과거 고점 접근)
+    NORMAL_LOW: 60,    // 60-85%: 정상
+    CAUTION: 60,       // < 60%: 위축 (저점 접근)
+    WARNING: 55        // < 55%: 경계 (이례적 저점)
+  },
+  // 여신 증가율 YoY% (TOTLL 기반 계산)
+  LOAN_GROWTH: {
+    POSITIVE: 5,    // >= 5%: 확장
+    NEUTRAL: 0,     // 0-5%: 정상
+    NEGATIVE: 0     // < 0%: 수축
   }
 });
 
@@ -134,6 +164,13 @@ export const ICONS = Object.freeze({
   },
   // 기존 호환
   STRESS: {
+    normal: '🟢',
+    caution: '🟡',
+    warning: '🟠',
+    danger: '🔴'
+  },
+  // Banking Health (4-A)
+  BANKING: {
     normal: '🟢',
     caution: '🟡',
     warning: '🟠',
