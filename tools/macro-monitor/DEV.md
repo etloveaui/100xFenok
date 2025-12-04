@@ -33,13 +33,15 @@ tools/macro-monitor/
 ├── index.html                ← Command Center 대시보드
 ├── widgets/                  ← 카드형 위젯
 │   ├── liquidity-stress.html ← ⚡ Layer 1
-│   └── liquidity-flow.html   ← 💧 Layer 2
+│   ├── liquidity-flow.html   ← 💧 Layer 2
+│   └── banking-health.html   ← 🏦 Layer 3 (4-A, 개발 중)
 ├── details/                  ← 상세 페이지
 │   ├── liquidity-stress.html
-│   └── liquidity-flow.html
+│   ├── liquidity-flow.html
+│   └── banking-health.html   ← 🏦 Layer 3 (4-A, 개발 중)
 └── shared/                   ← 공통 모듈 (ES Module)
     ├── data-manager.js       ← 캐시 + stale + NumberFormat
-    ├── constants.js          ← THRESHOLDS, COLORS, ICONS
+    ├── constants.js          ← THRESHOLDS, COLORS, ICONS (Banking 포함)
     ├── recession-data.js     ← NBER 리세션 기간
     └── chart-annotations.js  ← 차트 annotation
 ```
@@ -65,6 +67,35 @@ tools/macro-monitor/
 ### Layer 2: Liquidity Flow 💧 (v2.1 ✅)
 
 **핵심**: `Net Liquidity = WALCL - TGA - RRP`
+
+### Layer 3: Banking Health 🏦 (4-A, 테스트 대기)
+
+**목적**: 금융 시스템 건전성 모니터링
+**📊 실제 데이터**: `docs/references/market-data-snapshot-2025-11.md` (사진 006 예대율 71.73%)
+
+**FRED 지표**:
+| 지표 | Series ID | 주기 | 비고 |
+|------|-----------|------|------|
+| 연체율 | DRALACBN | 분기 | 낮을수록 건전 |
+| Tier 1 | BOGZ1FL010000016Q | 분기 | 높을수록 건전 |
+| 전체 대출 | **TOTLL** | 주간 | SA, 예대율 분자 |
+| 예금 | DPSACBW027SBOG | 주간 | SA, 예대율 분모 |
+
+**계산 지표**:
+- 예대율 = **TOTLL** / DPSACBW027SBOG × 100 (≈70%)
+- 여신증가율 YoY% = (현재 - 52주전) / 52주전 × 100
+
+**THRESHOLDS** (constants.js):
+| 지표 | 정상 | 주의 | 경계 |
+|------|------|------|------|
+| 예대율 | 60-85% | <60% or >85% | <55% |
+
+**Detail**: 4개 메트릭 + 2탭 (Capital Health / Credit Activity) + 리세션 비교
+**Widget**: 2x2 그리드, 캐시 기반
+
+**접근**: Admin → Dev Pages → Banking Health (테스트 대기)
+
+> ⚠️ 2025-12-04 수정: TOTCI → TOTLL (전체 대출로 변경)
 
 | 지표 | Primary | Subtext |
 |------|---------|---------|
