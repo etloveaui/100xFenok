@@ -50,38 +50,129 @@
 
     .dashboard-card { background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); padding: 32px; margin-bottom: 24px; }
 
-    /* Hero Section - 4개 메트릭 그리드 */
-    .metrics-grid {
+    /* ===== Signal Matrix (4개 지표) ===== */
+    .signal-matrix {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .matrix-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
-      margin-bottom: 24px;
     }
-    .metric-card {
+    .signal-card {
       background: #f8fafc;
-      border: 1px solid #e2e8f0;
       border-radius: 16px;
       padding: 16px;
+      border: 1px solid #e2e8f0;
       text-align: center;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
-    .metric-card:hover {
+    .signal-card:hover {
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
-    .metric-card.normal { border-left: 4px solid #10b981; }
-    .metric-card.caution { border-left: 4px solid #f59e0b; }
-    .metric-card.warning { border-left: 4px solid #f97316; }
-    .metric-card.danger { border-left: 4px solid #ef4444; }
+    .signal-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .signal-icon.green { background: #dcfce7; color: #16a34a; }
+    .signal-icon.yellow { background: #fef9c3; color: #ca8a04; }
+    .signal-icon.orange { background: #ffedd5; color: #c2410c; }
+    .signal-icon.red { background: #fee2e2; color: #dc2626; }
+    .signal-icon.gray { background: #f1f5f9; color: #94a3b8; }
 
-    .metric-icon { font-size: 24px; margin-bottom: 8px; }
-    .metric-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .metric-value { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 700; color: #1e293b; }
-    .metric-unit { font-size: 12px; color: #64748b; }
-    .metric-status { font-size: 11px; font-weight: 600; margin-top: 4px; }
-    .metric-status.normal { color: #10b981; }
-    .metric-status.caution { color: #f59e0b; }
-    .metric-status.warning { color: #f97316; }
-    .metric-status.danger { color: #ef4444; }
+    .signal-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .signal-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .signal-unit {
+      font-size: 12px;
+      color: #64748b;
+      margin-left: 2px;
+    }
+    .signal-status {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+    .signal-status.normal { background: #dcfce7; color: #166534; }
+    .signal-status.caution { background: #fef9c3; color: #854d0e; }
+    .signal-status.warning { background: #ffedd5; color: #c2410c; }
+    .signal-status.danger { background: #fee2e2; color: #991b1b; }
+
+    /* ===== Banking Health Pulse Hero ===== */
+    .health-pulse-hero {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .health-pulse-label {
+      font-size: 13px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .health-pulse-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .health-pulse-value.healthy { color: #4ade80; }
+    .health-pulse-value.watch { color: #fbbf24; }
+    .health-pulse-value.caution { color: #fb923c; }
+    .health-pulse-value.stress { color: #f87171; }
+    .health-pulse-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .health-pulse-info i {
+      font-size: 16px;
+    }
+    .health-indicator {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .health-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4b5563;
+    }
+    .health-dot.active.green { background: #4ade80; }
+    .health-dot.active.yellow { background: #fbbf24; }
+    .health-dot.active.orange { background: #fb923c; }
+    .health-dot.active.red { background: #f87171; }
 
     /* 탭 네비게이션 */
     .tab-nav {
@@ -209,11 +300,193 @@
       .container { padding: 16px; }
       .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
       .header-right { width: 100%; display: flex; justify-content: space-between; align-items: center; }
-      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-      .metric-value { font-size: 20px; }
+      .matrix-grid { grid-template-columns: repeat(2, 1fr); }
+      .signal-value { font-size: 18px; }
+      .signal-icon { width: 40px; height: 40px; font-size: 16px; }
+      .health-pulse-hero { flex-direction: column; text-align: center; gap: 12px; }
+      .health-pulse-value { font-size: 24px; }
+      .health-indicator { justify-content: center; }
       .chart-controls { flex-direction: column; align-items: flex-start; gap: 12px; }
       .period-selector { width: 100%; justify-content: space-between; }
       .comparison-table th, .comparison-table td { padding: 8px; font-size: 11px; }
+      /* 탭 버튼 축소 (아이콘 + 짧은 라벨) */
+      .tab-btn { padding: 8px 10px; font-size: 11px; }
+      .tab-btn i { font-size: 12px; margin-right: 4px; }
+      /* 설명 카드 터치 피드백 */
+      .info-card-header { padding: 14px; }
+      .info-card-header:active { background: #e2e8f0; }
+      .info-card-title { font-size: 13px; }
+      .info-card-summary { padding: 14px; font-size: 12px; }
+      .info-card-detail { font-size: 12px; margin: 0 14px; padding-top: 10px; }
+      /* 비교 테이블 최적화 */
+      .comparison-table .label-cell { font-size: 11px; white-space: nowrap; }
+    }
+    @media (max-width: 480px) {
+      .signal-label { font-size: 9px; }
+      .signal-value { font-size: 16px; }
+      .signal-status { font-size: 10px; padding: 3px 8px; }
+      /* 더 작은 화면 */
+      .tab-btn { padding: 8px 10px; }
+      .tab-btn i { font-size: 12px; }
+      .comparison-section { padding: 16px; }
+      .comparison-title { font-size: 14px; }
+      .comparison-table th, .comparison-table td { padding: 6px 4px; font-size: 10px; }
+      .info-card-icon { font-size: 20px; }
+      .info-expand-btn { width: 24px; height: 24px; }
+    }
+
+    /* ===== 설명 카드 섹션 ===== */
+    .info-cards-section {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .info-card {
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .info-card:hover {
+      box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.1);
+    }
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      cursor: pointer;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .info-card-icon {
+      font-size: 18px;
+    }
+    .info-card-title {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .info-expand-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .info-expand-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .info-card.expanded .info-expand-btn {
+      transform: rotate(180deg);
+    }
+    .info-card-summary {
+      padding: 16px;
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+    }
+    .info-card-detail {
+      display: none;
+      padding: 0 16px 16px;
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.7;
+      border-top: 1px dashed #e2e8f0;
+      margin: 0 16px;
+      padding-top: 12px;
+    }
+    .info-card.expanded .info-card-detail {
+      display: block;
+    }
+    .info-card-detail ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    .info-card-detail li {
+      margin-bottom: 6px;
+    }
+    .info-card-detail strong {
+      color: #1e293b;
+    }
+    .info-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+    .info-badge.green { background: #dcfce7; color: #166534; }
+    .info-badge.yellow { background: #fef9c3; color: #854d0e; }
+    .info-badge.orange { background: #ffedd5; color: #c2410c; }
+    .info-badge.red { background: #fee2e2; color: #991b1b; }
+    .info-badge.blue { background: #dbeafe; color: #1e40af; }
+    .info-badge.gray { background: #f1f5f9; color: #64748b; }
+
+    @media (max-width: 900px) {
+      .info-cards-section {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ===== 스와이프 인디케이터 (모바일) ===== */
+    .swipe-indicator {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 8px;
+    }
+    .swipe-dot {
+      width: 8px;
+      height: 8px;
+      background: #cbd5e1;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .swipe-dot.active {
+      background: #2563eb;
+      transform: scale(1.2);
+    }
+    .swipe-hint {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-left: 8px;
+    }
+    @media (max-width: 768px) {
+      .swipe-indicator { display: flex; }
+    }
+
+    /* ===== PC 자동 펼침 (900px+) ===== */
+    @media (min-width: 900px) {
+      .info-card-detail {
+        display: block !important;
+        max-height: 500px;
+        opacity: 1;
+        margin-top: 16px;
+      }
+      .info-expand-btn {
+        display: none;
+      }
+      .info-card-title { font-size: 15px; }
+      .info-card-summary { font-size: 15px; }
+      .info-card-detail { font-size: 14px; }
     }
   </style>
 </head>
@@ -240,40 +513,58 @@
     </div>
   </header>
 
-  <!-- Hero: 4개 메트릭 카드 -->
-  <section class="dashboard-card">
-    <div class="metrics-grid">
+  <!-- ===== Signal Matrix Hero ===== -->
+  <section class="signal-matrix">
+    <div class="matrix-grid">
       <!-- 연체율 -->
-      <div class="metric-card normal" id="delinquencyCard">
-        <div class="metric-icon">📉</div>
-        <div class="metric-label">Delinquency</div>
-        <div class="metric-value" id="delinquencyValue">--</div>
-        <div class="metric-unit">%</div>
-        <div class="metric-status normal" id="delinquencyStatus">--</div>
+      <div class="signal-card" id="delinquencyCard">
+        <div class="signal-icon gray" id="delinquencyIcon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="signal-label">Delinquency</div>
+        <div class="signal-value" id="delinquencyValue">--</div>
+        <span class="signal-unit">%</span>
+        <div class="signal-status" id="delinquencyStatus">Loading</div>
       </div>
       <!-- Tier 1 비율 -->
-      <div class="metric-card normal" id="tier1Card">
-        <div class="metric-icon">🛡️</div>
-        <div class="metric-label">Tier 1 Capital</div>
-        <div class="metric-value" id="tier1Value">--</div>
-        <div class="metric-unit">%</div>
-        <div class="metric-status normal" id="tier1Status">--</div>
+      <div class="signal-card" id="tier1Card">
+        <div class="signal-icon gray" id="tier1Icon"><i class="fas fa-shield-alt"></i></div>
+        <div class="signal-label">Tier 1 Capital</div>
+        <div class="signal-value" id="tier1Value">--</div>
+        <span class="signal-unit">%</span>
+        <div class="signal-status" id="tier1Status">Loading</div>
       </div>
       <!-- 예대율 -->
-      <div class="metric-card normal" id="loanDepositCard">
-        <div class="metric-icon">📊</div>
-        <div class="metric-label">Loan/Deposit</div>
-        <div class="metric-value" id="loanDepositValue">--</div>
-        <div class="metric-unit">%</div>
-        <div class="metric-status normal" id="loanDepositStatus">--</div>
+      <div class="signal-card" id="loanDepositCard">
+        <div class="signal-icon gray" id="loanDepositIcon"><i class="fas fa-balance-scale"></i></div>
+        <div class="signal-label">Loan/Deposit</div>
+        <div class="signal-value" id="loanDepositValue">--</div>
+        <span class="signal-unit">%</span>
+        <div class="signal-status" id="loanDepositStatus">Loading</div>
       </div>
       <!-- 여신 증가율 -->
-      <div class="metric-card normal" id="loanGrowthCard">
-        <div class="metric-icon">📈</div>
-        <div class="metric-label">Loan Growth YoY</div>
-        <div class="metric-value" id="loanGrowthValue">--</div>
-        <div class="metric-unit">%</div>
-        <div class="metric-status normal" id="loanGrowthStatus">--</div>
+      <div class="signal-card" id="loanGrowthCard">
+        <div class="signal-icon gray" id="loanGrowthIcon"><i class="fas fa-chart-line"></i></div>
+        <div class="signal-label">Loan Growth YoY</div>
+        <div class="signal-value" id="loanGrowthValue">--</div>
+        <span class="signal-unit">%</span>
+        <div class="signal-status" id="loanGrowthStatus">Loading</div>
+      </div>
+    </div>
+
+    <!-- Banking Health Pulse Hero -->
+    <div class="health-pulse-hero">
+      <div>
+        <div class="health-pulse-label">Banking Health Index</div>
+        <div class="health-pulse-value healthy" id="healthPulseValue">HEALTHY</div>
+        <div class="health-indicator" id="healthIndicator">
+          <div class="health-dot" id="dot1"></div>
+          <div class="health-dot" id="dot2"></div>
+          <div class="health-dot" id="dot3"></div>
+          <div class="health-dot" id="dot4"></div>
+        </div>
+      </div>
+      <div class="health-pulse-info" id="healthPulseInfo">
+        <i class="fas fa-check-circle"></i>
+        <span id="healthPulseDesc">4/4 indicators normal</span>
       </div>
     </div>
   </section>
@@ -281,44 +572,35 @@
   <!-- 차트 섹션 -->
   <section class="dashboard-card">
     <div class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('capital', this)">Capital Health</button>
-      <button class="tab-btn" onclick="switchTab('credit', this)">Credit Activity</button>
+      <button class="tab-btn active" onclick="switchTab('capital', this)"><i class="fas fa-shield-alt"></i> Capital</button>
+      <button class="tab-btn" onclick="switchTab('credit', this)"><i class="fas fa-chart-line"></i> Credit</button>
+      <button class="tab-btn" onclick="switchTab('risks', this)"><i class="fas fa-exclamation-triangle"></i> Risks</button>
     </div>
 
-    <!-- Tab 1: Capital Health -->
-    <div class="tab-content active" id="tab-capital">
-      <div class="chart-controls">
-        <div class="chart-title"><i class="fas fa-shield-halved"></i> Delinquency & Tier 1 Capital</div>
-        <div class="period-selector">
-          <button class="p-btn" onclick="updatePeriod(365, this)">1Y</button>
-          <button class="p-btn" onclick="updatePeriod(1825, this)">5Y</button>
-          <button class="p-btn active" onclick="updatePeriod(3650, this)">10Y</button>
-          <button class="p-btn" onclick="updatePeriod(7300, this)">20Y</button>
-          <button class="p-btn" onclick="updatePeriod(9999, this)">MAX</button>
-        </div>
+    <!-- 공통 기간 선택 (탭 동기화) -->
+    <div class="chart-controls">
+      <div class="chart-title" id="chartTitle"><i class="fas fa-shield-halved"></i> Delinquency & Tier 1 Capital</div>
+      <div class="period-selector" id="periodSelector">
+        <button class="p-btn" onclick="updatePeriod(365, this)">1Y</button>
+        <button class="p-btn" onclick="updatePeriod(1825, this)">5Y</button>
+        <button class="p-btn active" onclick="updatePeriod(3650, this)">10Y</button>
+        <button class="p-btn" onclick="updatePeriod(9999, this)">MAX</button>
       </div>
+    </div>
+
+    <!-- Tab 1: Capital Health (Tier 1 only) -->
+    <div class="tab-content active" id="tab-capital">
       <div class="chart-wrapper">
         <canvas id="capitalChart"></canvas>
       </div>
       <div class="custom-legend">
-        <div class="legend-item"><div class="legend-color" style="background: #dc2626;"></div><span>Delinquency Rate</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Tier 1 Capital Ratio</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Tier 1 Capital</span></div>
         <div class="legend-item"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>Recession</span></div>
       </div>
     </div>
 
-    <!-- Tab 2: Credit Activity -->
+    <!-- Tab 2: Credit Activity (L/D + YoY) -->
     <div class="tab-content" id="tab-credit">
-      <div class="chart-controls">
-        <div class="chart-title"><i class="fas fa-chart-line"></i> Loan/Deposit Ratio & Loan Growth</div>
-        <div class="period-selector">
-          <button class="p-btn" onclick="updatePeriod(365, this)">1Y</button>
-          <button class="p-btn" onclick="updatePeriod(1825, this)">5Y</button>
-          <button class="p-btn active" onclick="updatePeriod(3650, this)">10Y</button>
-          <button class="p-btn" onclick="updatePeriod(7300, this)">20Y</button>
-          <button class="p-btn" onclick="updatePeriod(9999, this)">MAX</button>
-        </div>
-      </div>
       <div class="chart-wrapper">
         <canvas id="creditChart"></canvas>
       </div>
@@ -327,6 +609,28 @@
         <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>Loan Growth YoY</span></div>
         <div class="legend-item"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>Recession</span></div>
       </div>
+    </div>
+
+    <!-- Tab 3: Risks (연체율 종합 + 세분화) -->
+    <div class="tab-content" id="tab-risks">
+      <div class="chart-wrapper">
+        <canvas id="risksChart"></canvas>
+      </div>
+      <div class="custom-legend">
+        <div class="legend-item"><div class="legend-color" style="background: #6366f1;"></div><span>Total Delinquency</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>Credit Card</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>Consumer Loans</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Business Loans</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>Recession</span></div>
+      </div>
+    </div>
+
+    <!-- 스와이프 인디케이터 (모바일) -->
+    <div class="swipe-indicator" id="swipeIndicator">
+      <div class="swipe-dot active" id="swipeDot1"></div>
+      <div class="swipe-dot" id="swipeDot2"></div>
+      <div class="swipe-dot" id="swipeDot3"></div>
+      <span class="swipe-hint">← 탭 스와이프 →</span>
     </div>
   </section>
 
@@ -370,9 +674,83 @@
       </tbody>
     </table>
   </section>
+
+  <!-- ===== 설명 카드 섹션 ===== -->
+  <section class="info-cards-section">
+    <!-- 카드 1: 현재 상태 (동적) -->
+    <div class="info-card" id="statusCard">
+      <div class="info-card-header" onclick="toggleInfoCard('statusCard')">
+        <div class="info-card-icon">📊</div>
+        <div class="info-card-title">현재 상태</div>
+        <button class="info-expand-btn"><i class="fas fa-chevron-down"></i></button>
+      </div>
+      <div class="info-card-summary" id="statusSummary">
+        은행 건전성 지표를 종합 분석 중입니다...
+      </div>
+      <div class="info-card-detail" id="statusDetail">
+        <ul>
+          <li><strong>연체율</strong>: <span id="detailDelinq">--</span></li>
+          <li><strong>Tier 1 비율</strong>: <span id="detailTier1">--</span></li>
+          <li><strong>예대율</strong>: <span id="detailLD">--</span></li>
+          <li><strong>여신 증가율</strong>: <span id="detailLG">--</span></li>
+        </ul>
+        <p id="statusConclusion">데이터 로딩 후 종합 분석 결과가 표시됩니다.</p>
+      </div>
+    </div>
+
+    <!-- 카드 2: 지표 정의 -->
+    <div class="info-card" id="definitionCard">
+      <div class="info-card-header" onclick="toggleInfoCard('definitionCard')">
+        <div class="info-card-icon">💡</div>
+        <div class="info-card-title">이 지표가 뭔가요?</div>
+        <button class="info-expand-btn"><i class="fas fa-chevron-down"></i></button>
+      </div>
+      <div class="info-card-summary">
+        은행 건전성을 판단하는 4가지 핵심 지표입니다.
+      </div>
+      <div class="info-card-detail">
+        <ul>
+          <li><strong>연체율 (Delinquency Rate)</strong>: 전체 대출 중 30일 이상 연체된 비율. 높을수록 부실 위험 증가.</li>
+          <li><strong>Tier 1 자본비율</strong>: 은행의 핵심자본 / 위험가중자산. 8% 이상 규제 요건, 12% 이상이면 건전.</li>
+          <li><strong>예대율 (Loan/Deposit)</strong>: 예금 대비 대출 비율. 60-85%가 적정, 너무 높으면 유동성 위험.</li>
+          <li><strong>여신 증가율 (YoY)</strong>: 전년 대비 대출 증가율. 양(+)이면 신용 확장, 음(-)이면 신용 수축.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 카드 3: 왜 중요한가? -->
+    <div class="info-card" id="importanceCard">
+      <div class="info-card-header" onclick="toggleInfoCard('importanceCard')">
+        <div class="info-card-icon">🎯</div>
+        <div class="info-card-title">왜 중요한가요?</div>
+        <button class="info-expand-btn"><i class="fas fa-chevron-down"></i></button>
+      </div>
+      <div class="info-card-summary">
+        은행 시스템은 경제의 혈관입니다. 건전성 악화는 금융위기로 이어질 수 있습니다.
+      </div>
+      <div class="info-card-detail">
+        <p><strong>📉 2008 금융위기 (GFC)</strong></p>
+        <p>연체율 급등(4.9%) + 예대율 과열(98%)이 서브프라임 위기를 촉발했습니다. 은행 파산 연쇄로 글로벌 경기침체.</p>
+        <br>
+        <p><strong>🦠 2020 코로나 위기</strong></p>
+        <p>정부의 빠른 유동성 공급으로 연체율(1.5%)을 억제. Tier 1 비율(13.3%)도 사전에 높아 충격 흡수 성공.</p>
+        <br>
+        <p><strong>🔍 시사점</strong></p>
+        <p>4개 지표가 동시에 악화되면 시스템 리스크 경보. 특히 연체율 상승 + Tier 1 하락 조합은 위험 신호입니다.</p>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
+  // ===== 설명 카드 토글 =====
+  function toggleInfoCard(cardId) {
+    const card = document.getElementById(cardId);
+    if (card) {
+      card.classList.toggle('expanded');
+    }
+  }
+
   // ===== 임계값 헬퍼 =====
   const getThreshold = (category, level) => {
     if (typeof THRESHOLDS !== 'undefined' && THRESHOLDS[category]) {
@@ -403,21 +781,184 @@
   };
 
   // ===== FRED API 호출 =====
+  let apiErrorCount = 0;
+  const API_TIMEOUT = 10000; // 10초 타임아웃
+
   async function getSeries(seriesId, days) {
     const end = new Date().toISOString().split('T')[0];
     const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
     const url = `${CONFIG.proxy}fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
 
     try {
-      const res = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!json.observations) return [];
-      return json.observations.filter(o => o.value !== '.').map(o => ({ date: o.date, val: parseFloat(o.value) }));
+
+      // NaN 처리 강화: parseFloat 결과 검증
+      return json.observations
+        .filter(o => o.value !== '.')
+        .map(o => {
+          const val = parseFloat(o.value);
+          return { date: o.date, val: isNaN(val) ? null : val };
+        })
+        .filter(o => o.val !== null);
     } catch (e) {
+      apiErrorCount++;
+      // 타임아웃 에러 사용자 친화적 메시지
+      const errorMsg = e.name === 'AbortError'
+        ? '타임아웃 (10초)'
+        : e.message;
       console.error(`[FRED] ${seriesId} fetch error:`, e);
+      showApiError(seriesId, errorMsg);
       return [];
     }
+  }
+
+  // API 에러 사용자 표시
+  function showApiError(seriesId, message) {
+    const loadingText = document.querySelector('.loading-text');
+    if (loadingText) {
+      loadingText.innerHTML = `<span style="color:#dc2626;">⚠️ ${seriesId} 로딩 실패: ${message}</span><br>다른 데이터 로딩 중...`;
+    }
+  }
+
+  // ===== FDIC API: 전체 히스토리 (스마트 캐싱) =====
+  const FDIC_CACHE_KEY = 'fdic_tier1_cache';
+
+  // 현재 사용 가능한 최신 분기 계산 (2개월 지연)
+  function getExpectedLatestQuarter() {
+    const quarterEnds = ['0331', '0630', '0930', '1231'];
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    const q = Math.floor(d.getMonth() / 3);
+    return `${d.getFullYear()}-${quarterEnds[q].slice(0,2)}-${quarterEnds[q].slice(2)}`;
+  }
+
+  async function getFDICTier1() {
+    const expectedLatest = getExpectedLatestQuarter();
+
+    // 1. 캐시 확인 - 최신 분기 포함 여부로 판단
+    try {
+      const cached = localStorage.getItem(FDIC_CACHE_KEY);
+      if (cached) {
+        const { data } = JSON.parse(cached);
+        const cacheLatest = data.length > 0 ? data[data.length - 1].date : '';
+        if (cacheLatest >= expectedLatest && data.length > 50) {
+          console.log(`[FDIC] 캐시 사용 (최신: ${cacheLatest})`);
+          return data;
+        }
+        console.log(`[FDIC] 새 분기 감지 (캐시: ${cacheLatest}, 예상: ${expectedLatest})`);
+      }
+    } catch (e) { /* 캐시 에러 무시 */ }
+
+    // 2. API 호출 (전체 분기 병렬)
+    try {
+      const quarterEnds = ['0331', '0630', '0930', '1231'];
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+
+      const quarters = [];
+      for (let year = 2009; year <= currentYear; year++) {
+        for (let q = 0; q < 4; q++) {
+          const qMonth = q * 3 + 2;
+          if (year < currentYear || (year === currentYear && qMonth <= currentMonth - 2)) {
+            quarters.push(`${year}${quarterEnds[q]}`);
+          }
+        }
+      }
+      quarters.sort().reverse();
+      console.log(`[FDIC] ${quarters.length}개 분기 로드 시작...`);
+
+      const fetchQ = async (q) => {
+        try {
+          const res = await fetch(`https://api.fdic.gov/banks/financials?limit=10000&fields=RBC1AAJ,RISDATE&filters=RISDATE:${q}`);
+          if (!res.ok) return null;
+          const json = await res.json();
+          const ratios = json.data?.map(r => r.data?.RBC1AAJ).filter(v => v != null && !isNaN(v)) || [];
+          if (ratios.length === 0) return null;
+          return { date: `${q.slice(0,4)}-${q.slice(4,6)}-${q.slice(6,8)}`, val: ratios.reduce((a,b) => a+b, 0) / ratios.length };
+        } catch { return null; }
+      };
+
+      // 전체 병렬 (rate limit 없음 확인됨)
+      const results = (await Promise.all(quarters.map(fetchQ))).filter(r => r);
+      results.sort((a, b) => a.date.localeCompare(b.date));
+
+      // 3. 캐시 저장
+      if (results.length > 0) {
+        try {
+          localStorage.setItem(FDIC_CACHE_KEY, JSON.stringify({ data: results, timestamp: Date.now() }));
+          console.log(`[FDIC] ${results.length}개 분기 캐시 저장 완료`);
+        } catch (e) { /* 캐시 저장 실패 무시 */ }
+      }
+
+      return results.length > 0 ? results : null;
+    } catch (e) {
+      console.error('[FDIC] 에러:', e);
+      return null;
+    }
+  }
+
+  // ===== 데이터 검증 함수 =====
+  function validateData(data) {
+    const issues = [];
+
+    // 1. 필수 데이터 존재 확인
+    if (!data.delinquency || data.delinquency.length === 0) {
+      issues.push('⚠️ 연체율 데이터 없음');
+    }
+    if (!data.tier1 || data.tier1.length === 0) {
+      issues.push('⚠️ Tier 1 데이터 없음');
+    }
+    if (!data.loans || data.loans.length === 0) {
+      issues.push('⚠️ 대출 데이터 없음');
+    }
+    if (!data.deposits || data.deposits.length === 0) {
+      issues.push('⚠️ 예금 데이터 없음');
+    }
+
+    // 2. 값 범위 검증
+    if (data.delinquency && data.delinquency.length > 0) {
+      const lastDel = data.delinquency[data.delinquency.length - 1].val;
+      if (lastDel < 0 || lastDel > 20) {
+        issues.push(`⚠️ 연체율 이상값: ${lastDel.toFixed(2)}%`);
+      }
+    }
+    if (data.tier1 && data.tier1.length > 0) {
+      const lastT1 = data.tier1[data.tier1.length - 1].val;
+      if (lastT1 < 5 || lastT1 > 25) {
+        issues.push(`⚠️ Tier 1 이상값: ${lastT1.toFixed(2)}%`);
+      }
+    }
+
+    // 3. 날짜 연속성 (분기 데이터 기준 120일 갭 경고)
+    if (data.delinquency && data.delinquency.length > 1) {
+      for (let i = 1; i < data.delinquency.length; i++) {
+        const prev = new Date(data.delinquency[i - 1].date);
+        const curr = new Date(data.delinquency[i].date);
+        const diffDays = (curr - prev) / (1000 * 60 * 60 * 24);
+        if (diffDays > 120) {
+          issues.push(`⚠️ 연체율 날짜 갭: ${diffDays.toFixed(0)}일`);
+          break;
+        }
+      }
+    }
+
+    // 결과 로깅
+    if (issues.length > 0) {
+      console.warn('[Validate] 데이터 검증 경고:', issues);
+    } else {
+      console.log('[Validate] 데이터 검증 통과 ✓');
+    }
+
+    return { valid: issues.length === 0, issues };
   }
 
   // ===== 데이터 저장 =====
@@ -426,12 +967,17 @@
     tier1: [],
     loans: [],
     deposits: [],
+    // Risks 탭용 연체율 세분화
+    creditCardDelinq: [],
+    consumerDelinq: [],
+    businessDelinq: [],
     timeline: []
   };
   let currentTab = 'capital';
   let currentPeriod = 3650; // 10Y default
   let capitalChart = null;
   let creditChart = null;
+  let risksChart = null;
 
   // ===== 데이터 처리 =====
   function processData() {
@@ -439,14 +985,33 @@
     const loansMap = new Map(fullData.loans.map(d => [d.date, d.val]));
     const depositsMap = new Map(fullData.deposits.map(d => [d.date, d.val]));
 
-    // YoY 계산용 (52주 전)
+    // YoY 계산용 (52주 = 364일 기준, ±7일 허용)
+    const YEAR_DAYS = 364; // 52주
+    const TOLERANCE_DAYS = 7;
+    const MS_PER_DAY = 86400000;
+
     const loanGrowthData = fullData.loans.map((d, i) => {
-      const yearAgoIdx = fullData.loans.findIndex(x => {
-        const diff = new Date(d.date) - new Date(x.date);
-        return diff >= 360 * 86400000 && diff <= 370 * 86400000;
-      });
-      if (yearAgoIdx >= 0) {
-        const yoy = ((d.val - fullData.loans[yearAgoIdx].val) / fullData.loans[yearAgoIdx].val) * 100;
+      const currentDate = new Date(d.date).getTime();
+      const targetMin = currentDate - (YEAR_DAYS + TOLERANCE_DAYS) * MS_PER_DAY;
+      const targetMax = currentDate - (YEAR_DAYS - TOLERANCE_DAYS) * MS_PER_DAY;
+
+      // 가장 가까운 52주 전 데이터 찾기
+      let bestMatch = null;
+      let minDiff = Infinity;
+
+      for (const x of fullData.loans) {
+        const xTime = new Date(x.date).getTime();
+        if (xTime >= targetMin && xTime <= targetMax) {
+          const diff = Math.abs(currentDate - xTime - YEAR_DAYS * MS_PER_DAY);
+          if (diff < minDiff) {
+            minDiff = diff;
+            bestMatch = x;
+          }
+        }
+      }
+
+      if (bestMatch && bestMatch.val !== 0) {
+        const yoy = ((d.val - bestMatch.val) / bestMatch.val) * 100;
         return { date: d.date, val: yoy };
       }
       return null;
@@ -514,61 +1079,213 @@
   // ===== UI 업데이트 =====
   function updateUI(processed) {
     const statusLabels = { normal: '정상', caution: '주의', warning: '경계', danger: '위험' };
+    const iconColorMap = { normal: 'green', caution: 'yellow', warning: 'orange', danger: 'red' };
+    const allStatuses = [];
 
     // 연체율
     if (fullData.delinquency.length > 0) {
       const latestDel = fullData.delinquency[fullData.delinquency.length - 1];
       const delStatus = getDelinquencyStatus(latestDel.val);
+      allStatuses.push(delStatus);
+
       document.getElementById('delinquencyValue').textContent = latestDel.val.toFixed(2);
-      document.getElementById('delinquencyStatus').textContent = getStatusEmoji(delStatus) + ' ' + statusLabels[delStatus];
-      document.getElementById('delinquencyStatus').className = 'metric-status ' + delStatus;
-      document.getElementById('delinquencyCard').className = 'metric-card ' + delStatus;
+      document.getElementById('delinquencyStatus').textContent = statusLabels[delStatus];
+      document.getElementById('delinquencyStatus').className = 'signal-status ' + delStatus;
+      document.getElementById('delinquencyIcon').className = 'signal-icon ' + iconColorMap[delStatus];
       document.getElementById('cmp-del-current').textContent = latestDel.val.toFixed(2) + '%';
+    } else {
+      document.getElementById('delinquencyValue').textContent = 'N/A';
+      document.getElementById('delinquencyStatus').textContent = '데이터 없음';
+      document.getElementById('delinquencyStatus').className = 'signal-status';
+      document.getElementById('delinquencyIcon').className = 'signal-icon gray';
+      document.getElementById('cmp-del-current').textContent = 'N/A';
     }
 
     // Tier 1
     if (fullData.tier1.length > 0) {
       const latestT1 = fullData.tier1[fullData.tier1.length - 1];
       const t1Status = getTier1Status(latestT1.val);
+      allStatuses.push(t1Status);
+
       document.getElementById('tier1Value').textContent = latestT1.val.toFixed(2);
-      document.getElementById('tier1Status').textContent = getStatusEmoji(t1Status) + ' ' + statusLabels[t1Status];
-      document.getElementById('tier1Status').className = 'metric-status ' + t1Status;
-      document.getElementById('tier1Card').className = 'metric-card ' + t1Status;
+      document.getElementById('tier1Status').textContent = statusLabels[t1Status];
+      document.getElementById('tier1Status').className = 'signal-status ' + t1Status;
+      document.getElementById('tier1Icon').className = 'signal-icon ' + iconColorMap[t1Status];
       document.getElementById('cmp-t1-current').textContent = latestT1.val.toFixed(2) + '%';
+    } else {
+      document.getElementById('tier1Value').textContent = 'N/A';
+      document.getElementById('tier1Status').textContent = '데이터 없음';
+      document.getElementById('tier1Status').className = 'signal-status';
+      document.getElementById('tier1Icon').className = 'signal-icon gray';
+      document.getElementById('cmp-t1-current').textContent = 'N/A';
     }
 
     // 예대율
     if (processed.loanDepositData.length > 0) {
       const latestLD = processed.loanDepositData[processed.loanDepositData.length - 1];
       const ldStatus = getLoanDepositStatus(latestLD.val);
+      allStatuses.push(ldStatus);
+
       document.getElementById('loanDepositValue').textContent = latestLD.val.toFixed(1);
-      document.getElementById('loanDepositStatus').textContent = getStatusEmoji(ldStatus) + ' ' + statusLabels[ldStatus];
-      document.getElementById('loanDepositStatus').className = 'metric-status ' + ldStatus;
-      document.getElementById('loanDepositCard').className = 'metric-card ' + ldStatus;
+      document.getElementById('loanDepositStatus').textContent = statusLabels[ldStatus];
+      document.getElementById('loanDepositStatus').className = 'signal-status ' + ldStatus;
+      document.getElementById('loanDepositIcon').className = 'signal-icon ' + iconColorMap[ldStatus];
       document.getElementById('cmp-ld-current').textContent = latestLD.val.toFixed(1) + '%';
+    } else {
+      document.getElementById('loanDepositValue').textContent = 'N/A';
+      document.getElementById('loanDepositStatus').textContent = '데이터 없음';
+      document.getElementById('loanDepositStatus').className = 'signal-status';
+      document.getElementById('loanDepositIcon').className = 'signal-icon gray';
+      document.getElementById('cmp-ld-current').textContent = 'N/A';
     }
 
     // 여신 증가율
     if (processed.loanGrowthData.length > 0) {
       const latestLG = processed.loanGrowthData[processed.loanGrowthData.length - 1];
       const lgStatus = getLoanGrowthStatus(latestLG.val);
+      allStatuses.push(lgStatus);
+
       const sign = latestLG.val >= 0 ? '+' : '';
       document.getElementById('loanGrowthValue').textContent = sign + latestLG.val.toFixed(1);
-      document.getElementById('loanGrowthStatus').textContent = getStatusEmoji(lgStatus) + ' ' + statusLabels[lgStatus];
-      document.getElementById('loanGrowthStatus').className = 'metric-status ' + lgStatus;
-      document.getElementById('loanGrowthCard').className = 'metric-card ' + lgStatus;
+      document.getElementById('loanGrowthStatus').textContent = statusLabels[lgStatus];
+      document.getElementById('loanGrowthStatus').className = 'signal-status ' + lgStatus;
+      document.getElementById('loanGrowthIcon').className = 'signal-icon ' + iconColorMap[lgStatus];
       document.getElementById('cmp-lg-current').textContent = sign + latestLG.val.toFixed(1) + '%';
+    } else {
+      document.getElementById('loanGrowthValue').textContent = 'N/A';
+      document.getElementById('loanGrowthStatus').textContent = '데이터 없음';
+      document.getElementById('loanGrowthStatus').className = 'signal-status';
+      document.getElementById('loanGrowthIcon').className = 'signal-icon gray';
+      document.getElementById('cmp-lg-current').textContent = 'N/A';
     }
 
-    // 종합 상태 배지
+    // 종합 상태 배지 + Health Pulse Hero 업데이트
     updateOverallBadge();
+    updateHealthPulseHero(allStatuses);
 
-    // 업데이트 시간
-    const latestDate = fullData.delinquency.length > 0 ? fullData.delinquency[fullData.delinquency.length - 1].date : '--';
+    // 설명 카드 동적 업데이트
+    updateInfoCards(processed, allStatuses);
+
+    // 업데이트 시간 (모든 데이터 중 가장 최신)
+    const allDates = [
+      fullData.delinquency.length > 0 ? fullData.delinquency[fullData.delinquency.length - 1].date : null,
+      fullData.tier1.length > 0 ? fullData.tier1[fullData.tier1.length - 1].date : null,
+      fullData.loans.length > 0 ? fullData.loans[fullData.loans.length - 1].date : null,
+      fullData.deposits.length > 0 ? fullData.deposits[fullData.deposits.length - 1].date : null
+    ].filter(d => d !== null);
+    const latestDate = allDates.length > 0 ? allDates.sort().reverse()[0] : '--';
     document.getElementById('updateTime').textContent = `Data: ${latestDate}`;
 
     // 위젯 캐시 저장
     saveWidgetCache(processed);
+  }
+
+  // Health Pulse Hero 업데이트
+  function updateHealthPulseHero(allStatuses) {
+    const statusOrder = ['normal', 'caution', 'warning', 'danger'];
+    const worst = allStatuses.reduce((a, b) => statusOrder.indexOf(a) > statusOrder.indexOf(b) ? a : b, 'normal');
+
+    const pulseValue = document.getElementById('healthPulseValue');
+    const pulseDesc = document.getElementById('healthPulseDesc');
+    const pulseInfo = document.getElementById('healthPulseInfo');
+
+    const config = {
+      normal: { label: 'HEALTHY', class: 'healthy', icon: 'fa-check-circle', iconColor: '#4ade80' },
+      caution: { label: 'WATCH', class: 'watch', icon: 'fa-eye', iconColor: '#fbbf24' },
+      warning: { label: 'CAUTION', class: 'caution', icon: 'fa-exclamation-circle', iconColor: '#fb923c' },
+      danger: { label: 'STRESS', class: 'stress', icon: 'fa-times-circle', iconColor: '#f87171' }
+    };
+
+    const c = config[worst];
+    pulseValue.textContent = c.label;
+    pulseValue.className = 'health-pulse-value ' + c.class;
+    pulseInfo.querySelector('i').className = 'fas ' + c.icon;
+    pulseInfo.querySelector('i').style.color = c.iconColor;
+
+    // 정상 지표 개수
+    const normalCount = allStatuses.filter(s => s === 'normal').length;
+    pulseDesc.textContent = `${normalCount}/4 indicators normal`;
+
+    // 4개 dot 업데이트
+    const dotColors = { normal: 'green', caution: 'yellow', warning: 'orange', danger: 'red' };
+    allStatuses.forEach((status, i) => {
+      const dot = document.getElementById(`dot${i + 1}`);
+      if (dot) {
+        dot.className = 'health-dot active ' + dotColors[status];
+      }
+    });
+  }
+
+  // 설명 카드 동적 업데이트
+  function updateInfoCards(processed, allStatuses) {
+    const statusLabels = { normal: '정상', caution: '주의', warning: '경계', danger: '위험' };
+    const badgeColors = { normal: 'green', caution: 'yellow', warning: 'orange', danger: 'red' };
+
+    // 현재 값 추출
+    const latestDel = fullData.delinquency.length > 0 ? fullData.delinquency[fullData.delinquency.length - 1] : null;
+    const latestT1 = fullData.tier1.length > 0 ? fullData.tier1[fullData.tier1.length - 1] : null;
+    const latestLD = processed.loanDepositData.length > 0 ? processed.loanDepositData[processed.loanDepositData.length - 1] : null;
+    const latestLG = processed.loanGrowthData.length > 0 ? processed.loanGrowthData[processed.loanGrowthData.length - 1] : null;
+
+    // 개별 상태
+    const delStatus = latestDel ? getDelinquencyStatus(latestDel.val) : 'normal';
+    const t1Status = latestT1 ? getTier1Status(latestT1.val) : 'normal';
+    const ldStatus = latestLD ? getLoanDepositStatus(latestLD.val) : 'normal';
+    const lgStatus = latestLG ? getLoanGrowthStatus(latestLG.val) : 'normal';
+
+    // 상세 데이터 업데이트 (null 처리 포함)
+    if (latestDel) {
+      document.getElementById('detailDelinq').innerHTML =
+        `${latestDel.val.toFixed(2)}% <span class="info-badge ${badgeColors[delStatus]}">${statusLabels[delStatus]}</span>`;
+    } else {
+      document.getElementById('detailDelinq').innerHTML =
+        `N/A <span class="info-badge gray">데이터 없음</span>`;
+    }
+    if (latestT1) {
+      document.getElementById('detailTier1').innerHTML =
+        `${latestT1.val.toFixed(2)}% <span class="info-badge ${badgeColors[t1Status]}">${statusLabels[t1Status]}</span>`;
+    } else {
+      document.getElementById('detailTier1').innerHTML =
+        `N/A <span class="info-badge gray">데이터 없음</span>`;
+    }
+    if (latestLD) {
+      document.getElementById('detailLD').innerHTML =
+        `${latestLD.val.toFixed(1)}% <span class="info-badge ${badgeColors[ldStatus]}">${statusLabels[ldStatus]}</span>`;
+    } else {
+      document.getElementById('detailLD').innerHTML =
+        `N/A <span class="info-badge gray">데이터 없음</span>`;
+    }
+    if (latestLG) {
+      const sign = latestLG.val >= 0 ? '+' : '';
+      document.getElementById('detailLG').innerHTML =
+        `${sign}${latestLG.val.toFixed(1)}% <span class="info-badge ${badgeColors[lgStatus]}">${statusLabels[lgStatus]}</span>`;
+    } else {
+      document.getElementById('detailLG').innerHTML =
+        `N/A <span class="info-badge gray">데이터 없음</span>`;
+    }
+
+    // 종합 상태 판정
+    const statusOrder = ['normal', 'caution', 'warning', 'danger'];
+    const worst = allStatuses.reduce((a, b) => statusOrder.indexOf(a) > statusOrder.indexOf(b) ? a : b, 'normal');
+    const normalCount = allStatuses.filter(s => s === 'normal').length;
+
+    // 요약 및 결론 업데이트
+    const summaryMessages = {
+      normal: `🟢 은행 건전성 양호 (${normalCount}/4 지표 정상)`,
+      caution: `🟡 일부 지표 주의 필요 (${normalCount}/4 지표 정상)`,
+      warning: `🟠 건전성 경계 수준 (${normalCount}/4 지표 정상)`,
+      danger: `🔴 시스템 리스크 경보 (${normalCount}/4 지표 정상)`
+    };
+
+    const conclusionMessages = {
+      normal: '모든 핵심 지표가 안정적인 범위 내에 있습니다. 은행 시스템이 건전하게 운영되고 있습니다.',
+      caution: '일부 지표에서 주의 신호가 감지됩니다. 해당 지표의 추이를 계속 모니터링하세요.',
+      warning: '여러 지표에서 경계 수준에 도달했습니다. 금융 시장 변동성 확대에 주의가 필요합니다.',
+      danger: '복수의 핵심 지표가 위험 수준입니다. 2008년 금융위기 직전과 유사한 패턴이 감지될 수 있습니다.'
+    };
+
+    document.getElementById('statusSummary').textContent = summaryMessages[worst];
+    document.getElementById('statusConclusion').textContent = conclusionMessages[worst];
   }
 
   function updateOverallBadge() {
@@ -639,31 +1356,34 @@
     console.log('[Detail] Banking Health cache saved:', widgetData);
   }
 
+  // ===== 안전한 차트 destroy 헬퍼 =====
+  function safeDestroyChart(chart) {
+    if (chart && typeof chart.destroy === 'function') {
+      try {
+        chart.destroy();
+      } catch (e) {
+        console.warn('[Chart] destroy error:', e);
+      }
+    }
+    return null;
+  }
+
   // ===== 차트 렌더링 =====
   function renderCapitalChart(processed) {
     const ctx = document.getElementById('capitalChart').getContext('2d');
-    if (capitalChart) capitalChart.destroy();
+    capitalChart = safeDestroyChart(capitalChart);
 
     // 기간 필터링
     const cutoff = new Date(Date.now() - currentPeriod * 86400000).toISOString().split('T')[0];
-    const delData = fullData.delinquency.filter(d => d.date >= cutoff);
     const t1Data = fullData.tier1.filter(d => d.date >= cutoff);
 
-    // 공통 날짜 추출
-    const allDates = [...new Set([...delData.map(d => d.date), ...t1Data.map(d => d.date)])].sort();
-
-    const delMap = new Map(delData.map(d => [d.date, d.val]));
-    const t1Map = new Map(t1Data.map(d => [d.date, d.val]));
-
-    const labels = allDates;
-    const delValues = labels.map(d => delMap.get(d) || null);
-    const t1Values = labels.map(d => t1Map.get(d) || null);
+    const labels = t1Data.map(d => d.date);
+    const t1Values = t1Data.map(d => d.val);
 
     // 리세션 annotation
     let annotations = {};
     if (typeof getRecessionAnnotations === 'function' && labels.length > 0) {
       annotations = getRecessionAnnotations(labels[0], labels[labels.length - 1], { showLabel: true });
-      // 날짜 매핑
       Object.entries(annotations).forEach(([key, val]) => {
         const findClosest = (target) => {
           const t = new Date(target).getTime();
@@ -676,22 +1396,21 @@
       });
     }
 
+    // 임계값 참조선 (Tier1)
+    annotations.t1Safe = {
+      type: 'line',
+      yMin: 10, yMax: 10,
+      borderColor: 'rgba(22, 163, 74, 0.5)',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      label: { display: true, content: '안전 10%', position: 'start', backgroundColor: 'rgba(22, 163, 74, 0.8)', font: { size: 9 } }
+    };
+
     capitalChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels,
         datasets: [
-          {
-            label: 'Delinquency Rate',
-            data: delValues,
-            borderColor: '#dc2626',
-            backgroundColor: 'rgba(220, 38, 38, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            pointRadius: 0,
-            yAxisID: 'y_left',
-            spanGaps: true
-          },
           {
             label: 'Tier 1 Capital',
             data: t1Values,
@@ -701,7 +1420,6 @@
             tension: 0.3,
             pointRadius: 0,
             fill: true,
-            yAxisID: 'y_right',
             spanGaps: true
           }
         ]
@@ -721,17 +1439,11 @@
         },
         scales: {
           x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
-          y_left: {
+          y: {
             type: 'linear', position: 'left',
             grid: { color: '#f1f5f9' },
-            ticks: { callback: v => v + '%', color: '#dc2626', font: { size: 10 } },
-            title: { display: true, text: 'Delinquency %', color: '#dc2626' }
-          },
-          y_right: {
-            type: 'linear', position: 'right',
-            grid: { display: false },
             ticks: { callback: v => v + '%', color: '#10b981', font: { size: 10 } },
-            title: { display: true, text: 'Tier 1 %', color: '#10b981' }
+            title: { display: true, text: 'Tier 1 Capital %', color: '#10b981' }
           }
         }
       }
@@ -740,12 +1452,13 @@
 
   function renderCreditChart(processed) {
     const ctx = document.getElementById('creditChart').getContext('2d');
-    if (creditChart) creditChart.destroy();
+    creditChart = safeDestroyChart(creditChart);
 
     const cutoff = new Date(Date.now() - currentPeriod * 86400000).toISOString().split('T')[0];
     const ldData = processed.loanDepositData.filter(d => d.date >= cutoff);
     const lgData = processed.loanGrowthData.filter(d => d.date >= cutoff);
 
+    // 공통 날짜 추출
     const allDates = [...new Set([...ldData.map(d => d.date), ...lgData.map(d => d.date)])].sort();
 
     const ldMap = new Map(ldData.map(d => [d.date, d.val]));
@@ -771,6 +1484,35 @@
       });
     }
 
+    // 예대율 임계값 참조선 (좌측 y축)
+    annotations.ldHigh = {
+      type: 'line',
+      yMin: 85, yMax: 85,
+      yScaleID: 'y_left',
+      borderColor: 'rgba(202, 138, 4, 0.5)',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      label: { display: true, content: '과열 85%', position: 'start', backgroundColor: 'rgba(202, 138, 4, 0.8)', font: { size: 9 } }
+    };
+    annotations.ldLow = {
+      type: 'line',
+      yMin: 60, yMax: 60,
+      yScaleID: 'y_left',
+      borderColor: 'rgba(59, 130, 246, 0.5)',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      label: { display: true, content: '위축 60%', position: 'start', backgroundColor: 'rgba(59, 130, 246, 0.8)', font: { size: 9 } }
+    };
+    // 0% 참조선 (우측 y축)
+    annotations.zeroLine = {
+      type: 'line',
+      yMin: 0, yMax: 0,
+      yScaleID: 'y_right',
+      borderColor: 'rgba(107, 114, 128, 0.5)',
+      borderWidth: 1,
+      borderDash: [5, 5]
+    };
+
     creditChart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -791,6 +1533,7 @@
             label: 'Loan Growth YoY',
             data: lgValues,
             borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
             borderWidth: 2,
             tension: 0.3,
             pointRadius: 0,
@@ -817,14 +1560,178 @@
           y_left: {
             type: 'linear', position: 'left',
             grid: { color: '#f1f5f9' },
-            ticks: { callback: v => v.toFixed(0) + '%', color: '#3b82f6', font: { size: 10 } },
-            title: { display: true, text: 'L/D Ratio %', color: '#3b82f6' }
+            ticks: { callback: v => v + '%', color: '#3b82f6', font: { size: 10 } },
+            title: { display: true, text: 'Loan/Deposit %', color: '#3b82f6' }
           },
           y_right: {
             type: 'linear', position: 'right',
             grid: { display: false },
             ticks: { callback: v => v.toFixed(0) + '%', color: '#f59e0b', font: { size: 10 } },
-            title: { display: true, text: 'YoY %', color: '#f59e0b' }
+            title: { display: true, text: 'Loan Growth YoY %', color: '#f59e0b' }
+          }
+        }
+      }
+    });
+  }
+
+  // ===== Risks 차트 렌더링 (전체 연체율 + 3개 세분화) =====
+  function renderRisksChart() {
+    const ctx = document.getElementById('risksChart').getContext('2d');
+    risksChart = safeDestroyChart(risksChart);
+
+    const cutoff = new Date(Date.now() - currentPeriod * 86400000).toISOString().split('T')[0];
+    const totalData = fullData.delinquency.filter(d => d.date >= cutoff);
+    const ccData = fullData.creditCardDelinq.filter(d => d.date >= cutoff);
+    const csData = fullData.consumerDelinq.filter(d => d.date >= cutoff);
+    const bsData = fullData.businessDelinq.filter(d => d.date >= cutoff);
+
+    // 공통 날짜 추출
+    const allDates = [...new Set([
+      ...totalData.map(d => d.date),
+      ...ccData.map(d => d.date),
+      ...csData.map(d => d.date),
+      ...bsData.map(d => d.date)
+    ])].sort();
+
+    const totalMap = new Map(totalData.map(d => [d.date, d.val]));
+    const ccMap = new Map(ccData.map(d => [d.date, d.val]));
+    const csMap = new Map(csData.map(d => [d.date, d.val]));
+    const bsMap = new Map(bsData.map(d => [d.date, d.val]));
+
+    const labels = allDates;
+    const totalValues = labels.map(d => totalMap.get(d) || null);
+    const ccValues = labels.map(d => ccMap.get(d) || null);
+    const csValues = labels.map(d => csMap.get(d) || null);
+    const bsValues = labels.map(d => bsMap.get(d) || null);
+
+    // 리세션 annotation
+    let annotations = {};
+    if (typeof getRecessionAnnotations === 'function' && labels.length > 0) {
+      annotations = getRecessionAnnotations(labels[0], labels[labels.length - 1], { showLabel: true });
+      Object.entries(annotations).forEach(([key, val]) => {
+        const findClosest = (target) => {
+          const t = new Date(target).getTime();
+          return labels.reduce((prev, curr) =>
+            Math.abs(new Date(curr).getTime() - t) < Math.abs(new Date(prev).getTime() - t) ? curr : prev
+          );
+        };
+        annotations[key].xMin = findClosest(val.xMin);
+        annotations[key].xMax = findClosest(val.xMax);
+      });
+    }
+
+    // 임계값 참조선 추가 (연체율 경계)
+    annotations.thresholdNormal = {
+      type: 'line',
+      yMin: 2, yMax: 2,
+      borderColor: 'rgba(22, 163, 74, 0.5)',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      label: {
+        display: true,
+        content: '정상 (2%)',
+        position: 'start',
+        backgroundColor: 'rgba(22, 163, 74, 0.8)',
+        font: { size: 9 }
+      }
+    };
+    annotations.thresholdCaution = {
+      type: 'line',
+      yMin: 3, yMax: 3,
+      borderColor: 'rgba(202, 138, 4, 0.5)',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      label: {
+        display: true,
+        content: '주의 (3%)',
+        position: 'start',
+        backgroundColor: 'rgba(202, 138, 4, 0.8)',
+        font: { size: 9 }
+      }
+    };
+    annotations.thresholdWarning = {
+      type: 'line',
+      yMin: 4, yMax: 4,
+      borderColor: 'rgba(220, 38, 38, 0.5)',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      label: {
+        display: true,
+        content: '위험 (4%)',
+        position: 'start',
+        backgroundColor: 'rgba(220, 38, 38, 0.8)',
+        font: { size: 9 }
+      }
+    };
+
+    risksChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Total Delinquency',
+            data: totalValues,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 0,
+            fill: true,
+            spanGaps: true
+          },
+          {
+            label: 'Credit Card',
+            data: ccValues,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 0,
+            spanGaps: true
+          },
+          {
+            label: 'Consumer Loans',
+            data: csValues,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 0,
+            spanGaps: true
+          },
+          {
+            label: 'Business Loans',
+            data: bsValues,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 0,
+            spanGaps: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            padding: 12,
+            cornerRadius: 10
+          },
+          annotation: { annotations }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+          y: {
+            type: 'linear',
+            grid: { color: '#f1f5f9' },
+            ticks: { callback: v => v + '%', font: { size: 10 } },
+            title: { display: true, text: 'Delinquency Rate %', color: '#64748b' }
           }
         }
       }
@@ -840,9 +1747,23 @@
     document.getElementById('tab-' + tab).classList.add('active');
 
     currentTab = tab;
+
+    // 차트 타이틀 업데이트
+    const titles = {
+      capital: '<i class="fas fa-shield-halved"></i> Tier 1 Capital Ratio',
+      credit: '<i class="fas fa-chart-line"></i> Loan/Deposit Ratio & Loan Growth',
+      risks: '<i class="fas fa-exclamation-triangle"></i> Delinquency Rate Analysis'
+    };
+    document.getElementById('chartTitle').innerHTML = titles[tab];
+
+    // 스와이프 인디케이터 업데이트
+    const tabIndex = { capital: 1, credit: 2, risks: 3 };
+    document.querySelectorAll('.swipe-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i + 1 === tabIndex[tab]);
+    });
   };
 
-  // ===== 기간 변경 =====
+  // ===== 기간 변경 (모든 탭 동기화) =====
   window.updatePeriod = function(days, btn) {
     document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -850,52 +1771,86 @@
     currentPeriod = days;
     const processed = processData();
 
-    if (currentTab === 'capital') {
-      renderCapitalChart(processed);
-    } else {
-      renderCreditChart(processed);
-    }
+    // 모든 차트 업데이트 (탭 동기화)
+    renderCapitalChart(processed);
+    renderCreditChart(processed);
+    renderRisksChart();
   };
 
   // ===== 초기화 =====
   async function init() {
     console.log('[Init] Banking Health loading...');
 
-    // 4개 시리즈 병렬 로드 (MAX 데이터)
-    // 수정: TOTCI → TOTLL (전체 대출, Seasonally Adjusted)
-    const [delinquency, tier1, loans, deposits] = await Promise.all([
-      getSeries('DRALACBN', 9999),      // 연체율 (분기)
-      getSeries('BOGZ1FL010000016Q', 9999),  // Tier 1 (분기, 2009~)
-      getSeries('TOTLL', 9999),          // 전체 대출 (주간, Seasonally Adjusted)
-      getSeries('DPSACBW027SBOG', 9999)  // 예금 (주간, Seasonally Adjusted)
+    // 6개 FRED 시리즈 + FDIC Tier1 병렬 로드
+    const [delinquency, loans, deposits, creditCard, consumer, business, tier1] = await Promise.all([
+      getSeries('DRALACBN', 9999),         // 연체율 (분기)
+      getSeries('TOTLL', 9999),             // 전체 대출 (주간)
+      getSeries('DPSACBW027SBOG', 9999),    // 예금 (주간)
+      // Risks 탭용 세분화 연체율
+      getSeries('DRCCLACBS', 9999),         // 신용카드 연체율 (분기)
+      getSeries('DRCLACBS', 9999),          // 소비자 대출 연체율 (분기)
+      getSeries('DRBLACBS', 9999),          // 기업 대출 연체율 (분기)
+      // FDIC Tier1 (2009~현재, 24시간 캐시)
+      getFDICTier1()
     ]);
 
     fullData.delinquency = delinquency;
     fullData.tier1 = tier1;
     fullData.loans = loans;
     fullData.deposits = deposits;
+    fullData.creditCardDelinq = creditCard;
+    fullData.consumerDelinq = consumer;
+    fullData.businessDelinq = business;
+
+    // 데이터 검증
+    validateData(fullData);
 
     console.log('[Init] Data loaded:', {
       delinquency: delinquency.length,
       tier1: tier1.length,
       loans: loans.length,
-      deposits: deposits.length
+      deposits: deposits.length,
+      creditCard: creditCard.length,
+      consumer: consumer.length,
+      business: business.length
     });
+
+    // 전체 데이터 로딩 실패 체크
+    if (apiErrorCount >= 4) {
+      document.querySelector('.loading-text').innerHTML =
+        '<span style="color:#dc2626; font-weight:600;">❌ 데이터 로딩 실패</span><br>' +
+        '<span style="font-size:12px;">네트워크 연결을 확인하고 새로고침해 주세요.</span>';
+      return;
+    }
+
+    // 부분 실패 경고
+    if (apiErrorCount > 0) {
+      console.warn(`[Init] ${apiErrorCount} API calls failed, showing partial data`);
+    }
 
     const processed = processData();
 
     updateUI(processed);
     renderCapitalChart(processed);
     renderCreditChart(processed);
+    renderRisksChart(); // Risks 탭 차트
 
     // 로딩 숨김
     document.getElementById('loadingOverlay').classList.add('hidden');
   }
 
-  // ES Module 대기
+  // ES Module 대기 (타임아웃 포함)
+  const MODULE_TIMEOUT = 10000; // 10초 모듈 로딩 타임아웃
+  let moduleWaitStart = Date.now();
+
   function startApp() {
     if (typeof getRecessionAnnotations === 'function') {
       console.log('[Init] Modules loaded ✓');
+      init();
+    } else if (Date.now() - moduleWaitStart > MODULE_TIMEOUT) {
+      // 모듈 로딩 타임아웃 - 기본 기능으로 진행
+      console.warn('[Init] Module load timeout, proceeding without annotations');
+      window.getRecessionAnnotations = () => ({}); // 빈 함수로 대체
       init();
     } else {
       console.log('[Init] Waiting for ES modules...');

@@ -1394,10 +1394,20 @@
       WARNING: getThreshold('RESERVES_GDP', 'WARNING')
     };
 
-    let overallStatus = 'normal';
-    if (spread >= SPREAD_TH.WARNING || rbGdpRatio < RGDP_TH.WARNING) overallStatus = 'danger';
-    else if (spread >= SPREAD_TH.CAUTION || rbGdpRatio < RGDP_TH.CAUTION) overallStatus = 'warning';
-    else if (spread >= SPREAD_TH.NORMAL || rbGdpRatio < RGDP_TH.NORMAL) overallStatus = 'caution';
+    // 개별 상태 점수화 (normal=0, caution=1, warning=2, danger=3)
+    let spreadScore = 0;
+    if (spread >= SPREAD_TH.WARNING) spreadScore = 3;
+    else if (spread >= SPREAD_TH.CAUTION) spreadScore = 2;
+    else if (spread >= SPREAD_TH.NORMAL) spreadScore = 1;
+
+    let rgdpScore = 0;
+    if (rbGdpRatio < RGDP_TH.WARNING) rgdpScore = 3;
+    else if (rbGdpRatio < RGDP_TH.CAUTION) rgdpScore = 2;
+    else if (rbGdpRatio < RGDP_TH.NORMAL) rgdpScore = 1;
+
+    // 평균 점수로 종합 판정 (반올림)
+    const avgScore = Math.round((spreadScore + rgdpScore) / 2);
+    const overallStatus = ['normal', 'caution', 'warning', 'danger'][avgScore];
 
     if (overallStatus === 'danger') {
       badge.style.cssText = 'background:#fee2e2; border-color:#fecaca; color:#dc2626';
