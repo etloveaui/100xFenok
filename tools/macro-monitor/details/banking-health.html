@@ -270,6 +270,27 @@
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; font-weight: 500; }
     .legend-color { width: 12px; height: 12px; border-radius: 3px; }
 
+    /* ===== Risks 탭: Small Multiples D구조 ===== */
+    .risks-main-section { margin-bottom: 16px; }
+    .risks-main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .risks-main-title { font-size: 14px; font-weight: 600; color: #1f2937; }
+    .risks-main-badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: #f0fdf4; color: #16a34a; }
+    .risks-main-chart { height: 220px; background: #fff; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+    .risks-mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .risks-mini-card { background: #fff; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.2s; }
+    .risks-mini-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .risks-mini-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .risks-mini-title { font-size: 11px; font-weight: 600; }
+    .risks-mini-value { font-size: 12px; font-weight: 700; color: #1f2937; }
+    .risks-mini-chart { height: 100px; }
+
+    @media (max-width: 768px) {
+      .risks-mini-grid { grid-template-columns: 1fr; }
+      .risks-main-chart { height: 180px; }
+      .risks-mini-chart { height: 80px; }
+    }
+
     /* 로딩 */
     .loading-overlay {
       position: fixed;
@@ -577,14 +598,23 @@
       <button class="tab-btn" onclick="switchTab('risks', this)"><i class="fas fa-exclamation-triangle"></i> Risks</button>
     </div>
 
-    <!-- 공통 기간 선택 (탭 동기화) -->
+    <!-- 기간 선택 (탭별 분리) -->
     <div class="chart-controls">
-      <div class="chart-title" id="chartTitle"><i class="fas fa-shield-halved"></i> Delinquency & Tier 1 Capital</div>
-      <div class="period-selector" id="periodSelector">
-        <button class="p-btn" onclick="updatePeriod(365, this)">1Y</button>
-        <button class="p-btn" onclick="updatePeriod(1825, this)">5Y</button>
-        <button class="p-btn active" onclick="updatePeriod(3650, this)">10Y</button>
-        <button class="p-btn" onclick="updatePeriod(9999, this)">MAX</button>
+      <div class="chart-title" id="chartTitle"><i class="fas fa-shield-halved"></i> Tier 1 Capital Ratio</div>
+      <!-- Capital/Credit 탭용: 1Y/5Y/10Y/MAX -->
+      <div class="period-selector" id="periodSelectorDefault">
+        <button class="p-btn" onclick="updatePeriod(365, this, 'default')">1Y</button>
+        <button class="p-btn" onclick="updatePeriod(1825, this, 'default')">5Y</button>
+        <button class="p-btn active" onclick="updatePeriod(3650, this, 'default')">10Y</button>
+        <button class="p-btn" onclick="updatePeriod(9999, this, 'default')">MAX</button>
+      </div>
+      <!-- Risks 탭용: 5Y/10Y/15Y/25Y/MAX (기본 MAX) -->
+      <div class="period-selector" id="periodSelectorRisks" style="display: none;">
+        <button class="p-btn" onclick="updatePeriod(1825, this, 'risks')">5Y</button>
+        <button class="p-btn" onclick="updatePeriod(3650, this, 'risks')">10Y</button>
+        <button class="p-btn" onclick="updatePeriod(5475, this, 'risks')">15Y</button>
+        <button class="p-btn" onclick="updatePeriod(9125, this, 'risks')">25Y</button>
+        <button class="p-btn active" onclick="updatePeriod(99999, this, 'risks')">MAX</button>
       </div>
     </div>
 
@@ -611,16 +641,52 @@
       </div>
     </div>
 
-    <!-- Tab 3: Risks (연체율 종합 + 세분화) -->
+    <!-- Tab 3: Risks (Small Multiples D구조) -->
     <div class="tab-content" id="tab-risks">
-      <div class="chart-wrapper">
-        <canvas id="risksChart"></canvas>
+      <!-- 메인 차트: Total Delinquency (제목은 상단 chartTitle에서 표시) -->
+      <div class="risks-main-section">
+        <div class="risks-main-header">
+          <span class="risks-main-title"><i class="fas fa-chart-area"></i> Total</span>
+          <span class="risks-main-badge" id="risksMainBadge">--</span>
+        </div>
+        <div class="risks-main-chart">
+          <canvas id="risksMainChart"></canvas>
+        </div>
       </div>
-      <div class="custom-legend">
-        <div class="legend-item"><div class="legend-color" style="background: #6366f1;"></div><span>Total Delinquency</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>Credit Card</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>Consumer Loans</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Business Loans</span></div>
+
+      <!-- 미니 차트 3개: 섹터별 -->
+      <div class="risks-mini-grid">
+        <div class="risks-mini-card">
+          <div class="risks-mini-header">
+            <span class="risks-mini-title" style="color: #ef4444;"><i class="fas fa-credit-card"></i> Credit Card</span>
+            <span class="risks-mini-value" id="risksMiniCCValue">--</span>
+          </div>
+          <div class="risks-mini-chart">
+            <canvas id="risksMiniCC"></canvas>
+          </div>
+        </div>
+        <div class="risks-mini-card">
+          <div class="risks-mini-header">
+            <span class="risks-mini-title" style="color: #f59e0b;"><i class="fas fa-user"></i> Consumer</span>
+            <span class="risks-mini-value" id="risksMiniConsumerValue">--</span>
+          </div>
+          <div class="risks-mini-chart">
+            <canvas id="risksMiniConsumer"></canvas>
+          </div>
+        </div>
+        <div class="risks-mini-card">
+          <div class="risks-mini-header">
+            <span class="risks-mini-title" style="color: #10b981;"><i class="fas fa-building"></i> Business</span>
+            <span class="risks-mini-value" id="risksMiniBusinessValue">--</span>
+          </div>
+          <div class="risks-mini-chart">
+            <canvas id="risksMiniBusiness"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 범례 -->
+      <div class="custom-legend" style="margin-top: 12px;">
         <div class="legend-item"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>Recession</span></div>
       </div>
     </div>
@@ -1574,12 +1640,15 @@
     });
   }
 
-  // ===== Risks 차트 렌더링 (전체 연체율 + 3개 세분화) =====
-  function renderRisksChart() {
-    const ctx = document.getElementById('risksChart').getContext('2d');
-    risksChart = safeDestroyChart(risksChart);
+  // ===== Risks 차트: Small Multiples D구조 =====
+  let risksMainChart = null;
+  let risksMiniCCChart = null;
+  let risksMiniConsumerChart = null;
+  let risksMiniBusinessChart = null;
 
-    const cutoff = new Date(Date.now() - currentPeriod * 86400000).toISOString().split('T')[0];
+  function renderRisksChart() {
+    const cutoff = new Date(Date.now() - risksPeriod * 86400000).toISOString().split('T')[0];
+
     const totalData = fullData.delinquency.filter(d => d.date >= cutoff);
     const ccData = fullData.creditCardDelinq.filter(d => d.date >= cutoff);
     const csData = fullData.consumerDelinq.filter(d => d.date >= cutoff);
@@ -1604,10 +1673,14 @@
     const csValues = labels.map(d => csMap.get(d) || null);
     const bsValues = labels.map(d => bsMap.get(d) || null);
 
-    // 리세션 annotation
+    // Y축 동일 스케일 (섹터 비교 가능)
+    const allValues = [...totalValues, ...ccValues, ...csValues, ...bsValues].filter(v => v !== null);
+    const yMax = Math.ceil(Math.max(...allValues)) + 1;
+
+    // 리세션 annotation (공통)
     let annotations = {};
     if (typeof getRecessionAnnotations === 'function' && labels.length > 0) {
-      annotations = getRecessionAnnotations(labels[0], labels[labels.length - 1], { showLabel: true });
+      annotations = getRecessionAnnotations(labels[0], labels[labels.length - 1], { showLabel: false });
       Object.entries(annotations).forEach(([key, val]) => {
         const findClosest = (target) => {
           const t = new Date(target).getTime();
@@ -1620,97 +1693,55 @@
       });
     }
 
-    // 임계값 참조선 추가 (연체율 경계)
-    annotations.thresholdNormal = {
-      type: 'line',
-      yMin: 2, yMax: 2,
-      borderColor: 'rgba(22, 163, 74, 0.5)',
-      borderWidth: 1,
-      borderDash: [5, 5],
-      label: {
-        display: true,
-        content: '정상 (2%)',
-        position: 'start',
-        backgroundColor: 'rgba(22, 163, 74, 0.8)',
-        font: { size: 9 }
-      }
+    // 메인 차트 렌더링
+    renderRisksMainChart(labels, totalValues, annotations, yMax);
+
+    // 미니 차트 3개 렌더링
+    renderRisksMiniChart('risksMiniCC', ccValues, labels, '#ef4444', annotations, yMax, 'risksMiniCCChart');
+    renderRisksMiniChart('risksMiniConsumer', csValues, labels, '#f59e0b', annotations, yMax, 'risksMiniConsumerChart');
+    renderRisksMiniChart('risksMiniBusiness', bsValues, labels, '#10b981', annotations, yMax, 'risksMiniBusinessChart');
+
+    // 값 업데이트
+    updateRisksValues(totalValues, ccValues, csValues, bsValues);
+  }
+
+  function renderRisksMainChart(labels, data, annotations, yMax) {
+    risksMainChart = safeDestroyChart(risksMainChart);
+    const ctx = document.getElementById('risksMainChart').getContext('2d');
+
+    // 임계값 참조선 (메인 차트만)
+    const mainAnnotations = { ...annotations };
+    mainAnnotations.thresholdNormal = {
+      type: 'line', yMin: 2, yMax: 2,
+      borderColor: 'rgba(22, 163, 74, 0.5)', borderWidth: 1, borderDash: [5, 5],
+      label: { display: true, content: '정상 2%', position: 'start', backgroundColor: 'rgba(22, 163, 74, 0.8)', font: { size: 9 } }
     };
-    annotations.thresholdCaution = {
-      type: 'line',
-      yMin: 3, yMax: 3,
-      borderColor: 'rgba(202, 138, 4, 0.5)',
-      borderWidth: 1,
-      borderDash: [5, 5],
-      label: {
-        display: true,
-        content: '주의 (3%)',
-        position: 'start',
-        backgroundColor: 'rgba(202, 138, 4, 0.8)',
-        font: { size: 9 }
-      }
+    mainAnnotations.thresholdCaution = {
+      type: 'line', yMin: 3, yMax: 3,
+      borderColor: 'rgba(202, 138, 4, 0.5)', borderWidth: 1, borderDash: [5, 5],
+      label: { display: true, content: '주의 3%', position: 'start', backgroundColor: 'rgba(202, 138, 4, 0.8)', font: { size: 9 } }
     };
-    annotations.thresholdWarning = {
-      type: 'line',
-      yMin: 4, yMax: 4,
-      borderColor: 'rgba(220, 38, 38, 0.5)',
-      borderWidth: 1,
-      borderDash: [5, 5],
-      label: {
-        display: true,
-        content: '위험 (4%)',
-        position: 'start',
-        backgroundColor: 'rgba(220, 38, 38, 0.8)',
-        font: { size: 9 }
-      }
+    mainAnnotations.thresholdWarning = {
+      type: 'line', yMin: 4, yMax: 4,
+      borderColor: 'rgba(220, 38, 38, 0.5)', borderWidth: 1, borderDash: [5, 5],
+      label: { display: true, content: 'GFC 4%', position: 'start', backgroundColor: 'rgba(220, 38, 38, 0.8)', font: { size: 9 } }
     };
 
-    risksChart = new Chart(ctx, {
+    risksMainChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels,
-        datasets: [
-          {
-            label: 'Total Delinquency',
-            data: totalValues,
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99, 102, 241, 0.15)',
-            borderWidth: 3,
-            tension: 0.3,
-            pointRadius: 0,
-            fill: true,
-            spanGaps: true
-          },
-          {
-            label: 'Credit Card',
-            data: ccValues,
-            borderColor: '#ef4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            pointRadius: 0,
-            spanGaps: true
-          },
-          {
-            label: 'Consumer Loans',
-            data: csValues,
-            borderColor: '#f59e0b',
-            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            pointRadius: 0,
-            spanGaps: true
-          },
-          {
-            label: 'Business Loans',
-            data: bsValues,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            pointRadius: 0,
-            spanGaps: true
-          }
-        ]
+        datasets: [{
+          label: 'Total Delinquency',
+          data,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.15)',
+          borderWidth: 3,
+          tension: 0.3,
+          pointRadius: 0,
+          fill: true,
+          spanGaps: true
+        }]
       },
       options: {
         responsive: true,
@@ -1718,27 +1749,97 @@
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
-          tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-            padding: 12,
-            cornerRadius: 10
-          },
-          annotation: { annotations }
+          tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', padding: 12, cornerRadius: 10 },
+          annotation: { annotations: mainAnnotations }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
           y: {
-            type: 'linear',
-            grid: { color: '#f1f5f9' },
-            ticks: { callback: v => v + '%', font: { size: 10 } },
-            title: { display: true, text: 'Delinquency Rate %', color: '#64748b' }
+            type: 'linear', min: 0, max: yMax,
+            grid: { color: '#e5e7eb' },
+            ticks: { callback: v => v.toFixed(1) + '%', font: { size: 10 } },
+            title: { display: true, text: 'Rate %', color: '#64748b', font: { size: 10 } }
           }
         }
       }
     });
   }
 
+  function renderRisksMiniChart(canvasId, data, labels, borderColor, annotations, yMax, chartVarName) {
+    // 기존 차트 정리
+    if (chartVarName === 'risksMiniCCChart') risksMiniCCChart = safeDestroyChart(risksMiniCCChart);
+    else if (chartVarName === 'risksMiniConsumerChart') risksMiniConsumerChart = safeDestroyChart(risksMiniConsumerChart);
+    else if (chartVarName === 'risksMiniBusinessChart') risksMiniBusinessChart = safeDestroyChart(risksMiniBusinessChart);
+
+    const ctx = document.getElementById(canvasId).getContext('2d');
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          borderColor,
+          backgroundColor: borderColor + '15',
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 0,
+          spanGaps: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', padding: 8, cornerRadius: 6 },
+          annotation: { annotations }
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            type: 'linear', min: 0, max: yMax,
+            grid: { color: '#f1f5f9', drawBorder: false },
+            ticks: { display: false }
+          }
+        }
+      }
+    });
+
+    // 변수 저장
+    if (chartVarName === 'risksMiniCCChart') risksMiniCCChart = chart;
+    else if (chartVarName === 'risksMiniConsumerChart') risksMiniConsumerChart = chart;
+    else if (chartVarName === 'risksMiniBusinessChart') risksMiniBusinessChart = chart;
+  }
+
+  function updateRisksValues(totalValues, ccValues, csValues, bsValues) {
+    const latestTotal = totalValues.filter(v => v !== null).pop();
+    const latestCC = ccValues.filter(v => v !== null).pop();
+    const latestCs = csValues.filter(v => v !== null).pop();
+    const latestBs = bsValues.filter(v => v !== null).pop();
+
+    // 메인 배지
+    const badge = document.getElementById('risksMainBadge');
+    if (latestTotal !== undefined) {
+      const status = getDelinquencyStatus(latestTotal);
+      const statusLabels = { normal: '정상', caution: '주의', warning: '경계', danger: '위험' };
+      const statusColors = { normal: '#16a34a', caution: '#ca8a04', warning: '#ea580c', danger: '#dc2626' };
+      const statusBg = { normal: '#f0fdf4', caution: '#fefce8', warning: '#fff7ed', danger: '#fef2f2' };
+      badge.textContent = latestTotal.toFixed(2) + '% ' + statusLabels[status];
+      badge.style.color = statusColors[status];
+      badge.style.background = statusBg[status];
+    }
+
+    // 미니 값
+    document.getElementById('risksMiniCCValue').textContent = latestCC !== undefined ? latestCC.toFixed(2) + '%' : '--';
+    document.getElementById('risksMiniConsumerValue').textContent = latestCs !== undefined ? latestCs.toFixed(2) + '%' : '--';
+    document.getElementById('risksMiniBusinessValue').textContent = latestBs !== undefined ? latestBs.toFixed(2) + '%' : '--';
+  }
+
   // ===== 탭 전환 =====
+  let risksPeriod = 99999; // Risks 탭 기본값: MAX
+
   window.switchTab = function(tab, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -1752,9 +1853,20 @@
     const titles = {
       capital: '<i class="fas fa-shield-halved"></i> Tier 1 Capital Ratio',
       credit: '<i class="fas fa-chart-line"></i> Loan/Deposit Ratio & Loan Growth',
-      risks: '<i class="fas fa-exclamation-triangle"></i> Delinquency Rate Analysis'
+      risks: '<i class="fas fa-exclamation-triangle"></i> Delinquency Risks'
     };
     document.getElementById('chartTitle').innerHTML = titles[tab];
+
+    // 기간 선택기 전환 (Risks vs Default)
+    const defaultSelector = document.getElementById('periodSelectorDefault');
+    const risksSelector = document.getElementById('periodSelectorRisks');
+    if (tab === 'risks') {
+      defaultSelector.style.display = 'none';
+      risksSelector.style.display = 'flex';
+    } else {
+      defaultSelector.style.display = 'flex';
+      risksSelector.style.display = 'none';
+    }
 
     // 스와이프 인디케이터 업데이트
     const tabIndex = { capital: 1, credit: 2, risks: 3 };
@@ -1763,18 +1875,24 @@
     });
   };
 
-  // ===== 기간 변경 (모든 탭 동기화) =====
-  window.updatePeriod = function(days, btn) {
-    document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+  // ===== 기간 변경 (탭별 분리) =====
+  window.updatePeriod = function(days, btn, selectorType) {
+    // 해당 선택기 내 버튼만 active 토글
+    const selector = selectorType === 'risks' ? 'periodSelectorRisks' : 'periodSelectorDefault';
+    document.querySelectorAll('#' + selector + ' .p-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    currentPeriod = days;
-    const processed = processData();
-
-    // 모든 차트 업데이트 (탭 동기화)
-    renderCapitalChart(processed);
-    renderCreditChart(processed);
-    renderRisksChart();
+    if (selectorType === 'risks') {
+      // Risks 탭만 업데이트
+      risksPeriod = days;
+      renderRisksChart();
+    } else {
+      // Capital/Credit 탭 업데이트
+      currentPeriod = days;
+      const processed = processData();
+      renderCapitalChart(processed);
+      renderCreditChart(processed);
+    }
   };
 
   // ===== 초기화 =====
