@@ -406,6 +406,25 @@
       .info-expand-btn { width: 24px; height: 24px; }
     }
 
+    /* Capital Resilience 범례 반응형 */
+    .legend-short { display: none; }
+    .legend-full { display: inline; }
+    @media (max-width: 600px) {
+      .legend-short { display: inline; }
+      .legend-full { display: none; }
+      /* Capital 탭 범례: 2x2 그리드 + 경기침체 중앙 */
+      .capital-legend {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 16px;
+        justify-items: start;
+      }
+      .capital-legend .legend-recession {
+        grid-column: 1 / -1;
+        justify-self: center;
+      }
+    }
+
     /* ===== 설명 카드 섹션 ===== */
     .info-cards-section {
       display: grid;
@@ -651,12 +670,14 @@
     <!-- 기간 선택 (탭별 분리) -->
     <div class="chart-controls">
       <div class="chart-title" id="chartTitle"><i class="fas fa-shield-halved"></i> 자기자본비율 (Tier 1)</div>
-      <!-- Capital/Credit 탭용: 1Y/5Y/10Y/MAX -->
+      <!-- Capital/Credit 탭용: 1Y/3Y/5Y/10Y/15Y/MAX -->
       <div class="period-selector" id="periodSelectorDefault">
         <button class="p-btn" onclick="updatePeriod(365, this, 'default')">1Y</button>
+        <button class="p-btn" onclick="updatePeriod(1095, this, 'default')">3Y</button>
         <button class="p-btn" onclick="updatePeriod(1825, this, 'default')">5Y</button>
         <button class="p-btn active" onclick="updatePeriod(3650, this, 'default')">10Y</button>
-        <button class="p-btn" onclick="updatePeriod(9999, this, 'default')">MAX</button>
+        <button class="p-btn" onclick="updatePeriod(5475, this, 'default')">15Y</button>
+        <button class="p-btn" onclick="updatePeriod(99999, this, 'default')">MAX</button>
       </div>
       <!-- Risks 탭용: 5Y/10Y/15Y/25Y/MAX (기본 MAX) -->
       <div class="period-selector" id="periodSelectorRisks" style="display: none;">
@@ -673,10 +694,14 @@
       <div class="chart-wrapper">
         <canvas id="capitalChart"></canvas>
       </div>
-      <div class="custom-legend">
-        <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>자기자본비율</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>FED 기준금리</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>경기침체</span></div>
+      <div class="custom-legend capital-legend">
+        <!-- Defense (성벽) - Okabe-Ito Blue Family -->
+        <div class="legend-item"><div class="legend-color" style="background: #0072B2;"></div><span class="legend-full">FDIC Tier1</span><span class="legend-short">Tier1</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: transparent; border: 2px dashed #56B4E9;"></div><span class="legend-full">FED Tier1</span><span class="legend-short">FED</span></div>
+        <!-- Offense (파도) - Okabe-Ito Orange Family -->
+        <div class="legend-item"><div class="legend-color" style="background: #E69F00;"></div><span class="legend-full">10Y 금리</span><span class="legend-short">10Y</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: transparent; border: 2px dashed #D55E00;"></div><span class="legend-full">HY 스프레드</span><span class="legend-short">HY</span></div>
+        <div class="legend-item legend-recession"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>경기침체</span></div>
       </div>
     </div>
 
@@ -1061,10 +1086,12 @@
   // ===== 데이터 저장 =====
   let fullData = {
     delinquency: [],
-    tier1: [],
+    tier1: [],        // FDIC Tier 1 (Defense 1)
+    fedTier1: [],     // FED Tier 1 BOGZ1FL010000016Q (Defense 2)
+    yield10y: [],     // 10Y Treasury DGS10 (Offense 1)
+    hySpread: [],     // HY Spread BAMLH0A0HYM2 (Offense 2)
     loans: [],
     deposits: [],
-    fedFunds: [],  // FED 기준금리
     // Risks 탭용 연체율 세분화
     creditCardDelinq: [],
     consumerDelinq: [],
@@ -1459,26 +1486,85 @@
   }
 
   // ===== 차트 렌더링 =====
+  // ===== Fill-Forward 보간 함수 (분기 → 일간) =====
+  // 분기 데이터를 일간 날짜 그리드에 맞춰 채움 (가장 최근 과거 값 사용)
+  function fillForward(quarterlyData, dailyDates) {
+    // 분기 데이터를 날짜순 정렬
+    const sorted = [...quarterlyData].sort((a, b) => a.date.localeCompare(b.date));
+    const filled = [];
+    let lastValue = null;
+
+    for (const date of dailyDates) {
+      // 현재 날짜 이하의 가장 최근 분기 데이터 찾기
+      for (const q of sorted) {
+        if (q.date <= date) {
+          lastValue = q.val;
+        } else {
+          break;  // 이미 정렬되어 있으므로 더 볼 필요 없음
+        }
+      }
+      filled.push(lastValue);
+    }
+    return filled;
+  }
+
+  // ===== Capital Resilience 차트 (Defense vs Offense 모델) =====
+  // Defense (성벽): FDIC Tier1 + FED Tier1 → 높을수록 안전
+  // Offense (파도): 10Y Yield + HY Spread → 높을수록 위험
+  // 수정: suggestedMax (적응형 스케일), Fill-Forward (툴팁 완전 표시)
   function renderCapitalChart(processed) {
     const ctx = document.getElementById('capitalChart').getContext('2d');
     capitalChart = safeDestroyChart(capitalChart);
 
     // 기간 필터링
     const cutoff = new Date(Date.now() - currentPeriod * 86400000).toISOString().split('T')[0];
-    const t1Data = fullData.tier1.filter(d => d.date >= cutoff);
-    const fedData = fullData.fedFunds.filter(d => d.date >= cutoff);
 
-    // 공통 날짜 (월별로 정렬)
-    const allDates = [...new Set([...t1Data.map(d => d.date), ...fedData.map(d => d.date)])].sort();
+    // 일간 데이터: cutoff 이후만
+    const y10Data = fullData.yield10y.filter(d => d.date >= cutoff);   // 10Y Yield (Offense 1) - 일간
+    const hyData = fullData.hySpread.filter(d => d.date >= cutoff);    // HY Spread (Offense 2) - 일간
 
-    const t1Map = new Map(t1Data.map(d => [d.date, d.val]));
-    const fedMap = new Map(fedData.map(d => [d.date, d.val]));
+    // 분기 데이터: cutoff 이전 최근 1개 포함 (fillForward가 첫 구간 채우도록)
+    // 예: 1Y cutoff=2024-12-07이면, 2024-10-01 분기 데이터도 필요
+    const getQuarterlyWithPrior = (data) => {
+      const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
+      const priorData = sorted.filter(d => d.date < cutoff);
+      const afterData = sorted.filter(d => d.date >= cutoff);
+      // cutoff 이전 마지막 1개 + cutoff 이후 전체
+      const lastPrior = priorData.length > 0 ? [priorData[priorData.length - 1]] : [];
+      return [...lastPrior, ...afterData];
+    };
 
-    const labels = allDates;
-    const t1Values = labels.map(d => t1Map.get(d) || null);
-    const fedValues = labels.map(d => fedMap.get(d) || null);
+    const t1Data = getQuarterlyWithPrior(fullData.tier1);       // FDIC Tier1 (Defense 1) - 분기
+    const fedT1Data = getQuarterlyWithPrior(fullData.fedTier1); // FED Tier1 (Defense 2) - 분기
 
-    // 리세션 annotation
+    // 일간 데이터 날짜를 기준 그리드로 사용 (더 촘촘함)
+    const dailyDates = [...new Set([
+      ...y10Data.map(d => d.date),
+      ...hyData.map(d => d.date)
+    ])].sort();
+
+    // 분기 데이터 → 일간 그리드로 Fill-Forward 보간
+    const t1Filled = fillForward(t1Data, dailyDates);
+    const fedT1Filled = fillForward(fedT1Data, dailyDates);
+
+    // 일간 데이터 Map
+    const y10Map = new Map(y10Data.map(d => [d.date, d.val]));
+    const hyMap = new Map(hyData.map(d => [d.date, d.val]));
+
+    const labels = dailyDates;
+    const y10Values = labels.map(d => y10Map.get(d) || null);
+    const hyValues = labels.map(d => hyMap.get(d) || null);
+
+    // 콘솔 로그: 데이터 검증
+    console.log('[Capital] Data check:', {
+      labels: labels.length,
+      t1Filled: t1Filled.filter(v => v !== null).length,
+      fedT1Filled: fedT1Filled.filter(v => v !== null).length,
+      y10: y10Values.filter(v => v !== null).length,
+      hy: hyValues.filter(v => v !== null).length
+    });
+
+    // Annotations: 리세션 + Danger Zone + Stress Zone
     let annotations = {};
     if (typeof getRecessionAnnotations === 'function' && labels.length > 0) {
       annotations = getRecessionAnnotations(labels[0], labels[labels.length - 1], { showLabel: true });
@@ -1494,15 +1580,53 @@
       });
     }
 
-    // 임계값 참조선 (Tier1)
-    annotations.t1Safe = {
+    // Defense: Danger Zone 8~10% 붉은 박스 (Tier1 10% 미만 = 위험)
+    annotations.dangerZone = {
+      type: 'box',
+      yMin: 8, yMax: 10,
+      yScaleID: 'y',
+      backgroundColor: 'rgba(239, 68, 68, 0.08)',
+      borderWidth: 0
+    };
+
+    // Defense: 자본 위험선 10% (Tier1 기준)
+    annotations.capitalThreshold = {
       type: 'line',
       yMin: 10, yMax: 10,
       yScaleID: 'y',
-      borderColor: 'rgba(22, 163, 74, 0.5)',
-      borderWidth: 1,
-      borderDash: [5, 5],
-      label: { display: true, content: '안전 10%', position: 'start', backgroundColor: 'rgba(22, 163, 74, 0.8)', font: { size: 9 } }
+      borderColor: 'rgba(239, 68, 68, 0.5)',
+      borderWidth: 1.5,
+      borderDash: [8, 4],
+      label: {
+        content: '자본 위험선 10%',
+        display: true,
+        position: 'start',
+        font: { size: 9 },
+        color: '#ef4444',
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        padding: 2
+      }
+    };
+
+    // Offense: 스트레스 경계 5% (HY/금리 공통)
+    // 박스 제거 - 경계선만 표시 (다른 그래프와 통일성)
+    // Okabe-Ito Vermillion: #D55E00
+    annotations.stressThreshold = {
+      type: 'line',
+      yMin: 5, yMax: 5,
+      yScaleID: 'y1',
+      borderColor: 'rgba(213, 94, 0, 0.5)',
+      borderWidth: 1.5,
+      borderDash: [8, 4],
+      label: {
+        content: '스트레스 경계 5%',
+        display: true,
+        position: 'end',
+        font: { size: 9 },
+        color: '#D55E00',
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        padding: 2
+      }
     };
 
     capitalChart = new Chart(ctx, {
@@ -1510,29 +1634,64 @@
       data: {
         labels,
         datasets: [
+          // Defense 1: FDIC Tier 1 (주역, Steel Blue, fill, stepped)
+          // Okabe-Ito 색맹 안전 팔레트 + Bloomberg 컨벤션
           {
-            label: '자기자본비율',
-            data: t1Values,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
+            label: 'FDIC Tier1',
+            data: t1Filled,
+            borderColor: '#0072B2',  // Steel Blue (색맹 안전)
+            backgroundColor: 'rgba(0, 114, 178, 0.15)',
+            borderWidth: 3,
             pointRadius: 0,
             fill: true,
             spanGaps: true,
-            yAxisID: 'y'
+            stepped: 'before',  // 계단식 (분기 데이터)
+            yAxisID: 'y',
+            order: 3  // 뒤에 배치
           },
+          // Defense 2: FED Tier 1 (교차검증, Sky Blue 점선, stepped)
           {
-            label: 'FED 기준금리',
-            data: fedValues,
-            borderColor: '#ef4444',
+            label: 'FED Tier1',
+            data: fedT1Filled,
+            borderColor: '#56B4E9',  // Sky Blue (보조)
             backgroundColor: 'transparent',
-            borderWidth: 1.5,
+            borderWidth: 2,
+            borderDash: [5, 3],
+            pointRadius: 0,
+            fill: false,
+            spanGaps: true,
+            stepped: 'before',  // 계단식 (분기 데이터)
+            yAxisID: 'y',
+            order: 2  // Defense 뒤
+          },
+          // Offense 1: 10Y Yield (Orange, 날카롭게)
+          {
+            label: '10Y 금리',
+            data: y10Values,
+            borderColor: '#E69F00',  // Orange (색맹 안전)
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
             tension: 0.1,
             pointRadius: 0,
             fill: false,
             spanGaps: true,
-            yAxisID: 'y1'
+            yAxisID: 'y1',
+            order: 1  // 앞에 배치
+          },
+          // Offense 2: HY Spread (Vermillion 점선)
+          {
+            label: 'HY 스프레드',
+            data: hyValues,
+            borderColor: '#D55E00',  // Vermillion (위험 강조)
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [4, 2],
+            tension: 0.1,
+            pointRadius: 0,
+            fill: false,
+            spanGaps: true,
+            yAxisID: 'y1',
+            order: 1  // 앞에 배치
           }
         ]
       },
@@ -1560,17 +1719,25 @@
         },
         scales: {
           x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+          // Left Y-axis: Defense (8% ~ suggestedMax 16%)
+          // Okabe-Ito Steel Blue: #0072B2
           y: {
             type: 'linear', position: 'left',
+            min: 8,
+            suggestedMax: 16,  // 적응형: 16 넘으면 확장
             grid: { color: '#f1f5f9' },
-            ticks: { callback: v => v + '%', color: '#10b981', font: { size: 10 } },
-            title: { display: true, text: '자기자본비율 %', color: '#10b981', font: { size: 11 } }
+            ticks: { callback: v => v + '%', color: '#0072B2', font: { size: 10 } },
+            title: { display: true, text: 'Tier 1 자본비율 %', color: '#0072B2', font: { size: 11 } }
           },
+          // Right Y-axis: Offense (0% ~ suggestedMax 10%)
+          // Okabe-Ito Orange: #E69F00
           y1: {
             type: 'linear', position: 'right',
+            min: 0,
+            suggestedMax: 10,  // 적응형: 10 넘으면 확장 (2008년 HY 21%+)
             grid: { drawOnChartArea: false },
-            ticks: { callback: v => v + '%', color: '#ef4444', font: { size: 10 } },
-            title: { display: true, text: 'FED 금리 %', color: '#ef4444', font: { size: 11 } }
+            ticks: { callback: v => v + '%', color: '#E69F00', font: { size: 10 } },
+            title: { display: true, text: '금리 / 스프레드 %', color: '#E69F00', font: { size: 11 } }
           }
         }
       }
@@ -1979,26 +2146,32 @@
     console.log('[Init] Banking Health loading...');
 
     try {
-      // 8개 FRED 시리즈 + FDIC Tier1 병렬 로드
-      const [delinquency, loans, deposits, creditCard, consumer, business, cre, fedFunds, tier1] = await Promise.all([
-        getSeries('DRALACBN', 9999),         // 연체율 (분기)
-        getSeries('TOTLL', 9999),             // 전체 대출 (주간)
-        getSeries('DPSACBW027SBOG', 9999),    // 예금 (주간)
+      // 10개 FRED 시리즈 + FDIC Tier1 병렬 로드
+      // Capital Resilience: Defense(FDIC Tier1, FED Tier1) vs Offense(10Y, HY Spread)
+      const [delinquency, loans, deposits, creditCard, consumer, business, cre, fedTier1, yield10y, hySpread, tier1] = await Promise.all([
+        getSeries('DRALACBN', 9999),           // 연체율 (분기)
+        getSeries('TOTLL', 9999),               // 전체 대출 (주간)
+        getSeries('DPSACBW027SBOG', 9999),      // 예금 (주간)
         // Risks 탭용 세분화 연체율
-        getSeries('DRCCLACBS', 9999),         // 신용카드 연체율 (분기)
-        getSeries('DRCLACBS', 9999),          // 소비자 대출 연체율 (분기)
-        getSeries('DRBLACBS', 9999),          // 기업 대출 연체율 (분기)
-        getSeries('DRCRELEXFACBS', 9999),     // CRE 연체율 (분기) - 다음 위기 후보
-        getSeries('FEDFUNDS', 9999),          // FED 기준금리 (월간)
-        // FDIC Tier1 (2009~현재, 24시간 캐시)
+        getSeries('DRCCLACBS', 9999),           // 신용카드 연체율 (분기)
+        getSeries('DRCLACBS', 9999),            // 소비자 대출 연체율 (분기)
+        getSeries('DRBLACBS', 9999),            // 기업 대출 연체율 (분기)
+        getSeries('DRCRELEXFACBS', 9999),       // CRE 연체율 (분기) - 다음 위기 후보
+        // Capital Resilience 차트용 (Defense 2, Offense 1, 2)
+        getSeries('BOGZ1FL010000016Q', 9999),   // FED Tier 1 (분기) - Defense 2
+        getSeries('DGS10', 9999),               // 10Y Treasury Yield (일간) - Offense 1
+        getSeries('BAMLH0A0HYM2', 9999),        // HY Spread (일간) - Offense 2
+        // FDIC Tier1 (2009~현재, 24시간 캐시) - Defense 1
         getFDICTier1()
       ]);
 
       fullData.delinquency = delinquency;
       fullData.tier1 = tier1;
+      fullData.fedTier1 = fedTier1;
+      fullData.yield10y = yield10y;
+      fullData.hySpread = hySpread;
       fullData.loans = loans;
       fullData.deposits = deposits;
-      fullData.fedFunds = fedFunds;
       fullData.creditCardDelinq = creditCard;
       fullData.consumerDelinq = consumer;
       fullData.businessDelinq = business;
@@ -2010,9 +2183,11 @@
       console.log('[Init] Data loaded:', {
         delinquency: delinquency.length,
         tier1: tier1.length,
+        fedTier1: fedTier1.length,
+        yield10y: yield10y.length,
+        hySpread: hySpread.length,
         loans: loans.length,
         deposits: deposits.length,
-        fedFunds: fedFunds.length,
         creditCard: creditCard.length,
         consumer: consumer.length,
         business: business.length,
