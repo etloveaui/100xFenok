@@ -19,7 +19,7 @@
 |-------|------|------|------------|------|
 | 1 | Shield (방패) | 지금 터지나? | 실시간~일간 | ✅ 완료 |
 | 2 | Fuel (연료) | 돈이 풀리고 있나? | 주간~월간 | ✅ 완료 |
-| 3 | Foundation (기초) | 펀더멘털 괜찮나? | 월간~분기 | 📋 계획 |
+| 3 | Foundation (기초) | 펀더멘털 괜찮나? | 월간~분기 | 🔄 개발 중 (4-A 완료) |
 
 > **Layer 3~4 상세**: `docs/archive/2025-12/20251202_DEV_Phase3.5-4_Plan.md`
 
@@ -68,7 +68,7 @@ tools/macro-monitor/
 
 **핵심**: `Net Liquidity = WALCL - TGA - RRP`
 
-### Layer 3: Banking Health 🏦 (4-A, 테스트 대기)
+### Layer 3: Banking Health 🏦 (4-A v2, 테스트 대기)
 
 **목적**: 금융 시스템 건전성 모니터링
 **📊 실제 데이터**: `docs/references/market-data-snapshot-2025-11.md` (사진 006 예대율 71.73%)
@@ -76,41 +76,34 @@ tools/macro-monitor/
 **FRED 지표**:
 | 지표 | Series ID | 주기 | 비고 |
 |------|-----------|------|------|
-| 연체율 | DRALACBN | 분기 | 낮을수록 건전 |
-| Tier 1 | BOGZ1FL010000016Q | 분기 | 높을수록 건전 |
+| 연체율 (Total) | DRALACBN | 분기 | 낮을수록 건전 |
+| 연체율 (CC) | DRCCLACBS | 분기 | 신용카드 |
+| 연체율 (Consumer) | DRCLACBS | 분기 | 소비자 대출 |
+| 연체율 (Business) | DRBLACBS | 분기 | 기업 대출 |
+| 연체율 (**CRE**) | DRCRELEXFACBS | 분기 | 🆕 상업부동산 (다음 위기 후보) |
+| Tier 1 | FDIC RBC1AAJ | 분기 | FDIC API (2개월 지연) |
+| **FED 기준금리** | FEDFUNDS | 월간 | 🆕 자본 탭 이중 Y축 |
 | 전체 대출 | **TOTLL** | 주간 | SA, 예대율 분자 |
 | 예금 | DPSACBW027SBOG | 주간 | SA, 예대율 분모 |
 
-**계산 지표**:
-- 예대율 = **TOTLL** / DPSACBW027SBOG × 100 (≈70%)
-- 여신증가율 YoY% = (현재 - 52주전) / 52주전 × 100
+**Detail 구조 (3탭)**:
+| 탭 | 차트 | 기간 옵션 |
+|-----|------|----------|
+| Capital | Tier1 + **FED 금리** (이중 Y축) | 1Y/5Y/10Y/MAX |
+| Credit | 예대율 + 여신증가율 | 1Y/5Y/10Y/MAX |
+| **Risks** | Total 연체율 + 접이식 섹터 분석 | 5Y/10Y/15Y/25Y/MAX |
 
-**THRESHOLDS** (constants.js):
-| 지표 | 정상 | 주의 | 경계 |
-|------|------|------|------|
-| 예대율 | 60-85% | <60% or >85% | <55% |
+**상단 카드 순서** (2025-12-06 변경):
+자기자본비율 → 예대율 → 여신증가율 → 연체율
 
-**Detail**: 4개 메트릭 + 2탭 (Capital Health / Credit Activity) + 리세션 비교
+**접이식 섹터 분석** (2025-12-06):
+- 4개 카드: CC, Consumer, Business, **CRE**
+- PC (900px+): 자동 펼침
+- Mobile: 접힘 기본, 토글 가능
+
 **Widget**: 2x2 그리드, 캐시 기반
 
 **접근**: Admin → Dev Pages → Banking Health (테스트 대기)
-
-> ⚠️ 2025-12-04 수정: TOTCI → TOTLL (전체 대출로 변경)
-
-| 지표 | Primary | Subtext |
-|------|---------|---------|
-| M2 | YoY% | $22.3T |
-| Net Liquidity | $5.8T | Δ +$39B |
-| Stablecoin | $226B | SC/M2 % |
-
-**상태 판단** (Widget=Detail 동일):
-- Expanding: Net Liq > 50 AND M2 YoY >= 4
-- Contracting: Net Liq < -50 OR M2 YoY < 2
-- Neutral: 그 외
-
-**Detail 탭 3개**: Liquidity Pulse / Credit Flow / Crypto Bridge
-
-> **v2.1 정합성 수정 상세**: CLAUDE.md Current Status 참조
 
 ---
 
