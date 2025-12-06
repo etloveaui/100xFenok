@@ -82,16 +82,66 @@ tools/macro-monitor/
 | 연체율 (Business) | DRBLACBS | 분기 | 기업 대출 |
 | 연체율 (**CRE**) | DRCRELEXFACBS | 분기 | 🆕 상업부동산 (다음 위기 후보) |
 | Tier 1 | FDIC RBC1AAJ | 분기 | FDIC API (2개월 지연) |
-| **FED 기준금리** | FEDFUNDS | 월간 | 🆕 자본 탭 이중 Y축 |
+| **FED Tier 1** | `BOGZ1FL010000016Q` | 분기 | 🆕 교차검증용 (GT1R 미존재) |
+| **10Y Yield** | `DGS10` | 일간 | 🆕 금리 충격 (Offense) |
+| **HY Spread** | `BAMLH0A0HYM2` | 일간 | 🆕 신용 충격 (Offense) |
+| ~~FED 기준금리~~ | ~~FEDFUNDS~~ | - | ❌ 제거 (Capital 탭) |
 | 전체 대출 | **TOTLL** | 주간 | SA, 예대율 분자 |
 | 예금 | DPSACBW027SBOG | 주간 | SA, 예대율 분모 |
 
 **Detail 구조 (3탭)**:
 | 탭 | 차트 | 기간 옵션 |
 |-----|------|----------|
-| Capital | Tier1 + **FED 금리** (이중 Y축) | 1Y/5Y/10Y/MAX |
+| **Capital** | 🆕 Capital Resilience (아래 참조) | 1Y/5Y/10Y/MAX |
 | Credit | 예대율 + 여신증가율 | 1Y/5Y/10Y/MAX |
 | **Risks** | Total 연체율 + 접이식 섹터 분석 | 5Y/10Y/15Y/25Y/MAX |
+
+#### 🆕 Capital Resilience 차트 (2025-12-07 v2 디자인)
+
+> **목표**: "Tier1 vs FED금리" → "Capital vs Macro Stress" 진단 모델
+> **디자인 기준**: Okabe-Ito 색맹 안전 팔레트 + Bloomberg 컨벤션
+
+**색상 팔레트** (접근성 최적화):
+| 역할 | 지표 | Hex | 선 스타일 | 두께 | 근거 |
+|------|------|-----|----------|------|------|
+| Defense 주역 | FDIC Tier 1 | `#0072B2` (Steel Blue) | Solid + Fill | 3px | 색맹 안전, 신뢰/안정 |
+| Defense 보조 | FED Tier 1 | `#56B4E9` (Sky Blue) | Dashed `[5,3]` | 2px | 계열 유지, 보조 강조 |
+| Offense 주역 | 10Y Yield | `#E69F00` (Orange) | Solid | 2.5px | 파랑 대비, 수익률 주목 |
+| Offense 보조 | HY Spread | `#D55E00` (Vermillion) | Dashed `[4,2]` | 2px | 위험 강조, 주황 계열 |
+
+**시각적 계층**:
+```
+Defense (좌측 Y축, 파랑 계열)    Offense (우측 Y축, 주황 계열)
+━━━ FDIC Tier1 (굵은 실선)      ━━━ 10Y Yield (실선)
+┅┅┅ FED Tier1 (점선)            ┅┅┅ HY Spread (점선)
+```
+
+**Y축 스케일 (적응형)**:
+- 좌측 (Defense): **8% ~ suggestedMax: 16**
+- 우측 (Offense): **0% ~ suggestedMax: 10** (2008 HY 21%+ 자동 확장)
+
+**Annotations** (경계선만, 박스 없음 - 다른 차트와 통일):
+| 요소 | 축 | 값 | 색상 | 라벨 |
+|------|-----|-----|------|------|
+| Danger Zone | Defense | 8~10% 박스 | `rgba(239,68,68,0.08)` | - |
+| 자본 위험선 | Defense | 10% 라인 | `#ef4444` | "자본 위험선 10%" |
+| 스트레스 경계 | Offense | 5% 라인 | `#D55E00` | "스트레스 경계 5%" |
+
+> ⚠️ Stress Zone 박스 제거 (2025-12-07): 5~50% 무한대 박스 → 배경 통일성 깨짐
+
+**기간 옵션**: 1Y / 3Y / 5Y / 10Y / **15Y** / MAX (기본: 10Y)
+
+**기술적 제약**:
+1. Defense: `stepped: 'before'` (계단식, 분기 데이터)
+2. 모든 데이터셋: `spanGaps: true`
+3. Order: Defense(3,2) 뒤, Offense(1) 앞
+4. **Fill-Forward 보간**: 분기(Tier1) → 일간 그리드 정렬 (툴팁 N/A 방지)
+5. **분기 데이터 필터링**: cutoff 이전 최근 1개 포함 (첫 구간 데이터 채움)
+
+**모바일 대응** (< 600px):
+- 범례: 2x2 그리드 또는 축약 표시
+- 라인 두께: 유지 (터치 대상)
+- 기간 버튼: 가로 스크롤
 
 **상단 카드 순서** (2025-12-06 변경):
 자기자본비율 → 예대율 → 여신증가율 → 연체율
