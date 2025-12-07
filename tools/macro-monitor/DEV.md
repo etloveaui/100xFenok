@@ -107,13 +107,13 @@ tools/macro-monitor/
 | Defense 주역 | FDIC Tier 1 | `#0072B2` (Steel Blue) | Solid + Fill | 3px | 색맹 안전, 신뢰/안정 |
 | Defense 보조 | FED Tier 1 | `#56B4E9` (Sky Blue) | Dashed `[5,3]` | 2px | 계열 유지, 보조 강조 |
 | Offense 주역 | 10Y Yield | `#E69F00` (Orange) | Solid | 2.5px | 파랑 대비, 수익률 주목 |
-| Offense 보조 | HY Spread | `#D55E00` (Vermillion) | Dashed `[4,2]` | 2px | 위험 강조, 주황 계열 |
+| Offense 보조 | HY Spread | `#CC79A7` (Reddish Purple) | Dashed `[4,2]` | 2px | 🆕 색상 대비 강화 (v3.1) |
 
 **시각적 계층**:
 ```
-Defense (좌측 Y축, 파랑 계열)    Offense (우측 Y축, 주황 계열)
-━━━ FDIC Tier1 (굵은 실선)      ━━━ 10Y Yield (실선)
-┅┅┅ FED Tier1 (점선)            ┅┅┅ HY Spread (점선)
+Defense (좌측 Y축, 파랑 계열)    Offense (우측 Y축)
+━━━ FDIC Tier1 (굵은 실선)      ━━━ 10Y Yield (주황 실선)
+┅┅┅ FED Tier1 (점선)            ┅┅┅ HY Spread (보라 점선)
 ```
 
 **Y축 스케일 (적응형)**:
@@ -150,6 +150,45 @@ Defense (좌측 Y축, 파랑 계열)    Offense (우측 Y축, 주황 계열)
 - 4개 카드: CC, Consumer, Business, **CRE**
 - PC (900px+): 자동 펼침
 - Mobile: 접힘 기본, 토글 가능
+
+#### 🆕 Shadow of Death - 상각율(NCO) 오버레이 (2025-12-07)
+
+> **목적**: 연체율 뒤에 상각율(Charge-Off)을 추가하여 시각적 비교
+> **상태**: ✅ Phase 1 완료 (Total 메인 차트) / ⏸️ Phase 2 대기 (미니 차트)
+
+**⚠️ 중요 - NCO/연체율 비율 패턴 폐기 (2025-12-07)**:
+```
+❌ 폐기된 기능: 배지에 NCO/연체율 비율 표시
+- 리서치: data-scientist + deep-research-agent (40년 FRED 데이터 분석)
+- 발견: 비율 0.40 = 정상(현재)과 위기(2008) 모두에서 발생
+- 결론: 절대값 없이 비율만으로는 상태 판단 불가능
+∴ 상각율은 차트에만 표시, 배지 제외
+```
+
+**현재 구현**:
+- ✅ 상각율 차트 오버레이 (토글로 ON/OFF)
+- ❌ 배지에 NCO 비율 패턴 표시 (폐기)
+
+**FRED 시리즈 (상각율)**:
+| 섹터 | 연체율 (기존) | 상각율 (추가) |
+|------|-------------|--------------|
+| Total | DRALACBN | **CORALACBN** |
+| Credit Card | DRCCLACBS | **CORCCACBS** |
+| Consumer | DRCLACBS | **CORCACBS** |
+| Business | DRBLACBS | **CORBLACBS** |
+| CRE | DRCRELEXFACBS | **CORCREXFACBS** |
+
+**차트 사양 (Dual-Axis + 토글)**:
+| 지표 | Y축 | 색상 | 스타일 | fill | 기본 |
+|------|-----|------|--------|------|------|
+| 연체율 | 좌 (0~10%) | `#E69F00` Orange | 실선 3px | ✅ | 표시 |
+| 상각율 | 우 (0~5%) | `#D55E00` Vermillion | 점선 2px `[4,4]` | ❌ | hidden |
+
+**토글 UI**: "📊 상각율 표시" 버튼 (기본 OFF)
+
+**구현 순서**:
+1. Phase 1: Total만 먼저 (메인 차트)
+2. Phase 2: 4개 미니 차트 확장
 
 **Widget**: 2x2 그리드, 캐시 기반
 
