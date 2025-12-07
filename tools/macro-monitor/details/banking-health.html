@@ -235,8 +235,22 @@
     .risks-main-section { margin-bottom: 16px; }
     .risks-main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .risks-main-title { font-size: 14px; font-weight: 600; color: #1f2937; }
+    .risks-main-controls { display: flex; align-items: center; gap: 8px; }
     .risks-main-badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: #f0fdf4; color: #16a34a; }
     .risks-main-chart { height: 220px; background: #fff; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    /* 🆕 NCO 토글 버튼 */
+    .nco-toggle-btn {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 500; padding: 4px 10px;
+      border: 1px solid #e5e7eb; border-radius: 6px;
+      background: #f9fafb; color: #6b7280; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nco-toggle-btn:hover { background: #f3f4f6; border-color: #d1d5db; }
+    .nco-toggle-btn.active {
+      background: #fef3c7; border-color: #f59e0b; color: #d97706;
+    }
+    .nco-toggle-btn i { font-size: 10px; }
 
     /* 접이식 섹터 분석 카드 */
     .sector-analysis-card {
@@ -700,7 +714,7 @@
         <div class="legend-item"><div class="legend-color" style="background: transparent; border: 2px dashed #56B4E9;"></div><span class="legend-full">FED Tier1</span><span class="legend-short">FED</span></div>
         <!-- Offense (파도) - Okabe-Ito Orange Family -->
         <div class="legend-item"><div class="legend-color" style="background: #E69F00;"></div><span class="legend-full">10Y 금리</span><span class="legend-short">10Y</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: transparent; border: 2px dashed #D55E00;"></div><span class="legend-full">HY 스프레드</span><span class="legend-short">HY</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: transparent; border: 2px dashed #CC79A7;"></div><span class="legend-full">HY 스프레드</span><span class="legend-short">HY</span></div>
         <div class="legend-item legend-recession"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>경기침체</span></div>
       </div>
     </div>
@@ -723,7 +737,13 @@
       <div class="risks-main-section">
         <div class="risks-main-header">
           <span class="risks-main-title"><i class="fas fa-chart-area"></i> Total</span>
-          <span class="risks-main-badge" id="risksMainBadge">--</span>
+          <div class="risks-main-controls">
+            <!-- 🆕 NCO 토글 버튼 -->
+            <button class="nco-toggle-btn" id="ncoToggleBtn" onclick="toggleNcoOverlay()">
+              <i class="fas fa-chart-line"></i> 상각율 표시
+            </button>
+            <span class="risks-main-badge" id="risksMainBadge">--</span>
+          </div>
         </div>
         <div class="risks-main-chart">
           <canvas id="risksMainChart"></canvas>
@@ -1096,8 +1116,16 @@
     creditCardDelinq: [],
     consumerDelinq: [],
     businessDelinq: [],
+    // 🆕 Shadow of Death - 상각율(NCO) 데이터
+    ncoTotal: [],           // CORALACBN - Total NCO
+    ncoCreditCard: [],      // CORCCACBS - Credit Card NCO
+    ncoConsumer: [],        // CORCACBS - Consumer NCO
+    ncoBusiness: [],        // CORBLACBS - Business NCO
+    ncoCRE: [],             // CORCREXFACBS - CRE NCO
     timeline: []
   };
+  // 🆕 NCO 토글 상태
+  let showNcoOverlay = false;
   let currentTab = 'capital';
   let currentPeriod = 3650; // 10Y default
   let capitalChart = null;
@@ -1678,11 +1706,11 @@
             yAxisID: 'y1',
             order: 1  // 앞에 배치
           },
-          // Offense 2: HY Spread (Vermillion 점선)
+          // Offense 2: HY Spread (Reddish Purple 점선)
           {
             label: 'HY 스프레드',
             data: hyValues,
-            borderColor: '#D55E00',  // Vermillion (위험 강조)
+            borderColor: '#CC79A7',  // Reddish Purple (색상 대비 강화)
             backgroundColor: 'transparent',
             borderWidth: 2,
             borderDash: [4, 2],
@@ -1879,26 +1907,45 @@
   function renderRisksChart() {
     const cutoff = new Date(Date.now() - risksPeriod * 86400000).toISOString().split('T')[0];
 
+    // 연체율 데이터
     const totalData = fullData.delinquency.filter(d => d.date >= cutoff);
     const ccData = fullData.creditCardDelinq.filter(d => d.date >= cutoff);
     const csData = fullData.consumerDelinq.filter(d => d.date >= cutoff);
     const bsData = fullData.businessDelinq.filter(d => d.date >= cutoff);
     const creData = (fullData.creDelinq || []).filter(d => d.date >= cutoff);
 
-    // 공통 날짜 추출
+    // 🆕 NCO (상각율) 데이터 - 5개 전체
+    const ncoTotalData = (fullData.ncoTotal || []).filter(d => d.date >= cutoff);
+    const ncoCCData = (fullData.ncoCreditCard || []).filter(d => d.date >= cutoff);
+    const ncoConsumerData = (fullData.ncoConsumer || []).filter(d => d.date >= cutoff);
+    const ncoBusinessData = (fullData.ncoBusiness || []).filter(d => d.date >= cutoff);
+    const ncoCREData = (fullData.ncoCRE || []).filter(d => d.date >= cutoff);
+
+    // 공통 날짜 추출 (연체율 + NCO 전체)
     const allDates = [...new Set([
       ...totalData.map(d => d.date),
       ...ccData.map(d => d.date),
       ...csData.map(d => d.date),
       ...bsData.map(d => d.date),
-      ...creData.map(d => d.date)
+      ...creData.map(d => d.date),
+      ...ncoTotalData.map(d => d.date),
+      ...ncoCCData.map(d => d.date),
+      ...ncoConsumerData.map(d => d.date),
+      ...ncoBusinessData.map(d => d.date),
+      ...ncoCREData.map(d => d.date)
     ])].sort();
 
+    // Map 생성
     const totalMap = new Map(totalData.map(d => [d.date, d.val]));
     const ccMap = new Map(ccData.map(d => [d.date, d.val]));
     const csMap = new Map(csData.map(d => [d.date, d.val]));
     const bsMap = new Map(bsData.map(d => [d.date, d.val]));
     const creMap = new Map(creData.map(d => [d.date, d.val]));
+    const ncoTotalMap = new Map(ncoTotalData.map(d => [d.date, d.val]));
+    const ncoCCMap = new Map(ncoCCData.map(d => [d.date, d.val]));
+    const ncoConsumerMap = new Map(ncoConsumerData.map(d => [d.date, d.val]));
+    const ncoBusinessMap = new Map(ncoBusinessData.map(d => [d.date, d.val]));
+    const ncoCREMap = new Map(ncoCREData.map(d => [d.date, d.val]));
 
     const labels = allDates;
     const totalValues = labels.map(d => totalMap.get(d) || null);
@@ -1906,8 +1953,14 @@
     const csValues = labels.map(d => csMap.get(d) || null);
     const bsValues = labels.map(d => bsMap.get(d) || null);
     const creValues = labels.map(d => creMap.get(d) || null);
+    // NCO 값 배열
+    const ncoTotalValues = labels.map(d => ncoTotalMap.get(d) || null);
+    const ncoCCValues = labels.map(d => ncoCCMap.get(d) || null);
+    const ncoConsumerValues = labels.map(d => ncoConsumerMap.get(d) || null);
+    const ncoBusinessValues = labels.map(d => ncoBusinessMap.get(d) || null);
+    const ncoCREValues = labels.map(d => ncoCREMap.get(d) || null);
 
-    // Y축 동일 스케일 (섹터 비교 가능)
+    // Y축 동일 스케일 (섹터 비교 가능) - 연체율 기준
     const allValues = [...totalValues, ...ccValues, ...csValues, ...bsValues, ...creValues].filter(v => v !== null);
     const yMax = Math.ceil(Math.max(...allValues)) + 1;
 
@@ -1927,81 +1980,149 @@
       });
     }
 
-    // 메인 차트 렌더링
-    renderRisksMainChart(labels, totalValues, annotations, yMax);
+    // 메인 차트 렌더링 (NCO 데이터 추가)
+    renderRisksMainChart(labels, totalValues, ncoTotalValues, annotations, yMax);
 
-    // 미니 차트 4개 렌더링
-    renderRisksMiniChart('risksMiniCC', ccValues, labels, '#ef4444', annotations, yMax, 'risksMiniCCChart');
-    renderRisksMiniChart('risksMiniConsumer', csValues, labels, '#f59e0b', annotations, yMax, 'risksMiniConsumerChart');
-    renderRisksMiniChart('risksMiniBusiness', bsValues, labels, '#10b981', annotations, yMax, 'risksMiniBusinessChart');
-    renderRisksMiniChart('risksMiniCRE', creValues, labels, '#8b5cf6', annotations, yMax, 'risksMiniCREChart');
+    // 🆕 미니 차트 4개 렌더링 (NCO 데이터 추가)
+    renderRisksMiniChart('risksMiniCC', ccValues, ncoCCValues, labels, '#ef4444', annotations, yMax, 'risksMiniCCChart');
+    renderRisksMiniChart('risksMiniConsumer', csValues, ncoConsumerValues, labels, '#f59e0b', annotations, yMax, 'risksMiniConsumerChart');
+    renderRisksMiniChart('risksMiniBusiness', bsValues, ncoBusinessValues, labels, '#10b981', annotations, yMax, 'risksMiniBusinessChart');
+    renderRisksMiniChart('risksMiniCRE', creValues, ncoCREValues, labels, '#8b5cf6', annotations, yMax, 'risksMiniCREChart');
 
     // 값 업데이트
     updateRisksValues(totalValues, ccValues, csValues, bsValues, creValues);
   }
 
-  function renderRisksMainChart(labels, data, annotations, yMax) {
+  // 🆕 Dual-Axis 차트: 연체율 (좌) + 상각율 (우)
+  function renderRisksMainChart(labels, delinqData, ncoData, annotations, yMax) {
     risksMainChart = safeDestroyChart(risksMainChart);
     const ctx = document.getElementById('risksMainChart').getContext('2d');
 
-    // 임계값 참조선 (메인 차트만)
+    // 임계값 참조선 (좌측 Y축 = 연체율)
     const mainAnnotations = { ...annotations };
     mainAnnotations.thresholdNormal = {
-      type: 'line', yMin: 2, yMax: 2,
+      type: 'line', yMin: 2, yMax: 2, yScaleID: 'yDelinq',
       borderColor: 'rgba(22, 163, 74, 0.5)', borderWidth: 1, borderDash: [5, 5],
       label: { display: true, content: '정상 2%', position: 'start', backgroundColor: 'rgba(22, 163, 74, 0.8)', font: { size: 9 } }
     };
     mainAnnotations.thresholdCaution = {
-      type: 'line', yMin: 3, yMax: 3,
+      type: 'line', yMin: 3, yMax: 3, yScaleID: 'yDelinq',
       borderColor: 'rgba(202, 138, 4, 0.5)', borderWidth: 1, borderDash: [5, 5],
       label: { display: true, content: '주의 3%', position: 'start', backgroundColor: 'rgba(202, 138, 4, 0.8)', font: { size: 9 } }
     };
     mainAnnotations.thresholdWarning = {
-      type: 'line', yMin: 4, yMax: 4,
+      type: 'line', yMin: 4, yMax: 4, yScaleID: 'yDelinq',
       borderColor: 'rgba(220, 38, 38, 0.5)', borderWidth: 1, borderDash: [5, 5],
       label: { display: true, content: '위험 4%', position: 'start', backgroundColor: 'rgba(220, 38, 38, 0.8)', font: { size: 9 } }
     };
 
+    // 🆕 NCO Y축 최대값 계산 (실제 데이터 기준 - 상각율이 연체율보다 높을 수 있음)
+    const ncoValidValues = ncoData ? ncoData.filter(v => v !== null) : [];
+    const ncoActualMax = ncoValidValues.length > 0 ? Math.max(...ncoValidValues) : 0;
+    const ncoMax = Math.ceil(Math.max(ncoActualMax, yMax / 2)) + 1;
+
+    // Datasets 구성
+    const datasets = [
+      // 연체율 (좌측 Y축) - Primary, fill
+      {
+        label: '연체율 (Delinquency)',
+        data: delinqData,
+        borderColor: '#E69F00',  // Okabe-Ito Orange
+        backgroundColor: 'rgba(230, 159, 0, 0.15)',
+        borderWidth: 3,
+        tension: 0.3,
+        pointRadius: 0,
+        fill: true,
+        spanGaps: true,
+        yAxisID: 'yDelinq',
+        order: 2  // 뒤에 그려짐
+      }
+    ];
+
+    // 🆕 NCO 토글 ON일 때만 추가
+    if (showNcoOverlay && ncoData) {
+      datasets.push({
+        label: '상각율 (Charge-Off)',
+        data: ncoData,
+        borderColor: '#D55E00',  // Okabe-Ito Vermillion
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderDash: [4, 4],
+        tension: 0.3,
+        pointRadius: 0,
+        fill: false,
+        spanGaps: true,
+        yAxisID: 'yNCO',
+        order: 1  // 앞에 그려짐
+      });
+    }
+
+    // Scales 구성
+    const scales = {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
+      yDelinq: {
+        type: 'linear',
+        position: 'left',
+        min: 0,
+        max: yMax,
+        grid: { color: '#e5e7eb' },
+        ticks: {
+          callback: v => v.toFixed(1) + '%',
+          font: { size: 10 },
+          color: '#E69F00'
+        },
+        title: { display: true, text: '연체율 %', color: '#E69F00', font: { size: 10, weight: 'bold' } }
+      }
+    };
+
+    // 🆕 NCO 우측 Y축 (토글 ON일 때만)
+    if (showNcoOverlay) {
+      scales.yNCO = {
+        type: 'linear',
+        position: 'right',
+        min: 0,
+        max: ncoMax,
+        grid: { display: false },
+        ticks: {
+          callback: v => v.toFixed(1) + '%',
+          font: { size: 10 },
+          color: '#D55E00'
+        },
+        title: { display: true, text: '상각율 %', color: '#D55E00', font: { size: 10, weight: 'bold' } }
+      };
+    }
+
     risksMainChart = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Total Delinquency',
-          data,
-          borderColor: '#6366f1',
-          backgroundColor: 'rgba(99, 102, 241, 0.15)',
-          borderWidth: 3,
-          tension: 0.3,
-          pointRadius: 0,
-          fill: true,
-          spanGaps: true
-        }]
-      },
+      data: { labels, datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { display: false },
-          tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', padding: 12, cornerRadius: 10 },
+          legend: { display: showNcoOverlay, position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: {
+              label: ctx => {
+                const label = ctx.dataset.label || '';
+                const val = ctx.parsed.y;
+                return val !== null ? `${label}: ${val.toFixed(2)}%` : `${label}: N/A`;
+              }
+            }
+          },
           annotation: { annotations: mainAnnotations }
         },
-        scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
-          y: {
-            type: 'linear', min: 0, max: yMax,
-            grid: { color: '#e5e7eb' },
-            ticks: { callback: v => v.toFixed(1) + '%', font: { size: 10 } },
-            title: { display: true, text: 'Rate %', color: '#64748b', font: { size: 10 } }
-          }
-        }
+        scales
       }
     });
   }
 
-  function renderRisksMiniChart(canvasId, data, labels, borderColor, annotations, yMax, chartVarName) {
+  // 🆕 미니 차트: Dual-Axis 지원 (연체율 + NCO)
+  function renderRisksMiniChart(canvasId, delinqData, ncoData, labels, borderColor, annotations, yMax, chartVarName) {
     // 기존 차트 정리
     if (chartVarName === 'risksMiniCCChart') risksMiniCCChart = safeDestroyChart(risksMiniCCChart);
     else if (chartVarName === 'risksMiniConsumerChart') risksMiniConsumerChart = safeDestroyChart(risksMiniConsumerChart);
@@ -2010,20 +2131,80 @@
 
     const ctx = document.getElementById(canvasId).getContext('2d');
 
+    // NCO 색상: 연체율 색상보다 어둡게
+    const ncoColorMap = {
+      '#ef4444': '#b91c1c',  // Red → Dark Red
+      '#f59e0b': '#b45309',  // Amber → Dark Amber
+      '#10b981': '#047857',  // Emerald → Dark Emerald
+      '#8b5cf6': '#6d28d9'   // Violet → Dark Violet
+    };
+    const ncoColor = ncoColorMap[borderColor] || '#666666';
+
+    // Datasets 구성
+    const datasets = [
+      // 연체율 (Primary)
+      {
+        label: '연체율',
+        data: delinqData,
+        borderColor,
+        backgroundColor: borderColor + '15',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 0,
+        spanGaps: true,
+        yAxisID: 'yDelinq',
+        order: 2
+      }
+    ];
+
+    // 🆕 NCO 토글 ON일 때만 추가
+    if (showNcoOverlay && ncoData) {
+      datasets.push({
+        label: '상각율',
+        data: ncoData,
+        borderColor: ncoColor,
+        backgroundColor: 'transparent',
+        borderWidth: 1.5,
+        borderDash: [3, 3],
+        tension: 0.3,
+        pointRadius: 0,
+        fill: false,
+        spanGaps: true,
+        yAxisID: 'yNCO',
+        order: 1
+      });
+    }
+
+    // Scales 구성 (NCO 실제 데이터 기준 - 상각율이 연체율보다 높을 수 있음)
+    const ncoValidValues = ncoData ? ncoData.filter(v => v !== null) : [];
+    const ncoActualMax = ncoValidValues.length > 0 ? Math.max(...ncoValidValues) : 0;
+    const ncoMax = Math.ceil(Math.max(ncoActualMax, yMax / 2)) + 1;
+
+    const scales = {
+      x: { display: false },
+      yDelinq: {
+        type: 'linear',
+        position: 'left',
+        min: 0,
+        max: yMax,
+        display: false
+      }
+    };
+
+    // NCO 우측 Y축 (토글 ON일 때만)
+    if (showNcoOverlay) {
+      scales.yNCO = {
+        type: 'linear',
+        position: 'right',
+        min: 0,
+        max: ncoMax,
+        display: false
+      };
+    }
+
     const chart = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          borderColor,
-          backgroundColor: borderColor + '15',
-          borderWidth: 2,
-          tension: 0.3,
-          pointRadius: 0,
-          spanGaps: true
-        }]
-      },
+      data: { labels, datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -2031,17 +2212,21 @@
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
-          tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', padding: 8, cornerRadius: 6 },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            padding: 8,
+            cornerRadius: 6,
+            callbacks: {
+              label: ctx => {
+                const label = ctx.dataset.label || '';
+                const val = ctx.parsed.y;
+                return val !== null ? `${label}: ${val.toFixed(2)}%` : `${label}: N/A`;
+              }
+            }
+          },
           annotation: { annotations }
         },
-        scales: {
-          x: { display: false },
-          y: {
-            type: 'linear', min: 0, max: yMax,
-            grid: { color: '#f1f5f9', drawBorder: false },
-            ticks: { display: false }
-          }
-        }
+        scales
       }
     });
 
@@ -2059,7 +2244,7 @@
     const latestBs = bsValues.filter(v => v !== null).pop();
     const latestCRE = creValues ? creValues.filter(v => v !== null).pop() : null;
 
-    // 메인 배지
+    // 메인 배지 (연체율만 표시)
     const badge = document.getElementById('risksMainBadge');
     if (latestTotal !== undefined) {
       const status = getDelinquencyStatus(latestTotal);
@@ -2081,6 +2266,17 @@
   // 접이식 섹터 분석 토글
   window.toggleSectorAnalysis = function() {
     document.getElementById('sectorAnalysisCard').classList.toggle('expanded');
+  };
+
+  // 🆕 NCO 오버레이 토글
+  window.toggleNcoOverlay = function() {
+    showNcoOverlay = !showNcoOverlay;
+    const btn = document.getElementById('ncoToggleBtn');
+    btn.classList.toggle('active', showNcoOverlay);
+    btn.innerHTML = showNcoOverlay
+      ? '<i class="fas fa-chart-line"></i> 상각율 숨김'
+      : '<i class="fas fa-chart-line"></i> 상각율 표시';
+    renderRisksChart(); // 차트 재렌더링
   };
 
   // ===== 탭 전환 =====
@@ -2146,9 +2342,11 @@
     console.log('[Init] Banking Health loading...');
 
     try {
-      // 10개 FRED 시리즈 + FDIC Tier1 병렬 로드
+      // 15개 FRED 시리즈 + FDIC Tier1 병렬 로드 (NCO 5개 추가)
       // Capital Resilience: Defense(FDIC Tier1, FED Tier1) vs Offense(10Y, HY Spread)
-      const [delinquency, loans, deposits, creditCard, consumer, business, cre, fedTier1, yield10y, hySpread, tier1] = await Promise.all([
+      const [delinquency, loans, deposits, creditCard, consumer, business, cre, fedTier1, yield10y, hySpread, tier1,
+             // 🆕 Shadow of Death - NCO (상각율) 시리즈
+             ncoTotal, ncoCreditCard, ncoConsumer, ncoBusiness, ncoCRE] = await Promise.all([
         getSeries('DRALACBN', 9999),           // 연체율 (분기)
         getSeries('TOTLL', 9999),               // 전체 대출 (주간)
         getSeries('DPSACBW027SBOG', 9999),      // 예금 (주간)
@@ -2162,7 +2360,13 @@
         getSeries('DGS10', 9999),               // 10Y Treasury Yield (일간) - Offense 1
         getSeries('BAMLH0A0HYM2', 9999),        // HY Spread (일간) - Offense 2
         // FDIC Tier1 (2009~현재, 24시간 캐시) - Defense 1
-        getFDICTier1()
+        getFDICTier1(),
+        // 🆕 NCO (상각율) 시리즈 - Shadow of Death
+        getSeries('CORALACBN', 9999),          // Total NCO (분기)
+        getSeries('CORCCACBS', 9999),          // Credit Card NCO (분기)
+        getSeries('CORCACBS', 9999),           // Consumer NCO (분기)
+        getSeries('CORBLACBS', 9999),          // Business NCO (분기)
+        getSeries('CORCREXFACBS', 9999)        // CRE NCO (분기)
       ]);
 
       fullData.delinquency = delinquency;
@@ -2176,6 +2380,12 @@
       fullData.consumerDelinq = consumer;
       fullData.businessDelinq = business;
       fullData.creDelinq = cre;
+      // 🆕 NCO 데이터 할당
+      fullData.ncoTotal = ncoTotal;
+      fullData.ncoCreditCard = ncoCreditCard;
+      fullData.ncoConsumer = ncoConsumer;
+      fullData.ncoBusiness = ncoBusiness;
+      fullData.ncoCRE = ncoCRE;
 
       // 데이터 검증
       validateData(fullData);
@@ -2191,7 +2401,13 @@
         creditCard: creditCard.length,
         consumer: consumer.length,
         business: business.length,
-        cre: cre.length
+        cre: cre.length,
+        // 🆕 NCO 데이터
+        ncoTotal: ncoTotal.length,
+        ncoCreditCard: ncoCreditCard.length,
+        ncoConsumer: ncoConsumer.length,
+        ncoBusiness: ncoBusiness.length,
+        ncoCRE: ncoCRE.length
       });
 
       // 전체 데이터 로딩 실패 체크
