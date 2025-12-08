@@ -93,8 +93,8 @@ tools/macro-monitor/
 | 탭 | 차트 | 기간 옵션 | 기본값 |
 |-----|------|----------|--------|
 | **Capital** | Capital Resilience (아래 참조) | 1Y/3Y/5Y/10Y/15Y/MAX | 10Y |
-| **Credit** | 🆕 Credit Health v2 (아래 참조) | 1Y/3Y/5Y/10Y/15Y/20Y/MAX | 10Y |
-| **Risks** | Total 연체율 + 접이식 섹터 분석 | 5Y/10Y/15Y/25Y/MAX | 10Y |
+| **Credit** | Credit Health v2 (아래 참조) | 1Y/3Y/5Y/10Y/15Y/20Y/MAX | 10Y |
+| **Risks** | Total 연체율 + 접이식 섹터 분석 | 5Y/10Y/15Y/25Y/MAX | MAX |
 
 #### Banking Health 차트 상세
 

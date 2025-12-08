@@ -1813,7 +1813,7 @@
     const ctx = document.getElementById('creditChart').getContext('2d');
     creditChart = safeDestroyChart(creditChart);
 
-    // Credit 탭 독립 기간 사용 (creditPeriod, 기본 5Y)
+    // Credit 탭 독립 기간 사용 (creditPeriod, 기본 10Y)
     const cutoff = new Date(Date.now() - creditPeriod * 86400000).toISOString().split('T')[0];
     const ldData = processed.loanDepositData.filter(d => d.date >= cutoff);
     const lgData = processed.loanGrowthData.filter(d => d.date >= cutoff);
