@@ -420,7 +420,7 @@
       .info-expand-btn { width: 24px; height: 24px; }
     }
 
-    /* Capital Resilience 범례 반응형 */
+    /* Capital/Credit Resilience 범례 반응형 */
     .legend-short { display: none; }
     .legend-full { display: inline; }
     @media (max-width: 600px) {
@@ -434,6 +434,17 @@
         justify-items: start;
       }
       .capital-legend .legend-recession {
+        grid-column: 1 / -1;
+        justify-self: center;
+      }
+      /* Credit 탭 범례: 2열 그리드 + 경기침체 중앙 */
+      .credit-legend {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 16px;
+        justify-items: start;
+      }
+      .credit-legend .legend-recession {
         grid-column: 1 / -1;
         justify-self: center;
       }
@@ -681,17 +692,27 @@
       <button class="tab-btn" onclick="switchTab('risks', this)"><i class="fas fa-exclamation-triangle"></i> 연체</button>
     </div>
 
-    <!-- 기간 선택 (탭별 분리) -->
+    <!-- 기간 선택 (탭별 완전 분리) -->
     <div class="chart-controls">
       <div class="chart-title" id="chartTitle"><i class="fas fa-shield-halved"></i> 자기자본비율 (Tier 1)</div>
-      <!-- Capital/Credit 탭용: 1Y/3Y/5Y/10Y/15Y/MAX -->
-      <div class="period-selector" id="periodSelectorDefault">
-        <button class="p-btn" onclick="updatePeriod(365, this, 'default')">1Y</button>
-        <button class="p-btn" onclick="updatePeriod(1095, this, 'default')">3Y</button>
-        <button class="p-btn" onclick="updatePeriod(1825, this, 'default')">5Y</button>
-        <button class="p-btn active" onclick="updatePeriod(3650, this, 'default')">10Y</button>
-        <button class="p-btn" onclick="updatePeriod(5475, this, 'default')">15Y</button>
-        <button class="p-btn" onclick="updatePeriod(99999, this, 'default')">MAX</button>
+      <!-- Capital 탭용: 1Y/3Y/5Y/10Y/15Y/MAX (기본 10Y) -->
+      <div class="period-selector" id="periodSelectorCapital">
+        <button class="p-btn" onclick="updatePeriod(365, this, 'capital')">1Y</button>
+        <button class="p-btn" onclick="updatePeriod(1095, this, 'capital')">3Y</button>
+        <button class="p-btn" onclick="updatePeriod(1825, this, 'capital')">5Y</button>
+        <button class="p-btn active" onclick="updatePeriod(3650, this, 'capital')">10Y</button>
+        <button class="p-btn" onclick="updatePeriod(5475, this, 'capital')">15Y</button>
+        <button class="p-btn" onclick="updatePeriod(99999, this, 'capital')">MAX</button>
+      </div>
+      <!-- Credit 탭용: 1Y/3Y/5Y/10Y/15Y/20Y/MAX (기본 10Y) -->
+      <div class="period-selector" id="periodSelectorCredit" style="display: none;">
+        <button class="p-btn" onclick="updatePeriod(365, this, 'credit')">1Y</button>
+        <button class="p-btn" onclick="updatePeriod(1095, this, 'credit')">3Y</button>
+        <button class="p-btn" onclick="updatePeriod(1825, this, 'credit')">5Y</button>
+        <button class="p-btn active" onclick="updatePeriod(3650, this, 'credit')">10Y</button>
+        <button class="p-btn" onclick="updatePeriod(5475, this, 'credit')">15Y</button>
+        <button class="p-btn" onclick="updatePeriod(7300, this, 'credit')">20Y</button>
+        <button class="p-btn" onclick="updatePeriod(99999, this, 'credit')">MAX</button>
       </div>
       <!-- Risks 탭용: 5Y/10Y/15Y/25Y/MAX (기본 MAX) -->
       <div class="period-selector" id="periodSelectorRisks" style="display: none;">
@@ -719,15 +740,18 @@
       </div>
     </div>
 
-    <!-- Tab 2: Credit Activity (L/D + YoY) -->
+    <!-- Tab 2: Credit Activity (L/D + YoY) - Okabe-Ito 색맹안전 팔레트 -->
     <div class="tab-content" id="tab-credit">
       <div class="chart-wrapper">
         <canvas id="creditChart"></canvas>
       </div>
-      <div class="custom-legend">
-        <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div><span>예대율</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>여신증가율</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>경기침체</span></div>
+      <div class="custom-legend credit-legend">
+        <!-- Base (수준) - Okabe-Ito Steel Blue -->
+        <div class="legend-item"><div class="legend-color" style="background: #0072B2;"></div><span class="legend-full">예대율 (L/D)</span><span class="legend-short">L/D</span></div>
+        <!-- Signal (모멘텀) - Okabe-Ito Orange -->
+        <div class="legend-item"><div class="legend-color" style="background: #E69F00;"></div><span class="legend-full">여신증가율 (YoY)</span><span class="legend-short">YoY</span></div>
+        <!-- 리세션 -->
+        <div class="legend-item legend-recession"><div class="legend-color" style="background: rgba(0,0,0,0.1);"></div><span>경기침체</span></div>
       </div>
     </div>
 
@@ -1127,7 +1151,13 @@
   // 🆕 NCO 토글 상태
   let showNcoOverlay = false;
   let currentTab = 'capital';
-  let currentPeriod = 3650; // 10Y default
+
+  // ===== 탭별 독립 기간 변수 =====
+  let currentPeriod = 3650;  // Capital 탭 기본값: 10Y (레거시 호환)
+  let capitalPeriod = 3650;  // Capital 탭 기본값: 10Y
+  let creditPeriod = 3650;   // Credit 탭 기본값: 10Y
+  let risksPeriod = 99999;   // Risks 탭 기본값: MAX
+
   let capitalChart = null;
   let creditChart = null;
   let risksChart = null;
@@ -1179,7 +1209,12 @@
       return null;
     }).filter(d => d !== null);
 
-    return { loanGrowthData, loanDepositData };
+    // Credit 탭 시작일: 1998-01-01 (FRED 원본 1973년부터 존재, 98년 1월부터 표시)
+    const CREDIT_START_DATE = '1998-01-01';
+    const filteredLoanGrowthData = loanGrowthData.filter(d => d.date >= CREDIT_START_DATE);
+    const filteredLoanDepositData = loanDepositData.filter(d => d.date >= CREDIT_START_DATE);
+
+    return { loanGrowthData: filteredLoanGrowthData, loanDepositData: filteredLoanDepositData };
   }
 
   // ===== 상태 판정 =====
@@ -1772,11 +1807,14 @@
     });
   }
 
+  // ===== Credit 탭: 신용 확장/수축 모니터 (리서치 기반 v2) =====
+  // Okabe-Ito 색맹안전 팔레트, 독립 기간, Y축 명시, 배경 영역, 툴팁 계층 표시
   function renderCreditChart(processed) {
     const ctx = document.getElementById('creditChart').getContext('2d');
     creditChart = safeDestroyChart(creditChart);
 
-    const cutoff = new Date(Date.now() - currentPeriod * 86400000).toISOString().split('T')[0];
+    // Credit 탭 독립 기간 사용 (creditPeriod, 기본 5Y)
+    const cutoff = new Date(Date.now() - creditPeriod * 86400000).toISOString().split('T')[0];
     const ldData = processed.loanDepositData.filter(d => d.date >= cutoff);
     const lgData = processed.loanGrowthData.filter(d => d.date >= cutoff);
 
@@ -1790,8 +1828,10 @@
     const ldValues = labels.map(d => ldMap.get(d) || null);
     const lgValues = labels.map(d => lgMap.get(d) || null);
 
-    // 리세션 annotation
+    // ===== Annotations: 리세션 + 배경 영역 + 임계값선 =====
     let annotations = {};
+
+    // 리세션 annotation
     if (typeof getRecessionAnnotations === 'function' && labels.length > 0) {
       annotations = getRecessionAnnotations(labels[0], labels[labels.length - 1], { showLabel: true });
       Object.entries(annotations).forEach(([key, val]) => {
@@ -1806,33 +1846,64 @@
       });
     }
 
-    // 예대율 임계값 참조선 (좌측 y축)
-    annotations.ldHigh = {
+    // 배경 영역: 과열 구간 (85-100%) - 빨강
+    annotations.overheatedZone = {
+      type: 'box',
+      yMin: 85, yMax: 100,
+      yScaleID: 'y_left',
+      backgroundColor: 'rgba(239, 68, 68, 0.08)',
+      borderWidth: 0
+    };
+
+    // 배경 영역: 위축 구간 (50-65%) - 노랑
+    annotations.contractionZone = {
+      type: 'box',
+      yMin: 50, yMax: 65,
+      yScaleID: 'y_left',
+      backgroundColor: 'rgba(234, 179, 8, 0.08)',
+      borderWidth: 0
+    };
+
+    // 예대율 과열선 85% (좌측 y축) - 리서치 결과
+    annotations.ldOverheat = {
       type: 'line',
       yMin: 85, yMax: 85,
       yScaleID: 'y_left',
-      borderColor: 'rgba(202, 138, 4, 0.5)',
-      borderWidth: 1,
-      borderDash: [5, 5],
-      label: { display: true, content: '과열 85%', position: 'start', backgroundColor: 'rgba(202, 138, 4, 0.8)', font: { size: 9 } }
+      borderColor: '#ef4444',
+      borderWidth: 1.5,
+      borderDash: [5, 3],
+      label: { display: true, content: '예대율 과열 85%', position: 'start', backgroundColor: 'rgba(239, 68, 68, 0.85)', color: '#fff', font: { size: 9, weight: 'bold' } }
     };
-    annotations.ldLow = {
+
+    // 예대율 위축선 65% (좌측 y축) - 리서치 결과
+    annotations.ldContraction = {
       type: 'line',
-      yMin: 60, yMax: 60,
+      yMin: 65, yMax: 65,
       yScaleID: 'y_left',
-      borderColor: 'rgba(59, 130, 246, 0.5)',
-      borderWidth: 1,
-      borderDash: [5, 5],
-      label: { display: true, content: '위축 60%', position: 'start', backgroundColor: 'rgba(59, 130, 246, 0.8)', font: { size: 9 } }
+      borderColor: '#ca8a04',
+      borderWidth: 1.5,
+      borderDash: [5, 3],
+      label: { display: true, content: '예대율 위축 65%', position: 'start', backgroundColor: 'rgba(202, 138, 4, 0.85)', color: '#fff', font: { size: 9, weight: 'bold' } }
     };
-    // 0% 참조선 (우측 y축)
+
+    // 여신증가율 0% 참조선 (우측 y축)
     annotations.zeroLine = {
       type: 'line',
       yMin: 0, yMax: 0,
       yScaleID: 'y_right',
-      borderColor: 'rgba(107, 114, 128, 0.5)',
+      borderColor: 'rgba(107, 114, 128, 0.6)',
       borderWidth: 1,
-      borderDash: [5, 5]
+      borderDash: [4, 4]
+    };
+
+    // ===== 신용 상태 판정 함수 (툴팁용) =====
+    const getCreditStatus = (ldRatio, lgYoY) => {
+      if (ldRatio === null || lgYoY === null) return { emoji: '❓', text: '데이터 없음' };
+      if (ldRatio > 85 && lgYoY > 5) return { emoji: '🔴', text: '과열 경고' };
+      if (ldRatio > 85) return { emoji: '🟠', text: '과열 주의' };
+      if (ldRatio < 65) return { emoji: '⚠️', text: '신용 위축' };
+      if (lgYoY >= 0) return { emoji: '🟢', text: '건전한 확장' };
+      return { emoji: '🟡', text: '수축 조짐' };
     };
 
     creditChart = new Chart(ctx, {
@@ -1841,26 +1912,34 @@
         labels,
         datasets: [
           {
-            label: 'Loan/Deposit Ratio',
+            // Base 지표: 예대율 (수준) - Okabe-Ito Steel Blue
+            label: '예대율',
             data: ldValues,
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            borderWidth: 2,
+            borderColor: '#0072B2',
+            backgroundColor: 'rgba(0, 114, 178, 0.12)',
+            fill: true,
+            borderWidth: 3,
             tension: 0.3,
             pointRadius: 0,
+            pointHoverRadius: 5,
             yAxisID: 'y_left',
-            spanGaps: true
+            spanGaps: true,
+            order: 2
           },
           {
-            label: 'Loan Growth YoY',
+            // Signal 지표: 여신증가율 (모멘텀) - Okabe-Ito Orange
+            label: '여신증가율',
             data: lgValues,
-            borderColor: '#f59e0b',
-            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-            borderWidth: 2,
+            borderColor: '#E69F00',
+            backgroundColor: 'transparent',
+            fill: false,
+            borderWidth: 2.5,
             tension: 0.3,
             pointRadius: 0,
+            pointHoverRadius: 5,
             yAxisID: 'y_right',
-            spanGaps: true
+            spanGaps: true,
+            order: 1
           }
         ]
       },
@@ -1873,24 +1952,68 @@
           legend: { display: false },
           tooltip: {
             backgroundColor: 'rgba(15, 23, 42, 0.95)',
-            padding: 12,
-            cornerRadius: 10
+            padding: 14,
+            cornerRadius: 10,
+            titleFont: { size: 12, weight: 'bold' },
+            bodyFont: { size: 11 },
+            callbacks: {
+              // 툴팁에 신용 상태 계층 표시
+              afterBody: function(context) {
+                // 데이터셋 label로 정확히 찾기
+                let ldVal = null, lgVal = null;
+                context.forEach(item => {
+                  if (item.dataset.label === '예대율') ldVal = item.raw;
+                  if (item.dataset.label === '여신증가율') lgVal = item.raw;
+                });
+                const status = getCreditStatus(ldVal, lgVal);
+                return [`\n상태: ${status.emoji} ${status.text}`];
+              }
+            }
           },
           annotation: { annotations }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+          x: {
+            grid: { display: false },
+            ticks: { maxTicksLimit: 8, font: { size: 10 } }
+          },
           y_left: {
-            type: 'linear', position: 'left',
+            // 예대율 Y축: 리서치 결과 (50-100)
+            type: 'linear',
+            position: 'left',
+            suggestedMin: 50,
+            suggestedMax: 100,
             grid: { color: '#f1f5f9' },
-            ticks: { callback: v => v + '%', color: '#3b82f6', font: { size: 10 } },
-            title: { display: true, text: 'Loan/Deposit %', color: '#3b82f6' }
+            ticks: {
+              callback: v => v + '%',
+              color: '#0072B2',
+              font: { size: 10 }
+            },
+            title: {
+              display: true,
+              text: '예대율 %',
+              color: '#0072B2',
+              font: { size: 11, weight: 'bold' }
+            }
           },
           y_right: {
-            type: 'linear', position: 'right',
+            // 여신증가율 Y축: 리서치 결과 (-5 ~ 10)
+            type: 'linear',
+            position: 'right',
+            suggestedMin: -5,
+            suggestedMax: 10,
             grid: { display: false },
-            ticks: { callback: v => v.toFixed(0) + '%', color: '#f59e0b', font: { size: 10 } },
-            title: { display: true, text: 'Loan Growth YoY %', color: '#f59e0b' }
+            ticks: {
+              callback: v => (v >= 0 ? '+' : '') + v.toFixed(0) + '%',
+              color: '#E69F00',
+              font: { size: 10 }
+            },
+            title: {
+              display: true,
+              text: '여신증가율 YoY %',
+              color: '#E69F00',
+              font: { size: 11, weight: 'bold' }
+            }
           }
         }
       }
@@ -2280,7 +2403,7 @@
   };
 
   // ===== 탭 전환 =====
-  let risksPeriod = 99999; // Risks 탭 기본값: MAX
+  // 기간 변수는 상단에서 이미 선언됨 (capitalPeriod, creditPeriod, risksPeriod)
 
   window.switchTab = function(tab, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2294,20 +2417,26 @@
     // 차트 타이틀 업데이트
     const titles = {
       capital: '<i class="fas fa-shield-halved"></i> 자기자본비율 (Tier 1)',
-      credit: '<i class="fas fa-chart-line"></i> 예대율 & 여신증가율',
+      credit: '<i class="fas fa-chart-line"></i> 신용 확장/수축 모니터',
       risks: '<i class="fas fa-exclamation-triangle"></i> 연체율 분석'
     };
     document.getElementById('chartTitle').innerHTML = titles[tab];
 
-    // 기간 선택기 전환 (Risks vs Default)
-    const defaultSelector = document.getElementById('periodSelectorDefault');
+    // 기간 선택기 전환 (3탭 완전 독립)
+    const capitalSelector = document.getElementById('periodSelectorCapital');
+    const creditSelector = document.getElementById('periodSelectorCredit');
     const risksSelector = document.getElementById('periodSelectorRisks');
-    if (tab === 'risks') {
-      defaultSelector.style.display = 'none';
+
+    capitalSelector.style.display = 'none';
+    creditSelector.style.display = 'none';
+    risksSelector.style.display = 'none';
+
+    if (tab === 'capital') {
+      capitalSelector.style.display = 'flex';
+    } else if (tab === 'credit') {
+      creditSelector.style.display = 'flex';
+    } else if (tab === 'risks') {
       risksSelector.style.display = 'flex';
-    } else {
-      defaultSelector.style.display = 'flex';
-      risksSelector.style.display = 'none';
     }
 
     // 스와이프 인디케이터 업데이트
@@ -2317,23 +2446,30 @@
     });
   };
 
-  // ===== 기간 변경 (탭별 분리) =====
+  // ===== 기간 변경 (3탭 완전 독립) =====
   window.updatePeriod = function(days, btn, selectorType) {
     // 해당 선택기 내 버튼만 active 토글
-    const selector = selectorType === 'risks' ? 'periodSelectorRisks' : 'periodSelectorDefault';
+    const selectorMap = {
+      'capital': 'periodSelectorCapital',
+      'credit': 'periodSelectorCredit',
+      'risks': 'periodSelectorRisks'
+    };
+    const selector = selectorMap[selectorType] || 'periodSelectorCapital';
     document.querySelectorAll('#' + selector + ' .p-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    if (selectorType === 'risks') {
-      // Risks 탭만 업데이트
-      risksPeriod = days;
-      renderRisksChart();
-    } else {
-      // Capital/Credit 탭 업데이트
-      currentPeriod = days;
+    if (selectorType === 'capital') {
+      capitalPeriod = days;
+      currentPeriod = days; // Capital용 currentPeriod 동기화
       const processed = processData();
       renderCapitalChart(processed);
+    } else if (selectorType === 'credit') {
+      creditPeriod = days;
+      const processed = processData();
       renderCreditChart(processed);
+    } else if (selectorType === 'risks') {
+      risksPeriod = days;
+      renderRisksChart();
     }
   };
 
@@ -2348,8 +2484,8 @@
              // 🆕 Shadow of Death - NCO (상각율) 시리즈
              ncoTotal, ncoCreditCard, ncoConsumer, ncoBusiness, ncoCRE] = await Promise.all([
         getSeries('DRALACBN', 9999),           // 연체율 (분기)
-        getSeries('TOTLL', 9999),               // 전체 대출 (주간)
-        getSeries('DPSACBW027SBOG', 9999),      // 예금 (주간)
+        getSeries('TOTLL', 11000),              // 전체 대출 (주간) - 1998년 1월 + YoY 1년 여유
+        getSeries('DPSACBW027SBOG', 11000),     // 예금 (주간) - 1998년 1월부터
         // Risks 탭용 세분화 연체율
         getSeries('DRCCLACBS', 9999),           // 신용카드 연체율 (분기)
         getSeries('DRCLACBS', 9999),            // 소비자 대출 연체율 (분기)
