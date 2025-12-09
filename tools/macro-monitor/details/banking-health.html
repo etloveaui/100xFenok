@@ -133,7 +133,86 @@
     .signal-status.warning { background: #ffedd5; color: #c2410c; }
     .signal-status.danger { background: #fee2e2; color: #991b1b; }
 
-    /* ===== Banking Health Pulse Hero ===== */
+    /* ===== 종합 상태 카드 미니 인디케이터 ===== */
+    .mini-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .mini-dot {
+      font-size: 10px;
+      color: #94a3b8;
+      cursor: help;
+      transition: color 0.2s;
+    }
+    .mini-dot.green { color: #16a34a; }
+    .mini-dot.yellow { color: #ca8a04; }
+    .mini-dot.orange { color: #c2410c; }
+    .mini-dot.red { color: #dc2626; }
+
+    /* ===== 종합 상태 카드 D+F 스타일 (그라데이션 + 펄스) ===== */
+    #compositeCard {
+      position: relative;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    #compositeCard .signal-value {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    /* 상태별 그라데이션 + 글로우 */
+    #compositeCard.healthy {
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #86efac 100%);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+      animation: pulseGlowGreen 3s ease-in-out infinite;
+    }
+    #compositeCard.watch {
+      background: linear-gradient(135deg, #fef9c3 0%, #fde68a 50%, #fcd34d 100%);
+      box-shadow: 0 0 20px rgba(234, 179, 8, 0.3);
+      animation: pulseGlowYellow 3s ease-in-out infinite;
+    }
+    #compositeCard.caution {
+      background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 50%, #fdba74 100%);
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+      animation: pulseGlowOrange 3s ease-in-out infinite;
+    }
+    #compositeCard.stress {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #fca5a5 100%);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+      animation: pulseGlowRed 2s ease-in-out infinite;
+    }
+    /* 미세 펄스 애니메이션 (글로우) */
+    @keyframes pulseGlowGreen {
+      0%, 100% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.25); }
+      50% { box-shadow: 0 0 25px rgba(34, 197, 94, 0.4); }
+    }
+    @keyframes pulseGlowYellow {
+      0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.25); }
+      50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.4); }
+    }
+    @keyframes pulseGlowOrange {
+      0%, 100% { box-shadow: 0 0 15px rgba(249, 115, 22, 0.25); }
+      50% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.45); }
+    }
+    @keyframes pulseGlowRed {
+      0%, 100% { box-shadow: 0 0 18px rgba(239, 68, 68, 0.35); }
+      50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.55); }
+    }
+    /* 아이콘 펄스 (심장박동 느낌) */
+    #compositeCard .signal-icon {
+      animation: iconPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes iconPulse {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.08); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.05); }
+      60% { transform: scale(1); }
+    }
+
+    /* ===== Banking Health Pulse Hero (레거시, 미사용) ===== */
     .health-pulse-hero {
       background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
       border-radius: 16px;
@@ -619,7 +698,7 @@
       <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
       <div class="title-group">
         <h1>🏦 Banking Health Monitor</h1>
-        <p>연체율 | 자기자본비율 | 예대율 | 여신증가율</p>
+        <p>예대율 | 연체율 | Tier1 자본비율</p>
       </div>
     </div>
     <div class="header-right">
@@ -631,15 +710,19 @@
   <!-- ===== Signal Matrix Hero ===== -->
   <section class="signal-matrix">
     <div class="matrix-grid">
-      <!-- Tier 1 비율 -->
-      <div class="signal-card" id="tier1Card">
-        <div class="signal-icon gray" id="tier1Icon"><i class="fas fa-shield-alt"></i></div>
-        <div class="signal-label">자기자본비율</div>
-        <div class="signal-value" id="tier1Value">--</div>
-        <span class="signal-unit">%</span>
-        <div class="signal-status" id="tier1Status">Loading</div>
+      <!-- 종합 상태 (Weakest Link) -->
+      <div class="signal-card" id="compositeCard">
+        <div class="signal-icon gray" id="compositeIcon"><i class="fas fa-heartbeat"></i></div>
+        <div class="signal-label">종합 상태</div>
+        <div class="signal-value" id="compositeValue">--</div>
+        <div class="signal-status" id="compositeStatus">Loading</div>
+        <div class="mini-indicators" id="miniIndicators">
+          <span class="mini-dot" id="miniLdr" title="예대율">●</span>
+          <span class="mini-dot" id="miniDel" title="연체율">●</span>
+          <span class="mini-dot" id="miniT1" title="Tier1">●</span>
+        </div>
       </div>
-      <!-- 예대율 -->
+      <!-- 예대율 (선행 지표) -->
       <div class="signal-card" id="loanDepositCard">
         <div class="signal-icon gray" id="loanDepositIcon"><i class="fas fa-balance-scale"></i></div>
         <div class="signal-label">예대율</div>
@@ -647,15 +730,7 @@
         <span class="signal-unit">%</span>
         <div class="signal-status" id="loanDepositStatus">Loading</div>
       </div>
-      <!-- 여신 증가율 -->
-      <div class="signal-card" id="loanGrowthCard">
-        <div class="signal-icon gray" id="loanGrowthIcon"><i class="fas fa-chart-line"></i></div>
-        <div class="signal-label">여신증가율</div>
-        <div class="signal-value" id="loanGrowthValue">--</div>
-        <span class="signal-unit">%</span>
-        <div class="signal-status" id="loanGrowthStatus">Loading</div>
-      </div>
-      <!-- 연체율 -->
+      <!-- 연체율 (Critical) -->
       <div class="signal-card" id="delinquencyCard">
         <div class="signal-icon gray" id="delinquencyIcon"><i class="fas fa-exclamation-triangle"></i></div>
         <div class="signal-label">연체율</div>
@@ -663,23 +738,13 @@
         <span class="signal-unit">%</span>
         <div class="signal-status" id="delinquencyStatus">Loading</div>
       </div>
-    </div>
-
-    <!-- Banking Health Pulse Hero -->
-    <div class="health-pulse-hero">
-      <div>
-        <div class="health-pulse-label">Banking Health Index</div>
-        <div class="health-pulse-value healthy" id="healthPulseValue">HEALTHY</div>
-        <div class="health-indicator" id="healthIndicator">
-          <div class="health-dot" id="dot1"></div>
-          <div class="health-dot" id="dot2"></div>
-          <div class="health-dot" id="dot3"></div>
-          <div class="health-dot" id="dot4"></div>
-        </div>
-      </div>
-      <div class="health-pulse-info" id="healthPulseInfo">
-        <i class="fas fa-check-circle"></i>
-        <span id="healthPulseDesc">4/4 indicators normal</span>
+      <!-- Tier1 자본비율 -->
+      <div class="signal-card" id="tier1Card">
+        <div class="signal-icon gray" id="tier1Icon"><i class="fas fa-shield-alt"></i></div>
+        <div class="signal-label">Tier1</div>
+        <div class="signal-value" id="tier1Value">--</div>
+        <span class="signal-unit">%</span>
+        <div class="signal-status" id="tier1Status">Loading</div>
       </div>
     </div>
   </section>
@@ -855,16 +920,15 @@
       </div>
       <div class="info-card-detail" id="statusDetail">
         <ul>
-          <li><strong>연체율</strong>: <span id="detailDelinq">--</span></li>
-          <li><strong>Tier 1 비율</strong>: <span id="detailTier1">--</span></li>
           <li><strong>예대율</strong>: <span id="detailLD">--</span></li>
-          <li><strong>여신 증가율</strong>: <span id="detailLG">--</span></li>
+          <li><strong>연체율</strong>: <span id="detailDelinq">--</span></li>
+          <li><strong>Tier1</strong>: <span id="detailTier1">--</span></li>
         </ul>
         <p id="statusConclusion">데이터 로딩 후 종합 분석 결과가 표시됩니다.</p>
       </div>
     </div>
 
-    <!-- 카드 2: 지표 정의 -->
+    <!-- 카드 2: 지표 정의 (정적) -->
     <div class="info-card" id="definitionCard">
       <div class="info-card-header" onclick="toggleInfoCard('definitionCard')">
         <div class="info-card-icon">💡</div>
@@ -872,37 +936,53 @@
         <button class="info-expand-btn"><i class="fas fa-chevron-down"></i></button>
       </div>
       <div class="info-card-summary">
-        은행 건전성을 판단하는 4가지 핵심 지표입니다.
+        은행 건강을 진단하는 3가지 핵심 체크포인트입니다.
       </div>
       <div class="info-card-detail">
-        <ul>
-          <li><strong>연체율 (Delinquency Rate)</strong>: 전체 대출 중 30일 이상 연체된 비율. 높을수록 부실 위험 증가.</li>
-          <li><strong>Tier 1 자본비율</strong>: 은행의 핵심자본 / 위험가중자산. 8% 이상 규제 요건, 12% 이상이면 건전.</li>
-          <li><strong>예대율 (Loan/Deposit)</strong>: 예금 대비 대출 비율. 60-85%가 적정, 너무 높으면 유동성 위험.</li>
-          <li><strong>여신 증가율 (YoY)</strong>: 전년 대비 대출 증가율. 양(+)이면 신용 확장, 음(-)이면 신용 수축.</li>
-        </ul>
+        <p><strong>📊 예대율</strong> — "은행이 예금을 얼마나 빌려줬나"</p>
+        <p style="margin: 4px 0 12px 20px; color: #64748b;">
+          65~85%가 적정. 너무 높으면 과열, 너무 낮으면 위축.<br>
+          <span style="color: #2563eb;">💡 2~4년 먼저 신호를 보내는 <b>선행 지표</b></span>
+        </p>
+        <p><strong>⚠️ 연체율</strong> — "빌려간 돈 중 안 갚는 비율"</p>
+        <p style="margin: 4px 0 12px 20px; color: #64748b;">
+          4% 넘으면 위험. 실제 부실이 발생하고 있다는 증거.<br>
+          <span style="color: #dc2626;">💡 지금 상황을 보여주는 <b>동행 지표</b></span>
+        </p>
+        <p><strong>🛡️ Tier1 자본비율</strong> — "은행의 안전 쿠션"</p>
+        <p style="margin: 4px 0 0 20px; color: #64748b;">
+          10% 이상이면 안전. 위기 때 손실을 흡수하는 완충장치.<br>
+          높을수록 충격에 강합니다.
+        </p>
       </div>
     </div>
 
-    <!-- 카드 3: 왜 중요한가? -->
+    <!-- 카드 3: 왜 중요한가? (탭별 동적) -->
     <div class="info-card" id="importanceCard">
       <div class="info-card-header" onclick="toggleInfoCard('importanceCard')">
         <div class="info-card-icon">🎯</div>
         <div class="info-card-title">왜 중요한가요?</div>
         <button class="info-expand-btn"><i class="fas fa-chevron-down"></i></button>
       </div>
-      <div class="info-card-summary">
-        은행 시스템은 경제의 혈관입니다. 건전성 악화는 금융위기로 이어질 수 있습니다.
+      <div class="info-card-summary" id="importanceSummary">
+        자본은 은행의 생존 보험입니다.
       </div>
-      <div class="info-card-detail">
-        <p><strong>📉 2008 금융위기 (GFC)</strong></p>
-        <p>연체율 급등(4.9%) + 예대율 과열(98%)이 서브프라임 위기를 촉발했습니다. 은행 파산 연쇄로 글로벌 경기침체.</p>
-        <br>
-        <p><strong>🦠 2020 코로나 위기</strong></p>
-        <p>정부의 빠른 유동성 공급으로 연체율(1.5%)을 억제. Tier 1 비율(13.3%)도 사전에 높아 충격 흡수 성공.</p>
-        <br>
-        <p><strong>🔍 시사점</strong></p>
-        <p>4개 지표가 동시에 악화되면 시스템 리스크 경보. 특히 연체율 상승 + Tier 1 하락 조합은 위험 신호입니다.</p>
+      <div class="info-card-detail" id="importanceDetail">
+        <p><strong>🏦 자본이 중요한 이유</strong></p>
+        <p style="margin: 4px 0 12px 0; color: #64748b;">
+          은행은 남의 돈(예금)으로 장사합니다.<br>
+          문제가 생기면? 자기 돈(자본)으로 막아야 합니다.
+        </p>
+        <p><strong>📉 2008년 교훈</strong></p>
+        <p style="margin: 4px 0 12px 0; color: #64748b;">
+          리먼브라더스 자본비율: 3%<br>
+          → 작은 손실에도 파산
+        </p>
+        <p><strong>💡 핵심</strong></p>
+        <p style="margin: 4px 0 0; color: #64748b;">
+          <b>Tier1 10% 미만이면 규제 레드라인.</b><br>
+          우리는 이 선을 모니터링합니다.
+        </p>
       </div>
     </div>
   </section>
@@ -1321,27 +1401,11 @@
       document.getElementById('loanDepositIcon').className = 'signal-icon gray';
     }
 
-    // 여신 증가율
-    if (processed.loanGrowthData.length > 0) {
-      const latestLG = processed.loanGrowthData[processed.loanGrowthData.length - 1];
-      const lgStatus = getLoanGrowthStatus(latestLG.val);
-      allStatuses.push(lgStatus);
+    // 종합 상태 카드 업데이트 (Weakest Link + 연체 Critical)
+    updateCompositeCard(allStatuses, iconColorMap, statusLabels);
 
-      const sign = latestLG.val >= 0 ? '+' : '';
-      document.getElementById('loanGrowthValue').textContent = sign + latestLG.val.toFixed(1);
-      document.getElementById('loanGrowthStatus').textContent = statusLabels[lgStatus];
-      document.getElementById('loanGrowthStatus').className = 'signal-status ' + lgStatus;
-      document.getElementById('loanGrowthIcon').className = 'signal-icon ' + iconColorMap[lgStatus];
-    } else {
-      document.getElementById('loanGrowthValue').textContent = 'N/A';
-      document.getElementById('loanGrowthStatus').textContent = '데이터 없음';
-      document.getElementById('loanGrowthStatus').className = 'signal-status';
-      document.getElementById('loanGrowthIcon').className = 'signal-icon gray';
-    }
-
-    // 종합 상태 배지 + Health Pulse Hero 업데이트
+    // 종합 상태 배지 업데이트
     updateOverallBadge();
-    updateHealthPulseHero(allStatuses);
 
     // 설명 카드 동적 업데이트
     updateInfoCards(processed, allStatuses);
@@ -1358,6 +1422,57 @@
 
     // 위젯 캐시 저장
     saveWidgetCache(processed);
+  }
+
+  // ===== 종합 상태 카드 업데이트 (Weakest Link + 연체 Critical) =====
+  // DECISION: DEC-023 (2025-12-09) - CAMELS 철학 기반
+  // 근거: FDIC Non-Compensatory, 연체율은 실제 부실 = Critical
+  function updateCompositeCard(allStatuses, iconColorMap, statusLabels) {
+    const statusOrder = ['normal', 'caution', 'warning', 'danger'];
+
+    // allStatuses 순서: [delStatus(연체율), t1Status(Tier1), ldStatus(예대율)]
+    const delStatus = allStatuses[0] || 'normal';
+    const t1Status = allStatuses[1] || 'normal';
+    const ldStatus = allStatuses[2] || 'normal';
+
+    // Weakest Link: 가장 나쁜 상태 선택
+    let compositeStatus = allStatuses.reduce((a, b) =>
+      statusOrder.indexOf(a) > statusOrder.indexOf(b) ? a : b, 'normal');
+
+    // 연체 Critical Rule: 연체율이 danger면 무조건 전체 danger
+    if (delStatus === 'danger') {
+      compositeStatus = 'danger';
+    }
+
+    // 종합 상태 영문 라벨
+    const compositeLabels = {
+      normal: 'HEALTHY',
+      caution: 'WATCH',
+      warning: 'CAUTION',
+      danger: 'STRESS'
+    };
+
+    // D+F 스타일: 상태 → CSS 클래스 매핑
+    const cardClassMap = {
+      normal: 'healthy',
+      caution: 'watch',
+      warning: 'caution',
+      danger: 'stress'
+    };
+
+    // 종합 카드 UI 업데이트
+    const compositeCard = document.getElementById('compositeCard');
+    compositeCard.className = 'signal-card ' + cardClassMap[compositeStatus]; // D+F 그라데이션+펄스
+    document.getElementById('compositeValue').textContent = compositeLabels[compositeStatus];
+    document.getElementById('compositeStatus').textContent = statusLabels[compositeStatus];
+    document.getElementById('compositeStatus').className = 'signal-status ' + compositeStatus;
+    document.getElementById('compositeIcon').className = 'signal-icon ' + iconColorMap[compositeStatus];
+
+    // 미니 인디케이터 업데이트 (순서: 예대율 → 연체율 → Tier1)
+    const dotColorMap = { normal: 'green', caution: 'yellow', warning: 'orange', danger: 'red' };
+    document.getElementById('miniLdr').className = 'mini-dot ' + dotColorMap[ldStatus];
+    document.getElementById('miniDel').className = 'mini-dot ' + dotColorMap[delStatus];
+    document.getElementById('miniT1').className = 'mini-dot ' + dotColorMap[t1Status];
   }
 
   // Health Pulse Hero 업데이트
@@ -1435,26 +1550,19 @@
       document.getElementById('detailLD').innerHTML =
         `N/A <span class="info-badge gray">데이터 없음</span>`;
     }
-    if (latestLG) {
-      const sign = latestLG.val >= 0 ? '+' : '';
-      document.getElementById('detailLG').innerHTML =
-        `${sign}${latestLG.val.toFixed(1)}% <span class="info-badge ${badgeColors[lgStatus]}">${statusLabels[lgStatus]}</span>`;
-    } else {
-      document.getElementById('detailLG').innerHTML =
-        `N/A <span class="info-badge gray">데이터 없음</span>`;
-    }
+    // 여신증가율 제거됨 (상단 3지표와 일치: 예대율, 연체율, Tier1)
 
     // 종합 상태 판정
     const statusOrder = ['normal', 'caution', 'warning', 'danger'];
     const worst = allStatuses.reduce((a, b) => statusOrder.indexOf(a) > statusOrder.indexOf(b) ? a : b, 'normal');
     const normalCount = allStatuses.filter(s => s === 'normal').length;
 
-    // 요약 및 결론 업데이트
+    // 요약 및 결론 업데이트 (3개 핵심 지표: 예대율, 연체율, Tier1)
     const summaryMessages = {
-      normal: `🟢 은행 건전성 양호 (${normalCount}/4 지표 정상)`,
-      caution: `🟡 일부 지표 주의 필요 (${normalCount}/4 지표 정상)`,
-      warning: `🟠 건전성 경계 수준 (${normalCount}/4 지표 정상)`,
-      danger: `🔴 시스템 리스크 경보 (${normalCount}/4 지표 정상)`
+      normal: `🟢 은행 건전성 양호 (${normalCount}/3 지표 정상)`,
+      caution: `🟡 일부 지표 주의 필요 (${normalCount}/3 지표 정상)`,
+      warning: `🟠 건전성 경계 수준 (${normalCount}/3 지표 정상)`,
+      danger: `🔴 시스템 리스크 경보 (${normalCount}/3 지표 정상)`
     };
 
     const conclusionMessages = {
@@ -1472,18 +1580,34 @@
     const badge = document.getElementById('statusBadge');
     const text = document.getElementById('statusText');
 
-    // 4개 지표 중 가장 나쁜 상태 선택
+    // 3개 핵심 지표 (연체율, Tier1, 예대율) 중 Weakest Link + 연체 Critical
     const statuses = [];
+    let delStatus = 'normal';
 
     if (fullData.delinquency.length > 0) {
-      statuses.push(getDelinquencyStatus(fullData.delinquency[fullData.delinquency.length - 1].val));
+      delStatus = getDelinquencyStatus(fullData.delinquency[fullData.delinquency.length - 1].val);
+      statuses.push(delStatus);
     }
     if (fullData.tier1.length > 0) {
       statuses.push(getTier1Status(fullData.tier1[fullData.tier1.length - 1].val));
     }
+    // 예대율은 processed.loanDepositData에서 가져와야 하지만, 여기서는 fullData에서 계산
+    if (fullData.loans.length > 0 && fullData.deposits.length > 0) {
+      const latestLoan = fullData.loans[fullData.loans.length - 1].val;
+      const latestDeposit = fullData.deposits[fullData.deposits.length - 1].val;
+      if (latestDeposit > 0) {
+        const ldRatio = (latestLoan / latestDeposit) * 100;
+        statuses.push(getLoanDepositStatus(ldRatio));
+      }
+    }
 
     const statusOrder = ['normal', 'caution', 'warning', 'danger'];
-    const worst = statuses.reduce((a, b) => statusOrder.indexOf(a) > statusOrder.indexOf(b) ? a : b, 'normal');
+    let worst = statuses.reduce((a, b) => statusOrder.indexOf(a) > statusOrder.indexOf(b) ? a : b, 'normal');
+
+    // 연체 Critical Rule
+    if (delStatus === 'danger') {
+      worst = 'danger';
+    }
 
     const config = {
       normal: { bg: '#dcfce7', border: '#bbf7d0', color: '#166534', text: 'Healthy' },
@@ -2402,6 +2526,81 @@
     renderRisksChart(); // 차트 재렌더링
   };
 
+  // ===== 카드3 "왜 중요한가요?" 탭별 콘텐츠 =====
+  const importanceContent = {
+    capital: {
+      summary: '자본은 은행의 생존 보험입니다.',
+      detail: `
+        <p><strong>🏦 자본이 중요한 이유</strong></p>
+        <p style="margin: 4px 0 12px 0; color: #64748b;">
+          은행은 남의 돈(예금)으로 장사합니다.<br>
+          문제가 생기면? 자기 돈(자본)으로 막아야 합니다.
+        </p>
+        <p><strong>📉 2008년 교훈</strong></p>
+        <p style="margin: 4px 0 12px 0; color: #64748b;">
+          리먼브라더스 자본비율: 3%<br>
+          → 작은 손실에도 파산
+        </p>
+        <p><strong>💡 핵심</strong></p>
+        <p style="margin: 4px 0 0; color: #64748b;">
+          <b>Tier1 10% 미만이면 규제 레드라인.</b><br>
+          우리는 이 선을 모니터링합니다.
+        </p>
+      `
+    },
+    credit: {
+      summary: '신용은 경제의 혈액입니다. 너무 많아도, 적어도 문제.',
+      detail: `
+        <p><strong>💳 신용 사이클의 비밀</strong></p>
+        <p style="margin: 4px 0 12px 0; color: #64748b;">
+          은행이 돈을 많이 빌려주면 → 경제 활성화<br>
+          너무 많이 빌려주면 → 버블 → 붕괴
+        </p>
+        <p><strong>📊 예대율로 보는 패턴</strong></p>
+        <p style="margin: 4px 0 12px 0; color: #64748b;">
+          85% 초과: 과열 (2006년 98% → 2008년 붕괴)<br>
+          65% 미만: 위축 (은행이 움츠림)
+        </p>
+        <p><strong>💡 핵심</strong></p>
+        <p style="margin: 4px 0 0; color: #64748b;">
+          <b>예대율 이상 → 2~4년 후 → 연체율 상승</b><br>
+          지금 예대율을 보면 미래를 예측할 수 있습니다.
+        </p>
+      `
+    },
+    risks: {
+      summary: '연체율은 거짓말하지 않습니다. 실제 부실의 증거.',
+      detail: `
+        <p><strong>🚨 연체율이 말해주는 것</strong></p>
+        <p style="margin: 4px 0 12px 0; color: #64748b;">
+          예대율은 "앞으로 위험할 수 있다"<br>
+          연체율은 "지금 위험하다"
+        </p>
+        <p><strong>📉 2008년 금융위기</strong></p>
+        <p style="margin: 4px 0 12px 0; color: #64748b;">
+          연체율 4.9% 돌파 → 은행 연쇄 파산<br>
+          서브프라임 → 리먼 → 글로벌 침체
+        </p>
+        <p><strong>⚠️ 섹터별 차이</strong></p>
+        <p style="margin: 4px 0 0; color: #64748b;">
+          신용카드 > 소비자 > 기업 > 상업부동산<br>
+          <b>4% 넘으면 시스템 스트레스 구간.</b>
+        </p>
+      `
+    }
+  };
+
+  function updateImportanceCard(tab) {
+    const content = importanceContent[tab];
+    if (!content) return;
+
+    const summaryEl = document.getElementById('importanceSummary');
+    const detailEl = document.getElementById('importanceDetail');
+
+    if (summaryEl) summaryEl.textContent = content.summary;
+    if (detailEl) detailEl.innerHTML = content.detail;
+  }
+
   // ===== 탭 전환 =====
   // 기간 변수는 상단에서 이미 선언됨 (capitalPeriod, creditPeriod, risksPeriod)
 
@@ -2444,6 +2643,9 @@
     document.querySelectorAll('.swipe-dot').forEach((dot, i) => {
       dot.classList.toggle('active', i + 1 === tabIndex[tab]);
     });
+
+    // 카드3 "왜 중요한가요?" 탭별 동적 업데이트
+    updateImportanceCard(tab);
   };
 
   // ===== 기간 변경 (3탭 완전 독립) =====
