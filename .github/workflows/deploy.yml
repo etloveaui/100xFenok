@@ -1,0 +1,47 @@
+# GitHub Pages 배포
+# data/ 폴더 변경은 배포하지 않음 (JSON 자동 업데이트 시 배포 방지)
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'data/**'  # JSON 데이터 변경은 배포 스킵
+
+# 동시 배포 방지
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+# GitHub Pages 권한
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
