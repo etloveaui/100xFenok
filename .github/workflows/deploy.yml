@@ -1,13 +1,11 @@
 # GitHub Pages 배포
-# data/ 폴더 변경은 배포하지 않음 (JSON 자동 업데이트 시 배포 방지)
+# main 브랜치 push 시 자동 배포
 
 name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - 'data/**'  # JSON 데이터 변경은 배포 스킵
 
 # 동시 배포 방지
 concurrency:
