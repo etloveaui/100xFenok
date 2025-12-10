@@ -1,5 +1,5 @@
 <!-- 100x Market Radar Widget - Banking Health (4-A) -->
-<!-- 캐시 기반: API 호출 없음, Detail에서 저장한 localStorage 데이터 읽기 -->
+<!-- 클래식 파사드 디자인: 그리스 신전 스타일 3기둥 = Capital / Credit / Risks -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -23,20 +23,22 @@
 
   .card-widget {
     height: 100%;
-    min-height: 260px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 280px;
+    background: linear-gradient(180deg, #fefce8 0%, #fef3c7 100%);
     border-radius: 16px;
-    padding: 20px;
+    padding: 16px;
     font-family: 'Inter', -apple-system, sans-serif;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
+    border: 1px solid #fde68a;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.08);
   }
 
   .card-widget:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03), 0 12px 28px rgba(0,0,0,0.12);
   }
 
   /* Header */
@@ -44,17 +46,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .card-title {
     font-family: 'Orbitron', monospace;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
-    color: #1e293b;
+    color: #78350f;
     display: flex;
     align-items: center;
     gap: 6px;
+    letter-spacing: 0.5px;
   }
 
   .title-icon { font-size: 14px; }
@@ -64,63 +67,122 @@
     align-items: center;
     gap: 4px;
     padding: 4px 10px;
-    border-radius: 16px;
+    border-radius: 12px;
     font-size: 10px;
     font-weight: 700;
+    border: 1px solid;
   }
 
-  .badge-normal { background: #dcfce7; color: #166534; }
-  .badge-caution { background: #fef9c3; color: #854d0e; }
-  .badge-warning { background: #ffedd5; color: #9a3412; }
-  .badge-danger { background: #fee2e2; color: #991b1b; }
+  .badge-normal {
+    background: #fef9c3;
+    color: #166534;
+    border-color: #fde047;
+  }
+  .badge-caution {
+    background: #fef9c3;
+    color: #a16207;
+    border-color: #fde047;
+  }
+  .badge-warning {
+    background: #fed7aa;
+    color: #9a3412;
+    border-color: #fdba74;
+  }
+  .badge-danger {
+    background: #fecaca;
+    color: #991b1b;
+    border-color: #fca5a5;
+  }
 
-  /* 2x2 메트릭 그리드 */
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+  /* 파사드 컨테이너 */
+  .facade-container {
     flex: 1;
-  }
-
-  .metric-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 12px;
-    border: 1px solid #e2e8f0;
-    text-align: center;
     display: flex;
     flex-direction: column;
+    align-items: center;
     justify-content: center;
+    padding: 8px 0;
   }
 
-  .metric-status {
+  /* 지붕 (삼각형) - 418px 컨텐츠 영역 90% 활용 */
+  .facade-roof {
+    width: 0;
+    height: 0;
+    border-left: 190px solid transparent;
+    border-right: 190px solid transparent;
+    border-bottom: 55px solid #d4a574;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.18));
+  }
+
+  /* 처마 */
+  .facade-cornice {
+    width: 380px;
+    height: 10px;
+    background: linear-gradient(180deg, #c9a66b 0%, #b8956a 100%);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+  }
+
+  /* 기둥 영역 */
+  .facade-pillars {
     display: flex;
+    gap: 24px;
+    padding: 10px 32px;
+    background: linear-gradient(180deg, #e8dcc8 0%, #d4c4a8 100%);
+  }
+
+  /* 개별 기둥 */
+  .pillar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pillar-column {
+    width: 80px;
+    height: 110px;
+    background: linear-gradient(90deg, #f5f0e6 0%, #e8e0d0 50%, #f5f0e6 100%);
+    border-radius: 8px 8px 0 0;
+    box-shadow: 5px 0 10px rgba(0,0,0,0.12), -5px 0 10px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    margin-bottom: 4px;
+    position: relative;
   }
 
-  .metric-emoji { font-size: 12px; }
-
-  .metric-label {
-    font-size: 9px;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+  /* 기둥 상단 장식 (코린트식 캐피탈) */
+  .pillar-column::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 88px;
+    height: 10px;
+    background: linear-gradient(180deg, #c9a66b 0%, #b8956a 100%);
+    border-radius: 4px 4px 0 0;
   }
 
-  .metric-value {
-    font-family: 'Orbitron', monospace;
-    font-size: 16px;
+  .pillar-status {
+    font-size: 42px;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+  }
+
+  .pillar-label {
+    font-size: 13px;
+    color: #78350f;
     font-weight: 700;
-    color: #1e293b;
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
   }
 
-  .metric-unit {
-    font-size: 10px;
-    color: #64748b;
+  /* 기단 */
+  .facade-base {
+    width: 370px;
+    height: 14px;
+    background: linear-gradient(180deg, #c9a66b 0%, #a88b5a 100%);
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 5px 12px rgba(0,0,0,0.2);
   }
 
   /* Footer */
@@ -131,7 +193,8 @@
 
   .view-details {
     font-size: 10px;
-    color: #64748b;
+    color: #92400e;
+    font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -142,7 +205,7 @@
   .loading {
     position: absolute;
     inset: 0;
-    background: rgba(255,255,255,0.95);
+    background: rgba(254, 252, 232, 0.95);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -154,8 +217,8 @@
   .spinner {
     width: 32px;
     height: 32px;
-    border: 3px solid #e2e8f0;
-    border-top-color: #10b981;
+    border: 3px solid #fde68a;
+    border-top-color: #d97706;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -163,7 +226,7 @@
   .loading-text {
     margin-top: 12px;
     font-size: 11px;
-    color: #64748b;
+    color: #92400e;
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -175,48 +238,56 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: #92400e;
   }
 
   .no-cache-icon {
-    font-size: 32px;
+    font-size: 36px;
     margin-bottom: 8px;
   }
 
   .no-cache-text {
     font-size: 12px;
     text-align: center;
+    font-weight: 500;
   }
 
   .no-cache-hint {
     font-size: 10px;
     margin-top: 4px;
-    color: #cbd5e1;
+    color: #b45309;
   }
 
   /* Stale Data 경고 배너 */
   .stale-warning {
     background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
-    border: 1px solid #f59e0b;
+    border: 1px solid #d97706;
     border-radius: 8px;
-    padding: 6px 10px;
-    margin-bottom: 8px;
+    padding: 5px 8px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 10px;
+    gap: 5px;
+    font-size: 9px;
     color: #92400e;
   }
 
-  .stale-warning-icon { font-size: 12px; }
+  .stale-warning-icon { font-size: 11px; }
   .stale-warning-text { font-weight: 500; }
   .stale-warning-age { color: #b45309; font-weight: 600; }
 
-  /* Responsive */
+  /* Responsive - 모바일 (320px 기준 → 컨텐츠 288px, 90% 활용) */
   @media (max-width: 480px) {
-    .card-widget { padding: 16px; min-height: 240px; }
-    .card-title { font-size: 12px; }
-    .metric-value { font-size: 14px; }
+    .card-widget { padding: 12px; min-height: 260px; }
+    .card-title { font-size: 11px; }
+    .facade-roof { border-left-width: 130px; border-right-width: 130px; border-bottom-width: 42px; }
+    .facade-cornice { width: 260px; height: 8px; }
+    .facade-pillars { gap: 16px; padding: 8px 20px; }
+    .pillar-column { width: 60px; height: 85px; }
+    .pillar-column::before { width: 66px; height: 8px; }
+    .pillar-status { font-size: 32px; }
+    .pillar-label { font-size: 11px; margin-top: 6px; }
+    .facade-base { width: 250px; height: 12px; }
   }
 </style>
 </head>
@@ -230,10 +301,9 @@
 
   <!-- Header -->
   <div class="card-header">
-    <div class="card-title"><span class="title-icon">🏦</span> Banking Health</div>
+    <div class="card-title"><span class="title-icon">🏦</span> BANKING HEALTH</div>
     <div class="overall-badge badge-normal" id="overallBadge">
-      <span id="overallEmoji">🟢</span>
-      <span id="overallLabel">Healthy</span>
+      <span id="overallLabel">STABLE</span>
     </div>
   </div>
 
@@ -244,71 +314,51 @@
     <span class="stale-warning-age" id="staleAge">6시간 전</span>
   </div>
 
-  <!-- 메인 컨텐츠 (캐시 있을 때) -->
-  <div id="mainContent" style="display: none; flex: 1; display: flex; flex-direction: column;">
-    <!-- 2x2 메트릭 그리드 -->
-    <div class="metrics-grid">
-      <!-- 연체율 -->
-      <div class="metric-card" id="delCard">
-        <div class="metric-status">
-          <span class="metric-emoji" id="delEmoji">🟢</span>
-          <span class="metric-label">Delinquency</span>
+  <!-- 메인 컨텐츠: 클래식 파사드 -->
+  <div id="mainContent" class="facade-container" style="display: none;">
+    <!-- 지붕 -->
+    <div class="facade-roof"></div>
+    <!-- 처마 -->
+    <div class="facade-cornice"></div>
+    <!-- 기둥들 -->
+    <div class="facade-pillars">
+      <!-- Capital 기둥 -->
+      <div class="pillar">
+        <div class="pillar-column">
+          <span class="pillar-status" id="capitalStatus">🟢</span>
         </div>
-        <div class="metric-value">
-          <span id="delValue">1.47</span>
-          <span class="metric-unit">%</span>
-        </div>
+        <span class="pillar-label">Capital</span>
       </div>
-
-      <!-- Tier 1 -->
-      <div class="metric-card" id="t1Card">
-        <div class="metric-status">
-          <span class="metric-emoji" id="t1Emoji">🟢</span>
-          <span class="metric-label">Tier 1</span>
+      <!-- Credit 기둥 -->
+      <div class="pillar">
+        <div class="pillar-column">
+          <span class="pillar-status" id="creditStatus">🟢</span>
         </div>
-        <div class="metric-value">
-          <span id="t1Value">14.2</span>
-          <span class="metric-unit">%</span>
-        </div>
+        <span class="pillar-label">Credit</span>
       </div>
-
-      <!-- 예대율 -->
-      <div class="metric-card" id="ldCard">
-        <div class="metric-status">
-          <span class="metric-emoji" id="ldEmoji">🟢</span>
-          <span class="metric-label">Loan/Dep</span>
+      <!-- Risks 기둥 -->
+      <div class="pillar">
+        <div class="pillar-column">
+          <span class="pillar-status" id="risksStatus">🟠</span>
         </div>
-        <div class="metric-value">
-          <span id="ldValue">--</span>
-          <span class="metric-unit">%</span>
-        </div>
-      </div>
-
-      <!-- 여신 증가율 -->
-      <div class="metric-card" id="lgCard">
-        <div class="metric-status">
-          <span class="metric-emoji" id="lgEmoji">🟢</span>
-          <span class="metric-label">Loan YoY</span>
-        </div>
-        <div class="metric-value">
-          <span id="lgValue">+2.5</span>
-          <span class="metric-unit">%</span>
-        </div>
+        <span class="pillar-label">Risks</span>
       </div>
     </div>
+    <!-- 기단 -->
+    <div class="facade-base"></div>
+  </div>
 
-    <!-- Footer -->
-    <div class="footer">
-      <div class="view-details">
-        <span>View Details</span>
-        <span>→</span>
-      </div>
+  <!-- Footer -->
+  <div class="footer" id="footerArea" style="display: none;">
+    <div class="view-details">
+      <span>View Details</span>
+      <span>→</span>
     </div>
   </div>
 
   <!-- 캐시 없음 상태 -->
   <div class="no-cache" id="noCache" style="display: none;">
-    <div class="no-cache-icon">🏦</div>
+    <div class="no-cache-icon">🏛️</div>
     <div class="no-cache-text">데이터 없음</div>
     <div class="no-cache-hint">클릭하여 상세 페이지에서 로드</div>
   </div>
@@ -328,57 +378,77 @@
     return fallback[status] || '🟢';
   };
 
+  // 상태별 라벨
+  const getStatusLabel = (status) => {
+    const labels = { normal: 'STABLE', caution: 'CAUTION', warning: 'WARNING', danger: 'DANGER' };
+    return labels[status] || 'STABLE';
+  };
+
   function renderWidget(data) {
     const mainContent = document.getElementById('mainContent');
+    const footerArea = document.getElementById('footerArea');
     const noCache = document.getElementById('noCache');
 
     if (!data) {
       mainContent.style.display = 'none';
+      footerArea.style.display = 'none';
       noCache.style.display = 'flex';
       return;
     }
 
     mainContent.style.display = 'flex';
+    footerArea.style.display = 'block';
     noCache.style.display = 'none';
 
     // Overall Badge
     const badge = document.getElementById('overallBadge');
     const badgeClasses = { normal: 'badge-normal', caution: 'badge-caution', warning: 'badge-warning', danger: 'badge-danger' };
     badge.className = 'overall-badge ' + (badgeClasses[data.overallStatus] || 'badge-normal');
-    document.getElementById('overallEmoji').textContent = getStatusEmoji(data.overallStatus);
-    document.getElementById('overallLabel').textContent = data.overallLabel || 'Healthy';
+    document.getElementById('overallLabel').textContent = getStatusLabel(data.overallStatus);
 
-    // 연체율
-    if (data.delinquency) {
-      document.getElementById('delEmoji').textContent = getStatusEmoji(data.delinquency.status);
-      document.getElementById('delValue').textContent = data.delinquency.value.toFixed(2);
-    }
-
-    // Tier 1
+    // Capital 기둥 (Tier1 기반)
     if (data.tier1) {
-      document.getElementById('t1Emoji').textContent = getStatusEmoji(data.tier1.status);
-      document.getElementById('t1Value').textContent = data.tier1.value.toFixed(1);
+      document.getElementById('capitalStatus').textContent = getStatusEmoji(data.tier1.status);
     }
 
-    // 예대율
+    // Credit 기둥 (예대율 기반)
     if (data.loanDeposit) {
-      document.getElementById('ldEmoji').textContent = getStatusEmoji(data.loanDeposit.status);
-      document.getElementById('ldValue').textContent = data.loanDeposit.value.toFixed(1);
+      document.getElementById('creditStatus').textContent = getStatusEmoji(data.loanDeposit.status);
     }
 
-    // 여신 증가율
-    if (data.loanGrowth) {
-      document.getElementById('lgEmoji').textContent = getStatusEmoji(data.loanGrowth.status);
-      const sign = data.loanGrowth.value >= 0 ? '+' : '';
-      document.getElementById('lgValue').textContent = sign + data.loanGrowth.value.toFixed(1);
+    // Risks 기둥 (연체율 기반)
+    if (data.delinquency) {
+      document.getElementById('risksStatus').textContent = getStatusEmoji(data.delinquency.status);
     }
   }
+
+  // Storage 접근 가능 여부 체크
+  function isStorageAvailable() {
+    try {
+      const test = '__storage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
 
   async function init() {
     const loader = document.getElementById('loader');
     const staleWarning = document.getElementById('staleWarning');
 
     try {
+      // Storage 접근 불가 시 (iframe 보안 정책 등)
+      if (!isStorageAvailable()) {
+        console.warn('[Widget] Storage not available');
+        renderWidget(null);
+        staleWarning.style.display = 'none';
+        loader.style.display = 'none';
+        return;
+      }
+
       // 캐시에서 데이터 + stale 상태 읽기
       let cacheResult = { data: null, isStale: true, ageMs: 0 };
       if (typeof DataManager !== 'undefined' && DataManager.getWidgetDataWithStale) {
@@ -402,16 +472,8 @@
           staleWarning.style.display = 'none';
         }
       } else {
-        // 캐시 없음 - hidden iframe으로 Detail 로드 시도
-        await loadDetailInBackground();
-
-        // 다시 캐시 확인
-        if (typeof DataManager !== 'undefined' && DataManager.getWidgetDataWithStale) {
-          cacheResult = DataManager.getWidgetDataWithStale(WIDGET_ID);
-        } else if (typeof DataManager !== 'undefined') {
-          cacheResult.data = DataManager.getWidgetData(WIDGET_ID);
-        }
-        renderWidget(cacheResult.data);
+        // 캐시 없음 - 디테일 페이지 방문 유도
+        renderWidget(null);
         staleWarning.style.display = 'none';
       }
     } catch (e) {
@@ -430,36 +492,6 @@
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}시간 전`;
     return `${Math.floor(hours / 24)}일 전`;
-  }
-
-  // Detail 페이지를 백그라운드에서 로드하여 캐시 생성
-  function loadDetailInBackground() {
-    return new Promise((resolve) => {
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = '../details/banking-health.html';
-
-      const timeout = setTimeout(() => {
-        iframe.remove();
-        resolve();
-      }, 10000); // 10초 타임아웃 (4개 API 호출)
-
-      iframe.onload = () => {
-        setTimeout(() => {
-          clearTimeout(timeout);
-          iframe.remove();
-          resolve();
-        }, 5000); // 5초 대기 (API 호출 완료 대기)
-      };
-
-      iframe.onerror = () => {
-        clearTimeout(timeout);
-        iframe.remove();
-        resolve();
-      };
-
-      document.body.appendChild(iframe);
-    });
   }
 
   // 캐시 업데이트 이벤트 리스닝
