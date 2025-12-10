@@ -1026,11 +1026,95 @@
     proxy: 'https://fed-proxy.etloveaui.workers.dev/'
   };
 
-  // ===== FRED API 호출 =====
+  // ===== FRED 데이터: JSON 캐시 우선, API 폴백 =====
   let apiErrorCount = 0;
-  const API_TIMEOUT = 10000; // 10초 타임아웃
+  const API_TIMEOUT = 10000;
 
+  // JSON 캐시 저장소 (페이지 로드 시 한 번만 fetch)
+  let fredJsonCache = {
+    daily: null,
+    weekly: null,
+    quarterly: null,
+    loaded: false
+  };
+
+  // JSON 파일들 미리 로드
+  async function loadFredJsonCache() {
+    if (fredJsonCache.loaded) return;
+
+    const baseUrl = window.location.origin + '/100xFenok/data/';
+    const files = ['fred-banking-daily.json', 'fred-banking-weekly.json', 'fred-banking-quarterly.json'];
+
+    try {
+      const results = await Promise.all(files.map(async (file) => {
+        try {
+          const res = await fetch(baseUrl + file);
+          if (res.ok) return await res.json();
+        } catch (e) { }
+        return null;
+      }));
+
+      fredJsonCache.daily = results[0];
+      fredJsonCache.weekly = results[1];
+      fredJsonCache.quarterly = results[2];
+      fredJsonCache.loaded = true;
+
+      const loadedCount = results.filter(r => r).length;
+      console.log(`[FRED JSON] ${loadedCount}/3 파일 로드 완료`);
+    } catch (e) {
+      console.log('[FRED JSON] 캐시 로드 실패, API 폴백 사용');
+    }
+  }
+
+  // 시리즈별 JSON 타입 매핑
+  const SERIES_TYPE_MAP = {
+    // Daily
+    'DGS10': 'daily',
+    'BAMLH0A0HYM2': 'daily',
+    // Weekly
+    'TOTLL': 'weekly',
+    'DPSACBW027SBOG': 'weekly',
+    // Quarterly
+    'DRALACBN': 'quarterly',
+    'DRCCLACBS': 'quarterly',
+    'DRCLACBS': 'quarterly',
+    'DRBLACBS': 'quarterly',
+    'DRCRELEXFACBS': 'quarterly',
+    'BOGZ1FL010000016Q': 'quarterly',
+    'CORALACBN': 'quarterly',
+    'CORCCACBS': 'quarterly',
+    'CORCACBS': 'quarterly',
+    'CORBLACBS': 'quarterly',
+    'CORCREXFACBS': 'quarterly'
+  };
+
+  // JSON 캐시에서 시리즈 가져오기
+  function getSeriesFromCache(seriesId) {
+    const type = SERIES_TYPE_MAP[seriesId];
+    if (!type) return null;
+
+    const cache = fredJsonCache[type];
+    if (!cache || !cache.series || !cache.series[seriesId]) return null;
+
+    // JSON 형식: { date, value } → { date, val } 변환
+    return cache.series[seriesId].map(d => ({ date: d.date, val: d.value }));
+  }
+
+  // 메인 함수: JSON 우선, API 폴백
   async function getSeries(seriesId, days) {
+    // 1. JSON 캐시 시도
+    const cached = getSeriesFromCache(seriesId);
+    if (cached && cached.length > 0) {
+      console.log(`[FRED] ${seriesId}: JSON 캐시 (${cached.length}개)`);
+      return cached;
+    }
+
+    // 2. API 폴백
+    return await getSeriesFromAPI(seriesId, days);
+  }
+
+  // API 직접 호출 (폴백용)
+  async function getSeriesFromAPI(seriesId, days) {
     const end = new Date().toISOString().split('T')[0];
     const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
     const url = `${CONFIG.proxy}fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
@@ -1046,20 +1130,19 @@
       const json = await res.json();
       if (!json.observations) return [];
 
-      // NaN 처리 강화: parseFloat 결과 검증
-      return json.observations
+      const result = json.observations
         .filter(o => o.value !== '.')
         .map(o => {
           const val = parseFloat(o.value);
           return { date: o.date, val: isNaN(val) ? null : val };
         })
         .filter(o => o.val !== null);
+
+      console.log(`[FRED] ${seriesId}: API (${result.length}개)`);
+      return result;
     } catch (e) {
       apiErrorCount++;
-      // 타임아웃 에러 사용자 친화적 메시지
-      const errorMsg = e.name === 'AbortError'
-        ? '타임아웃 (10초)'
-        : e.message;
+      const errorMsg = e.name === 'AbortError' ? '타임아웃 (10초)' : e.message;
       console.error(`[FRED] ${seriesId} fetch error:`, e);
       showApiError(seriesId, errorMsg);
       return [];
@@ -2691,6 +2774,9 @@
     console.log('[Init] Banking Health loading...');
 
     try {
+      // 🚀 FRED JSON 캐시 먼저 로드 (GitHub Actions에서 생성된 정적 파일)
+      await loadFredJsonCache();
+
       // 15개 FRED 시리즈 + FDIC Tier1 병렬 로드 (NCO 5개 추가)
       // Capital Resilience: Defense(FDIC Tier1, FED Tier1) vs Offense(10Y, HY Spread)
       const [delinquency, loans, deposits, creditCard, consumer, business, cre, fedTier1, yield10y, hySpread, tier1,

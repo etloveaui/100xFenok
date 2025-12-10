@@ -1,0 +1,311 @@
+# Banking Health FRED 데이터 수집
+# 분기/주간/일간 데이터를 각각 다른 스케줄로 수집
+# 결과: data/fred-banking-*.json
+
+name: Fetch FRED Banking Data
+
+on:
+  schedule:
+    # 매일 07:00 UTC (한국 16:00) - 일간 데이터
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      data_type:
+        description: 'Data type to fetch'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - daily
+          - weekly
+          - quarterly
+
+env:
+  FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+
+jobs:
+  fetch-daily:
+    if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'daily'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create data directory
+        run: mkdir -p data
+
+      - name: Fetch Daily FRED Data
+        run: |
+          echo "Fetching daily FRED series..."
+
+          node << 'EOF'
+          const https = require('https');
+          const fs = require('fs');
+
+          const API_KEY = process.env.FRED_API_KEY || '6dda7dc3956a2c1d6ac939133de115f1';
+
+          // 일간 시리즈 (Banking Health Capital 탭)
+          const DAILY_SERIES = [
+            { id: 'DGS10', name: '10Y Treasury Yield' },
+            { id: 'BAMLH0A0HYM2', name: 'HY Spread' }
+          ];
+
+          function fetchSeries(seriesId, days = 9999) {
+            return new Promise((resolve) => {
+              const end = new Date().toISOString().split('T')[0];
+              const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+              const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
+
+              https.get(url, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                  try {
+                    const json = JSON.parse(data);
+                    const observations = json.observations || [];
+                    const result = observations
+                      .filter(o => o.value !== '.')
+                      .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+                    console.log(`${seriesId}: ${result.length} points`);
+                    resolve({ id: seriesId, data: result });
+                  } catch (e) {
+                    console.error(`${seriesId}: Error - ${e.message}`);
+                    resolve({ id: seriesId, data: [] });
+                  }
+                });
+              }).on('error', (e) => {
+                console.error(`${seriesId}: Network error - ${e.message}`);
+                resolve({ id: seriesId, data: [] });
+              });
+            });
+          }
+
+          async function main() {
+            console.log('Fetching daily series...');
+            const results = {};
+
+            for (const series of DAILY_SERIES) {
+              const result = await fetchSeries(series.id);
+              results[series.id] = result.data;
+              await new Promise(r => setTimeout(r, 500)); // Rate limit
+            }
+
+            const output = {
+              updated: new Date().toISOString(),
+              type: 'daily',
+              series: results
+            };
+
+            fs.writeFileSync('data/fred-banking-daily.json', JSON.stringify(output, null, 2));
+            console.log('Saved to data/fred-banking-daily.json');
+          }
+
+          main().catch(console.error);
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/fred-banking-daily.json
+          git diff --staged --quiet || git commit -m "chore: update FRED daily data [skip ci]"
+          git push
+
+  fetch-weekly:
+    if: github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'weekly'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create data directory
+        run: mkdir -p data
+
+      - name: Fetch Weekly FRED Data
+        run: |
+          echo "Fetching weekly FRED series..."
+
+          node << 'EOF'
+          const https = require('https');
+          const fs = require('fs');
+
+          const API_KEY = process.env.FRED_API_KEY || '6dda7dc3956a2c1d6ac939133de115f1';
+
+          // 주간 시리즈 (Banking Health Credit 탭)
+          const WEEKLY_SERIES = [
+            { id: 'TOTLL', name: 'Total Loans' },
+            { id: 'DPSACBW027SBOG', name: 'Deposits' }
+          ];
+
+          function fetchSeries(seriesId, days = 11000) {
+            return new Promise((resolve) => {
+              const end = new Date().toISOString().split('T')[0];
+              const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+              const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
+
+              https.get(url, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                  try {
+                    const json = JSON.parse(data);
+                    const observations = json.observations || [];
+                    const result = observations
+                      .filter(o => o.value !== '.')
+                      .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+                    console.log(`${seriesId}: ${result.length} points`);
+                    resolve({ id: seriesId, data: result });
+                  } catch (e) {
+                    console.error(`${seriesId}: Error - ${e.message}`);
+                    resolve({ id: seriesId, data: [] });
+                  }
+                });
+              }).on('error', (e) => {
+                console.error(`${seriesId}: Network error - ${e.message}`);
+                resolve({ id: seriesId, data: [] });
+              });
+            });
+          }
+
+          async function main() {
+            console.log('Fetching weekly series...');
+            const results = {};
+
+            for (const series of WEEKLY_SERIES) {
+              const result = await fetchSeries(series.id);
+              results[series.id] = result.data;
+              await new Promise(r => setTimeout(r, 500)); // Rate limit
+            }
+
+            const output = {
+              updated: new Date().toISOString(),
+              type: 'weekly',
+              series: results
+            };
+
+            fs.writeFileSync('data/fred-banking-weekly.json', JSON.stringify(output, null, 2));
+            console.log('Saved to data/fred-banking-weekly.json');
+          }
+
+          main().catch(console.error);
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/fred-banking-weekly.json
+          git diff --staged --quiet || git commit -m "chore: update FRED weekly data [skip ci]"
+          git push
+
+  fetch-quarterly:
+    if: github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'quarterly'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create data directory
+        run: mkdir -p data
+
+      - name: Fetch Quarterly FRED Data
+        run: |
+          echo "Fetching quarterly FRED series..."
+
+          node << 'EOF'
+          const https = require('https');
+          const fs = require('fs');
+
+          const API_KEY = process.env.FRED_API_KEY || '6dda7dc3956a2c1d6ac939133de115f1';
+
+          // 분기 시리즈 (Banking Health)
+          const QUARTERLY_SERIES = [
+            // 연체율
+            { id: 'DRALACBN', name: 'Total Delinquency Rate' },
+            { id: 'DRCCLACBS', name: 'Credit Card Delinquency' },
+            { id: 'DRCLACBS', name: 'Consumer Delinquency' },
+            { id: 'DRBLACBS', name: 'Business Delinquency' },
+            { id: 'DRCRELEXFACBS', name: 'CRE Delinquency' },
+            // Tier1
+            { id: 'BOGZ1FL010000016Q', name: 'FED Tier1' },
+            // NCO (상각율)
+            { id: 'CORALACBN', name: 'Total NCO' },
+            { id: 'CORCCACBS', name: 'Credit Card NCO' },
+            { id: 'CORCACBS', name: 'Consumer NCO' },
+            { id: 'CORBLACBS', name: 'Business NCO' },
+            { id: 'CORCREXFACBS', name: 'CRE NCO' }
+          ];
+
+          function fetchSeries(seriesId, days = 9999) {
+            return new Promise((resolve) => {
+              const end = new Date().toISOString().split('T')[0];
+              const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+              const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
+
+              https.get(url, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                  try {
+                    const json = JSON.parse(data);
+                    const observations = json.observations || [];
+                    const result = observations
+                      .filter(o => o.value !== '.')
+                      .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+                    console.log(`${seriesId}: ${result.length} points`);
+                    resolve({ id: seriesId, data: result });
+                  } catch (e) {
+                    console.error(`${seriesId}: Error - ${e.message}`);
+                    resolve({ id: seriesId, data: [] });
+                  }
+                });
+              }).on('error', (e) => {
+                console.error(`${seriesId}: Network error - ${e.message}`);
+                resolve({ id: seriesId, data: [] });
+              });
+            });
+          }
+
+          async function main() {
+            console.log('Fetching quarterly series...');
+            const results = {};
+
+            for (const series of QUARTERLY_SERIES) {
+              const result = await fetchSeries(series.id);
+              results[series.id] = result.data;
+              await new Promise(r => setTimeout(r, 500)); // Rate limit
+            }
+
+            const output = {
+              updated: new Date().toISOString(),
+              type: 'quarterly',
+              series: results
+            };
+
+            fs.writeFileSync('data/fred-banking-quarterly.json', JSON.stringify(output, null, 2));
+            console.log('Saved to data/fred-banking-quarterly.json');
+          }
+
+          main().catch(console.error);
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/fred-banking-quarterly.json
+          git diff --staged --quiet || git commit -m "chore: update FRED quarterly data [skip ci]"
+          git push
