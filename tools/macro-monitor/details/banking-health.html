@@ -1074,36 +1074,49 @@
     }
   }
 
-  // ===== FDIC API: 전체 히스토리 (스마트 캐싱) =====
+  // ===== FDIC Tier1: GitHub Actions JSON 또는 API 폴백 =====
+  // 1순위: /data/fdic-tier1.json (GitHub Actions로 생성)
+  // 2순위: FDIC API 직접 호출 (폴백)
   const FDIC_CACHE_KEY = 'fdic_tier1_cache';
 
-  // 현재 사용 가능한 최신 분기 계산 (2개월 지연)
-  function getExpectedLatestQuarter() {
-    const quarterEnds = ['0331', '0630', '0930', '1231'];
-    const now = new Date();
-    const d = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-    const q = Math.floor(d.getMonth() / 3);
-    return `${d.getFullYear()}-${quarterEnds[q].slice(0,2)}-${quarterEnds[q].slice(2)}`;
+  async function getFDICTier1() {
+    // 1. GitHub Actions JSON 시도 (빠름)
+    try {
+      const jsonUrl = window.location.origin + '/100xFenok/data/fdic-tier1.json';
+      console.log('[FDIC] JSON 파일 로드 시도...');
+      const res = await fetch(jsonUrl);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && json.data.length > 0) {
+          // JSON 형식: { date, value } → { date, val } 변환
+          const data = json.data.map(d => ({ date: d.date, val: d.value }));
+          console.log(`[FDIC] JSON 로드 성공 (${data.length}개 분기, 업데이트: ${json.updated})`);
+          return data;
+        }
+      }
+    } catch (e) {
+      console.log('[FDIC] JSON 없음, API 폴백 시도...');
+    }
+
+    // 2. API 폴백 (JSON 없을 때만)
+    return await getFDICTier1FromAPI();
   }
 
-  async function getFDICTier1() {
-    const expectedLatest = getExpectedLatestQuarter();
-
-    // 1. 캐시 확인 - 최신 분기 포함 여부로 판단
+  // FDIC API 직접 호출 (폴백용)
+  async function getFDICTier1FromAPI() {
+    // 캐시 확인
     try {
       const cached = localStorage.getItem(FDIC_CACHE_KEY);
       if (cached) {
         const { data } = JSON.parse(cached);
-        const cacheLatest = data.length > 0 ? data[data.length - 1].date : '';
-        if (cacheLatest >= expectedLatest && data.length > 50) {
-          console.log(`[FDIC] 캐시 사용 (최신: ${cacheLatest})`);
+        if (data.length > 50) {
+          console.log(`[FDIC API] 캐시 사용 (${data.length}개 분기)`);
           return data;
         }
-        console.log(`[FDIC] 새 분기 감지 (캐시: ${cacheLatest}, 예상: ${expectedLatest})`);
       }
     } catch (e) { /* 캐시 에러 무시 */ }
 
-    // 2. API 호출 (전체 분기 병렬)
+    // API 호출
     try {
       const quarterEnds = ['0331', '0630', '0930', '1231'];
       const now = new Date();
@@ -1120,7 +1133,7 @@
         }
       }
       quarters.sort().reverse();
-      console.log(`[FDIC] ${quarters.length}개 분기 로드 시작...`);
+      console.log(`[FDIC API] ${quarters.length}개 분기 로드 시작...`);
 
       const fetchQ = async (q) => {
         try {
@@ -1133,21 +1146,19 @@
         } catch { return null; }
       };
 
-      // 전체 병렬 (rate limit 없음 확인됨)
       const results = (await Promise.all(quarters.map(fetchQ))).filter(r => r);
       results.sort((a, b) => a.date.localeCompare(b.date));
 
-      // 3. 캐시 저장
       if (results.length > 0) {
         try {
           localStorage.setItem(FDIC_CACHE_KEY, JSON.stringify({ data: results, timestamp: Date.now() }));
-          console.log(`[FDIC] ${results.length}개 분기 캐시 저장 완료`);
+          console.log(`[FDIC API] ${results.length}개 분기 캐시 저장`);
         } catch (e) { /* 캐시 저장 실패 무시 */ }
       }
 
       return results.length > 0 ? results : null;
     } catch (e) {
-      console.error('[FDIC] 에러:', e);
+      console.error('[FDIC API] 에러:', e);
       return null;
     }
   }

@@ -1,0 +1,151 @@
+# FDIC Tier1 Capital Ratio 데이터 수집
+# 분기별 자동 실행 + 수동 실행 가능
+# 결과: data/fdic-tier1.json
+
+name: Fetch FDIC Tier1 Data
+
+on:
+  schedule:
+    # 분기 첫째 주 월요일 06:00 UTC (한국 15:00)
+    # 1월, 4월, 7월, 10월
+    - cron: '0 6 1-7 1,4,7,10 1'
+  workflow_dispatch:  # 수동 실행 버튼
+
+jobs:
+  fetch-fdic:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create data directory
+        run: mkdir -p data
+
+      - name: Fetch FDIC Tier1 Data
+        run: |
+          echo "Fetching FDIC Tier1 Capital Ratio data..."
+
+          # 2009년부터 현재까지 모든 분기 데이터 수집
+          # FDIC API: https://banks.data.fdic.gov/api/
+
+          node << 'EOF'
+          const https = require('https');
+          const fs = require('fs');
+
+          // 2009 Q1 ~ 현재까지 분기 목록 생성
+          function generateQuarters() {
+            const quarters = [];
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+
+            for (let year = 2009; year <= currentYear; year++) {
+              for (let q = 1; q <= 4; q++) {
+                if (year === currentYear && q > currentQuarter) break;
+                quarters.push({ year, quarter: q });
+              }
+            }
+            return quarters;
+          }
+
+          // FDIC API 호출
+          function fetchQuarter(year, quarter) {
+            return new Promise((resolve, reject) => {
+              const url = `https://banks.data.fdic.gov/api/financials?filters=YEAR:${year} AND REPDTE:${year}${String(quarter * 3).padStart(2, '0')}31&fields=YEAR,REPDTE,ASSET,T1CRAPCT&sort_by=ASSET&sort_order=DESC&limit=10000&format=json`;
+
+              https.get(url, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                  try {
+                    const json = JSON.parse(data);
+                    if (json.data && json.data.length > 0) {
+                      // 자산 가중 평균 Tier1 비율 계산
+                      let totalAsset = 0;
+                      let weightedTier1 = 0;
+
+                      json.data.forEach(bank => {
+                        const asset = parseFloat(bank.data.ASSET) || 0;
+                        const tier1 = parseFloat(bank.data.T1CRAPCT) || 0;
+                        if (asset > 0 && tier1 > 0) {
+                          totalAsset += asset;
+                          weightedTier1 += asset * tier1;
+                        }
+                      });
+
+                      if (totalAsset > 0) {
+                        const avgTier1 = (weightedTier1 / totalAsset).toFixed(2);
+                        const monthStr = String(quarter * 3).padStart(2, '0');
+                        const lastDay = new Date(year, quarter * 3, 0).getDate();
+                        resolve({
+                          date: `${year}-${monthStr}-${lastDay}`,
+                          value: parseFloat(avgTier1),
+                          banks: json.data.length
+                        });
+                        return;
+                      }
+                    }
+                    resolve(null);
+                  } catch (e) {
+                    resolve(null);
+                  }
+                });
+              }).on('error', () => resolve(null));
+            });
+          }
+
+          async function main() {
+            const quarters = generateQuarters();
+            console.log(`Fetching ${quarters.length} quarters...`);
+
+            const results = [];
+            for (const { year, quarter } of quarters) {
+              const result = await fetchQuarter(year, quarter);
+              if (result) {
+                results.push(result);
+                console.log(`${year} Q${quarter}: ${result.value}% (${result.banks} banks)`);
+              } else {
+                console.log(`${year} Q${quarter}: No data`);
+              }
+              // Rate limiting
+              await new Promise(r => setTimeout(r, 200));
+            }
+
+            // 날짜순 정렬
+            results.sort((a, b) => a.date.localeCompare(b.date));
+
+            // JSON 저장
+            const output = {
+              updated: new Date().toISOString(),
+              source: 'FDIC',
+              description: 'Asset-weighted average Tier 1 Capital Ratio',
+              data: results
+            };
+
+            fs.writeFileSync('data/fdic-tier1.json', JSON.stringify(output, null, 2));
+            console.log(`\nSaved ${results.length} quarters to data/fdic-tier1.json`);
+          }
+
+          main().catch(console.error);
+          EOF
+
+      - name: Verify output
+        run: |
+          echo "=== Generated JSON ==="
+          head -20 data/fdic-tier1.json
+          echo "..."
+          echo "Total lines: $(wc -l < data/fdic-tier1.json)"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/fdic-tier1.json
+          git diff --staged --quiet || git commit -m "chore: update FDIC Tier1 data [skip ci]"
+          git push
