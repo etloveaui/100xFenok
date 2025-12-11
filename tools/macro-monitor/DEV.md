@@ -22,6 +22,7 @@
 | 3 | Foundation (기초) | 펀더멘털 괜찮나? | 월간~분기 | ✅ 4-A 완료 (Banking Health) |
 
 > **Layer 3~4 상세**: `docs/archive/2025-12/20251202_DEV_Phase3.5-4_Plan.md`
+> **🆕 Phase 4 마스터 플랜**: `docs/planning/phase4-indicators-master.md` (2025-12-12)
 
 ---
 
