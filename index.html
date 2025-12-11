@@ -289,6 +289,35 @@
     });
   }
 
+  // ===== 위젯 데이터 전달 (postMessage) =====
+  // main.html에서 요청 → index.html이 응답하는 방식
+  // 새 위젯 추가 시: 아래 switch문에 케이스만 추가
+  window.addEventListener('message', (event) => {
+    // main.html에서 위젯 데이터 요청
+    if (event.data && event.data.type === 'REQUEST_WIDGET_DATA') {
+      const widgetId = event.data.widgetId;
+      console.log(`[Index] ${widgetId} 데이터 요청 수신`);
+
+      try {
+        const rawData = localStorage.getItem(`macro_${widgetId}`);
+        if (rawData) {
+          const parsed = JSON.parse(rawData);
+          // 요청한 iframe에 응답
+          event.source.postMessage({
+            type: 'WIDGET_DATA_RESPONSE',
+            widgetId: widgetId,
+            payload: parsed.data
+          }, '*');
+          console.log(`[Index] ${widgetId} 데이터 응답 전송`);
+        } else {
+          console.log(`[Index] ${widgetId} localStorage 데이터 없음`);
+        }
+      } catch (e) {
+        console.warn(`[Index] ${widgetId} 데이터 처리 실패:`, e);
+      }
+    }
+  });
+
 </script>
 <!-- Global Loading Spinner -->
 <div id="global-spinner"

@@ -345,19 +345,14 @@
       </iframe>
     </div>
 
-    <!-- 3. Banking Health (4-A) -->
-    <div class="indicator-card coming-soon category-liquidity fade-in" data-category="liquidity">
-      <div class="cs-icon">🏦</div>
-      <h3 class="cs-title">Banking Health</h3>
-      <p class="cs-category">Foundation</p>
-      <span class="cs-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        Coming Soon
-      </span>
-      <p class="cs-description">금융 시스템 건전성 (Tier1, 예대율, 연체율)</p>
+    <!-- 3. Banking Health (4-A) - 라이브 위젯 -->
+    <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/banking-health.html')">
+      <iframe
+        src="widgets/banking-health.html"
+        scrolling="no"
+        loading="lazy"
+        title="Banking Health Monitor">
+      </iframe>
     </div>
 
     <!-- 4. Corporate Health (4-B) - 리서치 완료 -->
@@ -453,6 +448,62 @@
       }, index * 50);
     });
   });
+
+  // ===== 위젯 데이터 전달 (postMessage) =====
+  // iframe sandbox에서 localStorage 접근 불가 → 부모에서 데이터 전달
+  (function() {
+    const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health'];
+
+    function sendDataToWidgets() {
+      WIDGET_IDS.forEach(widgetId => {
+        const iframe = document.querySelector(`iframe[src*="${widgetId}.html"]`);
+        if (!iframe || !iframe.contentWindow) return;
+
+        try {
+          const rawData = localStorage.getItem('macro_' + widgetId);
+          if (rawData) {
+            const parsed = JSON.parse(rawData);
+            iframe.contentWindow.postMessage({
+              type: 'WIDGET_DATA_UPDATE',
+              payload: parsed.data
+            }, '*');
+            console.log(`[Index] ${widgetId} 위젯으로 데이터 전송`);
+          }
+        } catch (e) {
+          console.warn(`[Index] ${widgetId} 데이터 전송 실패:`, e);
+        }
+      });
+    }
+
+    // 페이지 로드 시 + iframe 로드 완료 시
+    window.addEventListener('load', () => {
+      // iframe 로드 대기 후 전송
+      setTimeout(sendDataToWidgets, 500);
+      setTimeout(sendDataToWidgets, 1500);
+    });
+
+    // 각 iframe onload 이벤트
+    document.querySelectorAll('.live-widget iframe').forEach(iframe => {
+      iframe.addEventListener('load', () => {
+        setTimeout(() => {
+          const widgetId = WIDGET_IDS.find(id => iframe.src.includes(id));
+          if (!widgetId) return;
+
+          try {
+            const rawData = localStorage.getItem('macro_' + widgetId);
+            if (rawData) {
+              const parsed = JSON.parse(rawData);
+              iframe.contentWindow.postMessage({
+                type: 'WIDGET_DATA_UPDATE',
+                payload: parsed.data
+              }, '*');
+              console.log(`[Index] ${widgetId} iframe 로드 후 데이터 전송`);
+            }
+          } catch (e) {}
+        }, 300);
+      });
+    });
+  })();
 </script>
 
 </body>
