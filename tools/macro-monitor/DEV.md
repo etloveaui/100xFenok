@@ -19,7 +19,7 @@
 |-------|------|------|------------|------|
 | 1 | Shield (방패) | 지금 터지나? | 실시간~일간 | ✅ 완료 |
 | 2 | Fuel (연료) | 돈이 풀리고 있나? | 주간~월간 | ✅ 완료 |
-| 3 | Foundation (기초) | 펀더멘털 괜찮나? | 월간~분기 | 🔄 개발 중 (4-A: Capital✅ Credit✅ Risks✅) |
+| 3 | Foundation (기초) | 펀더멘털 괜찮나? | 월간~분기 | ✅ 4-A 완료 (Banking Health) |
 
 > **Layer 3~4 상세**: `docs/archive/2025-12/20251202_DEV_Phase3.5-4_Plan.md`
 
@@ -34,11 +34,11 @@ tools/macro-monitor/
 ├── widgets/                  ← 카드형 위젯
 │   ├── liquidity-stress.html ← ⚡ Layer 1
 │   ├── liquidity-flow.html   ← 💧 Layer 2
-│   └── banking-health.html   ← 🏦 Layer 3 (4-A, 개발 중)
+│   └── banking-health.html   ← 🏦 Layer 3 (4-A, ✅ 배포)
 ├── details/                  ← 상세 페이지
 │   ├── liquidity-stress.html
 │   ├── liquidity-flow.html
-│   └── banking-health.html   ← 🏦 Layer 3 (4-A, 개발 중)
+│   └── banking-health.html   ← 🏦 Layer 3 (4-A, ✅ 배포)
 └── shared/                   ← 공통 모듈 (ES Module)
     ├── data-manager.js       ← 캐시 + stale + NumberFormat
     ├── constants.js          ← THRESHOLDS, COLORS, ICONS (Banking 포함)
@@ -59,18 +59,36 @@ tools/macro-monitor/
 
 ## Current Implementation
 
-### Layer 1: Liquidity Stress ⚡
+### Layer 1: Liquidity Stress ⚡ (v2 ✅)
 
-- **Widget**: 신호등 스타일, 캐시 기반
-- **Detail**: SOFR-IORB 스프레드, 기간 옵션 1M~MAX
+**컨셉**: Banking Health(신전) 옆의 **정밀 센서** - 의료 장비/항공 계기판 느낌
+**Widget**: Dual Precision Arc (150px 게이지 × 2)
+**Detail**: SOFR-IORB 스프레드, 기간 옵션 1M~MAX
 
-### Layer 2: Liquidity Flow 💧 (v2.1 ✅)
+**게이지 구성**:
+| 위치 | 지표 | 스트레스 로직 |
+|------|------|---------------|
+| 좌측 | Spread (bps) | 높을수록 위험 (직접) |
+| 우측 | RB·GDP (%) | 낮을수록 위험 (역비례) |
+
+### Layer 2: Liquidity Flow 💧 (v2 Clean Stream ✅)
+
+**컨셉**: Digital Hydro-Dynamics - 투명한 유리관 속 흐르는 디지털 자금
+**Widget**: Clean Stream (그라데이션 텍스트 + Wave SVG 배경)
+**Detail**: Net Liquidity 공식, 3탭 (Liquidity Pulse / Credit Flow / Crypto Bridge)
 
 **핵심**: `Net Liquidity = WALCL - TGA - RRP`
 
-### Layer 3: Banking Health 🏦 (4-A v3, Admin 개발 완료)
+**위젯 구조**:
+| 영역 | 내용 |
+|------|------|
+| Hero | Net Flow ($B) - 그라데이션 텍스트 (Teal/Red) |
+| Tributaries | M2 YoY \| Net Liq \| SC/M2 (Vertical Divider)
+
+### Layer 3: Banking Health 🏦 (4-A v4, ✅ 배포 완료)
 
 **목적**: 금융 시스템 건전성 모니터링
+**상태**: index.html 라이브 위젯 (2025-12-11)
 **📊 실제 데이터**: `docs/references/market-data-snapshot-2025-11.md` (사진 006 예대율 71.73%)
 
 **FRED 지표**:
@@ -109,8 +127,8 @@ tools/macro-monitor/
 - 접이식 섹터 분석: 4개 카드 (CC, Consumer, Business, CRE)
 - 모바일: 접힘 기본, PC: 자동 펼침
 
-**Widget**: 2x2 그리드, 캐시 기반
-**접근**: Admin → Dev Pages → Banking Health
+**Widget**: v4 The Solid Bank (월가 스타일 파사드)
+**접근**: index.html → Banking Health 카드 클릭
 
 ---
 
@@ -121,17 +139,49 @@ tools/macro-monitor/
 | 최소 높이 | 280px |
 | 상태 색상 | 🟢 #16a34a / 🟡 #ca8a04 / 🟠 #ea580c / 🔴 #dc2626 |
 | 캐시 | `DataManager.getWidgetDataWithStale()` / `saveWidgetData()` |
-| ⚠️ 금지 | Widget에서 API 직접 호출, 데모 데이터 |
+| ⚠️ 금지 | Widget에서 API 직접 호출, 데모 데이터, View Details 버튼 |
+
+> **Note**: 위젯 카드 전체가 클릭 가능하므로 "View Details" 버튼 불필요 (2025-12-11 제거)
 
 ---
 
 ## Data Flow
 
 ```
-Detail 로드 → FRED/DefiLlama API → 처리 → localStorage 저장
+Detail 로드 → FRED/DefiLlama API → 처리 → localStorage 저장 (macro_${widgetId})
                                               ↓
-Widget 로드 → localStorage 읽기 → 없으면 hidden iframe Detail 로드
+Widget 로드 → localStorage 읽기 또는 postMessage 수신
 ```
+
+### postMessage 통신 (iframe 환경)
+
+**Command Center** (`tools/macro-monitor/index.html`):
+- 부모 페이지에서 직접 localStorage 읽어서 위젯에 전송
+- `WIDGET_DATA_UPDATE` 이벤트
+
+**Main 페이지** (`main.html` in `index.html` iframe):
+- 요청-응답 패턴 (cross-origin 제한 우회)
+- **Smart 2-Slot Carousel** (2025-12-11 구현)
+```
+main.html → index.html: REQUEST_WIDGET_DATA
+index.html → main.html: WIDGET_DATA_RESPONSE
+main.html → widget: WIDGET_DATA_UPDATE
+widget → main.html: WIDGET_READY (렌더링 완료 신호)
+```
+
+**Carousel 플로우** (`main.html`):
+```
+Timer(5s) → prepareNextWidget → 다음 슬롯에 위젯 로드
+          → onload → REQUEST_WIDGET_DATA
+          → WIDGET_DATA_RESPONSE → WIDGET_DATA_UPDATE
+          → renderWidget() → WIDGET_READY
+          → executeTransition (Cross-fade 전환)
+```
+
+**새 위젯 추가 시**: `WIDGETS` 배열에 ID만 추가
+- `main.html`: line 265 (Carousel WIDGETS 배열)
+- `index.html`: line 296
+- `tools/macro-monitor/index.html`: line 455
 
 ---
 
@@ -145,13 +195,16 @@ Widget 로드 → localStorage 읽기 → 없으면 hidden iframe Detail 로드
 
 **Step 2: Widget** (`widgets/[name].html`)
 - [ ] API 호출 금지
-- [ ] localStorage만 읽기
-- [ ] 신호등 상태 표시
-- [ ] 260px+ 높이
+- [ ] localStorage 읽기 + postMessage 수신 리스너
+- [ ] 상태 표시 (게이지/신호등/etc)
+- [ ] 280px+ 최소 높이
+- [ ] View Details 버튼 없음 (카드 전체 클릭)
+- [ ] **WIDGET_READY 신호**: `renderWidget()` 끝에 `window.parent.postMessage({ type: 'WIDGET_READY' }, '*')`
 
 **Step 3: 등록**
-- [ ] index.html Command Center
-- [ ] main.html iframe (필요 시)
+- [ ] `tools/macro-monitor/index.html` WIDGET_IDS 배열
+- [ ] `main.html` WIDGETS 배열 (Carousel용)
+- [ ] `index.html` WIDGET_IDS 배열
 
 ---
 
@@ -182,6 +235,12 @@ Widget 로드 → localStorage 읽기 → 없으면 hidden iframe Detail 로드
 ## Known Issues
 
 - (현재 없음)
+
+### ✅ 해결됨: 위젯 iframe localStorage 이슈 (2025-12-11)
+- **문제**: Admin 페이지 iframe에서 위젯이 "데이터 없음" 표시
+- **원인**: 브라우저 Third-party Storage Partitioning 정책 (iframe 내 localStorage 차단)
+- **해결**: postMessage 통신 방식으로 변경 (부모→iframe 데이터 전달)
+- **상세**: `docs/DECISION_LOG.md` DEC-025
 
 ## Technical Decisions
 

@@ -58,6 +58,42 @@
     .macro-card {
       min-height: 280px;
     }
+
+    /* ===== Widget Carousel ===== */
+    .carousel-container {
+      position: relative;
+      height: 280px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .carousel-slot {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      transition: opacity 0.7s ease-in-out;
+    }
+
+    .carousel-slot.active { opacity: 1; z-index: 10; }
+    .carousel-slot.next { opacity: 0; z-index: 0; }
+
+    .carousel-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      width: 0%;
+      z-index: 20;
+      transition: none;
+    }
+
+    .carousel-progress.running {
+      width: 100%;
+      transition: width 5s linear;
+    }
   </style>
 </head>
 
@@ -98,24 +134,20 @@
 
     </header>
 
-    <!-- Macro Monitor Compact Hero Banner -->
+    <!-- Macro Monitor Carousel Banner -->
     <section class="flex flex-col items-center mb-8">
-      <!-- 위젯 컨테이너: 중앙 정렬 + max-width 제한 -->
-      <div class="w-full max-w-[600px] lg:max-w-[500px] rounded-2xl shadow-lg overflow-hidden card-hover">
-        <iframe
-          src="./tools/macro-monitor/widgets/liquidity-stress.html"
-          style="width: 100%; height: 280px; border: none;"
-          scrolling="no"
-          loading="lazy"
-          title="Liquidity Stress Monitor">
-        </iframe>
+      <!-- 2-Slot Carousel 컨테이너 -->
+      <div id="carousel" class="carousel-container w-full max-w-[600px] lg:max-w-[500px] shadow-lg">
+        <iframe id="slot-a" class="carousel-slot active" scrolling="no"></iframe>
+        <iframe id="slot-b" class="carousel-slot next" scrolling="no"></iframe>
+        <div id="carousel-progress" class="carousel-progress"></div>
       </div>
 
       <!-- CTA 버튼: Market Radar로 이동 -->
       <a href="index.html?path=tools/macro-monitor/index.html"
         class="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-full shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200">
         <span>100x Market Radar</span>
-        <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">Expanding...</span>
+        <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">Live</span>
         <i class="fas fa-arrow-right"></i>
       </a>
     </section>
@@ -220,12 +252,180 @@
   </main>
 
   <script>
+    // SPA 네비게이션
     document.body.addEventListener('click', event => {
       const link = event.target.closest('a[href*="?path="]');
       if (!link) return;
       event.preventDefault();
       parent.loadPage(new URL(link.href).searchParams.get('path'));
     });
+
+    // ===== Smart 2-Slot Carousel =====
+    (function() {
+      const WIDGETS = ['liquidity-stress', 'liquidity-flow', 'banking-health'];
+      const INTERVAL = 5000;      // 5초
+      const READY_TIMEOUT = 2000; // 2초 Safety
+
+      let currentIndex = 0;       // 현재 표시 중인 위젯
+      let activeSlot = 'a';       // 현재 활성 슬롯
+      let isPaused = false;
+      let timer = null;
+      let readyTimeout = null;
+      let pendingWidgetId = null; // 전환 대기 중인 위젯 ID
+
+      const slotA = document.getElementById('slot-a');
+      const slotB = document.getElementById('slot-b');
+      const progress = document.getElementById('carousel-progress');
+      const carousel = document.getElementById('carousel');
+
+      function getWidgetUrl(index) {
+        return `./tools/macro-monitor/widgets/${WIDGETS[index]}.html`;
+      }
+
+      function requestDataForWidget(widgetId) {
+        if (window.parent === window) return;
+        window.parent.postMessage({ type: 'REQUEST_WIDGET_DATA', widgetId }, '*');
+        console.log(`[Carousel] ${widgetId} 데이터 요청`);
+      }
+
+      function resetProgress() {
+        progress.classList.remove('running');
+        progress.style.width = '0%';
+        void progress.offsetWidth; // Force reflow
+      }
+
+      function startProgress() {
+        if (isPaused) return;
+        resetProgress();
+        requestAnimationFrame(() => {
+          progress.classList.add('running');
+        });
+      }
+
+      function executeTransition(toIndex) {
+        clearTimeout(readyTimeout);
+        pendingWidgetId = null;
+
+        // 슬롯 교체
+        if (activeSlot === 'a') {
+          slotA.classList.remove('active');
+          slotA.classList.add('next');
+          slotB.classList.remove('next');
+          slotB.classList.add('active');
+          activeSlot = 'b';
+        } else {
+          slotB.classList.remove('active');
+          slotB.classList.add('next');
+          slotA.classList.remove('next');
+          slotA.classList.add('active');
+          activeSlot = 'a';
+        }
+
+        currentIndex = toIndex;
+        console.log(`[Carousel] 전환 완료 → ${WIDGETS[currentIndex]} (index: ${currentIndex})`);
+
+        startProgress();
+        scheduleNext();
+      }
+
+      function prepareNextWidget() {
+        const nextIndex = (currentIndex + 1) % WIDGETS.length;
+        const nextSlot = activeSlot === 'a' ? slotB : slotA;
+        const nextWidgetId = WIDGETS[nextIndex];
+
+        // 대기 중인 위젯 설정
+        pendingWidgetId = nextWidgetId;
+
+        nextSlot.onload = () => {
+          console.log(`[Carousel] ${nextWidgetId} 로드 완료, 데이터 요청`);
+          requestDataForWidget(nextWidgetId);
+
+          // Safety Timeout
+          readyTimeout = setTimeout(() => {
+            console.warn(`[Carousel] READY 타임아웃 (${nextWidgetId}), 강제 전환`);
+            executeTransition(nextIndex);
+          }, READY_TIMEOUT);
+        };
+
+        nextSlot.src = getWidgetUrl(nextIndex);
+        console.log(`[Carousel] ${nextWidgetId} 로드 시작 (nextIndex: ${nextIndex})`);
+      }
+
+      function scheduleNext() {
+        clearTimeout(timer);
+        if (isPaused) return;
+
+        timer = setTimeout(() => {
+          prepareNextWidget();
+        }, INTERVAL);
+      }
+
+      function pause() {
+        isPaused = true;
+        clearTimeout(timer);
+        clearTimeout(readyTimeout);
+        progress.style.transition = 'none';
+        console.log('[Carousel] 일시정지');
+      }
+
+      function resume() {
+        isPaused = false;
+        startProgress();
+        scheduleNext();
+        console.log('[Carousel] 재개');
+      }
+
+      // 메시지 핸들러
+      window.addEventListener('message', (event) => {
+        const { type, widgetId, payload } = event.data || {};
+
+        // index.html로부터 데이터 응답
+        if (type === 'WIDGET_DATA_RESPONSE') {
+          console.log(`[Carousel] ${widgetId} 데이터 수신`);
+          // 양쪽 슬롯 모두에서 해당 위젯 찾기
+          [slotA, slotB].forEach(slot => {
+            if (slot.src && slot.src.includes(`${widgetId}.html`) && slot.contentWindow) {
+              slot.contentWindow.postMessage({ type: 'WIDGET_DATA_UPDATE', payload }, '*');
+            }
+          });
+        }
+
+        // 위젯 렌더링 완료 신호
+        if (type === 'WIDGET_READY') {
+          // pendingWidgetId가 없으면 무시 (첫 로드 또는 이미 전환 완료)
+          if (!pendingWidgetId) {
+            console.log('[Carousel] WIDGET_READY 수신 (무시: 대기 위젯 없음)');
+            return;
+          }
+
+          const nextIndex = WIDGETS.indexOf(pendingWidgetId);
+          console.log(`[Carousel] WIDGET_READY 수신 → ${pendingWidgetId} 전환 실행`);
+          executeTransition(nextIndex);
+        }
+      });
+
+      // 호버 이벤트
+      carousel.addEventListener('mouseenter', pause);
+      carousel.addEventListener('mouseleave', resume);
+
+      // 초기화
+      function init() {
+        console.log('[Carousel] 초기화 시작');
+        slotA.src = getWidgetUrl(0);
+        slotA.onload = () => {
+          console.log(`[Carousel] 첫 위젯 ${WIDGETS[0]} 로드 완료`);
+          requestDataForWidget(WIDGETS[0]);
+          startProgress();
+          scheduleNext();
+        };
+      }
+
+      if (document.readyState === 'complete') {
+        init();
+      } else {
+        window.addEventListener('load', init);
+      }
+    })();
   </script>
 </body>
 

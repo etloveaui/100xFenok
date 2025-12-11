@@ -1,5 +1,5 @@
-<!-- 100x Market Radar Widget - Banking Health (4-A) -->
-<!-- 클래식 파사드 디자인: 그리스 신전 스타일 3기둥 = Capital / Credit / Risks -->
+<!-- 100x Market Radar Widget - Banking Health (4-A) v4 -->
+<!-- The Solid Bank: 견고한 월가 스타일 은행 건물 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -21,6 +21,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: transparent; }
 
+  /* === 카드 기본 === */
   .card-widget {
     height: 100%;
     min-height: 280px;
@@ -41,7 +42,7 @@
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.03), 0 12px 28px rgba(0,0,0,0.12);
   }
 
-  /* Header */
+  /* === Header === */
   .card-header {
     display: flex;
     align-items: center;
@@ -73,28 +74,12 @@
     border: 1px solid;
   }
 
-  .badge-normal {
-    background: #fef9c3;
-    color: #166534;
-    border-color: #fde047;
-  }
-  .badge-caution {
-    background: #fef9c3;
-    color: #a16207;
-    border-color: #fde047;
-  }
-  .badge-warning {
-    background: #fed7aa;
-    color: #9a3412;
-    border-color: #fdba74;
-  }
-  .badge-danger {
-    background: #fecaca;
-    color: #991b1b;
-    border-color: #fca5a5;
-  }
+  .badge-normal { background: #dcfce7; color: #166534; border-color: #86efac; }
+  .badge-caution { background: #fef9c3; color: #a16207; border-color: #fde047; }
+  .badge-warning { background: #fed7aa; color: #9a3412; border-color: #fdba74; }
+  .badge-danger { background: #fecaca; color: #991b1b; border-color: #fca5a5; }
 
-  /* 파사드 컨테이너 */
+  /* === 파사드 컨테이너 (중앙 정렬) === */
   .facade-container {
     flex: 1;
     display: flex;
@@ -104,71 +89,209 @@
     padding: 8px 0;
   }
 
-  /* 지붕 (삼각형) - 418px 컨텐츠 영역 90% 활용 */
+  /* === 건물 래퍼 (비례 제어 - 380px 제한) === */
+  .building-wrapper {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* === 지붕 (평평한 페디먼트 - 월가 스타일) === */
   .facade-roof {
-    width: 0;
-    height: 0;
-    border-left: 190px solid transparent;
-    border-right: 190px solid transparent;
-    border-bottom: 55px solid #d4a574;
-    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.18));
-  }
-
-  /* 처마 */
-  .facade-cornice {
-    width: 380px;
-    height: 10px;
+    width: 100%;
+    height: 24px;
     background: linear-gradient(180deg, #c9a66b 0%, #b8956a 100%);
+    clip-path: polygon(5% 100%, 15% 0%, 85% 0%, 95% 100%);
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  /* === 처마 (두꺼운 엔타블라처) === */
+  .facade-entablature {
+    width: 100%;
+    height: 12px;
+    background: linear-gradient(180deg, #d4a574 0%, #c9a66b 100%);
     box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+    border-bottom: 2px solid #a88b5a;
   }
 
-  /* 기둥 영역 */
+  /* === 기둥 영역 (배경 벽면) === */
   .facade-pillars {
+    width: 100%;
     display: flex;
-    gap: 24px;
-    padding: 10px 32px;
-    background: linear-gradient(180deg, #e8dcc8 0%, #d4c4a8 100%);
-  }
-
-  /* 개별 기둥 */
-  .pillar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .pillar-column {
-    width: 80px;
-    height: 110px;
-    background: linear-gradient(90deg, #f5f0e6 0%, #e8e0d0 50%, #f5f0e6 100%);
-    border-radius: 8px 8px 0 0;
-    box-shadow: 5px 0 10px rgba(0,0,0,0.12), -5px 0 10px rgba(0,0,0,0.06);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, #f8f4ed 0%, #f0e8da 100%);
     justify-content: center;
-    gap: 4px;
+  }
+
+  /* === 개별 기둥 컨테이너 === */
+  .pillar {
+    flex: 1;
+    max-width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  /* === 기둥 본체 (묵직한 도릭 스타일) === */
+  .pillar-column {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.25s ease;
+  }
+
+  .pillar:hover .pillar-column {
+    transform: translateY(-4px);
+  }
+
+  /* 기둥 머리 (Capital - 도릭 양식) */
+  .pillar-capital {
+    width: 100%;
+    height: 14px;
+    background: linear-gradient(180deg, #d4a574 0%, #c9a66b 100%);
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     position: relative;
   }
 
-  /* 기둥 상단 장식 (코린트식 캐피탈) */
-  .pillar-column::before {
+  .pillar-capital::after {
     content: '';
     position: absolute;
-    top: 0;
-    width: 88px;
-    height: 10px;
-    background: linear-gradient(180deg, #c9a66b 0%, #b8956a 100%);
-    border-radius: 4px 4px 0 0;
+    bottom: 0;
+    left: 5%;
+    right: 5%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
   }
 
-  .pillar-status {
-    font-size: 42px;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+  /* 기둥 몸통 (Shaft) - 세로 홈(Fluting) 느낌 + 상태 색상 */
+  .pillar-shaft {
+    width: 85%;
+    height: 90px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 4px solid rgba(0,0,0,0.06);
+    border-right: 4px solid rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    /* 기본 대리석 느낌 */
+    background: linear-gradient(90deg,
+      rgba(200,200,200,0.3) 0%,
+      rgba(255,255,255,0.9) 20%,
+      rgba(255,255,255,0.95) 50%,
+      rgba(255,255,255,0.9) 80%,
+      rgba(200,200,200,0.3) 100%
+    );
   }
 
+  /* 상태별 기둥 색조 (은은한 조명 효과) */
+  .pillar-shaft.status-normal {
+    background: linear-gradient(90deg,
+      rgba(34,197,94,0.2) 0%,
+      rgba(34,197,94,0.1) 20%,
+      rgba(255,255,255,0.95) 50%,
+      rgba(34,197,94,0.1) 80%,
+      rgba(34,197,94,0.2) 100%
+    );
+    box-shadow: inset 0 0 20px rgba(34,197,94,0.15);
+  }
+  .pillar-shaft.status-caution {
+    background: linear-gradient(90deg,
+      rgba(234,179,8,0.2) 0%,
+      rgba(234,179,8,0.1) 20%,
+      rgba(255,255,255,0.95) 50%,
+      rgba(234,179,8,0.1) 80%,
+      rgba(234,179,8,0.2) 100%
+    );
+    box-shadow: inset 0 0 20px rgba(234,179,8,0.15);
+  }
+  .pillar-shaft.status-warning {
+    background: linear-gradient(90deg,
+      rgba(249,115,22,0.2) 0%,
+      rgba(249,115,22,0.1) 20%,
+      rgba(255,255,255,0.95) 50%,
+      rgba(249,115,22,0.1) 80%,
+      rgba(249,115,22,0.2) 100%
+    );
+    box-shadow: inset 0 0 20px rgba(249,115,22,0.15);
+  }
+  .pillar-shaft.status-danger {
+    background: linear-gradient(90deg,
+      rgba(239,68,68,0.25) 0%,
+      rgba(239,68,68,0.15) 20%,
+      rgba(255,255,255,0.95) 50%,
+      rgba(239,68,68,0.15) 80%,
+      rgba(239,68,68,0.25) 100%
+    );
+    box-shadow: inset 0 0 20px rgba(239,68,68,0.2);
+  }
+
+  /* 수치 표시 (기본 숨김, hover시 표시) */
+  .pillar-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    opacity: 0;
+    transform: scale(0.85);
+    transition: all 0.3s ease;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.9);
+    position: absolute;
+  }
+
+  .pillar:hover .pillar-value {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* 기둥 바닥 (Base - 두꺼운 토대) */
+  .pillar-base {
+    width: 100%;
+    height: 16px;
+    background: linear-gradient(180deg, #c9a66b 0%, #a88b5a 100%);
+    border-radius: 0 0 4px 4px;
+    position: relative;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  }
+
+  /* Glow 효과 (Base 하단) */
+  .pillar-glow {
+    position: absolute;
+    bottom: -2px;
+    left: 10%;
+    right: 10%;
+    height: 4px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .glow-normal {
+    background: #22c55e;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.7), 0 0 24px rgba(34, 197, 94, 0.4);
+  }
+  .glow-caution {
+    background: #eab308;
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.7), 0 0 24px rgba(234, 179, 8, 0.4);
+  }
+  .glow-warning {
+    background: #f97316;
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.7), 0 0 24px rgba(249, 115, 22, 0.4);
+  }
+  .glow-danger {
+    background: #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.7), 0 0 24px rgba(239, 68, 68, 0.4);
+  }
+
+  /* 기둥 라벨 */
   .pillar-label {
-    font-size: 13px;
+    font-size: 10px;
     color: #78350f;
     font-weight: 700;
     margin-top: 8px;
@@ -176,32 +299,16 @@
     text-transform: uppercase;
   }
 
-  /* 기단 */
-  .facade-base {
-    width: 370px;
-    height: 14px;
-    background: linear-gradient(180deg, #c9a66b 0%, #a88b5a 100%);
+  /* === 기단 (Foundation - 견고한 토대) === */
+  .facade-foundation {
+    width: 100%;
+    height: 16px;
+    background: linear-gradient(180deg, #b8956a 0%, #9a7b54 100%);
     border-radius: 0 0 6px 6px;
-    box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   }
 
-  /* Footer */
-  .footer {
-    margin-top: 8px;
-    text-align: center;
-  }
-
-  .view-details {
-    font-size: 10px;
-    color: #92400e;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-  }
-
-  /* Loading */
+  /* === Loading === */
   .loading {
     position: absolute;
     inset: 0;
@@ -231,7 +338,7 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* 캐시 없음 상태 */
+  /* === 캐시 없음 상태 === */
   .no-cache {
     flex: 1;
     display: flex;
@@ -241,24 +348,11 @@
     color: #92400e;
   }
 
-  .no-cache-icon {
-    font-size: 36px;
-    margin-bottom: 8px;
-  }
+  .no-cache-icon { font-size: 36px; margin-bottom: 8px; }
+  .no-cache-text { font-size: 12px; text-align: center; font-weight: 500; }
+  .no-cache-hint { font-size: 10px; margin-top: 4px; color: #b45309; }
 
-  .no-cache-text {
-    font-size: 12px;
-    text-align: center;
-    font-weight: 500;
-  }
-
-  .no-cache-hint {
-    font-size: 10px;
-    margin-top: 4px;
-    color: #b45309;
-  }
-
-  /* Stale Data 경고 배너 */
+  /* === Stale Data 경고 배너 === */
   .stale-warning {
     background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
     border: 1px solid #d97706;
@@ -276,18 +370,20 @@
   .stale-warning-text { font-weight: 500; }
   .stale-warning-age { color: #b45309; font-weight: 600; }
 
-  /* Responsive - 모바일 (320px 기준 → 컨텐츠 288px, 90% 활용) */
-  @media (max-width: 480px) {
+  /* === Responsive - 모바일 === */
+  @media (max-width: 380px) {
     .card-widget { padding: 12px; min-height: 260px; }
     .card-title { font-size: 11px; }
-    .facade-roof { border-left-width: 130px; border-right-width: 130px; border-bottom-width: 42px; }
-    .facade-cornice { width: 260px; height: 8px; }
-    .facade-pillars { gap: 16px; padding: 8px 20px; }
-    .pillar-column { width: 60px; height: 85px; }
-    .pillar-column::before { width: 66px; height: 8px; }
-    .pillar-status { font-size: 32px; }
-    .pillar-label { font-size: 11px; margin-top: 6px; }
-    .facade-base { width: 250px; height: 12px; }
+    .building-wrapper { max-width: 300px; }
+    .facade-roof { height: 20px; }
+    .facade-entablature { height: 10px; }
+    .facade-pillars { gap: 12px; padding: 10px 12px; }
+    .pillar-capital { height: 12px; }
+    .pillar-shaft { height: 75px; }
+    .pillar-value { font-size: 13px; }
+    .pillar-base { height: 14px; }
+    .pillar-label { font-size: 9px; margin-top: 6px; }
+    .facade-foundation { height: 14px; }
   }
 </style>
 </head>
@@ -314,47 +410,60 @@
     <span class="stale-warning-age" id="staleAge">6시간 전</span>
   </div>
 
-  <!-- 메인 컨텐츠: 클래식 파사드 -->
+  <!-- 메인 컨텐츠: The Solid Bank -->
   <div id="mainContent" class="facade-container" style="display: none;">
-    <!-- 지붕 -->
-    <div class="facade-roof"></div>
-    <!-- 처마 -->
-    <div class="facade-cornice"></div>
-    <!-- 기둥들 -->
-    <div class="facade-pillars">
-      <!-- Capital 기둥 -->
-      <div class="pillar">
-        <div class="pillar-column">
-          <span class="pillar-status" id="capitalStatus">🟢</span>
+    <div class="building-wrapper">
+      <!-- 지붕 (평평한 페디먼트) -->
+      <div class="facade-roof"></div>
+      <!-- 처마 (엔타블라처) -->
+      <div class="facade-entablature"></div>
+      <!-- 기둥들 -->
+      <div class="facade-pillars">
+        <!-- Capital 기둥 -->
+        <div class="pillar">
+          <div class="pillar-column">
+            <div class="pillar-capital"></div>
+            <div class="pillar-shaft status-normal" id="capitalShaft">
+              <span class="pillar-value" id="capitalValue">--%</span>
+            </div>
+            <div class="pillar-base">
+              <div class="pillar-glow glow-normal" id="capitalGlow"></div>
+            </div>
+          </div>
+          <span class="pillar-label">Capital</span>
         </div>
-        <span class="pillar-label">Capital</span>
-      </div>
-      <!-- Credit 기둥 -->
-      <div class="pillar">
-        <div class="pillar-column">
-          <span class="pillar-status" id="creditStatus">🟢</span>
+        <!-- Credit 기둥 -->
+        <div class="pillar">
+          <div class="pillar-column">
+            <div class="pillar-capital"></div>
+            <div class="pillar-shaft status-normal" id="creditShaft">
+              <span class="pillar-value" id="creditValue">--%</span>
+            </div>
+            <div class="pillar-base">
+              <div class="pillar-glow glow-normal" id="creditGlow"></div>
+            </div>
+          </div>
+          <span class="pillar-label">Credit</span>
         </div>
-        <span class="pillar-label">Credit</span>
-      </div>
-      <!-- Risks 기둥 -->
-      <div class="pillar">
-        <div class="pillar-column">
-          <span class="pillar-status" id="risksStatus">🟠</span>
+        <!-- Risks 기둥 -->
+        <div class="pillar">
+          <div class="pillar-column">
+            <div class="pillar-capital"></div>
+            <div class="pillar-shaft status-warning" id="risksShaft">
+              <span class="pillar-value" id="risksValue">--%</span>
+            </div>
+            <div class="pillar-base">
+              <div class="pillar-glow glow-warning" id="risksGlow"></div>
+            </div>
+          </div>
+          <span class="pillar-label">Risks</span>
         </div>
-        <span class="pillar-label">Risks</span>
       </div>
+      <!-- 기단 -->
+      <div class="facade-foundation"></div>
     </div>
-    <!-- 기단 -->
-    <div class="facade-base"></div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer" id="footerArea" style="display: none;">
-    <div class="view-details">
-      <span>View Details</span>
-      <span>→</span>
-    </div>
-  </div>
 
   <!-- 캐시 없음 상태 -->
   <div class="no-cache" id="noCache" style="display: none;">
@@ -368,14 +477,29 @@
   const WIDGET_ID = 'banking-health';
   const DETAIL_PATH = 'tools/macro-monitor/details/banking-health.html';
 
-  // 상태별 이모지 - constants.js ICONS.BANKING 사용 (fallback 포함)
-  const getStatusEmoji = (status) => {
-    if (typeof ICONS !== 'undefined' && ICONS.BANKING) {
-      return ICONS.BANKING[status] || ICONS.BANKING.normal;
+  // postMessage 수신 리스너 (부모로부터 데이터 전달받음)
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'WIDGET_DATA_UPDATE') {
+      console.log('[Widget] 부모로부터 데이터 수신');
+      renderWidget(event.data.payload);
+
+      const loader = document.getElementById('loader');
+      if (loader) loader.style.display = 'none';
+
+      const staleWarning = document.getElementById('staleWarning');
+      if (staleWarning) staleWarning.style.display = 'none';
     }
-    // Fallback
-    const fallback = { normal: '🟢', caution: '🟡', warning: '🟠', danger: '🔴' };
-    return fallback[status] || '🟢';
+  });
+
+  // 상태별 클래스
+  const getStatusClass = (status) => {
+    const classes = { normal: 'status-normal', caution: 'status-caution', warning: 'status-warning', danger: 'status-danger' };
+    return classes[status] || 'status-normal';
+  };
+
+  const getGlowClass = (status) => {
+    const classes = { normal: 'glow-normal', caution: 'glow-caution', warning: 'glow-warning', danger: 'glow-danger' };
+    return classes[status] || 'glow-normal';
   };
 
   // 상태별 라벨
@@ -384,20 +508,23 @@
     return labels[status] || 'STABLE';
   };
 
+  // 수치 포맷팅
+  const formatValue = (value, decimals = 1) => {
+    if (value === null || value === undefined || isNaN(value)) return '--%';
+    return value.toFixed(decimals) + '%';
+  };
+
   function renderWidget(data) {
     const mainContent = document.getElementById('mainContent');
-    const footerArea = document.getElementById('footerArea');
     const noCache = document.getElementById('noCache');
 
     if (!data) {
       mainContent.style.display = 'none';
-      footerArea.style.display = 'none';
       noCache.style.display = 'flex';
       return;
     }
 
     mainContent.style.display = 'flex';
-    footerArea.style.display = 'block';
     noCache.style.display = 'none';
 
     // Overall Badge
@@ -408,54 +535,47 @@
 
     // Capital 기둥 (Tier1 기반)
     if (data.tier1) {
-      document.getElementById('capitalStatus').textContent = getStatusEmoji(data.tier1.status);
+      document.getElementById('capitalValue').textContent = formatValue(data.tier1.value, 1);
+      document.getElementById('capitalShaft').className = 'pillar-shaft ' + getStatusClass(data.tier1.status);
+      document.getElementById('capitalGlow').className = 'pillar-glow ' + getGlowClass(data.tier1.status);
     }
 
     // Credit 기둥 (예대율 기반)
     if (data.loanDeposit) {
-      document.getElementById('creditStatus').textContent = getStatusEmoji(data.loanDeposit.status);
+      document.getElementById('creditValue').textContent = formatValue(data.loanDeposit.value, 1);
+      document.getElementById('creditShaft').className = 'pillar-shaft ' + getStatusClass(data.loanDeposit.status);
+      document.getElementById('creditGlow').className = 'pillar-glow ' + getGlowClass(data.loanDeposit.status);
     }
 
     // Risks 기둥 (연체율 기반)
     if (data.delinquency) {
-      document.getElementById('risksStatus').textContent = getStatusEmoji(data.delinquency.status);
+      document.getElementById('risksValue').textContent = formatValue(data.delinquency.value, 2);
+      document.getElementById('risksShaft').className = 'pillar-shaft ' + getStatusClass(data.delinquency.status);
+      document.getElementById('risksGlow').className = 'pillar-glow ' + getGlowClass(data.delinquency.status);
     }
-  }
 
-  // Storage 접근 가능 여부 체크
-  function isStorageAvailable() {
+    // 렌더링 완료 신호 (Carousel용)
     try {
-      const test = '__storage_test__';
-      localStorage.setItem(test, test);
-      localStorage.removeItem(test);
-      return true;
-    } catch (e) {
-      return false;
-    }
+      window.parent.postMessage({ type: 'WIDGET_READY' }, '*');
+    } catch (e) {}
   }
-
 
   async function init() {
     const loader = document.getElementById('loader');
     const staleWarning = document.getElementById('staleWarning');
 
     try {
-      // Storage 접근 불가 시 (iframe 보안 정책 등)
-      if (!isStorageAvailable()) {
-        console.warn('[Widget] Storage not available');
-        renderWidget(null);
-        staleWarning.style.display = 'none';
-        loader.style.display = 'none';
-        return;
-      }
-
-      // 캐시에서 데이터 + stale 상태 읽기
+      // 캐시에서 데이터 읽기 시도 (localStorage 접근 실패 시 조용히 넘어감)
       let cacheResult = { data: null, isStale: true, ageMs: 0 };
-      if (typeof DataManager !== 'undefined' && DataManager.getWidgetDataWithStale) {
-        cacheResult = DataManager.getWidgetDataWithStale(WIDGET_ID);
-      } else if (typeof DataManager !== 'undefined') {
-        cacheResult.data = DataManager.getWidgetData(WIDGET_ID);
-        cacheResult.isStale = false;
+      try {
+        if (typeof DataManager !== 'undefined' && DataManager.getWidgetDataWithStale) {
+          cacheResult = DataManager.getWidgetDataWithStale(WIDGET_ID);
+        } else if (typeof DataManager !== 'undefined') {
+          cacheResult.data = DataManager.getWidgetData(WIDGET_ID);
+          cacheResult.isStale = false;
+        }
+      } catch (storageError) {
+        console.warn('[Widget] 직접 스토리지 접근 불가 (postMessage 대기 중)');
       }
 
       if (cacheResult.data) {
@@ -471,16 +591,23 @@
         } else {
           staleWarning.style.display = 'none';
         }
+        loader.style.display = 'none';
       } else {
-        // 캐시 없음 - 디테일 페이지 방문 유도
-        renderWidget(null);
-        staleWarning.style.display = 'none';
+        // 데이터 없음 - postMessage 대기 (3초 후에도 없으면 '데이터 없음' 표시)
+        setTimeout(() => {
+          const noCache = document.getElementById('noCache');
+          if (noCache && noCache.style.display !== 'none') return;
+          const mainContent = document.getElementById('mainContent');
+          if (mainContent && mainContent.style.display === 'none') {
+            renderWidget(null);
+            loader.style.display = 'none';
+          }
+        }, 3000);
       }
     } catch (e) {
       console.error('[Widget] Init error:', e);
       renderWidget(null);
       staleWarning.style.display = 'none';
-    } finally {
       loader.style.display = 'none';
     }
   }

@@ -119,6 +119,18 @@ if (inputHash === storedHash) {
 
 ---
 
+## 정리 이력
+
+### Banking Health 섹션 삭제 (2025-12-11)
+- **이유**: index.html로 배포 완료 → Admin 개발용 섹션 불필요
+- **삭제 항목**:
+  - Dev Pages: Banking Health 링크
+  - Current Widget: iframe 프리뷰
+  - Widget Prototype Comparison: 4개 프로토타입 비교
+  - postMessage 데이터 전달 스크립트
+
+---
+
 ## Change Log
 
 > 상세 이력: `CookBook/docs/CHANGELOG.md` 참조
