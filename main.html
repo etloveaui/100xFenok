@@ -94,6 +94,19 @@
       width: 100%;
       transition: width 5s linear;
     }
+
+    /* ===== 모바일 반응형 (2025-12-13) ===== */
+    @media (max-width: 767px) {
+      .carousel-container {
+        height: 320px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .carousel-container {
+        height: 360px;
+      }
+    }
   </style>
 </head>
 
@@ -333,10 +346,12 @@
         const nextSlot = activeSlot === 'a' ? slotB : slotA;
         const nextWidgetId = WIDGETS[nextIndex];
 
-        // 대기 중인 위젯 설정
-        pendingWidgetId = nextWidgetId;
+        // 로드 시작 시 null로 초기화 (캐시된 위젯의 WIDGET_READY 무시)
+        pendingWidgetId = null;
 
         nextSlot.onload = () => {
+          // onload 후에만 대기 위젯 설정
+          pendingWidgetId = nextWidgetId;
           console.log(`[Carousel] ${nextWidgetId} 로드 완료, 데이터 요청`);
           requestDataForWidget(nextWidgetId);
 
@@ -392,9 +407,17 @@
 
         // 위젯 렌더링 완료 신호
         if (type === 'WIDGET_READY') {
-          // pendingWidgetId가 없으면 무시 (첫 로드 또는 이미 전환 완료)
+          const readyWidgetId = event.data.widgetId;
+
+          // 대기 위젯 없으면 무시
           if (!pendingWidgetId) {
-            console.log('[Carousel] WIDGET_READY 수신 (무시: 대기 위젯 없음)');
+            console.log(`[Carousel] WIDGET_READY 무시 (${readyWidgetId}): 대기 위젯 없음`);
+            return;
+          }
+
+          // 대기 중인 위젯과 일치하는지 확인
+          if (readyWidgetId !== pendingWidgetId) {
+            console.log(`[Carousel] WIDGET_READY 무시: ${readyWidgetId} (대기: ${pendingWidgetId})`);
             return;
           }
 

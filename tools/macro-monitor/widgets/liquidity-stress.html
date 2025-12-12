@@ -310,37 +310,36 @@
 
   /* === Responsive - 모바일 (세로 스택) === */
   @media (max-width: 400px) {
-    .card-widget { padding: 12px; min-height: 340px; }
+    .card-widget { padding: 10px; min-height: 350px; }
     .card-title { font-size: 10px; }
 
     .dual-arc-container {
-      flex-direction: column;
-      gap: 6px;
+      flex-direction: row;  /* 게이지 2개 가로 배치 */
+      gap: 8px;
+      justify-content: center;
     }
 
     .arc-divider {
-      width: 80%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent 0%, #cbd5e1 20%, #cbd5e1 80%, transparent 100%);
+      display: none;  /* 가로 배치 시 구분선 숨김 */
     }
 
     .gauge-wrapper {
       max-width: none;
-      flex-direction: row;
-      gap: 16px;
+      flex-direction: column;  /* 게이지+레이블 세로 */
+      gap: 4px;
     }
 
     .gauge {
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
     }
 
-    .gauge-value { font-size: 22px; }
-    .gauge-unit { font-size: 11px; }
-    .gauge-status { margin-top: 4px; }
+    .gauge-value { font-size: 18px; }
+    .gauge-unit { font-size: 10px; }
+    .gauge-status { margin-top: 2px; font-size: 8px; }
 
     .threshold-tick {
-      transform-origin: center 54px;
+      transform-origin: center 45px;
     }
   }
 
@@ -564,7 +563,7 @@
 
     // 렌더링 완료 신호 (Carousel용)
     try {
-      window.parent.postMessage({ type: 'WIDGET_READY' }, '*');
+      window.parent.postMessage({ type: 'WIDGET_READY', widgetId: 'liquidity-stress' }, '*');
     } catch (e) {}
   }
 
