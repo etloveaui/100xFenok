@@ -353,7 +353,7 @@
 
   /* === Responsive === */
   @media (max-width: 400px) {
-    .card-widget { padding: 14px; min-height: 320px; }
+    .card-widget { padding: 12px; min-height: 350px; }
     .hero-value { font-size: 36px; }
     .hero-unit { font-size: 14px; }
 
@@ -643,7 +643,7 @@
 
     // 렌더링 완료 신호 (Carousel용)
     try {
-      window.parent.postMessage({ type: 'WIDGET_READY' }, '*');
+      window.parent.postMessage({ type: 'WIDGET_READY', widgetId: 'liquidity-flow' }, '*');
     } catch (e) {}
   }
 
