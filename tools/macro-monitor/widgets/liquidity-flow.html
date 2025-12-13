@@ -353,8 +353,9 @@
 
   /* === Responsive === */
   @media (max-width: 400px) {
-    .card-widget { padding: 12px; min-height: 350px; }
-    .hero-value { font-size: 36px; }
+    .card-widget { padding: 12px 12px 16px; min-height: 320px; }
+    .hero-section { padding: 12px 0 8px; }
+    .hero-value { font-size: 34px; }
     .hero-unit { font-size: 14px; }
 
     .tributaries {
@@ -365,7 +366,8 @@
     .tributary {
       flex-direction: row;
       justify-content: space-between;
-      padding: 10px 0;
+      align-items: center;
+      padding: 14px 4px;
     }
 
     .tributary:not(:last-child) {
@@ -377,12 +379,19 @@
       margin-bottom: 0;
     }
 
+    .tributary-name {
+      font-size: 10px;
+    }
+
     .tributary-value {
-      font-size: 16px;
+      font-size: 18px;
     }
 
     .tributary-sub {
-      display: none;
+      display: inline-block;
+      font-size: 9px;
+      margin-left: 4px;
+      opacity: 0.7;
     }
   }
 
