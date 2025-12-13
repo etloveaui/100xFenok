@@ -1,6 +1,6 @@
-# data/benchmarks/ - Bloomberg 밸류에이션 데이터
+# data/benchmarks/ - 100xFenok Benchmarks 밸류에이션 데이터
 
-> **소스**: Bloomberg Terminal (주간 업데이트)
+> **소스**: 100xFenok Benchmarks (원본: Bloomberg Terminal, 주간 업데이트)
 > **기간**: 2010-01-22 ~ 현재 (15년, 829+ 포인트)
 > **협의 문서**: `docs/research/bloomberg-json-collaboration.md`
 
