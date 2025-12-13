@@ -146,7 +146,7 @@ tools/macro-monitor/
 
 ### 📱 반응형 브레이크포인트 (2025-12-13)
 
-> **상세 계획**: `docs/planning/mobile-responsive-plan.md`
+> **상세 계획**: `docs/archive/2025-12/20251213_PLAN_mobile-responsive.md`
 
 | 구간 | 화면 폭 | 컨테이너 높이 |
 |------|---------|---------------|
