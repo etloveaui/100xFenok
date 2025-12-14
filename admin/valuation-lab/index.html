@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>밸류에이션 실험실 - 100x FenoK</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+
+  <!-- Shared Modules -->
+  <script src="shared/constants.js"></script>
+  <script src="shared/formatters.js"></script>
+  <script src="shared/calculations.js"></script>
+  <script src="shared/validator.js"></script>
+  <script src="shared/security.js"></script>
+  <script src="shared/cache-manager.js"></script>
+  <script src="shared/data-manager.js"></script>
+  <script src="shared/indicators.js"></script>
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-flask text-amber-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">밸류에이션 실험실</h1>
+            <p class="text-gray-500 text-sm">MVP 기능 테스트</p>
+          </div>
+        </div>
+        <a href="../" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> Admin
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+
+    <!-- MVP 진행률 -->
+    <section class="mb-8">
+      <div class="bg-white rounded-xl p-6 shadow">
+        <h2 class="font-semibold mb-4">MVP 진행률</h2>
+        <div class="flex items-center gap-4">
+          <div class="flex-1 bg-gray-200 rounded-full h-4">
+            <div class="bg-green-500 h-4 rounded-full" style="width: 100%"></div>
+          </div>
+          <span class="text-sm text-gray-600">20 / 20 (100%) ✅</span>
+        </div>
+        <p class="text-sm text-gray-500 mt-2">Phase 1: ✅ Layer 0 (8/8) | Phase 2: ✅ Layer 1A (8/8) | Phase 3: ✅ Layer 1B (4/4)</p>
+      </div>
+    </section>
+
+    <!-- Layer 1B: UI 기능 -->
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-palette text-purple-500 mr-2"></i>UI 기능
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- 신호등 -->
+        <a href="signal-light.html" class="bg-white rounded-xl p-4 shadow hover:shadow-lg transition-shadow block">
+          <div class="flex items-center space-x-3 mb-3">
+            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-traffic-light text-green-500"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm">신호등</h3>
+              <p class="text-xs text-gray-500">4h</p>
+            </div>
+          </div>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">✅ 완료</span>
+        </a>
+
+        <!-- 1문장 해석 -->
+        <a href="one-liner.html" class="bg-white rounded-xl p-4 shadow hover:shadow-lg transition-shadow block">
+          <div class="flex items-center space-x-3 mb-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-comment text-blue-500"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm">1문장 해석</h3>
+              <p class="text-xs text-gray-500">2h</p>
+            </div>
+          </div>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">✅ 완료</span>
+        </a>
+
+        <!-- 분위수 -->
+        <a href="percentile.html" class="bg-white rounded-xl p-4 shadow hover:shadow-lg transition-shadow block">
+          <div class="flex items-center space-x-3 mb-3">
+            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-chart-line text-indigo-500"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm">분위수 차트</h3>
+              <p class="text-xs text-gray-500">4h</p>
+            </div>
+          </div>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">✅ 완료</span>
+        </a>
+
+        <!-- 카드 -->
+        <a href="card.html" class="bg-white rounded-xl p-4 shadow hover:shadow-lg transition-shadow block">
+          <div class="flex items-center space-x-3 mb-3">
+            <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-id-card text-amber-500"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm">밸류에이션 카드</h3>
+              <p class="text-xs text-gray-500">6h</p>
+            </div>
+          </div>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">✅ 완료</span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- Layer 1A 테스트 -->
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-chart-bar text-indigo-500 mr-2"></i>Layer 1A 지표 테스트
+      </h2>
+      <div class="bg-white rounded-xl p-4 shadow">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+          <button onclick="testIndicators()" class="bg-indigo-500 text-white px-3 py-2 rounded text-sm hover:bg-indigo-600">전체 지표</button>
+          <button onclick="testPercentiles()" class="bg-teal-500 text-white px-3 py-2 rounded text-sm hover:bg-teal-600">Percentiles</button>
+          <button onclick="testValuationSummary()" class="bg-rose-500 text-white px-3 py-2 rounded text-sm hover:bg-rose-600">종합 분석</button>
+        </div>
+        <div id="indicator-output" class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs h-64 overflow-auto">
+          <p class="text-gray-500">// 버튼을 클릭하여 Layer 1A 지표 테스트 실행</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layer 0 테스트 -->
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-vial text-amber-500 mr-2"></i>Layer 0 인프라 테스트
+      </h2>
+      <div class="bg-white rounded-xl p-4 shadow">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          <button onclick="testFormatters()" class="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600">Formatters</button>
+          <button onclick="testCalculations()" class="bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600">Calculations</button>
+          <button onclick="testValidator()" class="bg-purple-500 text-white px-3 py-2 rounded text-sm hover:bg-purple-600">Validator</button>
+          <button onclick="testDataManager()" class="bg-amber-500 text-white px-3 py-2 rounded text-sm hover:bg-amber-600">DataManager</button>
+        </div>
+        <div id="test-output" class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs h-48 overflow-auto">
+          <p class="text-gray-500">// 버튼을 클릭하여 테스트 실행</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 데이터 확인 -->
+    <section>
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-database text-green-500 mr-2"></i>데이터 상태
+      </h2>
+      <div class="bg-white rounded-xl p-4 shadow">
+        <p class="text-sm text-gray-600">
+          <strong>경로:</strong> <code class="bg-gray-100 px-2 py-1 rounded">/data/benchmarks/</code>
+        </p>
+        <p class="text-xs text-gray-500 mt-2">us.json, us_sectors.json, micro_sectors.json, developed.json, emerging.json, msci.json</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const output = document.getElementById('test-output');
+    function log(msg) {
+      output.innerHTML += `<p>${msg}</p>`;
+      output.scrollTop = output.scrollHeight;
+    }
+    function clearLog() {
+      output.innerHTML = '';
+    }
+
+    function testFormatters() {
+      clearLog();
+      log('=== Formatters 테스트 ===');
+      log(`formatNumber(1234.567, 2) → "${Formatters.formatNumber(1234.567, 2)}"`);
+      log(`formatPercent(0.156, 1, true) → "${Formatters.formatPercent(0.156, 1, true)}"`);
+      log(`formatPE(18.5) → "${Formatters.formatPE(18.5)}"`);
+      log(`formatPB(2.3) → "${Formatters.formatPB(2.3)}"`);
+      log(`formatCompact(1500000) → "${Formatters.formatCompact(1500000)}"`);
+      const sig25 = Formatters.formatSignal(25);
+      log(`formatSignal(25) → ${sig25.signal} ${sig25.label} (${sig25.color})`);
+      const sig50 = Formatters.formatSignal(50);
+      log(`formatSignal(50) → ${sig50.signal} ${sig50.label} (${sig50.color})`);
+      const sig75 = Formatters.formatSignal(75);
+      log(`formatSignal(75) → ${sig75.signal} ${sig75.label} (${sig75.color})`);
+      log('✅ Formatters 테스트 완료');
+    }
+
+    function testCalculations() {
+      clearLog();
+      log('=== Calculations 테스트 ===');
+      log(`earningsYield(20) → ${Calculations.earningsYield(20)} (5%)`);
+      log(`percentile(15, [10,12,15,18,20]) → ${Calculations.percentile(15, [10,12,15,18,20])}`);
+      log(`zScore(15, 14, 2) → ${Calculations.zScore(15, 14, 2)}`);
+      log(`mean([10, 15, 20]) → ${Calculations.mean([10, 15, 20])}`);
+      log(`standardDeviation([10, 15, 20]) → ${Calculations.standardDeviation([10, 15, 20]).toFixed(2)}`);
+      log(`sectorPremium(22, 20) → ${Calculations.sectorPremium(22, 20)} (+10%)`);
+      log(`return52Week(110, 100) → ${Calculations.return52Week(110, 100)} (+10%)`);
+      log(`pegProxy(20, 15) → ${Calculations.pegProxy(20, 15).toFixed(2)}`);
+      log('✅ Calculations 테스트 완료');
+    }
+
+    function testValidator() {
+      clearLog();
+      log('=== Validator 테스트 ===');
+      log(`isValidPE(20) → ${Validator.isValidPE(20)}`);
+      log(`isValidPE(-5) → ${Validator.isValidPE(-5)}`);
+      log(`isValidPB(2.5) → ${Validator.isValidPB(2.5)}`);
+      log(`isValidROE(15) → ${Validator.isValidROE(15)}`);
+      log(`isValidROE(-5) → ${Validator.isValidROE(-5)} (음수 허용)`);
+      log(`sanitize(null, 0) → ${Validator.sanitize(null, 0)}`);
+      const record = { date: '2025-01-15', best_pe_ratio: 20 };
+      const result = Validator.validateRecord(record);
+      log(`validateRecord({date, pe}) → valid: ${result.valid}`);
+      log('✅ Validator 테스트 완료');
+    }
+
+    async function testDataManager() {
+      clearLog();
+      log('=== DataManager 테스트 ===');
+      log('US 데이터 로딩 중...');
+      try {
+        const data = await DataManager.loadBenchmark('US');
+        log(`✅ US 데이터 로드 완료`);
+
+        // 섹션 키 확인
+        const sections = DataManager.getSectionKeys(data);
+        log(`섹션 목록: ${sections.join(', ')}`);
+
+        // S&P500 섹션 데이터
+        const sp500Data = DataManager.getSectionData(data, 'sp500');
+        log(`S&P500 데이터: ${sp500Data.length}개 레코드`);
+
+        // 최신 데이터
+        const latest = DataManager.getLatestData(sp500Data);
+        log(`최신 날짜: ${latest.date}`);
+        log(`P/E: ${latest.best_pe_ratio?.toFixed(2)}`);
+        log(`P/B: ${latest.px_to_book_ratio?.toFixed(2)}`);
+        log(`ROE: ${(latest.roe * 100)?.toFixed(1)}%`);
+
+        log('✅ DataManager 테스트 완료');
+      } catch (e) {
+        log(`❌ 에러: ${e.message}`);
+        console.error(e);
+      }
+    }
+
+    // ========================================
+    // Layer 1A 지표 테스트 함수
+    // ========================================
+
+    const indOutput = document.getElementById('indicator-output');
+    function logInd(msg) {
+      indOutput.innerHTML += `<p>${msg}</p>`;
+      indOutput.scrollTop = indOutput.scrollHeight;
+    }
+    function clearIndLog() {
+      indOutput.innerHTML = '';
+    }
+
+    async function testIndicators() {
+      clearIndLog();
+      logInd('=== Layer 1A 지표 테스트 ===');
+      logInd('S&P500 데이터 로딩 중...');
+
+      try {
+        const data = await DataManager.loadBenchmark('US');
+        const sp500Data = DataManager.getSectionData(data, 'sp500');
+        const latest = DataManager.getLatestData(sp500Data);
+        logInd(`✅ 데이터 로드 완료 (${sp500Data.length}개 레코드)`);
+        logInd('');
+
+        // Step 2.1: 간단한 지표
+        logInd('--- Step 2.1: 간단한 지표 ---');
+        const ey = Indicators.getEarningsYield(latest);
+        logInd(`#9 Earnings Yield: ${ey.formatted} (${ey.description})`);
+
+        const ret52 = Indicators.getReturn52Week(sp500Data);
+        logInd(`#15 52-Week Return: ${ret52.formatted}`);
+
+        const peg = Indicators.getPEGProxy(latest);
+        logInd(`#16 PEG Proxy: ${peg.signal} ${peg.formatted} (${peg.signalLabel})`);
+        logInd('');
+
+        // Step 2.2: Percentile 그룹
+        logInd('--- Step 2.2: Percentile 그룹 ---');
+        const pePct = Indicators.getPEPercentile(sp500Data);
+        logInd(`#10 P/E Percentile: ${pePct.signal} ${pePct.formatted} (${pePct.signalLabel})`);
+
+        const pbPct = Indicators.getPBPercentile(sp500Data);
+        logInd(`#11 P/B Percentile: ${pbPct.signal} ${pbPct.formatted} (${pbPct.signalLabel})`);
+
+        const roePct = Indicators.getROEPercentile(sp500Data);
+        logInd(`#12 ROE Percentile: ${roePct.signal} ${roePct.formatted} (${roePct.signalLabel})`);
+        logInd('');
+
+        // Step 2.3: 통계 그룹
+        logInd('--- Step 2.3: 통계 그룹 ---');
+        const zScore = Indicators.getPEZScore(sp500Data);
+        logInd(`#13 P/E Z-Score: ${zScore.signal} ${zScore.formatted} (${zScore.signalLabel})`);
+
+        // Sector Premium은 섹터 데이터 필요 (생략)
+        logInd(`#14 Sector Premium: (섹터 데이터 필요)`);
+
+        logInd('');
+        logInd('✅ Layer 1A 지표 테스트 완료');
+      } catch (e) {
+        logInd(`❌ 에러: ${e.message}`);
+        console.error(e);
+      }
+    }
+
+    async function testPercentiles() {
+      clearIndLog();
+      logInd('=== Percentile 상세 테스트 ===');
+
+      try {
+        const data = await DataManager.loadBenchmark('US');
+        const sections = DataManager.getSectionKeys(data);
+        logInd(`섹션: ${sections.join(', ')}`);
+        logInd('');
+
+        for (const section of sections) {
+          const sectionData = DataManager.getSectionData(data, section);
+          const pePct = Indicators.getPEPercentile(sectionData);
+          logInd(`${section}: P/E ${pePct.signal} ${pePct.formatted}`);
+        }
+
+        logInd('');
+        logInd('✅ Percentile 테스트 완료');
+      } catch (e) {
+        logInd(`❌ 에러: ${e.message}`);
+        console.error(e);
+      }
+    }
+
+    async function testValuationSummary() {
+      clearIndLog();
+      logInd('=== 종합 분석 테스트 ===');
+      logInd('S&P500 종합 밸류에이션 분석 중...');
+
+      try {
+        const summary = await Indicators.getValuationSummary('US', 'sp500');
+
+        if (summary.error) {
+          logInd(`❌ 에러: ${summary.error}`);
+          return;
+        }
+
+        logInd(`날짜: ${summary.date}`);
+        logInd('');
+        logInd('📊 밸류에이션 요약:');
+        logInd(`  Earnings Yield: ${summary.earningsYield.formatted}`);
+        logInd(`  52-Week Return: ${summary.return52Week.formatted}`);
+        logInd(`  PEG Proxy: ${summary.pegProxy.signal} ${summary.pegProxy.formatted}`);
+        logInd(`  P/E Percentile: ${summary.pePercentile.signal} ${summary.pePercentile.formatted}`);
+        logInd(`  P/B Percentile: ${summary.pbPercentile.signal} ${summary.pbPercentile.formatted}`);
+        logInd(`  ROE Percentile: ${summary.roePercentile.signal} ${summary.roePercentile.formatted}`);
+        logInd(`  P/E Z-Score: ${summary.peZScore.signal} ${summary.peZScore.formatted}`);
+        logInd('');
+        logInd('✅ 종합 분석 완료');
+      } catch (e) {
+        logInd(`❌ 에러: ${e.message}`);
+        console.error(e);
+      }
+    }
+  </script>
+
+</body>
+</html>
