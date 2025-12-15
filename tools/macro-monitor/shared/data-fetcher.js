@@ -108,6 +108,8 @@ class MacroDataFetcher {
    * Banking Health 데이터 fetch
    * FRED: DGS10, DRALACBN, TOTLL, DPSACBW027SBOG, BOGZ1FL010000016Q, BAMLH0A0HYM2
    * FDIC: Tier1 (JSON 캐시 또는 API)
+   *
+   * ★ Detail 페이지와 동일한 형식으로 반환 (DEC-032 수정)
    */
   async fetchBankingHealth() {
     const days = 365 * 2; // 2년 데이터
@@ -132,43 +134,40 @@ class MacroDataFetcher {
         this.fetchFDICTier1()                   // FDIC Tier1
       ]);
 
-      // 최신값 추출 및 상태 계산
-      const latestDelinquency = this.getLatestValue(delinquency);
+      // 최신값 추출
+      const latestDelinquency = this.getLatestValue(delinquency) || 0;
       const latestLoans = this.getLatestValue(loans);
       const latestDeposits = this.getLatestValue(deposits);
-      const loanDepositRatio = latestDeposits > 0 ? (latestLoans / latestDeposits * 100) : null;
+      const latestTier1 = this.getLatestValue(fdicTier1) || this.getLatestValue(fedTier1) || 0;
+
+      // 예대율 계산
+      const loanDepositRatio = latestDeposits > 0 ? parseFloat((latestLoans / latestDeposits * 100).toFixed(2)) : 0;
+
+      // 여신증가율 계산 (YoY)
+      const loanGrowth = this.calculateLoanGrowth(loans);
 
       // 상태 판정 (constants.js THRESHOLDS 기반)
-      const delinquencyStatus = this.getBankingStatus('delinquency', latestDelinquency);
-      const loanDepositStatus = this.getBankingStatus('loanDeposit', loanDepositRatio);
+      const delStatus = this.getDelinquencyStatus(latestDelinquency);
+      const t1Status = this.getTier1Status(latestTier1);
+      const ldStatus = this.getLoanDepositStatus(loanDepositRatio);
+      const lgStatus = this.getLoanGrowthStatus(loanGrowth);
 
       // 종합 상태 (Weakest Link)
-      const overallStatus = this.getWorstStatus([delinquencyStatus, loanDepositStatus]);
+      const overallStatus = this.getWorstStatus([delStatus, t1Status, ldStatus, lgStatus]);
 
+      // 라벨 맵 (Detail과 동일)
+      const statusLabels = { normal: '정상', caution: '주의', warning: '경계', danger: '위험' };
+      const overallLabels = { normal: 'Healthy', caution: 'Watch', warning: 'Caution', danger: 'Stress' };
+
+      // ★ Detail과 동일한 형식으로 반환
       return {
-        timestamp: Date.now(),
-        metrics: {
-          delinquency: latestDelinquency,
-          loanDepositRatio,
-          tier1: this.getLatestValue(fdicTier1),
-          fedTier1: this.getLatestValue(fedTier1),
-          yield10y: this.getLatestValue(yield10y),
-          hySpread: this.getLatestValue(hySpread)
-        },
-        statuses: {
-          delinquency: delinquencyStatus,
-          loanDeposit: loanDepositStatus
-        },
-        overall: overallStatus,
-        series: {
-          delinquency,
-          loans,
-          deposits,
-          fedTier1,
-          yield10y,
-          hySpread,
-          fdicTier1
-        }
+        overallStatus,
+        overallLabel: overallLabels[overallStatus],
+        delinquency: { value: parseFloat(latestDelinquency.toFixed(2)), status: delStatus, label: statusLabels[delStatus] },
+        tier1: { value: parseFloat(latestTier1.toFixed(2)), status: t1Status, label: statusLabels[t1Status] },
+        loanDeposit: { value: loanDepositRatio, status: ldStatus, label: statusLabels[ldStatus] },
+        loanGrowth: { value: parseFloat(loanGrowth.toFixed(2)), status: lgStatus, label: statusLabels[lgStatus] },
+        updated: new Date().toISOString()
       };
     } catch (e) {
       console.error('[DataFetcher] Banking Health fetch error:', e);
@@ -177,9 +176,70 @@ class MacroDataFetcher {
   }
 
   /**
+   * 여신증가율 계산 (YoY)
+   */
+  calculateLoanGrowth(loans) {
+    if (!loans?.length || loans.length < 2) return 0;
+
+    const latestVal = loans[loans.length - 1]?.val;
+    // 약 1년 전 데이터 (주간 데이터 ~52주)
+    const yearAgoIdx = Math.max(0, loans.length - 52);
+    const yearAgoVal = loans[yearAgoIdx]?.val;
+
+    if (!latestVal || !yearAgoVal || yearAgoVal === 0) return 0;
+    return ((latestVal - yearAgoVal) / yearAgoVal) * 100;
+  }
+
+  /**
+   * 연체율 상태 판정
+   */
+  getDelinquencyStatus(val) {
+    if (val == null) return 'normal';
+    if (val < 2) return 'normal';
+    if (val < 3) return 'caution';
+    if (val < 4) return 'warning';
+    return 'danger';
+  }
+
+  /**
+   * Tier1 자본비율 상태 판정
+   */
+  getTier1Status(val) {
+    if (val == null) return 'normal';
+    if (val >= 12) return 'normal';
+    if (val >= 10) return 'caution';
+    if (val >= 8) return 'warning';
+    return 'danger';
+  }
+
+  /**
+   * 예대율 상태 판정
+   */
+  getLoanDepositStatus(val) {
+    if (val == null) return 'normal';
+    if (val >= 60 && val <= 85) return 'normal';
+    if (val > 85) return 'warning';  // 과열
+    if (val >= 55) return 'caution';
+    return 'warning';  // 위축
+  }
+
+  /**
+   * 여신증가율 상태 판정
+   */
+  getLoanGrowthStatus(val) {
+    if (val == null) return 'normal';
+    if (val >= 5) return 'normal';
+    if (val >= 0) return 'caution';
+    return 'warning';
+  }
+
+  /**
    * Liquidity Flow 데이터 fetch
    * FRED: M2SL, WALCL, WTREGEN, RRPONTSYD
    * DefiLlama: Stablecoin 시총
+   *
+   * ★ Detail 페이지와 동일한 형식으로 반환 (DEC-032 수정)
+   * 단위: 모두 Billions로 변환
    */
   async fetchLiquidityFlow() {
     const days = 365 * 2;
@@ -199,38 +259,45 @@ class MacroDataFetcher {
         this.fetchStablecoinData()
       ]);
 
-      // Net Liquidity 계산: Fed BS - TGA - RRP
-      const latestFedBs = this.getLatestValue(fedBs);
-      const latestTga = this.getLatestValue(tga);
-      const latestRrp = this.getLatestValue(rrp);
-      const netLiquidity = latestFedBs - latestTga - latestRrp;
+      // 최신값 (단위 변환: WALCL, TGA, RRP는 Millions → Billions)
+      // M2SL은 이미 Billions
+      const latestM2 = this.getLatestValue(m2);  // Billions
+      const walclB = this.getLatestValue(fedBs) / 1000;  // Millions → Billions
+      const tgaB = this.getLatestValue(tga) / 1000;      // Millions → Billions
+      const rrpB = this.getLatestValue(rrp) / 1000;      // Millions → Billions (RRPONTSYD도 Millions으로 처리)
+
+      // Net Liquidity 계산 (정식 공식): Fed BS - TGA - RRP (Billions)
+      const netLiquidity = walclB - tgaB - rrpB;
 
       // M2 YoY 계산
-      const m2YoY = this.calculateYoY(m2);
+      const m2YoY = this.calculateYoY(m2) || 0;
 
-      // 상태 판정
-      const m2Status = m2YoY >= 6 ? 'positive' : m2YoY >= 2 ? 'neutral' : 'negative';
-      const netLiqStatus = netLiquidity > 50 ? 'positive' : netLiquidity > -50 ? 'neutral' : 'negative';
+      // Stablecoin / M2 비율 (%)
+      const stablecoinMcap = (stablecoin?.current || 0) / 1e9;  // Billions
+      const scM2Ratio = latestM2 > 0 ? (stablecoinMcap / (latestM2 * 1000)) * 100 : 0;  // M2는 Trillions 단위
 
+      // Delta 값들 (최근 2주 데이터로 계산, 없으면 0)
+      const netLiquidityDelta = this.calculateWeeklyDelta(fedBs, tga, rrp);
+
+      // ★ Detail과 동일한 형식으로 반환
       return {
-        timestamp: Date.now(),
-        metrics: {
-          m2: this.getLatestValue(m2),
-          m2YoY,
-          fedBs: latestFedBs,
-          tga: latestTga,
-          rrp: latestRrp,
-          netLiquidity,
-          stablecoin: stablecoin?.current || null
-        },
-        statuses: {
-          m2: m2Status,
-          netLiquidity: netLiqStatus
-        },
-        overall: m2Status === 'positive' && netLiqStatus === 'positive' ? 'EXPANDING'
-               : m2Status === 'negative' || netLiqStatus === 'negative' ? 'CONTRACTING'
-               : 'NEUTRAL',
-        series: { m2, fedBs, tga, rrp, stablecoin: stablecoin?.series || [] }
+        // Signal Matrix 3개 지표
+        m2YoY: parseFloat(m2YoY.toFixed(2)),
+        m2Total: latestM2,  // Billions
+        netLiquidity: parseFloat(netLiquidity.toFixed(1)),  // Billions
+        netLiquidityDelta: parseFloat(netLiquidityDelta.toFixed(1)),  // Billions (주간 변화)
+        stablecoinMcap,  // Billions
+        scM2Ratio: parseFloat(scM2Ratio.toFixed(2)),
+        // Components (Chart용)
+        walcl: parseFloat(walclB.toFixed(1)),
+        tga: parseFloat(tgaB.toFixed(1)),
+        rrp: parseFloat(rrpB.toFixed(1)),
+        walclDelta: 0,  // Detail 방문 시 갱신
+        tgaDelta: 0,
+        rrpDelta: 0,
+        // 기존 호환용
+        netFlow: parseFloat(netLiquidityDelta.toFixed(1)),
+        updated: new Date().toISOString()
       };
     } catch (e) {
       console.error('[DataFetcher] Liquidity Flow fetch error:', e);
@@ -239,8 +306,37 @@ class MacroDataFetcher {
   }
 
   /**
+   * 주간 Net Liquidity Delta 계산
+   * WALCL, TGA는 주간 데이터 → 마지막 2개 포인트 비교
+   * RRP는 일간이지만 현재 값이 매우 작아 무시 가능 (~1B)
+   */
+  calculateWeeklyDelta(fedBs, tga, rrp) {
+    // 주간 데이터 기준: WALCL, TGA의 마지막 2개 비교
+    if (!fedBs?.length || fedBs.length < 2 || !tga?.length || tga.length < 2) return 0;
+
+    // 최신 주 vs 이전 주
+    const latestWalcl = fedBs[fedBs.length - 1]?.val || 0;
+    const prevWalcl = fedBs[fedBs.length - 2]?.val || 0;
+
+    const latestTga = tga[tga.length - 1]?.val || 0;
+    const prevTga = tga[tga.length - 2]?.val || 0;
+
+    // RRP: 최신값만 사용 (현재 ~1B로 매우 작음, 변화 무시)
+    const latestRrp = rrp?.length > 0 ? rrp[rrp.length - 1]?.val || 0 : 0;
+
+    // Net Liquidity = WALCL - TGA - RRP (Millions 단위)
+    const latestNet = latestWalcl - latestTga - latestRrp;
+    const prevNet = prevWalcl - prevTga - latestRrp;
+
+    // Millions → Billions, 차이 계산
+    return (latestNet - prevNet) / 1000;
+  }
+
+  /**
    * Liquidity Stress 데이터 fetch
    * FRED: SOFR, IORB, WRESBAL, GDP
+   *
+   * ★ Detail 페이지와 동일한 형식으로 반환 (DEC-032 수정)
    */
   async fetchLiquidityStress() {
     const days = 365;
@@ -261,33 +357,42 @@ class MacroDataFetcher {
       // Spread 계산 (bp)
       const latestSofr = this.getLatestValue(sofr);
       const latestIorb = this.getLatestValue(iorb);
-      const spread = latestSofr && latestIorb ? Math.round((latestSofr - latestIorb) * 100) : null;
+      const spread = latestSofr && latestIorb ? Math.round((latestSofr - latestIorb) * 100) : 0;
 
       // Reserves/GDP 비율
+      // 단위: WRESBAL = Millions, GDP = Billions → Reserves를 Billions로 변환 (/1000)
       const latestReserves = this.getLatestValue(reserves);
       const latestGdp = this.getLatestValue(gdp);
-      const reservesGdpRatio = latestReserves && latestGdp ? (latestReserves / latestGdp * 100) : null;
+      const reservesGdpRatio = (latestReserves && latestGdp)
+        ? parseFloat(((latestReserves / 1000) / latestGdp * 100).toFixed(1))
+        : 0;
 
-      // 상태 판정
-      const spreadStatus = spread >= 30 ? 'danger' : spread >= 20 ? 'warning' : spread >= 10 ? 'caution' : 'normal';
-      const ratioStatus = reservesGdpRatio < 8 ? 'danger' : reservesGdpRatio < 10 ? 'warning' : reservesGdpRatio < 12 ? 'caution' : 'normal';
+      // 상태 판정 (Detail과 동일)
+      const tier1Status = spread >= 30 ? 'danger' : spread >= 20 ? 'warning' : spread >= 10 ? 'caution' : 'normal';
+      const tier2Status = reservesGdpRatio < 8 ? 'danger' : reservesGdpRatio < 10 ? 'warning' : reservesGdpRatio < 12 ? 'caution' : 'normal';
+      const overallStatus = this.getWorstStatus([tier1Status, tier2Status]);
 
+      // 라벨 맵 (Detail과 동일)
+      const statusLabels = { normal: '정상', caution: '주의', warning: '경계', danger: '위험' };
+      const overallLabels = { normal: 'Normal', caution: 'Caution', warning: 'High Stress', danger: 'Critical' };
+
+      // ★ Detail과 동일한 형식으로 반환
       return {
-        timestamp: Date.now(),
-        metrics: {
-          sofr: latestSofr,
-          iorb: latestIorb,
-          spread,
-          reserves: latestReserves,
-          gdp: latestGdp,
-          reservesGdpRatio
+        overallStatus,
+        overallLabel: overallLabels[overallStatus] || 'Normal',
+        tier1: {
+          status: tier1Status,
+          label: statusLabels[tier1Status],
+          value: spread,  // bp 단위, 정수
+          unit: 'bp'
         },
-        statuses: {
-          spread: spreadStatus,
-          ratio: ratioStatus
+        tier2: {
+          status: tier2Status,
+          label: statusLabels[tier2Status],
+          value: reservesGdpRatio,  // % 단위
+          unit: '%'
         },
-        overall: this.getWorstStatus([spreadStatus, ratioStatus]),
-        series: { sofr, iorb, reserves, gdp }
+        updated: new Date().toISOString()
       };
     } catch (e) {
       console.error('[DataFetcher] Liquidity Stress fetch error:', e);
