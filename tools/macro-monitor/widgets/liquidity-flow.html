@@ -748,6 +748,7 @@
   }
 
   // DataFetcher 반환 형식 → Widget 형식 변환
+  // 단위: DataFetcher(netLiquidity=Millions) → Widget(Billions)
   function convertToWidgetFormat(data) {
     // 이미 Widget 형식이면 그대로 반환
     if (data.netLiquidityDelta !== undefined || data.netFlow !== undefined) {
@@ -756,13 +757,21 @@
 
     // DataFetcher 형식 변환
     if (data.metrics) {
+      // netLiquidity: Millions → Billions (÷1000)
+      const nlMillions = data.metrics.netLiquidity || 0;
+      const nlBillions = nlMillions / 1000;
+
+      // stablecoin: DefiLlama는 $ 단위, Billions로 변환
+      const scRaw = data.metrics.stablecoin || 0;
+      const scBillions = scRaw > 1e9 ? scRaw / 1e9 : scRaw;
+
       return {
-        netLiquidityDelta: data.metrics.netLiquidity || 0,
-        netFlow: data.metrics.netLiquidity || 0,
+        netLiquidityDelta: nlBillions,
+        netFlow: nlBillions,
         m2YoY: data.metrics.m2YoY || 0,
         m2Total: data.metrics.m2 || 22298,
-        netLiquidity: data.metrics.netLiquidity || 5649,
-        stablecoinMcap: data.metrics.stablecoin || 0
+        netLiquidity: nlBillions,
+        stablecoinMcap: scBillions
       };
     }
 

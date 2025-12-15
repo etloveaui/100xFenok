@@ -41,11 +41,50 @@ tools/macro-monitor/
 │   ├── liquidity-flow.html
 │   └── banking-health.html   ← 🏦 Layer 3 (4-A, ✅ 배포)
 └── shared/                   ← 공통 모듈 (ES Module)
+    ├── data-fetcher.js       ← 🆕 Widget 직접 API 호출 (2025-12-15)
     ├── data-manager.js       ← 캐시 + stale + NumberFormat
     ├── constants.js          ← THRESHOLDS, COLORS, ICONS (Banking 포함)
     ├── recession-data.js     ← NBER 리세션 기간
     └── chart-annotations.js  ← 차트 annotation
 ```
+
+### 🆕 DataFetcher - Detail 형식 호환 (2025-12-15 v2)
+
+> **목적**: Widget이 Detail 방문 없이 직접 API 호출 가능
+> **핵심**: DataFetcher가 **Detail과 동일한 형식**으로 반환 → Widget 변환 불필요
+> **참조**: `docs/DECISION_LOG.md` DEC-032, `docs/archive/2025-12/20251215_RETRO_DataFetcher-Format-Mismatch.md`
+
+**사용법**:
+```javascript
+import { DataFetcher } from '../shared/data-fetcher.js';
+const result = await DataFetcher.fetch(WIDGET_ID);
+// result = { data: {...}, isStale: boolean, isFresh: boolean, ageMs: number }
+// data는 Detail이 saveWidgetData()로 저장하는 형식과 동일
+```
+
+**Widget별 반환 형식** (Detail과 동일):
+
+| Widget | 반환 형식 |
+|--------|----------|
+| **liquidity-stress** | `{ overallStatus, tier1: {value,status,label,unit:'bp'}, tier2: {value,status,label,unit:'%'}, updated }` |
+| **liquidity-flow** | `{ m2YoY, netLiquidity, netLiquidityDelta, stablecoinMcap, scM2Ratio, walcl, tga, rrp, netFlow, updated }` |
+| **banking-health** | `{ overallStatus, delinquency: {value,status,label}, tier1, loanDeposit, loanGrowth, updated }` |
+
+**FRED 시리즈 단위** (중요):
+| Series | 이름 | 단위 | 주기 |
+|--------|------|------|------|
+| WALCL | Fed Balance Sheet | Millions | 주간 |
+| WTREGEN | TGA | Millions | 주간 |
+| RRPONTSYD | RRP | Billions | 일간 |
+| M2SL | M2 | Billions | 월간 |
+| WRESBAL | Bank Reserves | Millions | 주간 |
+| GDP | GDP | Billions | 분기 |
+
+**TTL 설정**:
+| 구분 | 값 | 용도 |
+|------|-----|------|
+| Fresh | 24시간 | 데이터 신선 |
+| Stale | 7일 | 캐시 유효 |
 
 ### ✅ 인프라 완료 (2025-12-01)
 

@@ -601,14 +601,16 @@
     }
 
     // DataFetcher 형식 → Widget 형식 변환
+    // 키 매핑: DataFetcher(spread, reservesGdpRatio) ↔ Legacy(tedSpread, rbGdpRatio)
     if (data.metrics) {
-      const tedSpread = data.metrics.tedSpread || 0;
-      const rbGdpRatio = data.metrics.rbGdpRatio || 0;
+      const spreadValue = data.metrics.spread ?? data.metrics.tedSpread ?? 0;
+      const ratioValue = data.metrics.reservesGdpRatio ?? data.metrics.rbGdpRatio ?? 0;
 
       // TED Spread 상태 판정 (bp 단위)
       // < 20bp: normal, 20-40bp: caution, 40-60bp: warning, > 60bp: danger
       let spreadStatus = 'normal';
-      const spreadBp = tedSpread * 100; // % → bp 변환
+      // DataFetcher는 이미 bp 단위 반환, Legacy는 % 단위일 수 있음
+      const spreadBp = data.metrics.spread !== undefined ? spreadValue : spreadValue * 100;
       if (spreadBp > 60) spreadStatus = 'danger';
       else if (spreadBp > 40) spreadStatus = 'warning';
       else if (spreadBp > 20) spreadStatus = 'caution';
@@ -616,9 +618,9 @@
       // RB/GDP 상태 판정 (%, 역방향 - 낮을수록 위험)
       // > 12%: normal, 8-12%: caution, 5-8%: warning, < 5%: danger
       let rbgdpStatus = 'normal';
-      if (rbGdpRatio < 5) rbgdpStatus = 'danger';
-      else if (rbGdpRatio < 8) rbgdpStatus = 'warning';
-      else if (rbGdpRatio < 12) rbgdpStatus = 'caution';
+      if (ratioValue < 5) rbgdpStatus = 'danger';
+      else if (ratioValue < 8) rbgdpStatus = 'warning';
+      else if (ratioValue < 12) rbgdpStatus = 'caution';
 
       // 전체 상태: 더 나쁜 쪽 기준
       const statusOrder = ['normal', 'caution', 'warning', 'danger'];
@@ -629,7 +631,7 @@
       return {
         overallStatus: overallStatus,
         tier1: { value: spreadBp, status: spreadStatus },
-        tier2: { value: rbGdpRatio, status: rbgdpStatus }
+        tier2: { value: ratioValue, status: rbgdpStatus }
       };
     }
 
