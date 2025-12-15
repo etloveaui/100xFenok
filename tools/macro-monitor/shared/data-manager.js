@@ -7,8 +7,8 @@
 class MacroDataManager {
   constructor() {
     this.prefix = 'macro_';
-    this.ttl = 30 * 60 * 1000; // 30분 (fresh)
-    this.staleTtl = 6 * 60 * 60 * 1000; // 6시간 (stale 경고 임계값)
+    this.ttl = 24 * 60 * 60 * 1000; // 24시간 (fresh)
+    this.staleTtl = 7 * 24 * 60 * 60 * 1000; // 7일 (stale 경고 임계값)
   }
 
   /**
@@ -40,18 +40,19 @@ class MacroDataManager {
 
   /**
    * Widget에서 호출 - 캐시에서 데이터 읽기
+   * 만료되어도 삭제하지 않고 stale 데이터 반환 (7일까지 유지)
    * @param {string} widgetId - 위젯 ID
-   * @returns {object|null} - 캐시 데이터 또는 null (만료/없음)
+   * @returns {object|null} - 캐시 데이터 또는 null (없음)
    */
   getWidgetData(widgetId) {
     try {
       const cached = localStorage.getItem(this.prefix + widgetId);
       if (!cached) return null;
 
-      const { data, expires } = JSON.parse(cached);
+      const { data, timestamp } = JSON.parse(cached);
 
-      // 만료 체크
-      if (Date.now() > expires) {
+      // Stale 임계값(7일) 초과 시에만 삭제
+      if (Date.now() - timestamp > this.staleTtl) {
         this.clearWidgetData(widgetId);
         return null;
       }

@@ -6,15 +6,22 @@
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
 
-<!-- Constants & DataManager ES Module import -->
+<!-- Constants & DataManager & DataFetcher ES Module import -->
 <script type="module">
   import { DataManager, MacroDataManager } from '../shared/data-manager.js';
+  import { DataFetcher } from '../shared/data-fetcher.js';
   import { THRESHOLDS, ICONS, COLORS } from '../shared/constants.js';
   window.DataManager = DataManager;
   window.MacroDataManager = MacroDataManager;
+  window.DataFetcher = DataFetcher;
   window.THRESHOLDS = THRESHOLDS;
   window.ICONS = ICONS;
   window.COLORS = COLORS;
+
+  // Module 로드 완료 후 init 호출
+  if (typeof window.init === 'function') {
+    window.init();
+  }
 </script>
 
 <style>
@@ -347,7 +354,7 @@
     z-index: 2;
   }
 
-  .stale-warning-icon { font-size: 12px; }
+  .stale-warning-icon { font-size: 11px; }
   .stale-warning-text { font-weight: 500; }
   .stale-warning-age { color: #b45309; font-weight: 600; }
 
@@ -683,29 +690,37 @@
     const loader = document.getElementById('loader');
     const staleWarning = document.getElementById('staleWarning');
 
-    let cacheResult = { data: null, isStale: true, ageMs: 0 };
+    let result = { data: null, isStale: true, isFresh: false, ageMs: 0 };
 
     try {
-      // localStorage에서 직접 읽기 시도
-      try {
-        const rawData = localStorage.getItem(`macro_${WIDGET_ID}`);
-        if (rawData) {
-          const parsed = JSON.parse(rawData);
-          cacheResult.data = parsed.data;
-          cacheResult.isStale = parsed.isStale || false;
-          cacheResult.ageMs = parsed.timestamp ? Date.now() - parsed.timestamp : 0;
+      // 1. DataFetcher로 데이터 가져오기 (캐시 우선 + API 폴백)
+      if (typeof DataFetcher !== 'undefined') {
+        result = await DataFetcher.fetch(WIDGET_ID);
+        console.log('[Widget] DataFetcher 결과:', result.data ? 'OK' : 'NULL', result.isStale ? '(stale)' : '(fresh)');
+      } else {
+        // Fallback: localStorage 직접 읽기
+        try {
+          const rawData = localStorage.getItem(`macro_${WIDGET_ID}`);
+          if (rawData) {
+            const parsed = JSON.parse(rawData);
+            result.data = parsed.data;
+            result.isStale = parsed.isStale || false;
+            result.ageMs = parsed.timestamp ? Date.now() - parsed.timestamp : 0;
+          }
+        } catch (storageError) {
+          console.warn('[Widget] 스토리지 접근 불가');
         }
-      } catch (storageError) {
-        console.warn('[Widget] 직접 스토리지 접근 불가 (postMessage 대기 중)');
       }
 
-      if (cacheResult.data) {
-        renderWidget(cacheResult.data);
+      // 2. 데이터 렌더링
+      if (result.data) {
+        const widgetData = convertToWidgetFormat(result.data);
+        renderWidget(widgetData);
 
-        if (cacheResult.isStale && cacheResult.ageMs > 0) {
+        if (result.isStale && result.ageMs > 0) {
           const ageText = typeof MacroDataManager !== 'undefined'
-            ? MacroDataManager.formatAge(cacheResult.ageMs)
-            : formatAgeSimple(cacheResult.ageMs);
+            ? MacroDataManager.formatAge(result.ageMs)
+            : formatAgeSimple(result.ageMs);
           document.getElementById('staleAge').textContent = ageText;
           staleWarning.style.display = 'flex';
         } else {
@@ -732,6 +747,28 @@
     }
   }
 
+  // DataFetcher 반환 형식 → Widget 형식 변환
+  function convertToWidgetFormat(data) {
+    // 이미 Widget 형식이면 그대로 반환
+    if (data.netLiquidityDelta !== undefined || data.netFlow !== undefined) {
+      return data;
+    }
+
+    // DataFetcher 형식 변환
+    if (data.metrics) {
+      return {
+        netLiquidityDelta: data.metrics.netLiquidity || 0,
+        netFlow: data.metrics.netLiquidity || 0,
+        m2YoY: data.metrics.m2YoY || 0,
+        m2Total: data.metrics.m2 || 22298,
+        netLiquidity: data.metrics.netLiquidity || 5649,
+        stablecoinMcap: data.metrics.stablecoin || 0
+      };
+    }
+
+    return data;
+  }
+
   // 상세 페이지 열기
   function openDetail() {
     try {
@@ -742,8 +779,8 @@
     (window.top||window).location.assign(`${base}index.html?path=${DETAIL_PATH}`);
   }
 
-  // 초기화
-  init();
+  // window.init 노출 (module에서 호출)
+  window.init = init;
 </script>
 </body>
 </html>

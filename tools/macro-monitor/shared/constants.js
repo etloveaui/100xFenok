@@ -183,8 +183,8 @@ export const ICONS = Object.freeze({
 // ============================================
 export const CACHE = Object.freeze({
   PREFIX: 'macro_',
-  TTL: 30 * 60 * 1000,              // 30분 (ms)
-  STALE_THRESHOLD: 6 * 60 * 60 * 1000  // 6시간 (ms)
+  TTL: 24 * 60 * 60 * 1000,              // 24시간 (ms)
+  STALE_THRESHOLD: 7 * 24 * 60 * 60 * 1000  // 7일 (ms)
 });
 
 // ============================================
