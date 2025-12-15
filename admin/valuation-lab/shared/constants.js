@@ -8,8 +8,8 @@
 
 const CONSTANTS = {
 
-  // 데이터 경로 (절대 고정 - 스킬에서 사용)
-  DATA_BASE: '/data/benchmarks',
+  // 데이터 경로 (GitHub Pages 기준)
+  DATA_BASE: '/100xFenok/data/benchmarks',
 
   // 파일 목록
   FILES: {
