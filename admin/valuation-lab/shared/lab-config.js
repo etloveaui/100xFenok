@@ -1,11 +1,9 @@
 /**
  * Valuation Lab 설정
- *
- * 데이터 경로는 스킬에서 사용 중이므로 절대 변경 금지
  */
 const LAB_CONFIG = {
-  // 데이터 경로 (절대 고정)
-  DATA_BASE: '/data/benchmarks',
+  // 데이터 경로 (GitHub Pages 기준)
+  DATA_BASE: '/100xFenok/data/benchmarks',
 
   // 파일 목록
   FILES: {
