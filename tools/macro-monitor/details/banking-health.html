@@ -1042,7 +1042,10 @@
   async function loadFredJsonCache() {
     if (fredJsonCache.loaded) return;
 
-    const baseUrl = window.location.origin + '/100xFenok/data/';
+    const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
+    const isCloudflare = location.hostname.endsWith('pages.dev');
+    const basePath = (isLocal || isCloudflare) ? '' : '/100xFenok';
+    const baseUrl = window.location.origin + basePath + '/data/';
     const files = ['fred-banking-daily.json', 'fred-banking-weekly.json', 'fred-banking-quarterly.json'];
 
     try {
@@ -1165,7 +1168,10 @@
   async function getFDICTier1() {
     // 1. GitHub Actions JSON 시도 (빠름)
     try {
-      const jsonUrl = window.location.origin + '/100xFenok/data/fdic-tier1.json';
+      const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
+      const isCloudflare = location.hostname.endsWith('pages.dev');
+      const basePath = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      const jsonUrl = window.location.origin + basePath + '/data/fdic-tier1.json';
       console.log('[FDIC] JSON 파일 로드 시도...');
       const res = await fetch(jsonUrl);
       if (res.ok) {

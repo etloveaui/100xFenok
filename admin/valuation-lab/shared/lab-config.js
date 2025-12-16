@@ -1,9 +1,17 @@
 /**
  * Valuation Lab 설정
  */
+
+// 동적 base path (Cloudflare Pages, localhost, GitHub Pages 호환)
+const getBasePath = () => {
+  const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
+  const isCloudflare = location.hostname.endsWith('pages.dev');
+  return (isLocal || isCloudflare) ? '' : '/100xFenok';
+};
+
 const LAB_CONFIG = {
-  // 데이터 경로 (GitHub Pages 기준)
-  DATA_BASE: '/100xFenok/data/benchmarks',
+  // 데이터 경로 (동적)
+  DATA_BASE: getBasePath() + '/data/benchmarks',
 
   // 파일 목록
   FILES: {
