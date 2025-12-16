@@ -1,14 +1,13 @@
 (() => {
-  // Treat local hosts, LAN addresses like 192.168.* and file:// protocol as local
+  // Treat local hosts, LAN addresses, file:// protocol, and Cloudflare Pages as local (base: /)
   const isLocalHost = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname);
   const isLocalProtocol = location.protocol === 'file:';
-  const isLocal = isLocalHost || isLocalProtocol;
+  const isCloudflare = location.hostname.endsWith('pages.dev');
+  const isLocal = isLocalHost || isLocalProtocol || isCloudflare;
 
-  const isPreview = window.location.pathname.includes('/preview/');
-  const baseHref = isLocal ? '/' : isPreview ? '/100xFenok/preview/' : '/100xFenok/';
+  const baseHref = isLocal ? '/' : '/100xFenok/';
   window.baseHref = baseHref;
   if (!document.querySelector('base')) {
     document.head.insertAdjacentHTML('afterbegin', `<base href="${baseHref}">`);
   }
 })();
-
