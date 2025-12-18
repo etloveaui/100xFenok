@@ -1103,16 +1103,42 @@
     return cache.series[seriesId].map(d => ({ date: d.date, val: d.value }));
   }
 
-  // 메인 함수: JSON 우선, API 폴백
+  // Stale 임계값 (밀리초): 시리즈 타입별
+  const STALE_THRESHOLDS = {
+    daily: 5 * 24 * 60 * 60 * 1000,      // 5일
+    weekly: 14 * 24 * 60 * 60 * 1000,    // 14일
+    quarterly: 140 * 24 * 60 * 60 * 1000 // 140일 (분기+버퍼)
+  };
+
+  // 메인 함수: JSON 우선, stale 체크 후 API 폴백
   async function getSeries(seriesId, days) {
     // 1. JSON 캐시 시도
     const cached = getSeriesFromCache(seriesId);
     if (cached && cached.length > 0) {
-      console.log(`[FRED] ${seriesId}: JSON 캐시 (${cached.length}개)`);
-      return cached;
+      // 2. Stale 체크: 마지막 데이터 날짜 기준
+      const lastDate = new Date(cached[cached.length - 1].date);
+      const type = SERIES_TYPE_MAP[seriesId] || 'weekly';
+      const threshold = STALE_THRESHOLDS[type] || STALE_THRESHOLDS.weekly;
+      const age = Date.now() - lastDate.getTime();
+      const isStale = age > threshold;
+
+      if (!isStale) {
+        console.log(`[FRED] ${seriesId}: JSON 캐시 (${cached.length}개, fresh)`);
+        return cached;
+      }
+
+      // 3. Stale이면 API 시도, 실패 시 캐시 반환
+      console.log(`[FRED] ${seriesId}: 캐시 stale (${Math.floor(age/86400000)}일 전) → API 시도`);
+      try {
+        const fresh = await getSeriesFromAPI(seriesId, days);
+        if (fresh && fresh.length > 0) return fresh;
+      } catch (e) {
+        console.log(`[FRED] ${seriesId}: API 실패, stale 캐시 사용`);
+      }
+      return cached; // API 실패 시 stale 캐시라도 반환
     }
 
-    // 2. API 폴백
+    // 4. 캐시 없으면 API 직접
     return await getSeriesFromAPI(seriesId, days);
   }
 
@@ -1511,12 +1537,17 @@
     updateInfoCards(processed, allStatuses);
 
     // 업데이트 시간 (모든 데이터 중 가장 최신)
+    // 모든 데이터셋 포함: quarterly + weekly + daily
     const allDates = [
       fullData.delinquency.length > 0 ? fullData.delinquency[fullData.delinquency.length - 1].date : null,
       fullData.tier1.length > 0 ? fullData.tier1[fullData.tier1.length - 1].date : null,
+      fullData.fedTier1.length > 0 ? fullData.fedTier1[fullData.fedTier1.length - 1].date : null,
       fullData.loans.length > 0 ? fullData.loans[fullData.loans.length - 1].date : null,
-      fullData.deposits.length > 0 ? fullData.deposits[fullData.deposits.length - 1].date : null
+      fullData.deposits.length > 0 ? fullData.deposits[fullData.deposits.length - 1].date : null,
+      fullData.yield10y.length > 0 ? fullData.yield10y[fullData.yield10y.length - 1].date : null,
+      fullData.hySpread.length > 0 ? fullData.hySpread[fullData.hySpread.length - 1].date : null
     ].filter(d => d !== null);
+
     const latestDate = allDates.length > 0 ? allDates.sort().reverse()[0] : '--';
     document.getElementById('updateTime').textContent = `Data: ${latestDate}`;
 
