@@ -49,10 +49,20 @@ class MacroDataFetcher {
         console.log(`[DataFetcher] ${widgetId}: 캐시 사용 (fresh)`);
         return cached;
       }
-      // Stale이지만 데이터 있으면 반환 (백그라운드 갱신은 추후)
-      if (cached.data) {
-        console.log(`[DataFetcher] ${widgetId}: stale 캐시 사용 (${this.formatAge(cached.ageMs)})`);
-        return cached;
+      // Stale이면 API 시도 후 실패 시 캐시 반환 (#16 수정)
+      if (cached.data && cached.isStale) {
+        console.log(`[DataFetcher] ${widgetId}: stale 캐시 (${this.formatAge(cached.ageMs)}) → API 시도`);
+        try {
+          const data = await this.fetchByWidgetId(widgetId);
+          if (data) {
+            DataManager.saveWidgetData(widgetId, data);
+            console.log(`[DataFetcher] ${widgetId}: API 갱신 성공`);
+            return { data, isStale: false, isFresh: true, ageMs: 0 };
+          }
+        } catch (e) {
+          console.log(`[DataFetcher] ${widgetId}: API 실패, stale 캐시 사용`);
+        }
+        return cached; // API 실패 시 stale 캐시 반환
       }
     }
 
