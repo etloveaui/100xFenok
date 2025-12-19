@@ -245,7 +245,8 @@ class MacroDataFetcher {
 
   /**
    * Liquidity Flow 데이터 fetch
-   * FRED: M2SL, WALCL, WTREGEN, RRPONTSYD
+   * FRED: M2SL, WALCL, RRPONTSYD
+   * Treasury: TGA (일간) - DEC-048
    * DefiLlama: Stablecoin 시총
    *
    * ★ Detail 페이지와 동일한 형식으로 반환 (DEC-032 수정)
@@ -264,7 +265,7 @@ class MacroDataFetcher {
       ] = await Promise.all([
         this.fetchFRED('M2SL', days),
         this.fetchFRED('WALCL', days),
-        this.fetchFRED('WTREGEN', days),
+        this.fetchTreasuryTGA(days),       // TGA: 일간 (DEC-048)
         this.fetchFRED('RRPONTSYD', days),
         this.fetchStablecoinData()
       ]);
@@ -316,12 +317,12 @@ class MacroDataFetcher {
   }
 
   /**
-   * 주간 Net Liquidity Delta 계산
-   * WALCL, TGA는 주간 데이터 → 마지막 2개 포인트 비교
-   * RRP는 일간이지만 현재 값이 매우 작아 무시 가능 (~1B)
+   * Net Liquidity Delta 계산
+   * WALCL: 주간, TGA: 일간 (DEC-048), RRP: 일간
+   * 마지막 2개 포인트 비교 (참고용 - 정밀 계산은 Detail 페이지)
    */
   calculateWeeklyDelta(fedBs, tga, rrp) {
-    // 주간 데이터 기준: WALCL, TGA의 마지막 2개 비교
+    // 마지막 2개 포인트 비교 (TGA 일간 전환 후에도 동일 로직 유지)
     if (!fedBs?.length || fedBs.length < 2 || !tga?.length || tga.length < 2) return 0;
 
     // 최신 주 vs 이전 주
@@ -435,6 +436,76 @@ class MacroDataFetcher {
     } catch (e) {
       console.error(`[DataFetcher] FRED ${seriesId} error:`, e);
       return [];
+    }
+  }
+
+  // =========================================
+  // Treasury FiscalData API (DEC-048)
+  // =========================================
+
+  /**
+   * TGA 일간 데이터 fetch (Treasury API 우선, FRED 폴백)
+   * 2005-2021: Federal Reserve Account / 2021-10-01~현재: Treasury General Account (TGA)
+   * 필드: open_today_bal (close_today_bal은 null)
+   * @param {number} days - 조회 일수
+   * @returns {Promise<Array>} - [{ date, val }, ...] (Millions 단위)
+   *
+   * account_type 변경 이력 (DEC-048, DEC-049 수정):
+   *   2005 ~ 2021-09-30: Federal Reserve Account
+   *   2021-10-01 ~ 2022-04-15: Treasury General Account (TGA)
+   *   2022-04-18 ~ 현재: Treasury General Account (TGA) Opening Balance
+   */
+  async fetchTreasuryTGA(days = 365) {
+    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
+
+    try {
+      // 3개 account_type 모두 fetch (시기별 다른 이름 사용)
+      const urls = [
+        // 1. Federal Reserve Account (2005 ~ 2021-09-30)
+        `${baseUrl}?filter=account_type:eq:Federal Reserve Account,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
+        // 2. Treasury General Account (TGA) (2021-10-01 ~ 2022-04-15)
+        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA),record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
+        // 3. Treasury General Account (TGA) Opening Balance (2022-04-18 ~ 현재) ★ 추가!
+        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA) Opening Balance,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`
+      ];
+
+      const responses = await Promise.all(urls.map(url => this.fetchWithTimeout(url)));
+
+      // 데이터 병합
+      const allData = [];
+      responses.forEach((json, idx) => {
+        if (json?.data) {
+          const typeName = ['FRA', 'TGA', 'TGA-Opening'][idx];
+          json.data.forEach(d => {
+            if (d.open_today_bal && d.open_today_bal !== 'null') {
+              allData.push({ date: d.record_date, val: parseFloat(d.open_today_bal) });
+            }
+          });
+          console.log(`[DataFetcher] ${typeName}: ${json.data.length}개`);
+        }
+      });
+
+      if (allData.length === 0) {
+        console.warn('[DataFetcher] Treasury API 데이터 없음, FRED 폴백');
+        return this.fetchFRED('WTREGEN', days);
+      }
+
+      // 날짜 정렬 (오름차순)
+      allData.sort((a, b) => a.date.localeCompare(b.date));
+
+      // 중복 제거 (같은 날짜면 나중 데이터 = Opening Balance 우선)
+      const uniqueMap = new Map();
+      allData.forEach(d => uniqueMap.set(d.date, d.val));
+
+      const result = Array.from(uniqueMap.entries()).map(([date, val]) => ({ date, val }));
+      console.log(`[DataFetcher] Treasury TGA 로드: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
+
+      return result;
+
+    } catch (e) {
+      console.error('[DataFetcher] Treasury API 실패, FRED 폴백:', e);
+      return this.fetchFRED('WTREGEN', days);
     }
   }
 

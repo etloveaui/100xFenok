@@ -585,6 +585,66 @@
       .map(o => ({ date: o.date, val: parseFloat(o.value) }));
   }
 
+  // ★ Treasury FiscalData API - TGA 일간 데이터 (DEC-048, DEC-049 수정)
+  // account_type 변경 이력:
+  //   2005 ~ 2021-09-30: Federal Reserve Account
+  //   2021-10-01 ~ 2022-04-15: Treasury General Account (TGA)
+  //   2022-04-18 ~ 현재: Treasury General Account (TGA) Opening Balance
+  // 필드: open_today_bal
+  async function getTreasuryTGA(days) {
+    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
+
+    try {
+      // 3개 account_type 모두 fetch (시기별 다른 이름 사용)
+      const urls = [
+        // 1. Federal Reserve Account (2005 ~ 2021-09-30)
+        `${baseUrl}?filter=account_type:eq:Federal Reserve Account,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
+        // 2. Treasury General Account (TGA) (2021-10-01 ~ 2022-04-15)
+        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA),record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
+        // 3. Treasury General Account (TGA) Opening Balance (2022-04-18 ~ 현재) ★ 추가!
+        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA) Opening Balance,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`
+      ];
+
+      const responses = await Promise.all(urls.map(url => fetchData(url)));
+
+      // 데이터 병합
+      const allData = [];
+      responses.forEach((json, idx) => {
+        if (json?.data) {
+          const typeName = ['FRA', 'TGA', 'TGA-Opening'][idx];
+          json.data.forEach(d => {
+            if (d.open_today_bal && d.open_today_bal !== 'null') {
+              allData.push({ date: d.record_date, val: parseFloat(d.open_today_bal) });
+            }
+          });
+          console.log(`[TGA] ${typeName}: ${json.data.length}개`);
+        }
+      });
+
+      if (allData.length === 0) {
+        console.warn('[TGA] Treasury API 데이터 없음, FRED 폴백');
+        return getFredSeries('WTREGEN', days);
+      }
+
+      // 날짜 정렬 (오름차순)
+      allData.sort((a, b) => a.date.localeCompare(b.date));
+
+      // 중복 제거 (같은 날짜면 나중 데이터 = Opening Balance 우선)
+      const uniqueMap = new Map();
+      allData.forEach(d => uniqueMap.set(d.date, d.val));
+
+      const result = Array.from(uniqueMap.entries()).map(([date, val]) => ({ date, val }));
+      console.log(`[TGA] Treasury API 로드 완료: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
+
+      return result;
+
+    } catch (e) {
+      console.error('[TGA] Treasury API 실패, FRED 폴백:', e);
+      return getFredSeries('WTREGEN', days);
+    }
+  }
+
   async function getStablecoinData() {
     // ★ 시계열 API 사용 (일간 데이터, 2017년~현재)
     const chartUrl = 'https://stablecoins.llama.fi/stablecoincharts/all';
@@ -625,12 +685,12 @@
   // ===== DATA PROCESSING =====
   // Net Liquidity 정식 공식: Fed Balance Sheet (WALCL) - TGA - RRP
   function processData(m2, tga, rrp, walcl, stablecoin) {
-    // M2: Monthly → Weekly (forward fill)
-    // TGA: Weekly (WTREGEN) - millions
-    // RRP: Daily → Weekly (RRPONTSYD) - millions
-    // WALCL: Weekly (Fed Balance Sheet) - millions ★ 신규
+    // M2: Monthly → Daily (forward fill)
+    // TGA: Daily (Treasury API) - millions ★ DEC-048
+    // RRP: Daily (RRPONTSYD) - millions
+    // WALCL: Weekly (Fed Balance Sheet) - millions (forward fill)
 
-    // 공통 날짜 기준: TGA (주간 데이터)
+    // 공통 날짜 기준: TGA (일간 데이터) - DEC-048
     const tgaMap = new Map(tga.map(d => [d.date, d.val]));
     const m2Map = new Map(m2.map(d => [d.date, d.val]));
     const rrpMap = new Map(rrp.map(d => [d.date, d.val]));
@@ -703,14 +763,15 @@
       });
     }
 
-    // 4주 이동평균 (Net Liquidity 기준)
+    // ★ 4주(20영업일) 이동평균 (Net Liquidity 기준)
+    // DEC-048 이후: TGA 일간 전환으로 인해 4포인트 → 20포인트로 변경
     for (let i = 0; i < weeklyData.length; i++) {
-      const start = Math.max(0, i - 3);
+      const start = Math.max(0, i - 19);
       const slice = weeklyData.slice(start, i + 1);
       weeklyData[i].ma4 = slice.reduce((s, d) => s + d.netLiquidityDelta, 0) / slice.length;
     }
 
-    // M2 YoY% 계산 (52주 전 대비) + SC/M2 비율 (시계열)
+    // M2 YoY% 계산 (252영업일 전 대비) + SC/M2 비율 (시계열)
     const scMcap = stablecoin?.totalMarketCap || 0;
     const scHistorical = stablecoin?.historical;  // Map: 날짜 → 시총 (billions)
 
@@ -737,8 +798,9 @@
     for (let i = 0; i < weeklyData.length; i++) {
       const currentDate = weeklyData[i].date;
 
-      // 약 52주(1년) 전 데이터 찾기
-      const yearAgoIdx = Math.max(0, i - 52);
+      // ★ 약 1년 전 데이터 찾기 (일간 데이터 기준: 252 영업일)
+      // DEC-048 이후: TGA 일간 전환으로 인해 52주 → 252일로 변경
+      const yearAgoIdx = Math.max(0, i - 252);
       const m2Now = weeklyData[i].m2;
       const m2YearAgo = weeklyData[yearAgoIdx].m2;
       weeklyData[i].m2YoY = ((m2Now - m2YearAgo) / m2YearAgo) * 100;
@@ -781,6 +843,36 @@
     };
     document.getElementById('chartTitleText').textContent = titles[tab];
 
+    // ★ 탭별 기간 버튼 제어
+    // Credit Flow: M2는 월간 데이터 → 1M/3M 비활성화, 6M 기본
+    // Pulse/Crypto: 모든 기간 활성화
+    const periodBtns = document.querySelectorAll('.p-btn');
+    const shortTermDays = [30, 90]; // 1M, 3M
+
+    periodBtns.forEach(pbtn => {
+      const days = parseInt(pbtn.getAttribute('onclick').match(/\d+/)[0]);
+      if (tab === 'credit' && shortTermDays.includes(days)) {
+        pbtn.classList.add('disabled');
+        pbtn.style.opacity = '0.4';
+        pbtn.style.pointerEvents = 'none';
+      } else {
+        pbtn.classList.remove('disabled');
+        pbtn.style.opacity = '1';
+        pbtn.style.pointerEvents = 'auto';
+      }
+    });
+
+    // Credit Flow로 전환 시 1M/3M 선택 중이면 6M으로 자동 변경
+    if (tab === 'credit' && shortTermDays.includes(currentPeriod)) {
+      currentPeriod = 180; // 6M
+      periodBtns.forEach(pbtn => {
+        pbtn.classList.remove('active');
+        if (pbtn.getAttribute('onclick').includes('180')) {
+          pbtn.classList.add('active');
+        }
+      });
+    }
+
     // fullData에서 현재 기간으로 slice해서 차트 갱신
     if (fullData) {
       processedData = sliceDataByPeriod(fullData, currentPeriod);
@@ -801,12 +893,35 @@
   };
 
   // 기간별 데이터 슬라이스 (차트용, 상단 카드는 항상 전체 데이터 사용)
+  // ★ DEC-048 이후: 날짜 기반 필터링 + 장기 주간 샘플링
   function sliceDataByPeriod(data, days) {
-    const weeks = Math.ceil(days / 7);
-    const slicedTimeline = data.timeline.slice(-weeks);
+    // 1. 달력일 기준 cutoff 날짜 계산
+    const cutoffDate = new Date(Date.now() - days * 86400000);
+    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+    // 2. 날짜 기반 필터링 (달력일 기준)
+    let filtered = data.timeline.filter(d => d.date >= cutoffStr);
+
+    // 3. 장기 기간(6M 이상)이면 주간 샘플링 (매 5영업일)
+    //    - 1M, 3M: 일간 데이터 유지 (세부 변동성 확인)
+    //    - 6M+: 주간 샘플링 (가독성, 차트 성능)
+    const WEEKLY_THRESHOLD = 180; // 6M
+    if (days >= WEEKLY_THRESHOLD && filtered.length > 100) {
+      // 주간 샘플링: 매 5번째 데이터 + 마지막 데이터 포함
+      const sampled = filtered.filter((_, i) => i % 5 === 0);
+      // 마지막 데이터가 누락됐으면 추가
+      if (sampled[sampled.length - 1] !== filtered[filtered.length - 1]) {
+        sampled.push(filtered[filtered.length - 1]);
+      }
+      console.log(`[Slice] ${days}일: ${filtered.length}개 → ${sampled.length}개 (주간 샘플링)`);
+      filtered = sampled;
+    } else {
+      console.log(`[Slice] ${days}일: ${filtered.length}개 (일간 유지)`);
+    }
+
     return {
       ...data,
-      timeline: slicedTimeline
+      timeline: filtered
     };
   }
 
@@ -1408,7 +1523,7 @@
 
       const [m2, tga, rrp, walcl, sc] = await Promise.all([
         getFredSeries('M2SL', MAX_DAYS + 365),  // M2: YoY 계산을 위해 +1년
-        getFredSeries('WTREGEN', MAX_DAYS),     // TGA: 주간 (millions)
+        getTreasuryTGA(MAX_DAYS),               // TGA: 일간 (millions) - DEC-048
         getFredSeries('RRPONTSYD', MAX_DAYS),   // RRP: 일간 (millions)
         getFredSeries('WALCL', MAX_DAYS),       // Fed Balance Sheet: 주간 (millions)
         getStablecoinData()                      // Stablecoin: 전체 시계열
@@ -1424,7 +1539,7 @@
 
       // 전체 데이터 저장
       fullData = processData(m2, tga, rrp, walcl, sc);
-      console.log(`[Init] 전체 데이터 처리 완료: ${fullData.timeline.length}주`);
+      console.log(`[Init] 전체 데이터 처리 완료: ${fullData.timeline.length}일 (일간 데이터)`);
 
       // 차트용 데이터 (기간별 slice)
       processedData = sliceDataByPeriod(fullData, initialPeriod);

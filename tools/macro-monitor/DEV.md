@@ -74,7 +74,7 @@ const result = await DataFetcher.fetch(WIDGET_ID);
 | Series | 이름 | 단위 | 주기 |
 |--------|------|------|------|
 | WALCL | Fed Balance Sheet | Millions | 주간 |
-| WTREGEN | TGA | Millions | 주간 |
+| Treasury API | TGA | Millions | 일간 | 🆕 DEC-048 |
 | RRPONTSYD | RRP | Billions | 일간 |
 | M2SL | M2 | Billions | 월간 |
 | WRESBAL | Bank Reserves | Millions | 주간 |
@@ -264,41 +264,25 @@ Timer(5s) → prepareNextWidget → 다음 슬롯에 위젯 로드
 
 ## Phase Checklist
 
-### ✅ Phase 1~2.7 (완료)
+> **완료 Phase 상세**: `docs/archive/2025-12/`
 
-> **상세**: `docs/archive/2025-12/20251202_DEV_Phase1-2_Checklist.md`
-
-### ✅ Phase 3: Layer 2 Liquidity Flow (완료 2025-12-01)
-
-> **상세 설계**: `docs/archive/2025-12/20251201_DEV_Phase3_Detail.md`
-
-- Net Liquidity 정식 공식, Signal Matrix 3개, Detail 탭 3개
-- Widget-Detail 정합성 100% (v2.1)
-
-### ✅ Phase 5-0: Infrastructure (완료 2025-12-01)
-
-- Google Sheets + Apps Script
-- Admin Panel (`admin/DEV.md`)
-
-### 📋 대기: Phase 3.5, 4, 5-1
-
-> **상세**: `docs/archive/2025-12/20251202_DEV_Phase3.5-4_Plan.md`
+| Phase | 상태 | 참조 |
+|-------|------|------|
+| 1~2.7 | ✅ | `20251202_DEV_Phase1-2_Checklist.md` |
+| 3 Layer 2 | ✅ | `20251201_DEV_Phase3_Detail.md` |
+| 5-0 Infra | ✅ | `admin/DEV.md` |
+| 3.5, 4, 5-1 | 📋 | `20251202_DEV_Phase3.5-4_Plan.md` |
 
 ---
 
 ## Known Issues
 
-### ✅ 해결됨: 모바일 반응형 (2025-12-13)
-- **문제**: liquidity-stress 위젯 모바일에서 하단 짤림
-- **원인**: 컨테이너 280px 고정 vs 위젯 340px 필요
-- **해결**: 컨테이너 반응형 + 위젯 최적화 (4단계)
-- **상세**: `docs/planning/mobile-responsive-plan.md`
+> 해결된 이슈 상세: `docs/archive/2025-12/`
 
-### ✅ 해결됨: 위젯 iframe localStorage 이슈 (2025-12-11)
-- **문제**: Admin 페이지 iframe에서 위젯이 "데이터 없음" 표시
-- **원인**: 브라우저 Third-party Storage Partitioning 정책 (iframe 내 localStorage 차단)
-- **해결**: postMessage 통신 방식으로 변경 (부모→iframe 데이터 전달)
-- **상세**: `docs/DECISION_LOG.md` DEC-025
+| 이슈 | 해결일 | 참조 |
+|------|--------|------|
+| 모바일 반응형 짤림 | 12-13 | `mobile-responsive-plan.md` |
+| iframe localStorage 차단 | 12-11 | DEC-025 |
 
 ## Technical Decisions
 
