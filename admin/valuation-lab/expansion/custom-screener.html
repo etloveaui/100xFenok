@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>맞춤 스크리너 - Valuation Lab</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    input[type="range"] { accent-color: #6366f1; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-sliders text-indigo-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">맞춤 스크리너</h1>
+            <p class="text-gray-500 text-sm">가중치 기반 종합 점수</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">데이터 기준일:</span>
+          <span id="data-date" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">총 종목:</span>
+          <span id="total-count" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">필터 결과:</span>
+          <span id="filtered-count" class="ml-1 mono">-</span>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        점수는 Growth(Forward CAGR), Value(밴드 편차), Stability(CV), Sector Gap을 합산합니다.
+        상위 점수일수록 더 우수한 후보입니다.
+      </p>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h2 class="font-semibold text-gray-700">빠른 시작</h2>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button data-preset="value" class="preset-btn bg-emerald-50 border border-emerald-100 text-emerald-700 px-3 py-2 rounded-lg">저평가</button>
+          <button data-preset="growth" class="preset-btn bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-2 rounded-lg">성장</button>
+          <button data-preset="stable" class="preset-btn bg-rose-50 border border-rose-100 text-rose-700 px-3 py-2 rounded-lg">안정</button>
+          <button data-preset="balanced" class="preset-btn bg-gray-50 border border-gray-100 text-gray-700 px-3 py-2 rounded-lg">밸런스</button>
+        </div>
+      </div>
+      <h2 class="font-semibold text-gray-700">필터</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <input id="search-input" type="text" placeholder="티커/기업명 검색"
+          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+        <select id="sector-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="">섹터 전체</option>
+        </select>
+
+        <select id="country-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="">국가 전체</option>
+        </select>
+
+        <select id="limit-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="50">50개</option>
+          <option value="100" selected>100개</option>
+          <option value="200">200개</option>
+          <option value="all">전체</option>
+        </select>
+
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <input id="require-coverage" type="checkbox" checked>
+          필수 데이터 보유
+        </label>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">가중치</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div>
+          <div class="flex items-center justify-between">
+            <span>Growth (Forward CAGR)</span>
+            <span class="mono" id="w-growth">40</span>
+          </div>
+          <input id="growth-weight" type="range" min="0" max="100" value="40" class="w-full">
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <span>Value (밴드 편차)</span>
+            <span class="mono" id="w-value">25</span>
+          </div>
+          <input id="value-weight" type="range" min="0" max="100" value="25" class="w-full">
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <span>Stability (CV)</span>
+            <span class="mono" id="w-stability">20</span>
+          </div>
+          <input id="stability-weight" type="range" min="0" max="100" value="20" class="w-full">
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <span>Sector Gap (US)</span>
+            <span class="mono" id="w-gap">15</span>
+          </div>
+          <input id="gap-weight" type="range" min="0" max="100" value="15" class="w-full">
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        총합이 100이 아니어도 됩니다. 비율로 정규화됩니다.
+      </p>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">Top 3 요약</h2>
+      <div id="top-summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm"></div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">결과</h2>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr>
+              <th class="text-left px-3 py-2">티커</th>
+              <th class="text-left px-3 py-2">기업명</th>
+              <th class="text-left px-3 py-2">섹터</th>
+              <th class="text-right px-3 py-2">Growth</th>
+              <th class="text-right px-3 py-2">Value</th>
+              <th class="text-right px-3 py-2">Stability</th>
+              <th class="text-right px-3 py-2">Gap</th>
+              <th class="text-right px-3 py-2">Total</th>
+            </tr>
+          </thead>
+          <tbody id="result-body" class="divide-y"></tbody>
+        </table>
+      </div>
+      <p id="empty-state" class="text-sm text-gray-500 mt-4 hidden">표시할 결과가 없습니다.</p>
+    </section>
+
+  </main>
+
+  <script>
+    const DATA_URL = (() => {
+      const host = location.hostname;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      const isCloudflare = host.endsWith('pages.dev');
+      const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      return `${base}/data/global-scouter/stocks.json`;
+    })();
+
+    const state = { raw: null, rows: [] };
+    const elements = {
+      dataDate: document.getElementById('data-date'),
+      totalCount: document.getElementById('total-count'),
+      filteredCount: document.getElementById('filtered-count'),
+      resultBody: document.getElementById('result-body'),
+      emptyState: document.getElementById('empty-state'),
+      search: document.getElementById('search-input'),
+      sector: document.getElementById('sector-filter'),
+      country: document.getElementById('country-filter'),
+      limit: document.getElementById('limit-filter'),
+      requireCoverage: document.getElementById('require-coverage'),
+      growthWeight: document.getElementById('growth-weight'),
+      valueWeight: document.getElementById('value-weight'),
+      stabilityWeight: document.getElementById('stability-weight'),
+      gapWeight: document.getElementById('gap-weight'),
+      wGrowth: document.getElementById('w-growth'),
+      wValue: document.getElementById('w-value'),
+      wStability: document.getElementById('w-stability'),
+      wGap: document.getElementById('w-gap')
+    };
+
+    function lastNonNull(arr) {
+      if (!Array.isArray(arr)) return null;
+      for (let i = arr.length - 1; i >= 0; i -= 1) {
+        if (arr[i] !== null && arr[i] !== undefined) return arr[i];
+      }
+      return null;
+    }
+
+    function calcCagr(start, end, years) {
+      if (start === null || end === null || years <= 0) return null;
+      if (start <= 0 || end <= 0) return null;
+      return Math.pow(end / start, 1 / years) - 1;
+    }
+
+    function mean(values) {
+      if (!values.length) return null;
+      return values.reduce((a, b) => a + b, 0) / values.length;
+    }
+
+    function std(values, avg) {
+      if (!values.length) return null;
+      const variance = values.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / values.length;
+      return Math.sqrt(variance);
+    }
+
+    function percentileRank(values, value, reverse = false) {
+      const filtered = values.filter(v => v !== null && v !== undefined && !Number.isNaN(v)).sort((a, b) => a - b);
+      if (!filtered.length || value === null || value === undefined) return null;
+      let index = 0;
+      while (index < filtered.length && filtered[index] < value) index += 1;
+      const rank = index / (filtered.length - 1 || 1);
+      return reverse ? 1 - rank : rank;
+    }
+
+    function formatPercent(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      return `${(value * 100).toFixed(1)}%`;
+    }
+
+    function buildRows(data) {
+      const rows = [];
+      const stocks = data.stocks || {};
+      const sectors = data.sectors || {};
+
+      for (const [ticker, stock] of Object.entries(stocks)) {
+        const info = stock.info || {};
+        const perBand = stock.per_band || {};
+        const historical = stock.historical || {};
+        const estimates = stock.estimates || {};
+
+        const epsHist = Array.isArray(historical.eps) ? historical.eps : [];
+        const epsStart = epsHist[0] ?? null;
+        const epsEnd = epsHist[epsHist.length - 1] ?? null;
+        const histCagr = calcCagr(epsStart, epsEnd, Math.max(epsHist.length - 1, 1));
+        const fwdCagr = calcCagr(estimates.eps?.fy1 ?? null, estimates.eps?.fy3 ?? null, 2);
+
+        const currentPer = lastNonNull(historical.per);
+        const perAvg = perBand.avg ?? null;
+        const deviation = (currentPer !== null && perAvg) ? (currentPer - perAvg) / perAvg : null;
+
+        const epsFiltered = epsHist.filter(v => v !== null && v !== undefined);
+        const avg = mean(epsFiltered);
+        const sd = avg !== null ? std(epsFiltered, avg) : null;
+        const cv = (avg && sd !== null) ? sd / avg : null;
+
+        const sectorKey = info.sector_kr || info.sector || '-';
+        const sectorAvg = sectors[sectorKey]?.avg_per ?? null;
+        const gap = (perAvg !== null && sectorAvg) ? (perAvg / sectorAvg) - 1 : null;
+
+        rows.push({
+          ticker,
+          name: info.name || '-',
+          sector: sectorKey,
+          country: info.country || '-',
+          fwdCagr,
+          deviation,
+          cv,
+          gap
+        });
+      }
+      return rows;
+    }
+
+    function uniqueValues(rows, key) {
+      return [...new Set(rows.map(r => r[key]).filter(Boolean))].sort();
+    }
+
+    function computeScores(rows) {
+      const growthVals = rows.map(r => r.fwdCagr);
+      const valueVals = rows.map(r => r.deviation);
+      const stabilityVals = rows.map(r => r.cv);
+      const gapVals = rows.map(r => r.gap);
+
+      const wGrowth = Number(elements.growthWeight.value);
+      const wValue = Number(elements.valueWeight.value);
+      const wStability = Number(elements.stabilityWeight.value);
+      const wGap = Number(elements.gapWeight.value);
+      const wSum = wGrowth + wValue + wStability + wGap || 1;
+
+      return rows.map(r => {
+        const growthScore = percentileRank(growthVals, r.fwdCagr) ?? null;
+        const valueScore = percentileRank(valueVals, r.deviation, true) ?? null;
+        const stabilityScore = percentileRank(stabilityVals, r.cv, true) ?? null;
+        const gapScore = percentileRank(gapVals, r.gap, true) ?? null;
+
+        let total = null;
+        if (growthScore !== null || valueScore !== null || stabilityScore !== null || gapScore !== null) {
+          const g = growthScore ?? 0;
+          const v = valueScore ?? 0;
+          const s = stabilityScore ?? 0;
+          const gp = gapScore ?? 0;
+          total = (g * wGrowth + v * wValue + s * wStability + gp * wGap) / wSum;
+        }
+        return { ...r, growthScore, valueScore, stabilityScore, gapScore, total };
+      });
+    }
+
+    function applyFilters() {
+      const query = elements.search.value.trim().toLowerCase();
+      const sector = elements.sector.value;
+      const country = elements.country.value;
+      const requireCoverage = elements.requireCoverage.checked;
+
+      let rows = state.rows.filter(row => {
+        if (sector && row.sector !== sector) return false;
+        if (country && row.country !== country) return false;
+        if (query) {
+          const hay = `${row.ticker} ${row.name}`.toLowerCase();
+          if (!hay.includes(query)) return false;
+        }
+        if (requireCoverage) {
+          if (row.fwdCagr === null || row.deviation === null || row.cv === null) return false;
+          if (row.deviation <= -0.99) return false;
+          if (row.cv <= 0) return false;
+        }
+        return true;
+      });
+
+      rows = computeScores(rows);
+      rows = applyLimit(rows);
+      renderRows(rows);
+    }
+
+    function applyLimit(rows) {
+      const limit = elements.limit.value;
+      if (limit === 'all') return rows;
+      return rows.slice(0, Number(limit));
+    }
+
+    function renderRows(rows) {
+      elements.resultBody.innerHTML = '';
+      elements.filteredCount.textContent = rows.length.toString();
+      if (rows.length === 0) {
+        elements.emptyState.classList.remove('hidden');
+        return;
+      }
+      elements.emptyState.classList.add('hidden');
+      const sorted = [...rows].sort((a, b) => (b.total ?? -Infinity) - (a.total ?? -Infinity));
+      for (const row of sorted) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2 mono">${row.ticker}</td>
+          <td class="px-3 py-2">${row.name}</td>
+          <td class="px-3 py-2">${row.sector}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.growthScore)}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.valueScore)}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.stabilityScore)}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.gapScore)}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.total)}</td>
+        `;
+        elements.resultBody.appendChild(tr);
+      }
+      renderTopSummary(sorted.slice(0, 3));
+    }
+
+    function renderTopSummary(rows) {
+      const wrap = document.getElementById('top-summary');
+      wrap.innerHTML = '';
+      for (const row of rows) {
+        const card = document.createElement('div');
+        card.className = 'border rounded-xl p-4 bg-slate-50';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">${row.ticker}</span>
+            <span class="mono text-indigo-700">${formatPercent(row.total)}</span>
+          </div>
+          <div class="text-xs text-gray-500 mt-1">${row.name}</div>
+          <div class="text-xs text-gray-600 mt-3">성장 ${formatPercent(row.growthScore)} · 가치 ${formatPercent(row.valueScore)} · 안정 ${formatPercent(row.stabilityScore)}</div>
+        `;
+        wrap.appendChild(card);
+      }
+    }
+
+    function applyPreset(type) {
+      const presets = {
+        value: { growth: 20, value: 45, stability: 20, gap: 15 },
+        growth: { growth: 55, value: 20, stability: 15, gap: 10 },
+        stable: { growth: 20, value: 20, stability: 50, gap: 10 },
+        balanced: { growth: 40, value: 25, stability: 20, gap: 15 }
+      };
+      const chosen = presets[type] || presets.balanced;
+      elements.growthWeight.value = chosen.growth;
+      elements.valueWeight.value = chosen.value;
+      elements.stabilityWeight.value = chosen.stability;
+      elements.gapWeight.value = chosen.gap;
+      updateWeights();
+    }
+
+    function updateWeights() {
+      elements.wGrowth.textContent = elements.growthWeight.value;
+      elements.wValue.textContent = elements.valueWeight.value;
+      elements.wStability.textContent = elements.stabilityWeight.value;
+      elements.wGap.textContent = elements.gapWeight.value;
+      applyFilters();
+    }
+
+    async function init() {
+      const res = await fetch(DATA_URL);
+      if (!res.ok) throw new Error('데이터 로딩 실패');
+      const data = await res.json();
+      state.raw = data;
+      state.rows = buildRows(data);
+
+      elements.dataDate.textContent = data.metadata?.date || data.metadata?.generated_at || '-';
+      elements.totalCount.textContent = state.rows.length.toString();
+
+      const sectors = uniqueValues(state.rows, 'sector');
+      const countries = uniqueValues(state.rows, 'country');
+      for (const value of sectors) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        elements.sector.appendChild(opt);
+      }
+      for (const value of countries) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        elements.country.appendChild(opt);
+      }
+
+      const preset = new URLSearchParams(location.search).get('preset');
+      if (preset) applyPreset(preset);
+      updateWeights();
+    }
+
+    [elements.search, elements.sector, elements.country, elements.limit, elements.requireCoverage]
+      .forEach(el => el.addEventListener('input', applyFilters));
+    [elements.growthWeight, elements.valueWeight, elements.stabilityWeight, elements.gapWeight]
+      .forEach(el => el.addEventListener('input', updateWeights));
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+    });
+
+    init().catch(err => {
+      elements.emptyState.classList.remove('hidden');
+      elements.emptyState.textContent = err.message;
+    });
+  </script>
+</body>
+</html>

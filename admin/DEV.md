@@ -18,7 +18,9 @@
 admin/
 ├── DEV.md           ← 이 파일
 ├── index.html       ← 관리자 대시보드
-└── api-test.html    ← Apps Script API 테스트
+├── api-test.html    ← Apps Script API 테스트
+├── valuation-lab/   ← 밸류에이션 실험실
+└── data-lab/        ← 데이터 관리 전용 공간
 ```
 
 ---
@@ -108,7 +110,8 @@ if (inputHash === storedHash) {
 
 ### Phase 2: 확장 (대기)
 - [ ] 설정 페이지
-- [ ] 데이터 관리 UI
+- [x] 데이터 관리 UI (Data Lab 기본 구조)
+- [x] Valuation Lab 확장 섹션
 - [ ] 로그 뷰어
 
 ---

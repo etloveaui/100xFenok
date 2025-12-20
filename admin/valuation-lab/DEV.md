@@ -85,6 +85,45 @@
 
 ---
 
+## 확장 섹션
+
+> **역할**: 서비스 후보 기능 검증 단계
+
+| 항목 | 값 |
+|------|-----|
+| 위치 | `admin/valuation-lab/expansion/` |
+| 목적 | 서비스 후보 기능 검증 |
+| 기준 | Data Lab 검증 통과 후 진행 |
+
+### Phase A
+
+- `expansion/per-band.html` (PER 밴드 스크리너)
+
+### Phase B
+
+- `expansion/eps-growth.html` (EPS 성장 랭킹)
+
+### Phase C
+
+- `expansion/target-price.html` (목표가 계산)
+
+### Phase D
+
+- `expansion/stability-score.html` (안정성/변동성 점수)
+
+### Phase E
+
+- `expansion/sector-gap.html` (섹터 대비 멀티플 갭)
+
+### 통합/맞춤
+
+- `expansion/dashboard.html` (A~E 요약 대시보드)
+- `expansion/custom-screener.html` (가중치 기반 스크리너)
+
+**상세**: `docs/planning/valuation-lab-expansion.md`
+
+---
+
 ## Shared 모듈 API
 
 > **API 상세**: `docs/archive/2025-12/20251220_DEV_Valuation-Lab-API-Details.md`

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PER 밴드 스크리너 - Valuation Lab</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-chart-line text-emerald-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">PER 밴드 스크리너</h1>
+            <p class="text-gray-500 text-sm">Global Scouter 기반</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">데이터 기준일:</span>
+          <span id="data-date" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">총 종목:</span>
+          <span id="total-count" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">필터 결과:</span>
+          <span id="filtered-count" class="ml-1 mono">-</span>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        현재 PER은 historical.per 마지막 유효값을 사용하며, PER 평균 1 미만은 제외합니다.
+      </p>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">필터</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <input id="search-input" type="text" placeholder="티커/기업명 검색"
+          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+
+        <select id="sector-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="">섹터 전체</option>
+        </select>
+
+        <select id="country-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="">국가 전체</option>
+        </select>
+
+        <select id="position-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="">구간 전체</option>
+          <option value="저평가">저평가</option>
+          <option value="적정">적정</option>
+          <option value="고평가">고평가</option>
+          <option value="없음">없음</option>
+        </select>
+
+        <select id="sort-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="deviation-asc">편차 낮은 순</option>
+          <option value="deviation-desc">편차 높은 순</option>
+          <option value="per-asc">현재 PER 낮은 순</option>
+          <option value="per-desc">현재 PER 높은 순</option>
+          <option value="name-asc">이름 A-Z</option>
+        </select>
+
+        <select id="limit-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="50">50개</option>
+          <option value="100">100개</option>
+          <option value="200" selected>200개</option>
+          <option value="all">전체</option>
+        </select>
+
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <input id="only-band" type="checkbox" checked>
+          PER 밴드 보유
+        </label>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">결과</h2>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr>
+              <th class="text-left px-3 py-2">티커</th>
+              <th class="text-left px-3 py-2">기업명</th>
+              <th class="text-left px-3 py-2">섹터</th>
+              <th class="text-right px-3 py-2">현재 PER</th>
+              <th class="text-right px-3 py-2">밴드 평균</th>
+          <th class="text-right px-3 py-2">가치 백분위</th>
+          <th class="text-right px-3 py-2">편차</th>
+              <th class="text-center px-3 py-2">구간</th>
+            </tr>
+          </thead>
+          <tbody id="result-body" class="divide-y"></tbody>
+        </table>
+      </div>
+      <p id="empty-state" class="text-sm text-gray-500 mt-4 hidden">표시할 결과가 없습니다.</p>
+    </section>
+
+  </main>
+
+  <script>
+    const DATA_URL = (() => {
+    const isLocalHost = () => {
+      const host = location.hostname;
+      if (location.protocol === 'file:') return true;
+      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return true;
+      if (host.startswith('192.168.') || host.startswith('10.') || host.startswith('172.')) return true;
+      return false;
+    };
+    const isLocal = isLocalHost();
+    const isCloudflare = location.hostname.endsWith('pages.dev');
+    const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      return `${base}/data/global-scouter/stocks.json`;
+    })();
+
+    const state = {
+      raw: null,
+      rows: []
+    };
+
+    const elements = {
+      dataDate: document.getElementById('data-date'),
+      totalCount: document.getElementById('total-count'),
+      filteredCount: document.getElementById('filtered-count'),
+      resultBody: document.getElementById('result-body'),
+      emptyState: document.getElementById('empty-state'),
+      search: document.getElementById('search-input'),
+      sector: document.getElementById('sector-filter'),
+      country: document.getElementById('country-filter'),
+      position: document.getElementById('position-filter'),
+      sort: document.getElementById('sort-filter'),
+      limit: document.getElementById('limit-filter'),
+      onlyBand: document.getElementById('only-band')
+    };
+
+    function lastNonNull(arr) {
+      if (!Array.isArray(arr)) return null;
+      for (let i = arr.length - 1; i >= 0; i -= 1) {
+        if (arr[i] !== null && arr[i] !== undefined) return arr[i];
+      }
+      return null;
+    }
+
+    function calcPosition(current, min, max) {
+      if (current === null || min === null || max === null) return '없음';
+      if (current <= min) return '저평가';
+      if (current >= max) return '고평가';
+      return '적정';
+    }
+
+    function formatNumber(value, digits = 2) {
+      if (value === null || value === undefined) return '-';
+      return Number(value).toFixed(digits);
+    }
+
+    function formatPercent(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      const sign = value >= 0 ? '+' : '';
+      return `${sign}${(value * 100).toFixed(1)}%`;
+    }
+
+    function percentileRank(values, value, reverse = false) {
+      const filtered = values.filter(v => v !== null && v !== undefined && !Number.isNaN(v)).sort((a, b) => a - b);
+      if (!filtered.length || value === null || value === undefined) return null;
+      let index = 0;
+      while (index < filtered.length && filtered[index] < value) index += 1;
+      const rank = index / (filtered.length - 1 || 1);
+      return reverse ? 1 - rank : rank;
+    }
+
+    function buildRows(data) {
+      const rows = [];
+      const stocks = data.stocks || {};
+      for (const [ticker, stock] of Object.entries(stocks)) {
+        const info = stock.info || {};
+        const perBand = stock.per_band || {};
+        const historical = stock.historical || {};
+        const currentPer = lastNonNull(historical.per);
+        const perAvg = perBand.avg ?? null;
+        const deviation = (currentPer !== null && perAvg) ? (currentPer - perAvg) / perAvg : null;
+        rows.push({
+          ticker,
+          name: info.name || '-',
+          sector: info.sector_kr || info.sector || '-',
+          country: info.country || '-',
+          per: currentPer,
+          perAvg,
+          perMin: perBand.min ?? null,
+          perMax: perBand.max ?? null,
+          deviation,
+          position: calcPosition(currentPer, perBand.min ?? null, perBand.max ?? null)
+        });
+      }
+      return rows;
+    }
+
+    function uniqueValues(rows, key) {
+      return [...new Set(rows.map(r => r[key]).filter(Boolean))].sort();
+    }
+
+    function applyFilters() {
+      const query = elements.search.value.trim().toLowerCase();
+      const sector = elements.sector.value;
+      const country = elements.country.value;
+      const position = elements.position.value;
+      const onlyBand = elements.onlyBand.checked;
+
+      let rows = state.rows.filter(row => {
+        if (onlyBand && (row.perAvg === null || row.perAvg === undefined)) return false;
+        if (row.perAvg !== null && row.perAvg < 1) return false;
+        if (sector && row.sector !== sector) return false;
+        if (country && row.country !== country) return false;
+        if (position && row.position !== position) return false;
+        if (query) {
+          const hay = `${row.ticker} ${row.name}`.toLowerCase();
+          if (!hay.includes(query)) return false;
+        }
+        return true;
+      });
+
+      rows = attachValueScores(rows);
+      rows = applySort(rows);
+      rows = applyLimit(rows);
+      renderRows(rows);
+    }
+
+    function applySort(rows) {
+      const mode = elements.sort.value;
+      const sorted = [...rows];
+      const byName = (a, b) => a.name.localeCompare(b.name);
+      if (mode === 'deviation-asc') {
+        sorted.sort((a, b) => (a.deviation ?? Infinity) - (b.deviation ?? Infinity));
+      } else if (mode === 'deviation-desc') {
+        sorted.sort((a, b) => (b.deviation ?? -Infinity) - (a.deviation ?? -Infinity));
+      } else if (mode === 'per-asc') {
+        sorted.sort((a, b) => (a.per ?? Infinity) - (b.per ?? Infinity));
+      } else if (mode === 'per-desc') {
+        sorted.sort((a, b) => (b.per ?? -Infinity) - (a.per ?? -Infinity));
+      } else if (mode === 'name-asc') {
+        sorted.sort(byName);
+      }
+      return sorted;
+    }
+
+    function attachValueScores(rows) {
+      const deviations = rows.map(r => r.deviation);
+      return rows.map(r => ({
+        ...r,
+        valueScore: percentileRank(deviations, r.deviation, true)
+      }));
+    }
+
+    function applyLimit(rows) {
+      const limit = elements.limit.value;
+      if (limit === 'all') return rows;
+      const n = Number(limit);
+      return rows.slice(0, n);
+    }
+
+    function renderRows(rows) {
+      elements.resultBody.innerHTML = '';
+      elements.filteredCount.textContent = rows.length.toString();
+      if (rows.length === 0) {
+        elements.emptyState.classList.remove('hidden');
+        return;
+      }
+      elements.emptyState.classList.add('hidden');
+      for (const row of rows) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2 mono">${row.ticker}</td>
+          <td class="px-3 py-2">${row.name}</td>
+          <td class="px-3 py-2">${row.sector}</td>
+          <td class="px-3 py-2 text-right mono">${formatNumber(row.per)}</td>
+          <td class="px-3 py-2 text-right mono">${formatNumber(row.perAvg)}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.valueScore)}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.deviation)}</td>
+          <td class="px-3 py-2 text-center">
+            <span class="px-2 py-1 rounded text-xs ${badgeClass(row.position)}">${row.position}</span>
+          </td>
+        `;
+        elements.resultBody.appendChild(tr);
+      }
+    }
+
+    function badgeClass(position) {
+      if (position === '저평가') return 'bg-emerald-100 text-emerald-700';
+      if (position === '고평가') return 'bg-rose-100 text-rose-700';
+      if (position === '적정') return 'bg-blue-100 text-blue-700';
+      return 'bg-gray-100 text-gray-600';
+    }
+
+    async function init() {
+      const res = await fetch(DATA_URL);
+      if (!res.ok) throw new Error('데이터 로딩 실패');
+      const data = await res.json();
+      state.raw = data;
+      state.rows = buildRows(data);
+
+      elements.dataDate.textContent = data.metadata?.date || data.metadata?.generated_at || '-';
+      elements.totalCount.textContent = state.rows.length.toString();
+
+      const sectors = uniqueValues(state.rows, 'sector');
+      const countries = uniqueValues(state.rows, 'country');
+
+      for (const value of sectors) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        elements.sector.appendChild(opt);
+      }
+      for (const value of countries) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        elements.country.appendChild(opt);
+      }
+
+      const symbol = new URLSearchParams(location.search).get('symbol');
+      if (symbol) {
+        elements.search.value = symbol;
+      }
+      applyFilters();
+    }
+
+    [elements.search, elements.sector, elements.country, elements.position, elements.sort, elements.limit, elements.onlyBand]
+      .forEach(el => el.addEventListener('input', applyFilters));
+
+    init().catch(err => {
+      elements.emptyState.classList.remove('hidden');
+      elements.emptyState.textContent = err.message;
+    });
+  </script>
+</body>
+</html>

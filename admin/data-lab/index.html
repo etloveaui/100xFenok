@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Lab - 100x FenoK</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <script src="shared/data-lab-config.js"></script>
+  <script src="shared/validators.js"></script>
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-database text-emerald-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">Data Lab</h1>
+            <p class="text-gray-500 text-sm">데이터 상태 및 스키마 검증</p>
+          </div>
+        </div>
+        <a href="../" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> Admin
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-signal text-emerald-500 mr-2"></i>데이터 상태
+      </h2>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Damodaran ERP</h3>
+              <p class="text-xs text-gray-500">Country Risk Premium</p>
+            </div>
+            <span id="erp-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>레코드: <span id="erp-count">-</span></p>
+            <p>갱신일: <span id="erp-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="erp-sample">-</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Damodaran EV/Sales</h3>
+              <p class="text-xs text-gray-500">Sector Multiples</p>
+            </div>
+            <span id="evsales-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>레코드: <span id="evsales-count">-</span></p>
+            <p>갱신일: <span id="evsales-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="evsales-sample">-</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Global Scouter</h3>
+              <p class="text-xs text-gray-500">Stocks Master</p>
+            </div>
+            <span id="scouter-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>레코드: <span id="scouter-count">-</span></p>
+            <p>갱신일: <span id="scouter-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="scouter-sample">-</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Benchmarks</h3>
+              <p class="text-xs text-gray-500">Market Benchmarks</p>
+            </div>
+            <span id="benchmarks-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>파일: <span id="benchmarks-files">-</span></p>
+            <p>섹션: <span id="benchmarks-sections">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="benchmarks-sample">-</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-shield-check text-indigo-500 mr-2"></i>검증 결과
+      </h2>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <ul id="validation-log" class="text-sm text-gray-700 space-y-2">
+          <li class="text-gray-500">// 데이터 로딩 후 자동 검증</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const logEl = document.getElementById('validation-log');
+    function addLog(message, ok = true) {
+      const li = document.createElement('li');
+      li.textContent = message;
+      li.className = ok ? 'text-emerald-600' : 'text-rose-600';
+      logEl.appendChild(li);
+    }
+
+    function setStatus(elId, ok, label) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      if (ok) {
+        el.textContent = label || '정상';
+        el.className = 'text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700';
+      } else {
+        el.textContent = label || '오류';
+        el.className = 'text-xs px-2 py-1 rounded bg-rose-100 text-rose-700';
+      }
+    }
+
+    function getMetaDate(data) {
+      return data?.metadata?.generated_at || data?.metadata?.date || '-';
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function sampleKeys(obj, limit) {
+      return Object.keys(obj || {}).slice(0, limit).join(', ');
+    }
+
+    async function loadDamodaranErp() {
+      try {
+        const data = await fetchDataLabFile('DAMODARAN_ERP');
+        const result = validateDamodaranErp(data);
+        setStatus('erp-status', result.ok);
+        setText('erp-count', result.stats.actualCount);
+        setText('erp-date', getMetaDate(data));
+        setText('erp-sample', sampleKeys(data.countries, 5));
+        addLog(`Damodaran ERP: ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
+      } catch (err) {
+        setStatus('erp-status', false, '로드 실패');
+        addLog(`Damodaran ERP: ${err.message}`, false);
+      }
+    }
+
+    async function loadDamodaranEvSales() {
+      try {
+        const data = await fetchDataLabFile('DAMODARAN_EVSALES');
+        const result = validateDamodaranEvSales(data);
+        setStatus('evsales-status', result.ok);
+        setText('evsales-count', result.stats.actualCount);
+        setText('evsales-date', getMetaDate(data));
+        setText('evsales-sample', sampleKeys(data.sectors, 5));
+        addLog(`Damodaran EV/Sales: ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
+      } catch (err) {
+        setStatus('evsales-status', false, '로드 실패');
+        addLog(`Damodaran EV/Sales: ${err.message}`, false);
+      }
+    }
+
+    async function loadGlobalScouter() {
+      try {
+        const data = await fetchDataLabFile('GLOBAL_SCOUTER');
+        const result = validateGlobalScouter(data);
+        setStatus('scouter-status', result.ok);
+        setText('scouter-count', result.stats.actualCount);
+        setText('scouter-date', getMetaDate(data));
+        setText('scouter-sample', sampleKeys(data.stocks, 5));
+        addLog(`Global Scouter: ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
+      } catch (err) {
+        setStatus('scouter-status', false, '로드 실패');
+        addLog(`Global Scouter: ${err.message}`, false);
+      }
+    }
+
+    async function loadBenchmarks() {
+      const files = DATA_LAB_CONFIG.BENCHMARKS || [];
+      let okCount = 0;
+      let totalSections = 0;
+      const samples = [];
+
+      for (const file of files) {
+        try {
+          const data = await fetchDataLabPath(file.path);
+          const result = validateBenchmarkFile(data);
+          totalSections += result.stats.sectionCount || 0;
+          const sampleKeys = Object.keys(data.sections || {}).slice(0, 2).join(', ');
+          samples.push(`${file.key}: ${sampleKeys}`);
+          addLog(`Benchmarks(${file.key}): ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
+          if (result.ok) okCount += 1;
+        } catch (err) {
+          addLog(`Benchmarks(${file.key}): ${err.message}`, false);
+        }
+      }
+
+      const allOk = okCount === files.length;
+      setStatus('benchmarks-status', allOk, allOk ? '정상' : `${okCount}/${files.length}`);
+      setText('benchmarks-files', files.length);
+      setText('benchmarks-sections', totalSections);
+      setText('benchmarks-sample', samples.slice(0, 2).join(' | ') || '-');
+    }
+
+    (async function init() {
+      logEl.innerHTML = '';
+      await Promise.all([loadDamodaranErp(), loadDamodaranEvSales(), loadGlobalScouter(), loadBenchmarks()]);
+    })();
+  </script>
+</body>
+</html>

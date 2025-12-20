@@ -270,12 +270,12 @@ class MacroDataFetcher {
         this.fetchStablecoinData()
       ]);
 
-      // 최신값 (단위 변환: WALCL, TGA, RRP는 Millions → Billions)
-      // M2SL은 이미 Billions
+      // 최신값 (단위 변환: WALCL, TGA는 Millions → Billions)
+      // M2SL, RRP는 이미 Billions
       const latestM2 = this.getLatestValue(m2);  // Billions
       const walclB = this.getLatestValue(fedBs) / 1000;  // Millions → Billions
       const tgaB = this.getLatestValue(tga) / 1000;      // Millions → Billions
-      const rrpB = this.getLatestValue(rrp) / 1000;      // Millions → Billions (RRPONTSYD도 Millions으로 처리)
+      const rrpB = this.getLatestValue(rrp);             // 이미 Billions ★ 수정됨
 
       // Net Liquidity 계산 (정식 공식): Fed BS - TGA - RRP (Billions)
       const netLiquidity = walclB - tgaB - rrpB;
@@ -287,8 +287,9 @@ class MacroDataFetcher {
       const stablecoinMcap = (stablecoin?.current || 0) / 1e9;  // Billions
       const scM2Ratio = latestM2 > 0 ? (stablecoinMcap / (latestM2 * 1000)) * 100 : 0;  // M2는 Trillions 단위
 
-      // Delta 값들 (최근 2주 데이터로 계산, 없으면 0)
-      const netLiquidityDelta = this.calculateWeeklyDelta(fedBs, tga, rrp);
+      // Delta 값들 (최근 2주 데이터로 계산)
+      // ★ weeklyNetFlow: 최근 1주일간 변화량 (Hero Value용)
+      const weeklyNetFlow = this.calculateWeeklyDelta(fedBs, tga, rrp);
 
       // ★ Detail과 동일한 형식으로 반환
       return {
@@ -296,18 +297,21 @@ class MacroDataFetcher {
         m2YoY: parseFloat(m2YoY.toFixed(2)),
         m2Total: latestM2,  // Billions
         netLiquidity: parseFloat(netLiquidity.toFixed(1)),  // Billions
-        netLiquidityDelta: parseFloat(netLiquidityDelta.toFixed(1)),  // Billions (주간 변화)
+        // netLiquidityDelta: 초기 로딩 시에도 의미있는 값 제공 (일간 변화량 근사치)
+        // 단, 위젯은 weeklyNetFlow를 우선 사용하도록 설계됨
+        netLiquidityDelta: weeklyNetFlow, 
+        weeklyNetFlow: weeklyNetFlow, // ★ 명시적 필드 추가
         stablecoinMcap,  // Billions
         scM2Ratio: parseFloat(scM2Ratio.toFixed(2)),
         // Components (Chart용)
         walcl: parseFloat(walclB.toFixed(1)),
         tga: parseFloat(tgaB.toFixed(1)),
         rrp: parseFloat(rrpB.toFixed(1)),
-        walclDelta: 0,  // Detail 방문 시 갱신
+        walclDelta: 0,  
         tgaDelta: 0,
         rrpDelta: 0,
         // 기존 호환용
-        netFlow: parseFloat(netLiquidityDelta.toFixed(1)),
+        netFlow: weeklyNetFlow,
         updated: new Date().toISOString()
       };
     } catch (e) {
@@ -316,32 +320,85 @@ class MacroDataFetcher {
     }
   }
 
-  /**
-   * Net Liquidity Delta 계산
-   * WALCL: 주간, TGA: 일간 (DEC-048), RRP: 일간
-   * 마지막 2개 포인트 비교 (참고용 - 정밀 계산은 Detail 페이지)
-   */
-  calculateWeeklyDelta(fedBs, tga, rrp) {
-    // 마지막 2개 포인트 비교 (TGA 일간 전환 후에도 동일 로직 유지)
-    if (!fedBs?.length || fedBs.length < 2 || !tga?.length || tga.length < 2) return 0;
+    /**
 
-    // 최신 주 vs 이전 주
-    const latestWalcl = fedBs[fedBs.length - 1]?.val || 0;
-    const prevWalcl = fedBs[fedBs.length - 2]?.val || 0;
+     * Net Liquidity Weekly Delta 계산
 
-    const latestTga = tga[tga.length - 1]?.val || 0;
-    const prevTga = tga[tga.length - 2]?.val || 0;
+     * WALCL: 주간, TGA: 일간 (DEC-048), RRP: 일간
 
-    // RRP: 최신값만 사용 (현재 ~1B로 매우 작음, 변화 무시)
-    const latestRrp = rrp?.length > 0 ? rrp[rrp.length - 1]?.val || 0 : 0;
+     * RRP 단위 수정 반영 (/1000 제거)
 
-    // Net Liquidity = WALCL - TGA - RRP (Millions 단위)
-    const latestNet = latestWalcl - latestTga - latestRrp;
-    const prevNet = prevWalcl - prevTga - latestRrp;
+     */
 
-    // Millions → Billions, 차이 계산
-    return (latestNet - prevNet) / 1000;
-  }
+    calculateWeeklyDelta(fedBs, tga, rrp) {
+
+      // 데이터 부족 시 0 반환
+
+      if (!fedBs?.length || fedBs.length < 2 || !tga?.length || tga.length < 2) return 0;
+
+  
+
+      const hasRrp = Array.isArray(rrp) && rrp.length > 0;
+
+  
+
+      // 최신 값 (Last)
+
+      const latestWalcl = (fedBs[fedBs.length - 1]?.val || 0) / 1000; // Billions
+
+      const latestTga = (tga[tga.length - 1]?.val || 0) / 1000;       // Billions
+
+      // RRPONTSYD는 원천 데이터가 이미 Billions 단위이므로 /1000 하지 않는다 (P0 Unit Fix)
+
+      const latestRrp = hasRrp ? (rrp[rrp.length - 1]?.val || 0) : 0; 
+
+  
+
+      // 1주일 전 값 (Prev)
+
+      const prevWalcl = (fedBs[fedBs.length - 2]?.val || 0) / 1000;
+
+      
+
+      // TGA: 5일 전(영업일 기준 1주일) 데이터를 찾거나, 없으면 index-5 사용
+
+      let prevTga = latestTga;
+
+      if (tga.length > 5) prevTga = (tga[tga.length - 6]?.val || 0) / 1000;
+
+  
+
+      // RRP: 안전하게 접근
+
+      let prevRrp = latestRrp;
+
+      if (hasRrp && rrp.length > 5) prevRrp = rrp[rrp.length - 6]?.val || 0;
+
+  
+
+      // Sanity Check: RRP 단위 검증 (P0)
+
+      // 최근 8년 내 RRP가 $5T를 넘은 적은 없으므로, 5000 초과 시 단위 오류 가능성 큼
+
+      if (latestRrp > 5000) {
+
+          console.warn(`[DataFetcher] Abnormal RRP value detected: ${latestRrp}. Unit scaling might be incorrect (expected Billions).`);
+
+      }
+
+  
+
+      // Net Liquidity = WALCL - TGA - RRP
+
+      const latestNet = latestWalcl - latestTga - latestRrp;
+
+      const prevNet = prevWalcl - prevTga - prevRrp;
+
+  
+
+      return parseFloat((latestNet - prevNet).toFixed(1));
+
+    }
 
   /**
    * Liquidity Stress 데이터 fetch

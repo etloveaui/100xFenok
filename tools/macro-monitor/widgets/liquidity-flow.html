@@ -748,31 +748,51 @@
   }
 
   // DataFetcher 반환 형식 → Widget 형식 변환
-  // 단위: DataFetcher(netLiquidity=Millions) → Widget(Billions)
+  // 단위: DataFetcher(netLiquidity=Billions) → Widget(Billions) ★ 단위 통일됨
   function convertToWidgetFormat(data) {
     // 이미 Widget 형식이면 그대로 반환
     if (data.netLiquidityDelta !== undefined || data.netFlow !== undefined) {
-      return data;
+      // weeklyNetFlow가 없으면 netLiquidityDelta(일간)를 사용해야 함 (fallback)
+      // 원본 객체 보호를 위해 복사본 사용
+      const widgetData = { ...data };
+      if (widgetData.weeklyNetFlow === undefined && widgetData.netLiquidityDelta !== undefined) {
+          widgetData.weeklyNetFlow = widgetData.netLiquidityDelta;
+      }
+      // Hero Value용 netFlow 필드 명시적 할당
+      widgetData.netFlow = widgetData.weeklyNetFlow;
+      return widgetData;
     }
 
-    // DataFetcher 형식 변환
+    // DataFetcher 형식 변환 (metrics 객체 사용 시)
     if (data.metrics) {
-      // netLiquidity: Millions → Billions (÷1000)
-      const nlMillions = data.metrics.netLiquidity || 0;
-      const nlBillions = nlMillions / 1000;
+      // netLiquidity: 이미 Billions (수정됨)
+      const nlBillions = data.metrics.netLiquidity || 0;
 
       // stablecoin: DefiLlama는 $ 단위, Billions로 변환
       const scRaw = data.metrics.stablecoin || 0;
       const scBillions = scRaw > 1e9 ? scRaw / 1e9 : scRaw;
 
+      // Hero Value: 주간 흐름 (weeklyNetFlow) 우선
+      const weeklyFlow = data.metrics.weeklyNetFlow ?? 0;
+
       return {
-        netLiquidityDelta: nlBillions,
-        netFlow: nlBillions,
-        m2YoY: data.metrics.m2YoY || 0,
-        m2Total: data.metrics.m2 || 22298,
+        netFlow: weeklyFlow, // Hero Value
+        netLiquidityDelta: data.metrics.netLiquidityDelta ?? weeklyFlow, // 일간 변화량 (또는 근사치)
+        weeklyNetFlow: weeklyFlow, // 명시적 필드
+        m2YoY: data.metrics.m2YoY ?? 0,
+        m2Total: data.metrics.m2 ?? 22298,
         netLiquidity: nlBillions,
         stablecoinMcap: scBillions
       };
+    }
+
+    // DataFetcher(fetchLiquidityFlow) 직접 반환 형식일 경우
+    if (data.netLiquidity !== undefined) {
+        return {
+            ...data,
+            netFlow: data.weeklyNetFlow ?? data.netLiquidityDelta ?? 0,
+            // netLiquidityDelta는 원본 값 유지 (DataFetcher가 이미 계산해서 줌)
+        };
     }
 
     return data;
