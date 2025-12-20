@@ -506,6 +506,39 @@
 </div>
 
 <script>
+  // ===== 날짜 유틸리티 (전역) =====
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  const toLocalYMD = (dt) => {
+    const y = dt.getFullYear();
+    const m = pad2(dt.getMonth() + 1);
+    const d = pad2(dt.getDate());
+    return `${y}-${m}-${d}`;
+  };
+
+  const toUTCYMD = (dt) => {
+    const y = dt.getUTCFullYear();
+    const m = pad2(dt.getUTCMonth() + 1);
+    const d = pad2(dt.getUTCDate());
+    return `${y}-${m}-${d}`;
+  };
+
+  const parseYMDLocal = (s) => {
+    // Strict YYYY-MM-DD
+    if (!s || typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+
+    const [y, m, d] = s.split('-').map(Number);
+    if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+
+    // DST 안전: 정오 고정
+    const dt = new Date(y, m - 1, d, 12, 0, 0, 0);
+
+    // Rollover 방지(유령 날짜 차단)
+    if (dt.getFullYear() !== y || (dt.getMonth() + 1) !== m || dt.getDate() !== d) return null;
+
+    return dt;
+  };
+
   // ===== 임계값 헬퍼 - constants.js THRESHOLDS 사용 (fallback 포함) =====
   const getThreshold = (category, level) => {
     if (typeof THRESHOLDS !== 'undefined' && THRESHOLDS[category]) {
@@ -574,8 +607,15 @@
   }
 
   async function getFredSeries(seriesId, days) {
-    const end = new Date().toISOString().split('T')[0];
-    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    // DST-safe 날짜 계산 (정오 고정)
+    const endDate = new Date();
+    endDate.setHours(12, 0, 0, 0);
+    const end = toLocalYMD(endDate);
+
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+    const start = toLocalYMD(startDate);
+
     const url = `https://fed-proxy.etloveaui.workers.dev/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.fredApiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
 
     const json = await fetchData(url);
@@ -592,7 +632,14 @@
   //   2022-04-18 ~ 현재: Treasury General Account (TGA) Opening Balance
   // 필드: open_today_bal
   async function getTreasuryTGA(days) {
-    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    // DST-safe 날짜 계산 (정오 고정)
+    const endDate = new Date();
+    endDate.setHours(12, 0, 0, 0);
+    
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+    const start = toLocalYMD(startDate);
+
     const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
 
     try {
@@ -665,7 +712,8 @@
     const historicalMap = new Map();
     json.forEach(item => {
       const timestamp = parseInt(item.date);
-      const dateStr = new Date(timestamp * 1000).toISOString().split('T')[0];
+      // toUTCYMD 사용하여 UTC 날짜 문자열 생성 (P0)
+      const dateStr = toUTCYMD(new Date(timestamp * 1000));
       const mcap = (item.totalCirculatingUSD?.peggedUSD || 0) / 1e9; // billions
       historicalMap.set(dateStr, mcap);
     });
@@ -687,7 +735,7 @@
   function processData(m2, tga, rrp, walcl, stablecoin) {
     // M2: Monthly → Daily (forward fill)
     // TGA: Daily (Treasury API) - millions ★ DEC-048
-    // RRP: Daily (RRPONTSYD) - millions
+    // RRP: Daily (RRPONTSYD) - billions (원천 데이터가 이미 Billions)
     // WALCL: Weekly (Fed Balance Sheet) - millions (forward fill)
 
     // 공통 날짜 기준: TGA (일간 데이터) - DEC-048
@@ -713,7 +761,7 @@
       if (walclMap.has(d)) lastWalcl = walclMap.get(d);
 
       const tgaB = t.val / 1000;        // millions → billions
-      const rrpB = lastRrp / 1000;      // millions → billions
+      const rrpB = lastRrp;             // RRPONTSYD는 원천 데이터가 이미 Billions 단위이므로 /1000 하지 않음
       const walclB = lastWalcl / 1000;  // millions → billions
 
       // ★ Net Liquidity 정식 공식: Fed BS - TGA - RRP
@@ -729,20 +777,65 @@
       };
     });
 
+    // 날짜별 인덱스 매핑 (1W 델타 계산용)
+    const dateToIndex = new Map();
+    timeline.forEach((item, index) => dateToIndex.set(item.date, index));
+
     // 주간 변화량 계산
     const weeklyData = [];
-    for (let i = 1; i < timeline.length; i++) {
-      const prev = timeline[i - 1];
+    for (let i = 0; i < timeline.length; i++) {
       const curr = timeline[i];
+      // 1D Delta용 이전 데이터 (없으면 현재 데이터)
+      const prev = i > 0 ? timeline[i - 1] : curr;
+
+      // 1W Delta용 7일 전 데이터 찾기
+      let prev1W = null;
+      if (i > 0) {
+        // 현재 날짜 파싱
+        const currDateObj = parseYMDLocal(curr.date);
+        if (currDateObj) {
+            // 7일 전 날짜 계산
+            const targetDateObj = new Date(currDateObj);
+            targetDateObj.setDate(currDateObj.getDate() - 7);
+            const targetDateStr = toLocalYMD(targetDateObj);
+
+            // 정확히 7일 전 데이터가 있는지 확인
+            if (dateToIndex.has(targetDateStr)) {
+                prev1W = timeline[dateToIndex.get(targetDateStr)];
+            } else {
+                // 없으면 7일 전보다 과거이면서 가장 가까운 데이터 찾기 (fallback)
+                // 단순히 i-5 (영업일 기준 1주일 근사치) 사용하거나, 날짜 비교 루프
+                // 성능을 위해 간단히 5~10일 전 범위 검색
+                for (let gap = 1; gap <= 5; gap++) {
+                    const fallbackDateObj = new Date(targetDateObj);
+                    fallbackDateObj.setDate(targetDateObj.getDate() - gap);
+                    const fallbackDateStr = toLocalYMD(fallbackDateObj);
+                    if (dateToIndex.has(fallbackDateStr)) {
+                        prev1W = timeline[dateToIndex.get(fallbackDateStr)];
+                        break;
+                    }
+                }
+                // 그래도 없으면 인덱스 기반 fallback (약 1주일 전)
+                if (!prev1W && i >= 5) {
+                    prev1W = timeline[i - 5];
+                }
+            }
+        }
+      }
+      // 1W 데이터가 없으면 1D 데이터 사용 (초기값 등)
+      if (!prev1W) prev1W = prev;
+
 
       const m2Delta = curr.m2 - prev.m2;
       const tgaDelta = -(curr.tga - prev.tga);  // TGA 감소 = 시장 유입
       const rrpDelta = -(curr.rrp - prev.rrp);  // RRP 감소 = 시장 유입
       const walclDelta = curr.walcl - prev.walcl;  // Fed BS 증가 = 시장 유입
 
-      // ★ Net Liquidity 정식 델타: WALCL변화 - TGA변화 - RRP변화
-      // 또는 간단히: 현재 netLiquidity - 이전 netLiquidity
+      // ★ Net Liquidity 정식 델타 (1D): 현재 - 어제
       const netLiquidityDelta = curr.netLiquidity - prev.netLiquidity;
+      
+      // ★ Net Liquidity 1W 델타: 현재 - 1주일 전 (상단 KPI용)
+      const netLiquidityDelta1W = curr.netLiquidity - prev1W.netLiquidity;
 
       // 기존 호환용 netFlow (M2+TGA방출+RRP방출) - 근사치
       const netFlow = m2Delta + tgaDelta + rrpDelta;
@@ -758,8 +851,9 @@
         tgaDelta,
         rrpDelta,
         walclDelta,
-        netLiquidityDelta,  // ★ 정식 공식 델타
-        netFlow             // 기존 호환용 (근사치)
+        netLiquidityDelta,    // 1D 변화량 (기존 유지)
+        netLiquidityDelta1W,  // 1W 변화량 (신규 추가)
+        netFlow               // 기존 호환용 (근사치)
       });
     }
 
@@ -893,28 +987,104 @@
   };
 
   // 기간별 데이터 슬라이스 (차트용, 상단 카드는 항상 전체 데이터 사용)
-  // ★ DEC-048 이후: 날짜 기반 필터링 + 장기 주간 샘플링
+  // ★ DEC-048 이후: 날짜 기반 필터링 + 장기 주간 리샘플링 (단순 샘플링 아님)
   function sliceDataByPeriod(data, days) {
-    // 1. 달력일 기준 cutoff 날짜 계산
-    const cutoffDate = new Date(Date.now() - days * 86400000);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    // 1. 달력일 기준 cutoff 날짜 계산 (로컬 기준, DST 안전)
+    // Date.now() - ms 방식 대신 setDate 사용
+    const cutoffDate = new Date();
+    cutoffDate.setHours(12, 0, 0, 0); // 정오 설정으로 DST 경계 방어
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    // UTC ISO 대신 로컬 YMD 사용하여 타임존 이슈 방어
+    const cutoffStr = toLocalYMD(cutoffDate);
 
-    // 2. 날짜 기반 필터링 (달력일 기준)
+    // 2. 날짜 기반 필터링 (데이터가 YYYY-MM-DD 포맷임을 전제)
+    // 전제: data.timeline은 날짜순 정렬되어 있음
     let filtered = data.timeline.filter(d => d.date >= cutoffStr);
 
-    // 3. 장기 기간(6M 이상)이면 주간 샘플링 (매 5영업일)
-    //    - 1M, 3M: 일간 데이터 유지 (세부 변동성 확인)
-    //    - 6M+: 주간 샘플링 (가독성, 차트 성능)
+    // 3. 장기 기간(6M 이상)이면 주간 리샘플링
     const WEEKLY_THRESHOLD = 180; // 6M
-    if (days >= WEEKLY_THRESHOLD && filtered.length > 100) {
-      // 주간 샘플링: 매 5번째 데이터 + 마지막 데이터 포함
-      const sampled = filtered.filter((_, i) => i % 5 === 0);
-      // 마지막 데이터가 누락됐으면 추가
-      if (sampled[sampled.length - 1] !== filtered[filtered.length - 1]) {
-        sampled.push(filtered[filtered.length - 1]);
-      }
-      console.log(`[Slice] ${days}일: ${filtered.length}개 → ${sampled.length}개 (주간 샘플링)`);
-      filtered = sampled;
+    
+    if (days >= WEEKLY_THRESHOLD && filtered.length > 20) {
+      console.log(`[Slice] ${days}일: ${filtered.length}개 → 주간 리샘플링 시작`);
+      
+      const weeklyMap = new Map(); // Key: "YYYY-MM-DD" (월요일)
+      let parseErrorCount = 0; // 파싱 에러 카운터
+
+      // 주 단위 그룹화 (로컬 시간 기준, 직접 파싱)
+      filtered.forEach(item => {
+        const d0 = parseYMDLocal(item.date);
+        
+        if (!d0) {
+            parseErrorCount++;
+            if (parseErrorCount === 1) console.warn(`[Slice] Invalid date found: ${item.date} (skipped)`);
+            return; // 조용히 스킵
+        }
+        
+        const day = d0.getDay(); // 0(일) ~ 6(토)
+        // 월요일을 주의 시작으로 설정
+        const diff = d0.getDate() - day + (day === 0 ? -6 : 1);
+        
+        const startOfWeek = new Date(d0);
+        startOfWeek.setDate(diff); // 월요일로 보정
+        
+        const key = toLocalYMD(startOfWeek);
+        
+        if (!weeklyMap.has(key)) weeklyMap.set(key, []);
+        weeklyMap.get(key).push(item);
+      });
+      
+      if (parseErrorCount > 0) console.warn(`[Slice] Total invalid dates skipped: ${parseErrorCount}`);
+
+      const weeklyResampled = [];
+      let prevWeekLast = null;
+
+      // 주별 대표값 추출 (마지막 날짜 기준)
+      // Map은 삽입 순서를 보장하므로 날짜순 정렬됨
+      const sortedWeeks = Array.from(weeklyMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+      sortedWeeks.forEach(([weekStart, items], index) => {
+        // 주간 마지막 데이터 (Friday or last available)
+        const lastItem = items[items.length - 1];
+        
+        // 첫 번째 주는 이전 데이터가 없으므로 스킵하거나 초기값으로 사용
+        if (index === 0 && !prevWeekLast) {
+            // 필터링된 데이터 이전의 데이터 찾기 시도 (연속성 확보)
+            const firstDateIdx = data.timeline.findIndex(d => d.date === items[0].date);
+            if (firstDateIdx > 0) prevWeekLast = data.timeline[firstDateIdx - 1];
+            else prevWeekLast = null; // 없으면 첫 포인트 Delta 계산 불가 (0 처리)
+        }
+
+        let netLiquidityDelta = 0;
+        let walclDelta = 0;
+        let tgaDelta = 0;
+        let rrpDelta = 0;
+
+        if (prevWeekLast) {
+            // ★ 주간 변화량 재계산: (이번 주 잔액) - (지난 주 잔액)
+            netLiquidityDelta = lastItem.netLiquidity - prevWeekLast.netLiquidity;
+            walclDelta = lastItem.walcl - prevWeekLast.walcl;
+            tgaDelta = -(lastItem.tga - prevWeekLast.tga); // TGA 감소 = 유입
+            rrpDelta = -(lastItem.rrp - prevWeekLast.rrp); // RRP 감소 = 유입
+        } else {
+            // 첫 포인트는 Delta 0 (또는 생략)
+            netLiquidityDelta = 0; 
+        }
+            
+        weeklyResampled.push({
+            ...lastItem, // 날짜, 잔액 등은 마지막 값 유지
+            netLiquidityDelta,
+            walclDelta,
+            tgaDelta,
+            rrpDelta,
+            // m2YoY, scM2Ratio 등은 마지막 값 그대로 사용 (Stock 성격)
+        });
+        
+        prevWeekLast = lastItem;
+      });
+      
+      console.log(`[Slice] 주간 리샘플링 완료: ${weeklyResampled.length}주`);
+      filtered = weeklyResampled;
     } else {
       console.log(`[Slice] ${days}일: ${filtered.length}개 (일간 유지)`);
     }
@@ -1405,7 +1575,8 @@
     const weeklyChanges = document.getElementById('weeklyChanges');
 
     const INFO_TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
-    const netLiqDelta = last.netLiquidityDelta;
+    // ★ 카드 설명도 1W 변화량 사용
+    const netLiqDelta = last.netLiquidityDelta1W;
 
     if (netLiqDelta > INFO_TH.POSITIVE) {
       statusCard.className = 'info-card inflow';
@@ -1438,12 +1609,14 @@
     const last = data.timeline[data.timeline.length - 1];
 
     // ★ 새 구조: Net Liquidity 정식 공식 기반
+    // Widget 캐시는 항상 1W 변화량(netLiquidityDelta1W)을 저장 (Hero Value용)
     const widgetData = {
       // Signal Matrix 3개 지표
       m2YoY: last.m2YoY || 0,
       m2Total: last.m2,
       netLiquidity: last.netLiquidity,
-      netLiquidityDelta: last.netLiquidityDelta,
+      netLiquidityDelta: last.netLiquidityDelta1W, // ★ 위젯 Hero는 1W 변화량 표시
+      netLiquidityDelta1D: last.netLiquidityDelta, // ★ 1D 변화량은 백업용
       stablecoinMcap: data.stablecoinMcap,
       scM2Ratio: last.scM2Ratio || 0,
       // Components (Chart용)
@@ -1494,7 +1667,7 @@
     // 3. 데이터 충분성 검증
     const expectedWeeks = Math.floor(days / 7) * 0.7; // 70% 이상 있어야 함
     if (timeline.length < expectedWeeks) {
-      issues.push(`⚠️ 데이터 부족: ${timeline.length}주 (예상: ${Math.floor(expectedWeeks)}+주)`);
+      issues.push(`⚠️ 데이터 부족: ${timeline.length}일 (예상: ${Math.floor(expectedWeeks)}주+)`);
     }
 
     // 4. NaN/Infinity 검증
@@ -1508,7 +1681,7 @@
     if (issues.length > 0) {
       console.warn('[Data Validation]', issues);
     } else {
-      console.log(`[Data Validation] ✅ ${timeline.length}주 데이터 정상 (${days}일 요청)`);
+      console.log(`[Data Validation] ✅ ${timeline.length}일 데이터 정상 (${days}일 요청)`);
     }
 
     return { valid: issues.filter(i => i.startsWith('❌')).length === 0, issues };

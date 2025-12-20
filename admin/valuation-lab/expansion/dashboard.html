@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valuation Lab 대시보드</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-gauge-high text-indigo-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">Valuation Lab 대시보드</h1>
+            <p class="text-gray-500 text-sm">Global Scouter 요약</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <section class="bg-white rounded-2xl p-6 shadow">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">오늘 무엇을 찾고 싶나요?</h2>
+          <p class="text-gray-500 text-sm mt-2">질문 하나만 고르면 자동으로 맞춤 스크리닝이 시작됩니다.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:max-w-2xl">
+          <a href="custom-screener.html?preset=value" class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 hover:border-emerald-300">
+            <div class="font-semibold text-sm">저평가 중심</div>
+            <div class="text-xs text-gray-500 mt-1">밴드 편차 중심</div>
+          </a>
+          <a href="custom-screener.html?preset=growth" class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 hover:border-indigo-300">
+            <div class="font-semibold text-sm">성장 중심</div>
+            <div class="text-xs text-gray-500 mt-1">Forward CAGR</div>
+          </a>
+          <a href="custom-screener.html?preset=stable" class="bg-rose-50 border border-rose-100 rounded-xl p-4 hover:border-rose-300">
+            <div class="font-semibold text-sm">안정성 중심</div>
+            <div class="text-xs text-gray-500 mt-1">변동성 낮음</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">데이터 기준일</span>
+          <div class="mono" id="data-date">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">총 종목</span>
+          <div class="mono" id="stock-count">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">섹터 수</span>
+          <div class="mono" id="sector-count">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">국가 수</span>
+          <div class="mono" id="country-count">-</div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">표시는 백분위 기준입니다. 상세 분석은 각 Phase로 이동하세요.</p>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl p-5 shadow">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-700">Top Value (PER 밴드)</h2>
+          <a href="per-band.html" class="text-xs text-indigo-600">Phase A 이동</a>
+        </div>
+        <ul id="top-value" class="space-y-2 text-sm"></ul>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-700">Top Growth (Forward CAGR)</h2>
+          <a href="eps-growth.html" class="text-xs text-indigo-600">Phase B 이동</a>
+        </div>
+        <ul id="top-growth" class="space-y-2 text-sm"></ul>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-700">Top Stability (CV 낮음)</h2>
+          <a href="stability-score.html" class="text-xs text-indigo-600">Phase D 이동</a>
+        </div>
+        <ul id="top-stability" class="space-y-2 text-sm"></ul>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-700">Top Sector Gap (저평가)</h2>
+          <a href="sector-gap.html" class="text-xs text-indigo-600">Phase E 이동</a>
+        </div>
+        <ul id="top-gap" class="space-y-2 text-sm"></ul>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">바로가기</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <a href="per-band.html" class="bg-emerald-50 border border-emerald-100 rounded-lg p-4 hover:border-emerald-300">
+          <div class="font-semibold">PER 밴드 스크리너</div>
+          <div class="text-xs text-gray-500 mt-1">저/중/고평가 구간</div>
+        </a>
+        <a href="eps-growth.html" class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 hover:border-indigo-300">
+          <div class="font-semibold">EPS 성장 랭킹</div>
+          <div class="text-xs text-gray-500 mt-1">Historical + Forward CAGR</div>
+        </a>
+        <a href="target-price.html" class="bg-amber-50 border border-amber-100 rounded-lg p-4 hover:border-amber-300">
+          <div class="font-semibold">목표가 계산</div>
+          <div class="text-xs text-gray-500 mt-1">PER 밴드 × FY1 EPS</div>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const DATA_URL = (() => {
+      const host = location.hostname;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      const isCloudflare = host.endsWith('pages.dev');
+      const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      return `${base}/data/global-scouter/stocks.json`;
+    })();
+
+    function lastNonNull(arr) {
+      if (!Array.isArray(arr)) return null;
+      for (let i = arr.length - 1; i >= 0; i -= 1) {
+        if (arr[i] !== null && arr[i] !== undefined) return arr[i];
+      }
+      return null;
+    }
+
+    function calcCagr(start, end, years) {
+      if (start === null || end === null || years <= 0) return null;
+      if (start <= 0 || end <= 0) return null;
+      return Math.pow(end / start, 1 / years) - 1;
+    }
+
+    function mean(values) {
+      if (!values.length) return null;
+      return values.reduce((a, b) => a + b, 0) / values.length;
+    }
+
+    function std(values, avg) {
+      if (!values.length) return null;
+      const variance = values.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / values.length;
+      return Math.sqrt(variance);
+    }
+
+    function formatPercent(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      const sign = value >= 0 ? '+' : '';
+      return `${sign}${(value * 100).toFixed(1)}%`;
+    }
+
+    function percentileRank(values, value, reverse = false) {
+      const filtered = values.filter(v => v !== null && v !== undefined && !Number.isNaN(v)).sort((a, b) => a - b);
+      if (!filtered.length || value === null || value === undefined) return null;
+      let index = 0;
+      while (index < filtered.length && filtered[index] < value) index += 1;
+      const rank = index / (filtered.length - 1 || 1);
+      return reverse ? 1 - rank : rank;
+    }
+
+    function renderList(el, items, formatter) {
+      el.innerHTML = '';
+      for (const item of items) {
+        const li = document.createElement('li');
+        li.className = 'flex items-center justify-between';
+        li.innerHTML = formatter(item);
+        el.appendChild(li);
+      }
+    }
+
+    async function init() {
+      const res = await fetch(DATA_URL);
+      if (!res.ok) throw new Error('데이터 로딩 실패');
+      const data = await res.json();
+      const stocks = data.stocks || {};
+      const sectors = data.sectors || {};
+
+      const rows = Object.entries(stocks).map(([ticker, stock]) => {
+        const info = stock.info || {};
+        const perBand = stock.per_band || {};
+        const historical = stock.historical || {};
+        const estimates = stock.estimates || {};
+        const currentPer = lastNonNull(historical.per);
+        const perAvg = perBand.avg ?? null;
+        const deviation = (currentPer !== null && perAvg) ? (currentPer - perAvg) / perAvg : null;
+
+        const epsHist = Array.isArray(historical.eps) ? historical.eps : [];
+        const epsStart = epsHist[0] ?? null;
+        const epsEnd = epsHist[epsHist.length - 1] ?? null;
+        const histCagr = calcCagr(epsStart, epsEnd, Math.max(epsHist.length - 1, 1));
+        const epsEst = estimates.eps || {};
+        const fwdCagr = calcCagr(epsEst.fy1 ?? null, epsEst.fy3 ?? null, 2);
+
+        const epsFiltered = epsHist.filter(v => v !== null && v !== undefined);
+        const avg = mean(epsFiltered);
+        const sd = avg !== null ? std(epsFiltered, avg) : null;
+        const cv = (avg && sd !== null) ? sd / avg : null;
+
+        const sectorKey = info.sector_kr || info.sector || '-';
+        const sectorAvg = sectors[sectorKey]?.avg_per ?? null;
+        const gap = (perAvg !== null && sectorAvg) ? (perAvg / sectorAvg) - 1 : null;
+
+        return {
+          ticker,
+          name: info.name || '-',
+          sector: sectorKey,
+          country: info.country || '-',
+          deviation,
+          fwdCagr,
+          cv,
+          gap
+        };
+      });
+
+      document.getElementById('data-date').textContent = data.metadata?.date || data.metadata?.generated_at || '-';
+      document.getElementById('stock-count').textContent = rows.length.toString();
+      document.getElementById('sector-count').textContent = Object.keys(sectors).length.toString();
+      document.getElementById('country-count').textContent = new Set(rows.map(r => r.country)).size.toString();
+
+      const valuePool = rows.filter(r => r.deviation !== null && r.deviation > -0.99);
+      const growthPool = rows.filter(r => r.fwdCagr !== null);
+      const stabilityPool = rows.filter(r => r.cv !== null && r.cv > 0);
+      const gapPool = rows.filter(r => r.gap !== null && r.country === 'US');
+
+      const valueRanks = valuePool.map(r => r.deviation);
+      const growthRanks = growthPool.map(r => r.fwdCagr);
+      const stabilityRanks = stabilityPool.map(r => r.cv);
+      const gapRanks = gapPool.map(r => r.gap);
+
+      const topValue = valuePool.sort((a, b) => a.deviation - b.deviation).slice(0, 5)
+        .map(r => ({ ...r, valueRank: percentileRank(valueRanks, r.deviation, true) }));
+      const topGrowth = growthPool.sort((a, b) => b.fwdCagr - a.fwdCagr).slice(0, 5)
+        .map(r => ({ ...r, growthRank: percentileRank(growthRanks, r.fwdCagr) }));
+      const topStability = stabilityPool.sort((a, b) => a.cv - b.cv).slice(0, 5)
+        .map(r => ({ ...r, stabilityRank: percentileRank(stabilityRanks, r.cv, true) }));
+      const topGap = gapPool.sort((a, b) => a.gap - b.gap).slice(0, 5)
+        .map(r => ({ ...r, gapRank: percentileRank(gapRanks, r.gap, true) }));
+
+      renderList(document.getElementById('top-value'), topValue, item => `
+        <a class="flex-1" href="per-band.html?symbol=${item.ticker}">
+          ${item.ticker} <span class="text-xs text-gray-500">${item.name}</span>
+          <span class="text-xs text-gray-400 ml-2">가치 상위</span>
+        </a>
+        <span class="mono text-emerald-700">${formatPercent(item.valueRank)}</span>
+      `);
+      renderList(document.getElementById('top-growth'), topGrowth, item => `
+        <a class="flex-1" href="eps-growth.html?symbol=${item.ticker}">
+          ${item.ticker} <span class="text-xs text-gray-500">${item.name}</span>
+          <span class="text-xs text-gray-400 ml-2">성장 상위</span>
+        </a>
+        <span class="mono text-indigo-700">${formatPercent(item.growthRank)}</span>
+      `);
+      renderList(document.getElementById('top-stability'), topStability, item => `
+        <a class="flex-1" href="stability-score.html?symbol=${item.ticker}">
+          ${item.ticker} <span class="text-xs text-gray-500">${item.name}</span>
+          <span class="text-xs text-gray-400 ml-2">안정 상위</span>
+        </a>
+        <span class="mono text-rose-700">${formatPercent(item.stabilityRank)}</span>
+      `);
+      renderList(document.getElementById('top-gap'), topGap, item => `
+        <a class="flex-1" href="sector-gap.html?symbol=${item.ticker}">
+          ${item.ticker} <span class="text-xs text-gray-500">${item.name}</span>
+          <span class="text-xs text-gray-400 ml-2">섹터 대비</span>
+        </a>
+        <span class="mono text-sky-700">${formatPercent(item.gapRank)}</span>
+      `);
+    }
+
+    init().catch(err => console.error(err));
+  </script>
+</body>
+</html>
