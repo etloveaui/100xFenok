@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EV/Sales 섹터 대시보드</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-chart-column text-emerald-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">EV/Sales 섹터 대시보드</h1>
+            <p class="text-gray-500 text-sm">Damodaran 섹터 비교</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">데이터 기준일</span>
+          <div class="mono" id="data-date">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">섹터 수</span>
+          <div class="mono" id="sector-count">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">중앙값 EV/Sales</span>
+          <div class="mono" id="median-evsales">-</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">상/하위 10</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm">
+        <div>
+          <div class="text-xs text-gray-500 mb-2">상위 10 (EV/Sales 높음)</div>
+          <ul id="top-list" class="space-y-2"></ul>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 mb-2">하위 10 (EV/Sales 낮음)</div>
+          <ul id="bottom-list" class="space-y-2"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">섹터 테이블</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <input id="search-input" type="text" placeholder="섹터 검색"
+          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <select id="sort-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="ev-desc">EV/Sales 높은 순</option>
+          <option value="ev-asc">EV/Sales 낮은 순</option>
+          <option value="firms-desc">기업 수 많은 순</option>
+          <option value="name-asc">이름 A-Z</option>
+        </select>
+        <select id="limit-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="20">20개</option>
+          <option value="50" selected>50개</option>
+          <option value="all">전체</option>
+        </select>
+      </div>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr>
+              <th class="text-left px-3 py-2">섹터</th>
+              <th class="text-right px-3 py-2">EV/Sales</th>
+              <th class="text-right px-3 py-2">Net Margin</th>
+              <th class="text-right px-3 py-2">Operating Margin</th>
+              <th class="text-right px-3 py-2">기업 수</th>
+            </tr>
+          </thead>
+          <tbody id="result-body" class="divide-y"></tbody>
+        </table>
+      </div>
+      <p id="empty-state" class="text-sm text-gray-500 mt-4 hidden">표시할 결과가 없습니다.</p>
+    </section>
+
+  </main>
+
+  <script>
+    const DATA_URL = (() => {
+      const host = location.hostname;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      const isCloudflare = host.endsWith('pages.dev');
+      const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      return `${base}/data/damodaran/ev_sales.json`;
+    })();
+
+    const state = { raw: null, rows: [] };
+    const elements = {
+      dataDate: document.getElementById('data-date'),
+      sectorCount: document.getElementById('sector-count'),
+      median: document.getElementById('median-evsales'),
+      topList: document.getElementById('top-list'),
+      bottomList: document.getElementById('bottom-list'),
+      resultBody: document.getElementById('result-body'),
+      emptyState: document.getElementById('empty-state'),
+      search: document.getElementById('search-input'),
+      sort: document.getElementById('sort-filter'),
+      limit: document.getElementById('limit-filter')
+    };
+
+    function formatNumber(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      return Number(value).toFixed(2);
+    }
+
+    function median(values) {
+      if (!values.length) return null;
+      const sorted = [...values].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    function renderList(el, items) {
+      el.innerHTML = '';
+      for (const item of items) {
+        const li = document.createElement('li');
+        li.className = 'flex items-center justify-between';
+        li.innerHTML = `
+          <span>${item.name}</span>
+          <span class="mono text-emerald-700">${formatNumber(item.ev_sales)}</span>
+        `;
+        el.appendChild(li);
+      }
+    }
+
+    function applyFilters() {
+      const query = elements.search.value.trim().toLowerCase();
+      let rows = state.rows.filter(row => {
+        if (query && !row.name.toLowerCase().includes(query)) return false;
+        return true;
+      });
+      rows = applySort(rows);
+      rows = applyLimit(rows);
+      renderRows(rows);
+    }
+
+    function applySort(rows) {
+      const mode = elements.sort.value;
+      const sorted = [...rows];
+      if (mode === 'ev-desc') sorted.sort((a, b) => b.ev_sales - a.ev_sales);
+      if (mode === 'ev-asc') sorted.sort((a, b) => a.ev_sales - b.ev_sales);
+      if (mode === 'firms-desc') sorted.sort((a, b) => (b.num_firms ?? 0) - (a.num_firms ?? 0));
+      if (mode === 'name-asc') sorted.sort((a, b) => a.name.localeCompare(b.name));
+      return sorted;
+    }
+
+    function applyLimit(rows) {
+      const limit = elements.limit.value;
+      if (limit === 'all') return rows;
+      return rows.slice(0, Number(limit));
+    }
+
+    function renderRows(rows) {
+      elements.resultBody.innerHTML = '';
+      if (rows.length === 0) {
+        elements.emptyState.classList.remove('hidden');
+        return;
+      }
+      elements.emptyState.classList.add('hidden');
+      for (const row of rows) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2">${row.name}</td>
+          <td class="px-3 py-2 text-right mono">${formatNumber(row.ev_sales)}</td>
+          <td class="px-3 py-2 text-right mono">${formatNumber(row.net_margin)}</td>
+          <td class="px-3 py-2 text-right mono">${formatNumber(row.operating_margin)}</td>
+          <td class="px-3 py-2 text-right mono">${row.num_firms ?? '-'}</td>
+        `;
+        elements.resultBody.appendChild(tr);
+      }
+    }
+
+    async function init() {
+      const res = await fetch(DATA_URL);
+      if (!res.ok) throw new Error('데이터 로딩 실패');
+      const data = await res.json();
+      const sectors = data.sectors || {};
+      const rows = Object.entries(sectors).map(([name, row]) => ({
+        name,
+        ev_sales: row.ev_sales ?? null,
+        net_margin: row.net_margin ?? null,
+        operating_margin: row.operating_margin ?? null,
+        num_firms: row.num_firms ?? null
+      })).filter(r => r.ev_sales !== null);
+
+      state.raw = data;
+      state.rows = rows;
+
+      elements.dataDate.textContent = data.metadata?.generated_at || '-';
+      elements.sectorCount.textContent = rows.length.toString();
+      elements.median.textContent = formatNumber(median(rows.map(r => r.ev_sales)));
+
+      const sorted = [...rows].sort((a, b) => b.ev_sales - a.ev_sales);
+      renderList(elements.topList, sorted.slice(0, 10));
+      renderList(elements.bottomList, sorted.slice(-10).reverse());
+
+      applyFilters();
+    }
+
+    [elements.search, elements.sort, elements.limit].forEach(el => el.addEventListener('input', applyFilters));
+    init().catch(err => {
+      elements.emptyState.classList.remove('hidden');
+      elements.emptyState.textContent = err.message;
+    });
+  </script>
+</body>
+</html>

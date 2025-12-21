@@ -320,85 +320,170 @@ class MacroDataFetcher {
     }
   }
 
-    /**
+  // =========================================
+  // 완결 주 (Complete Week) 계산 헬퍼
+  // =========================================
 
-     * Net Liquidity Weekly Delta 계산
+  /**
+   * 로컬 YYYY-MM-DD 포맷 (금지패턴 toISOString().split('T') 대체)
+   * @param {Date} dt
+   * @returns {string} "YYYY-MM-DD"
+   */
+  toLocalYMD(dt) {
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const y = dt.getFullYear();
+    const m = pad2(dt.getMonth() + 1);
+    const d = pad2(dt.getDate());
+    return `${y}-${m}-${d}`;
+  }
 
-     * WALCL: 주간, TGA: 일간 (DEC-048), RRP: 일간
+  /**
+   * Date 객체 → weekKey (월요일 시작)
+   * Detail 페이지와 동일한 로직
+   */
+  getWeekKeyFromDate(dt) {
+    const x = new Date(dt);
+    x.setHours(12, 0, 0, 0);              // DST/경계 방어
+    const day = x.getDay();               // 0=Sun..6=Sat
+    const diff = (day + 6) % 7;           // Monday=0 기준으로 보정
+    x.setDate(x.getDate() - diff);        // 해당 주의 월요일
+    return this.toLocalYMD(x);            // ★ 금지패턴 제거
+  }
 
-     * RRP 단위 수정 반영 (/1000 제거)
+  /**
+   * YYYY-MM-DD 문자열 → weekKey
+   */
+  getWeekKeyFromYMD(ymd) {
+    const parts = ymd.split('-').map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0, 0);
+    return this.getWeekKeyFromDate(d);
+  }
 
-     */
+  /**
+   * 시계열 데이터 → 주간 버킷팅 → 완결 주 2개 선택
+   * @param {Array} series - [{ date, val }, ...]
+   * @returns {Object} - { lastComplete, prevComplete } 또는 null
+   */
+  pickCompleteWeeks(series) {
+    if (!Array.isArray(series) || series.length < 7) return null;
 
-    calculateWeeklyDelta(fedBs, tga, rrp) {
-
-      // 데이터 부족 시 0 반환
-
-      if (!fedBs?.length || fedBs.length < 2 || !tga?.length || tga.length < 2) return 0;
-
-  
-
-      const hasRrp = Array.isArray(rrp) && rrp.length > 0;
-
-  
-
-      // 최신 값 (Last)
-
-      const latestWalcl = (fedBs[fedBs.length - 1]?.val || 0) / 1000; // Billions
-
-      const latestTga = (tga[tga.length - 1]?.val || 0) / 1000;       // Billions
-
-      // RRPONTSYD는 원천 데이터가 이미 Billions 단위이므로 /1000 하지 않는다 (P0 Unit Fix)
-
-      const latestRrp = hasRrp ? (rrp[rrp.length - 1]?.val || 0) : 0; 
-
-  
-
-      // 1주일 전 값 (Prev)
-
-      const prevWalcl = (fedBs[fedBs.length - 2]?.val || 0) / 1000;
-
-      
-
-      // TGA: 5일 전(영업일 기준 1주일) 데이터를 찾거나, 없으면 index-5 사용
-
-      let prevTga = latestTga;
-
-      if (tga.length > 5) prevTga = (tga[tga.length - 6]?.val || 0) / 1000;
-
-  
-
-      // RRP: 안전하게 접근
-
-      let prevRrp = latestRrp;
-
-      if (hasRrp && rrp.length > 5) prevRrp = rrp[rrp.length - 6]?.val || 0;
-
-  
-
-      // Sanity Check: RRP 단위 검증 (P0)
-
-      // 최근 8년 내 RRP가 $5T를 넘은 적은 없으므로, 5000 초과 시 단위 오류 가능성 큼
-
-      if (latestRrp > 5000) {
-
-          console.warn(`[DataFetcher] Abnormal RRP value detected: ${latestRrp}. Unit scaling might be incorrect (expected Billions).`);
-
+    // 1. weekKey로 버킷팅 (각 주의 마지막 값 사용)
+    const weeklyMap = new Map();
+    series.forEach(item => {
+      const weekKey = this.getWeekKeyFromYMD(item.date);
+      if (!weeklyMap.has(weekKey) || item.date > weeklyMap.get(weekKey).date) {
+        weeklyMap.set(weekKey, { ...item, weekKey });
       }
+    });
 
-  
+    // 2. weekKey 정렬
+    const sortedWeeks = Array.from(weeklyMap.values())
+      .sort((a, b) => a.weekKey.localeCompare(b.weekKey));
 
-      // Net Liquidity = WALCL - TGA - RRP
+    if (sortedWeeks.length < 2) return null;
 
-      const latestNet = latestWalcl - latestTga - latestRrp;
+    // 3. 오늘 weekKey
+    const todayWeekKey = this.getWeekKeyFromDate(new Date());
 
-      const prevNet = prevWalcl - prevTga - prevRrp;
+    // 4. 미완결 주(오늘 주) 제외
+    const last = sortedWeeks[sortedWeeks.length - 1];
+    const secondLast = sortedWeeks[sortedWeeks.length - 2];
+    const thirdLast = sortedWeeks.length >= 3 ? sortedWeeks[sortedWeeks.length - 3] : null;
 
-  
-
-      return parseFloat((latestNet - prevNet).toFixed(1));
-
+    let lastComplete, prevComplete;
+    if (last.weekKey === todayWeekKey) {
+      lastComplete = secondLast;
+      prevComplete = thirdLast ?? secondLast;
+    } else {
+      lastComplete = last;
+      prevComplete = secondLast;
     }
+
+    console.log(`[DataFetcher] pickCompleteWeeks: last=${lastComplete.weekKey} prev=${prevComplete.weekKey}`);
+    return { lastComplete, prevComplete };
+  }
+
+  /**
+   * Net Liquidity Weekly Delta 계산 (완결 주 기준)
+   * WALCL: 주간, TGA: 일간 (DEC-048), RRP: 일간
+   *
+   * ★ 개선: weekKey 버킷팅 → 완결 주 2개 → Δ 계산
+   */
+  calculateWeeklyDelta(fedBs, tga, rrp) {
+    // 데이터 부족 시 0 반환
+    if (!fedBs?.length || fedBs.length < 2 || !tga?.length || tga.length < 7) return 0;
+
+    const hasRrp = Array.isArray(rrp) && rrp.length > 0;
+
+    // TGA 기준으로 완결 주 선택 (일간 데이터이므로 가장 풍부)
+    const completeWeeks = this.pickCompleteWeeks(tga);
+    if (!completeWeeks) {
+      console.warn('[DataFetcher] 완결 주 계산 실패, fallback 사용');
+      return this.calculateWeeklyDeltaFallback(fedBs, tga, rrp);
+    }
+
+    const { lastComplete, prevComplete } = completeWeeks;
+
+    // WALCL: 완결 주의 endDate 이하 중 가장 최근 값 (주간 지표)
+    const findNearestValue = (series, targetDate) => {
+      if (!Array.isArray(series) || series.length === 0) return 0;
+      for (let i = series.length - 1; i >= 0; i--) {
+        if (series[i].date <= targetDate) return series[i].val;
+      }
+      return series[0]?.val || 0;
+    };
+
+    // 완결 주 기준 값 추출
+    const lastWalcl = findNearestValue(fedBs, lastComplete.date) / 1000;  // Billions
+    const prevWalcl = findNearestValue(fedBs, prevComplete.date) / 1000;
+    const lastTga = lastComplete.val / 1000;  // Billions
+    const prevTga = prevComplete.val / 1000;
+
+    // RRP: 완결 주 기준
+    let lastRrp = 0, prevRrp = 0;
+    if (hasRrp) {
+      const rrpCompleteWeeks = this.pickCompleteWeeks(rrp);
+      if (rrpCompleteWeeks) {
+        lastRrp = rrpCompleteWeeks.lastComplete.val;  // 이미 Billions
+        prevRrp = rrpCompleteWeeks.prevComplete.val;
+      }
+    }
+
+    // Sanity Check: RRP 단위 검증
+    if (lastRrp > 5000) {
+      console.warn(`[DataFetcher] Abnormal RRP value: ${lastRrp}. Unit might be incorrect.`);
+    }
+
+    // Net Liquidity = WALCL - TGA - RRP
+    const lastNet = lastWalcl - lastTga - lastRrp;
+    const prevNet = prevWalcl - prevTga - prevRrp;
+    const delta = parseFloat((lastNet - prevNet).toFixed(1));
+
+    console.log(`[DataFetcher] WeeklyDelta: week=${lastComplete.weekKey} net=${lastNet.toFixed(1)} prev=${prevNet.toFixed(1)} delta=${delta}`);
+    return delta;
+  }
+
+  /**
+   * Fallback: 인덱스 기반 계산 (이전 로직 유지)
+   */
+  calculateWeeklyDeltaFallback(fedBs, tga, rrp) {
+    const hasRrp = Array.isArray(rrp) && rrp.length > 0;
+
+    const latestWalcl = (fedBs[fedBs.length - 1]?.val || 0) / 1000;
+    const latestTga = (tga[tga.length - 1]?.val || 0) / 1000;
+    const latestRrp = hasRrp ? (rrp[rrp.length - 1]?.val || 0) : 0;
+
+    const prevWalcl = (fedBs[fedBs.length - 2]?.val || 0) / 1000;
+    let prevTga = latestTga;
+    if (tga.length > 5) prevTga = (tga[tga.length - 6]?.val || 0) / 1000;
+    let prevRrp = latestRrp;
+    if (hasRrp && rrp.length > 5) prevRrp = rrp[rrp.length - 6]?.val || 0;
+
+    const latestNet = latestWalcl - latestTga - latestRrp;
+    const prevNet = prevWalcl - prevTga - prevRrp;
+
+    return parseFloat((latestNet - prevNet).toFixed(1));
+  }
 
   /**
    * Liquidity Stress 데이터 fetch
@@ -479,8 +564,13 @@ class MacroDataFetcher {
    * @returns {Promise<Array>} - [{ date, val }, ...]
    */
   async fetchFRED(seriesId, days = 365) {
-    const end = new Date().toISOString().split('T')[0];
-    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    // ★ 금지패턴 제거: toISOString().split('T'), Date.now() - ms
+    const endDate = new Date();
+    endDate.setHours(12, 0, 0, 0);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+    const end = this.toLocalYMD(endDate);
+    const start = this.toLocalYMD(startDate);
     const url = `${this.proxy}fred/series/observations?series_id=${seriesId}&api_key=${this.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
 
     try {
@@ -513,7 +603,11 @@ class MacroDataFetcher {
    *   2022-04-18 ~ 현재: Treasury General Account (TGA) Opening Balance
    */
   async fetchTreasuryTGA(days = 365) {
-    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    // ★ 금지패턴 제거: Date.now() - ms, toISOString().split('T')
+    const startDate = new Date();
+    startDate.setHours(12, 0, 0, 0);
+    startDate.setDate(startDate.getDate() - days);
+    const start = this.toLocalYMD(startDate);
     const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
 
     try {
@@ -624,10 +718,15 @@ class MacroDataFetcher {
       // 시계열 API
       const json = await this.fetchWithTimeout(this.urls.defiLlamaChart);
       if (Array.isArray(json) && json.length > 0) {
-        const series = json.map(d => ({
-          date: new Date(d.date * 1000).toISOString().split('T')[0],
-          val: d.totalCirculating?.peggedUSD || 0
-        }));
+        const series = json.map(d => {
+          // ★ 금지패턴 제거: toISOString().split('T')
+          const dt = new Date(d.date * 1000);
+          dt.setHours(12, 0, 0, 0); // DST 안전
+          return {
+            date: this.toLocalYMD(dt),
+            val: d.totalCirculating?.peggedUSD || 0
+          };
+        });
         return {
           current: series[series.length - 1]?.val || 0,
           series

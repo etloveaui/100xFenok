@@ -27,6 +27,13 @@
 
 - 통합 대시보드 (A~E 요약)
 - 맞춤 스크리너 (가중치 기반)
+- Cross-Benchmark 스코어링 (Benchmarks × Scouter)
+- 국면 분류 & 프리셋 (Benchmarks 기반)
+- Damodaran 상대 벤치마크 (ERP/EV 조회)
+- Composite 리포트 (Benchmarks + Damodaran)
+- Damodaran 통합 허브 (EV/Sales + ERP)
+- EV/Sales 섹터 대시보드 (Damodaran)
+- 국가 ERP 랭킹 (Damodaran)
 - PER 밴드 스크리너 (Phase A)
 - EPS 성장 랭킹 (Phase B)
 - 목표가 계산 (Phase C)

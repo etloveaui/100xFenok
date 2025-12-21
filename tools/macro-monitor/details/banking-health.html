@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <!-- Google tag (gtag.js) - 호스트별 자동 선택 -->
+  <script>
+    (function() {
+      const GA_IDS = {
+        'etloveaui.github.io': 'G-X7MZFQZRBW',
+        '100xfenok.pages.dev': 'G-BWHGXQPH2D'
+      };
+      const id = GA_IDS[location.hostname] || 'G-X7MZFQZRBW';
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', id);
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Banking Health Monitor | 100xFenok</title>

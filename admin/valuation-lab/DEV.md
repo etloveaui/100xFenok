@@ -120,6 +120,12 @@
 - `expansion/dashboard.html` (A~E 요약 대시보드)
 - `expansion/custom-screener.html` (가중치 기반 스크리너)
 
+### Damodaran
+
+- `expansion/damodaran-hub.html` (EV/Sales + ERP 요약)
+- `expansion/ev-sales.html` (EV/Sales 섹터 대시보드)
+- `expansion/erp-rank.html` (국가 ERP 랭킹)
+
 **상세**: `docs/planning/valuation-lab-expansion.md`
 
 ---

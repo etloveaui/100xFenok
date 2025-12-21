@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Stats - 100x FenoK</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+    }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    .card {
+      background: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .stat-card.users { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+    .stat-card.sessions { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .stat-card.pageviews { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .stat-card.duration { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+  </style>
+</head>
+<body class="text-gray-800 p-6">
+
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold orbitron text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            Site Statistics
+          </h1>
+          <p class="text-gray-500 text-sm mt-1">GA4 데이터 기반 (최근 7일)</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="refreshData()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+            <i class="fas fa-sync-alt mr-2"></i>새로고침
+          </button>
+          <a href="https://analytics.google.com" target="_blank" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+            <i class="fas fa-external-link-alt mr-2"></i>GA4 대시보드
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="text-center py-20">
+      <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+      <p class="text-gray-500">데이터 로딩 중...</p>
+    </div>
+
+    <!-- No Data State -->
+    <div id="no-data" class="hidden text-center py-20">
+      <i class="fas fa-chart-bar text-6xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500 text-lg">아직 수집된 데이터가 없습니다</p>
+      <p class="text-gray-400 text-sm mt-2">GA4 설정 후 24-48시간 후에 데이터가 표시됩니다</p>
+    </div>
+
+    <!-- Stats Content -->
+    <div id="stats-content" class="hidden">
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card users p-5 rounded-xl">
+          <div class="text-white/70 text-sm mb-1"><i class="fas fa-users mr-2"></i>총 사용자</div>
+          <div id="total-users" class="text-3xl font-bold">-</div>
+        </div>
+        <div class="stat-card sessions p-5 rounded-xl">
+          <div class="text-white/70 text-sm mb-1"><i class="fas fa-chart-line mr-2"></i>총 세션</div>
+          <div id="total-sessions" class="text-3xl font-bold">-</div>
+        </div>
+        <div class="stat-card pageviews p-5 rounded-xl">
+          <div class="text-white/70 text-sm mb-1"><i class="fas fa-eye mr-2"></i>총 페이지뷰</div>
+          <div id="total-pageviews" class="text-3xl font-bold">-</div>
+        </div>
+        <div class="stat-card duration p-5 rounded-xl">
+          <div class="text-white/70 text-sm mb-1"><i class="fas fa-clock mr-2"></i>평균 체류시간</div>
+          <div id="avg-duration" class="text-3xl font-bold">-</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card p-6 mb-8">
+        <h3 class="font-bold text-lg mb-4"><i class="fas fa-chart-area mr-2 text-blue-500"></i>일별 추이</h3>
+        <canvas id="dailyChart" height="100"></canvas>
+      </div>
+
+      <!-- Data Table -->
+      <div class="card p-6">
+        <h3 class="font-bold text-lg mb-4"><i class="fas fa-table mr-2 text-green-500"></i>일별 상세</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th class="text-left py-3 px-4 font-semibold text-gray-600">날짜</th>
+                <th class="text-right py-3 px-4 font-semibold text-gray-600">사용자</th>
+                <th class="text-right py-3 px-4 font-semibold text-gray-600">세션</th>
+                <th class="text-right py-3 px-4 font-semibold text-gray-600">페이지뷰</th>
+                <th class="text-right py-3 px-4 font-semibold text-gray-600">체류시간</th>
+              </tr>
+            </thead>
+            <tbody id="data-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Last Updated -->
+      <div class="text-center text-gray-400 text-sm mt-6">
+        마지막 업데이트: <span id="last-updated">-</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwz6aRq3zmtcDjQmicz1RfbpljpHs0lrO2LYakgY7a38CVNu89DUr4iWy9IqcX8_yBriQ/exec';
+
+    let dailyChart = null;
+
+    async function refreshData() {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('stats-content').classList.add('hidden');
+      document.getElementById('no-data').classList.add('hidden');
+
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('no-data').classList.remove('hidden');
+          return;
+        }
+
+        renderStats(data);
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('stats-content').classList.remove('hidden');
+        document.getElementById('last-updated').textContent = new Date().toLocaleString('ko-KR');
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('no-data').classList.remove('hidden');
+      }
+    }
+
+    function renderStats(data) {
+      // Calculate totals
+      let totalUsers = 0, totalSessions = 0, totalPageViews = 0, totalDuration = 0;
+
+      data.forEach(row => {
+        totalUsers += parseInt(row.Users) || 0;
+        totalSessions += parseInt(row.Sessions) || 0;
+        totalPageViews += parseInt(row.PageViews) || 0;
+        totalDuration += parseFloat(row.AvgDuration) || 0;
+      });
+
+      const avgDuration = data.length > 0 ? (totalDuration / data.length) : 0;
+
+      // Update summary cards
+      document.getElementById('total-users').textContent = totalUsers.toLocaleString();
+      document.getElementById('total-sessions').textContent = totalSessions.toLocaleString();
+      document.getElementById('total-pageviews').textContent = totalPageViews.toLocaleString();
+      document.getElementById('avg-duration').textContent = formatDuration(avgDuration);
+
+      // Render chart
+      renderChart(data);
+
+      // Render table
+      renderTable(data);
+    }
+
+    function formatDuration(seconds) {
+      if (seconds < 60) return Math.round(seconds) + '초';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.round(seconds % 60);
+      return mins + '분 ' + secs + '초';
+    }
+
+    function renderChart(data) {
+      const ctx = document.getElementById('dailyChart').getContext('2d');
+
+      const labels = data.map(d => d.Date);
+      const users = data.map(d => parseInt(d.Users) || 0);
+      const sessions = data.map(d => parseInt(d.Sessions) || 0);
+      const pageViews = data.map(d => parseInt(d.PageViews) || 0);
+
+      if (dailyChart) {
+        dailyChart.destroy();
+      }
+
+      dailyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '사용자',
+              data: users,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: '세션',
+              data: sessions,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: '페이지뷰',
+              data: pageViews,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('data-table');
+      tbody.innerHTML = '';
+
+      // Reverse for newest first
+      const reversed = [...data].reverse();
+
+      reversed.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-gray-100 hover:bg-gray-50';
+        tr.innerHTML = `
+          <td class="py-3 px-4">${row.Date}</td>
+          <td class="py-3 px-4 text-right font-medium">${parseInt(row.Users || 0).toLocaleString()}</td>
+          <td class="py-3 px-4 text-right">${parseInt(row.Sessions || 0).toLocaleString()}</td>
+          <td class="py-3 px-4 text-right">${parseInt(row.PageViews || 0).toLocaleString()}</td>
+          <td class="py-3 px-4 text-right text-gray-500">${formatDuration(parseFloat(row.AvgDuration) || 0)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Initial load
+    refreshData();
+  </script>
+
+</body>
+</html>

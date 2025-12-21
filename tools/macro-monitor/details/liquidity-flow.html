@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <!-- Google tag (gtag.js) - 호스트별 자동 선택 -->
+  <script>
+    (function() {
+      const GA_IDS = {
+        'etloveaui.github.io': 'G-X7MZFQZRBW',
+        '100xfenok.pages.dev': 'G-BWHGXQPH2D'
+      };
+      const id = GA_IDS[location.hostname] || 'G-X7MZFQZRBW';
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', id);
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Liquidity Flow Monitor | 100xFenok</title>
@@ -539,6 +558,100 @@
     return dt;
   };
 
+  // ===== Weekly Timeline 헬퍼 (WoW 계산용) =====
+  // Date 객체 → weekKey (월요일 시작)
+  const getWeekKeyFromDate = (dt) => {
+    const x = new Date(dt);
+    x.setHours(12, 0, 0, 0);              // DST/경계 방어
+    const day = x.getDay();               // 0=Sun..6=Sat
+    const diff = (day + 6) % 7;           // Monday=0 기준으로 보정
+    x.setDate(x.getDate() - diff);        // 해당 주의 월요일
+    return toLocalYMD(x);                 // "YYYY-MM-DD"
+  };
+
+  // YYYY-MM-DD 문자열 → weekKey
+  const getWeekKeyFromYMD = (ymd) => {
+    const d = parseYMDLocal(ymd);
+    if (!d) return null;
+    return getWeekKeyFromDate(d);
+  };
+
+  // 기존 호환 alias (deprecated - getWeekKeyFromYMD 사용 권장)
+  const getWeekKey = getWeekKeyFromYMD;
+
+  // 일간 타임라인 → 주간 스냅샷 배열
+  const buildWeeklyTimeline = (dailyTimeline) => {
+    const weeklyMap = new Map(); // weekKey → item
+
+    dailyTimeline.forEach(item => {
+      const weekKey = getWeekKey(item.date);
+      if (!weekKey) return;
+
+      // 같은 주에서 가장 마지막(최신) 날짜의 데이터로 덮어쓰기
+      if (!weeklyMap.has(weekKey) || item.date > weeklyMap.get(weekKey).date) {
+        weeklyMap.set(weekKey, { ...item, weekKey, isWeekly: true });
+      }
+    });
+
+    // weekKey 오름차순 정렬
+    const weeklyTimeline = Array.from(weeklyMap.values())
+      .sort((a, b) => a.weekKey.localeCompare(b.weekKey));
+
+    // WoW delta 계산 (Net Liquidity + 구성요소)
+    for (let i = 0; i < weeklyTimeline.length; i++) {
+      if (i === 0) {
+        weeklyTimeline[i].netLiquidityDeltaWoW = 0;
+        weeklyTimeline[i].walclDeltaWoW = 0;
+        weeklyTimeline[i].tgaDeltaWoW = 0;
+        weeklyTimeline[i].rrpDeltaWoW = 0;
+      } else {
+        const cur = weeklyTimeline[i];
+        const prev = weeklyTimeline[i-1];
+        cur.netLiquidityDeltaWoW = cur.netLiquidity - prev.netLiquidity;
+        cur.walclDeltaWoW = (cur.walcl ?? 0) - (prev.walcl ?? 0);
+        cur.tgaDeltaWoW = (cur.tga ?? 0) - (prev.tga ?? 0);
+        cur.rrpDeltaWoW = (cur.rrp ?? 0) - (prev.rrp ?? 0);
+      }
+    }
+
+    console.log(`[Weekly] Built ${weeklyTimeline.length} weekly snapshots from ${dailyTimeline.length} daily`);
+    return weeklyTimeline;
+  };
+
+  // 완결된 주 선택 (상단/위젯 전용)
+  const pickLastCompleteWeeks = (weeklyTimeline) => {
+    if (!weeklyTimeline || weeklyTimeline.length < 2) {
+      console.warn('[KPI Weekly] insufficient weekly points -> fallback needed');
+      return { lastComplete: null, prevComplete: null };
+    }
+
+    // 오늘 기준 weekKey
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const todayStr = toLocalYMD(today);
+    const weekKeyToday = getWeekKey(todayStr);
+
+    const last = weeklyTimeline[weeklyTimeline.length - 1];
+    const secondLast = weeklyTimeline[weeklyTimeline.length - 2];
+    const thirdLast = weeklyTimeline.length >= 3
+      ? weeklyTimeline[weeklyTimeline.length - 3] : null;
+
+    let lastComplete, prevComplete;
+
+    // 최신 주가 오늘 주와 같으면 아직 완결 안 됨 → 그 전 주 사용
+    if (last.weekKey === weekKeyToday) {
+      lastComplete = secondLast;
+      prevComplete = thirdLast ?? secondLast;
+    } else {
+      lastComplete = last;
+      prevComplete = secondLast;
+    }
+
+    console.log(`[KPI Weekly] weekKey=${lastComplete.weekKey} lastDate=${lastComplete.date} prevWeekKey=${prevComplete.weekKey} delta=${lastComplete.netLiquidityDeltaWoW}`);
+
+    return { lastComplete, prevComplete };
+  };
+
   // ===== 임계값 헬퍼 - constants.js THRESHOLDS 사용 (fallback 포함) =====
   const getThreshold = (category, level) => {
     if (typeof THRESHOLDS !== 'undefined' && THRESHOLDS[category]) {
@@ -988,110 +1101,148 @@
 
   // 기간별 데이터 슬라이스 (차트용, 상단 카드는 항상 전체 데이터 사용)
   // ★ DEC-048 이후: 날짜 기반 필터링 + 장기 주간 리샘플링 (단순 샘플링 아님)
+  /**
+   * normalizeDeltas - 차트용 delta 정규화 (공유 함수)
+   * ★ 부호 계약(contract): netLiquidityDelta ≈ walclDelta + tgaContribution + rrpContribution
+   *    - tgaContribution := -ΔTGA (TGA 감소=유동성 방출이면 +)
+   *    - rrpContribution := -ΔRRP (RRP 감소=유동성 방출이면 +)
+   * ★ 재발 방지: 포인트별이 아닌 "기간 단위 1회"로 signMode 결정
+   *
+   * @param {Array} points - 일간/주간 데이터 배열
+   * @param {string} mode - 'daily' | 'weekly'
+   * @returns {Object} - { normalized, signMode, warnCount }
+   */
+  function normalizeDeltas(points, mode) {
+    if (!points || points.length === 0) {
+      return { normalized: [], signMode: 'A', warnCount: 0 };
+    }
+
+    const TOLERANCE = 0.5; // 허용 오차 $B
+    const isWeekly = mode === 'weekly';
+
+    // 1단계: 원본 값 추출 (raw 배열)
+    const rawData = points.map(p => ({
+      point: p,
+      net: isWeekly ? (p.netLiquidityDeltaWoW ?? p.netLiquidityDelta ?? 0) : (p.netLiquidityDelta ?? 0),
+      walcl: isWeekly ? (p.walclDeltaWoW ?? p.walclDelta ?? 0) : (p.walclDelta ?? 0),
+      tgaDeltaRaw: isWeekly ? (p.tgaDeltaWoW ?? p.tgaDelta ?? 0) : (p.tgaDelta ?? 0),
+      rrpDeltaRaw: isWeekly ? (p.rrpDeltaWoW ?? p.rrpDelta ?? 0) : (p.rrpDelta ?? 0),
+    }));
+
+    // 2단계: 기간 전체에 대해 A/B 가설 총 오차 계산 (포인트별 X, 기간 단위 1회 O)
+    let sumAbsDiffA = 0, sumAbsDiffB = 0;
+    rawData.forEach(r => {
+      const sumA = r.walcl + r.tgaDeltaRaw + r.rrpDeltaRaw;  // 가설 A: 이미 -Δ 형태
+      const sumB = r.walcl - r.tgaDeltaRaw - r.rrpDeltaRaw;  // 가설 B: 그냥 Δ 형태
+      sumAbsDiffA += Math.abs(r.net - sumA);
+      sumAbsDiffB += Math.abs(r.net - sumB);
+    });
+    const useA = sumAbsDiffA <= sumAbsDiffB;
+    const signMode = useA ? 'A' : 'B';
+
+    // 3단계: 동일한 signMode로 전체 포인트 정규화 + 경고 수집
+    let warnCount = 0;
+    const normalized = rawData.map((r, idx) => {
+      // tgaContribution/rrpContribution: 차트에 들어가는 "기여분" (= -ΔTGA, -ΔRRP)
+      const tgaContribution = useA ? r.tgaDeltaRaw : -r.tgaDeltaRaw;
+      const rrpContribution = useA ? r.rrpDeltaRaw : -r.rrpDeltaRaw;
+      const sum = r.walcl + tgaContribution + rrpContribution;
+      const diff = r.net - sum;
+
+      // 허용 오차 초과 시 경고
+      if (Math.abs(diff) > TOLERANCE) {
+        const label = r.point.weekKey || r.point.date;
+        console.warn(`[Chart] identity warn: ${label} net=${r.net.toFixed(1)} sum=${sum.toFixed(1)} diff=${diff.toFixed(2)}`);
+        warnCount++;
+      }
+
+      return {
+        ...r.point,
+        netLiquidityDelta: r.net,
+        walclDelta: r.walcl,
+        tgaDelta: tgaContribution,   // ★ 차트 label "-TGA Δ"와 일치: 기여분
+        rrpDelta: rrpContribution,   // ★ 차트 label "-RRP Δ"와 일치: 기여분
+      };
+    });
+
+    return { normalized, signMode, warnCount };
+  }
+
+  /**
+   * sliceDataByPeriod - daily/weekly 전환 + 표시용 미완결 주 제거
+   * ★ 단일 소스 원칙: weeklyTimeline을 직접 슬라이스 (중복 리샘플링 금지)
+   * ★ 부호 계약: normalizeDeltas()로 기간 단위 1회 결정
+   *
+   * @param {Object} data - { timeline(일간), weeklyTimeline(주간) }
+   * @param {number} days - 기간 (30=1M, 90=3M, 180=6M, ...)
+   * @returns {Object} - { ...data, timeline, mode }
+   */
   function sliceDataByPeriod(data, days) {
-    // 1. 달력일 기준 cutoff 날짜 계산 (로컬 기준, DST 안전)
-    // Date.now() - ms 방식 대신 setDate 사용
+    // 1. cutoff 날짜 계산 (로컬 기준, DST 안전)
     const cutoffDate = new Date();
-    cutoffDate.setHours(12, 0, 0, 0); // 정오 설정으로 DST 경계 방어
+    cutoffDate.setHours(12, 0, 0, 0);
     cutoffDate.setDate(cutoffDate.getDate() - days);
-    
-    // UTC ISO 대신 로컬 YMD 사용하여 타임존 이슈 방어
     const cutoffStr = toLocalYMD(cutoffDate);
 
-    // 2. 날짜 기반 필터링 (데이터가 YYYY-MM-DD 포맷임을 전제)
-    // 전제: data.timeline은 날짜순 정렬되어 있음
-    let filtered = data.timeline.filter(d => d.date >= cutoffStr);
+    const WEEKLY_THRESHOLD = 90; // 3M 초과 시 weekly
 
-    // 3. 장기 기간(6M 이상)이면 주간 리샘플링
-    const WEEKLY_THRESHOLD = 180; // 6M
-    
-    if (days >= WEEKLY_THRESHOLD && filtered.length > 20) {
-      console.log(`[Slice] ${days}일: ${filtered.length}개 → 주간 리샘플링 시작`);
-      
-      const weeklyMap = new Map(); // Key: "YYYY-MM-DD" (월요일)
-      let parseErrorCount = 0; // 파싱 에러 카운터
+    // 2. days <= 90 (1M/3M): daily 사용 + 정규화
+    if (days <= WEEKLY_THRESHOLD) {
+      const filteredDaily = data.timeline.filter(d => d.date >= cutoffStr);
+      const { normalized, signMode, warnCount } = normalizeDeltas(filteredDaily, 'daily');
 
-      // 주 단위 그룹화 (로컬 시간 기준, 직접 파싱)
-      filtered.forEach(item => {
-        const d0 = parseYMDLocal(item.date);
-        
-        if (!d0) {
-            parseErrorCount++;
-            if (parseErrorCount === 1) console.warn(`[Slice] Invalid date found: ${item.date} (skipped)`);
-            return; // 조용히 스킵
-        }
-        
-        const day = d0.getDay(); // 0(일) ~ 6(토)
-        // 월요일을 주의 시작으로 설정
-        const diff = d0.getDate() - day + (day === 0 ? -6 : 1);
-        
-        const startOfWeek = new Date(d0);
-        startOfWeek.setDate(diff); // 월요일로 보정
-        
-        const key = toLocalYMD(startOfWeek);
-        
-        if (!weeklyMap.has(key)) weeklyMap.set(key, []);
-        weeklyMap.get(key).push(item);
-      });
-      
-      if (parseErrorCount > 0) console.warn(`[Slice] Total invalid dates skipped: ${parseErrorCount}`);
+      // 검증 로그: 기간별 summary
+      const lastPt = normalized[normalized.length - 1];
+      if (lastPt) {
+        const sum = lastPt.walclDelta + lastPt.tgaDelta + lastPt.rrpDelta;
+        const diff = (lastPt.netLiquidityDelta - sum).toFixed(2);
+        console.log(`[Chart] identity summary: points=${normalized.length}, warn=${warnCount}, signMode=${signMode}, lastDiff=${diff}`);
+      }
 
-      const weeklyResampled = [];
-      let prevWeekLast = null;
+      return {
+        ...data,
+        timeline: normalized,
+        mode: 'daily'
+      };
+    }
 
-      // 주별 대표값 추출 (마지막 날짜 기준)
-      // Map은 삽입 순서를 보장하므로 날짜순 정렬됨
-      const sortedWeeks = Array.from(weeklyMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    // 3. days > 90 (6M 이상): weeklyTimeline 직접 사용 (중복 리샘플링 금지!)
+    if (!data.weeklyTimeline || data.weeklyTimeline.length === 0) {
+      console.warn('[Slice] weeklyTimeline 없음, daily fallback');
+      const filteredDaily = data.timeline.filter(d => d.date >= cutoffStr);
+      const { normalized, signMode, warnCount } = normalizeDeltas(filteredDaily, 'daily');
+      console.log(`[Chart] identity summary: points=${normalized.length}, warn=${warnCount}, signMode=${signMode} (fallback)`);
+      return { ...data, timeline: normalized, mode: 'daily' };
+    }
 
-      sortedWeeks.forEach(([weekStart, items], index) => {
-        // 주간 마지막 데이터 (Friday or last available)
-        const lastItem = items[items.length - 1];
-        
-        // 첫 번째 주는 이전 데이터가 없으므로 스킵하거나 초기값으로 사용
-        if (index === 0 && !prevWeekLast) {
-            // 필터링된 데이터 이전의 데이터 찾기 시도 (연속성 확보)
-            const firstDateIdx = data.timeline.findIndex(d => d.date === items[0].date);
-            if (firstDateIdx > 0) prevWeekLast = data.timeline[firstDateIdx - 1];
-            else prevWeekLast = null; // 없으면 첫 포인트 Delta 계산 불가 (0 처리)
-        }
+    // weeklyTimeline에서 cutoff 이후 슬라이스 (weekKey 또는 date 기준)
+    let filteredWeekly = data.weeklyTimeline.filter(w => w.date >= cutoffStr || w.weekKey >= cutoffStr);
 
-        let netLiquidityDelta = 0;
-        let walclDelta = 0;
-        let tgaDelta = 0;
-        let rrpDelta = 0;
+    // 미완결 주(오늘이 속한 주) 제거
+    const todayWeekKey = getWeekKeyFromDate(new Date());
+    if (filteredWeekly.length > 0) {
+      const lastWk = filteredWeekly[filteredWeekly.length - 1].weekKey;
+      if (lastWk === todayWeekKey) {
+        console.log(`[Slice] Dropping incomplete current week: ${lastWk}`);
+        filteredWeekly = filteredWeekly.slice(0, -1);
+      }
+    }
 
-        if (prevWeekLast) {
-            // ★ 주간 변화량 재계산: (이번 주 잔액) - (지난 주 잔액)
-            netLiquidityDelta = lastItem.netLiquidity - prevWeekLast.netLiquidity;
-            walclDelta = lastItem.walcl - prevWeekLast.walcl;
-            tgaDelta = -(lastItem.tga - prevWeekLast.tga); // TGA 감소 = 유입
-            rrpDelta = -(lastItem.rrp - prevWeekLast.rrp); // RRP 감소 = 유입
-        } else {
-            // 첫 포인트는 Delta 0 (또는 생략)
-            netLiquidityDelta = 0; 
-        }
-            
-        weeklyResampled.push({
-            ...lastItem, // 날짜, 잔액 등은 마지막 값 유지
-            netLiquidityDelta,
-            walclDelta,
-            tgaDelta,
-            rrpDelta,
-            // m2YoY, scM2Ratio 등은 마지막 값 그대로 사용 (Stock 성격)
-        });
-        
-        prevWeekLast = lastItem;
-      });
-      
-      console.log(`[Slice] 주간 리샘플링 완료: ${weeklyResampled.length}주`);
-      filtered = weeklyResampled;
-    } else {
-      console.log(`[Slice] ${days}일: ${filtered.length}개 (일간 유지)`);
+    // ★ 정규화: 기간 단위 1회 signMode 결정
+    const { normalized, signMode, warnCount } = normalizeDeltas(filteredWeekly, 'weekly');
+
+    // 검증 로그: 기간별 summary (마지막 포인트 diff 포함)
+    const lastPt = normalized[normalized.length - 1];
+    if (lastPt) {
+      const sum = lastPt.walclDelta + lastPt.tgaDelta + lastPt.rrpDelta;
+      const diff = (lastPt.netLiquidityDelta - sum).toFixed(2);
+      console.log(`[Chart] identity summary: points=${normalized.length}, warn=${warnCount}, signMode=${signMode}, lastDiff=${diff}`);
     }
 
     return {
       ...data,
-      timeline: filtered
+      timeline: normalized,
+      mode: 'weekly'
     };
   }
 
@@ -1412,6 +1563,17 @@
             padding: 12,
             cornerRadius: 10,
             callbacks: {
+              // ★ A-6: weekly 모드일 때 "Week of {weekKey}" 표시
+              title: (tooltipItems) => {
+                if (!tooltipItems.length) return '';
+                const idx = tooltipItems[0].dataIndex;
+                const item = data.timeline[idx];
+                // weekly 모드이고 weekKey가 있으면 "Week of" 표시
+                if (data.mode === 'weekly' && item?.weekKey) {
+                  return `Week of ${item.weekKey} (end: ${item.date})`;
+                }
+                return item?.date || '';
+              },
               label: ctx => {
                 const val = ctx.raw;
                 // Credit Flow: M2 Total은 $T, M2 YoY%는 %
@@ -1466,6 +1628,11 @@
   function updateSignalMatrix(data) {
     const last = data.timeline[data.timeline.length - 1];
     const prev = data.timeline.length > 1 ? data.timeline[data.timeline.length - 2] : last;
+
+    // ★ WoW 계산용 완결된 주 가져오기 (상단 Hero/위젯 전용)
+    const { lastComplete, prevComplete } = pickLastCompleteWeeks(data.weeklyTimeline);
+    const wowDelta = lastComplete?.netLiquidityDeltaWoW ?? 0;
+
     // ===== 1. M2 YoY - THRESHOLDS 기반 상태 =====
     const m2YoY = last.m2YoY || 0;
     const m2TotalT = last.m2 / 1000;
@@ -1474,12 +1641,12 @@
     updateSignalCard('m2', `${m2YoY >= 0 ? '+' : ''}${m2YoY.toFixed(1)}`, '%',
       m2Status.color, m2Status.status, { subtext: `$${m2TotalT.toFixed(1)}T` });
 
-    // ===== 2. Net Liquidity - THRESHOLDS 기반 상태 =====
-    const netLiq = last.netLiquidity;
-    const netLiqDelta = last.netLiquidityDelta;
+    // ===== 2. Net Liquidity - THRESHOLDS 기반 상태 (★ WoW 변화량) =====
+    const netLiq = lastComplete?.netLiquidity ?? last.netLiquidity;
+    const netLiqDelta = lastComplete?.netLiquidityDeltaWoW ?? 0;
     const nlStatus = getNetLiqStatus(netLiqDelta);
 
-    updateSignalCard('netLiq', `${netLiqDelta >= 0 ? '+' : ''}${netLiqDelta.toFixed(0)}`, '$B',
+    updateSignalCard('netLiq', `${netLiqDelta >= 0 ? '+' : ''}${netLiqDelta.toFixed(0)}`, '$B WoW',
       nlStatus.color, nlStatus.status, { subtext: `$${(netLiq / 1000).toFixed(2)}T` });
 
     // ===== 3. SC/M2 Ratio - THRESHOLDS 기반 상태 =====
@@ -1490,22 +1657,21 @@
     updateSignalCard('sc', scM2Ratio.toFixed(2), '%',
       scStatus.color, scStatus.status, { subtext: `$${latestScMcap.toFixed(0)}B` });
 
-    // ===== Hero Section: Weekly Net Liquidity Delta - constants.js THRESHOLDS 사용 =====
+    // ===== Hero Section: ★ WoW (완결된 주) Net Liquidity Delta =====
     const HERO_TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
-    const netLiqDeltaVal = last.netLiquidityDelta;
     const netFlowEl = document.getElementById('netFlowValue');
-    netFlowEl.textContent = `$${netLiqDeltaVal >= 0 ? '+' : ''}${netLiqDeltaVal.toFixed(0)}B`;
-    netFlowEl.className = 'net-flow-value ' + (netLiqDeltaVal >= 0 ? 'positive' : 'negative');
+    netFlowEl.textContent = `$${wowDelta >= 0 ? '+' : ''}${wowDelta.toFixed(0)}B`;
+    netFlowEl.className = 'net-flow-value ' + (wowDelta >= 0 ? 'positive' : 'negative');
 
     const trendEl = document.getElementById('netFlowTrend');
     const trendIcon = trendEl.querySelector('i');
     const trendDesc = document.getElementById('netFlowDesc');
 
-    if (netLiqDeltaVal > HERO_TH.POSITIVE) {
+    if (wowDelta > HERO_TH.POSITIVE) {
       trendEl.className = 'net-flow-trend up';
       trendIcon.className = 'fas fa-arrow-up';
       trendDesc.textContent = '유동성 상승';
-    } else if (netLiqDeltaVal < HERO_TH.NEGATIVE) {
+    } else if (wowDelta < HERO_TH.NEGATIVE) {
       trendEl.className = 'net-flow-trend down';
       trendIcon.className = 'fas fa-arrow-down';
       trendDesc.textContent = '유동성 하락';
@@ -1516,9 +1682,11 @@
     }
 
     // Status Badge & Info Cards & Time
-    updateStatusBadge(netLiqDeltaVal, m2YoY);
-    updateInfoCards(last, prev);
-    document.getElementById('updateTime').textContent = `Data: ${last.date}`;
+    updateStatusBadge(wowDelta, m2YoY);
+    updateInfoCards(lastComplete ?? last, prevComplete ?? prev);
+    // ★ 주간 기준 날짜 표시 (완결된 주)
+    const weekLabel = lastComplete ? `Week of ${lastComplete.weekKey}` : `Data: ${last.date}`;
+    document.getElementById('updateTime').textContent = weekLabel;
   }
 
   function updateSignalCard(id, value, unit, color, status, opts = {}) {
@@ -1569,31 +1737,38 @@
   }
 
   // constants.js THRESHOLDS.NET_LIQUIDITY 사용
+  // ★ last는 이제 lastComplete (완결된 주 데이터) 또는 fallback daily
   function updateInfoCards(last, prev) {
     const statusCard = document.getElementById('statusCard');
     const summary = document.getElementById('statusSummary');
     const weeklyChanges = document.getElementById('weeklyChanges');
 
     const INFO_TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
-    // ★ 카드 설명도 1W 변화량 사용
-    const netLiqDelta = last.netLiquidityDelta1W;
+    // ★ WoW 우선, fallback으로 rolling 7D
+    const netLiqDelta = last.netLiquidityDeltaWoW ?? last.netLiquidityDelta1W ?? 0;
+    const weekLabel = last.weekKey ? `Week of ${last.weekKey}` : '주간';
 
     if (netLiqDelta > INFO_TH.POSITIVE) {
       statusCard.className = 'info-card inflow';
-      summary.innerHTML = `주간 <span class="info-value">+$${netLiqDelta.toFixed(0)}B</span> 순유입 - 상승`;
+      summary.innerHTML = `${weekLabel} <span class="info-value">+$${netLiqDelta.toFixed(0)}B</span> 순유입 - 상승`;
     } else if (netLiqDelta < INFO_TH.NEGATIVE) {
       statusCard.className = 'info-card outflow';
-      summary.innerHTML = `주간 <span class="info-value">-$${Math.abs(netLiqDelta).toFixed(0)}B</span> 순유출 - 하락`;
+      summary.innerHTML = `${weekLabel} <span class="info-value">-$${Math.abs(netLiqDelta).toFixed(0)}B</span> 순유출 - 하락`;
     } else {
       statusCard.className = 'info-card neutral';
-      summary.innerHTML = `주간 변동 <span class="info-value">$${netLiqDelta >= 0 ? '+' : ''}${netLiqDelta.toFixed(0)}B</span> - 횡보`;
+      summary.innerHTML = `${weekLabel} 변동 <span class="info-value">$${netLiqDelta >= 0 ? '+' : ''}${netLiqDelta.toFixed(0)}B</span> - 횡보`;
     }
 
-    // Components 분해 표시
+    // ★ Components 분해 표시 - 차트와 동일한 부호 계약 사용
+    // 표준 contract: Net = WALCL + (-ΔTGA) + (-ΔRRP)
+    // tgaDeltaWoW/rrpDeltaWoW는 raw ΔTGA/ΔRRP이므로 부호 반전(signMode B)하여 기여분으로 변환
+    const walclD = last.walclDeltaWoW ?? last.walclDelta ?? 0;
+    const tgaContrib = -(last.tgaDeltaWoW ?? last.tgaDelta ?? 0);  // -ΔTGA (기여분)
+    const rrpContrib = -(last.rrpDeltaWoW ?? last.rrpDelta ?? 0);  // -ΔRRP (기여분)
     weeklyChanges.innerHTML = `
-      <li>Fed BS (WALCL): <strong>${last.walclDelta >= 0 ? '+' : ''}${last.walclDelta.toFixed(1)}B</strong></li>
-      <li>TGA: <strong>${-last.tgaDelta >= 0 ? '+' : ''}${(-last.tgaDelta).toFixed(1)}B</strong> (차감)</li>
-      <li>RRP: <strong>${-last.rrpDelta >= 0 ? '+' : ''}${(-last.rrpDelta).toFixed(1)}B</strong> (차감)</li>
+      <li>Fed BS Δ: <strong>${walclD >= 0 ? '+' : ''}${walclD.toFixed(1)}B</strong></li>
+      <li>-TGA Δ: <strong>${tgaContrib >= 0 ? '+' : ''}${tgaContrib.toFixed(1)}B</strong></li>
+      <li>-RRP Δ: <strong>${rrpContrib >= 0 ? '+' : ''}${rrpContrib.toFixed(1)}B</strong></li>
       <li><strong>= Net Liquidity Δ: ${netLiqDelta >= 0 ? '+' : ''}${netLiqDelta.toFixed(1)}B</strong></li>
     `;
   }
@@ -1608,15 +1783,21 @@
 
     const last = data.timeline[data.timeline.length - 1];
 
+    // ★ WoW (완결된 주) 계산
+    const { lastComplete } = pickLastCompleteWeeks(data.weeklyTimeline);
+    const wowDelta = lastComplete?.netLiquidityDeltaWoW ?? last.netLiquidityDelta1W ?? 0;
+
     // ★ 새 구조: Net Liquidity 정식 공식 기반
-    // Widget 캐시는 항상 1W 변화량(netLiquidityDelta1W)을 저장 (Hero Value용)
+    // Widget 캐시는 WoW 변화량을 저장 (Hero Value용)
     const widgetData = {
       // Signal Matrix 3개 지표
       m2YoY: last.m2YoY || 0,
       m2Total: last.m2,
-      netLiquidity: last.netLiquidity,
-      netLiquidityDelta: last.netLiquidityDelta1W, // ★ 위젯 Hero는 1W 변화량 표시
+      netLiquidity: lastComplete?.netLiquidity ?? last.netLiquidity, // ★ lastComplete 기준
+      netLiquidityDelta: wowDelta, // ★ 위젯 Hero는 WoW (완결된 주) 변화량 표시
       netLiquidityDelta1D: last.netLiquidityDelta, // ★ 1D 변화량은 백업용
+      weekKey: lastComplete?.weekKey ?? null, // ★ 완결된 주 기준 날짜
+      asOfDate: lastComplete?.date ?? last.date, // ★ 기준 날짜
       stablecoinMcap: data.stablecoinMcap,
       scM2Ratio: last.scM2Ratio || 0,
       // Components (Chart용)
@@ -1632,7 +1813,7 @@
     };
 
     DataManager.saveWidgetData('liquidity-flow', widgetData);
-    console.log('[Detail] Widget cache saved:', widgetData);
+    console.log('[Detail] Widget cache saved (WoW):', widgetData);
   }
 
   // ===== DATA VALIDATION =====
@@ -1713,6 +1894,9 @@
       // 전체 데이터 저장
       fullData = processData(m2, tga, rrp, walcl, sc);
       console.log(`[Init] 전체 데이터 처리 완료: ${fullData.timeline.length}일 (일간 데이터)`);
+
+      // ★ Weekly Timeline 생성 (상단 KPI/위젯 WoW 계산용)
+      fullData.weeklyTimeline = buildWeeklyTimeline(fullData.timeline);
 
       // 차트용 데이터 (기간별 slice)
       processedData = sliceDataByPeriod(fullData, initialPeriod);
