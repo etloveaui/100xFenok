@@ -112,6 +112,129 @@
       </div>
     </section>
 
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-bell text-amber-500 mr-2"></i>업데이트 신호
+      </h2>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Benchmarks</h3>
+            <span id="update-bench-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">최근 갱신</div>
+          <div class="mono text-sm" id="update-bench-date">-</div>
+          <button data-revalidate="benchmarks" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Global Scouter</h3>
+            <span id="update-scouter-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">최근 갱신</div>
+          <div class="mono text-sm" id="update-scouter-date">-</div>
+          <button data-revalidate="scouter" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Damodaran ERP</h3>
+            <span id="update-erp-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">최근 갱신</div>
+          <div class="mono text-sm" id="update-erp-date">-</div>
+          <button data-revalidate="damodaran" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Damodaran EV/Sales</h3>
+            <span id="update-ev-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">최근 갱신</div>
+          <div class="mono text-sm" id="update-ev-date">-</div>
+          <button data-revalidate="damodaran" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-terminal text-sky-500 mr-2"></i>통합 콘솔
+      </h2>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <div class="flex flex-wrap gap-2 mb-4 text-sm">
+          <button class="tab-btn px-3 py-2 rounded-lg border bg-sky-50 text-sky-700" data-tab="bench-console">Benchmarks</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="scouter-console">Global Scouter</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="damodaran-console">Damodaran</button>
+        </div>
+
+        <div id="bench-console" class="console-panel space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">파일 수</span>
+              <div class="mono" id="bench-console-files">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">섹션 수</span>
+              <div class="mono" id="bench-console-sections">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">최신 데이터</span>
+              <div class="mono" id="bench-console-latest">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">샘플 섹션</span>
+              <div class="mono" id="bench-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="bench-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+
+        <div id="scouter-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">종목 수</span>
+              <div class="mono" id="scouter-console-count">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">기준일</span>
+              <div class="mono" id="scouter-console-date">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">생성일</span>
+              <div class="mono" id="scouter-console-generated">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">샘플 티커</span>
+              <div class="mono" id="scouter-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="scouter-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+
+        <div id="damodaran-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">ERP 국가</span>
+              <div class="mono" id="damodaran-console-erp">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">EV/Sales 섹터</span>
+              <div class="mono" id="damodaran-console-ev">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">최신 생성일</span>
+              <div class="mono" id="damodaran-console-date">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">샘플 키</span>
+              <div class="mono" id="damodaran-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="damodaran-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+      </div>
+    </section>
+
     <section>
       <h2 class="text-lg font-semibold text-gray-600 mb-4">
         <i class="fas fa-shield-check text-indigo-500 mr-2"></i>검증 결과
@@ -159,6 +282,63 @@
       return Object.keys(obj || {}).slice(0, limit).join(', ');
     }
 
+    function daysSince(dateStr) {
+      if (!dateStr) return null;
+      const date = new Date(dateStr);
+      if (Number.isNaN(date.getTime())) return null;
+      const diff = Date.now() - date.getTime();
+      return Math.floor(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function setUpdateStatus(id, days, warn, danger) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (days === null) {
+        el.textContent = '알 수 없음';
+        el.className = 'text-xs px-2 py-1 rounded bg-gray-100 text-gray-600';
+        return;
+      }
+      if (days >= danger) {
+        el.textContent = `갱신 필요 (${days}일)`;
+        el.className = 'text-xs px-2 py-1 rounded bg-rose-100 text-rose-700';
+        return;
+      }
+      if (days >= warn) {
+        el.textContent = `주의 (${days}일)`;
+        el.className = 'text-xs px-2 py-1 rounded bg-amber-100 text-amber-700';
+        return;
+      }
+      el.textContent = `정상 (${days}일)`;
+      el.className = 'text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700';
+    }
+    function setTab(activeId) {
+      document.querySelectorAll('.console-panel').forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== activeId);
+      });
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === activeId;
+        btn.className = `tab-btn px-3 py-2 rounded-lg border ${isActive ? 'bg-sky-50 text-sky-700' : 'text-gray-600'}`;
+      });
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toISOString().slice(0, 10);
+    }
+
+    function safeStringify(value, limit = 900) {
+      const raw = JSON.stringify(value, null, 2) || '';
+      return raw.length > limit ? `${raw.slice(0, limit)}\n...` : raw;
+    }
+
+    function pickSample(obj) {
+      const keys = Object.keys(obj || {});
+      if (!keys.length) return null;
+      return { key: keys[0], value: obj[keys[0]] };
+    }
+
     async function loadDamodaranErp() {
       try {
         const data = await fetchDataLabFile('DAMODARAN_ERP');
@@ -167,6 +347,8 @@
         setText('erp-count', result.stats.actualCount);
         setText('erp-date', getMetaDate(data));
         setText('erp-sample', sampleKeys(data.countries, 5));
+        setText('update-erp-date', formatDate(data?.metadata?.generated_at));
+        setUpdateStatus('update-erp-status', daysSince(data?.metadata?.generated_at), 400, 500);
         addLog(`Damodaran ERP: ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
       } catch (err) {
         setStatus('erp-status', false, '로드 실패');
@@ -182,6 +364,8 @@
         setText('evsales-count', result.stats.actualCount);
         setText('evsales-date', getMetaDate(data));
         setText('evsales-sample', sampleKeys(data.sectors, 5));
+        setText('update-ev-date', formatDate(data?.metadata?.generated_at));
+        setUpdateStatus('update-ev-status', daysSince(data?.metadata?.generated_at), 250, 400);
         addLog(`Damodaran EV/Sales: ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
       } catch (err) {
         setStatus('evsales-status', false, '로드 실패');
@@ -197,6 +381,9 @@
         setText('scouter-count', result.stats.actualCount);
         setText('scouter-date', getMetaDate(data));
         setText('scouter-sample', sampleKeys(data.stocks, 5));
+        const scouterDate = data?.metadata?.date || data?.metadata?.generated_at;
+        setText('update-scouter-date', formatDate(scouterDate));
+        setUpdateStatus('update-scouter-status', daysSince(scouterDate), 10, 21);
         addLog(`Global Scouter: ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
       } catch (err) {
         setStatus('scouter-status', false, '로드 실패');
@@ -209,6 +396,8 @@
       let okCount = 0;
       let totalSections = 0;
       const samples = [];
+      let latestGenerated = null;
+      let latestData = null;
 
       for (const file of files) {
         try {
@@ -217,6 +406,20 @@
           totalSections += result.stats.sectionCount || 0;
           const sampleKeys = Object.keys(data.sections || {}).slice(0, 2).join(', ');
           samples.push(`${file.key}: ${sampleKeys}`);
+          const generated = data?.metadata?.generated;
+          if (generated && (!latestGenerated || new Date(generated) > new Date(latestGenerated))) {
+            latestGenerated = generated;
+          }
+          const sectionEntries = Object.entries(data?.sections || {});
+          for (const [, section] of sectionEntries) {
+            const rows = section?.data || [];
+            if (rows.length) {
+              const lastDate = rows[rows.length - 1]?.date;
+              if (lastDate && (!latestData || new Date(lastDate) > new Date(latestData))) {
+                latestData = lastDate;
+              }
+            }
+          }
           addLog(`Benchmarks(${file.key}): ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
           if (result.ok) okCount += 1;
         } catch (err) {
@@ -229,12 +432,104 @@
       setText('benchmarks-files', files.length);
       setText('benchmarks-sections', totalSections);
       setText('benchmarks-sample', samples.slice(0, 2).join(' | ') || '-');
+      const updateDate = latestData || latestGenerated;
+      setText('update-bench-date', formatDate(updateDate));
+      setUpdateStatus('update-bench-status', daysSince(updateDate), 10, 21);
+    }
+
+    async function loadBenchConsole() {
+      const files = DATA_LAB_CONFIG.BENCHMARKS || [];
+      let totalSections = 0;
+      let latestGenerated = null;
+      let latestData = null;
+      let sampleSection = null;
+      let preview = null;
+
+      for (const file of files) {
+        const data = await fetchDataLabPath(file.path);
+        const generated = data?.metadata?.generated;
+        if (generated && (!latestGenerated || new Date(generated) > new Date(latestGenerated))) {
+          latestGenerated = generated;
+        }
+        const sections = Object.entries(data?.sections || {});
+        totalSections += sections.length;
+        if (!sampleSection && sections.length) {
+          sampleSection = sections[0][0];
+          const rows = sections[0][1]?.data || [];
+          preview = rows.length ? rows[0] : sections[0][1];
+        }
+        for (const [, section] of sections) {
+          const rows = section?.data || [];
+          if (rows.length) {
+            const lastDate = rows[rows.length - 1]?.date;
+            if (lastDate && (!latestData || new Date(lastDate) > new Date(latestData))) {
+              latestData = lastDate;
+            }
+          }
+        }
+      }
+
+      setText('bench-console-files', files.length);
+      setText('bench-console-sections', totalSections);
+      setText('bench-console-latest', formatDate(latestData || latestGenerated));
+      setText('bench-console-sample', sampleSection || '-');
+      document.getElementById('bench-console-preview').textContent = preview ? safeStringify(preview) : '샘플 없음';
+    }
+
+    async function loadScouterConsole() {
+      const data = await fetchDataLabFile('GLOBAL_SCOUTER');
+      const sample = pickSample(data?.stocks || {});
+      setText('scouter-console-count', data?.metadata?.stock_count || Object.keys(data?.stocks || {}).length || '-');
+      setText('scouter-console-date', data?.metadata?.date || '-');
+      setText('scouter-console-generated', formatDate(data?.metadata?.generated_at));
+      setText('scouter-console-sample', sample ? sample.key : '-');
+      document.getElementById('scouter-console-preview').textContent = sample ? safeStringify(sample.value) : '샘플 없음';
+    }
+
+    async function loadDamodaranConsole() {
+      const erp = await fetchDataLabFile('DAMODARAN_ERP');
+      const ev = await fetchDataLabFile('DAMODARAN_EVSALES');
+      const erpSample = pickSample(erp?.countries || {});
+      const evSample = pickSample(ev?.sectors || {});
+      const latest = [erp?.metadata?.generated_at, ev?.metadata?.generated_at].filter(Boolean).sort().reverse()[0];
+      setText('damodaran-console-erp', Object.keys(erp?.countries || {}).length || '-');
+      setText('damodaran-console-ev', Object.keys(ev?.sectors || {}).length || '-');
+      setText('damodaran-console-date', formatDate(latest));
+      setText('damodaran-console-sample', [erpSample?.key, evSample?.key].filter(Boolean).join(' / ') || '-');
+      document.getElementById('damodaran-console-preview').textContent = safeStringify({ erp: erpSample, ev_sales: evSample });
     }
 
     (async function init() {
       logEl.innerHTML = '';
       await Promise.all([loadDamodaranErp(), loadDamodaranEvSales(), loadGlobalScouter(), loadBenchmarks()]);
+      await Promise.all([loadBenchConsole(), loadScouterConsole(), loadDamodaranConsole()]);
     })();
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTab(btn.dataset.tab));
+    });
+    setTab('bench-console');
+
+    async function revalidate(kind) {
+      addLog(`재검증 시작: ${kind}`, true);
+      if (kind === 'benchmarks') {
+        await loadBenchmarks();
+        await loadBenchConsole();
+      }
+      if (kind === 'scouter') {
+        await loadGlobalScouter();
+        await loadScouterConsole();
+      }
+      if (kind === 'damodaran') {
+        await Promise.all([loadDamodaranErp(), loadDamodaranEvSales()]);
+        await loadDamodaranConsole();
+      }
+      addLog(`재검증 완료: ${kind}`, true);
+    }
+
+    document.querySelectorAll('[data-revalidate]').forEach(btn => {
+      btn.addEventListener('click', () => revalidate(btn.dataset.revalidate));
+    });
   </script>
 </body>
 </html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross-Benchmark 스코어링</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-layer-group text-indigo-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">Cross-Benchmark 스코어링</h1>
+            <p class="text-gray-500 text-sm">Benchmarks × Global Scouter</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">시장 국면</span>
+          <div class="mono" id="market-regime">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Benchmarks 기준일</span>
+          <div class="mono" id="bench-date">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Scouter 종목 수</span>
+          <div class="mono" id="stock-count">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">스코어 기준</span>
+          <div class="mono">CAGR 60% · 밴드갭 40%</div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-3">시장 국면은 S&P500 P/E 분위수로 계산됩니다.</p>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 class="font-semibold text-gray-700">Top 30 스코어</h2>
+        <div class="flex items-center gap-2 text-xs text-gray-500">
+          <span class="px-2 py-1 rounded bg-indigo-50 text-indigo-700">가중치 자동 조정</span>
+        </div>
+      </div>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr>
+              <th class="text-left px-3 py-2">티커</th>
+              <th class="text-left px-3 py-2">기업명</th>
+              <th class="text-left px-3 py-2">섹터</th>
+              <th class="text-right px-3 py-2">Forward CAGR</th>
+              <th class="text-right px-3 py-2">밴드 갭</th>
+              <th class="text-right px-3 py-2">Score</th>
+            </tr>
+          </thead>
+          <tbody id="score-body" class="divide-y"></tbody>
+        </table>
+      </div>
+      <p id="empty-state" class="text-sm text-gray-500 mt-4 hidden">표시할 결과가 없습니다.</p>
+    </section>
+
+  </main>
+
+  <script>
+    const DATA_URLS = (() => {
+      const host = location.hostname;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      const isCloudflare = host.endsWith('pages.dev');
+      const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      return {
+        benchmarks: `${base}/data/benchmarks/us.json`,
+        scouter: `${base}/data/global-scouter/stocks.json`
+      };
+    })();
+
+    const elements = {
+      regime: document.getElementById('market-regime'),
+      benchDate: document.getElementById('bench-date'),
+      stockCount: document.getElementById('stock-count'),
+      body: document.getElementById('score-body'),
+      empty: document.getElementById('empty-state')
+    };
+
+    function formatPercent(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      return `${(value * 100).toFixed(1)}%`;
+    }
+
+    function percentile(value, list) {
+      const sorted = [...list].sort((a, b) => a - b);
+      const idx = sorted.findIndex(v => v >= value);
+      if (idx < 0) return 1;
+      return idx / (sorted.length - 1 || 1);
+    }
+
+    function calcCagr(fy1, fy3) {
+      if (!fy1 || !fy3 || fy1 <= 0 || fy3 <= 0) return null;
+      return Math.pow(fy3 / fy1, 1 / 2) - 1;
+    }
+
+    function calcBandGap(current, avg) {
+      if (!current || !avg || avg <= 0) return null;
+      return (current - avg) / avg;
+    }
+
+    function marketRegime(pePercentile) {
+      if (pePercentile <= 0.3) return '저평가 구간';
+      if (pePercentile >= 0.7) return '고평가 구간';
+      return '중립 구간';
+    }
+
+    function renderRows(rows) {
+      elements.body.innerHTML = '';
+      if (!rows.length) {
+        elements.empty.classList.remove('hidden');
+        return;
+      }
+      elements.empty.classList.add('hidden');
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2 mono">${row.ticker}</td>
+          <td class="px-3 py-2">${row.name}</td>
+          <td class="px-3 py-2 text-xs text-gray-500">${row.sector}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.cagr)}</td>
+          <td class="px-3 py-2 text-right mono">${formatPercent(row.bandGap)}</td>
+          <td class="px-3 py-2 text-right mono text-indigo-700">${row.score.toFixed(2)}</td>
+        `;
+        elements.body.appendChild(tr);
+      });
+    }
+
+    async function init() {
+      const [benchRes, scouterRes] = await Promise.all([fetch(DATA_URLS.benchmarks), fetch(DATA_URLS.scouter)]);
+      if (!benchRes.ok || !scouterRes.ok) throw new Error('데이터 로딩 실패');
+      const bench = await benchRes.json();
+      const scouter = await scouterRes.json();
+
+      const sp = bench?.sections?.sp500?.data || [];
+      const peList = sp.map(row => row.best_pe_ratio).filter(v => v && v > 0);
+      const latest = sp[sp.length - 1];
+      const pePercentile = latest ? percentile(latest.best_pe_ratio, peList) : 0.5;
+      const regime = marketRegime(pePercentile);
+
+      elements.regime.textContent = `${regime} (${(pePercentile * 100).toFixed(0)}p)`;
+      elements.benchDate.textContent = bench?.metadata?.generated ? bench.metadata.generated.slice(0, 10) : '-';
+      elements.stockCount.textContent = scouter?.metadata?.stock_count || Object.keys(scouter?.stocks || {}).length || '-';
+
+      const weightValue = pePercentile >= 0.7 ? 0.55 : 0.4;
+      const weightGrowth = 1 - weightValue;
+
+      const rows = Object.entries(scouter.stocks || {}).map(([ticker, stock]) => {
+        const fy1 = stock?.estimates?.eps?.fy1;
+        const fy3 = stock?.estimates?.eps?.fy3;
+        const cagr = calcCagr(fy1, fy3);
+        const currentPer = (stock?.historical?.per || []).slice(-1)[0];
+        const bandGap = calcBandGap(currentPer, stock?.per_band?.avg);
+        return {
+          ticker,
+          name: stock?.info?.name || '-',
+          sector: stock?.info?.sector || '-',
+          cagr,
+          bandGap,
+          score: null
+        };
+      }).filter(row => row.cagr !== null && row.bandGap !== null);
+
+      const cagrList = rows.map(r => r.cagr);
+      const gapList = rows.map(r => r.bandGap);
+
+      rows.forEach(row => {
+        const cagrScore = percentile(row.cagr, cagrList);
+        const gapScore = 1 - percentile(row.bandGap, gapList);
+        row.score = cagrScore * weightGrowth + gapScore * weightValue;
+      });
+
+      const sorted = rows.sort((a, b) => b.score - a.score).slice(0, 30);
+      renderRows(sorted);
+    }
+
+    init().catch(err => {
+      elements.empty.classList.remove('hidden');
+      elements.empty.textContent = err.message;
+    });
+  </script>
+</body>
+</html>

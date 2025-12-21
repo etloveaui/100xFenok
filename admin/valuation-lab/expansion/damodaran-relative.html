@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Damodaran 상대 벤치마크</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-compass text-amber-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">Damodaran 상대 벤치마크</h1>
+            <p class="text-gray-500 text-sm">국가 ERP · 섹터 EV/Sales</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">ERP 국가 수</span>
+          <div class="mono" id="erp-count">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">EV/Sales 섹터 수</span>
+          <div class="mono" id="ev-count">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">최신 생성일</span>
+          <div class="mono" id="latest-date">-</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">상대 벤치마크 조회</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div>
+          <label class="text-xs text-gray-500">국가명 검색</label>
+          <input id="country-input" type="text" placeholder="예: Korea, United States"
+            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+          <div id="country-result" class="mt-3 text-xs text-gray-600">-</div>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500">섹터명 검색</label>
+          <input id="sector-input" type="text" placeholder="예: Software & IT Services"
+            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+          <div id="sector-result" class="mt-3 text-xs text-gray-600">-</div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-3">입력한 값은 Damodaran 원본 키와 직접 매칭합니다.</p>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">ERP 상/하위 5</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div>
+          <div class="text-xs text-gray-500 mb-2">높은 ERP</div>
+          <ul id="erp-top" class="space-y-2"></ul>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 mb-2">낮은 ERP</div>
+          <ul id="erp-bottom" class="space-y-2"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">EV/Sales 상/하위 5</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div>
+          <div class="text-xs text-gray-500 mb-2">높은 EV/Sales</div>
+          <ul id="ev-top" class="space-y-2"></ul>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 mb-2">낮은 EV/Sales</div>
+          <ul id="ev-bottom" class="space-y-2"></ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const DATA_URLS = (() => {
+      const host = location.hostname;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      const isCloudflare = host.endsWith('pages.dev');
+      const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      return {
+        erp: `${base}/data/damodaran/erp.json`,
+        ev: `${base}/data/damodaran/ev_sales.json`
+      };
+    })();
+
+    const elements = {
+      erpCount: document.getElementById('erp-count'),
+      evCount: document.getElementById('ev-count'),
+      latestDate: document.getElementById('latest-date'),
+      countryInput: document.getElementById('country-input'),
+      sectorInput: document.getElementById('sector-input'),
+      countryResult: document.getElementById('country-result'),
+      sectorResult: document.getElementById('sector-result'),
+      erpTop: document.getElementById('erp-top'),
+      erpBottom: document.getElementById('erp-bottom'),
+      evTop: document.getElementById('ev-top'),
+      evBottom: document.getElementById('ev-bottom')
+    };
+
+    function formatPercent(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      return `${(value * 100).toFixed(2)}%`;
+    }
+
+    function formatNumber(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      return Number(value).toFixed(2);
+    }
+
+    function renderList(el, items, formatter) {
+      el.innerHTML = '';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'flex items-center justify-between';
+        li.innerHTML = `
+          <span>${item.name}</span>
+          <span class="mono text-amber-700">${formatter(item.value)}</span>
+        `;
+        el.appendChild(li);
+      });
+    }
+
+    function updateCountryResult(name, row) {
+      if (!row) {
+        elements.countryResult.textContent = '해당 국가를 찾지 못했습니다.';
+        return;
+      }
+      elements.countryResult.textContent = `${name} | ERP ${formatPercent(row.equity_risk_premium)} · Country RP ${formatPercent(row.country_risk_premium)} · Spread ${formatPercent(row.default_spread)}`;
+    }
+
+    function updateSectorResult(name, row) {
+      if (!row) {
+        elements.sectorResult.textContent = '해당 섹터를 찾지 못했습니다.';
+        return;
+      }
+      elements.sectorResult.textContent = `${name} | EV/Sales ${formatNumber(row.ev_sales)} · Net ${formatNumber(row.net_margin)} · Op ${formatNumber(row.operating_margin)}`;
+    }
+
+    async function init() {
+      const [erpRes, evRes] = await Promise.all([fetch(DATA_URLS.erp), fetch(DATA_URLS.ev)]);
+      if (!erpRes.ok || !evRes.ok) throw new Error('데이터 로딩 실패');
+      const erp = await erpRes.json();
+      const ev = await evRes.json();
+
+      const erpEntries = Object.entries(erp.countries || {}).map(([name, row]) => ({
+        name,
+        value: row.equity_risk_premium,
+        row
+      })).filter(r => r.value !== null && r.value !== undefined);
+
+      const evEntries = Object.entries(ev.sectors || {}).map(([name, row]) => ({
+        name,
+        value: row.ev_sales,
+        row
+      })).filter(r => r.value !== null && r.value !== undefined);
+
+      elements.erpCount.textContent = erpEntries.length.toString();
+      elements.evCount.textContent = evEntries.length.toString();
+      const latest = [erp.metadata?.generated_at, ev.metadata?.generated_at].filter(Boolean).sort().reverse()[0];
+      elements.latestDate.textContent = latest ? latest.slice(0, 10) : '-';
+
+      const erpSorted = [...erpEntries].sort((a, b) => b.value - a.value);
+      renderList(elements.erpTop, erpSorted.slice(0, 5), formatPercent);
+      renderList(elements.erpBottom, erpSorted.slice(-5).reverse(), formatPercent);
+
+      const evSorted = [...evEntries].sort((a, b) => b.value - a.value);
+      renderList(elements.evTop, evSorted.slice(0, 5), formatNumber);
+      renderList(elements.evBottom, evSorted.slice(-5).reverse(), formatNumber);
+
+      function handleCountry() {
+        const query = elements.countryInput.value.trim().toLowerCase();
+        const match = erpEntries.find(item => item.name.toLowerCase() === query) || erpEntries.find(item => item.name.toLowerCase().includes(query));
+        updateCountryResult(match?.name, match?.row);
+      }
+
+      function handleSector() {
+        const query = elements.sectorInput.value.trim().toLowerCase();
+        const match = evEntries.find(item => item.name.toLowerCase() === query) || evEntries.find(item => item.name.toLowerCase().includes(query));
+        updateSectorResult(match?.name, match?.row);
+      }
+
+      elements.countryInput.addEventListener('input', handleCountry);
+      elements.sectorInput.addEventListener('input', handleSector);
+      handleCountry();
+      handleSector();
+    }
+
+    init().catch(err => {
+      elements.countryResult.textContent = err.message;
+      elements.sectorResult.textContent = err.message;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>국면 분류 & 프리셋</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-map text-emerald-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">국면 분류 & 프리셋</h1>
+            <p class="text-gray-500 text-sm">Benchmarks 기반 스크리닝 가이드</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">현재 국면</span>
+          <div class="mono" id="regime">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">P/E 분위수</span>
+          <div class="mono" id="pe-percentile">-</div>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Benchmarks 기준일</span>
+          <div class="mono" id="bench-date">-</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="bg-white rounded-xl p-5 shadow">
+        <h2 class="font-semibold text-gray-700 mb-2">저평가 국면</h2>
+        <p class="text-xs text-gray-500 mb-4">밸류/안정성 우선</p>
+        <div class="space-y-2 text-xs text-gray-600">
+          <div>Value 50% · Stability 30% · Growth 20%</div>
+          <div>권장: PER 밴드 + 섹터 갭</div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <h2 class="font-semibold text-gray-700 mb-2">중립 국면</h2>
+        <p class="text-xs text-gray-500 mb-4">균형형 스크리닝</p>
+        <div class="space-y-2 text-xs text-gray-600">
+          <div>Value 35% · Stability 25% · Growth 40%</div>
+          <div>권장: 맞춤 스크리너</div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <h2 class="font-semibold text-gray-700 mb-2">고평가 국면</h2>
+        <p class="text-xs text-gray-500 mb-4">성장/모멘텀 우선</p>
+        <div class="space-y-2 text-xs text-gray-600">
+          <div>Growth 55% · Stability 25% · Value 20%</div>
+          <div>권장: EPS 성장 랭킹</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">빠른 이동</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+        <a href="custom-screener.html" class="border rounded-lg p-3 hover:shadow-sm">맞춤 스크리너</a>
+        <a href="eps-growth.html" class="border rounded-lg p-3 hover:shadow-sm">EPS 성장 랭킹</a>
+        <a href="per-band.html" class="border rounded-lg p-3 hover:shadow-sm">PER 밴드</a>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const DATA_URL = (() => {
+      const host = location.hostname;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      const isCloudflare = host.endsWith('pages.dev');
+      const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      return `${base}/data/benchmarks/us.json`;
+    })();
+
+    const elements = {
+      regime: document.getElementById('regime'),
+      pePercentile: document.getElementById('pe-percentile'),
+      benchDate: document.getElementById('bench-date')
+    };
+
+    function percentile(value, list) {
+      const sorted = [...list].sort((a, b) => a - b);
+      const idx = sorted.findIndex(v => v >= value);
+      if (idx < 0) return 1;
+      return idx / (sorted.length - 1 || 1);
+    }
+
+    function regimeLabel(p) {
+      if (p <= 0.3) return '저평가 국면';
+      if (p >= 0.7) return '고평가 국면';
+      return '중립 국면';
+    }
+
+    async function init() {
+      const res = await fetch(DATA_URL);
+      if (!res.ok) throw new Error('Benchmarks 로딩 실패');
+      const data = await res.json();
+      const sp = data?.sections?.sp500?.data || [];
+      const peList = sp.map(row => row.best_pe_ratio).filter(v => v && v > 0);
+      const latest = sp[sp.length - 1];
+      const pePercentile = latest ? percentile(latest.best_pe_ratio, peList) : 0.5;
+      elements.regime.textContent = `${regimeLabel(pePercentile)} (${(pePercentile * 100).toFixed(0)}p)`;
+      elements.pePercentile.textContent = `${(pePercentile * 100).toFixed(0)}p`;
+      elements.benchDate.textContent = data?.metadata?.generated ? data.metadata.generated.slice(0, 10) : '-';
+    }
+
+    init().catch(err => {
+      elements.regime.textContent = err.message;
+    });
+  </script>
+</body>
+</html>
