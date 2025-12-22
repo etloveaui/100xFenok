@@ -49,8 +49,8 @@ python send_notification.py --test
 
 ### Chat ID 관리
 현재 하드코딩된 Chat ID를 사용합니다:
-- `6443399098` (개인 Chat ID 1)
-- `1697642019` (개인 Chat ID 2)
+- `-1001513671466` (그룹: RC Lounge)
+- `1697642019` (개인: El Fenómeno)
 
 Chat ID를 변경하려면 `telegram_notifier.py`의 `get_chat_ids()` 메서드를 수정하세요.
 
@@ -113,7 +113,7 @@ python tools/notify_daily_wrap.py --test
 ### 로그 확인
 알림 시스템은 자세한 로그를 제공합니다:
 ```
-2025-08-17 22:45:36,704 - TelegramNotifier - INFO - Message sent successfully to 6443399098
+2025-12-22 21:55:18,704 - TelegramNotifier - INFO - Message sent successfully to 1697642019
 ```
 
 ## ✅ 테스트 완료 사항

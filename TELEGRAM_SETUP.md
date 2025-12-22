@@ -63,8 +63,8 @@ python send_notification.py --test
 `multi_report_notifier.py`의 `report_configs`에 새 타입 추가
 
 ## 📱 알림 발송 대상
-- 그룹 채팅: `-1001513671466`
-- 개인 채팅: `6443399098`, `1697642019`
+- 그룹 채팅: `-1001513671466` (RC Lounge)
+- 개인 채팅: `1697642019` (El Fenómeno)
 
 ## 🛠 트러블슈팅
 

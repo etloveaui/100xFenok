@@ -90,27 +90,29 @@ class SmartNotificationSystem:
         }
 
     def send_notification(self, notification_data: Dict) -> bool:
-        """알림 발송 (기존 시스템 활용)"""
-        try:
-            # 기존 notify_daily_wrap 모듈 사용 (호환성)
-            from notify_daily_wrap import DailyWrapNotificationTrigger
+        """알림 발송 (Apps Script 프록시 방식)
 
-            trigger = DailyWrapNotificationTrigger()
-            
-            # 커스텀 알림으로 발송
-            success = trigger.notify_custom(
-                title=notification_data["title"],
-                file_path=notification_data["file_path"],
-                summary=notification_data["message"]
-            )
-            
-            return success
-            
-        except ImportError:
-            print("❌ 기존 알림 모듈을 찾을 수 없습니다.")
-            return False
+        토큰/Chat IDs는 Apps Script에서 관리:
+        - 토큰: Apps Script 코드 내 저장
+        - Chat IDs: Google Sheets에서 동적 로드
+        """
+        import requests
+
+        # Apps Script 프록시 URL
+        PROXY_URL = "https://script.google.com/macros/s/AKfycbxp9riUdfBjG0zuG1USN46E5k1-nVWR2ikR40RNGfINkmgCTJ6wIRuq9b-4BpIOZZNv/exec"
+
+        try:
+            response = requests.post(PROXY_URL, json={
+                "action": "web_notification",
+                "title": notification_data["title"],
+                "message": notification_data["message"]
+            }, timeout=30)
+
+            print(f"✅ 프록시 응답: {response.text}")
+            return True
+
         except Exception as e:
-            print(f"❌ 알림 발송 실패: {e}")
+            print(f"❌ 프록시 알림 발송 실패: {e}")
             return False
     
     def process_github_action(self, changed_files: List[str]) -> bool:

@@ -377,9 +377,14 @@
   .stale-warning-text { font-weight: 500; }
   .stale-warning-age { color: #b45309; font-weight: 600; }
 
-  /* === Responsive - 모바일 (400px 통일) === */
+  /* === Responsive - 태블릿/모바일 (767px) === */
+  @media (max-width: 767px) {
+    .card-widget { min-height: 320px; }
+  }
+
+  /* === Responsive - 소형 모바일 (400px) === */
   @media (max-width: 400px) {
-    .card-widget { padding: 12px; min-height: 260px; }
+    .card-widget { padding: 12px; min-height: 320px; }
     .card-title { font-size: 11px; }
     .building-wrapper { max-width: 300px; }
     .facade-roof { height: 20px; }
