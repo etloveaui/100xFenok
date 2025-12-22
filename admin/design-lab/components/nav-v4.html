@@ -1,0 +1,118 @@
+<nav class="enhanced-nav container mx-auto px-4 sm:px-6 py-3 border-b border-gray-100 bg-white">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#010079',
+              gold: '#D5AD36',
+              interactive: '#1B73D3',
+              cta: '#FED701'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../../../global.css">
+  
+  <div class="flex justify-between items-center">
+    <!-- 로고 영역: V2 기반 (Slate + Gold Point) -->
+    <a href="#" class="logo-section flex items-center space-x-3 group">
+      <img src="../../../favicon.svg" alt="100x FenoK Icon"
+        class="h-10 w-10 transition-transform duration-500 group-hover:rotate-[360deg] drop-shadow-md">
+      <div class="flex flex-col justify-center leading-none">
+        <span class="font-[800] orbitron text-slate-800 tracking-widest text-xl">100x <span class="text-brand-gold">FENOK</span></span>
+        <span class="text-[9px] text-slate-400 font-bold tracking-[0.25em] uppercase mt-1">Global Market Radar</span>
+      </div>
+    </a>
+
+    <!-- 메뉴 영역: V4 (Standard Align, All-Dropdown Consistency) -->
+    <div class="nav-links hidden md:flex items-center space-x-8">
+
+      <!-- Briefing Dropdown -->
+      <div class="relative group">
+        <button class="nav-item flex items-center gap-1.5 font-bold text-slate-600 hover:text-brand-navy transition-colors text-[14px] orbitron tracking-tight">
+          BRIEFING
+          <i class="fas fa-chevron-down text-[9px] mt-[1px] opacity-40 group-hover:opacity-100 group-hover:text-brand-gold transition-all"></i>
+        </button>
+        <div class="absolute top-full left-0 mt-4 bg-white shadow-2xl border border-slate-100 rounded-xl opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-2 z-50 min-w-[220px] p-2">
+          <a href="#" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-slate-50 transition-all group/item mb-1">
+            <div class="flex items-center">
+              <span class="w-1 h-8 bg-brand-gold rounded-full mr-3 scale-y-0 group-hover/item:scale-y-100 transition-transform origin-center"></span>
+              <div>
+                <span class="block text-[10px] text-brand-gold font-bold mb-0.5 tracking-wider">DAILY</span>
+                <span class="text-sm font-bold text-slate-700 group-hover/item:text-brand-navy transition-colors">Market Wrap</span>
+              </div>
+            </div>
+          </a>
+          <a href="#" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-slate-50 transition-all group/item">
+            <div class="flex items-center">
+              <span class="w-1 h-8 bg-brand-interactive rounded-full mr-3 scale-y-0 group-hover/item:scale-y-100 transition-transform origin-center"></span>
+              <div>
+                <span class="block text-[10px] text-brand-interactive font-bold mb-0.5 tracking-wider">WEEKLY</span>
+                <span class="text-sm font-bold text-slate-700 group-hover/item:text-brand-navy transition-colors">Alpha Scout</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Lab Dropdown -->
+      <div class="relative group">
+        <button class="nav-item flex items-center gap-1.5 font-bold text-slate-600 hover:text-brand-navy transition-colors text-[14px] orbitron tracking-tight">
+          LAB
+          <i class="fas fa-chevron-down text-[9px] mt-[1px] opacity-40 group-hover:opacity-100 group-hover:text-brand-gold transition-all"></i>
+        </button>
+        <div class="absolute top-full left-0 mt-4 bg-white shadow-2xl border border-slate-100 rounded-xl opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-2 z-50 min-w-[200px] p-2">
+          <a href="#" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-slate-50 transition-all group/item mb-1">
+            <div class="flex items-center">
+              <span class="w-1 h-8 bg-brand-navy rounded-full mr-3 scale-y-0 group-hover/item:scale-y-100 transition-transform origin-center"></span>
+              <span class="text-sm font-bold text-slate-700 group-hover/item:text-brand-navy transition-colors">Multichart</span>
+            </div>
+          </a>
+          <a href="#" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-slate-50 transition-all group/item">
+            <div class="flex items-center">
+              <span class="w-1 h-8 bg-brand-navy rounded-full mr-3 scale-y-0 group-hover/item:scale-y-100 transition-transform origin-center"></span>
+              <span class="text-sm font-bold text-slate-700 group-hover/item:text-brand-navy transition-colors">Market Radar</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <a href="#" class="nav-item font-bold text-slate-600 hover:text-brand-navy transition-colors text-[14px] orbitron tracking-tight">INSIGHTS</a>
+
+      <!-- LAOR Dropdown -->
+      <div class="relative group">
+        <button class="nav-item flex items-center gap-1.5 font-bold text-slate-600 hover:text-brand-navy transition-colors text-[14px] orbitron tracking-tight">
+          LAOR
+          <i class="fas fa-chevron-down text-[9px] mt-[1px] opacity-40 group-hover:opacity-100 group-hover:text-brand-gold transition-all"></i>
+        </button>
+        <div class="absolute top-full left-0 mt-4 bg-white shadow-2xl border border-slate-100 rounded-xl opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-2 z-50 min-w-[200px] p-2">
+          <a href="#" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-slate-50 transition-all group/item mb-1">
+            <div class="flex items-center">
+              <span class="w-1 h-8 bg-brand-gold rounded-full mr-3 scale-y-0 group-hover/item:scale-y-100 transition-transform origin-center"></span>
+              <span class="text-sm font-bold text-slate-700 group-hover/item:text-brand-navy transition-colors">Infinite Buying</span>
+            </div>
+          </a>
+          <a href="#" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-slate-50 transition-all group/item">
+            <div class="flex items-center">
+              <span class="w-1 h-8 bg-brand-gold rounded-full mr-3 scale-y-0 group-hover/item:scale-y-100 transition-transform origin-center"></span>
+              <span class="text-sm font-bold text-slate-700 group-hover/item:text-brand-navy transition-colors">Value Rebalancing</span>
+            </div>
+          </a>
+        </div>
+      </div>
+      
+      <!-- Admin Link -->
+      <a href="../../../admin/index.html" class="nav-item text-[10px] font-extrabold text-slate-400 hover:text-white hover:bg-brand-navy transition-all ml-4 border border-slate-200 hover:border-brand-navy px-3 py-1.5 rounded-md tracking-widest orbitron">
+        ADMIN
+      </a>
+
+    </div>
+  </div>
+</nav>
