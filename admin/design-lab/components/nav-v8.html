@@ -75,29 +75,85 @@
             <div class="h-4 w-[1px] bg-gray-200 mx-2"></div>
 
             <div class="flex items-center gap-1 h-full">
-                <!-- Nav Pill Item -->
+                
+                <!-- MARKET Item -->
                 <div class="relative group h-full flex items-center">
-                    <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1">
+                    <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm">
                         MARKET
-                        <i class="fas fa-chevron-down text-[8px] opacity-30"></i>
+                        <i class="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold"></i>
                     </button>
-                    <!-- Floating Dropdown -->
-                    <div class="absolute top-[80%] left-0 bg-white border border-gray-200 shadow-xl rounded-xl p-2 min-w-[200px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-1 z-50">
-                        <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg font-medium">Daily Briefing</a>
-                        <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg font-medium">Alpha Scout</a>
+                    <!-- List Style Dropdown -->
+                    <div class="absolute top-[80%] left-0 bg-white border border-gray-200 shadow-xl rounded-xl p-2 min-w-[220px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-1 z-50">
+                        <div class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-1">Briefing</div>
+                        <a href="#" class="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
+                            <span class="w-1 h-4 bg-brand-gold rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity"></span>
+                            <div>
+                                <span class="block font-bold text-slate-700">Market Wrap</span>
+                                <span class="text-[10px] text-slate-400">Daily Updates</span>
+                            </div>
+                        </a>
+                        <a href="#" class="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
+                            <span class="w-1 h-4 bg-brand-interactive rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity"></span>
+                            <div>
+                                <span class="block font-bold text-slate-700">Alpha Scout</span>
+                                <span class="text-[10px] text-slate-400">Weekly Deep Dive</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
+                <!-- ANALYTICS (LAB) Item -->
                 <div class="relative group h-full flex items-center">
-                    <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1">
+                    <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm">
                         ANALYTICS
-                        <i class="fas fa-chevron-down text-[8px] opacity-30"></i>
+                        <i class="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold"></i>
                     </button>
+                    <!-- Grid Style Dropdown -->
+                    <div class="absolute top-[80%] left-0 bg-white border border-gray-200 shadow-xl rounded-xl p-4 min-w-[320px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-1 z-50">
+                        <div class="px-1 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-2">Tools & Charts</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="#" class="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                                <i class="fas fa-chart-line text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform"></i>
+                                <span class="text-xs font-bold text-slate-700">Multichart</span>
+                            </a>
+                            <a href="#" class="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                                <i class="fas fa-radar text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform"></i>
+                                <span class="text-xs font-bold text-slate-700">Radar</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
-                <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all">
-                    STRATEGIES
-                </button>
+                <!-- STRATEGIES (LAOR) Item -->
+                <div class="relative group h-full flex items-center">
+                    <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm">
+                        STRATEGIES
+                        <i class="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold"></i>
+                    </button>
+                    <!-- Detail List Dropdown -->
+                    <div class="absolute top-[80%] right-0 bg-white border border-gray-200 shadow-xl rounded-xl p-3 min-w-[280px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-1 z-50">
+                        <div class="px-2 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-2">Proven Methods</div>
+                        <a href="#" class="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors mb-1 group/strat">
+                            <div class="w-8 h-8 rounded bg-green-100 flex items-center justify-center text-green-600 mr-3 mt-0.5 group-hover/strat:bg-green-200 transition-colors">
+                                <i class="fas fa-infinity text-xs"></i>
+                            </div>
+                            <div>
+                                <span class="block text-sm font-bold text-slate-700 group-hover/strat:text-brand-navy">Infinite Buying</span>
+                                <span class="block text-[10px] text-slate-500 leading-tight mt-0.5">DCA strategy for volatile markets</span>
+                            </div>
+                        </a>
+                        <a href="#" class="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors group/strat">
+                            <div class="w-8 h-8 rounded bg-brand-gold/20 flex items-center justify-center text-brand-gold mr-3 mt-0.5 group-hover/strat:bg-brand-gold/30 transition-colors">
+                                <i class="fas fa-balance-scale text-xs"></i>
+                            </div>
+                            <div>
+                                <span class="block text-sm font-bold text-slate-700 group-hover/strat:text-brand-navy">Value Rebalancing</span>
+                                <span class="block text-[10px] text-slate-500 leading-tight mt-0.5">Asset allocation optimization</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
             </div>
             
         </div>
