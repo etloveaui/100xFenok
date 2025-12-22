@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100xFenok Design Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: bold; }
+        .status-todo { background: #e2e8f0; color: #475569; }
+        .status-doing { background: #bfdbfe; color: #1e40af; }
+        .status-done { background: #bbf7d0; color: #166534; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">🎨 Design Lab</h1>
+            <p class="text-slate-600 mt-2">100xFenok 리디자인 실험실 및 작업 대시보드</p>
+        </header>
+
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">🚀 진행 중인 작업</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Main Page Redesign -->
+                <div class="card border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Main Page 리디자인</h3>
+                        <span class="status-badge status-todo">Step 0 조사 중</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4">메인 페이지 레이아웃 및 브랜드 컬러 적용 실험</p>
+                    <div class="flex gap-2">
+                        <a href="#" class="text-blue-600 text-sm hover:underline opacity-50 cursor-not-allowed">v1 시안 (준비중)</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">📂 작업 공간</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="main/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">🏠</div>
+                    <div class="font-bold text-slate-700">Main</div>
+                    <div class="text-xs text-slate-400 mt-1">index.html</div>
+                </a>
+                <a href="widgets/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">🧩</div>
+                    <div class="font-bold text-slate-700">Widgets</div>
+                    <div class="text-xs text-slate-400 mt-1">Components</div>
+                </a>
+                <a href="components/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">🧱</div>
+                    <div class="font-bold text-slate-700">Components</div>
+                    <div class="text-xs text-slate-400 mt-1">Shared UI</div>
+                </a>
+                <a href="../../index.html" target="_blank" class="card text-center hover:bg-slate-50 block border-dashed border-2 border-slate-300">
+                    <div class="text-2xl mb-2">👀</div>
+                    <div class="font-bold text-slate-700">Live Site</div>
+                    <div class="text-xs text-slate-400 mt-1">현재 운영 사이트</div>
+                </a>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-bold mb-4 text-slate-700">📚 참조</h2>
+            <ul class="list-disc list-inside text-slate-600 bg-white p-6 rounded-lg shadow-sm">
+                <li><a href="https://tailwindcss.com/docs" target="_blank" class="text-blue-500 hover:underline">Tailwind CSS Docs</a></li>
+                <li><a href="https://fonts.google.com" target="_blank" class="text-blue-500 hover:underline">Google Fonts</a></li>
+                <li>Master Plan: <code>docs/planning/design-lab-master.md</code></li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>
