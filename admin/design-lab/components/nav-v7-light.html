@@ -1,0 +1,114 @@
+<nav class="enhanced-nav w-full bg-white border-b border-gray-200">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#010079',
+              gold: '#D5AD36',
+              interactive: '#1B73D3',
+              cta: '#FED701'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Top Ticker Bar: Light Mode (Professional Gray) -->
+  <div class="bg-slate-100 text-slate-600 text-[10px] py-1.5 px-6 border-b border-gray-200 flex justify-between items-center orbitron tracking-wider font-bold">
+    <div class="flex space-x-6 overflow-hidden">
+      <span class="flex items-center"><span class="text-green-600 mr-1">▲</span> SPX 4,783.45 (+0.4%)</span>
+      <span class="flex items-center"><span class="text-red-600 mr-1">▼</span> NDX 16,832.11 (-0.1%)</span>
+      <span class="flex items-center"><span class="text-brand-navy mr-1">●</span> US10Y 3.92%</span>
+    </div>
+    <div class="flex space-x-4 text-slate-400">
+      <span class="flex items-center"><i class="fas fa-circle text-[6px] text-green-500 mr-1"></i> SYSTEM NORMAL</span>
+    </div>
+  </div>
+
+  <!-- Main Nav -->
+  <div class="container mx-auto px-6 h-16 flex justify-between items-center bg-white relative">
+    
+    <!-- Logo: Navy & Sharp -->
+    <a href="#" class="flex items-center space-x-3 group mr-10">
+      <img src="../../../favicon.svg" alt="Icon" class="h-9 w-9">
+      <div class="flex flex-col">
+        <span class="font-[900] orbitron text-brand-navy text-xl tracking-widest leading-none">100x</span>
+        <span class="text-[8px] text-brand-gold font-bold tracking-[0.3em] uppercase">TERMINAL</span>
+      </div>
+    </a>
+
+    <!-- Menu: Sharp & Bold -->
+    <div class="hidden md:flex items-center h-full mr-auto">
+      
+      <!-- Mega Menu Item 1 -->
+      <div class="group h-full flex items-center px-5 hover:bg-slate-50 border-b-4 border-transparent hover:border-brand-navy transition-all cursor-pointer">
+        <span class="font-[800] text-slate-600 group-hover:text-brand-navy text-xs orbitron tracking-wide">MARKET</span>
+        <!-- Mega Panel -->
+        <div class="absolute top-full left-0 w-full bg-white border-y border-gray-200 shadow-xl p-8 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 grid grid-cols-12 gap-8 transform translate-y-2 group-hover:translate-y-0">
+          
+          <!-- Column 1: Links -->
+          <div class="col-span-2 border-r border-gray-100">
+            <h4 class="text-brand-gold text-xs font-bold mb-4 uppercase tracking-wider">Briefing</h4>
+            <a href="#" class="block text-sm font-medium text-slate-600 hover:text-brand-navy hover:bg-slate-50 p-2 rounded -ml-2 transition-colors">Daily Market Wrap</a>
+            <a href="#" class="block text-sm font-medium text-slate-600 hover:text-brand-navy hover:bg-slate-50 p-2 rounded -ml-2 transition-colors">Weekly Alpha Scout</a>
+            <a href="#" class="block text-sm font-medium text-slate-600 hover:text-brand-navy hover:bg-slate-50 p-2 rounded -ml-2 transition-colors">Macro Outlook</a>
+          </div>
+
+          <!-- Column 2: Data Viz (Light) -->
+          <div class="col-span-10">
+             <h4 class="text-slate-400 text-xs font-bold mb-4 uppercase tracking-wider">Market Overview</h4>
+             <div class="grid grid-cols-4 gap-4">
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg hover:border-brand-navy transition-colors group/card">
+                    <span class="text-[10px] text-slate-500 block font-bold">FEAR & GREED</span>
+                    <div class="flex items-end gap-2 mt-1">
+                        <span class="text-2xl text-green-600 font-bold orbitron">76</span>
+                        <span class="text-xs text-green-600 font-medium mb-1">Extreme</span>
+                    </div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg hover:border-brand-navy transition-colors">
+                    <span class="text-[10px] text-slate-500 block font-bold">VIX INDEX</span>
+                    <div class="flex items-end gap-2 mt-1">
+                        <span class="text-2xl text-slate-700 font-bold orbitron">12.45</span>
+                        <span class="text-xs text-red-500 font-medium mb-1">-2.1%</span>
+                    </div>
+                </div>
+                <!-- More cards... -->
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mega Menu Item 2 -->
+      <div class="group h-full flex items-center px-5 hover:bg-slate-50 border-b-4 border-transparent hover:border-brand-interactive transition-all cursor-pointer">
+        <span class="font-[800] text-slate-600 group-hover:text-brand-interactive text-xs orbitron tracking-wide">ANALYTICS</span>
+        <div class="absolute top-full left-0 w-full bg-white border-y border-gray-200 shadow-xl p-8 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 grid grid-cols-12 gap-8 transform translate-y-2 group-hover:translate-y-0">
+            <div class="col-span-2">
+                <h4 class="text-brand-interactive text-xs font-bold mb-4 uppercase tracking-wider">Tools</h4>
+                <a href="#" class="block text-sm font-medium text-slate-600 hover:text-brand-interactive hover:bg-slate-50 p-2 rounded -ml-2 transition-colors">Multichart Pro</a>
+                <a href="#" class="block text-sm font-medium text-slate-600 hover:text-brand-interactive hover:bg-slate-50 p-2 rounded -ml-2 transition-colors">Market Radar</a>
+            </div>
+        </div>
+      </div>
+
+      <div class="group h-full flex items-center px-5 hover:bg-slate-50 border-b-4 border-transparent hover:border-slate-400 transition-all cursor-pointer">
+        <span class="font-[800] text-slate-600 group-hover:text-slate-800 text-xs orbitron tracking-wide">INSIGHTS</span>
+      </div>
+
+    </div>
+
+    <!-- Search (Boxed) -->
+    <div class="flex items-center">
+        <div class="relative group">
+            <input type="text" placeholder="Search Ticker..." class="bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 px-4 py-2 w-48 focus:w-64 transition-all focus:outline-none focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/10 font-bold">
+            <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-brand-navy transition-colors"></i>
+        </div>
+    </div>
+
+  </div>
+</nav>

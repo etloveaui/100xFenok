@@ -1,0 +1,104 @@
+<div class="relative w-full h-[250px] bg-gradient-to-br from-slate-100 to-blue-50 overflow-hidden">
+  <!-- 배경 패턴 (Dynamic Feel) -->
+  <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#444cf7 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
+  <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+  <div class="absolute top-1/4 right-1/4 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+
+  <!-- V6 Evo: Dynamic Floating Glass -->
+  <nav class="fixed top-6 left-1/2 -translate-x-1/2 w-auto min-w-[600px] z-50">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                cta: '#FED701'
+              }
+            },
+            animation: {
+              blob: "blob 7s infinite"
+            },
+            keyframes: {
+              blob: {
+                "0%": { transform: "translate(0px, 0px) scale(1)" },
+                "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+                "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+                "100%": { transform: "translate(0px, 0px) scale(1)" }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Outer Glow Container -->
+    <div class="relative group/nav p-[1px] rounded-full bg-gradient-to-r from-white/40 via-white/80 to-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.1)] hover:shadow-[0_15px_40px_0_rgba(31,38,135,0.2)] transition-all duration-500 hover:scale-[1.02]">
+      
+      <!-- Glass Content -->
+      <div class="bg-white/70 backdrop-blur-xl rounded-full px-8 py-3 flex items-center gap-8 relative overflow-hidden">
+        
+        <!-- Shine Effect -->
+        <div class="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 transition-all duration-1000 group-hover/nav:left-[200%]"></div>
+
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-3 relative z-10">
+          <img src="../../../favicon.svg" alt="Icon" class="h-8 w-8 drop-shadow-md">
+          <span class="font-[800] orbitron text-slate-800 text-lg tracking-wider">100x</span>
+        </a>
+
+        <!-- Menu Divider -->
+        <div class="h-6 w-[1px] bg-slate-300/50"></div>
+
+        <!-- Menu Items (Pill Interaction) -->
+        <div class="flex items-center gap-1">
+          
+          <div class="relative group">
+            <button class="px-5 py-2 rounded-full text-xs font-bold text-slate-600 hover:text-brand-navy transition-all orbitron tracking-wide relative overflow-hidden">
+              <span class="relative z-10">BRIEFING</span>
+              <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-inner"></div>
+            </button>
+            <!-- Dropdown -->
+            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-48 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-xl p-2 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
+               <a href="#" class="block px-4 py-2 text-xs font-bold text-slate-600 hover:text-brand-navy hover:bg-white/80 rounded-xl transition-all">Market Wrap</a>
+               <a href="#" class="block px-4 py-2 text-xs font-bold text-slate-600 hover:text-brand-navy hover:bg-white/80 rounded-xl transition-all">Alpha Scout</a>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <button class="px-5 py-2 rounded-full text-xs font-bold text-slate-600 hover:text-brand-navy transition-all orbitron tracking-wide relative">
+              <span class="relative z-10">LAB</span>
+              <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-inner"></div>
+            </button>
+             <div class="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-48 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-xl p-2 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
+               <a href="#" class="block px-4 py-2 text-xs font-bold text-slate-600 hover:text-brand-navy hover:bg-white/80 rounded-xl transition-all">Multichart</a>
+               <a href="#" class="block px-4 py-2 text-xs font-bold text-slate-600 hover:text-brand-navy hover:bg-white/80 rounded-xl transition-all">Market Radar</a>
+            </div>
+          </div>
+
+          <button class="px-5 py-2 rounded-full text-xs font-bold text-slate-600 hover:text-brand-navy transition-all orbitron tracking-wide relative group">
+            <span class="relative z-10">INSIGHTS</span>
+            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-inner"></div>
+          </button>
+
+          <button class="px-5 py-2 rounded-full text-xs font-bold text-slate-600 hover:text-brand-navy transition-all orbitron tracking-wide relative group">
+            <span class="relative z-10">LAOR</span>
+            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-inner"></div>
+          </button>
+
+        </div>
+
+        <!-- Action (Search) -->
+        <button class="w-8 h-8 rounded-full bg-white/50 hover:bg-brand-navy hover:text-white transition-colors flex items-center justify-center text-slate-500 shadow-sm ml-2">
+          <i class="fas fa-search text-xs"></i>
+        </button>
+
+      </div>
+    </div>
+  </nav>
+</div>
