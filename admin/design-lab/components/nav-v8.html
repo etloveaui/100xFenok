@@ -1,0 +1,107 @@
+<nav class="relative w-full z-50">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#010079',
+              gold: '#D5AD36',
+              interactive: '#1B73D3',
+              cta: '#FED701'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- V8: The Integrated Command Deck -->
+  <div class="w-full bg-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border-b border-gray-100">
+    
+    <!-- Top Layer: Meta Info & Status -->
+    <div class="container mx-auto px-6 pt-3 flex justify-between items-end pb-2">
+        <!-- Brand Area -->
+        <a href="#" class="flex items-center gap-3 group">
+            <div class="w-10 h-10 bg-brand-navy rounded-xl flex items-center justify-center shadow-lg shadow-brand-navy/30 group-hover:scale-105 transition-transform">
+                <img src="../../../favicon.svg" alt="Icon" class="h-6 w-6 filter brightness-0 invert">
+            </div>
+            <div class="flex flex-col">
+                <span class="font-[900] orbitron text-slate-800 text-xl leading-none tracking-tight">100x <span class="text-brand-gold">FENOK</span></span>
+                <span class="text-[10px] font-bold text-slate-400 tracking-[0.2em] mt-0.5">COMMAND CENTER</span>
+            </div>
+        </a>
+
+        <!-- Live Ticker (Integrated) -->
+        <div class="hidden lg:flex items-center gap-6 bg-slate-50 px-6 py-2 rounded-full border border-slate-100">
+            <div class="flex flex-col items-center leading-none">
+                <span class="text-[9px] font-bold text-slate-400 mb-0.5">S&P 500</span>
+                <span class="text-xs font-[800] text-green-600 orbitron">4,783.45</span>
+            </div>
+            <div class="w-[1px] h-4 bg-slate-200"></div>
+            <div class="flex flex-col items-center leading-none">
+                <span class="text-[9px] font-bold text-slate-400 mb-0.5">NASDAQ</span>
+                <span class="text-xs font-[800] text-red-500 orbitron">16,832.11</span>
+            </div>
+            <div class="w-[1px] h-4 bg-slate-200"></div>
+            <div class="flex flex-col items-center leading-none">
+                <span class="text-[9px] font-bold text-slate-400 mb-0.5">VIX</span>
+                <span class="text-xs font-[800] text-slate-700 orbitron">12.45</span>
+            </div>
+        </div>
+
+        <!-- User/Tools -->
+        <div class="flex items-center gap-3">
+             <button class="w-9 h-9 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 shadow-sm flex items-center justify-center">
+                <i class="fas fa-search text-sm"></i>
+             </button>
+             <button class="w-9 h-9 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 shadow-sm flex items-center justify-center">
+                <i class="fas fa-th-grid text-sm"></i>
+             </button>
+        </div>
+    </div>
+
+    <!-- Bottom Layer: Navigation Pills -->
+    <div class="w-full border-t border-gray-100 bg-white/50 backdrop-blur-sm">
+        <div class="container mx-auto px-6 h-12 flex items-center gap-2">
+            
+            <a href="#" class="h-full flex items-center px-4 text-xs font-[800] text-brand-navy border-b-2 border-brand-navy bg-blue-50/50 orbitron tracking-wide">
+                DASHBOARD
+            </a>
+
+            <div class="h-4 w-[1px] bg-gray-200 mx-2"></div>
+
+            <div class="flex items-center gap-1 h-full">
+                <!-- Nav Pill Item -->
+                <div class="relative group h-full flex items-center">
+                    <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1">
+                        MARKET
+                        <i class="fas fa-chevron-down text-[8px] opacity-30"></i>
+                    </button>
+                    <!-- Floating Dropdown -->
+                    <div class="absolute top-[80%] left-0 bg-white border border-gray-200 shadow-xl rounded-xl p-2 min-w-[200px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-1 z-50">
+                        <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg font-medium">Daily Briefing</a>
+                        <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg font-medium">Alpha Scout</a>
+                    </div>
+                </div>
+
+                <div class="relative group h-full flex items-center">
+                    <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1">
+                        ANALYTICS
+                        <i class="fas fa-chevron-down text-[8px] opacity-30"></i>
+                    </button>
+                </div>
+
+                <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all">
+                    STRATEGIES
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+  </div>
+</nav>
