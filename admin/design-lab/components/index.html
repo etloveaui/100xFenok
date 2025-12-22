@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Lab - Components</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                cta: '#FED701'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Global CSS 참조 (3단계 상위) -->
+    <link rel="stylesheet" href="../../../global.css">
+</head>
+<body class="bg-slate-100 p-8">
+    
+    <div class="max-w-6xl mx-auto space-y-12">
+        
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">🧱 Component Lab</h1>
+            <a href="../index.html" class="text-blue-600 hover:underline">← Back to Dashboard</a>
+        </div>
+
+        <!-- 1. Color Palette -->
+        <section class="bg-white p-6 rounded-xl shadow-sm">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">🎨 Brand Palette Check</h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="space-y-2">
+                    <div class="h-20 rounded-lg bg-brand-navy shadow-lg flex items-center justify-center text-white font-bold">Navy</div>
+                    <div class="text-xs text-center font-mono">#010079</div>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-20 rounded-lg bg-brand-gold shadow-lg flex items-center justify-center text-white font-bold">Gold</div>
+                    <div class="text-xs text-center font-mono">#D5AD36</div>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-20 rounded-lg bg-brand-interactive shadow-lg flex items-center justify-center text-white font-bold">Interactive</div>
+                    <div class="text-xs text-center font-mono">#1B73D3</div>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-20 rounded-lg bg-brand-cta shadow-lg flex items-center justify-center text-slate-800 font-bold">CTA</div>
+                    <div class="text-xs text-center font-mono">#FED701</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Navigation v1 -->
+        <section class="bg-white p-6 rounded-xl shadow-sm">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">🧭 Navigation v1</h2>
+            <p class="mb-4 text-sm text-slate-500">
+                변경점: 하단 Border Gold 포인트, 드롭다운 상단 Border, 폰트 굵기 강화, 브랜드 컬러 적용
+            </p>
+            <div class="border rounded-lg overflow-hidden bg-white relative min-h-[200px]">
+                <!-- iframe으로 nav-v1.html 로드 -->
+                <iframe src="nav-v1.html" class="w-full h-[200px] border-0" title="Navigation Preview"></iframe>
+            </div>
+            <div class="mt-2 text-right">
+                <a href="nav-v1.html" target="_blank" class="text-sm text-blue-600 hover:underline">새 창에서 보기 ↗</a>
+            </div>
+        </section>
+
+    </div>
+
+</body>
+</html>
