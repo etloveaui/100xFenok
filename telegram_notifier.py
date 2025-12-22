@@ -123,8 +123,9 @@ class TelegramNotifier:
             return None
     
     def get_chat_ids(self) -> List[str]:
-        """하드코딩된 Chat ID 목록 반환"""
-        hardcoded_chat_ids = ["-1001513671466", "6443399098", "1697642019"]
+        """Google Sheets에서 Chat ID 동적 로드 (하드코딩 제거됨)"""
+        # 🔒 보안: Chat IDs는 Google Sheets에서만 관리
+        # 시트 구조: ChatIDs 시트의 A열에 Chat ID 목록
         if self.sheets_service:
             try:
                 spreadsheet_id = self.config['google_sheets']['spreadsheet_id']
@@ -138,8 +139,16 @@ class TelegramNotifier:
                         return sheets_chat_ids
             except Exception as e:
                 self.logger.warning(f"Failed to get chat IDs from Google Sheets: {e}")
-        self.logger.info(f"Using hardcoded chat IDs: {len(hardcoded_chat_ids)} recipients")
-        return hardcoded_chat_ids
+
+        # Fallback: 환경변수에서 로드 (GitHub Actions용)
+        env_chat_ids = os.environ.get('TELEGRAM_CHAT_IDS', '')
+        if env_chat_ids:
+            chat_id_list = [cid.strip() for cid in env_chat_ids.split(',') if cid.strip()]
+            self.logger.info(f"Using chat IDs from environment: {len(chat_id_list)} recipients")
+            return chat_id_list
+
+        self.logger.warning("No chat IDs available - check Google Sheets or TELEGRAM_CHAT_IDS env")
+        return []
     
     def send_telegram_message(self, chat_id: str, message: str) -> Tuple[bool, str]:
         """개별 텔레그램 메시지 발송"""

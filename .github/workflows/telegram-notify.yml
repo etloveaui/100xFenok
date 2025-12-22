@@ -40,43 +40,25 @@ jobs:
     - name: Install dependencies
       run: |
         pip install requests python-dateutil
-        
-    - name: 🔒 웹 패널 보안 빌드 (토큰 치환)
-      env:
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      run: |
-        echo "=== 웹 패널 보안 빌드 ==="
-        echo "토큰을 안전하게 치환하여 배포용 웹 패널을 생성합니다..."
-        # 백업 생성
-        cp notification-control-panel-web.html notification-control-panel-web-template.html
-        # 토큰 치환
-        sed -i "s/\${TELEGRAM_BOT_TOKEN}/$TELEGRAM_BOT_TOKEN/g" notification-control-panel-web.html
-        # 치환 확인
-        echo "토큰 치환 완료 확인:"
-        grep -c "7524488237" notification-control-panel-web.html || echo "토큰 치환 실패"
-        echo "✅ 웹 패널 빌드 완료"
 
-    - name: 🤖 똑똑한 알림 시스템 실행
+    - name: 🔒 보안 확인 (프록시 방식)
+      run: |
+        echo "=== 보안 확인 ==="
+        echo "웹 패널은 Apps Script 프록시 방식을 사용합니다."
+        echo "토큰: Apps Script Script Properties에 저장"
+        echo "Chat IDs: Google Sheets에서 동적 로드"
+        # 토큰이 코드에 없는지 확인
+        if grep -q "AAEI9fI3x30mVwau" notification-control-panel-web.html 2>/dev/null; then
+          echo "❌ 경고: 웹 패널에 토큰이 발견됨!"
+          exit 1
+        else
+          echo "✅ 웹 패널에 토큰 없음 (안전)"
+        fi
+
+    - name: 🤖 똑똑한 알림 시스템 실행 (프록시 방식)
       if: steps.changed_files.outputs.any_changed == 'true'
-      env:
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        GITHUB_ACTIONS: true
       run: |
         echo "=== 100xFenok 똑똑한 알림 시스템 ==="
+        echo "프록시 방식: 토큰/Chat IDs는 Apps Script에서 관리"
         echo "다음 파일에 대해 알림을 발송합니다: ${{ steps.changed_files.outputs.all_changed_files }}"
         python smart_notification_system.py --github-action --changed-files "${{ steps.changed_files.outputs.all_changed_files }}"
-
-    - name: 📤 업데이트된 웹 패널 배포
-      if: success()
-      run: |
-        echo "=== 웹 패널 자동 배포 ==="
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add notification-control-panel-web.html
-        if git diff --staged --quiet; then
-          echo "변경사항 없음 - 배포 건너뜀"
-        else
-          git commit -m "🤖 Auto-update web panel with secure token - Updated by GitHub Actions $(date '+%Y-%m-%d %H:%M:%S')"
-          git push
-          echo "✅ 웹 패널 배포 완료"
-        fi
