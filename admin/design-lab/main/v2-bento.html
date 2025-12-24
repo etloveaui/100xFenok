@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main v2 - Bento Grid Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                cta: '#FED701',
+                bg: '#f8fafc'
+              }
+            },
+            fontFamily: {
+              sans: ['Noto Sans KR', 'sans-serif'],
+              orbitron: ['Orbitron', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .bento-card {
+            background: white;
+            border-radius: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: #cbd5e1;
+        }
+        .bento-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .sparkline {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: dash 2s ease-out forwards;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Nav Placeholder (v11 Mock) -->
+    <nav class="fixed top-0 w-full h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50 flex items-center justify-center text-xs font-bold text-slate-400">
+        [ Navigation v11 Integration Area ]
+    </nav>
+
+    <!-- Dashboard Container -->
+    <main class="container mx-auto px-4 pt-24 pb-12">
+        
+        <!-- Header: Welcome & Status -->
+        <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-[800] text-slate-900 mb-2">Market Overview</h1>
+                <p class="text-slate-500 text-sm">Real-time intelligence for smart investors.</p>
+            </div>
+            <div class="flex gap-2">
+                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
+                    <i class="fas fa-circle text-[8px]"></i> Market Open
+                </span>
+                <span class="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-bold rounded-full">
+                    EST 14:32
+                </span>
+            </div>
+        </div>
+
+        <!-- Bento Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6 auto-rows-[minmax(180px,auto)]">
+
+            <!-- 1. Market Sentiment (1x1) -->
+            <div class="bento-card p-6 flex flex-col justify-between group">
+                <div class="bento-title text-brand-interactive">Sentiment</div>
+                <div class="flex items-end gap-2">
+                    <span class="text-5xl font-[800] text-green-600 tracking-tighter">76</span>
+                    <span class="text-sm font-bold text-green-600 mb-2">Greed</span>
+                </div>
+                <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-green-400 to-green-600 w-[76%] rounded-full"></div>
+                </div>
+                <div class="absolute top-4 right-4 text-slate-300 group-hover:text-green-500 transition-colors">
+                    <i class="fas fa-laugh-beam text-2xl"></i>
+                </div>
+            </div>
+
+            <!-- 2. Market Regime (1x1) -->
+            <div class="bento-card p-6 flex flex-col justify-between group">
+                <div class="bento-title text-brand-gold">Regime</div>
+                <div class="flex flex-col">
+                    <span class="text-2xl font-[800] text-slate-800">Bull Market</span>
+                    <span class="text-xs font-bold text-slate-400 mt-1">Liquidity Expanding</span>
+                </div>
+                <div class="mt-4 flex gap-1">
+                    <div class="h-8 flex-1 bg-brand-gold rounded opacity-100"></div>
+                    <div class="h-8 flex-1 bg-brand-gold rounded opacity-40"></div>
+                    <div class="h-8 flex-1 bg-brand-gold rounded opacity-20"></div>
+                </div>
+                <div class="absolute top-4 right-4 text-slate-300 group-hover:text-brand-gold transition-colors">
+                    <i class="fas fa-bullhorn text-2xl"></i>
+                </div>
+            </div>
+
+            <!-- 3. Sector Heatmap (2x2 - Large) -->
+            <div class="bento-card md:col-span-2 md:row-span-2 p-6 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="bento-title text-brand-navy">Sector Performance</div>
+                    <button class="text-xs text-slate-400 hover:text-brand-navy"><i class="fas fa-expand"></i></button>
+                </div>
+                <!-- Heatmap Mockup -->
+                <div class="flex-1 grid grid-cols-4 grid-rows-3 gap-2">
+                    <div class="col-span-2 row-span-2 bg-green-500 rounded-lg p-3 text-white flex flex-col justify-between hover:bg-green-600 transition-colors cursor-pointer group">
+                        <span class="font-bold text-sm">Technology</span>
+                        <span class="font-[800] text-lg text-white/90 group-hover:text-white">+2.45%</span>
+                    </div>
+                    <div class="bg-red-400 rounded-lg p-3 text-white flex flex-col justify-between hover:bg-red-500 transition-colors">
+                        <span class="font-bold text-[10px]">Healthcare</span>
+                        <span class="font-bold">-0.8%</span>
+                    </div>
+                    <div class="bg-green-400 rounded-lg p-3 text-white flex flex-col justify-between">
+                        <span class="font-bold text-[10px]">Financial</span>
+                        <span class="font-bold">+1.2%</span>
+                    </div>
+                    <div class="col-span-2 bg-slate-200 rounded-lg p-3 text-slate-600 flex items-center justify-center font-bold text-xs hover:bg-slate-300">
+                        Consumer Disc. (+0.5%)
+                    </div>
+                    <div class="bg-red-300 rounded-lg p-3 text-white flex items-center justify-center font-bold text-xs">
+                        Energy
+                    </div>
+                    <div class="bg-green-300 rounded-lg p-3 text-white flex items-center justify-center font-bold text-xs">
+                        Comm.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Liquidity Widget (2x1) -->
+            <div class="bento-card md:col-span-2 p-6 relative overflow-hidden group">
+                <div class="relative z-10">
+                    <div class="bento-title text-blue-500">Global Liquidity</div>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-3xl font-[800] text-slate-800">$6.24T</span>
+                            <span class="text-sm font-bold text-green-500 ml-2">▲ $45B</span>
+                        </div>
+                        <div class="text-xs text-slate-400 font-bold">Updated: Today</div>
+                    </div>
+                </div>
+                <!-- SVG Sparkline Background -->
+                <svg class="absolute bottom-0 left-0 w-full h-24 opacity-20 group-hover:opacity-30 transition-opacity" preserveAspectRatio="none">
+                    <path d="M0,20 Q30,10 60,40 T120,30 T180,60 T240,10 V100 H0 Z" fill="#3b82f6" />
+                    <path d="M0,20 Q30,10 60,40 T120,30 T180,60 T240,10" fill="none" stroke="#3b82f6" stroke-width="2" class="sparkline" />
+                </svg>
+            </div>
+
+            <!-- 5. Banking Health (1x1) -->
+            <div class="bento-card p-6 flex flex-col justify-between">
+                <div class="bento-title text-purple-500">Banking Health</div>
+                <div class="flex flex-col items-center py-2">
+                    <div class="w-20 h-20 rounded-full border-4 border-purple-100 border-t-purple-500 flex items-center justify-center">
+                        <span class="text-xl font-bold text-slate-700">Safe</span>
+                    </div>
+                </div>
+                <div class="text-center text-xs text-slate-400 font-bold">
+                    BTFP Utilization: Low
+                </div>
+            </div>
+
+            <!-- 6. Top News (1x2) -->
+            <div class="bento-card md:row-span-2 p-0 flex flex-col">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="bento-title text-slate-400">Briefing Feed</div>
+                </div>
+                <div class="flex-1 overflow-y-auto p-2 custom-scrollbar">
+                    <a href="#" class="block p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-gold"></span>
+                            <span class="text-[10px] font-bold text-slate-400">MARKET WRAP</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-700 leading-tight group-hover:text-brand-navy">
+                            Fed holds rates steady, signals 3 cuts in 2024
+                        </h4>
+                        <span class="text-[10px] text-slate-400 mt-2 block">2 hours ago</span>
+                    </a>
+                    <a href="#" class="block p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-interactive"></span>
+                            <span class="text-[10px] font-bold text-slate-400">ALPHA SCOUT</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-700 leading-tight group-hover:text-brand-navy">
+                            Tech sector rotation: Key levels to watch
+                        </h4>
+                        <span class="text-[10px] text-slate-400 mt-2 block">Yesterday</span>
+                    </a>
+                    <!-- More items... -->
+                </div>
+            </div>
+
+            <!-- 7. Movers (2x1) -->
+            <div class="bento-card md:col-span-2 p-4 flex items-center justify-between gap-4">
+                <div class="flex-1">
+                    <div class="bento-title text-green-500 mb-2">Top Gainers</div>
+                    <div class="flex gap-2">
+                        <div class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold flex items-center gap-1">
+                            NVDA <span class="bg-green-200 px-1 rounded text-[10px]">+3.2%</span>
+                        </div>
+                        <div class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold flex items-center gap-1">
+                            AMD <span class="bg-green-200 px-1 rounded text-[10px]">+2.8%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-[1px] h-10 bg-slate-100"></div>
+                <div class="flex-1">
+                    <div class="bento-title text-red-500 mb-2">Top Losers</div>
+                    <div class="flex gap-2">
+                        <div class="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-bold flex items-center gap-1">
+                            TSLA <span class="bg-red-200 px-1 rounded text-[10px]">-1.2%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
