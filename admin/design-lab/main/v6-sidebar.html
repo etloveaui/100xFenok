@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main v6 - Sidebar Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                cta: '#FED701'
+              }
+            },
+            fontFamily: {
+              sans: ['Noto Sans KR', 'sans-serif'],
+              orbitron: ['Orbitron', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .sidebar-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .sidebar-link.active {
+            background: #010079;
+            color: white;
+        }
+        .sidebar-link.active i {
+            color: #D5AD36;
+        }
+
+        /* Bento Card */
+        .bento-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .bento-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Sidebar Toggle */
+        @media (max-width: 1023px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 50;
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 40;
+            }
+            .sidebar-overlay.open {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Nav Placeholder -->
+    <nav class="sticky top-0 w-full h-14 bg-white/90 backdrop-blur border-b border-gray-200 z-30 flex items-center justify-between px-4">
+        <button id="sidebarToggle" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+            <i class="fas fa-bars text-lg"></i>
+        </button>
+        <span class="text-xs font-bold text-slate-400">[ Nav v11 docked here ]</span>
+        <div></div>
+    </nav>
+
+    <!-- Mobile Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="flex min-h-screen">
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="sidebar w-60 flex-shrink-0 p-4 flex flex-col">
+            <!-- Logo/Title -->
+            <div class="mb-6 pb-4 border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brand-navy rounded-lg flex items-center justify-center">
+                        <span class="text-brand-gold font-orbitron font-bold text-sm">100x</span>
+                    </div>
+                    <span class="font-bold text-slate-800">Market Radar</span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="space-y-1 flex-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">Dashboard</span>
+
+                <a href="#" class="sidebar-link active">
+                    <i class="fas fa-th-large w-5 text-center"></i>
+                    Overview
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-layer-group w-5 text-center"></i>
+                    Sectors
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-water w-5 text-center"></i>
+                    Liquidity
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-building-columns w-5 text-center"></i>
+                    Banking
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-chart-line w-5 text-center"></i>
+                    Movers
+                </a>
+
+                <div class="pt-4 mt-4 border-t border-gray-100">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">Filters</span>
+
+                    <!-- Period Filter -->
+                    <div class="px-3 mb-3">
+                        <label class="text-xs text-slate-500 mb-2 block">Period</label>
+                        <div class="flex bg-slate-100 rounded-lg p-0.5">
+                            <button class="flex-1 px-3 py-1.5 text-xs font-bold bg-white text-slate-700 rounded shadow-sm">1D</button>
+                            <button class="flex-1 px-3 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600">1W</button>
+                            <button class="flex-1 px-3 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600">1M</button>
+                        </div>
+                    </div>
+
+                    <!-- Checkboxes -->
+                    <div class="px-3 space-y-2">
+                        <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                            <input type="checkbox" class="rounded border-slate-300 text-brand-interactive focus:ring-brand-interactive" checked>
+                            Show % Change
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                            <input type="checkbox" class="rounded border-slate-300 text-brand-interactive focus:ring-brand-interactive">
+                            Show Trends
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                            <input type="checkbox" class="rounded border-slate-300 text-brand-interactive focus:ring-brand-interactive">
+                            Compact View
+                        </label>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Bottom Settings -->
+            <div class="pt-4 border-t border-gray-100">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-cog w-5 text-center"></i>
+                    Settings
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CANVAS -->
+        <main class="flex-1 p-6 overflow-auto">
+
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">Market Overview</h1>
+                    <p class="text-xs text-slate-500 mt-1">Real-time market intelligence • EST 14:32</p>
+                </div>
+                <div class="flex gap-2">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Market Open
+                    </span>
+                </div>
+            </div>
+
+            <!-- Bento Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
+
+                <!-- Sentiment Card -->
+                <div class="bento-card p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Sentiment</span>
+                        <i class="fas fa-laugh-beam text-green-500"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2 mb-3">
+                        <span class="text-4xl font-[800] text-green-600">76</span>
+                        <span class="text-sm font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded">Extreme Greed</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-green-400 to-green-600 w-[76%] rounded-full"></div>
+                    </div>
+                </div>
+
+                <!-- Regime Card -->
+                <div class="bento-card p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Regime</span>
+                        <i class="fas fa-bullhorn text-brand-gold"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-bold text-slate-800">Bull Market</span>
+                        <span class="text-xs text-slate-400 mt-1">Liquidity Expanding</span>
+                    </div>
+                    <div class="mt-4 flex gap-1">
+                        <div class="h-6 flex-1 bg-brand-gold rounded"></div>
+                        <div class="h-6 flex-1 bg-brand-gold/40 rounded"></div>
+                        <div class="h-6 flex-1 bg-brand-gold/20 rounded"></div>
+                    </div>
+                </div>
+
+                <!-- Liquidity Card -->
+                <div class="bento-card p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Liquidity</span>
+                        <span class="text-[10px] text-green-600 font-bold bg-green-50 px-2 py-1 rounded">▲ Risk On</span>
+                    </div>
+                    <div class="flex items-baseline gap-2 mb-1">
+                        <span class="text-3xl font-[800] text-slate-800">$6.24T</span>
+                        <span class="text-sm font-bold text-green-600">+$45B</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 mb-3">Net Liquidity (Fed + TGA + RRP)</div>
+                    <div class="h-12 bg-blue-50 rounded border border-blue-100 relative overflow-hidden">
+                        <svg class="absolute bottom-0 left-0 w-full h-full" preserveAspectRatio="none">
+                            <path d="M0,40 Q20,35 40,20 T80,10 T120,30 T160,5 V50 H0 Z" fill="#dbeafe" />
+                            <path d="M0,40 Q20,35 40,20 T80,10 T120,30 T160,5" fill="none" stroke="#2563eb" stroke-width="1.5" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Sector Heatmap (Large) -->
+                <div class="bento-card md:col-span-2 p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Sector Performance</span>
+                        <div class="flex bg-slate-100 rounded-lg p-0.5">
+                            <button class="px-3 py-0.5 text-[10px] font-bold bg-white text-slate-700 rounded shadow-sm">1D</button>
+                            <button class="px-3 py-0.5 text-[10px] font-bold text-slate-400">1W</button>
+                            <button class="px-3 py-0.5 text-[10px] font-bold text-slate-400">1M</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 grid-rows-3 gap-2 h-48">
+                        <div class="col-span-2 row-span-2 bg-emerald-500 rounded-lg p-3 text-white flex flex-col justify-between hover:bg-emerald-600 transition-colors cursor-pointer">
+                            <span class="font-bold text-xs uppercase opacity-80">Technology</span>
+                            <span class="font-[800] text-xl">+2.45%</span>
+                        </div>
+                        <div class="bg-emerald-400 rounded-lg p-2 text-white flex flex-col justify-center items-center">
+                            <span class="text-[9px] font-bold opacity-90">Comm.</span>
+                            <span class="font-bold text-sm">+1.8%</span>
+                        </div>
+                        <div class="bg-rose-400 rounded-lg p-2 text-white flex flex-col justify-center items-center">
+                            <span class="text-[9px] font-bold opacity-90">Health</span>
+                            <span class="font-bold text-sm">-0.8%</span>
+                        </div>
+                        <div class="bg-emerald-300 rounded-lg p-2 text-white flex flex-col justify-center items-center">
+                            <span class="text-[9px] font-bold opacity-90">Finance</span>
+                            <span class="font-bold text-sm">+1.2%</span>
+                        </div>
+                        <div class="bg-slate-200 rounded-lg p-2 text-slate-600 flex flex-col justify-center items-center">
+                            <span class="text-[9px] font-bold">Discret.</span>
+                            <span class="font-bold text-sm">+0.5%</span>
+                        </div>
+                        <div class="bg-rose-300 rounded-lg flex items-center justify-center text-[10px] font-bold text-rose-800">Energy</div>
+                        <div class="bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-600">Util</div>
+                        <div class="bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-600">Real</div>
+                        <div class="bg-emerald-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-emerald-800">Staples</div>
+                    </div>
+                </div>
+
+                <!-- Banking Health -->
+                <div class="bento-card p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Banking</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                    <div class="flex items-center justify-center py-2 mb-3">
+                        <div class="w-20 h-20 rounded-full border-4 border-green-100 border-t-green-500 flex items-center justify-center">
+                            <span class="text-xl font-bold text-green-600">Safe</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-50 rounded p-2 text-center border border-slate-100">
+                            <span class="block text-[10px] text-slate-400">BTFP</span>
+                            <span class="block text-sm font-bold text-slate-700">$124B</span>
+                        </div>
+                        <div class="bg-slate-50 rounded p-2 text-center border border-slate-100">
+                            <span class="block text-[10px] text-slate-400">Discount</span>
+                            <span class="block text-sm font-bold text-slate-700">$2.1B</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Movers -->
+                <div class="bento-card md:col-span-2 lg:col-span-3 p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Top Movers</span>
+                        <a href="#" class="text-xs text-brand-interactive hover:underline">View All →</a>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        <div class="flex items-center gap-3 bg-green-50 rounded-lg p-3 border border-green-100">
+                            <div class="text-sm font-bold text-slate-700">NVDA</div>
+                            <div class="text-sm font-bold text-green-600">+3.2%</div>
+                        </div>
+                        <div class="flex items-center gap-3 bg-green-50 rounded-lg p-3 border border-green-100">
+                            <div class="text-sm font-bold text-slate-700">AMD</div>
+                            <div class="text-sm font-bold text-green-600">+2.8%</div>
+                        </div>
+                        <div class="flex items-center gap-3 bg-green-50 rounded-lg p-3 border border-green-100">
+                            <div class="text-sm font-bold text-slate-700">META</div>
+                            <div class="text-sm font-bold text-green-600">+2.1%</div>
+                        </div>
+                        <div class="flex items-center gap-3 bg-red-50 rounded-lg p-3 border border-red-100">
+                            <div class="text-sm font-bold text-slate-700">TSLA</div>
+                            <div class="text-sm font-bold text-red-500">-1.2%</div>
+                        </div>
+                        <div class="flex items-center gap-3 bg-red-50 rounded-lg p-3 border border-red-100">
+                            <div class="text-sm font-bold text-slate-700">JNJ</div>
+                            <div class="text-sm font-bold text-red-500">-0.9%</div>
+                        </div>
+                        <div class="flex items-center gap-3 bg-red-50 rounded-lg p-3 border border-red-100">
+                            <div class="text-sm font-bold text-slate-700">XOM</div>
+                            <div class="text-sm font-bold text-red-500">-0.7%</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Mobile Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('open');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+        });
+    </script>
+
+</body>
+</html>

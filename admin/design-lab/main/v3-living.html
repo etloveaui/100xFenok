@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main v3 - Living Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                cta: '#FED701'
+              }
+            },
+            fontFamily: {
+              sans: ['Noto Sans KR', 'sans-serif'],
+              orbitron: ['Orbitron', 'sans-serif'],
+            },
+            animation: {
+              'gradient-x': 'gradient-x 15s ease infinite',
+              'float': 'float 6s ease-in-out infinite',
+            },
+            keyframes: {
+              'gradient-x': {
+                '0%, 100%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'left center'
+                },
+                '50%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'right center'
+                },
+              },
+              'float': {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Living Background */
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(213, 173, 54, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+        
+        /* Grid Pattern */
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        /* Focus Mode Card */
+        .living-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* Hover Effect: Lift & Glow */
+        .group:hover .living-card:not(:hover) {
+            opacity: 0.6;
+            transform: scale(0.98);
+            filter: grayscale(0.5);
+        }
+
+        .living-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.05), 
+                0 8px 10px -6px rgba(0, 0, 0, 0.01),
+                0 0 0 4px rgba(59, 130, 246, 0.05);
+            z-index: 10;
+            opacity: 1 !important;
+            filter: grayscale(0) !important;
+        }
+
+        /* Title Style */
+        .section-header {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, #cbd5e1, transparent);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 selection:bg-brand-interactive selection:text-white">
+
+    <!-- Ambient Grid -->
+    <div class="fixed inset-0 bg-grid pointer-events-none z-[-1]"></div>
+
+    <!-- Nav Placeholder -->
+    <nav class="fixed top-0 w-full h-20 z-50 flex items-center justify-center pointer-events-none">
+        <div class="bg-white/90 backdrop-blur-md px-6 py-2 rounded-full border border-slate-200 shadow-sm text-xs font-bold text-slate-400">
+            [ Nav v11 docked here ]
+        </div>
+    </nav>
+
+    <!-- Main Container (Focus Group) -->
+    <main class="container mx-auto px-4 pt-28 pb-20 group">
+        
+        <!-- Header -->
+        <header class="mb-12 animate-float">
+            <h1 class="text-5xl md:text-6xl font-[900] text-slate-900 mb-2 tracking-tight">
+                Market <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-navy to-brand-interactive">Pulse</span>
+            </h1>
+            <p class="text-lg text-slate-500 font-medium max-w-xl">
+                Real-time liquidity tracking and sector performance analysis.
+            </p>
+        </header>
+
+        <!-- Dynamic Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[minmax(160px,auto)]">
+
+            <!-- 1. Market Status (4 cols) -->
+            <div class="md:col-span-4 living-card p-6 flex flex-col justify-between">
+                <div class="section-header text-brand-gold">
+                    <i class="fas fa-bolt"></i> Current Regime
+                </div>
+                <div>
+                    <div class="text-3xl font-[800] text-slate-800">Risk On</div>
+                    <div class="text-sm font-medium text-slate-400 mt-1">High Liquidity Environment</div>
+                </div>
+                <div class="mt-4 flex gap-1">
+                    <div class="h-1.5 flex-1 bg-green-500 rounded-full"></div>
+                    <div class="h-1.5 flex-1 bg-green-500 rounded-full"></div>
+                    <div class="h-1.5 flex-1 bg-green-500 rounded-full"></div>
+                    <div class="h-1.5 flex-1 bg-slate-200 rounded-full"></div>
+                </div>
+            </div>
+
+            <!-- 2. Liquidity (4 cols) -->
+            <div class="md:col-span-4 living-card p-6 relative overflow-hidden">
+                <div class="section-header text-brand-interactive">
+                    <i class="fas fa-water"></i> Global Liquidity
+                </div>
+                <div class="flex items-baseline gap-2 relative z-10">
+                    <span class="text-4xl font-[900] text-slate-900 tracking-tighter">$6.24T</span>
+                    <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold mb-1">▲ 1.2%</span>
+                </div>
+                <!-- Animated Wave -->
+                <div class="absolute bottom-0 left-0 w-[200%] h-24 bg-gradient-to-r from-blue-400/20 to-cyan-300/20 rounded-t-full blur-xl animate-gradient-x"></div>
+            </div>
+
+            <!-- 3. Fear & Greed (4 cols) -->
+            <div class="md:col-span-4 living-card p-6 flex flex-col justify-between bg-gradient-to-br from-white to-green-50/50">
+                <div class="section-header text-green-600">
+                    <i class="fas fa-thermometer-half"></i> Sentiment
+                </div>
+                <div class="flex justify-between items-end">
+                    <span class="text-5xl font-[900] text-green-600">76</span>
+                    <span class="text-sm font-bold text-green-700 mb-2 uppercase tracking-wider">Extreme Greed</span>
+                </div>
+                <div class="w-full bg-slate-200 h-1 mt-4">
+                    <div class="h-full bg-green-500 w-[76%] relative">
+                        <div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-white border-2 border-green-500 rounded-full shadow"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Sector Heatmap (8 cols, 2 rows) -->
+            <div class="md:col-span-8 md:row-span-2 living-card p-6 flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="section-header text-brand-navy w-full">
+                        <i class="fas fa-th-large"></i> Sector Performance
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 text-[10px] font-bold bg-slate-100 rounded-full hover:bg-slate-200 transition-colors text-slate-500">1D</button>
+                        <button class="px-3 py-1 text-[10px] font-bold bg-white border border-slate-200 rounded-full hover:bg-slate-50 transition-colors text-slate-400">1W</button>
+                    </div>
+                </div>
+                
+                <div class="flex-1 grid grid-cols-4 grid-rows-3 gap-3">
+                    <div class="col-span-2 row-span-2 bg-emerald-500 rounded-xl p-4 text-white flex flex-col justify-between hover:scale-[1.02] transition-transform shadow-lg shadow-emerald-500/20 cursor-pointer">
+                        <span class="font-bold tracking-wide text-sm opacity-90">Technology</span>
+                        <span class="font-[800] text-2xl">+2.45%</span>
+                    </div>
+                    <div class="bg-rose-400 rounded-xl p-3 text-white flex flex-col justify-center items-center hover:scale-[1.05] transition-transform shadow-lg shadow-rose-400/20">
+                        <span class="font-bold text-xs opacity-90">Health</span>
+                        <span class="font-[800]">-0.8%</span>
+                    </div>
+                    <div class="bg-emerald-400 rounded-xl p-3 text-white flex flex-col justify-center items-center hover:scale-[1.05] transition-transform shadow-lg shadow-emerald-400/20">
+                        <span class="font-bold text-xs opacity-90">Finance</span>
+                        <span class="font-[800]">+1.2%</span>
+                    </div>
+                    <div class="col-span-2 bg-slate-200 rounded-xl p-3 text-slate-600 flex justify-between items-center px-4 hover:bg-slate-300 transition-colors">
+                        <span class="font-bold text-xs">Consumer Disc.</span>
+                        <span class="font-[800]">+0.5%</span>
+                    </div>
+                    <!-- Placeholders -->
+                    <div class="bg-rose-300 rounded-xl"></div>
+                    <div class="bg-emerald-300 rounded-xl"></div>
+                </div>
+            </div>
+
+            <!-- 5. News Feed (4 cols, 2 rows) -->
+            <div class="md:col-span-4 md:row-span-2 living-card p-0 flex flex-col">
+                <div class="p-6 border-b border-slate-100">
+                    <div class="section-header text-slate-400 mb-0">
+                        <i class="far fa-newspaper"></i> Briefing
+                    </div>
+                </div>
+                <div class="flex-1 p-2 overflow-y-auto">
+                    <a href="#" class="block p-4 rounded-xl hover:bg-slate-50 transition-all group/news">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
+                            <span class="text-[10px] font-bold text-brand-gold tracking-wider">MARKET WRAP</span>
+                        </div>
+                        <h3 class="text-sm font-bold text-slate-700 leading-snug group-hover/news:text-brand-interactive transition-colors">
+                            Fed holds rates steady, signals 3 cuts in 2024
+                        </h3>
+                    </a>
+                    <a href="#" class="block p-4 rounded-xl hover:bg-slate-50 transition-all group/news">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                            <span class="text-[10px] font-bold text-slate-400 tracking-wider">ALPHA SCOUT</span>
+                        </div>
+                        <h3 class="text-sm font-bold text-slate-700 leading-snug group-hover/news:text-brand-interactive transition-colors">
+                            Tech sector rotation analysis
+                        </h3>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Floating Action Button (Mobile Friendly) -->
+    <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        <button class="w-12 h-12 bg-white rounded-full shadow-lg border border-slate-100 text-slate-400 hover:text-brand-navy hover:scale-110 transition-all flex items-center justify-center">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+        <button class="w-14 h-14 bg-brand-navy text-white rounded-full shadow-xl shadow-brand-navy/30 hover:bg-brand-interactive hover:scale-110 transition-all flex items-center justify-center text-xl">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+
+</body>
+</html>

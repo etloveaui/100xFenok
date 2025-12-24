@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main v7 - Tabbed Panels</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                cta: '#FED701'
+              }
+            },
+            fontFamily: {
+              sans: ['Noto Sans KR', 'sans-serif'],
+              orbitron: ['Orbitron', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
+
+        /* Tab Styles */
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-button:hover {
+            color: #1e293b;
+            background: #f1f5f9;
+        }
+        .tab-button.active {
+            color: #010079;
+            border-bottom-color: #D5AD36;
+            background: white;
+        }
+
+        /* Tab Content Animation */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Nav Placeholder -->
+    <nav class="sticky top-0 w-full h-14 bg-white/90 backdrop-blur border-b border-gray-200 z-50 flex items-center justify-center text-xs font-bold text-slate-400">
+        [ Nav v11 docked here ]
+    </nav>
+
+    <main class="container mx-auto px-4 py-6 max-w-7xl">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fas fa-th-large text-brand-navy"></i> Market Dashboard
+                </h1>
+                <p class="text-xs text-slate-500 mt-1">SPA-style tabbed panels • EST 14:32</p>
+            </div>
+            <div class="flex gap-2">
+                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Market Open
+                </span>
+            </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="bg-white rounded-t-xl border border-gray-200 border-b-0 overflow-x-auto">
+            <div class="flex">
+                <button class="tab-button active" data-tab="overview">
+                    <i class="fas fa-chart-pie mr-2"></i>Overview
+                </button>
+                <button class="tab-button" data-tab="sectors">
+                    <i class="fas fa-layer-group mr-2"></i>Sectors
+                </button>
+                <button class="tab-button" data-tab="liquidity">
+                    <i class="fas fa-water mr-2"></i>Liquidity
+                </button>
+                <button class="tab-button" data-tab="health">
+                    <i class="fas fa-building-columns mr-2"></i>Health
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content Container -->
+        <div class="bg-white rounded-b-xl border border-gray-200 p-6 min-h-[500px]">
+
+            <!-- OVERVIEW TAB -->
+            <div id="overview" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- F&G Card -->
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Fear & Greed</span>
+                            <i class="fas fa-laugh-beam text-2xl text-green-500"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2 mb-3">
+                            <span class="text-5xl font-[800] text-green-600">76</span>
+                            <span class="text-sm font-bold text-green-700">Extreme Greed</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-green-400 to-green-600 w-[76%]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Regime Card -->
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Market Regime</span>
+                            <i class="fas fa-bullhorn text-2xl text-brand-gold"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-slate-800 mb-2">Bull Market</div>
+                        <div class="text-sm text-slate-500">Liquidity Expanding</div>
+                        <div class="mt-4 flex gap-1">
+                            <div class="h-8 flex-1 bg-brand-gold rounded"></div>
+                            <div class="h-8 flex-1 bg-brand-gold/40 rounded"></div>
+                            <div class="h-8 flex-1 bg-brand-gold/20 rounded"></div>
+                        </div>
+                    </div>
+
+                    <!-- Market Status Card -->
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Market Status</span>
+                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">S&P 500</span>
+                                <span class="font-bold text-green-600">+0.4%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">NASDAQ</span>
+                                <span class="font-bold text-red-500">-0.1%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">VIX</span>
+                                <span class="font-bold text-slate-700">12.45</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Briefing Section -->
+                <div class="card p-0 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-slate-50/50 flex justify-between items-center">
+                        <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                            <i class="fas fa-newspaper text-brand-navy"></i> Briefing Feed
+                        </span>
+                        <a href="#" class="text-xs text-brand-interactive hover:underline">View All →</a>
+                    </div>
+                    <div class="divide-y divide-gray-50">
+                        <a href="#" class="block px-6 py-4 hover:bg-blue-50/50 transition-colors">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="px-2 py-0.5 rounded bg-brand-gold/10 text-brand-gold text-[9px] font-bold">DAILY</span>
+                                <span class="text-[10px] text-slate-400">2h ago</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-700">Fed holds rates steady, signals 3 cuts in 2024</h4>
+                        </a>
+                        <a href="#" class="block px-6 py-4 hover:bg-blue-50/50 transition-colors">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="px-2 py-0.5 rounded bg-brand-interactive/10 text-brand-interactive text-[9px] font-bold">WEEKLY</span>
+                                <span class="text-[10px] text-slate-400">Yesterday</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-700">Tech sector rotation: Key levels to watch</h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTORS TAB -->
+            <div id="sectors" class="tab-content">
+                <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-layer-group text-brand-navy"></i> Sector Performance
+                </h2>
+                <div class="grid grid-cols-4 grid-rows-4 gap-3 h-96">
+                    <div class="col-span-2 row-span-2 bg-emerald-500 rounded-xl p-4 text-white flex flex-col justify-between hover:bg-emerald-600 transition-colors cursor-pointer">
+                        <div>
+                            <i class="fas fa-microchip text-4xl opacity-30"></i>
+                            <span class="block font-bold text-sm uppercase mt-2">Technology</span>
+                        </div>
+                        <span class="font-[800] text-3xl">+2.45%</span>
+                    </div>
+                    <div class="col-span-2 bg-emerald-400 rounded-xl p-3 text-white flex justify-between items-center">
+                        <span class="font-bold text-sm">Comm. Services</span>
+                        <span class="font-[800] text-xl">+1.8%</span>
+                    </div>
+                    <div class="bg-rose-400 rounded-xl p-3 text-white flex flex-col justify-center items-center">
+                        <span class="text-[10px] font-bold opacity-90">Healthcare</span>
+                        <span class="font-[800] text-lg">-0.8%</span>
+                    </div>
+                    <div class="bg-emerald-300 rounded-xl p-3 text-white flex flex-col justify-center items-center">
+                        <span class="text-[10px] font-bold opacity-90">Financials</span>
+                        <span class="font-[800] text-lg">+1.2%</span>
+                    </div>
+                    <div class="bg-slate-200 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600">Consumer Disc.</div>
+                    <div class="bg-rose-300 rounded-xl flex items-center justify-center text-xs font-bold text-rose-800">Energy</div>
+                    <div class="bg-slate-200 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600">Utilities</div>
+                    <div class="bg-slate-200 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600">Real Estate</div>
+                    <div class="bg-emerald-200 rounded-xl flex items-center justify-center text-xs font-bold text-emerald-800">Consumer Staples</div>
+                    <div class="bg-slate-200 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600">Materials</div>
+                    <div class="bg-emerald-200 rounded-xl flex items-center justify-center text-xs font-bold text-emerald-800">Industrials</div>
+                </div>
+            </div>
+
+            <!-- LIQUIDITY TAB -->
+            <div id="liquidity" class="tab-content">
+                <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-water text-brand-interactive"></i> Liquidity Monitor
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="card p-6">
+                        <div class="text-xs font-bold text-slate-500 uppercase mb-3">Net Liquidity</div>
+                        <div class="text-4xl font-[800] text-slate-800">$6.24T</div>
+                        <div class="text-sm font-bold text-green-600 mt-1">▲ +$45B (1W)</div>
+                        <div class="mt-4 h-20 bg-blue-50 rounded-lg border border-blue-100 relative overflow-hidden">
+                            <svg class="absolute bottom-0 left-0 w-full h-full" preserveAspectRatio="none">
+                                <path d="M0,60 Q40,50 80,30 T160,20 T240,50 V100 H0 Z" fill="#dbeafe" />
+                                <path d="M0,60 Q40,50 80,30 T160,20 T240,50" fill="none" stroke="#2563eb" stroke-width="2" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <div class="text-xs font-bold text-slate-500 uppercase mb-3">TGA Balance</div>
+                        <div class="text-4xl font-[800] text-slate-800">$800B</div>
+                        <div class="text-sm font-bold text-red-500 mt-1">▼ -$12B (1W)</div>
+                        <div class="mt-4 h-20 bg-amber-50 rounded-lg border border-amber-100 relative overflow-hidden">
+                            <svg class="absolute bottom-0 left-0 w-full h-full" preserveAspectRatio="none">
+                                <path d="M0,30 Q40,40 80,60 T160,50 T240,70 V100 H0 Z" fill="#fef3c7" />
+                                <path d="M0,30 Q40,40 80,60 T160,50 T240,70" fill="none" stroke="#d97706" stroke-width="2" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <div class="text-xs font-bold text-slate-500 uppercase mb-3">RRP Balance</div>
+                        <div class="text-4xl font-[800] text-slate-800">$500B</div>
+                        <div class="text-sm font-bold text-green-600 mt-1">▼ Draining (Good)</div>
+                        <div class="mt-4 h-20 bg-green-50 rounded-lg border border-green-100 relative overflow-hidden">
+                            <svg class="absolute bottom-0 left-0 w-full h-full" preserveAspectRatio="none">
+                                <path d="M0,30 Q40,50 80,60 T160,70 T240,80 V100 H0 Z" fill="#dcfce7" />
+                                <path d="M0,30 Q40,50 80,60 T160,70 T240,80" fill="none" stroke="#16a34a" stroke-width="2" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <div class="text-xs font-bold text-slate-500 uppercase mb-4">Liquidity Components Breakdown</div>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600">Fed Balance Sheet</span>
+                                <span class="font-bold text-slate-700">$7.5T</span>
+                            </div>
+                            <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-brand-navy rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600">TGA (Treasury)</span>
+                                <span class="font-bold text-slate-700">$800B</span>
+                            </div>
+                            <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-brand-gold rounded-full" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600">RRP (Reverse Repo)</span>
+                                <span class="font-bold text-slate-700">$500B</span>
+                            </div>
+                            <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-brand-interactive rounded-full" style="width: 30%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HEALTH TAB -->
+            <div id="health" class="tab-content">
+                <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-building-columns text-brand-gold"></i> Banking Health
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Status Card -->
+                    <div class="card p-6">
+                        <div class="text-xs font-bold text-slate-500 uppercase mb-4">System Status</div>
+                        <div class="flex items-center justify-center py-6">
+                            <div class="w-32 h-32 rounded-full border-8 border-green-100 border-t-green-500 flex items-center justify-center">
+                                <div class="text-center">
+                                    <span class="text-3xl font-bold text-green-600 block">Safe</span>
+                                    <span class="text-xs text-slate-400">Low Stress</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center text-sm text-slate-500">Banking system operating normally</div>
+                    </div>
+
+                    <!-- Metrics Card -->
+                    <div class="card p-6">
+                        <div class="text-xs font-bold text-slate-500 uppercase mb-4">Key Metrics</div>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <div>
+                                    <span class="text-sm font-bold text-slate-700">BTFP Utilization</span>
+                                    <span class="block text-xs text-slate-400">Bank Term Funding</span>
+                                </div>
+                                <span class="text-xl font-bold text-slate-700">$124B</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <div>
+                                    <span class="text-sm font-bold text-slate-700">Discount Window</span>
+                                    <span class="block text-xs text-slate-400">Emergency Lending</span>
+                                </div>
+                                <span class="text-xl font-bold text-green-600">$2.1B</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <div>
+                                    <span class="text-sm font-bold text-slate-700">SOFR-IORB Spread</span>
+                                    <span class="block text-xs text-slate-400">Liquidity Stress</span>
+                                </div>
+                                <span class="text-xl font-bold text-green-600">+2 bps</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // Tab Switching Logic
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+
+                // Remove active from all
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Add active to clicked
+                button.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
+
+</body>
+</html>
