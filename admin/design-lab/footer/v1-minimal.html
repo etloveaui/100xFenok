@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer v1 - Pure Minimal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#010079',
+                            gold: '#D5AD36',
+                            interactive: '#1B73D3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        body { font-family: 'Noto Sans KR', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-[200px] flex flex-col justify-end">
+
+    <!-- v1: Pure Minimal (Updated) -->
+    <footer class="bg-white border-t border-slate-200">
+        <div class="container mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+            
+            <!-- Left: Brand Identity -->
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="alert('URL 복사 기능 실행')">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-brand-navy group-hover:bg-brand-navy group-hover:text-white transition-colors">
+                    <i class="fas fa-chart-line text-sm"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-[900] orbitron text-slate-800 text-sm leading-none group-hover:text-brand-interactive transition-colors">100x <span class="text-brand-gold">FENOK</span></span>
+                    <span class="text-[10px] text-slate-400 font-medium">© 2025</span>
+                </div>
+            </div>
+
+            <!-- Right: Status & Info -->
+            <div class="flex items-center gap-4 sm:gap-6">
+                <!-- Status Indicator (Mobile: Dot only) -->
+                <div class="flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full bg-slate-50 border border-slate-100 hover:bg-slate-100 cursor-pointer transition-colors" onclick="alert('관리자 모드 진입')">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="hidden sm:inline text-[10px] font-bold text-slate-600 uppercase tracking-wider">Alive</span>
+                </div>
+
+                <!-- Witty Message (Updated) -->
+                <p class="hidden md:block text-xs text-slate-500 font-medium">
+                    "모든 정보는 투자 참고용이지만, <span class="text-slate-800 font-bold">손실 나면 니 탓 수익 나면 내 탓</span>"
+                </p>
+            </div>
+
+        </div>
+    </footer>
+
+</body>
+</html>

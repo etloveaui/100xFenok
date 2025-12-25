@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main v17.6 - Command Bar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#f8fafc'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8fafc; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Command Bar */
+        .command-bar {
+            position: sticky;
+            top: 64px;
+            z-index: 40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Tab Pills */
+        .tab-pills {
+            display: flex;
+            gap: 0.25rem;
+            background: #f1f5f9;
+            padding: 0.25rem;
+            border-radius: 9999px;
+        }
+        .tab-pill {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            border-radius: 9999px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .tab-pill:hover { color: #1e293b; }
+        .tab-pill.active {
+            background: #010079;
+            color: white;
+            box-shadow: 0 2px 4px rgba(1, 0, 121, 0.3);
+        }
+
+        /* Period Pills */
+        .period-pills {
+            display: flex;
+            gap: 0.125rem;
+            background: #f1f5f9;
+            padding: 0.25rem;
+            border-radius: 0.75rem;
+        }
+        .period-pill {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.625rem;
+            font-weight: 600;
+            color: #64748b;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .period-pill.active {
+            background: #D5AD36;
+            color: #010079;
+        }
+
+        /* Search */
+        .search-trigger {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .search-trigger:hover { background: #e2e8f0; }
+        .search-kbd {
+            font-size: 0.625rem;
+            padding: 0.125rem 0.375rem;
+            background: white;
+            border-radius: 0.25rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Search Modal */
+        .search-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 15vh;
+        }
+        .search-modal.active { display: flex; }
+        .search-box {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        .search-input {
+            width: 100%;
+            padding: 1.25rem;
+            font-size: 1.125rem;
+            border: none;
+            outline: none;
+        }
+        .search-results {
+            border-top: 1px solid #e2e8f0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .search-item {
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .search-item:hover { background: #f8fafc; }
+
+        /* Bento */
+        .bento-card {
+            background: white;
+            border-radius: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tab Content */
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 히트맵 */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 4px;
+            height: 280px;
+        }
+        .heatmap-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .heatmap-cell:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .heatmap-cell.xlk { grid-column: span 2; grid-row: span 2; }
+        .heatmap-cell.xlf { grid-row: span 2; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .command-bar { flex-direction: column; align-items: stretch; }
+            .tab-pills { justify-content: center; }
+            .period-pills { justify-content: center; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Nav -->
+    <nav class="w-full bg-white shadow-lg border-b border-gray-100 sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 py-3">
+            <div class="flex justify-between items-center">
+                <a href="#" class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md border border-slate-100">
+                        <img src="../../../favicon.svg" alt="Logo" class="h-8 w-8">
+                    </div>
+                    <div>
+                        <span class="font-[900] orbitron text-slate-800 text-xl">100x <span class="text-brand-gold">FENOK</span></span>
+                        <p class="text-[10px] text-slate-400 tracking-widest">COMMAND BAR</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Command Bar: 탭 + 기간 + 검색 통합 -->
+    <div class="command-bar">
+        <!-- 탭 Pills -->
+        <div class="tab-pills">
+            <button class="tab-pill active" data-tab="overview">Overview</button>
+            <button class="tab-pill" data-tab="sectors">Sectors</button>
+            <button class="tab-pill" data-tab="liquidity">Liquidity</button>
+            <button class="tab-pill" data-tab="sentiment">Sentiment</button>
+        </div>
+
+        <!-- 기간 Pills -->
+        <div class="period-pills">
+            <button class="period-pill" data-period="1D">1D</button>
+            <button class="period-pill active" data-period="1W">1W</button>
+            <button class="period-pill" data-period="1M">1M</button>
+            <button class="period-pill" data-period="YTD">YTD</button>
+            <button class="period-pill" data-period="1Y">1Y</button>
+            <button class="period-pill" data-period="ALL">ALL</button>
+        </div>
+
+        <!-- 검색 트리거 -->
+        <button class="search-trigger" id="searchTrigger">
+            <i class="fas fa-search"></i>
+            <span>Search...</span>
+            <span class="search-kbd">⌘K</span>
+        </button>
+    </div>
+
+    <!-- Main -->
+    <main class="container mx-auto px-4 py-6">
+
+        <!-- Tab: Overview -->
+        <div id="tab-overview" class="tab-content active">
+            <!-- Hero Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- F&G -->
+                <div class="bento-card p-6">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-4 orbitron">FEAR & GREED INDEX</h3>
+                    <div class="flex items-center gap-6">
+                        <div class="relative w-24 h-12">
+                            <svg viewBox="0 0 100 50" class="w-full h-full">
+                                <defs>
+                                    <linearGradient id="gaugeG6" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ef4444"/>
+                                        <stop offset="50%" stop-color="#eab308"/>
+                                        <stop offset="100%" stop-color="#22c55e"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>
+                                <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="url(#gaugeG6)" stroke-width="8" stroke-linecap="round" stroke-dasharray="126" stroke-dashoffset="35"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-4xl font-bold text-brand-navy orbitron">72</span>
+                            <span class="ml-2 px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-sm">GREED</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Regime -->
+                <div class="bento-card p-6">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-4 orbitron">MARKET REGIME</h3>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="px-4 py-2 rounded-full font-bold text-sm bg-gradient-to-r from-green-500 to-green-600 text-white">
+                                <i class="fas fa-rocket mr-2"></i>RISK-ON
+                            </span>
+                            <span class="text-sm text-slate-600 font-bold">Bullish Momentum</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-400">Confidence</p>
+                            <p class="text-2xl font-bold text-green-600 orbitron">87%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sector Heatmap -->
+            <div class="bento-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest orbitron">SECTOR PERFORMANCE</h3>
+                    <span class="text-xs text-slate-400">Treemap by Market Cap</span>
+                </div>
+                <div class="heatmap-grid">
+                    <div class="heatmap-cell xlk bg-green-500 text-white"><span class="font-bold text-lg">XLK</span><span class="text-sm">Tech</span><span class="font-bold">+2.34%</span></div>
+                    <div class="heatmap-cell xlf bg-green-400 text-white"><span class="font-bold">XLF</span><span class="text-xs">+1.56%</span></div>
+                    <div class="heatmap-cell bg-green-300 text-green-800"><span class="font-bold">XLV</span><span class="text-xs">+0.89%</span></div>
+                    <div class="heatmap-cell bg-red-400 text-white"><span class="font-bold">XLE</span><span class="text-xs">-1.23%</span></div>
+                    <div class="heatmap-cell bg-green-200 text-green-800"><span class="font-bold">XLI</span><span class="text-xs">+0.45%</span></div>
+                    <div class="heatmap-cell bg-green-400 text-white"><span class="font-bold">XLC</span><span class="text-xs">+1.12%</span></div>
+                    <div class="heatmap-cell bg-red-300 text-red-800"><span class="font-bold">XLY</span><span class="text-xs">-0.67%</span></div>
+                    <div class="heatmap-cell bg-slate-200 text-slate-600"><span class="font-bold">XLP</span><span class="text-xs">+0.12%</span></div>
+                    <div class="heatmap-cell bg-red-200 text-red-700"><span class="font-bold">XLRE</span><span class="text-xs">-0.34%</span></div>
+                    <div class="heatmap-cell bg-green-300 text-green-800"><span class="font-bold">XLB</span><span class="text-xs">+0.78%</span></div>
+                    <div class="heatmap-cell bg-red-500 text-white"><span class="font-bold">XLU</span><span class="text-xs">-1.89%</span></div>
+                </div>
+            </div>
+
+            <!-- Widget Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bento-card p-6">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-4 orbitron">LIQUIDITY FLOW</h3>
+                    <div class="flex items-center justify-between">
+                        <span class="text-3xl font-bold text-brand-navy orbitron">+$87B</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold">WoW</span>
+                    </div>
+                </div>
+                <div class="bento-card p-6">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-4 orbitron">BANKING HEALTH</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-xl font-bold text-green-600">Stable</span>
+                    </div>
+                </div>
+                <div class="bento-card p-6">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-4 orbitron">STRESS INDEX</h3>
+                    <div class="flex items-center justify-between">
+                        <span class="text-3xl font-bold text-green-600 orbitron">0.12</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold">Low</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Tabs -->
+        <div id="tab-sectors" class="tab-content">
+            <div class="bento-card p-8 text-center">
+                <i class="fas fa-chart-pie text-6xl text-slate-300 mb-4"></i>
+                <h3 class="text-xl font-bold text-slate-700">Sectors Deep Dive</h3>
+            </div>
+        </div>
+        <div id="tab-liquidity" class="tab-content">
+            <div class="bento-card p-8 text-center">
+                <i class="fas fa-water text-6xl text-blue-300 mb-4"></i>
+                <h3 class="text-xl font-bold text-slate-700">Liquidity Analysis</h3>
+            </div>
+        </div>
+        <div id="tab-sentiment" class="tab-content">
+            <div class="bento-card p-8 text-center">
+                <i class="fas fa-heart-pulse text-6xl text-red-300 mb-4"></i>
+                <h3 class="text-xl font-bold text-slate-700">Sentiment Indicators</h3>
+            </div>
+        </div>
+    </main>
+
+    <!-- Search Modal -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Search symbols, indicators, settings..." id="searchInput">
+            <div class="search-results">
+                <div class="search-item"><i class="fas fa-chart-line text-brand-navy mr-3"></i>SPY - S&P 500 ETF</div>
+                <div class="search-item"><i class="fas fa-chart-line text-brand-navy mr-3"></i>QQQ - Nasdaq 100 ETF</div>
+                <div class="search-item"><i class="fas fa-water text-blue-500 mr-3"></i>Liquidity Flow Monitor</div>
+                <div class="search-item"><i class="fas fa-gauge text-green-500 mr-3"></i>Fear & Greed Index</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Period toggle
+        document.querySelectorAll('.period-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.period-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Search Modal
+        const searchModal = document.getElementById('searchModal');
+        const searchTrigger = document.getElementById('searchTrigger');
+        const searchInput = document.getElementById('searchInput');
+
+        searchTrigger.addEventListener('click', () => {
+            searchModal.classList.add('active');
+            searchInput.focus();
+        });
+
+        searchModal.addEventListener('click', (e) => {
+            if (e.target === searchModal) {
+                searchModal.classList.remove('active');
+            }
+        });
+
+        // Cmd+K shortcut
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                searchModal.classList.add('active');
+                searchInput.focus();
+            }
+            if (e.key === 'Escape') {
+                searchModal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

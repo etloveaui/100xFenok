@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer v9 - Split Islands</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#010079',
+                            gold: '#D5AD36',
+                            interactive: '#1B73D3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        body { font-family: 'Noto Sans KR', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-[300px] relative">
+
+    <!-- Demo Content -->
+    <div class="p-8 text-center text-slate-400">
+        <p>Main Content Area</p>
+        <div class="h-[400px]"></div>
+    </div>
+
+    <!-- v9: Split Islands (Corner Anchored) -->
+    <!-- 중앙을 비워두고 양쪽 구석에 플로팅 배치 -->
+    
+    <!-- Left Island: Brand -->
+    <div class="fixed bottom-6 left-6 z-50">
+        <div class="bg-white/90 backdrop-blur-md shadow-lg border border-white/20 rounded-full px-4 py-2 flex items-center gap-2 transition-transform hover:scale-105">
+            <i class="fas fa-chart-line text-brand-navy"></i>
+            <span class="font-[900] orbitron text-slate-800 text-xs">100x</span>
+        </div>
+    </div>
+
+    <!-- Right Island: Status & Witty -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <div class="bg-white/90 backdrop-blur-md shadow-lg border border-white/20 rounded-full pl-4 pr-2 py-2 flex items-center gap-3 transition-transform hover:scale-105 group">
+            
+            <span class="text-[10px] font-bold text-slate-600 hidden sm:inline group-hover:hidden">
+                System Alive
+            </span>
+            
+            <!-- Hover 시 등장하는 Witty Text -->
+            <span class="text-[10px] font-bold text-brand-navy hidden group-hover:inline whitespace-nowrap">
+                손실은 니 탓, 수익은 내 탓
+            </span>
+
+            <div class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
