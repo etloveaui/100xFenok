@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculators Design Gallery - 100x Design Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .gallery-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s; border: 1px solid #e2e8f0; }
+        .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #010079; }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <a href="../index.html" class="text-slate-400 hover:text-slate-600 text-sm font-bold mb-2 block">← Dashboard</a>
+                <h1 class="text-3xl font-bold text-slate-800">🧮 Calculators Gallery</h1>
+                <p class="text-slate-500">IB(무한매수), VR(밸류 리밸런싱) 등 도구형 페이지 리디자인</p>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- v1: Fintech Standard -->
+            <div class="gallery-card border-2 border-blue-400 shadow-lg">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-blue-500">📱</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-blue-100 text-blue-700">🔥 작업 중</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">v1: Fintech Standard</h3>
+                    <p class="text-sm text-slate-500 mb-6">토스/카뱅 스타일. 둥근 카드와 부드러운 인터랙션. (Mobile-First)</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v1-fintech-standard.html</span>
+                        <a href="v1-fintech-standard.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v2: Pro Dark -->
+            <div class="gallery-card opacity-60 grayscale">
+                <div class="h-48 bg-slate-900 flex items-center justify-center border-b border-slate-700 relative">
+                    <span class="text-4xl text-slate-600">💹</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-slate-700 text-slate-400">준비 중</span>
+                    </div>
+                </div>
+                <div class="p-6 bg-slate-50">
+                    <h3 class="font-bold text-xl mb-2 text-slate-400">v2: Pro Trader</h3>
+                    <p class="text-sm text-slate-400 mb-6">바이낸스/영웅문 스타일. 다크모드 기반의 고밀도 정보.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-300">Preparing...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v3: Swiss Functional -->
+            <div class="gallery-card opacity-60 grayscale">
+                <div class="h-48 bg-white flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-slate-300">📐</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-slate-200 text-slate-500">준비 중</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-400">v3: Swiss Functional</h3>
+                    <p class="text-sm text-slate-400 mb-6">계산기 본연에 집중한 타이포그래피 중심 디자인.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-300">Preparing...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
