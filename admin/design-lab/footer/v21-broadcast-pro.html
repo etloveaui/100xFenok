@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer v21 - Broadcast HUD Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#010079',
+                            gold: '#D5AD36',
+                            interactive: '#1B73D3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        body { font-family: 'Noto Sans KR', sans-serif; }
+
+        /* Ticker scroll */
+        .ticker-scroll {
+            display: flex;
+            animation: ticker 12s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Glow effect */
+        .glow-bar {
+            box-shadow: 0 0 15px rgba(1, 0, 121, 0.25);
+        }
+
+        /* Toast */
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .toast-animate { animation: toast-in 0.3s ease-out; }
+
+        /* Market status colors */
+        .market-regular { background: linear-gradient(135deg, #10b981, #059669); }
+        .market-pre { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .market-after { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .market-overnight { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .market-closed { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+        /* Admin modal */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+    <!-- Content -->
+    <main class="flex-1 container mx-auto px-4 py-12">
+        <div class="text-center">
+            <h1 class="text-4xl font-bold text-brand-navy orbitron mb-4">Footer v21 - Broadcast HUD Pro</h1>
+            <p class="text-slate-600 mb-2">v20 개선: 슬림화 + 미국 장 실시간 동기화</p>
+            <p class="text-sm text-slate-500">PRE / OPEN / AFTER / NIGHT / CLOSED</p>
+        </div>
+
+        <div class="h-64"></div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-brand-navy mb-4">v20 대비 변경점</h2>
+            <ul class="space-y-2 text-slate-600">
+                <li class="flex items-start gap-2">
+                    <i class="fas fa-check text-green-500 mt-1"></i>
+                    <span><strong>장 상태 티커 우측 고정:</strong> 스트리밍 데이터 옆에 배치</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fas fa-check text-green-500 mt-1"></i>
+                    <span><strong>영어 단어:</strong> PRE / OPEN / AFTER / NIGHT / CLOSED</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fas fa-check text-green-500 mt-1"></i>
+                    <span><strong>설정 → 관리자:</strong> 비밀번호 입력 후 이동</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-32">
+            <h2 class="text-2xl font-bold text-brand-navy mb-4">미국 장 시간표</h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-center text-sm">
+                <div class="p-3 rounded-lg market-pre text-white">
+                    <div class="font-bold">🟡 PRE</div>
+                    <div class="text-xs opacity-90">04:00-09:30 ET</div>
+                </div>
+                <div class="p-3 rounded-lg market-regular text-white">
+                    <div class="font-bold">🟢 OPEN</div>
+                    <div class="text-xs opacity-90">09:30-16:00 ET</div>
+                </div>
+                <div class="p-3 rounded-lg market-after text-white">
+                    <div class="font-bold">🟠 AFTER</div>
+                    <div class="text-xs opacity-90">16:00-20:00 ET</div>
+                </div>
+                <div class="p-3 rounded-lg market-overnight text-white">
+                    <div class="font-bold">🔵 NIGHT</div>
+                    <div class="text-xs opacity-90">20:00-04:00 ET</div>
+                </div>
+                <div class="p-3 rounded-lg market-closed text-white">
+                    <div class="font-bold">⚫ CLOSED</div>
+                    <div class="text-xs opacity-90">주말/공휴일</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 bg-brand-navy text-white text-sm font-medium rounded-lg shadow-lg hidden z-50"></div>
+
+    <!-- Admin Password Modal -->
+    <div id="admin-modal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-80 max-w-[90vw]">
+            <h3 class="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
+                <i class="fas fa-lock text-brand-interactive"></i>
+                관리자 인증
+            </h3>
+            <input
+                type="password"
+                id="admin-password"
+                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-interactive mb-4"
+                placeholder="비밀번호 입력"
+                onkeydown="if(event.key==='Enter') checkAdminPassword()"
+            >
+            <div class="flex gap-2">
+                <button
+                    class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
+                    onclick="closeAdminModal()"
+                >
+                    취소
+                </button>
+                <button
+                    class="flex-1 px-4 py-2 bg-brand-interactive hover:bg-brand-navy text-white rounded-lg font-medium transition-colors"
+                    onclick="checkAdminPassword()"
+                >
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer v21: Broadcast HUD Pro -->
+    <footer class="fixed bottom-0 left-0 right-0 z-40">
+        <!-- Upper Ticker Bar - Slim with Market Status on Right -->
+        <div class="hidden md:block bg-gradient-to-r from-brand-navy via-brand-interactive to-brand-navy glow-bar overflow-hidden">
+            <div class="h-6 flex items-center px-4">
+                <!-- Left: LIVE Badge -->
+                <div class="flex items-center gap-1.5 flex-shrink-0 mr-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                    <span class="text-[9px] font-bold text-white uppercase">LIVE</span>
+                </div>
+
+                <!-- Center: Data Ticker -->
+                <div class="flex-1 overflow-hidden">
+                    <div class="ticker-scroll">
+                        <div class="flex items-center gap-3 text-[10px] font-medium text-white/90 whitespace-nowrap">
+                            <span class="text-green-300 font-semibold">SPY +1.24%</span>
+                            <span class="text-white/40">•</span>
+                            <span class="text-brand-gold font-semibold">BTC $98,432</span>
+                            <span class="text-white/40">•</span>
+                            <span>VIX <span class="text-cyan-300">14.2</span></span>
+                            <span class="text-white/40">•</span>
+                            <span>FEAR <span class="text-orange-300">72</span></span>
+                            <span class="text-white/30 mx-3">───</span>
+                            <!-- Duplicate -->
+                            <span class="text-green-300 font-semibold">SPY +1.24%</span>
+                            <span class="text-white/40">•</span>
+                            <span class="text-brand-gold font-semibold">BTC $98,432</span>
+                            <span class="text-white/40">•</span>
+                            <span>VIX <span class="text-cyan-300">14.2</span></span>
+                            <span class="text-white/40">•</span>
+                            <span>FEAR <span class="text-orange-300">72</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Market Status Badge (Fixed) - v20 Style -->
+                <button
+                    id="market-badge"
+                    class="px-2.5 py-1 rounded text-white text-[10px] font-bold tracking-wide shadow-sm transition-all duration-200 hover:scale-105 hover:brightness-110 ml-3 flex-shrink-0"
+                    onclick="showMarketInfo()"
+                    aria-label="장 상태"
+                >
+                    <span id="market-text">MARKET OPEN</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Bar - Compact -->
+        <div class="bg-white/95 backdrop-blur-md border-t border-brand-navy/20 shadow-[0_-6px_20px_rgba(0,0,0,0.08)]">
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="h-12 flex items-center justify-between gap-3">
+
+                    <!-- Left: Brand -->
+                    <button
+                        class="flex items-center gap-2 group cursor-pointer min-w-0"
+                        onclick="copyUrl()"
+                        aria-label="URL 복사"
+                    >
+                        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-navy/10 to-brand-interactive/10 flex items-center justify-center text-brand-navy group-hover:from-brand-navy group-hover:to-brand-interactive group-hover:text-white transition-all duration-300 flex-shrink-0">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="hidden sm:flex flex-col">
+                            <span class="font-[800] orbitron text-slate-800 text-sm group-hover:text-brand-interactive transition-colors leading-none">
+                                100x <span class="text-brand-gold">FENOK</span>
+                            </span>
+                            <span class="text-[8px] text-slate-400">© 2025 All rights reserved</span>
+                        </div>
+                    </button>
+
+                    <!-- Center: Disclaimer Message -->
+                    <div class="flex-1 flex justify-center min-w-0">
+                        <p class="hidden md:block text-[11px] text-slate-600 truncate max-w-[400px]">
+                            모든 정보는 투자 참고용이지만, <span class="font-bold text-slate-800">손실 나면 니 탓</span> <span class="font-bold text-brand-gold">수익 나면 내 탓</span>
+                        </p>
+                        <!-- Mobile: Market Status Badge - v20 Style -->
+                        <button
+                            id="market-badge-mobile"
+                            class="md:hidden px-3 py-1.5 rounded text-white text-[10px] font-bold tracking-wide shadow-sm"
+                            onclick="showMarketInfo()"
+                        >
+                            <span id="market-text-mobile">MARKET OPEN</span>
+                        </button>
+                    </div>
+
+                    <!-- Right: Utility Buttons -->
+                    <div class="flex items-center gap-1.5">
+                        <button
+                            class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                            onclick="showToast('알림 없음')"
+                            aria-label="알림"
+                        >
+                            <i class="fas fa-bell text-sm"></i>
+                        </button>
+                        <button
+                            class="hidden sm:flex w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                            onclick="openAdminModal()"
+                            aria-label="관리자"
+                        >
+                            <i class="fas fa-cog text-sm"></i>
+                        </button>
+                        <button
+                            class="hidden sm:flex w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                            onclick="showToast('도움말: 100xFenok 시장 모니터링 도구')"
+                            aria-label="도움말"
+                        >
+                            <i class="fas fa-question text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ===== 미국 장 시간 동기화 =====
+
+        function isDST(date) {
+            const year = date.getFullYear();
+            const marchFirst = new Date(year, 2, 1);
+            const dstStart = new Date(year, 2, 8 + (7 - marchFirst.getDay()) % 7);
+            const novFirst = new Date(year, 10, 1);
+            const dstEnd = new Date(year, 10, 1 + (7 - novFirst.getDay()) % 7);
+            return date >= dstStart && date < dstEnd;
+        }
+
+        function getETTime() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const offset = isDST(now) ? -4 : -5;
+            return new Date(utc + (3600000 * offset));
+        }
+
+        function getMarketStatus() {
+            const et = getETTime();
+            const day = et.getDay();
+            const hours = et.getHours();
+            const minutes = et.getMinutes();
+            const time = hours * 100 + minutes;
+
+            if (day === 0 || day === 6) {
+                return { status: 'closed', text: 'MARKET CLOSED', class: 'market-closed' };
+            }
+
+            if (time >= 400 && time < 930) {
+                return { status: 'pre', text: 'MARKET PRE', class: 'market-pre' };
+            } else if (time >= 930 && time < 1600) {
+                return { status: 'regular', text: 'MARKET OPEN', class: 'market-regular' };
+            } else if (time >= 1600 && time < 2000) {
+                return { status: 'after', text: 'MARKET AFTER', class: 'market-after' };
+            } else {
+                return { status: 'overnight', text: 'MARKET NIGHT', class: 'market-overnight' };
+            }
+        }
+
+        function updateMarketStatus() {
+            const market = getMarketStatus();
+
+            // Desktop badge (ticker) - v20 style (no icon)
+            const badge = document.getElementById('market-badge');
+            const text = document.getElementById('market-text');
+            if (badge && text) {
+                text.textContent = market.text;
+                badge.className = badge.className.replace(/market-\w+/g, '');
+                badge.classList.add(market.class);
+            }
+
+            // Mobile badge - v20 style (no icon)
+            const badgeMobile = document.getElementById('market-badge-mobile');
+            const textMobile = document.getElementById('market-text-mobile');
+            if (badgeMobile && textMobile) {
+                textMobile.textContent = market.text;
+                badgeMobile.className = badgeMobile.className.replace(/market-\w+/g, '');
+                badgeMobile.classList.add(market.class);
+            }
+        }
+
+        function showMarketInfo() {
+            const et = getETTime();
+            const market = getMarketStatus();
+            const dst = isDST(new Date()) ? 'DST' : 'EST';
+            const etTime = et.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            showToast(`${market.text} | ET ${etTime} (${dst})`);
+        }
+
+        updateMarketStatus();
+        setInterval(updateMarketStatus, 60000);
+
+        // ===== 관리자 모달 =====
+
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            document.getElementById('admin-password').value = '';
+            document.getElementById('admin-password').focus();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function checkAdminPassword() {
+            const password = document.getElementById('admin-password').value;
+            // 간단한 비밀번호 체크 (실제로는 서버 검증 필요)
+            if (password === '100x') {
+                closeAdminModal();
+                showToast('관리자 인증 성공! 이동 중...');
+                setTimeout(() => {
+                    window.location.href = '../../index.html'; // admin 페이지로 이동
+                }, 1000);
+            } else {
+                showToast('비밀번호가 틀렸습니다');
+                document.getElementById('admin-password').value = '';
+                document.getElementById('admin-password').focus();
+            }
+        }
+
+        // 모달 외부 클릭시 닫기
+        document.getElementById('admin-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeAdminModal();
+        });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAdminModal();
+        });
+
+        // ===== 유틸리티 =====
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add('toast-animate');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('toast-animate');
+            }, 2500);
+        }
+
+        function copyUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('URL 복사 완료!');
+            });
+        }
+    </script>
+
+</body>
+</html>

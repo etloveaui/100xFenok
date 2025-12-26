@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+Pro:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v3.1: Enhanced Elite - Market Wrap</title>
+    <meta name="description" content="100x Market Wrap - Professional Insight">
+    <meta name="theme-color" content="#ffffff">
+    <script type="module" src="../../../initBaseHref.js"></script>
+    <style>
+        :root {
+            --ft-navy: #0f172a; /* Ink Blue */
+            --ft-gold: #c5a059;
+            --ft-bg: #fff1e5; /* FT Pinkish/Beige option? Let's stick to warm white for now */
+            --paper-bg: #fdfbf7; /* Warm Paper */
+        }
+        body { background-color: var(--paper-bg); color: #1e293b; font-family: 'Source Sans Pro', 'Noto Sans KR', sans-serif; }
+        
+        /* Typography */
+        h1, h2, h3 { font-family: 'Playfair Display', 'Noto Sans KR', serif; }
+        .font-serif-kr { font-family: 'Playfair Display', 'Noto Sans KR', serif; }
+        
+        /* Elements */
+        .double-border {
+            border-top: 4px solid var(--ft-navy);
+            border-bottom: 1px solid var(--ft-gold);
+        }
+        .section-divider {
+            border-top: 1px solid #e2e8f0;
+            margin: 2rem 0;
+        }
+        .item-border-top {
+            border-top: 2px solid #1e293b;
+            padding-top: 1rem;
+        }
+        .hover-underline-animation {
+            display: inline-block;
+            position: relative;
+        }
+        .hover-underline-animation::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            transform: scaleX(0);
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--ft-gold);
+            transform-origin: bottom right;
+            transition: transform 0.25s ease-out;
+        }
+        .hover-underline-animation:hover::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+        
+        .loader {
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid var(--ft-navy);
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Compact Professional Header -->
+    <header class="bg-white double-border py-6 mb-10">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <div class="text-[10px] font-bold tracking-[0.2em] text-[#c5a059] uppercase mb-1">Weekly Intelligence</div>
+                <h1 class="text-4xl font-black text-[#0f172a] tracking-tight leading-none">MARKET WRAP</h1>
+            </div>
+            <div class="hidden md:block h-8 w-px bg-slate-200 mx-4"></div>
+            <div class="text-sm font-semibold text-slate-500 text-center md:text-right">
+                <p>100xFenok Original Series</p>
+                <p class="text-xs text-slate-400 font-normal mt-0.5">Global Macro & Asset Allocation</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 max-w-6xl flex-grow">
+        
+        <!-- Featured Report: Newspaper Hero -->
+        <section id="featured-reports" class="mb-16">
+            <div id="featured-grid">
+                <div class="flex justify-center"><div class="loader"></div></div>
+            </div>
+        </section>
+
+        <!-- Archive: 3-Column Dense Grid -->
+        <section id="report-archive" class="py-8">
+            <div class="flex items-center gap-4 mb-8">
+                <h2 class="text-2xl font-bold text-[#0f172a] italic">Archive</h2>
+                <div class="h-px bg-[#0f172a] flex-grow opacity-20"></div>
+            </div>
+            
+            <div id="archive-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+                <div class="col-span-full flex justify-center"><div class="loader"></div></div>
+            </div>
+
+            <nav id="pagination-container" aria-label="Page navigation" class="flex justify-center mt-20 pb-20 border-t border-slate-200 pt-10">
+            </nav>
+        </section>
+        
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const BASE_HREF = window.baseHref || '../../../';
+            const DATA_FOLDER_PATH = `${BASE_HREF}100x/data/`;
+            const METADATA_PATH = `${DATA_FOLDER_PATH}metadata/`;
+            const INDEX_PATH = `${DATA_FOLDER_PATH}reports-index.json`;
+            const ITEMS_PER_PAGE = 9; 
+
+            const featuredGrid = document.getElementById('featured-grid');
+            const archiveGrid = document.getElementById('archive-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+
+            let reportIndex = [];
+            let featuredFilenames = [];
+            let archiveFilenames = [];
+            let totalPages = 0;
+            let currentPage = 1;
+
+            function parseDate(dateString) {
+                if (!dateString) return '';
+                if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) return dateString;
+                return dateString.replace(/년|월|일/g, '.'); 
+            }
+
+            async function initialize() {
+                try {
+                    const response = await fetch(INDEX_PATH);
+                    if (!response.ok) throw new Error('Index load failed');
+                    reportIndex = await response.json();
+                    
+                    featuredFilenames = reportIndex.slice(0, 1);
+                    archiveFilenames = reportIndex.slice(1);
+                    totalPages = Math.ceil(archiveFilenames.length / ITEMS_PER_PAGE);
+
+                    await renderFeatured(featuredFilenames);
+                    await showArchivePage(1);
+                } catch (error) { console.error(error); }
+            }
+
+            async function renderFeatured(filenames) {
+                if (!featuredGrid || filenames.length === 0) return;
+                try {
+                    const requests = filenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+                    const latest = reports[0];
+
+                    if (latest) {
+                        const tagsHTML = latest.keywords.map(tag => `<span class="inline-block px-2 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold uppercase tracking-wider mr-2">${tag.name}</span>`).join('');
+                        
+                        featuredGrid.innerHTML = `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                                <div class="lg:col-span-8">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <span class="bg-[#0f172a] text-white text-xs font-bold px-2 py-1">LATEST</span>
+                                        <span class="text-sm font-bold text-[#c5a059] uppercase">${latest.date}</span>
+                                    </div>
+                                    <h2 class="text-5xl md:text-6xl font-black text-[#0f172a] mb-6 leading-tight hover:text-[#c5a059] transition-colors cursor-pointer">
+                                        <a href="#" data-path="${latest.path}">${latest.title}</a>
+                                    </h2>
+                                    <p class="text-xl text-slate-700 font-serif-kr leading-relaxed mb-6 border-l-4 border-[#c5a059] pl-6">${latest.summary}</p>
+                                    <div class="flex items-center gap-4">
+                                        <a href="#" data-path="${latest.path}" class="text-[#0f172a] font-bold border-b-2 border-[#0f172a] hover:bg-[#0f172a] hover:text-white transition-all px-1">READ FULL REPORT &rarr;</a>
+                                    </div>
+                                </div>
+                                <div class="lg:col-span-4 bg-white p-6 border border-slate-200 shadow-sm">
+                                    <h3 class="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">In This Issue</h3>
+                                    <div class="space-y-4">
+                                        ${latest.keywords.map(k => `
+                                            <div class="flex items-center gap-3 group cursor-pointer">
+                                                <div class="w-1.5 h-1.5 bg-[#c5a059] rounded-full group-hover:scale-150 transition-transform"></div>
+                                                <span class="text-sm font-semibold text-slate-700 group-hover:text-[#0f172a]">${k.name} Analysis</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <div class="mt-8 pt-6 border-t border-slate-100">
+                                         <span class="text-xs text-slate-400">Published by 100xFenok AI</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) { console.error(error); }
+            }
+
+            async function showArchivePage(page) {
+                currentPage = page;
+                const startIndex = (page - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const pageFilenames = archiveFilenames.slice(startIndex, endIndex);
+
+                try {
+                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+
+                    let archiveHTML = '';
+                    reports.forEach(report => {
+                        const displayDate = parseDate(report.date);
+                        archiveHTML += `
+                            <div class="group flex flex-col h-full item-border-top hover:border-[#c5a059] transition-colors duration-300">
+                                <div class="mb-3 flex justify-between items-baseline">
+                                    <span class="text-xs font-bold text-[#c5a059]">${displayDate}</span>
+                                    ${report.keywords[0] ? `<span class="text-[10px] font-bold text-slate-400 uppercase">${report.keywords[0].name}</span>` : ''}
+                                </div>
+                                <h3 class="text-2xl font-bold text-[#0f172a] leading-tight mb-3 font-serif-kr group-hover:text-[#c5a059] transition-colors">
+                                    <a href="#" data-path="${report.path}" class="hover-underline-animation">${report.title}</a>
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-3">${report.summary || ''}</p>
+                            </div>`;
+                    });
+                    archiveGrid.innerHTML = archiveHTML;
+                } catch (error) { console.error(error); }
+                
+                renderPaginationControls();
+                setupDynamicLinks();
+            }
+
+            function renderPaginationControls() {
+                if (totalPages <= 1) { paginationContainer.innerHTML = ''; return; }
+                
+                let paginationHTML = '<div class="flex gap-2">';
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    const style = isActive 
+                        ? 'w-8 h-8 flex items-center justify-center bg-[#0f172a] text-white font-bold text-sm' 
+                        : 'w-8 h-8 flex items-center justify-center bg-white text-slate-500 border border-slate-200 hover:border-[#0f172a] hover:text-[#0f172a] transition-colors text-sm';
+                    paginationHTML += `<a href="#" data-page="${i}" class="${style}">${i}</a>`;
+                }
+                paginationHTML += '</div>';
+                paginationContainer.innerHTML = paginationHTML;
+            }
+
+            paginationContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('a');
+                if (!target) return;
+                const page = parseInt(target.dataset.page, 10);
+                if (isNaN(page)) return;
+                showArchivePage(page);
+                document.getElementById('report-archive').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            function setupDynamicLinks() {
+                document.querySelectorAll('a[data-path]').forEach(a => {
+                    if (a.dataset.bound) return;
+                    a.dataset.bound = 'true';
+                    a.addEventListener('click', e => {
+                        e.preventDefault();
+                        const path = a.dataset.path;
+                        const urlParams = new URLSearchParams(path.split('?')[1]);
+                        const finalPath = urlParams.get('path') || path;
+                        if (window.parent && typeof window.parent.loadPage === 'function') {
+                            window.parent.loadPage(finalPath);
+                        } else if (typeof loadPage === 'function') {
+                            loadPage(finalPath);
+                        }
+                    });
+                });
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>

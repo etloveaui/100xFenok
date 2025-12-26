@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100xFenok - 통합 프리뷰 (Nav v11 + Main v17.8 + Footer v21)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#010079',
+                            gold: '#D5AD36',
+                            interactive: '#1B73D3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        body { font-family: 'Noto Sans KR', sans-serif; }
+
+        /* Preview Frame */
+        .preview-frame {
+            border: 3px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .preview-frame:hover {
+            border-color: #010079;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: linear-gradient(135deg, #010079 0%, #1B73D3 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-100">
+
+    <!-- Control Panel -->
+    <div class="control-panel fixed top-0 left-0 right-0 z-50 text-white">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="text-white/80 hover:text-white transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Design Lab
+                </a>
+                <span class="text-white/40">|</span>
+                <h1 class="font-bold orbitron">
+                    <span class="text-brand-gold">통합 프리뷰</span>
+                </h1>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+                <span class="px-2 py-1 bg-white/20 rounded">Nav v11</span>
+                <span class="text-white/40">+</span>
+                <span class="px-2 py-1 bg-white/20 rounded">Main v17.8</span>
+                <span class="text-white/40">+</span>
+                <span class="px-2 py-1 bg-white/20 rounded">Footer v21</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="pt-20 pb-8 px-4">
+        <div class="container mx-auto max-w-7xl">
+
+            <!-- Preview Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+                <!-- Nav v11 -->
+                <div class="preview-frame">
+                    <div class="bg-slate-800 text-white px-4 py-2 flex items-center justify-between">
+                        <span class="font-bold text-sm">🧱 Navigation v11</span>
+                        <a href="components/nav-v11.html" target="_blank" class="text-xs text-white/60 hover:text-white">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                    <iframe src="components/nav-v11.html" class="w-full h-48 bg-white"></iframe>
+                </div>
+
+                <!-- Main v17.8 -->
+                <div class="preview-frame">
+                    <div class="bg-slate-800 text-white px-4 py-2 flex items-center justify-between">
+                        <span class="font-bold text-sm">🏠 Main Page v17.8</span>
+                        <a href="main/v17.8-responsive.html" target="_blank" class="text-xs text-white/60 hover:text-white">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                    <iframe src="main/v17.8-responsive.html" class="w-full h-48 bg-white"></iframe>
+                </div>
+
+                <!-- Footer v21 -->
+                <div class="preview-frame">
+                    <div class="bg-slate-800 text-white px-4 py-2 flex items-center justify-between">
+                        <span class="font-bold text-sm">📋 Footer v21</span>
+                        <a href="footer/v21-broadcast-pro.html" target="_blank" class="text-xs text-white/60 hover:text-white">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                    <iframe src="footer/v21-broadcast-pro.html" class="w-full h-48 bg-white"></iframe>
+                </div>
+            </div>
+
+            <!-- Full Preview -->
+            <div class="preview-frame">
+                <div class="bg-gradient-to-r from-brand-navy to-brand-interactive text-white px-4 py-3 flex items-center justify-between">
+                    <span class="font-bold orbitron">🎯 전체 통합 미리보기</span>
+                    <div class="flex items-center gap-4">
+                        <button onclick="toggleDevice('desktop')" id="btn-desktop" class="px-3 py-1 bg-white/20 rounded hover:bg-white/30 transition-colors text-sm">
+                            <i class="fas fa-desktop mr-1"></i>Desktop
+                        </button>
+                        <button onclick="toggleDevice('tablet')" id="btn-tablet" class="px-3 py-1 bg-white/10 rounded hover:bg-white/30 transition-colors text-sm">
+                            <i class="fas fa-tablet-alt mr-1"></i>Tablet
+                        </button>
+                        <button onclick="toggleDevice('mobile')" id="btn-mobile" class="px-3 py-1 bg-white/10 rounded hover:bg-white/30 transition-colors text-sm">
+                            <i class="fas fa-mobile-alt mr-1"></i>Mobile
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-slate-200 p-4 flex justify-center">
+                    <div id="preview-container" class="transition-all duration-300" style="width: 100%;">
+                        <iframe id="full-preview" src="main/v17.8-responsive.html" class="w-full h-[600px] bg-white rounded-lg shadow-lg"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <h3 class="font-bold text-brand-navy mb-2">🧱 Navigation v11</h3>
+                    <ul class="text-sm text-slate-600 space-y-1">
+                        <li>2-Tier 구조</li>
+                        <li>Brand + Ticker + Search</li>
+                        <li>Navigation Pills</li>
+                        <li>3파일 모듈화 (HTML+CSS+JS)</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <h3 class="font-bold text-brand-navy mb-2">🏠 Main v17.8</h3>
+                    <ul class="text-sm text-slate-600 space-y-1">
+                        <li>Responsive Ultimate</li>
+                        <li>모바일 햄버거/검색</li>
+                        <li>반응형 Heatmap</li>
+                        <li>접근성 완료 (P0~P2)</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <h3 class="font-bold text-brand-navy mb-2">📋 Footer v21</h3>
+                    <ul class="text-sm text-slate-600 space-y-1">
+                        <li>Broadcast HUD Pro</li>
+                        <li>미국 장 실시간 동기화</li>
+                        <li>v20 스타일 사각형 뱃지</li>
+                        <li>섬머타임 자동 감지</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function toggleDevice(device) {
+            const container = document.getElementById('preview-container');
+            const buttons = ['desktop', 'tablet', 'mobile'];
+
+            buttons.forEach(btn => {
+                document.getElementById(`btn-${btn}`).className =
+                    `px-3 py-1 ${btn === device ? 'bg-white/20' : 'bg-white/10'} rounded hover:bg-white/30 transition-colors text-sm`;
+            });
+
+            switch(device) {
+                case 'desktop':
+                    container.style.width = '100%';
+                    break;
+                case 'tablet':
+                    container.style.width = '768px';
+                    break;
+                case 'mobile':
+                    container.style.width = '375px';
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>

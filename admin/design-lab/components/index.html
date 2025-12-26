@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Design Lab - Components</title>
+    <title>Design Lab - Navigation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -22,170 +22,61 @@
       }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Global CSS 참조 (3단계 상위) -->
-    <link rel="stylesheet" href="../../../global.css">
 </head>
 <body class="bg-slate-100 p-8">
-    
-    <div class="max-w-6xl mx-auto space-y-12">
-        
+
+    <div class="max-w-6xl mx-auto space-y-8">
+
         <div class="flex items-center justify-between mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">🧱 Component Lab</h1>
+            <h1 class="text-3xl font-bold text-slate-800">🧱 Navigation Gallery</h1>
             <a href="../index.html" class="text-blue-600 hover:underline">← Back to Dashboard</a>
         </div>
 
-        <!-- 1. Color Palette -->
+        <!-- Brand Palette -->
         <section class="bg-white p-6 rounded-xl shadow-sm">
-            <h2 class="text-xl font-bold mb-4 text-slate-700">🎨 Brand Palette Check</h2>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">🎨 Brand Palette</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="space-y-2">
-                    <div class="h-20 rounded-lg bg-brand-navy shadow-lg flex items-center justify-center text-white font-bold">Navy</div>
+                    <div class="h-16 rounded-lg bg-brand-navy flex items-center justify-center text-white font-bold">Navy</div>
                     <div class="text-xs text-center font-mono">#010079</div>
                 </div>
                 <div class="space-y-2">
-                    <div class="h-20 rounded-lg bg-brand-gold shadow-lg flex items-center justify-center text-white font-bold">Gold</div>
+                    <div class="h-16 rounded-lg bg-brand-gold flex items-center justify-center text-white font-bold">Gold</div>
                     <div class="text-xs text-center font-mono">#D5AD36</div>
                 </div>
                 <div class="space-y-2">
-                    <div class="h-20 rounded-lg bg-brand-interactive shadow-lg flex items-center justify-center text-white font-bold">Interactive</div>
+                    <div class="h-16 rounded-lg bg-brand-interactive flex items-center justify-center text-white font-bold">Interactive</div>
                     <div class="text-xs text-center font-mono">#1B73D3</div>
                 </div>
                 <div class="space-y-2">
-                    <div class="h-20 rounded-lg bg-brand-cta shadow-lg flex items-center justify-center text-slate-800 font-bold">CTA</div>
+                    <div class="h-16 rounded-lg bg-brand-cta flex items-center justify-center text-slate-800 font-bold">CTA</div>
                     <div class="text-xs text-center font-mono">#FED701</div>
                 </div>
             </div>
         </section>
 
-        <!-- 2. Navigation v5 (Survivor) -->
-        <section class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-navy">
-            <h2 class="text-xl font-bold mb-4 text-slate-700">🧭 Navigation v5 (Standard Center)</h2>
-            <p class="mb-4 text-sm text-slate-500">
-                선택: 깔끔한 중앙 정렬, 영문 메뉴, Admin 제거. 가장 안정적이고 호불호 없는 스타일.
+        <!-- Navigation v11 (확정) -->
+        <section class="bg-gradient-to-br from-brand-navy/5 via-brand-gold/10 to-brand-interactive/5 p-6 rounded-xl shadow-lg border-2 border-brand-gold">
+            <div class="flex items-center gap-3 mb-4">
+                <h2 class="text-2xl font-bold text-brand-navy">🏆 Navigation v11</h2>
+                <span class="px-3 py-1 text-xs font-bold bg-emerald-500 text-white rounded-full">확정</span>
+            </div>
+            <p class="mb-4 text-slate-600">
+                <strong>Ultimate Fusion:</strong> v9 디자인 품질 + v10 기능 완전 결합
             </p>
-            <div class="border rounded-lg overflow-hidden bg-white relative min-h-[150px]">
-                <iframe src="nav-v5.html" class="w-full h-[150px] border-0" title="Navigation V5"></iframe>
-            </div>
-            <div class="mt-2 text-right">
-                <a href="nav-v5.html" target="_blank" class="text-sm text-blue-600 hover:underline">새 창에서 보기 ↗</a>
-            </div>
-        </section>
-
-        <!-- 3. Navigation v6 Evo -->
-        <section class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl shadow-sm border-l-4 border-indigo-500">
-            <h2 class="text-xl font-bold mb-4 text-indigo-900">🧭 Navigation v6 Evo (Dynamic Glass)</h2>
-            <p class="mb-4 text-sm text-indigo-700">
-                진화: <strong>살아있는 Glassmorphism</strong>. 호버 시 확장되는 애니메이션, 더 깊이 있는 블러 효과, 유기적인 인터랙션.
-            </p>
-            <div class="border rounded-lg overflow-hidden bg-slate-200 relative min-h-[250px]">
-                <iframe src="nav-v6-evo.html" class="w-full h-[250px] border-0" title="Navigation V6 Evo"></iframe>
-            </div>
-            <div class="mt-2 text-right">
-                <a href="nav-v6-evo.html" target="_blank" class="text-sm text-indigo-600 hover:underline">새 창에서 보기 ↗</a>
-            </div>
-        </section>
-
-        <!-- 4. Navigation v7 Light -->
-        <section class="bg-slate-50 p-6 rounded-xl shadow-sm border-l-4 border-slate-800">
-            <h2 class="text-xl font-bold mb-4 text-slate-800">🧭 Navigation v7 Light (Pro Terminal)</h2>
-            <p class="mb-4 text-sm text-slate-600">
-                변형: <strong>전문가용 Light Mode</strong>. Bloomberg/Reuters 스타일을 밝은 테마로 해석. 높은 가독성, 날카로운 경계선, 정보 집약적 메가 메뉴.
-            </p>
-            <div class="border border-gray-200 rounded-lg overflow-hidden bg-white relative min-h-[250px]">
-                <iframe src="nav-v7-light.html" class="w-full h-[250px] border-0" title="Navigation V7 Light"></iframe>
-            </div>
-            <div class="mt-2 text-right">
-                <a href="nav-v7-light.html" target="_blank" class="text-sm text-slate-800 hover:underline">새 창에서 보기 ↗</a>
-            </div>
-        </section>
-
-        <!-- 5. Navigation v8 -->
-        <section class="bg-white p-6 rounded-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border-l-4 border-brand-cta">
-            <h2 class="text-xl font-bold mb-4 text-brand-navy">🧭 Navigation v8 (Integrated Command Deck)</h2>
-            <p class="mb-4 text-sm text-slate-500">
-                <strong>압도적 신규:</strong> 상단 Ticker와 Nav가 결합된 2단 덱(Deck) 구조. 입체적인 물리 버튼, 확실한 위계질서, 대시보드형 UX.
-            </p>
-            <div class="border border-gray-100 rounded-lg overflow-hidden bg-white relative min-h-[250px]">
-                <iframe src="nav-v8.html" class="w-full h-[250px] border-0" title="Navigation V8"></iframe>
-            </div>
-            <div class="mt-2 text-right">
-                <a href="nav-v8.html" target="_blank" class="text-sm text-brand-cta hover:underline font-bold">새 창에서 보기 ↗</a>
-            </div>
-        </section>
-
-        <!-- 6. Navigation v9 (Ultimate) -->
-        <section class="bg-gradient-to-br from-brand-navy/5 to-brand-gold/10 p-6 rounded-xl shadow-[0_20px_50px_-12px_rgba(1,0,121,0.15)] border-l-4 border-brand-gold">
-            <h2 class="text-xl font-bold mb-4 text-brand-navy">🚀 Navigation v9 (Ultimate Command Deck)</h2>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>최종 진화:</strong> v8 기반 + 9가지 개선. 반응형 햄버거, 검색 슬라이드, Sticky Nav, 키보드 접근성, 마이크로 애니메이션.
-            </p>
-            <ul class="mb-4 text-xs text-slate-500 grid grid-cols-3 gap-1">
-                <li>✅ 모바일/태블릿 반응형</li>
-                <li>✅ 드롭다운 딜레이</li>
-                <li>✅ 검색 슬라이드 UI</li>
-                <li>✅ 알림 배지</li>
-                <li>✅ 현재 페이지 표시</li>
-                <li>✅ 키보드 접근성</li>
-                <li>✅ Sticky Nav 압축</li>
-                <li>✅ 마이크로 애니메이션</li>
-                <li>✅ API 연동 구조</li>
-            </ul>
-            <div class="border border-gray-100 rounded-lg overflow-hidden bg-white relative min-h-[250px]">
-                <iframe src="nav-v9.html" class="w-full h-[250px] border-0" title="Navigation V9"></iframe>
-            </div>
-            <div class="mt-2 text-right">
-                <a href="nav-v9.html" target="_blank" class="text-sm text-brand-gold hover:underline font-bold">새 창에서 보기 ↗</a>
-            </div>
-        </section>
-
-        <!-- 7. Navigation v10 (Modular) -->
-        <section class="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-[0_20px_50px_-12px_rgba(16,185,129,0.2)] border-l-4 border-emerald-500">
-            <h2 class="text-xl font-bold mb-4 text-emerald-800">⚡ Navigation v10 (3파일 모듈화)</h2>
-            <p class="mb-4 text-sm text-emerald-700">
-                <strong>구조 개선:</strong> v9 기반 + 6가지 개선. 코드 3파일 분리(HTML/CSS/JS), Bloomberg 검색, 자동완성, localStorage 알림.
-            </p>
-            <ul class="mb-4 text-xs text-slate-600 grid grid-cols-3 gap-1">
-                <li>🔴 검색 상시 노출</li>
-                <li>🟡 검색 자동완성</li>
-                <li>🟡 코드 3파일 분리</li>
-                <li>🔴 알림 배지 로직</li>
-                <li>🔴 Live Ticker 실시간</li>
-                <li>🟢 Sticky cubic-bezier</li>
-            </ul>
-            <div class="bg-slate-100 p-3 rounded-lg mb-4">
-                <p class="text-xs font-mono text-slate-500">📁 nav-v10.html (~200줄) + nav-v10.css (~300줄) + nav-v10.js (~400줄)</p>
-            </div>
-            <div class="border border-gray-100 rounded-lg overflow-hidden bg-white relative min-h-[250px]">
-                <iframe src="nav-v10.html" class="w-full h-[250px] border-0" title="Navigation V10"></iframe>
-            </div>
-            <div class="mt-2 text-right">
-                <a href="nav-v10.html" target="_blank" class="text-sm text-emerald-600 hover:underline font-bold">새 창에서 보기 ↗</a>
-            </div>
-        </section>
-
-        <!-- 8. Navigation v11 (Ultimate Fusion) -->
-        <section class="bg-gradient-to-br from-brand-navy/5 via-brand-gold/10 to-brand-interactive/5 p-6 rounded-xl shadow-[0_20px_50px_-12px_rgba(1,0,121,0.25)] border-l-4 border-brand-gold ring-2 ring-brand-gold/20">
-            <div class="flex items-center gap-2 mb-4">
-                <h2 class="text-xl font-bold text-brand-navy">🏆 Navigation v11 (Ultimate Fusion)</h2>
-                <span class="px-2 py-0.5 text-[10px] font-bold bg-brand-gold text-brand-navy rounded-full">BEST</span>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>최종 통합:</strong> v9 디자인 품질 + v10 기능 완전 결합. 세련된 UI와 강력한 기능의 완벽한 조화.
-            </p>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 mb-1">FROM V9 (디자인)</p>
-                    <ul class="text-xs text-slate-600 space-y-0.5">
-                        <li>✨ 브랜드 로고 (그림자+호버)</li>
+            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                <div class="bg-white/50 p-3 rounded-lg">
+                    <p class="font-bold text-slate-500 mb-2">디자인 (from v9)</p>
+                    <ul class="text-slate-600 space-y-1">
+                        <li>✨ 브랜드 로고 그림자+호버</li>
                         <li>✨ Pill 스타일 Ticker</li>
                         <li>✨ 정교한 그림자</li>
                         <li>✨ 드롭다운 컬러바</li>
                     </ul>
                 </div>
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 mb-1">FROM V10 (기능)</p>
-                    <ul class="text-xs text-slate-600 space-y-0.5">
+                <div class="bg-white/50 p-3 rounded-lg">
+                    <p class="font-bold text-slate-500 mb-2">기능 (from v10)</p>
+                    <ul class="text-slate-600 space-y-1">
                         <li>⚡ Bloomberg 검색</li>
                         <li>⚡ 자동완성 시스템</li>
                         <li>⚡ 알림 localStorage</li>
@@ -194,15 +85,64 @@
                 </div>
             </div>
             <div class="bg-slate-100 p-3 rounded-lg mb-4">
-                <p class="text-xs font-mono text-slate-500">📁 nav-v11.html (~280줄) + nav-v11.css (~380줄) + nav-v11.js (~480줄)</p>
+                <p class="text-xs font-mono text-slate-500">📁 nav-v11.html + nav-v11.css + nav-v11.js (3파일 모듈화)</p>
             </div>
-            <div class="border border-gray-100 rounded-lg overflow-hidden bg-white relative min-h-[250px]">
-                <iframe src="nav-v11.html" class="w-full h-[250px] border-0" title="Navigation V11"></iframe>
+            <div class="border border-gray-200 rounded-lg overflow-hidden bg-white min-h-[280px]">
+                <iframe src="nav-v11.html" class="w-full h-[280px] border-0" title="Navigation V11"></iframe>
             </div>
-            <div class="mt-2 text-right">
-                <a href="nav-v11.html" target="_blank" class="text-sm text-brand-gold hover:underline font-bold">새 창에서 보기 ↗</a>
+            <div class="mt-3 flex justify-between items-center">
+                <span class="text-xs text-slate-400">확정일: 2025-12-25</span>
+                <a href="nav-v11.html" target="_blank" class="px-4 py-2 bg-brand-gold text-brand-navy rounded-lg font-bold hover:brightness-110 transition-all">
+                    새 창에서 보기 ↗
+                </a>
             </div>
         </section>
+
+        <!-- Navigation v11 Slim (1-Tier) -->
+        <section class="bg-gradient-to-br from-amber-50 to-white p-6 rounded-xl shadow-lg border-2 border-amber-400 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <h2 class="text-2xl font-bold text-amber-700">⚡ Navigation v11 Slim</h2>
+                <span class="px-3 py-1 text-xs font-bold bg-amber-500 text-white rounded-full">NEW</span>
+            </div>
+            <p class="mb-4 text-slate-600">
+                <strong>1-Tier 슬림화:</strong> 2-Tier (110px) → 1-Tier (60px) = <strong>-45% 높이 절감</strong>
+            </p>
+            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                <div class="bg-white/50 p-3 rounded-lg">
+                    <p class="font-bold text-amber-600 mb-2">변경 사항</p>
+                    <ul class="text-slate-600 space-y-1">
+                        <li>📐 60px 단일 행 레이아웃</li>
+                        <li>🔤 로고 축약 (100xF)</li>
+                        <li>📊 Mini Ticker (인라인)</li>
+                        <li>🔍 검색 모달 방식</li>
+                    </ul>
+                </div>
+                <div class="bg-white/50 p-3 rounded-lg">
+                    <p class="font-bold text-amber-600 mb-2">유지된 기능</p>
+                    <ul class="text-slate-600 space-y-1">
+                        <li>✅ 드롭다운 메뉴</li>
+                        <li>✅ 모바일 슬라이드 메뉴</li>
+                        <li>✅ 알림 시스템</li>
+                        <li>✅ 키보드 단축키 (⌘K)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border border-amber-300 rounded-lg overflow-hidden bg-white min-h-[200px]">
+                <iframe src="nav-v11-slim.html" class="w-full h-[200px] border-0" title="Navigation V11 Slim"></iframe>
+            </div>
+            <div class="mt-3 flex justify-between items-center">
+                <span class="text-xs text-slate-400">생성일: 2025-12-27</span>
+                <a href="nav-v11-slim.html" target="_blank" class="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 transition-all">
+                    새 창에서 보기 ↗
+                </a>
+            </div>
+        </section>
+
+        <!-- Archive Note -->
+        <div class="bg-slate-200 p-4 rounded-lg text-center text-slate-500 text-sm mt-6">
+            <i class="fas fa-archive mr-2"></i>
+            이전 시안 (v5~v10)은 정리되었습니다. v11이 최종 확정 버전입니다.
+        </div>
 
     </div>
 
