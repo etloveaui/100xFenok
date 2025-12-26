@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v2: Pro Trader - IB Calculator</title>
+    <meta name="theme-color" content="#0b0e11">
+    <script type="module" src="../../../../initBaseHref.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#0b0e11',
+                            card: '#1e2329',
+                            input: '#2b3139',
+                            text: '#eaecef',
+                            muted: '#848e9c'
+                        },
+                        trade: {
+                            up: '#0ecb81',
+                            down: '#f6465d',
+                            yellow: '#fcd535'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'monospace'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0b0e11; color: #eaecef; font-family: 'Inter', sans-serif; }
+        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 80px; }
+        
+        /* Pro Inputs */
+        .input-group { margin-bottom: 1rem; }
+        .input-label { font-size: 0.75rem; color: #848e9c; margin-bottom: 0.25rem; display: block; font-weight: 600; }
+        .input-wrapper { 
+            background: #2b3139; border-radius: 4px; display: flex; align-items: center; 
+            border: 1px solid transparent; transition: all 0.2s;
+        }
+        .input-wrapper:focus-within { border-color: #fcd535; }
+        .input-field {
+            background: transparent; border: none; color: #eaecef; font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem; width: 100%; padding: 0.75rem; outline: none; text-align: right;
+        }
+        .input-prefix { color: #848e9c; padding-left: 0.75rem; font-size: 0.875rem; }
+        .input-suffix { color: #848e9c; padding-right: 0.75rem; font-size: 0.75rem; }
+
+        /* Ticker Tabs */
+        .ticker-tab {
+            flex: 1; padding: 0.75rem; text-align: center; font-weight: 700; color: #848e9c;
+            border-bottom: 2px solid #2b3139; cursor: pointer; transition: all 0.2s;
+        }
+        .ticker-tab.active { color: #fcd535; border-bottom-color: #fcd535; background: linear-gradient(to top, rgba(252, 213, 53, 0.1), transparent); }
+
+        /* Action Button */
+        .action-btn {
+            background: #fcd535; color: #0b0e11; width: 100%; padding: 1rem; border-radius: 4px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; transition: opacity 0.2s;
+        }
+        .action-btn:active { opacity: 0.8; }
+
+        /* Bottom Sheet - Dark */
+        .bottom-sheet {
+            position: fixed; bottom: 0; left: 0; right: 0; background: #1e2329; 
+            border-top: 1px solid #2b3139; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            transform: translateY(100%); transition: transform 0.3s ease-out; z-index: 50;
+            max-width: 480px; margin: 0 auto; border-top-left-radius: 12px; border-top-right-radius: 12px;
+        }
+        .bottom-sheet.open { transform: translateY(0); }
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 40; backdrop-filter: blur(2px);
+        }
+        .overlay.open { opacity: 1; pointer-events: auto; }
+
+        /* Result Items */
+        .order-row {
+            display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #2b3139;
+        }
+        .order-row:last-child { border-bottom: none; }
+        .order-type { font-size: 0.75rem; font-weight: 700; }
+        .order-price { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .buy-text { color: #0ecb81; }
+        .sell-text { color: #f6465d; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="pt-4 px-4 pb-2 bg-dark-bg sticky top-0 z-10 border-b border-dark-input">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-layer-group text-trade-yellow"></i>
+                    <span class="font-bold tracking-tight">IB PRO</span>
+                </div>
+                <div class="text-right">
+                    <div id="live-price" class="font-mono font-bold text-lg text-trade-up">Loading...</div>
+                    <div class="text-[10px] text-dark-muted">Real-time</div>
+                </div>
+            </div>
+            
+            <div class="flex">
+                <div class="ticker-tab active" data-ticker="TQQQ">TQQQ</div>
+                <div class="ticker-tab" data-ticker="SOXL">SOXL</div>
+            </div>
+        </header>
+
+        <!-- Main Form -->
+        <main class="p-4 pt-6">
+            <div class="grid grid-cols-2 gap-4 mb-2">
+                <div class="col-span-2">
+                    <div class="input-group">
+                        <label class="input-label">SEED CAPITAL</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">$</span>
+                            <input type="number" id="virtualSeed" class="input-field" placeholder="20000" value="20000">
+                            <span class="input-suffix">USD</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="input-group">
+                        <label class="input-label">TOTAL INVESTED</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">$</span>
+                            <input type="number" id="cumulativeBuy" class="input-field" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="input-group">
+                        <label class="input-label">QUANTITY</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="totalQuantity" class="input-field" placeholder="0">
+                            <span class="input-suffix">Qty</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-span-2">
+                    <div class="input-group">
+                        <label class="input-label">AVG PRICE</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">$</span>
+                            <input type="number" id="avgPrice" class="input-field" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Info -->
+            <div class="bg-dark-card rounded p-3 mb-6 flex justify-between items-center text-xs">
+                <span class="text-dark-muted">Buying Power (1 Time)</span>
+                <span class="font-mono text-trade-yellow" id="info-one-buy">--</span>
+            </div>
+        </main>
+
+        <!-- Bottom Action -->
+        <div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto p-4 bg-dark-bg border-t border-dark-input z-30">
+            <button id="calculateBtn" class="action-btn">GENERATE ORDERS</button>
+        </div>
+    </div>
+
+    <!-- Result Sheet -->
+    <div class="overlay" id="overlay"></div>
+    <div class="bottom-sheet" id="bottomSheet">
+        <div class="p-4 border-b border-dark-input flex justify-between items-center bg-dark-card rounded-t-xl">
+            <h2 class="font-bold text-sm uppercase tracking-wider text-dark-muted">Execution Plan</h2>
+            <button id="closeSheet" class="text-dark-muted hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="p-4 pb-8 max-h-[70vh] overflow-y-auto">
+            <!-- Dashboard Summary -->
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <div class="bg-dark-bg p-2 rounded text-center border border-dark-input">
+                    <div class="text-[10px] text-dark-muted uppercase">Progress</div>
+                    <div class="font-mono font-bold text-sm text-white" id="res-t-value">T-0</div>
+                </div>
+                <div class="bg-dark-bg p-2 rounded text-center border border-dark-input">
+                    <div class="text-[10px] text-dark-muted uppercase">Target</div>
+                    <div class="font-mono font-bold text-sm text-trade-yellow" id="res-target">10%</div>
+                </div>
+                <div class="bg-dark-bg p-2 rounded text-center border border-dark-input">
+                    <div class="text-[10px] text-dark-muted uppercase">P/L</div>
+                    <div class="font-mono font-bold text-sm" id="res-profit">0.00%</div>
+                </div>
+            </div>
+
+            <div class="mb-2 text-xs font-bold text-dark-muted uppercase">Buy Orders (LOC)</div>
+            <div id="buy-orders-list" class="bg-dark-bg rounded border border-dark-input p-2 mb-4"></div>
+
+            <div class="mb-2 text-xs font-bold text-dark-muted uppercase">Sell Orders</div>
+            <div id="sell-orders-list" class="bg-dark-bg rounded border border-dark-input p-2"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const state = { ticker: 'TQQQ', price: 0 };
+            
+            // Logic (Simplified Copy of v1 logic, adjusted for DOM IDs)
+            const tabs = document.querySelectorAll('.ticker-tab');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const bottomSheet = document.getElementById('bottomSheet');
+            const overlay = document.getElementById('overlay');
+            const closeSheet = document.getElementById('closeSheet');
+            
+            const config = {
+                TQQQ: { split: 40, starFormula: t => 10 - (t / 2), sellProfit: 10 },
+                SOXL: { split: 40, starFormula: t => 12 - (t * 0.6), sellProfit: 12 }
+            };
+
+            tabs.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.ticker = btn.dataset.ticker;
+                    updateLivePrice();
+                });
+            });
+
+            async function updateLivePrice() {
+                const priceEl = document.getElementById('live-price');
+                priceEl.classList.add('text-dark-muted');
+                try {
+                    const proxyUrl = 'https://api.allorigins.win/get?url=';
+                    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${state.ticker}`;
+                    const res = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                    const data = await res.json();
+                    const content = JSON.parse(data.contents);
+                    const price = content?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                    
+                    if (price) {
+                        state.price = price;
+                        priceEl.textContent = price.toFixed(2);
+                        priceEl.className = 'font-mono font-bold text-lg ' + (content?.chart?.result?.[0]?.meta?.regularMarketChange >= 0 ? 'text-trade-up' : 'text-trade-down');
+                    }
+                } catch (e) { console.error(e); }
+            }
+            updateLivePrice();
+
+            function calculate() {
+                // ... (Same Logic as v1, just mapping to new IDs if changed) ...
+                // Reusing Logic for Brevity - Adapting Output Render
+                const virtualSeed = parseFloat(document.getElementById('virtualSeed').value) || 0;
+                const cumulativeBuy = parseFloat(document.getElementById('cumulativeBuy').value) || 0;
+                const totalQuantity = parseFloat(document.getElementById('totalQuantity').value) || 0;
+                const avgPrice = parseFloat(document.getElementById('avgPrice').value) || 0;
+
+                if (virtualSeed <= 0) return alert('Input Seed Capital');
+
+                const currentConfig = config[state.ticker];
+                const oneTimeBuy = virtualSeed / currentConfig.split;
+                document.getElementById('info-one-buy').textContent = `$${oneTimeBuy.toFixed(2)}`;
+
+                let tValue = 0;
+                if (oneTimeBuy > 0) tValue = Math.ceil((cumulativeBuy / oneTimeBuy) * 10) / 10;
+                if (tValue === 0) tValue = 0;
+
+                const starPercent = currentConfig.starFormula(tValue);
+                const starPrice = avgPrice * (1 + starPercent / 100);
+                const profitPrice = avgPrice * (1 + currentConfig.sellProfit / 100);
+                
+                const currentProfit = state.price > 0 && avgPrice > 0 ? ((state.price - avgPrice) / avgPrice * 100) : 0;
+
+                document.getElementById('res-t-value').textContent = `T-${tValue}`;
+                document.getElementById('res-target').textContent = `${currentConfig.sellProfit}%`;
+                const profitEl = document.getElementById('res-profit');
+                profitEl.textContent = `${currentProfit.toFixed(2)}%`;
+                profitEl.className = `font-mono font-bold text-sm ${currentProfit >= 0 ? 'text-trade-up' : 'text-trade-down'}`;
+
+                // Render Lists
+                const buyList = document.getElementById('buy-orders-list');
+                const sellList = document.getElementById('sell-orders-list');
+                
+                const halfBuy = oneTimeBuy / 2;
+                let buyHtml = '';
+                
+                const qty1 = avgPrice > 0 ? Math.floor(halfBuy / avgPrice) : 0;
+                if (qty1 > 0) buyHtml += renderRow('LOC AVG', qty1, avgPrice, 'buy-text');
+                
+                const qty2 = starPrice > 0 ? Math.floor(halfBuy / starPrice) : 0;
+                if (qty2 > 0) buyHtml += renderRow('LOC STAR', qty2, starPrice, 'buy-text');
+                
+                if (buyHtml === '') buyHtml = '<div class="text-center text-xs text-dark-muted py-2">No Orders</div>';
+                buyList.innerHTML = buyHtml;
+
+                let sellHtml = '';
+                const sellQty1 = Math.floor(totalQuantity / 4);
+                const sellQty2 = totalQuantity - sellQty1;
+                
+                if (sellQty1 > 0) sellHtml += renderRow('LOC TARGET', sellQty1, starPrice, 'sell-text');
+                if (sellQty2 > 0) sellHtml += renderRow('LIMIT TARGET', sellQty2, profitPrice, 'sell-text');
+                
+                if (sellHtml === '') sellHtml = '<div class="text-center text-xs text-dark-muted py-2">No Orders</div>';
+                sellList.innerHTML = sellHtml;
+
+                openResultSheet();
+            }
+
+            function renderRow(title, qty, price, colorClass) {
+                return `
+                    <div class="order-row">
+                        <div class="order-type ${colorClass}">${title}</div>
+                        <div class="text-right">
+                            <span class="order-price text-white mr-2">$${price.toFixed(2)}</span>
+                            <span class="text-xs text-dark-muted">${qty}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function openResultSheet() { overlay.classList.add('open'); bottomSheet.classList.add('open'); }
+            function closeResultSheet() { overlay.classList.remove('open'); bottomSheet.classList.remove('open'); }
+
+            calculateBtn.addEventListener('click', calculate);
+            closeSheet.addEventListener('click', closeResultSheet);
+            overlay.addEventListener('click', closeResultSheet);
+        });
+    </script>
+</body>
+</html>
