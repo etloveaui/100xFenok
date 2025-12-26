@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v2: Modern Bold - Market Wrap</title>
+    <meta name="description" content="100x Market Wrap 리포트 아카이브 페이지입니다.">
+    <meta name="theme-color" content="#010079">
+    <script type="module" src="../../../initBaseHref.js"></script>
+    <style>
+        :root {
+            --brand-navy: #010079;
+            --brand-gold: #D5AD36;
+            --brand-gold-bright: #FED701;
+            --brand-navy-bright: #1B73D3;
+        }
+        * { font-family: 'Noto Sans KR', sans-serif; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 8px 8px 0px rgba(1, 0, 121, 0.1); border: 2px solid #010079; }
+        .card-hover { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0px rgba(213, 173, 54, 0.4); }
+        .tag { display: inline-block; padding: 4px 12px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; border: 2px solid #010079; background: white; color: #010079; }
+        .btn-bold {
+            background: #010079; color: #FED701; font-weight: 900;
+            border: 2px solid #010079; transition: all 0.2s;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .btn-bold:hover { background: #FED701; color: #010079; border-color: #010079; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #010079;
+            border-radius: 0;
+            width: 40px; height: 40px;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .display-title { font-family: 'Noto Sans KR', sans-serif; font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; }
+    </style>
+</head>
+<body class="bg-[#f0f2f5] text-slate-900">
+
+    <!-- Modern Header: Asymmetric Layout -->
+    <header class="bg-white border-b-4 border-[#010079] py-16 mb-12 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-[#D5AD36] rounded-full filter blur-[80px] opacity-20 translate-x-1/2 -translate-y-1/2"></div>
+        <div class="container mx-auto px-6 relative z-10 flex flex-col md:flex-row justify-between items-end">
+            <div>
+                <div class="inline-block bg-[#010079] text-[#FED701] px-4 py-1 font-bold mb-4 transform -rotate-2">WEEKLY INTELLIGENCE</div>
+                <h1 class="text-6xl md:text-8xl font-black mb-0 orbitron text-[#010079] leading-none">MARKET<br>WRAP</h1>
+            </div>
+            <div class="text-right mt-6 md:mt-0">
+                <p class="text-2xl font-bold text-slate-800">AI-Driven Multi-Asset Analysis</p>
+                <p class="text-slate-500 font-medium">100xFenok Original Series</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6">
+        <!-- Featured: Bold Grid -->
+        <section id="featured-reports" class="mb-24">
+            <div id="featured-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-[300px]">
+                <div class="col-span-full flex justify-center"><div class="loader"></div></div>
+            </div>
+        </section>
+
+        <!-- Archive: Masonry-style Grid -->
+        <section id="report-archive" class="py-12">
+            <div class="container mx-auto">
+                <div class="flex items-center gap-4 mb-10">
+                    <div class="bg-[#010079] w-4 h-12"></div>
+                    <h2 class="text-4xl font-black text-slate-900 tracking-tight">ARCHIVE</h2>
+                </div>
+                
+                <div id="archive-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[400px]">
+                    <div class="col-span-full flex justify-center items-center"><div class="loader"></div></div>
+                </div>
+
+                <nav id="pagination-container" aria-label="Page navigation" class="flex justify-center mt-20">
+                </nav>
+            </div>
+        </section>
+        
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const BASE_HREF = window.baseHref || '../../../';
+            const DATA_FOLDER_PATH = `${BASE_HREF}100x/data/`;
+            const METADATA_PATH = `${DATA_FOLDER_PATH}metadata/`;
+            const INDEX_PATH = `${DATA_FOLDER_PATH}reports-index.json`;
+            const ITEMS_PER_PAGE = 9; 
+
+            const featuredGrid = document.getElementById('featured-grid');
+            const archiveGrid = document.getElementById('archive-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+
+            let reportIndex = [];
+            let featuredFilenames = [];
+            let archiveFilenames = [];
+            let totalPages = 0;
+            let currentPage = 1;
+
+            function parseDate(dateString) {
+                if (!dateString) return '';
+                let parts = dateString.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+                if (parts) return `${parts[1]}-${parts[2].padStart(2, '0')}-${parts[3].padStart(2, '0')}`;
+                
+                const monthMap = {
+                    'January': '01', 'February': '02', 'March': '03', 'April': '04', 'May': '05', 'June': '06',
+                    'July': '07', 'August': '08', 'September': '09', 'October': '10', 'November': '11', 'December': '12'
+                };
+                parts = dateString.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+                if (parts && monthMap[parts[1]]) return `${parts[3]}-${monthMap[parts[1]]}-${parts[2].padStart(2, '0')}`;
+                
+                if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) return dateString.split(' ')[0];
+                return dateString; 
+            }
+
+            async function initialize() {
+                try {
+                    const response = await fetch(INDEX_PATH);
+                    if (!response.ok) throw new Error(`인덱스 파일(${INDEX_PATH})을 불러올 수 없습니다.`);
+                    
+                    reportIndex = await response.json();
+                    
+                    featuredFilenames = reportIndex.slice(0, 3);
+                    archiveFilenames = reportIndex.slice(3);
+                    totalPages = Math.ceil(archiveFilenames.length / ITEMS_PER_PAGE);
+
+                    await renderFeatured(featuredFilenames);
+                    await showArchivePage(1);
+
+                } catch (error) {
+                    console.error("초기화 실패:", error);
+                    featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">리포트 목록을 불러오는 데 실패했습니다.</p>`;
+                    archiveGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">아카이브를 불러오는 데 실패했습니다.</p>`;
+                }
+            }
+
+            async function renderFeatured(filenames) {
+                if (!featuredGrid || filenames.length === 0) {
+                    if(featuredGrid) featuredGrid.innerHTML = '<p class="text-slate-500 col-span-full text-center">추천 리포트가 없습니다.</p>';
+                    return;
+                }
+
+                try {
+                    const requests = filenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+                    const [latest, second, third] = reports;
+
+                    let featuredHTML = '';
+                    
+                    if (latest) {
+                        const tagsHTML = latest.keywords.map(tag => `<span class="tag">${tag.name}</span>`).join('');
+                        featuredHTML += `
+                            <div class="lg:col-span-8 bg-white p-10 card-shadow card-hover flex flex-col justify-between h-full relative overflow-hidden group">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-[#D5AD36] rounded-full filter blur-[60px] opacity-0 group-hover:opacity-30 transition-opacity"></div>
+                                <div>
+                                    <div class="flex justify-between items-start mb-6">
+                                       <span class="bg-[#010079] text-white text-sm font-black px-4 py-2 uppercase transform -skew-x-12">Latest Report</span>
+                                       <div class="text-xl font-bold text-[#010079] orbitron border-b-2 border-[#D5AD36]">${latest.date}</div>
+                                    </div>
+                                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6 display-title leading-tight">
+                                        <a href="#" data-path="${latest.path}" class="hover:text-[#010079] hover:underline decoration-4 decoration-[#D5AD36] underline-offset-4 transition-all">${latest.title}</a>
+                                    </h2>
+                                    <p class="text-slate-600 text-lg font-medium leading-relaxed mb-8 border-l-4 border-[#D5AD36] pl-6">${latest.summary}</p>
+                                </div>
+                                <div class="flex justify-between items-end mt-auto">
+                                    <div class="flex flex-wrap gap-3">${tagsHTML}</div>
+                                    <a href="#" data-path="${latest.path}" class="btn-bold px-8 py-4 text-sm inline-flex items-center shadow-lg">
+                                        Read Now <i class="fas fa-arrow-right ml-3"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="lg:col-span-4 flex flex-col gap-8">
+                        `;
+                    }
+
+                    const renderSubFeatured = (report, index) => {
+                        const tagsHTML = report.keywords.slice(0, 2).map(tag => `<span class="text-xs font-bold text-[#010079] uppercase mr-2">#${tag.name}</span>`).join('');
+                        return `
+                            <div class="bg-white p-8 card-shadow card-hover flex-1 flex flex-col justify-center">
+                                <div class="text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Trending ${index + 1}</div>
+                                <h3 class="text-xl font-black text-slate-900 mb-3 display-title leading-tight hover:text-[#010079] transition-colors">
+                                    <a href="#" data-path="${report.path}">${report.title}</a>
+                                </h3>
+                                <div class="mt-auto pt-4 border-t-2 border-slate-100 flex justify-between items-center">
+                                    <div>${tagsHTML}</div>
+                                    <span class="text-[#D5AD36] font-bold text-sm">${report.date}</span>
+                                </div>
+                            </div>`;
+                    };
+                    
+                    if (latest) {
+                        if (second) featuredHTML += renderSubFeatured(second, 0);
+                        if (third) featuredHTML += renderSubFeatured(third, 1);
+                        featuredHTML += `</div>`;
+                    }
+                    
+                    featuredGrid.innerHTML = featuredHTML;
+                } catch (error) {
+                     console.error("추천 리포트 렌더링 실패:", error);
+                }
+            }
+
+            async function showArchivePage(page) {
+                currentPage = page;
+                const startIndex = (page - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const pageFilenames = archiveFilenames.slice(startIndex, endIndex);
+
+                archiveGrid.innerHTML = `<div class="w-full flex justify-center items-center"><div class="loader"></div></div>`;
+
+                if (pageFilenames.length === 0) {
+                    archiveGrid.innerHTML = `<p class="w-full text-center text-slate-500">아카이브된 리포트가 없습니다.</p>`;
+                    renderPaginationControls();
+                    return;
+                }
+
+                try {
+                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+
+                    let archiveHTML = '';
+                    reports.forEach(report => {
+                        const tagsHTML = report.keywords.slice(0, 3).map(tag => `<span class="bg-slate-100 text-slate-700 px-2 py-1 text-[10px] font-bold uppercase">${tag.name}</span>`).join('');
+                        const displayDate = parseDate(report.date);
+
+                        archiveHTML += `
+                            <div class="bg-white p-6 card-shadow card-hover flex flex-col w-full h-80 relative group">
+                                 <div class="absolute top-0 left-0 w-full h-1 bg-[#010079] group-hover:bg-[#D5AD36] transition-colors"></div>
+                                <div class="flex-grow pt-4">
+                                    <p class="text-xs font-bold text-[#010079] orbitron mb-2">${displayDate}</p>
+                                    <h3 class="text-2xl font-black text-slate-900 leading-tight mb-4 hover:underline decoration-2 decoration-[#D5AD36] underline-offset-4">
+                                        <a href="#" data-path="${report.path}">${report.title}</a>
+                                    </h3>
+                                    <p class="text-slate-500 text-sm font-medium line-clamp-3 leading-relaxed border-l-2 border-slate-200 pl-3 group-hover:border-[#010079] transition-colors">${report.summary || ''}</p>
+                                </div>
+                                <div class="mt-6">
+                                    <div class="flex flex-wrap gap-2 mb-4">${tagsHTML}</div>
+                                    <a href="#" data-path="${report.path}" class="text-[#010079] font-black text-sm uppercase flex items-center group-hover:gap-2 transition-all">
+                                        Read Article <i class="fas fa-long-arrow-alt-right ml-2"></i>
+                                    </a>
+                                </div>
+                            </div>`;
+                    });
+                    archiveGrid.innerHTML = archiveHTML;
+
+                } catch (error) {
+                     console.error(`아카이브 페이지 ${page} 렌더링 실패:`, error);
+                }
+                
+                renderPaginationControls();
+                setupDynamicLinks();
+            }
+
+            function renderPaginationControls() {
+                if (totalPages <= 1) {
+                    paginationContainer.innerHTML = '';
+                    return;
+                }
+                
+                let paginationHTML = '<ul class="inline-flex items-center gap-4">';
+                paginationHTML += `<li><a href="#" data-page="${currentPage - 1}" class="px-6 py-3 text-sm font-black text-slate-400 bg-white border-2 border-slate-200 hover:bg-slate-50 hover:text-slate-600 transition-all ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}">PREV</a></li>`;
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    const activeClasses = 'z-10 px-6 py-3 text-sm font-black text-[#FED701] bg-[#010079] shadow-lg transform -translate-y-1';
+                    const defaultClasses = 'px-6 py-3 text-sm font-bold text-[#010079] bg-white border-2 border-[#010079] hover:bg-[#010079] hover:text-white transition-all';
+                    paginationHTML += `<li><a href="#" data-page="${i}" class="${isActive ? activeClasses : defaultClasses}">${i}</a></li>`;
+                }
+
+                paginationHTML += `<li><a href="#" data-page="${currentPage + 1}" class="px-6 py-3 text-sm font-black text-slate-400 bg-white border-2 border-slate-200 hover:bg-slate-50 hover:text-slate-600 transition-all ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}">NEXT</a></li>`;
+                paginationHTML += '</ul>';
+                paginationContainer.innerHTML = paginationHTML;
+            }
+
+            paginationContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('a');
+                if (!target || target.classList.contains('cursor-not-allowed')) return;
+                const page = parseInt(target.dataset.page, 10);
+                if (isNaN(page) || page < 1 || page > totalPages || currentPage === page) return;
+                showArchivePage(page);
+                document.getElementById('report-archive').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            function setupDynamicLinks() {
+                document.querySelectorAll('a[data-path]').forEach(a => {
+                    if (a.dataset.bound) return;
+                    a.dataset.bound = 'true';
+                    a.addEventListener('click', e => {
+                        e.preventDefault();
+                        const path = a.dataset.path;
+                        const urlParams = new URLSearchParams(path.split('?')[1]);
+                        const finalPath = urlParams.get('path') || path;
+                        if (window.parent && typeof window.parent.loadPage === 'function') {
+                            window.parent.loadPage(finalPath);
+                        } else if (typeof loadPage === 'function') {
+                            loadPage(finalPath);
+                        }
+                    });
+                });
+            }
+
+            initialize();
+        });
+    </script>
+
+</body>
+</html>

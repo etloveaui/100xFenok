@@ -25,17 +25,37 @@
         <!-- 확정된 컴포넌트 -->
         <section class="mb-8">
             <h2 class="text-xl font-bold mb-4 text-slate-700">✅ 확정된 컴포넌트</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Nav v11 확정 -->
+
+            <!-- 통합 데모 (진짜 조합) -->
+            <div class="card border-2 border-brand-gold bg-amber-50 mb-4" style="border-color:#D5AD36;">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg text-amber-800">🎯 통합 데모 (실제 조합)</h3>
+                        <p class="text-sm text-amber-700">Nav Slim (60px) + Main + Footer (48px) = <strong>108px</strong></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="integrated-demo.html" class="px-4 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-colors">
+                            데모 보기 →
+                        </a>
+                        <a href="preview-all.html" class="px-3 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300 transition-colors">
+                            개별 프리뷰
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Nav v11 + Slim -->
                 <div class="card border-l-4 border-emerald-500">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="font-bold text-lg">Navigation v11</h3>
                         <span class="status-badge status-done">확정 (12-25)</span>
                     </div>
-                    <p class="text-sm text-slate-500 mb-3">2-Tier 구조, Brand+Ticker+Search / Navigation Pills</p>
-                    <div class="flex gap-4">
-                        <a href="components/nav-v11.html" class="text-emerald-600 text-sm font-bold hover:underline">v11 보기 →</a>
-                        <a href="components/index.html" class="text-slate-400 text-sm hover:underline">전체 시안</a>
+                    <p class="text-sm text-slate-500 mb-3">2-Tier (110px) 또는 <strong>Slim 1-Tier (60px)</strong></p>
+                    <div class="flex gap-4 flex-wrap">
+                        <a href="components/nav-v11.html" class="text-emerald-600 text-sm font-bold hover:underline">v11 (2-Tier)</a>
+                        <a href="components/nav-v11-slim.html" class="text-amber-600 text-sm font-bold hover:underline">v11 Slim ⭐</a>
+                        <a href="components/index.html" class="text-slate-400 text-sm hover:underline">전체</a>
                     </div>
                 </div>
 
@@ -51,6 +71,19 @@
                         <a href="main/index.html" class="text-slate-400 text-sm hover:underline">전체 시안</a>
                     </div>
                 </div>
+
+                <!-- Footer v21 확정 -->
+                <div class="card border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Footer v21</h3>
+                        <span class="status-badge status-done">확정 (12-27)</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">Broadcast HUD Pro - 미국 장 실시간 동기화</p>
+                    <div class="flex gap-4">
+                        <a href="footer/v21-broadcast-pro.html" class="text-emerald-600 text-sm font-bold hover:underline">v21 보기 →</a>
+                        <a href="footer/index.html" class="text-slate-400 text-sm hover:underline">전체 시안</a>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -58,15 +91,27 @@
         <section class="mb-8">
             <h2 class="text-xl font-bold mb-4 text-slate-700">🚀 진행 중인 작업</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Footer Design -->
-                <div class="card border-l-4 border-blue-500">
+                <!-- Reports Redesign -->
+                <div class="card border-l-4 border-purple-500">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-lg">Footer (P1)</h3>
-                        <span class="status-badge status-doing">Step 4 시안 제작</span>
+                        <h3 class="font-bold text-lg">Reports (P4)</h3>
+                        <span class="status-badge status-doing">v4 실험적 시안 완료</span>
                     </div>
-                    <p class="text-sm text-slate-500 mb-4">Nav v11 + Main v17.8 스타일에 맞는 Footer 디자인</p>
+                    <p class="text-sm text-slate-500 mb-4">Market Wrap: Premium Newsletter 스타일 리디자인</p>
                     <div class="flex gap-4">
-                        <a href="footer/index.html" class="text-indigo-600 text-sm font-bold hover:underline">시안 보기 →</a>
+                        <a href="reports/index.html" class="text-purple-600 text-sm font-bold hover:underline">시안 보기 →</a>
+                    </div>
+                </div>
+
+                <!-- 통합 적용 대기 -->
+                <div class="card border-l-4 border-amber-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">통합 적용</h3>
+                        <span class="status-badge" style="background:#fef3c7;color:#92400e;">다음 단계</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4">Nav v11 + Main v17.8 + Footer v21 → 실제 사이트 적용</p>
+                    <div class="flex gap-4">
+                        <a href="preview-all.html" class="text-amber-600 text-sm font-bold hover:underline">프리뷰 확인 →</a>
                     </div>
                 </div>
             </div>
@@ -75,7 +120,8 @@
         <!-- 작업 공간 -->
         <section class="mb-8">
             <h2 class="text-xl font-bold mb-4 text-slate-700">📂 작업 공간</h2>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <!-- Identity & Structure -->
                 <a href="components/" class="card text-center hover:bg-slate-50 block">
                     <div class="text-2xl mb-2">🧱</div>
                     <div class="font-bold text-slate-700">Nav</div>
@@ -86,16 +132,40 @@
                     <div class="font-bold text-slate-700">Main</div>
                     <div class="text-xs text-slate-400 mt-1">v17.8 확정</div>
                 </a>
-                <a href="footer/" class="card text-center hover:bg-blue-50 block border-2 border-blue-300">
+                <a href="footer/" class="card text-center hover:bg-emerald-50 block border-2 border-emerald-300">
                     <div class="text-2xl mb-2">📋</div>
-                    <div class="font-bold text-blue-700">Footer</div>
-                    <div class="text-xs text-blue-400 mt-1">진행 중</div>
+                    <div class="font-bold text-emerald-700">Footer</div>
+                    <div class="text-xs text-emerald-400 mt-1">✅ v21 확정</div>
+                </a>
+                
+                <!-- Expanded Scope (Specific Naming) -->
+                <a href="calculators/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">🧮</div>
+                    <div class="font-bold text-slate-700">Calculators</div>
+                    <div class="text-xs text-slate-400 mt-1">IB / VR</div>
+                </a>
+                <a href="charts/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">📈</div>
+                    <div class="font-bold text-slate-700">Charts</div>
+                    <div class="text-xs text-slate-400 mt-1">Multi / Analyzer</div>
+                </a>
+                <a href="reports/" class="card text-center hover:bg-blue-50 block border-2 border-blue-300">
+                    <div class="text-2xl mb-2">📰</div>
+                    <div class="font-bold text-blue-700">Reports</div>
+                    <div class="text-xs text-blue-400 mt-1">🔥 진행 중</div>
+                </a>
+                <a href="dashboards/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">⚡</div>
+                    <div class="font-bold text-slate-700">Dashboards</div>
+                    <div class="text-xs text-slate-400 mt-1">Valuation / Sys</div>
                 </a>
                 <a href="widgets/" class="card text-center hover:bg-slate-50 block">
                     <div class="text-2xl mb-2">🧩</div>
                     <div class="font-bold text-slate-700">Widgets</div>
                     <div class="text-xs text-slate-400 mt-1">Components</div>
                 </a>
+                
+                <!-- Live Link -->
                 <a href="../../index.html" target="_blank" class="card text-center hover:bg-slate-50 block border-dashed border-2 border-slate-300">
                     <div class="text-2xl mb-2">👀</div>
                     <div class="font-bold text-slate-700">Live Site</div>

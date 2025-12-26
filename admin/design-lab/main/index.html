@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Design Lab - Main Page Gallery</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
@@ -25,274 +24,61 @@
 </head>
 <body class="bg-slate-100 p-8 text-slate-800">
 
-    <div class="max-w-7xl mx-auto space-y-12">
+    <div class="max-w-6xl mx-auto space-y-8">
 
         <header class="flex justify-between items-center border-b border-gray-200 pb-6">
             <div>
-                <h1 class="text-3xl font-bold text-slate-800 mb-2">🖥️ Main Page Gallery</h1>
-                <p class="text-slate-500">유지된 시안: v10, v11, v16, <strong class="text-brand-navy">v17 (현재 기준)</strong></p>
+                <h1 class="text-3xl font-bold text-slate-800 mb-2">🏠 Main Page Gallery</h1>
+                <p class="text-slate-500">확정: <strong class="text-emerald-600">v17.8 Responsive Ultimate</strong></p>
             </div>
             <a href="../index.html" class="text-blue-600 hover:underline font-bold">← Back to Dashboard</a>
         </header>
 
-        <!-- v17 Tab+Heatmap (현재 기준) -->
+        <!-- v17.8 Responsive Ultimate (확정) -->
         <section class="bg-gradient-to-br from-emerald-50 to-white p-6 rounded-xl shadow-lg border-2 border-emerald-500">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-emerald-800">⭐ v17 Tab+Heatmap (현재 기준)</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full font-bold">v10 탭 + Sector Heatmap</span>
-                    <a href="v17-tab-heatmap.html" target="_blank" class="text-sm text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
+            <div class="flex items-center gap-3 mb-4">
+                <h2 class="text-2xl font-bold text-emerald-800">🏆 v17.8 Responsive Ultimate</h2>
+                <span class="px-3 py-1 text-xs font-bold bg-emerald-500 text-white rounded-full">확정</span>
+            </div>
+            <p class="mb-4 text-slate-600">
+                <strong>최종 버전:</strong> Nav v11 2-Tier + Hero Zone + Sector Snapshot + Command Bar + 반응형 + 접근성
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
+                <div class="bg-white/50 p-3 rounded-lg">
+                    <p class="font-bold text-red-600 mb-2">P0 Critical</p>
+                    <ul class="text-slate-600 space-y-1">
+                        <li>✓ 햄버거 메뉴 + 슬라이드 패널</li>
+                        <li>✓ 모바일 검색 아이콘 + 모달</li>
+                        <li>✓ Command Bar calc() 변수화</li>
+                    </ul>
+                </div>
+                <div class="bg-white/50 p-3 rounded-lg">
+                    <p class="font-bold text-amber-600 mb-2">P1 Important</p>
+                    <ul class="text-slate-600 space-y-1">
+                        <li>✓ Quick Indices 수평 스크롤</li>
+                        <li>✓ 최소 폰트 12px</li>
+                        <li>✓ Heatmap 2/4열 반응형</li>
+                    </ul>
                 </div>
             </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>v10 탭 전환 + Sector Heatmap:</strong> Overview/Sectors/Liquidity/Sentiment 탭, Treemap 스타일 Sector Performance, 확장 기간 토글 (1D/1W/1M/YTD/1Y/ALL).
-            </p>
-            <div class="border border-emerald-400 rounded-lg overflow-hidden relative h-[500px] group shadow-inner bg-white">
-                <iframe src="v17-tab-heatmap.html" class="w-full h-full border-0 pointer-events-none"></iframe>
+
+            <div class="border border-emerald-400 rounded-lg overflow-hidden bg-white min-h-[500px]">
+                <iframe src="v17.8-responsive.html" class="w-full h-[500px] border-0" title="Main v17.8"></iframe>
             </div>
-            <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <h4 class="font-bold text-amber-800 mb-2">🔧 개선 필요 사항</h4>
-                <ul class="text-sm text-amber-700 space-y-1">
-                    <li>• F&G 게이지 크기 축소 필요</li>
-                    <li>• Nav v11 완전 통합 (현재 placeholder)</li>
-                    <li>• 아이콘 "F" → 로고 이미지 교체</li>
-                </ul>
+            <div class="mt-3 flex justify-between items-center">
+                <span class="text-xs text-slate-400">확정일: 2025-12-26</span>
+                <a href="v17.8-responsive.html" target="_blank" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition-all">
+                    새 창에서 보기 ↗
+                </a>
             </div>
         </section>
 
-        <!-- v17 발전 시안들 -->
-        <div class="border-t-4 border-brand-gold pt-8">
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">🚀 v17 발전 시안 (v17.1-v17.3)</h2>
-            <p class="text-slate-500 text-sm mb-8">사용자 피드백 반영: F&G 축소, Nav v11 완전 통합, Hero Zone 재설계</p>
+        <!-- Archive Note -->
+        <div class="bg-slate-200 p-4 rounded-lg text-center text-slate-500 text-sm">
+            <i class="fas fa-archive mr-2"></i>
+            이전 시안 (v10~v17.7)은 정리되었습니다. v17.8이 최종 확정 버전입니다.
         </div>
-
-        <!-- v17.1 Compact F&G -->
-        <section class="bg-gradient-to-br from-teal-50 to-white p-6 rounded-xl shadow-lg border-2 border-teal-400">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-teal-800">📊 v17.1 Compact F&G</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-teal-100 text-teal-800 px-2 py-1 rounded-full font-bold">F&G 인라인 + Heatmap 확장</span>
-                    <a href="v17.1-compact-fg.html" target="_blank" class="text-sm text-white bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>F&G 컴팩트화:</strong> F&G를 인라인 배치 (w-80 h-40 → w-20 h-10), Sector Heatmap 전체 너비 확장, favicon.svg 로고 사용.
-            </p>
-            <div class="border border-teal-400 rounded-lg overflow-hidden relative h-[450px] group shadow-inner bg-white">
-                <iframe src="v17.1-compact-fg.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v17.2 Nav Full -->
-        <section class="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-xl shadow-lg border-2 border-indigo-400">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-indigo-800">🔗 v17.2 Nav v11 Full</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full font-bold">Nav v11 완전 통합</span>
-                    <a href="v17.2-nav-full.html" target="_blank" class="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Nav v11 완전 통합:</strong> 2-Tier Nav (Brand+Search+Ticker / Navigation Pills), favicon.svg 로고, 검색바, Live Ticker 모두 포함.
-            </p>
-            <div class="border border-indigo-400 rounded-lg overflow-hidden relative h-[450px] group shadow-inner bg-white">
-                <iframe src="v17.2-nav-full.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v17.3 Hero Zone -->
-        <section class="bg-gradient-to-br from-purple-50 to-white p-6 rounded-xl shadow-lg border-2 border-purple-400">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-purple-800">🎯 v17.3 Hero Zone</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-bold">P0: F&G + Market Regime</span>
-                    <a href="v17.3-hero-zone.html" target="_blank" class="text-sm text-white bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Hero Zone 재설계:</strong> P0 (3초 핵심 파악) = F&G + Market Regime 나란히, P1 = Sector Heatmap + Liquidity 위젯들.
-            </p>
-            <div class="border border-purple-400 rounded-lg overflow-hidden relative h-[450px] group shadow-inner bg-white">
-                <iframe src="v17.3-hero-zone.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v17.4-v17.7 발전 시안 -->
-        <div class="border-t-4 border-orange-400 pt-8">
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">🔥 v17.4-v17.7 발전 시안 (DEC-058)</h2>
-            <p class="text-slate-500 text-sm mb-8">v17.1+v17.3 피드백 반영: Sector Snapshot, Quick Glance, Command Bar, Ultimate Fusion</p>
-        </div>
-
-        <!-- v17.4 Sector Snapshot -->
-        <section class="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl shadow-lg border-2 border-orange-400">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-orange-800">📊 v17.4 Sector Snapshot</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-bold">Hero + 간략 Sector</span>
-                    <a href="v17.4-sector-snapshot.html" target="_blank" class="text-sm text-white bg-orange-600 hover:bg-orange-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Sector Snapshot:</strong> 메인에 간략 요약 (7 Up / 4 Down + Top 3), Sectors 탭에 상세 Heatmap 분리.
-            </p>
-            <div class="border border-orange-400 rounded-lg overflow-hidden relative h-[450px] group shadow-inner bg-white">
-                <iframe src="v17.4-sector-snapshot.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v17.5 Quick Glance -->
-        <section class="bg-gradient-to-br from-cyan-50 to-white p-6 rounded-xl shadow-lg border-2 border-cyan-400">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-cyan-800">⚡ v17.5 Quick Glance</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-cyan-100 text-cyan-800 px-2 py-1 rounded-full font-bold">Inline + Sparklines</span>
-                    <a href="v17.5-quick-glance.html" target="_blank" class="text-sm text-white bg-cyan-600 hover:bg-cyan-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Quick Glance:</strong> F&G+Regime+Sparklines 한 줄 인라인, 3-Column 고밀도 그리드.
-            </p>
-            <div class="border border-cyan-400 rounded-lg overflow-hidden relative h-[450px] group shadow-inner bg-white">
-                <iframe src="v17.5-quick-glance.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v17.6 Command Bar -->
-        <section class="bg-gradient-to-br from-violet-50 to-white p-6 rounded-xl shadow-lg border-2 border-violet-400">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-violet-800">🎮 v17.6 Command Bar</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-violet-100 text-violet-800 px-2 py-1 rounded-full font-bold">탭+기간+검색 통합</span>
-                    <a href="v17.6-command-bar.html" target="_blank" class="text-sm text-white bg-violet-600 hover:bg-violet-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Command Bar:</strong> 탭+기간+검색 하나의 Sticky Bar로 통합, ⌘K 검색 모달, SPA 느낌.
-            </p>
-            <div class="border border-violet-400 rounded-lg overflow-hidden relative h-[450px] group shadow-inner bg-white">
-                <iframe src="v17.6-command-bar.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v17.7 Ultimate Fusion -->
-        <section class="bg-gradient-to-br from-rose-50 to-white p-6 rounded-xl shadow-lg border-2 border-rose-400">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-rose-800">🏆 v17.7 Ultimate Fusion</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-rose-100 text-rose-800 px-2 py-1 rounded-full font-bold">v17.8 기준</span>
-                    <a href="v17.7-ultimate.html" target="_blank" class="text-sm text-white bg-rose-600 hover:bg-rose-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Ultimate Fusion:</strong> Nav v11 2-Tier + Hero Zone + Sector Snapshot + Sparklines + Command Bar 모든 최고 요소 결합.
-            </p>
-            <div class="border border-rose-400 rounded-lg overflow-hidden relative h-[500px] group shadow-inner bg-white">
-                <iframe src="v17.7-ultimate.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v17.8 Responsive Ultimate (최종) -->
-        <section class="bg-gradient-to-br from-emerald-50 to-white p-6 rounded-xl shadow-lg border-4 border-emerald-500">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-emerald-800">✅ v17.8 Responsive Ultimate (최종)</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full font-bold">P0~P2 완료</span>
-                    <a href="v17.8-responsive.html" target="_blank" class="text-sm text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Responsive Ultimate:</strong> v17.7 + 모바일 햄버거/검색 + CSS 변수 + 반응형 Heatmap + 접근성 + 터치타겟 44px.
-            </p>
-            <div class="border border-emerald-500 rounded-lg overflow-hidden relative h-[500px] group shadow-inner bg-white">
-                <iframe src="v17.8-responsive.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-            <div class="mt-4 p-4 bg-emerald-50 border border-emerald-300 rounded-lg">
-                <h4 class="font-bold text-emerald-800 mb-2">✅ P0~P2 수정 완료 (9개)</h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                        <p class="font-bold text-red-600">P0 Critical</p>
-                        <ul class="text-slate-600 space-y-1">
-                            <li>✓ 햄버거 메뉴 + 슬라이드 패널</li>
-                            <li>✓ 모바일 검색 아이콘 + 모달</li>
-                            <li>✓ Command Bar calc() 변수화</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <p class="font-bold text-amber-600">P1 Important</p>
-                        <ul class="text-slate-600 space-y-1">
-                            <li>✓ Quick Indices 수평 스크롤</li>
-                            <li>✓ 최소 폰트 12px (0.75rem)</li>
-                            <li>✓ Heatmap 2/4열 반응형</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <p class="font-bold text-blue-600">P2 Nice-to-have</p>
-                        <ul class="text-slate-600 space-y-1">
-                            <li>✓ 터치 타겟 44px</li>
-                            <li>✓ aria-label, tabindex, focus</li>
-                            <li>✓ 탭 스켈레톤 플레이스홀더</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 참조 시안들 -->
-        <div class="border-t-4 border-slate-300 pt-8">
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">📚 참조 시안</h2>
-            <p class="text-slate-500 text-sm mb-8">v17 발전을 위한 참고용 시안들</p>
-        </div>
-
-        <!-- v10 Dynamic Canvas -->
-        <section class="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl shadow-lg border-2 border-blue-300">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-blue-800">⚡ v10 Dynamic Canvas</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-bold">탭 + Masonry</span>
-                    <a href="v10-dynamic.html" target="_blank" class="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>탭 전환 SPA + Masonry:</strong> 탭 전환 인터랙션, CSS columns 기반 Masonry 레이아웃.
-            </p>
-            <div class="border border-blue-300 rounded-lg overflow-hidden relative h-[400px] group shadow-inner bg-white">
-                <iframe src="v10-dynamic.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v11 Native Integration -->
-        <section class="bg-gradient-to-br from-slate-50 to-white p-6 rounded-xl shadow-lg border-2 border-brand-navy">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-brand-navy">🎯 v11 Native Integration</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-brand-gold text-brand-navy px-2 py-1 rounded-full font-bold">Nav v11 + Bento</span>
-                    <a href="v11-native.html" target="_blank" class="text-sm text-white bg-brand-navy hover:bg-blue-900 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Nav v11 완전 통합:</strong> Pill 스타일 카드, Bento Grid 레이아웃, 브랜드 컬러 일관성.
-            </p>
-            <div class="border border-brand-navy rounded-lg overflow-hidden relative h-[400px] group shadow-inner bg-white">
-                <iframe src="v11-native.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
-
-        <!-- v16 Hybrid Compact -->
-        <section class="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl shadow-lg border-2 border-blue-400">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-blue-800">💠 v16 Hybrid Compact</h2>
-                <div class="flex gap-2">
-                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-bold">고밀도 + Period Toggle</span>
-                    <a href="v16-hybrid-compact.html" target="_blank" class="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full font-bold">Full View ↗</a>
-                </div>
-            </div>
-            <p class="mb-4 text-sm text-slate-600">
-                <strong>Quick Stats + Period Toggle:</strong> 4-Column Grid (1-2-1 배분), Period Toggle (1D/1W/1M).
-            </p>
-            <div class="border border-blue-400 rounded-lg overflow-hidden relative h-[400px] group shadow-inner bg-white">
-                <iframe src="v16-hybrid-compact.html" class="w-full h-full border-0 pointer-events-none"></iframe>
-            </div>
-        </section>
 
     </div>
 
