@@ -31,3 +31,44 @@
 *   **Primary**: `#010079` (Navy Blue)
 *   **Accent**: `#D5AD36` (Gold)
 *   **Framework**: Tailwind CSS (CDN) + Custom CSS (`global.css`)
+
+---
+
+## 5. 확정 컴포넌트 (2025-12-27)
+
+| 컴포넌트 | 버전 | 높이 | 특징 |
+|----------|------|------|------|
+| **Nav** | 1-Tier EDGY | 60px | Glassmorphism + Dropdown + Gold Accent |
+| **Main** | v17.8 | Responsive | Hero Zone + Bento + Heatmap + 접근성 |
+| **Footer** | v21 | 48px | Broadcast HUD Pro, 장 상태 실시간 동기화 |
+
+**통합 데모**: `integrated-demo.html`
+
+---
+
+## 6. Reports 리디자인 (Gemini 작업)
+
+> **위치**: `reports/`
+> **갤러리**: `reports/index.html`
+> **목적**: Market Wrap, Alpha Scout 등 콘텐츠 중심 페이지 리디자인
+
+### 시안 현황
+
+| 버전 | 파일명 | 컨셉 | 상태 |
+|------|--------|------|------|
+| v1 | `v1-classic-premium.html` | 정통 경제지 (Navy & Gold) | 검토 대기 |
+| v2 | `v2-modern-bold.html` | 트렌디 매거진 레이아웃 | 검토 대기 |
+| v3 | `v3-minimal-elite.html` | 프라이빗 리포트 스타일 | 보류 |
+| v3.1 | `v3-1-enhanced-elite.html` | Financial Times 스타일 | 강력 추천 |
+| v4 | `v4-intelligent-briefing.html` | Bento Grid 대시보드형 | 실험적 |
+| **v5** | `v5-unified-premium.html` | **v3.1 + 브랜드 통일 + Nav/Footer 통합** | ⭐ **NEW** |
+
+### 디자인 방향
+
+1. **v3.1 (Enhanced Elite)**: 고대비 타이포 + 명확한 섹션 구분 → 가독성/주목도 극대화
+2. **v4 (Intelligent Briefing)**: 핀테크 앱 스타일 대시보드형 리포트
+
+### 다음 단계
+
+- [ ] 사용자 시안 검토 및 확정
+- [ ] 확정 시안 → 실제 Market Wrap 페이지 적용
