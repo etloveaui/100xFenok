@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v5: Unified Premium - Market Wrap</title>
+    <meta name="description" content="100x Market Wrap - Professional Insight">
+    <meta name="theme-color" content="#010079">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#010079',
+                            gold: '#D5AD36',
+                            bg: '#fdfbf7'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+Pro:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <script type="module" src="../../../initBaseHref.js"></script>
+    <style>
+        :root {
+            --brand-navy: #010079;
+            --brand-gold: #D5AD36;
+            --paper-bg: #fdfbf7;
+            --nav-height: 60px;
+            --footer-height: 48px;
+            --touch-target: 44px;
+        }
+
+        body {
+            background-color: var(--paper-bg);
+            color: #1e293b;
+            font-family: 'Source Sans Pro', 'Noto Sans KR', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Typography */
+        h1, h2, h3 { font-family: 'Playfair Display', 'Noto Sans KR', serif; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Focus Visible */
+        *:focus-visible {
+            outline: 2px solid var(--brand-gold);
+            outline-offset: 2px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Nav 1-Tier EDGY (통합)
+           ═══════════════════════════════════════════════════════════════ */
+        .nav-edgy {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid transparent;
+            background-image: linear-gradient(white, white),
+                              linear-gradient(90deg, var(--brand-navy) 0%, var(--brand-gold) 50%, var(--brand-navy) 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .nav-pill-edgy {
+            position: relative;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.025em;
+            color: #475569;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+        }
+        .nav-pill-edgy:hover {
+            transform: translateY(-2px);
+            border-color: var(--brand-gold);
+            box-shadow: 0 4px 12px rgba(213, 173, 54, 0.2);
+        }
+        .nav-pill-edgy.active {
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #0a0a8c 100%);
+            border-color: var(--brand-gold);
+            box-shadow: 0 0 0 1px var(--brand-gold);
+        }
+
+        @media (max-width: 768px) {
+            .nav-pills-container { display: none; }
+            .nav-mobile-menu { display: flex; }
+        }
+        @media (min-width: 769px) {
+            .nav-mobile-menu { display: none; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Content Styles
+           ═══════════════════════════════════════════════════════════════ */
+        .double-border {
+            border-top: 4px solid var(--brand-navy);
+            border-bottom: 1px solid var(--brand-gold);
+        }
+
+        .item-border-top {
+            border-top: 2px solid #1e293b;
+            padding-top: 1rem;
+        }
+
+        .hover-underline::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            transform: scaleX(0);
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--brand-gold);
+            transform-origin: bottom right;
+            transition: transform 0.25s ease-out;
+        }
+        .hover-underline:hover::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+        .loader {
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid var(--brand-navy);
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Footer v21 (통합 - 간소화)
+           ═══════════════════════════════════════════════════════════════ */
+        .footer-hud {
+            height: var(--footer-height);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            margin-top: auto;
+        }
+        .footer-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 0.875rem;
+            color: white;
+        }
+        .footer-brand span { color: var(--brand-gold); }
+        .market-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 0.25rem;
+            font-size: 0.625rem;
+            font-weight: 700;
+            color: #22c55e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .market-status.closed {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Nav 1-Tier EDGY (브랜드 통일)
+         ═══════════════════════════════════════════════════════════════ -->
+    <nav class="nav-edgy sticky top-0 z-50 shadow-lg" role="navigation" aria-label="Main navigation">
+        <!-- Brand -->
+        <a href="#" class="flex items-center gap-2" aria-label="100x FENOK Home">
+            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow border border-slate-100">
+                <span class="orbitron text-brand-navy font-black text-xs">100x</span>
+            </div>
+            <span class="orbitron font-black text-slate-800 hidden sm:block">
+                100x <span class="text-brand-gold">FENOK</span>
+            </span>
+        </a>
+
+        <!-- Nav Pills (Desktop) -->
+        <div class="nav-pills-container flex gap-2">
+            <a href="#" class="nav-pill-edgy">Dashboard</a>
+            <a href="#" class="nav-pill-edgy">Market Radar</a>
+            <a href="#" class="nav-pill-edgy active">Reports</a>
+            <a href="#" class="nav-pill-edgy">Valuation Lab</a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="nav-mobile-menu w-10 h-10 flex items-center justify-center bg-slate-100 rounded-lg" aria-label="Open menu">
+            <i class="fas fa-bars text-slate-600"></i>
+        </button>
+
+        <!-- Search -->
+        <div class="hidden md:flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg text-xs text-slate-400 cursor-pointer hover:bg-slate-200 transition-colors">
+            <i class="fas fa-search"></i>
+            <span>Search...</span>
+            <span class="px-1.5 py-0.5 bg-white rounded border text-[10px]">⌘K</span>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Content Header (브랜드 컬러 적용)
+         ═══════════════════════════════════════════════════════════════ -->
+    <header class="bg-white double-border py-6 mb-8">
+        <div class="container mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <div class="text-[10px] font-bold tracking-[0.2em] text-brand-gold uppercase mb-1">Weekly Intelligence</div>
+                <h1 class="text-3xl md:text-4xl font-black text-brand-navy tracking-tight leading-none">MARKET WRAP</h1>
+            </div>
+            <div class="hidden md:block h-8 w-px bg-slate-200 mx-4"></div>
+            <div class="text-sm font-semibold text-slate-500 text-center md:text-right">
+                <p>100xFenok Original Series</p>
+                <p class="text-xs text-slate-400 font-normal mt-0.5">Global Macro & Asset Allocation</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Main Content
+         ═══════════════════════════════════════════════════════════════ -->
+    <main class="container mx-auto px-4 md:px-6 max-w-6xl flex-grow pb-8">
+
+        <!-- Featured Report -->
+        <section id="featured-reports" class="mb-12">
+            <div id="featured-grid">
+                <div class="flex justify-center py-12"><div class="loader"></div></div>
+            </div>
+        </section>
+
+        <!-- Archive Grid -->
+        <section id="report-archive" class="py-8">
+            <div class="flex items-center gap-4 mb-8">
+                <h2 class="text-2xl font-bold text-brand-navy italic">Archive</h2>
+                <div class="h-px bg-brand-navy flex-grow opacity-20"></div>
+            </div>
+
+            <div id="archive-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+                <div class="col-span-full flex justify-center py-8"><div class="loader"></div></div>
+            </div>
+
+            <nav id="pagination-container" aria-label="Page navigation" class="flex justify-center mt-16 pt-8 border-t border-slate-200">
+            </nav>
+        </section>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Footer v21 HUD (간소화 통합)
+         ═══════════════════════════════════════════════════════════════ -->
+    <footer class="footer-hud" role="contentinfo">
+        <div class="footer-brand">
+            100x <span>FENOK</span>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="hidden sm:flex items-center gap-4 text-xs text-slate-400">
+                <span class="orbitron">SPY <span class="text-green-400">+0.85%</span></span>
+                <span class="orbitron">QQQ <span class="text-green-400">+1.12%</span></span>
+                <span class="orbitron">VIX <span class="text-red-400">13.45</span></span>
+            </div>
+            <div class="market-status" id="marketStatus">
+                <span class="w-1.5 h-1.5 bg-current rounded-full animate-pulse"></span>
+                <span>MARKET CLOSED</span>
+            </div>
+        </div>
+
+        <div class="text-xs text-slate-500">
+            &copy; 2025 All rights reserved
+        </div>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Scripts
+         ═══════════════════════════════════════════════════════════════ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const BASE_HREF = window.baseHref || '../../../';
+            const DATA_FOLDER_PATH = `${BASE_HREF}100x/data/`;
+            const METADATA_PATH = `${DATA_FOLDER_PATH}metadata/`;
+            const INDEX_PATH = `${DATA_FOLDER_PATH}reports-index.json`;
+            const ITEMS_PER_PAGE = 9;
+
+            const featuredGrid = document.getElementById('featured-grid');
+            const archiveGrid = document.getElementById('archive-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+            const marketStatus = document.getElementById('marketStatus');
+
+            let reportIndex = [];
+            let featuredFilenames = [];
+            let archiveFilenames = [];
+            let totalPages = 0;
+            let currentPage = 1;
+
+            // Market Status Check
+            function updateMarketStatus() {
+                const now = new Date();
+                const nyHour = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' })).getHours();
+                const day = now.getDay();
+
+                let status = 'CLOSED';
+                let isOpen = false;
+
+                if (day >= 1 && day <= 5) {
+                    if (nyHour >= 4 && nyHour < 9.5) { status = 'PRE-MARKET'; }
+                    else if (nyHour >= 9.5 && nyHour < 16) { status = 'OPEN'; isOpen = true; }
+                    else if (nyHour >= 16 && nyHour < 20) { status = 'AFTER-HOURS'; }
+                }
+
+                marketStatus.innerHTML = `
+                    <span class="w-1.5 h-1.5 bg-current rounded-full ${isOpen ? 'animate-pulse' : ''}"></span>
+                    <span>MARKET ${status}</span>
+                `;
+                marketStatus.className = `market-status ${isOpen ? '' : 'closed'}`;
+            }
+
+            function parseDate(dateString) {
+                if (!dateString) return '';
+                if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) return dateString;
+                return dateString.replace(/년|월|일/g, '.');
+            }
+
+            async function initialize() {
+                updateMarketStatus();
+                setInterval(updateMarketStatus, 60000);
+
+                try {
+                    const response = await fetch(INDEX_PATH);
+                    if (!response.ok) throw new Error('Index load failed');
+                    reportIndex = await response.json();
+
+                    featuredFilenames = reportIndex.slice(0, 1);
+                    archiveFilenames = reportIndex.slice(1);
+                    totalPages = Math.ceil(archiveFilenames.length / ITEMS_PER_PAGE);
+
+                    await renderFeatured(featuredFilenames);
+                    await showArchivePage(1);
+                } catch (error) {
+                    console.error(error);
+                    featuredGrid.innerHTML = '<p class="text-center text-slate-400 py-12">리포트를 불러올 수 없습니다.</p>';
+                    archiveGrid.innerHTML = '';
+                }
+            }
+
+            async function renderFeatured(filenames) {
+                if (!featuredGrid || filenames.length === 0) return;
+                try {
+                    const requests = filenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+                    const latest = reports[0];
+
+                    if (latest) {
+                        featuredGrid.innerHTML = `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                                <div class="lg:col-span-8">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <span class="bg-brand-navy text-white text-xs font-bold px-2 py-1 rounded">LATEST</span>
+                                        <span class="text-sm font-bold text-brand-gold uppercase">${latest.date}</span>
+                                    </div>
+                                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-brand-navy mb-6 leading-tight hover:text-brand-gold transition-colors cursor-pointer">
+                                        <a href="#" data-path="${latest.path}" class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold">${latest.title}</a>
+                                    </h2>
+                                    <p class="text-lg md:text-xl text-slate-700 leading-relaxed mb-6 border-l-4 border-brand-gold pl-6">${latest.summary}</p>
+                                    <a href="#" data-path="${latest.path}" class="inline-flex items-center gap-2 text-brand-navy font-bold border-b-2 border-brand-navy hover:bg-brand-navy hover:text-white transition-all px-2 py-1 min-h-[44px]">
+                                        READ FULL REPORT <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                                <div class="lg:col-span-4 bg-white p-6 border border-slate-200 shadow-sm rounded-lg">
+                                    <h3 class="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">In This Issue</h3>
+                                    <div class="space-y-4">
+                                        ${latest.keywords.map(k => `
+                                            <div class="flex items-center gap-3 group cursor-pointer min-h-[44px]">
+                                                <div class="w-2 h-2 bg-brand-gold rounded-full group-hover:scale-150 transition-transform"></div>
+                                                <span class="text-sm font-semibold text-slate-700 group-hover:text-brand-navy">${k.name} Analysis</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <div class="mt-6 pt-4 border-t border-slate-100">
+                                        <span class="text-xs text-slate-400">Published by 100xFenok AI</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) { console.error(error); }
+            }
+
+            async function showArchivePage(page) {
+                currentPage = page;
+                const startIndex = (page - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const pageFilenames = archiveFilenames.slice(startIndex, endIndex);
+
+                try {
+                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+
+                    let archiveHTML = '';
+                    reports.forEach(report => {
+                        const displayDate = parseDate(report.date);
+                        archiveHTML += `
+                            <article class="group flex flex-col h-full item-border-top hover:border-brand-gold transition-colors duration-300">
+                                <div class="mb-3 flex justify-between items-baseline">
+                                    <span class="text-xs font-bold text-brand-gold">${displayDate}</span>
+                                    ${report.keywords[0] ? `<span class="text-[10px] font-bold text-slate-400 uppercase">${report.keywords[0].name}</span>` : ''}
+                                </div>
+                                <h3 class="text-xl md:text-2xl font-bold text-brand-navy leading-tight mb-3 group-hover:text-brand-gold transition-colors">
+                                    <a href="#" data-path="${report.path}" class="relative hover-underline focus-visible:outline-none">${report.title}</a>
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-3">${report.summary || ''}</p>
+                            </article>`;
+                    });
+                    archiveGrid.innerHTML = archiveHTML || '<p class="col-span-full text-center text-slate-400">아카이브가 없습니다.</p>';
+                } catch (error) { console.error(error); }
+
+                renderPaginationControls();
+                setupDynamicLinks();
+            }
+
+            function renderPaginationControls() {
+                if (totalPages <= 1) { paginationContainer.innerHTML = ''; return; }
+
+                let paginationHTML = '<div class="flex gap-2">';
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    const style = isActive
+                        ? 'w-10 h-10 flex items-center justify-center bg-brand-navy text-white font-bold rounded'
+                        : 'w-10 h-10 flex items-center justify-center bg-white text-slate-500 border border-slate-200 hover:border-brand-gold hover:text-brand-navy transition-colors rounded';
+                    paginationHTML += `<a href="#" data-page="${i}" class="${style}" aria-label="Page ${i}">${i}</a>`;
+                }
+                paginationHTML += '</div>';
+                paginationContainer.innerHTML = paginationHTML;
+            }
+
+            paginationContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('a');
+                if (!target) return;
+                const page = parseInt(target.dataset.page, 10);
+                if (isNaN(page)) return;
+                showArchivePage(page);
+                document.getElementById('report-archive').scrollIntoView({ behavior: 'smooth' });
+            });
+
+            function setupDynamicLinks() {
+                document.querySelectorAll('a[data-path]').forEach(a => {
+                    if (a.dataset.bound) return;
+                    a.dataset.bound = 'true';
+                    a.addEventListener('click', e => {
+                        e.preventDefault();
+                        const path = a.dataset.path;
+                        const urlParams = new URLSearchParams(path.split('?')[1]);
+                        const finalPath = urlParams.get('path') || path;
+                        if (window.parent && typeof window.parent.loadPage === 'function') {
+                            window.parent.loadPage(finalPath);
+                        } else if (typeof loadPage === 'function') {
+                            loadPage(finalPath);
+                        }
+                    });
+                });
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>
