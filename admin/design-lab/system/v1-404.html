@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1-404 | 100x FENOK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { brand: { navy: '#010079', gold: '#D5AD36', interactive: '#1B73D3' } },
+            animation: { 'float': 'float 6s ease-in-out infinite' },
+            keyframes: { float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } } }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #ffffff; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .chart-grid { position: absolute; inset: 0; z-index: -1; opacity: 0.03; background-image: linear-gradient(#010079 1px, transparent 1px), linear-gradient(90deg, #010079 1px, transparent 1px); background-size: 30px 30px; }
+    </style>
+</head>
+<body class="relative">
+    <div class="chart-grid"></div>
+    
+    <nav class="h-[60px] flex items-center px-8 border-b border-slate-100 bg-white/80 backdrop-blur-md z-50">
+        <span class="font-[900] orbitron text-slate-800 text-lg">100x <span class="text-brand-gold">FENOK</span></span>
+    </nav>
+
+    <main class="flex-1 flex flex-col items-center justify-center p-4 relative">
+        <div class="text-center max-w-lg z-10 animate-float">
+            <div class="relative mb-12 h-48 flex items-center justify-center">
+                <!-- Broken Line Illustration -->
+                <svg viewBox="0 0 400 200" class="w-full h-full opacity-20 absolute inset-0">
+                    <path d="M 0 150 Q 100 130 200 150 T 400 130" fill="none" stroke="#010079" stroke-width="2" stroke-dasharray="10 10" />
+                </svg>
+                <h1 class="font-[900] orbitron text-[160px] leading-none text-slate-100 select-none">404</h1>
+                <div class="absolute bottom-4 bg-red-500 text-white px-4 py-1.5 rounded-lg font-black orbitron text-sm shadow-xl shadow-red-500/20 transform -rotate-6">GAP DOWN</div>
+            </div>
+
+            <h2 class="text-4xl font-black text-slate-800 mb-4">주소가 끊겼습니다.</h2>
+            <p class="text-slate-400 mb-10 text-lg font-medium leading-relaxed">
+                페이지가 이동했거나 삭제되었을 수 있습니다.<br>
+                손절은 빠를수록 좋지만, 홈으로 복귀는 더 빠릅니다.
+            </p>
+
+            <div class="flex gap-4 justify-center">
+                <a href="../../index.html" class="bg-brand-navy text-white px-10 py-4 rounded-2xl font-bold shadow-2xl shadow-blue-900/20 hover:scale-105 transition-transform flex items-center gap-3">
+                    <i class="fas fa-home"></i> 홈으로 가기
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-6 text-center text-[10px] font-bold text-slate-300 tracking-widest uppercase">
+        Error Code: 0x404_TARGET_NOT_FOUND
+    </footer>
+</body>
+</html>
