@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>Multichart v7 - THE SINGULARITY</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: { navy: '#0F172A', gold: '#F59E0B', accent: '#3B82F6', surface: '#F8FAFC' },
+              glass: { border: 'rgba(255,255,255,0.6)', surface: 'rgba(255,255,255,0.85)' }
+            },
+            boxShadow: {
+              'ethereal': '0 20px 40px -10px rgba(148, 163, 184, 0.15), 0 0 0 1px rgba(255,255,255,0.8) inset',
+              'neumorphic': '6px 6px 12px #e2e8f0, -6px -6px 12px #ffffff',
+              'pressed': 'inset 4px 4px 8px #e2e8f0, inset -4px -4px 8px #ffffff'
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+              display: ['Outfit', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { background-color: #F1F5F9; color: #1E293B; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        
+        /* Ethereal Glass Panel */
+        .ethereal-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 24px;
+            box-shadow: var(--tw-shadow-ethereal);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+        .ethereal-card:hover { transform: translateY(-4px) scale(1.005); box-shadow: 0 30px 60px -12px rgba(148, 163, 184, 0.25); }
+
+        /* Neumorphic Controls */
+        .neu-btn {
+            background: #F1F5F9; border-radius: 12px; color: #64748B; font-weight: 700;
+            box-shadow: 4px 4px 8px #e2e8f0, -4px -4px 8px #ffffff;
+            transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.5);
+        }
+        .neu-btn:active, .neu-btn.active {
+            box-shadow: inset 3px 3px 6px #e2e8f0, inset -3px -3px 6px #ffffff;
+            color: #3B82F6;
+        }
+        
+        /* Typography */
+        .display-font { font-family: 'Outfit', sans-serif; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+
+        /* Grid Layout */
+        .singularity-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr 340px;
+            grid-template-rows: auto 1fr auto;
+            gap: 24px;
+            max-width: 1800px; margin: 0 auto; padding: 24px;
+            height: calc(100vh - 80px); /* Minus Nav */
+        }
+        @media (max-width: 1400px) { .singularity-grid { grid-template-columns: 260px 1fr; } .panel-right { display: none; } }
+        @media (max-width: 1024px) { .singularity-grid { grid-template-columns: 1fr; height: auto; } .panel-left { display: none; } }
+
+        /* Nav & Footer Integration */
+        .nav-integration {
+            height: 80px; display: flex; justify-content: space-between; align-items: center; padding: 0 32px;
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.5);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        /* Animations */
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
+        .floating { animation: float 6s ease-in-out infinite; }
+        
+        .glow-text { text-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+
+        /* Chart Canvas */
+        canvas { filter: drop-shadow(0 10px 20px rgba(59, 130, 246, 0.15)); }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- Nav Integration -->
+    <nav class="nav-integration">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg text-white text-lg">
+                <i class="fas fa-atom"></i>
+            </div>
+            <div>
+                <h1 class="display-font font-[900] text-2xl tracking-tight text-slate-800 leading-none">THE <span class="text-blue-600">SINGULARITY</span></h1>
+                <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">100xFenok Multichart v7</p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button class="neu-btn px-6 py-3 text-xs flex items-center gap-2 active">
+                <i class="fas fa-chart-line"></i> ANALYSIS
+            </button>
+            <button class="neu-btn px-6 py-3 text-xs flex items-center gap-2">
+                <i class="fas fa-cog"></i> SETTINGS
+            </button>
+        </div>
+    </nav>
+
+    <main class="singularity-grid">
+        
+        <!-- Left: Control Center -->
+        <aside class="panel-left flex flex-col gap-6">
+            
+            <!-- Asset Selector -->
+            <div class="ethereal-card p-6 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Assets</h3>
+                    <button class="w-6 h-6 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition"><i class="fas fa-plus text-xs"></i></button>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="group flex items-center justify-between p-3 rounded-xl bg-white/50 border border-white hover:border-blue-200 hover:bg-white transition cursor-pointer shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-8 rounded-full bg-blue-500"></span>
+                            <div>
+                                <p class="font-bold text-slate-700 display-font">TQQQ</p>
+                                <p class="text-[10px] text-slate-400">Nasdaq 3x</p>
+                            </div>
+                        </div>
+                        <span class="mono-font font-bold text-green-500 text-xs">+1.2%</span>
+                    </div>
+                    <div class="group flex items-center justify-between p-3 rounded-xl bg-white/50 border border-white hover:border-amber-200 hover:bg-white transition cursor-pointer shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-8 rounded-full bg-amber-500"></span>
+                            <div>
+                                <p class="font-bold text-slate-700 display-font">SOXL</p>
+                                <p class="text-[10px] text-slate-400">Semi 3x</p>
+                            </div>
+                        </div>
+                        <span class="mono-font font-bold text-red-500 text-xs">-0.8%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeframe -->
+            <div class="ethereal-card p-6">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Timeframe</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <button class="neu-btn py-2 text-xs">1M</button>
+                    <button class="neu-btn py-2 text-xs active">1Y</button>
+                    <button class="neu-btn py-2 text-xs">YTD</button>
+                </div>
+            </div>
+
+            <!-- AI Insight (New Feature) -->
+            <div class="ethereal-card p-6 bg-gradient-to-br from-indigo-50 to-white border-indigo-100">
+                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i class="fas fa-robot"></i> AI Insight
+                </h3>
+                <p class="text-sm text-slate-600 leading-relaxed font-medium">
+                    <span class="text-indigo-600 font-bold">TQQQ</span> is showing high correlation (<span class="mono-font">0.89</span>) with <span class="text-amber-600 font-bold">SOXL</span> today. Consider diversifying to reduce sector risk.
+                </p>
+            </div>
+
+        </aside>
+
+        <!-- Center: Main Stage -->
+        <div class="panel-center flex flex-col gap-6">
+            
+            <!-- Main Chart -->
+            <div class="ethereal-card p-1 flex-1 relative flex flex-col">
+                <div class="absolute top-6 left-8 z-10">
+                    <h2 class="display-font text-3xl font-[900] text-slate-800 glow-text">Performance</h2>
+                    <p class="text-sm text-slate-400 font-medium mt-1">Normalized Return (%)</p>
+                </div>
+                <div class="absolute top-6 right-8 z-10 flex gap-4">
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">TQQQ</p>
+                        <p class="text-xl font-bold text-blue-600 mono-font">+42.5%</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">SOXL</p>
+                        <p class="text-xl font-bold text-amber-500 mono-font">+68.2%</p>
+                    </div>
+                </div>
+                <div class="flex-1 w-full h-full p-4 pt-20 rounded-2xl bg-white/30">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Underwater (Drawdown) -->
+            <div class="ethereal-card p-6 h-[240px] flex flex-col">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Underwater (Risk Analysis)</h3>
+                <div class="flex-1 relative">
+                    <canvas id="uwChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right: Analytics Hub -->
+        <aside class="panel-right flex flex-col gap-6">
+            
+            <!-- Efficiency Score -->
+            <div class="ethereal-card p-6">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">Efficiency Rank</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl font-[900] text-slate-200">01</span>
+                        <div class="flex-1">
+                            <div class="flex justify-between mb-1">
+                                <span class="font-bold text-slate-700 text-sm">TQQQ</span>
+                                <span class="mono-font font-bold text-blue-500 text-xs">2.45</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-full w-[85%] rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl font-[900] text-slate-200">02</span>
+                        <div class="flex-1">
+                            <div class="flex justify-between mb-1">
+                                <span class="font-bold text-slate-700 text-sm">SOXL</span>
+                                <span class="mono-font font-bold text-amber-500 text-xs">1.82</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-amber-500 h-full w-[60%] rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Correlation Matrix -->
+            <div class="ethereal-card p-6 flex-1 flex flex-col">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Correlation Matrix</h3>
+                <div class="flex-1 flex items-center justify-center">
+                    <div class="grid grid-cols-2 gap-2 w-full aspect-square">
+                        <div class="bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">1.0</div>
+                        <div class="bg-blue-400 rounded-lg flex items-center justify-center text-white font-bold text-xs" title="TQQQ vs SOXL">0.89</div>
+                        <div class="bg-blue-400 rounded-lg flex items-center justify-center text-white font-bold text-xs" title="SOXL vs TQQQ">0.89</div>
+                        <div class="bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">1.0</div>
+                    </div>
+                </div>
+                <p class="text-center text-[10px] text-slate-400 mt-4">High correlation implies lower diversification benefit.</p>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <script>
+        // Mock Data Generation
+        const generateData = (start, vol, trend) => {
+            let data = [start];
+            for(let i=0; i<100; i++) {
+                let change = (Math.random() - 0.5) * vol + trend;
+                data.push(data[i] * (1 + change));
+            }
+            return data;
+        };
+
+        const labels = Array.from({length: 101}, (_, i) => i);
+        const data1 = generateData(100, 0.03, 0.002); // TQQQ
+        const data2 = generateData(100, 0.05, 0.003); // SOXL
+
+        // Gradient Setup
+        const getGradient = (ctx, colorStart, colorEnd) => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colorStart);
+            gradient.addColorStop(1, colorEnd);
+            return gradient;
+        };
+
+        // Main Chart
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        const mainGradient1 = getGradient(ctx, 'rgba(59, 130, 246, 0.2)', 'rgba(59, 130, 246, 0)');
+        const mainGradient2 = getGradient(ctx, 'rgba(245, 158, 11, 0.2)', 'rgba(245, 158, 11, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'TQQQ',
+                        data: data1,
+                        borderColor: '#3B82F6',
+                        backgroundColor: mainGradient1,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'SOXL',
+                        data: data2,
+                        borderColor: '#F59E0B',
+                        backgroundColor: mainGradient2,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: { font: { family: 'JetBrains Mono' }, color: '#94a3b8' }
+                    }
+                },
+                interaction: { mode: 'index', intersect: false }
+            }
+        });
+
+        // Underwater Chart
+        const uwCtx = document.getElementById('uwChart').getContext('2d');
+        // Simple DD calculation
+        const getDD = (arr) => {
+            let peak = arr[0];
+            return arr.map(v => {
+                if(v > peak) peak = v;
+                return ((v - peak) / peak) * 100;
+            });
+        };
+
+        new Chart(uwCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'TQQQ DD',
+                        data: getDD(data1),
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        fill: true
+                    },
+                    {
+                        label: 'SOXL DD',
+                        data: getDD(data2),
+                        borderColor: '#F59E0B',
+                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: { font: { family: 'JetBrains Mono' }, color: '#94a3b8' }
+                    }
+                },
+                elements: { line: { tension: 0 } }
+            }
+        });
+    </script>
+</body>
+</html>

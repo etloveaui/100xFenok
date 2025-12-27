@@ -60,85 +60,34 @@
 
   <main class="container mx-auto px-4 py-8 space-y-10">
 
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="card p-6 lg:col-span-2">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div>
-            <h2 class="text-lg font-semibold text-gray-800">데이터 상태</h2>
-            <p class="text-xs text-gray-500">JSON 최신성/규모 요약</p>
-          </div>
-          <a href="../data-lab/" class="text-xs text-emerald-600 hover:underline">Data Lab 열기</a>
+    <section class="card p-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">오늘의 판단</h2>
+          <p class="text-xs text-gray-500">우선순위와 다음 액션</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="border rounded-xl p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold">Benchmarks</h3>
-                <p class="text-xs text-gray-500">Market Benchmarks</p>
-              </div>
-              <span id="bench-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
-            </div>
-            <div class="mt-3 text-sm text-gray-600 space-y-1">
-              <p>파일 수: <span id="bench-files" class="mono">-</span></p>
-              <p>섹션 수: <span id="bench-sections" class="mono">-</span></p>
-              <p>최신 데이터: <span id="bench-latest" class="mono">-</span></p>
-            </div>
-            <button data-action="focus-bench" class="mt-3 text-xs text-amber-600 hover:underline">워크스트림으로 이동</button>
-          </div>
-
-          <div class="border rounded-xl p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold">Global Scouter</h3>
-                <p class="text-xs text-gray-500">Stocks Master</p>
-              </div>
-              <span id="scouter-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
-            </div>
-            <div class="mt-3 text-sm text-gray-600 space-y-1">
-              <p>종목 수: <span id="scouter-count" class="mono">-</span></p>
-              <p>기준일: <span id="scouter-date" class="mono">-</span></p>
-              <p>생성일: <span id="scouter-generated" class="mono">-</span></p>
-            </div>
-            <button data-action="focus-scouter" class="mt-3 text-xs text-indigo-600 hover:underline">워크스트림으로 이동</button>
-          </div>
-
-          <div class="border rounded-xl p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold">Damodaran</h3>
-                <p class="text-xs text-gray-500">ERP / EV Benchmarks</p>
-              </div>
-              <span id="damodaran-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
-            </div>
-            <div class="mt-3 text-sm text-gray-600 space-y-1">
-              <p>ERP 국가: <span id="damodaran-erp" class="mono">-</span></p>
-              <p>EV/Sales 섹터: <span id="damodaran-ev" class="mono">-</span></p>
-              <p>최신 생성일: <span id="damodaran-date" class="mono">-</span></p>
-            </div>
-            <button data-action="focus-damodaran" class="mt-3 text-xs text-amber-600 hover:underline">워크스트림으로 이동</button>
-          </div>
-        </div>
+        <a href="../data-lab/" class="text-xs text-emerald-600 hover:underline">Data Lab →</a>
       </div>
-
-      <div class="card p-6">
-        <h2 class="text-lg font-semibold text-gray-800">오늘의 판단</h2>
-        <p class="text-xs text-gray-500 mb-4">우선순위와 다음 액션</p>
-        <div class="space-y-3 text-sm">
-          <div class="border rounded-lg p-3">
-            <div class="text-xs text-gray-500">Benchmarks</div>
-            <div class="font-semibold">이관 체크리스트 확정</div>
-            <div class="text-xs text-gray-500">UI/문서 완료 여부 확정</div>
-          </div>
-          <div class="border rounded-lg p-3">
-            <div class="text-xs text-gray-500">Global Scouter</div>
-            <div class="font-semibold">UX 점검 기준 확정</div>
-            <div class="text-xs text-gray-500">스크리너/대시보드 기준</div>
-          </div>
-          <div class="border rounded-lg p-3">
-            <div class="text-xs text-gray-500">Damodaran</div>
-            <div class="font-semibold">활용 전략 정리</div>
-            <div class="text-xs text-gray-500">시나리오/이관 조건</div>
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+        <div class="border rounded-lg p-4">
+          <div class="text-xs text-gray-500 mb-1">Benchmarks</div>
+          <div class="font-semibold">이관 체크리스트 확정</div>
+          <div class="text-xs text-gray-400 mt-1">UI/문서 완료 여부 확정</div>
+        </div>
+        <div class="border rounded-lg p-4">
+          <div class="text-xs text-gray-500 mb-1">Global Scouter</div>
+          <div class="font-semibold">UX 점검 기준 확정</div>
+          <div class="text-xs text-gray-400 mt-1">스크리너/대시보드 기준</div>
+        </div>
+        <div class="border rounded-lg p-4">
+          <div class="text-xs text-gray-500 mb-1">Damodaran</div>
+          <div class="font-semibold">활용 전략 정리</div>
+          <div class="text-xs text-gray-400 mt-1">시나리오/이관 조건</div>
+        </div>
+        <div class="border rounded-lg p-4">
+          <div class="text-xs text-gray-500 mb-1">SEC 13F</div>
+          <div class="font-semibold">위젯 개발 준비</div>
+          <div class="text-xs text-gray-400 mt-1">투자자 포트폴리오 UI</div>
         </div>
       </div>
     </section>
@@ -263,7 +212,7 @@
         </div>
         <span class="text-xs text-gray-500">확정 후 배포 섹션으로 이동</span>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 text-sm">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 text-sm">
         <div class="border rounded-lg p-3">
           <div class="font-semibold">Benchmarks</div>
           <div class="text-xs text-gray-500">데이터 검증 ✅ · UI 테스트 ⏳ · 문서 ⏳</div>
@@ -275,6 +224,10 @@
         <div class="border rounded-lg p-3">
           <div class="font-semibold">Damodaran</div>
           <div class="text-xs text-gray-500">데이터 검증 ✅ · 활용 전략 ⏳ · 운영 기준 ⏳</div>
+        </div>
+        <div class="border rounded-lg p-3">
+          <div class="font-semibold">SEC 13F</div>
+          <div class="text-xs text-gray-500">데이터 준비 ✅ · 위젯 개발 ⏳ · UI 테스트 ⏳</div>
         </div>
       </div>
     </section>
