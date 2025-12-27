@@ -1,5 +1,6 @@
 /**
  * Data Lab 설정
+ * v2.0.0 - DEC-063: global-scouter 모듈화 + sec-13f 통합
  */
 
 // 동적 base path (Cloudflare Pages, localhost, GitHub Pages 호환)
@@ -12,9 +13,26 @@ const getBasePath = () => {
 const DATA_LAB_CONFIG = {
   BASE_PATH: getBasePath(),
   FILES: {
+    // Damodaran
     DAMODARAN_ERP: '/data/damodaran/erp.json',
     DAMODARAN_EVSALES: '/data/damodaran/ev_sales.json',
+
+    // Global Scouter - Core (v2.0)
+    SCOUTER_METADATA: '/data/global-scouter/core/metadata.json',
+    SCOUTER_DASHBOARD: '/data/global-scouter/core/dashboard.json',
+    SCOUTER_INDEX: '/data/global-scouter/core/stocks_index.json',
+
+    // SEC 13F (신규)
+    SEC13F_SUMMARY: '/data/sec-13f/summary.json',
+    SEC13F_BY_SECTOR: '/data/sec-13f/by_sector.json',
+    SEC13F_BY_TICKER: '/data/sec-13f/by_ticker.json',
+
+    // Legacy (deprecated - 삭제 예정)
     GLOBAL_SCOUTER: '/data/global-scouter/stocks.json'
+  },
+  PATHS: {
+    SCOUTER_DETAIL: '/data/global-scouter/stocks/detail/',
+    SEC13F_INVESTORS: '/data/sec-13f/investors/'
   },
   BENCHMARKS: [
     { key: 'US', path: '/data/benchmarks/us.json' },
@@ -26,6 +44,7 @@ const DATA_LAB_CONFIG = {
   ]
 };
 
+// 기본 fetch
 async function fetchDataLabFile(fileKey) {
   const relPath = DATA_LAB_CONFIG.FILES[fileKey];
   if (!relPath) throw new Error(`Unknown file key: ${fileKey}`);
@@ -41,4 +60,54 @@ async function fetchDataLabPath(relPath) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to fetch ${url}`);
   return response.json();
+}
+
+// Global Scouter v2.0 헬퍼
+async function fetchScouterIndex() {
+  return fetchDataLabFile('SCOUTER_INDEX');
+}
+
+async function fetchScouterDashboard() {
+  return fetchDataLabFile('SCOUTER_DASHBOARD');
+}
+
+async function fetchStockDetail(ticker) {
+  const url = DATA_LAB_CONFIG.BASE_PATH +
+              DATA_LAB_CONFIG.PATHS.SCOUTER_DETAIL +
+              ticker + '.json';
+  const response = await fetch(url);
+  if (!response.ok) return null; // 없는 종목은 null 반환
+  return response.json();
+}
+
+async function fetchStockDetails(tickers) {
+  const results = await Promise.allSettled(
+    tickers.map(t => fetchStockDetail(t))
+  );
+  return results
+    .filter(r => r.status === 'fulfilled' && r.value !== null)
+    .map(r => r.value);
+}
+
+// SEC 13F 헬퍼
+async function fetch13FSummary() {
+  return fetchDataLabFile('SEC13F_SUMMARY');
+}
+
+async function fetchInvestor(name) {
+  const url = DATA_LAB_CONFIG.BASE_PATH +
+              DATA_LAB_CONFIG.PATHS.SEC13F_INVESTORS +
+              name + '.json';
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Investor not found: ${name}`);
+  return response.json();
+}
+
+async function fetchAllInvestors(names) {
+  const results = await Promise.allSettled(
+    names.map(n => fetchInvestor(n))
+  );
+  return results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value);
 }

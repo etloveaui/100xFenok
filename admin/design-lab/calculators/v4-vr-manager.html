@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Calculator v4 - Asset Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#f8fafc',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #f8fafc; font-family: 'Noto Sans KR', sans-serif; color: #334155; }
+        .eng-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        /* Nav (1-Tier EDGY - Static for Demo) */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px);
+            border-bottom: 2px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(90deg, #010079 0%, #D5AD36 50%, #010079 100%);
+            background-origin: border-box; background-clip: padding-box, border-box;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem;
+        }
+
+        /* Layout */
+        .manager-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+        
+        .glass-card {
+            background: white; border-radius: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f1f5f9;
+            transition: transform 0.2s;
+        }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+
+        .stat-label { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-value { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: #1e293b; }
+
+        /* Balance Circle */
+        .balance-circle-container { position: relative; width: 240px; height: 240px; margin: 0 auto; }
+        .balance-label {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        /* Action Slider */
+        .slider-container {
+            background: #f1f5f9; border-radius: 999px; padding: 0.5rem; display: flex; align-items: center;
+            position: relative; overflow: hidden; height: 60px;
+        }
+        .slider-track { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1; }
+        .slider-thumb {
+            width: 50%; height: 100%; border-radius: 999px; background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: absolute; left: 0; top: 0;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid transparent;
+        }
+        .slider-thumb.buy { border-color: #22c55e; }
+        .slider-thumb.sell { border-color: #ef4444; }
+        
+        .slider-text { font-weight: 700; font-size: 0.875rem; color: #64748b; z-index: 2; cursor: pointer; text-align: center; width: 50%; }
+        .slider-text.active { color: #0f172a; }
+
+        /* Gold Gradient Text */
+        .text-gold-grad {
+            background: linear-gradient(135deg, #D5AD36 0%, #b48a1e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <nav class="sticky top-0 z-50 nav-edgy shadow-sm">
+        <div class="flex items-center gap-3">
+            <span class="font-[800] eng-font text-slate-800 text-lg">100x <span class="text-brand-gold">FENOK</span></span>
+        </div>
+        <div class="flex gap-4 text-sm font-bold text-slate-600">
+            <span>Asset Manager</span>
+        </div>
+    </nav>
+
+    <main class="manager-container">
+        
+        <header class="text-center mb-12">
+            <p class="stat-label mb-2">Total Managed Assets</p>
+            <h1 class="text-5xl md:text-6xl stat-value mb-2">$20,600.00</h1>
+            <p class="text-sm font-bold text-green-600 bg-green-50 inline-block px-3 py-1 rounded-full">
+                <i class="fas fa-arrow-up mr-1"></i> +$1,200 (6.2%) This Cycle
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+            
+            <!-- Left: Portfolio Balance -->
+            <div class="md:col-span-5 lg:col-span-4">
+                <div class="glass-card p-8 h-full flex flex-col items-center justify-center relative">
+                    <h3 class="absolute top-8 left-8 font-bold text-slate-800 text-lg">Portfolio Balance</h3>
+                    
+                    <div class="balance-circle-container mt-8">
+                        <canvas id="balanceChart"></canvas>
+                        <div class="balance-label">
+                            <p class="text-xs font-bold text-slate-400">STOCK RATIO</p>
+                            <p class="text-3xl font-black text-slate-800">90.3%</p>
+                        </div>
+                    </div>
+
+                    <div class="w-full mt-8 space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 rounded-full bg-brand-navy"></div>
+                                <span class="font-bold text-slate-600">TQQQ</span>
+                            </div>
+                            <span class="font-bold text-slate-800">$18,600</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 rounded-full bg-brand-gold"></div>
+                                <span class="font-bold text-slate-600">Pool (Cash)</span>
+                            </div>
+                            <span class="font-bold text-slate-800">$2,000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Next Move -->
+            <div class="md:col-span-7 lg:col-span-8">
+                <div class="glass-card p-8 mb-8 bg-gradient-to-br from-white to-blue-50/50">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-xl mb-1">Next Cycle Target</h3>
+                            <p class="text-sm text-slate-500">Scheduled for <span class="font-bold text-slate-700">Feb 14, 2025</span></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="stat-label text-brand-interactive mb-1">Target V-Value</p>
+                            <p class="text-3xl font-black text-slate-800 eng-font">$19,450</p>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-8">
+                        <div class="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                            <span>Current: $18,300</span>
+                            <span>Goal</span>
+                        </div>
+                        <div class="h-4 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-brand-interactive w-[94%] relative">
+                                <div class="absolute inset-0 bg-white/20" style="background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent); background-size: 1rem 1rem;"></div>
+                            </div>
+                        </div>
+                        <p class="text-right text-xs font-bold text-brand-interactive mt-2">Only $1,150 to go!</p>
+                    </div>
+
+                    <!-- Rebalancing Action -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                        <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                            <i class="fas fa-bolt text-brand-gold"></i> Required Action
+                        </h4>
+                        
+                        <div class="slider-container mb-4">
+                            <div class="slider-thumb buy" style="left: 0;"></div>
+                            <div class="slider-text active">BUY (Low Price)</div>
+                            <div class="slider-text">SELL (High Price)</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-green-50 rounded-xl border border-green-100 text-center">
+                                <p class="text-xs font-bold text-green-700 uppercase mb-1">Buy Zone Start</p>
+                                <p class="text-xl font-black text-slate-800">$55.10</p>
+                            </div>
+                            <div class="p-4 bg-red-50 rounded-xl border border-red-100 text-center opacity-50 grayscale">
+                                <p class="text-xs font-bold text-red-700 uppercase mb-1">Sell Zone Start</p>
+                                <p class="text-xl font-black text-slate-800">$74.50</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mini Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass-card p-6 flex flex-col justify-between">
+                        <p class="stat-label">Min Band (Bottom)</p>
+                        <p class="text-2xl font-bold text-slate-700 mt-2">$16,532</p>
+                        <div class="h-1 w-full bg-slate-100 mt-4 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-400 w-1/3"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col justify-between">
+                        <p class="stat-label">Max Band (Top)</p>
+                        <p class="text-2xl font-bold text-slate-700 mt-2">$22,367</p>
+                        <div class="h-1 w-full bg-slate-100 mt-4 rounded-full overflow-hidden">
+                            <div class="h-full bg-green-400 w-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const ctx = document.getElementById('balanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['TQQQ', 'Pool'],
+                datasets: [{
+                    data: [90.3, 9.7],
+                    backgroundColor: ['#010079', '#D5AD36'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                cutout: '75%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+    </script>
+</body>
+</html>

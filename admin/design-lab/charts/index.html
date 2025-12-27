@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charts Gallery - 100x Design Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .gallery-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s; border: 1px solid #e2e8f0; }
+        .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #3b82f6; }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <a href="../index.html" class="text-slate-400 hover:text-slate-600 text-sm font-bold mb-2 block">← Dashboard</a>
+                <h1 class="text-3xl font-bold text-slate-800">📈 Charts Gallery</h1>
+                <p class="text-slate-500">Multichart 및 데이터 시각화 도구 리디자인</p>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- v1: Grid Monitor -->
+            <div class="gallery-card border-t-4 border-[#010079] shadow-lg">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-slate-700">🖥️</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-[#010079] text-white">NEW</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-[#010079]">v1: Grid Monitor</h3>
+                    <p class="text-sm text-slate-600 mb-6">4분할 CCTV 스타일 모니터링. 여러 자산의 상관관계를 한눈에 감시.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v1-grid-monitor.html</span>
+                        <a href="v1-grid-monitor.html" class="bg-[#010079] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-900 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v2: Compare Studio -->
+            <div class="gallery-card border-t-4 border-[#1B73D3] shadow-lg">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-blue-500">⚖️</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-[#1B73D3] text-white">NEW</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-[#1B73D3]">v2: Compare Studio</h3>
+                    <p class="text-sm text-slate-600 mb-6">벤치마크 오버레이 비교 분석. 상대 수익률(Alpha) 측정에 최적화.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v2-compare-studio.html</span>
+                        <a href="v2-compare-studio.html" class="bg-[#1B73D3] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-600 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+            <!-- v3: Event Horizon -->
+            <div class="gallery-card border-t-4 border-indigo-500 shadow-lg">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-indigo-600">🌅</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-indigo-600 text-white">NEW</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-indigo-900">v3: Event Horizon</h3>
+                    <p class="text-sm text-slate-600 mb-6">Macro Events 타임라인 연동. 가격 변동의 원인(CPI, FOMC)을 시각적으로 연결.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v3-event-horizon.html</span>
+                        <a href="v3-event-horizon.html" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v4: Quant Lab -->
+            <div class="gallery-card border-t-4 border-purple-500 shadow-lg">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-purple-600">⚗️</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-purple-600 text-white">NEW</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-purple-900">v4: Quant Lab</h3>
+                    <p class="text-sm text-slate-600 mb-6">보조지표(RSI, MACD) 스택형 차트. 트레이딩 신호(Signal) 중심 레이아웃.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v4-quant-lab.html</span>
+                        <a href="v4-quant-lab.html" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-purple-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v5: Sector Map -->
+            <div class="gallery-card border-t-4 border-green-500 shadow-lg">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-green-600">🗺️</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-green-500 text-white">NEW</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-green-900">v5: Sector Map</h3>
+                    <p class="text-sm text-slate-600 mb-6">변동성 vs 수익률 버블 차트. 시장 전체의 흐름을 한눈에 조망(Market Breadth).</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v5-sector-map.html</span>
+                        <a href="v5-sector-map.html" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

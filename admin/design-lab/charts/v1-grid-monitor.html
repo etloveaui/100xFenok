@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multichart v1 - Grid Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#f8fafc',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #f1f5f9; font-family: 'Noto Sans KR', sans-serif; color: #1e293b; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Nav (1-Tier EDGY - Static) */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: white; border-bottom: 1px solid #cbd5e1;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem;
+            z-index: 50;
+        }
+
+        /* Grid Layout */
+        .monitor-grid {
+            flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr);
+            gap: 1px; background: #cbd5e1; /* Grid Border */
+            padding: 1px;
+        }
+        @media (max-width: 768px) { .monitor-grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); } }
+
+        .chart-panel {
+            background: white; position: relative; display: flex; flex-direction: column; padding: 1rem;
+        }
+
+        /* Panel Header */
+        .panel-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+        .ticker-name { font-size: 1.25rem; font-weight: 800; color: #010079; line-height: 1; }
+        .ticker-price { font-size: 1.125rem; font-weight: 700; color: #1e293b; font-family: 'JetBrains Mono', monospace; }
+        .ticker-change { font-size: 0.875rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        
+        .pos { color: #16a34a; } .neg { color: #dc2626; }
+
+        /* Chart Canvas */
+        .chart-wrapper { flex: 1; position: relative; width: 100%; height: 100%; }
+
+        /* Controls Overlay (Hover) */
+        .panel-controls {
+            position: absolute; top: 1rem; right: 1rem;
+            display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s;
+        }
+        .chart-panel:hover .panel-controls { opacity: 1; }
+        .icon-btn {
+            width: 28px; height: 28px; border-radius: 4px; background: #f1f5f9; color: #64748b;
+            display: flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer;
+        }
+        .icon-btn:hover { background: #e2e8f0; color: #0f172a; }
+
+        /* Footer (Minimal) */
+        .footer-bar {
+            height: 32px; background: #0f172a; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-edgy">
+        <div class="flex items-center gap-3">
+            <span class="font-[800] text-slate-800 text-lg">GRID MONITOR</span>
+            <div class="hidden md:flex gap-2">
+                <button class="px-3 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600 hover:bg-slate-200">2x2</button>
+                <button class="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-bold text-slate-400 hover:text-slate-600">3x3</button>
+                <button class="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-bold text-slate-400 hover:text-slate-600">1x4</button>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">● LIVE DATA</span>
+        </div>
+    </nav>
+
+    <main class="monitor-grid">
+        
+        <!-- Panel 1: TQQQ -->
+        <div class="chart-panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="ticker-name">TQQQ</h2>
+                    <p class="text-xs text-slate-400 font-bold">ProShares UltraPro QQQ</p>
+                </div>
+                <div class="text-right">
+                    <p class="ticker-price">$78.45</p>
+                    <p class="ticker-change pos">▲ 1.24%</p>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="chart1"></canvas>
+            </div>
+            <div class="panel-controls">
+                <div class="icon-btn"><i class="fas fa-expand"></i></div>
+                <div class="icon-btn"><i class="fas fa-cog"></i></div>
+                <div class="icon-btn"><i class="fas fa-times"></i></div>
+            </div>
+        </div>
+
+        <!-- Panel 2: SOXL -->
+        <div class="chart-panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="ticker-name">SOXL</h2>
+                    <p class="text-xs text-slate-400 font-bold">Direxion Daily Semi Bull</p>
+                </div>
+                <div class="text-right">
+                    <p class="ticker-price">$34.12</p>
+                    <p class="ticker-change neg">▼ 0.85%</p>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="chart2"></canvas>
+            </div>
+            <div class="panel-controls">
+                <div class="icon-btn"><i class="fas fa-expand"></i></div>
+                <div class="icon-btn"><i class="fas fa-cog"></i></div>
+                <div class="icon-btn"><i class="fas fa-times"></i></div>
+            </div>
+        </div>
+
+        <!-- Panel 3: NVDA -->
+        <div class="chart-panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="ticker-name">NVDA</h2>
+                    <p class="text-xs text-slate-400 font-bold">NVIDIA Corporation</p>
+                </div>
+                <div class="text-right">
+                    <p class="ticker-price">$124.50</p>
+                    <p class="ticker-change pos">▲ 2.10%</p>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="chart3"></canvas>
+            </div>
+            <div class="panel-controls">
+                <div class="icon-btn"><i class="fas fa-expand"></i></div>
+                <div class="icon-btn"><i class="fas fa-cog"></i></div>
+                <div class="icon-btn"><i class="fas fa-times"></i></div>
+            </div>
+        </div>
+
+        <!-- Panel 4: BTC -->
+        <div class="chart-panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="ticker-name">BTC/USD</h2>
+                    <p class="text-xs text-slate-400 font-bold">Bitcoin</p>
+                </div>
+                <div class="text-right">
+                    <p class="ticker-price">$98,432</p>
+                    <p class="ticker-change pos">▲ 0.45%</p>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="chart4"></canvas>
+            </div>
+            <div class="panel-controls">
+                <div class="icon-btn"><i class="fas fa-expand"></i></div>
+                <div class="icon-btn"><i class="fas fa-cog"></i></div>
+                <div class="icon-btn"><i class="fas fa-times"></i></div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer-bar">
+        <span>MARKET STATUS: OPEN</span>
+        <span class="text-slate-400">LAST UPDATE: 14:02:33 EST</span>
+    </footer>
+
+    <script>
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false },
+                y: { display: false } // Minimalist view
+            },
+            elements: { point: { radius: 0 }, line: { borderWidth: 2 } }
+        };
+
+        const createChart = (id, color) => {
+            const ctx = document.getElementById(id).getContext('2d');
+            const dataPoints = Array.from({length: 50}, () => Math.floor(Math.random() * 100));
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 50}, (_, i) => i),
+                    datasets: [{
+                        data: dataPoints,
+                        borderColor: color,
+                        backgroundColor: color + '10', // 10 opacity
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: commonOptions
+            });
+        };
+
+        createChart('chart1', '#010079'); // TQQQ - Navy
+        createChart('chart2', '#dc2626'); // SOXL - Red
+        createChart('chart3', '#16a34a'); // NVDA - Green
+        createChart('chart4', '#D5AD36'); // BTC - Gold
+    </script>
+
+</body>
+</html>
