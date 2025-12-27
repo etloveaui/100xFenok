@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1-loading | 100x FENOK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { brand: { navy: '#010079', gold: '#D5AD36', interactive: '#1B73D3' } },
+            animation: { 'pulse-ring': 'pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite' },
+            keyframes: { 'pulse-ring': { '0%': { transform: 'scale(.33)' }, '80%, 100%': { opacity: 0 } } }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        
+        .loader-container { position: relative; width: 160px; height: 160px; display: flex; align-items: center; justify-content: center; }
+        .dot { width: 80px; height: 80px; background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; z-index: 2; border: 1px solid #f1f5f9; }
+        
+        .pulse { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: #1B73D3; opacity: 0.15; z-index: 1; animation: pulse-ring 2s infinite; }
+        .pulse-delayed { animation-delay: 0.5s; }
+    </style>
+</head>
+<body>
+
+    <div class="loader-container">
+        <div class="pulse"></div>
+        <div class="pulse pulse-delayed"></div>
+        <div class="dot">
+            <span class="orbitron font-[900] text-2xl text-brand-navy">100x</span>
+        </div>
+    </div>
+
+    <div class="mt-12 flex flex-col items-center gap-2">
+        <p class="orbitron font-bold text-slate-800 tracking-widest text-sm">MARKET ANALYZER</p>
+        <div class="flex gap-1">
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style="animation-delay: 0.1s"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style="animation-delay: 0.2s"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style="animation-delay: 0.3s"></div>
+        </div>
+    </div>
+
+    <p class="mt-8 text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Connecting to Intelligence Stream</p>
+
+</body>
+</html>

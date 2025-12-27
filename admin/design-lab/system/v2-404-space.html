@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v2-404 | 100x FENOK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        
+        .floating-astronaut {
+            font-size: 8rem; animation: float 6s ease-in-out infinite; margin-bottom: 2rem; display: block;
+        }
+        @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } 100% { transform: translateY(0px) rotate(0deg); } }
+        
+        .stars { position: absolute; inset: 0; z-index: -1; opacity: 0.5; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 50px 50px; }
+    </style>
+</head>
+<body class="relative overflow-hidden">
+    <div class="stars"></div>
+
+    <span class="floating-astronaut">🧑‍🚀</span>
+    
+    <h1 class="text-6xl font-black text-slate-800 mb-4 orbitron">404</h1>
+    <h2 class="text-xl font-semibold text-slate-600 mb-8">길을 잃으셨나요?</h2>
+    
+    <p class="text-slate-400 mb-10 max-w-md leading-relaxed">
+        요청하신 페이지는 존재하지 않습니다.<br>
+        하지만 걱정 마세요. 베이스캠프는 언제나 열려 있습니다.
+    </p>
+
+    <a href="../../index.html" class="px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-slate-700 transition-colors shadow-lg">
+        베이스캠프로 귀환
+    </a>
+</body>
+</html>
