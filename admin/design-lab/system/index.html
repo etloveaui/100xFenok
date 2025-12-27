@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System States Gallery - 100x Design Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .gallery-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s; border: 1px solid #e2e8f0; }
+        .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #3b82f6; }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <a href="../index.html" class="text-slate-400 hover:text-slate-600 text-sm font-bold mb-2 block">← Dashboard</a>
+                <h1 class="text-3xl font-bold text-slate-800">🚦 System States Gallery</h1>
+                <p class="text-slate-500">404, Loading, Maintenance 등 시스템 상태 페이지 리디자인</p>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- v1: 404 Gap Down -->
+            <div class="gallery-card border-t-4 border-red-500 shadow-md">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-red-500">📉</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-red-100 text-red-600">DONE</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">v1: 404 Gap Down</h3>
+                    <p class="text-sm text-slate-600 mb-6">차트의 갭 하락을 메타포로 활용한 위트 있는 에러 페이지.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v1-404-gap-down.html</span>
+                        <a href="v1-404-gap-down.html" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-600 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v2: Loading Pulse -->
+            <div class="gallery-card border-t-4 border-[#010079] bg-slate-900 shadow-xl border-none">
+                <div class="h-48 bg-slate-800 flex items-center justify-center border-b border-slate-700 relative">
+                    <span class="text-4xl text-blue-400">⚡</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-blue-900 text-blue-200">DONE</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-white">v2: Loading Pulse</h3>
+                    <p class="text-sm text-slate-400 mb-6">브랜드 로고 애니메이션과 데이터 스트림 효과. (Dark Mode)</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-500 font-mono">v2-loading-pulse.html</span>
+                        <a href="v2-loading-pulse.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v3: Maintenance -->
+            <div class="gallery-card border-t-4 border-amber-500 shadow-md">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-amber-500">🛠️</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-amber-100 text-amber-600">DONE</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">v3: Maintenance</h3>
+                    <p class="text-sm text-slate-600 mb-6">시스템 업그레이드 진행 상황을 보여주는 깔끔한 카드 UI.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v3-maintenance-upgrade.html</span>
+                        <a href="v3-maintenance-upgrade.html" class="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-600 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

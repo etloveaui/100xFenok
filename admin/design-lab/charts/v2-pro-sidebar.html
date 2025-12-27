@@ -1,0 +1,286 @@
+<!DOCTYPE html><html lang="ko"><head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { brand: { navy: '#010079', gold: '#D5AD36', interactive: '#1B73D3' } }
+        }
+      }
+    }
+  </script>
+  <meta charset="utf-8">
+  <title>Multichart v2 - Pro Sidebar</title>
+  
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; background-color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    
+    /* Nav */
+    .nav-edgy { height: 60px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem; flex-shrink: 0; }
+
+    /* Layout */
+    .app-container { flex: 1; display: flex; overflow: hidden; }
+    .sidebar { width: 320px; background: #f8fafc; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow-y: auto; }
+    .main-view { flex: 1; display: flex; flex-direction: column; padding: 1rem; gap: 1rem; overflow-y: auto; }
+
+    /* Sidebar Elements */
+    .side-section { padding: 1.5rem; border-bottom: 1px solid #e2e8f0; }
+    .side-title { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 1rem; }
+    
+    .ticker-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .input-compact { flex: 1; border: 1px solid #cbd5e1; padding: 0.5rem; border-radius: 6px; font-size: 0.875rem; font-weight: 700; text-transform: uppercase; }
+    
+    .period-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .btn-period { font-size: 0.75rem; font-weight: 700; padding: 0.5rem 0; background: white; border: 1px solid #cbd5e1; border-radius: 4px; color: #64748b; transition: all 0.2s; }
+    .btn-period:hover { border-color: #94a3b8; color: #1e293b; }
+    .btn-period.active { background: #010079; color: white; border-color: #010079; }
+
+    .btn-run { width: 100%; padding: 1rem; background: #1B73D3; color: white; font-weight: 800; border-radius: 8px; margin-top: 1rem; transition: background 0.2s; }
+    .btn-run:hover { background: #010079; }
+
+    /* Main Chart */
+    .chart-box { flex: 2; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; position: relative; }
+    .table-box { flex: 1; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  </style>
+
+  <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script defer="" src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script defer="" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script defer="" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+
+  <div id="root" class="h-full flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect, useCallback } = React;
+    
+    /* [LOGIC COPY] Original logic included here... */
+    const API_KEYS = ['QQHTQMTRUSFFD4UB','ZHWYM2BSS73UH9YI','SE3NG2WW0BDJY42J','QXJT87SAUPW50BM8','T6D38694XL3V6CGA','1GJ75NRCELNNYBPU','5Y3HTLFEA4WMKBNI'];
+    const rotateKey = (() => { let idx = -1; return () => { idx = (idx + 1) % API_KEYS.length; return API_KEYS[idx]; }; })();
+    const DELAY_MS = Math.ceil(60000 / (5 * API_KEYS.length));
+    const PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+    const getColor = i => PALETTE[i % PALETTE.length];
+    const STOOQ_PROXY = 'https://stooq-proxy.etloveaui.workers.dev';
+
+    function toStooqSymbol(symbol) {
+        if (symbol.startsWith('^')) return symbol.toLowerCase();
+        if (/^[0-9]{6}\.KS$/i.test(symbol)) return symbol.slice(0,6).toLowerCase()+'.kr';
+        return symbol.toLowerCase() + '.us';
+    }
+
+    async function fetchStooq(symbol) {
+        const stoSym = toStooqSymbol(symbol);
+        const cacheKey = `stooq_cache_${stoSym}`;
+        const c = JSON.parse(localStorage.getItem(cacheKey)||'{}');
+        if (c.ts && Date.now() - c.ts < 86400000) return c.data;
+        
+        const url = STOOQ_PROXY + encodeURIComponent(`https://stooq.com/q/d/l/?s=${stoSym}&i=d`);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Proxy error');
+        const txt = await res.text();
+        if (!txt.startsWith('Date')) throw new Error('CSV format');
+        const data = txt.trim().split('\n').slice(1).map(l => {
+            const f = l.split(','); return { date: f[0], price: +f[4] };
+        }).sort((a,b)=>a.date.localeCompare(b.date));
+        
+        localStorage.setItem(cacheKey, JSON.stringify({ts:Date.now(), data}));
+        return data;
+    }
+
+    async function fetchPriceDataAlpha(symbol) { return []; } // Fallback stub
+
+    async function fetchPriceData(symbol) {
+        try { return await fetchStooq(symbol); } catch (e) { console.warn(e); return []; }
+    }
+
+    const calculateMDD = prices => {
+        let peak = -Infinity, maxDD = 0;
+        prices.forEach(p => { if (p > peak) peak = p; const dd = (p - peak) / peak; if (dd < maxDD) maxDD = dd; });
+        return maxDD * -100;
+    };
+    const calculateVolatility = prices => {
+        if (prices.length < 2) return 0;
+        const rets = []; for (let i = 1; i < prices.length; i++) rets.push(Math.log(prices[i] / prices[i - 1]));
+        const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+        const variance = rets.reduce((a, v) => a + (v - mean) ** 2, 0) / (rets.length - 1);
+        return Math.sqrt(variance) * Math.sqrt(252) * 100;
+    };
+
+    function App() {
+        const [rows, setRows] = useState([{ id: 1, v: 'SPY' }, { id: 2, v: 'QQQ' }]);
+        const [period, setPeriod] = useState('1Y');
+        const [startDate, setStartDate] = useState(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d.toISOString().slice(0, 10); });
+        const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
+        const [chartMode, setChartMode] = useState('normalized');
+        const [options, setOptions] = useState({ showMA50: false, benchmarkTicker: 'SPY' });
+        const [summary, setSummary] = useState([]);
+        const [isLoading, setIsLoading] = useState(false);
+        const chartRef = useRef(null);
+        const canvasRef = useRef(null);
+
+        const addRow = () => rows.length < 5 && setRows([...rows, { id: Date.now(), v: '' }]);
+        const upd = (id, v) => setRows(rows.map(r => r.id === id ? { ...r, v: v.toUpperCase() } : r));
+        const del = id => setRows(rows.filter(r => r.id !== id));
+
+        // Preset Date Logic
+        useEffect(() => {
+            const endDt = new Date(); const startDt = new Date();
+            const m = { '1M': -1, '3M': -3, '6M': -6, '1Y': -12, '2Y': -24, '3Y': -36, '5Y': -60 }[period];
+            if (m) startDt.setMonth(endDt.getMonth() + m); else if (period === 'YTD') startDt.setMonth(0, 1);
+            setStartDate(startDt.toISOString().slice(0, 10)); setEndDate(endDt.toISOString().slice(0, 10));
+        }, [period]);
+
+        const runAnalysis = async () => {
+            setIsLoading(true);
+            const tickers = rows.map(r => r.v.trim()).filter(Boolean);
+            if(!tickers.length) { setIsLoading(false); return; }
+            if (chartMode === 'benchmark' && !tickers.includes(options.benchmarkTicker)) tickers.push(options.benchmarkTicker);
+            
+            const dataMap = {};
+            for(const t of tickers) { try { dataMap[t] = await fetchStooq(t); } catch(e){} }
+            
+            // Date Filtering
+            const sStr = startDate;
+            const eStr = endDate;
+            const allDates = [...new Set(Object.values(dataMap).flat().map(p=>p.date))].filter(d=>d>=sStr && d<=eStr).sort();
+            
+            const datasets = [], sum = [];
+
+            tickers.forEach((t, i) => {
+                const full = dataMap[t]; if(!full) return;
+                const filtered = full.filter(p=>p.date >= sStr && p.date <= eStr);
+                if(!filtered.length) return;
+                
+                const first = filtered[0].price;
+                const color = getColor(i);
+
+                let dataArr = allDates.map(dt => {
+                    const found = filtered.find(p=>p.date===dt);
+                    return found ? found.price : null;
+                });
+
+                if(chartMode === 'normalized') {
+                    dataArr = dataArr.map(v => v ? (v/first-1)*100 : null);
+                } else if(chartMode === 'benchmark') {
+                    const bench = dataMap[options.benchmarkTicker]?.filter(p=>p.date >= sStr && p.date <= eStr);
+                    if(bench?.length) {
+                        const bFirst = bench[0].price;
+                        dataArr = allDates.map(dt => {
+                            const pT = filtered.find(p=>p.date===dt);
+                            const pB = bench.find(p=>p.date===dt);
+                            return (pT && pB) ? ((pT.price/first) / (pB.price/bFirst) - 1)*100 : null;
+                        });
+                    } else { dataArr = []; }
+                }
+
+                datasets.push({ label: t, data: dataArr, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.1 });
+                
+                const prices = filtered.map(p=>p.price);
+                const last = prices[prices.length-1];
+                
+                sum.push({
+                    sym: t,
+                    ret: ((last/first-1)*100).toFixed(2),
+                    mdd: calculateMDD(prices).toFixed(2),
+                    vol: calculateVolatility(prices).toFixed(2),
+                    color
+                });
+            });
+
+            setSummary(sum.sort((a,b)=>b.ret - a.ret));
+
+            if(chartRef.current) chartRef.current.destroy();
+            const unit = (new Date(eStr) - new Date(sStr))/86400000 <= 90 ? 'week' : 'month';
+            
+            chartRef.current = new Chart(canvasRef.current, {
+                type: 'line',
+                data: { labels: allDates, datasets },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    interaction: { mode: 'index', intersect: false },
+                    scales: { 
+                        x: { type: 'time', time: { unit }, grid: { display: false } }, 
+                        y: { grid: { color: '#f1f5f9' } } 
+                    }, 
+                    plugins: { legend: { position: 'top' } } 
+                } 
+            });
+            setIsLoading(false);
+        };
+
+        return (
+            <div className="h-full flex flex-col">
+                <nav className="nav-edgy">
+                    <span className="font-[900] orbitron text-slate-800 text-lg">100x <span className="text-brand-interactive">PRO</span></span>
+                </nav>
+                <div className="app-container">
+                    <aside className="sidebar">
+                        <div className="side-section">
+                            <div className="side-title">Assets</div>
+                            {rows.map(r => (
+                                <div key={r.id} className="ticker-row">
+                                    <input value={r.v} onChange={e=>upd(r.id, e.target.value)} className="input-compact" placeholder="TICKER" />
+                                    <button onClick={()=>del(r.id)} className="text-slate-400 hover:text-red-500"><i className="fas fa-times"></i></button>
+                                </div>
+                            ))}
+                            <button onClick={addRow} className="text-xs font-bold text-blue-600 mt-2 hover:underline">+ Add Symbol</button>
+                        </div>
+                        <div className="side-section">
+                            <div className="side-title">Timeframe</div>
+                            <div className="period-grid">
+                                {['1M','3M','6M','YTD','1Y','2Y','3Y','5Y'].map(p => (
+                                    <button key={p} onClick={()=>setPeriod(p)} className={`btn-period ${period===p?'active':''}`}>{p}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="side-section">
+                            <div className="side-title">Mode</div>
+                            <div className="flex bg-slate-100 p-1 rounded-lg">
+                                <button onClick={()=>setChartMode('normalized')} className={`flex-1 text-xs font-bold py-2 rounded ${chartMode==='normalized'?'bg-white shadow text-blue-600':'text-slate-500'}`}>% Return</button>
+                                <button onClick={()=>setChartMode('price')} className={`flex-1 text-xs font-bold py-2 rounded ${chartMode==='price'?'bg-white shadow text-blue-600':'text-slate-500'}`}>Price $</button>
+                            </div>
+                            <div className="mt-2 text-center">
+                                <button onClick={()=>setChartMode('benchmark')} className={`text-xs font-bold py-1 px-2 rounded ${chartMode==='benchmark'?'text-blue-600':'text-slate-400'}`}>vs Benchmark</button>
+                            </div>
+                        </div>
+                        <div className="p-4 mt-auto">
+                            <button onClick={runAnalysis} disabled={isLoading} className="btn-run">{isLoading?'LOADING...':'UPDATE CHART'}</button>
+                        </div>
+                    </aside>
+                    
+                    <main className="main-view">
+                        <div className="chart-box">
+                            <canvas ref={canvasRef}></canvas>
+                        </div>
+                        <div className="table-box h-48">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-slate-50 text-xs text-slate-500 uppercase sticky top-0">
+                                    <tr><th className="p-3">Asset</th><th className="p-3 text-right">Return</th><th className="p-3 text-right">MDD</th><th className="p-3 text-right">Vol</th></tr>
+                                </thead>
+                                <tbody>
+                                    {summary.map(r => (
+                                        <tr key={r.sym} className="border-b border-slate-50">
+                                            <td className="p-3 font-bold flex items-center"><span className="w-2 h-2 rounded-full mr-2" style={{background:r.color}}></span>{r.sym}</td>
+                                            <td className={`p-3 text-right font-bold ${r.ret>=0?'text-green-600':'text-red-500'}`}>{r.ret}%</td>
+                                            <td className="p-3 text-right text-red-500">{r.mdd}%</td>
+                                            <td className="p-3 text-right text-slate-500">{r.vol}%</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

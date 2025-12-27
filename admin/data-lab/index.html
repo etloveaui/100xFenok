@@ -11,8 +11,8 @@
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
 
-  <script src="shared/data-lab-config.js"></script>
-  <script src="shared/validators.js"></script>
+  <script src="shared/data-lab-config.js?v=2.1"></script>
+  <script src="shared/validators.js?v=2.0"></script>
 
   <header class="py-6 border-b bg-white">
     <div class="container mx-auto px-4">
@@ -139,7 +139,7 @@
             <h3 class="font-semibold text-sm">Benchmarks</h3>
             <span id="update-bench-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
           </div>
-          <div class="text-xs text-gray-500">최근 갱신</div>
+          <div class="text-xs text-gray-500">주간 갱신</div>
           <div class="mono text-sm" id="update-bench-date">-</div>
           <button data-revalidate="benchmarks" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
         </div>
@@ -148,7 +148,7 @@
             <h3 class="font-semibold text-sm">Global Scouter</h3>
             <span id="update-scouter-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
           </div>
-          <div class="text-xs text-gray-500">최근 갱신</div>
+          <div class="text-xs text-gray-500">주간 갱신</div>
           <div class="mono text-sm" id="update-scouter-date">-</div>
           <button data-revalidate="scouter" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
         </div>
@@ -157,7 +157,7 @@
             <h3 class="font-semibold text-sm">Damodaran ERP</h3>
             <span id="update-erp-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
           </div>
-          <div class="text-xs text-gray-500">최근 갱신</div>
+          <div class="text-xs text-gray-500">연간 갱신</div>
           <div class="mono text-sm" id="update-erp-date">-</div>
           <button data-revalidate="damodaran" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
         </div>
@@ -166,7 +166,7 @@
             <h3 class="font-semibold text-sm">Damodaran EV/Sales</h3>
             <span id="update-ev-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
           </div>
-          <div class="text-xs text-gray-500">최근 갱신</div>
+          <div class="text-xs text-gray-500">연간 갱신</div>
           <div class="mono text-sm" id="update-ev-date">-</div>
           <button data-revalidate="damodaran" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
         </div>
@@ -394,7 +394,7 @@
         const result = validateDamodaranErp(data);
         setStatus('erp-status', result.ok);
         setText('erp-count', result.stats.actualCount);
-        setText('erp-date', getMetaDate(data));
+        setText('erp-date', formatDate(data?.metadata?.generated_at));
         setText('erp-sample', sampleKeys(data.countries, 5));
         setText('update-erp-date', formatDate(data?.metadata?.generated_at));
         setUpdateStatus('update-erp-status', daysSince(data?.metadata?.generated_at), 400, 500);
@@ -411,7 +411,7 @@
         const result = validateDamodaranEvSales(data);
         setStatus('evsales-status', result.ok);
         setText('evsales-count', result.stats.actualCount);
-        setText('evsales-date', getMetaDate(data));
+        setText('evsales-date', formatDate(data?.metadata?.generated_at));
         setText('evsales-sample', sampleKeys(data.sectors, 5));
         setText('update-ev-date', formatDate(data?.metadata?.generated_at));
         setUpdateStatus('update-ev-status', daysSince(data?.metadata?.generated_at), 250, 400);
@@ -428,7 +428,7 @@
         const result = validateGlobalScouter(data);
         setStatus('scouter-status', result.ok);
         setText('scouter-count', result.stats.actualCount);
-        setText('scouter-date', getMetaDate(data));
+        setText('scouter-date', formatDate(data?.metadata?.date || data?.metadata?.generated_at));
         setText('scouter-sample', sampleKeys(data.stocks, 5));
         const scouterDate = data?.metadata?.date || data?.metadata?.generated_at;
         setText('update-scouter-date', formatDate(scouterDate));
@@ -443,8 +443,9 @@
     async function loadSec13F() {
       try {
         const summary = await fetchDataLabFile('SEC13F_SUMMARY');
-        const investorCount = summary?.investors?.length || 0;
-        const stockCount = summary?.top_stocks?.length || 0;
+        // summary.json은 Object 구조 (Array 아님)
+        const investorCount = Object.keys(summary?.investors || {}).length;
+        const stockCount = Object.keys(summary?.top_stocks || {}).length;
         const latestDate = summary?.metadata?.quarter || summary?.metadata?.generated_at;
 
         setStatus('sec13f-status', true, '정상');
@@ -464,8 +465,9 @@
     async function loadSec13FConsole() {
       try {
         const summary = await fetchDataLabFile('SEC13F_SUMMARY');
-        const investors = summary?.investors || [];
-        const topStocks = summary?.top_stocks || [];
+        // summary.json은 Object 구조 → Object.values로 배열 변환
+        const investors = Object.values(summary?.investors || {});
+        const topStocks = Object.values(summary?.top_stocks || {});
 
         setText('sec13f-console-investors', investors.length || '-');
         setText('sec13f-console-stocks', topStocks.length || '-');
@@ -569,7 +571,7 @@
       const data = await fetchDataLabFile('GLOBAL_SCOUTER');
       const sample = pickSample(data?.stocks || {});
       setText('scouter-console-count', data?.metadata?.stock_count || Object.keys(data?.stocks || {}).length || '-');
-      setText('scouter-console-date', data?.metadata?.date || '-');
+      setText('scouter-console-date', formatDate(data?.metadata?.date || data?.metadata?.generated_at));
       setText('scouter-console-generated', formatDate(data?.metadata?.generated_at));
       setText('scouter-console-sample', sample ? sample.key : '-');
       document.getElementById('scouter-console-preview').textContent = sample ? safeStringify(sample.value) : '샘플 없음';
