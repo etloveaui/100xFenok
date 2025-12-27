@@ -23,7 +23,7 @@
           </div>
           <div>
             <h1 class="text-xl font-bold">Valuation Lab 대시보드</h1>
-            <p class="text-gray-500 text-sm">Global Scouter 요약</p>
+            <p class="text-gray-500 text-sm">Global Scouter v2.0</p>
           </div>
         </div>
         <a href="./" class="text-gray-500 hover:text-blue-600">
@@ -39,18 +39,18 @@
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
           <h2 class="text-2xl font-bold text-gray-800">오늘 무엇을 찾고 싶나요?</h2>
-          <p class="text-gray-500 text-sm mt-2">질문 하나만 고르면 자동으로 맞춤 스크리닝이 시작됩니다.</p>
+          <p class="text-gray-500 text-sm mt-2">분석 목적에 맞는 스크리너로 바로 이동하세요.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:max-w-2xl">
-          <a href="custom-screener.html?preset=value" class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 hover:border-emerald-300">
+          <a href="per-band.html" class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 hover:border-emerald-300">
             <div class="font-semibold text-sm">저평가 중심</div>
-            <div class="text-xs text-gray-500 mt-1">밴드 편차 중심</div>
+            <div class="text-xs text-gray-500 mt-1">PER 밴드 편차</div>
           </a>
-          <a href="custom-screener.html?preset=growth" class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 hover:border-indigo-300">
+          <a href="eps-growth.html" class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 hover:border-indigo-300">
             <div class="font-semibold text-sm">성장 중심</div>
             <div class="text-xs text-gray-500 mt-1">Forward CAGR</div>
           </a>
-          <a href="custom-screener.html?preset=stable" class="bg-rose-50 border border-rose-100 rounded-xl p-4 hover:border-rose-300">
+          <a href="stability-score.html" class="bg-rose-50 border border-rose-100 rounded-xl p-4 hover:border-rose-300">
             <div class="font-semibold text-sm">안정성 중심</div>
             <div class="text-xs text-gray-500 mt-1">변동성 낮음</div>
           </a>
@@ -76,6 +76,10 @@
           <span class="font-semibold text-gray-700">국가 수</span>
           <div class="mono" id="country-count">-</div>
         </div>
+      </div>
+      <div id="loading-status" class="text-blue-600 text-sm mt-2 hidden">
+        <i class="fas fa-spinner fa-spin mr-1"></i>
+        <span id="loading-text">로딩 중...</span>
       </div>
       <p class="text-xs text-gray-500 mt-2">표시는 백분위 기준입니다. 상세 분석은 각 Phase로 이동하세요.</p>
     </section>
@@ -132,13 +136,27 @@
   </main>
 
   <script>
-    const DATA_URL = (() => {
+    // v2.0 모듈화 구조 - 2단계 로딩
+    const getBasePath = () => {
       const host = location.hostname;
-      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
-      const isCloudflare = host.endsWith('pages.dev');
-      const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
-      return `${base}/data/global-scouter/stocks.json`;
-    })();
+      if (location.protocol === 'file:') return '';
+      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return '';
+      if (host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')) return '';
+      if (host.endsWith('pages.dev')) return '';
+      return '/100xFenok';
+    };
+
+    const BASE_PATH = getBasePath();
+    const URLS = {
+      INDEX: `${BASE_PATH}/data/global-scouter/core/stocks_index.json`,
+      DASHBOARD: `${BASE_PATH}/data/global-scouter/core/dashboard.json`,
+      DETAIL_BASE: `${BASE_PATH}/data/global-scouter/stocks/detail/`
+    };
+
+    const elements = {
+      loadingStatus: document.getElementById('loading-status'),
+      loadingText: document.getElementById('loading-text')
+    };
 
     function lastNonNull(arr) {
       if (!Array.isArray(arr)) return null;
@@ -190,23 +208,67 @@
       }
     }
 
-    async function init() {
-      const res = await fetch(DATA_URL);
-      if (!res.ok) throw new Error('데이터 로딩 실패');
-      const data = await res.json();
-      const stocks = data.stocks || {};
-      const sectors = data.sectors || {};
+    async function fetchDetail(ticker) {
+      try {
+        const res = await fetch(URLS.DETAIL_BASE + ticker + '.json');
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    }
 
-      const rows = Object.entries(stocks).map(([ticker, stock]) => {
-        const info = stock.info || {};
-        const perBand = stock.per_band || {};
-        const historical = stock.historical || {};
-        const estimates = stock.estimates || {};
-        const currentPer = lastNonNull(historical.per);
+    async function fetchDetails(tickers) {
+      const batchSize = 50;
+      const results = {};
+      for (let i = 0; i < tickers.length; i += batchSize) {
+        const batch = tickers.slice(i, i + batchSize);
+        elements.loadingText.textContent = `상세 로딩 중... (${Math.min(i + batchSize, tickers.length)}/${tickers.length})`;
+        await Promise.all(batch.map(async (t) => {
+          const detail = await fetchDetail(t);
+          if (detail) results[t] = detail;
+        }));
+      }
+      return results;
+    }
+
+    async function init() {
+      elements.loadingStatus.classList.remove('hidden');
+
+      // 1단계: 인덱스 + 대시보드 로드
+      elements.loadingText.textContent = '인덱스 로딩 중...';
+      const [indexRes, dashRes] = await Promise.all([
+        fetch(URLS.INDEX),
+        fetch(URLS.DASHBOARD)
+      ]);
+      if (!indexRes.ok) throw new Error('인덱스 로딩 실패');
+      if (!dashRes.ok) throw new Error('대시보드 로딩 실패');
+
+      const index = await indexRes.json();
+      const dashboard = await dashRes.json();
+      const sectors = dashboard.sectors || {};
+
+      const tickers = Object.keys(index.stocks || {});
+
+      // 2단계: 상세 데이터 배치 로드
+      const details = await fetchDetails(tickers);
+
+      // 3단계: 행 구성
+      const rows = [];
+      for (const [ticker, info] of Object.entries(index.stocks || {})) {
+        const detail = details[ticker];
+        if (!detail) continue;
+
+        const valuation = detail.valuation || {};
+        const perShare = detail.per_share || {};
+        const estimates = detail.estimates || {};
+
+        const perBand = valuation.per_band || {};
+        const currentPer = lastNonNull(valuation.per);
         const perAvg = perBand.avg ?? null;
         const deviation = (currentPer !== null && perAvg) ? (currentPer - perAvg) / perAvg : null;
 
-        const epsHist = Array.isArray(historical.eps) ? historical.eps : [];
+        const epsHist = Array.isArray(perShare.eps) ? perShare.eps : [];
         const epsStart = epsHist[0] ?? null;
         const epsEnd = epsHist[epsHist.length - 1] ?? null;
         const histCagr = calcCagr(epsStart, epsEnd, Math.max(epsHist.length - 1, 1));
@@ -218,23 +280,23 @@
         const sd = avg !== null ? std(epsFiltered, avg) : null;
         const cv = (avg && sd !== null) ? sd / avg : null;
 
-        const sectorKey = info.sector_kr || info.sector || '-';
+        const sectorKey = info.s || '-';
         const sectorAvg = sectors[sectorKey]?.avg_per ?? null;
         const gap = (perAvg !== null && sectorAvg) ? (perAvg / sectorAvg) - 1 : null;
 
-        return {
+        rows.push({
           ticker,
-          name: info.name || '-',
+          name: info.n || '-',
           sector: sectorKey,
-          country: info.country || '-',
+          country: info.c || '-',
           deviation,
           fwdCagr,
           cv,
           gap
-        };
-      });
+        });
+      }
 
-      document.getElementById('data-date').textContent = data.metadata?.date || data.metadata?.generated_at || '-';
+      document.getElementById('data-date').textContent = dashboard.source_date || '-';
       document.getElementById('stock-count').textContent = rows.length.toString();
       document.getElementById('sector-count').textContent = Object.keys(sectors).length.toString();
       document.getElementById('country-count').textContent = new Set(rows.map(r => r.country)).size.toString();
@@ -286,9 +348,14 @@
         </a>
         <span class="mono text-sky-700">${formatPercent(item.gapRank)}</span>
       `);
+
+      elements.loadingStatus.classList.add('hidden');
     }
 
-    init().catch(err => console.error(err));
+    init().catch(err => {
+      elements.loadingStatus.classList.add('hidden');
+      console.error(err);
+    });
   </script>
 </body>
 </html>

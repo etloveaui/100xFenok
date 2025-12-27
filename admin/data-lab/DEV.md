@@ -1,7 +1,8 @@
 # Data Lab DEV.md
 
-> **목적**: Damodaran/Global Scouter 등 외부 JSON 데이터의 품질/최신성 관리
+> **목적**: 외부 JSON 데이터의 품질/최신성 관리
 > **위치**: `admin/data-lab/`
+> **마이그레이션**: DEC-063 (2025-12-27)
 
 ---
 
@@ -10,19 +11,43 @@
 | 항목 | 값 |
 |------|-----|
 | 역할 | 데이터 상태 대시보드 (관리 전용) |
-| 대상 | Damodaran, Global Scouter |
+| 대상 | Damodaran, Global Scouter, Benchmarks, **SEC 13F** |
 | 성격 | 읽기/검증 중심 (UI 실험 없음) |
 
 ---
 
 ## 데이터 대상
 
-| 데이터 | 파일 | 갱신 주기 |
-|------|------|-----------|
-| Damodaran ERP | `/data/damodaran/erp.json` | 연 1회 |
-| Damodaran EV/Sales | `/data/damodaran/ev_sales.json` | 연 1~2회 |
-| Global Scouter | `/data/global-scouter/stocks.json` | 주간 |
-| Benchmarks | `/data/benchmarks/*.json` | 주간 |
+| 데이터 | 파일 | 갱신 주기 | 비고 |
+|------|------|-----------|------|
+| Damodaran ERP | `/data/damodaran/erp.json` | 연 1회 | 1개 파일 |
+| Damodaran EV/Sales | `/data/damodaran/ev_sales.json` | 연 1~2회 | 1개 파일 |
+| Global Scouter | `/data/global-scouter/core/stocks_index.json` | 주간 | 모듈화 (DEC-063) |
+| Benchmarks | `/data/benchmarks/*.json` | 주간 | 6개 파일 |
+| **SEC 13F** | `/data/sec-13f/summary.json` | 분기 | 3개 파일 + 17 투자자 |
+
+### SEC 13F 구조 (신규)
+```
+/data/sec-13f/
+├── summary.json       # 17명 투자자 요약
+├── by_sector.json     # 섹터별 집계
+├── by_ticker.json     # 티커별 집계
+└── investors/         # 개별 투자자 (17개)
+    ├── warren-buffett.json
+    ├── michael-burry.json
+    └── ...
+```
+
+### Global Scouter 구조 (DEC-063 변경)
+```
+/data/global-scouter/
+├── core/
+│   ├── metadata.json
+│   ├── dashboard.json
+│   └── stocks_index.json   # 메인 인덱스
+├── stocks/detail/*.json    # 개별 종목
+└── stocks.json             # Legacy (참조용)
+```
 
 ---
 

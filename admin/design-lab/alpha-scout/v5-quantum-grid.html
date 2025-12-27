@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Scout v5 - Quantum Grid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#3b82f6',
+                bg: '#f1f5f9',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; color: #1e293b; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Nav (Static) */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: white; border-bottom: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem;
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        /* Bento Grid Layout */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto auto auto;
+            gap: 1rem;
+            max-width: 1400px; margin: 0 auto; padding: 1.5rem;
+        }
+        @media (max-width: 1280px) { .grid-container { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 1024px) { .grid-container { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 640px) { .grid-container { grid-template-columns: 1fr; } }
+
+        /* Tiles */
+        .tile {
+            background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1.25rem;
+            display: flex; flex-direction: column; position: relative;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .tile.header { grid-column: span 2; background: #0f172a; color: white; border: none; }
+        .tile.large { grid-column: span 2; grid-row: span 2; }
+        .tile.tall { grid-row: span 2; }
+
+        /* Typography */
+        .tile-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+        .tile-value { font-size: 1.5rem; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; }
+        .tile-sub { font-size: 0.875rem; font-weight: 500; margin-top: 0.25rem; }
+        
+        .pos { color: #16a34a; }
+        .neg { color: #dc2626; }
+
+        /* Custom Visuals */
+        .bar-container { width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; margin-top: 0.5rem; }
+        .bar-fill { height: 100%; border-radius: 4px; }
+
+        /* Tags */
+        .tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+        .tag.blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+        /* Radar Chart Overlay */
+        .radar-score {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 2rem; font-weight: 900; color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-edgy">
+        <span class="font-bold text-slate-800 text-lg mono">ALPHA_SCOUT<span class="text-brand-interactive">_PRO</span></span>
+        <div class="flex gap-2">
+            <input type="text" placeholder="Search Ticker..." class="bg-slate-100 border border-slate-200 rounded px-3 py-1 text-sm outline-none focus:border-blue-500">
+        </div>
+    </nav>
+
+    <main class="grid-container">
+        
+        <!-- Header Tile -->
+        <div class="tile header">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold mb-1">IBM</h1>
+                    <p class="text-slate-400 text-sm">International Business Machines</p>
+                    <div class="flex gap-2 mt-3">
+                        <span class="tag bg-slate-700 text-white border-slate-600">TECH</span>
+                        <span class="tag bg-slate-700 text-white border-slate-600">AI</span>
+                        <span class="tag bg-slate-700 text-white border-slate-600">DIVIDEND</span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-3xl font-mono font-bold">$219.83</p>
+                    <p class="text-green-400 font-mono text-sm">▲ 1.24%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Factor Radar -->
+        <div class="tile tall relative">
+            <div class="tile-label">Factor Score <i class="fas fa-info-circle"></i></div>
+            <div class="flex-1 flex items-center justify-center">
+                <canvas id="radarChart"></canvas>
+                <div class="radar-score">88</div>
+            </div>
+            <div class="text-center text-xs text-slate-500 mt-2 font-mono">
+                Top 5% in Sector
+            </div>
+        </div>
+
+        <!-- Valuation Football Field -->
+        <div class="tile large">
+            <div class="tile-label">Valuation Models <span>Target Range</span></div>
+            <div class="flex-1 flex flex-col justify-center gap-6 mt-2">
+                
+                <!-- DCF -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                        <span>DCF Growth</span>
+                        <span class="text-blue-600">$210 - $260</span>
+                    </div>
+                    <div class="relative h-6 bg-slate-100 rounded">
+                        <div class="absolute top-1 bottom-1 left-[40%] width-[30%] bg-blue-200 rounded"></div> <!-- Range -->
+                        <div class="absolute top-0 bottom-0 left-[45%] w-1 bg-blue-600 rounded"></div> <!-- Target -->
+                        <div class="absolute top-[-4px] bottom-[-4px] left-[42%] w-0.5 bg-black"></div> <!-- Current Price Marker -->
+                    </div>
+                </div>
+
+                <!-- P/E Multiple -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                        <span>P/E Multiple</span>
+                        <span class="text-green-600">$230 - $280</span>
+                    </div>
+                    <div class="relative h-6 bg-slate-100 rounded">
+                        <div class="absolute top-1 bottom-1 left-[50%] right-[10%] bg-green-200 rounded"></div>
+                        <div class="absolute top-0 bottom-0 left-[60%] w-1 bg-green-600 rounded"></div>
+                        <div class="absolute top-[-4px] bottom-[-4px] left-[42%] w-0.5 bg-black"></div>
+                    </div>
+                </div>
+
+                <!-- Historical Band -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                        <span>5Y Hist Band</span>
+                        <span class="text-slate-500">$180 - $220</span>
+                    </div>
+                    <div class="relative h-6 bg-slate-100 rounded">
+                        <div class="absolute top-1 bottom-1 left-[20%] right-[40%] bg-slate-300 rounded"></div>
+                        <div class="absolute top-0 bottom-0 left-[35%] w-1 bg-slate-600 rounded"></div>
+                        <div class="absolute top-[-4px] bottom-[-4px] left-[42%] w-0.5 bg-black"></div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="mt-4 flex items-center gap-2 text-xs">
+                <div class="w-0.5 h-3 bg-black"></div> <span class="text-slate-500">Current Price ($219.83)</span>
+            </div>
+        </div>
+
+        <!-- KPI: Growth -->
+        <div class="tile">
+            <div class="tile-label">Revenue YoY</div>
+            <div class="tile-value text-blue-600">+1.4%</div>
+            <div class="bar-container"><div class="bar-fill bg-blue-500" style="width: 20%"></div></div>
+            <p class="text-xs text-slate-400 mt-2">Stable Growth</p>
+        </div>
+
+        <!-- KPI: Profitability -->
+        <div class="tile">
+            <div class="tile-label">Net Margin</div>
+            <div class="tile-value text-green-600">9.6%</div>
+            <div class="bar-container"><div class="bar-fill bg-green-500" style="width: 65%"></div></div>
+            <p class="text-xs text-slate-400 mt-2">Improving</p>
+        </div>
+
+        <!-- Consensus -->
+        <div class="tile">
+            <div class="tile-label">Analyst Rating</div>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="text-lg font-bold text-slate-700">HOLD</span>
+                <span class="text-xs bg-slate-100 px-2 py-1 rounded">2.4/5.0</span>
+            </div>
+            <div class="flex h-2 mt-3 rounded overflow-hidden">
+                <div class="bg-green-500 w-[30%]"></div>
+                <div class="bg-yellow-400 w-[60%]"></div>
+                <div class="bg-red-500 w-[10%]"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                <span>Buy</span><span>Hold</span><span>Sell</span>
+            </div>
+        </div>
+
+        <!-- Dividend -->
+        <div class="tile">
+            <div class="tile-label">Dividend Yield</div>
+            <div class="tile-value text-brand-gold">3.03%</div>
+            <div class="tile-sub text-slate-500">Payout: 65%</div>
+        </div>
+
+    </main>
+
+    <script>
+        // Radar Chart
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Growth', 'Value', 'Quality', 'Momentum', 'Yield'],
+                datasets: [{
+                    label: 'Score',
+                    data: [65, 80, 95, 85, 90],
+                    fill: true,
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    borderColor: 'rgb(59, 130, 246)',
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(59, 130, 246)'
+                }]
+            },
+            options: {
+                elements: { line: { borderWidth: 2 } },
+                scales: {
+                    r: {
+                        angleLines: { color: '#e2e8f0' },
+                        grid: { color: '#e2e8f0' },
+                        pointLabels: { font: { size: 10, weight: '700' }, color: '#64748b' },
+                        ticks: { display: false, backdropColor: 'transparent' }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+</body>
+</html>

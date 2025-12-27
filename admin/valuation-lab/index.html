@@ -175,7 +175,7 @@
       </div>
     </section>
 
-    <section id="workstreams" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <section id="workstreams" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div id="stream-bench" class="card p-6">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-lg font-semibold">Benchmarks</h3>
@@ -194,7 +194,6 @@
         <div class="mt-4">
           <div class="text-xs text-gray-500">연계 기능</div>
           <div class="mt-2 flex flex-wrap gap-2 text-xs">
-            <a href="expansion/cross-score.html" class="px-2 py-1 rounded bg-sky-50 text-sky-700 border border-sky-100">Cross-Score</a>
             <a href="expansion/regime-presets.html" class="px-2 py-1 rounded bg-sky-50 text-sky-700 border border-sky-100">국면 프리셋</a>
             <a href="expansion/composite-report.html" class="px-2 py-1 rounded bg-sky-50 text-sky-700 border border-sky-100">Composite</a>
           </div>
@@ -210,9 +209,9 @@
         <div class="text-sm text-gray-500">A~E 대시보드/스크리너</div>
         <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
           <a href="expansion/dashboard.html" class="border rounded-lg p-2 hover:shadow-sm">통합 대시보드</a>
-          <a href="expansion/custom-screener.html" class="border rounded-lg p-2 hover:shadow-sm">맞춤 스크리너</a>
           <a href="expansion/per-band.html" class="border rounded-lg p-2 hover:shadow-sm">PER 밴드</a>
           <a href="expansion/sector-gap.html" class="border rounded-lg p-2 hover:shadow-sm">섹터 갭</a>
+          <a href="expansion/eps-growth.html" class="border rounded-lg p-2 hover:shadow-sm">EPS 성장</a>
         </div>
       </div>
 
@@ -222,11 +221,36 @@
           <span class="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700">확장 검증</span>
         </div>
         <div class="text-sm text-gray-500">ERP/EV 벤치마크</div>
-        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <div class="mt-4 grid grid-cols-3 gap-2 text-xs">
           <a href="expansion/damodaran-hub.html" class="border rounded-lg p-2 hover:shadow-sm">허브</a>
           <a href="expansion/erp-rank.html" class="border rounded-lg p-2 hover:shadow-sm">ERP 랭킹</a>
           <a href="expansion/ev-sales.html" class="border rounded-lg p-2 hover:shadow-sm">EV/Sales</a>
-          <a href="../data-lab/" class="border rounded-lg p-2 hover:shadow-sm">Data Lab</a>
+        </div>
+      </div>
+
+      <div id="stream-13f" class="card p-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-semibold">SEC 13F</h3>
+          <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">준비 중</span>
+        </div>
+        <div class="text-sm text-gray-500">유명 투자자 포트폴리오 (17명)</div>
+        <div class="mt-4 text-xs text-gray-500 space-y-2">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-user-tie text-gray-400"></i>
+            <span>Warren Buffett, Michael Burry, Bill Ackman...</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fas fa-chart-pie text-gray-400"></i>
+            <span>분기별 포지션 변동 추적</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fas fa-database text-gray-400"></i>
+            <span>데이터 준비됨 · 기능 개발 대기</span>
+          </div>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+          <span class="border rounded-lg p-2 text-gray-400 cursor-not-allowed">투자자 포트폴리오</span>
+          <span class="border rounded-lg p-2 text-gray-400 cursor-not-allowed">Top 종목</span>
         </div>
       </div>
     </section>
@@ -326,15 +350,16 @@
 
     async function loadScouter() {
       const base = getBasePath();
-      const res = await fetch(base + '/data/global-scouter/stocks.json');
+      // v2.0: 메타데이터 사용 (core/metadata.json)
+      const res = await fetch(base + '/data/global-scouter/core/metadata.json');
       if (!res.ok) throw new Error('Global Scouter 로딩 실패');
       const data = await res.json();
-      const count = data?.metadata?.stock_count || Object.keys(data?.stocks || {}).length;
-      const generated = data?.metadata?.generated_at;
+      const count = data?.counts?.stocks || 0;
+      const generated = data?.generated_at;
       setText('scouter-count', count ? count.toString() : '-');
-      setText('scouter-date', data?.metadata?.date || '-');
+      setText('scouter-date', data?.source_date || '-');
       setText('scouter-generated', generated ? generated.toString().slice(0, 10) : '-');
-      setStatus('scouter-status', true, '정상');
+      setStatus('scouter-status', true, 'v2.0');
     }
 
     async function loadDamodaran() {

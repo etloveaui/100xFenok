@@ -39,7 +39,7 @@
       <h2 class="text-lg font-semibold text-gray-600 mb-4">
         <i class="fas fa-signal text-emerald-500 mr-2"></i>데이터 상태
       </h2>
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
 
         <div class="bg-white rounded-xl p-5 shadow">
           <div class="flex items-center justify-between mb-3">
@@ -50,7 +50,7 @@
             <span id="erp-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
           </div>
           <div class="text-sm text-gray-600 space-y-1">
-            <p>레코드: <span id="erp-count">-</span></p>
+            <p>레코드: <span id="erp-count">-</span> <span class="text-xs text-gray-400">(1개 파일)</span></p>
             <p>갱신일: <span id="erp-date">-</span></p>
           </div>
           <div class="mt-3 text-xs text-gray-500">
@@ -67,7 +67,7 @@
             <span id="evsales-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
           </div>
           <div class="text-sm text-gray-600 space-y-1">
-            <p>레코드: <span id="evsales-count">-</span></p>
+            <p>레코드: <span id="evsales-count">-</span> <span class="text-xs text-gray-400">(1개 파일)</span></p>
             <p>갱신일: <span id="evsales-date">-</span></p>
           </div>
           <div class="mt-3 text-xs text-gray-500">
@@ -84,7 +84,7 @@
             <span id="scouter-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
           </div>
           <div class="text-sm text-gray-600 space-y-1">
-            <p>레코드: <span id="scouter-count">-</span></p>
+            <p>레코드: <span id="scouter-count">-</span> <span class="text-xs text-gray-400">(1개 파일)</span></p>
             <p>갱신일: <span id="scouter-date">-</span></p>
           </div>
           <div class="mt-3 text-xs text-gray-500">
@@ -101,11 +101,28 @@
             <span id="benchmarks-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
           </div>
           <div class="text-sm text-gray-600 space-y-1">
-            <p>파일: <span id="benchmarks-files">-</span></p>
-            <p>섹션: <span id="benchmarks-sections">-</span></p>
+            <p>레코드: <span id="benchmarks-sections">-</span> <span class="text-xs text-gray-400">(6개 파일)</span></p>
+            <p>갱신일: <span id="benchmarks-date">-</span></p>
           </div>
           <div class="mt-3 text-xs text-gray-500">
             샘플: <span id="benchmarks-sample">-</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">SEC 13F</h3>
+              <p class="text-xs text-gray-500">Investor Holdings</p>
+            </div>
+            <span id="sec13f-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">준비 중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>레코드: <span id="sec13f-count">-</span> <span class="text-xs text-gray-400">(3개 파일 + 17 투자자)</span></p>
+            <p>갱신일: <span id="sec13f-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="sec13f-sample">Warren Buffett, Michael Burry...</span>
           </div>
         </div>
 
@@ -116,7 +133,7 @@
       <h2 class="text-lg font-semibold text-gray-600 mb-4">
         <i class="fas fa-bell text-amber-500 mr-2"></i>업데이트 신호
       </h2>
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div class="bg-white rounded-xl p-5 shadow">
           <div class="flex items-center justify-between mb-2">
             <h3 class="font-semibold text-sm">Benchmarks</h3>
@@ -153,6 +170,15 @@
           <div class="mono text-sm" id="update-ev-date">-</div>
           <button data-revalidate="damodaran" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
         </div>
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">SEC 13F</h3>
+            <span id="update-13f-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">분기 갱신</div>
+          <div class="mono text-sm" id="update-13f-date">-</div>
+          <button data-revalidate="sec13f" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
       </div>
     </section>
 
@@ -165,6 +191,7 @@
           <button class="tab-btn px-3 py-2 rounded-lg border bg-sky-50 text-sky-700" data-tab="bench-console">Benchmarks</button>
           <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="scouter-console">Global Scouter</button>
           <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="damodaran-console">Damodaran</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="sec13f-console">SEC 13F</button>
         </div>
 
         <div id="bench-console" class="console-panel space-y-4">
@@ -231,6 +258,28 @@
             </div>
           </div>
           <pre id="damodaran-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+
+        <div id="sec13f-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">투자자 수</span>
+              <div class="mono" id="sec13f-console-investors">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">Top 종목</span>
+              <div class="mono" id="sec13f-console-stocks">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">분기</span>
+              <div class="mono" id="sec13f-console-quarter">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">주요 투자자</span>
+              <div class="mono" id="sec13f-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="sec13f-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
         </div>
       </div>
     </section>
@@ -391,6 +440,46 @@
       }
     }
 
+    async function loadSec13F() {
+      try {
+        const summary = await fetchDataLabFile('SEC13F_SUMMARY');
+        const investorCount = summary?.investors?.length || 0;
+        const stockCount = summary?.top_stocks?.length || 0;
+        const latestDate = summary?.metadata?.quarter || summary?.metadata?.generated_at;
+
+        setStatus('sec13f-status', true, '정상');
+        setText('sec13f-count', `${investorCount} 투자자`);
+        setText('sec13f-date', formatDate(latestDate));
+        setText('update-13f-date', formatDate(latestDate));
+        setUpdateStatus('update-13f-status', daysSince(latestDate), 100, 180);
+        addLog(`SEC 13F: OK (${investorCount} investors, ${stockCount} stocks)`, true);
+      } catch (err) {
+        setStatus('sec13f-status', false, '로드 실패');
+        setText('sec13f-count', '-');
+        setText('sec13f-date', '-');
+        addLog(`SEC 13F: ${err.message}`, false);
+      }
+    }
+
+    async function loadSec13FConsole() {
+      try {
+        const summary = await fetchDataLabFile('SEC13F_SUMMARY');
+        const investors = summary?.investors || [];
+        const topStocks = summary?.top_stocks || [];
+
+        setText('sec13f-console-investors', investors.length || '-');
+        setText('sec13f-console-stocks', topStocks.length || '-');
+        setText('sec13f-console-quarter', summary?.metadata?.quarter || '-');
+        setText('sec13f-console-sample', investors.slice(0, 3).map(i => i.name).join(', ') || '-');
+        document.getElementById('sec13f-console-preview').textContent = safeStringify({
+          top_investors: investors.slice(0, 3),
+          top_stocks: topStocks.slice(0, 5)
+        });
+      } catch (err) {
+        document.getElementById('sec13f-console-preview').textContent = `Error: ${err.message}`;
+      }
+    }
+
     async function loadBenchmarks() {
       const files = DATA_LAB_CONFIG.BENCHMARKS || [];
       let okCount = 0;
@@ -429,10 +518,10 @@
 
       const allOk = okCount === files.length;
       setStatus('benchmarks-status', allOk, allOk ? '정상' : `${okCount}/${files.length}`);
-      setText('benchmarks-files', files.length);
       setText('benchmarks-sections', totalSections);
-      setText('benchmarks-sample', samples.slice(0, 2).join(' | ') || '-');
       const updateDate = latestData || latestGenerated;
+      setText('benchmarks-date', formatDate(updateDate));
+      setText('benchmarks-sample', samples.slice(0, 2).join(' | ') || '-');
       setText('update-bench-date', formatDate(updateDate));
       setUpdateStatus('update-bench-status', daysSince(updateDate), 10, 21);
     }
@@ -501,8 +590,8 @@
 
     (async function init() {
       logEl.innerHTML = '';
-      await Promise.all([loadDamodaranErp(), loadDamodaranEvSales(), loadGlobalScouter(), loadBenchmarks()]);
-      await Promise.all([loadBenchConsole(), loadScouterConsole(), loadDamodaranConsole()]);
+      await Promise.all([loadDamodaranErp(), loadDamodaranEvSales(), loadGlobalScouter(), loadBenchmarks(), loadSec13F()]);
+      await Promise.all([loadBenchConsole(), loadScouterConsole(), loadDamodaranConsole(), loadSec13FConsole()]);
     })();
 
     document.querySelectorAll('.tab-btn').forEach(btn => {

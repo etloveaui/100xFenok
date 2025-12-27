@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts Hub v2 - 비주얼 그리드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#f3f4f6',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #f3f4f6; font-family: 'Noto Sans KR', sans-serif; color: #1f2937; }
+
+        /* Nav (1-Tier EDGY - Light) */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e5e7eb;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 2rem;
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        /* Container */
+        .hub-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1rem; }
+
+        /* Header */
+        .hub-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .hub-title { font-size: 2rem; font-weight: 900; color: #111827; }
+        .hub-desc { color: #6b7280; font-size: 0.9rem; }
+
+        /* Masonry Grid Simulation (using CSS Columns) */
+        .masonry-grid {
+            column-count: 4; column-gap: 1.5rem;
+        }
+        @media (max-width: 1280px) { .masonry-grid { column-count: 3; } }
+        @media (max-width: 1024px) { .masonry-grid { column-count: 2; } }
+        @media (max-width: 640px) { .masonry-grid { column-count: 1; } }
+
+        .card {
+            background: white; border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem;
+            break-inside: avoid; border: 1px solid #e5e7eb;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+
+        .card-img { width: 100%; display: block; object-fit: cover; }
+        .card-body { padding: 1.25rem; }
+        
+        .card-tag {
+            position: absolute; top: 1rem; left: 1rem;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px);
+            padding: 0.25rem 0.75rem; border-radius: 99px;
+            font-size: 0.7rem; font-weight: 700; color: #010079;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-title { font-size: 1.125rem; font-weight: 800; color: #1f2937; margin-bottom: 0.5rem; line-height: 1.4; word-break: keep-all; }
+        .card-excerpt { font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
+        
+        .card-meta { display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid #f3f4f6; font-size: 0.75rem; color: #9ca3af; font-weight: 600; }
+        
+        .rating-badge {
+            background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 0.7rem;
+        }
+        .rating-badge.hold { background: #fef9c3; color: #854d0e; }
+
+        /* Filter Pills */
+        .filter-scroll {
+            display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 2rem;
+            -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        }
+        .filter-pill {
+            white-space: nowrap; padding: 0.5rem 1.25rem; border-radius: 99px; background: white; border: 1px solid #e5e7eb;
+            font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.2s; font-size: 0.875rem;
+        }
+        .filter-pill:hover { border-color: #94a3b8; color: #374151; }
+        .filter-pill.active { background: #010079; color: white; border-color: #010079; }
+
+    </style>
+</head>
+<body>
+
+    <nav class="nav-edgy">
+        <span class="font-[900] text-slate-800 text-lg">100x 인사이트</span>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200">
+            <i class="fas fa-filter text-slate-600"></i>
+        </button>
+    </nav>
+
+    <main class="hub-container">
+        
+        <header class="hub-header">
+            <div>
+                <h1 class="hub-title">알파를 찾아서</h1>
+                <p class="hub-desc">현대 투자자를 위한 큐레이션 인텔리전스</p>
+            </div>
+        </header>
+
+        <div class="filter-scroll">
+            <button class="filter-pill active">전체</button>
+            <button class="filter-pill">Alpha Scout</button>
+            <button class="filter-pill">Market Wrap</button>
+            <button class="filter-pill">거시경제</button>
+            <button class="filter-pill">크립토</button>
+            <button class="filter-pill">플레이북</button>
+        </div>
+
+        <div class="masonry-grid">
+            
+            <!-- Card 1: Alpha Scout -->
+            <div class="card">
+                <span class="card-tag">Alpha Scout</span>
+                <img src="https://images.unsplash.com/photo-1611974765270-ca12586343bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img" style="height: 240px;">
+                <div class="card-body">
+                    <h3 class="card-title">ResMed (RMD): 수면 테크의 독점적 해자</h3>
+                    <p class="card-excerpt">경쟁사의 리콜 사태로 ResMed는 시장 점유율 80% 이상을 장악했습니다. 완벽한 방어적 성장주입니다.</p>
+                    <div class="card-meta">
+                        <span>6월 30일</span>
+                        <span class="rating-badge">STRONG BUY</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Market Wrap (Text only) -->
+            <div class="card bg-slate-900 border-none text-white">
+                <div class="card-body">
+                    <span class="text-xs font-bold text-blue-400 uppercase mb-2 block">Market Wrap</span>
+                    <h3 class="card-title text-white text-xl">연준의 피벗(Pivot): 포트폴리오를 재편할 시간</h3>
+                    <p class="card-excerpt text-slate-400">제롬 파월이 금리 인하 신호를 보냈습니다. 즉각적인 수혜가 예상되는 3가지 섹터를 분석합니다.</p>
+                    <div class="card-meta border-slate-700 text-slate-500">
+                        <span>2시간 전</span>
+                        <span><i class="fas fa-bolt text-yellow-400 mr-1"></i>긴급 분석</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Playbook -->
+            <div class="card">
+                <span class="card-tag">Playbook</span>
+                <img src="https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img" style="height: 180px;">
+                <div class="card-body">
+                    <h3 class="card-title">스테이블코인 마스터플랜</h3>
+                    <p class="card-excerpt">디지털 달러 시대의 결정적 가이드. USDC와 USDT가 글로벌 금융 지형을 어떻게 바꾸고 있는가.</p>
+                    <div class="card-meta">
+                        <span>6월 23일</span>
+                        <span>Deep Dive</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Alpha Scout -->
+            <div class="card">
+                <span class="card-tag">Alpha Scout</span>
+                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img" style="height: 200px;">
+                <div class="card-body">
+                    <h3 class="card-title">IBM: 하이브리드 클라우드로의 변신</h3>
+                    <p class="card-excerpt">코끼리가 다시 춤을 춥니다. 높은 배당 수익률에 AI 성장 스토리를 더했습니다.</p>
+                    <div class="card-meta">
+                        <span>6월 20일</span>
+                        <span class="rating-badge hold">HOLD</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5: Macro -->
+            <div class="card">
+                <span class="card-tag">Macro</span>
+                <div class="card-body">
+                    <h3 class="card-title">구리(Copper) 슈퍼사이클</h3>
+                    <p class="card-excerpt">에너지 전환 시대, 왜 구리가 향후 10년간 가장 중요한 원자재가 될 수밖에 없는가.</p>
+                    <div class="card-meta">
+                        <span>6월 18일</span>
+                        <span>원자재</span>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Card 6: Chart -->
+             <div class="card">
+                <span class="card-tag">오늘의 차트</span>
+                <img src="https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img" style="height: 280px;">
+                <div class="card-body">
+                    <h3 class="card-title">글로벌 유동성 vs S&P 500</h3>
+                    <div class="card-meta">
+                        <span>6월 15일</span>
+                        <span>기술적 분석</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

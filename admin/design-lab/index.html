@@ -111,15 +111,27 @@
         <section class="mb-8">
             <h2 class="text-xl font-bold mb-4 text-slate-700">🚀 진행 중인 작업</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Posts (Content Hub) -->
+                <div class="card border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Posts (Content Hub)</h3>
+                        <span class="status-badge status-done">v1~v4 완료</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4"><code>posts-main.html</code> 리디자인: Magazine, Masonry, Timeline, Archive 4종</p>
+                    <div class="flex gap-4">
+                        <a href="posts/index.html" class="text-blue-600 text-sm font-bold hover:underline">시안 갤러리 →</a>
+                    </div>
+                </div>
+
                 <!-- Alpha Scout Redesign -->
                 <div class="card border-l-4 border-purple-500">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="font-bold text-lg">Alpha Scout</h3>
-                        <span class="status-badge status-todo">대기</span>
+                        <span class="status-badge status-done">v2~v5 완료</span>
                     </div>
-                    <p class="text-sm text-slate-500 mb-4">개별 종목 분석 리포트 - v5 스타일 적용 예정</p>
+                    <p class="text-sm text-slate-500 mb-4">개별 종목 리포트: v4 Analyst Desk & v5 Quantum Grid (Light Mode Only)</p>
                     <div class="flex gap-4">
-                        <a href="../../alpha-scout/alpha-scout-main.html" class="text-purple-600 text-sm font-bold hover:underline">현재 버전 →</a>
+                        <a href="alpha-scout/index.html" class="text-purple-600 text-sm font-bold hover:underline">시안 보기 →</a>
                     </div>
                 </div>
 
@@ -135,17 +147,67 @@
                     </div>
                 </div>
 
-                <!-- Calculators VR -->
-                <div class="card border-l-4 border-emerald-500">
+                <!-- Charts -->
+                <div class="card border-l-4 border-blue-500">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-lg">Calculators - VR</h3>
-                        <span class="status-badge status-done">v1~v3 완료</span>
+                        <h3 class="font-bold text-lg">Charts</h3>
+                        <span class="status-badge status-done">v1, v2 완료</span>
                     </div>
-                    <p class="text-sm text-slate-500 mb-4">밸류 리밸런싱 계산기: 3종 시안 (Ultimate, Dashboard, Wizard)</p>
+                    <p class="text-sm text-slate-500 mb-4">멀티차트 리디자인: Grid Monitor & Compare Studio 시안</p>
                     <div class="flex gap-4">
-                        <a href="calculators/index.html" class="text-emerald-600 text-sm font-bold hover:underline">시안 보기 →</a>
+                        <a href="charts/index.html" class="text-blue-600 text-sm font-bold hover:underline">시안 갤러리 →</a>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Future Ideas (Backlog) -->
+        <section class="mb-12">
+            <h2 class="text-xl font-bold mb-4 text-slate-400 uppercase tracking-wider">💡 Future Ideas (Backlog)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-80 hover:opacity-100 transition-opacity">
+                
+                <!-- Settings -->
+                <div class="card border-2 border-dashed border-slate-300 bg-slate-50">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">⚙️</span>
+                        <h3 class="font-bold text-slate-700">Settings Center</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">Priority 2</p>
+                    <ul class="text-xs text-slate-600 list-disc list-inside">
+                        <li>Glass Modal (Quick)</li>
+                        <li>System Page (Full)</li>
+                        <li>API Key Security UI</li>
+                    </ul>
+                </div>
+
+                <!-- System States -->
+                <div class="card border-2 border-dashed border-slate-300 bg-slate-50">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">🚦</span>
+                        <h3 class="font-bold text-slate-700">System States</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">Priority 3</p>
+                    <ul class="text-xs text-slate-600 list-disc list-inside">
+                        <li>Brand Loading Animation</li>
+                        <li>Smart Empty States</li>
+                        <li>Witty 404 Page</li>
+                    </ul>
+                </div>
+
+                <!-- Mobile Opt -->
+                <div class="card border-2 border-dashed border-slate-300 bg-slate-50">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">📱</span>
+                        <h3 class="font-bold text-slate-700">Mobile UX</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">Priority 4</p>
+                    <ul class="text-xs text-slate-600 list-disc list-inside">
+                        <li>Bottom Sheet Nav</li>
+                        <li>Swipe Gestures</li>
+                        <li>Touch-friendly Charts</li>
+                    </ul>
+                </div>
+
             </div>
         </section>
 
@@ -170,16 +232,11 @@
                     <div class="text-xs text-emerald-400 mt-1">✅ v21 확정</div>
                 </a>
                 
-                <!-- Expanded Scope (Specific Naming) -->
-                <a href="calculators/" class="card text-center hover:bg-orange-50 block border-2 border-orange-300">
-                    <div class="text-2xl mb-2">🧮</div>
-                    <div class="font-bold text-orange-700">Calculators</div>
-                    <div class="text-xs text-orange-500 mt-1">🔥 디자인 기획</div>
-                </a>
-                <a href="charts/" class="card text-center hover:bg-slate-50 block">
+                <!-- Charts -->
+                <a href="charts/" class="card text-center hover:bg-blue-50 block border-2 border-blue-300">
                     <div class="text-2xl mb-2">📈</div>
-                    <div class="font-bold text-slate-700">Charts</div>
-                    <div class="text-xs text-slate-400 mt-1">Multi / Analyzer</div>
+                    <div class="font-bold text-blue-700">Charts</div>
+                    <div class="text-xs text-blue-400 mt-1">v1~v5 완료</div>
                 </a>
                 <a href="reports/" class="card text-center hover:bg-blue-50 block border-2 border-blue-300">
                     <div class="text-2xl mb-2">📰</div>

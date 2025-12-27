@@ -23,7 +23,7 @@
           </div>
           <div>
             <h1 class="text-xl font-bold">PER 밴드 스크리너</h1>
-            <p class="text-gray-500 text-sm">Global Scouter 기반</p>
+            <p class="text-gray-500 text-sm">Global Scouter v2.0</p>
           </div>
         </div>
         <a href="./" class="text-gray-500 hover:text-blue-600">
@@ -42,8 +42,12 @@
           <span id="data-date" class="ml-1 mono">-</span>
         </div>
         <div>
-          <span class="font-semibold text-gray-700">총 종목:</span>
-          <span id="total-count" class="ml-1 mono">-</span>
+          <span class="font-semibold text-gray-700">인덱스:</span>
+          <span id="index-count" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">상세 로드:</span>
+          <span id="detail-count" class="ml-1 mono">-</span>
         </div>
         <div>
           <span class="font-semibold text-gray-700">필터 결과:</span>
@@ -51,8 +55,11 @@
         </div>
       </div>
       <p class="text-xs text-gray-500 mt-2">
-        현재 PER은 historical.per 마지막 유효값을 사용하며, PER 평균 1 미만은 제외합니다.
+        v2.0: 개별 종목 상세 파일에서 PER 밴드 데이터를 로드합니다. PER 평균 1 미만은 제외합니다.
       </p>
+      <div id="loading-status" class="mt-2 text-sm text-blue-600 hidden">
+        <i class="fas fa-spinner fa-spin mr-1"></i> 데이터 로딩 중...
+      </div>
     </section>
 
     <section class="bg-white rounded-xl p-5 shadow">
@@ -110,8 +117,8 @@
               <th class="text-left px-3 py-2">섹터</th>
               <th class="text-right px-3 py-2">현재 PER</th>
               <th class="text-right px-3 py-2">밴드 평균</th>
-          <th class="text-right px-3 py-2">가치 백분위</th>
-          <th class="text-right px-3 py-2">편차</th>
+              <th class="text-right px-3 py-2">가치 백분위</th>
+              <th class="text-right px-3 py-2">편차</th>
               <th class="text-center px-3 py-2">구간</th>
             </tr>
           </thead>
@@ -124,29 +131,33 @@
   </main>
 
   <script>
-    const DATA_URL = (() => {
-    const isLocalHost = () => {
+    // v2.0: 동적 base path
+    const getBasePath = () => {
       const host = location.hostname;
-      if (location.protocol === 'file:') return true;
-      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return true;
-      if (host.startswith('192.168.') || host.startswith('10.') || host.startswith('172.')) return true;
-      return false;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      const isCloudflare = host.endsWith('pages.dev');
+      return (isLocal || isCloudflare) ? '' : '/100xFenok';
     };
-    const isLocal = isLocalHost();
-    const isCloudflare = location.hostname.endsWith('pages.dev');
-    const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
-      return `${base}/data/global-scouter/stocks.json`;
-    })();
+
+    const BASE_PATH = getBasePath();
+    const URLS = {
+      INDEX: `${BASE_PATH}/data/global-scouter/core/stocks_index.json`,
+      METADATA: `${BASE_PATH}/data/global-scouter/core/metadata.json`,
+      DETAIL_BASE: `${BASE_PATH}/data/global-scouter/stocks/detail/`
+    };
 
     const state = {
-      raw: null,
+      index: null,
+      details: {},
       rows: []
     };
 
     const elements = {
       dataDate: document.getElementById('data-date'),
-      totalCount: document.getElementById('total-count'),
+      indexCount: document.getElementById('index-count'),
+      detailCount: document.getElementById('detail-count'),
       filteredCount: document.getElementById('filtered-count'),
+      loadingStatus: document.getElementById('loading-status'),
       resultBody: document.getElementById('result-body'),
       emptyState: document.getElementById('empty-state'),
       search: document.getElementById('search-input'),
@@ -160,7 +171,7 @@
 
     function lastNonNull(arr) {
       if (!Array.isArray(arr)) return null;
-      for (let i = arr.length - 1; i >= 0; i -= 1) {
+      for (let i = arr.length - 1; i >= 0; i--) {
         if (arr[i] !== null && arr[i] !== undefined) return arr[i];
       }
       return null;
@@ -188,26 +199,54 @@
       const filtered = values.filter(v => v !== null && v !== undefined && !Number.isNaN(v)).sort((a, b) => a - b);
       if (!filtered.length || value === null || value === undefined) return null;
       let index = 0;
-      while (index < filtered.length && filtered[index] < value) index += 1;
+      while (index < filtered.length && filtered[index] < value) index++;
       const rank = index / (filtered.length - 1 || 1);
       return reverse ? 1 - rank : rank;
     }
 
-    function buildRows(data) {
+    async function fetchDetail(ticker) {
+      try {
+        const res = await fetch(URLS.DETAIL_BASE + ticker + '.json');
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    }
+
+    async function fetchDetails(tickers) {
+      const batchSize = 50;
+      const results = {};
+      for (let i = 0; i < tickers.length; i += batchSize) {
+        const batch = tickers.slice(i, i + batchSize);
+        const promises = batch.map(async (t) => {
+          const detail = await fetchDetail(t);
+          if (detail) results[t] = detail;
+        });
+        await Promise.all(promises);
+        elements.detailCount.textContent = Object.keys(results).length.toString();
+      }
+      return results;
+    }
+
+    function buildRows(index, details) {
       const rows = [];
-      const stocks = data.stocks || {};
-      for (const [ticker, stock] of Object.entries(stocks)) {
-        const info = stock.info || {};
-        const perBand = stock.per_band || {};
-        const historical = stock.historical || {};
-        const currentPer = lastNonNull(historical.per);
+      for (const [ticker, info] of Object.entries(index.stocks || {})) {
+        const detail = details[ticker];
+        if (!detail) continue;
+
+        const valuation = detail.valuation || {};
+        const perBand = valuation.per_band || {};
+        const perArray = valuation.per || [];
+        const currentPer = lastNonNull(perArray);
         const perAvg = perBand.avg ?? null;
         const deviation = (currentPer !== null && perAvg) ? (currentPer - perAvg) / perAvg : null;
+
         rows.push({
           ticker,
-          name: info.name || '-',
-          sector: info.sector_kr || info.sector || '-',
-          country: info.country || '-',
+          name: info.n || '-',
+          sector: info.s || '-',
+          country: info.c || '-',
           per: currentPer,
           perAvg,
           perMin: perBand.min ?? null,
@@ -252,7 +291,6 @@
     function applySort(rows) {
       const mode = elements.sort.value;
       const sorted = [...rows];
-      const byName = (a, b) => a.name.localeCompare(b.name);
       if (mode === 'deviation-asc') {
         sorted.sort((a, b) => (a.deviation ?? Infinity) - (b.deviation ?? Infinity));
       } else if (mode === 'deviation-desc') {
@@ -262,7 +300,7 @@
       } else if (mode === 'per-desc') {
         sorted.sort((a, b) => (b.per ?? -Infinity) - (a.per ?? -Infinity));
       } else if (mode === 'name-asc') {
-        sorted.sort(byName);
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
       }
       return sorted;
     }
@@ -278,8 +316,7 @@
     function applyLimit(rows) {
       const limit = elements.limit.value;
       if (limit === 'all') return rows;
-      const n = Number(limit);
-      return rows.slice(0, n);
+      return rows.slice(0, Number(limit));
     }
 
     function renderRows(rows) {
@@ -316,15 +353,30 @@
     }
 
     async function init() {
-      const res = await fetch(DATA_URL);
-      if (!res.ok) throw new Error('데이터 로딩 실패');
-      const data = await res.json();
-      state.raw = data;
-      state.rows = buildRows(data);
+      elements.loadingStatus.classList.remove('hidden');
 
-      elements.dataDate.textContent = data.metadata?.date || data.metadata?.generated_at || '-';
-      elements.totalCount.textContent = state.rows.length.toString();
+      // 1단계: 메타데이터 + 인덱스 로드
+      const [metaRes, indexRes] = await Promise.all([
+        fetch(URLS.METADATA),
+        fetch(URLS.INDEX)
+      ]);
+      if (!metaRes.ok || !indexRes.ok) throw new Error('인덱스 로딩 실패');
 
+      const meta = await metaRes.json();
+      const index = await indexRes.json();
+      state.index = index;
+
+      elements.dataDate.textContent = meta.source_date || '-';
+      elements.indexCount.textContent = Object.keys(index.stocks || {}).length.toString();
+
+      // 2단계: 상세 데이터 로드 (배치)
+      const tickers = Object.keys(index.stocks || {});
+      state.details = await fetchDetails(tickers);
+
+      // 3단계: 행 구성
+      state.rows = buildRows(index, state.details);
+
+      // 필터 옵션 채우기
       const sectors = uniqueValues(state.rows, 'sector');
       const countries = uniqueValues(state.rows, 'country');
 
@@ -345,6 +397,8 @@
       if (symbol) {
         elements.search.value = symbol;
       }
+
+      elements.loadingStatus.classList.add('hidden');
       applyFilters();
     }
 
@@ -352,8 +406,10 @@
       .forEach(el => el.addEventListener('input', applyFilters));
 
     init().catch(err => {
+      elements.loadingStatus.classList.add('hidden');
       elements.emptyState.classList.remove('hidden');
       elements.emptyState.textContent = err.message;
+      console.error(err);
     });
   </script>
 </body>

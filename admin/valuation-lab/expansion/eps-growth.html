@@ -23,7 +23,7 @@
           </div>
           <div>
             <h1 class="text-xl font-bold">EPS 성장 랭킹</h1>
-            <p class="text-gray-500 text-sm">Global Scouter 기반</p>
+            <p class="text-gray-500 text-sm">Global Scouter v2.0</p>
           </div>
         </div>
         <a href="./" class="text-gray-500 hover:text-blue-600">
@@ -48,6 +48,10 @@
         <div>
           <span class="font-semibold text-gray-700">필터 결과:</span>
           <span id="filtered-count" class="ml-1 mono">-</span>
+        </div>
+        <div id="loading-status" class="text-blue-600 hidden">
+          <i class="fas fa-spinner fa-spin mr-1"></i>
+          <span id="loading-text">로딩 중...</span>
         </div>
       </div>
       <p class="text-xs text-gray-500 mt-2">
@@ -99,9 +103,9 @@
               <th class="text-left px-3 py-2">티커</th>
               <th class="text-left px-3 py-2">기업명</th>
               <th class="text-left px-3 py-2">섹터</th>
-          <th class="text-right px-3 py-2">Historical CAGR</th>
-          <th class="text-right px-3 py-2">Forward CAGR</th>
-          <th class="text-right px-3 py-2">성장 백분위</th>
+              <th class="text-right px-3 py-2">Historical CAGR</th>
+              <th class="text-right px-3 py-2">Forward CAGR</th>
+              <th class="text-right px-3 py-2">성장 백분위</th>
             </tr>
           </thead>
           <tbody id="result-body" class="divide-y"></tbody>
@@ -113,22 +117,26 @@
   </main>
 
   <script>
-    const DATA_URL = (() => {
-    const isLocalHost = () => {
+    // v2.0 모듈화 구조 - 2단계 로딩
+    const getBasePath = () => {
       const host = location.hostname;
-      if (location.protocol === 'file:') return true;
-      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return true;
-      if (host.startswith('192.168.') || host.startswith('10.') || host.startswith('172.')) return true;
-      return false;
+      if (location.protocol === 'file:') return '';
+      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return '';
+      if (host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')) return '';
+      if (host.endsWith('pages.dev')) return '';
+      return '/100xFenok';
     };
-    const isLocal = isLocalHost();
-    const isCloudflare = location.hostname.endsWith('pages.dev');
-    const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
-      return `${base}/data/global-scouter/stocks.json`;
-    })();
+
+    const BASE_PATH = getBasePath();
+    const URLS = {
+      INDEX: `${BASE_PATH}/data/global-scouter/core/stocks_index.json`,
+      METADATA: `${BASE_PATH}/data/global-scouter/core/metadata.json`,
+      DETAIL_BASE: `${BASE_PATH}/data/global-scouter/stocks/detail/`
+    };
 
     const state = {
-      raw: null,
+      index: null,
+      details: {},
       rows: []
     };
 
@@ -136,6 +144,8 @@
       dataDate: document.getElementById('data-date'),
       totalCount: document.getElementById('total-count'),
       filteredCount: document.getElementById('filtered-count'),
+      loadingStatus: document.getElementById('loading-status'),
+      loadingText: document.getElementById('loading-text'),
       resultBody: document.getElementById('result-body'),
       emptyState: document.getElementById('empty-state'),
       search: document.getElementById('search-input'),
@@ -157,32 +167,59 @@
       return Math.pow(end / start, 1 / years) - 1;
     }
 
-    function percentileRank(values, value, reverse = false) {
+    function percentileRank(values, value) {
       const filtered = values.filter(v => v !== null && v !== undefined && !Number.isNaN(v)).sort((a, b) => a - b);
       if (!filtered.length || value === null || value === undefined) return null;
       let index = 0;
       while (index < filtered.length && filtered[index] < value) index += 1;
-      const rank = index / (filtered.length - 1 || 1);
-      return reverse ? 1 - rank : rank;
+      return index / (filtered.length - 1 || 1);
     }
 
-    function buildRows(data) {
-      const rows = [];
-      const stocks = data.stocks || {};
-      for (const [ticker, stock] of Object.entries(stocks)) {
-        const info = stock.info || {};
-        const historical = stock.historical || {};
-        const estimates = stock.estimates || {};
+    async function fetchDetail(ticker) {
+      try {
+        const res = await fetch(URLS.DETAIL_BASE + ticker + '.json');
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    }
 
-        const epsHist = Array.isArray(historical.eps) ? historical.eps : [];
+    async function fetchDetails(tickers) {
+      const batchSize = 50;
+      const results = {};
+      for (let i = 0; i < tickers.length; i += batchSize) {
+        const batch = tickers.slice(i, i + batchSize);
+        elements.loadingText.textContent = `상세 로딩 중... (${Math.min(i + batchSize, tickers.length)}/${tickers.length})`;
+        await Promise.all(batch.map(async (t) => {
+          const detail = await fetchDetail(t);
+          if (detail) results[t] = detail;
+        }));
+      }
+      return results;
+    }
+
+    function buildRows(index, details) {
+      const rows = [];
+      for (const [ticker, info] of Object.entries(index.stocks || {})) {
+        const detail = details[ticker];
+        if (!detail) continue;
+
+        const perShare = detail.per_share || {};
+        const estimates = detail.estimates || {};
+
+        // Historical EPS CAGR
+        const epsHist = Array.isArray(perShare.eps) ? perShare.eps : [];
         const epsStart = epsHist[0] ?? null;
         const epsEnd = epsHist[epsHist.length - 1] ?? null;
         const histYears = Math.max(epsHist.length - 1, 1);
         const histCagr = calcCagr(epsStart, epsEnd, histYears);
 
+        // Forward EPS CAGR (FY1 → FY3)
         const epsEst = estimates.eps || {};
         const fwdCagr = calcCagr(epsEst.fy1 ?? null, epsEst.fy3 ?? null, 2);
 
+        // Combined score
         let score = null;
         if (histCagr !== null || fwdCagr !== null) {
           const h = histCagr ?? 0;
@@ -192,9 +229,9 @@
 
         rows.push({
           ticker,
-          name: info.name || '-',
-          sector: info.sector_kr || info.sector || '-',
-          country: info.country || '-',
+          name: info.n || '-',
+          sector: info.s || '-',
+          country: info.c || '-',
           histCagr,
           fwdCagr,
           score,
@@ -257,8 +294,7 @@
     function applyLimit(rows) {
       const limit = elements.limit.value;
       if (limit === 'all') return rows;
-      const n = Number(limit);
-      return rows.slice(0, n);
+      return rows.slice(0, Number(limit));
     }
 
     function renderRows(rows) {
@@ -284,15 +320,29 @@
     }
 
     async function init() {
-      const res = await fetch(DATA_URL);
-      if (!res.ok) throw new Error('데이터 로딩 실패');
-      const data = await res.json();
-      state.raw = data;
-      state.rows = buildRows(data);
+      elements.loadingStatus.classList.remove('hidden');
 
-      elements.dataDate.textContent = data.metadata?.date || data.metadata?.generated_at || '-';
-      elements.totalCount.textContent = state.rows.length.toString();
+      // 1단계: 인덱스 + 메타데이터 로드
+      elements.loadingText.textContent = '인덱스 로딩 중...';
+      const [indexRes, metaRes] = await Promise.all([
+        fetch(URLS.INDEX),
+        fetch(URLS.METADATA)
+      ]);
+      if (!indexRes.ok) throw new Error('인덱스 로딩 실패');
+      state.index = await indexRes.json();
+      const meta = metaRes.ok ? await metaRes.json() : {};
 
+      elements.dataDate.textContent = meta.source_date || '-';
+      const tickers = Object.keys(state.index.stocks || {});
+      elements.totalCount.textContent = tickers.length.toString();
+
+      // 2단계: 상세 데이터 배치 로드
+      state.details = await fetchDetails(tickers);
+
+      // 3단계: 행 구성
+      state.rows = buildRows(state.index, state.details);
+
+      // 필터 옵션 채우기
       const sectors = uniqueValues(state.rows, 'sector');
       const countries = uniqueValues(state.rows, 'country');
 
@@ -309,10 +359,13 @@
         elements.country.appendChild(opt);
       }
 
+      // URL 파라미터 처리
       const symbol = new URLSearchParams(location.search).get('symbol');
       if (symbol) {
         elements.search.value = symbol;
       }
+
+      elements.loadingStatus.classList.add('hidden');
       applyFilters();
     }
 
@@ -320,6 +373,7 @@
       .forEach(el => el.addEventListener('input', applyFilters));
 
     init().catch(err => {
+      elements.loadingStatus.classList.add('hidden');
       elements.emptyState.classList.remove('hidden');
       elements.emptyState.textContent = err.message;
     });

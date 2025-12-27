@@ -23,7 +23,7 @@
           </div>
           <div>
             <h1 class="text-xl font-bold">섹터 대비 멀티플 갭</h1>
-            <p class="text-gray-500 text-sm">섹터 평균 PER 대비</p>
+            <p class="text-gray-500 text-sm">Global Scouter v2.0</p>
           </div>
         </div>
         <a href="./" class="text-gray-500 hover:text-blue-600">
@@ -49,9 +49,13 @@
           <span class="font-semibold text-gray-700">필터 결과:</span>
           <span id="filtered-count" class="ml-1 mono">-</span>
         </div>
+        <div id="loading-status" class="text-blue-600 hidden">
+          <i class="fas fa-spinner fa-spin mr-1"></i>
+          <span id="loading-text">로딩 중...</span>
+        </div>
       </div>
       <p class="text-xs text-gray-500 mt-2">
-        섹터 평균 PER은 `sectors.avg_per` 기준이며, US 필터가 기본값입니다.
+        섹터 평균 PER은 dashboard.sectors 기준이며, US 필터가 기본값입니다.
       </p>
     </section>
 
@@ -96,8 +100,8 @@
               <th class="text-left px-3 py-2">섹터</th>
               <th class="text-right px-3 py-2">PER 평균</th>
               <th class="text-right px-3 py-2">섹터 평균</th>
-          <th class="text-right px-3 py-2">가치 백분위</th>
-          <th class="text-right px-3 py-2">갭</th>
+              <th class="text-right px-3 py-2">가치 백분위</th>
+              <th class="text-right px-3 py-2">갭</th>
             </tr>
           </thead>
           <tbody id="result-body" class="divide-y"></tbody>
@@ -109,25 +113,37 @@
   </main>
 
   <script>
-    const DATA_URL = (() => {
-    const isLocalHost = () => {
+    // v2.0 모듈화 구조 - 2단계 로딩
+    const getBasePath = () => {
       const host = location.hostname;
-      if (location.protocol === 'file:') return true;
-      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return true;
-      if (host.startswith('192.168.') || host.startswith('10.') || host.startswith('172.')) return true;
-      return false;
+      if (location.protocol === 'file:') return '';
+      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return '';
+      if (host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')) return '';
+      if (host.endsWith('pages.dev')) return '';
+      return '/100xFenok';
     };
-    const isLocal = isLocalHost();
-    const isCloudflare = location.hostname.endsWith('pages.dev');
-    const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
-      return `${base}/data/global-scouter/stocks.json`;
-    })();
 
-    const state = { raw: null, rows: [], sectorMap: {} };
+    const BASE_PATH = getBasePath();
+    const URLS = {
+      INDEX: `${BASE_PATH}/data/global-scouter/core/stocks_index.json`,
+      DASHBOARD: `${BASE_PATH}/data/global-scouter/core/dashboard.json`,
+      DETAIL_BASE: `${BASE_PATH}/data/global-scouter/stocks/detail/`
+    };
+
+    const state = {
+      index: null,
+      dashboard: null,
+      details: {},
+      rows: [],
+      sectorMap: {}
+    };
+
     const elements = {
       dataDate: document.getElementById('data-date'),
       totalCount: document.getElementById('total-count'),
       filteredCount: document.getElementById('filtered-count'),
+      loadingStatus: document.getElementById('loading-status'),
+      loadingText: document.getElementById('loading-text'),
       resultBody: document.getElementById('result-body'),
       emptyState: document.getElementById('empty-state'),
       search: document.getElementById('search-input'),
@@ -157,27 +173,59 @@
       return reverse ? 1 - rank : rank;
     }
 
-    function buildRows(data) {
+    async function fetchDetail(ticker) {
+      try {
+        const res = await fetch(URLS.DETAIL_BASE + ticker + '.json');
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    }
+
+    async function fetchDetails(tickers) {
+      const batchSize = 50;
+      const results = {};
+      for (let i = 0; i < tickers.length; i += batchSize) {
+        const batch = tickers.slice(i, i + batchSize);
+        elements.loadingText.textContent = `상세 로딩 중... (${Math.min(i + batchSize, tickers.length)}/${tickers.length})`;
+        await Promise.all(batch.map(async (t) => {
+          const detail = await fetchDetail(t);
+          if (detail) results[t] = detail;
+        }));
+      }
+      return results;
+    }
+
+    function buildRows(index, dashboard, details) {
       const rows = [];
-      const stocks = data.stocks || {};
-      const sectorMap = data.sectors || {};
-      for (const [ticker, stock] of Object.entries(stocks)) {
-        const info = stock.info || {};
-        const perAvg = stock.per_band?.avg ?? null;
-        const sectorKey = info.sector_kr || info.sector || '-';
-        const sectorAvg = sectorMap[sectorKey]?.avg_per ?? null;
+      const sectorMap = dashboard.sectors || {};
+
+      for (const [ticker, info] of Object.entries(index.stocks || {})) {
+        const detail = details[ticker];
+        if (!detail) continue;
+
+        const valuation = detail.valuation || {};
+        const perBand = valuation.per_band || {};
+        const perAvg = perBand.avg ?? null;
+
+        const sectorKey = info.s || '-';
+        const sectorData = sectorMap[sectorKey];
+        const sectorAvg = sectorData?.avg_per ?? null;
+
         const gap = (perAvg !== null && sectorAvg) ? (perAvg / sectorAvg) - 1 : null;
+
         rows.push({
           ticker,
-          name: info.name || '-',
+          name: info.n || '-',
           sector: sectorKey,
-          country: info.country || '-',
+          country: info.c || '-',
           perAvg,
           sectorAvg,
           gap
         });
       }
-      return { rows, sectorMap };
+      return rows;
     }
 
     function uniqueValues(rows, key) {
@@ -257,17 +305,31 @@
     }
 
     async function init() {
-      const res = await fetch(DATA_URL);
-      if (!res.ok) throw new Error('데이터 로딩 실패');
-      const data = await res.json();
-      const built = buildRows(data);
-      state.raw = data;
-      state.rows = built.rows;
-      state.sectorMap = built.sectorMap;
+      elements.loadingStatus.classList.remove('hidden');
 
-      elements.dataDate.textContent = data.metadata?.date || data.metadata?.generated_at || '-';
-      elements.totalCount.textContent = state.rows.length.toString();
+      // 1단계: 인덱스 + 대시보드 로드
+      elements.loadingText.textContent = '인덱스 로딩 중...';
+      const [indexRes, dashRes] = await Promise.all([
+        fetch(URLS.INDEX),
+        fetch(URLS.DASHBOARD)
+      ]);
+      if (!indexRes.ok) throw new Error('인덱스 로딩 실패');
+      if (!dashRes.ok) throw new Error('대시보드 로딩 실패');
 
+      state.index = await indexRes.json();
+      state.dashboard = await dashRes.json();
+
+      elements.dataDate.textContent = state.dashboard.source_date || '-';
+      const tickers = Object.keys(state.index.stocks || {});
+      elements.totalCount.textContent = tickers.length.toString();
+
+      // 2단계: 상세 데이터 배치 로드
+      state.details = await fetchDetails(tickers);
+
+      // 3단계: 행 구성
+      state.rows = buildRows(state.index, state.dashboard, state.details);
+
+      // 필터 옵션 채우기
       const sectors = uniqueValues(state.rows, 'sector');
       for (const value of sectors) {
         const opt = document.createElement('option');
@@ -276,10 +338,13 @@
         elements.sector.appendChild(opt);
       }
 
+      // URL 파라미터 처리
       const symbol = new URLSearchParams(location.search).get('symbol');
       if (symbol) {
         elements.search.value = symbol;
       }
+
+      elements.loadingStatus.classList.add('hidden');
       applyFilters();
     }
 
@@ -287,6 +352,7 @@
       .forEach(el => el.addEventListener('input', applyFilters));
 
     init().catch(err => {
+      elements.loadingStatus.classList.add('hidden');
       elements.emptyState.classList.remove('hidden');
       elements.emptyState.textContent = err.message;
     });
