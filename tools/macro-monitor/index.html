@@ -402,19 +402,14 @@
       <p class="cs-description">기업 수익성 (기업이익/GDP, Forward P/E)</p>
     </div>
 
-    <!-- 5. Market Sentiment (4-C) - 리서치 완료 -->
-    <div class="indicator-card coming-soon category-sentiment fade-in" data-category="sentiment">
-      <div class="cs-icon">🎭</div>
-      <h3 class="cs-title">Market Sentiment</h3>
-      <p class="cs-category">Sentiment</p>
-      <span class="cs-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        Coming Soon
-      </span>
-      <p class="cs-description">투자 심리 (Fear & Greed, VIX, Crypto F&G)</p>
+    <!-- 5. Market Sentiment (4-C) - 라이브 위젯 -->
+    <div class="indicator-card live-widget fade-in" data-category="sentiment" onclick="openDetail('details/sentiment.html')">
+      <iframe
+        src="widgets/sentiment.html"
+        scrolling="no"
+        loading="lazy"
+        title="Market Sentiment Monitor">
+      </iframe>
     </div>
 
   </div>
@@ -484,7 +479,7 @@
   // ===== 위젯 데이터 전달 (postMessage) =====
   // iframe sandbox에서 localStorage 접근 불가 → 부모에서 데이터 전달
   (function() {
-    const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health'];
+    const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health', 'sentiment'];
 
     function sendDataToWidgets() {
       WIDGET_IDS.forEach(widgetId => {

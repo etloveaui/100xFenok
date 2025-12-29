@@ -179,6 +179,114 @@ export const ICONS = Object.freeze({
 });
 
 // ============================================
+// SENTIMENT - 시장 심리 지표 (Phase 4-C)
+// ============================================
+export const SENTIMENT = Object.freeze({
+  // 5개 지표별 임계값
+  THRESHOLDS: {
+    VIX: {
+      EXTREME_FEAR: 40,   // >= 40: 극도 공포 (-2점) - 100% 승률 역사적 바닥
+      FEAR: 30,           // >= 30: 공포 (-1점)
+      NEUTRAL_LOW: 15,    // 15-20: 중립
+      GREED: 12           // < 12: 탐욕 (+1점)
+    },
+    CNN: {
+      EXTREME_FEAR: 15,   // <= 15: 극도 공포 (-2점)
+      FEAR: 25,           // <= 25: 공포 (-1점)
+      NEUTRAL_HIGH: 75,   // 25-75: 중립
+      EXTREME_GREED: 85   // >= 85: 극도 탐욕 (+2점)
+    },
+    CFTC: {
+      EXTREME_SHORT: -180000,  // <= -180K: 극도 공포 (-2점)
+      SHORT: -100000,          // <= -100K: 공포 (-1점)
+      LONG: 100000,            // >= 100K: 탐욕 (+1점)
+      EXTREME_LONG: 180000     // >= 180K: 극도 탐욕 (+2점)
+    },
+    MOVE: {
+      STABLE: 60,         // <= 60: 안정 (+1점) - 80%+ 승률
+      NEUTRAL: 80,        // 60-120: 중립
+      STRESS: 120,        // >= 120: 스트레스 (-1점)
+      CRISIS: 150         // >= 150: 위기 (-2점)
+    },
+    CRYPTO: {
+      EXTREME_FEAR: 10,   // <= 10: 극도 공포 (-2점)
+      FEAR: 25,           // <= 25: 공포 (-1점)
+      NEUTRAL: 45,        // 25-75: 중립
+      GREED: 75           // >= 75: 탐욕 (+1점)
+    }
+  },
+
+  // 바닥 확인 조건 (5개 체크리스트)
+  BOTTOM_CHECKS: {
+    VIX: { threshold: 30, ideal: 40, compare: 'gte', label: 'VIX > 30' },
+    CNN: { threshold: 25, compare: 'lte', label: 'CNN F&G < 25' },
+    CFTC: { threshold: -150000, compare: 'lte', label: 'CFTC Net < -150K' },
+    MOVE: { threshold: 60, compare: 'lte', label: 'MOVE < 60' },
+    CRYPTO: { threshold: 20, compare: 'lte', label: 'Crypto F&G < 20' }
+  },
+
+  // Signal Score 범위별 상태
+  SCORE_RANGES: {
+    EXTREME_FEAR: { min: -8, max: -5 },
+    FEAR: { min: -4, max: -1 },
+    NEUTRAL: { min: 0, max: 0 },
+    GREED: { min: 1, max: 4 },
+    EXTREME_GREED: { min: 5, max: 8 }
+  },
+
+  // 색상 (CSS 변수와 동기화)
+  COLORS: {
+    EXTREME_FEAR: '#7c2d12',
+    FEAR: '#dc2626',
+    NEUTRAL: '#f59e0b',
+    GREED: '#16a34a',
+    EXTREME_GREED: '#15803d'
+  },
+
+  // 라벨 (한글)
+  LABELS: {
+    EXTREME_FEAR: '극도 공포',
+    FEAR: '공포',
+    NEUTRAL: '중립',
+    GREED: '탐욕',
+    EXTREME_GREED: '극도 탐욕'
+  },
+
+  // 라벨 (영문)
+  LABELS_EN: {
+    EXTREME_FEAR: 'Extreme Fear',
+    FEAR: 'Fear',
+    NEUTRAL: 'Neutral',
+    GREED: 'Greed',
+    EXTREME_GREED: 'Extreme Greed'
+  },
+
+  // 4개 그룹 정의
+  GROUPS: {
+    MARKET_FG: {
+      name: 'Market F&G',
+      icon: '📊',
+      indicators: ['cnn', 'aaii', 'cftc']
+    },
+    VOLATILITY: {
+      name: 'Volatility',
+      icon: '📈',
+      indicators: ['vix', 'move']
+    },
+    CRYPTO: {
+      name: 'Crypto',
+      icon: '₿',
+      indicators: ['crypto']
+    },
+    CNN_COMPONENTS: {
+      name: 'CNN 7 Components',
+      icon: '🔍',
+      indicators: ['cnn_components']
+    }
+  }
+});
+
+// ============================================
 // CACHE - 캐시 설정
 // ============================================
 export const CACHE = Object.freeze({

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Sentiment | 100x Market Radar</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #010079;
+      --gold: #D5AD36;
+      --interactive: #1B73D3;
+      --extreme-fear: #7c2d12;
+      --fear: #dc2626;
+      --neutral: #f59e0b;
+      --greed: #16a34a;
+      --extreme-greed: #15803d;
+      --positive: #16a34a;
+      --warning: #ea580c;
+      --negative: #dc2626;
+      --bg-dark: #0f172a;
+      --bg-card: #ffffff;
+      --bg-muted: #f8fafc;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      color: var(--text-primary);
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+    /* Loading */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(255,255,255,0.9);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; transition: opacity 0.3s;
+    }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loading-spinner {
+      width: 48px; height: 48px; border: 4px solid #e2e8f0;
+      border-top-color: var(--interactive); border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Page Header */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn {
+      width: 40px; height: 40px; border: none; background: var(--bg-card);
+      border-radius: 10px; cursor: pointer; font-size: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s;
+    }
+    .back-btn:hover { transform: translateX(-2px); }
+    .title-group h1 { font-size: 24px; font-weight: 700; }
+    .title-group p { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .status-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;
+    }
+    .status-badge.fear { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); color: var(--fear); }
+    .status-badge.greed { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); color: var(--greed); }
+    .status-badge.neutral { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); color: var(--neutral); }
+    .update-time { font-size: 12px; color: var(--text-muted); }
+
+    /* Hero Section */
+    .sentiment-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      border-radius: 24px; padding: 32px; margin-bottom: 24px;
+      position: relative; overflow: hidden;
+    }
+    .sentiment-hero::before {
+      content: ''; position: absolute; top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .hero-icon { font-size: 32px; }
+    .hero-label {
+      font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .signal-display { text-align: center; margin-bottom: 32px; }
+    .signal-score-value {
+      font-family: 'Orbitron', monospace; font-size: 80px;
+      font-weight: 800; line-height: 1; margin-bottom: 8px;
+    }
+    .signal-score-value.fear {
+      color: #f87171;
+      text-shadow: 0 0 40px #f87171, 0 0 80px rgba(248, 113, 113, 0.3);
+      animation: fearPulse 2s ease-in-out infinite;
+    }
+    .signal-score-value.greed {
+      color: #4ade80; text-shadow: 0 0 40px #4ade80, 0 0 80px rgba(74, 222, 128, 0.3);
+    }
+    .signal-score-value.neutral { color: #fbbf24; text-shadow: 0 0 40px #fbbf24; }
+    @keyframes fearPulse {
+      0%, 100% { text-shadow: 0 0 40px #f87171; transform: scale(1); }
+      50% { text-shadow: 0 0 60px #f87171, 0 0 100px rgba(239, 68, 68, 0.5); transform: scale(1.02); }
+    }
+    .signal-label {
+      font-size: 20px; font-weight: 600; color: rgba(255,255,255,0.9);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+
+    /* Segment Bar */
+    .signal-gauge { margin-bottom: 32px; }
+    .segment-bar {
+      display: flex; height: 24px; border-radius: 12px;
+      overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .segment { transition: filter 0.3s ease; }
+    .seg-extreme-fear { background: linear-gradient(90deg, #7c2d12 0%, #991b1b 100%); flex: 3; }
+    .seg-fear { background: #fca5a5; flex: 4; }
+    .seg-neutral { background: #fcd34d; flex: 2; }
+    .seg-greed { background: #86efac; flex: 4; }
+    .seg-extreme-greed { background: linear-gradient(90deg, #22c55e 0%, #15803d 100%); flex: 3; }
+    .gauge-marker {
+      position: absolute; top: 50%; transform: translate(-50%, -50%);
+      width: 6px; height: 40px; background: #fff; border-radius: 3px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4); transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .segment-labels {
+      display: flex; justify-content: space-between; margin-top: 8px; padding: 0 4px;
+    }
+    .segment-labels span { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 500; }
+
+    /* Mini Indicators */
+    .mini-indicators { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .mini-card {
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(8px);
+      border-radius: 12px; padding: 12px; text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .mini-label {
+      font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .mini-value { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 700; }
+    .mini-value.fear { color: #f87171; }
+    .mini-value.neutral { color: #fbbf24; }
+    .mini-value.greed { color: #4ade80; }
+
+    /* Bottom Check Section */
+    .bottom-check-section {
+      background: var(--bg-card); border-radius: 20px; padding: 24px;
+      margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .check-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .check-title { display: flex; align-items: center; gap: 10px; }
+    .check-title h3 { font-size: 18px; font-weight: 700; }
+    .check-summary { display: flex; align-items: center; gap: 12px; }
+    .check-count { font-size: 16px; font-weight: 700; color: var(--positive); }
+    .check-progress-bar { width: 120px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+    .check-progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%); transition: width 0.5s ease; }
+    .check-grid { display: grid; gap: 12px; }
+    .check-item {
+      display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+      background: var(--bg-muted); border-radius: 12px; border-left: 4px solid #cbd5e1;
+      transition: all 0.3s ease; animation: fadeInUp 0.4s ease-out backwards;
+    }
+    .check-item:nth-child(1) { animation-delay: 0.05s; }
+    .check-item:nth-child(2) { animation-delay: 0.1s; }
+    .check-item:nth-child(3) { animation-delay: 0.15s; }
+    .check-item:nth-child(4) { animation-delay: 0.2s; }
+    .check-item:nth-child(5) { animation-delay: 0.25s; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .check-item.completed { background: #f0fdf4; border-left-color: #22c55e; }
+    .check-item.pending { background: #fffbeb; border-left-color: #f59e0b; }
+    .check-status-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .check-content { flex: 1; }
+    .check-item-title { font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .check-item-value { font-size: 14px; color: var(--text-secondary); }
+    .check-item-value .highlight { font-weight: 600; color: var(--text-primary); }
+
+    /* Group Matrix */
+    .group-matrix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+    .group-card {
+      background: var(--bg-card); border-radius: 16px; padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: fadeInUp 0.4s ease-out backwards;
+    }
+    .group-card:nth-child(1) { animation-delay: 0.1s; }
+    .group-card:nth-child(2) { animation-delay: 0.15s; }
+    .group-card:nth-child(3) { animation-delay: 0.2s; }
+    .group-card:nth-child(4) { animation-delay: 0.25s; }
+    .group-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .group-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .group-icon {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; background: var(--bg-muted); border-radius: 10px;
+    }
+    .group-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+    .group-score-box { text-align: center; padding: 16px; background: var(--bg-muted); border-radius: 12px; margin-bottom: 16px; }
+    .group-score { font-family: 'Orbitron', monospace; font-size: 36px; font-weight: 700; line-height: 1; }
+    .group-score.fear { color: var(--fear); }
+    .group-score.neutral { color: var(--neutral); }
+    .group-score.greed { color: var(--greed); }
+    .group-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500; margin-top: 8px; padding: 4px 12px; border-radius: 20px;
+    }
+    .group-status.fear { background: #fef2f2; color: var(--fear); }
+    .group-status.neutral { background: #fffbeb; color: #d97706; }
+    .group-status.greed { background: #f0fdf4; color: var(--greed); }
+    .group-components { display: flex; flex-direction: column; gap: 8px; }
+    .component-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .component-label { color: var(--text-secondary); }
+    .component-value { font-weight: 600; color: var(--text-primary); }
+
+    /* Chart Section */
+    .chart-section { background: var(--bg-card); border-radius: 20px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px; }
+    .chart-header h3 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .chart-controls { display: flex; align-items: center; gap: 12px; }
+    .period-tabs { display: flex; background: var(--bg-muted); border-radius: 8px; padding: 4px; }
+    .period-tab {
+      padding: 8px 16px; border: none; background: transparent; cursor: pointer;
+      font-size: 13px; font-weight: 500; color: var(--text-secondary); border-radius: 6px; transition: all 0.2s;
+    }
+    .period-tab.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .breakdown-toggle {
+      display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+      border: 1px solid #e2e8f0; background: var(--bg-card); border-radius: 8px;
+      cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;
+    }
+    .breakdown-toggle:hover { border-color: var(--interactive); color: var(--interactive); }
+    .breakdown-toggle.active { background: var(--interactive); border-color: var(--interactive); color: white; }
+    .chart-wrapper { height: 400px; position: relative; }
+
+    /* Info Cards */
+    .info-cards-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+    .info-card { background: var(--bg-card); border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 4px solid var(--interactive); }
+    .info-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .info-card-icon { font-size: 20px; }
+    .info-card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .info-card-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* Responsive */
+    @media (max-width: 899px) { .info-cards-section { grid-template-columns: 1fr; } }
+    @media (max-width: 599px) {
+      .container { padding: 16px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .header-right { width: 100%; justify-content: space-between; }
+      .sentiment-hero { padding: 20px; }
+      .signal-score-value { font-size: 56px; }
+      .mini-indicators { grid-template-columns: repeat(2, 1fr); }
+      .group-matrix { grid-template-columns: 1fr; }
+      .chart-wrapper { height: 280px; }
+      .chart-controls { width: 100%; justify-content: space-between; }
+      .period-tabs { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div class="container">
+    <!-- Page Header -->
+    <header class="page-header">
+      <div class="header-left">
+        <button class="back-btn" onclick="history.back()">←</button>
+        <div class="title-group">
+          <h1>Market Sentiment</h1>
+          <p>Signal Score: VIX + MOVE + CNN + CFTC + Crypto F&G</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-badge neutral" id="statusBadge">
+          <span id="statusIcon">➡️</span>
+          <span id="statusText">Loading...</span>
+        </div>
+        <span class="update-time" id="updateTime">Loading...</span>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="sentiment-hero">
+      <div class="hero-header">
+        <span class="hero-icon">🎭</span>
+        <span class="hero-label">Market Sentiment Signal</span>
+      </div>
+      <div class="signal-display">
+        <div class="signal-score-value neutral" id="signalScoreValue">0</div>
+        <div class="signal-label">
+          <span id="signalLabelIcon">➡️</span>
+          <span id="signalLabelText">Loading...</span>
+        </div>
+      </div>
+      <div class="signal-gauge">
+        <div class="segment-bar">
+          <div class="segment seg-extreme-fear"></div>
+          <div class="segment seg-fear"></div>
+          <div class="segment seg-neutral"></div>
+          <div class="segment seg-greed"></div>
+          <div class="segment seg-extreme-greed"></div>
+          <div class="gauge-marker" id="gaugeMarker" style="left: 50%;"></div>
+        </div>
+        <div class="segment-labels">
+          <span>-8</span><span>-5</span><span>0</span><span>+5</span><span>+8</span>
+        </div>
+      </div>
+      <div class="mini-indicators">
+        <div class="mini-card">
+          <div class="mini-label">Market F&G</div>
+          <div class="mini-value neutral" id="miniMarket">-</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">Volatility</div>
+          <div class="mini-value neutral" id="miniVol">-</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">Crypto</div>
+          <div class="mini-value neutral" id="miniCrypto">-</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">CNN Detail</div>
+          <div class="mini-value neutral" id="miniCNN">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Check Section -->
+    <section class="bottom-check-section">
+      <div class="check-header">
+        <div class="check-title"><span>🔍</span><h3>바닥 확인 체크리스트</h3></div>
+        <div class="check-summary">
+          <span class="check-count" id="checkCount">0/5</span>
+          <div class="check-progress-bar"><div class="check-progress-fill" id="checkProgress" style="width: 0%;"></div></div>
+        </div>
+      </div>
+      <div class="check-grid" id="checkGrid"></div>
+    </section>
+
+    <!-- Group Matrix -->
+    <div class="group-matrix" id="groupMatrix"></div>
+
+    <!-- Chart Section -->
+    <section class="chart-section">
+      <div class="chart-header">
+        <h3>📈 Signal Score Timeline</h3>
+        <div class="chart-controls">
+          <div class="period-tabs">
+            <button class="period-tab active" data-period="365">1Y</button>
+            <button class="period-tab" data-period="1095">3Y</button>
+            <button class="period-tab" data-period="max">MAX</button>
+          </div>
+          <button class="breakdown-toggle" id="breakdownToggle">
+            <span>📊</span><span>Breakdown</span><span>▼</span>
+          </button>
+        </div>
+      </div>
+      <div class="chart-wrapper"><canvas id="signalChart"></canvas></div>
+    </section>
+
+    <!-- Info Cards -->
+    <div class="info-cards-section">
+      <div class="info-card">
+        <div class="info-card-header"><span class="info-card-icon">📊</span><span class="info-card-title">Signal Score란?</span></div>
+        <div class="info-card-content">5개 지표(VIX, MOVE, CNN F&G, CFTC, Crypto F&G)를 종합하여 -8~+8 점수로 변환한 복합 심리 지표입니다. 3개+ 지표가 같은 방향일 때 신뢰도가 73-81%로 상승합니다.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-header"><span class="info-card-icon">💡</span><span class="info-card-title">바닥 확인이란?</span></div>
+        <div class="info-card-content">역사적 바닥(2020 COVID, 2022 침체)에서 공통 발생한 조건들입니다. VIX 40+ 시 100% 승률, 3개+ 충족 시 강력한 매수 신호로 해석합니다.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-header"><span class="info-card-icon">🎯</span><span class="info-card-title">활용 방법</span></div>
+        <div class="info-card-content">극도 공포(-5 이하)에서 분할 매수, 극도 탐욕(+5 이상)에서 익절/방어적 전환. 중립(-1~+1)에서는 펀더멘털과 밸류에이션을 함께 고려하세요.</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { DataFetcher } from '../shared/data-fetcher.js';
+    import { DataManager } from '../shared/data-manager.js';
+    import {
+      calculateSignalScore, calculateScoreBreakdown, getSignalStatus,
+      getStatusLabel, getStatusLabelEn, calculateMarkerPosition, getScoreCssClass,
+      checkBottomConditions, calculateGroupScore, formatCftcValue, formatValue
+    } from '../shared/sentiment-calculator.js';
+
+    // ============================================
+    // Main App
+    // ============================================
+    let sentimentData = null;
+    let signalChart = null;
+    let showBreakdown = false;
+    let currentPeriod = 365;
+
+    async function init() {
+      try {
+        // 데이터 로드
+        const result = await DataFetcher.fetch('sentiment');
+        if (result.data) {
+          sentimentData = result.data;
+          console.log('[Sentiment] 데이터 로드 완료:', sentimentData);
+
+          // UI 업데이트
+          updateHero();
+          updateChecklist();
+          updateGroupCards();
+          initChart();
+          updateMeta();
+
+          // 캐시 저장 (Widget용)
+          const cacheData = buildCacheData();
+          DataManager.saveWidgetData('sentiment', cacheData);
+        } else {
+          console.error('[Sentiment] 데이터 로드 실패');
+        }
+      } catch (e) {
+        console.error('[Sentiment] 초기화 오류:', e);
+      } finally {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+      }
+    }
+
+    function buildCacheData() {
+      const score = calculateSignalScore(sentimentData);
+      const status = getSignalStatus(score);
+      return {
+        score,
+        status,
+        statusLabel: getStatusLabel(status),
+        statusLabelEn: getStatusLabelEn(status),
+        cssClass: getScoreCssClass(score),
+        vix: sentimentData.vix,
+        move: sentimentData.move,
+        cnn: sentimentData.cnn,
+        cftc: sentimentData.cftc,
+        crypto: sentimentData.crypto,
+        updated: sentimentData.updated
+      };
+    }
+
+    // ============================================
+    // Hero Section Update
+    // ============================================
+    function updateHero() {
+      const score = calculateSignalScore(sentimentData);
+      const status = getSignalStatus(score);
+      const cssClass = getScoreCssClass(score);
+      const markerPos = calculateMarkerPosition(score);
+
+      // Score Display
+      const scoreEl = document.getElementById('signalScoreValue');
+      scoreEl.textContent = score >= 0 ? `+${score}` : score;
+      scoreEl.className = `signal-score-value ${cssClass}`;
+
+      // Label
+      const icons = { fear: '📉', neutral: '➡️', greed: '📈' };
+      document.getElementById('signalLabelIcon').textContent = icons[cssClass];
+      document.getElementById('signalLabelText').textContent = getStatusLabelEn(status);
+
+      // Status Badge
+      const badge = document.getElementById('statusBadge');
+      badge.className = `status-badge ${cssClass}`;
+      document.getElementById('statusIcon').textContent = icons[cssClass];
+      document.getElementById('statusText').textContent = getStatusLabelEn(status);
+
+      // Gauge Marker
+      document.getElementById('gaugeMarker').style.left = `${markerPos}%`;
+
+      // Mini Indicators
+      const breakdown = calculateScoreBreakdown(sentimentData);
+      const marketScore = calculateGroupScore('MARKET_FG', sentimentData);
+      const volScore = calculateGroupScore('VOLATILITY', sentimentData);
+      const cryptoScore = calculateGroupScore('CRYPTO', sentimentData);
+      const cnnScore = calculateGroupScore('CNN_COMPONENTS', sentimentData);
+
+      updateMiniCard('miniMarket', marketScore);
+      updateMiniCard('miniVol', volScore);
+      updateMiniCard('miniCrypto', cryptoScore);
+      updateMiniCard('miniCNN', cnnScore);
+    }
+
+    function updateMiniCard(id, score) {
+      const el = document.getElementById(id);
+      el.textContent = score >= 0 ? `+${score}` : score;
+      el.className = `mini-value ${getScoreCssClass(score)}`;
+    }
+
+    // ============================================
+    // Checklist Update
+    // ============================================
+    function updateChecklist() {
+      const result = checkBottomConditions(sentimentData);
+      document.getElementById('checkCount').textContent = `${result.count}/${result.total}`;
+      document.getElementById('checkProgress').style.width = `${result.percentage}%`;
+
+      const grid = document.getElementById('checkGrid');
+      grid.innerHTML = result.checks.map(check => {
+        const statusClass = check.passed ? 'completed' : 'pending';
+        const icon = check.passed ? '✅' : '⏳';
+        let valueText = '';
+        if (check.key === 'CFTC') {
+          valueText = `현재: <span class="highlight">${formatCftcValue(check.value)}</span>`;
+        } else {
+          valueText = `현재: <span class="highlight">${formatValue(check.value)}</span>`;
+        }
+        if (check.passed) valueText += ' ✓';
+        else if (check.ideal) valueText += ` (이상적: ${check.ideal}+)`;
+
+        return `
+          <div class="check-item ${statusClass}">
+            <div class="check-status-icon">${icon}</div>
+            <div class="check-content">
+              <div class="check-item-title">${check.label}</div>
+              <div class="check-item-value">${valueText}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ============================================
+    // Group Cards Update
+    // ============================================
+    function updateGroupCards() {
+      const groups = [
+        {
+          key: 'MARKET_FG', icon: '📊', title: 'Market Fear & Greed',
+          components: [
+            { label: 'CNN F&G', value: formatValue(sentimentData.cnn, 0) },
+            { label: 'AAII Bull-Bear', value: sentimentData.aaii ? `${(sentimentData.aaii.bullish - sentimentData.aaii.bearish).toFixed(0)}%` : 'N/A' },
+            { label: 'CFTC Net', value: formatCftcValue(sentimentData.cftc) }
+          ]
+        },
+        {
+          key: 'VOLATILITY', icon: '📈', title: 'Volatility',
+          components: [
+            { label: 'VIX', value: formatValue(sentimentData.vix, 1) },
+            { label: 'MOVE', value: formatValue(sentimentData.move, 1) }
+          ]
+        },
+        {
+          key: 'CRYPTO', icon: '₿', title: 'Crypto Sentiment',
+          components: [
+            { label: 'Crypto F&G', value: formatValue(sentimentData.crypto, 0) }
+          ]
+        },
+        {
+          key: 'CNN_COMPONENTS', icon: '📰', title: 'CNN Components',
+          components: sentimentData.cnnComponents ? [
+            { label: 'Momentum', value: formatValue(sentimentData.cnnComponents.momentum, 1) },
+            { label: 'Junk Bond', value: formatValue(sentimentData.cnnComponents.junk_bond_demand, 1) },
+            { label: 'Put/Call', value: formatValue(sentimentData.cnnComponents.put_call, 1) }
+          ] : [{ label: 'Data', value: 'N/A' }]
+        }
+      ];
+
+      const matrix = document.getElementById('groupMatrix');
+      matrix.innerHTML = groups.map(group => {
+        const score = calculateGroupScore(group.key, sentimentData);
+        const cssClass = getScoreCssClass(score);
+        const statusIcons = { fear: '📉 Fear', neutral: '🟡 Mixed', greed: '📈 Greed' };
+
+        return `
+          <div class="group-card">
+            <div class="group-header">
+              <div class="group-icon">${group.icon}</div>
+              <div class="group-title">${group.title}</div>
+            </div>
+            <div class="group-score-box">
+              <div class="group-score ${cssClass}">${score >= 0 ? '+' + score : score}</div>
+              <div class="group-status ${cssClass}">${statusIcons[cssClass]}</div>
+            </div>
+            <div class="group-components">
+              ${group.components.map(c => `
+                <div class="component-item">
+                  <span class="component-label">${c.label}</span>
+                  <span class="component-value">${c.value}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ============================================
+    // Chart
+    // ============================================
+    function initChart() {
+      const ctx = document.getElementById('signalChart').getContext('2d');
+
+      // 히스토리에서 Signal Score 계산
+      const history = sentimentData.history;
+      const dates = [];
+      const scores = [];
+
+      // VIX 데이터 기준으로 날짜 추출 (가장 풍부)
+      if (history.vix && history.vix.length > 0) {
+        // 최근 1년치만 (기본값)
+        const startIdx = Math.max(0, history.vix.length - currentPeriod);
+        for (let i = startIdx; i < history.vix.length; i++) {
+          const date = history.vix[i].date;
+          const vixVal = history.vix[i].close || history.vix[i].value;
+
+          // 같은 날짜의 다른 지표 찾기
+          const moveVal = findValueByDate(history.move, date);
+          const cftcVal = findValueByDate(history.cftc, date, 'net_position');
+          const cnnVal = findValueByDate(history.cnn, date);
+          const cryptoVal = findValueByDate(history.crypto, date);
+
+          if (vixVal != null) {
+            const score = calculateSignalScore({
+              vix: vixVal,
+              move: moveVal,
+              cftc: cftcVal,
+              cnn: cnnVal,
+              crypto: cryptoVal
+            });
+            dates.push(date);
+            scores.push(score);
+          }
+        }
+      }
+
+      const config = {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Signal Score',
+            data: scores,
+            borderColor: '#2563eb',
+            borderWidth: 2,
+            backgroundColor: (context) => {
+              const value = context.raw;
+              return value < 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)';
+            },
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          scales: {
+            x: {
+              type: 'time',
+              time: { unit: 'month', displayFormats: { month: 'MMM yy' } },
+              grid: { display: false }
+            },
+            y: {
+              min: -8, max: 8,
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+              padding: 12,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => `Signal Score: ${ctx.parsed.y}`
+              }
+            },
+            annotation: {
+              annotations: {
+                zeroLine: { type: 'line', yMin: 0, yMax: 0, borderColor: '#f59e0b', borderWidth: 2, borderDash: [5, 5] },
+                extremeFearZone: { type: 'box', yMin: -8, yMax: -5, backgroundColor: 'rgba(124, 45, 18, 0.08)', borderWidth: 0 },
+                extremeGreedZone: { type: 'box', yMin: 5, yMax: 8, backgroundColor: 'rgba(21, 128, 61, 0.08)', borderWidth: 0 }
+              }
+            }
+          }
+        }
+      };
+
+      if (signalChart) signalChart.destroy();
+      signalChart = new Chart(ctx, config);
+
+      // Period tabs
+      document.querySelectorAll('.period-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const period = btn.dataset.period;
+          currentPeriod = period === 'max' ? 9999 : parseInt(period);
+          initChart();
+        });
+      });
+    }
+
+    function findValueByDate(arr, date, field = 'value') {
+      if (!Array.isArray(arr)) return null;
+      const item = arr.find(d => d.date === date);
+      if (item) return item[field] ?? item.value ?? item.close ?? null;
+      return null;
+    }
+
+    // ============================================
+    // Meta Update
+    // ============================================
+    function updateMeta() {
+      const now = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      document.getElementById('updateTime').textContent =
+        `Updated: ${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+
+    // Initialize
+    init();
+  </script>
+</body>
+</html>
