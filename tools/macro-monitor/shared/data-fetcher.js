@@ -108,6 +108,8 @@ class MacroDataFetcher {
         return await this.fetchLiquidityFlow();
       case 'liquidity-stress':
         return await this.fetchLiquidityStress();
+      case 'sentiment':
+        return await this.fetchSentiment();
       default:
         console.warn(`[DataFetcher] Unknown widget: ${widgetId}`);
         return null;
@@ -549,6 +551,91 @@ class MacroDataFetcher {
       };
     } catch (e) {
       console.error('[DataFetcher] Liquidity Stress fetch error:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Sentiment 데이터 fetch (Phase 4-C)
+   * JSON 파일 로드: vix, move, cftc-sp500, cnn-fear-greed, crypto-fear-greed, aaii
+   * @returns {Promise<object|null>}
+   */
+  async fetchSentiment() {
+    try {
+      const basePath = this.getBasePath();
+      const baseUrl = window.location.origin + basePath + '/data/sentiment/';
+
+      // 병렬 로드 (필수 5개 + 선택 2개)
+      const [vix, move, cftc, cnn, crypto, aaii, cnnComponents] = await Promise.all([
+        this.fetchJsonFile(baseUrl + 'vix.json'),
+        this.fetchJsonFile(baseUrl + 'move.json'),
+        this.fetchJsonFile(baseUrl + 'cftc-sp500.json'),
+        this.fetchJsonFile(baseUrl + 'cnn-fear-greed.json'),
+        this.fetchJsonFile(baseUrl + 'crypto-fear-greed.json'),
+        this.fetchJsonFile(baseUrl + 'aaii.json'),
+        this.fetchJsonFile(baseUrl + 'cnn-components.json')
+      ]);
+
+      // 최신값 추출
+      const getLatest = (arr, field = 'value') => {
+        if (!Array.isArray(arr) || arr.length === 0) return null;
+        const latest = arr[arr.length - 1];
+        return latest[field] ?? latest.val ?? latest.close ?? null;
+      };
+
+      // VIX: { date, close } 형태
+      const latestVix = getLatest(vix, 'close');
+      // MOVE: { date, value } 형태
+      const latestMove = getLatest(move, 'value');
+      // CFTC: { date, net_position } 형태
+      const latestCftc = getLatest(cftc, 'net_position');
+      // CNN F&G: { date, value } 형태
+      const latestCnn = getLatest(cnn, 'value');
+      // Crypto F&G: { date, value } 형태
+      const latestCrypto = getLatest(crypto, 'value');
+      // AAII: { date, bullish, bearish, neutral } 형태 - 사용 예정
+      const latestAaii = aaii?.[aaii.length - 1] || null;
+
+      console.log(`[DataFetcher] Sentiment 로드: VIX=${latestVix}, MOVE=${latestMove}, CFTC=${latestCftc}, CNN=${latestCnn}, Crypto=${latestCrypto}`);
+
+      return {
+        // 핵심 지표 (계산용)
+        vix: latestVix,
+        move: latestMove,
+        cftc: latestCftc,
+        cnn: latestCnn,
+        crypto: latestCrypto,
+        // 추가 지표
+        aaii: latestAaii,
+        cnnComponents: cnnComponents,
+        // 히스토리 데이터 (차트용)
+        history: {
+          vix: vix || [],
+          move: move || [],
+          cftc: cftc || [],
+          cnn: cnn || [],
+          crypto: crypto || []
+        },
+        // 메타데이터
+        updated: new Date().toISOString()
+      };
+    } catch (e) {
+      console.error('[DataFetcher] Sentiment fetch error:', e);
+      return null;
+    }
+  }
+
+  /**
+   * JSON 파일 로드 헬퍼
+   * @param {string} url - JSON 파일 URL
+   * @returns {Promise<array|object|null>}
+   */
+  async fetchJsonFile(url) {
+    try {
+      const res = await this.fetchWithTimeout(url);
+      return res;
+    } catch (e) {
+      console.warn(`[DataFetcher] JSON load failed: ${url}`, e.message);
       return null;
     }
   }
