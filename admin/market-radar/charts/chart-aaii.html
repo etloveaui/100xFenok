@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AAII Bull-Bear Spread Chart | Market Radar</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #ffffff;
+    }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    .period-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #6b7280;
+    }
+    .period-btn:hover {
+      border-color: #a855f7;
+      color: #9333ea;
+    }
+    .period-btn.active {
+      background: #a855f7;
+      color: white;
+      border-color: #a855f7;
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <span class="text-2xl">👥</span>
+        AAII Bull-Bear Spread
+      </h1>
+      <p class="text-sm text-gray-500 mt-1">Bullish - Bearish = Sentiment Spread (1987~, Weekly)</p>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="flex gap-2 flex-wrap">
+      <button class="period-btn" data-period="365">1Y</button>
+      <button class="period-btn active" data-period="1825">5Y</button>
+      <button class="period-btn" data-period="3650">10Y</button>
+      <button class="period-btn" data-period="9999">MAX</button>
+    </div>
+  </div>
+
+  <!-- Current Value Display -->
+  <div class="flex flex-wrap items-center gap-6 mb-6 p-4 bg-gray-50 rounded-xl">
+    <div>
+      <div class="text-xs text-gray-500 mb-1">Bull-Bear Spread</div>
+      <div id="spreadValue" class="text-3xl font-bold text-gray-800">--</div>
+    </div>
+    <div class="text-sm text-gray-500">
+      <div>Bullish: <span id="bullishValue" class="font-medium text-green-600">--</span></div>
+      <div>Bearish: <span id="bearishValue" class="font-medium text-red-600">--</span></div>
+    </div>
+    <div>
+      <div class="text-xs text-gray-500 mb-1">Date</div>
+      <div id="currentDate" class="text-lg font-medium text-gray-600">--</div>
+    </div>
+    <div id="statusBadge" class="ml-auto px-4 py-2 rounded-lg text-sm font-bold">
+      --
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="bg-white rounded-2xl border border-gray-200 p-4">
+    <canvas id="aaiiChart" height="320"></canvas>
+  </div>
+
+  <!-- Legend -->
+  <div class="mt-4 flex flex-wrap gap-4 text-xs text-gray-600">
+    <div class="flex items-center gap-2">
+      <div class="w-4 h-3 bg-green-600 opacity-20 rounded"></div>
+      <span>Extreme Bullish (≥+20)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-4 h-3 bg-red-600 opacity-20 rounded"></div>
+      <span>Extreme Bearish (≤-20)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-4 h-1 bg-gray-400 rounded"></div>
+      <span>Zero Line (Neutral)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-4 h-3 bg-gray-500 opacity-10 rounded"></div>
+      <span>Recession</span>
+    </div>
+  </div>
+
+  <!-- Note -->
+  <div class="mt-4 p-3 bg-purple-50 rounded-lg text-xs text-purple-800">
+    <strong>📊 Bull-Bear Spread:</strong> Bullish% - Bearish% | 양수 = 낙관 우세, 음수 = 비관 우세 | 주간 업데이트 (목요일)
+  </div>
+
+  <script type="module">
+    import { getRecessionAnnotations } from '../../../tools/macro-monitor/shared/chart-annotations.js';
+
+    // Data & Chart State
+    let allData = [];
+    let chart = null;
+    let currentPeriod = 1825; // 5Y default
+
+    // Thresholds
+    const THRESHOLDS = {
+      EXTREME_BULLISH: 20,
+      EXTREME_BEARISH: -20
+    };
+
+    // Fetch AAII data
+    async function fetchData() {
+      try {
+        const response = await fetch('../../../data/sentiment/aaii.json');
+        allData = await response.json();
+        allData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return allData;
+      } catch (error) {
+        console.error('Failed to fetch AAII data:', error);
+        return [];
+      }
+    }
+
+    // Filter data by period
+    function filterByPeriod(data, days) {
+      if (days >= 9999) return data;
+
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      return data.filter(d => new Date(d.date) >= cutoff);
+    }
+
+    // Update current value display
+    function updateCurrentDisplay(data) {
+      if (!data.length) return;
+
+      const latest = data[data.length - 1];
+      const spread = latest.bullish - latest.bearish;
+
+      document.getElementById('spreadValue').textContent = (spread > 0 ? '+' : '') + spread.toFixed(1);
+      document.getElementById('bullishValue').textContent = latest.bullish.toFixed(1) + '%';
+      document.getElementById('bearishValue').textContent = latest.bearish.toFixed(1) + '%';
+      document.getElementById('currentDate').textContent = latest.date;
+
+      // Color the spread value
+      const spreadEl = document.getElementById('spreadValue');
+      if (spread > 0) {
+        spreadEl.className = 'text-3xl font-bold text-green-600';
+      } else if (spread < 0) {
+        spreadEl.className = 'text-3xl font-bold text-red-600';
+      } else {
+        spreadEl.className = 'text-3xl font-bold text-gray-600';
+      }
+
+      const badge = document.getElementById('statusBadge');
+      if (spread >= THRESHOLDS.EXTREME_BULLISH) {
+        badge.textContent = 'EXTREME BULLISH';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-green-700 text-white';
+      } else if (spread > 10) {
+        badge.textContent = 'BULLISH';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-green-100 text-green-800';
+      } else if (spread <= THRESHOLDS.EXTREME_BEARISH) {
+        badge.textContent = 'EXTREME BEARISH';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-800 text-white';
+      } else if (spread < -10) {
+        badge.textContent = 'BEARISH';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-100 text-red-800';
+      } else {
+        badge.textContent = 'NEUTRAL';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-gray-100 text-gray-700';
+      }
+    }
+
+    // Create/Update Chart
+    function renderChart(data) {
+      const ctx = document.getElementById('aaiiChart').getContext('2d');
+
+      const dates = data.map(d => d.date);
+      const spreadData = data.map(d => d.bullish - d.bearish);
+
+      // Color based on positive/negative
+      const pointColors = spreadData.map(v => v >= 0 ? 'rgba(22, 163, 74, 0.8)' : 'rgba(220, 38, 38, 0.8)');
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, 400);
+      bgGradient.addColorStop(0, 'rgba(22, 163, 74, 0.2)');
+      bgGradient.addColorStop(0.5, 'rgba(156, 163, 175, 0.1)');
+      bgGradient.addColorStop(1, 'rgba(220, 38, 38, 0.2)');
+
+      // Get recession annotations
+      const recessionAnnotations = dates.length > 0
+        ? getRecessionAnnotations(dates[0], dates[dates.length - 1])
+        : {};
+
+      // Zone annotations
+      const zoneAnnotations = {
+        zone_bullish: {
+          type: 'box',
+          yMin: THRESHOLDS.EXTREME_BULLISH,
+          yMax: 60,
+          backgroundColor: 'rgba(22, 163, 74, 0.08)',
+          borderWidth: 0
+        },
+        zone_bearish: {
+          type: 'box',
+          yMin: -60,
+          yMax: THRESHOLDS.EXTREME_BEARISH,
+          backgroundColor: 'rgba(220, 38, 38, 0.08)',
+          borderWidth: 0
+        },
+        line_zero: {
+          type: 'line',
+          yMin: 0,
+          yMax: 0,
+          borderColor: '#9ca3af',
+          borderWidth: 2,
+          label: {
+            display: true,
+            content: 'Neutral',
+            position: 'start',
+            backgroundColor: 'transparent',
+            color: '#9ca3af',
+            font: { size: 10 }
+          }
+        },
+        line_bullish: {
+          type: 'line',
+          yMin: THRESHOLDS.EXTREME_BULLISH,
+          yMax: THRESHOLDS.EXTREME_BULLISH,
+          borderColor: '#16a34a',
+          borderWidth: 1,
+          borderDash: [5, 5],
+          label: {
+            display: true,
+            content: 'Extreme Bull (+20)',
+            position: 'end',
+            backgroundColor: 'transparent',
+            color: '#16a34a',
+            font: { size: 10 }
+          }
+        },
+        line_bearish: {
+          type: 'line',
+          yMin: THRESHOLDS.EXTREME_BEARISH,
+          yMax: THRESHOLDS.EXTREME_BEARISH,
+          borderColor: '#dc2626',
+          borderWidth: 1,
+          borderDash: [5, 5],
+          label: {
+            display: true,
+            content: 'Extreme Bear (-20)',
+            position: 'end',
+            backgroundColor: 'transparent',
+            color: '#dc2626',
+            font: { size: 10 }
+          }
+        }
+      };
+
+      const config = {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Bull-Bear Spread',
+            data: spreadData,
+            borderColor: '#a855f7',
+            backgroundColor: bgGradient,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: currentPeriod <= 365 ? 'month' : 'year',
+                displayFormats: {
+                  month: 'MMM yyyy',
+                  year: 'yyyy'
+                }
+              },
+              grid: { display: false },
+              ticks: {
+                maxTicksLimit: 8,
+                color: '#9ca3af'
+              }
+            },
+            y: {
+              min: -50,
+              max: 50,
+              grid: { color: '#f3f4f6' },
+              ticks: {
+                color: '#9ca3af',
+                callback: (value) => (value > 0 ? '+' : '') + value
+              }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              cornerRadius: 8,
+              callbacks: {
+                title: (items) => items[0].label,
+                label: (context) => {
+                  const spread = context.parsed.y;
+                  return `Spread: ${spread > 0 ? '+' : ''}${spread.toFixed(1)}`;
+                }
+              }
+            },
+            annotation: {
+              annotations: { ...recessionAnnotations, ...zoneAnnotations }
+            }
+          }
+        }
+      };
+
+      if (chart) {
+        chart.destroy();
+      }
+      chart = new Chart(ctx, config);
+    }
+
+    // Period button handlers
+    function setupPeriodButtons() {
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          currentPeriod = parseInt(btn.dataset.period);
+          const filtered = filterByPeriod(allData, currentPeriod);
+          updateCurrentDisplay(filtered);
+          renderChart(filtered);
+        });
+      });
+    }
+
+    // Initialize
+    async function init() {
+      await fetchData();
+      const filtered = filterByPeriod(allData, currentPeriod);
+      updateCurrentDisplay(filtered);
+      renderChart(filtered);
+      setupPeriodButtons();
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
