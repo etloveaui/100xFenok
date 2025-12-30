@@ -54,14 +54,15 @@
         <span class="text-2xl">⚡📈</span>
         VIX & MOVE Volatility
       </h1>
-      <p class="text-sm text-gray-500 mt-1">Stock (VIX) + Bond (MOVE) Volatility Dual Axis (2020~)</p>
+      <p class="text-sm text-gray-500 mt-1">Stock (VIX 1990~) + Bond (MOVE 2020~) Volatility Dual Axis</p>
     </div>
 
     <!-- Period Selector -->
     <div class="flex gap-2 flex-wrap">
-      <button class="period-btn" data-period="90">3M</button>
-      <button class="period-btn" data-period="180">6M</button>
       <button class="period-btn active" data-period="365">1Y</button>
+      <button class="period-btn" data-period="1825">5Y</button>
+      <button class="period-btn" data-period="3650">10Y</button>
+      <button class="period-btn" data-period="7300">20Y</button>
       <button class="period-btn" data-period="9999">MAX</button>
     </div>
   </div>
@@ -137,7 +138,7 @@
 
   <!-- Note -->
   <div class="mt-4 p-3 bg-indigo-50 rounded-lg text-xs text-indigo-800">
-    <strong>📊 Dual Volatility:</strong> VIX = 주식시장 변동성 | MOVE = 채권시장 변동성 | 둘 다 높으면 시장 전반 불안
+    <strong>📊 Dual Volatility:</strong> VIX = 주식시장 변동성 (1990~) | MOVE = 채권시장 변동성 (2020~) | 둘 다 높으면 시장 전반 불안 | 5Y 이상 기간에서 MOVE는 2020년 이후만 표시
   </div>
 
   <script type="module">
@@ -173,19 +174,15 @@
         vixData.sort((a, b) => new Date(a.date) - new Date(b.date));
         moveData.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        // Find MOVE start date (shorter history)
-        const moveStartDate = moveData[0]?.date;
+        // Merge data - use VIX date range as base (longer history)
+        // MOVE data will be null for dates before 2020
+        const moveMap = new Map(moveData.map(d => [d.date, d.close]));
 
-        // Merge data - use MOVE date range as base (shorter)
-        const vixMap = new Map(vixData.map(d => [d.date, d.value]));
-
-        mergedData = moveData
-          .filter(d => vixMap.has(d.date))
-          .map(d => ({
-            date: d.date,
-            vix: vixMap.get(d.date),
-            move: d.close
-          }));
+        mergedData = vixData.map(d => ({
+          date: d.date,
+          vix: d.value,
+          move: moveMap.get(d.date) || null  // null if no MOVE data
+        }));
 
         return mergedData;
       } catch (error) {
@@ -210,11 +207,12 @@
       const latest = data[data.length - 1];
 
       document.getElementById('vixValue').textContent = latest.vix.toFixed(2);
-      document.getElementById('moveValue').textContent = latest.move.toFixed(2);
+      document.getElementById('moveValue').textContent = latest.move !== null ? latest.move.toFixed(2) : 'N/A';
       document.getElementById('currentDate').textContent = latest.date;
 
-      // Check for dual stress
-      const isDualStress = latest.vix >= THRESHOLDS.VIX_FEAR && latest.move >= THRESHOLDS.MOVE_STRESS;
+      // Check for dual stress (only if MOVE data exists)
+      const hasMoveData = latest.move !== null;
+      const isDualStress = hasMoveData && latest.vix >= THRESHOLDS.VIX_FEAR && latest.move >= THRESHOLDS.MOVE_STRESS;
       const stressAlert = document.getElementById('stressAlert');
 
       if (isDualStress) {
@@ -226,16 +224,16 @@
       // Determine overall status
       const badge = document.getElementById('statusBadge');
 
-      if (latest.vix >= THRESHOLDS.VIX_EXTREME && latest.move >= THRESHOLDS.MOVE_EXTREME) {
+      if (hasMoveData && latest.vix >= THRESHOLDS.VIX_EXTREME && latest.move >= THRESHOLDS.MOVE_EXTREME) {
         badge.textContent = 'EXTREME STRESS';
         badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-800 text-white';
       } else if (isDualStress) {
         badge.textContent = 'DUAL STRESS';
         badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-100 text-red-800';
-      } else if (latest.vix >= THRESHOLDS.VIX_FEAR || latest.move >= THRESHOLDS.MOVE_STRESS) {
+      } else if (latest.vix >= THRESHOLDS.VIX_FEAR || (hasMoveData && latest.move >= THRESHOLDS.MOVE_STRESS)) {
         badge.textContent = 'ELEVATED';
         badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-orange-100 text-orange-800';
-      } else if (latest.vix < 15 && latest.move < 80) {
+      } else if (latest.vix < 15 && (!hasMoveData || latest.move < 80)) {
         badge.textContent = 'CALM';
         badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-green-100 text-green-800';
       } else {
