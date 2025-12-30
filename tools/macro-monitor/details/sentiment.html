@@ -10,9 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --navy: #010079;
-      --gold: #D5AD36;
-      --interactive: #1B73D3;
       --extreme-fear: #7c2d12;
       --fear: #dc2626;
       --neutral: #f59e0b;
@@ -21,7 +18,7 @@
       --positive: #16a34a;
       --warning: #ea580c;
       --negative: #dc2626;
-      --bg-dark: #0f172a;
+      --bg-page: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
       --bg-card: #ffffff;
       --bg-muted: #f8fafc;
       --text-primary: #1e293b;
@@ -31,7 +28,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      background: var(--bg-page);
       min-height: 100vh;
       color: var(--text-primary);
     }
@@ -46,7 +43,7 @@
     .loading-overlay.hidden { opacity: 0; pointer-events: none; }
     .loading-spinner {
       width: 48px; height: 48px; border: 4px solid #e2e8f0;
-      border-top-color: var(--interactive); border-radius: 50%;
+      border-top-color: #2563eb; border-radius: 50%;
       animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -70,57 +67,44 @@
       display: flex; align-items: center; gap: 8px;
       padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;
     }
-    .status-badge.fear { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); color: var(--fear); }
-    .status-badge.greed { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); color: var(--greed); }
-    .status-badge.neutral { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); color: var(--neutral); }
+    .status-badge.fear { background: #fef2f2; color: var(--fear); }
+    .status-badge.greed { background: #f0fdf4; color: var(--greed); }
+    .status-badge.neutral { background: #fffbeb; color: var(--neutral); }
     .update-time { font-size: 12px; color: var(--text-muted); }
 
-    /* Hero Section */
+    /* Hero Section - LIGHT THEME */
     .sentiment-hero {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-      border-radius: 24px; padding: 32px; margin-bottom: 24px;
-      position: relative; overflow: hidden;
-    }
-    .sentiment-hero::before {
-      content: ''; position: absolute; top: -50%; left: -50%;
-      width: 200%; height: 200%;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.05) 0%, transparent 50%);
-      pointer-events: none;
+      background: var(--bg-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     }
     .hero-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
     .hero-icon { font-size: 32px; }
     .hero-label {
-      font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7);
+      font-size: 14px; font-weight: 600; color: var(--text-secondary);
       text-transform: uppercase; letter-spacing: 1px;
     }
     .signal-display { text-align: center; margin-bottom: 32px; }
     .signal-score-value {
-      font-family: 'Orbitron', monospace; font-size: 80px;
+      font-family: 'Orbitron', monospace; font-size: 72px;
       font-weight: 800; line-height: 1; margin-bottom: 8px;
     }
-    .signal-score-value.fear {
-      color: #f87171;
-      text-shadow: 0 0 40px #f87171, 0 0 80px rgba(248, 113, 113, 0.3);
-      animation: fearPulse 2s ease-in-out infinite;
-    }
-    .signal-score-value.greed {
-      color: #4ade80; text-shadow: 0 0 40px #4ade80, 0 0 80px rgba(74, 222, 128, 0.3);
-    }
-    .signal-score-value.neutral { color: #fbbf24; text-shadow: 0 0 40px #fbbf24; }
-    @keyframes fearPulse {
-      0%, 100% { text-shadow: 0 0 40px #f87171; transform: scale(1); }
-      50% { text-shadow: 0 0 60px #f87171, 0 0 100px rgba(239, 68, 68, 0.5); transform: scale(1.02); }
-    }
+    .signal-score-value.fear { color: var(--fear); }
+    .signal-score-value.greed { color: var(--greed); }
+    .signal-score-value.neutral { color: var(--neutral); }
     .signal-label {
-      font-size: 20px; font-weight: 600; color: rgba(255,255,255,0.9);
+      font-size: 18px; font-weight: 600; color: var(--text-secondary);
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
 
     /* Segment Bar */
     .signal-gauge { margin-bottom: 32px; }
     .segment-bar {
-      display: flex; height: 24px; border-radius: 12px;
-      overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+      display: flex; height: 20px; border-radius: 10px;
+      overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
     }
     .segment { transition: filter 0.3s ease; }
     .seg-extreme-fear { background: linear-gradient(90deg, #7c2d12 0%, #991b1b 100%); flex: 3; }
@@ -130,102 +114,129 @@
     .seg-extreme-greed { background: linear-gradient(90deg, #22c55e 0%, #15803d 100%); flex: 3; }
     .gauge-marker {
       position: absolute; top: 50%; transform: translate(-50%, -50%);
-      width: 6px; height: 40px; background: #fff; border-radius: 3px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.4); transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 6px; height: 36px; background: #1e293b; border-radius: 3px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3); transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .segment-labels {
       display: flex; justify-content: space-between; margin-top: 8px; padding: 0 4px;
     }
-    .segment-labels span { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 500; }
+    .segment-labels span { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
-    /* Mini Indicators */
-    .mini-indicators { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    /* Mini Indicators - 6개 */
+    .mini-indicators { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
     .mini-card {
-      background: rgba(255,255,255,0.1); backdrop-filter: blur(8px);
-      border-radius: 12px; padding: 12px; text-align: center;
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--bg-muted); border: 1px solid #e2e8f0;
+      border-radius: 12px; padding: 16px; text-align: center;
     }
     .mini-label {
-      font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 4px;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
     }
-    .mini-value { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 700; }
-    .mini-value.fear { color: #f87171; }
-    .mini-value.neutral { color: #fbbf24; }
-    .mini-value.greed { color: #4ade80; }
+    .mini-value { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; }
+    .mini-score { font-size: 12px; font-weight: 600; margin-top: 4px; }
+    .mini-value.fear, .mini-score.fear { color: var(--fear); }
+    .mini-value.neutral, .mini-score.neutral { color: var(--neutral); }
+    .mini-value.greed, .mini-score.greed { color: var(--greed); }
 
-    /* Bottom Check Section */
-    .bottom-check-section {
+    /* 100x Sentiment Signal Section - Option C+ Enhanced Gauge */
+    .signal-section {
       background: var(--bg-card); border-radius: 20px; padding: 24px;
       margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
     }
-    .check-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .check-title { display: flex; align-items: center; gap: 10px; }
-    .check-title h3 { font-size: 18px; font-weight: 700; }
-    .check-summary { display: flex; align-items: center; gap: 12px; }
-    .check-count { font-size: 16px; font-weight: 700; color: var(--positive); }
-    .check-progress-bar { width: 120px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-    .check-progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%); transition: width 0.5s ease; }
-    .check-grid { display: grid; gap: 12px; }
-    .check-item {
-      display: flex; align-items: center; gap: 16px; padding: 16px 20px;
-      background: var(--bg-muted); border-radius: 12px; border-left: 4px solid #cbd5e1;
-      transition: all 0.3s ease; animation: fadeInUp 0.4s ease-out backwards;
-    }
-    .check-item:nth-child(1) { animation-delay: 0.05s; }
-    .check-item:nth-child(2) { animation-delay: 0.1s; }
-    .check-item:nth-child(3) { animation-delay: 0.15s; }
-    .check-item:nth-child(4) { animation-delay: 0.2s; }
-    .check-item:nth-child(5) { animation-delay: 0.25s; }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .check-item.completed { background: #f0fdf4; border-left-color: #22c55e; }
-    .check-item.pending { background: #fffbeb; border-left-color: #f59e0b; }
-    .check-status-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .check-content { flex: 1; }
-    .check-item-title { font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-    .check-item-value { font-size: 14px; color: var(--text-secondary); }
-    .check-item-value .highlight { font-weight: 600; color: var(--text-primary); }
+    .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .signal-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; }
+    .signal-title .tm { font-size: 10px; vertical-align: super; color: var(--text-secondary); }
 
-    /* Group Matrix */
-    .group-matrix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
-    .group-card {
-      background: var(--bg-card); border-radius: 16px; padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s ease, box-shadow 0.2s ease;
-      animation: fadeInUp 0.4s ease-out backwards;
+    /* Split Layout */
+    .signal-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .signal-split { grid-template-columns: 1fr; } }
+
+    /* Enhanced Gauge Card - 중립 흰 배경 */
+    .gauge-card {
+      border-radius: 16px; padding: 24px; text-align: center;
+      background: white; border: 3px solid;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     }
-    .group-card:nth-child(1) { animation-delay: 0.1s; }
-    .group-card:nth-child(2) { animation-delay: 0.15s; }
-    .group-card:nth-child(3) { animation-delay: 0.2s; }
-    .group-card:nth-child(4) { animation-delay: 0.25s; }
-    .group-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-    .group-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-    .group-icon {
-      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      font-size: 20px; background: var(--bg-muted); border-radius: 10px;
+    .gauge-card.fear { border-color: #ef4444; }
+    .gauge-card.greed { border-color: #22c55e; }
+
+    /* Card Header with Color Badge */
+    .gauge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .gauge-title-badge {
+      font-size: 13px; font-weight: 700; padding: 6px 14px;
+      border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;
     }
-    .group-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
-    .group-score-box { text-align: center; padding: 16px; background: var(--bg-muted); border-radius: 12px; margin-bottom: 16px; }
-    .group-score { font-family: 'Orbitron', monospace; font-size: 36px; font-weight: 700; line-height: 1; }
-    .group-score.fear { color: var(--fear); }
-    .group-score.neutral { color: var(--neutral); }
-    .group-score.greed { color: var(--greed); }
-    .group-status {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 13px; font-weight: 500; margin-top: 8px; padding: 4px 12px; border-radius: 20px;
+    .gauge-card.fear .gauge-title-badge { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .gauge-card.greed .gauge-title-badge { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .gauge-score-badge {
+      font-size: 18px; font-weight: 800; padding: 8px 16px; border-radius: 12px;
     }
-    .group-status.fear { background: #fef2f2; color: var(--fear); }
-    .group-status.neutral { background: #fffbeb; color: #d97706; }
-    .group-status.greed { background: #f0fdf4; color: var(--greed); }
-    .group-components { display: flex; flex-direction: column; gap: 8px; }
-    .component-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-    .component-label { color: var(--text-secondary); }
-    .component-value { font-weight: 600; color: var(--text-primary); }
+    .gauge-card.fear .gauge-score-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
+    .gauge-card.greed .gauge-score-badge { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+
+    /* Enhanced Gauge */
+    .gauge-wrapper { position: relative; width: 200px; height: 110px; margin: 0 auto 20px; }
+    .gauge-bg {
+      position: absolute; top: 0; left: 0; width: 200px; height: 100px;
+      border-radius: 100px 100px 0 0; overflow: hidden;
+      background: linear-gradient(90deg, #ef4444 0%, #f97316 25%, #eab308 50%, #84cc16 75%, #22c55e 100%);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .gauge-inner {
+      position: absolute; top: 15px; left: 15px; width: 170px; height: 85px;
+      border-radius: 85px 85px 0 0; background: white;
+    }
+    .gauge-needle {
+      position: absolute; bottom: 0; left: 50%; width: 6px; height: 85px;
+      background: linear-gradient(to top, #1e293b, #334155);
+      transform-origin: bottom center; transform: rotate(var(--angle, 0deg));
+      border-radius: 3px; transition: transform 0.5s ease;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+    .gauge-needle::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      border-left: 8px solid transparent; border-right: 8px solid transparent;
+      border-bottom: 12px solid #1e293b;
+    }
+    .gauge-center {
+      position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+      width: 24px; height: 24px; background: #1e293b; border-radius: 50%;
+      border: 4px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .gauge-labels { display: flex; justify-content: space-between; padding: 0 20px; font-size: 11px; font-weight: 700; margin-top: 8px; }
+    .gauge-labels .fear-label { color: #ef4444; }
+    .gauge-labels .neutral-label { color: #94a3b8; }
+    .gauge-labels .greed-label { color: #22c55e; }
+    .gauge-status { font-size: 14px; font-weight: 600; color: #475569; margin-top: 12px; }
+
+    /* Condition Toggle */
+    .condition-toggle {
+      margin-top: 20px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 500;
+      color: #64748b; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .condition-toggle:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    .condition-toggle .arrow { transition: transform 0.2s; }
+    .condition-toggle.open .arrow { transform: rotate(180deg); }
+    .condition-list { margin-top: 12px; text-align: left; display: none; }
+    .condition-list.open { display: block; }
+    .condition-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      border-radius: 10px; margin-bottom: 6px; background: #f8fafc;
+      border: 1px solid #e2e8f0; font-size: 13px; transition: all 0.2s;
+    }
+    .condition-item.passed { background: #f0fdf4; border-color: #86efac; }
+    .condition-icon { width: 22px; font-size: 14px; }
+    .condition-label { flex: 1; color: #475569; font-weight: 500; }
+    .condition-value { font-weight: 700; color: #64748b; padding: 2px 8px; background: white; border-radius: 6px; }
+    .condition-item.passed .condition-value { color: #16a34a; background: #dcfce7; }
 
     /* Chart Section */
-    .chart-section { background: var(--bg-card); border-radius: 20px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .chart-section {
+      background: var(--bg-card); border-radius: 20px; padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+    }
     .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px; }
     .chart-header h3 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .chart-controls { display: flex; align-items: center; gap: 12px; }
@@ -235,25 +246,25 @@
       font-size: 13px; font-weight: 500; color: var(--text-secondary); border-radius: 6px; transition: all 0.2s;
     }
     .period-tab.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .breakdown-toggle {
-      display: flex; align-items: center; gap: 8px; padding: 8px 16px;
-      border: 1px solid #e2e8f0; background: var(--bg-card); border-radius: 8px;
-      cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;
-    }
-    .breakdown-toggle:hover { border-color: var(--interactive); color: var(--interactive); }
-    .breakdown-toggle.active { background: var(--interactive); border-color: var(--interactive); color: white; }
     .chart-wrapper { height: 400px; position: relative; }
 
     /* Info Cards */
     .info-cards-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
-    .info-card { background: var(--bg-card); border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 4px solid var(--interactive); }
+    .info-card {
+      background: var(--bg-card); border-radius: 16px; padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+      border-left: 4px solid #2563eb;
+    }
     .info-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .info-card-icon { font-size: 20px; }
     .info-card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
     .info-card-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 
     /* Responsive */
-    @media (max-width: 899px) { .info-cards-section { grid-template-columns: 1fr; } }
+    @media (max-width: 899px) {
+      .info-cards-section { grid-template-columns: 1fr; }
+      .mini-indicators { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 599px) {
       .container { padding: 16px; }
       .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
@@ -261,10 +272,8 @@
       .sentiment-hero { padding: 20px; }
       .signal-score-value { font-size: 56px; }
       .mini-indicators { grid-template-columns: repeat(2, 1fr); }
-      .group-matrix { grid-template-columns: 1fr; }
       .chart-wrapper { height: 280px; }
-      .chart-controls { width: 100%; justify-content: space-between; }
-      .period-tabs { flex: 1; }
+      .chart-controls { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -281,7 +290,7 @@
         <button class="back-btn" onclick="history.back()">←</button>
         <div class="title-group">
           <h1>Market Sentiment</h1>
-          <p>Signal Score: VIX + MOVE + CNN + CFTC + Crypto F&G</p>
+          <p>Signal Score: VIX + MOVE + CNN + CFTC + Crypto + AAII</p>
         </div>
       </div>
       <div class="header-right">
@@ -293,7 +302,7 @@
       </div>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Hero Section - LIGHT THEME -->
     <section class="sentiment-hero">
       <div class="hero-header">
         <span class="hero-icon">🎭</span>
@@ -319,40 +328,100 @@
           <span>-8</span><span>-5</span><span>0</span><span>+5</span><span>+8</span>
         </div>
       </div>
+      <!-- Mini Indicators - 6개 개별 지표 -->
       <div class="mini-indicators">
         <div class="mini-card">
-          <div class="mini-label">Market F&G</div>
-          <div class="mini-value neutral" id="miniMarket">-</div>
+          <div class="mini-label">VIX</div>
+          <div class="mini-value neutral" id="miniVix">-</div>
+          <div class="mini-score neutral" id="miniVixScore">0</div>
         </div>
         <div class="mini-card">
-          <div class="mini-label">Volatility</div>
-          <div class="mini-value neutral" id="miniVol">-</div>
+          <div class="mini-label">MOVE</div>
+          <div class="mini-value neutral" id="miniMove">-</div>
+          <div class="mini-score neutral" id="miniMoveScore">0</div>
         </div>
         <div class="mini-card">
-          <div class="mini-label">Crypto</div>
+          <div class="mini-label">CNN F&G</div>
+          <div class="mini-value neutral" id="miniCnn">-</div>
+          <div class="mini-score neutral" id="miniCnnScore">0</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">CFTC</div>
+          <div class="mini-value neutral" id="miniCftc">-</div>
+          <div class="mini-score neutral" id="miniCftcScore">0</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">Crypto F&G</div>
           <div class="mini-value neutral" id="miniCrypto">-</div>
+          <div class="mini-score neutral" id="miniCryptoScore">0</div>
         </div>
         <div class="mini-card">
-          <div class="mini-label">CNN Detail</div>
-          <div class="mini-value neutral" id="miniCNN">-</div>
+          <div class="mini-label">AAII</div>
+          <div class="mini-value neutral" id="miniAaii">-</div>
+          <div class="mini-score neutral" id="miniAaiiScore">0</div>
         </div>
       </div>
     </section>
 
-    <!-- Bottom Check Section -->
-    <section class="bottom-check-section">
-      <div class="check-header">
-        <div class="check-title"><span>🔍</span><h3>바닥 확인 체크리스트</h3></div>
-        <div class="check-summary">
-          <span class="check-count" id="checkCount">0/5</span>
-          <div class="check-progress-bar"><div class="check-progress-fill" id="checkProgress" style="width: 0%;"></div></div>
+    <!-- 100x Sentiment Signal Section - Option C+ Enhanced Gauge -->
+    <section class="signal-section">
+      <div class="signal-header">
+        <div class="signal-title">
+          <span style="font-size: 24px;">⚡</span>
+          100x Sentiment Signal<span class="tm">™</span>
         </div>
       </div>
-      <div class="check-grid" id="checkGrid"></div>
-    </section>
 
-    <!-- Group Matrix -->
-    <div class="group-matrix" id="groupMatrix"></div>
+      <div class="signal-split">
+        <!-- Fear Gauge -->
+        <div class="gauge-card fear">
+          <div class="gauge-header">
+            <div class="gauge-title-badge"><span>🔴</span> FEAR CONDITIONS</div>
+            <div class="gauge-score-badge" id="fearCount">0/5</div>
+          </div>
+          <div class="gauge-wrapper">
+            <div class="gauge-bg"></div>
+            <div class="gauge-inner"></div>
+            <div class="gauge-needle" id="fearNeedle" style="--angle: -90deg;"></div>
+            <div class="gauge-center"></div>
+          </div>
+          <div class="gauge-labels">
+            <span class="fear-label">FEAR</span>
+            <span class="neutral-label">NEUTRAL</span>
+            <span class="greed-label">GREED</span>
+          </div>
+          <div class="gauge-status" id="fearStatus">공포 조건 충족: 낮음</div>
+          <div class="condition-toggle" id="fearToggle">
+            <span class="arrow">▼</span> 세부 조건 보기
+          </div>
+          <div class="condition-list" id="fearConditions"></div>
+        </div>
+
+        <!-- Greed Gauge -->
+        <div class="gauge-card greed">
+          <div class="gauge-header">
+            <div class="gauge-title-badge"><span>🟢</span> GREED CONDITIONS</div>
+            <div class="gauge-score-badge" id="greedCount">0/5</div>
+          </div>
+          <div class="gauge-wrapper">
+            <div class="gauge-bg"></div>
+            <div class="gauge-inner"></div>
+            <div class="gauge-needle" id="greedNeedle" style="--angle: -90deg;"></div>
+            <div class="gauge-center"></div>
+          </div>
+          <div class="gauge-labels">
+            <span class="fear-label">FEAR</span>
+            <span class="neutral-label">NEUTRAL</span>
+            <span class="greed-label">GREED</span>
+          </div>
+          <div class="gauge-status" id="greedStatus">탐욕 조건 충족: 낮음</div>
+          <div class="condition-toggle" id="greedToggle">
+            <span class="arrow">▼</span> 세부 조건 보기
+          </div>
+          <div class="condition-list" id="greedConditions"></div>
+        </div>
+      </div>
+    </section>
 
     <!-- Chart Section -->
     <section class="chart-section">
@@ -364,9 +433,6 @@
             <button class="period-tab" data-period="1095">3Y</button>
             <button class="period-tab" data-period="max">MAX</button>
           </div>
-          <button class="breakdown-toggle" id="breakdownToggle">
-            <span>📊</span><span>Breakdown</span><span>▼</span>
-          </button>
         </div>
       </div>
       <div class="chart-wrapper"><canvas id="signalChart"></canvas></div>
@@ -376,15 +442,15 @@
     <div class="info-cards-section">
       <div class="info-card">
         <div class="info-card-header"><span class="info-card-icon">📊</span><span class="info-card-title">Signal Score란?</span></div>
-        <div class="info-card-content">5개 지표(VIX, MOVE, CNN F&G, CFTC, Crypto F&G)를 종합하여 -8~+8 점수로 변환한 복합 심리 지표입니다. 3개+ 지표가 같은 방향일 때 신뢰도가 73-81%로 상승합니다.</div>
+        <div class="info-card-content">6개 지표(VIX, MOVE, CNN F&G, CFTC, Crypto F&G, AAII)를 종합하여 -8~+8 점수로 변환한 복합 심리 지표입니다.</div>
       </div>
       <div class="info-card">
         <div class="info-card-header"><span class="info-card-icon">💡</span><span class="info-card-title">바닥 확인이란?</span></div>
-        <div class="info-card-content">역사적 바닥(2020 COVID, 2022 침체)에서 공통 발생한 조건들입니다. VIX 40+ 시 100% 승률, 3개+ 충족 시 강력한 매수 신호로 해석합니다.</div>
+        <div class="info-card-content">역사적 바닥(2020 COVID, 2022 침체)에서 공통 발생한 조건들입니다. 3개+ 충족 시 강력한 매수 신호입니다.</div>
       </div>
       <div class="info-card">
         <div class="info-card-header"><span class="info-card-icon">🎯</span><span class="info-card-title">활용 방법</span></div>
-        <div class="info-card-content">극도 공포(-5 이하)에서 분할 매수, 극도 탐욕(+5 이상)에서 익절/방어적 전환. 중립(-1~+1)에서는 펀더멘털과 밸류에이션을 함께 고려하세요.</div>
+        <div class="info-card-content">극도 공포(-5 이하)에서 분할 매수, 극도 탐욕(+5 이상)에서 익절/방어적 전환을 고려하세요.</div>
       </div>
     </div>
   </div>
@@ -395,7 +461,7 @@
     import {
       calculateSignalScore, calculateScoreBreakdown, getSignalStatus,
       getStatusLabel, getStatusLabelEn, calculateMarkerPosition, getScoreCssClass,
-      checkBottomConditions, calculateGroupScore, formatCftcValue, formatValue
+      checkBottomConditions, formatCftcValue, formatValue
     } from '../shared/sentiment-calculator.js';
 
     // ============================================
@@ -403,25 +469,21 @@
     // ============================================
     let sentimentData = null;
     let signalChart = null;
-    let showBreakdown = false;
     let currentPeriod = 365;
 
     async function init() {
       try {
-        // 데이터 로드
         const result = await DataFetcher.fetch('sentiment');
         if (result.data) {
           sentimentData = result.data;
           console.log('[Sentiment] 데이터 로드 완료:', sentimentData);
 
-          // UI 업데이트
           updateHero();
-          updateChecklist();
-          updateGroupCards();
+          updateSignalCards();
           initChart();
           updateMeta();
 
-          // 캐시 저장 (Widget용)
+          // 캐시 저장
           const cacheData = buildCacheData();
           DataManager.saveWidgetData('sentiment', cacheData);
         } else {
@@ -438,16 +500,11 @@
       const score = calculateSignalScore(sentimentData);
       const status = getSignalStatus(score);
       return {
-        score,
-        status,
+        score, status,
         statusLabel: getStatusLabel(status),
         statusLabelEn: getStatusLabelEn(status),
         cssClass: getScoreCssClass(score),
-        vix: sentimentData.vix,
-        move: sentimentData.move,
-        cnn: sentimentData.cnn,
-        cftc: sentimentData.cftc,
-        crypto: sentimentData.crypto,
+        ...sentimentData,
         updated: sentimentData.updated
       };
     }
@@ -457,6 +514,7 @@
     // ============================================
     function updateHero() {
       const score = calculateSignalScore(sentimentData);
+      const breakdown = calculateScoreBreakdown(sentimentData);
       const status = getSignalStatus(score);
       const cssClass = getScoreCssClass(score);
       const markerPos = calculateMarkerPosition(score);
@@ -480,121 +538,149 @@
       // Gauge Marker
       document.getElementById('gaugeMarker').style.left = `${markerPos}%`;
 
-      // Mini Indicators
-      const breakdown = calculateScoreBreakdown(sentimentData);
-      const marketScore = calculateGroupScore('MARKET_FG', sentimentData);
-      const volScore = calculateGroupScore('VOLATILITY', sentimentData);
-      const cryptoScore = calculateGroupScore('CRYPTO', sentimentData);
-      const cnnScore = calculateGroupScore('CNN_COMPONENTS', sentimentData);
+      // Mini Indicators - 6개 개별 지표
+      updateMiniCard('miniVix', 'miniVixScore', sentimentData.vix, breakdown.vix.score, 1);
+      updateMiniCard('miniMove', 'miniMoveScore', sentimentData.move, breakdown.move.score, 1);
+      updateMiniCard('miniCnn', 'miniCnnScore', sentimentData.cnn, breakdown.cnn.score, 0);
+      updateMiniCard('miniCftc', 'miniCftcScore', formatCftcValue(sentimentData.cftc), breakdown.cftc.score, null);
+      updateMiniCard('miniCrypto', 'miniCryptoScore', sentimentData.crypto, breakdown.crypto.score, 0);
 
-      updateMiniCard('miniMarket', marketScore);
-      updateMiniCard('miniVol', volScore);
-      updateMiniCard('miniCrypto', cryptoScore);
-      updateMiniCard('miniCNN', cnnScore);
+      // AAII: Bull-Bear Spread
+      const aaiiBullBear = sentimentData.aaii
+        ? (sentimentData.aaii.bullish - sentimentData.aaii.bearish)
+        : null;
+      const aaiiScore = calculateAaiiScore(aaiiBullBear);
+      updateMiniCard('miniAaii', 'miniAaiiScore', aaiiBullBear !== null ? `${aaiiBullBear > 0 ? '+' : ''}${aaiiBullBear.toFixed(0)}%` : 'N/A', aaiiScore, null);
     }
 
-    function updateMiniCard(id, score) {
-      const el = document.getElementById(id);
-      el.textContent = score >= 0 ? `+${score}` : score;
-      el.className = `mini-value ${getScoreCssClass(score)}`;
+    function updateMiniCard(valueId, scoreId, value, score, decimals) {
+      const valueEl = document.getElementById(valueId);
+      const scoreEl = document.getElementById(scoreId);
+
+      // 값 표시
+      if (decimals !== null && typeof value === 'number') {
+        valueEl.textContent = value.toFixed(decimals);
+      } else {
+        valueEl.textContent = value ?? 'N/A';
+      }
+
+      // 스코어 표시
+      const scorePrefix = score > 0 ? '+' : '';
+      scoreEl.textContent = `${scorePrefix}${score}`;
+
+      // 색상 클래스
+      const cssClass = score < 0 ? 'fear' : score > 0 ? 'greed' : 'neutral';
+      valueEl.className = `mini-value ${cssClass}`;
+      scoreEl.className = `mini-score ${cssClass}`;
+    }
+
+    // AAII Bull-Bear Spread 점수 계산
+    function calculateAaiiScore(spread) {
+      if (spread == null) return 0;
+      if (spread <= -20) return -2;  // 극도 약세
+      if (spread <= -10) return -1;  // 약세
+      if (spread >= 20) return 2;    // 극도 강세
+      if (spread >= 10) return 1;    // 강세
+      return 0;                      // 중립
     }
 
     // ============================================
-    // Checklist Update
+    // 100x Sentiment Signal Cards
     // ============================================
-    function updateChecklist() {
-      const result = checkBottomConditions(sentimentData);
-      document.getElementById('checkCount').textContent = `${result.count}/${result.total}`;
-      document.getElementById('checkProgress').style.width = `${result.percentage}%`;
+    const FEAR_SIGNALS = [
+      { key: 'vix', label: 'VIX > 30', condition: (v) => v > 30, format: (v) => v?.toFixed(1) ?? 'N/A' },
+      { key: 'cnn', label: 'CNN F&G < 25', condition: (v) => v < 25, format: (v) => v?.toFixed(0) ?? 'N/A' },
+      { key: 'cftc', label: 'CFTC < -150K', condition: (v) => v < -150000, format: (v) => formatCftcValue(v) },
+      { key: 'move', label: 'MOVE > 120', condition: (v) => v > 120, format: (v) => v?.toFixed(1) ?? 'N/A' },
+      { key: 'crypto', label: 'Crypto F&G < 20', condition: (v) => v < 20, format: (v) => v?.toFixed(0) ?? 'N/A' }
+    ];
 
-      const grid = document.getElementById('checkGrid');
-      grid.innerHTML = result.checks.map(check => {
-        const statusClass = check.passed ? 'completed' : 'pending';
-        const icon = check.passed ? '✅' : '⏳';
-        let valueText = '';
-        if (check.key === 'CFTC') {
-          valueText = `현재: <span class="highlight">${formatCftcValue(check.value)}</span>`;
-        } else {
-          valueText = `현재: <span class="highlight">${formatValue(check.value)}</span>`;
-        }
-        if (check.passed) valueText += ' ✓';
-        else if (check.ideal) valueText += ` (이상적: ${check.ideal}+)`;
+    const GREED_SIGNALS = [
+      { key: 'vix', label: 'VIX < 12', condition: (v) => v < 12, format: (v) => v?.toFixed(1) ?? 'N/A' },
+      { key: 'cnn', label: 'CNN F&G > 85', condition: (v) => v > 85, format: (v) => v?.toFixed(0) ?? 'N/A' },
+      { key: 'cftc', label: 'CFTC > +150K', condition: (v) => v > 150000, format: (v) => formatCftcValue(v) },
+      { key: 'move', label: 'MOVE < 60', condition: (v) => v < 60, format: (v) => v?.toFixed(1) ?? 'N/A' },
+      { key: 'crypto', label: 'Crypto F&G > 70', condition: (v) => v > 70, format: (v) => v?.toFixed(0) ?? 'N/A' }
+    ];
 
+    function updateSignalCards() {
+      const data = {
+        vix: sentimentData.vix,
+        cnn: sentimentData.cnn,
+        cftc: sentimentData.cftc,
+        move: sentimentData.move,
+        crypto: sentimentData.crypto
+      };
+
+      // Fear Card
+      let fearCount = 0;
+      const fearHtml = FEAR_SIGNALS.map(sig => {
+        const value = data[sig.key];
+        const passed = value != null && sig.condition(value);
+        if (passed) fearCount++;
         return `
-          <div class="check-item ${statusClass}">
-            <div class="check-status-icon">${icon}</div>
-            <div class="check-content">
-              <div class="check-item-title">${check.label}</div>
-              <div class="check-item-value">${valueText}</div>
-            </div>
+          <div class="condition-item ${passed ? 'passed' : ''}">
+            <span class="condition-icon">${passed ? '✅' : '⏳'}</span>
+            <span class="condition-label">${sig.label}</span>
+            <span class="condition-value">${sig.format(value)}</span>
           </div>
         `;
       }).join('');
-    }
+      document.getElementById('fearConditions').innerHTML = fearHtml;
+      document.getElementById('fearCount').textContent = `${fearCount}/5`;
 
-    // ============================================
-    // Group Cards Update
-    // ============================================
-    function updateGroupCards() {
-      const groups = [
-        {
-          key: 'MARKET_FG', icon: '📊', title: 'Market Fear & Greed',
-          components: [
-            { label: 'CNN F&G', value: formatValue(sentimentData.cnn, 0) },
-            { label: 'AAII Bull-Bear', value: sentimentData.aaii ? `${(sentimentData.aaii.bullish - sentimentData.aaii.bearish).toFixed(0)}%` : 'N/A' },
-            { label: 'CFTC Net', value: formatCftcValue(sentimentData.cftc) }
-          ]
-        },
-        {
-          key: 'VOLATILITY', icon: '📈', title: 'Volatility',
-          components: [
-            { label: 'VIX', value: formatValue(sentimentData.vix, 1) },
-            { label: 'MOVE', value: formatValue(sentimentData.move, 1) }
-          ]
-        },
-        {
-          key: 'CRYPTO', icon: '₿', title: 'Crypto Sentiment',
-          components: [
-            { label: 'Crypto F&G', value: formatValue(sentimentData.crypto, 0) }
-          ]
-        },
-        {
-          key: 'CNN_COMPONENTS', icon: '📰', title: 'CNN Components',
-          components: sentimentData.cnnComponents ? [
-            { label: 'Momentum', value: formatValue(sentimentData.cnnComponents.momentum, 1) },
-            { label: 'Junk Bond', value: formatValue(sentimentData.cnnComponents.junk_bond_demand, 1) },
-            { label: 'Put/Call', value: formatValue(sentimentData.cnnComponents.put_call, 1) }
-          ] : [{ label: 'Data', value: 'N/A' }]
-        }
-      ];
+      // Fear Gauge Needle: 0/5 = 0deg (중립), 5/5 = -90deg (왼쪽/공포)
+      // 조건 충족 많을수록 왼쪽(공포)으로 이동
+      document.getElementById('fearNeedle').style.setProperty('--angle', `${-(fearCount / 5) * 90}deg`);
 
-      const matrix = document.getElementById('groupMatrix');
-      matrix.innerHTML = groups.map(group => {
-        const score = calculateGroupScore(group.key, sentimentData);
-        const cssClass = getScoreCssClass(score);
-        const statusIcons = { fear: '📉 Fear', neutral: '🟡 Mixed', greed: '📈 Greed' };
+      // Fear Status Text
+      const fearStatusText = fearCount === 0 ? '없음' : fearCount <= 2 ? '낮음' : fearCount <= 3 ? '보통' : '높음';
+      document.getElementById('fearStatus').textContent = `공포 조건 충족: ${fearStatusText}`;
 
+      // Greed Card
+      let greedCount = 0;
+      const greedHtml = GREED_SIGNALS.map(sig => {
+        const value = data[sig.key];
+        const passed = value != null && sig.condition(value);
+        if (passed) greedCount++;
         return `
-          <div class="group-card">
-            <div class="group-header">
-              <div class="group-icon">${group.icon}</div>
-              <div class="group-title">${group.title}</div>
-            </div>
-            <div class="group-score-box">
-              <div class="group-score ${cssClass}">${score >= 0 ? '+' + score : score}</div>
-              <div class="group-status ${cssClass}">${statusIcons[cssClass]}</div>
-            </div>
-            <div class="group-components">
-              ${group.components.map(c => `
-                <div class="component-item">
-                  <span class="component-label">${c.label}</span>
-                  <span class="component-value">${c.value}</span>
-                </div>
-              `).join('')}
-            </div>
+          <div class="condition-item ${passed ? 'passed' : ''}">
+            <span class="condition-icon">${passed ? '✅' : '⏳'}</span>
+            <span class="condition-label">${sig.label}</span>
+            <span class="condition-value">${sig.format(value)}</span>
           </div>
         `;
       }).join('');
+      document.getElementById('greedConditions').innerHTML = greedHtml;
+      document.getElementById('greedCount').textContent = `${greedCount}/5`;
+
+      // Greed Gauge Needle: 0/5 = 0deg (중립), 5/5 = +90deg (오른쪽/탐욕)
+      // 조건 충족 많을수록 오른쪽(탐욕)으로 이동
+      document.getElementById('greedNeedle').style.setProperty('--angle', `${(greedCount / 5) * 90}deg`);
+
+      // Greed Status Text
+      const greedStatusText = greedCount === 0 ? '없음' : greedCount <= 2 ? '낮음' : greedCount <= 3 ? '보통' : '높음';
+      document.getElementById('greedStatus').textContent = `탐욕 조건 충족: ${greedStatusText}`;
+
+      // Setup toggles
+      setupConditionToggles();
+    }
+
+    function setupConditionToggles() {
+      const fearToggle = document.getElementById('fearToggle');
+      const greedToggle = document.getElementById('greedToggle');
+      const fearConditions = document.getElementById('fearConditions');
+      const greedConditions = document.getElementById('greedConditions');
+
+      fearToggle.onclick = () => {
+        fearToggle.classList.toggle('open');
+        fearConditions.classList.toggle('open');
+      };
+
+      greedToggle.onclick = () => {
+        greedToggle.classList.toggle('open');
+        greedConditions.classList.toggle('open');
+      };
     }
 
     // ============================================
@@ -602,37 +688,39 @@
     // ============================================
     function initChart() {
       const ctx = document.getElementById('signalChart').getContext('2d');
-
-      // 히스토리에서 Signal Score 계산
       const history = sentimentData.history;
+
+      if (!history || !history.vix || history.vix.length === 0) {
+        console.warn('[Sentiment] 히스토리 데이터 없음');
+        return;
+      }
+
       const dates = [];
       const scores = [];
 
-      // VIX 데이터 기준으로 날짜 추출 (가장 풍부)
-      if (history.vix && history.vix.length > 0) {
-        // 최근 1년치만 (기본값)
-        const startIdx = Math.max(0, history.vix.length - currentPeriod);
-        for (let i = startIdx; i < history.vix.length; i++) {
-          const date = history.vix[i].date;
-          const vixVal = history.vix[i].close || history.vix[i].value;
+      // VIX 데이터 기준으로 날짜 추출
+      const startIdx = currentPeriod === 9999 ? 0 : Math.max(0, history.vix.length - currentPeriod);
 
-          // 같은 날짜의 다른 지표 찾기
-          const moveVal = findValueByDate(history.move, date);
-          const cftcVal = findValueByDate(history.cftc, date, 'net_position');
-          const cnnVal = findValueByDate(history.cnn, date);
-          const cryptoVal = findValueByDate(history.crypto, date);
+      for (let i = startIdx; i < history.vix.length; i++) {
+        const date = history.vix[i].date;
+        const vixVal = history.vix[i].value;  // value 필드 사용
 
-          if (vixVal != null) {
-            const score = calculateSignalScore({
-              vix: vixVal,
-              move: moveVal,
-              cftc: cftcVal,
-              cnn: cnnVal,
-              crypto: cryptoVal
-            });
-            dates.push(date);
-            scores.push(score);
-          }
+        // 같은 날짜의 다른 지표 찾기
+        const moveVal = findValueByDate(history.move, date, 'value');
+        const cftcVal = findValueByDate(history.cftc, date, 'net');
+        const cnnVal = findValueByDate(history.cnn, date, 'score');  // score 필드!
+        const cryptoVal = findValueByDate(history.crypto, date, 'value');
+
+        if (vixVal != null) {
+          const score = calculateSignalScore({
+            vix: vixVal,
+            move: moveVal,
+            cftc: cftcVal,
+            cnn: cnnVal,
+            crypto: cryptoVal
+          });
+          dates.push(date);
+          scores.push(score);
         }
       }
 
@@ -674,11 +762,8 @@
             legend: { display: false },
             tooltip: {
               backgroundColor: 'rgba(15, 23, 42, 0.9)',
-              padding: 12,
-              cornerRadius: 8,
-              callbacks: {
-                label: (ctx) => `Signal Score: ${ctx.parsed.y}`
-              }
+              padding: 12, cornerRadius: 8,
+              callbacks: { label: (ctx) => `Signal Score: ${ctx.parsed.y}` }
             },
             annotation: {
               annotations: {
@@ -709,7 +794,7 @@
     function findValueByDate(arr, date, field = 'value') {
       if (!Array.isArray(arr)) return null;
       const item = arr.find(d => d.date === date);
-      if (item) return item[field] ?? item.value ?? item.close ?? null;
+      if (item) return item[field] ?? null;
       return null;
     }
 

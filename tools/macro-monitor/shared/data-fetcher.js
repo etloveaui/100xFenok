@@ -583,14 +583,14 @@ class MacroDataFetcher {
         return latest[field] ?? latest.val ?? latest.close ?? null;
       };
 
-      // VIX: { date, close } 형태
-      const latestVix = getLatest(vix, 'close');
+      // VIX: { date, value } 형태
+      const latestVix = getLatest(vix, 'value');
       // MOVE: { date, value } 형태
       const latestMove = getLatest(move, 'value');
-      // CFTC: { date, net_position } 형태
-      const latestCftc = getLatest(cftc, 'net_position');
-      // CNN F&G: { date, value } 형태
-      const latestCnn = getLatest(cnn, 'value');
+      // CFTC: { date, net } 형태
+      const latestCftc = getLatest(cftc, 'net');
+      // CNN F&G: { date, score } 형태 (주의: value가 아닌 score!)
+      const latestCnn = getLatest(cnn, 'score');
       // Crypto F&G: { date, value } 형태
       const latestCrypto = getLatest(crypto, 'value');
       // AAII: { date, bullish, bearish, neutral } 형태 - 사용 예정

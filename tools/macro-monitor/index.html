@@ -402,16 +402,6 @@
       <p class="cs-description">기업 수익성 (기업이익/GDP, Forward P/E)</p>
     </div>
 
-    <!-- 5. Market Sentiment (4-C) - 라이브 위젯 -->
-    <div class="indicator-card live-widget fade-in" data-category="sentiment" onclick="openDetail('details/sentiment.html')">
-      <iframe
-        src="widgets/sentiment.html"
-        scrolling="no"
-        loading="lazy"
-        title="Market Sentiment Monitor">
-      </iframe>
-    </div>
-
   </div>
 </div>
 
@@ -479,7 +469,7 @@
   // ===== 위젯 데이터 전달 (postMessage) =====
   // iframe sandbox에서 localStorage 접근 불가 → 부모에서 데이터 전달
   (function() {
-    const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health', 'sentiment'];
+    const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health'];
 
     function sendDataToWidgets() {
       WIDGET_IDS.forEach(widgetId => {
