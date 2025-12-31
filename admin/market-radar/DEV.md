@@ -16,10 +16,15 @@ Market Sentiment + Market Indices 차트 시각화. Signal Score Timeline, MA �
 ```
 admin/market-radar/
 ├── DEV.md           ← 이 파일
-└── charts/          ← 총 13개 차트
-    ├── [Sentiment 5개]
-    ├── [CNN Sub 6개]
-    └── [Indices 2개]
+├── charts/          ← 총 13개 차트
+│   ├── [Sentiment 5개]
+│   ├── [CNN Sub 6개]
+│   └── [Indices 2개]
+└── scripts/         ← Apps Script 백업
+    ├── README.md
+    ├── vix.gs
+    ├── move.gs
+    └── indices.gs   ← SP500/NASDAQ (예정)
 ```
 
 ---
@@ -82,12 +87,33 @@ admin/market-radar/
 
 ## Data Sources
 
-| 파일 | 레코드 | 기간 |
-|------|--------|------|
-| `data/indices/sp500.json` | 11,594 | 1980-01-02 ~ |
-| `data/indices/nasdaq.json` | 11,594 | 1980-01-02 ~ |
+### Indices
+| 파일 | 레코드 | 기간 | 소스 |
+|------|--------|------|------|
+| `data/indices/sp500.json` | 11,594+ | 1980-01-02 ~ | GOOGLEFINANCE |
+| `data/indices/nasdaq.json` | 11,594+ | 1980-01-02 ~ | GOOGLEFINANCE |
+
+### Sentiment
+| 파일 | 레코드 | 기간 | 소스 |
+|------|--------|------|------|
+| `data/sentiment/vix.json` | 9,091+ | 1990-01-02 ~ | FRED API |
+| `data/sentiment/move.json` | 1,249+ | 2020-12-29 ~ | Yahoo Proxy |
 
 **필드**: `{ date, value }`
+
+---
+
+## Data Collection (Apps Script)
+
+> 코드 백업: `scripts/` 폴더 참조
+
+| 수집기 | 트리거 | 방식 |
+|--------|--------|------|
+| SP500/NASDAQ | 06:00, 09:00 | GOOGLEFINANCE → merge → GitHub |
+| VIX | 07:48 | FRED API → merge → GitHub |
+| MOVE | 07:29 | Yahoo Proxy → merge → GitHub |
+
+**⚠️ 필수**: 모든 수집기는 **merge 패턴** 사용 (기존 데이터 보호)
 
 ---
 
@@ -146,6 +172,8 @@ admin/market-radar/
 
 | 날짜 | 변경 |
 |------|------|
+| 01-01 | scripts/ 폴더 생성 (Apps Script 백업) |
+| 01-01 | VIX/MOVE merge 패턴 적용 + 테스트 완료 |
 | 12-31 | 스마트 드롭다운 기간 선택기 구현 |
 | 12-31 | YTD, 연도별, 커스텀 범위 지원 |
 | 12-31 | 20/50/200 MA 토글 구현 |
