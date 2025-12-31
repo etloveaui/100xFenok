@@ -44,6 +44,7 @@
 | **AAII** | `updateAAII()` | **금요일 00:00, 06:00** |
 | **CFTC** | `updateCFTC()` | **토요일 06:00, 12:00** |
 | CNN F&G | `updateCNN()` | 매일 07:20 |
+| **CNN Components** | `updateCNNComponents()` | **매일 07:25** |
 | Crypto F&G | `updateCryptoFG()` | 매일 07:52 |
 
 ---
@@ -58,6 +59,7 @@
 | `aaii.gs` | IMPORTHTML (AAII 웹사이트) | `data/sentiment/aaii.json` |
 | `cftc.gs` | CFTC API | `data/sentiment/cftc-sp500.json` |
 | `cnn.gs` | Cloudflare Proxy → CNN API | `data/sentiment/cnn-fear-greed.json`, `cnn-components.json` |
+| `cnn-components.gs` | Cloudflare Proxy → CNN API | `cnn-momentum/strength/breadth/put-call/junk-bond/safe-haven.json` |
 | `crypto.gs` | Alternative.me API | `data/sentiment/crypto-fear-greed.json` |
 
 ---
