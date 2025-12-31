@@ -23,9 +23,14 @@
 
 ### 시트 내 탭
 
-| 탭 | 데이터 소스 | 비고 |
-|----|------------|------|
-| AAII | IMPORTHTML | 오래되면 N/A → 삭제 후 재작성 로직 |
+| 탭 | 수식 | 비고 |
+|----|------|------|
+| AAII | `=IMPORTHTML("https://www.aaii.com/sentimentsurvey/sent_results", "table", 1)` | ⚠️ 오래되면 #N/A → 수식 갱신 로직 |
+| VIX | 수동 | FRED API 직접 호출 |
+| MOVE | 수동 | Yahoo Finance Proxy |
+| CNN | 수동 | CNN API 직접 호출 |
+| Crypto | 수동 | Alternative.me API |
+| CFTC | 없음 | CFTC API 직접 호출 (개별 시트 없음) |
 
 ---
 
@@ -36,6 +41,8 @@
 | SP500/NASDAQ | `updateAllIndices()` | 매일 06:00, 09:00 |
 | VIX | `updateVIX()` | 매일 07:48 |
 | MOVE | `updateMOVE()` | 매일 07:29 |
+| **AAII** | `updateAAII()` | **금요일 00:00, 06:00** |
+| **CFTC** | `updateCFTC()` | **토요일 06:00, 12:00** |
 | CNN F&G | `updateCNN()` | 매일 07:20 |
 | Crypto F&G | `updateCryptoFG()` | 매일 07:52 |
 
@@ -48,6 +55,10 @@
 | `indices.gs` | GOOGLEFINANCE | `data/indices/sp500.json`, `nasdaq.json` |
 | `vix.gs` | FRED API | `data/sentiment/vix.json` |
 | `move.gs` | Yahoo Proxy | `data/sentiment/move.json` |
+| `aaii.gs` | IMPORTHTML (AAII 웹사이트) | `data/sentiment/aaii.json` |
+| `cftc.gs` | CFTC API | `data/sentiment/cftc-sp500.json` |
+| `cnn.gs` | Cloudflare Proxy → CNN API | `data/sentiment/cnn-fear-greed.json`, `cnn-components.json` |
+| `crypto.gs` | Alternative.me API | `data/sentiment/crypto-fear-greed.json` |
 
 ---
 
