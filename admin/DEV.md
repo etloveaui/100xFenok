@@ -20,7 +20,10 @@ admin/
 ├── index.html       ← 관리자 대시보드
 ├── api-test.html    ← Apps Script API 테스트
 ├── valuation-lab/   ← 밸류에이션 실험실
-└── data-lab/        ← 데이터 관리 전용 공간
+├── data-lab/        ← 데이터 관리 전용 공간
+├── design-lab/      ← 디자인 실험실
+└── market-radar/    ← 시장 지수 차트 (S&P 500, NASDAQ)
+    └── charts/
 ```
 
 ---
@@ -87,6 +90,7 @@ if (inputHash === storedHash) {
 |------|------|------|
 | Telegram 알림 | ✅ 완료 | 기존 페이지 연결 |
 | API Test | ✅ 완료 | Apps Script 연동 테스트 |
+| Market Radar | ✅ 완료 | S&P 500, NASDAQ 차트 (MA 토글, 스마트 기간 선택) |
 | 설정 | ⏳ 예정 | Coming soon |
 
 ---

@@ -86,27 +86,6 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <!-- VIX -->
-        <div class="card rounded-2xl p-5">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
-              <i class="fas fa-bolt text-red-500"></i>
-              VIX Volatility
-            </h3>
-            <a href="chart-vix.html" target="_blank"
-               class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors">
-              <i class="fas fa-external-link-alt mr-1"></i>Open
-            </a>
-          </div>
-          <div class="preview-frame">
-            <iframe src="chart-vix.html"
-                    class="w-full h-[280px]"
-                    scrolling="no"
-                    loading="lazy"></iframe>
-          </div>
-          <p class="mt-3 text-xs text-gray-500">9,000+ 레코드 (1990~)</p>
-        </div>
-
         <!-- CNN Fear & Greed -->
         <div class="card rounded-2xl p-5">
           <div class="flex items-center justify-between mb-4">
@@ -170,27 +149,6 @@
           <p class="mt-3 text-xs text-gray-500">3,000+ 레코드 (1987~)</p>
         </div>
 
-        <!-- MOVE -->
-        <div class="card rounded-2xl p-5">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
-              <i class="fas fa-chart-area text-teal-500"></i>
-              MOVE Bond Volatility
-            </h3>
-            <a href="chart-move.html" target="_blank"
-               class="px-3 py-1.5 bg-teal-50 text-teal-600 rounded-lg text-xs font-medium hover:bg-teal-100 transition-colors">
-              <i class="fas fa-external-link-alt mr-1"></i>Open
-            </a>
-          </div>
-          <div class="preview-frame">
-            <iframe src="chart-move.html"
-                    class="w-full h-[280px]"
-                    scrolling="no"
-                    loading="lazy"></iframe>
-          </div>
-          <p class="mt-3 text-xs text-gray-500">1,200+ 레코드 (2020~)</p>
-        </div>
-
         <!-- VIX + MOVE Dual -->
         <div class="card featured rounded-2xl p-5">
           <div class="flex items-center justify-between mb-4">
@@ -237,10 +195,180 @@
       </div>
     </section>
 
-    <!-- CNN Components Table -->
+    <!-- Market Indices -->
+    <section>
+      <div class="flex items-center gap-3 mb-6">
+        <span class="status-badge status-dev">NEW</span>
+        <h2 class="text-lg font-semibold text-gray-700">Market Indices (2 Charts)</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- S&P 500 -->
+        <div class="card featured rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-chart-line text-blue-500"></i>
+              S&P 500
+              <span class="status-badge status-dev">NEW</span>
+            </h3>
+            <a href="chart-sp500.html" target="_blank"
+               class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame border-blue-200">
+            <iframe src="chart-sp500.html" class="w-full h-[280px]" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-xs text-gray-500">11,500+ 레코드 (1980~) + 200일 MA</p>
+        </div>
+
+        <!-- NASDAQ -->
+        <div class="card featured rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-microchip text-emerald-500"></i>
+              NASDAQ
+              <span class="status-badge status-dev">NEW</span>
+            </h3>
+            <a href="chart-nasdaq.html" target="_blank"
+               class="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame border-emerald-200">
+            <iframe src="chart-nasdaq.html" class="w-full h-[280px]" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-xs text-gray-500">11,500+ 레코드 (1980~) + 200일 MA</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CNN Sub-Indicators Charts -->
     <section>
       <div class="flex items-center gap-3 mb-6">
         <span class="status-badge status-done">DONE</span>
+        <h2 class="text-lg font-semibold text-gray-700">CNN Sub-Indicators (6 Charts)</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Market Momentum -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-rocket text-blue-500"></i>
+              Market Momentum
+            </h3>
+            <a href="chart-cnn-momentum.html" target="_blank"
+               class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame">
+            <iframe src="chart-cnn-momentum.html" class="w-full h-[280px]" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-xs text-gray-500">S&P 500 vs 125-day MA</p>
+        </div>
+
+        <!-- Stock Price Strength -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-dumbbell text-pink-500"></i>
+              Price Strength
+            </h3>
+            <a href="chart-cnn-strength.html" target="_blank"
+               class="px-3 py-1.5 bg-pink-50 text-pink-600 rounded-lg text-xs font-medium hover:bg-pink-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame">
+            <iframe src="chart-cnn-strength.html" class="w-full h-[280px]" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-xs text-gray-500">52-week Highs vs Lows</p>
+        </div>
+
+        <!-- Market Breadth -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-signal text-cyan-500"></i>
+              Market Breadth
+            </h3>
+            <a href="chart-cnn-breadth.html" target="_blank"
+               class="px-3 py-1.5 bg-cyan-50 text-cyan-600 rounded-lg text-xs font-medium hover:bg-cyan-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame">
+            <iframe src="chart-cnn-breadth.html" class="w-full h-[280px]" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-xs text-gray-500">McClellan Volume Summation</p>
+        </div>
+
+        <!-- Put/Call Ratio -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-balance-scale text-purple-500"></i>
+              Put/Call Ratio
+            </h3>
+            <a href="chart-cnn-put-call.html" target="_blank"
+               class="px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg text-xs font-medium hover:bg-purple-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame">
+            <iframe src="chart-cnn-put-call.html" class="w-full h-[280px]" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-xs text-gray-500">5-day Avg Options Ratio</p>
+        </div>
+
+        <!-- Safe Haven Demand -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-shield-alt text-sky-500"></i>
+              Safe Haven
+            </h3>
+            <a href="chart-cnn-safe-haven.html" target="_blank"
+               class="px-3 py-1.5 bg-sky-50 text-sky-600 rounded-lg text-xs font-medium hover:bg-sky-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame">
+            <iframe src="chart-cnn-safe-haven.html" class="w-full h-[280px]" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-xs text-gray-500">Stock vs Treasury Returns</p>
+        </div>
+
+        <!-- Junk Bond Demand -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-coins text-amber-500"></i>
+              Junk Bond
+            </h3>
+            <a href="chart-cnn-junk-bond.html" target="_blank"
+               class="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-medium hover:bg-amber-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame">
+            <iframe src="chart-cnn-junk-bond.html" class="w-full h-[280px]" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-xs text-gray-500">High Yield Bond Spread</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CNN Components Table -->
+    <section>
+      <div class="flex items-center gap-3 mb-6">
+        <span class="status-badge status-pending">LEGACY</span>
         <h2 class="text-lg font-semibold text-gray-700">CNN 7 Components (Table)</h2>
       </div>
 
@@ -263,7 +391,7 @@
         </div>
         <p class="mt-3 text-sm text-gray-500">
           <i class="fas fa-info-circle mr-1"></i>
-          히스토리 없음 - 오늘/어제 비교 테이블
+          히스토리 없음 - 오늘/어제 비교 테이블 (Sub-Indicator 차트로 대체됨)
         </p>
       </div>
     </section>
@@ -276,20 +404,20 @@
       </h3>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
         <div class="p-4 bg-amber-50 rounded-xl text-center">
-          <div class="text-2xl font-bold text-amber-600">8</div>
+          <div class="text-2xl font-bold text-amber-600">13</div>
           <div class="text-amber-700">Total Charts</div>
         </div>
         <div class="p-4 bg-emerald-50 rounded-xl text-center">
-          <div class="text-2xl font-bold text-emerald-600">8</div>
-          <div class="text-emerald-700">Completed</div>
+          <div class="text-2xl font-bold text-emerald-600">5</div>
+          <div class="text-emerald-700">Sentiment</div>
         </div>
         <div class="p-4 bg-blue-50 rounded-xl text-center">
-          <div class="text-2xl font-bold text-blue-600">0</div>
-          <div class="text-blue-700">In Progress</div>
+          <div class="text-2xl font-bold text-blue-600">6</div>
+          <div class="text-blue-700">CNN Sub</div>
         </div>
         <div class="p-4 bg-gray-50 rounded-xl text-center">
-          <div class="text-2xl font-bold text-gray-600">0</div>
-          <div class="text-gray-700">Pending</div>
+          <div class="text-2xl font-bold text-gray-600">2</div>
+          <div class="text-gray-700">Indices</div>
         </div>
       </div>
     </section>

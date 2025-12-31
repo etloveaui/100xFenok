@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Momentum Chart | Market Radar</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; background: #ffffff; }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    .period-btn {
+      padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      transition: all 0.2s; border: 1px solid #e5e7eb; background: white; color: #6b7280;
+    }
+    .period-btn:hover { border-color: #14b8a6; color: #0d9488; }
+    .period-btn.active { background: #14b8a6; color: white; border-color: #14b8a6; }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <span class="text-2xl">🚀</span>
+        Market Momentum (S&P 500)
+      </h1>
+      <p class="text-sm text-gray-500 mt-1">S&P 500 vs 125-day MA - CNN Fear & Greed Sub-indicator</p>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <button class="period-btn" data-period="90">3M</button>
+      <button class="period-btn active" data-period="365">1Y</button>
+      <button class="period-btn" data-period="9999">MAX</button>
+    </div>
+  </div>
+
+  <!-- Current Value Display -->
+  <div class="flex items-center gap-6 mb-6 p-4 bg-gray-50 rounded-xl">
+    <div>
+      <div class="text-xs text-gray-500 mb-1">S&P 500</div>
+      <div id="currentValue" class="text-3xl font-bold text-gray-800">--</div>
+    </div>
+    <div>
+      <div class="text-xs text-gray-500 mb-1">125-day MA</div>
+      <div id="maValue" class="text-xl font-medium text-gray-600">--</div>
+    </div>
+    <div>
+      <div class="text-xs text-gray-500 mb-1">Date</div>
+      <div id="currentDate" class="text-lg font-medium text-gray-600">--</div>
+    </div>
+    <div id="statusBadge" class="ml-auto px-4 py-2 rounded-lg text-sm font-bold">--</div>
+  </div>
+
+  <!-- Chart -->
+  <div class="bg-white rounded-2xl border border-gray-200 p-4">
+    <canvas id="mainChart" height="320"></canvas>
+  </div>
+
+  <!-- Legend -->
+  <div class="mt-4 flex flex-wrap gap-4 text-xs text-gray-600">
+    <div class="flex items-center gap-2">
+      <div class="w-4 h-1 bg-blue-500 rounded"></div>
+      <span>S&P 500</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-4 h-1 bg-orange-500 rounded" style="border-style: dashed;"></div>
+      <span>125-day Moving Average</span>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="mt-4 p-4 bg-blue-50 rounded-xl text-sm text-gray-700">
+    <strong>해석:</strong> S&P 500과 125일 이동평균선의 관계를 보여줍니다.
+    <ul class="mt-2 list-disc list-inside space-y-1">
+      <li><strong>가격 > MA</strong>: 상승 추세 → 시장 낙관 (Greed)</li>
+      <li><strong>가격 < MA</strong>: 하락 추세 → 시장 비관 (Fear)</li>
+      <li>125일 MA는 약 반년간의 평균 추세를 반영</li>
+    </ul>
+  </div>
+
+  <script type="module">
+    let allData = [];
+    let chart = null;
+    let currentPeriod = 365;
+    const MA_PERIOD = 125;
+
+    async function fetchData() {
+      try {
+        const response = await fetch('../../../data/sentiment/cnn-momentum.json');
+        allData = await response.json();
+        allData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return allData;
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        return [];
+      }
+    }
+
+    // Calculate MA
+    function calculateMA(data, period) {
+      const result = [];
+      for (let i = 0; i < data.length; i++) {
+        if (i < period - 1) {
+          result.push(null);
+        } else {
+          let sum = 0;
+          for (let j = 0; j < period; j++) {
+            sum += data[i - j].value;
+          }
+          result.push(sum / period);
+        }
+      }
+      return result;
+    }
+
+    function filterByPeriod(data, days) {
+      if (days >= 9999) return data;
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      return data.filter(d => new Date(d.date) >= cutoff);
+    }
+
+    function updateCurrentDisplay(data, maValues) {
+      if (!data.length) return;
+      const latestIdx = data.length - 1;
+      const latest = data[latestIdx];
+      const value = latest.value;
+      const ma = maValues[latestIdx];
+
+      document.getElementById('currentValue').textContent = value.toLocaleString('en-US', {maximumFractionDigits: 2});
+      document.getElementById('maValue').textContent = ma ? ma.toLocaleString('en-US', {maximumFractionDigits: 2}) : '--';
+      document.getElementById('currentDate').textContent = latest.date;
+
+      const badge = document.getElementById('statusBadge');
+      if (ma && value > ma * 1.05) {
+        badge.textContent = 'STRONG GREED';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-green-600 text-white';
+      } else if (ma && value > ma) {
+        badge.textContent = 'GREED';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-green-100 text-green-800';
+      } else if (ma && value < ma * 0.95) {
+        badge.textContent = 'STRONG FEAR';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-600 text-white';
+      } else if (ma && value < ma) {
+        badge.textContent = 'FEAR';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-100 text-red-800';
+      } else {
+        badge.textContent = 'NEUTRAL';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-yellow-100 text-yellow-800';
+      }
+    }
+
+    function renderChart(data) {
+      const ctx = document.getElementById('mainChart').getContext('2d');
+      const dates = data.map(d => d.date);
+      const values = data.map(d => d.value);
+
+      // Calculate MA for filtered data (need full data for accurate MA)
+      const fullMA = calculateMA(allData, MA_PERIOD);
+      const startIdx = allData.findIndex(d => d.date === data[0]?.date);
+      const maValues = startIdx >= 0 ? fullMA.slice(startIdx, startIdx + data.length) : [];
+
+      updateCurrentDisplay(data, maValues);
+
+      const config = {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'S&P 500',
+              data: values,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2
+            },
+            {
+              label: '125-day MA',
+              data: maValues,
+              borderColor: '#f97316',
+              backgroundColor: 'transparent',
+              fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2, borderDash: [5, 5]
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: {
+              type: 'time',
+              time: { unit: currentPeriod <= 365 ? 'month' : 'year', displayFormats: { month: 'MMM yyyy', year: 'yyyy' } },
+              grid: { display: false }, ticks: { maxTicksLimit: 8, color: '#9ca3af' }
+            },
+            y: {
+              grid: { color: '#f3f4f6' },
+              ticks: { color: '#9ca3af', callback: (v) => v.toLocaleString() }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: { usePointStyle: true, padding: 20 }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)', titleColor: '#fff', bodyColor: '#fff', cornerRadius: 8,
+              callbacks: {
+                title: (items) => items[0].label,
+                label: (context) => `${context.dataset.label}: ${context.parsed.y?.toLocaleString('en-US', {maximumFractionDigits: 2}) || '--'}`
+              }
+            }
+          }
+        }
+      };
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, config);
+    }
+
+    function setupPeriodButtons() {
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentPeriod = parseInt(btn.dataset.period);
+          const filtered = filterByPeriod(allData, currentPeriod);
+          renderChart(filtered);
+        });
+      });
+    }
+
+    async function init() {
+      await fetchData();
+      const filtered = filterByPeriod(allData, currentPeriod);
+      renderChart(filtered);
+      setupPeriodButtons();
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

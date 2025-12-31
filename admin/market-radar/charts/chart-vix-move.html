@@ -176,7 +176,7 @@
 
         // Merge data - use VIX date range as base (longer history)
         // MOVE data will be null for dates before 2020
-        const moveMap = new Map(moveData.map(d => [d.date, d.close]));
+        const moveMap = new Map(moveData.map(d => [d.date, d.value]));
 
         mergedData = vixData.map(d => ({
           date: d.date,
