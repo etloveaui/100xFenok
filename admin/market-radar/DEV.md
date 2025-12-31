@@ -1,13 +1,13 @@
 # Market Radar - DEV.md
 
-> Market Indices 차트 개발 메모
+> Market Radar 차트 개발 메모
 > 생성일: 2025-12-31
 
 ---
 
 ## Purpose
 
-시장 지수 (S&P 500, NASDAQ) 차트 시각화. MA 오버레이 및 유연한 기간 선택 지원.
+Market Sentiment + Market Indices 차트 시각화. Signal Score Timeline, MA 오버레이, 유연한 기간 선택 지원.
 
 ---
 
@@ -16,10 +16,43 @@
 ```
 admin/market-radar/
 ├── DEV.md           ← 이 파일
-└── charts/
-    ├── chart-sp500.html   ← S&P 500 차트
-    └── chart-nasdaq.html  ← NASDAQ 차트
+└── charts/          ← 총 13개 차트
+    ├── [Sentiment 5개]
+    ├── [CNN Sub 6개]
+    └── [Indices 2개]
 ```
+
+---
+
+## Charts Overview (총 13개)
+
+### 1. Sentiment 차트 (5개) - Signal Score Timeline
+
+| 파일 | 지표 | 데이터 |
+|------|------|--------|
+| `chart-aaii.html` | AAII 투자자 심리 | `aaii.json` |
+| `chart-cftc.html` | CFTC 포지션 | `cftc-sp500.json` |
+| `chart-cnn-fg.html` | CNN Fear & Greed | `cnn-fg.json` |
+| `chart-crypto-fg.html` | Crypto Fear & Greed | `crypto-fg.json` |
+| `chart-vix-move.html` | VIX + MOVE 듀얼 | `vix.json`, `move.json` |
+
+### 2. CNN Sub-indicator 차트 (6개) - 원시 측정값
+
+| 파일 | 지표 | 표시방식 |
+|------|------|---------|
+| `chart-cnn-momentum.html` | S&P vs 125-day MA | 듀얼 라인 |
+| `chart-cnn-strength.html` | 52주 고/저점 비율 | 제로라인 기준 |
+| `chart-cnn-breadth.html` | McClellan VSI | 백분위 임계값 |
+| `chart-cnn-put-call.html` | Put/Call 비율 | 0.7/1.0 임계존 |
+| `chart-cnn-junk-bond.html` | 정크본드 스프레드 | 동적 임계값 |
+| `chart-cnn-safe-haven.html` | 주식/국채 수익률 | 제로라인 기준 |
+
+### 3. Market Indices 차트 (2개) - MA 오버레이
+
+| 파일 | 지표 | 데이터 |
+|------|------|--------|
+| `chart-sp500.html` | S&P 500 | `sp500.json` (11,594개) |
+| `chart-nasdaq.html` | NASDAQ | `nasdaq.json` (11,594개) |
 
 ---
 
@@ -91,8 +124,11 @@ admin/market-radar/
 - [x] 모바일 최적화
 - [x] admin/index.html 등록
 
-### Phase 2: 확장 (예정)
-- [ ] 데이터 자동 수집 파이프라인
+### Phase 2: 확장 (진행 중)
+- [x] 데이터 자동 수집 파이프라인 ✅ (#77, DEC-076)
+  - Apps Script + GOOGLEFINANCE + GitHub API
+  - 병합 방식 (기존 데이터 유지)
+  - 트리거: 매일 06:00 + 09:00
 - [ ] 더 많은 지수 추가 (DJI, Russell 등)
 - [ ] 비교 차트 기능
 
