@@ -13,6 +13,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     body { background: #f8fafc; }
 
     /* Period Dropdown */
@@ -118,7 +125,7 @@
   </style>
 </head>
 <body class="p-4 sm:p-6">
-  <div class="max-w-5xl mx-auto">
+  <div>
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div>
@@ -222,21 +229,6 @@
       <!-- Populated by JS -->
     </div>
 
-    <!-- Info -->
-    <div class="mt-4 p-4 bg-yellow-50 rounded-lg text-xs text-yellow-800 space-y-2">
-      <div>
-        <strong>CNN Fear & Greed</strong>: 미국 주식시장 심리 지표 (0~100).
-        7개 구성요소의 가중 평균: 모멘텀, 강도, 폭, 풋/콜, VIX, 안전자산, 정크본드.
-      </div>
-      <div>
-        <strong>핵심 인사이트</strong>:
-        <ul class="list-disc ml-4 mt-1 space-y-1">
-          <li><strong>역발상 지표</strong>: Extreme Fear(≤15) = 매수 기회, Extreme Greed(≥85) = 주의</li>
-          <li><strong>시장 타이밍</strong>: 극단값에서 반전 신호 주목</li>
-          <li><strong>7개 구성요소</strong>: 개별 지표 확인으로 세부 분석 가능</li>
-        </ul>
-      </div>
-    </div>
   </div>
 
   <script type="module">

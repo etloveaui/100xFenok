@@ -13,6 +13,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     body { background: #f8fafc; }
 
     /* Period Dropdown */
@@ -238,7 +245,7 @@
 </head>
 <body class="p-4 sm:p-6">
 
-  <div class="max-w-5xl mx-auto">
+  <div>
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div>
@@ -341,24 +348,6 @@
       <!-- Populated by JS -->
     </div>
 
-    <!-- Info -->
-    <div class="mt-4 p-4 bg-sky-50 rounded-lg text-xs text-sky-800 space-y-2">
-      <div>
-        <strong>📊 CFTC COT Report</strong>: 비상업 투자자(헤지펀드, 투기꾼)의 S&P 500 선물 순포지션.
-        음수(-) = 숏 우세 (약세 베팅), 양수(+) = 롱 우세 (강세 베팅).
-      </div>
-      <div>
-        <strong>🔍 핵심 인사이트</strong>:
-        <ul class="list-disc ml-4 mt-1 space-y-1">
-          <li><strong>역발상 지표</strong>: 투기꾼이 극단적 숏(-150K+)일 때 오히려 반등 확률 높음 (스마트머니 반대편)</li>
-          <li><strong>숏 우세 ≠ 하락</strong>: 헤지펀드 숏은 헷지 목적 포함. 실제 시장은 연기금/패시브 자금이 주도</li>
-          <li><strong>변화율 주시</strong>: 절대값보다 주간 변화량이 중요. 급격한 포지션 전환이 시그널</li>
-        </ul>
-      </div>
-      <div class="text-sky-600">
-        💡 <strong>활용법</strong>: Extreme Short + VIX 급등 + 기술적 지지선 = 강력한 매수 시그널
-      </div>
-    </div>
   </div>
 
   <script type="module">

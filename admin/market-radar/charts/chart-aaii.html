@@ -13,6 +13,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     body { background: #f8fafc; }
 
     /* Period Dropdown */
@@ -243,7 +250,7 @@
 </head>
 <body class="p-4 sm:p-6">
 
-  <div class="max-w-5xl mx-auto space-y-4">
+  <div class="space-y-4">
 
     <!-- Mobile Backdrop -->
     <div id="periodBackdrop" class="period-backdrop"></div>
@@ -366,10 +373,6 @@
       </div>
     </div>
 
-    <!-- Info Note -->
-    <div class="p-3 bg-purple-50 rounded-lg text-xs text-purple-800">
-      <strong>📊 Bull-Bear Spread:</strong> Bullish% - Bearish% | 양수 = 낙관 우세, 음수 = 비관 우세 | 주간 업데이트 (목요일)
-    </div>
 
   </div>
 
