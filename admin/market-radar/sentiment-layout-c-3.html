@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C-3: Gauge Dashboard Home | Sentiment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: #f8fafc; margin: 0; }
+    .orbitron { font-family: 'Orbitron', monospace; }
+
+    /* Split Layout */
+    .split-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      height: 100vh;
+    }
+    @media (max-width: 1024px) {
+      .split-layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        height: auto; max-height: 50vh; z-index: 100;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(calc(100% - 56px));
+        transition: transform 0.3s ease;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      }
+      .sidebar.expanded { transform: translateY(0); }
+      .main-content { padding-bottom: 70px; }
+    }
+
+    /* Sidebar - Minimal */
+    .sidebar {
+      background: white;
+      border-right: 1px solid #e2e8f0;
+      overflow-y: auto;
+    }
+
+    /* Nav Item */
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; margin: 2px 8px;
+      border-radius: 10px; cursor: pointer;
+      font-size: 13px; color: #475569;
+      transition: all 0.15s;
+    }
+    .nav-item:hover { background: #f1f5f9; }
+    .nav-item.active { background: #eef2ff; color: #4f46e5; font-weight: 500; }
+    .nav-item .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+
+    /* Main Content */
+    .main-content { overflow-y: auto; background: #f8fafc; }
+
+    /* ===== HOME: Gauge Dashboard ===== */
+    .gauge-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    /* Large Gauge */
+    .gauge-large {
+      background: white;
+      border-radius: 24px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .gauge-svg {
+      width: 180px;
+      height: 100px;
+      margin: 0 auto;
+    }
+    .gauge-value {
+      font-size: 48px;
+      font-weight: 800;
+      margin-top: -20px;
+    }
+    .gauge-label {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 8px;
+    }
+
+    /* Condition List */
+    .condition-list {
+      margin-top: 20px;
+      text-align: left;
+    }
+    .condition-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 13px;
+    }
+    .condition-item:last-child { border-bottom: none; }
+    .condition-met { color: #16a34a; }
+    .condition-unmet { color: #94a3b8; }
+
+    /* Quick Stats Row */
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+    @media (max-width: 768px) {
+      .quick-stats { grid-template-columns: repeat(3, 1fr); }
+    }
+    .stat-pill {
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .stat-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+    .stat-pill .icon { font-size: 18px; }
+    .stat-pill .value { font-size: 16px; font-weight: 700; margin-top: 4px; }
+    .stat-pill .label { font-size: 10px; color: #94a3b8; }
+
+    /* Detail Card */
+    .detail-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    /* Chart Container - Full Height */
+    .chart-container {
+      background: #f8fafc;
+      border-radius: 12px;
+      overflow: hidden;
+      height: calc(100vh - 340px);
+      min-height: 360px;
+    }
+    .chart-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ===== DESCRIPTION: Tabs ===== */
+    .desc-tabs {
+      display: flex;
+      gap: 4px;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 4px;
+      margin-top: 16px;
+    }
+    .desc-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .desc-tab:hover { color: #334155; }
+    .desc-tab.active {
+      background: white;
+      color: #4f46e5;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .desc-content {
+      padding: 16px;
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.7;
+      background: #f8fafc;
+      border-radius: 12px;
+      margin-top: 12px;
+      min-height: 80px;
+    }
+
+    /* Mobile Handle */
+    .mobile-handle {
+      display: none;
+      width: 36px; height: 4px;
+      background: #cbd5e1;
+      border-radius: 2px;
+      margin: 10px auto;
+    }
+    @media (max-width: 1024px) {
+      .mobile-handle { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="split-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="mobile-handle" onclick="toggleSidebar()"></div>
+
+      <!-- Logo -->
+      <div class="p-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <i class="fas fa-gauge-high text-white text-sm"></i>
+          </div>
+          <div>
+            <div class="orbitron text-sm font-bold text-slate-800">Sentiment</div>
+            <div class="text-[10px] text-slate-400">C-3: Gauge</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="py-2">
+        <div class="text-[10px] text-slate-400 uppercase tracking-wider px-4 py-2">Dashboard</div>
+        <div class="nav-item active" onclick="showView('home')">
+          <div class="dot bg-indigo-500"></div>
+          <span>Overview</span>
+        </div>
+
+        <div class="text-[10px] text-slate-400 uppercase tracking-wider px-4 py-2 mt-2">Indicators</div>
+        <div class="nav-item" onclick="showDetail('cnn')"><div class="dot bg-amber-400"></div><span>CNN F&G</span></div>
+        <div class="nav-item" onclick="showDetail('cftc')"><div class="dot bg-blue-400"></div><span>CFTC</span></div>
+        <div class="nav-item" onclick="showDetail('aaii')"><div class="dot bg-purple-400"></div><span>AAII</span></div>
+        <div class="nav-item" onclick="showDetail('vix')"><div class="dot bg-red-400"></div><span>VIX+MOVE</span></div>
+        <div class="nav-item" onclick="showDetail('crypto')"><div class="dot bg-orange-400"></div><span>Crypto</span></div>
+
+        <div class="text-[10px] text-slate-400 uppercase tracking-wider px-4 py-2 mt-2">CNN Sub</div>
+        <div class="nav-item" onclick="showDetail('momentum')"><div class="dot bg-blue-300"></div><span>Momentum</span></div>
+        <div class="nav-item" onclick="showDetail('strength')"><div class="dot bg-pink-300"></div><span>Strength</span></div>
+        <div class="nav-item" onclick="showDetail('breadth')"><div class="dot bg-teal-300"></div><span>Breadth</span></div>
+        <div class="nav-item" onclick="showDetail('putcall')"><div class="dot bg-purple-300"></div><span>Put/Call</span></div>
+        <div class="nav-item" onclick="showDetail('safehaven')"><div class="dot bg-sky-300"></div><span>Safe Haven</span></div>
+        <div class="nav-item" onclick="showDetail('junkbond')"><div class="dot bg-yellow-300"></div><span>Junk Bond</span></div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content p-5">
+
+      <!-- HOME VIEW -->
+      <div id="view-home">
+        <!-- Dual Gauge -->
+        <div class="gauge-row">
+          <!-- Fear Gauge -->
+          <div class="gauge-large" style="border-top: 4px solid #dc2626;">
+            <svg class="gauge-svg" viewBox="0 0 200 100">
+              <defs>
+                <linearGradient id="fearGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color:#fecaca"/>
+                  <stop offset="100%" style="stop-color:#dc2626"/>
+                </linearGradient>
+              </defs>
+              <path d="M 20 90 A 80 80 0 0 1 180 90" fill="none" stroke="#fee2e2" stroke-width="12" stroke-linecap="round"/>
+              <path d="M 20 90 A 80 80 0 0 1 116 22" fill="none" stroke="url(#fearGrad)" stroke-width="12" stroke-linecap="round"/>
+              <circle cx="116" cy="22" r="8" fill="#dc2626"/>
+            </svg>
+            <div class="gauge-value text-red-600">3/5</div>
+            <div class="gauge-label">Fear Conditions Met</div>
+
+            <div class="condition-list">
+              <div class="condition-item condition-met"><span>✓ VIX > 30</span><span>32.5</span></div>
+              <div class="condition-item condition-met"><span>✓ CNN F&G < 25</span><span>18</span></div>
+              <div class="condition-item condition-met"><span>✓ CFTC < -150K</span><span>-180K</span></div>
+              <div class="condition-item condition-unmet"><span>○ MOVE > 120</span><span>95</span></div>
+              <div class="condition-item condition-unmet"><span>○ Crypto < 20</span><span>35</span></div>
+            </div>
+          </div>
+
+          <!-- Greed Gauge -->
+          <div class="gauge-large" style="border-top: 4px solid #16a34a;">
+            <svg class="gauge-svg" viewBox="0 0 200 100">
+              <defs>
+                <linearGradient id="greedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color:#bbf7d0"/>
+                  <stop offset="100%" style="stop-color:#16a34a"/>
+                </linearGradient>
+              </defs>
+              <path d="M 20 90 A 80 80 0 0 1 180 90" fill="none" stroke="#dcfce7" stroke-width="12" stroke-linecap="round"/>
+              <path d="M 20 90 A 80 80 0 0 1 52 42" fill="none" stroke="url(#greedGrad)" stroke-width="12" stroke-linecap="round"/>
+              <circle cx="52" cy="42" r="8" fill="#16a34a"/>
+            </svg>
+            <div class="gauge-value text-green-600">1/5</div>
+            <div class="gauge-label">Greed Conditions Met</div>
+
+            <div class="condition-list">
+              <div class="condition-item condition-unmet"><span>○ VIX < 12</span><span>32.5</span></div>
+              <div class="condition-item condition-unmet"><span>○ CNN F&G > 85</span><span>18</span></div>
+              <div class="condition-item condition-unmet"><span>○ CFTC > +150K</span><span>-180K</span></div>
+              <div class="condition-item condition-met"><span>✓ MOVE < 60</span><span>55</span></div>
+              <div class="condition-item condition-unmet"><span>○ Crypto > 70</span><span>35</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+          <div class="stat-pill" onclick="showDetail('cnn')">
+            <div class="icon">😐</div>
+            <div class="value text-amber-500">18</div>
+            <div class="label">CNN</div>
+          </div>
+          <div class="stat-pill" onclick="showDetail('cftc')">
+            <div class="icon">📊</div>
+            <div class="value text-blue-500">-180K</div>
+            <div class="label">CFTC</div>
+          </div>
+          <div class="stat-pill" onclick="showDetail('aaii')">
+            <div class="icon">👥</div>
+            <div class="value text-purple-500">-15%</div>
+            <div class="label">AAII</div>
+          </div>
+          <div class="stat-pill" onclick="showDetail('vix')">
+            <div class="icon">⚡</div>
+            <div class="value text-red-500">32.5</div>
+            <div class="label">VIX</div>
+          </div>
+          <div class="stat-pill" onclick="showDetail('crypto')">
+            <div class="icon">₿</div>
+            <div class="value text-orange-500">35</div>
+            <div class="label">Crypto</div>
+          </div>
+        </div>
+
+        <!-- Summary Card -->
+        <div class="detail-card p-5 mt-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-slate-500">Market Sentiment Signal</div>
+              <div class="orbitron text-4xl font-bold text-amber-500 mt-1">-3</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-medium text-slate-700">Moderate Fear</div>
+              <div class="text-xs text-slate-400 mt-1">Updated: Dec 31, 2025</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div id="view-detail" style="display: none;">
+        <div class="detail-card">
+          <!-- Header -->
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <button onclick="showView('home')" class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                <i class="fas fa-arrow-left text-sm"></i>
+              </button>
+              <span class="text-xl" id="detailIcon">😐</span>
+              <div>
+                <h2 class="font-bold text-slate-800 text-sm" id="detailTitle">CNN Fear & Greed</h2>
+                <p class="text-[10px] text-slate-400" id="detailSubtitle">0-100 scale</p>
+              </div>
+            </div>
+            <a href="#" target="_blank" id="detailLink" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">
+              <i class="fas fa-expand mr-1"></i>Full
+            </a>
+          </div>
+
+          <!-- Chart -->
+          <div class="p-4">
+            <div class="chart-container">
+              <iframe id="detailChart" src="" loading="lazy"></iframe>
+            </div>
+
+            <!-- Tab Description -->
+            <div class="desc-tabs">
+              <div class="desc-tab active" onclick="showDescTab('what')">
+                <i class="fas fa-info-circle mr-1"></i>What
+              </div>
+              <div class="desc-tab" onclick="showDescTab('how')">
+                <i class="fas fa-cogs mr-1"></i>How
+              </div>
+              <div class="desc-tab" onclick="showDescTab('insight')">
+                <i class="fas fa-lightbulb mr-1"></i>Insight
+              </div>
+            </div>
+            <div class="desc-content" id="descContent">
+              CNN measures 7 market indicators to gauge investor sentiment from Extreme Fear (0) to Extreme Greed (100).
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    const data = {
+      cnn: { icon: '😐', title: 'CNN Fear & Greed', sub: '0-100 scale', chart: 'charts/chart-cnn-fg.html',
+        what: 'CNN Fear & Greed Index measures market sentiment from Extreme Fear (0) to Extreme Greed (100). It aggregates 7 different market indicators to provide a single sentiment reading. The index is updated daily and is widely followed by traders and investors.',
+        how: 'The index equally weights seven indicators: Market Momentum (S&P 500 vs 125-day MA), Stock Price Strength (52-week highs vs lows), Stock Price Breadth (McClellan Summation), Put/Call Ratio, Junk Bond Demand, Safe Haven Demand, and Market Volatility (VIX).',
+        insight: 'Use as a contrarian indicator. When the index reaches Extreme Fear (<25), markets are often oversold and may present buying opportunities. When it hits Extreme Greed (>75), consider reducing exposure. Combine with other signals for best results.' },
+      cftc: { icon: '📊', title: 'CFTC Position', sub: 'Net contracts', chart: 'charts/chart-cftc.html',
+        what: 'The CFTC Commitment of Traders (COT) report shows how large speculators (primarily hedge funds and institutional traders) are positioned in S&P 500 E-mini futures contracts. Reports are released every Friday.',
+        how: 'Net position = Long contracts - Short contracts. Positive values indicate net long (bullish) positioning. Negative values indicate net short (bearish) positioning. Data is reported weekly with a 3-day delay.',
+        insight: 'Extreme positioning often signals potential reversals. When speculators are maximally long, a correction may follow. When they are maximally short, a rally becomes more likely. Watch for positioning divergence with price.' },
+      aaii: { icon: '👥', title: 'AAII Sentiment', sub: 'Bull-Bear spread', chart: 'charts/chart-aaii.html',
+        what: 'The AAII Investor Sentiment Survey polls individual investors weekly on their 6-month stock market outlook. Members classify themselves as bullish, bearish, or neutral. Data history extends back to 1987.',
+        how: 'Bull-Bear Spread = % Bullish - % Bearish. Positive spread indicates more bulls than bears. Negative spread indicates more bears than bulls. The historical average is roughly +7% (slightly more bulls).',
+        insight: 'A powerful contrarian indicator. Historically, when bearish sentiment exceeds 50% (spread below -20%), markets have often been near bottoms. Extreme bullishness has sometimes preceded corrections. Best used with price action.' },
+      vix: { icon: '⚡', title: 'VIX + MOVE', sub: 'Volatility indices', chart: 'charts/chart-vix-move.html',
+        what: 'VIX measures expected 30-day volatility in the S&P 500, derived from options prices. MOVE (Merrill Option Volatility Estimate) measures expected volatility in Treasury bonds. Together they show overall market stress.',
+        how: 'Both indices are calculated from options pricing (implied volatility). Higher values = more expected market movement = higher uncertainty/fear. VIX typically ranges 10-30; MOVE typically ranges 60-150.',
+        insight: 'VIX > 30 often signals a fear extreme and potential buying opportunity. VIX < 12 suggests complacency and potential for correction. MOVE spikes during rate uncertainty. Watch for divergence between VIX and MOVE.' },
+      crypto: { icon: '₿', title: 'Crypto F&G', sub: '0-100 scale', chart: 'charts/chart-crypto-fg.html',
+        what: 'The Alternative.me Crypto Fear & Greed Index measures sentiment in cryptocurrency markets, primarily driven by Bitcoin. It uses a 0-100 scale similar to CNN\'s index. Data available since February 2018.',
+        how: 'Combines: Volatility (25%), Market Momentum/Volume (25%), Social Media (15%), Surveys (15%), Bitcoin Dominance (10%), Google Trends (10%). Updated daily.',
+        insight: 'Extreme fear in crypto (<20) has historically presented buying opportunities. Note that crypto sentiment can diverge significantly from stock market sentiment. Crypto fear can persist longer than equity fear.' },
+      momentum: { icon: '🚀', title: 'Momentum', sub: 'S&P vs 125MA', chart: 'charts/chart-cnn-momentum.html',
+        what: 'Market Momentum compares the S&P 500\'s current price level to its 125-day (approximately 6-month) moving average. This indicates whether the market is in an uptrend or downtrend.',
+        how: 'If S&P 500 > 125-day MA, momentum is positive and contributes to greed. If S&P 500 < 125-day MA, momentum is negative and contributes to fear. The distance from the MA indicates momentum strength.',
+        insight: 'Strong momentum above the MA suggests trend continuation. However, being too far above the MA often leads to mean reversion. A cross below the MA after being above can signal trend change.' },
+      strength: { icon: '💪', title: 'Strength', sub: '52W highs/lows', chart: 'charts/chart-cnn-strength.html',
+        what: 'Stock Price Strength measures the ratio of stocks hitting 52-week highs versus 52-week lows on the NYSE. This shows breadth of market moves.',
+        how: 'More new 52-week highs = market strength = greed. More new 52-week lows = market weakness = fear. The indicator looks at the net number of highs minus lows.',
+        insight: 'Healthy rallies are accompanied by expanding new highs. Divergence (price up but fewer new highs) can warn of weakness. Many new lows during declines can signal capitulation.' },
+      breadth: { icon: '📈', title: 'Breadth', sub: 'McClellan Index', chart: 'charts/chart-cnn-breadth.html',
+        what: 'The McClellan Volume Summation Index measures the cumulative difference between advancing and declining volume on the NYSE. It shows the overall buying or selling pressure.',
+        how: 'Positive values indicate more volume in advancing stocks (buying pressure). Negative values indicate more volume in declining stocks (selling pressure). Extreme readings suggest overbought/oversold.',
+        insight: 'Breadth divergences often precede reversals. If price makes new highs but breadth doesn\'t confirm, rally may be weakening. Extreme readings in either direction often mean revert.' },
+      putcall: { icon: '⚖️', title: 'Put/Call', sub: '5-day average', chart: 'charts/chart-cnn-put-call.html',
+        what: 'The Put/Call Ratio measures the volume of put options versus call options traded on the CBOE. It\'s smoothed over 5 days to reduce noise.',
+        how: 'Ratio > 1.0 = more puts traded (bearish sentiment). Ratio < 0.7 = more calls traded (bullish sentiment). The 5-day average helps identify sustained sentiment shifts.',
+        insight: 'Extreme spikes in put/call ratio (>1.2) often mark fear capitulation and near-term bottoms. Very low readings (<0.6) can indicate complacency. Best used as contrarian indicator.' },
+      safehaven: { icon: '🛡️', title: 'Safe Haven', sub: 'Stocks vs Bonds', chart: 'charts/chart-cnn-safe-haven.html',
+        what: 'Safe Haven Demand compares the 20-day returns of stocks (S&P 500) versus Treasury bonds. It shows whether investors prefer risk or safety.',
+        how: 'Bonds outperforming stocks = flight to safety = fear. Stocks outperforming bonds = risk appetite = greed. The spread indicates the magnitude of the preference.',
+        insight: 'Extreme flight to safety often marks fear peaks and potential equity bottoms. Return of risk appetite after a fear period can signal improving sentiment. Watch for persistent trends.' },
+      junkbond: { icon: '💰', title: 'Junk Bond', sub: 'HY spread', chart: 'charts/chart-cnn-junk-bond.html',
+        what: 'Junk Bond Demand measures the yield spread between high-yield (junk) bonds and investment-grade corporate bonds. It shows credit risk appetite.',
+        how: 'Tight spread = investors comfortable taking credit risk = greed. Wide spread = investors demanding premium for credit risk = fear. Historical range provides context.',
+        insight: 'Spread widening often signals credit stress and risk-off sentiment across markets. Tight spreads may indicate complacency about credit risk. Watch for correlation with equity weakness.' }
+    };
+
+    let currentDesc = 'what';
+
+    function showView(view) {
+      document.getElementById('view-home').style.display = view === 'home' ? 'block' : 'none';
+      document.getElementById('view-detail').style.display = view === 'detail' ? 'block' : 'none';
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      if (view === 'home') document.querySelector('.nav-item').classList.add('active');
+    }
+
+    function showDetail(key) {
+      const d = data[key];
+      window.currentData = d;
+      document.getElementById('detailIcon').textContent = d.icon;
+      document.getElementById('detailTitle').textContent = d.title;
+      document.getElementById('detailSubtitle').textContent = d.sub;
+      document.getElementById('detailChart').src = d.chart;
+      document.getElementById('detailLink').href = d.chart;
+      showDescTab('what');
+      showView('detail');
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      if (event.currentTarget) event.currentTarget.classList.add('active');
+    }
+
+    function showDescTab(tab) {
+      currentDesc = tab;
+      document.querySelectorAll('.desc-tab').forEach(el => el.classList.remove('active'));
+      event.currentTarget?.classList.add('active') || document.querySelector(`.desc-tab:first-child`).classList.add('active');
+      const d = window.currentData || data.cnn;
+      document.getElementById('descContent').textContent = d[tab] || d.what;
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('expanded');
+    }
+  </script>
+
+</body>
+</html>
