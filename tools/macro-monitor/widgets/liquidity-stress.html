@@ -315,9 +315,20 @@
   .stale-warning-text { font-weight: 500; }
   .stale-warning-age { color: #b45309; font-weight: 600; }
 
-  /* === Responsive - 모바일 (세로) === */
+  /* === Responsive === */
+  @media (max-width: 767px) {
+    .gauge {
+      width: 130px;
+      height: 130px;
+    }
+    .gauge-value { font-size: 24px; }
+    .threshold-tick {
+      transform-origin: center 59px;
+    }
+  }
+
   @media (max-width: 400px) {
-    .card-widget { padding: 10px; min-height: 320px; }
+    .card-widget { padding: 10px; }
     .card-title { font-size: 10px; }
 
     .dual-arc-container {
@@ -350,31 +361,14 @@
     }
   }
 
-  /* === Responsive - 모바일 가로 모드 === */
+  /* Mobile Landscape */
   @media (max-width: 667px) and (orientation: landscape) {
-    .card-widget { min-height: 260px; }
-
     .gauge {
       width: 130px;
       height: 130px;
     }
-
     .gauge-value { font-size: 22px; }
     .gauge-unit { font-size: 11px; }
-
-    .threshold-tick {
-      transform-origin: center 59px;
-    }
-  }
-
-  /* === Responsive - 태블릿 === */
-  @media (min-width: 401px) and (max-width: 500px) {
-    .gauge {
-      width: 130px;
-      height: 130px;
-    }
-    .gauge-value { font-size: 24px; }
-
     .threshold-tick {
       transform-origin: center 59px;
     }

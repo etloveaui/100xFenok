@@ -128,10 +128,10 @@ const result = await DataFetcher.fetch(WIDGET_ID);
 | Hero | Net Flow ($B) - 그라데이션 텍스트 (Teal/Red) |
 | Tributaries | M2 YoY \| Net Liq \| SC/M2 (Vertical Divider)
 
-### 🆕 Sentiment Signal 📊 (4-D, ⏳ 서비스 등록 대기)
+### ✅ Sentiment Signal 📊 (4-D, 배포 완료)
 
-**목적**: 11개 센티먼트 지표 통합 시그널 제공
-**상태**: Widget + Detail 완성, 서비스 등록 진행 중
+**목적**: 11개 센티먼트 지표 + 10개 콤보 시그널 통합 제공
+**상태**: Widget + Detail 완성, 테스트 완료, 배포 완료 (2026-01-02)
 
 **구성**:
 | 항목 | 설명 |
@@ -196,26 +196,26 @@ VIX, VIX Term, MOVE, SKEW, Put/Call, CNN Fear&Greed, AAII, NAAIM, CFTC Positioni
 
 | 항목 | 값 |
 |------|-----|
-| 최소 높이 | 280px (PC), 360px (Mobile) |
+| 최소 높이 | **아래 브레이크포인트 참조** |
 | 상태 색상 | 🟢 #16a34a / 🟡 #ca8a04 / 🟠 #ea580c / 🔴 #dc2626 |
 | 캐시 | `DataManager.getWidgetDataWithStale()` / `saveWidgetData()` |
 | ⚠️ 금지 | Widget에서 API 직접 호출, 데모 데이터, View Details 버튼 |
 
 > **Note**: 위젯 카드 전체가 클릭 가능하므로 "View Details" 버튼 불필요 (2025-12-11 제거)
 
-### 📱 반응형 브레이크포인트 (2025-12-13)
+### 📱 Widget Size Standards
 
-> **상세 계획**: `docs/archive/2025-12/20251213_PLAN_mobile-responsive.md`
+> **가이드**: `docs/manuals/widget-size-guide.md`
 
-| 구간 | 화면 폭 | 컨테이너 높이 |
-|------|---------|---------------|
-| PC Desktop | 1200px+ | 280px |
-| Tablet | 768-1199px | 280px |
-| Mobile Large | 401-767px | 320px |
-| Mobile Small | ≤400px | 360px |
+| 항목 | 값 |
+|------|-----|
+| iframe 높이 | **280px** (고정) |
+| 위젯 min-height | **280px** (고정) |
 
-**컨테이너 파일**: `main.html`, `tools/macro-monitor/index.html`
-**표준 브레이크포인트**: `400px` (모든 위젯 통일)
+**핵심 원칙**:
+1. **크기 280px 고정** (모든 화면 동일)
+2. 내용 잘림 발생 시 → **디자인/폰트 조정** (크기 증가 금지)
+3. 컨테이너 파일: `tools/macro-monitor/index.html`
 
 ---
 
