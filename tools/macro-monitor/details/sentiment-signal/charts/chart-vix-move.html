@@ -378,15 +378,26 @@
     function updateCurrentDisplay(data) {
       if (!data.length) return;
 
-      const latest = data[data.length - 1];
+      // VIX: 최신 데이터 (항상 존재)
+      const latestVix = data[data.length - 1];
 
-      document.getElementById('vixValue').textContent = latest.vix.toFixed(2);
-      document.getElementById('moveValue').textContent = latest.move !== null ? latest.move.toFixed(2) : 'N/A';
-      document.getElementById('currentDate').textContent = latest.date;
+      // MOVE: 최신 유효 데이터 찾기 (뒤에서부터 null 아닌 첫 번째)
+      const latestMove = data.slice().reverse().find(d => d.move !== null);
+
+      document.getElementById('vixValue').textContent = latestVix.vix.toFixed(2);
+      document.getElementById('moveValue').textContent = latestMove ? latestMove.move.toFixed(2) : 'N/A';
+
+      // 날짜가 다르면 둘 다 표시
+      if (latestMove && latestMove.date !== latestVix.date) {
+        document.getElementById('currentDate').textContent = `VIX: ${latestVix.date} | MOVE: ${latestMove.date}`;
+      } else {
+        document.getElementById('currentDate').textContent = latestVix.date;
+      }
 
       // Check for dual stress (only if MOVE data exists)
-      const hasMoveData = latest.move !== null;
-      const isDualStress = hasMoveData && latest.vix >= THRESHOLDS.VIX_FEAR && latest.move >= THRESHOLDS.MOVE_STRESS;
+      const hasMoveData = latestMove !== null;
+      const moveValue = hasMoveData ? latestMove.move : null;
+      const isDualStress = hasMoveData && latestVix.vix >= THRESHOLDS.VIX_FEAR && moveValue >= THRESHOLDS.MOVE_STRESS;
       const stressAlert = document.getElementById('stressAlert');
 
       if (isDualStress) {
@@ -398,16 +409,16 @@
       // Determine overall status
       const badge = document.getElementById('statusBadge');
 
-      if (hasMoveData && latest.vix >= THRESHOLDS.VIX_EXTREME && latest.move >= THRESHOLDS.MOVE_EXTREME) {
+      if (hasMoveData && latestVix.vix >= THRESHOLDS.VIX_EXTREME && moveValue >= THRESHOLDS.MOVE_EXTREME) {
         badge.textContent = 'EXTREME STRESS';
         badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-800 text-white';
       } else if (isDualStress) {
         badge.textContent = 'DUAL STRESS';
         badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-100 text-red-800';
-      } else if (latest.vix >= THRESHOLDS.VIX_FEAR || (hasMoveData && latest.move >= THRESHOLDS.MOVE_STRESS)) {
+      } else if (latestVix.vix >= THRESHOLDS.VIX_FEAR || (hasMoveData && moveValue >= THRESHOLDS.MOVE_STRESS)) {
         badge.textContent = 'ELEVATED';
         badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-orange-100 text-orange-800';
-      } else if (latest.vix < 15 && (!hasMoveData || latest.move < 80)) {
+      } else if (latestVix.vix < 15 && (!hasMoveData || moveValue < 80)) {
         badge.textContent = 'CALM';
         badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-green-100 text-green-800';
       } else {
