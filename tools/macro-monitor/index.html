@@ -387,7 +387,17 @@
       </iframe>
     </div>
 
-    <!-- 4. Corporate Health (4-B) - 리서치 완료 -->
+    <!-- 4. Sentiment Signal (4-D) - 라이브 위젯 -->
+    <div class="indicator-card live-widget fade-in" data-category="sentiment" onclick="openDetail('details/sentiment-signal/index.html')">
+      <iframe
+        src="widgets/sentiment-signal.html"
+        scrolling="no"
+        loading="lazy"
+        title="Sentiment Signal Monitor">
+      </iframe>
+    </div>
+
+    <!-- 5. Corporate Health (4-B) - 리서치 완료 -->
     <div class="indicator-card coming-soon category-rates fade-in" data-category="rates">
       <div class="cs-icon">🏢</div>
       <h3 class="cs-title">Corporate Health</h3>
@@ -469,7 +479,7 @@
   // ===== 위젯 데이터 전달 (postMessage) =====
   // iframe sandbox에서 localStorage 접근 불가 → 부모에서 데이터 전달
   (function() {
-    const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health'];
+    const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health', 'sentiment-signal'];
 
     function sendDataToWidgets() {
       WIDGET_IDS.forEach(widgetId => {

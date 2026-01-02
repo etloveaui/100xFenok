@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Fear & Greed Chart | Market Radar</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+    body { background: #f8fafc; }
+
+    /* Period Dropdown */
+    .period-dropdown { position: relative; display: inline-block; }
+    .period-btn-main {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px; background: white;
+      border: 2px solid #e2e8f0; border-radius: 12px;
+      font-size: 14px; font-weight: 600; color: #334155;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .period-btn-main:hover { border-color: #f97316; }
+    .period-panel {
+      display: none; position: absolute;
+      top: calc(100% + 8px); right: 0;
+      background: white; border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      padding: 16px; min-width: 320px; z-index: 100;
+    }
+    .period-panel.open { display: block; }
+    .period-section-title {
+      font-size: 11px; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 8px; margin-top: 12px;
+    }
+    .period-section-title:first-child { margin-top: 0; }
+    .period-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .period-chip {
+      padding: 8px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 500; text-align: center;
+      cursor: pointer; transition: all 0.15s;
+      background: #f1f5f9; color: #64748b; border: 1px solid transparent;
+    }
+    .period-chip:hover { background: #fff7ed; color: #ea580c; }
+    .period-chip.active { background: #f97316; color: white; border-color: #f97316; }
+
+    /* Custom Date Range */
+    .custom-range { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .custom-range input[type="date"] {
+      padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px;
+      font-size: 12px; font-family: inherit; color: #334155; flex: 1; min-width: 110px;
+    }
+    .custom-range input[type="date"]:focus { outline: none; border-color: #f97316; }
+    .custom-range .apply-btn {
+      padding: 8px 14px; background: #f97316; color: white; border: none;
+      border-radius: 8px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .custom-range .apply-btn:hover { background: #ea580c; }
+
+    /* Mobile Dropdown */
+    @media (max-width: 640px) {
+      .period-panel {
+        position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px;
+        border-radius: 20px; max-height: 70vh; overflow-y: auto;
+      }
+      .period-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* Backdrop */
+    .period-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 99; }
+    .period-backdrop.open { display: block; }
+
+    /* Overlay Chip */
+    .overlay-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; border: 2px solid #e2e8f0;
+      background: #f1f5f9; color: #94a3b8;
+    }
+    .overlay-chip:hover { border-color: #0ea5e9; color: #0ea5e9; }
+    .overlay-chip.active { background: #0ea5e9; color: white; border-color: #0ea5e9; }
+    .chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .overlay-chip.active .chip-dot { background: rgba(255,255,255,0.8); }
+    .overlay-chip:not(.active) .chip-dot { background: #0ea5e9; }
+
+    /* Stats Card */
+    .stats-card {
+      background: white; border-radius: 16px;
+      padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 4px; }
+    .stat-label {
+      font-size: 11px; font-weight: 500; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .stat-value { font-size: 20px; font-weight: 700; color: #1e293b; }
+    .stat-value.greed { color: #16a34a; }
+    .stat-value.fear { color: #dc2626; }
+    .stat-value.neutral { color: #f97316; }
+
+    /* Dynamic Legend */
+    .legend-container {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      padding: 12px 16px; background: white; border-radius: 12px; margin-top: 16px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; }
+    .legend-line { width: 20px; height: 3px; border-radius: 2px; }
+    .legend-line.dashed { background: none; border-top: 2px dashed currentColor; height: 0; }
+    .legend-box { width: 16px; height: 12px; border-radius: 2px; }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+
+  <div>
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <span class="text-2xl">₿</span>
+          Crypto Fear & Greed Index
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">Cryptocurrency Market Sentiment (2018~)</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- S&P 500 Overlay Toggle -->
+        <div class="overlay-chip" id="sp500Overlay">
+          <span class="chip-dot"></span>
+          S&P 500
+        </div>
+
+        <!-- Period Dropdown -->
+        <div class="period-dropdown">
+          <button class="period-btn-main" id="periodBtn">
+            <span id="periodLabel">1Y</span>
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 4l4 4 4-4"/>
+            </svg>
+          </button>
+          <div class="period-panel" id="periodPanel">
+            <!-- Recent -->
+            <div class="period-section-title">Recent</div>
+            <div class="period-grid">
+              <div class="period-chip" data-period="30" data-label="1M">1M</div>
+              <div class="period-chip" data-period="90" data-label="3M">3M</div>
+              <div class="period-chip" data-period="180" data-label="6M">6M</div>
+              <div class="period-chip active" data-period="365" data-label="1Y">1Y</div>
+            </div>
+            <!-- Extended -->
+            <div class="period-section-title">Extended</div>
+            <div class="period-grid">
+              <div class="period-chip" data-period="730" data-label="2Y">2Y</div>
+              <div class="period-chip" data-period="1825" data-label="5Y">5Y</div>
+              <div class="period-chip" data-period="9999" data-label="MAX">MAX</div>
+            </div>
+            <!-- Historical -->
+            <div class="period-section-title">Historical</div>
+            <div class="period-grid">
+              <div class="period-chip" data-period="since_2022" data-label="2022~">2022~</div>
+              <div class="period-chip" data-period="since_2020" data-label="2020~">2020~</div>
+              <div class="period-chip" data-period="since_2018" data-label="2018~">2018~</div>
+              <div class="period-chip" data-period="ytd" data-label="YTD">YTD</div>
+            </div>
+            <!-- Custom Range -->
+            <div class="period-section-title">Custom</div>
+            <div class="custom-range">
+              <input type="date" id="startDate" value="2022-01-01">
+              <span class="text-slate-400 text-sm">~</span>
+              <input type="date" id="endDate">
+              <button class="apply-btn" id="applyCustom">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backdrop for mobile -->
+    <div class="period-backdrop" id="periodBackdrop"></div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">Score</span>
+          <span id="scoreValue" class="stat-value">--</span>
+        </div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">Status</span>
+          <span id="statusValue" class="stat-value text-base">--</span>
+        </div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">Change</span>
+          <span id="changeValue" class="stat-value">--</span>
+        </div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">Date</span>
+          <span id="dateValue" class="stat-value text-base text-gray-600">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6">
+      <canvas id="cryptoChart" height="350"></canvas>
+    </div>
+
+    <!-- Dynamic Legend -->
+    <div class="legend-container" id="legendContainer">
+      <!-- Populated by JS -->
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { getRecessionAnnotations } from '../../../shared/chart-annotations.js';
+
+    // Data & State
+    let allData = [];
+    let sp500Data = [];
+    let chart = null;
+    let currentPeriod = 365;
+    let showSP500 = false;
+
+    // Thresholds
+    const THRESHOLDS = {
+      EXTREME_GREED: 75,
+      GREED: 60,
+      FEAR: 40,
+      EXTREME_FEAR: 25
+    };
+
+    // Fetch data
+    async function fetchData() {
+      try {
+        const [cryptoRes, sp500Res] = await Promise.all([
+          fetch('../../../../../data/sentiment/crypto-fear-greed.json'),
+          fetch('../../../../../data/indices/sp500.json')
+        ]);
+        allData = await cryptoRes.json();
+        sp500Data = await sp500Res.json();
+
+        allData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        sp500Data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        return allData;
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        return [];
+      }
+    }
+
+    // Filter by period
+    function filterByPeriod(data, period) {
+      if (period >= 9999 || period === 'max') return data;
+
+      if (typeof period === 'string' && period.startsWith('since_')) {
+        const year = parseInt(period.replace('since_', ''));
+        return data.filter(d => new Date(d.date).getFullYear() >= year);
+      }
+
+      if (period === 'ytd') {
+        const now = new Date();
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        return data.filter(d => new Date(d.date) >= yearStart);
+      }
+
+      if (typeof period === 'object' && period.start && period.end) {
+        const start = new Date(period.start);
+        const end = new Date(period.end);
+        return data.filter(d => {
+          const date = new Date(d.date);
+          return date >= start && date <= end;
+        });
+      }
+
+      const days = parseInt(period);
+      if (!isNaN(days)) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        return data.filter(d => new Date(d.date) >= cutoff);
+      }
+
+      return data;
+    }
+
+    // Merge S&P 500 with Crypto data
+    function mergeSP500WithCrypto(cryptoData, sp500Data) {
+      const sp500Map = new Map();
+      sp500Data.forEach(d => sp500Map.set(d.date, d.value));
+
+      return cryptoData.map(d => {
+        const targetDate = new Date(d.date);
+        let closestValue = null;
+
+        for (let offset = 0; offset <= 3; offset++) {
+          for (const dir of [0, -1, 1]) {
+            const checkDate = new Date(targetDate);
+            checkDate.setDate(checkDate.getDate() + (offset * dir));
+            const dateStr = checkDate.toISOString().split('T')[0];
+            if (sp500Map.has(dateStr)) {
+              closestValue = sp500Map.get(dateStr);
+              break;
+            }
+          }
+          if (closestValue !== null) break;
+        }
+
+        return { ...d, sp500: closestValue };
+      });
+    }
+
+    // Update display
+    function updateCurrentDisplay(data) {
+      if (!data.length) return;
+
+      const latest = data[data.length - 1];
+      const prev = data.length > 1 ? data[data.length - 2] : null;
+      const value = latest.value;
+      const change = prev ? value - prev.value : 0;
+
+      // Score
+      const scoreEl = document.getElementById('scoreValue');
+      scoreEl.textContent = Math.round(value);
+      if (value >= THRESHOLDS.GREED) {
+        scoreEl.className = 'stat-value greed';
+      } else if (value <= THRESHOLDS.FEAR) {
+        scoreEl.className = 'stat-value fear';
+      } else {
+        scoreEl.className = 'stat-value neutral';
+      }
+
+      // Status
+      const statusEl = document.getElementById('statusValue');
+      if (value >= THRESHOLDS.EXTREME_GREED) {
+        statusEl.textContent = 'EXTREME GREED';
+        statusEl.className = 'stat-value text-base text-green-700';
+      } else if (value >= THRESHOLDS.GREED) {
+        statusEl.textContent = 'GREED';
+        statusEl.className = 'stat-value text-base text-green-500';
+      } else if (value <= THRESHOLDS.EXTREME_FEAR) {
+        statusEl.textContent = 'EXTREME FEAR';
+        statusEl.className = 'stat-value text-base text-red-700';
+      } else if (value <= THRESHOLDS.FEAR) {
+        statusEl.textContent = 'FEAR';
+        statusEl.className = 'stat-value text-base text-red-500';
+      } else {
+        statusEl.textContent = 'NEUTRAL';
+        statusEl.className = 'stat-value text-base text-orange-500';
+      }
+
+      // Change
+      const changeEl = document.getElementById('changeValue');
+      const changePrefix = change >= 0 ? '+' : '';
+      changeEl.textContent = changePrefix + change;
+      changeEl.className = `stat-value ${change >= 0 ? 'greed' : 'fear'}`;
+
+      // Date
+      document.getElementById('dateValue').textContent = latest.date;
+    }
+
+    // Update legend
+    function updateLegend() {
+      const container = document.getElementById('legendContainer');
+      let html = `
+        <div class="legend-item">
+          <span class="legend-line" style="background: #f97316;"></span>
+          Crypto F&G
+        </div>
+      `;
+
+      if (showSP500) {
+        html += `
+          <div class="legend-item">
+            <span class="legend-line dashed" style="color: #0ea5e9;"></span>
+            S&P 500 (%)
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="legend-item">
+          <span class="legend-box" style="background: rgba(22, 163, 74, 0.15);"></span>
+          Greed Zone
+        </div>
+        <div class="legend-item">
+          <span class="legend-box" style="background: rgba(220, 38, 38, 0.15);"></span>
+          Fear Zone
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // Render chart
+    function renderChart(mergedData) {
+      const ctx = document.getElementById('cryptoChart').getContext('2d');
+
+      const dates = mergedData.map(d => d.date);
+      const values = mergedData.map(d => d.value);
+
+      // Recession annotations
+      const recessionAnnotations = dates.length > 0
+        ? getRecessionAnnotations(dates[0], dates[dates.length - 1])
+        : {};
+
+      // Zone annotations
+      const zoneAnnotations = {
+        zone_extreme_greed: {
+          type: 'box', yMin: THRESHOLDS.EXTREME_GREED, yMax: 100,
+          backgroundColor: 'rgba(21, 128, 61, 0.12)', borderWidth: 0
+        },
+        zone_greed: {
+          type: 'box', yMin: THRESHOLDS.GREED, yMax: THRESHOLDS.EXTREME_GREED,
+          backgroundColor: 'rgba(34, 197, 94, 0.08)', borderWidth: 0
+        },
+        zone_fear: {
+          type: 'box', yMin: THRESHOLDS.EXTREME_FEAR, yMax: THRESHOLDS.FEAR,
+          backgroundColor: 'rgba(239, 68, 68, 0.08)', borderWidth: 0
+        },
+        zone_extreme_fear: {
+          type: 'box', yMin: 0, yMax: THRESHOLDS.EXTREME_FEAR,
+          backgroundColor: 'rgba(127, 29, 29, 0.12)', borderWidth: 0
+        },
+        line_neutral: {
+          type: 'line', yMin: 50, yMax: 50,
+          borderColor: '#94a3b8', borderWidth: 1.5, borderDash: [4, 4],
+          label: {
+            display: true, content: 'Neutral (50)', position: 'start',
+            backgroundColor: 'transparent', color: '#94a3b8', font: { size: 10, weight: 'bold' }
+          }
+        }
+      };
+
+      // Datasets
+      const datasets = [{
+        label: 'Crypto F&G',
+        data: values,
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#f97316',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
+        borderWidth: 2.5,
+        yAxisID: 'y'
+      }];
+
+      const scales = {
+        x: {
+          type: 'time',
+          time: {
+            unit: currentPeriod <= 365 ? 'month' : 'year',
+            displayFormats: { month: 'MMM yyyy', year: 'yyyy' }
+          },
+          grid: { display: false },
+          ticks: { maxTicksLimit: 8, color: '#94a3b8', font: { size: 11 } }
+        },
+        y: {
+          position: 'left',
+          min: 0, max: 100,
+          grid: { color: 'rgba(156, 163, 175, 0.15)' },
+          ticks: {
+            color: '#64748b', font: { weight: '500', size: 11 },
+            stepSize: 25
+          },
+          title: {
+            display: true, text: 'Fear & Greed Index',
+            color: '#f97316', font: { weight: 'bold', size: 12 }
+          }
+        }
+      };
+
+      // S&P 500 overlay
+      if (showSP500) {
+        const sp500Values = mergedData.map(d => d.sp500);
+        const firstValidIndex = sp500Values.findIndex(v => v !== null);
+        if (firstValidIndex !== -1) {
+          const baseValue = sp500Values[firstValidIndex];
+          const normalizedSP500 = sp500Values.map(v =>
+            v !== null ? ((v - baseValue) / baseValue) * 100 : null
+          );
+
+          datasets.push({
+            label: 'S&P 500 (%)',
+            data: normalizedSP500,
+            borderColor: '#64748b',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: '#64748b',
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2,
+            borderWidth: 2,
+            yAxisID: 'y2',
+            spanGaps: true
+          });
+
+          scales.y2 = {
+            position: 'right',
+            title: {
+              display: true, text: 'S&P 500 (%)',
+              color: '#64748b', font: { weight: 'bold', size: 12 }
+            },
+            grid: { drawOnChartArea: false },
+            ticks: {
+              color: '#64748b', font: { weight: '600', size: 11 },
+              callback: (v) => (v > 0 ? '+' : '') + v.toFixed(0) + '%'
+            },
+            border: { display: false }
+          };
+        }
+      }
+
+      const config = {
+        type: 'line',
+        data: { labels: dates, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#fff', bodyColor: '#e2e8f0',
+              cornerRadius: 10, padding: 12,
+              titleFont: { weight: '600' },
+              callbacks: {
+                title: (items) => items[0].label,
+                label: (context) => {
+                  const v = context.parsed.y;
+                  if (context.dataset.label === 'S&P 500 (%)') {
+                    return ` S&P 500: ${v > 0 ? '+' : ''}${v?.toFixed(1) || '--'}%`;
+                  }
+                  return ` Score: ${Math.round(v)}`;
+                }
+              }
+            },
+            annotation: {
+              annotations: { ...recessionAnnotations, ...zoneAnnotations }
+            }
+          }
+        }
+      };
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, config);
+
+      updateCurrentDisplay(mergedData);
+      updateLegend();
+    }
+
+    // Setup dropdown
+    function setupDropdown() {
+      const btn = document.getElementById('periodBtn');
+      const panel = document.getElementById('periodPanel');
+      const backdrop = document.getElementById('periodBackdrop');
+      const labelEl = document.getElementById('periodLabel');
+
+      function togglePanel() {
+        panel.classList.toggle('open');
+        backdrop.classList.toggle('open');
+      }
+
+      function closePanel() {
+        panel.classList.remove('open');
+        backdrop.classList.remove('open');
+      }
+
+      btn.addEventListener('click', (e) => { e.stopPropagation(); togglePanel(); });
+      backdrop.addEventListener('click', closePanel);
+
+      // Period chips
+      document.querySelectorAll('.period-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('.period-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+
+          const periodValue = chip.dataset.period;
+          currentPeriod = isNaN(periodValue) ? periodValue : parseInt(periodValue);
+          labelEl.textContent = chip.dataset.label || chip.textContent;
+
+          const filtered = filterByPeriod(allData, currentPeriod);
+          const merged = mergeSP500WithCrypto(filtered, sp500Data);
+          renderChart(merged);
+
+          closePanel();
+        });
+      });
+
+      // Custom Range
+      const startInput = document.getElementById('startDate');
+      const endInput = document.getElementById('endDate');
+      const applyBtn = document.getElementById('applyCustom');
+
+      const today = new Date();
+      endInput.value = today.toISOString().split('T')[0];
+
+      applyBtn.addEventListener('click', () => {
+        if (startInput.value && endInput.value) {
+          document.querySelectorAll('.period-chip').forEach(c => c.classList.remove('active'));
+          currentPeriod = { start: startInput.value, end: endInput.value };
+          labelEl.textContent = 'Custom';
+
+          const filtered = filterByPeriod(allData, currentPeriod);
+          const merged = mergeSP500WithCrypto(filtered, sp500Data);
+          renderChart(merged);
+
+          closePanel();
+        }
+      });
+    }
+
+    // Initialize
+    async function init() {
+      await fetchData();
+      setupDropdown();
+
+      const filtered = filterByPeriod(allData, currentPeriod);
+      const merged = mergeSP500WithCrypto(filtered, sp500Data);
+      renderChart(merged);
+
+      // S&P 500 overlay toggle
+      document.getElementById('sp500Overlay').addEventListener('click', () => {
+        showSP500 = !showSP500;
+        document.getElementById('sp500Overlay').classList.toggle('active', showSP500);
+
+        const filtered = filterByPeriod(allData, currentPeriod);
+        const merged = mergeSP500WithCrypto(filtered, sp500Data);
+        renderChart(merged);
+      });
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

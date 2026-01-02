@@ -377,7 +377,7 @@
   </div>
 
   <script type="module">
-    import { getRecessionAnnotations } from '../../../tools/macro-monitor/shared/chart-annotations.js';
+    import { getRecessionAnnotations } from '../../../shared/chart-annotations.js';
 
     // ========================================
     // DATA & STATE
@@ -402,8 +402,8 @@
     async function fetchData() {
       try {
         const [aaiiRes, sp500Res] = await Promise.all([
-          fetch('../../../data/sentiment/aaii.json'),
-          fetch('../../../data/indices/sp500.json')
+          fetch('../../../../../data/sentiment/aaii.json'),
+          fetch('../../../../../data/indices/sp500.json')
         ]);
         allData = await aaiiRes.json();
         sp500Data = await sp500Res.json();
@@ -528,7 +528,7 @@
       if (showSP500) {
         html += `
           <div class="legend-item">
-            <span class="legend-line dashed" style="color: #0ea5e9;"></span>
+            <span class="legend-line dashed" style="color: #f97316;"></span>
             S&P 500 (%)
           </div>
         `;
@@ -590,14 +590,14 @@
           yScaleID: 'y',
           yMin: THRESHOLDS.EXTREME_BULLISH,
           yMax: THRESHOLDS.EXTREME_BULLISH,
-          borderColor: '#16a34a',
+          borderColor: '#22c55e',
           borderWidth: 1.5,
-          borderDash: [6, 4],
+          borderDash: [5, 5],
           label: {
             display: true,
             content: '+20',
             position: 'end',
-            backgroundColor: 'rgba(22, 163, 74, 0.9)',
+            backgroundColor: 'rgba(34, 197, 94, 0.9)',
             color: '#fff',
             font: { size: 10, weight: 'bold' },
             padding: { x: 6, y: 3 },
@@ -609,14 +609,14 @@
           yScaleID: 'y',
           yMin: THRESHOLDS.EXTREME_BEARISH,
           yMax: THRESHOLDS.EXTREME_BEARISH,
-          borderColor: '#dc2626',
+          borderColor: '#ef4444',
           borderWidth: 1.5,
-          borderDash: [6, 4],
+          borderDash: [5, 5],
           label: {
             display: true,
             content: '-20',
             position: 'end',
-            backgroundColor: 'rgba(220, 38, 38, 0.9)',
+            backgroundColor: 'rgba(239, 68, 68, 0.9)',
             color: '#fff',
             font: { size: 10, weight: 'bold' },
             padding: { x: 6, y: 3 },
@@ -688,17 +688,16 @@
           datasets.push({
             label: 'S&P 500 (%)',
             data: normalizedSP500,
-            borderColor: '#0ea5e9',
+            borderColor: '#64748b',
             backgroundColor: 'transparent',
             fill: false,
             tension: 0.4,
             pointRadius: 0,
             pointHoverRadius: 5,
-            pointHoverBackgroundColor: '#0ea5e9',
+            pointHoverBackgroundColor: '#64748b',
             pointHoverBorderColor: '#fff',
             pointHoverBorderWidth: 2,
             borderWidth: 2,
-            borderDash: [6, 4],
             yAxisID: 'y2',
             spanGaps: true
           });
@@ -708,12 +707,12 @@
             title: {
               display: true,
               text: 'S&P 500 (%)',
-              color: '#0ea5e9',
+              color: '#64748b',
               font: { weight: 'bold', size: 12 }
             },
             grid: { drawOnChartArea: false },
             ticks: {
-              color: '#0ea5e9',
+              color: '#64748b',
               font: { weight: '600', size: 11 },
               callback: (v) => (v > 0 ? '+' : '') + v.toFixed(0) + '%'
             },

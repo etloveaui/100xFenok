@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Market Breadth Chart | Market Radar</title>
+  <title>Stock Price Strength | Market Radar</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +34,7 @@
       font-weight: 600; color: #334155; cursor: pointer;
       transition: all 0.2s;
     }
-    .period-btn:hover { border-color: #06b6d4; }
+    .period-btn:hover { border-color: #ec4899; }
     .period-btn svg { width: 16px; height: 16px; transition: transform 0.2s; }
     .period-btn.open svg { transform: rotate(180deg); }
 
@@ -55,14 +55,14 @@
       background: #f1f5f9; color: #64748b; cursor: pointer; text-align: center;
       transition: all 0.15s; border: 2px solid transparent;
     }
-    .period-chip:hover { background: #e0f2fe; color: #06b6d4; }
-    .period-chip.active { background: #06b6d4; color: white; }
+    .period-chip:hover { background: #fce7f3; color: #ec4899; }
+    .period-chip.active { background: #ec4899; color: white; }
 
     .custom-range { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
     .custom-range input { flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; }
-    .custom-range input:focus { outline: none; border-color: #06b6d4; }
-    .apply-btn { padding: 8px 16px; background: #06b6d4; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .apply-btn:hover { background: #0891b2; }
+    .custom-range input:focus { outline: none; border-color: #ec4899; }
+    .apply-btn { padding: 8px 16px; background: #ec4899; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .apply-btn:hover { background: #db2777; }
 
     /* Overlay Toggle */
     .overlay-chip {
@@ -94,10 +94,10 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
       <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-        <span class="text-2xl">📶</span>
-        Market Breadth
+        <span class="text-2xl">💪</span>
+        Stock Price Strength
       </h1>
-      <p class="text-sm text-slate-500 mt-1">McClellan Volume Summation Index - CNN Fear & Greed Sub-indicator</p>
+      <p class="text-sm text-slate-500 mt-1">52-Week Highs vs Lows Ratio - CNN Fear & Greed Sub-indicator</p>
     </div>
 
     <div class="flex items-center gap-3">
@@ -150,8 +150,8 @@
   <!-- Stats Cards -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
     <div class="stats-card">
-      <div class="stat-label">MCVSI</div>
-      <div id="mcvsiValue" class="stat-value">--</div>
+      <div class="stat-label">Ratio</div>
+      <div id="ratioValue" class="stat-value">--</div>
     </div>
     <div class="stats-card">
       <div class="stat-label">Status</div>
@@ -175,8 +175,8 @@
   <!-- Legend -->
   <div class="mt-4 flex flex-wrap gap-4 text-xs text-slate-600">
     <div class="flex items-center gap-2">
-      <div class="w-3 h-3 rounded-full" style="background: #06b6d4;"></div>
-      <span>McClellan VSI</span>
+      <div class="w-3 h-3 rounded-full" style="background: #ec4899;"></div>
+      <span>Strength Ratio</span>
     </div>
     <div class="flex items-center gap-2">
       <div class="w-4 h-0.5 rounded" style="background: #0ea5e9; border-style: dashed;"></div>
@@ -184,11 +184,11 @@
     </div>
     <div class="flex items-center gap-2">
       <div class="w-4 h-3 bg-green-500 opacity-20 rounded"></div>
-      <span>Greed Zone (67th %ile)</span>
+      <span>Greed Zone</span>
     </div>
     <div class="flex items-center gap-2">
       <div class="w-4 h-3 bg-red-500 opacity-20 rounded"></div>
-      <span>Fear Zone (33rd %ile)</span>
+      <span>Fear Zone</span>
     </div>
   </div>
 
@@ -199,25 +199,17 @@
     let currentPeriod = 365;
     let showSP500 = false;
 
-    // Dynamic thresholds based on percentiles
-    let THRESHOLDS = { GREED: 1400, FEAR: 800 };
-
     // Fetch data
     async function fetchData() {
       try {
-        const [breadthRes, sp500Res] = await Promise.all([
-          fetch('../../../data/sentiment/cnn-breadth.json'),
-          fetch('../../../data/indices/sp500.json')
+        const [strengthRes, sp500Res] = await Promise.all([
+          fetch('../../../../../data/sentiment/cnn-strength.json'),
+          fetch('../../../../../data/indices/sp500.json')
         ]);
-        allData = await breadthRes.json();
+        allData = await strengthRes.json();
         sp500Data = await sp500Res.json();
         allData.sort((a, b) => new Date(a.date) - new Date(b.date));
         sp500Data.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-        // Calculate percentile-based thresholds (using ALL data)
-        const values = allData.map(d => d.value).sort((a, b) => a - b);
-        THRESHOLDS.FEAR = values[Math.floor(values.length * 0.33)];
-        THRESHOLDS.GREED = values[Math.floor(values.length * 0.67)];
       } catch (error) {
         console.error('Failed to fetch data:', error);
       }
@@ -277,16 +269,22 @@
       const value = latest.value;
       const change = value - prev.value;
 
-      document.getElementById('mcvsiValue').textContent = value.toLocaleString('en-US', {maximumFractionDigits: 0});
+      document.getElementById('ratioValue').textContent = (value >= 0 ? '+' : '') + value.toFixed(2);
       document.getElementById('dateValue').textContent = latest.date;
-      document.getElementById('changeValue').textContent = (change >= 0 ? '+' : '') + change.toLocaleString('en-US', {maximumFractionDigits: 0});
+      document.getElementById('changeValue').textContent = (change >= 0 ? '+' : '') + change.toFixed(2);
       document.getElementById('changeValue').className = 'stat-value ' + (change >= 0 ? 'text-green-600' : 'text-red-600');
 
       const statusEl = document.getElementById('statusValue');
-      if (value >= THRESHOLDS.GREED) {
+      if (value > 3) {
+        statusEl.textContent = 'STRONG GREED';
+        statusEl.className = 'stat-value text-base px-2 py-1 rounded bg-green-600 text-white';
+      } else if (value > 0) {
         statusEl.textContent = 'GREED';
         statusEl.className = 'stat-value text-base px-2 py-1 rounded bg-green-100 text-green-800';
-      } else if (value <= THRESHOLDS.FEAR) {
+      } else if (value < -3) {
+        statusEl.textContent = 'STRONG FEAR';
+        statusEl.className = 'stat-value text-base px-2 py-1 rounded bg-red-600 text-white';
+      } else if (value < 0) {
         statusEl.textContent = 'FEAR';
         statusEl.className = 'stat-value text-base px-2 py-1 rounded bg-red-100 text-red-800';
       } else {
@@ -303,12 +301,22 @@
       const values = mergedData.map(d => d.value);
       const minVal = Math.min(...values);
       const maxVal = Math.max(...values);
+      const absMax = Math.max(Math.abs(minVal), Math.abs(maxVal));
 
       const datasets = [{
-        label: 'McClellan VSI',
+        label: 'Strength Ratio',
         data: values,
-        borderColor: '#06b6d4',
-        backgroundColor: 'rgba(6, 182, 212, 0.12)',
+        borderColor: '#ec4899',
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          if (!chartArea) return null;
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, 'rgba(34, 197, 94, 0.25)');
+          gradient.addColorStop(0.5, 'rgba(236, 72, 153, 0.08)');
+          gradient.addColorStop(1, 'rgba(239, 68, 68, 0.25)');
+          return gradient;
+        },
         fill: true,
         tension: 0.3,
         pointRadius: 0,
@@ -329,15 +337,15 @@
         },
         y: {
           position: 'left',
-          min: minVal * 0.95,
-          suggestedMax: maxVal * 1.05,
+          min: -absMax * 1.2,
+          max: absMax * 1.2,
           grid: { color: '#f1f5f9' },
           ticks: {
-            color: '#06b6d4',
+            color: '#ec4899',
             font: { weight: '600', size: 11 },
-            callback: (v) => v.toLocaleString()
+            callback: (v) => (v >= 0 ? '+' : '') + v.toFixed(1)
           },
-          title: { display: true, text: 'McClellan VSI', color: '#06b6d4', font: { weight: '600' } }
+          title: { display: true, text: 'Strength Ratio', color: '#ec4899', font: { weight: '600' } }
         }
       };
 
@@ -353,49 +361,41 @@
           datasets.push({
             label: 'S&P 500 (%)',
             data: normalizedSP500,
-            borderColor: '#0ea5e9',
+            borderColor: '#64748b',
             backgroundColor: 'transparent',
-            borderDash: [6, 4],
             yAxisID: 'y2',
             spanGaps: true,
             tension: 0.4,
             pointRadius: 0,
             pointHoverRadius: 5,
-            borderWidth: 2.5
+            borderWidth: 2
           });
           scales.y2 = {
             position: 'right',
             grid: { drawOnChartArea: false },
             ticks: {
-              color: '#0ea5e9',
+              color: '#64748b',
               font: { weight: '600', size: 11 },
               callback: (v) => (v > 0 ? '+' : '') + v.toFixed(0) + '%'
             },
-            title: { display: true, text: 'S&P 500 (%)', color: '#0ea5e9', font: { weight: '600' } },
+            title: { display: true, text: 'S&P 500 (%)', color: '#64748b', font: { weight: '600' } },
             border: { display: false }
           };
         }
       }
 
-      // Dynamic threshold annotations
       const annotations = {
         zone_greed: {
-          type: 'box', yMin: THRESHOLDS.GREED, yMax: maxVal * 1.1,
-          backgroundColor: 'rgba(34, 197, 94, 0.08)', borderWidth: 0
+          type: 'box', yMin: 0, yMax: absMax * 1.2,
+          backgroundColor: 'rgba(34, 197, 94, 0.06)', borderWidth: 0
         },
         zone_fear: {
-          type: 'box', yMin: minVal * 0.9, yMax: THRESHOLDS.FEAR,
-          backgroundColor: 'rgba(239, 68, 68, 0.08)', borderWidth: 0
+          type: 'box', yMin: -absMax * 1.2, yMax: 0,
+          backgroundColor: 'rgba(239, 68, 68, 0.06)', borderWidth: 0
         },
-        line_greed: {
-          type: 'line', yMin: THRESHOLDS.GREED, yMax: THRESHOLDS.GREED,
-          borderColor: '#22c55e', borderWidth: 1.5, borderDash: [5, 5],
-          label: { display: true, content: `67th %ile (${THRESHOLDS.GREED.toLocaleString()})`, position: 'end', backgroundColor: 'transparent', color: '#22c55e', font: { size: 10, weight: '600' } }
-        },
-        line_fear: {
-          type: 'line', yMin: THRESHOLDS.FEAR, yMax: THRESHOLDS.FEAR,
-          borderColor: '#ef4444', borderWidth: 1.5, borderDash: [5, 5],
-          label: { display: true, content: `33rd %ile (${THRESHOLDS.FEAR.toLocaleString()})`, position: 'end', backgroundColor: 'transparent', color: '#ef4444', font: { size: 10, weight: '600' } }
+        line_zero: {
+          type: 'line', yMin: 0, yMax: 0,
+          borderColor: '#64748b', borderWidth: 2, borderDash: [4, 4]
         }
       };
 
@@ -420,7 +420,7 @@
                 label: (context) => {
                   const v = context.parsed.y;
                   if (context.datasetIndex === 0) {
-                    return `MCVSI: ${v.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
+                    return `Ratio: ${v >= 0 ? '+' : ''}${v.toFixed(2)}`;
                   } else {
                     return `S&P 500: ${v > 0 ? '+' : ''}${v.toFixed(1)}%`;
                   }

@@ -36,10 +36,13 @@ tools/macro-monitor/
 │   ├── liquidity-stress.html ← ⚡ Layer 1
 │   ├── liquidity-flow.html   ← 💧 Layer 2
 │   └── banking-health.html   ← 🏦 Layer 3 (4-A, ✅ 배포)
-├── details/                  ← 상세 페이지
-│   ├── liquidity-stress.html
+├── details/                  ← 상세 페이지 (DEC-089 복잡도 기준)
+│   ├── liquidity-stress.html    # 단순: 차트 0-2개 → 단일 파일
 │   ├── liquidity-flow.html
-│   └── banking-health.html   ← 🏦 Layer 3 (4-A, ✅ 배포)
+│   ├── banking-health.html      # 🏦 Layer 3 (4-A, ✅ 배포)
+│   └── sentiment-signal/        # 🆕 복잡: 차트 3개+ → 폴더 구조
+│       ├── index.html           # 메인 페이지
+│       └── charts/              # 관련 차트 14개
 └── shared/                   ← 공통 모듈 (ES Module)
     ├── data-fetcher.js       ← 🆕 Widget 직접 API 호출 (2025-12-15)
     ├── data-manager.js       ← 캐시 + stale + NumberFormat
@@ -124,6 +127,23 @@ const result = await DataFetcher.fetch(WIDGET_ID);
 |------|------|
 | Hero | Net Flow ($B) - 그라데이션 텍스트 (Teal/Red) |
 | Tributaries | M2 YoY \| Net Liq \| SC/M2 (Vertical Divider)
+
+### 🆕 Sentiment Signal 📊 (4-D, ⏳ 서비스 등록 대기)
+
+**목적**: 11개 센티먼트 지표 통합 시그널 제공
+**상태**: Widget + Detail 완성, 서비스 등록 진행 중
+
+**구성**:
+| 항목 | 설명 |
+|------|------|
+| 위젯 | `widgets/sentiment-signal.html` - Combo Signal 요약 |
+| 디테일 | `details/sentiment-signal/index.html` - 전체 분석 |
+| 차트 | `details/sentiment-signal/charts/` - 14개 독립 차트 |
+
+**지표 (11개)**:
+VIX, VIX Term, MOVE, SKEW, Put/Call, CNN Fear&Greed, AAII, NAAIM, CFTC Positioning, Crypto Fear&Greed, Stablecoin Dominance
+
+---
 
 ### Layer 3: Banking Health 🏦 (4-A v4, ✅ 배포 완료)
 
@@ -284,6 +304,32 @@ Timer(5s) → prepareNextWidget → 다음 슬롯에 위젯 로드
 | 모바일 반응형 짤림 | 12-13 | `mobile-responsive-plan.md` |
 | iframe localStorage 차단 | 12-11 | DEC-025 |
 
+## Details 폴더 구조 규칙 (DEC-089)
+
+> **기준**: 연관 차트 개수 기반 복잡도 분류
+
+| 복잡도 | 차트 수 | 구조 | 예시 |
+|--------|---------|------|------|
+| 단순 | 0-2개 | 단일 HTML | `liquidity-stress.html` |
+| 복잡 | 3개+ | 폴더 | `sentiment-signal/index.html` |
+
+**복잡 구조 폴더 패턴**:
+```
+details/{name}/
+├── index.html         # 메인 페이지
+├── charts/            # 관련 차트들
+│   ├── chart-a.html
+│   └── chart-b.html
+└── README.md          # 폴더 설명 (선택)
+```
+
+**복잡 구조 적용 조건**:
+- 연관 차트 3개 이상
+- sidebar/탭 구조로 여러 섹션
+- 독립 실행 가능한 차트 컴포넌트 다수
+
+---
+
 ## Technical Decisions
 
 | 결정 | 이유 |
@@ -291,5 +337,6 @@ Timer(5s) → prepareNextWidget → 다음 슬롯에 위젯 로드
 | Chart.js | 가볍고 빠름 |
 | widgets/details 분리 | 확장성 |
 | 밝은 테마 | 사이트 톤 통일 |
+| 복잡도 기반 폴더 구조 (DEC-089) | 지속가능한 확장성 |
 
 > **Change Log**: `docs/CHANGELOG.md` 참조
