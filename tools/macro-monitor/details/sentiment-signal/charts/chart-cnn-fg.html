@@ -232,7 +232,7 @@
   </div>
 
   <script type="module">
-    import { getRecessionAnnotations } from '../../../tools/macro-monitor/shared/chart-annotations.js';
+    import { getRecessionAnnotations } from '../../../shared/chart-annotations.js';
 
     // Data & State
     let allData = [];
@@ -253,8 +253,8 @@
     async function fetchData() {
       try {
         const [cnnRes, sp500Res] = await Promise.all([
-          fetch('../../../data/sentiment/cnn-fear-greed.json'),
-          fetch('../../../data/indices/sp500.json')
+          fetch('../../../../../data/sentiment/cnn-fear-greed.json'),
+          fetch('../../../../../data/indices/sp500.json')
         ]);
 
         allData = await cnnRes.json();
@@ -512,17 +512,16 @@
           datasets.push({
             label: 'S&P 500 (%)',
             data: normalizedSP500,
-            borderColor: '#0ea5e9',
+            borderColor: '#64748b',
             backgroundColor: 'transparent',
             fill: false,
             tension: 0.4,
             pointRadius: 0,
             pointHoverRadius: 5,
-            pointHoverBackgroundColor: '#0ea5e9',
+            pointHoverBackgroundColor: '#64748b',
             pointHoverBorderColor: '#fff',
             pointHoverBorderWidth: 2,
-            borderWidth: 2.5,
-            borderDash: [6, 4],
+            borderWidth: 2,
             yAxisID: 'y2',
             spanGaps: true
           });
@@ -531,11 +530,11 @@
             position: 'right',
             title: {
               display: true, text: 'S&P 500 (%)',
-              color: '#0ea5e9', font: { weight: 'bold', size: 12 }
+              color: '#64748b', font: { weight: 'bold', size: 12 }
             },
             grid: { drawOnChartArea: false },
             ticks: {
-              color: '#0ea5e9', font: { weight: '600', size: 11 },
+              color: '#64748b', font: { weight: '600', size: 11 },
               callback: (v) => (v > 0 ? '+' : '') + v.toFixed(0) + '%'
             },
             border: { display: false }

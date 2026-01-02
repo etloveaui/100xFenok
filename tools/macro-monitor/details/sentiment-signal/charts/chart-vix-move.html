@@ -122,9 +122,9 @@
       border-color: #94a3b8;
     }
     .overlay-chip.on {
-      background: #6366f1;
+      background: #0ea5e9;
       color: white;
-      border-color: #6366f1;
+      border-color: #0ea5e9;
     }
     .chip-dot {
       width: 8px;
@@ -152,8 +152,16 @@
       <p class="text-sm text-gray-500 mt-1">Stock (VIX 1990~) + Bond (MOVE 2020~) Volatility Dual Axis</p>
     </div>
 
-    <!-- Period Selector + Overlay Toggle -->
+    <!-- Overlay Toggle + Period Selector -->
     <div class="flex items-center gap-4 flex-wrap">
+      <!-- Overlay Toggle (SP 버튼 먼저 - 다른 차트와 통일) -->
+      <div class="overlay-toggle">
+        <span class="overlay-chip off" id="sp500Overlay" title="S&P 500 % Change Overlay">
+          <span class="chip-dot" style="background: #0ea5e9;"></span>
+          S&P 500
+        </span>
+      </div>
+
       <!-- Period Dropdown -->
       <div class="period-dropdown">
         <div class="period-trigger" id="periodTrigger">
@@ -193,14 +201,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Overlay Toggle -->
-      <div class="overlay-toggle">
-        <span class="overlay-chip off" id="sp500Overlay" title="S&P 500 % Change Overlay">
-          <span class="chip-dot" style="background: #6366f1;"></span>
-          S&P 500
-        </span>
       </div>
     </div>
   </div>
@@ -261,7 +261,7 @@
       <span class="font-semibold">MOVE (Bond Vol)</span>
     </div>
     <div class="flex items-center gap-2">
-      <div class="w-6 h-0.5 rounded" style="background: #6366f1; border: 1px dashed #6366f1;"></div>
+      <div class="w-6 h-0.5 rounded" style="background: #22c55e; border: 1px dashed #22c55e;"></div>
       <span class="font-semibold">S&P 500 (% Change)</span>
     </div>
     <div class="flex items-center gap-2">
@@ -272,7 +272,7 @@
 
 
   <script type="module">
-    import { getRecessionAnnotations } from '../../../tools/macro-monitor/shared/chart-annotations.js';
+    import { getRecessionAnnotations } from '../../../shared/chart-annotations.js';
 
     // Data & Chart State
     let vixData = [];
@@ -333,9 +333,9 @@
     async function fetchData() {
       try {
         const [vixRes, moveRes, sp500Res] = await Promise.all([
-          fetch('../../../data/sentiment/vix.json'),
-          fetch('../../../data/sentiment/move.json'),
-          fetch('../../../data/indices/sp500.json')
+          fetch('../../../../../data/sentiment/vix.json'),
+          fetch('../../../../../data/sentiment/move.json'),
+          fetch('../../../../../data/indices/sp500.json')
         ]);
 
         vixData = await vixRes.json();
@@ -558,17 +558,16 @@
         datasets.push({
           label: 'S&P 500 (%)',
           data: sp500OverlayValues,
-          borderColor: '#6366f1',       // Indigo-500 (S&P 500)
+          borderColor: '#64748b',       // Slate-500 (S&P 통일)
           backgroundColor: 'transparent',
           fill: false,
           tension: 0.4,
           pointRadius: 0,
           pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#6366f1',
+          pointHoverBackgroundColor: '#64748b',
           pointHoverBorderColor: '#ffffff',
           pointHoverBorderWidth: 2,
-          borderWidth: 2.5,             // 약간 얇게 (보조 지표)
-          borderDash: [8, 4],           // 점선으로 구분
+          borderWidth: 2,
           yAxisID: 'y2',
           spanGaps: true
         });
@@ -659,11 +658,11 @@
               title: {
                 display: overlayEnabled,
                 text: 'S&P 500 %',
-                color: '#6366f1',
+                color: '#22c55e',
                 font: { weight: 'bold', size: 12 }
               },
               ticks: {
-                color: '#6366f1',
+                color: '#22c55e',
                 font: { weight: '600', size: 11 },
                 callback: (value) => value.toFixed(0) + '%'
               }

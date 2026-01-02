@@ -1,0 +1,302 @@
+<!-- Combo Signals Widget - Dot Matrix with BUY/WARN Indicators -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: transparent; }
+
+  .card-widget {
+    height: 100%;
+    min-height: 280px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    padding: 16px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .card-widget:hover {
+    transform: translateY(-4px);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 12px 28px rgba(0,0,0,0.1);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .title-icon { font-size: 12px; }
+
+  .active-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+  }
+
+  .active-badge.has-active {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+  }
+
+  .active-badge.has-warning {
+    background: #fecaca;
+    color: #991b1b;
+    border-color: #fca5a5;
+  }
+
+  .signals-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+    padding: 4px 0;
+  }
+
+  .signal-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.5);
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+
+  .signal-row:hover { background: rgba(255,255,255,0.9); }
+  .signal-row.active { background: rgba(22, 163, 74, 0.1); }
+  .signal-row.near { background: rgba(245, 158, 11, 0.1); }
+
+  /* BUY/WARN 카테고리 표시 - 왼쪽 바 */
+  .signal-row.cat-buy { border-left-color: #3b82f6; }
+  .signal-row.cat-warn { border-left-color: #ef4444; }
+
+  .signal-icon { font-size: 11px; flex-shrink: 0; }
+
+  .signal-name {
+    font-size: 9px;
+    font-weight: 600;
+    color: #334155;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* BUY/WARN 태그 */
+  .signal-tag {
+    font-size: 7px;
+    font-weight: 700;
+    padding: 1px 3px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .tag-buy {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  .tag-warn {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .signal-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid;
+  }
+
+  .dot-active { background: #16a34a; border-color: #16a34a; }
+  .dot-near { background: linear-gradient(135deg, #f59e0b 50%, transparent 50%); border-color: #f59e0b; }
+  .dot-inactive { background: transparent; border-color: #cbd5e1; }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    font-size: 8px;
+    color: #64748b;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 3px; }
+  .legend-dot { width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid; }
+  .legend-bar { width: 3px; height: 10px; border-radius: 1px; }
+  .bar-buy { background: #3b82f6; }
+  .bar-warn { background: #ef4444; }
+</style>
+</head>
+<body>
+
+<div class="card-widget" id="widgetCard" onclick="openDetail()">
+  <div class="card-header">
+    <div class="card-title">
+      <span class="title-icon">🎯</span>
+      <span>COMBO SIGNALS</span>
+    </div>
+    <div class="active-badge" id="activeBadge">
+      <span id="activeCount">0</span>/10
+    </div>
+  </div>
+
+  <div class="signals-grid" id="signalsGrid"></div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-bar bar-buy"></div><span>Buy</span></div>
+    <div class="legend-item"><div class="legend-bar bar-warn"></div><span>Warn</span></div>
+    <div class="legend-item" style="margin-left:6px"><div class="legend-dot dot-active"></div><span>Active</span></div>
+    <div class="legend-item"><div class="legend-dot dot-near"></div><span>Near</span></div>
+    <div class="legend-item"><div class="legend-dot dot-inactive"></div><span>Off</span></div>
+  </div>
+</div>
+
+<script>
+  const DETAIL_PATH = 'tools/macro-monitor/details/sentiment-signal/index.html';
+
+  // 상세 페이지 열기
+  function openDetail() {
+    try {
+      if (window.top?.loadPage) { window.top.loadPage(DETAIL_PATH); return; }
+      if (window.parent?.loadPage) { window.parent.loadPage(DETAIL_PATH); return; }
+    } catch(e) {}
+    const base = window.top?.baseHref || '/';
+    (window.top||window).location.assign(`${base}index.html?path=${DETAIL_PATH}`);
+  }
+
+  const COMBO_SIGNALS = [
+    { id: 'vix-panic', name: 'VIX Panic', icon: '⚡', category: 'buy', conditions: [{ indicator: 'vix', operator: '>=', value: 40 }] },
+    { id: 'move-spike', name: 'MOVE Spike', icon: '📊', category: 'buy', conditions: [{ indicator: 'move', operator: '>=', value: 140 }] },
+    { id: 'cnn-fear', name: 'CNN Fear', icon: '😱', category: 'buy', conditions: [{ indicator: 'cnn_fg', operator: '<=', value: 25 }] },
+    { id: 'putcall-high', name: 'Put/Call', icon: '📉', category: 'buy', conditions: [{ indicator: 'putcall_ratio', operator: '>=', value: 1.1 }] },
+    { id: 'aaii-bears', name: 'AAII Bears', icon: '🐻', category: 'buy', conditions: [{ indicator: 'aaii_bearish', operator: '>=', value: 50 }] },
+    { id: 'cftc-short', name: 'CFTC Short', icon: '🏦', category: 'buy', conditions: [{ indicator: 'cftc_net', operator: '<=', value: -50000 }] },
+    { id: 'crypto-fear', name: 'Crypto Fear', icon: '🪙', category: 'buy', conditions: [{ indicator: 'crypto_fg', operator: '<=', value: 25 }] },
+    { id: 'vix-complacent', name: 'VIX Low', icon: '⚠️', category: 'warn', conditions: [{ indicator: 'vix', operator: '<=', value: 12 }] },
+    { id: 'cnn-greed', name: 'CNN Greed', icon: '🤑', category: 'warn', conditions: [{ indicator: 'cnn_fg', operator: '>=', value: 80 }] },
+    { id: 'aaii-bulls', name: 'AAII Bulls', icon: '🐂', category: 'warn', conditions: [{ indicator: 'aaii_spread', operator: '>=', value: 30 }] }
+  ];
+
+  let CURRENT_VALUES = { vix: null, move: null, cnn_fg: null, aaii_bearish: null, aaii_spread: null, cftc_net: null, crypto_fg: null, putcall_ratio: null };
+
+  const DATA_SOURCES = {
+    vix: '../../../data/sentiment/vix.json',
+    move: '../../../data/sentiment/move.json',
+    cnn_fg: '../../../data/sentiment/cnn-fear-greed.json',
+    aaii_bearish: '../../../data/sentiment/aaii.json',
+    aaii_spread: '../../../data/sentiment/aaii.json',
+    cftc_net: '../../../data/sentiment/cftc-sp500.json',
+    crypto_fg: '../../../data/sentiment/crypto-fear-greed.json',
+    putcall_ratio: '../../../data/sentiment/cnn-put-call.json'
+  };
+
+  function evaluateCondition(cond) {
+    const value = CURRENT_VALUES[cond.indicator];
+    if (value === null || value === undefined) return false;
+    switch (cond.operator) {
+      case '>=': return value >= cond.value;
+      case '<=': return value <= cond.value;
+      default: return false;
+    }
+  }
+
+  function isNearCondition(cond) {
+    const value = CURRENT_VALUES[cond.indicator];
+    if (value === null || value === undefined) return false;
+    const threshold = cond.value;
+    const tolerance = Math.abs(threshold) * 0.1 || 5;
+    if (cond.operator === '>=') return value >= threshold - tolerance && value < threshold;
+    if (cond.operator === '<=') return value <= threshold + tolerance && value > threshold;
+    return false;
+  }
+
+  function evaluateSignal(signal) {
+    const allMet = signal.conditions.every(c => evaluateCondition(c));
+    if (allMet) return 'active';
+    const anyNear = signal.conditions.some(c => isNearCondition(c));
+    if (anyNear) return 'near';
+    return 'inactive';
+  }
+
+  function render() {
+    const grid = document.getElementById('signalsGrid');
+    let activeCount = 0;
+    let hasWarning = false;
+
+    const html = COMBO_SIGNALS.map(signal => {
+      const status = evaluateSignal(signal);
+      if (status === 'active') {
+        activeCount++;
+        if (signal.category === 'warn') hasWarning = true;
+      }
+      const catClass = signal.category === 'warn' ? 'cat-warn' : 'cat-buy';
+      const tagClass = signal.category === 'warn' ? 'tag-warn' : 'tag-buy';
+      const tagText = signal.category === 'warn' ? 'W' : 'B';
+
+      return `<div class="signal-row ${status} ${catClass}">
+        <span class="signal-icon">${signal.icon}</span>
+        <span class="signal-name">${signal.name}</span>
+        <span class="signal-tag ${tagClass}">${tagText}</span>
+        <div class="signal-dot dot-${status}"></div>
+      </div>`;
+    }).join('');
+
+    grid.innerHTML = html;
+
+    const badge = document.getElementById('activeBadge');
+    document.getElementById('activeCount').textContent = activeCount;
+    badge.className = 'active-badge' + (hasWarning ? ' has-warning' : activeCount > 0 ? ' has-active' : '');
+  }
+
+  async function loadData() {
+    const fetches = Object.entries(DATA_SOURCES).map(async ([key, url]) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (key === 'aaii_bearish') CURRENT_VALUES.aaii_bearish = json.bearish ?? json.value?.bearish;
+        else if (key === 'aaii_spread') CURRENT_VALUES.aaii_spread = json.spread ?? (json.value?.bullish - json.value?.bearish);
+        else if (key === 'cftc_net') CURRENT_VALUES.cftc_net = json.net ?? json.value?.net ?? json.value;
+        else CURRENT_VALUES[key] = json.value ?? json[key] ?? json.index;
+      } catch (e) {}
+    });
+    await Promise.allSettled(fetches);
+    render();
+  }
+
+  document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>

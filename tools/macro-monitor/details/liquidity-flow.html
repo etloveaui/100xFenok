@@ -330,7 +330,7 @@
 <div class="container">
   <header class="page-header">
     <div class="header-left">
-      <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+      <button class="back-btn" onclick="goBackToRadar()"><i class="fas fa-arrow-left"></i></button>
       <div class="title-group">
         <h1>Liquidity Flow Monitor</h1>
         <p>Fed Net Liquidity = WALCL - TGA - RRP</p>
@@ -525,6 +525,17 @@
 </div>
 
 <script>
+  // 뒤로가기 - Market Radar 메인으로 이동
+  function goBackToRadar() {
+    const RADAR_PATH = 'tools/macro-monitor/index.html';
+    try {
+      if (window.top?.loadPage) { window.top.loadPage(RADAR_PATH); return; }
+      if (window.parent?.loadPage) { window.parent.loadPage(RADAR_PATH); return; }
+    } catch(e) {}
+    const base = window.top?.baseHref || '/';
+    (window.top||window).location.assign(`${base}index.html?path=${RADAR_PATH}`);
+  }
+
   // ===== 날짜 유틸리티 (전역) =====
   const pad2 = (n) => String(n).padStart(2, '0');
 

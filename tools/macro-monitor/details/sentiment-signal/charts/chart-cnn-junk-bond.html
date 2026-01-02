@@ -206,8 +206,8 @@
     async function fetchData() {
       try {
         const [junkBondRes, sp500Res] = await Promise.all([
-          fetch('../../../data/sentiment/cnn-junk-bond.json'),
-          fetch('../../../data/indices/sp500.json')
+          fetch('../../../../../data/sentiment/cnn-junk-bond.json'),
+          fetch('../../../../../data/indices/sp500.json')
         ]);
         allData = await junkBondRes.json();
         sp500Data = await sp500Res.json();
@@ -356,25 +356,24 @@
           datasets.push({
             label: 'S&P 500 (%)',
             data: normalizedSP500,
-            borderColor: '#0ea5e9',
+            borderColor: '#64748b',
             backgroundColor: 'transparent',
-            borderDash: [6, 4],
             yAxisID: 'y2',
             spanGaps: true,
             tension: 0.4,
             pointRadius: 0,
             pointHoverRadius: 5,
-            borderWidth: 2.5
+            borderWidth: 2
           });
           scales.y2 = {
             position: 'right',
             grid: { drawOnChartArea: false },
             ticks: {
-              color: '#0ea5e9',
+              color: '#64748b',
               font: { weight: '600', size: 11 },
               callback: (v) => (v > 0 ? '+' : '') + v.toFixed(0) + '%'
             },
-            title: { display: true, text: 'S&P 500 (%)', color: '#0ea5e9', font: { weight: '600' } },
+            title: { display: true, text: 'S&P 500 (%)', color: '#64748b', font: { weight: '600' } },
             border: { display: false }
           };
         }

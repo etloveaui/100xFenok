@@ -1,9 +1,9 @@
 /**
  * VIX Data Collector
- * Source: FRED API (VIXCLS)
- * Schedule: Daily 07:48
- * Field: value (not close!)
- * Last Updated: 2025-01-01
+ * Source: Yahoo Finance (^VIX)
+ * Schedule: Daily 07:00~08:00 KST
+ * Field: value (Close price)
+ * Last Updated: 2026-01-03 (DEC-091: FRED → Yahoo 전환)
  */
 
 const VIX_CONFIG = {
@@ -11,8 +11,7 @@ const VIX_CONFIG = {
   REPO_NAME: '100xFenok',
   BRANCH: 'main',
   FILE_PATH: 'data/sentiment/vix.json',
-  FRED_API_KEY: '6dda7dc3956a2c1d6ac939133de115f1',
-  FRED_SERIES: 'VIXCLS'
+  YAHOO_SYMBOL: '^VIX'
 };
 
 function getGitHubToken() {
@@ -20,28 +19,50 @@ function getGitHubToken() {
 }
 
 function updateVIX() {
-  // 1. FRED에서 최근 데이터 가져오기
-  const apiUrl = 'https://api.stlouisfed.org/fred/series/observations?' +
-    'series_id=' + VIX_CONFIG.FRED_SERIES +
-    '&api_key=' + VIX_CONFIG.FRED_API_KEY +
-    '&file_type=json&limit=10&sort_order=desc';
+  // 1. Yahoo Finance에서 최근 데이터 가져오기 (15일)
+  const endDate = Math.floor(Date.now() / 1000);
+  const startDate = endDate - (15 * 24 * 60 * 60);
 
-  const response = UrlFetchApp.fetch(apiUrl);
-  const json = JSON.parse(response.getContentText());
+  const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' +
+    encodeURIComponent(VIX_CONFIG.YAHOO_SYMBOL) +
+    '?period1=' + startDate +
+    '&period2=' + endDate +
+    '&interval=1d';
 
-  const newData = json.observations
-    .filter(function(obs) { return obs.value !== '.'; })
-    .map(function(obs) {
-      return {
-        date: obs.date,
-        value: parseFloat(obs.value)
-      };
-    });
+  const response = UrlFetchApp.fetch(yahooUrl, {
+    headers: { 'User-Agent': 'Mozilla/5.0' },
+    muteHttpExceptions: true
+  });
 
-  if (newData.length === 0) {
-    Logger.log('VIX: 새 데이터 없음');
+  if (response.getResponseCode() !== 200) {
+    Logger.log('❌ VIX: Yahoo API 오류 - ' + response.getResponseCode());
     return;
   }
+
+  const json = JSON.parse(response.getContentText());
+  const result = json.chart.result[0];
+  const timestamps = result.timestamp;
+  const closes = result.indicators.quote[0].close;
+
+  if (!timestamps || timestamps.length === 0) {
+    Logger.log('❌ VIX: 새 데이터 없음');
+    return;
+  }
+
+  // timestamp → YYYY-MM-DD 변환 + Close 값 매핑
+  const newData = [];
+  for (var i = 0; i < timestamps.length; i++) {
+    if (closes[i] !== null) {
+      var d = new Date(timestamps[i] * 1000);
+      var dateStr = Utilities.formatDate(d, 'GMT', 'yyyy-MM-dd');
+      newData.push({
+        date: dateStr,
+        value: Math.round(closes[i] * 100) / 100
+      });
+    }
+  }
+
+  Logger.log('📊 Yahoo에서 가져온 데이터: ' + newData.length + '개');
 
   // 2. 기존 데이터 가져오기 (GitHub)
   const existingData = getExistingData(VIX_CONFIG.FILE_PATH);
@@ -50,9 +71,9 @@ function updateVIX() {
   const mergedData = mergeData(existingData, newData);
 
   // 4. GitHub에 푸시
-  pushToGitHub(VIX_CONFIG.FILE_PATH, mergedData, 'Update VIX data');
+  pushToGitHub(VIX_CONFIG.FILE_PATH, mergedData, 'Update VIX data (Yahoo)');
 
-  Logger.log('VIX: 기존 ' + existingData.length + '개 + 신규 ' + newData.length + '개 → 총 ' + mergedData.length + '개');
+  Logger.log('✅ VIX: 기존 ' + existingData.length + '개 → 총 ' + mergedData.length + '개');
 }
 
 function getExistingData(filePath) {
@@ -83,17 +104,14 @@ function getExistingData(filePath) {
 function mergeData(existingData, newData) {
   const dataMap = new Map();
 
-  // 기존 데이터 먼저
   existingData.forEach(function(item) {
     dataMap.set(item.date, item.value);
   });
 
-  // 신규 데이터 (덮어쓰기)
   newData.forEach(function(item) {
     dataMap.set(item.date, item.value);
   });
 
-  // Map → Array, 날짜순 정렬
   var result = [];
   dataMap.forEach(function(value, date) {
     result.push({ date: date, value: value });
@@ -109,7 +127,6 @@ function pushToGitHub(filePath, data, message) {
   const token = getGitHubToken();
   const url = 'https://api.github.com/repos/' + VIX_CONFIG.REPO_OWNER + '/' + VIX_CONFIG.REPO_NAME + '/contents/' + filePath;
 
-  // 기존 파일 SHA 가져오기
   var sha = '';
   try {
     const getResponse = UrlFetchApp.fetch(url, {
@@ -124,10 +141,9 @@ function pushToGitHub(filePath, data, message) {
       sha = JSON.parse(getResponse.getContentText()).sha;
     }
   } catch (e) {
-    Logger.log('SHA 가져오기 실패 (새 파일일 수 있음)');
+    Logger.log('SHA 가져오기 실패');
   }
 
-  // 파일 업데이트
   const content = Utilities.base64Encode(JSON.stringify(data, null, 2));
   const payload = {
     message: message,
@@ -147,8 +163,32 @@ function pushToGitHub(filePath, data, message) {
   });
 
   if (putResponse.getResponseCode() === 200 || putResponse.getResponseCode() === 201) {
-    Logger.log('GitHub 푸시 성공: ' + filePath);
+    Logger.log('✅ GitHub 푸시 성공: ' + filePath);
   } else {
-    Logger.log('GitHub 푸시 실패: ' + putResponse.getContentText());
+    Logger.log('❌ GitHub 푸시 실패: ' + putResponse.getContentText());
   }
+}
+
+// ============================================================
+// 트리거 관리
+// ============================================================
+
+/**
+ * VIX 트리거 생성
+ * - 매일 07:00~08:00 KST (미국 장 마감 후)
+ */
+function createVIXTrigger() {
+  // 기존 VIX 트리거 삭제
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'updateVIX')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+
+  // 매일 07:00~08:00 사이 실행
+  ScriptApp.newTrigger('updateVIX')
+    .timeBased()
+    .everyDays(1)
+    .atHour(7)
+    .create();
+
+  Logger.log('✅ VIX 트리거 생성: 매일 07:00~08:00 KST');
 }
