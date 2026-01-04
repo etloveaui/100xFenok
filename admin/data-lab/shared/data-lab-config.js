@@ -25,10 +25,7 @@ const DATA_LAB_CONFIG = {
     // SEC 13F (신규)
     SEC13F_SUMMARY: '/data/sec-13f/summary.json',
     SEC13F_BY_SECTOR: '/data/sec-13f/by_sector.json',
-    SEC13F_BY_TICKER: '/data/sec-13f/by_ticker.json',
-
-    // Legacy (deprecated - 삭제 예정)
-    GLOBAL_SCOUTER: '/data/global-scouter/stocks.json'
+    SEC13F_BY_TICKER: '/data/sec-13f/by_ticker.json'
   },
   PATHS: {
     SCOUTER_DETAIL: '/data/global-scouter/stocks/detail/',
