@@ -308,20 +308,18 @@
     });
   }
 
-  // ===== 위젯 데이터 전달 (postMessage) =====
-  // main.html에서 요청 → index.html이 응답하는 방식
-  // 새 위젯 추가 시: 아래 switch문에 케이스만 추가
-  window.addEventListener('message', (event) => {
-    // main.html에서 위젯 데이터 요청
+  // ===== 위젯 데이터 전달 (postMessage) - 기본 핸들러 =====
+  // DataFetcher module에서 비동기 핸들러가 오버라이드함
+  // 하위 호환을 위해 기본 핸들러 유지
+  window._widgetDataHandler = function(event) {
     if (event.data && event.data.type === 'REQUEST_WIDGET_DATA') {
       const widgetId = event.data.widgetId;
-      console.log(`[Index] ${widgetId} 데이터 요청 수신`);
+      console.log(`[Index] ${widgetId} 데이터 요청 수신 (기본 핸들러)`);
 
       try {
         const rawData = localStorage.getItem(`macro_${widgetId}`);
         if (rawData) {
           const parsed = JSON.parse(rawData);
-          // 요청한 iframe에 응답
           event.source.postMessage({
             type: 'WIDGET_DATA_RESPONSE',
             widgetId: widgetId,
@@ -335,8 +333,62 @@
         console.warn(`[Index] ${widgetId} 데이터 처리 실패:`, e);
       }
     }
+  };
+  window.addEventListener('message', window._widgetDataHandler);
+
+</script>
+
+<!-- ===== DataFetcher 기반 위젯 데이터 갱신 (2026-01-08 추가) ===== -->
+<script type="module">
+  import { DataFetcher } from './tools/macro-monitor/shared/data-fetcher.js';
+
+  // 기존 핸들러 제거 후 새 핸들러 등록
+  if (window._widgetDataHandler) {
+    window.removeEventListener('message', window._widgetDataHandler);
+    delete window._widgetDataHandler;
+  }
+
+  // DataFetcher를 사용한 비동기 핸들러
+  window.addEventListener('message', async (event) => {
+    if (event.data && event.data.type === 'REQUEST_WIDGET_DATA') {
+      const widgetId = event.data.widgetId;
+      console.log(`[Index] ${widgetId} 데이터 요청 수신 (DataFetcher)`);
+
+      try {
+        // DataFetcher가 캐시 상태 확인 → stale이면 API 호출
+        const result = await DataFetcher.fetch(widgetId);
+
+        if (result.data) {
+          event.source.postMessage({
+            type: 'WIDGET_DATA_RESPONSE',
+            widgetId: widgetId,
+            payload: result.data
+          }, '*');
+          console.log(`[Index] ${widgetId}: ${result.isFresh ? 'fresh' : 'stale'} 데이터 응답`);
+        } else {
+          console.log(`[Index] ${widgetId} 데이터 없음`);
+        }
+      } catch (e) {
+        console.warn(`[Index] ${widgetId} 데이터 처리 실패:`, e);
+
+        // 폴백: localStorage에서 직접 읽기
+        try {
+          const rawData = localStorage.getItem(`macro_${widgetId}`);
+          if (rawData) {
+            const parsed = JSON.parse(rawData);
+            event.source.postMessage({
+              type: 'WIDGET_DATA_RESPONSE',
+              widgetId: widgetId,
+              payload: parsed.data
+            }, '*');
+            console.log(`[Index] ${widgetId} 폴백 응답`);
+          }
+        } catch (e2) {}
+      }
+    }
   });
 
+  console.log('[Index] DataFetcher 기반 위젯 데이터 핸들러 활성화');
 </script>
 <!-- Global Loading Spinner -->
 <div id="global-spinner"

@@ -375,8 +375,12 @@
   .stale-warning-age { color: #b45309; font-weight: 600; }
 
   /* === Responsive === */
-  @media (max-width: 400px) {
-    .card-widget { padding: 12px; }
+  /* 플래그십 모바일 (iPhone Pro Max, Galaxy S) */
+  @media (max-width: 431px) {
+    .card-widget {
+      min-height: 320px;
+      padding: 12px;
+    }
     .card-title { font-size: 11px; }
     .building-wrapper { max-width: 300px; }
     .facade-roof { height: 20px; }
@@ -388,6 +392,13 @@
     .pillar-base { height: 14px; }
     .pillar-label { font-size: 9px; margin-top: 6px; }
     .facade-foundation { height: 14px; }
+  }
+
+  /* 소형 모바일 */
+  @media (max-width: 359px) {
+    .card-widget {
+      min-height: 350px;
+    }
   }
 </style>
 </head>

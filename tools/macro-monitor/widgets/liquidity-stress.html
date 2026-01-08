@@ -327,8 +327,12 @@
     }
   }
 
-  @media (max-width: 400px) {
-    .card-widget { padding: 10px; }
+  /* 플래그십 모바일 (iPhone Pro Max, Galaxy S) */
+  @media (max-width: 431px) {
+    .card-widget {
+      min-height: 320px;
+      padding: 10px;
+    }
     .card-title { font-size: 10px; }
 
     .dual-arc-container {
@@ -358,6 +362,13 @@
 
     .threshold-tick {
       transform-origin: center 52px;
+    }
+  }
+
+  /* 소형 모바일 */
+  @media (max-width: 359px) {
+    .card-widget {
+      min-height: 350px;
     }
   }
 

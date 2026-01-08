@@ -83,11 +83,13 @@ const result = await DataFetcher.fetch(WIDGET_ID);
 | WRESBAL | Bank Reserves | Millions | 주간 |
 | GDP | GDP | Billions | 분기 |
 
-**TTL 설정**:
+**TTL 설정** (2026-01-08 Updated):
 | 구분 | 값 | 용도 |
 |------|-----|------|
-| Fresh | 24시간 | 데이터 신선 |
-| Stale | 7일 | 캐시 유효 |
+| Fresh | **1시간** | 데이터 신선 (API 재호출 트리거) |
+| Stale | **24시간** | 캐시 유효 (stale 경고 임계값) |
+
+> **변경 사유**: 위젯이 Detail 방문 없이도 자동으로 1시간마다 데이터 갱신
 
 ### ✅ 인프라 완료 (2025-12-01)
 
@@ -206,26 +208,53 @@ VIX, VIX Term, MOVE, SKEW, Put/Call, CNN Fear&Greed, AAII, NAAIM, CFTC Positioni
 ### 📱 Widget Size Standards
 
 > **가이드**: `docs/manuals/widget-size-guide.md`
+> **Updated**: 2026-01-08 (Responsive breakpoints added)
 
-| 항목 | 값 |
-|------|-----|
-| iframe 높이 | **280px** (고정) |
-| 위젯 min-height | **280px** (고정) |
+| Viewport | iframe Height | Widget min-height | Target Devices |
+|----------|---------------|-------------------|----------------|
+| ≥432px | 280px | 280px | Desktop, Tablet |
+| 360-431px | 320px | 320px | iPhone Pro Max, Galaxy S |
+| <360px | 350px | 350px | Small mobile |
 
-**핵심 원칙**:
-1. **크기 280px 고정** (모든 화면 동일)
-2. 내용 잘림 발생 시 → **디자인/폰트 조정** (크기 증가 금지)
-3. 컨테이너 파일: `tools/macro-monitor/index.html`
+**Core Principles**:
+1. **Responsive breakpoints** - Device-optimized heights
+2. Content clipping → **Adjust design/font** (no size increase)
+3. Container file: `tools/macro-monitor/index.html`
+4. **431px**: iPhone 14/15/16 Pro Max, Galaxy S23/24/25 (flagship mobile)
 
 ---
 
 ## Data Flow
 
+### 기본 흐름
 ```
 Detail 로드 → FRED/DefiLlama API → 처리 → localStorage 저장 (macro_${widgetId})
                                               ↓
 Widget 로드 → localStorage 읽기 또는 postMessage 수신
 ```
+
+### 🆕 적극적 데이터 갱신 (2026-01-08 Added)
+
+> **문제**: Detail 방문 전까지 위젯이 구식 데이터 표시
+> **해결**: 페이지 로드 시 DataFetcher가 캐시 상태 확인 → stale이면 API 자동 호출
+
+**새 흐름**:
+```
+[Main Dashboard / Carousel 로드]
+         ↓
+DataFetcher.fetch(widgetId) → 캐시 Fresh?
+         ↓ (No, stale)        ↓ (Yes)
+    API 호출 + 캐시 저장    캐시 데이터 반환
+         ↓                    ↓
+      Widget에 데이터 전송 (postMessage)
+```
+
+**수정 파일**:
+| 파일 | 변경 내용 |
+|------|----------|
+| `shared/data-manager.js` | TTL 24h→1h, staleTtl 7d→24h |
+| `tools/macro-monitor/index.html` | refreshWidgetData() 추가 |
+| `index.html` (root) | REQUEST_WIDGET_DATA에 DataFetcher 적용 |
 
 ### postMessage 통신 (iframe 환경)
 

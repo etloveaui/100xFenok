@@ -157,6 +157,30 @@
   .legend-bar { width: 3px; height: 10px; border-radius: 1px; }
   .bar-buy { background: #3b82f6; }
   .bar-warn { background: #ef4444; }
+
+  /* === Responsive === */
+  /* 플래그십 모바일 (iPhone Pro Max, Galaxy S) */
+  @media (max-width: 431px) {
+    .card-widget {
+      min-height: 320px;
+      padding: 10px;
+    }
+    .signals-grid {
+      gap: 2px 4px;
+    }
+    .signal-row {
+      padding: 3px 4px;
+    }
+    .signal-name { font-size: 8px; }
+    .signal-tag { font-size: 6px; }
+  }
+
+  /* 소형 모바일 */
+  @media (max-width: 359px) {
+    .card-widget {
+      min-height: 350px;
+    }
+  }
 </style>
 </head>
 <body>

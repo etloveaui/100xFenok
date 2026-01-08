@@ -363,8 +363,12 @@
     .hero-value { font-size: 38px; }
   }
 
-  @media (max-width: 400px) {
-    .card-widget { padding: 12px 12px 16px; }
+  /* 플래그십 모바일 (iPhone Pro Max, Galaxy S) */
+  @media (max-width: 431px) {
+    .card-widget {
+      min-height: 320px;
+      padding: 12px 12px 16px;
+    }
     .hero-section { padding: 12px 0 8px; }
     .hero-value { font-size: 34px; }
     .hero-unit { font-size: 14px; }
@@ -403,6 +407,13 @@
       font-size: 9px;
       margin-left: 4px;
       opacity: 0.7;
+    }
+  }
+
+  /* 소형 모바일 */
+  @media (max-width: 359px) {
+    .card-widget {
+      min-height: 350px;
     }
   }
 </style>
