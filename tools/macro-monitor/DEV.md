@@ -135,6 +135,11 @@ const result = await DataFetcher.fetch(WIDGET_ID);
 **목적**: 11개 센티먼트 지표 + 10개 콤보 시그널 통합 제공
 **상태**: Widget + Detail 완성, 테스트 완료, 배포 완료 (2026-01-02)
 
+**🆕 NEAR Logic Fix (2026-01-08)**: DEC-101
+- **Before**: 1개 조건 근접 → NEAR 표시 (잘못됨)
+- **After**: (N-1)개 달성 + 1개 근접 → NEAR 표시
+- 예: Triple Greed(3조건) = 2개 MET + 1개 NEAR → NEAR ✅
+
 **구성**:
 | 항목 | 설명 |
 |------|------|

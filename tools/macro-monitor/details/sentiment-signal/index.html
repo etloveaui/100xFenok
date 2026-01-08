@@ -1395,31 +1395,33 @@
     }
 
     function evaluateSignal(signal) {
-      let allMet = true;
-      let anyNear = false;
+      let metCount = 0;
+      let nearCount = 0;
       const conditionDetails = [];
+      const total = signal.conditions.length;
 
       for (const cond of signal.conditions) {
         const current = CURRENT_VALUES[cond.indicator];
         if (current === undefined) {
-          allMet = false;
           conditionDetails.push({ ...cond, current: 'N/A', status: 'unknown' });
           continue;
         }
 
         if (evaluateCondition(current, cond.operator, cond.value)) {
+          metCount++;
           conditionDetails.push({ ...cond, current, status: 'met' });
         } else if (isNearCondition(current, cond.operator, cond.value)) {
-          anyNear = true;
-          allMet = false;
+          nearCount++;
           conditionDetails.push({ ...cond, current, status: 'near' });
         } else {
-          allMet = false;
           conditionDetails.push({ ...cond, current, status: 'unmet' });
         }
       }
 
-      const overallStatus = allMet ? 'active' : (anyNear ? 'near' : 'inactive');
+      // NEAR = (N-1) conditions MET + at least 1 NEAR
+      // e.g., 3 conditions: 2 MET + 1 NEAR = NEAR, 0 MET + 1 NEAR = INACTIVE
+      const isNearState = (metCount === total - 1) && (nearCount >= 1);
+      const overallStatus = (metCount === total) ? 'active' : (isNearState ? 'near' : 'inactive');
       return { status: overallStatus, conditions: conditionDetails };
     }
 
