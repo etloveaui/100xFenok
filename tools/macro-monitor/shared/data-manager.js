@@ -1,14 +1,14 @@
 /**
  * Macro Monitor - 데이터 매니저
  * localStorage 기반 캐싱 + Widget-Detail 동기화
- * @version 1.0.0
+ * @version 1.1.0 - TTL 변경 (24h→1h fresh, 7d→24h stale)
  */
 
 class MacroDataManager {
   constructor() {
     this.prefix = 'macro_';
-    this.ttl = 24 * 60 * 60 * 1000; // 24시간 (fresh)
-    this.staleTtl = 7 * 24 * 60 * 60 * 1000; // 7일 (stale 경고 임계값)
+    this.ttl = 1 * 60 * 60 * 1000; // 1시간 (fresh) - 2026-01-08 변경
+    this.staleTtl = 24 * 60 * 60 * 1000; // 24시간 (stale 경고 임계값) - 2026-01-08 변경
   }
 
   /**
@@ -40,7 +40,7 @@ class MacroDataManager {
 
   /**
    * Widget에서 호출 - 캐시에서 데이터 읽기
-   * 만료되어도 삭제하지 않고 stale 데이터 반환 (7일까지 유지)
+   * 만료되어도 삭제하지 않고 stale 데이터 반환 (24시간까지 유지)
    * @param {string} widgetId - 위젯 ID
    * @returns {object|null} - 캐시 데이터 또는 null (없음)
    */
@@ -51,7 +51,7 @@ class MacroDataManager {
 
       const { data, timestamp } = JSON.parse(cached);
 
-      // Stale 임계값(7일) 초과 시에만 삭제
+      // Stale 임계값(24시간) 초과 시에만 삭제
       if (Date.now() - timestamp > this.staleTtl) {
         this.clearWidgetData(widgetId);
         return null;
@@ -103,7 +103,7 @@ class MacroDataManager {
   }
 
   /**
-   * 데이터가 stale 상태인지 확인 (6시간 경과)
+   * 데이터가 stale 상태인지 확인 (24시간 경과)
    * @param {string} widgetId - 위젯 ID
    * @returns {boolean} - stale 여부
    */
@@ -121,7 +121,7 @@ class MacroDataManager {
 
   /**
    * Widget에서 호출 - 캐시 데이터 + stale 상태 함께 반환
-   * expired(30분)되어도 삭제하지 않고, stale 여부만 표시
+   * expired(1시간)되어도 삭제하지 않고, stale 여부만 표시
    * @param {string} widgetId - 위젯 ID
    * @returns {object} - { data, isStale, isFresh, ageMs }
    */
@@ -136,8 +136,8 @@ class MacroDataManager {
 
       return {
         data,
-        isStale: ageMs > this.staleTtl,  // 6시간 초과
-        isFresh: now <= expires,          // 30분 이내
+        isStale: ageMs > this.staleTtl,  // 24시간 초과
+        isFresh: now <= expires,          // 1시간 이내
         ageMs
       };
     } catch (e) {
