@@ -230,3 +230,217 @@ function validateSlickChartsNasdaq100(data) {
 function validateSlickChartsDowjones(data) {
   return validateSlickChartsSnapshot(data, 'holdings');
 }
+
+// === NEW: Yield type validator (single value, not array) ===
+function validateSlickChartsYieldType(data) {
+  const issues = [];
+  if (!data?.updated) issues.push('updated 필드 누락');
+  if (!data?.source) issues.push('source 필드 누락');
+  if (typeof data?.yield !== 'number') issues.push('yield 숫자 아님');
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    stats: { yield: data?.yield, updated: data?.updated }
+  };
+}
+
+// === NEW: Nested stocks validator (stocks-returns, stocks-dividends) ===
+function validateSlickChartsNestedStocks(data, nestedKey) {
+  const issues = [];
+  if (!data?.updated) issues.push('updated 필드 누락');
+  if (!data?.source) issues.push('source 필드 누락');
+
+  const stocks = data?.stocks || [];
+  if (!Array.isArray(stocks)) issues.push('stocks 배열 아님');
+  else if (stocks.length === 0) issues.push('stocks 비어있음');
+  else {
+    const first = stocks[0];
+    if (!first?.symbol) issues.push('첫 종목 symbol 누락');
+    if (!first?.[nestedKey] || !Array.isArray(first[nestedKey])) {
+      issues.push(`첫 종목에 ${nestedKey} 배열 없음`);
+    }
+  }
+
+  const count = data?.count;
+  if (count && count !== stocks.length) issues.push(`count 불일치: ${count} vs ${stocks.length}`);
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    stats: { stockCount: stocks.length, updated: data?.updated }
+  };
+}
+
+// === NEW: Object+Array validator (drawdown, marketcap) ===
+function validateSlickChartsObjectArray(data, arrayKey) {
+  const issues = [];
+  if (!data?.updated) issues.push('updated 필드 누락');
+  if (!data?.source) issues.push('source 필드 누락');
+
+  const items = data?.[arrayKey] || data?.data || [];
+  if (!Array.isArray(items)) issues.push(`${arrayKey || 'data'} 배열 아님`);
+  else if (items.length === 0) issues.push(`${arrayKey || 'data'} 비어있음`);
+
+  // Check for current/latest object if exists
+  if (data?.current && typeof data.current !== 'object') {
+    issues.push('current 객체 아님');
+  }
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    stats: { count: items.length, hasCurrent: !!data?.current, updated: data?.updated }
+  };
+}
+
+// === Performance validators (3) ===
+function validateSlickChartsSp500Performance(data) {
+  return validateSlickChartsSnapshot(data, 'performance');
+}
+
+function validateSlickChartsNasdaq100Performance(data) {
+  return validateSlickChartsSnapshot(data, 'performance');
+}
+
+function validateSlickChartsDowjonesPerformance(data) {
+  return validateSlickChartsSnapshot(data, 'performance');
+}
+
+// === Returns validators (5) ===
+function validateSlickChartsSp500Returns(data) {
+  return validateSlickChartsSnapshot(data, 'returns');
+}
+
+function validateSlickChartsNasdaq100Returns(data) {
+  return validateSlickChartsSnapshot(data, 'returns');
+}
+
+function validateSlickChartsDowjonesReturns(data) {
+  return validateSlickChartsSnapshot(data, 'returns');
+}
+
+function validateSlickChartsBtcReturns(data) {
+  return validateSlickChartsSnapshot(data, 'returns');
+}
+
+function validateSlickChartsEthReturns(data) {
+  return validateSlickChartsSnapshot(data, 'returns');
+}
+
+// === Analysis validators (3) ===
+function validateSlickChartsSp500Analysis(data) {
+  return validateSlickChartsSnapshot(data, 'analysis');
+}
+
+function validateSlickChartsNasdaq100Analysis(data) {
+  return validateSlickChartsSnapshot(data, 'analysis');
+}
+
+function validateSlickChartsNasdaq100Ratio(data) {
+  return validateSlickChartsSnapshot(data, 'ratios');
+}
+
+// === Yields validators (3) ===
+function validateSlickChartsSp500Yield(data) {
+  return validateSlickChartsYieldType(data);
+}
+
+function validateSlickChartsNasdaq100Yield(data) {
+  return validateSlickChartsYieldType(data);
+}
+
+function validateSlickChartsDowjonesYield(data) {
+  return validateSlickChartsYieldType(data);
+}
+
+// === Drawdown/Marketcap validators (2) ===
+function validateSlickChartsSp500Drawdown(data) {
+  return validateSlickChartsObjectArray(data, 'data');
+}
+
+function validateSlickChartsSp500Marketcap(data) {
+  return validateSlickChartsSnapshot(data, 'marketcap');
+}
+
+// === Portfolio validators (2) - scrapers exist, JSON pending ===
+function validateSlickCharts1929Crash(data) {
+  return validateSlickChartsSnapshot(data, 'data');
+}
+
+function validateSlickChartsBerkshire(data) {
+  return validateSlickChartsSnapshot(data, 'holdings');
+}
+
+// === Special validators (6) ===
+function validateSlickChartsInflation(data) {
+  return validateSlickChartsSnapshot(data, 'inflation');
+}
+
+function validateSlickChartsMagnificent7(data) {
+  return validateSlickChartsSnapshot(data, 'holdings');
+}
+
+function validateSlickChartsEtf(data) {
+  const issues = [];
+  if (!data?.updated) issues.push('updated 필드 누락');
+  if (!data?.source) issues.push('source 필드 누락');
+
+  const ark = data?.ark || [];
+  const index = data?.index || [];
+  if (!Array.isArray(ark)) issues.push('ark 배열 아님');
+  if (!Array.isArray(index)) issues.push('index 배열 아님');
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    stats: { arkCount: ark.length, indexCount: index.length, updated: data?.updated }
+  };
+}
+
+function validateSlickChartsStocksReturns(data) {
+  return validateSlickChartsNestedStocks(data, 'returns');
+}
+
+function validateSlickChartsStocksDividends(data) {
+  return validateSlickChartsNestedStocks(data, 'dividends');
+}
+
+function validateSlickChartsMembershipChanges(data) {
+  const issues = [];
+  if (!data?.updated) issues.push('updated 필드 누락');
+  if (!data?.source) issues.push('source 필드 누락');
+
+  const indices = data?.indices || {};
+  if (typeof indices !== 'object') issues.push('indices 객체 아님');
+  else if (Object.keys(indices).length === 0) issues.push('indices 비어있음');
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    stats: { indicesCount: Object.keys(indices).length, updated: data?.updated }
+  };
+}
+
+// === Dividends split file validators (2) ===
+function validateSlickChartsStocksDividendsRecent(data) {
+  return validateSlickChartsNestedStocks(data, 'dividends');
+}
+
+function validateSlickChartsStocksDividendsHistorical(data) {
+  return validateSlickChartsNestedStocks(data, 'dividends');
+}
+
+// === Mortgage validator (1) ===
+function validateSlickChartsMortgage(data) {
+  return validateSlickChartsCumulative(data, 'rates');
+}
+
+// === Universe/Symbols validators (2) ===
+function validateSlickChartsUniverse(data) {
+  return validateSlickChartsSnapshot(data, 'stocks');
+}
+
+function validateSlickChartsSymbolsAll(data) {
+  return validateSlickChartsSnapshot(data, 'stocks');
+}

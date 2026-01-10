@@ -115,6 +115,13 @@
 
 - `expansion/sector-gap.html` (섹터 대비 멀티플 갭)
 
+### Phase F (SlickCharts Integration)
+
+- `expansion/slickcharts-historical.html` (47yr Returns + 13yr Dividends)
+- `shared/slickcharts-config.js` (Config + calculation helpers)
+- **Data**: `/data/slickcharts/stocks-returns.json`, `stocks-dividends-*.json`
+- **Features**: CAGR, Volatility, Best/Worst Year, Dividend Growth, Comparison
+
 ### 통합/맞춤
 
 - `expansion/dashboard.html` (A~E 요약 대시보드)

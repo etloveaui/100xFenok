@@ -27,14 +27,61 @@ const DATA_LAB_CONFIG = {
     SEC13F_BY_SECTOR: '/data/sec-13f/by_sector.json',
     SEC13F_BY_TICKER: '/data/sec-13f/by_ticker.json',
 
-    // SlickCharts (Phase 5)
-    SLICK_GAINERS: '/data/slickcharts/gainers.json',
-    SLICK_LOSERS: '/data/slickcharts/losers.json',
-    SLICK_TREASURY: '/data/slickcharts/treasury.json',
-    SLICK_CURRENCY: '/data/slickcharts/currency.json',
+    // SlickCharts - Index Holdings (3)
     SLICK_SP500: '/data/slickcharts/sp500.json',
     SLICK_NASDAQ100: '/data/slickcharts/nasdaq100.json',
-    SLICK_DOWJONES: '/data/slickcharts/dowjones.json'
+    SLICK_DOWJONES: '/data/slickcharts/dowjones.json',
+
+    // SlickCharts - Performance (3)
+    SLICK_SP500_PERFORMANCE: '/data/slickcharts/sp500-performance.json',
+    SLICK_NASDAQ100_PERFORMANCE: '/data/slickcharts/nasdaq100-performance.json',
+    SLICK_DOWJONES_PERFORMANCE: '/data/slickcharts/dowjones-performance.json',
+
+    // SlickCharts - Returns (5)
+    SLICK_SP500_RETURNS: '/data/slickcharts/sp500-returns.json',
+    SLICK_NASDAQ100_RETURNS: '/data/slickcharts/nasdaq100-returns.json',
+    SLICK_DOWJONES_RETURNS: '/data/slickcharts/dowjones-returns.json',
+    SLICK_BTC_RETURNS: '/data/slickcharts/btc-returns.json',
+    SLICK_ETH_RETURNS: '/data/slickcharts/eth-returns.json',
+
+    // SlickCharts - Analysis (3)
+    SLICK_SP500_ANALYSIS: '/data/slickcharts/sp500-analysis.json',
+    SLICK_NASDAQ100_ANALYSIS: '/data/slickcharts/nasdaq100-analysis.json',
+    SLICK_NASDAQ100_RATIO: '/data/slickcharts/nasdaq100-ratio.json',
+
+    // SlickCharts - Yields (3)
+    SLICK_SP500_YIELD: '/data/slickcharts/sp500-yield.json',
+    SLICK_NASDAQ100_YIELD: '/data/slickcharts/nasdaq100-yield.json',
+    SLICK_DOWJONES_YIELD: '/data/slickcharts/dowjones-yield.json',
+
+    // SlickCharts - Drawdown/Marketcap (2)
+    SLICK_SP500_DRAWDOWN: '/data/slickcharts/sp500-drawdown.json',
+    SLICK_SP500_MARKETCAP: '/data/slickcharts/sp500-marketcap.json',
+
+    // SlickCharts - Movers (2)
+    SLICK_GAINERS: '/data/slickcharts/gainers.json',
+    SLICK_LOSERS: '/data/slickcharts/losers.json',
+
+    // SlickCharts - Macro (4)
+    SLICK_TREASURY: '/data/slickcharts/treasury.json',
+    SLICK_CURRENCY: '/data/slickcharts/currency.json',
+    SLICK_INFLATION: '/data/slickcharts/inflation.json',
+    SLICK_MORTGAGE: '/data/slickcharts/mortgage.json',
+
+    // SlickCharts - Portfolio (2)
+    SLICK_MAGNIFICENT7: '/data/slickcharts/magnificent7.json',
+    SLICK_ETF: '/data/slickcharts/etf.json',
+
+    // SlickCharts - Stocks Aggregated (4)
+    SLICK_STOCKS_RETURNS: '/data/slickcharts/stocks-returns.json',
+    SLICK_STOCKS_DIVIDENDS: '/data/slickcharts/stocks-dividends.json',
+    SLICK_STOCKS_DIVIDENDS_RECENT: '/data/slickcharts/stocks-dividends-recent.json',
+    SLICK_STOCKS_DIVIDENDS_HISTORICAL: '/data/slickcharts/stocks-dividends-historical.json',
+
+    // SlickCharts - Reference (3)
+    SLICK_UNIVERSE: '/data/slickcharts/universe.json',
+    SLICK_SYMBOLS_ALL: '/data/slickcharts/symbols-all.json',
+    SLICK_MEMBERSHIP_CHANGES: '/data/slickcharts/membership-changes.json'
   },
   PATHS: {
     SCOUTER_DETAIL: '/data/global-scouter/stocks/detail/',
