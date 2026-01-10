@@ -1,8 +1,9 @@
 # SlickCharts Historical Stock Data Pipeline
 # Scrapes returns history (47yr) and dividend history (13yr) per stock
 #
-# Schedule: Monthly on 1st at 8:00 AM UTC
+# Schedule: Monthly on 1st at 9:00 AM UTC (1hr after monthly to avoid conflict)
 # Note: Historical data changes infrequently (returns: yearly, dividends: quarterly)
+# DEC-102: Changed from 8:00 to 9:00 UTC to prevent Git Lock with monthly workflow
 #
 # Uses matrix builds for parallel execution:
 # - Batch A-D: ~130 stocks
@@ -17,8 +18,8 @@ name: SlickCharts History
 
 on:
   schedule:
-    # Monthly on 1st at 8:00 AM UTC
-    - cron: '0 8 1 * *'
+    # Monthly on 1st at 9:00 AM UTC (DEC-102: moved from 8:00 to avoid monthly conflict)
+    - cron: '0 9 1 * *'
   workflow_dispatch:
     inputs:
       scraper:
@@ -239,11 +240,13 @@ jobs:
 
           # Run aggregator to create individual stock JSON files
           # Uses: symbols.json (weekly metrics) + stocks-returns.json + stocks-dividends.json
+          # --split-dividends: Creates recent (5yr) + historical split for large dividend files
           python scripts/scrapers/stock-aggregator.py \
             --metrics data/slickcharts/symbols.json \
             --returns data/slickcharts/stocks-returns.json \
             --dividends data/slickcharts/stocks-dividends.json \
             --output-dir data/slickcharts/stocks/ \
+            --split-dividends data/slickcharts/ \
             --retention-days 365
         continue-on-error: true
 
