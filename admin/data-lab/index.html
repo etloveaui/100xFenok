@@ -330,13 +330,60 @@
           </div>
           <div class="flex gap-2 text-xs mb-2">
             <select id="slick-file-select" class="border rounded px-2 py-1">
-              <option value="gainers">Gainers</option>
-              <option value="losers">Losers</option>
-              <option value="treasury">Treasury</option>
-              <option value="currency">Currency</option>
-              <option value="sp500">S&P 500</option>
-              <option value="nasdaq100">Nasdaq 100</option>
-              <option value="dowjones">Dow Jones</option>
+              <optgroup label="Index Holdings">
+                <option value="sp500">S&P 500</option>
+                <option value="nasdaq100">Nasdaq 100</option>
+                <option value="dowjones">Dow Jones</option>
+              </optgroup>
+              <optgroup label="Performance">
+                <option value="sp500-performance">S&P 500 Performance</option>
+                <option value="nasdaq100-performance">Nasdaq 100 Performance</option>
+                <option value="dowjones-performance">Dow Jones Performance</option>
+              </optgroup>
+              <optgroup label="Returns">
+                <option value="sp500-returns">S&P 500 Returns</option>
+                <option value="nasdaq100-returns">Nasdaq 100 Returns</option>
+                <option value="dowjones-returns">Dow Jones Returns</option>
+                <option value="btc-returns">BTC Returns</option>
+                <option value="eth-returns">ETH Returns</option>
+              </optgroup>
+              <optgroup label="Analysis">
+                <option value="sp500-analysis">S&P 500 Analysis</option>
+                <option value="nasdaq100-analysis">Nasdaq 100 Analysis</option>
+                <option value="nasdaq100-ratio">Nasdaq 100 Ratio</option>
+                <option value="sp500-drawdown">S&P 500 Drawdown</option>
+                <option value="sp500-marketcap">S&P 500 Marketcap</option>
+              </optgroup>
+              <optgroup label="Yields">
+                <option value="sp500-yield">S&P 500 Yield</option>
+                <option value="nasdaq100-yield">Nasdaq 100 Yield</option>
+                <option value="dowjones-yield">Dow Jones Yield</option>
+              </optgroup>
+              <optgroup label="Movers">
+                <option value="gainers" selected>Gainers</option>
+                <option value="losers">Losers</option>
+              </optgroup>
+              <optgroup label="Macro">
+                <option value="treasury">Treasury</option>
+                <option value="currency">Currency</option>
+                <option value="inflation">Inflation</option>
+                <option value="mortgage">Mortgage</option>
+              </optgroup>
+              <optgroup label="Portfolio">
+                <option value="magnificent7">Magnificent 7</option>
+                <option value="etf">ETF</option>
+              </optgroup>
+              <optgroup label="Stocks Aggregated">
+                <option value="stocks-returns">Individual Returns (516)</option>
+                <option value="stocks-dividends">Individual Dividends</option>
+                <option value="stocks-dividends-recent">Dividends Recent</option>
+                <option value="stocks-dividends-historical">Dividends Historical</option>
+              </optgroup>
+              <optgroup label="Reference">
+                <option value="universe">Universe</option>
+                <option value="symbols-all">Symbols All</option>
+                <option value="membership-changes">Membership Changes</option>
+              </optgroup>
             </select>
           </div>
           <pre id="slick-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
@@ -730,7 +777,7 @@
         const history = gainers?.history || [];
         const latest = history[0];
 
-        setText('slick-console-files', '7 (core)');
+        setText('slick-console-files', '34 (full)');
         setText('slick-console-history', history.length ? `${history.length} days` : '-');
         setText('slick-console-updated', formatDate(gainers?.updated));
         setText('slick-console-sample', latest?.gainers?.slice(0, 3).map(g => g.symbol).join(', ') || '-');
@@ -745,13 +792,51 @@
         // File select handler
         document.getElementById('slick-file-select').addEventListener('change', async (e) => {
           const fileMap = {
-            gainers: 'SLICK_GAINERS',
-            losers: 'SLICK_LOSERS',
-            treasury: 'SLICK_TREASURY',
-            currency: 'SLICK_CURRENCY',
+            // Index Holdings (3)
             sp500: 'SLICK_SP500',
             nasdaq100: 'SLICK_NASDAQ100',
-            dowjones: 'SLICK_DOWJONES'
+            dowjones: 'SLICK_DOWJONES',
+            // Performance (3)
+            'sp500-performance': 'SLICK_SP500_PERFORMANCE',
+            'nasdaq100-performance': 'SLICK_NASDAQ100_PERFORMANCE',
+            'dowjones-performance': 'SLICK_DOWJONES_PERFORMANCE',
+            // Returns (5)
+            'sp500-returns': 'SLICK_SP500_RETURNS',
+            'nasdaq100-returns': 'SLICK_NASDAQ100_RETURNS',
+            'dowjones-returns': 'SLICK_DOWJONES_RETURNS',
+            'btc-returns': 'SLICK_BTC_RETURNS',
+            'eth-returns': 'SLICK_ETH_RETURNS',
+            // Analysis (3)
+            'sp500-analysis': 'SLICK_SP500_ANALYSIS',
+            'nasdaq100-analysis': 'SLICK_NASDAQ100_ANALYSIS',
+            'nasdaq100-ratio': 'SLICK_NASDAQ100_RATIO',
+            // Yields (3)
+            'sp500-yield': 'SLICK_SP500_YIELD',
+            'nasdaq100-yield': 'SLICK_NASDAQ100_YIELD',
+            'dowjones-yield': 'SLICK_DOWJONES_YIELD',
+            // Drawdown/Marketcap (2)
+            'sp500-drawdown': 'SLICK_SP500_DRAWDOWN',
+            'sp500-marketcap': 'SLICK_SP500_MARKETCAP',
+            // Movers (2)
+            gainers: 'SLICK_GAINERS',
+            losers: 'SLICK_LOSERS',
+            // Macro (4)
+            treasury: 'SLICK_TREASURY',
+            currency: 'SLICK_CURRENCY',
+            inflation: 'SLICK_INFLATION',
+            mortgage: 'SLICK_MORTGAGE',
+            // Portfolio (2)
+            magnificent7: 'SLICK_MAGNIFICENT7',
+            etf: 'SLICK_ETF',
+            // Stocks Aggregated (4)
+            'stocks-returns': 'SLICK_STOCKS_RETURNS',
+            'stocks-dividends': 'SLICK_STOCKS_DIVIDENDS',
+            'stocks-dividends-recent': 'SLICK_STOCKS_DIVIDENDS_RECENT',
+            'stocks-dividends-historical': 'SLICK_STOCKS_DIVIDENDS_HISTORICAL',
+            // Reference (3)
+            universe: 'SLICK_UNIVERSE',
+            'symbols-all': 'SLICK_SYMBOLS_ALL',
+            'membership-changes': 'SLICK_MEMBERSHIP_CHANGES'
           };
           try {
             const data = await fetchDataLabFile(fileMap[e.target.value]);

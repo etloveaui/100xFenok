@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlickCharts Historical - Valuation Lab</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .compare-row { background-color: #fef3c7 !important; }
+    .positive { color: #059669; }
+    .negative { color: #dc2626; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-violet-100 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-chart-bar text-violet-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">SlickCharts Historical</h1>
+            <p class="text-gray-500 text-sm">Returns & Dividends (47yr, 516 stocks)</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> Expansion
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <!-- Meta Section -->
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">Updated:</span>
+          <span id="data-updated" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Stocks:</span>
+          <span id="stock-count" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Years Range:</span>
+          <span id="year-range" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Filtered:</span>
+          <span id="filtered-count" class="ml-1 mono">-</span>
+        </div>
+      </div>
+      <div id="loading-status" class="mt-2 text-sm text-violet-600">
+        <i class="fas fa-spinner fa-spin mr-1"></i> Loading large dataset...
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        v1.0: 516 stocks with 47yr returns (1977-2024) + 13yr dividends. Source: SlickCharts
+      </p>
+    </section>
+
+    <!-- Filters Section -->
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">Filters</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <input id="search-input" type="text" placeholder="Search ticker/company"
+          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+
+        <select id="years-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="5">5 years</option>
+          <option value="10">10 years</option>
+          <option value="20" selected>20 years</option>
+          <option value="30">30 years</option>
+          <option value="all">All available</option>
+        </select>
+
+        <select id="dividend-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="">All stocks</option>
+          <option value="has-div">Has dividends</option>
+          <option value="no-div">No dividends</option>
+          <option value="div-growth">Dividend growth > 0</option>
+        </select>
+
+        <select id="sort-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="cagr-desc">CAGR (High to Low)</option>
+          <option value="cagr-asc">CAGR (Low to High)</option>
+          <option value="vol-asc">Volatility (Low to High)</option>
+          <option value="vol-desc">Volatility (High to Low)</option>
+          <option value="years-desc">Years (Most data)</option>
+          <option value="div-desc">Div Yield (High to Low)</option>
+          <option value="ticker-asc">Ticker A-Z</option>
+        </select>
+
+        <select id="limit-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="50" selected>50 results</option>
+          <option value="100">100 results</option>
+          <option value="200">200 results</option>
+          <option value="all">All</option>
+        </select>
+
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <input id="min-years-check" type="checkbox" checked>
+          <label for="min-years-check">Min 5yr data</label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-3">Compare (max 5)</h2>
+      <div id="compare-list" class="flex flex-wrap gap-2 text-sm">
+        <span class="text-gray-400 italic">Click checkbox to add stocks for comparison</span>
+      </div>
+      <button id="clear-compare" class="mt-2 px-3 py-1 bg-gray-200 text-gray-600 rounded text-sm hover:bg-gray-300 hidden">
+        Clear All
+      </button>
+    </section>
+
+    <!-- Results Table -->
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">Results</h2>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr>
+              <th class="text-center px-2 py-2 w-8">
+                <i class="fas fa-balance-scale text-xs"></i>
+              </th>
+              <th class="text-left px-3 py-2">Ticker</th>
+              <th class="text-right px-3 py-2">Years</th>
+              <th class="text-right px-3 py-2">CAGR</th>
+              <th class="text-right px-3 py-2">Best Year</th>
+              <th class="text-right px-3 py-2">Worst Year</th>
+              <th class="text-right px-3 py-2">Volatility</th>
+              <th class="text-right px-3 py-2">Div Yield</th>
+              <th class="text-right px-3 py-2">Div Growth</th>
+            </tr>
+          </thead>
+          <tbody id="result-body" class="divide-y"></tbody>
+        </table>
+      </div>
+      <p id="empty-state" class="text-sm text-gray-500 mt-4 hidden">No results to display.</p>
+    </section>
+
+  </main>
+
+  <script src="../shared/slickcharts-config.js"></script>
+  <script>
+    // State
+    const state = {
+      returnsData: null,
+      dividendsData: null,
+      rows: [],
+      compare: new Set()
+    };
+
+    // Elements
+    const elements = {
+      dataUpdated: document.getElementById('data-updated'),
+      stockCount: document.getElementById('stock-count'),
+      yearRange: document.getElementById('year-range'),
+      filteredCount: document.getElementById('filtered-count'),
+      loadingStatus: document.getElementById('loading-status'),
+      resultBody: document.getElementById('result-body'),
+      emptyState: document.getElementById('empty-state'),
+      compareList: document.getElementById('compare-list'),
+      clearCompare: document.getElementById('clear-compare'),
+      search: document.getElementById('search-input'),
+      years: document.getElementById('years-filter'),
+      dividend: document.getElementById('dividend-filter'),
+      sort: document.getElementById('sort-filter'),
+      limit: document.getElementById('limit-filter'),
+      minYears: document.getElementById('min-years-check')
+    };
+
+    // Initialize
+    async function init() {
+      try {
+        // Load returns + recent dividends first (faster UX)
+        const [returnsRes, dividendsRes] = await Promise.all([
+          fetchSlickChartsData('STOCKS_RETURNS'),
+          fetchSlickChartsData('STOCKS_DIVIDENDS_RECENT')
+        ]);
+
+        state.returnsData = returnsRes;
+        state.dividendsData = dividendsRes;
+
+        // Update meta
+        elements.dataUpdated.textContent = returnsRes.updated || '-';
+        elements.stockCount.textContent = returnsRes.count || returnsRes.stocks?.length || '-';
+        elements.yearRange.textContent = '1977-2024 (47yr)';
+        elements.loadingStatus.classList.add('hidden');
+
+        // Build rows
+        buildRows();
+        applyFilters();
+
+        // Setup event listeners
+        setupListeners();
+      } catch (err) {
+        elements.loadingStatus.innerHTML = `<span class="text-red-600">Error: ${err.message}</span>`;
+      }
+    }
+
+    function buildRows() {
+      const stocks = state.returnsData?.stocks || [];
+      const divMap = buildDividendMap(state.dividendsData?.stocks || []);
+
+      state.rows = stocks.map(stock => {
+        const returns = stock.returns || [];
+        const yearsCount = returns.length;
+        const yearValues = returns.map(r => r.return).filter(v => v !== null);
+
+        // Calculate metrics
+        const cagr = calcCAGR(yearValues);
+        const volatility = calcVolatility(yearValues);
+        const { best, worst } = findBestWorstYearsFromArray(returns);
+
+        // Dividend data
+        const divData = divMap[stock.symbol] || {};
+        const dividends = divData.dividends || [];
+        const latestDivYield = dividends[0]?.yield || null;
+        const divGrowth = calcDividendGrowthFromArray(dividends);
+
+        return {
+          ticker: stock.symbol,
+          yearsCount,
+          cagr,
+          bestYear: best?.year,
+          bestReturn: best?.return,
+          worstYear: worst?.year,
+          worstReturn: worst?.return,
+          volatility,
+          dividendYield: latestDivYield,
+          dividendGrowth: divGrowth,
+          hasDividend: dividends.length > 0
+        };
+      });
+    }
+
+    function buildDividendMap(stocks) {
+      const map = {};
+      for (const s of stocks) {
+        map[s.symbol] = s;
+      }
+      return map;
+    }
+
+    function findBestWorstYearsFromArray(returns) {
+      let best = null, worst = null;
+      for (const r of returns) {
+        if (r.return === null || r.return === undefined) continue;
+        if (!best || r.return > best.return) best = { year: r.year, return: r.return };
+        if (!worst || r.return < worst.return) worst = { year: r.year, return: r.return };
+      }
+      return { best, worst };
+    }
+
+    function calcDividendGrowthFromArray(dividends) {
+      if (!dividends || dividends.length < 2) return null;
+      const first = dividends[dividends.length - 1]?.amount;
+      const last = dividends[0]?.amount;
+      if (!first || !last || first <= 0) return null;
+      const years = dividends.length - 1;
+      return Math.pow(last / first, 1 / years) - 1;
+    }
+
+    function applyFilters() {
+      let rows = [...state.rows];
+
+      // Search filter
+      const searchTerm = elements.search.value.toLowerCase().trim();
+      if (searchTerm) {
+        rows = rows.filter(r => r.ticker.toLowerCase().includes(searchTerm));
+      }
+
+      // Years filter
+      const yearsVal = elements.years.value;
+      if (yearsVal !== 'all') {
+        const minYrs = parseInt(yearsVal, 10);
+        // Recalculate CAGR based on selected years
+        rows = rows.map(r => {
+          const stock = state.returnsData.stocks.find(s => s.symbol === r.ticker);
+          if (!stock) return r;
+          const yearValues = stock.returns.slice(0, minYrs).map(x => x.return).filter(v => v !== null);
+          return { ...r, cagr: yearValues.length >= 2 ? calcCAGR(yearValues) : null };
+        });
+      }
+
+      // Min 5yr check
+      if (elements.minYears.checked) {
+        rows = rows.filter(r => r.yearsCount >= 5);
+      }
+
+      // Dividend filter
+      const divFilter = elements.dividend.value;
+      if (divFilter === 'has-div') {
+        rows = rows.filter(r => r.hasDividend);
+      } else if (divFilter === 'no-div') {
+        rows = rows.filter(r => !r.hasDividend);
+      } else if (divFilter === 'div-growth') {
+        rows = rows.filter(r => r.dividendGrowth !== null && r.dividendGrowth > 0);
+      }
+
+      // Sort
+      const sortVal = elements.sort.value;
+      rows.sort((a, b) => {
+        switch (sortVal) {
+          case 'cagr-desc': return (b.cagr ?? -999) - (a.cagr ?? -999);
+          case 'cagr-asc': return (a.cagr ?? 999) - (b.cagr ?? 999);
+          case 'vol-asc': return (a.volatility ?? 999) - (b.volatility ?? 999);
+          case 'vol-desc': return (b.volatility ?? -999) - (a.volatility ?? -999);
+          case 'years-desc': return b.yearsCount - a.yearsCount;
+          case 'div-desc': return (b.dividendYield ?? -999) - (a.dividendYield ?? -999);
+          case 'ticker-asc': return a.ticker.localeCompare(b.ticker);
+          default: return 0;
+        }
+      });
+
+      // Limit
+      const limitVal = elements.limit.value;
+      const displayRows = limitVal === 'all' ? rows : rows.slice(0, parseInt(limitVal, 10));
+
+      // Render
+      renderTable(displayRows);
+      elements.filteredCount.textContent = displayRows.length;
+      elements.emptyState.classList.toggle('hidden', displayRows.length > 0);
+    }
+
+    function renderTable(rows) {
+      elements.resultBody.innerHTML = rows.map(r => {
+        const isCompared = state.compare.has(r.ticker);
+        return `
+          <tr class="${isCompared ? 'compare-row' : ''}">
+            <td class="text-center px-2 py-2">
+              <input type="checkbox" class="compare-check" data-ticker="${r.ticker}" ${isCompared ? 'checked' : ''}>
+            </td>
+            <td class="px-3 py-2 font-semibold mono">${r.ticker}</td>
+            <td class="text-right px-3 py-2 mono">${r.yearsCount}yr</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(r.cagr)}">${formatPct(r.cagr)}</td>
+            <td class="text-right px-3 py-2 mono positive">${r.bestYear ? `${r.bestYear} (${formatPct(r.bestReturn)})` : '-'}</td>
+            <td class="text-right px-3 py-2 mono negative">${r.worstYear ? `${r.worstYear} (${formatPct(r.worstReturn)})` : '-'}</td>
+            <td class="text-right px-3 py-2 mono">${formatPct(r.volatility, false)}</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(r.dividendYield)}">${r.dividendYield ? formatPct(r.dividendYield / 100, false) : '-'}</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(r.dividendGrowth)}">${formatPct(r.dividendGrowth)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // Add checkbox listeners
+      document.querySelectorAll('.compare-check').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const ticker = e.target.dataset.ticker;
+          if (e.target.checked) {
+            if (state.compare.size < 5) {
+              state.compare.add(ticker);
+            } else {
+              e.target.checked = false;
+              alert('Maximum 5 stocks for comparison');
+            }
+          } else {
+            state.compare.delete(ticker);
+          }
+          updateCompareList();
+          applyFilters();
+        });
+      });
+    }
+
+    function getColorClass(value) {
+      if (value === null || value === undefined) return '';
+      return value >= 0 ? 'positive' : 'negative';
+    }
+
+    function updateCompareList() {
+      if (state.compare.size === 0) {
+        elements.compareList.innerHTML = '<span class="text-gray-400 italic">Click checkbox to add stocks for comparison</span>';
+        elements.clearCompare.classList.add('hidden');
+      } else {
+        elements.compareList.innerHTML = [...state.compare].map(t =>
+          `<span class="px-2 py-1 bg-violet-100 text-violet-700 rounded">${t}</span>`
+        ).join('');
+        elements.clearCompare.classList.remove('hidden');
+      }
+    }
+
+    function setupListeners() {
+      elements.search.addEventListener('input', applyFilters);
+      elements.years.addEventListener('change', applyFilters);
+      elements.dividend.addEventListener('change', applyFilters);
+      elements.sort.addEventListener('change', applyFilters);
+      elements.limit.addEventListener('change', applyFilters);
+      elements.minYears.addEventListener('change', applyFilters);
+      elements.clearCompare.addEventListener('click', () => {
+        state.compare.clear();
+        updateCompareList();
+        applyFilters();
+      });
+    }
+
+    // Run
+    init();
+  </script>
+
+</body>
+</html>
