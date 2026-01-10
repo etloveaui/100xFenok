@@ -1,0 +1,99 @@
+# SlickCharts Daily Data Pipeline
+# Scrapers that need daily updates with cumulative history (90 days)
+#
+# Scrapers: gainers, losers, treasury, currency, mortgage (5 total)
+# Schedule: Daily at 6:00 AM UTC
+#
+# Created: 2026-01-10
+# Reference: docs/planning/slickcharts-data-pipeline.md
+
+name: SlickCharts Daily
+
+on:
+  schedule:
+    # Daily at 6:00 AM UTC (after US market close + settlement)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      scraper:
+        description: 'Which scraper to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - gainers
+          - losers
+          - treasury
+          - currency
+          - mortgage
+
+jobs:
+  scrape-daily:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      # Gainers - cumulative mode
+      - name: Run Gainers scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'gainers' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/gainers-scraper.py \
+            --output data/slickcharts/gainers.json \
+            --pretty --cumulative
+        continue-on-error: true
+
+      # Losers - cumulative mode
+      - name: Run Losers scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'losers' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/losers-scraper.py \
+            --output data/slickcharts/losers.json \
+            --pretty --cumulative
+        continue-on-error: true
+
+      # Treasury rates - cumulative mode
+      - name: Run Treasury scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'treasury' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/treasury-scraper.py \
+            --output data/slickcharts/treasury.json \
+            --pretty --cumulative
+        continue-on-error: true
+
+      # Crypto currency - cumulative mode
+      - name: Run Currency scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'currency' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/currency-scraper.py \
+            --output data/slickcharts/currency.json \
+            --pretty --cumulative
+        continue-on-error: true
+
+      # Mortgage rates - cumulative mode
+      - name: Run Mortgage scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'mortgage' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/mortgage-scraper.py \
+            --output data/slickcharts/mortgage.json \
+            --pretty --cumulative
+        continue-on-error: true
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/slickcharts/
+          git diff --staged --quiet || git commit -m "chore: update SlickCharts daily data $(date -u +%Y-%m-%d)"
+          git push

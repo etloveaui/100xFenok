@@ -39,7 +39,7 @@
       <h2 class="text-lg font-semibold text-gray-600 mb-4">
         <i class="fas fa-signal text-emerald-500 mr-2"></i>데이터 상태
       </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
 
         <div class="bg-white rounded-xl p-5 shadow">
           <div class="flex items-center justify-between mb-3">
@@ -126,6 +126,23 @@
           </div>
         </div>
 
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">SlickCharts</h3>
+              <p class="text-xs text-gray-500">Market Data Pipeline</p>
+            </div>
+            <span id="slick-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>스크래퍼: <span id="slick-count">-</span> <span class="text-xs text-gray-400">(27개 파일)</span></p>
+            <p>갱신일: <span id="slick-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="slick-sample">S&P500, Nasdaq100, Treasury...</span>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -133,7 +150,7 @@
       <h2 class="text-lg font-semibold text-gray-600 mb-4">
         <i class="fas fa-bell text-amber-500 mr-2"></i>업데이트 신호
       </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <div class="bg-white rounded-xl p-5 shadow">
           <div class="flex items-center justify-between mb-2">
             <h3 class="font-semibold text-sm">Benchmarks</h3>
@@ -179,6 +196,15 @@
           <div class="mono text-sm" id="update-13f-date">-</div>
           <button data-revalidate="sec13f" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
         </div>
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">SlickCharts</h3>
+            <span id="update-slick-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">일일 갱신</div>
+          <div class="mono text-sm" id="update-slick-date">-</div>
+          <button data-revalidate="slickcharts" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
       </div>
     </section>
 
@@ -192,6 +218,7 @@
           <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="scouter-console">Global Scouter</button>
           <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="damodaran-console">Damodaran</button>
           <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="sec13f-console">SEC 13F</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="slick-console">SlickCharts</button>
         </div>
 
         <div id="bench-console" class="console-panel space-y-4">
@@ -280,6 +307,39 @@
             </div>
           </div>
           <pre id="sec13f-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+
+        <div id="slick-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">파일 수</span>
+              <div class="mono" id="slick-console-files">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">히스토리</span>
+              <div class="mono" id="slick-console-history">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">최신 갱신</span>
+              <div class="mono" id="slick-console-updated">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">Top Gainers</span>
+              <div class="mono" id="slick-console-sample">-</div>
+            </div>
+          </div>
+          <div class="flex gap-2 text-xs mb-2">
+            <select id="slick-file-select" class="border rounded px-2 py-1">
+              <option value="gainers">Gainers</option>
+              <option value="losers">Losers</option>
+              <option value="treasury">Treasury</option>
+              <option value="currency">Currency</option>
+              <option value="sp500">S&P 500</option>
+              <option value="nasdaq100">Nasdaq 100</option>
+              <option value="dowjones">Dow Jones</option>
+            </select>
+          </div>
+          <pre id="slick-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
         </div>
       </div>
     </section>
@@ -598,10 +658,118 @@
       document.getElementById('damodaran-console-preview').textContent = safeStringify({ erp: erpSample, ev_sales: evSample });
     }
 
+    async function loadSlickCharts() {
+      try {
+        const [gainers, losers, treasury, currency, sp500] = await Promise.all([
+          fetchDataLabFile('SLICK_GAINERS').catch(() => null),
+          fetchDataLabFile('SLICK_LOSERS').catch(() => null),
+          fetchDataLabFile('SLICK_TREASURY').catch(() => null),
+          fetchDataLabFile('SLICK_CURRENCY').catch(() => null),
+          fetchDataLabFile('SLICK_SP500').catch(() => null)
+        ]);
+
+        let okCount = 0;
+        let totalFiles = 0;
+        let latestDate = null;
+        const samples = [];
+
+        // Validate cumulative files
+        if (gainers) {
+          totalFiles++;
+          const r = validateSlickChartsGainers(gainers);
+          if (r.ok) okCount++;
+          if (r.stats.updated && (!latestDate || new Date(r.stats.updated) > new Date(latestDate))) {
+            latestDate = r.stats.updated;
+          }
+          if (gainers.history?.[0]?.gainers?.slice(0, 3)) {
+            samples.push(...gainers.history[0].gainers.slice(0, 3).map(g => g.symbol));
+          }
+          addLog(`SlickCharts Gainers: ${r.ok ? 'OK' : r.issues.join(' / ')}`, r.ok);
+        }
+        if (losers) {
+          totalFiles++;
+          const r = validateSlickChartsLosers(losers);
+          if (r.ok) okCount++;
+          addLog(`SlickCharts Losers: ${r.ok ? 'OK' : r.issues.join(' / ')}`, r.ok);
+        }
+        if (treasury) {
+          totalFiles++;
+          const r = validateSlickChartsTreasury(treasury);
+          if (r.ok) okCount++;
+          addLog(`SlickCharts Treasury: ${r.ok ? 'OK' : r.issues.join(' / ')}`, r.ok);
+        }
+        if (currency) {
+          totalFiles++;
+          const r = validateSlickChartsCurrency(currency);
+          if (r.ok) okCount++;
+          addLog(`SlickCharts Currency: ${r.ok ? 'OK' : r.issues.join(' / ')}`, r.ok);
+        }
+        if (sp500) {
+          totalFiles++;
+          const r = validateSlickChartsSp500(sp500);
+          if (r.ok) okCount++;
+          addLog(`SlickCharts S&P500: ${r.ok ? 'OK' : r.issues.join(' / ')}`, r.ok);
+        }
+
+        const allOk = okCount === totalFiles && totalFiles > 0;
+        setStatus('slick-status', allOk, allOk ? '정상' : `${okCount}/${totalFiles}`);
+        setText('slick-count', `${totalFiles} 확인됨`);
+        setText('slick-date', formatDate(latestDate));
+        setText('slick-sample', samples.slice(0, 3).join(', ') || '-');
+        setText('update-slick-date', formatDate(latestDate));
+        setUpdateStatus('update-slick-status', daysSince(latestDate), 2, 7);
+      } catch (err) {
+        setStatus('slick-status', false, '로드 실패');
+        addLog(`SlickCharts: ${err.message}`, false);
+      }
+    }
+
+    async function loadSlickConsole() {
+      try {
+        const gainers = await fetchDataLabFile('SLICK_GAINERS').catch(() => null);
+        const history = gainers?.history || [];
+        const latest = history[0];
+
+        setText('slick-console-files', '7 (core)');
+        setText('slick-console-history', history.length ? `${history.length} days` : '-');
+        setText('slick-console-updated', formatDate(gainers?.updated));
+        setText('slick-console-sample', latest?.gainers?.slice(0, 3).map(g => g.symbol).join(', ') || '-');
+
+        const preview = latest ? {
+          date: latest.date,
+          count: latest.count,
+          top3: latest.gainers?.slice(0, 3)
+        } : null;
+        document.getElementById('slick-console-preview').textContent = preview ? safeStringify(preview) : 'No data';
+
+        // File select handler
+        document.getElementById('slick-file-select').addEventListener('change', async (e) => {
+          const fileMap = {
+            gainers: 'SLICK_GAINERS',
+            losers: 'SLICK_LOSERS',
+            treasury: 'SLICK_TREASURY',
+            currency: 'SLICK_CURRENCY',
+            sp500: 'SLICK_SP500',
+            nasdaq100: 'SLICK_NASDAQ100',
+            dowjones: 'SLICK_DOWJONES'
+          };
+          try {
+            const data = await fetchDataLabFile(fileMap[e.target.value]);
+            const sample = data?.history?.[0] || data;
+            document.getElementById('slick-console-preview').textContent = safeStringify(sample);
+          } catch (err) {
+            document.getElementById('slick-console-preview').textContent = `Error: ${err.message}`;
+          }
+        });
+      } catch (err) {
+        document.getElementById('slick-console-preview').textContent = `Error: ${err.message}`;
+      }
+    }
+
     (async function init() {
       logEl.innerHTML = '';
-      await Promise.all([loadDamodaranErp(), loadDamodaranEvSales(), loadGlobalScouter(), loadBenchmarks(), loadSec13F()]);
-      await Promise.all([loadBenchConsole(), loadScouterConsole(), loadDamodaranConsole(), loadSec13FConsole()]);
+      await Promise.all([loadDamodaranErp(), loadDamodaranEvSales(), loadGlobalScouter(), loadBenchmarks(), loadSec13F(), loadSlickCharts()]);
+      await Promise.all([loadBenchConsole(), loadScouterConsole(), loadDamodaranConsole(), loadSec13FConsole(), loadSlickConsole()]);
     })();
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -622,6 +790,10 @@
       if (kind === 'damodaran') {
         await Promise.all([loadDamodaranErp(), loadDamodaranEvSales()]);
         await loadDamodaranConsole();
+      }
+      if (kind === 'slickcharts') {
+        await loadSlickCharts();
+        await loadSlickConsole();
       }
       addLog(`재검증 완료: ${kind}`, true);
     }

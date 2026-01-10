@@ -152,3 +152,81 @@ function validateBenchmarkFile(data) {
     stats: { sectionCount }
   };
 }
+
+// SlickCharts validators
+function validateSlickChartsSnapshot(data, dataKey) {
+  const issues = [];
+  if (!data?.updated) issues.push('updated 필드 누락');
+  if (!data?.source) issues.push('source 필드 누락');
+  if (data?.source && data.source !== 'slickcharts') issues.push(`source 불일치: ${data.source}`);
+
+  const items = data?.[dataKey] || [];
+  if (!Array.isArray(items)) issues.push(`${dataKey} 배열 아님`);
+  else if (items.length === 0) issues.push(`${dataKey} 비어있음`);
+
+  const count = data?.count;
+  if (count && count !== items.length) issues.push(`count 불일치: ${count} vs ${items.length}`);
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    stats: { count: items.length, updated: data?.updated }
+  };
+}
+
+function validateSlickChartsCumulative(data, dataKey) {
+  const issues = [];
+  if (!data?.updated) issues.push('updated 필드 누락');
+  if (!data?.source) issues.push('source 필드 누락');
+
+  const history = data?.history || [];
+  if (!Array.isArray(history)) issues.push('history 배열 아님');
+  else if (history.length === 0) issues.push('history 비어있음');
+
+  const latest = history[0];
+  if (latest) {
+    if (!latest.date) issues.push('latest entry: date 누락');
+    const items = latest[dataKey] || [];
+    if (!Array.isArray(items)) issues.push(`latest entry: ${dataKey} 배열 아님`);
+    else if (items.length === 0) issues.push(`latest entry: ${dataKey} 비어있음`);
+  }
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    stats: {
+      historyDays: history.length,
+      latestCount: latest?.[dataKey]?.length || 0,
+      latestDate: latest?.date,
+      updated: data?.updated
+    }
+  };
+}
+
+function validateSlickChartsGainers(data) {
+  return validateSlickChartsCumulative(data, 'gainers');
+}
+
+function validateSlickChartsLosers(data) {
+  return validateSlickChartsCumulative(data, 'losers');
+}
+
+function validateSlickChartsTreasury(data) {
+  return validateSlickChartsCumulative(data, 'rates');
+}
+
+function validateSlickChartsCurrency(data) {
+  return validateSlickChartsCumulative(data, 'currencies');
+}
+
+function validateSlickChartsSp500(data) {
+  return validateSlickChartsSnapshot(data, 'holdings');
+}
+
+function validateSlickChartsNasdaq100(data) {
+  return validateSlickChartsSnapshot(data, 'holdings');
+}
+
+function validateSlickChartsDowjones(data) {
+  return validateSlickChartsSnapshot(data, 'holdings');
+}

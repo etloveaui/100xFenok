@@ -25,7 +25,16 @@ const DATA_LAB_CONFIG = {
     // SEC 13F (신규)
     SEC13F_SUMMARY: '/data/sec-13f/summary.json',
     SEC13F_BY_SECTOR: '/data/sec-13f/by_sector.json',
-    SEC13F_BY_TICKER: '/data/sec-13f/by_ticker.json'
+    SEC13F_BY_TICKER: '/data/sec-13f/by_ticker.json',
+
+    // SlickCharts (Phase 5)
+    SLICK_GAINERS: '/data/slickcharts/gainers.json',
+    SLICK_LOSERS: '/data/slickcharts/losers.json',
+    SLICK_TREASURY: '/data/slickcharts/treasury.json',
+    SLICK_CURRENCY: '/data/slickcharts/currency.json',
+    SLICK_SP500: '/data/slickcharts/sp500.json',
+    SLICK_NASDAQ100: '/data/slickcharts/nasdaq100.json',
+    SLICK_DOWJONES: '/data/slickcharts/dowjones.json'
   },
   PATHS: {
     SCOUTER_DETAIL: '/data/global-scouter/stocks/detail/',
