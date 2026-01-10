@@ -1,0 +1,277 @@
+# SlickCharts Monthly Data Pipeline
+# Historical and analysis data that rarely changes
+#
+# Scrapers: Returns, Performance, Yields, Analysis, Other indices (22 total)
+# Schedule: 1st of month at 8:00 AM UTC
+#
+# Created: 2026-01-10 (split from slickcharts.yml)
+# Reference: docs/planning/slickcharts-data-pipeline.md
+
+name: SlickCharts Monthly
+
+on:
+  schedule:
+    # 1st of each month at 8:00 AM UTC
+    - cron: '0 8 1 * *'
+  workflow_dispatch:
+    inputs:
+      scraper:
+        description: 'Which scraper to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          # Returns
+          - sp500-returns
+          - sp500-returns-details
+          - nasdaq100-returns
+          - dowjones-returns
+          - sp500-drawdown
+          - btc-returns
+          - eth-returns
+          # Performance
+          - sp500-performance
+          - nasdaq100-performance
+          - dowjones-performance
+          # Yields
+          - sp500-yield
+          - nasdaq100-yield
+          - dowjones-yield
+          # Analysis
+          - sp500-analysis
+          - nasdaq100-analysis
+          - dowjones-analysis
+          - sp500-marketcap
+          - nasdaq100-ratio
+          # Other indices
+          - nasdaq100
+          - dowjones
+          # Historical (one-time)
+          - 1929crash
+          - inflation
+
+jobs:
+  scrape-monthly:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      # ========================================
+      # Returns Section
+      # ========================================
+
+      - name: Run S&P 500 Returns scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-returns' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/sp500-returns-scraper.py \
+            --output data/slickcharts/sp500-returns.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run S&P 500 Returns Details scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-returns-details' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/sp500-returns-details-scraper.py \
+            --output data/slickcharts/sp500-returns-details.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Nasdaq 100 Returns scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-returns' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/nasdaq100-returns-scraper.py \
+            --output data/slickcharts/nasdaq100-returns.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Dow Jones Returns scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones-returns' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/dowjones-returns-scraper.py \
+            --output data/slickcharts/dowjones-returns.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run S&P 500 Drawdown scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-drawdown' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/sp500-drawdown-scraper.py \
+            --output data/slickcharts/sp500-drawdown.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run BTC Returns scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'btc-returns' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/btc-returns-scraper.py \
+            --output data/slickcharts/btc-returns.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run ETH Returns scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'eth-returns' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/eth-returns-scraper.py \
+            --output data/slickcharts/eth-returns.json \
+            --pretty
+        continue-on-error: true
+
+      # ========================================
+      # Performance Section
+      # ========================================
+
+      - name: Run S&P 500 Performance scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-performance' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/sp500-performance-scraper.py \
+            --output data/slickcharts/sp500-performance.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Nasdaq 100 Performance scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-performance' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/nasdaq100-performance-scraper.py \
+            --output data/slickcharts/nasdaq100-performance.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Dow Jones Performance scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones-performance' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/dowjones-performance-scraper.py \
+            --output data/slickcharts/dowjones-performance.json \
+            --pretty
+        continue-on-error: true
+
+      # ========================================
+      # Yields Section
+      # ========================================
+
+      - name: Run S&P 500 Yield scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-yield' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/sp500-yield-scraper.py \
+            --output data/slickcharts/sp500-yield.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Nasdaq 100 Yield scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-yield' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/nasdaq100-yield-scraper.py \
+            --output data/slickcharts/nasdaq100-yield.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Dow Jones Yield scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones-yield' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/dowjones-yield-scraper.py \
+            --output data/slickcharts/dowjones-yield.json \
+            --pretty
+        continue-on-error: true
+
+      # ========================================
+      # Analysis Section
+      # ========================================
+
+      - name: Run S&P 500 Analysis scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-analysis' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/sp500-analysis-scraper.py \
+            --output data/slickcharts/sp500-analysis.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Nasdaq 100 Analysis scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-analysis' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/nasdaq100-analysis-scraper.py \
+            --output data/slickcharts/nasdaq100-analysis.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Dow Jones Analysis scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones-analysis' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/dowjones-analysis-scraper.py \
+            --output data/slickcharts/dowjones-analysis.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run S&P 500 Market Cap scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-marketcap' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/sp500-marketcap-scraper.py \
+            --output data/slickcharts/sp500-marketcap.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Nasdaq 100 Ratio scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-ratio' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/nasdaq100-ratio-scraper.py \
+            --output data/slickcharts/nasdaq100-ratio.json \
+            --pretty
+        continue-on-error: true
+
+      # ========================================
+      # Other Indices
+      # ========================================
+
+      - name: Run Nasdaq 100 scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/nasdaq100-scraper.py \
+            --output data/slickcharts/nasdaq100.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Dow Jones scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/dowjones-scraper.py \
+            --output data/slickcharts/dowjones.json \
+            --pretty
+        continue-on-error: true
+
+      # ========================================
+      # Historical (One-Time)
+      # ========================================
+
+      - name: Run 1929 Crash scraper
+        if: ${{ github.event.inputs.scraper == '1929crash' }}
+        run: |
+          python scripts/scrapers/1929crash-scraper.py \
+            --output data/slickcharts/1929crash.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Run Inflation scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'inflation' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/inflation-scraper.py \
+            --output data/slickcharts/inflation.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/slickcharts/
+          git diff --staged --quiet || git commit -m "chore: update SlickCharts monthly data $(date -u +%Y-%m-%d)"
+          git push

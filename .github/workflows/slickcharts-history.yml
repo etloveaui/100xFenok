@@ -1,0 +1,288 @@
+# SlickCharts Historical Stock Data Pipeline
+# Scrapes returns history (47yr) and dividend history (13yr) per stock
+#
+# Schedule: Monthly on 1st at 8:00 AM UTC
+# Note: Historical data changes infrequently (returns: yearly, dividends: quarterly)
+#
+# Uses matrix builds for parallel execution:
+# - Batch A-D: ~130 stocks
+# - Batch E-L: ~130 stocks
+# - Batch M-R: ~130 stocks
+# - Batch S-Z: ~130 stocks
+#
+# Created: 2026-01-10
+# Reference: Individual Stock Data Pipeline v2 (#151)
+
+name: SlickCharts History
+
+on:
+  schedule:
+    # Monthly on 1st at 8:00 AM UTC
+    - cron: '0 8 1 * *'
+  workflow_dispatch:
+    inputs:
+      scraper:
+        description: 'Which scraper to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - returns
+          - dividends
+          - membership
+      batch:
+        description: 'Which batch (for returns/dividends)'
+        required: false
+        default: 'ALL'
+        type: choice
+        options:
+          - ALL
+          - A-D
+          - E-L
+          - M-R
+          - S-Z
+          - single
+      symbol:
+        description: 'Single symbol (only if batch=single)'
+        required: false
+        type: string
+
+jobs:
+  # Run membership tracker first
+  membership:
+    if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'membership' || github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Membership Tracker
+        run: |
+          python scripts/scrapers/membership-tracker.py
+        continue-on-error: true
+
+      - name: Commit membership changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/slickcharts/membership-changes.json data/slickcharts/universe.json
+          git diff --staged --quiet || git commit -m "chore: update index membership $(date -u +%Y-%m-%d)"
+          git push
+
+  # Scrape returns history (matrix builds)
+  scrape-returns:
+    if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'returns' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
+    needs: membership
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [A-D, E-L, M-R, S-Z]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Returns scraper (batch ${{ matrix.batch }})
+        if: ${{ github.event.inputs.batch == 'ALL' || github.event.inputs.batch == matrix.batch || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/symbol-returns-scraper.py \
+            --batch ${{ matrix.batch }} \
+            --output data/slickcharts/stocks-returns-${{ matrix.batch }}.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Upload batch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: returns-${{ matrix.batch }}
+          path: data/slickcharts/stocks-returns-${{ matrix.batch }}.json
+          retention-days: 1
+
+  # Scrape dividend history (matrix builds)
+  scrape-dividends:
+    if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dividends' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
+    needs: membership
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [A-D, E-L, M-R, S-Z]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Dividends scraper (batch ${{ matrix.batch }})
+        if: ${{ github.event.inputs.batch == 'ALL' || github.event.inputs.batch == matrix.batch || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/symbol-dividend-scraper.py \
+            --batch ${{ matrix.batch }} \
+            --output data/slickcharts/stocks-dividends-${{ matrix.batch }}.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Upload batch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dividends-${{ matrix.batch }}
+          path: data/slickcharts/stocks-dividends-${{ matrix.batch }}.json
+          retention-days: 1
+
+  # Merge all batch files
+  merge-history:
+    needs: [scrape-returns, scrape-dividends]
+    runs-on: ubuntu-latest
+    if: ${{ (github.event.inputs.batch == 'ALL' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Move and merge returns
+        run: |
+          mkdir -p data/slickcharts
+          mv artifacts/returns-A-D/*.json data/slickcharts/ 2>/dev/null || true
+          mv artifacts/returns-E-L/*.json data/slickcharts/ 2>/dev/null || true
+          mv artifacts/returns-M-R/*.json data/slickcharts/ 2>/dev/null || true
+          mv artifacts/returns-S-Z/*.json data/slickcharts/ 2>/dev/null || true
+
+          # Merge returns batches (if merger script exists)
+          if [ -f scripts/scrapers/symbol-returns-scraper.py ]; then
+            python scripts/scrapers/symbol-returns-scraper.py \
+              --merge \
+              data/slickcharts/stocks-returns-A-D.json \
+              data/slickcharts/stocks-returns-E-L.json \
+              data/slickcharts/stocks-returns-M-R.json \
+              data/slickcharts/stocks-returns-S-Z.json \
+              --output data/slickcharts/stocks-returns.json || true
+          fi
+        continue-on-error: true
+
+      - name: Move and merge dividends
+        run: |
+          mv artifacts/dividends-A-D/*.json data/slickcharts/ 2>/dev/null || true
+          mv artifacts/dividends-E-L/*.json data/slickcharts/ 2>/dev/null || true
+          mv artifacts/dividends-M-R/*.json data/slickcharts/ 2>/dev/null || true
+          mv artifacts/dividends-S-Z/*.json data/slickcharts/ 2>/dev/null || true
+
+          # Merge dividend batches (if merger script exists)
+          if [ -f scripts/scrapers/symbol-dividend-scraper.py ]; then
+            python scripts/scrapers/symbol-dividend-scraper.py \
+              --merge \
+              data/slickcharts/stocks-dividends-A-D.json \
+              data/slickcharts/stocks-dividends-E-L.json \
+              data/slickcharts/stocks-dividends-M-R.json \
+              data/slickcharts/stocks-dividends-S-Z.json \
+              --output data/slickcharts/stocks-dividends.json || true
+          fi
+        continue-on-error: true
+
+      - name: Clean up batch files
+        run: |
+          rm -f data/slickcharts/stocks-returns-A-D.json
+          rm -f data/slickcharts/stocks-returns-E-L.json
+          rm -f data/slickcharts/stocks-returns-M-R.json
+          rm -f data/slickcharts/stocks-returns-S-Z.json
+          rm -f data/slickcharts/stocks-dividends-A-D.json
+          rm -f data/slickcharts/stocks-dividends-E-L.json
+          rm -f data/slickcharts/stocks-dividends-M-R.json
+          rm -f data/slickcharts/stocks-dividends-S-Z.json
+
+      - name: Aggregate into individual stock files
+        run: |
+          # Create stocks directory
+          mkdir -p data/slickcharts/stocks
+
+          # Run aggregator to create individual stock JSON files
+          # Uses: symbols.json (weekly metrics) + stocks-returns.json + stocks-dividends.json
+          python scripts/scrapers/stock-aggregator.py \
+            --metrics data/slickcharts/symbols.json \
+            --returns data/slickcharts/stocks-returns.json \
+            --dividends data/slickcharts/stocks-dividends.json \
+            --output-dir data/slickcharts/stocks/ \
+            --retention-days 365
+        continue-on-error: true
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/slickcharts/
+          git diff --staged --quiet || git commit -m "chore: update SlickCharts stock history $(date -u +%Y-%m-%d)"
+          git push
+
+  # Single symbol scraping for testing
+  scrape-single:
+    if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Returns scraper (single: ${{ github.event.inputs.symbol }})
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'returns' }}
+        run: |
+          python scripts/scrapers/symbol-returns-scraper.py \
+            --symbol ${{ github.event.inputs.symbol }} \
+            --pretty
+
+      - name: Run Dividends scraper (single: ${{ github.event.inputs.symbol }})
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dividends' }}
+        run: |
+          python scripts/scrapers/symbol-dividend-scraper.py \
+            --symbol ${{ github.event.inputs.symbol }} \
+            --pretty

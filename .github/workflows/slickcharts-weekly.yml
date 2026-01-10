@@ -1,0 +1,92 @@
+# SlickCharts Weekly Data Pipeline
+# Scrapers for slow-changing data that doesn't need daily updates
+#
+# Scrapers: magnificent7, etf, berkshire, sp500 (4 total)
+# Note: symbol-scraper has its own workflow (slickcharts-symbols.yml) with matrix builds
+#
+# Schedule: Sunday at 7:00 AM UTC
+#
+# Created: 2026-01-10
+# Reference: docs/planning/slickcharts-data-pipeline.md
+
+name: SlickCharts Weekly
+
+on:
+  schedule:
+    # Sunday at 7:00 AM UTC
+    - cron: '0 7 * * 0'
+  workflow_dispatch:
+    inputs:
+      scraper:
+        description: 'Which scraper to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - magnificent7
+          - etf
+          - berkshire
+          - sp500
+
+jobs:
+  scrape-weekly:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      # S&P 500 holdings (quarterly changes, but weekly for freshness)
+      - name: Run S&P 500 scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/sp500-scraper.py \
+            --output data/slickcharts/sp500.json \
+            --pretty
+        continue-on-error: true
+
+      # Magnificent 7 stocks
+      - name: Run Magnificent 7 scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'magnificent7' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/magnificent7-scraper.py \
+            --output data/slickcharts/magnificent7.json \
+            --pretty
+        continue-on-error: true
+
+      # ARK ETFs
+      - name: Run ETF scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'etf' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/etf-scraper.py \
+            --output data/slickcharts/etf.json \
+            --pretty
+        continue-on-error: true
+
+      # Berkshire Hathaway holdings + returns
+      - name: Run Berkshire scraper
+        if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'berkshire' || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/berkshire-scraper.py \
+            --all \
+            --output data/slickcharts/berkshire.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/slickcharts/
+          git diff --staged --quiet || git commit -m "chore: update SlickCharts weekly data $(date -u +%Y-%m-%d)"
+          git push

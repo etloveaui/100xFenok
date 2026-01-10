@@ -1,0 +1,157 @@
+# SlickCharts Individual Symbols Pipeline
+# Scrapes P/E, EPS, Dividend for all S&P 500 stocks
+#
+# Uses matrix builds for parallel execution:
+# - Batch A-D: ~125 stocks
+# - Batch E-L: ~125 stocks
+# - Batch M-R: ~125 stocks
+# - Batch S-Z: ~125 stocks
+#
+# Created: 2026-01-10
+# Reference: docs/planning/slickcharts-data-pipeline.md
+
+name: SlickCharts Symbols
+
+on:
+  schedule:
+    # Weekly on Sunday at 7:00 AM UTC (after market close)
+    - cron: '0 7 * * 0'
+  workflow_dispatch:
+    inputs:
+      batch:
+        description: 'Which batch to scrape'
+        required: false
+        default: 'ALL'
+        type: choice
+        options:
+          - ALL
+          - A-D
+          - E-L
+          - M-R
+          - S-Z
+          - single
+      symbol:
+        description: 'Single symbol (only if batch=single)'
+        required: false
+        type: string
+
+jobs:
+  # Matrix build for parallel batch execution
+  scrape-batch:
+    if: ${{ github.event.inputs.batch != 'single' || github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [A-D, E-L, M-R, S-Z]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Symbol scraper (batch ${{ matrix.batch }})
+        if: ${{ github.event.inputs.batch == 'ALL' || github.event.inputs.batch == matrix.batch || github.event_name == 'schedule' }}
+        run: |
+          python scripts/scrapers/symbol-scraper.py \
+            --batch ${{ matrix.batch }} \
+            --output data/slickcharts/symbols-${{ matrix.batch }}.json \
+            --pretty
+        continue-on-error: true
+
+      - name: Upload batch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: symbols-${{ matrix.batch }}
+          path: data/slickcharts/symbols-${{ matrix.batch }}.json
+          retention-days: 1
+
+  # Merge all batches into single file
+  merge-batches:
+    needs: scrape-batch
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.batch == 'ALL' || github.event_name == 'schedule' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Move artifacts to data folder
+        run: |
+          mkdir -p data/slickcharts
+          mv artifacts/symbols-A-D/symbols-A-D.json data/slickcharts/ || true
+          mv artifacts/symbols-E-L/symbols-E-L.json data/slickcharts/ || true
+          mv artifacts/symbols-M-R/symbols-M-R.json data/slickcharts/ || true
+          mv artifacts/symbols-S-Z/symbols-S-Z.json data/slickcharts/ || true
+
+      - name: Merge batch files (cumulative)
+        run: |
+          python scripts/scrapers/symbol-scraper.py \
+            --merge \
+            data/slickcharts/symbols-A-D.json \
+            data/slickcharts/symbols-E-L.json \
+            data/slickcharts/symbols-M-R.json \
+            data/slickcharts/symbols-S-Z.json \
+            --output data/slickcharts/symbols.json \
+            --cumulative
+
+      - name: Clean up batch files
+        run: |
+          rm -f data/slickcharts/symbols-A-D.json
+          rm -f data/slickcharts/symbols-E-L.json
+          rm -f data/slickcharts/symbols-M-R.json
+          rm -f data/slickcharts/symbols-S-Z.json
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/slickcharts/symbols.json
+          git diff --staged --quiet || git commit -m "chore: update SlickCharts symbols $(date -u +%Y-%m-%d)"
+          git push
+
+  # Single symbol scraping for testing
+  scrape-single:
+    if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Symbol scraper (single: ${{ github.event.inputs.symbol }})
+        run: |
+          python scripts/scrapers/symbol-scraper.py \
+            --symbol ${{ github.event.inputs.symbol }} \
+            --pretty
