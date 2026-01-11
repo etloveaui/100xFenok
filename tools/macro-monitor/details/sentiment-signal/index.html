@@ -14,6 +14,7 @@
       --neutral: #f59e0b;
       --bg-page: #f1f5f9;
       --bg-card: #ffffff;
+      --footer-offset: 60px;
     }
     * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
     body { background: var(--bg-page); min-height: 100vh; }
@@ -71,16 +72,19 @@
       .app-layout { grid-template-columns: 1fr; }
       .sidebar {
         position: fixed;
-        bottom: 0; left: 0; right: 0;
-        height: auto; max-height: 55vh;
+        bottom: var(--footer-offset);
+        left: 0;
+        right: 0;
+        height: auto;
+        max-height: 55vh;
         z-index: 100;
         border-radius: 20px 20px 0 0;
-        transform: translateY(calc(100% - 52px));
+        transform: translateY(calc(100% - 48px));
         transition: transform 0.3s ease;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
       }
       .sidebar.expanded { transform: translateY(0); }
-      .main-content { padding-bottom: 72px; }
+      .main-content { padding-bottom: calc(72px + var(--footer-offset)); }
     }
 
     /* ===== SIDEBAR ===== */
