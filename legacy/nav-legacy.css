@@ -1,0 +1,333 @@
+/* ========================================
+   네비게이션 바 - 완전한 CSS 스타일
+   ======================================== */
+
+/* 전체 네비게이션 바 스타일 */
+.enhanced-nav {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(248, 250, 252, 0.85) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+  box-shadow: 0 4px 12px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.enhanced-nav:hover {
+  box-shadow: 0 8px 20px -2px rgba(0, 0, 0, 0.08);
+}
+
+/* 로고 섹션 */
+.logo-section {
+  text-decoration: none !important;
+  transition: all 0.3s ease;
+}
+
+.logo-section:hover {
+  transform: translateY(-1px);
+}
+
+.brand-text {
+  font-family: 'Orbitron', monospace, sans-serif;
+  font-weight: 700;
+  color: #1e293b;
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+}
+
+.logo-section:hover .brand-text {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Favicon 호버 효과 */
+.logo-section:hover img {
+  transform: scale(1.1) rotate(-10deg);
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.2));
+}
+
+/* 메뉴 아이템 - 한글 볼드 처리 */
+.nav-item {
+  position: relative;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 700 !important;
+  font-size: 1.1rem;
+  color: #475569 !important;
+  padding: 10px 6px;
+  transition: all 0.3s ease;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+  text-decoration: none !important;
+}
+
+.nav-item:hover {
+  color: #3b82f6 !important;
+  transform: translateY(-2px);
+}
+
+/* 밑줄 애니메이션 */
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+  border-radius: 1px;
+}
+
+.nav-item:hover::after {
+  width: 100%;
+}
+
+.nav-item:active {
+  transform: translateY(0);
+  color: #2563eb !important;
+}
+
+/* 그라데이션 미지원 브라우저 fallback */
+@supports not (-webkit-background-clip: text) {
+  .brand-text {
+    color: #1e293b !important;
+  }
+
+  .logo-section:hover .brand-text {
+    color: #3b82f6 !important;
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .enhanced-nav {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .nav-item {
+    font-size: 1rem;
+    font-weight: 600 !important;
+  }
+}
+
+/* ========================================
+   세련된 플로팅 메뉴 - 통일된 블루 톤
+   ======================================== */
+
+.combined-floating-menu {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* 메인 토글 버튼 - 블루 톤 */
+.main-toggle-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.25); /* 통일된 블루 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 2px 12px rgba(59, 130, 246, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #3b82f6; /* 블루 아이콘 */
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-toggle-btn:hover {
+  background: rgba(59, 130, 246, 0.9); /* 호버 시 진한 블루 */
+  color: white;
+  transform: scale(1.08);
+  box-shadow: 
+    0 4px 20px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.main-toggle-btn.active {
+  background: rgba(59, 130, 246, 1);
+  color: white;
+  transform: rotate(45deg) scale(1.05);
+  box-shadow: 
+    0 6px 25px rgba(59, 130, 246, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+/* 서브 버튼 컨테이너 */
+.sub-buttons {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(15px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sub-buttons.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* 서브 버튼들 - 모두 같은 블루 톤 */
+.sub-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.2); /* 통일된 블루 배경 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 2px 10px rgba(59, 130, 246, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #3b82f6; /* 통일된 블루 아이콘 */
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* ========================================
+   왼쪽 공유 버튼 스타일 (수정된 버전)
+   ======================================== */
+
+/* 공유 버튼 컨테이너 - 왼쪽으로 배치 */
+.share-button {
+  position: absolute;
+  bottom: 4px; /* 메인 버튼과 같은 높이 */
+  left: -50px; /* 메인 버튼 왼쪽에 배치 */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-15px); /* 왼쪽에서 나오도록 */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 메뉴 활성화 시 공유 버튼 나타남 */
+.combined-floating-menu .main-toggle-btn.active ~ .share-button {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0); /* 제자리로 */
+  transition-delay: 0.15s; /* 다른 버튼들 다음에 나타남 */
+}
+
+/* 공유 버튼 특별 스타일 */
+.share-sub {
+  background: rgba(34, 197, 94, 0.2) !important; /* 녹색 톤 */
+  color: #22c55e !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+.share-sub:hover {
+  background: rgba(34, 197, 94, 0.9) !important;
+  color: white !important;
+  transform: translateX(6px) scale(1.15) !important; /* 왼쪽으로 더 나가도록 */
+  box-shadow: 
+    0 4px 15px rgba(34, 197, 94, 0.25),
+    0 0 0 1px rgba(34, 197, 94, 0.4) !important;
+}
+
+/* 모바일에서 위치 조정 */
+@media (max-width: 640px) {
+  .share-button {
+    left: -46px; /* 모바일에서는 더 가깝게 */
+  }
+}
+
+/* ========================================
+   플로팅 버튼 글리치 수정 (2025-08-17)
+   ======================================== */
+
+/* 640px 전후 구간에서의 위치 보정 */
+@media (min-width: 600px) and (max-width: 680px) {
+    .combined-floating-menu {
+        /* 전환 구간에서 더 안전한 위치로 이동 */
+        bottom: 30px !important;
+        right: 30px !important;
+        /* 부드러운 전환을 위한 트랜지션 */
+        transition: all 0.3s ease !important;
+        /* 확실한 가시성 보장 */
+        visibility: visible !important;
+        opacity: 1 !important;
+        /* 최상위 z-index */
+        z-index: 9999 !important;
+        /* 포지셔닝 강제 */
+        position: fixed !important;
+    }
+    
+    /* 메인 버튼 크기 약간 축소하여 안전성 확보 */
+    .combined-floating-menu .main-toggle-btn {
+        width: 44px !important;
+        height: 44px !important;
+        /* 더 강한 그림자로 가시성 향상 */
+        box-shadow: 
+            0 4px 20px rgba(59, 130, 246, 0.25),
+            0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    /* 서브 버튼들도 조정 */
+    .combined-floating-menu .sub-btn {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    /* 공유 버튼 위치 조정 */
+    .combined-floating-menu .share-button {
+        left: -46px !important;
+    }
+}
+
+/* 추가 안전 장치: 590px-720px 구간 전체에 적용 */
+@media (min-width: 590px) and (max-width: 720px) {
+    .combined-floating-menu {
+        /* 컨테이너 경계와의 충돌 방지 */
+        margin-right: 0 !important;
+        margin-bottom: 0 !important;
+        /* 스택 컨텍스트 격리 */
+        contain: layout style !important;
+    }
+    
+    /* 푸터와의 상호작용 방지 */
+    .enhanced-simple-footer {
+        z-index: auto !important;
+    }
+}
+
+/* 극단적 케이스 대응: 정확히 640px에서 */
+@media (width: 640px) {
+    .combined-floating-menu {
+        bottom: 25px !important;
+        right: 25px !important;
+        transform: translateZ(0) !important; /* 하드웨어 가속 */
+    }
+}
+
+/* lg 브레이크포인트 직전 안전 장치 */
+@media (min-width: 1020px) and (max-width: 1024px) {
+    .combined-floating-menu {
+        /* lg:hidden 적용 직전 구간에서 페이드아웃 */
+        opacity: 0.3 !important;
+        transition: opacity 0.2s ease !important;
+    }
+}

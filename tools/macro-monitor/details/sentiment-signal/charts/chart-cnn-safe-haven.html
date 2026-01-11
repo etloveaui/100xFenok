@@ -45,6 +45,7 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
     .period-panel.open { display: block; }
+    .period-panel.flip-left { right: auto; left: 0; }
 
     .period-section-title { font-size: 11px; font-weight: 600; color: #94a3b8; margin: 12px 0 8px; text-transform: uppercase; }
     .period-section-title:first-child { margin-top: 0; }
@@ -147,8 +148,13 @@
   <!-- Backdrop (Mobile) -->
   <div class="period-backdrop" id="periodBackdrop"></div>
 
-  <!-- Stats Cards -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+  <!-- Chart (moved up) -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm mb-6">
+    <canvas id="mainChart" height="360"></canvas>
+  </div>
+
+  <!-- Stats Cards (moved below chart) -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
     <div class="stats-card">
       <div class="stat-label">Return Diff</div>
       <div id="returnValue" class="stat-value">--</div>
@@ -165,11 +171,6 @@
       <div class="stat-label">Date</div>
       <div id="dateValue" class="stat-value text-base text-slate-600">--</div>
     </div>
-  </div>
-
-  <!-- Chart -->
-  <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-    <canvas id="mainChart" height="360"></canvas>
   </div>
 
   <!-- Legend -->
@@ -452,9 +453,22 @@
       const label = document.getElementById('periodLabel');
 
       btn.addEventListener('click', () => {
+        const isOpening = !panel.classList.contains('open');
         btn.classList.toggle('open');
         panel.classList.toggle('open');
         backdrop.classList.toggle('open');
+
+        // Viewport overflow detection
+        if (isOpening) {
+          requestAnimationFrame(() => {
+            const rect = panel.getBoundingClientRect();
+            if (rect.right > window.innerWidth - 16) {
+              panel.classList.add('flip-left');
+            } else {
+              panel.classList.remove('flip-left');
+            }
+          });
+        }
       });
 
       backdrop.addEventListener('click', () => {

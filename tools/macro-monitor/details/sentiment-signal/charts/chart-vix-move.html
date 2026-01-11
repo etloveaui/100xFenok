@@ -55,6 +55,7 @@
       display: none;
     }
     .period-panel.open { display: block; }
+    .period-panel.flip-left { right: auto; left: 0; }
     .period-section {
       margin-bottom: 16px;
     }
@@ -205,8 +206,13 @@
     </div>
   </div>
 
-  <!-- Current Values Display -->
-  <div class="flex flex-wrap items-center gap-6 mb-6 p-4 bg-gray-50 rounded-xl">
+  <!-- Chart (moved up) -->
+  <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+    <canvas id="dualChart" height="360"></canvas>
+  </div>
+
+  <!-- Current Values Display (moved below chart) -->
+  <div class="flex flex-wrap items-center gap-6 mb-4 p-4 bg-gray-50 rounded-xl">
     <!-- VIX -->
     <div class="flex items-center gap-3">
       <div class="w-4 h-4 rounded-full" style="background: #2563eb;"></div>
@@ -243,11 +249,6 @@
         <div class="text-sm text-red-600">VIX ≥30 AND MOVE ≥120: Both stock and bond markets showing elevated volatility</div>
       </div>
     </div>
-  </div>
-
-  <!-- Chart -->
-  <div class="bg-white rounded-2xl border border-gray-200 p-4">
-    <canvas id="dualChart" height="360"></canvas>
   </div>
 
   <!-- Legend (simplified - thresholds shown as dashed lines on chart) -->
@@ -722,7 +723,20 @@
 
       trigger.addEventListener('click', (e) => {
         e.stopPropagation();
+        const isOpening = !panel.classList.contains('open');
         panel.classList.toggle('open');
+
+        // Viewport overflow detection
+        if (isOpening) {
+          requestAnimationFrame(() => {
+            const rect = panel.getBoundingClientRect();
+            if (rect.right > window.innerWidth - 16) {
+              panel.classList.add('flip-left');
+            } else {
+              panel.classList.remove('flip-left');
+            }
+          });
+        }
       });
 
       // Close on outside click
