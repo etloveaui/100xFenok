@@ -1132,15 +1132,15 @@
       document.getElementById('sidebar').classList.toggle('expanded');
     }
 
-    // Mobile toggle event listener (touch + click)
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
       const mobileToggle = document.getElementById('mobileToggle');
       if (mobileToggle) {
-        mobileToggle.addEventListener('click', toggleSidebar);
-        mobileToggle.addEventListener('touchend', function(e) {
-          e.preventDefault();
+        const handleToggle = (event) => {
+          event.preventDefault();
           toggleSidebar();
-        });
+        };
+        mobileToggle.addEventListener('click', handleToggle);
+        mobileToggle.addEventListener('touchend', handleToggle);
       }
     });
 
