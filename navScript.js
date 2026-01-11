@@ -519,7 +519,7 @@ function updateIconNavActiveState() {
 // ========================================
 //   10. Initialize
 // ========================================
-document.addEventListener('DOMContentLoaded', () => {
+function initializeNav() {
   // Sticky Nav
   const navWrapper = document.querySelector('.nav-wrapper');
   if (navWrapper) {
@@ -576,4 +576,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   console.log('Nav V12 initialized');
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeNav);
+} else {
+  initializeNav();
+}
