@@ -1,13 +1,18 @@
+/**
+ * loadNav.js - Nav V11 Loader
+ * - Loads global.css and nav.css
+ * - Fetches nav.html and processes data-path attributes
+ * - Loads navScript.js for v11 functionality
+ */
 export async function loadNav(siteVersion, containerId = 'nav') {
 
-    // 1. CSS 로딩 완료를 확실히 기다리기
+    // 1. Load global CSS
     if (!document.getElementById('global-css-loaded')) {
         const globalCSS = document.createElement('link');
         globalCSS.id = 'global-css-loaded';
         globalCSS.rel = 'stylesheet';
         globalCSS.href = `${window.baseHref}global.css?v=${siteVersion}`;
 
-        // CSS 로딩 완료 대기
         await new Promise((resolve, reject) => {
             globalCSS.onload = resolve;
             globalCSS.onerror = reject;
@@ -15,14 +20,27 @@ export async function loadNav(siteVersion, containerId = 'nav') {
         });
     }
 
+    // 2. Load nav CSS (v11)
+    if (!document.getElementById('nav-css-loaded')) {
+        const navCSS = document.createElement('link');
+        navCSS.id = 'nav-css-loaded';
+        navCSS.rel = 'stylesheet';
+        navCSS.href = `${window.baseHref}nav.css?v=${siteVersion}`;
 
+        await new Promise((resolve, reject) => {
+            navCSS.onload = resolve;
+            navCSS.onerror = reject;
+            document.head.appendChild(navCSS);
+        });
+    }
 
+    // 3. Fetch nav.html
     const res = await fetch(`${window.baseHref}nav.html?v=${siteVersion}`);
     const html = await res.text();
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
-    // Use global base href computed by the host page
+    // 4. Process data-path attributes with baseHref
     const baseHref = window.baseHref;
 
     if (baseHref) {
@@ -43,87 +61,24 @@ export async function loadNav(siteVersion, containerId = 'nav') {
         });
     }
 
+    // 5. Insert nav HTML into container
     const navContainer = document.getElementById(containerId);
-
-    // nav.html은 이제 HTML만 포함 (script는 navScript.js로 분리)
     navContainer.innerHTML = doc.body.innerHTML;
 
-    // navScript.js 동적 로드
+    // 6. Load navScript.js (v11 - handles all nav functionality)
     const navScript = document.createElement('script');
     navScript.src = `${window.baseHref}navScript.js?v=${siteVersion}`;
     navScript.async = false;
     document.body.appendChild(navScript);
 
-    // ----- Post init tweaks -----
-    // 1) Rename menu label "분석" -> "Insights"
-    try {
-        navContainer.querySelectorAll('a.nav-item, a').forEach(a => {
-            const href = (a.getAttribute('href') || '') + (a.getAttribute('data-path') || '');
-            const text = (a.textContent || '').trim();
-            if (/posts\/posts-main\.html$/.test(href) && text === '분석') {
-                a.textContent = 'Insights';
+    // 7. Wire up SPA navigation for all data-path links
+    navContainer.querySelectorAll('[data-path]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const path = link.getAttribute('data-path');
+            if (path && window.handleNavigation) {
+                e.preventDefault();
+                window.handleNavigation(path);
             }
         });
-    } catch {}
-
-    // 2) Mobile dropdown fold logic (click to open, outside/ESC to close)
-    try {
-        const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
-        const wrappers = Array.from(navContainer.querySelectorAll('.relative.group'));
-
-        function closeAll() {
-            wrappers.forEach(w => {
-                w.removeAttribute('data-open');
-                const menu = w.querySelector('div.absolute');
-                if (menu) { menu.style.opacity = ''; menu.style.visibility = ''; }
-            });
-        }
-
-        function toggleWrapper(w) {
-            const open = w.hasAttribute('data-open');
-            closeAll();
-            if (!open) {
-                w.setAttribute('data-open', '1');
-                const menu = w.querySelector('div.absolute');
-                if (menu) { menu.style.opacity = '1'; menu.style.visibility = 'visible'; }
-            }
-        }
-
-        function attach()
-        {
-            // Button click toggles
-            wrappers.forEach(w => {
-                const btn = w.querySelector('button.nav-item');
-                const menu = w.querySelector('div.absolute');
-                if (!btn || !menu) return;
-                btn.addEventListener('click', (e) => {
-                    if (!isMobile()) return; // desktop unaffected
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleWrapper(w);
-                });
-                // Menu item click closes
-                menu.querySelectorAll('a').forEach(link => {
-                    link.addEventListener('click', () => { if (isMobile()) closeAll(); });
-                });
-            });
-
-            // Outside click
-            document.addEventListener('click', (e) => {
-                if (!isMobile()) return;
-                if (!navContainer.contains(e.target)) closeAll();
-            });
-
-            // ESC key
-            document.addEventListener('keydown', (e) => {
-                if (!isMobile()) return;
-                if (e.key === 'Escape') closeAll();
-            });
-        }
-
-        attach();
-
-        // On resize, close all and keep desktop behavior intact
-        window.addEventListener('resize', () => { if (!isMobile()) closeAll(); });
-    } catch {}
+    });
 }

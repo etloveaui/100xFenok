@@ -44,6 +44,16 @@
 
 **통합 데모**: `integrated-demo.html`
 
+### Step 6: Production Integration Status (2026-01-11)
+
+| Component | Status | BACKLOG | Files Modified |
+|-----------|--------|---------|----------------|
+| Nav 1-Tier EDGY | ✅ Applied | #159 | nav.html, nav.css, navScript.js, loadNav.js |
+| Footer v21 | ✅ Applied | #159 | index.html (footer + admin + market status) |
+| Main v17.8 | ⏸️ Hold | - | PNG quality issue blocking |
+
+**Changes**: English menus, Insights added, admin ⚙️ explicit, password changed, US market status
+
 ---
 
 ## 6. Reports 리디자인 (Gemini 작업)

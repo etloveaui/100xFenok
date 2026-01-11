@@ -56,6 +56,7 @@
       display: none;
     }
     .period-panel.open { display: block; }
+    .period-panel.flip-left { right: auto; left: 0; }
 
     .period-section { margin-bottom: 16px; }
     .period-section:last-child { margin-bottom: 0; }
@@ -326,8 +327,21 @@
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <!-- Chart (moved up) -->
+    <div class="chart-container mb-6">
+      <div id="legendContainer" class="chart-legend">
+        <div class="legend-item">
+          <span class="legend-line" style="background: #a855f7;"></span>
+          Bull-Bear Spread
+        </div>
+      </div>
+      <div style="height: 360px;">
+        <canvas id="aaiiChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Stats Cards (moved below chart) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
       <div class="stats-card">
         <div class="stat-item">
           <span class="stat-label">Spread</span>
@@ -358,19 +372,6 @@
     <div class="flex items-center gap-3">
       <div id="statusBadge" class="px-4 py-2 rounded-lg text-sm font-bold">--</div>
       <span id="neutralValue" class="text-sm text-slate-500">Neutral: --</span>
-    </div>
-
-    <!-- Chart -->
-    <div class="chart-container">
-      <div id="legendContainer" class="chart-legend">
-        <div class="legend-item">
-          <span class="legend-line" style="background: #a855f7;"></span>
-          Bull-Bear Spread
-        </div>
-      </div>
-      <div style="height: 360px;">
-        <canvas id="aaiiChart"></canvas>
-      </div>
     </div>
 
 
@@ -775,9 +776,22 @@
       const labelEl = document.getElementById('periodLabel');
 
       btn.addEventListener('click', () => {
+        const isOpening = !panel.classList.contains('open');
         btn.classList.toggle('open');
         panel.classList.toggle('open');
         backdrop.classList.toggle('open');
+
+        // Viewport overflow detection
+        if (isOpening) {
+          requestAnimationFrame(() => {
+            const rect = panel.getBoundingClientRect();
+            if (rect.right > window.innerWidth - 16) {
+              panel.classList.add('flip-left');
+            } else {
+              panel.classList.remove('flip-left');
+            }
+          });
+        }
       });
 
       backdrop.addEventListener('click', () => {

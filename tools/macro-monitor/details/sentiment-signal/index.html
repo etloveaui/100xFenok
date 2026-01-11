@@ -75,7 +75,7 @@
         height: auto; max-height: 55vh;
         z-index: 100;
         border-radius: 20px 20px 0 0;
-        transform: translateY(calc(100% - 56px));
+        transform: translateY(calc(100% - 52px));
         transition: transform 0.3s ease;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
       }
@@ -107,15 +107,36 @@
     }
     .mobile-handle {
       display: none;
-      width: 40px; height: 5px;
-      background: #cbd5e1;
-      border-radius: 3px;
-      margin: 12px auto 8px;
+    }
+    .mobile-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 52px;
+      background: var(--bg-card);
+      border-bottom: 1px solid #e2e8f0;
       cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      user-select: none;
+      -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+      touch-action: manipulation;
+    }
+    .mobile-toggle:hover, .mobile-toggle:active { background: #f8fafc; }
+    .toggle-arrow {
+      font-size: 10px;
+      transition: transform 0.3s;
+    }
+    .sidebar.expanded .toggle-arrow {
+      transform: rotate(180deg);
     }
     @media (max-width: 1024px) {
-      .mobile-handle { display: block; }
+      .mobile-toggle { display: flex; }
       .sidebar-header { display: none; }
+      .sidebar { overflow: hidden; }
+      .sidebar.expanded { overflow-y: auto; }
     }
     .section-title {
       font-size: 10px; font-weight: 700;
@@ -697,7 +718,12 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
-      <div class="mobile-handle" onclick="toggleSidebar()"></div>
+      <!-- Mobile Toggle Button -->
+      <div class="mobile-toggle" id="mobileToggle">
+        <span class="toggle-icon">☰</span>
+        <span class="toggle-text">메뉴</span>
+        <span class="toggle-arrow">▲</span>
+      </div>
 
       <!-- Sidebar Header (제목 + 뒤로가기) -->
       <div class="sidebar-header">
@@ -1105,6 +1131,18 @@
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('expanded');
     }
+
+    // Mobile toggle event listener (touch + click)
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileToggle = document.getElementById('mobileToggle');
+      if (mobileToggle) {
+        mobileToggle.addEventListener('click', toggleSidebar);
+        mobileToggle.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          toggleSidebar();
+        });
+      }
+    });
 
     // ===== 100x COMBO SIGNALS™ =====
     const COMBO_SIGNALS = [
