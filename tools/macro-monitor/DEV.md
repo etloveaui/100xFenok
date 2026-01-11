@@ -4,6 +4,43 @@
 > **설계 철학**: `docs/planning/macro-monitor-philosophy.md` 필독
 > **검증 체크리스트**: `docs/manuals/chart-dev-checklist.md` (차트 작업 시 필수)
 
+---
+
+## 🆕 Recent Updates
+
+### Widget Responsive CSS V3 Final Fix (2026-01-11) ✅
+
+**Problem**: V1→V2 failed - `min-height` prevented widget from following iframe height
+**Solution**: Remove all `min-height`, add `max-height: 100%`
+
+| Change | Before | After |
+|--------|--------|-------|
+| `.card-widget` | `min-height: 280px` | `max-height: 100%` (min-height 제거) |
+| 모바일/소형 | `min-height: 320/350px` | 제거 - iframe 높이 따름 |
+| overflow | liquidity만 | 두 위젯 모두 `overflow: hidden` |
+
+### 🔴 iframe 위젯 개발 필수 규칙
+
+```css
+/* ✅ CORRECT - iframe 위젯 */
+.card-widget {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  /* 🔴 NEVER use min-height in iframe widgets */
+}
+
+/* ❌ WRONG - iframe 높이 무시됨 */
+.card-widget {
+  height: 100%;
+  min-height: 280px;  /* 이게 height: 100% 무시함 */
+}
+```
+
+**V2 CSS 축소** (V3에서 유지):
+- liquidity-flow: Wave 200%→150%, hero 42→36px, tributary 8→6px
+- sentiment-signal: card 12→10px, grid 3→2px, signal-row 4→2px
+
 ## Purpose
 
 유동성 및 펀더멘털 지표를 **조합**하여 **의미 있는 신호**로 시각화하는 위젯 시스템.

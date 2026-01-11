@@ -8,12 +8,14 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: transparent; }
 
+  /* V3: min-height 제거 → iframe 높이를 그대로 따름 */
   .card-widget {
     height: 100%;
-    min-height: 280px;
+    max-height: 100%;  /* V3: 부모(iframe) 높이 초과 방지 */
+    /* min-height 제거됨 - iframe이 높이 결정 */
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     border-radius: 16px;
-    padding: 12px;
+    padding: 10px;
     font-family: 'Inter', -apple-system, sans-serif;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -21,6 +23,7 @@
     flex-direction: column;
     border: 1px solid #e2e8f0;
     box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 4px 12px rgba(0,0,0,0.06);
+    overflow: hidden;  /* V3: 추가 - 콘텐츠 넘침 방지 */
   }
 
   .card-widget:hover {
@@ -32,7 +35,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 4px;  /* V2: 8px → 4px */
   }
 
   .card-title {
@@ -78,7 +81,7 @@
     flex: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 3px 6px;
+    gap: 2px 4px;  /* V2: 3px 6px → 2px 4px */
     padding: 2px 0;
   }
 
@@ -86,7 +89,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 4px 5px;
+    padding: 2px 4px;  /* V2: 4px 5px → 2px 4px */
     border-radius: 6px;
     background: rgba(255,255,255,0.5);
     transition: all 0.2s;
@@ -101,10 +104,10 @@
   .signal-row.cat-buy { border-left-color: #3b82f6; }
   .signal-row.cat-warn { border-left-color: #ef4444; }
 
-  .signal-icon { font-size: 11px; flex-shrink: 0; }
+  .signal-icon { font-size: 10px; flex-shrink: 0; }  /* V2: 11px → 10px */
 
   .signal-name {
-    font-size: 9px;
+    font-size: 8px;  /* V2: 9px → 8px */
     font-weight: 600;
     color: #334155;
     flex: 1;
@@ -131,11 +134,11 @@
   }
 
   .signal-dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;  /* V2: 8px → 6px */
+    height: 6px;  /* V2: 8px → 6px */
     border-radius: 50%;
     flex-shrink: 0;
-    border: 2px solid;
+    border: 1.5px solid;  /* V2: 2px → 1.5px */
   }
 
   .dot-active { background: #16a34a; border-color: #16a34a; }
@@ -145,41 +148,54 @@
   .legend {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    padding-top: 4px;
+    gap: 4px;  /* V2: 8px → 4px */
+    padding-top: 2px;  /* V2: 4px → 2px */
     border-top: 1px solid rgba(0,0,0,0.05);
-    font-size: 8px;
+    font-size: 7px;  /* V2: 8px → 7px */
     color: #64748b;
   }
 
-  .legend-item { display: flex; align-items: center; gap: 3px; }
-  .legend-dot { width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid; }
+  .legend-item { display: flex; align-items: center; gap: 2px; }  /* V2: gap 3px → 2px */
+  .legend-dot { width: 5px; height: 5px; border-radius: 50%; border: 1px solid; }  /* V2: 6px,1.5px → 5px,1px */
   .legend-bar { width: 3px; height: 10px; border-radius: 1px; }
   .bar-buy { background: #3b82f6; }
   .bar-warn { background: #ef4444; }
 
-  /* === Responsive === */
-  /* 플래그십 모바일 (iPhone Pro Max, Galaxy S) */
-  @media (max-width: 431px) {
-    .card-widget {
-      min-height: 320px;
-      padding: 10px;
-    }
-    .signals-grid {
-      gap: 2px 4px;
-    }
-    .signal-row {
-      padding: 3px 4px;
-    }
-    .signal-name { font-size: 8px; }
-    .signal-tag { font-size: 6px; }
+  /* === Responsive V2: 더 과감한 축소 === */
+
+  /* 태블릿 (768-1023px) - V2: 기본값 이미 축소됨 */
+  @media (max-width: 1023px) and (min-width: 768px) {
+    .card-widget { padding: 8px; }
+    .card-header { margin-bottom: 3px; }
+    .signals-grid { gap: 1px 3px; }
+    .signal-row { padding: 1px 3px; }
+    .legend { gap: 3px; font-size: 6px; }
   }
 
-  /* 소형 모바일 */
-  @media (max-width: 359px) {
+  /* 플래그십 모바일 (360-431px) - V3: min-height 제거, 극단적 축소 */
+  @media (max-width: 431px) {
     .card-widget {
-      min-height: 350px;
+      /* min-height 제거됨 - iframe이 높이 결정 (320px) */
+      padding: 8px;
     }
+    .card-header { margin-bottom: 2px; }
+    .signals-grid { gap: 1px 3px; }  /* V2: 2px 4px → 1px 3px */
+    .signal-row { padding: 1px 2px; }  /* V2: 1px 3px → 1px 2px */
+    .signal-name { font-size: 7px; }  /* V2: 9px → 7px */
+    .signal-tag { font-size: 5px; }  /* V2: 6px → 5px */
+    .signal-icon { font-size: 9px; }  /* V2: 10px → 9px */
+    .signal-dot { width: 5px; height: 5px; }  /* V2: 추가 */
+    .legend { gap: 2px; font-size: 6px; padding-top: 1px; }  /* V2: 3px,8px,3px → 2px,6px,1px */
+  }
+
+  /* 소형 모바일 (<360px) - V3: min-height 제거, 최소 크기 */
+  @media (max-width: 359px) {
+    .card-widget { padding: 6px; }  /* min-height 제거됨 - iframe이 높이 결정 (350px) */
+    .card-header { margin-bottom: 1px; }
+    .signal-row { padding: 0px 2px; }
+    .signal-name { font-size: 6px; }  /* V2: 8px → 6px */
+    .signal-tag { font-size: 4px; }  /* V2: 추가 */
+    .legend { flex-wrap: wrap; gap: 1px; font-size: 5px; }  /* V2: 2px,7px → 1px,5px */
   }
 </style>
 </head>

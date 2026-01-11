@@ -29,12 +29,14 @@
   html, body { height: 100%; background: transparent; }
 
   /* === 카드 기본 (밝은 톤 통일) === */
+  /* V3: min-height 제거 → iframe 높이를 그대로 따름 */
   .card-widget {
     height: 100%;
-    min-height: 280px;
+    max-height: 100%;  /* V3: 부모(iframe) 높이 초과 방지 */
+    /* min-height 제거됨 - iframe이 높이 결정 */
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     border-radius: 16px;
-    padding: 16px;
+    padding: 12px;
     font-family: 'Inter', -apple-system, sans-serif;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -98,15 +100,15 @@
     font-weight: 700;
   }
 
-  /* === Wave 배경 (은은한 흐름) === */
+  /* === Wave 배경 (은은한 흐름) - V2: 오버플로우 방지 === */
   .wave-background {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 200%;
-    height: 200%;
-    opacity: 0.04;
+    height: 150%;  /* V2: 200% → 150% (배경 튀어나감 방지) */
+    opacity: 0.03;  /* V2: 0.04 → 0.03 */
     z-index: 0;
     pointer-events: none;
   }
@@ -123,7 +125,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 16px 0 12px;
+    padding: 8px 0 6px;  /* V2: 16px 0 12px → 8px 0 6px */
     position: relative;
     z-index: 2;
   }
@@ -145,7 +147,7 @@
 
   .hero-value {
     font-family: 'Orbitron', monospace;
-    font-size: 42px;
+    font-size: 36px;  /* V2: 42px → 36px */
     font-weight: 800;
     line-height: 1;
     letter-spacing: -1px;
@@ -203,7 +205,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 0;
+    padding: 4px 0;  /* V2: 8px 0 → 4px 0 */
     position: relative;
     z-index: 2;
   }
@@ -237,7 +239,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 8px 12px;
+    padding: 6px 10px;  /* V2: 8px 12px → 6px 10px */
     text-align: center;
   }
 
@@ -272,7 +274,7 @@
 
   .tributary-value {
     font-family: 'Orbitron', monospace;
-    font-size: 18px;
+    font-size: 16px;  /* V2: 18px → 16px */
     font-weight: 700;
     color: #1e293b;
     line-height: 1.2;
@@ -287,9 +289,10 @@
   }
 
   .tributary-sub {
-    font-size: 10px;
+    font-size: 9px;  /* V2: 10px → 9px */
     color: #94a3b8;
-    margin-top: 2px;
+    margin-top: 1px;  /* V2: 2px → 1px */
+    line-height: 1.0;  /* V2: 추가 */
   }
 
   /* === Loading === */
@@ -358,20 +361,29 @@
   .stale-warning-text { font-weight: 500; }
   .stale-warning-age { color: #b45309; font-weight: 600; }
 
-  /* === Responsive === */
-  @media (max-width: 767px) {
-    .hero-value { font-size: 38px; }
+  /* === Responsive V2: 더 과감한 축소 === */
+
+  /* 태블릿 (768-1023px) - V2: 기본값 이미 축소됨, 추가 축소 */
+  @media (max-width: 1023px) and (min-width: 768px) {
+    .card-widget { padding: 10px; }
+    .hero-section { padding: 6px 0 4px; }
+    .hero-value { font-size: 32px; }  /* V2: 36px → 32px */
+    .flow-divider { padding: 3px 0; }
+    .tributary { padding: 5px 8px; }
+    .tributary-value { font-size: 14px; }
   }
 
-  /* 플래그십 모바일 (iPhone Pro Max, Galaxy S) */
+  /* 플래그십 모바일 (360-431px) - V3: min-height 제거, 극단적 축소 */
   @media (max-width: 431px) {
     .card-widget {
-      min-height: 320px;
-      padding: 12px 12px 16px;
+      /* min-height 제거됨 - iframe이 높이 결정 (320px) */
+      padding: 8px;
     }
-    .hero-section { padding: 12px 0 8px; }
-    .hero-value { font-size: 34px; }
-    .hero-unit { font-size: 14px; }
+    .hero-section { padding: 4px 0; }  /* V2: 8px 0 6px → 4px 0 */
+    .hero-value { font-size: 24px; }  /* V2: 28px → 24px */
+    .hero-unit { font-size: 10px; }  /* V2: 12px → 10px */
+    .hero-trend { font-size: 9px; margin-top: 2px; }  /* V2: 10px,4px → 9px,2px */
+    .flow-divider { padding: 2px 0; }  /* V2: 4px → 2px */
 
     .tributaries {
       flex-direction: column;
@@ -382,7 +394,7 @@
       flex-direction: row;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 4px;
+      padding: 6px 4px;  /* V2: 8px 4px → 6px 4px */
     }
 
     .tributary:not(:last-child) {
@@ -390,31 +402,28 @@
       border-bottom: 1px solid #e2e8f0;
     }
 
-    .tributary-header {
-      margin-bottom: 0;
-    }
-
-    .tributary-name {
-      font-size: 10px;
-    }
-
-    .tributary-value {
-      font-size: 18px;
-    }
-
+    .tributary-header { margin-bottom: 0; }
+    .tributary-name { font-size: 8px; }  /* V2: 9px → 8px */
+    .tributary-value { font-size: 13px; }  /* V2: 14px → 13px */
+    .tributary-unit { font-size: 7px; }  /* V2: 8px → 7px */
     .tributary-sub {
       display: inline-block;
-      font-size: 9px;
-      margin-left: 4px;
+      font-size: 8px;  /* V2: 9px → 8px */
+      margin-left: 3px;
+      margin-top: 0;
       opacity: 0.7;
     }
   }
 
-  /* 소형 모바일 */
+  /* 소형 모바일 (<360px) - V3: min-height 제거, 최소 크기 */
   @media (max-width: 359px) {
-    .card-widget {
-      min-height: 350px;
-    }
+    .card-widget { padding: 6px; }  /* min-height 제거됨 - iframe이 높이 결정 (350px) */
+    .hero-section { padding: 2px 0; }
+    .hero-value { font-size: 20px; }  /* V2: 24px → 20px */
+    .hero-unit { font-size: 9px; }  /* V2: 10px → 9px */
+    .tributary { padding: 4px 2px; }  /* V2: 6px 4px → 4px 2px */
+    .tributary-value { font-size: 11px; }  /* V2: 12px → 11px */
+    .tributary-name { font-size: 7px; }  /* V2: 8px → 7px */
   }
 </style>
 </head>
