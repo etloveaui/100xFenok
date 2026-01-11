@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-01-10
-> **Total Files**: 1,841 JSON files
+> **Last Updated**: 2026-01-11
+> **Total Files**: 1,843 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -11,7 +11,7 @@
 | Folder | Files | Update Frequency | Source |
 |--------|-------|------------------|--------|
 | [benchmarks/](benchmarks/DEV.md) | 7 | Weekly | Bloomberg Terminal |
-| [damodaran/](damodaran/README.md) | 2 | Yearly | NYU Stern (Damodaran) |
+| [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,247 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [sec-13f/](sec-13f/README.md) | 20 | Quarterly | SEC EDGAR |
@@ -29,7 +29,7 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Damodaran ERP, EV/Sales multiples
+- Damodaran: industries (96 w/ beta, margins, EVA), ERP (178 countries), historical ERP (66 years), credit ratings
 
 ### Institutional Data (sec-13f/)
 - 13F holdings from major investors
