@@ -1,7 +1,8 @@
 # data/benchmarks/ - 100xFenok Benchmarks 밸류에이션 데이터
 
 > **소스**: 100xFenok Benchmarks (원본: Bloomberg Terminal, 주간 업데이트)
-> **기간**: 2010-01-22 ~ 현재 (15년, 829+ 포인트)
+> **기간**: 2010-02-26 ~ 현재 (15년+, 829+ 포인트)
+> **최신 데이터**: 2026-01-09
 > **협의 문서**: `docs/research/bloomberg-json-collaboration.md`
 
 ---
@@ -37,8 +38,8 @@
 ```json
 {
   "metadata": {
-    "version": "2025-12-05",
-    "generated": "2025-12-14T01:25:58.500083",
+    "version": "2026-01-09",
+    "generated": "2026-01-12T17:16:09.365126",
     "source": "Bloomberg Terminal",
     "sheet": "미국",
     "update_frequency": "weekly"
