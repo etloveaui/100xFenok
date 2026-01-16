@@ -15,7 +15,6 @@ const DATA_LAB_CONFIG = {
   FILES: {
     // Damodaran
     DAMODARAN_ERP: '/data/damodaran/erp.json',
-    DAMODARAN_EVSALES: '/data/damodaran/ev_sales.json',
 
     // Global Scouter - Core (v2.0)
     SCOUTER_METADATA: '/data/global-scouter/core/metadata.json',
@@ -87,6 +86,18 @@ const DATA_LAB_CONFIG = {
     SCOUTER_DETAIL: '/data/global-scouter/stocks/detail/',
     SEC13F_INVESTORS: '/data/sec-13f/investors/'
   },
+  SENTIMENT: [
+    { key: 'SENTIMENT_AII', path: '/data/sentiment/aaii.json' },
+    { key: 'SENTIMENT_CFTC_SP500', path: '/data/sentiment/cftc-sp500.json' },
+    { key: 'SENTIMENT_CNN', path: '/data/sentiment/cnn-fear-greed.json' },
+    { key: 'SENTIMENT_CRYPTO', path: '/data/sentiment/crypto-fear-greed.json' },
+    { key: 'SENTIMENT_MOVE', path: '/data/sentiment/move.json' },
+    { key: 'SENTIMENT_VIX', path: '/data/sentiment/vix.json' }
+  ],
+  INDICES: [
+    { key: 'INDICES_SP500', path: '/data/indices/sp500.json' },
+    { key: 'INDICES_NASDAQ100', path: '/data/indices/nasdaq100.json' }
+  ],
   BENCHMARKS: [
     { key: 'US', path: '/data/benchmarks/us.json' },
     { key: 'US_SECTORS', path: '/data/benchmarks/us_sectors.json' },
