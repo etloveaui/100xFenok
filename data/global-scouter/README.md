@@ -2,7 +2,7 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,249
+> **Files**: 1,248
 > **Version**: v2.1.0
 
 ---
@@ -20,14 +20,14 @@ global-scouter/
 │   ├── metadata.json        # System metadata
 │   └── stocks_index.json    # Master stock index
 ├── stocks/
-│   └── detail/              # Individual stock profiles (1,244 files)
+│   └── detail/              # Individual stock profiles (1,243 files)
 │       ├── AAPL.json
 │       ├── MSFT.json
 │       └── ...
 ├── etfs/                    # 🆕 v2.1.0
 │   └── index.json           # ETF/Index data (23 items)
 └── indicators/              # 🆕 v2.1.0
-    └── economic.json        # Economic indicators (1,044 records)
+    └── economic.json        # Economic indicators (1,045 records)
 ```
 
 ## File Counts
@@ -35,10 +35,10 @@ global-scouter/
 | Folder | Files |
 |--------|-------|
 | core/ | 3 |
-| stocks/detail/ | 1,244 |
+| stocks/detail/ | 1,243 |
 | etfs/ | 1 |
 | indicators/ | 1 |
-| **Total** | 1,249 |
+| **Total** | 1,248 |
 
 ## Schema
 
@@ -118,4 +118,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-01-12*
+*Last Updated: 2026-01-16*
