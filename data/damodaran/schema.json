@@ -1,0 +1,112 @@
+{
+  "folder": "damodaran",
+  "version": "2.0.0",
+  "updated": "2026-01-15",
+  "source": "NYU Stern - Aswath Damodaran",
+  "source_url": "https://pages.stern.nyu.edu/~adamodar/",
+  "update_frequency": "yearly (January)",
+  "maintainer": "Manual conversion from Excel",
+
+  "files": {
+    "industries.json": {
+      "description": "96 industries with beta, margins, EVA, debt, growth, multiples",
+      "size_kb": 72,
+      "industry_count": 96,
+      "datasets_merged": ["betas", "margin", "eva", "debtdetails", "fundgr", "ev_sales"],
+      "schema": {
+        "metadata": {
+          "schema_version": "string",
+          "last_updated": "YYYY-MM-DD",
+          "industry_count": "number",
+          "datasets_merged": "string[]"
+        },
+        "industries.{industry_name}": {
+          "num_firms": "number",
+          "beta": {
+            "levered": "number",
+            "unlevered": "number",
+            "cash_adjusted": "number"
+          },
+          "margins": {
+            "gross": "number (0-1)",
+            "operating": "number (0-1)",
+            "net": "number (0-1)",
+            "ebitda": "number (0-1)"
+          },
+          "eva": {
+            "roe": "number",
+            "roc": "number",
+            "wacc": "number",
+            "eva_spread": "number"
+          },
+          "debt": {
+            "debt_to_equity": "number",
+            "debt_to_capital": "number",
+            "interest_coverage": "number"
+          },
+          "growth": {
+            "revenue_growth": "number",
+            "earnings_growth": "number",
+            "reinvestment_rate": "number"
+          },
+          "multiples": {
+            "ev_sales": "number",
+            "ev_ebitda": "number",
+            "pe_ratio": "number"
+          }
+        }
+      }
+    },
+    "erp.json": {
+      "description": "178 countries with ERP, CRP, credit ratings, tax rates",
+      "size_kb": 45,
+      "country_count": 178,
+      "schema": {
+        "metadata": {
+          "base_erp": "number (US implied ERP)",
+          "risk_free_rate": "number",
+          "last_updated": "YYYY-MM-DD"
+        },
+        "countries.{country_name}": {
+          "region": "string",
+          "moodys_rating": "string (e.g., Aaa, Aa1)",
+          "default_spread": "number (basis points)",
+          "country_risk_premium": "number",
+          "equity_risk_premium": "number",
+          "corporate_tax_rate": "number (0-1)"
+        }
+      }
+    },
+    "historical_erp.json": {
+      "description": "66 years (1960-2025) implied ERP history",
+      "size_kb": 6.5,
+      "year_range": [1960, 2025],
+      "schema": {
+        "data[]": {
+          "year": "number",
+          "implied_erp": "number (percent)",
+          "sp500_return": "number (percent)",
+          "tbond_rate": "number (percent)"
+        }
+      }
+    },
+    "credit_ratings.json": {
+      "description": "Interest coverage to credit rating lookup tables",
+      "size_kb": 6.2,
+      "schema": {
+        "large_cap[]": {
+          "min_coverage": "number",
+          "max_coverage": "number",
+          "rating": "string",
+          "spread": "number (basis points)"
+        },
+        "small_cap[]": "Same structure as large_cap"
+      }
+    }
+  },
+
+  "breaking_changes_history": [
+    {"version": "2.0.0", "date": "2026-01-15", "change": "Merged 6 datasets into industries.json"},
+    {"version": "1.0.0", "date": "2025-12-01", "change": "Initial schema"}
+  ]
+}
