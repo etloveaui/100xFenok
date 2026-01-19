@@ -1,0 +1,38 @@
+{
+  "folder": "indices",
+  "version": "1.0.0",
+  "updated": "2025-12-01",
+  "source": "Legacy (Wikipedia, manual)",
+  "update_frequency": "manual",
+  "maintainer": "Deprecated - use slickcharts/ for current data",
+
+  "status": "LEGACY",
+  "note": "This folder contains legacy index data. For current index holdings, use slickcharts/sp500.json, slickcharts/nasdaq100.json, slickcharts/dowjones.json",
+
+  "files": {
+    "sp500.json": {
+      "description": "S&P 500 constituents (legacy)",
+      "schema": {
+        "stocks[]": {
+          "symbol": "string",
+          "name": "string",
+          "sector": "string",
+          "weight": "number (optional)"
+        }
+      }
+    },
+    "nasdaq.json": {
+      "description": "Nasdaq 100 constituents (legacy)",
+      "schema": "Same as sp500.json"
+    }
+  },
+
+  "migration_guide": {
+    "sp500.json": "Use slickcharts/sp500.json instead",
+    "nasdaq.json": "Use slickcharts/nasdaq100.json instead"
+  },
+
+  "breaking_changes_history": [
+    {"version": "1.0.0", "date": "2025-12-01", "change": "Marked as legacy"}
+  ]
+}

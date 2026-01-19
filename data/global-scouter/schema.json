@@ -1,0 +1,116 @@
+{
+  "folder": "global-scouter",
+  "version": "2.1.0",
+  "updated": "2026-01-10",
+  "source": "Custom aggregation (FinancialModelingPrep, Yahoo Finance)",
+  "update_frequency": "on-demand",
+  "maintainer": "Manual conversion scripts",
+
+  "structure": {
+    "core/": "Dashboard config, metadata, master stock index",
+    "stocks/detail/": "1,243 individual stock profiles",
+    "etfs/": "ETF and index benchmarks",
+    "indicators/": "Economic indicators"
+  },
+
+  "files": {
+    "core/dashboard.json": {
+      "description": "Dashboard configuration",
+      "size_kb": 3.1,
+      "schema": {
+        "config": "object (UI settings)"
+      }
+    },
+    "core/metadata.json": {
+      "description": "System metadata",
+      "size_kb": 0.4,
+      "schema": {
+        "version": "string",
+        "last_updated": "ISO timestamp"
+      }
+    },
+    "core/stocks_index.json": {
+      "description": "Master stock index (ticker -> basic info)",
+      "size_kb": 341,
+      "stock_count": 1243,
+      "schema": {
+        "stocks.{TICKER}": {
+          "name": "string",
+          "sector": "string",
+          "industry": "string",
+          "market_cap": "number"
+        }
+      }
+    },
+    "stocks/detail/{TICKER}.json": {
+      "description": "Individual stock profile (1,243 files)",
+      "schema": {
+        "ticker": "string",
+        "name": "string",
+        "sector": "string",
+        "industry": "string",
+        "financials": {
+          "revenue": "number[]",
+          "net_income": "number[]",
+          "eps": "number[]"
+        },
+        "metrics": {
+          "pe_ratio": "number",
+          "pb_ratio": "number",
+          "roe": "number",
+          "debt_to_equity": "number"
+        },
+        "history": {
+          "years": "number[]",
+          "prices": "number[]"
+        }
+      }
+    },
+    "etfs/index.json": {
+      "added_in": "2.1.0",
+      "description": "23 ETFs/Indices with returns, CAGR, market cap",
+      "size_kb": 15,
+      "etf_count": 23,
+      "schema": {
+        "count": "number",
+        "etfs.{name}": {
+          "ticker": "string",
+          "category": "string (Indices/ETFs)",
+          "market_cap": "number",
+          "returns": {
+            "1m": "number",
+            "3m": "number",
+            "ytd": "number",
+            "1y": "number"
+          },
+          "cagr": {
+            "3y": "number",
+            "5y": "number",
+            "10y": "number"
+          }
+        }
+      }
+    },
+    "indicators/economic.json": {
+      "added_in": "2.1.0",
+      "description": "Treasury rates, spreads, HY yields, TIPS",
+      "record_count": 1045,
+      "schema": {
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "treasury_10y": "number",
+          "treasury_2y": "number",
+          "spread_10y_2y": "number",
+          "hy_spread": "number",
+          "tips_5y": "number"
+        }
+      }
+    }
+  },
+
+  "breaking_changes_history": [
+    {"version": "2.1.0", "date": "2026-01-10", "change": "etfs/ and indicators/ folders added"},
+    {"version": "2.0.0", "date": "2025-12-15", "change": "stocks/detail/ restructured"},
+    {"version": "1.0.0", "date": "2025-11-01", "change": "Initial schema"}
+  ]
+}
