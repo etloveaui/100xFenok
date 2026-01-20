@@ -108,7 +108,7 @@
       const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
       const isCloudflare = host.endsWith('pages.dev');
       const base = (isLocal || isCloudflare) ? '' : '/100xFenok';
-      return `${base}/data/damodaran/ev_sales.json`;
+      return `${base}/data/damodaran/industries.json`;
     })();
 
     const state = { raw: null, rows: [] };
@@ -201,12 +201,12 @@
       const res = await fetch(DATA_URL);
       if (!res.ok) throw new Error('데이터 로딩 실패');
       const data = await res.json();
-      const sectors = data.sectors || {};
-      const rows = Object.entries(sectors).map(([name, row]) => ({
+      const industries = data.industries || {};
+      const rows = Object.entries(industries).map(([name, row]) => ({
         name,
-        ev_sales: row.ev_sales ?? null,
-        net_margin: row.net_margin ?? null,
-        operating_margin: row.operating_margin ?? null,
+        ev_sales: row.multiples?.ev_sales ?? null,
+        net_margin: row.margins?.net ?? null,
+        operating_margin: row.margins?.operating ?? null,
         num_firms: row.num_firms ?? null
       })).filter(r => r.ev_sales !== null);
 

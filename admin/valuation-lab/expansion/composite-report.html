@@ -83,7 +83,7 @@
       return {
         bench: `${base}/data/benchmarks/us.json`,
         erp: `${base}/data/damodaran/erp.json`,
-        ev: `${base}/data/damodaran/ev_sales.json`
+        ev: `${base}/data/damodaran/industries.json`
       };
     })();
 
@@ -160,14 +160,14 @@
       elements.erpMedian.textContent = formatPercent(median(erpValues));
       elements.erpGen.textContent = erp?.metadata?.generated_at ? erp.metadata.generated_at.slice(0, 10) : '-';
 
-      const evValues = Object.values(ev?.sectors || {}).map(row => row.ev_sales).filter(v => v !== null && v !== undefined);
+      const evValues = Object.values(ev?.industries || {}).map(row => row.multiples?.ev_sales).filter(v => v !== null && v !== undefined);
       elements.evMedian.textContent = formatNumber(median(evValues));
       elements.evGen.textContent = ev?.metadata?.generated_at ? ev.metadata.generated_at.slice(0, 10) : '-';
 
       const erpSorted = Object.entries(erp?.countries || {}).map(([name, row]) => ({ name, value: row.equity_risk_premium }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5);
-      const evSorted = Object.entries(ev?.sectors || {}).map(([name, row]) => ({ name, value: row.ev_sales }))
+      const evSorted = Object.entries(ev?.industries || {}).map(([name, row]) => ({ name, value: row.multiples?.ev_sales }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5);
 
