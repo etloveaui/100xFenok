@@ -1,0 +1,83 @@
+/**
+ * Valuation Lab Dashboard Styles
+ * Based on Data Lab pattern (DEC-108)
+ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+  transition: all 0.2s ease;
+}
+
+.flash {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Status colors fallback for dynamic Tailwind classes */
+.bg-amber-50 { background-color: #fffbeb; }
+.bg-amber-100 { background-color: #fef3c7; }
+.text-amber-700 { color: #b45309; }
+.border-amber-100 { border-color: #fef3c7; }
+
+.bg-indigo-50 { background-color: #eef2ff; }
+.bg-indigo-100 { background-color: #e0e7ff; }
+.text-indigo-700 { color: #4338ca; }
+.border-indigo-100 { border-color: #e0e7ff; }
+
+.bg-emerald-50 { background-color: #ecfdf5; }
+.bg-emerald-100 { background-color: #d1fae5; }
+.text-emerald-700 { color: #047857; }
+.border-emerald-100 { border-color: #d1fae5; }
+
+.bg-sky-50 { background-color: #f0f9ff; }
+.bg-sky-100 { background-color: #e0f2fe; }
+.text-sky-700 { color: #0369a1; }
+.border-sky-100 { border-color: #e0f2fe; }
+
+.bg-purple-50 { background-color: #faf5ff; }
+.bg-purple-100 { background-color: #f3e8ff; }
+.text-purple-700 { color: #7c3aed; }
+.border-purple-100 { border-color: #f3e8ff; }
+
+.bg-gray-50 { background-color: #f9fafb; }
+.bg-gray-100 { background-color: #f3f4f6; }
+.text-gray-600 { color: #4b5563; }
+.border-gray-100 { border-color: #f3f4f6; }
+
+/* Loading indicator */
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card {
+    border-radius: 0.75rem;
+  }
+}
