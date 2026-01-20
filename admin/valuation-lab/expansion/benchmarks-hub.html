@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benchmarks Hub - Valuation Lab</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .metric-card { transition: all 0.2s ease; }
+    .metric-card:hover { transform: translateY(-2px); }
+    .index-chip { cursor: pointer; transition: all 0.15s ease; }
+    .index-chip:hover { transform: scale(1.02); }
+    .index-chip.active { background-color: #3b82f6 !important; color: white !important; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b shadow-sm">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-chart-bar text-blue-500 text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-gray-800">Benchmarks Hub</h1>
+            <p class="text-sm text-gray-500">Market indices P/E, P/B, ROE - 15+ years history</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div id="freshness-badge" class="text-right">
+            <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">Loading...</span>
+          </div>
+          <a href="../" class="p-2 text-gray-500 hover:text-blue-600 rounded-lg hover:bg-blue-50">
+            <i class="fas fa-arrow-left"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-6">
+
+    <!-- Key Metrics (Top 4 Indices) -->
+    <section class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-600 mb-3">
+        <i class="fas fa-tachometer-alt mr-2 text-blue-500"></i>Key Indices - YTD Momentum
+      </h2>
+      <div id="metrics-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Rendered by JS -->
+        <div class="animate-pulse bg-gray-200 rounded-xl h-32"></div>
+        <div class="animate-pulse bg-gray-200 rounded-xl h-32"></div>
+        <div class="animate-pulse bg-gray-200 rounded-xl h-32"></div>
+        <div class="animate-pulse bg-gray-200 rounded-xl h-32"></div>
+      </div>
+    </section>
+
+    <!-- Index Selector -->
+    <section class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-600 mb-3">
+        <i class="fas fa-layer-group mr-2 text-emerald-500"></i>Index Groups
+      </h2>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button class="index-chip px-3 py-1.5 text-sm rounded-full bg-blue-500 text-white font-medium" data-group="us">
+          🇺🇸 US
+        </button>
+        <button class="index-chip px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 font-medium" data-group="sectors">
+          📊 Sectors
+        </button>
+        <button class="index-chip px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 font-medium" data-group="developed">
+          🌍 Developed
+        </button>
+        <button class="index-chip px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 font-medium" data-group="emerging">
+          🌏 Emerging
+        </button>
+        <button class="index-chip px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 font-medium" data-group="msci">
+          📈 MSCI
+        </button>
+        <button class="index-chip px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 font-medium" data-group="micro">
+          🔬 Micro
+        </button>
+      </div>
+    </section>
+
+    <!-- Yearly Returns Chart -->
+    <section class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-600 mb-3">
+        <i class="fas fa-chart-line mr-2 text-purple-500"></i>Yearly Returns Comparison
+      </h2>
+      <div class="bg-white rounded-xl shadow p-4">
+        <div id="returns-chart" style="height: 350px;">
+          <canvas id="returnsCanvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Momentum Table -->
+    <section class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-600 mb-3">
+        <i class="fas fa-table mr-2 text-amber-500"></i>Momentum Overview
+      </h2>
+      <div id="momentum-table"></div>
+    </section>
+
+    <!-- Available Tools -->
+    <section class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-600 mb-3">
+        <i class="fas fa-tools mr-2 text-indigo-500"></i>Available Tools
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a href="per-band.html" class="block p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+              <i class="fas fa-chart-area text-blue-500"></i>
+            </div>
+            <div>
+              <h3 class="font-medium text-gray-800">P/E Band Chart</h3>
+              <p class="text-xs text-gray-500">Historical P/E range visualization</p>
+            </div>
+          </div>
+        </a>
+        <a href="sector-gap.html" class="block p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+              <i class="fas fa-th-large text-emerald-500"></i>
+            </div>
+            <div>
+              <h3 class="font-medium text-gray-800">Sector Gap Analysis</h3>
+              <p class="text-xs text-gray-500">Sector valuation comparison</p>
+            </div>
+          </div>
+        </a>
+        <a href="eps-growth.html" class="block p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+              <i class="fas fa-arrow-trend-up text-purple-500"></i>
+            </div>
+            <div>
+              <h3 class="font-medium text-gray-800">EPS Growth Tracker</h3>
+              <p class="text-xs text-gray-500">Earnings growth analysis</p>
+            </div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t bg-white py-4 mt-auto">
+    <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+      <p>Benchmarks Hub v1.0 | Data: Bloomberg Terminal</p>
+    </div>
+  </footer>
+
+  <!-- Shared Modules -->
+  <script src="../../shared/config/manifest-loader.js"></script>
+  <script src="../../shared/core/cache-manager.js"></script>
+  <script src="../../shared/core/data-manager.js"></script>
+  <script src="../../shared/core/formatters.js"></script>
+  <script src="../../shared/validators/freshness-checker.js"></script>
+  <script src="../../shared/ui/metric-card.js"></script>
+  <script src="../../shared/ui/time-series-chart.js"></script>
+  <script src="../../shared/ui/data-table.js"></script>
+
+  <script>
+    // Index groups configuration
+    const INDEX_GROUPS = {
+      us: ['sp500', 'nasdaq100', 'nasdaq_composite', 'russell2000'],
+      sectors: ['information_technology', 'health_care', 'financials', 'consumer_discretionary', 'communication_services', 'industrials', 'consumer_staples', 'energy', 'utilities', 'real_estate', 'materials', 'homebuilders'],
+      developed: ['euro_stoxx_50', 'topix', 'hong_kong', 'nikkei'],
+      emerging: ['shanghai', 'india_sensex', 'kospi', 'brazil', 'vietnam', 'hang_seng_h'],
+      msci: ['world', 'developed', 'emerging', 'china', 'india', 'korea'],
+      micro: ['philadelphia_semi', 'us_regional_banks', 'hang_seng_tech', 'us_biotech']
+    };
+
+    // Display names
+    const INDEX_NAMES = {
+      sp500: 'S&P 500',
+      nasdaq100: 'Nasdaq 100',
+      nasdaq_composite: 'Nasdaq Comp',
+      russell2000: 'Russell 2000',
+      information_technology: 'Tech',
+      health_care: 'Healthcare',
+      financials: 'Financials',
+      consumer_discretionary: 'Consumer Disc',
+      communication_services: 'Comm Svc',
+      industrials: 'Industrials',
+      consumer_staples: 'Staples',
+      energy: 'Energy',
+      utilities: 'Utilities',
+      real_estate: 'Real Estate',
+      materials: 'Materials',
+      homebuilders: 'Homebuilders',
+      euro_stoxx_50: 'Euro Stoxx 50',
+      topix: 'TOPIX',
+      hong_kong: 'Hang Seng',
+      nikkei: 'Nikkei 225',
+      shanghai: 'Shanghai',
+      india_sensex: 'Sensex',
+      kospi: 'KOSPI',
+      brazil: 'Bovespa',
+      vietnam: 'Vietnam',
+      hang_seng_h: 'HSCEI',
+      world: 'MSCI World',
+      developed: 'MSCI Dev',
+      emerging: 'MSCI EM',
+      china: 'MSCI China',
+      india: 'MSCI India',
+      korea: 'MSCI Korea',
+      philadelphia_semi: 'SOX',
+      us_regional_banks: 'Reg Banks',
+      hang_seng_tech: 'HS Tech',
+      us_biotech: 'Biotech'
+    };
+
+    // Chart colors
+    const CHART_COLORS = [
+      'rgb(59, 130, 246)',   // blue
+      'rgb(16, 185, 129)',   // emerald
+      'rgb(245, 158, 11)',   // amber
+      'rgb(139, 92, 246)',   // purple
+      'rgb(236, 72, 153)',   // pink
+      'rgb(20, 184, 166)'    // teal
+    ];
+
+    let summariesData = null;
+    let returnsChart = null;
+    let currentGroup = 'us';
+
+    // Initialize
+    async function init() {
+      try {
+        // Load manifest for freshness
+        const manifest = await ManifestLoader.load();
+        const folderConfig = manifest.folders?.benchmarks || {};
+        const freshness = FreshnessChecker.checkFreshness(folderConfig.updated, folderConfig.update_frequency);
+
+        // Update freshness badge
+        const statusClasses = FreshnessChecker.getStatusClasses(freshness.status);
+        document.getElementById('freshness-badge').innerHTML = `
+          <span class="text-xs px-2 py-1 rounded ${statusClasses.bg} ${statusClasses.text}">
+            ${freshness.signal} ${freshness.label}
+          </span>
+          <p class="text-xs text-gray-400 mt-1">v${folderConfig.version || '-'} • ${folderConfig.file_count || 0} files</p>
+        `;
+
+        // Load summaries data
+        const response = await fetch('../../../data/benchmarks/summaries.json');
+        summariesData = await response.json();
+
+        // Render components
+        renderMetrics();
+        renderChart();
+        renderTable();
+        setupEventListeners();
+
+      } catch (error) {
+        console.error('[BenchmarksHub] Init failed:', error);
+        document.getElementById('metrics-grid').innerHTML = `
+          <div class="col-span-4 text-center text-red-600 py-8">
+            <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
+            <p>Failed to load data: ${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Render key metrics
+    function renderMetrics() {
+      const keyIndices = ['sp500', 'nasdaq100', 'kospi', 'emerging'];
+      const metrics = keyIndices.map(key => {
+        const mom = summariesData.momentum[key] || {};
+        const ytd = mom.ytd || 0;
+        const oneMonth = mom['1m'] || 0;
+
+        return {
+          title: INDEX_NAMES[key] || key,
+          value: (ytd * 100).toFixed(1),
+          unit: '%',
+          change: oneMonth,
+          changeFormat: 'percent',
+          changePeriod: '1M',
+          status: ytd > 0.1 ? 'bullish' : ytd < -0.05 ? 'bearish' : 'neutral',
+          emoji: ytd > 0.1 ? '🚀' : ytd < -0.05 ? '📉' : '➡️',
+          subtitle: `YTD Return`
+        };
+      });
+
+      document.getElementById('metrics-grid').innerHTML = MetricCard.renderGrid(metrics, { cols: 4 });
+    }
+
+    // Render yearly returns chart
+    function renderChart() {
+      const ctx = document.getElementById('returnsCanvas').getContext('2d');
+      const indices = INDEX_GROUPS[currentGroup];
+      const years = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+
+      const datasets = indices.slice(0, 6).map((key, i) => ({
+        label: INDEX_NAMES[key] || key,
+        data: years.map(y => {
+          const val = summariesData.yearly_returns[key]?.[y];
+          return val !== undefined ? val * 100 : null;
+        }),
+        borderColor: CHART_COLORS[i % CHART_COLORS.length],
+        backgroundColor: 'transparent',
+        tension: 0.3,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 2
+      }));
+
+      if (returnsChart) {
+        returnsChart.destroy();
+      }
+
+      returnsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: {
+                boxWidth: 12,
+                usePointStyle: true,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%`
+              }
+            }
+          },
+          scales: {
+            y: {
+              title: { display: true, text: 'Return (%)' },
+              grid: { color: 'rgba(0,0,0,0.05)' },
+              ticks: {
+                callback: (v) => v + '%'
+              }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // Render momentum table
+    function renderTable() {
+      const indices = INDEX_GROUPS[currentGroup];
+      const tableData = indices.map(key => {
+        const mom = summariesData.momentum[key] || {};
+        const returns = summariesData.yearly_returns[key] || {};
+
+        return {
+          name: INDEX_NAMES[key] || key,
+          '1m': mom['1m'],
+          '3m': mom['3m'],
+          '6m': mom['6m'],
+          ytd: mom.ytd,
+          '2024': returns['2024'],
+          '2025': returns['2025']
+        };
+      });
+
+      DataTable.render('#momentum-table', {
+        columns: [
+          { key: 'name', label: 'Index', width: '160px' },
+          { key: '1m', label: '1M', type: 'percent', decimals: 1, align: 'right' },
+          { key: '3m', label: '3M', type: 'percent', decimals: 1, align: 'right' },
+          { key: '6m', label: '6M', type: 'percent', decimals: 1, align: 'right' },
+          { key: 'ytd', label: 'YTD', type: 'percent', decimals: 1, align: 'right' },
+          { key: '2024', label: '2024', type: 'percent', decimals: 1, align: 'right' },
+          { key: '2025', label: '2025', type: 'percent', decimals: 1, align: 'right' }
+        ],
+        data: tableData,
+        options: {
+          pageSize: 15,
+          searchable: true,
+          sortable: true
+        }
+      });
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      document.querySelectorAll('.index-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          const group = e.target.dataset.group;
+          if (group === currentGroup) return;
+
+          // Update chip styles
+          document.querySelectorAll('.index-chip').forEach(c => {
+            c.classList.remove('bg-blue-500', 'text-white');
+            c.classList.add('bg-gray-100', 'text-gray-700');
+          });
+          e.target.classList.remove('bg-gray-100', 'text-gray-700');
+          e.target.classList.add('bg-blue-500', 'text-white');
+
+          currentGroup = group;
+          renderChart();
+          renderTable();
+        });
+      });
+    }
+
+    // Start
+    init();
+  </script>
+
+</body>
+</html>
