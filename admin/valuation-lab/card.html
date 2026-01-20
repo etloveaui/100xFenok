@@ -352,10 +352,12 @@
         
         if (type === 'stock') {
            text += `<strong>PER ${summary.currentPE?.toFixed(1) || '-'}</strong>로 `;
-           if (summary.industryGap) {
+           if (summary.industryGap !== null && summary.industryGap !== undefined) {
              const gap = summary.industryGap;
              const gapText = gap > 0 ? `+${(gap*100).toFixed(0)}% 할증` : `${(gap*100).toFixed(0)}% 할인`;
              text += `산업 대비 <strong>${gapText}</strong> 거래되고 있습니다. `;
+           } else {
+             text += `<strong>${overall.label}</strong> 상태입니다. `;
            }
         } else {
            if (pe?.value !== null) text += `<strong>P/E ${pe.formatted}</strong> `;

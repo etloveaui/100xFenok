@@ -199,7 +199,518 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 </style>
 
 <script>
-const C={c:3e5,n:5,a:800,y:['2018','2019','2020','2021','2022','2023','2024','2025']},G={us:['sp500','nasdaq100','nasdaq_composite','russell2000'],sec:['information_technology','health_care','financials','consumer_discretionary','communication_services','industrials','consumer_staples','energy','utilities','real_estate','materials','homebuilders'],dev:['euro_stoxx_50','topix','hong_kong','nikkei'],em:['shanghai','india_sensex','kospi','brazil','vietnam','hang_seng_h'],msci:['world','developed','emerging','china','india','korea'],micro:['philadelphia_semi','us_regional_banks','hang_seng_tech','us_biotech']},N={sp500:'S&P 500',nasdaq100:'Nasdaq 100',nasdaq_composite:'Nasdaq Composite',russell2000:'Russell 2000',information_technology:'Info Tech',health_care:'Healthcare',financials:'Financials',consumer_discretionary:'Consumer Disc',communication_services:'Comm Services',industrials:'Industrials',consumer_staples:'Consumer Staples',energy:'Energy',utilities:'Utilities',real_estate:'Real Estate',materials:'Materials',homebuilders:'Homebuilders',euro_stoxx_50:'Euro Stoxx 50',topix:'TOPIX',hong_kong:'Hong Kong',nikkei:'Nikkei 225',shanghai:'Shanghai',india_sensex:'India Sensex',kospi:'KOSPI',brazil:'Bovespa',vietnam:'VN-Index',hang_seng_h:'HSCEI',world:'MSCI World',developed:'MSCI Dev',emerging:'MSCI EM',china:'MSCI China',india:'MSCI India',korea:'MSCI Korea',philadelphia_semi:'SOX',us_regional_banks:'Regional Banks',hang_seng_tech:'HS Tech',us_biotech:'Biotech'},Cc=['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#eab308','#f87171'],S={d:null,g:'us',st:{k:'6m',a:!1},cs:new Set(),fs:new Set(),cm:!1,q:''};let ci=null,to=null;const $=id=>document.getElementById(id),qa=id=>document.querySelectorAll(id),fp=v=>({v:p=v*100,s:p>0?'+':'',c:p>0?'text-green':p<0?'text-red':'text-gray',t:(p>0?'+':'')+p.toFixed(1)+'%'}),rt=d=>d<6e4?'방금 전':d<36e5?Math.floor(d/6e4)+'분 전':d<864e5?Math.floor(d/36e5)+'시간 전':Math.floor(d/864e5)+'일 전',toast=(m,t='i')=>{const e=document.createElement('div');e.className='toast-enter '+(t==='s'?'bg-green':t==='i'?'bg-blue':t==='w'?'bg-yellow':'bg-red')+' text-white px-4 py-3 rounded-xl flex items-center gap-3';e.innerHTML='<i class="fas '+(t==='s'?'fa-check':t==='i'?'fa-info':t==='w'?'fa-exclamation':'fa-times')+'"></i><span>'+m+'</span>';$('toast-container').appendChild(e);setTimeout(()=>e.remove(),3e3)},err=m=>{$('main').innerHTML='<div class="text-center py-16"><div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-exclamation-triangle text-4xl text-red-500"></i></div><p class="text-gray-700 text-lg mb-2 font-medium">데이터 불가</p><p class="text-gray-500 text-sm mb-4">'+m+'</p><button onclick="location.reload()" class="px-6 py-2 bg-blue-500 text-white rounded-lg">다시 시도</button></div>'};async function load(){try{const cd=localStorage.getItem('mD'),ct=localStorage.getItem('mT');if(cd&&ct&&Date.now()-ct<C.c){S.d=JSON.parse(cd);toast('캐시','s')}else{const r=await fetch('../../../data/benchmarks/summaries.json');if(!r.ok)throw new Error('실패');S.d=await r.json();localStorage.setItem('mD',JSON.stringify(S.d));localStorage.setItem('mT',Date.now());toast('업데이트','s')}const lastUpdate=localStorage.getItem('mT');$('relative-time').textContent=lastUpdate?rt(Date.now()-parseInt(lastUpdate)):'방금 전';$('data-freshness').classList.remove('hidden');S.d?.metadata?.generated&&($('last-updated').textContent='업데이트: '+new Date(S.d.metadata.generated).toLocaleString('ko-KR'));renderAll()}catch(e){err(e.message)}}function refresh(){$('refresh-icon').classList.add('animate-spin');localStorage.removeItem('mD');localStorage.removeItem('mT');setTimeout(()=>location.reload(),500)}function upFav(){const h=G[S.g].some(k=>S.fs.has(k));$('fav-icon').classList.toggle('text-yellow-500',h);$('fav-icon').classList.toggle('text-gray-400',!h)}function renderAll(){const ig=G[S.g],rk=ig.map(k=>({k,n:N[k]||k,m6:S.d.momentum[k]?.['6m']||0,m1:S.d.momentum[k]?.['1m']||0,ytd:S.d.momentum[k]?.['ytd']||0,f:S.fs.has(k)})).sort((a,b)=>b.m6-a.m6);const topMetrics=rk.slice(0,5).map((i,n)=>({title:i.n,value:fp(i.m6).t,status:i.m6>0.1?'bullish':i.m6<-0.05?'bearish':'neutral',change:i.m1,changeFormat:'percent',changePeriod:'1M',emoji:n===0?'🥇':n===1?'🥈':n===2?'🥉':'',subtitle:'6M Momentum'+(i.f?' ★':''),className:n===0?'border-yellow-400':''}));const botMetrics=rk.slice(-5).reverse().map((i,n)=>{const r=ig.length-n;return{title:i.n,value:fp(i.m6).t,status:'bearish',change:i.m1,changeFormat:'percent',changePeriod:'1M',emoji:'',subtitle:'#'+r+(i.f?' ★':'')}});$('top5-cards').innerHTML=MetricCard.renderGrid(topMetrics,{cols:1,gap:'gap-2'});$('bottom5-cards').innerHTML=MetricCard.renderGrid(botMetrics,{cols:1,gap:'gap-2'});const tableData=ig.filter(k=>(N[k]||k).toLowerCase().includes(S.q.toLowerCase())).map(k=>{const m=S.d.momentum[k]||{},r=S.d.yearly_returns[k]||{};return{k,n:N[k]||k,'1m':m['1m'],'3m':m['3m'],'6m':m['6m'],ytd:m.ytd,'2025':r['2025'],f:S.fs.has(k),ic:S.cs.has(k)}});tableData.sort((a,b)=>{const av=a[S.st.k]||0,bv=b[S.st.k]||0;return S.st.a?av-bv:bv-av});$('table-count').textContent=tableData.length+'개';DataTable.render('#momentum-table',{columns:[{key:'n',label:'Index',width:'140px'},{key:'1m',label:'1M',type:'percent',decimals:1,align:'right'},{key:'3m',label:'3M',type:'percent',decimals:1,align:'right'},{key:'6m',label:'6M',type:'percent',decimals:1,align:'right'},{key:'ytd',label:'YTD',type:'percent',decimals:1,align:'right'},{key:'2025',label:'25',type:'percent',decimals:1,align:'right'}],data:tableData,options:{pageSize:15,searchable:!0,sortable:!0,onRowClick:(row)=>{M.toggleC(row.k)}}});G[S.g].slice(0,C.n).forEach(k=>S.cs.add(k));renderChart()}function renderChart(){const ctx=$('chartCanvas').getContext('2d');if(S.cs.size===0){$('chart-empty').classList.remove('hidden');ci&&(ci.destroy(),ci=null)}else{$('chart-empty').classList.add('hidden');const ds=Array.from(S.cs).map((k,i)=>({label:N[k]||k,data:C.y.map(y=>{const v=S.d.yearly_returns[k]?.[y];return v!==undefined?v*100:null}),borderColor:Cc[i%10],backgroundColor:Cc[i%10]+'15',tension:.4,pointRadius:5,pointHoverRadius:8,borderWidth:2.5,fill:!1}));ci&&ci.destroy();ci=new Chart(ctx,{type:'line',data:{labels:C.y,datasets:ds},options:{responsive:!0,maintainAspectRatio:!1,interaction:{intersect:!1,mode:'index'},plugins:{legend:{position:'top',align:'end',labels:{boxWidth:12,usePointStyle:!0,padding:15,font:{size:12}}},tooltip:{backgroundColor:'rgba(255,255,255,0.98)',borderColor:'#e5e7eb',borderWidth:1,cornerRadius:8,padding:12}},scales:{y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{callback:v=>v+'%'}},x:{grid:{display:!1}}}}})}}function chartAll(){G[S.g].forEach(k=>S.cs.add(k));renderChart();toast('전체 선택','s')}function chartTop5(){const rk=G[S.g].map(k=>({k,v:S.d.momentum[k]?.['6m']||0})).sort((a,b)=>b.v-a.v);S.cs.clear();rk.slice(0,5).forEach(i=>S.cs.add(i.k));renderChart();toast('Top 5','s')}function chartClear(){S.cs.clear();renderChart();toast('초기화','i')}function exportChart(){if(!ci)return;const l=document.createElement('a');l.download='momentum-'+S.g+'-'+Date.now()+'.png';l.href=ci.toBase64Image();l.click();toast('차트 저장','s')}function exportCSV(){const ig=G[S.g],h=['Index','1M','3M','6M','YTD','2024','2025'],r=ig.map(k=>{const m=S.d.momentum[k]||{},r=S.d.yearly_returns[k]||{};return[N[k]||k,(m['1m']*100).toFixed(2),(m['3m']*100).toFixed(2),(m['6m']*100).toFixed(2),(m.ytd*100).toFixed(2),(r['2024']*100).toFixed(2),(r['2025']*100).toFixed(2)].join(',')}).join('\n');const b=new Blob([h.join(',')+'\n'+r],{type:'text/csv'});const l=document.createElement('a');l.download='momentum-'+S.g+'-'+Date.now()+'.csv';l.href=URL.createObjectURL(b);l.click();toast('CSV 저장','s')}const M={show:k=>{const m=S.d.momentum[k]||{},r=S.d.yearly_returns[k]||{},n=N[k]||k;$('modal-title').textContent=n;$('modal-subtitle').textContent='Summary';$('modal-content').innerHTML='<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">'+['1m','3m','6m','ytd'].map(p=>{const c=fp(m[p]||0);return'<div class="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 text-center"><div class="text-xs text-blue-600 uppercase mb-1">'+p+'</div><div class="text-xl font-bold '+c.c+'">'+c.t+'</div></div>'}).join('')+'</div><div class="space-y-2"><h4 class="font-semibold text-gray-700 mb-3">연간 수익률</h4>'+['2025','24','23','22','21'].map(y=>{const v=r[y];if(v===undefined)return'';const c=fp(v);return'<div class="flex justify-between py-2 border-b"><span class="text-gray-600">20'+y+'</span><span class="font-semibold '+c.c+'">'+c.t+'</span></div>'}).join('')+'</div>';$('detail-modal').classList.remove('hidden');document.body.style.overflow='hidden'},closeM:()=>{$('detail-modal').classList.add('hidden');document.body.style.overflow=''},showK:()=>{$('shortcuts-modal').classList.remove('hidden')},closeK:()=>{$('shortcuts-modal').classList.add('hidden')},shareShow:()=>$('share-modal').classList.remove('hidden'),shareClose:()=>$('share-modal').classList.add('hidden'),shareCopy:()=>{navigator.clipboard.writeText(location.origin+location.pathname+'?g='+S.g);toast('링크 복사','s');$('share-modal').classList.add('hidden')},shareTW:()=>window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent('Momentum - '+S.g.toUpperCase()),'_blank'),toggleC:k=>{if(S.cs.has(k)){if(S.cs.size>1){S.cs.delete(k);toast((N[k]||k)+' 제거','i')}}else{S.cs.add(k);toast((N[k]||k)+' 추가','s')}renderChart()},toggleF:k=>{S.fs.has(k)?(S.fs.delete(k),toast('즐겨찾기 해제','i')):(S.fs.add(k),toast('즐겨찾기 추가','s'));localStorage.setItem('mF',JSON.stringify([...S.fs]));upFav();renderAll()}};function toggleCmp(){S.cm=!S.cm;const b=$('compare-banner');S.cm?(b.classList.remove('hidden'),toast('비교 모드','i')):(b.classList.add('hidden'),S.ci=[])}function toggleD(){const d=document.documentElement.classList.toggle('dark');localStorage.setItem('darkMode',d);toast(d?'다크':'라이트','i')}function toggleFavV(){S.q='☆';$('table-search').value='';renderAll();toast('즐겨찾기','i')}function toggleQ(){const m=$('quick-actions'),b=$('quick-actions-backdrop');m.classList.toggle('hidden');b.classList.toggle('hidden')}function closeQ(){$('quick-actions').classList.add('hidden');$('quick-actions-backdrop').classList.add('hidden')}qa('.index-chip').forEach(c=>{c.onclick=e=>{const g=e.target.dataset.group||e.target.closest('.index-chip').dataset.group;if(g===S.g)return;qa('.index-chip').forEach(x=>{x.className='index-chip flex-shrink-0 px-4 py-2.5 text-sm rounded-xl font-medium shadow-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200'});const t=e.target.classList.contains('index-chip')?e.target:e.target.closest('.index-chip');t.className='index-chip flex-shrink-0 px-4 py-2.5 text-sm rounded-xl font-medium shadow-md bg-blue-500 text-white';S.g=g;S.cs.clear();renderAll()}});$('table-search').oninput=e=>{clearTimeout(to);to=setTimeout(()=>{S.q=e.target.value;renderAll()},200)};document.onkeydown=e=>{if(e.target.tagName==='INPUT')return;switch(e.key.toLowerCase()){case'r':refresh();break;case'/':e.preventDefault();$('table-search').focus();break;case'd':toggleD();break;case'c':toggleCmp();break;case'?':M.showK();break;case'escape':M.closeM();M.closeK();$('share-modal').classList.add('hidden');closeQ();break}};let sy=0,cy=0;const pr=$('pull-refresh'),mc=$('main-content');mc.ontouchstart=e=>{if(window.scrollY===0)sy=e.touches[0].clientY};mc.ontouchmove=e=>{if(window.scrollY===0&&sy>0){cy=e.touches[0].clientY-sy;if(cy>50)pr.classList.add('active')}};mc.ontouchend=()=>{if(cy>100)refresh();pr.classList.remove('active');sy=0;cy=0};const d=localStorage.getItem('darkMode')==='true'||(!localStorage.getItem('darkMode')&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');const sf=localStorage.getItem('mF');if(sf)S.fs=new Set(JSON.parse(sf));upFav();load();
-</script>
+    // Index groups configuration
+    const INDEX_GROUPS = {
+      us: ['sp500', 'nasdaq100', 'nasdaq_composite', 'russell2000'],
+      sec: ['information_technology', 'health_care', 'financials', 'consumer_discretionary', 'communication_services', 'industrials', 'consumer_staples', 'energy', 'utilities', 'real_estate', 'materials', 'homebuilders'],
+      dev: ['euro_stoxx_50', 'topix', 'hong_kong', 'nikkei'],
+      em: ['shanghai', 'india_sensex', 'kospi', 'brazil', 'vietnam', 'hang_seng_h'],
+      msci: ['world', 'developed', 'emerging', 'china', 'india', 'korea'],
+      micro: ['philadelphia_semi', 'us_regional_banks', 'hang_seng_tech', 'us_biotech']
+    };
+
+    // Display names
+    const INDEX_NAMES = {
+      sp500: 'S&P 500',
+      nasdaq100: 'Nasdaq 100',
+      nasdaq_composite: 'Nasdaq Composite',
+      russell2000: 'Russell 2000',
+      information_technology: 'Info Tech',
+      health_care: 'Healthcare',
+      financials: 'Financials',
+      consumer_discretionary: 'Consumer Disc',
+      communication_services: 'Comm Services',
+      industrials: 'Industrials',
+      consumer_staples: 'Consumer Staples',
+      energy: 'Energy',
+      utilities: 'Utilities',
+      real_estate: 'Real Estate',
+      materials: 'Materials',
+      homebuilders: 'Homebuilders',
+      euro_stoxx_50: 'Euro Stoxx 50',
+      topix: 'TOPIX',
+      hong_kong: 'Hong Kong',
+      nikkei: 'Nikkei 225',
+      shanghai: 'Shanghai',
+      india_sensex: 'India Sensex',
+      kospi: 'KOSPI',
+      brazil: 'Bovespa',
+      vietnam: 'VN-Index',
+      hang_seng_h: 'HSCEI',
+      world: 'MSCI World',
+      developed: 'MSCI Dev',
+      emerging: 'MSCI EM',
+      china: 'MSCI China',
+      india: 'MSCI India',
+      korea: 'MSCI Korea',
+      philadelphia_semi: 'SOX',
+      us_regional_banks: 'Regional Banks',
+      hang_seng_tech: 'HS Tech',
+      us_biotech: 'Biotech'
+    };
+
+    // Chart colors
+    const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1'];
+
+    // Constants
+    const CACHE_DURATION = 5 * 60 * 1000;
+    const STORAGE_KEYS = { d: 'mD', t: 'mT', fav: 'mFav' };
+    const YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+
+    // State
+    let data = null;
+    let chart = null;
+    let currentGroup = 'us';
+    let sortKey = '6m';
+    let sortAsc = false;
+    let compareMode = false;
+    let;
+    let searchQuery = '';
+    let favorites = new Set();
+    let lastUpdated = null;
+
+    // DOM elements
+    const $ = id => document.getElementById(id);
+    const $$ = selector => document.querySelectorAll(selector);
+
+    // Format helpers
+    const fp = v => {
+      const p = v * 100;
+      return {
+        v: p,
+        s: p > 0 ? '+' : '',
+        c: p > 0 ? 'text-green-600' : p < 0 ? 'text-red-600' : 'text-gray-500',
+        t: (p > 0 ? '+' : '') + p.toFixed(1) + '%'
+      };
+    };
+
+    const rt = d => {
+      if (d < 60000) return '방금 전';
+      if (d < 3600000) return Math.floor(d / 60000) + '분 전';
+      if (d < 86400000) return Math.floor(d / 3600000) + '시간 전';
+      return Math.floor(d / 86400000) + '일 전';
+    };
+
+    const toast = (msg, type = 'info') => {
+      const container = $('toast-container');
+      const toastEl = document.createElement('div');
+      const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle', warning: 'fa-exclamation-triangle' };
+      const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-amber-500' };
+      toastEl.className = `toast-enter px-4 py-3 ${colors[type]} text-white rounded-lg shadow-lg flex items-center gap-2 text-sm`;
+      toastEl.innerHTML = `<i class="fas ${icons[type]}"></i><span>${msg}</span>`;
+      container.appendChild(toastEl);
+      setTimeout(() => toastEl.remove(), 3000);
+    };
+
+    // Storage helpers
+    const storage = {
+      get: (k, def) => {
+        try {
+          const v = localStorage.getItem(k);
+          if (v === null) return def;
+          return k === STORAGE_KEYS.t ? Date.now() - (parseInt(v) || 0) : JSON.parse(v);
+        } catch (e) { return def; }
+      },
+      set: (k, v) => {
+        try { localStorage.setItem(k, typeof v === 'object' ? JSON.stringify(v) : v); } catch (e) {}
+      }
+    };
+
+    // Initialize
+    async function init() {
+      try {
+        const response = await fetch('../../../data/benchmarks/summaries.json');
+        if (!response.ok) throw new Error('Failed to load data');
+        data = await response.json();
+
+        const now = Date.now();
+        storage.set(STORAGE_KEYS.t, now);
+        storage.set(STORAGE_KEYS.d, data);
+        lastUpdated = now;
+
+        render();
+        setupEventListeners();
+
+      } catch (error) {
+        console.error('Init failed:', error);
+        toast('데이터 로드 실패: ' + error.message, 'error');
+      }
+    }
+
+    // Render all components
+    function render() {
+      renderTopBottom5();
+      renderTable();
+      renderChart();
+      updateRelativeTime();
+      updateFavorites();
+    }
+
+    // Render Top 5 and Bottom 5 cards
+    function renderTopBottom5() {
+      const indices = getAllIndices();
+      const sorted = indices.map(key => ({
+        key,
+        name: INDEX_NAMES[key] || key,
+        mom: data.momentum[key] || {},
+        value: (data.momentum[key] || {})['6m'] || 0
+      })).sort((a, b) => b.value - a.value);
+
+      const top5 = sorted.slice(0, 5);
+      const bottom5 = sorted.slice(-5).reverse();
+
+      $('top5-cards').innerHTML = top5.map(item => createMetricCard(item, true)).join('');
+      $('bottom5-cards').innerHTML = bottom5.map(item => createMetricCard(item, false)).join('');
+    }
+
+    function createMetricCard(item, isTop) {
+      const f = fp(item.value);
+      const emoji = item.value > 0 ? '📈' : item.value < 0 ? '📉' : '➡️';
+
+      return `
+        <div class="metric-card ${isTop ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'} rounded-xl p-4 border cursor-pointer hover:shadow-lg transition-all" onclick="showDetail('${item.key}')">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-gray-600 truncate flex-1">${item.name}</span>
+            <span class="text-lg">${emoji}</span>
+          </div>
+          <div class="text-2xl font-bold ${f.c}">${f.s}${f.v.toFixed(1)}%</div>
+          <div class="text-xs text-gray-400 mt-1">6개월 수익률</div>
+        </div>
+      `;
+    }
+
+    // Render table
+    function renderTable() {
+      const indices = INDEX_GROUPS[currentGroup];
+      const filtered = indices.filter(key => {
+        const name = (INDEX_NAMES[key] || '').toLowerCase();
+        return !searchQuery || name.includes(searchQuery.toLowerCase()) || key.includes(searchQuery.toLowerCase());
+      });
+
+      const rows = filtered.map(key => {
+        const mom = data.momentum[key] || {};
+        const f1m = fp(mom['1m'] || 0);
+        const f3m = fp(mom['3m'] || 0);
+        const f6m = fp(mom['6m'] || 0);
+        const fytd = fp(mom.ytd || 0);
+
+        return `
+          <tr class="table-row border-b border-gray-100 hover:bg-gray-50 cursor-pointer" data-key="${key}" onclick="toggleCompare('${key}')">
+            <td class="px-4 py-3 text-sm font-medium">${INDEX_NAMES[key] || key}</td>
+            <td class="px-4 py-3 text-sm text-right ${f1m.c}">${f1m.t}</td>
+            <td class="px-4 py-3 text-sm text-right ${f3m.c}">${f3m.t}</td>
+            <td class="px-4 py-3 text-sm text-right ${f6m.c} font-semibold">${f6m.t}</td>
+            <td class="px-4 py-3 text-sm text-right ${fytd.c}">${fytd.t}</td>
+          </tr>
+        `;
+      }).join('');
+
+      $('momentum-table').innerHTML = `
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Index</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">1M</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">3M</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">6M</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">YTD</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+
+      $('table-count').textContent = filtered.length;
+    }
+
+    // Render chart
+    function renderChart() {
+      const ctx = document.getElementById('chartCanvas').getContext('2d');
+      const selected = getSelectedIndices();
+
+      if (selected.length === 0) {
+        $('chart-empty').classList.remove('hidden');
+        if (chart) { chart.destroy(); chart = null; }
+        return;
+      }
+
+      $('chart-empty').classList.add('hidden');
+
+      const datasets = selected.map((key, i) => ({
+        label: INDEX_NAMES[key] || key,
+        data: YEARS.map(y => {
+          const val = data.yearly_returns[key]?.[y];
+          return val !== undefined ? val * 100 : null;
+        }),
+        borderColor: CHART_COLORS[i % CHART_COLORS.length],
+        backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + '20',
+        tension: 0.3,
+        fill: false,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }));
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: YEARS, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%`
+              }
+            }
+          },
+          scales: {
+            y: {
+              title: { display: true, text: 'Return (%)' },
+              grid: { color: 'rgba(0,0,0,0.05)' },
+              ticks: { callback: v => v + '%' }
+            },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // Helper functions
+    function getAllIndices() {
+      return Object.values(INDEX_GROUPS).flat();
+    }
+
+    function getSelectedIndices() {
+      const container = $('chart-empty');
+      if (!container.classList.contains('hidden')) return [];
+      const selected = Array.from(document.querySelectorAll('.table-row.bg-blue-50')).map(r => r.dataset.key);
+      return selected.length > 0 ? selected : INDEX_GROUPS[currentGroup].slice(0, 5);
+    }
+
+    function updateRelativeTime() {
+      const diff = Date.now() - (storage.get(STORAGE_KEYS.t, 0) || Date.now());
+      $('relative-time').textContent = rt(diff);
+    }
+
+    function updateFavorites() {
+      const fav = storage.get(STORAGE_KEYS.fav, []);
+      favorites = new Set(fav);
+      $('fav-icon').className = favorites.has(currentGroup) ? 'fas fa-star text-base text-yellow-500' : 'far fa-star text-base';
+    }
+
+    // Event handlers
+    function setupEventListeners() {
+      // Group tabs
+      $$('.index-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          $$('.index-chip').forEach(c => {
+            c.classList.remove('bg-blue-500', 'text-white');
+            c.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-200');
+          });
+          chip.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-200');
+          chip.classList.add('bg-blue-500', 'text-white');
+          currentGroup = chip.dataset.group;
+          render();
+        });
+      });
+
+      // Search
+      $('table-search').addEventListener('input', e => {
+        searchQuery = e.target.value;
+        renderTable();
+      });
+
+      // Refresh
+      window.refresh = () => {
+        $('refresh-icon').classList.add('animate-spin');
+        init().finally(() => $('refresh-icon').classList.remove('animate-spin'));
+      };
+
+      // Dark mode
+      window.toggleD = () => {
+        document.documentElement.classList.toggle('dark');
+        storage.set('dark', document.documentElement.classList.contains('dark'));
+      };
+
+      // Favorites
+      window.toggleFavV = () => {
+        if (favorites.has(currentGroup)) {
+          favorites.delete(currentGroup);
+          toast('즐겨찾기 제거됨', 'info');
+        } else {
+          favorites.add(currentGroup);
+          toast('즐겨찾기 추가됨', 'success');
+        }
+        storage.set(STORAGE_KEYS.fav, Array.from(favorites));
+        updateFavorites();
+      };
+
+      // Quick actions
+      window.toggleQ = () => {
+        const qa = $('quick-actions');
+        const backdrop = $('pull-refresh');
+        qa.classList.toggle('hidden');
+        backdrop.classList.toggle('active');
+      };
+
+      window.closeQ = () => {
+        $('quick-actions').classList.add('hidden');
+        $('pull-refresh').classList.remove('active');
+      };
+
+      // Chart controls
+      window.chartAll = () => {
+        $$('.table-row').forEach(r => r.classList.add('bg-blue-50'));
+        renderChart();
+      };
+
+      window.chartTop5 = () => {
+        $$('.table-row').forEach(r => r.classList.remove('bg-blue-50'));
+        INDEX_GROUPS[currentGroup].slice(0, 5).forEach(key => {
+          document.querySelector(`tr[data-key="${key}"]`)?.classList.add('bg-blue-50');
+        });
+        renderChart();
+      };
+
+      window.chartClear = () => {
+        $$('.table-row').forEach(r => r.classList.remove('bg-blue-50'));
+        renderChart();
+      };
+
+      // Compare mode
+      window.toggleCmp = () => {
+        compareMode = !compareMode;
+        $('compare-banner').classList.toggle('hidden', !compareMode);
+        toast(compareMode ? '비교 모드 활성화' : '비교 모드 종료', 'info');
+      };
+
+      window.toggleCompare = (key) => {
+        if (!compareMode) return;
+        const row = document.querySelector(`tr[data-key="${key}"]`);
+        row.classList.toggle('bg-blue-50');
+        renderChart();
+      };
+
+      // Export
+      window.exportChart = () => {
+        const link = document.createElement('a');
+        link.download = 'momentum-chart.png';
+        link.href = document.getElementById('chartCanvas').toDataURL();
+        link.click();
+        toast('차트 저장됨', 'success');
+      };
+
+      window.exportCSV = () => {
+        const indices = INDEX_GROUPS[currentGroup];
+        const rows = indices.map(key => {
+          const mom = data.momentum[key] || {};
+          return [key, mom['1m'], mom['3m'], mom['6m'], mom.ytd].join(',');
+        });
+        const csv = 'Index,1M,3M,6M,YTD\n' + rows.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const link = document.createElement('a');
+        link.download = 'momentum-data.csv';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        toast('CSV 저장됨', 'success');
+      };
+
+      // Detail modal
+      window.showDetail = (key) => {
+        const mom = data.momentum[key] || {};
+        const returns = data.yearly_returns[key] || {};
+        const f = fp;
+
+        $('modal-title').textContent = INDEX_NAMES[key] || key;
+        $('modal-subtitle').textContent = 'Momentum & Yearly Returns';
+        $('modal-content').innerHTML = `
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">1개월</div>
+                <div class="text-lg font-bold ${f(mom['1m'] || 0).c}">${f(mom['1m'] || 0).t}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">3개월</div>
+                <div class="text-lg font-bold ${f(mom['3m'] || 0).c}">${f(mom['3m'] || 0).t}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">6개월</div>
+                <div class="text-lg font-bold ${f(mom['6m'] || 0).c}">${f(mom['6m'] || 0).t}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">YTD</div>
+                <div class="text-lg font-bold ${f(mom.ytd || 0).c}">${f(mom.ytd || 0).t}</div>
+              </div>
+            </div>
+            <div class="border-t pt-4">
+              <h4 class="text-sm font-medium mb-2">연도별 수익률</h4>
+              <div class="grid grid-cols-4 gap-2">
+                ${YEARS.map(y => {
+                  const val = returns[y];
+                  if (val === undefined) return '';
+                  const ff = f(val);
+                  return `
+                    <div class="text-center p-2 bg-gray-50 rounded">
+                      <div class="text-xs text-gray-500">${y}</div>
+                      <div class="font-medium ${ff.c}">${ff.t}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+        $('detail-modal').classList.remove('hidden');
+      };
+
+      window.M = {
+        closeM: () => $('detail-modal').classList.add('hidden'),
+        closeK: () => $('shortcuts-modal').classList.add('hidden'),
+        shareClose: () => $('share-modal').classList.add('hidden'),
+        shareShow: () => $('share-modal').classList.remove('hidden'),
+        shareCopy: () => {
+          navigator.clipboard.writeText(window.location.href);
+          toast('링복사됨', 'success');
+        },
+        shareTW: () => {
+          const text = `Momentum Dashboard - ${currentGroup.toUpperCase()} indices performance`;
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+        },
+        showK: () => $('shortcuts-modal').classList.remove('hidden')
+      };
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT') return;
+        switch (e.key.toLowerCase()) {
+          case 'r': refresh(); break;
+          case '/': e.preventDefault(); $('table-search').focus(); break;
+          case 'd': toggleD(); break;
+          case 'c': toggleCmp(); break;
+          case '?': M.showK(); break;
+          case 'escape': $$('.modal').forEach(m => m.classList.add('hidden')); closeQ(); break;
+        }
+      });
+
+      // Initialize dark mode from storage
+      if (storage.get('dark', false)) document.documentElement.classList.add('dark');
+
+      // Update time every minute
+      setInterval(updateRelativeTime, 60000);
+    }
+
+    // Start
+    init();
+  </script>
 </body>
 </html>
