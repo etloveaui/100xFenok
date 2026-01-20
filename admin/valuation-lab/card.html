@@ -709,7 +709,9 @@
               signal: '⚪'
             }
           };
-          name = `${stock.name} (${ticker})`;
+          // Get name from stocksIndex (stocks_index.json uses 'n' for name)
+          const stockName = stocksIndex?.[ticker]?.n || ticker;
+          name = `${stockName} (${ticker})`;
         }
 
         elements.cardOutput.innerHTML = '';
