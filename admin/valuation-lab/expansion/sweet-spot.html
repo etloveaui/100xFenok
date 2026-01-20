@@ -1,2200 +1,383 @@
 <!DOCTYPE html>
-<html lang="ko" class="antialiased scroll-smooth">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sweet Spot Scanner v8.0 - 100xFenok</title>
-  <meta name="description" content="Valuation vs Momentum analysis with AI-powered insights & historical tracking">
-  <link rel="icon" type="image/svg+xml" href="../../favicon.svg?v=8.0">
+  <title>Sweet Spot Scanner v8.1 - 100xFenok</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'Monaco', 'monospace']
-          },
-          animation: {
-            'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
-            'fade-in-down': 'fadeInDown 0.4s ease-out forwards',
-            'scale-in': 'scaleIn 0.3s ease-out forwards',
-            'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
-            'shimmer': 'shimmer 2.5s linear infinite',
-            'slide-in-right': 'slideInRight 0.3s ease-out forwards',
-            'slide-in-left': 'slideInLeft 0.3s ease-out forwards',
-            'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite',
-            'spin-slow': 'spin 3s linear infinite',
-            'pulse-soft': 'pulseSoft 2s ease-in-out infinite'
-          },
-          keyframes: {
-            fadeInUp: {
-              '0%': { opacity: '0', transform: 'translateY(30px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' }
-            },
-            fadeInDown: {
-              '0%': { opacity: '0', transform: 'translateY(-20px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' }
-            },
-            scaleIn: {
-              '0%': { opacity: '0', transform: 'scale(0.9)' },
-              '100%': { opacity: '1', transform: 'scale(1)' }
-            },
-            slideInRight: {
-              '0%': { opacity: '0', transform: 'translateX(100%)' },
-              '100%': { opacity: '1', transform: 'translateX(0)' }
-            },
-            slideInLeft: {
-              '0%': { opacity: '0', transform: 'translateX(-100%)' },
-              '100%': { opacity: '1', transform: 'translateX(0)' }
-            },
-            pulseGlow: {
-              '0%, 100%': {
-                boxShadow: '0 0 20px rgba(34, 197, 94, 0.3), 0 0 40px rgba(34, 197, 94, 0.1)'
-              },
-              '50%': {
-                boxShadow: '0 0 30px rgba(34, 197, 94, 0.5), 0 0 60px rgba(34, 197, 94, 0.2)'
-              }
-            },
-            shimmer: {
-              '0%': { backgroundPosition: '-200% 0' },
-              '100%': { backgroundPosition: '200% 0' }
-            },
-            bounceSubtle: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-5px)' }
-            },
-            pulseSoft: {
-              '0%, 100%': { opacity: '1' },
-              '50%': { opacity: '0.7' }
-            },
-            spin: {
-              'to': { transform: 'rotate(360deg)' }
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    /* ==================== CSS VARIABLES SYSTEM v5 ==================== */
-    :root {
-      /* Primary Colors */
-      --sweet-primary: #22c55e;
-      --sweet-primary-dark: #16a34a;
-      --sweet-light: #dcfce7;
-      --sweet-bg: rgba(34, 197, 94, 0.08);
-      --sweet-bg-hover: rgba(34, 197, 94, 0.15);
-      --sweet-border: rgba(34, 197, 94, 0.3);
-      --sweet-gradient: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #dcfce7 100%);
-      --sweet-text: #166534;
-
-      --danger-primary: #ef4444;
-      --danger-primary-dark: #dc2626;
-      --danger-light: #fee2e2;
-      --danger-bg: rgba(239, 68, 68, 0.08);
-      --danger-bg-hover: rgba(239, 68, 68, 0.15);
-      --danger-border: rgba(239, 68, 68, 0.3);
-      --danger-gradient: linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #fee2e2 100%);
-      --danger-text: #991b1b;
-
-      --neutral-primary: #64748b;
-      --neutral-light: #f1f5f9;
-      --neutral-bg: rgba(100, 116, 139, 0.08);
-      --neutral-bg-hover: rgba(100, 116, 139, 0.15);
-      --neutral-border: rgba(203, 213, 225, 0.6);
-      --neutral-text: #475569;
-
-      /* v8.0: Insight Colors */
-      --insight-positive: #10b981;
-      --insight-negative: #f59e0b;
-      --insight-neutral: #6366f1;
-
-      /* Heatmap Colors */
-      --heatmap-low: #22c55e;
-      --heatmap-medium: #eab308;
-      --heatmap-high: #ef4444;
-
-      /* Semantic Colors */
-      --info-primary: #3b82f6;
-      --info-bg: rgba(59, 130, 246, 0.08);
-      --info-text: #1e40af;
-
-      /* Glass Effect */
-      --glass-bg: rgba(255, 255, 255, 0.8);
-      --glass-bg-dark: rgba(17, 24, 39, 0.85);
-      --glass-border: rgba(255, 255, 255, 0.4);
-      --glass-blur: blur(20px) saturate(180%);
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-
-      /* Shadows */
-      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
-      --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
-      --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.1);
-      --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.15);
-      --shadow-2xl: 0 50px 100px rgba(0, 0, 0, 0.2);
-
-      /* Transitions */
-      --transition-instant: 100ms cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-
-      /* Spacing */
-      --radius-sm: 0.375rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --radius-xl: 1rem;
-      --radius-2xl: 1.5rem;
-
-      /* Fluid Typography Scale */
-      --font-size-xs: clamp(0.7rem, 1.5vw, 0.75rem);
-      --font-size-sm: clamp(0.8rem, 1.8vw, 0.875rem);
-      --font-size-base: clamp(0.875rem, 2vw, 1rem);
-      --font-size-lg: clamp(1rem, 2.2vw, 1.125rem);
-      --font-size-xl: clamp(1.125rem, 2.5vw, 1.25rem);
-      --font-size-2xl: clamp(1.25rem, 3vw, 1.5rem);
-      --font-size-3xl: clamp(1.5rem, 4vw, 1.875rem);
-      --font-size-4xl: clamp(1.875rem, 5vw, 2.25rem);
-
-      /* Line Heights */
-      --line-height-tight: 1.25;
-      --line-height-normal: 1.5;
-      --line-height-relaxed: 1.75;
-      --line-height-loose: 2;
-
-      /* Letter Spacing */
-      --letter-spacing-tight: -0.02em;
-      --letter-spacing-normal: 0;
-      --letter-spacing-wide: 0.025em;
-
-      /* Touch Target Sizes */
-      --touch-target-min: 44px;
-      --touch-target-comfortable: 48px;
-    }
-
-    .dark {
-      --glass-bg: rgba(17, 24, 39, 0.85);
-      --glass-border: rgba(55, 65, 81, 0.5);
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      --neutral-bg: rgba(75, 85, 99, 0.25);
-      --neutral-bg-hover: rgba(75, 85, 99, 0.4);
-      --neutral-border: rgba(75, 85, 99, 0.5);
-      --neutral-text: #94a3b8;
-      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-      --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
-      --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.6);
-      --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.7);
-    }
-
-    /* ==================== BASE STYLES ==================== */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-    }
-
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      font-size: var(--font-size-base);
-      line-height: var(--line-height-normal);
-      letter-spacing: var(--letter-spacing-normal);
-      overflow-wrap: break-word;
-      word-wrap: break-word;
-      word-break: break-word;
-      -webkit-hyphens: auto;
-      -moz-hyphens: auto;
-      hyphens: auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+      padding: 20px;
     }
-
-    /* ==================== GLASS CARD ==================== */
-    .glass-card {
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--glass-shadow);
-    }
-
-    /* ==================== ANIMATIONS ==================== */
-    .fade-in-section {
-      opacity: 0;
-      animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    .fade-in-section:nth-child(1) { animation-delay: 0ms; }
-    .fade-in-section:nth-child(2) { animation-delay: 100ms; }
-    .fade-in-section:nth-child(3) { animation-delay: 200ms; }
-    .fade-in-section:nth-child(4) { animation-delay: 300ms; }
-
-    /* ==================== SKELETON LOADING ==================== */
-    .skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 2s linear infinite;
-      border-radius: var(--radius-md);
-    }
-
-    .dark .skeleton {
-      background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
-      background-size: 200% 100%;
-    }
-
-    /* ==================== ZONE BADGES ==================== */
-    .zone-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-      padding: 0.375rem 0.75rem;
-      border-radius: 9999px;
-      font-size: var(--font-size-xs);
-      font-weight: 600;
-      transition: all var(--transition-fast);
-      min-height: var(--touch-target-min);
-    }
-
-    .zone-badge.sweet-spot {
-      background: var(--sweet-gradient);
-      border: 1.5px solid var(--sweet-primary);
-      color: var(--sweet-text);
-    }
-
-    .zone-badge.danger-zone {
-      background: var(--danger-gradient);
-      border: 1.5px solid var(--danger-primary);
-      color: var(--danger-text);
-    }
-
-    .zone-badge.neutral {
-      background: var(--neutral-light);
-      border: 1px solid var(--neutral-border);
-      color: var(--neutral-text);
-    }
-
-    /* ==================== DATA TABLE ==================== */
-    .data-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: var(--font-size-sm);
-    }
-
-    .data-table th {
-      background: var(--neutral-light);
-      padding: 0.75rem 1rem;
-      text-align: left;
-      font-weight: 600;
-      color: var(--neutral-text);
-      border-bottom: 2px solid var(--neutral-border);
-      cursor: pointer;
-      user-select: none;
-      transition: background var(--transition-fast);
-    }
-
-    .data-table th:hover {
-      background: #e2e8f0;
-    }
-
-    .data-table th.sort-asc::after {
-      content: ' ▲';
-      font-size: 0.7em;
-    }
-
-    .data-table th.sort-desc::after {
-      content: ' ▼';
-      font-size: 0.7em;
-    }
-
-    .data-table td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--neutral-border);
-      transition: all var(--transition-fast);
-    }
-
-    .data-table tbody tr {
-      transition: all var(--transition-fast);
-      cursor: pointer;
-    }
-
-    .data-table tbody tr:hover {
-      background: var(--neutral-bg-hover);
-      transform: scale(1.003);
-    }
-
-    .data-table tbody tr.highlighted {
-      background: var(--sweet-bg) !important;
-      box-shadow: inset 3px 0 0 var(--sweet-primary);
-    }
-
-    /* ==================== DROPDOWN MENU ==================== */
-    .dropdown {
-      position: relative;
-    }
-
-    .dropdown-menu {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      z-index: 1000;
-      min-width: 200px;
-      margin-top: 0.5rem;
+    .card {
       background: white;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-xl);
-      border: 1px solid var(--neutral-border);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-10px);
-      transition: all var(--transition-fast);
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
     }
-
-    .dropdown-menu.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
+    .metric {
+      text-align: center;
+      padding: 15px;
+      border-radius: 8px;
     }
-
-    .dropdown-item {
+    .metric-sweet { background: #dcfce7; }
+    .metric-danger { background: #fee2e2; }
+    .metric-neutral { background: #f1f5f9; }
+    .metric-value { font-size: 24px; font-weight: bold; }
+    .metric-label { font-size: 12px; color: #666; }
+    .zone-item {
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      cursor: pointer;
-      transition: background var(--transition-fast);
-    }
-
-    .dropdown-item:hover {
-      background: var(--neutral-bg);
-    }
-
-    .dropdown-divider {
-      height: 1px;
-      background: var(--neutral-border);
-      margin: 0.25rem 0;
-    }
-
-    /* ==================== TOAST NOTIFICATIONS ==================== */
-    .toast-container {
-      position: fixed;
-      bottom: 1rem;
-      right: 1rem;
-      z-index: 10000;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .toast {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      background: white;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-xl);
-      animation: slideInRight 0.3s ease-out forwards;
-      min-height: var(--touch-target-min);
-    }
-
-    .toast.success { border-left: 4px solid var(--sweet-primary); }
-    .toast.error { border-left: 4px solid var(--danger-primary); }
-    .toast.info { border-left: 4px solid var(--info-primary); }
-
-    .toast.hiding {
-      animation: fadeOutRight 0.3s ease-in forwards;
-    }
-
-    @keyframes fadeOutRight {
-      to { opacity: 0; transform: translateX(100%); }
-    }
-
-    /* ==================== HEATMAP ==================== */
-    .heatmap-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 0.5rem;
-    }
-
-    .heatmap-cell {
-      aspect-ratio: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-md);
-      padding: 0.5rem;
-      font-size: var(--font-size-xs);
-      transition: all var(--transition-fast);
+      justify-content: space-between;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 6px;
       cursor: pointer;
     }
+    .zone-item:hover { opacity: 0.8; }
+    .sweet-spot { background: #dcfce7; }
+    .danger-zone { background: #fee2e2; }
+    table { width: 100%; border-collapse: collapse; }
 
-    .heatmap-cell:hover {
-      transform: scale(1.05);
-      box-shadow: var(--shadow-md);
-    }
-
-    /* ==================== v8.0: THRESHOLD SLIDERS ==================== */
-    .threshold-slider-container {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.5rem 0;
-    }
-
-    .threshold-slider {
-      flex: 1;
-      height: 8px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: var(--neutral-light);
-      border-radius: 4px;
-      outline: none;
-    }
-
-    .threshold-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--sweet-primary);
-      cursor: pointer;
-      box-shadow: var(--shadow-md);
-      transition: all var(--transition-fast);
-    }
-
-    .threshold-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-    }
-
-    .threshold-slider::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--sweet-primary);
-      cursor: pointer;
-      border: none;
-      box-shadow: var(--shadow-md);
-    }
-
-    /* ==================== v8.0: DETAIL PANEL ==================== */
-    .detail-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 100%;
-      max-width: 480px;
-      height: 100vh;
-      background: white;
-      box-shadow: var(--shadow-2xl);
-      z-index: 1000;
-      transform: translateX(100%);
-      transition: transform var(--transition-normal);
-      overflow-y: auto;
-    }
-
-    .detail-panel.open {
-      transform: translateX(0);
-    }
-
-    .detail-panel-overlay {
+    /* Loading State */
+    .loading-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 999;
-      opacity: 0;
-      visibility: hidden;
-      transition: all var(--transition-normal);
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
     }
-
-    .detail-panel-overlay.open {
-      opacity: 1;
-      visibility: visible;
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
-
-    /* ==================== v8.0: HISTORICAL CHART ==================== */
-    .historical-bar {
-      height: 100%;
-      min-height: 4px;
-      border-radius: 2px;
-      transition: all var(--transition-fast);
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
-
-    .historical-bar.sweet { background: var(--sweet-primary); }
-    .historical-bar.danger { background: var(--danger-primary); }
-    .historical-bar.neutral { background: var(--neutral-primary); }
-
-    /* ==================== v8.0: INSIGHT CARDS ==================== */
-    .insight-card {
-      padding: 1rem;
-      border-radius: var(--radius-md);
-      border-left: 4px solid;
-      background: var(--neutral-light);
-      margin-bottom: 0.75rem;
-    }
-
-    .insight-card.positive {
-      border-left-color: var(--sweet-primary);
-      background: var(--sweet-bg);
-    }
-
-    .insight-card.negative {
-      border-left-color: var(--danger-primary);
-      background: var(--danger-bg);
-    }
-
-    .insight-card.neutral {
-      border-left-color: var(--insight-neutral);
-      background: rgba(99, 102, 241, 0.08);
-    }
-
-    /* ==================== v8.0: COMPARISON TABLE ==================== */
-    .comparison-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: var(--font-size-sm);
-    }
-
-    .comparison-table th {
-      background: var(--neutral-light);
-      padding: 0.5rem 0.75rem;
-      text-align: center;
-      font-weight: 600;
-      color: var(--neutral-text);
-      border-bottom: 2px solid var(--neutral-border);
-    }
-
-    .comparison-table td {
-      padding: 0.5rem 0.75rem;
-      text-align: center;
-      border-bottom: 1px solid var(--neutral-border);
-    }
-
-    .comparison-table .best-value {
-      background: var(--sweet-bg);
-      color: var(--sweet-text);
-      font-weight: 600;
-    }
-
-    /* ==================== RESPONSIVE ==================== */
-    @media (max-width: 768px) {
-      .detail-panel {
-        max-width: 100%;
-      }
-
-      .heatmap-container {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .hide-mobile { display: none !important; }
-      .show-mobile { display: block !important; }
-    }
-
-    @media (min-width: 769px) {
-      .hide-desktop { display: none !important; }
-      .show-desktop { display: block !important; }
-    }
-
-    /* ==================== DARK MODE ==================== */
-    .dark body {
-      background: #0f172a;
-      color: #e2e8f0;
-    }
-
-    .dark .glass-card {
-      background: var(--glass-bg-dark);
-    }
-
-    .dark .data-table th {
-      background: #1e293b;
-    }
-
-    .dark .toast,
-    .dark .detail-panel {
-      background: #1e293b;
-    }
-
-    .dark .dropdown-menu {
-      background: #1e293b;
-      border-color: #374151;
-    }
-
-    .dark .dropdown-item:hover {
-      background: #334155;
-    }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; cursor: pointer; }
+    th:hover { background: #f3f4f6; }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 min-h-screen">
-  <!-- ==================== HEADER ==================== -->
-  <header class="sticky top-0 z-50 glass-card border-0 rounded-none">
-    <div class="container mx-auto px-4 py-4">
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="text-gray-600 mt-4">Loading market data...</p>
+  </div>
+
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="card">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-            <i class="fas fa-crosshairs text-white text-xl"></i>
-          </div>
-          <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Sweet Spot Scanner</h1>
-            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-              v8.0 | Valuation vs Momentum with AI Insights
-            </p>
-          </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Sweet Spot Scanner v8.1</h1>
+          <p class="text-gray-500">P/E vs Momentum - Finding Optimal Entry Points</p>
         </div>
-        <div class="flex items-center gap-2 sm:gap-4">
-          <div id="freshness-badge" class="text-right hide-mobile">
-            <span class="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">Loading...</span>
-          </div>
-          <button onclick="location.reload()" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="새로고침">
-            <i class="fas fa-refresh"></i>
-          </button>
-          <a href="../admin/valuation-lab/" class="p-2 text-gray-500 hover:text-blue-600 rounded-lg hover:bg-blue-50">
-            <i class="fas fa-arrow-left"></i>
-          </a>
-        </div>
+        <a href="../" class="text-blue-500 hover:underline">← Back</a>
       </div>
     </div>
-  </header>
 
-  <!-- ==================== MAIN CONTENT ==================== -->
-  <main class="container mx-auto px-4 py-6 sm:py-8">
+    <!-- Summary Metrics -->
+    <div id="metrics" class="grid grid-cols-4 gap-4 mb-6"></div>
 
-    <!-- v8.0: DYNAMIC THRESHOLDS -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="glass-card p-4 sm:p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <i class="fas fa-sliders-h text-blue-500"></i>
-            <span class="hide-mobile">사용자 정의 임계값</span>
-            <span class="show-mobile">임계값</span>
-          </h2>
-          <button onclick="ThresholdManager.reset()" class="text-xs px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600">
-            <i class="fas fa-undo mr-1"></i>초기화
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- P/E Threshold -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                <i class="fas fa-chart-line text-green-500 mr-2"></i>P/E 임계값
-              </label>
-              <span id="peThresholdValue" class="text-lg font-bold text-green-600">15</span>
-            </div>
-            <div class="threshold-slider-container">
-              <span class="text-xs text-gray-500">10</span>
-              <input type="range" id="peThresholdSlider" class="threshold-slider" min="10" max="30" value="15" step="1">
-              <span class="text-xs text-gray-500">30</span>
-            </div>
-            <p class="text-xs text-gray-500 mt-1">P/E &lt; <span id="peThresholdLabel">15</span>인 인덱스</p>
-          </div>
-
-          <!-- Momentum Threshold -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                <i class="fas fa-bolt text-yellow-500 mr-2"></i>모멘텀 임계값
-              </label>
-              <span id="momentumThresholdValue" class="text-lg font-bold text-yellow-600">20%</span>
-            </div>
-            <div class="threshold-slider-container">
-              <span class="text-xs text-gray-500">10%</span>
-              <input type="range" id="momentumThresholdSlider" class="threshold-slider" min="10" max="50" value="20" step="5">
-              <span class="text-xs text-gray-500">50%</span>
-            </div>
-            <p class="text-xs text-gray-500 mt-1">6M 모멘텀 &gt; <span id="momentumThresholdLabel">20</span>%인 인덱스</p>
-          </div>
-        </div>
-
-        <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p class="text-xs text-blue-700 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            <strong>Sweet Spot:</strong> P/E &lt; <span id="sweetPeLabel">15</span> AND 6M &gt; <span id="sweetMomLabel">20</span>% |
-            <strong>Danger Zone:</strong> P/E &gt; 25 AND 6M &lt; 5%
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- SUMMARY METRICS -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div id="metrics-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Rendered by JS -->
-        <div class="skeleton h-32 rounded-xl"></div>
-        <div class="skeleton h-32 rounded-xl"></div>
-        <div class="skeleton h-32 rounded-xl"></div>
-        <div class="skeleton h-32 rounded-xl"></div>
-      </div>
-    </section>
-
-    <!-- v8.0: AI INSIGHTS -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="glass-card p-4 sm:p-6">
-        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fas fa-lightbulb text-yellow-500"></i>
-          <span class="hide-mobile">AI 인사이트</span>
-          <span class="show-mobile">인사이트</span>
-        </h2>
-        <div id="insights-container">
-          <!-- Rendered by JS -->
-          <div class="skeleton h-20 rounded-lg"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SCATTER PLOT -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="glass-card p-4 sm:p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <i class="fas fa-chart-scatter text-purple-500"></i>
-            <span class="hide-mobile">P/E vs 6M 모멘텀</span>
-            <span class="show-mobile">스캐터 플롯</span>
-          </h2>
-        </div>
-        <div style="height: 350px;">
-          <canvas id="scatterChart"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- ZONE LISTS -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Sweet Spot -->
-        <div class="glass-card p-4 sm:p-6">
-          <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <i class="fas fa-candy-cane text-green-500"></i>
-            Sweet Spot
-            <span id="sweetSpotCount" class="text-xs px-2 py-1 rounded bg-green-100 text-green-700">0</span>
-          </h3>
-          <div id="sweetSpotList" class="space-y-2 max-h-80 overflow-y-auto">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
-
-        <!-- Danger Zone -->
-        <div class="glass-card p-4 sm:p-6">
-          <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <i class="fas fa-exclamation-triangle text-red-500"></i>
-            Danger Zone
-            <span id="dangerZoneCount" class="text-xs px-2 py-1 rounded bg-red-100 text-red-700">0</span>
-          </h3>
-          <div id="dangerZoneList" class="space-y-2 max-h-80 overflow-y-auto">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- v8.0: HISTORICAL ZONES -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="glass-card p-4 sm:p-6">
-        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fas fa-history text-indigo-500"></i>
-          <span class="hide-mobile">시계열 추이 (12개월)</span>
-          <span class="show-mobile">시계열</span>
-        </h2>
-        <div id="historical-chart" style="height: 200px;">
-          <canvas id="historicalCanvas"></canvas>
-        </div>
-        <div class="mt-4 grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div class="text-2xl font-bold text-green-600" id="historicalSweetAvg">-</div>
-            <div class="text-xs text-gray-500">평균 Sweet Spot</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold text-gray-600" id="historicalNeutralAvg">-</div>
-            <div class="text-xs text-gray-500">평균 Neutral</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold text-red-600" id="historicalDangerAvg">-</div>
-            <div class="text-xs text-gray-500">평균 Danger Zone</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FULL DATA TABLE -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="glass-card p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-          <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <i class="fas fa-table text-blue-500"></i>
-            <span class="hide-mobile">전체 분석 테이블</span>
-            <span class="show-mobile">데이터 테이블</span>
-          </h2>
-          <div class="flex items-center gap-2">
-            <div class="relative">
-              <input type="text" id="searchInput" placeholder="검색..."
-                class="pl-8 pr-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 w-40 sm:w-56">
-              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            </div>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="data-table" id="fullTable">
-            <thead>
-              <tr>
-                <th data-sort="name">인덱스</th>
-                <th data-sort="pe">P/E</th>
-                <th data-sort="momentum1m">1M</th>
-                <th data-sort="momentum3m">3M</th>
-                <th data-sort="momentum6m">6M</th>
-                <th data-sort="momentumYtd">YTD</th>
-                <th data-sort="zone">Zone</th>
-              </tr>
-            </thead>
-            <tbody id="fullTableBody">
-              <!-- Rendered by JS -->
-            </tbody>
-          </table>
-        </div>
-        <div class="mt-3 text-xs text-gray-500 text-center">
-          총 <span id="totalCount">0</span>개 인덱스
-        </div>
-      </div>
-    </section>
-
-    <!-- v8.0: ADVANCED STATS -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="glass-card p-4 sm:p-6">
-        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fas fa-chart-bar text-teal-500"></i>
-          <span class="hide-mobile">고급 통계</span>
-          <span class="show-mobile">통계</span>
-        </h2>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div class="text-lg font-bold text-gray-900 dark:text-white" id="rSquaredValue">-</div>
-            <div class="text-xs text-gray-500">R² (결정계수)</div>
-          </div>
-          <div class="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div class="text-lg font-bold text-gray-900 dark:text-white" id="pValue">-</div>
-            <div class="text-xs text-gray-500">P-value</div>
-          </div>
-          <div class="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div class="text-lg font-bold text-gray-900 dark:text-white" id="stdError">-</div>
-            <div class="text-xs text-gray-500">표준오차</div>
-          </div>
-          <div class="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div class="text-lg font-bold text-gray-900 dark:text-white" id="trendSlope">-</div>
-            <div class="text-xs text-gray-500">추세 기울기</div>
-          </div>
-        </div>
-
-        <!-- Heatmap Toggle -->
-        <div class="mt-4">
-          <button onclick="UI.toggleHeatmap()" class="text-sm px-4 py-2 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 transition-colors">
-            <i class="fas fa-fire mr-1"></i>상관관계 히트맵
-          </button>
-          <div id="heatmapView" class="hidden mt-4">
-            <div class="heatmap-container" id="heatmapContainer"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- EXPORT SECTION -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="dropdown" id="exportDropdown">
-          <button id="exportBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2">
-            <i class="fas fa-download"></i>
-            <span class="hide-mobile">내보내기</span>
-            <i class="fas fa-chevron-down text-xs"></i>
-          </button>
-          <div class="dropdown-menu">
-            <div class="dropdown-item" data-export="csv">
-              <i class="fas fa-file-csv text-green-600"></i>
-              <span>CSV로 내보내기</span>
-            </div>
-            <div class="dropdown-item" data-export="excel">
-              <i class="fas fa-file-excel text-green-600"></i>
-              <span>Excel로 내보내기</span>
-            </div>
-            <div class="dropdown-item" data-export="image">
-              <i class="fas fa-image text-blue-600"></i>
-              <span>이미지로 저장</span>
-            </div>
-            <div class="dropdown-divider"></div>
-            <div class="dropdown-item" data-export="share">
-              <i class="fas fa-share-alt text-purple-600"></i>
-              <span>링크 공유</span>
-            </div>
-          </div>
-        </div>
-        <div class="text-xs text-gray-500">
-          <i class="fas fa-clock mr-1"></i>
-          <span id="updateTime">-</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- METHODOLOGY -->
-    <section class="mb-6 sm:mb-8 fade-in-section">
-      <div class="glass-card p-4 sm:p-6">
-        <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-3">
-          <i class="fas fa-book text-gray-500 mr-2"></i>방법론
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
-          <div>
-            <p class="mb-2"><strong class="text-green-600">Sweet Spot:</strong> P/E &lt; <span class="dynamic-pe">15</span> AND 6M &gt; <span class="dynamic-mom">20</span>%</p>
-            <p><strong class="text-red-600">Danger Zone:</strong> P/E &gt; 25 AND 6M &lt; 5%</p>
-          </div>
-          <div>
-            <p class="mb-2"><strong>상관계수:</strong> P/E ↓ = Momentum ↑ (약 -0.4)</p>
-            <p><strong>해석:</strong> 저평가 + 강한 모멘텀 = 최적 매수 구간</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ==================== DETAIL PANEL (v8.0) ==================== -->
-  <div id="detailPanelOverlay" class="detail-panel-overlay" onclick="UI.closeDetailPanel()"></div>
-  <aside id="detailPanel" class="detail-panel">
-    <div class="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b flex items-center justify-between">
-      <h3 class="text-lg font-bold">상세 분석</h3>
-      <button onclick="UI.closeDetailPanel()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-        <i class="fas fa-times"></i>
-      </button>
+    <!-- Scatter Plot -->
+    <div class="card">
+      <h2 class="text-lg font-bold mb-4">P/E vs 6M Momentum</h2>
+      <canvas id="scatterChart" height="300"></canvas>
     </div>
-    <div id="detailPanelContent" class="p-4">
-      <!-- Rendered by JS -->
+
+    <!-- Zones -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="card">
+        <h3 class="text-green-600 font-bold mb-3">🟢 Sweet Spot</h3>
+        <div id="sweetSpotList"></div>
+      </div>
+      <div class="card">
+        <h3 class="text-red-600 font-bold mb-3">🔴 Danger Zone</h3>
+        <div id="dangerZoneList"></div>
+      </div>
     </div>
-  </aside>
 
-  <!-- ==================== TOAST CONTAINER ==================== -->
-  <div id="toastContainer" class="toast-container"></div>
+    <!-- Full Table -->
+    <div class="card">
+      <h2 class="text-lg font-bold mb-4">All Indices</h2>
+      <input id="search" type="text" placeholder="Search..."
+             class="w-full p-2 border rounded mb-4" oninput="filterTable()">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('name')">Index</th>
+            <th onclick="sortTable('pe')">P/E</th>
+            <th onclick="sortTable('momentum6m')">6M</th>
+            <th onclick="sortTable('zone')">Zone</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
 
-  <!-- ==================== FOOTER ==================== -->
-  <footer class="border-t bg-white dark:bg-gray-800 py-6 mt-auto">
-    <div class="container mx-auto px-4 text-center text-sm text-gray-500">
-      <p>Sweet Spot Scanner v8.0</p>
-      <p class="text-xs mt-1 text-gray-400">
-        Based on <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">benchmarks-data-analysis.md</code> |
-        <a href="../admin/valuation-lab/expansion/benchmarks-hub.html" class="hover:text-blue-600">Benchmarks Hub</a>
+    <!-- Methodology -->
+    <div class="card">
+      <h3 class="font-bold mb-2">Methodology</h3>
+      <p class="text-sm text-gray-600">
+        <strong>Sweet Spot:</strong> P/E &lt; 15 AND 6M &gt; 20%<br>
+        <strong>Danger Zone:</strong> P/E &gt; 25 AND 6M &lt; 5%
       </p>
     </div>
-  </footer>
-
-  <!-- ==================== SCRIPTS ==================== -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  </div>
 
   <script>
-    // ==================== CONFIGURATION ====================
+    // ==================== CONFIG ====================
     const CONFIG = {
-      dataPath: '../../data/benchmarks/',
-      files: ['us.json', 'us_sectors.json', 'developed.json', 'emerging.json', 'msci.json', 'micro_sectors.json'],
-      defaultThresholds: {
-        pe: 15,
-        momentum: 20
-      },
-      zones: {
-        sweet: { pe: 15, momentum: 20 },
-        danger: { pe: 25, momentum: 5 }
-      }
+      dataPath: '../../../data/benchmarks/',
+      files: ['us.json', 'us_sectors.json', 'developed.json', 'emerging.json', 'msci.json'],
+      SWEET_PE = 15,
+      SWEET_MOMENTUM = 0.20,
+      DANGER_PE = 25,
+      DANGER_MOMENTUM = 0.05,
+      CORRELATION_PE_6M = -0.399  // P/E vs 6M Momentum correlation
     };
 
-    // ==================== UTILITY FUNCTIONS ====================
-    const Utils = {
-      formatPercent: (value) => {
-        if (value == null) return 'N/A';
-        return (value * 100).toFixed(1) + '%';
-      },
+    let allData = [];
+    let currentSort = { column: 'momentum6m', direction: 'desc' };
 
-      formatNumber: (value, decimals = 2) => {
-        if (value == null) return 'N/A';
-        return value.toFixed(decimals);
-      },
-
-      debounce: (func, wait) => {
-        let timeout;
-        return function executedFunction(...args) {
-          const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-          };
-          clearTimeout(timeout);
-          timeout = setTimeout(later, wait);
-        };
-      }
-    };
-
-    // ==================== THRESHOLD MANAGER (v8.0) ====================
-    const ThresholdManager = {
-      pe: CONFIG.defaultThresholds.pe,
-      momentum: CONFIG.defaultThresholds.momentum,
-
-      init() {
-        this.peSlider = document.getElementById('peThresholdSlider');
-        this.momentumSlider = document.getElementById('momentumThresholdSlider');
-        this.peValue = document.getElementById('peThresholdValue');
-        this.momentumValue = document.getElementById('momentumThresholdValue');
-
-        this.peSlider.addEventListener('input', Utils.debounce((e) => {
-          this.pe = parseInt(e.target.value);
-          this.updateDisplay();
-          App.recalculate();
-        }, 100));
-
-        this.momentumSlider.addEventListener('input', Utils.debounce((e) => {
-          this.momentum = parseInt(e.target.value);
-          this.updateDisplay();
-          App.recalculate();
-        }, 100));
-      },
-
-      updateDisplay() {
-        this.peValue.textContent = this.pe;
-        this.momentumValue.textContent = this.momentum + '%';
-
-        // Update labels
-        document.getElementById('peThresholdLabel').textContent = this.pe;
-        document.getElementById('momentumThresholdLabel').textContent = this.momentum;
-        document.getElementById('sweetPeLabel').textContent = this.pe;
-        document.getElementById('sweetMomLabel').textContent = this.momentum;
-
-        // Update methodology section
-        document.querySelectorAll('.dynamic-pe').forEach(el => el.textContent = this.pe);
-        document.querySelectorAll('.dynamic-mom').forEach(el => el.textContent = this.momentum);
-      },
-
-      reset() {
-        this.pe = CONFIG.defaultThresholds.pe;
-        this.momentum = CONFIG.defaultThresholds.momentum;
-        this.peSlider.value = this.pe;
-        this.momentumSlider.value = this.momentum;
-        this.updateDisplay();
-        App.recalculate();
-      }
-    };
-
-    // ==================== STATISTICS ENGINE ====================
-    class StatisticsEngine {
-      calculateLinearRegression(xValues, yValues) {
-        const n = xValues.length;
-        const sumX = xValues.reduce((a, b) => a + b, 0);
-        const sumY = yValues.reduce((a, b) => a + b, 0);
-        const sumXY = xValues.reduce((sum, x, i) => sum + x * yValues[i], 0);
-        const sumXX = xValues.reduce((sum, x) => sum + x * x, 0);
-        const sumYY = yValues.reduce((sum, y) => sum + y * y, 0);
-
-        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-        const intercept = (sumY - slope * sumX) / n;
-
-        const ssTotal = sumYY - (sumY * sumY) / n;
-        const ssResidual = yValues.reduce((sum, y, i) => {
-          const predicted = slope * xValues[i] + intercept;
-          return sum + Math.pow(y - predicted, 2);
-        }, 0);
-        const rSquared = ssTotal > 0 ? 1 - (ssResidual / ssTotal) : 0;
-
-        const stdError = n > 2 ? Math.sqrt(ssResidual / (n - 2)) : 0;
-
-        const correlation = (n * sumXY - sumX * sumY) /
-                           Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
-
-        const pValue = this.calculatePValue(correlation, n);
-
-        return {
-          slope, intercept, rSquared, correlation, stdError, pValue,
-          equation: `y = ${slope.toFixed(4)}x ${intercept >= 0 ? '+' : ''}${intercept.toFixed(2)}`
-        };
-      }
-
-      calculatePValue(correlation, n) {
-        if (n < 3) return 1;
-        const tStat = correlation * Math.sqrt((n - 2) / (1 - correlation * correlation));
-        return 2 * (1 - this.tCDF(Math.abs(tStat), n - 2));
-      }
-
-      tCDF(t, df) {
-        const x = (df / (df + t * t));
-        let result = this.betaIncomplete(0.5 * df, 0.5, x);
-        return t > 0 ? 1 - 0.5 * result : 0.5 * result;
-      }
-
-      betaIncomplete(a, b, x) {
-        if (x === 0) return 0;
-        if (x === 1) return 1;
-
-        const lbeta = this.logGamma(a) + this.logGamma(b) - this.logGamma(a + b);
-        const front = Math.exp(a * Math.log(x) + b * Math.log(1 - x) - lbeta) / a;
-
-        return this.continuedFraction(a, b, x, front);
-      }
-
-      continuedFraction(a, b, x, front) {
-        const maxIterations = 100;
-        const epsilon = 1e-10;
-        let f = 1;
-        let C = 1;
-        let D = 0;
-
-        for (let i = 1; i <= maxIterations; i++) {
-          const m = (i - 1) / 2;
-          let numerator;
-
-          if (i % 2 === 0) {
-            numerator = m * (b - m) * x / ((a + 2 * m - 1) * (a + 2 * m));
-          } else {
-            numerator = -((a + m) * (a + b + m) * x) / ((a + 2 * m) * (a + 2 * m + 1));
-          }
-
-          D = 1 + numerator * D;
-          if (Math.abs(D) < epsilon) D = epsilon;
-          D = 1 / D;
-
-          C = 1 + numerator / C;
-          if (Math.abs(C) < epsilon) C = epsilon;
-
-          f *= C * D;
-
-          if (Math.abs(1 - C * D) < epsilon) break;
-        }
-
-        return front * f;
-      }
-
-      logGamma(z) {
-        const c = [76.18009172947146, -86.50532032941677, 24.01409824083091,
-                   -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
-        let x = z;
-        let y = z;
-        let tmp = x + 5.5;
-        tmp -= (x + 0.5) * Math.log(tmp);
-        let ser = 1.000000000190015;
-
-        for (let j = 0; j < 6; j++) {
-          y += 1;
-          ser += c[j] / y;
-        }
-
-        return -tmp + Math.log(2.5066282746310005 * ser / x);
+    // ==================== INITIALIZATION ====================
+    async function init() {
+      try {
+        const data = await loadData();
+        processData(data);
+        render();
+      } catch (error) {
+        console.error('Init error:', error);
+        showError('Failed to load data');
       }
     }
 
-    // ==================== INSIGHTS ENGINE (v8.0) ====================
-    class InsightsEngine {
-      generate(data, stats) {
-        const insights = [];
-        const sweetSpot = data.filter(d => d.zone === 'sweet-spot');
-        const dangerZone = data.filter(d => d.zone === 'danger-zone');
-
-        // Sweet Spot insights
-        if (sweetSpot.length > 0) {
-          const topSweet = sweetSpot.sort((a, b) => b.momentum6m - a.momentum6m)[0];
-          insights.push({
-            type: 'positive',
-            icon: 'fa-check-circle',
-            title: '최적 매수 기회',
-            content: `${sweetSpot.length}개 인덱스가 Sweet Spot입니다. ${topSweet.name}(${topSweet.momentum6m > 0.5 ? '6M ' + Utils.formatPercent(topSweet.momentum6m) : ''})가 가장 강력합니다.`
-          });
-
-          // Check for Korean markets
-          const korean = sweetSpot.filter(d => d.name.includes('Korea') || d.name.includes('KOSPI'));
-          if (korean.length > 0) {
-            insights.push({
-              type: 'positive',
-              icon: 'fa-chart-line',
-              title: '한국 시트리트',
-              content: `${korean.map(k => k.name).join(', ')} ${korean.length > 1 ? '모두' : ''} Sweet Spot 진입!`
-            });
-          }
-        }
-
-        // Danger Zone insights
-        if (dangerZone.length > 0) {
-          insights.push({
-            type: 'negative',
-            icon: 'fa-exclamation-triangle',
-            title: '투자 주의 구간',
-            content: `${dangerZone.length}개 인덱스가 Danger Zone입니다. ${dangerZone[0].name} 등 주의 필요.`
-          });
-        }
-
-        // Correlation insight
-        insights.push({
-          type: stats.correlation < -0.3 ? 'positive' : 'neutral',
-          icon: 'fa-chart-bar',
-          title: '밸류에이션-모멘텀 상관',
-          content: `상관계수 ${stats.correlation.toFixed(3)}: 저평가 시 강한 모멘텀 확인됨.`
-        });
-
-        return insights;
-      }
-    }
-
-    // ==================== HISTORICAL TRACKING (v8.0) ====================
-    class HistoricalTracker {
-      constructor() {
-        this.monthlyData = this.generateHistoricalData();
-      }
-
-      generateHistoricalData() {
-        // Simulated 12-month historical data
-        // In production, this would load from historical data files
-        const months = [];
-        const now = new Date();
-
-        for (let i = 11; i >= 0; i--) {
-          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          months.push({
-            date: date,
-            label: date.toLocaleDateString('ko-KR', { month: 'short' }),
-            // Simulated data - in production, load from historical files
-            sweet: Math.floor(Math.random() * 8) + 5,
-            neutral: Math.floor(Math.random() * 15) + 10,
-            danger: Math.floor(Math.random() * 8) + 5
-          });
-        }
-
-        return months;
-      }
-
-      getAverages() {
-        const avg = data => data.reduce((a, b) => a + b, 0) / this.monthlyData.length;
-        return {
-          sweet: avg(this.monthlyData.map(m => m.sweet)),
-          neutral: avg(this.monthlyData.map(m => m.neutral)),
-          danger: avg(this.monthlyData.map(m => m.danger))
-        };
-      }
-    }
-
-    // ==================== DETAIL PANEL MANAGER (v8.0) ====================
-    class DetailPanelManager {
-      constructor() {
-        this.panel = document.getElementById('detailPanel');
-        this.overlay = document.getElementById('detailPanelOverlay');
-        this.content = document.getElementById('detailPanelContent');
-      }
-
-      show(indexData) {
-        this.content.innerHTML = this.renderContent(indexData);
-        this.panel.classList.add('open');
-        this.overlay.classList.add('open');
-        document.body.style.overflow = 'hidden';
-      }
-
-      close() {
-        this.panel.classList.remove('open');
-        this.overlay.classList.remove('open');
-        document.body.style.overflow = '';
-      }
-
-      renderContent(data) {
-        const zoneClass = data.zone === 'sweet-spot' ? 'sweet-spot' :
-                         data.zone === 'danger-zone' ? 'danger-zone' : 'neutral';
-        const zoneLabel = data.zone === 'sweet-spot' ? 'Sweet Spot 🟢' :
-                         data.zone === 'danger-zone' ? 'Danger Zone 🔴' : 'Neutral ⚪';
-
-        return `
-          <div class="space-y-6">
-            <!-- Header -->
-            <div>
-              <span class="zone-badge ${zoneClass}">${zoneLabel}</span>
-              <h2 class="text-2xl font-bold mt-3">${data.name}</h2>
-            </div>
-
-            <!-- Key Metrics -->
-            <div class="grid grid-cols-2 gap-4">
-              <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div class="text-sm text-gray-500">P/E Ratio</div>
-                <div class="text-xl font-bold">${Utils.formatNumber(data.pe)}</div>
-                <div class="text-xs ${data.pe < 15 ? 'text-green-600' : data.pe > 25 ? 'text-red-600' : 'text-gray-500'}">
-                  ${data.pe < 15 ? '저평가' : data.pe > 25 ? '고평가' : '중립'}
-                </div>
-              </div>
-              <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div class="text-sm text-gray-500">6M Momentum</div>
-                <div class="text-xl font-bold">${Utils.formatPercent(data.momentum6m)}</div>
-                <div class="text-xs ${data.momentum6m > 0.2 ? 'text-green-600' : data.momentum6m < 0.05 ? 'text-red-600' : 'text-gray-500'}">
-                  ${data.momentum6m > 0.2 ? '강세' : data.momentum6m < 0.05 ? '약세' : '중립'}
-                </div>
-              </div>
-            </div>
-
-            <!-- All Momentum Periods -->
-            <div>
-              <h4 class="font-semibold mb-2">모멘텀 추이</h4>
-              <div class="space-y-2">
-                ${['1m', '3m', '6m', 'ytd'].map(period => `
-                  <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
-                    <span class="text-sm">${period.toUpperCase()}</span>
-                    <span class="font-medium ${data[`momentum${period}`] > 0 ? 'text-green-600' : 'text-red-600'}">
-                      ${Utils.formatPercent(data[`momentum${period}`])}
-                    </span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Analysis -->
-            <div>
-              <h4 class="font-semibold mb-2">분석</h4>
-              ${this.getAnalysisText(data)}
-            </div>
-
-            <!-- Action -->
-            <div class="pt-4 border-t">
-              <a href="../admin/valuation-lab/expansion/benchmarks-hub.html"
-                 class="block w-full text-center py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                <i class="fas fa-chart-bar mr-2"></i>Benchmarks Hub에서 상세보기
-              </a>
-            </div>
-          </div>
-        `;
-      }
-
-      getAnalysisText(data) {
-        const insights = [];
-
-        if (data.zone === 'sweet-spot') {
-          insights.push(`<div class="insight-card positive">
-            <div class="font-medium text-green-800"><i class="fas fa-check-circle mr-2"></i>최적 매수 구간</div>
-            <p class="text-sm text-green-700 mt-1">저평가(P/E ${Utils.formatNumber(data.pe)}) + 강한 모멘텀(6M ${Utils.formatPercent(data.momentum6m)})</p>
-          </div>`);
-        } else if (data.zone === 'danger-zone') {
-          insights.push(`<div class="insight-card negative">
-            <div class="font-medium text-red-800"><i class="fas fa-exclamation-triangle mr-2"></i>투자 주의 구간</div>
-            <p class="text-sm text-red-700 mt-1">고평가(P/E ${Utils.formatNumber(data.pe)}) + 약한 모멘텀(6M ${Utils.formatPercent(data.momentum6m)})</p>
-          </div>`);
-        } else {
-          insights.push(`<div class="insight-card neutral">
-            <div class="font-medium text-indigo-800"><i class="fas fa-minus-circle mr-2"></i>중립 구간</div>
-            <p class="text-sm text-indigo-700 mt-1">밸류에이션과 모멘텀 균형 상태</p>
-          </div>`);
-        }
-
-        return insights.join('');
-      }
-    }
-
-    // ==================== UI RENDERER ====================
-    const UIRenderer = {
-      historicalChart: null,  // v8.0: Track historical chart for destroy
-      renderMetrics(data) {
-        const sweetCount = data.filter(d => d.zone === 'sweet-spot').length;
-        const dangerCount = data.filter(d => d.zone === 'danger-zone').length;
-        const neutralCount = data.filter(d => d.zone === 'neutral').length;
-
-        const metrics = [
-          { label: 'Sweet Spot', value: sweetCount, icon: 'fa-candy-cane', color: 'green' },
-          { label: 'Danger Zone', value: dangerCount, icon: 'fa-exclamation-triangle', color: 'red' },
-          { label: 'Neutral', value: neutralCount, icon: 'fa-minus-circle', color: 'gray' },
-          { label: '전체 인덱스', value: data.length, icon: 'fa-chart-bar', color: 'blue' }
-        ];
-
-        document.getElementById('metrics-grid').innerHTML = metrics.map(m => `
-          <div class="glass-card p-4 hover:shadow-lg transition-shadow cursor-pointer" onclick="UI.filterByZone('${m.label}')">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-xs text-gray-500 mb-1">${m.label}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-${m.color}-600">${m.value}</p>
-              </div>
-              <div class="w-12 h-12 bg-${m.color}-100 rounded-xl flex items-center justify-center">
-                <i class="fas ${m.icon} text-${m.color}-500 text-xl"></i>
-              </div>
-            </div>
-          </div>
-        `).join('');
-
-        document.getElementById('sweetSpotCount').textContent = sweetCount;
-        document.getElementById('dangerZoneCount').textContent = dangerCount;
-      },
-
-      renderInsights(insights) {
-        const container = document.getElementById('insights-container');
-        container.innerHTML = insights.map(i => `
-          <div class="insight-card ${i.type}">
-            <div class="flex items-start gap-2">
-              <i class="fas ${i.icon} mt-1"></i>
-              <div>
-                <div class="font-medium">${i.title}</div>
-                <p class="text-sm mt-1">${i.content}</p>
-              </div>
-            </div>
-          </div>
-        `).join('');
-      },
-
-      renderZoneLists(data) {
-        const sweetSpot = data.filter(d => d.zone === 'sweet-spot')
-          .sort((a, b) => b.momentum6m - a.momentum6m);
-        const dangerZone = data.filter(d => d.zone === 'danger-zone')
-          .sort((a, b) => a.momentum6m - b.momentum6m);
-
-        const renderListItem = (item, rank) => `
-          <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
-               onclick="DetailPanel.show(App.allData.find(d => d.name === '${item.name}'))">
-            <div class="flex items-center gap-3">
-              <span class="text-sm font-bold text-gray-400">#${rank}</span>
-              <div>
-                <div class="font-medium text-sm">${item.name}</div>
-                <div class="text-xs text-gray-500">P/E: ${Utils.formatNumber(item.pe)}</div>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="font-bold ${item.momentum6m > 0 ? 'text-green-600' : 'text-red-600'}">
-                ${Utils.formatPercent(item.momentum6m)}
-              </div>
-              <div class="text-xs text-gray-500">6M</div>
-            </div>
-          </div>
-        `;
-
-        document.getElementById('sweetSpotList').innerHTML =
-          sweetSpot.length > 0 ? sweetSpot.map((item, i) => renderListItem(item, i + 1)).join('')
-          : '<p class="text-sm text-gray-500 text-center py-4">Sweet Spot 인덱스 없음</p>';
-
-        document.getElementById('dangerZoneList').innerHTML =
-          dangerZone.length > 0 ? dangerZone.map((item, i) => renderListItem(item, i + 1)).join('')
-          : '<p class="text-sm text-gray-500 text-center py-4">Danger Zone 인덱스 없음</p>';
-      },
-
-      renderTable(data) {
-        const tbody = document.getElementById('fullTableBody');
-        tbody.innerHTML = data.map(item => {
-          const zoneClass = item.zone === 'sweet-spot' ? 'sweet-spot' :
-                           item.zone === 'danger-zone' ? 'danger-zone' : 'neutral';
-          const zoneLabel = item.zone === 'sweet-spot' ? 'Sweet Spot' :
-                           item.zone === 'danger-zone' ? 'Danger Zone' : 'Neutral';
-          const signal = item.zone === 'sweet-spot' ? '🟢' :
-                        item.zone === 'danger-zone' ? '🔴' : '⚪';
-
-          return `
-            <tr data-name="${item.name.toLowerCase()}" onclick="DetailPanel.show(App.allData.find(d => d.name === '${item.name}'))">
-              <td class="font-medium">${item.name}</td>
-              <td>${Utils.formatNumber(item.pe)}</td>
-              <td class="${item.momentum1m > 0 ? 'text-green-600' : 'text-red-600'}">${Utils.formatPercent(item.momentum1m)}</td>
-              <td class="${item.momentum3m > 0 ? 'text-green-600' : 'text-red-600'}">${Utils.formatPercent(item.momentum3m)}</td>
-              <td class="${item.momentum6m > 0 ? 'text-green-600' : 'text-red-600'}">${Utils.formatPercent(item.momentum6m)}</td>
-              <td class="${item.momentumYtd > 0 ? 'text-green-600' : 'text-red-600'}">${Utils.formatPercent(item.momentumYtd)}</td>
-              <td><span class="zone-badge ${zoneClass}">${signal} ${zoneLabel}</span></td>
-            </tr>
-          `;
-        }).join('');
-
-        document.getElementById('totalCount').textContent = data.length;
-      },
-
-      updateStats(stats) {
-        if (!stats) return;
-        document.getElementById('rSquaredValue').textContent = stats.rSquared.toFixed(4);
-        document.getElementById('pValue').textContent = stats.pValue < 0.001 ? '<0.001' : stats.pValue.toFixed(4);
-        document.getElementById('stdError').textContent = stats.stdError.toFixed(4);
-        document.getElementById('trendSlope').textContent = stats.slope.toFixed(4);
-      },
-
-      renderHeatmap(data) {
-        const periods = ['1m', '3m', '6m', 'ytd'];
-        const labels = { '1m': '1개월', '3m': '3개월', '6m': '6개월', 'ytd': 'YTD' };
-        const peValues = data.map(d => d.pe).filter(v => v != null);
-
-        const correlations = periods.map(period => {
-          const values = data.map(d => d[`momentum${period}`]).filter(v => v != null);
-          if (peValues.length < 2 || values.length < 2) return null;
-
-          const n = Math.min(peValues.length, values.length);
-          const peSlice = peValues.slice(0, n);
-          const valSlice = values.slice(0, n);
-
-          const sumX = peSlice.reduce((a, b) => a + b, 0);
-          const sumY = valSlice.reduce((a, b) => a + b, 0);
-          const sumXY = peSlice.reduce((sum, x, i) => sum + x * valSlice[i], 0);
-          const sumXX = peSlice.reduce((sum, x) => sum + x * x, 0);
-          const sumYY = valSlice.reduce((sum, y) => sum + y * y, 0);
-
-          const corr = (n * sumXY - sumX * sumY) /
-                      Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
-          return { period, correlation: isNaN(corr) ? 0 : corr };
-        }).filter(c => c !== null);
-
-        const container = document.getElementById('heatmapContainer');
-        container.innerHTML = correlations.map(c => {
-          const value = c.correlation;
-          const color = this.getHeatmapColor(value);
-          const textColor = Math.abs(value) > 0.3 ? 'white' : '#374151';
-          return `
-            <div class="heatmap-cell" style="background: ${color}; color: ${textColor}">
-              <div class="text-xs opacity-80">${labels[c.period]}</div>
-              <div class="text-lg font-bold">${value.toFixed(3)}</div>
-            </div>
-          `;
-        }).join('');
-      },
-
-      getHeatmapColor(value) {
-        // Green for negative, Red for positive
-        if (value < -0.3) return 'rgb(34, 197, 94)';
-        if (value < -0.1) return 'rgb(132, 204, 22)';
-        if (value < 0.1) return 'rgb(251, 191, 36)';
-        if (value < 0.3) return 'rgb(251, 146, 60)';
-        return 'rgb(239, 68, 68)';
-      },
-
-      renderHistoricalChart(tracker) {
-        const ctx = document.getElementById('historicalCanvas').getContext('2d');
-        const labels = tracker.monthlyData.map(m => m.label);
-
-        // Destroy existing chart if exists
-        if (this.historicalChart) {
-          this.historicalChart.destroy();
-        }
-
-        this.historicalChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: 'Sweet Spot',
-                data: tracker.monthlyData.map(m => m.sweet),
-                borderColor: '#22c55e',
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                fill: true,
-                tension: 0.4
-              },
-              {
-                label: 'Neutral',
-                data: tracker.monthlyData.map(m => m.neutral),
-                borderColor: '#64748b',
-                backgroundColor: 'rgba(100, 116, 139, 0.1)',
-                fill: true,
-                tension: 0.4
-              },
-              {
-                label: 'Danger Zone',
-                data: tracker.monthlyData.map(m => m.danger),
-                borderColor: '#ef4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                fill: true,
-                tension: 0.4
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: { boxWidth: 12, padding: 10, font: { size: 11 } }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { font: { size: 10 } }
-              },
-              x: {
-                ticks: { font: { size: 10 } }
-              }
-            }
-          }
-        });
-
-        // Update averages
-        const avg = tracker.getAverages();
-        document.getElementById('historicalSweetAvg').textContent = avg.sweet.toFixed(1);
-        document.getElementById('historicalNeutralAvg').textContent = avg.neutral.toFixed(1);
-        document.getElementById('historicalDangerAvg').textContent = avg.danger.toFixed(1);
-      }
-    };
-
-    // ==================== CHART RENDERER ====================
-    const ChartRenderer = {
-      chart: null,
-
-      render(data, stats) {
-        const ctx = document.getElementById('scatterChart').getContext('2d');
-
-        if (this.chart) {
-          this.chart.destroy();
-        }
-
-        const sweetSpotData = data.filter(d => d.zone === 'sweet-spot').map(d => ({
-          x: d.pe,
-          y: d.momentum6m * 100,
-          label: d.name
-        }));
-
-        const dangerZoneData = data.filter(d => d.zone === 'danger-zone').map(d => ({
-          x: d.pe,
-          y: d.momentum6m * 100,
-          label: d.name
-        }));
-
-        const neutralData = data.filter(d => d.zone === 'neutral').map(d => ({
-          x: d.pe,
-          y: d.momentum6m * 100,
-          label: d.name
-        }));
-
-        // Generate trend line
-        const trendLine = this.generateTrendLine(data);
-
-        this.chart = new Chart(ctx, {
-          type: 'scatter',
-          data: {
-            datasets: [
-              {
-                label: 'Sweet Spot',
-                data: sweetSpotData,
-                backgroundColor: 'rgba(34, 197, 94, 0.7)',
-                borderColor: '#22c55e',
-                pointRadius: 10,
-                pointHoverRadius: 13
-              },
-              {
-                label: 'Danger Zone',
-                data: dangerZoneData,
-                backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                borderColor: '#ef4444',
-                pointRadius: 10,
-                pointHoverRadius: 13
-              },
-              {
-                label: 'Neutral',
-                data: neutralData,
-                backgroundColor: 'rgba(156, 163, 175, 0.5)',
-                borderColor: '#94a3b8',
-                pointRadius: 7,
-                pointHoverRadius: 10
-              },
-              {
-                label: 'Trend Line',
-                data: trendLine,
-                type: 'line',
-                borderColor: '#3b82f6',
-                backgroundColor: 'transparent',
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: { boxWidth: 12, padding: 15, font: { size: 12 } }
-              },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => {
-                    if (ctx.dataset.label === 'Trend Line') return null;
-                    const point = ctx.raw;
-                    return `${point.label}: P/E ${point.x.toFixed(1)}, 6M ${point.y.toFixed(1)}%`;
-                  }
-                }
-              },
-              annotation: {
-                annotations: {
-                  sweetSpotArea: {
-                    type: 'box',
-                    xMin: 0,
-                    xMax: ThresholdManager.pe,
-                    yMin: ThresholdManager.momentum,
-                    yMax: 100,
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    borderColor: 'transparent'
-                  },
-                  dangerZoneArea: {
-                    type: 'box',
-                    xMin: 25,
-                    xMax: 50,
-                    yMin: 0,
-                    yMax: 5,
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderColor: 'transparent'
-                  }
-                }
-              }
-            },
-            scales: {
-              x: {
-                title: { display: true, text: 'P/E Ratio', font: { size: 12 } },
-                min: 0,
-                max: 40
-              },
-              y: {
-                title: { display: true, text: '6M Momentum (%)', font: { size: 12 } },
-                min: -20,
-                max: 100
-              }
-            },
-            onClick: (evt, elements) => {
-              if (elements.length > 0) {
-                const index = elements[0].index;
-                const datasetIndex = elements[0].datasetIndex;
-                if (datasetIndex < 3) {
-                  const chartData = this.chart.data.datasets[datasetIndex].data[index];
-                  const dataIndex = App.allData.findIndex(d => d.name === chartData.label);
-                  if (dataIndex >= 0) {
-                    DetailPanel.show(App.allData[dataIndex]);
-                  }
-                }
-              }
-            }
-          }
-        });
-      },
-
-      generateTrendLine(data) {
-        const validData = data.filter(d => d.pe != null && d.momentum6m != null);
-        if (validData.length < 2) return [];
-
-        const xValues = validData.map(d => d.pe);
-        const yValues = validData.map(d => d.momentum6m * 100);
-
-        const n = xValues.length;
-        const sumX = xValues.reduce((a, b) => a + b, 0);
-        const sumY = yValues.reduce((a, b) => a + b, 0);
-        const sumXY = xValues.reduce((sum, x, i) => sum + x * yValues[i], 0);
-        const sumXX = xValues.reduce((sum, x) => sum + x * x, 0);
-
-        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-        const intercept = (sumY - slope * sumX) / n;
-
-        return [
-          { x: 0, y: intercept },
-          { x: 40, y: slope * 40 + intercept }
-        ];
-      }
-    };
-
-    // ==================== TABLE SORTER ====================
-    const TableSorter = {
-      currentSort: { column: null, direction: 'asc' },
-
-      sort(column) {
-        if (this.currentSort.column === column) {
-          this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-          this.currentSort.column = column;
-          this.currentSort.direction = 'asc';
-        }
-
-        const sorted = this.getSortedData(App.filteredData || App.allData);
-        UIRenderer.renderTable(sorted);
-        this.updateIndicators();
-      },
-
-      getSortedData(data) {
-        const { column, direction } = this.currentSort;
-        if (!column) return data;
-
-        return [...data].sort((a, b) => {
-          let aVal = a[column];
-          let bVal = b[column];
-
-          if (column === 'zone') {
-            const zoneOrder = { 'sweet-spot': 1, 'neutral': 2, 'danger-zone': 3 };
-            aVal = zoneOrder[a.zone] || 2;
-            bVal = zoneOrder[b.zone] || 2;
-          }
-
-          if (typeof aVal === 'string') {
-            return direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-          }
-          return direction === 'asc' ? aVal - bVal : bVal - aVal;
-        });
-      },
-
-      updateIndicators() {
-        document.querySelectorAll('.data-table th').forEach(th => {
-          th.classList.remove('sort-asc', 'sort-desc');
-        });
-
-        const { column } = this.currentSort;
-        if (column) {
-          const th = document.querySelector(`[data-sort="${column}"]`);
-          if (th) {
-            th.classList.add(this.currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-          }
-        }
-      }
-    };
-
-    // ==================== EXPORT MANAGER ====================
-    class ExportManager {
-      constructor(data, stats) {
-        this.data = data;
-        this.stats = stats;
-      }
-
-      exportToCSV() {
-        const headers = ['Index', 'P/E', '1M', '3M', '6M', 'YTD', 'Zone'];
-        const rows = this.data.map(item => [
-          item.name,
-          item.pe?.toFixed(2) || 'N/A',
-          Utils.formatPercent(item.momentum1m * 100),
-          Utils.formatPercent(item.momentum3m * 100),
-          Utils.formatPercent(item.momentum6m * 100),
-          Utils.formatPercent(item.momentumYtd * 100),
-          item.zone
-        ]);
-
-        const csvContent = [
-          '\uFEFF' + headers.join(','),
-          ...rows.map(row => row.join(','))
-        ].join('\n');
-
-        this.downloadFile(csvContent, 'sweet-spot-scanner.csv', 'text/csv;charset=utf-8');
-        ToastManager.show('CSV 파일로 내보내기 완료!', 'success');
-      }
-
-      exportToExcel() {
-        const table = document.createElement('table');
-        table.innerHTML = `
-          <thead>
-            <tr>
-              <th>Index</th><th>P/E</th><th>1M</th><th>3M</th><th>6M</th><th>YTD</th><th>Zone</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${this.data.map(item => `
-              <tr>
-                <td>${item.name}</td>
-                <td>${item.pe?.toFixed(2) || 'N/A'}</td>
-                <td>${Utils.formatPercent(item.momentum1m * 100)}</td>
-                <td>${Utils.formatPercent(item.momentum3m * 100)}</td>
-                <td>${Utils.formatPercent(item.momentum6m * 100)}</td>
-                <td>${Utils.formatPercent(item.momentumYtd * 100)}</td>
-                <td>${item.zone}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        `;
-
-        const htmlContent = `
-          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
-          <head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Sheet1</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>
-          <body>${table.outerHTML}</body></html>
-        `;
-
-        this.downloadFile(htmlContent, 'sweet-spot-scanner.xls', 'application/vnd.ms-excel');
-        ToastManager.show('Excel 파일로 내보내기 완료!', 'success');
-      }
-
-      exportToImage() {
-        const chartCanvas = document.getElementById('scatterChart');
-        chartCanvas.toBlob((blob) => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `sweet-spot-scanner-${Date.now()}.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          ToastManager.show('이미지 저장 완료!', 'success');
-        }, 'image/png');
-      }
-
-      shareLink() {
-        const url = new URL(window.location.href);
-        url.searchParams.set('v', '8.0');
-        url.searchParams.set('pe', ThresholdManager.pe);
-        url.searchParams.set('mom', ThresholdManager.momentum);
-        url.searchParams.set('date', new Date().toISOString().split('T')[0]);
-
-        navigator.clipboard.writeText(url.toString()).then(() => {
-          ToastManager.show('링크가 클립보드에 복사되었습니다!', 'success');
-        }).catch(() => {
-          ToastManager.show('링크 복사에 실패했습니다', 'error');
-        });
-      }
-
-      downloadFile(content, filename, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-    }
-
-    // ==================== TOAST MANAGER ====================
-    const ToastManager = {
-      show(message, type = 'info', duration = 3000) {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-
-        const icons = {
-          success: 'fa-check-circle',
-          error: 'fa-exclamation-circle',
-          info: 'fa-info-circle'
-        };
-
-        toast.innerHTML = `
-          <i class="fas ${icons[type]}"></i>
-          <span>${message}</span>
-        `;
-
-        container.appendChild(toast);
-
-        setTimeout(() => {
-          toast.classList.add('hiding');
-          setTimeout(() => toast.remove(), 300);
-        }, duration);
-      }
-    };
-
-    // ==================== MAIN APP ====================
-    const App = {
-      allData: [],
-      filteredData: null,
-      stats: null,
-      exportManager: null,
-      statsEngine: new StatisticsEngine(),
-      insightsEngine: new InsightsEngine(),
-      historicalTracker: null,
-
-      async init() {
-        ThresholdManager.init();
-        this.historicalTracker = new HistoricalTracker();
-
+    // ==================== DATA LOADING ====================
+    async function loadData() {
+      const summaries = await fetch(CONFIG.dataPath + 'summaries.json').then(r => r.json());
+
+      for (const file of CONFIG.files) {
         try {
-          await this.loadData();
-          this.processData();
-          this.render();
-          this.setupEventListeners();
-        } catch (error) {
-          console.error('Initialization error:', error);
-          ToastManager.show('데이터 로드 실패', 'error');
-        }
-      },
+          const response = await fetch(CONFIG.dataPath + file);
+          const data = await response.json();
 
-      async loadData() {
-        const promises = CONFIG.files.map(file =>
-          fetch(CONFIG.dataPath + file)
-            .then(res => res.json())
-            .catch(err => {
-              console.warn(`Failed to load ${file}:`, err);
-              return { sections: {} };
-            })
-        );
+          if (data.sections) {
+            for (const [key, section] of Object.entries(data.sections)) {
+              const latest = section.data?.[section.data.length - 1] || {};
+              const momentum = summaries.momentum[key] || {};
 
-        const results = await Promise.all(promises);
-        const summaries = await fetch(CONFIG.dataPath + 'summaries.json')
-          .then(res => res.json())
-          .catch(() => ({ momentum: {} }));
-
-        this.allData = this.combineData(results, summaries);
-      },
-
-      combineData(results, summaries) {
-        const data = [];
-        const seen = new Set();
-
-        for (const result of results) {
-          const sections = result.sections || {};
-          for (const [key, section] of Object.entries(sections)) {
-            const id = `${section.name || key}`;
-            if (seen.has(id)) continue;
-            seen.add(id);
-
-            const latestData = section.data?.[section.data.length - 1] || {};
-            const momentum = summaries.momentum[key] || {};
-
-            data.push({
-              key,
-              name: section.name || key,
-              pe: latestData.best_pe_ratio || latestData.pe_ratio || null,
-              momentum1m: momentum['1m'] || null,
-              momentum3m: momentum['3m'] || null,
-              momentum6m: momentum['6m'] || null,
-              momentumYtd: momentum['ytd'] || null
-            });
+              allData.push({
+                name: section.name || key,
+                pe: latest.best_pe_ratio || latest.pe_ratio || null,
+                momentum6m: momentum['6m'] || null
+              });
+            }
           }
+        } catch (e) {
+          console.warn(`Failed to load ${file}:`, e);
         }
+      }
 
-        return data.filter(d => d.pe != null || d.momentum6m != null);
-      },
+      return allData.filter(d => d.pe != null || d.momentum6m != null);
+    }
 
-      processData() {
-        const peThreshold = ThresholdManager.pe;
-        const momentumThreshold = ThresholdManager.momentum / 100;
-
-        this.allData.forEach(item => {
-          if (item.pe < peThreshold && item.momentum6m > momentumThreshold) {
-            item.zone = 'sweet-spot';
-          } else if (item.pe > 25 && item.momentum6m < 0.05) {
-            item.zone = 'danger-zone';
-          } else {
-            item.zone = 'neutral';
-          }
-        });
-
-        const validData = this.allData.filter(d => d.pe != null && d.momentum6m != null);
-
-        // Ensure we have valid data before calculating stats
-        if (validData.length < 2) {
-          console.warn('Not enough valid data for statistics calculation. Valid items:', validData.length);
-          this.stats = {
-            slope: 0,
-            intercept: 0,
-            rSquared: 0,
-            correlation: 0,
-            stdError: 0,
-            pValue: 1,
-            equation: 'N/A (insufficient data)'
-          };
+    // ==================== PROCESSING ====================
+    function processData(data) {
+      data.forEach(item => {
+        if (item.pe < CONFIG.SWEET_PE && item.momentum6m > CONFIG.SWEET_MOMENTUM) {
+          item.zone = 'sweet-spot';
+        } else if (item.pe > CONFIG.DANGER_PE && item.momentum6m < CONFIG.DANGER_MOMENTUM) {
+          item.zone = 'danger-zone';
         } else {
-          this.stats = this.statsEngine.calculateLinearRegression(
-            validData.map(d => d.pe),
-            validData.map(d => d.momentum6m * 100)
-          );
+          item.zone = 'neutral';
         }
+      });
+    }
 
-        console.log('Processed data:', {
-          total: this.allData.length,
-          valid: validData.length,
-          stats: this.stats
-        });
-      },
+    // ==================== RENDERING ====================
+    function render() {
+      renderMetrics();
+      renderChart();
+      renderZones();
+      renderTable(allData);
+    }
 
-      render() {
-        UIRenderer.renderMetrics(this.allData);
+    function renderMetrics() {
+      const sweet = allData.filter(d => d.zone === 'sweet-spot').length;
+      const danger = allData.filter(d => d.zone === 'danger-zone').length;
+      const neutral = allData.filter(d => d.zone === 'neutral').length;
 
-        const insights = this.insightsEngine.generate(this.allData, this.stats);
-        UIRenderer.renderInsights(insights);
+      document.getElementById('metrics').innerHTML = `
+        <div class="metric metric-sweet">
+          <div class="metric-value text-green-600">${sweet}</div>
+          <div class="metric-label">Sweet Spot</div>
+        </div>
+        <div class="metric metric-danger">
+          <div class="metric-value text-red-600">${danger}</div>
+          <div class="metric-label">Danger Zone</div>
+        </div>
+        <div class="metric metric-neutral">
+          <div class="metric-value text-gray-600">${neutral}</div>
+          <div class="metric-label">Neutral</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value text-blue-600">${allData.length}</div>
+          <div class="metric-label">Total</div>
+        </div>
+      `;
+    }
 
-        UIRenderer.renderZoneLists(this.allData);
-        UIRenderer.renderTable(this.allData);
-        UIRenderer.updateStats(this.stats);
-        ChartRenderer.render(this.allData, this.stats);
-        UIRenderer.renderHistoricalChart(this.historicalTracker);
+    function renderChart() {
+      const ctx = document.getElementById('scatterChart').getContext('2d');
 
-        this.exportManager = new ExportManager(this.allData, this.stats);
-        this.updateTime();
-        this.updateFreshness();
-      },
-
-      setupEventListeners() {
-        // Search
-        const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', Utils.debounce((e) => {
-          const query = e.target.value.toLowerCase();
-          this.filteredData = this.allData.filter(item =>
-            item.name.toLowerCase().includes(query)
-          );
-          UIRenderer.renderTable(this.filteredData || this.allData);
-        }, 200));
-
-        // Table sorting
-        document.querySelectorAll('[data-sort]').forEach(th => {
-          th.addEventListener('click', () => TableSorter.sort(th.dataset.sort));
-        });
-
-        // Export dropdown
-        const exportBtn = document.getElementById('exportBtn');
-        const exportDropdown = document.getElementById('exportDropdown');
-
-        exportBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          exportDropdown.querySelector('.dropdown-menu').classList.toggle('show');
-        });
-
-        document.querySelectorAll('[data-export]').forEach(item => {
-          item.addEventListener('click', () => {
-            const action = item.dataset.export;
-            if (action === 'csv') this.exportManager.exportToCSV();
-            else if (action === 'excel') this.exportManager.exportToExcel();
-            else if (action === 'image') this.exportManager.exportToImage();
-            else if (action === 'share') this.exportManager.shareLink();
-            exportDropdown.querySelector('.dropdown-menu').classList.remove('show');
-          });
-        });
-
-        document.addEventListener('click', () => {
-          exportDropdown.querySelector('.dropdown-menu').classList.remove('show');
-        });
-      },
-
-      recalculate() {
-        this.processData();
-        this.render();
-      },
-
-      updateTime() {
-        const now = new Date();
-        document.getElementById('updateTime').textContent = now.toLocaleString('ko-KR');
-      },
-
-      updateFreshness() {
-        const badges = document.querySelectorAll('#freshness-badge span');
-        badges.forEach(badge => {
-          badge.textContent = 'Updated';
-          badge.className = 'text-xs px-2 py-1 rounded bg-green-100 text-green-700';
-        });
-      }
-    };
-
-    // ==================== UI HELPERS ====================
-    const UI = {
-      toggleHeatmap() {
-        const view = document.getElementById('heatmapView');
-        const isHidden = view.classList.contains('hidden');
-        view.classList.toggle('hidden');
-
-        if (isHidden) {
-          UIRenderer.renderHeatmap(App.allData);
+      new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Sweet Spot',
+              data: allData.filter(d => d.zone === 'sweet-spot').map(d => ({ x: d.pe, y: d.momentum6m * 100 })),
+              backgroundColor: 'rgba(34, 197, 94, 0.7)',
+              pointRadius: 10
+            },
+            {
+              label: 'Danger Zone',
+              data: allData.filter(d => d.zone === 'danger-zone').map(d => ({ x: d.pe, y: d.momentum6m * 100 })),
+              backgroundColor: 'rgba(239, 68, 68, 0.7)',
+              pointRadius: 10
+            },
+            {
+              label: 'Neutral',
+              data: allData.filter(d => d.zone === 'neutral').map(d => ({ x: d.pe, y: d.momentum6m * 100 })),
+              backgroundColor: 'rgba(156, 163, 175, 0.5)',
+              pointRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { title: 'P/E', min: 0, max: 40 },
+            y: { title: '6M Momentum (%)', min: -20, max: 100 }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.raw.name}: P/E ${ctx.raw.x.toFixed(1)}, 6M ${ctx.raw.y.toFixed(1)}%`
+                }
+              }
+            }
+          }
         }
-      },
+      });
+    }
 
-      filterByZone(zoneLabel) {
-        const searchTerm = zoneLabel.toLowerCase().replace(' ', '-');
-        const searchInput = document.getElementById('searchInput');
-        searchInput.value = zoneLabel;
+    function renderZones() {
+      const sweet = allData.filter(d => d.zone === 'sweet-spot')
+        .sort((a, b) => b.momentum6m - a.momentum6m);
+      const danger = allData.filter(d => d.zone === 'danger-zone')
+        .sort((a, b) => a.momentum6m - b.momentum6m);
 
-        const filtered = App.allData.filter(item => item.zone === searchTerm);
-        UIRenderer.renderTable(filtered);
-      },
+      document.getElementById('sweetSpotList').innerHTML = sweet.length > 0
+        ? sweet.map((item, i) => `
+            <div class="zone-item sweet-spot">
+              <span>#${i + 1} ${item.name}</span>
+              <strong>${formatPercent(item.momentum6m)}</strong> (P/E: ${item.pe.toFixed(1)})
+            </div>
+          `).join('')
+        : '<p class="text-gray-500">No Sweet Spot indices</p>';
 
-      closeDetailPanel() {
-        DetailPanel.close();
+      document.getElementById('dangerZoneList').innerHTML = danger.length > 0
+        ? danger.map((item, i) => `
+            <div class="zone-item danger-zone">
+              <span>#${i + 1} ${item.name}</span>
+              <strong>${formatPercent(item.momentum6m)}</strong> (P/E: ${item.pe.toFixed(1)})
+            </div>
+          `).join('')
+        : '<p class="text-gray-500">No Danger Zone indices</p>';
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = data.map(item => {
+        const zoneClass = item.zone === 'sweet-spot' ? 'text-green-600'
+                        : item.zone === 'danger-zone' ? 'text-red-600' : 'text-gray-600';
+        return `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.pe ? item.pe.toFixed(2) : 'N/A'}</td>
+            <td class="${item.momentum6m > 0 ? 'text-green-600' : 'text-red-600'}">
+              ${formatPercent(item.momentum6m)}
+            </td>
+            <td class="${zoneClass}">${item.zone.replace('-', ' ').toUpperCase()}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ==================== UTILITIES ====================
+    function formatPercent(value) {
+      return value ? (value * 100).toFixed(1) + '%' : 'N/A';
+    }
+
+    function sortTable(column) {
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = column;
+        currentSort.direction = 'desc';
       }
-    };
 
-    // ==================== DETAIL PANEL GLOBAL ====================
-    const DetailPanel = new DetailPanelManager();
+      const sorted = [...allData].sort((a, b) => {
+        let aVal = a[column], bVal = b[column];
+        if (column === 'zone') {
+          const order = { 'sweet-spot': 1, 'neutral': 2, 'danger-zone': 3 };
+          aVal = order[a.zone] || 2;
+          bVal = order[b.zone] || 2;
+        }
+        return currentSort.direction === 'asc'
+          ? (aVal > bVal ? 1 : -1)
+          : (aVal < bVal ? 1 : -1);
+      });
 
-    // ==================== INITIALIZE ====================
-    document.addEventListener('DOMContentLoaded', () => {
-      App.init();
-    });
+      renderTable(sorted);
+    }
+
+    function filterTable() {
+      const query = document.getElementById('search').value.toLowerCase();
+      const filtered = allData.filter(item => item.name.toLowerCase().includes(query));
+      renderTable(filtered);
+    }
+
+    function showError(message) {
+      document.body.innerHTML = `
+        <div class="card max-w-lg mx-auto mt-10">
+          <h2 class="text-red-600 font-bold">Error</h2>
+          <p>${message}</p>
+          <button onclick="location.reload()" class="text-blue-500 underline">Retry</button>
+        </div>
+      `;
+    }
+
+    // ==================== START ====================
+    init();
   </script>
 </body>
 </html>
