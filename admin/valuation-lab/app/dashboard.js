@@ -77,17 +77,14 @@ const ValuationLabUI = (function() {
     const foldersData = await ManifestLoader.getAllFoldersWithSchemas();
     state.folders = foldersData;
 
-    // 2. Check Freshness (Parallel)
-    const freshnessPromises = Object.entries(foldersData).map(async ([name, data]) => {
-      const result = await FreshnessChecker.check(name, data.config);
-      return { name, result };
+    // 2. Check Freshness
+    state.freshness = {};
+    Object.entries(foldersData).forEach(([name, data]) => {
+      state.freshness[name] = FreshnessChecker.checkFreshness(
+        data.config.updated,
+        data.config.update_frequency
+      );
     });
-
-    const freshnessResults = await Promise.all(freshnessPromises);
-    state.freshness = freshnessResults.reduce((acc, curr) => {
-      acc[curr.name] = curr.result;
-      return acc;
-    }, {});
 
     // 3. Update Last Updated
     const manifestInfo = await ManifestLoader.getManifestInfo();
