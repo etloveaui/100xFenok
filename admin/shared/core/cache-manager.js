@@ -1,35 +1,53 @@
 /**
- * 3-Tier Caching System
+ * 3-Tier Caching System (Unified)
  *
- * Layer 1: Memory (즉시) - 현재 세션 내 재사용
- * Layer 2: SessionStorage (빠름) - 탭 내 지속
- * Layer 3: Fetch (느림) - 네트워크 요청
+ * Layer 1: Memory (instant) - current session
+ * Layer 2: SessionStorage (fast) - tab persistence
+ * Layer 3: Fetch (slow) - network request
  *
  * @module cache-manager
+ * @version 3.0.0 (unified for admin/shared)
  */
 
 const CacheManager = (function() {
   // Layer 1: Memory Cache
   const memoryCache = new Map();
 
-  // 캐시 설정
+  // Config (modifiable via setPrefix)
   const CONFIG = {
-    MEMORY_TTL: 5 * 60 * 1000,      // 5분
-    SESSION_TTL: 30 * 60 * 1000,    // 30분
-    PREFIX: 'vlab_cache_'
+    MEMORY_TTL: 5 * 60 * 1000,      // 5 minutes
+    SESSION_TTL: 30 * 60 * 1000,    // 30 minutes
+    PREFIX: 'admin_cache_'           // Default prefix (changed via setPrefix)
   };
 
   /**
-   * 캐시 키 생성
-   * @param {string} key - 원본 키
-   * @returns {string} 프리픽스 적용된 키
+   * Set cache prefix for different modules
+   * @param {string} prefix - e.g., 'dlab_cache_' or 'vlab_cache_'
+   */
+  function setPrefix(prefix) {
+    CONFIG.PREFIX = prefix;
+    console.log(`[Cache] Prefix set to: ${prefix}`);
+  }
+
+  /**
+   * Get current prefix
+   * @returns {string}
+   */
+  function getPrefix() {
+    return CONFIG.PREFIX;
+  }
+
+  /**
+   * Generate cache key
+   * @param {string} key - original key
+   * @returns {string} prefixed key
    */
   function getCacheKey(key) {
     return CONFIG.PREFIX + key;
   }
 
   /**
-   * Layer 1: Memory에서 조회
+   * Layer 1: Get from Memory
    * @param {string} key
    * @returns {any|null}
    */
@@ -45,7 +63,7 @@ const CacheManager = (function() {
   }
 
   /**
-   * Layer 1: Memory에 저장
+   * Layer 1: Set to Memory
    * @param {string} key
    * @param {any} data
    */
@@ -57,7 +75,7 @@ const CacheManager = (function() {
   }
 
   /**
-   * Layer 2: SessionStorage에서 조회
+   * Layer 2: Get from SessionStorage
    * @param {string} key
    * @returns {any|null}
    */
@@ -80,7 +98,7 @@ const CacheManager = (function() {
   }
 
   /**
-   * Layer 2: SessionStorage에 저장
+   * Layer 2: Set to SessionStorage
    * @param {string} key
    * @param {any} data
    */
@@ -97,9 +115,9 @@ const CacheManager = (function() {
   }
 
   /**
-   * 3-Tier 캐시 조회
-   * @param {string} key - 캐시 키
-   * @param {Function} fetchFn - 캐시 미스 시 호출할 함수
+   * 3-Tier cache get
+   * @param {string} key - cache key
+   * @param {Function} fetchFn - function to call on cache miss
    * @returns {Promise<any>}
    */
   async function get(key, fetchFn) {
@@ -114,7 +132,7 @@ const CacheManager = (function() {
     data = getFromSession(key);
     if (data !== null) {
       console.log(`[Cache] L2 HIT: ${key}`);
-      setToMemory(key, data); // L1에 승격
+      setToMemory(key, data); // Promote to L1
       return data;
     }
 
@@ -122,7 +140,7 @@ const CacheManager = (function() {
     console.log(`[Cache] L3 FETCH: ${key}`);
     data = await fetchFn();
 
-    // 양쪽에 저장
+    // Store in both layers
     setToMemory(key, data);
     setToSession(key, data);
 
@@ -130,7 +148,7 @@ const CacheManager = (function() {
   }
 
   /**
-   * 특정 키 캐시 무효화
+   * Invalidate specific key
    * @param {string} key
    */
   function invalidate(key) {
@@ -141,7 +159,7 @@ const CacheManager = (function() {
   }
 
   /**
-   * 전체 캐시 클리어
+   * Clear all cache (for current prefix)
    */
   function clear() {
     memoryCache.clear();
@@ -156,11 +174,12 @@ const CacheManager = (function() {
   }
 
   /**
-   * 캐시 상태 조회
+   * Get cache stats
    * @returns {Object}
    */
   function getStats() {
     return {
+      prefix: CONFIG.PREFIX,
       memorySize: memoryCache.size,
       sessionKeys: Object.keys(sessionStorage).filter(k => k.startsWith(CONFIG.PREFIX)).length
     };
@@ -171,6 +190,8 @@ const CacheManager = (function() {
     invalidate,
     clear,
     getStats,
+    setPrefix,
+    getPrefix,
     CONFIG
   };
 })();

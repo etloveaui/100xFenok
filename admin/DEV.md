@@ -16,15 +16,22 @@
 
 ```
 admin/
-├── DEV.md           ← 이 파일
-├── index.html       ← 관리자 대시보드
-├── api-test.html    ← Apps Script API 테스트
-├── valuation-lab/   ← 밸류에이션 실험실
-├── data-lab/        ← 데이터 관리 전용 공간
-├── design-lab/      ← 디자인 실험실
-└── market-radar/    ← 시장 지수 차트 (S&P 500, NASDAQ)
+├── DEV.md           ← This file
+├── index.html       ← Admin dashboard
+├── api-test.html    ← Apps Script API test
+├── shared/          ← ★ Unified shared modules (NEW 2026-01-20)
+│   ├── config/      # ManifestLoader
+│   ├── core/        # CacheManager, DataManager, Formatters
+│   ├── ui/          # StatusCard
+│   └── validators/  # FreshnessChecker, SchemaValidator
+├── valuation-lab/   ← Valuation analysis tools
+├── data-lab/        ← Data management dashboard
+├── design-lab/      ← Design experiments
+└── market-radar/    ← Market index charts (S&P 500, NASDAQ)
     └── charts/
 ```
+
+> **shared/ Details**: See `admin/shared/README.md`
 
 ---
 
@@ -140,4 +147,11 @@ if (inputHash === storedHash) {
 
 ## Change Log
 
-> 상세 이력: `CookBook/docs/CHANGELOG.md` 참조
+> Details: `docs/CHANGELOG.md`
+
+### 2026-01-20: Unified Shared Modules
+- Created `admin/shared/` folder with 7 modules
+- CacheManager: Added `setPrefix()` for multi-lab support
+- DataManager: Added `loadFromManifest()` for dynamic loading
+- Modules shared between Data Lab and Valuation Lab
+- Reference: `admin/shared/README.md`

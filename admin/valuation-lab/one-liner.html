@@ -112,14 +112,24 @@
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
 
   <!-- Shared Modules -->
+  <!-- Shared Modules -->
+  <script src="../shared/config/manifest-loader.js"></script>
+  <script src="../shared/core/cache-manager.js"></script>
+  <script src="../shared/core/data-manager.js"></script>
+  <script src="../shared/core/formatters.js"></script>
+  <script src="../shared/validators/freshness-checker.js"></script>
+
+  <!-- Valuation Lab Specific -->
   <script src="shared/constants.js"></script>
-  <script src="shared/formatters.js"></script>
   <script src="shared/calculations.js"></script>
-  <script src="shared/validator.js"></script>
-  <script src="shared/security.js"></script>
-  <script src="shared/cache-manager.js"></script>
-  <script src="shared/data-manager.js"></script>
   <script src="shared/indicators.js"></script>
+  <script src="shared/security.js"></script>
+  <script src="shared/validator.js"></script>
+
+  <script>
+    // Set prefix for Valuation Lab
+    if (window.CacheManager) CacheManager.setPrefix('vlab_cache_');
+  </script>
 
   <header class="py-6 border-b bg-white">
     <div class="container mx-auto px-4">

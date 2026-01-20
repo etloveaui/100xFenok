@@ -81,18 +81,19 @@
     </div>
   </footer>
 
-  <!-- Core Modules (load order matters) -->
-  <script src="shared/core/cache-manager.js"></script>
-  <script src="shared/core/formatters.js"></script>
-  <script src="shared/core/data-manager.js"></script>
+  <!-- Shared Modules (from admin/shared/) -->
+  <script src="../shared/config/manifest-loader.js"></script>
+  <script src="../shared/core/cache-manager.js"></script>
+  <script src="../shared/core/data-manager.js"></script>
+  <script src="../shared/core/formatters.js"></script>
+  <script src="../shared/validators/freshness-checker.js"></script>
+  <script src="../shared/validators/schema-validator.js"></script>
+  <script src="../shared/ui/status-card.js"></script>
 
-  <!-- Config & Validators -->
-  <script src="shared/config/manifest-loader.js"></script>
-  <script src="shared/validators/schema-validator.js"></script>
-  <script src="shared/validators/freshness-checker.js"></script>
-
-  <!-- UI Components -->
-  <script src="shared/ui/status-card.js"></script>
+  <script>
+    // Set prefix for Data Lab
+    if (window.CacheManager) CacheManager.setPrefix('dlab_cache_');
+  </script>
 
   <!-- App -->
   <script src="app/state-manager.js"></script>
