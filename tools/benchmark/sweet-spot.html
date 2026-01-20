@@ -1394,6 +1394,7 @@
 
     // ==================== UI RENDERER ====================
     const UIRenderer = {
+      historicalChart: null,  // v8.0: Track historical chart for destroy
       renderMetrics(data) {
         const sweetCount = data.filter(d => d.zone === 'sweet-spot').length;
         const dangerCount = data.filter(d => d.zone === 'danger-zone').length;
@@ -1558,7 +1559,12 @@
         const ctx = document.getElementById('historicalCanvas').getContext('2d');
         const labels = tracker.monthlyData.map(m => m.label);
 
-        new Chart(ctx, {
+        // Destroy existing chart if exists
+        if (this.historicalChart) {
+          this.historicalChart.destroy();
+        }
+
+        this.historicalChart = new Chart(ctx, {
           type: 'line',
           data: {
             labels: labels,
