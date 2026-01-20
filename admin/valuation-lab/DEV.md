@@ -19,6 +19,7 @@
 ## Phase 6: UI Redesign (2026-01-20, DEC-108) ✅ COMPLETE
 
 **Implemented by**: OpenCode (Gemini 3 Pro)
+**Bug Fix**: FreshnessChecker.check → checkFreshness (Claude)
 
 | Step | Task | Status |
 |------|------|--------|

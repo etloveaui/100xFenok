@@ -262,15 +262,61 @@ const DataManager = (function() {
   /**
    * Get section keys from benchmark data
    * @param {Object} data - benchmark data object
-   * @returns {Array<string>} - array of section keys
+   * @returns {Array<string>} - array of section keys (e.g., ['sp500', 'nasdaq100', ...])
    */
   function getSectionKeys(data) {
     if (!data || typeof data !== 'object') return [];
 
-    // Exclude metadata-like keys
-    const excludeKeys = ['metadata', 'version', 'updated', 'schema', 'source', 'description'];
+    // Benchmark data has nested structure: { metadata: {}, sections: { sp500: {...}, ... } }
+    if (data.sections && typeof data.sections === 'object') {
+      return Object.keys(data.sections);
+    }
 
+    // Fallback for flat structure (legacy compatibility)
+    const excludeKeys = ['metadata', 'version', 'updated', 'schema', 'source', 'description'];
     return Object.keys(data).filter(key => !excludeKeys.includes(key.toLowerCase()));
+  }
+
+  /**
+   * Get section data array from benchmark data
+   * @param {Object} data - benchmark data object
+   * @param {string} section - section key (e.g., 'sp500')
+   * @returns {Array} - time series data array
+   */
+  function getSectionData(data, section) {
+    if (!data || !section) return [];
+
+    // Benchmark data structure: { sections: { sp500: { name: '...', data: [...] } } }
+    if (data.sections && data.sections[section]) {
+      return data.sections[section].data || [];
+    }
+
+    // Fallback for flat structure (legacy compatibility)
+    if (data[section] && Array.isArray(data[section].data)) {
+      return data[section].data;
+    }
+    if (data[section] && Array.isArray(data[section])) {
+      return data[section];
+    }
+
+    return [];
+  }
+
+  /**
+   * Get section info (name, metadata) from benchmark data
+   * @param {Object} data - benchmark data object
+   * @param {string} section - section key (e.g., 'sp500')
+   * @returns {Object} - section info { name, name_en, ... }
+   */
+  function getSectionInfo(data, section) {
+    if (!data || !section) return null;
+
+    if (data.sections && data.sections[section]) {
+      const { data: _, ...info } = data.sections[section];
+      return info;
+    }
+
+    return null;
   }
 
   return {
@@ -288,6 +334,8 @@ const DataManager = (function() {
     // Valuation Lab Benchmark functions
     loadBenchmark,
     getSectionKeys,
+    getSectionData,
+    getSectionInfo,
     BENCHMARK_FILES,
     CONFIG
   };
