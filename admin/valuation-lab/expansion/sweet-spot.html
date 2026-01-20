@@ -163,9 +163,12 @@
         const data = await loadData();
         processData(data);
         render();
+        // Hide loading overlay
+        document.getElementById('loadingOverlay').classList.add('hidden');
       } catch (error) {
         console.error('Init error:', error);
         showError('Failed to load data');
+        document.getElementById('loadingOverlay').classList.add('hidden');
       }
     }
 
@@ -222,7 +225,6 @@
     function renderMetrics() {
       const sweet = allData.filter(d => d.zone === 'sweet-spot').length;
       const danger = allData.filter(d => d.zone === 'danger-zone').length;
-      const neutral = allData.filter(d => d.zone === 'neutral').length;
 
       document.getElementById('metrics').innerHTML = `
         <div class="metric metric-sweet">
@@ -234,8 +236,8 @@
           <div class="metric-label">Danger Zone</div>
         </div>
         <div class="metric metric-neutral">
-          <div class="metric-value text-gray-600">${neutral}</div>
-          <div class="metric-label">Neutral</div>
+          <div class="metric-value text-purple-600">${CONFIG.CORRELATION_PE_6M}</div>
+          <div class="metric-label">Correlation</div>
         </div>
         <div class="metric">
           <div class="metric-value text-blue-600">${allData.length}</div>
