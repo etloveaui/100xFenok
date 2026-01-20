@@ -230,6 +230,49 @@ const DataManager = (function() {
     return 0;
   }
 
+  // ========================================
+  // Valuation Lab Benchmark Functions
+  // ========================================
+
+  /**
+   * Benchmark name to filename mapping
+   */
+  const BENCHMARK_FILES = {
+    'US': 'us.json',
+    'SECTORS': 'us_sectors.json',
+    'EMERGING': 'emerging.json',
+    'DEVELOPED': 'developed.json',
+    'MSCI': 'msci.json',
+    'MICRO': 'micro_sectors.json'
+  };
+
+  /**
+   * Load benchmark data by name
+   * @param {string} benchmark - benchmark name (US, SECTORS, EMERGING, etc.)
+   * @returns {Promise<Object>}
+   */
+  async function loadBenchmark(benchmark) {
+    const fileName = BENCHMARK_FILES[benchmark.toUpperCase()];
+    if (!fileName) {
+      throw new Error(`Unknown benchmark: ${benchmark}`);
+    }
+    return loadFromManifest('benchmarks', fileName);
+  }
+
+  /**
+   * Get section keys from benchmark data
+   * @param {Object} data - benchmark data object
+   * @returns {Array<string>} - array of section keys
+   */
+  function getSectionKeys(data) {
+    if (!data || typeof data !== 'object') return [];
+
+    // Exclude metadata-like keys
+    const excludeKeys = ['metadata', 'version', 'updated', 'schema', 'source', 'description'];
+
+    return Object.keys(data).filter(key => !excludeKeys.includes(key.toLowerCase()));
+  }
+
   return {
     fetchWithTimeout,
     fetchWithRetry,
@@ -242,6 +285,10 @@ const DataManager = (function() {
     createError,
     extractUpdateDate,
     countRecords,
+    // Valuation Lab Benchmark functions
+    loadBenchmark,
+    getSectionKeys,
+    BENCHMARK_FILES,
     CONFIG
   };
 })();
