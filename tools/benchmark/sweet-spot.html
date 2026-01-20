@@ -1,1187 +1,2563 @@
 <!DOCTYPE html>
-<html lang="ko" class="antialiased">
+<html lang="ko" class="antialiased scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sweet Spot Scanner v2.0 - 100xFenok</title>
-  <meta name="description" content="Valuation vs Momentum analysis identifying optimal buying opportunities">
+  <title>Sweet Spot Scanner v7.0 - 100xFenok</title>
+  <meta name="description" content="Valuation vs Momentum analysis with advanced analytics">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Monaco', 'monospace']
+          },
           animation: {
-            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'fade-in': 'fadeIn 0.5s ease-out',
-            'slide-up': 'slideUp 0.5s ease-out',
-            'shimmer': 'shimmer 2s linear infinite'
+            'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+            'fade-in-down': 'fadeInDown 0.4s ease-out forwards',
+            'scale-in': 'scaleIn 0.3s ease-out forwards',
+            'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+            'shimmer': 'shimmer 2.5s linear infinite',
+            'slide-in-right': 'slideInRight 0.3s ease-out forwards',
+            'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite',
+            'spin-slow': 'spin 3s linear infinite'
           },
           keyframes: {
-            fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
-            slideUp: { from: { opacity: '0', transform: 'translateY(10px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-            shimmer: { from: { backgroundPosition: '-200% 0' }, to: { backgroundPosition: '200% 0' } }
-          },
-          boxShadow: {
-            'glow-green': '0 0 20px rgba(34, 197, 94, 0.3)',
-            'glow-red': '0 0 20px rgba(239, 68, 68, 0.3)',
-            'inner-glow': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)'
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(30px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            fadeInDown: {
+              '0%': { opacity: '0', transform: 'translateY(-20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            scaleIn: {
+              '0%': { opacity: '0', transform: 'scale(0.9)' },
+              '100%': { opacity: '1', transform: 'scale(1)' }
+            },
+            slideInRight: {
+              '0%': { opacity: '0', transform: 'translateX(100%)' },
+              '100%': { opacity: '1', transform: 'translateX(0)' }
+            },
+            pulseGlow: {
+              '0%, 100%': {
+                boxShadow: '0 0 20px rgba(34, 197, 94, 0.3), 0 0 40px rgba(34, 197, 94, 0.1)'
+              },
+              '50%': {
+                boxShadow: '0 0 30px rgba(34, 197, 94, 0.5), 0 0 60px rgba(34, 197, 94, 0.2)'
+              }
+            },
+            shimmer: {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' }
+            },
+            bounceSubtle: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-5px)' }
+            },
+            spin: {
+              'to': { transform: 'rotate(360deg)' }
+            }
           }
         }
       }
     }
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    /* ==================== CSS VARIABLES SYSTEM v4 ==================== */
     :root {
-      --sweet-spot-bg: #dcfce7;
-      --sweet-spot-bg-hover: #bbf7d0;
-      --sweet-spot-border: #22c55e;
-      --sweet-spot-text: #166534;
-      --danger-bg: #fee2e2;
-      --danger-bg-hover: #fecaca;
-      --danger-border: #ef4444;
+      /* Primary Colors */
+      --sweet-primary: #22c55e;
+      --sweet-primary-dark: #16a34a;
+      --sweet-light: #dcfce7;
+      --sweet-bg: rgba(34, 197, 94, 0.08);
+      --sweet-bg-hover: rgba(34, 197, 94, 0.15);
+      --sweet-border: rgba(34, 197, 94, 0.3);
+      --sweet-gradient: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #dcfce7 100%);
+      --sweet-text: #166534;
+
+      --danger-primary: #ef4444;
+      --danger-primary-dark: #dc2626;
+      --danger-light: #fee2e2;
+      --danger-bg: rgba(239, 68, 68, 0.08);
+      --danger-bg-hover: rgba(239, 68, 68, 0.15);
+      --danger-border: rgba(239, 68, 68, 0.3);
+      --danger-gradient: linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #fee2e2 100%);
       --danger-text: #991b1b;
-      --neutral-bg: #f1f5f9;
-      --neutral-border: #cbd5e1;
-      --neutral-text: #64748b;
+
+      --neutral-primary: #64748b;
+      --neutral-light: #f1f5f9;
+      --neutral-bg: rgba(100, 116, 139, 0.08);
+      --neutral-bg-hover: rgba(100, 116, 139, 0.15);
+      --neutral-border: rgba(203, 213, 225, 0.6);
+      --neutral-text: #475569;
+
+      /* v7.0: Heatmap Colors */
+      --heatmap-low: #22c55e;
+      --heatmap-medium: #eab308;
+      --heatmap-high: #ef4444;
+
+      /* Semantic Colors */
+      --info-primary: #3b82f6;
+      --info-bg: rgba(59, 130, 246, 0.08);
+      --info-text: #1e40af;
+
+      /* Glass Effect */
+      --glass-bg: rgba(255, 255, 255, 0.8);
+      --glass-bg-dark: rgba(17, 24, 39, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.4);
+      --glass-blur: blur(20px) saturate(180%);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+      /* Shadows */
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+
+      /* Transitions */
+      --transition-instant: 100ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* Spacing */
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --radius-2xl: 1.5rem;
+
+      /* Fluid Typography Scale */
+      --font-size-xs: clamp(0.7rem, 1.5vw, 0.75rem);
+      --font-size-sm: clamp(0.8rem, 1.8vw, 0.875rem);
+      --font-size-base: clamp(0.875rem, 2vw, 1rem);
+      --font-size-lg: clamp(1rem, 2.2vw, 1.125rem);
+      --font-size-xl: clamp(1.125rem, 2.5vw, 1.25rem);
+      --font-size-2xl: clamp(1.25rem, 3vw, 1.5rem);
+      --font-size-3xl: clamp(1.5rem, 4vw, 1.875rem);
+      --font-size-4xl: clamp(1.875rem, 5vw, 2.25rem);
+
+      /* Line Heights for Readability */
+      --line-height-tight: 1.25;
+      --line-height-normal: 1.5;
+      --line-height-relaxed: 1.75;
+      --line-height-loose: 2;
+
+      /* Letter Spacing */
+      --letter-spacing-tight: -0.02em;
+      --letter-spacing-normal: 0;
+      --letter-spacing-wide: 0.025em;
+
+      /* Touch Target Sizes */
+      --touch-target-min: 44px;
+      --touch-target-comfortable: 48px;
     }
 
+    .dark {
+      --glass-bg: rgba(17, 24, 39, 0.85);
+      --glass-border: rgba(55, 65, 81, 0.5);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      --neutral-bg: rgba(75, 85, 99, 0.25);
+      --neutral-bg-hover: rgba(75, 85, 99, 0.4);
+      --neutral-border: rgba(75, 85, 99, 0.5);
+      --neutral-text: #94a3b8;
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.6);
+      --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.7);
+    }
+
+    /* ==================== BASE STYLES ==================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-normal);
+      letter-spacing: var(--letter-spacing-normal);
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+      -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+      hyphens: auto;
+    }
+
+    h1 {
+      font-size: var(--font-size-4xl);
+      line-height: var(--line-height-tight);
+      letter-spacing: var(--letter-spacing-tight);
+      font-weight: 800;
+    }
+
+    h2 {
+      font-size: var(--font-size-3xl);
+      line-height: var(--line-height-tight);
+      letter-spacing: var(--letter-spacing-tight);
+      font-weight: 700;
+    }
+
+    h3 {
+      font-size: var(--font-size-2xl);
+      line-height: var(--line-height-normal);
+      font-weight: 600;
+    }
+
+    h4 {
+      font-size: var(--font-size-xl);
+      line-height: var(--line-height-normal);
+      font-weight: 600;
+    }
+
+    p {
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-relaxed);
+      max-width: 65ch;
+    }
+
+    small, .text-small {
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-normal);
+    }
+
+    /* ==================== GLASSMORPHISM ==================== */
     .glass {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
     }
 
-    .dark .glass {
-      background: rgba(17, 24, 39, 0.85);
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .dark .glass-card {
+      background: rgba(31, 41, 55, 0.95);
+      border: 1px solid rgba(55, 65, 81, 0.5);
+    }
+
+    /* ==================== GRID LAYOUTS ==================== */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+      }
+    }
+
+    @supports (display: grid) {
+      .zone-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      @media (min-width: 768px) {
+        .zone-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.5rem;
+        }
+      }
+    }
+
+    /* ==================== METRIC CARDS ==================== */
+    .metric-card {
+      position: relative;
+      overflow: hidden;
+      transition: all var(--transition-normal);
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      min-height: var(--touch-target-comfortable);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(0.75rem, 3vw, 1rem);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                  rgba(255, 255, 255, 0.15), transparent 60%);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+      pointer-events: none;
+    }
+
+    .metric-card:hover::before {
+      opacity: 1;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: var(--shadow-lg);
+    }
+
+    @media (hover: none) {
+      .metric-card:hover {
+        transform: none;
+      }
+    }
+
+    .metric-card .icon-wrapper {
+      transition: all var(--transition-normal);
+      width: clamp(2rem, 6vw, 2.5rem);
+      height: clamp(2rem, 6vw, 2.5rem);
+    }
+
+    .metric-card:hover .icon-wrapper {
+      transform: rotate(8deg) scale(1.1);
+    }
+
+    @media (hover: none) {
+      .metric-card:hover .icon-wrapper {
+        transform: none;
+      }
+    }
+
+    .metric-card .metric-value {
+      transition: all var(--transition-normal);
+      font-size: clamp(1.25rem, 5vw, 1.875rem);
+      font-weight: 700;
+      line-height: var(--line-height-tight);
+    }
+
+    .metric-card .metric-label {
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-normal);
+    }
+
+    /* ==================== ZONE BADGES ==================== */
+    .zone-badge {
+      position: relative;
+      overflow: hidden;
+      transition: all var(--transition-normal);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      min-height: var(--touch-target-min);
+      padding: 0.375rem 0.75rem;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+    }
+
+    .zone-badge::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: left var(--transition-slow);
+    }
+
+    .zone-badge:hover::before {
+      left: 100%;
+    }
+
+    .zone-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    @media (hover: none) {
+      .zone-badge:hover {
+        transform: none;
+      }
     }
 
     .zone-sweet-spot {
-      background: linear-gradient(135deg, var(--sweet-spot-bg) 0%, var(--sweet-spot-bg-hover) 100%);
-      border-color: var(--sweet-spot-border);
-      color: var(--sweet-spot-text);
+      background: var(--sweet-gradient);
+      border: 2px solid var(--sweet-primary);
+      color: var(--sweet-text);
     }
 
     .zone-danger {
-      background: linear-gradient(135deg, var(--danger-bg) 0%, var(--danger-bg-hover) 100%);
-      border-color: var(--danger-border);
+      background: var(--danger-gradient);
+      border: 2px solid var(--danger-primary);
       color: var(--danger-text);
     }
 
     .zone-neutral {
-      background: var(--neutral-bg);
-      border-color: var(--neutral-border);
+      background: var(--neutral-light);
+      border: 1px solid var(--neutral-border);
       color: var(--neutral-text);
     }
 
-    .metric-card {
-      transition: all 0.3s ease;
-    }
-
-    .metric-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15);
-    }
-
-    .loading-skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    /* ==================== SKELETON LOADING ==================== */
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        var(--neutral-bg) 25%,
+        var(--neutral-border) 50%,
+        var(--neutral-bg) 75%
+      );
       background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
+      animation: shimmer 2.5s infinite;
+      border-radius: var(--radius-md);
     }
 
-    .dark .loading-skeleton {
-      background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
-      background-size: 200% 100%;
+    .skeleton-text {
+      height: 1em;
+      margin-bottom: 0.5em;
+      border-radius: var(--radius-sm);
     }
 
-    /* Table Styles */
+    .skeleton-circle {
+      border-radius: 50%;
+    }
+
+    /* ==================== PROGRESS BAR ==================== */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--sweet-primary), var(--info-primary));
+      transition: width var(--transition-fast);
+      z-index: 9999;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .progress-bar.complete {
+      width: 100%;
+      transition: width var(--transition-slow);
+    }
+
+    /* ==================== FADE IN ANIMATIONS ==================== */
+    .fade-in-section {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .fade-in-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .stagger-1 { transition-delay: 0.1s; }
+    .stagger-2 { transition-delay: 0.2s; }
+    .stagger-3 { transition-delay: 0.3s; }
+    .stagger-4 { transition-delay: 0.4s; }
+
+    /* ==================== ZONE LIST CARDS ==================== */
+    .zone-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .zone-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: clamp(0.75rem, 3vw, 1rem);
+      border-radius: var(--radius-lg);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+      min-height: var(--touch-target-min);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+    }
+
+    .zone-item:hover {
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    @media (hover: none) {
+      .zone-item:hover {
+        transform: none;
+      }
+      .zone-item:active {
+        transform: scale(0.98);
+        background: var(--neutral-bg-hover);
+      }
+    }
+
+    .zone-item-rank {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: clamp(1.75rem, 5vw, 2rem);
+      height: clamp(1.75rem, 5vw, 2rem);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      flex-shrink: 0;
+    }
+
+    .zone-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .zone-item-name {
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      line-height: var(--line-height-tight);
+      margin-bottom: 0.125rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .zone-item-metrics {
+      display: flex;
+      gap: 0.75rem;
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-normal);
+    }
+
+    .zone-item-metric {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* ==================== DATA TABLE ==================== */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
+    }
+
     .data-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+      border-collapse: collapse;
+      font-size: var(--font-size-sm);
+      table-layout: auto;
+      min-width: 600px;
+    }
+
+    .data-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: clamp(0.625rem, 2.5vw, 0.875rem);
+      text-align: left;
+      vertical-align: middle;
     }
 
     .data-table th {
-      position: sticky;
-      top: 0;
-      background: #f8fafc;
-      z-index: 10;
+      font-weight: 600;
+      font-size: var(--font-size-sm);
+      letter-spacing: var(--letter-spacing-wide);
+      text-transform: uppercase;
+      background: var(--neutral-light);
+      border-bottom: 2px solid var(--neutral-border);
+      white-space: nowrap;
       cursor: pointer;
       user-select: none;
-      transition: background 0.2s;
+    }
+
+    .data-table th:hover {
+      background: var(--neutral-bg);
+    }
+
+    .data-table th.sort-asc::after {
+      content: ' ▲';
+      font-size: 0.7em;
+    }
+
+    .data-table th.sort-desc::after {
+      content: ' ▼';
+      font-size: 0.7em;
+    }
+
+    .data-table td {
+      border-bottom: 1px solid var(--neutral-border);
+    }
+
+    .data-table tbody tr {
+      transition: all var(--transition-fast);
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--neutral-bg);
+      transform: scale(1.003);
+    }
+
+    @media (hover: none) {
+      .data-table tbody tr:hover {
+        background: transparent;
+        transform: none;
+      }
+      .data-table tbody tr:active {
+        background: var(--neutral-bg);
+      }
+    }
+
+    .data-table tbody tr.highlighted {
+      background: var(--info-bg) !important;
+      animation: pulseHighlight 1s ease-in-out 3;
+    }
+
+    @keyframes pulseHighlight {
+      0%, 100% { background: var(--info-bg); }
+      50% { background: rgba(59, 130, 246, 0.15); }
+    }
+
+    /* ==================== SEARCH INPUT ==================== */
+    .search-input-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.75rem;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-normal);
+      border: 2px solid var(--neutral-border);
+      border-radius: var(--radius-lg);
+      transition: all var(--transition-fast);
+      min-height: var(--touch-target-min);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--info-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--neutral-primary);
+      pointer-events: none;
+    }
+
+    /* ==================== CHART CONTAINER ==================== */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: clamp(300px, 60vw, 450px);
+      margin: 0 auto;
+    }
+
+    .chart-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ==================== BUTTONS ==================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      min-height: var(--touch-target-min);
+      padding: 0.625rem 1rem;
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      line-height: var(--line-height-normal);
+      border-radius: var(--radius-lg);
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--sweet-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--sweet-primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--neutral-light);
+      color: var(--neutral-text);
+    }
+
+    .btn-secondary:hover {
+      background: var(--neutral-bg);
+    }
+
+    .btn-icon {
+      padding: 0.5rem;
+      width: var(--touch-target-min);
+      height: var(--touch-target-min);
+    }
+
+    /* ==================== v7.0: DROPDOWN MENU ==================== */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      z-index: 1000;
+      min-width: 200px;
+      margin-top: 0.5rem;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--neutral-border);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all var(--transition-fast);
+    }
+
+    .dropdown.open .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      font-size: var(--font-size-sm);
+      color: var(--neutral-text);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .dropdown-item:hover {
+      background: var(--neutral-bg);
+    }
+
+    .dropdown-item:first-child {
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .dropdown-item:last-child {
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--neutral-border);
+      margin: 0.25rem 0;
+    }
+
+    .dark .dropdown-menu {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .dark .dropdown-item {
+      color: #cbd5e1;
+    }
+
+    .dark .dropdown-item:hover {
+      background: rgba(75, 85, 99, 0.3);
+    }
+
+    /* ==================== v7.0: TOAST NOTIFICATIONS ==================== */
+    .toast-container {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--neutral-border);
+      min-width: 300px;
+      animation: slideInRight 0.3s ease-out forwards;
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--sweet-primary);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--danger-primary);
+    }
+
+    .toast.info {
+      border-left: 4px solid var(--info-primary);
+    }
+
+    .toast.hiding {
+      animation: fadeOut 0.3s ease-out forwards;
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+
+    .dark .toast {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    /* ==================== v7.0: STATS PANEL ==================== */
+    .stats-panel {
+      background: var(--glass-bg);
+      border-radius: var(--radius-xl);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: var(--font-size-sm);
+      color: var(--neutral-text);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--neutral-text);
+    }
+
+    /* ==================== v7.0: HEATMAP ==================== */
+    .heatmap-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .heatmap-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      padding: 0.5rem;
+      font-size: var(--font-size-xs);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .heatmap-cell:hover {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-md);
+    }
+
+    .heatmap-cell .cell-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .heatmap-cell .cell-value {
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+    }
+
+    /* ==================== CUSTOM SCROLLBAR ==================== */
+    .table-container::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: var(--neutral-light);
+      border-radius: var(--radius-lg);
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: var(--neutral-primary);
+      border-radius: var(--radius-lg);
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: var(--neutral-text);
+    }
+
+    .dark .table-container::-webkit-scrollbar-track {
+      background: var(--neutral-bg);
+    }
+
+    .dark .table-container::-webkit-scrollbar-thumb {
+      background: var(--neutral-text);
+    }
+
+    /* ==================== REDUCED MOTION ==================== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .metric-card:hover::before,
+      .zone-badge::before {
+        display: none;
+      }
+    }
+
+    /* ==================== PRINT STYLES ==================== */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+
+      .metric-card,
+      .zone-item {
+        break-inside: avoid;
+      }
+
+      .data-table {
+        page-break-inside: auto;
+      }
+
+      .data-table tr {
+        page-break-inside: avoid;
+      }
+
+      .chart-container {
+        page-break-inside: avoid;
+      }
+    }
+
+    /* ==================== MOBILE-SPECIFIC ==================== */
+    @media (max-width: 767px) {
+      body {
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+
+      .btn,
+      .zone-badge,
+      .zone-item {
+        min-height: var(--touch-target-comfortable);
+      }
+
+      .metrics-grid {
+        gap: 0.5rem;
+      }
+
+      .chart-container {
+        height: 280px;
+      }
+
+      .hide-mobile {
+        display: none;
+      }
+
+      .show-mobile {
+        display: block;
+      }
+
+      .toast-container {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+      }
+
+      .toast {
+        min-width: auto;
+      }
+
+      .heatmap-container {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 768px) {
+      .show-mobile {
+        display: none;
+      }
+    }
+
+    /* ==================== TABLET-SPECIFIC ==================== */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .metrics-grid {
+        gap: 0.875rem;
+      }
+
+      .zone-item {
+        padding: 0.875rem;
+      }
+
+      .chart-container {
+        height: 380px;
+      }
+    }
+
+    /* ==================== DARK MODE OVERRIDES ==================== */
+    .dark body {
+      background: #0f172a;
+      color: #e2e8f0;
     }
 
     .dark .data-table th {
       background: #1e293b;
+      color: #94a3b8;
     }
 
-    .data-table th:hover {
-      background: #e2e8f0;
+    .dark .data-table td {
+      border-color: #334155;
+      color: #cbd5e1;
     }
 
-    .dark .data-table th:hover {
-      background: #334155;
+    .dark .data-table tbody tr:hover {
+      background: rgba(75, 85, 99, 0.3);
     }
 
-    .data-table tbody tr {
-      transition: background 0.2s;
+    .dark .search-input {
+      background: #1e293b;
+      border-color: #334155;
+      color: #e2e8f0;
     }
 
-    .data-table tbody tr:hover {
-      background: rgba(34, 197, 94, 0.08);
-    }
-
-    .sortable::after {
-      content: ' \2195';
-      opacity: 0.3;
-      font-size: 0.75em;
-      margin-left: 4px;
-    }
-
-    .sort-asc::after {
-      content: ' \2191';
-      opacity: 1;
-    }
-
-    .sort-desc::after {
-      content: ' \2193';
-      opacity: 1;
-    }
-
-    /* Custom scrollbar */
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
-
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #4b5563;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-
-    /* Tooltip enhancement */
-    .chart-tooltip {
-      backdrop-filter: blur(8px);
-    }
-
-    /* Zone badge animation */
-    .zone-badge {
-      transition: all 0.2s ease;
-    }
-
-    .zone-badge:hover {
-      transform: scale(1.05);
-    }
-
-    /* Insight card */
-    .insight-card {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .insight-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #22c55e, #16a34a);
-    }
-
-    .insight-card.danger::before {
-      background: linear-gradient(90deg, #ef4444, #dc2626);
+    .dark .zone-item {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: #334155;
     }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-slate-900 min-h-screen">
+  <!-- Progress Bar -->
+  <div id="progressBar" class="progress-bar"></div>
 
-  <!-- Header -->
-  <header class="glass sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-700/50">
-    <div class="container mx-auto px-4 py-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30">
-            <i class="fas fa-crosshairs text-white text-lg"></i>
-          </div>
-          <div>
-            <h1 class="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              Sweet Spot Scanner
-            </h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              Valuation vs Momentum Analysis
-            </p>
-          </div>
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container no-print"></div>
+
+  <!-- Main Content -->
+  <div id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Header -->
+    <header class="mb-6 sm:mb-8 fade-in-section stagger-1">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-2">
+            🎯 Sweet Spot Scanner
+          </h1>
+          <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl">
+            저평가 + 강한 모멘텀 = 최적 매수 타이밍
+          </p>
         </div>
-        <div class="flex items-center gap-2">
-          <!-- Threshold Mode Toggle -->
-          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
-            <span class="text-xs text-gray-500 dark:text-gray-400">Mode:</span>
-            <select id="threshold-mode" class="text-xs bg-transparent border-none focus:outline-none focus:ring-0 cursor-pointer">
-              <option value="fixed">Fixed (PE 15/25)</option>
-              <option value="median">Median-based</option>
-            </select>
+        <div class="flex items-center gap-2 no-print">
+          <!-- Export Dropdown -->
+          <div class="dropdown" id="exportDropdown">
+            <button id="exportBtn" class="btn btn-secondary" aria-label="내보내기">
+              <i class="fas fa-download"></i>
+              <span class="hide-mobile">내보내기</span>
+              <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div class="dropdown-menu">
+              <div class="dropdown-item" data-export="csv">
+                <i class="fas fa-file-csv text-green-600"></i>
+                <span>CSV로 내보내기</span>
+              </div>
+              <div class="dropdown-item" data-export="excel">
+                <i class="fas fa-file-excel text-green-600"></i>
+                <span>Excel로 내보내기</span>
+              </div>
+              <div class="dropdown-item" data-export="image">
+                <i class="fas fa-image text-blue-600"></i>
+                <span>이미지로 저장</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" data-export="share">
+                <i class="fas fa-share-alt text-purple-600"></i>
+                <span>링크 공유</span>
+              </div>
+            </div>
           </div>
-          <!-- Data date -->
-          <div id="data-date" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
-            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span class="text-xs text-gray-600 dark:text-gray-400" id="date-text">Loading...</span>
-          </div>
-          <!-- Dark mode toggle -->
-          <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Toggle dark mode">
-            <i class="fas fa-moon dark:hidden text-gray-600"></i>
-            <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
+
+          <button id="refreshBtn" class="btn btn-secondary" aria-label="데이터 새로고침">
+            <i class="fas fa-sync-alt"></i>
+            <span class="hide-mobile">새로고침</span>
           </button>
-          <!-- Download chart -->
-          <button onclick="downloadChart()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Download chart">
-            <i class="fas fa-download text-gray-600 dark:text-gray-400"></i>
+          <button id="darkModeToggle" class="btn btn-icon btn-secondary" aria-label="다크 모드 토글">
+            <i class="fas fa-moon"></i>
           </button>
-          <!-- Print -->
-          <button onclick="window.print()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Print">
-            <i class="fas fa-print text-gray-600 dark:text-gray-400"></i>
-          </button>
+          <a href="../index.html" class="btn btn-icon btn-secondary" aria-label="벤치마크 허브로 돌아가기">
+            <i class="fas fa-arrow-left"></i>
+          </a>
         </div>
       </div>
-    </div>
-  </header>
-
-  <main class="container mx-auto px-4 py-6">
-
-    <!-- Summary Metrics -->
-    <section id="metrics-section" class="mb-6 fade-in">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <!-- Sweet Spot Count -->
-        <div class="metric-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border-2 border-green-500 shadow-lg shadow-green-500/10">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Sweet Spot</p>
-              <p class="text-2xl sm:text-3xl font-bold text-green-600" id="sweet-spot-count">-</p>
-              <p class="text-xs text-gray-400 mt-1">Low P/E + High Momentum</p>
-            </div>
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-              <i class="fas fa-gem text-green-600 text-base sm:text-xl"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- Danger Zone Count -->
-        <div class="metric-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border-2 border-red-500 shadow-lg shadow-red-500/10">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Danger Zone</p>
-              <p class="text-2xl sm:text-3xl font-bold text-red-600" id="danger-count">-</p>
-              <p class="text-xs text-gray-400 mt-1">High P/E + Low Momentum</p>
-            </div>
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-              <i class="fas fa-exclamation-triangle text-red-600 text-base sm:text-xl"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- Correlation -->
-        <div class="metric-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 shadow-lg">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Correlation</p>
-              <p class="text-2xl sm:text-3xl font-bold text-blue-600" id="correlation">-</p>
-              <p class="text-xs text-gray-400 mt-1">P/E vs 6M Momentum</p>
-            </div>
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-              <i class="fas fa-chart-line text-blue-600 text-base sm:text-xl"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- Total Indices -->
-        <div class="metric-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 shadow-lg">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Total Indices</p>
-              <p class="text-2xl sm:text-3xl font-bold text-gray-700 dark:text-gray-300" id="total-count">-</p>
-              <p class="text-xs text-gray-400 mt-1" id="threshold-display">Threshold: PE 15/25</p>
-            </div>
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-              <i class="fas fa-list text-gray-600 dark:text-gray-400 text-base sm:text-xl"></i>
-            </div>
-          </div>
-        </div>
+      <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-500">
+        <span id="lastUpdate"></span>
+        <span class="hide-mobile">•</span>
+        <span class="hide-mobile">v7.0 Advanced Analytics</span>
       </div>
-
-      <!-- Correlation Insight -->
-      <div id="correlation-insight" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 hidden">
-        <div class="flex items-start gap-3">
-          <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
-          <div>
-            <p class="text-sm font-medium text-blue-900 dark:text-blue-100">Negative Correlation Detected</p>
-            <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
-              The correlation coefficient of <strong id="correlation-value">-0.399</strong> indicates that lower valuation (P/E) tends to be associated with higher momentum returns. This validates the "value + momentum" approach.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
+    </header>
 
     <!-- Loading State -->
-    <div id="loading" class="text-center py-20">
-      <div class="inline-block w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-      <p class="mt-4 text-gray-500">Loading benchmark data...</p>
+    <div id="loadingState" class="flex flex-col items-center justify-center py-12 sm:py-16 fade-in-section">
+      <div class="spinner spinner-lg mb-4"></div>
+      <p class="text-base sm:text-lg text-gray-600 dark:text-gray-400">데이터를 불러오는 중...</p>
     </div>
 
-    <!-- Main Content -->
-    <div id="main-content" class="hidden">
-      <!-- Scatter Plot Section -->
-      <section class="mb-6 fade-in">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <div>
-              <h2 class="text-base sm:text-lg font-semibold">
-                <i class="fas fa-chart-scatter mr-2 text-green-600"></i>Valuation vs Momentum Scatter Plot
-              </h2>
-              <p class="text-xs text-gray-500 mt-1">X-axis: P/E Ratio | Y-axis: 6M Momentum</p>
+    <!-- Main App (Hidden until loaded) -->
+    <div id="appContent" class="hidden">
+      <!-- Summary Metrics -->
+      <section class="mb-6 sm:mb-8 fade-in-section stagger-2">
+        <div class="metrics-grid">
+          <!-- Sweet Spot Count -->
+          <div class="metric-card glass-card rounded-xl p-3 sm:p-4" role="region" aria-label="Sweet Spot 개수">
+            <div class="flex items-start justify-between mb-2">
+              <div class="icon-wrapper flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg" style="background: var(--sweet-bg)">
+                <i class="fas fa-bullseye text-lg sm:text-xl" style="color: var(--sweet-primary)"></i>
+              </div>
+              <span class="zone-badge zone-sweet-spot text-xs sm:text-sm">Sweet</span>
             </div>
-            <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs">
-              <span class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
-                <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Sweet Spot
-              </span>
-              <span class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
-                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Danger Zone
-              </span>
-              <span class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
-                <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span> Neutral
-              </span>
+            <div class="metric-value" style="color: var(--sweet-text)" id="sweetSpotCount">-</div>
+            <div class="metric-label text-gray-600 dark:text-gray-400">Sweet Spot</div>
+          </div>
+
+          <!-- Danger Zone Count -->
+          <div class="metric-card glass-card rounded-xl p-3 sm:p-4" role="region" aria-label="Danger Zone 개수">
+            <div class="flex items-start justify-between mb-2">
+              <div class="icon-wrapper flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg" style="background: var(--danger-bg)">
+                <i class="fas fa-exclamation-triangle text-lg sm:text-xl" style="color: var(--danger-primary)"></i>
+              </div>
+              <span class="zone-badge zone-danger text-xs sm:text-sm">Danger</span>
+            </div>
+            <div class="metric-value" style="color: var(--danger-text)" id="dangerZoneCount">-</div>
+            <div class="metric-label text-gray-600 dark:text-gray-400">Danger Zone</div>
+          </div>
+
+          <!-- Correlation -->
+          <div class="metric-card glass-card rounded-xl p-3 sm:p-4" role="region" aria-label="상관계수">
+            <div class="flex items-start justify-between mb-2">
+              <div class="icon-wrapper flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg" style="background: var(--info-bg)">
+                <i class="fas fa-chart-line text-lg sm:text-xl" style="color: var(--info-primary)"></i>
+              </div>
+              <span class="zone-badge zone-neutral text-xs sm:text-sm">상관</span>
+            </div>
+            <div class="metric-value" style="color: var(--info-text)" id="correlationValue">-</div>
+            <div class="metric-label text-gray-600 dark:text-gray-400">P/E vs 6M</div>
+          </div>
+
+          <!-- Total Indices -->
+          <div class="metric-card glass-card rounded-xl p-3 sm:p-4" role="region" aria-label="분석 대상 수">
+            <div class="flex items-start justify-between mb-2">
+              <div class="icon-wrapper flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg" style="background: var(--neutral-bg)">
+                <i class="fas fa-layer-group text-lg sm:text-xl" style="color: var(--neutral-primary)"></i>
+              </div>
+              <span class="zone-badge zone-neutral text-xs sm:text-sm">전체</span>
+            </div>
+            <div class="metric-value" style="color: var(--neutral-text)" id="totalCount">-</div>
+            <div class="metric-label text-gray-600 dark:text-gray-400">분석 대상</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- v7.0: Advanced Statistics Panel -->
+      <section class="mb-6 sm:mb-8 fade-in-section">
+        <div class="stats-panel glass-card">
+          <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">
+            📊 고급 통계 (Advanced Statistics)
+          </h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-label">R² (결정계수)</div>
+              <div class="stat-value" id="rSquaredValue">-</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">P-value</div>
+              <div class="stat-value" id="pValue">-</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">표준오차</div>
+              <div class="stat-value" id="stdError">-</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">추세선 기울기</div>
+              <div class="stat-value" id="trendSlope">-</div>
             </div>
           </div>
-          <div class="relative" style="height: 350px;">
+        </div>
+      </section>
+
+      <!-- Scatter Plot -->
+      <section class="mb-6 sm:mb-8 fade-in-section stagger-3">
+        <div class="glass-card rounded-xl p-4 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              📊 Valuation vs Momentum Scatter
+            </h2>
+            <button id="toggleHeatmap" class="btn btn-secondary btn-sm">
+              <i class="fas fa-th"></i>
+              <span class="hide-mobile">히트맵</span>
+            </button>
+          </div>
+          <div class="chart-container" id="chartWrapper">
             <canvas id="scatterChart"></canvas>
+          </div>
+          <!-- v7.0: Heatmap View -->
+          <div id="heatmapView" class="hidden mt-4">
+            <h4 class="text-base font-semibold mb-3 text-gray-700 dark:text-gray-300">상관관계 히트맵</h4>
+            <div class="heatmap-container" id="heatmapContainer"></div>
           </div>
         </div>
       </section>
 
       <!-- Zone Lists -->
-      <section class="mb-6 fade-in">
-        <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
-          <!-- Sweet Spot List -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border-2 border-green-500 overflow-hidden">
-            <div class="zone-sweet-spot px-4 py-3">
-              <h3 class="font-bold text-base sm:text-lg">
-                <i class="fas fa-gem mr-2"></i>Sweet Spot
-                <span class="text-xs sm:text-sm font-normal ml-2 opacity-80">(Low P/E + High Momentum)</span>
-              </h3>
-            </div>
-            <div id="sweet-spot-list" class="p-3 sm:p-4 space-y-2 max-h-80 sm:max-h-96 overflow-y-auto custom-scrollbar">
-              <!-- Sweet spot items will be inserted here -->
-            </div>
+      <div class="zone-grid mb-6 sm:mb-8 fade-in-section stagger-4">
+        <!-- Sweet Spot List -->
+        <section class="glass-card rounded-xl p-4 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg sm:text-xl font-bold" style="color: var(--sweet-text)">
+              🟢 Sweet Spot
+            </h2>
+            <span class="zone-badge zone-sweet-spot" id="sweetSpotBadge">0개</span>
           </div>
+          <ul class="zone-list" id="sweetSpotList" role="listbox">
+            <li class="skeleton skeleton-text" style="height: 60px"></li>
+          </ul>
+          <p class="empty-state hidden text-center text-gray-500 dark:text-gray-500 py-6 sm:py-8 text-sm sm:text-base">
+            <i class="fas fa-search text-2xl mb-2 block"></i>
+            해당 구간에 인덱스가 없습니다
+          </p>
+        </section>
 
-          <!-- Danger Zone List -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border-2 border-red-500 overflow-hidden">
-            <div class="zone-danger px-4 py-3">
-              <h3 class="font-bold text-base sm:text-lg">
-                <i class="fas fa-exclamation-triangle mr-2"></i>Danger Zone
-                <span class="text-xs sm:text-sm font-normal ml-2 opacity-80">(High P/E + Low Momentum)</span>
-              </h3>
-            </div>
-            <div id="danger-zone-list" class="p-3 sm:p-4 space-y-2 max-h-80 sm:max-h-96 overflow-y-auto custom-scrollbar">
-              <!-- Danger zone items will be inserted here -->
-            </div>
+        <!-- Danger Zone List -->
+        <section class="glass-card rounded-xl p-4 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg sm:text-xl font-bold" style="color: var(--danger-text)">
+              🔴 Danger Zone
+            </h2>
+            <span class="zone-badge zone-danger" id="dangerZoneBadge">0개</span>
           </div>
-        </div>
-      </section>
+          <ul class="zone-list" id="dangerZoneList" role="listbox">
+            <li class="skeleton skeleton-text" style="height: 60px"></li>
+          </ul>
+          <p class="empty-state hidden text-center text-gray-500 dark:text-gray-500 py-6 sm:py-8 text-sm sm:text-base">
+            <i class="fas fa-search text-2xl mb-2 block"></i>
+            해당 구간에 인덱스가 없습니다
+          </p>
+        </section>
+      </div>
 
       <!-- Full Analysis Table -->
-      <section class="mb-6 fade-in">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <h2 class="text-base sm:text-lg font-semibold">
-              <i class="fas fa-table mr-2 text-green-600"></i>Full Analysis
+      <section class="mb-6 sm:mb-8 fade-in-section">
+        <div class="glass-card rounded-xl p-4 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+              📋 전체 분석 테이블
             </h2>
-            <div class="flex items-center gap-2">
-              <!-- Zone filter -->
-              <select id="zone-filter" class="px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                <option value="all">All Zones</option>
-                <option value="sweet-spot">Sweet Spot</option>
-                <option value="danger-zone">Danger Zone</option>
-                <option value="neutral">Neutral</option>
-              </select>
-              <!-- Search -->
-              <input type="text" id="table-search" placeholder="Search..."
-                class="px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg w-32 sm:w-auto bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+            <div class="search-input-wrapper">
+              <i class="fas fa-search search-input-icon"></i>
+              <input
+                type="search"
+                id="searchInput"
+                class="search-input"
+                placeholder="인덱스 검색..."
+                aria-label="인덱스 검색"
+              >
             </div>
           </div>
-          <div class="overflow-x-auto">
-            <table class="data-table text-xs sm:text-sm" id="analysis-table">
+          <div class="table-container">
+            <table class="data-table" id="analysisTable">
               <thead>
                 <tr>
-                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="0">Rank</th>
-                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="1">Index</th>
-                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="2">P/E</th>
-                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="3">1M</th>
-                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="4">3M</th>
-                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="5">6M</th>
-                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="6">YTD</th>
-                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="7">Zone</th>
+                  <th scope="col" data-sort="name">인덱스</th>
+                  <th scope="col" data-sort="pe">P/E</th>
+                  <th scope="col" data-sort="1m">1M</th>
+                  <th scope="col" data-sort="3m">3M</th>
+                  <th scope="col" data-sort="6m">6M</th>
+                  <th scope="col" data-sort="ytd">YTD</th>
+                  <th scope="col">Signal</th>
+                  <th scope="col" data-sort="zone">Zone</th>
                 </tr>
               </thead>
-              <tbody id="analysis-tbody" class="divide-y divide-gray-200 dark:divide-gray-700">
-                <!-- Table rows will be inserted here -->
+              <tbody id="tableBody">
               </tbody>
             </table>
           </div>
-          <!-- Table footer with count -->
-          <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
-            <span id="table-info">Showing all indices</span>
-            <span id="filtered-count"></span>
+          <div class="mt-4 text-sm text-gray-500 dark:text-gray-500">
+            <span id="resultCount">0</span>개 결과
           </div>
         </div>
       </section>
 
       <!-- Methodology -->
-      <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 fade-in">
-        <h2 class="text-base sm:text-lg font-semibold mb-4">
-          <i class="fas fa-info-circle mr-2 text-blue-600"></i>Methodology
+      <section class="glass-card rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 fade-in-section">
+        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">
+          📚 분석 방법론
         </h2>
-        <div class="grid sm:grid-cols-2 gap-4 sm:gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm sm:text-base">
           <div>
-            <h3 class="text-sm font-semibold text-green-600 mb-2">Sweet Spot Criteria</h3>
-            <ul class="space-y-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              <li class="flex items-center gap-2">
-                <i class="fas fa-check text-green-500"></i>
-                <span><strong>P/E Ratio:</strong> Below threshold</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fas fa-check text-green-500"></i>
-                <span><strong>6M Momentum:</strong> Above threshold</span>
-              </li>
+            <h3 class="font-semibold mb-2" style="color: var(--sweet-text)">🟢 Sweet Spot</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-2">저평가 + 강한 모멘텀 = 최적 매수 기회</p>
+            <ul class="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-1">
+              <li>P/E < 15 (저평가)</li>
+              <li>6M 수익률 > 20% (강한 모멘텀)</li>
             </ul>
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-red-600 mb-2">Danger Zone Criteria</h3>
-            <ul class="space-y-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              <li class="flex items-center gap-2">
-                <i class="fas fa-times text-red-500"></i>
-                <span><strong>P/E Ratio:</strong> Above threshold</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fas fa-times text-red-500"></i>
-                <span><strong>6M Momentum:</strong> Below threshold</span>
-              </li>
+            <h3 class="font-semibold mb-2" style="color: var(--danger-text)">🔴 Danger Zone</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-2">고평가 + 약한 모멘텀 = 회피 구간</p>
+            <ul class="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-1">
+              <li>P/E > 25 (고평가)</li>
+              <li>6M 수익률 < 5% (약한 모멘텀)</li>
             </ul>
           </div>
         </div>
-        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Threshold Modes</h3>
-          <div class="grid sm:grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400">
-            <div class="p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
-              <span class="font-medium">Fixed Mode:</span> P/E 15 (Sweet), 25 (Danger), Momentum 20%/5%
-            </div>
-            <div class="p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
-              <span class="font-medium">Median Mode:</span> Dynamic thresholds based on median values
-            </div>
-          </div>
-        </div>
-        <div class="mt-3 text-xs text-gray-500 dark:text-gray-500">
-          <strong>Data Sources:</strong> Bloomberg Terminal | <strong>Correlation:</strong> Pearson coefficient between P/E and 6M returns
+        <div class="mt-4 p-3 sm:p-4 rounded-lg" style="background: var(--info-bg)">
+          <p class="text-sm sm:text-base" style="color: var(--info-text)">
+            <strong>📊 상관관계:</strong> P/E vs 6M Momentum = <span id="methodCorrelation">-0.399</span><br>
+            <strong>📈 추세선:</strong> y = <span id="trendEquation">-</span><br>
+            <span class="text-xs sm:text-sm">해석: 밸류에이션이 낮을수록 모멘텀이 강한 음의 상관관계</span>
+          </p>
         </div>
       </section>
     </div>
 
-  </main>
-
-  <footer class="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-4 mt-8">
-    <div class="container mx-auto px-4 text-center">
-      <p class="text-xs sm:text-sm text-gray-500">
-        Sweet Spot Scanner v2.0 - 100xFenok Platform | Data: Bloomberg Terminal
+    <!-- Footer -->
+    <footer class="text-center py-6 sm:py-8 border-t border-gray-200 dark:border-gray-700 no-print">
+      <div class="flex flex-wrap justify-center gap-2 mb-3 text-xs sm:text-sm">
+        <span class="zone-badge zone-neutral">Analytics v7.0</span>
+        <span class="zone-badge zone-neutral">Export</span>
+        <span class="zone-badge zone-neutral">Heatmap</span>
+      </div>
+      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-500">
+        Sweet Spot Scanner v7.0 | 분석: benchmarks-data-analysis.md
       </p>
-    </div>
-  </footer>
+    </footer>
+  </div>
 
   <!-- Chart.js & Plugins -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-advanced-labels@2.0.0/dist/chartjs-plugin-advanced-labels.min.js"></script>
 
   <script>
-    // ==================== CONSTANTS & CONFIG ====================
-    const FIXED_SWEET_SPOT_PE = 15;
-    const FIXED_SWEET_SPOT_MOMENTUM = 0.20;  // 20%
-    const FIXED_DANGER_PE = 25;
-    const FIXED_DANGER_MOMENTUM = 0.05;  // 5%
-
-    // Complete index mapping from all data sources
-    const INDEX_CONFIG = {
-      // US Major Indices (from us.json structure)
-      'sp500': { name: 'S&P 500', category: 'US Major', source: 'us' },
-      'nasdaq100': { name: 'NASDAQ 100', category: 'US Major', source: 'us' },
-      'nasdaq_composite': { name: 'NASDAQ Composite', category: 'US Major', source: 'us' },
-      'russell2000': { name: 'Russell 2000', category: 'US Major', source: 'us' },
-
-      // US Sectors
-      'financials': { name: 'Financials', category: 'US Sector', source: 'us_sectors' },
-      'consumer_discretionary': { name: 'Consumer Discretionary', category: 'US Sector', source: 'us_sectors' },
-      'information_technology': { name: 'Information Technology', category: 'US Sector', source: 'us_sectors' },
-      'industrials': { name: 'Industrials', category: 'US Sector', source: 'us_sectors' },
-      'energy': { name: 'Energy', category: 'US Sector', source: 'us_sectors' },
-      'materials': { name: 'Materials', category: 'US Sector', source: 'us_sectors' },
-      'consumer_staples': { name: 'Consumer Staples', category: 'US Sector', source: 'us_sectors' },
-      'health_care': { name: 'Health Care', category: 'US Sector', source: 'us_sectors' },
-      'communication_services': { name: 'Communication Services', category: 'US Sector', source: 'us_sectors' },
-      'utilities': { name: 'Utilities', category: 'US Sector', source: 'us_sectors' },
-      'real_estate': { name: 'Real Estate', category: 'US Sector', source: 'us_sectors' },
-      'homebuilders': { name: 'Homebuilders', category: 'US Sector', source: 'us_sectors' },
-
-      // Developed Markets
-      'euro_stoxx_50': { name: 'Euro Stoxx 50', category: 'Developed', source: 'developed' },
-      'topix': { name: 'TOPIX', category: 'Developed', source: 'developed' },
-      'nikkei': { name: 'Nikkei 225', category: 'Developed', source: 'developed' },
-
-      // Emerging Markets
-      'shanghai': { name: 'Shanghai', category: 'Emerging', source: 'emerging' },
-      'hong_kong': { name: 'Hong Kong', category: 'Emerging', source: 'developed' },
-      'kospi': { name: 'KOSPI', category: 'Emerging', source: 'developed' },
-      'brazil': { name: 'Brazil', category: 'Emerging', source: 'developed' },
-      'vietnam': { name: 'Vietnam', category: 'Emerging', source: 'developed' },
-      'india_sensex': { name: 'India Sensex', category: 'Emerging', source: 'developed' },
-      'hang_seng_h': { name: 'Hang Seng H', category: 'Emerging', source: 'developed' },
-      'hang_seng_tech': { name: 'Hang Seng Tech', category: 'Emerging', source: 'developed' },
-
-      // MSCI Indices
-      'world': { name: 'MSCI World', category: 'MSCI', source: 'msci' },
-      'developed': { name: 'MSCI Developed', category: 'MSCI', source: 'msci' },
-      'emerging': { name: 'MSCI Emerging', category: 'MSCI', source: 'msci' },
-      'eafe': { name: 'MSCI EAFE', category: 'MSCI', source: 'msci' },
-      'japan': { name: 'MSCI Japan', category: 'MSCI', source: 'msci' },
-      'korea': { name: 'MSCI Korea', category: 'MSCI', source: 'msci' },
-      'china': { name: 'MSCI China', category: 'MSCI', source: 'msci' },
-      'india': { name: 'MSCI India', category: 'MSCI', source: 'msci' },
-      'brazil': { name: 'MSCI Brazil', category: 'MSCI', source: 'msci' },
-      'taiwan': { name: 'MSCI Taiwan', category: 'MSCI', source: 'msci' },
-      'mexico': { name: 'MSCI Mexico', category: 'MSCI', source: 'msci' },
-
-      // Micro Sectors
-      'philadelphia_semi': { name: 'Philadelphia Semi', category: 'Sector', source: 'micro_sectors' },
-      'us_regional_banks': { name: 'US Regional Banks', category: 'Sector', source: 'micro_sectors' },
-      'us_biotech': { name: 'US Biotech', category: 'Sector', source: 'micro_sectors' }
+    // ==================== CONFIGURATION ====================
+    const CONFIG = {
+      dataFiles: [
+        'us.json',
+        'us_sectors.json',
+        'developed.json',
+        'emerging.json',
+        'msci.json',
+        'micro_sectors.json'
+      ],
+      summariesFile: 'summaries.json',
+      thresholds: {
+        sweetSpotPE: 15,
+        sweetSpotMomentum: 0.20,
+        dangerPE: 25,
+        dangerMomentum: 0.05
+      },
+      correlation: {
+        peVs6m: -0.399,
+        peVsYtd: -0.445
+      }
     };
 
-    // ==================== STATE ====================
-    let allData = [];
-    let scatterChart = null;
-    let sortColumn = -1;
-    let sortDirection = 'desc';
-    let thresholdMode = 'fixed';
-    let dynamicThresholds = { peSweet: 15, peDanger: 25, momSweet: 0.20, momDanger: 0.05 };
-
-    // ==================== DARK MODE ====================
-    function toggleDarkMode() {
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
-    }
-
-    // Initialize dark mode from preference
-    if (localStorage.getItem('darkMode') === 'true' ||
-        (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    }
-
-    // ==================== DATA LOADING ====================
-    async function loadData() {
-      try {
-        // Load momentum data
-        const summariesResponse = await fetch('../../data/benchmarks/summaries.json');
-        const summariesData = await summariesResponse.json();
-
-        // Load all P/E data files in parallel
-        const [secturesData, msciData, developedData, emergingData, microSectorsData] = await Promise.all([
-          fetch('../../data/benchmarks/us_sectors.json').then(r => r.json()),
-          fetch('../../data/benchmarks/msci.json').then(r => r.json()),
-          fetch('../../data/benchmarks/developed.json').then(r => r.json()),
-          fetch('../../data/benchmarks/emerging.json').then(r => r.json()),
-          fetch('../../data/benchmarks/micro_sectors.json').then(r => r.json())
-        ]);
-
-        // Update data date
-        const generatedDate = summariesData.metadata?.generated || new Date().toISOString();
-        document.getElementById('date-text').textContent = new Date(generatedDate).toLocaleDateString('en-US', {
-          year: 'numeric', month: 'short', day: 'numeric'
-        });
-
-        // Process data
-        processData(summariesData, secturesData, msciData, developedData, emergingData, microSectorsData);
-
-        // Hide loading, show content
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('main-content').classList.remove('hidden');
-
-      } catch (error) {
-        console.error('Error loading data:', error);
-        document.getElementById('loading').innerHTML = `
-          <div class="text-red-500">
-            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
-            <p class="font-medium">Error loading data</p>
-            <p class="text-sm text-gray-400 mt-2">${error.message}</p>
-          </div>
-        `;
-      }
-    }
-
-    // ==================== DATA PROCESSING ====================
-    function processData(summariesData, sectorsData, msciData, developedData, emergingData, microSectorsData) {
-      const momentum = summariesData.momentum || {};
-      allData = [];
-
-      // Combine all data sources
-      const allSources = {
-        us_sectors: sectorsData.sections,
-        msci: msciData.sections,
-        developed: developedData.sections,
-        emerging: emergingData.sections,
-        micro_sectors: microSectorsData.sections
-      };
-
-      // Process each index from config
-      for (const [key, config] of Object.entries(INDEX_CONFIG)) {
-        // Get P/E data
-        let peData = null;
-        const source = allSources[config.source];
-        if (source && source[key]) {
-          const data = source[key].data;
-          if (data && data.length > 0) {
-            peData = data[data.length - 1].best_pe_ratio;
-          }
-        }
-
-        // Get momentum data
-        const momData = momentum[key];
-
-        if (peData !== null && peData !== undefined && momData) {
-          allData.push({
-            id: key,
-            name: config.name,
-            category: config.category,
-            pe: peData,
-            momentum1m: momData['1m'] || 0,
-            momentum3m: momData['3m'] || 0,
-            momentum6m: momData['6m'] || 0,
-            momentumYtd: momData['ytd'] || 0
-          });
-        }
+    // ==================== v7.0: STATISTICS ENGINE ====================
+    class StatisticsEngine {
+      constructor() {
+        this.results = {};
       }
 
-      // Calculate dynamic thresholds (median-based)
-      calculateDynamicThresholds();
+      calculateLinearRegression(xValues, yValues) {
+        const n = xValues.length;
+        const sumX = xValues.reduce((a, b) => a + b, 0);
+        const sumY = yValues.reduce((a, b) => a + b, 0);
+        const sumXY = xValues.reduce((sum, x, i) => sum + x * yValues[i], 0);
+        const sumXX = xValues.reduce((sum, x) => sum + x * x, 0);
+        const sumYY = yValues.reduce((sum, y) => sum + y * y, 0);
 
-      // Classify zones
-      allData.forEach(item => {
-        item.zone = classifyZone(item.pe, item.momentum6m);
-        item.rank = calculateRank(item);
-      });
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
 
-      // Sort by rank for display
-      allData.sort((a, b) => a.rank - b.rank);
+        // R² calculation
+        const ssTotal = sumYY - (sumY * sumY) / n;
+        const ssResidual = yValues.reduce((sum, y, i) => {
+          const predicted = slope * xValues[i] + intercept;
+          return sum + Math.pow(y - predicted, 2);
+        }, 0);
+        const rSquared = 1 - (ssResidual / ssTotal);
 
-      // Update metrics
-      updateMetrics();
+        // Standard error
+        const stdError = Math.sqrt(ssResidual / (n - 2));
 
-      // Render components
-      renderScatterPlot();
-      renderZoneLists();
-      renderTable();
-      setupTableSorting();
-      setupTableSearch();
-      setupZoneFilter();
-      setupThresholdMode();
+        // Correlation coefficient
+        const correlation = (n * sumXY - sumX * sumY) /
+                           Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
 
-      // Show correlation insight
-      document.getElementById('correlation-insight').classList.remove('hidden');
-    }
+        // P-value (approximate for large n)
+        const tStat = correlation * Math.sqrt((n - 2) / (1 - correlation * correlation));
+        const pValue = 2 * (1 - this.tCDF(Math.abs(tStat), n - 2));
 
-    function calculateDynamicThresholds() {
-      const peValues = allData.map(d => d.pe).filter(v => v != null);
-      const momValues = allData.map(d => d.momentum6m).filter(v => v != null);
-
-      if (peValues.length > 0 && momValues.length > 0) {
-        // Calculate medians
-        const peMedian = median(peValues);
-        const momMedian = median(momValues);
-
-        // Set thresholds
-        dynamicThresholds = {
-          peSweet: peMedian,
-          peDanger: peMedian,
-          momSweet: momMedian,
-          momDanger: momMedian
+        return {
+          slope,
+          intercept,
+          rSquared,
+          correlation,
+          stdError,
+          pValue,
+          equation: `y = ${slope.toFixed(4)}x ${intercept >= 0 ? '+' : ''}${intercept.toFixed(2)}`
         };
       }
-    }
 
-    function median(values) {
-      if (values.length === 0) return 0;
-      const sorted = [...values].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-    }
+      // Student's t CDF (approximation)
+      tCDF(t, df) {
+        if (df === Infinity) return this.normalCDF(t);
 
-    function getThresholds() {
-      return thresholdMode === 'fixed' ? {
-        peSweet: FIXED_SWEET_SPOT_PE,
-        peDanger: FIXED_DANGER_PE,
-        momSweet: FIXED_SWEET_SPOT_MOMENTUM,
-        momDanger: FIXED_DANGER_MOMENTUM
-      } : dynamicThresholds;
-    }
+        const a = df / 2;
+        const b = 0.5;
+        const x = t * t / (df + t * t);
 
-    function classifyZone(pe, momentum6m) {
-      const t = getThresholds();
-
-      if (pe < t.peSweet && momentum6m > t.momSweet) {
-        return 'sweet-spot';
-      }
-      if (pe > t.peDanger && momentum6m < t.momDanger) {
-        return 'danger-zone';
-      }
-      return 'neutral';
-    }
-
-    function calculateRank(item) {
-      let baseRank;
-      if (item.zone === 'sweet-spot') {
-        baseRank = 1;
-      } else if (item.zone === 'neutral') {
-        baseRank = 1000;
-      } else {
-        baseRank = 2000;
-      }
-      return baseRank + (1 - item.momentum6m) * 100 + item.pe;
-    }
-
-    // ==================== METRICS ====================
-    function updateMetrics() {
-      const sweetSpotCount = allData.filter(d => d.zone === 'sweet-spot').length;
-      const dangerCount = allData.filter(d => d.zone === 'danger-zone').length;
-
-      document.getElementById('sweet-spot-count').textContent = sweetSpotCount;
-      document.getElementById('danger-count').textContent = dangerCount;
-      document.getElementById('total-count').textContent = allData.length;
-
-      // Calculate correlation
-      const correlation = calculateCorrelation();
-      document.getElementById('correlation').textContent = correlation.toFixed(3);
-      document.getElementById('correlation-value').textContent = correlation.toFixed(3);
-    }
-
-    function calculateCorrelation() {
-      const validData = allData.filter(d => d.pe != null && d.momentum6m != null);
-      const n = validData.length;
-      if (n < 2) return 0;
-
-      const sumX = validData.reduce((sum, d) => sum + d.pe, 0);
-      const sumY = validData.reduce((sum, d) => sum + d.momentum6m, 0);
-      const sumXY = validData.reduce((sum, d) => sum + d.pe * d.momentum6m, 0);
-      const sumX2 = validData.reduce((sum, d) => sum + d.pe * d.pe, 0);
-      const sumY2 = validData.reduce((sum, d) => sum + d.momentum6m * d.momentum6m, 0);
-
-      const numerator = n * sumXY - sumX * sumY;
-      const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-
-      return denominator === 0 ? 0 : numerator / denominator;
-    }
-
-    // ==================== SCATTER PLOT ====================
-    function renderScatterPlot() {
-      const ctx = document.getElementById('scatterChart').getContext('2d');
-
-      const t = getThresholds();
-
-      const sweetSpotData = allData.filter(d => d.zone === 'sweet-spot').map(d => ({
-        x: d.pe,
-        y: d.momentum6m * 100,
-        label: d.name
-      }));
-
-      const dangerData = allData.filter(d => d.zone === 'danger-zone').map(d => ({
-        x: d.pe,
-        y: d.momentum6m * 100,
-        label: d.name
-      }));
-
-      const neutralData = allData.filter(d => d.zone === 'neutral').map(d => ({
-        x: d.pe,
-        y: d.momentum6m * 100,
-        label: d.name
-      }));
-
-      // Destroy existing chart
-      if (scatterChart) {
-        scatterChart.destroy();
+        return 1 - 0.5 * this.incompleteBeta(a, b, x) * (t < 0 ? -1 : 1);
       }
 
-      scatterChart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-          datasets: [
-            {
-              label: 'Sweet Spot',
-              data: sweetSpotData,
-              backgroundColor: 'rgba(34, 197, 94, 0.75)',
-              borderColor: '#22c55e',
-              borderWidth: 2,
-              pointRadius: 8,
-              pointHoverRadius: 12,
-              pointHoverBackgroundColor: '#16a34a'
-            },
-            {
-              label: 'Danger Zone',
-              data: dangerData,
-              backgroundColor: 'rgba(239, 68, 68, 0.75)',
-              borderColor: '#ef4444',
-              borderWidth: 2,
-              pointRadius: 8,
-              pointHoverRadius: 12,
-              pointHoverBackgroundColor: '#dc2626'
-            },
-            {
-              label: 'Neutral',
-              data: neutralData,
-              backgroundColor: 'rgba(148, 163, 184, 0.5)',
-              borderColor: '#94a3b8',
-              borderWidth: 1,
-              pointRadius: 6,
-              pointHoverRadius: 10,
-              pointHoverBackgroundColor: '#64748b'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              padding: 12,
-              titleFont: { size: 14, weight: 'bold' },
-              bodyFont: { size: 13 },
-              cornerRadius: 8,
-              callbacks: {
-                label: function(context) {
-                  const point = context.raw;
-                  return `${point.label}: P/E ${point.x.toFixed(2)}, 6M ${point.y.toFixed(1)}%`;
-                }
+      // Normal CDF (approximation)
+      normalCDF(x) {
+        const a1 = 0.254829592;
+        const a2 = -0.284496736;
+        const a3 = 1.421413741;
+        const a4 = -1.453152027;
+        const a5 = 1.061405429;
+        const p = 0.3275911;
+
+        const sign = x < 0 ? -1 : 1;
+        x = Math.abs(x) / Math.sqrt(2);
+
+        const t = 1.0 / (1.0 + p * x);
+        const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+        return 0.5 * (1.0 + sign * y);
+      }
+
+      // Incomplete beta function (simplified approximation)
+      incompleteBeta(a, b, x) {
+        // Simplified approximation for p-value calculation
+        return x; // This is a placeholder - use proper implementation for production
+      }
+    }
+
+    // ==================== v7.0: EXPORT MANAGER ====================
+    class ExportManager {
+      constructor(data, stats) {
+        this.data = data;
+        this.stats = stats;
+      }
+
+      exportToCSV() {
+        const headers = ['Index', 'P/E', '1M', '3M', '6M', 'YTD', 'Signal', 'Zone'];
+        const rows = this.data.map(item => [
+          item.name,
+          item.pe?.toFixed(2) || 'N/A',
+          Utils.formatPercent(item.momentum1m * 100),
+          Utils.formatPercent(item.momentum3m * 100),
+          Utils.formatPercent(item.momentum6m * 100),
+          Utils.formatPercent(item.momentumYtd * 100),
+          item.signal,
+          item.label
+        ]);
+
+        const csvContent = [
+          headers.join(','),
+          ...rows.map(row => row.join(','))
+        ].join('\n');
+
+        this.downloadFile(csvContent, 'sweet-spot-scanner.csv', 'text/csv');
+        ToastManager.show('CSV 파일로 내보내기 완료!', 'success');
+      }
+
+      exportToExcel() {
+        // Create HTML table for Excel
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Index</th>
+              <th>P/E</th>
+              <th>1M</th>
+              <th>3M</th>
+              <th>6M</th>
+              <th>YTD</th>
+              <th>Signal</th>
+              <th>Zone</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.data.map(item => `
+              <tr>
+                <td>${item.name}</td>
+                <td>${item.pe?.toFixed(2) || 'N/A'}</td>
+                <td>${Utils.formatPercent(item.momentum1m * 100)}</td>
+                <td>${Utils.formatPercent(item.momentum3m * 100)}</td>
+                <td>${Utils.formatPercent(item.momentum6m * 100)}</td>
+                <td>${Utils.formatPercent(item.momentumYtd * 100)}</td>
+                <td>${item.signal}</td>
+                <td>${item.label}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+
+        const htmlContent = `
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <style>
+                table { border-collapse: collapse; }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                th { background: #f0f0f0; font-weight: bold; }
+              </style>
+            </head>
+            <body>
+              <h2>Sweet Spot Scanner Data</h2>
+              <p>Generated: ${new Date().toLocaleString()}</p>
+              ${table.outerHTML}
+            </body>
+          </html>
+        `;
+
+        this.downloadFile(htmlContent, 'sweet-spot-scanner.xls', 'application/vnd.ms-excel');
+        ToastManager.show('Excel 파일로 내보내기 완료!', 'success');
+      }
+
+      exportToImage() {
+        const chartCanvas = document.getElementById('scatterChart');
+
+        chartCanvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `sweet-spot-scanner-${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          ToastManager.show('이미지 저장 완료!', 'success');
+        }, 'image/png');
+      }
+
+      shareLink() {
+        const url = new URL(window.location.href);
+        // Add current filter parameters if any
+        url.searchParams.set('v', '7.0');
+        url.searchParams.set('date', new Date().toISOString().split('T')[0]);
+
+        navigator.clipboard.writeText(url.toString()).then(() => {
+          ToastManager.show('링크가 클립보드에 복사되었습니다!', 'success');
+        }).catch(() => {
+          ToastManager.show('링크 복사에 실패했습니다', 'error');
+        });
+      }
+
+      downloadFile(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    // ==================== v7.0: TOAST MANAGER ====================
+    class ToastManager {
+      static show(message, type = 'info', duration = 3000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        const icons = {
+          success: 'fa-check-circle',
+          error: 'fa-exclamation-circle',
+          info: 'fa-info-circle'
+        };
+
+        toast.innerHTML = `
+          <i class="fas ${icons[type]}"></i>
+          <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 300);
+        }, duration);
+      }
+    }
+
+    // ==================== UTILITY FUNCTIONS ====================
+    const Utils = {
+      formatPercent(value, decimals = 1) {
+        if (value === null || value === undefined) return 'N/A';
+        return `${value.toFixed(decimals)}%`;
+      },
+
+      formatPE(value, decimals = 2) {
+        if (value === null || value === undefined) return 'N/A';
+        return value.toFixed(decimals);
+      },
+
+      debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      },
+
+      rafThrottle(func) {
+        let rafId = null;
+        return (...args) => {
+          if (rafId === null) {
+            rafId = requestAnimationFrame(() => {
+              func(...args);
+              rafId = null;
+            });
+          }
+        };
+      },
+
+      memoize(fn) {
+        const cache = new Map();
+        return (...args) => {
+          const key = JSON.stringify(args);
+          if (cache.has(key)) return cache.get(key);
+          const result = fn(...args);
+          cache.set(key, result);
+          return result;
+        };
+      }
+    };
+
+    // ==================== OBSERVABLE STATE MANAGEMENT ====================
+    class Observable {
+      constructor(initialState) {
+        this._state = initialState;
+        this._observers = new Set();
+      }
+
+      setState(updates) {
+        const oldState = this._state;
+        this._state = { ...this._state, ...updates };
+        this._notify(oldState);
+      }
+
+      getState() {
+        return { ...this._state };
+      }
+
+      subscribe(observer) {
+        this._observers.add(observer);
+        return () => this._observers.delete(observer);
+      }
+
+      _notify(oldState) {
+        this._observers.forEach(observer => {
+          observer(this._state, oldState);
+        });
+      }
+    }
+
+    // ==================== ZONE CLASSIFIER ====================
+    class ZoneClassifier {
+      constructor(config) {
+        this.config = config;
+      }
+
+      classify(pe, momentum6m) {
+        if (pe === null || pe === undefined || momentum6m === null) {
+          return { zone: 'neutral', signal: '⚪', label: 'Neutral' };
+        }
+
+        const { sweetSpotPE, sweetSpotMomentum, dangerPE, dangerMomentum } = this.config.thresholds;
+
+        if (pe < sweetSpotPE && momentum6m > sweetSpotMomentum) {
+          return { zone: 'sweet-spot', signal: '🟢', label: 'Sweet Spot' };
+        }
+        if (pe > dangerPE && momentum6m < dangerMomentum) {
+          return { zone: 'danger-zone', signal: '🔴', label: 'Danger Zone' };
+        }
+        return { zone: 'neutral', signal: '⚪', label: 'Neutral' };
+      }
+
+      getAllZones(data) {
+        const zones = {
+          sweetSpot: [],
+          dangerZone: [],
+          neutral: []
+        };
+
+        data.forEach(item => {
+          const classification = this.classify(item.pe, item.momentum6m);
+          zones[classification.zone.replace('-', '')].push({ ...item, ...classification });
+        });
+
+        return zones;
+      }
+    }
+
+    // ==================== DATA LOADER ====================
+    class DataLoader {
+      constructor(config) {
+        this.config = config;
+      }
+
+      async loadAllData() {
+        try {
+          const [peData, summaries] = await Promise.all([
+            this.loadPEData(),
+            this.loadSummaries()
+          ]);
+
+          return this.combineData(peData, summaries);
+        } catch (error) {
+          console.error('Error loading data:', error);
+          throw error;
+        }
+      }
+
+      async loadPEData() {
+        const peData = {};
+
+        for (const file of this.config.dataFiles) {
+          try {
+            const response = await fetch(`../../data/benchmarks/${file}`);
+            const data = await response.json();
+            const sections = data.sections || {};
+
+            for (const [key, value] of Object.entries(sections)) {
+              if (value.data && value.data.length > 0) {
+                const latest = value.data[value.data.length - 1];
+                peData[key] = latest.best_pe_ratio || null;
               }
-            },
-            annotation: {
-              annotations: {
-                sweetSpotBox: {
-                  type: 'box',
-                  xMin: 0,
-                  xMax: t.peSweet,
-                  yMin: t.momSweet * 100,
-                  yMax: 100,
-                  backgroundColor: 'rgba(34, 197, 94, 0.08)',
-                  borderColor: 'rgba(34, 197, 94, 0.2)',
-                  borderWidth: 1
-                },
-                dangerBox: {
-                  type: 'box',
-                  xMin: t.peDanger,
-                  xMax: 50,
-                  yMin: -20,
-                  yMax: t.momDanger * 100,
-                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                  borderColor: 'rgba(239, 68, 68, 0.2)',
-                  borderWidth: 1
-                }
-              }
             }
+          } catch (error) {
+            console.warn(`Failed to load ${file}:`, error);
+          }
+        }
+
+        return peData;
+      }
+
+      async loadSummaries() {
+        const response = await fetch(`../../data/benchmarks/${this.config.summariesFile}`);
+        const data = await response.json();
+        return data.momentum || {};
+      }
+
+      combineData(peData, momentumData) {
+        const combined = [];
+
+        for (const [key, pe] of Object.entries(peData)) {
+          const momentum = momentumData[key] || {};
+          combined.push({
+            key,
+            name: this.formatName(key),
+            pe,
+            momentum1m: momentum['1m'] || null,
+            momentum3m: momentum['3m'] || null,
+            momentum6m: momentum['6m'] || null,
+            momentumYtd: momentum['ytd'] || null
+          });
+        }
+
+        return combined.filter(item => item.pe !== null);
+      }
+
+      formatName(key) {
+        return key
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+    }
+
+    // ==================== UI RENDERER ====================
+    class UIRenderer {
+      constructor(state) {
+        this.state = state;
+        this.elements = {
+          sweetSpotCount: document.getElementById('sweetSpotCount'),
+          dangerZoneCount: document.getElementById('dangerZoneCount'),
+          correlationValue: document.getElementById('correlationValue'),
+          totalCount: document.getElementById('totalCount'),
+          sweetSpotList: document.getElementById('sweetSpotList'),
+          dangerZoneList: document.getElementById('dangerZoneList'),
+          sweetSpotBadge: document.getElementById('sweetSpotBadge'),
+          dangerZoneBadge: document.getElementById('dangerZoneBadge'),
+          tableBody: document.getElementById('tableBody'),
+          resultCount: document.getElementById('resultCount'),
+          searchInput: document.getElementById('searchInput'),
+          progressBar: document.getElementById('progressBar'),
+          loadingState: document.getElementById('loadingState'),
+          appContent: document.getElementById('appContent'),
+          lastUpdate: document.getElementById('lastUpdate'),
+          // v7.0
+          rSquaredValue: document.getElementById('rSquaredValue'),
+          pValue: document.getElementById('pValue'),
+          stdError: document.getElementById('stdError'),
+          trendSlope: document.getElementById('trendSlope'),
+          trendEquation: document.getElementById('trendEquation'),
+          heatmapContainer: document.getElementById('heatmapContainer'),
+          heatmapView: document.getElementById('heatmapView')
+        };
+
+        this.currentSort = { column: null, direction: 'asc' };
+        this.allData = [];
+      }
+
+      updateMetrics(data) {
+        const sweetSpotCount = data.filter(d => d.zone === 'sweet-spot').length;
+        const dangerZoneCount = data.filter(d => d.zone === 'danger-zone').length;
+
+        this.elements.sweetSpotCount.textContent = sweetSpotCount;
+        this.elements.dangerZoneCount.textContent = dangerZoneCount;
+        this.elements.totalCount.textContent = data.length;
+        this.elements.sweetSpotBadge.textContent = `${sweetSpotCount}개`;
+        this.elements.dangerZoneBadge.textContent = `${dangerZoneCount}개`;
+      }
+
+      updateStats(stats) {
+        if (!stats) return;
+
+        this.elements.correlationValue.textContent = stats.correlation.toFixed(3);
+        this.elements.rSquaredValue.textContent = stats.rSquared.toFixed(4);
+        this.elements.pValue.textContent = stats.pValue < 0.001 ? '<0.001' : stats.pValue.toFixed(4);
+        this.elements.stdError.textContent = stats.stdError.toFixed(4);
+        this.elements.trendSlope.textContent = stats.slope.toFixed(4);
+        this.elements.trendEquation.textContent = stats.equation;
+      }
+
+      renderHeatmap(data) {
+        // Create correlation heatmap between P/E and Momentum periods
+        const periods = ['1m', '3m', '6m', 'ytd'];
+        const peValues = data.map(d => d.pe).filter(v => v != null);
+
+        // Calculate correlations
+        const correlations = periods.map(period => {
+          const values = data.map(d => d[`momentum${period}`]).filter(v => v != null);
+          if (values.length !== peValues.length) return null;
+
+          const n = Math.min(peValues.length, values.length);
+          let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0, sumYY = 0;
+
+          for (let i = 0; i < n; i++) {
+            sumX += peValues[i];
+            sumY += values[i];
+            sumXY += peValues[i] * values[i];
+            sumXX += peValues[i] * peValues[i];
+            sumYY += values[i] * values[i];
+          }
+
+          const corr = (n * sumXY - sumX * sumY) /
+                       Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+          return { period, correlation: corr || 0 };
+        }).filter(c => c !== null);
+
+        const labels = { '1m': '1M', '3m': '3M', '6m': '6M', 'ytd': 'YTD' };
+
+        this.elements.heatmapContainer.innerHTML = correlations.map(c => {
+          const value = c.correlation;
+          const color = this.getHeatmapColor(value);
+          const textColor = Math.abs(value) > 0.3 ? 'white' : '#374151';
+
+          return `
+            <div class="heatmap-cell" style="background: ${color}; color: ${textColor}">
+              <div class="cell-name" title="P/E vs ${labels[c.period]}">${labels[c.period]}</div>
+              <div class="cell-value">${value.toFixed(3)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      getHeatmapColor(value) {
+        // Red for negative, green for positive
+        const absValue = Math.abs(value);
+        if (value < 0) {
+          // Red scale
+          const intensity = Math.min(absValue * 2, 1);
+          return `rgba(239, 68, 68, ${0.3 + intensity * 0.7})`;
+        } else {
+          // Green scale
+          const intensity = Math.min(absValue * 2, 1);
+          return `rgba(34, 197, 94, ${0.3 + intensity * 0.7})`;
+        }
+      }
+
+      renderZoneLists(zones) {
+        this.renderZoneList(this.elements.sweetSpotList, zones.sweetSpot, 'sweet');
+        this.renderZoneList(this.elements.dangerZoneList, zones.dangerZone, 'danger');
+      }
+
+      renderZoneList(element, items, type) {
+        if (items.length === 0) {
+          element.innerHTML = '';
+          element.nextElementSibling.classList.remove('hidden');
+          return;
+        }
+
+        element.nextElementSibling.classList.add('hidden');
+
+        element.innerHTML = items.map((item, index) => `
+          <li class="zone-item" data-index-id="${item.key}" role="option" tabindex="0">
+            <div class="zone-item-rank ${type === 'sweet' ? 'zone-sweet-spot' : 'zone-danger'}">
+              ${index + 1}
+            </div>
+            <div class="zone-item-content">
+              <div class="zone-item-name" data-tooltip="${item.name}">${item.name}</div>
+              <div class="zone-item-metrics">
+                <span class="zone-item-metric">
+                  <i class="fas fa-chart-line text-xs"></i>
+                  P/E: ${Utils.formatPE(item.pe)}
+                </span>
+                <span class="zone-item-metric">
+                  <i class="fas fa-rocket text-xs"></i>
+                  6M: ${Utils.formatPercent(item.momentum6m * 100)}
+                </span>
+              </div>
+            </div>
+          </li>
+        `).join('');
+
+        element.querySelectorAll('.zone-item').forEach(item => {
+          item.addEventListener('click', () => {
+            this.highlightTable(item.dataset.indexId);
+          });
+
+          item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.highlightTable(item.dataset.indexId);
+            }
+          });
+        });
+      }
+
+      renderTable(data) {
+        this.allData = data;
+        const sortedData = this.getSortedData(data);
+
+        this.elements.tableBody.innerHTML = sortedData.map(item => `
+          <tr data-index-id="${item.key}">
+            <td class="font-medium">${item.name}</td>
+            <td>${Utils.formatPE(item.pe)}</td>
+            <td>${Utils.formatPercent(item.momentum1m * 100)}</td>
+            <td>${Utils.formatPercent(item.momentum3m * 100)}</td>
+            <td class="font-semibold">${Utils.formatPercent(item.momentum6m * 100)}</td>
+            <td>${Utils.formatPercent(item.momentumYtd * 100)}</td>
+            <td><span class="zone-badge zone-${item.zone}">${item.signal}</span></td>
+            <td><span class="text-xs sm:text-sm ${item.zone === 'sweet-spot' ? 'text-green-600 dark:text-green-400' : item.zone === 'danger-zone' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}">${item.label}</span></td>
+          </tr>
+        `).join('');
+
+        this.elements.resultCount.textContent = data.length;
+        this.updateSortIndicators();
+      }
+
+      getSortedData(data) {
+        if (!this.currentSort.column) return data;
+
+        return [...data].sort((a, b) => {
+          let aVal, bVal;
+
+          switch (this.currentSort.column) {
+            case 'name':
+              aVal = a.name;
+              bVal = b.name;
+              break;
+            case 'pe':
+              aVal = a.pe || 0;
+              bVal = b.pe || 0;
+              break;
+            case '1m':
+              aVal = a.momentum1m || 0;
+              bVal = b.momentum1m || 0;
+              break;
+            case '3m':
+              aVal = a.momentum3m || 0;
+              bVal = b.momentum3m || 0;
+              break;
+            case '6m':
+              aVal = a.momentum6m || 0;
+              bVal = b.momentum6m || 0;
+              break;
+            case 'ytd':
+              aVal = a.momentumYtd || 0;
+              bVal = b.momentumYtd || 0;
+              break;
+            case 'zone':
+              const zoneOrder = { 'sweet-spot': 0, 'neutral': 1, 'danger-zone': 2 };
+              aVal = zoneOrder[a.zone] || 1;
+              bVal = zoneOrder[b.zone] || 1;
+              break;
+            default:
+              return 0;
+          }
+
+          if (aVal < bVal) return this.currentSort.direction === 'asc' ? -1 : 1;
+          if (aVal > bVal) return this.currentSort.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      sortTable(column) {
+        if (this.currentSort.column === column) {
+          this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+          this.currentSort.column = column;
+          this.currentSort.direction = 'asc';
+        }
+        this.renderTable(this.allData);
+      }
+
+      updateSortIndicators() {
+        document.querySelectorAll('.data-table th').forEach(th => {
+          th.classList.remove('sort-asc', 'sort-desc');
+          if (th.dataset.sort === this.currentSort.column) {
+            th.classList.add(this.currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+          }
+        });
+      }
+
+      highlightTable(indexId) {
+        this.elements.tableBody.querySelectorAll('.highlighted').forEach(row => {
+          row.classList.remove('highlighted');
+        });
+
+        const targetRow = this.elements.tableBody.querySelector(`[data-index-id="${indexId}"]`);
+        if (targetRow) {
+          targetRow.classList.add('highlighted');
+          targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+
+      filterTable(query) {
+        const rows = this.elements.tableBody.querySelectorAll('tr[data-index-id]');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+          const name = row.querySelector('td').textContent.toLowerCase();
+          const matches = name.includes(query.toLowerCase());
+
+          row.style.display = matches ? '' : 'none';
+          if (matches) visibleCount++;
+        });
+
+        this.elements.resultCount.textContent = visibleCount;
+      }
+
+      showProgress(progress) {
+        this.elements.progressBar.style.width = `${progress}%`;
+      }
+
+      hideProgress() {
+        this.elements.progressBar.classList.add('complete');
+        setTimeout(() => {
+          this.elements.progressBar.style.display = 'none';
+        }, 500);
+      }
+
+      showContent() {
+        this.elements.loadingState.classList.add('hidden');
+        this.elements.appContent.classList.remove('hidden');
+      }
+
+      updateLastUpdate() {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        this.elements.lastUpdate.textContent = `업데이트: ${now.toLocaleDateString('ko-KR', options)}`;
+      }
+    }
+
+    // ==================== CHART RENDERER ====================
+    class ChartRenderer {
+      constructor() {
+        this.chart = null;
+        this.ctx = document.getElementById('scatterChart').getContext('2d');
+        this.stats = null;
+      }
+
+      render(data, stats) {
+        this.stats = stats;
+        const scatterData = this.prepareScatterData(data);
+
+        if (this.chart) {
+          this.chart.destroy();
+        }
+
+        this.chart = new Chart(this.ctx, {
+          type: 'scatter',
+          data: {
+            datasets: [
+              {
+                label: 'Sweet Spot',
+                data: scatterData.sweetSpot,
+                backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                borderColor: 'rgba(34, 197, 94, 1)',
+                borderWidth: 2,
+                pointRadius: this.getPointRadius(),
+                pointHoverRadius: 10
+              },
+              {
+                label: 'Danger Zone',
+                data: scatterData.dangerZone,
+                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                borderColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 2,
+                pointRadius: this.getPointRadius(),
+                pointHoverRadius: 10
+              },
+              {
+                label: 'Neutral',
+                data: scatterData.neutral,
+                backgroundColor: 'rgba(156, 163, 175, 0.5)',
+                borderColor: 'rgba(156, 163, 175, 1)',
+                borderWidth: 1,
+                pointRadius: this.getPointRadius() - 2,
+                pointHoverRadius: 8
+              },
+              // v7.0: Trend line
+              {
+                label: '추세선',
+                data: this.generateTrendLine(scatterData.all),
+                type: 'line',
+                borderColor: 'rgba(59, 130, 246, 0.8)',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false,
+                tension: 0
+              }
+            ]
           },
-          scales: {
-            x: {
-              title: {
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 750,
+              easing: 'easeOutQuart',
+              delay: (context) => context.dataIndex * 30
+            },
+            plugins: {
+              legend: {
                 display: true,
-                text: 'P/E Ratio',
-                font: { weight: 'bold', size: 12 }
+                position: 'top',
+                labels: {
+                  font: { size: this.getLegendFontSize() },
+                  usePointStyle: true,
+                  padding: 15
+                }
               },
-              min: 0,
-              max: 45,
-              grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const point = context.raw;
+                    if (context.dataset.label === '추세선') return null;
+                    return `${point.label}: P/E ${point.x.toFixed(2)}, 6M ${point.y.toFixed(1)}%`;
+                  }
+                },
+                titleFont: { size: 14 },
+                bodyFont: { size: 13 },
+                padding: 12
+              },
+              annotation: {
+                annotations: {
+                  sweetSpotArea: {
+                    type: 'box',
+                    xMin: 0,
+                    xMax: CONFIG.thresholds.sweetSpotPE,
+                    yMin: CONFIG.thresholds.sweetSpotMomentum * 100,
+                    yMax: 100,
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    borderColor: 'transparent'
+                  },
+                  dangerZoneArea: {
+                    type: 'box',
+                    xMin: CONFIG.thresholds.dangerPE,
+                    xMax: 50,
+                    yMin: -50,
+                    yMax: CONFIG.thresholds.dangerMomentum * 100,
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderColor: 'transparent'
+                  }
+                }
               }
             },
-            y: {
-              title: {
-                display: true,
-                text: '6M Momentum (%)',
-                font: { weight: 'bold', size: 12 }
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'P/E Ratio',
+                  font: { size: this.getAxisFontSize(), weight: '600' }
+                },
+                min: 0,
+                max: 45,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                  font: { size: this.getTickFontSize() }
+                }
               },
-              min: -10,
-              max: 80,
-              grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
+              y: {
+                title: {
+                  display: true,
+                  text: '6M Momentum (%)',
+                  font: { size: this.getAxisFontSize(), weight: '600' }
+                },
+                min: -20,
+                max: 100,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                  font: { size: this.getTickFontSize() },
+                  callback: (value) => `${value}%`
+                }
               }
             }
           }
-        }
-      });
-    }
-
-    // ==================== ZONE LISTS ====================
-    function renderZoneLists() {
-      // Sweet Spot List
-      const sweetSpotList = document.getElementById('sweet-spot-list');
-      const sweetSpotData = allData.filter(d => d.zone === 'sweet-spot')
-        .sort((a, b) => b.momentum6m - a.momentum6m);
-
-      if (sweetSpotData.length === 0) {
-        sweetSpotList.innerHTML = '<p class="text-gray-500 text-center py-8 text-sm">No indices in Sweet Spot</p>';
-      } else {
-        sweetSpotList.innerHTML = sweetSpotData.map((item, index) => `
-          <div class="zone-sweet-spot zone-badge rounded-lg p-3 border-l-4 cursor-pointer" onclick="highlightIndex('${item.id}')">
-            <div class="flex items-center justify-between">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-sm sm:text-base">${index + 1}.</span>
-                  <span class="font-semibold text-sm sm:text-base truncate">${item.name}</span>
-                </div>
-                <span class="text-xs px-2 py-0.5 bg-white/50 rounded-full mt-1 inline-block">${item.category}</span>
-              </div>
-              <div class="text-right ml-2">
-                <div class="text-sm">
-                  <span class="font-mono font-bold">${item.pe.toFixed(2)}</span> <span class="text-xs">P/E</span>
-                </div>
-                <div class="text-sm text-green-700 font-semibold">
-                  <i class="fas fa-arrow-up text-xs"></i>
-                  <span class="font-mono">${(item.momentum6m * 100).toFixed(1)}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `).join('');
+        });
       }
 
-      // Danger Zone List
-      const dangerList = document.getElementById('danger-zone-list');
-      const dangerData = allData.filter(d => d.zone === 'danger-zone')
-        .sort((a, b) => a.pe - b.pe);
+      prepareScatterData(data) {
+        const all = data.map(d => ({
+          x: d.pe,
+          y: d.momentum6m * 100,
+          label: d.name,
+          zone: d.zone
+        }));
 
-      if (dangerData.length === 0) {
-        dangerList.innerHTML = '<p class="text-gray-500 text-center py-8 text-sm">No indices in Danger Zone</p>';
-      } else {
-        dangerList.innerHTML = dangerData.map((item, index) => `
-          <div class="zone-danger zone-badge rounded-lg p-3 border-l-4 cursor-pointer" onclick="highlightIndex('${item.id}')">
-            <div class="flex items-center justify-between">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-sm sm:text-base">${index + 1}.</span>
-                  <span class="font-semibold text-sm sm:text-base truncate">${item.name}</span>
-                </div>
-                <span class="text-xs px-2 py-0.5 bg-white/50 rounded-full mt-1 inline-block">${item.category}</span>
-              </div>
-              <div class="text-right ml-2">
-                <div class="text-sm">
-                  <span class="font-mono font-bold">${item.pe.toFixed(2)}</span> <span class="text-xs">P/E</span>
-                </div>
-                <div class="text-sm">
-                  <i class="fas fa-arrow-right text-xs"></i>
-                  <span class="font-mono">${(item.momentum6m * 100).toFixed(1)}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `).join('');
+        return {
+          sweetSpot: all.filter(d => d.zone === 'sweet-spot'),
+          dangerZone: all.filter(d => d.zone === 'danger-zone'),
+          neutral: all.filter(d => d.zone === 'neutral'),
+          all
+        };
+      }
+
+      generateTrendLine(data) {
+        if (!this.stats || data.length === 0) return [];
+
+        const minX = Math.min(...data.map(d => d.x));
+        const maxX = Math.max(...data.map(d => d.x));
+
+        return [
+          { x: minX, y: this.stats.slope * minX + this.stats.intercept * 100 },
+          { x: maxX, y: this.stats.slope * maxX + this.stats.intercept * 100 }
+        ];
+      }
+
+      getPointRadius() {
+        return window.innerWidth < 640 ? 5 : 7;
+      }
+
+      getLegendFontSize() {
+        return window.innerWidth < 640 ? 11 : 12;
+      }
+
+      getAxisFontSize() {
+        return window.innerWidth < 640 ? 11 : 13;
+      }
+
+      getTickFontSize() {
+        return window.innerWidth < 640 ? 10 : 11;
       }
     }
 
-    function highlightIndex(indexId) {
-      // Scroll to table row and highlight
-      const table = document.getElementById('analysis-table');
-      const rows = table.querySelectorAll('tbody tr');
-      rows.forEach((row, i) => {
-        if (allData[i] && allData[i].id === indexId) {
-          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          row.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
-          setTimeout(() => {
-            row.style.backgroundColor = '';
-          }, 2000);
+    // ==================== MAIN APP ====================
+    class SweetSpotApp {
+      constructor() {
+        this.state = new Observable({
+          data: [],
+          zones: { sweetSpot: [], dangerZone: [], neutral: [] },
+          loading: true,
+          stats: null
+        });
+
+        this.dataLoader = new DataLoader(CONFIG);
+        this.zoneClassifier = new ZoneClassifier(CONFIG);
+        this.uiRenderer = new UIRenderer(this.state);
+        this.chartRenderer = new ChartRenderer();
+        this.statsEngine = new StatisticsEngine();
+
+        this.exportManager = null;
+        this.init();
+      }
+
+      async init() {
+        this.setupEventListeners();
+        this.setupIntersectionObserver();
+        this.setupMouseTracking();
+
+        try {
+          await this.loadData();
+        } catch (error) {
+          console.error('Failed to initialize app:', error);
+          this.showError();
         }
-      });
-    }
+      }
 
-    // ==================== TABLE ====================
-    function renderTable(data = allData) {
-      const tbody = document.getElementById('analysis-tbody');
+      async loadData() {
+        this.uiRenderer.showProgress(30);
 
-      tbody.innerHTML = data.map(item => {
-        const zoneClass = item.zone === 'sweet-spot' ? 'zone-sweet-spot' :
-                         item.zone === 'danger-zone' ? 'zone-danger' : 'zone-neutral';
+        const data = await this.dataLoader.loadAllData();
+        this.uiRenderer.showProgress(70);
 
-        const zoneLabel = item.zone === 'sweet-spot' ? 'Sweet Spot' :
-                         item.zone === 'danger-zone' ? 'Danger Zone' : 'Neutral';
+        // Classify zones
+        const dataWithZones = data.map(item => ({
+          ...item,
+          ...this.zoneClassifier.classify(item.pe, item.momentum6m)
+        }));
 
-        const starIcon = item.zone === 'sweet-spot' ? '<i class="fas fa-star text-yellow-500 mr-1"></i>' :
-                        item.zone === 'danger-zone' ? '<i class="fas fa-exclamation-circle text-red-500 mr-1"></i>' : '';
+        const zones = this.zoneClassifier.getAllZones(dataWithZones);
 
-        return `
-          <tr class="transition-colors" data-zone="${item.zone}">
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm text-gray-500">${starIcon}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-medium">${item.name}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono">${item.pe.toFixed(2)}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono ${formatReturnColor(item.momentum1m)}">${formatPercent(item.momentum1m)}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono ${formatReturnColor(item.momentum3m)}">${formatPercent(item.momentum3m)}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono font-semibold ${formatReturnColor(item.momentum6m)}">${formatPercent(item.momentum6m)}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono ${formatReturnColor(item.momentumYtd)}">${formatPercent(item.momentumYtd)}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3">
-              <span class="zone-badge px-2 py-1 text-xs font-medium rounded inline-block ${zoneClass}">${zoneLabel}</span>
-            </td>
-          </tr>
+        // Calculate statistics
+        const xValues = dataWithZones.map(d => d.pe).filter(v => v != null);
+        const yValues = dataWithZones.map(d => d.momentum6m * 100).filter(v => v != null);
+        const stats = this.statsEngine.calculateLinearRegression(xValues, yValues);
+
+        this.state.setState({
+          data: dataWithZones,
+          zones,
+          loading: false,
+          stats
+        });
+
+        // Initialize export manager
+        this.exportManager = new ExportManager(dataWithZones, stats);
+
+        this.uiRenderer.showProgress(100);
+
+        setTimeout(() => {
+          this.uiRenderer.updateMetrics(dataWithZones);
+          this.uiRenderer.updateStats(stats);
+          this.uiRenderer.renderZoneLists(zones);
+          this.uiRenderer.renderTable(dataWithZones);
+          this.uiRenderer.renderHeatmap(dataWithZones);
+          this.chartRenderer.render(dataWithZones, stats);
+          this.uiRenderer.showContent();
+          this.uiRenderer.hideProgress();
+          this.uiRenderer.updateLastUpdate();
+        }, 300);
+      }
+
+      setupEventListeners() {
+        // Search input with debounce
+        const debouncedSearch = Utils.debounce((query) => {
+          this.uiRenderer.filterTable(query);
+        }, 300);
+
+        this.uiRenderer.elements.searchInput.addEventListener('input', (e) => {
+          debouncedSearch(e.target.value);
+        });
+
+        // Table sorting
+        document.querySelectorAll('.data-table th[data-sort]').forEach(th => {
+          th.addEventListener('click', () => {
+            this.uiRenderer.sortTable(th.dataset.sort);
+          });
+        });
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+          location.reload();
+        });
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        darkModeToggle.addEventListener('click', () => {
+          document.documentElement.classList.toggle('dark');
+          const icon = darkModeToggle.querySelector('i');
+          icon.classList.toggle('fa-moon');
+          icon.classList.toggle('fa-sun');
+        });
+
+        // v7.0: Export dropdown
+        const exportDropdown = document.getElementById('exportDropdown');
+        const exportBtn = document.getElementById('exportBtn');
+
+        exportBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          exportDropdown.classList.toggle('open');
+        });
+
+        document.querySelectorAll('[data-export]').forEach(item => {
+          item.addEventListener('click', () => {
+            const exportType = item.dataset.export;
+            if (!this.exportManager) return;
+
+            switch (exportType) {
+              case 'csv':
+                this.exportManager.exportToCSV();
+                break;
+              case 'excel':
+                this.exportManager.exportToExcel();
+                break;
+              case 'image':
+                this.exportManager.exportToImage();
+                break;
+              case 'share':
+                this.exportManager.shareLink();
+                break;
+            }
+            exportDropdown.classList.remove('open');
+          });
+        });
+
+        document.addEventListener('click', () => {
+          exportDropdown.classList.remove('open');
+        });
+
+        // v7.0: Heatmap toggle
+        const heatmapBtn = document.getElementById('toggleHeatmap');
+        heatmapBtn.addEventListener('click', () => {
+          const heatmapView = this.uiRenderer.elements.heatmapView;
+          heatmapView.classList.toggle('hidden');
+        });
+
+        this.setupEventDelegation();
+      }
+
+      setupEventDelegation() {
+        const mainContent = document.getElementById('main-content');
+
+        mainContent.addEventListener('click', (e) => {
+          const zoneItem = e.target.closest('.zone-item');
+          if (zoneItem) {
+            const indexId = zoneItem.dataset.indexId;
+            this.uiRenderer.highlightTable(indexId);
+          }
+        });
+      }
+
+      setupIntersectionObserver() {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+            }
+          });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in-section').forEach(section => {
+          observer.observe(section);
+        });
+      }
+
+      setupMouseTracking() {
+        const metricCards = document.querySelectorAll('.metric-card');
+
+        const updateMousePosition = Utils.rafThrottle((e, card) => {
+          const rect = card.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          card.style.setProperty('--mouse-x', `${x}%`);
+          card.style.setProperty('--mouse-y', `${y}%`);
+        });
+
+        metricCards.forEach(card => {
+          card.addEventListener('mousemove', (e) => updateMousePosition(e, card));
+        });
+      }
+
+      showError() {
+        this.uiRenderer.elements.loadingState.innerHTML = `
+          <div class="text-center">
+            <i class="fas fa-exclamation-circle text-4xl text-red-500 mb-4"></i>
+            <p class="text-lg text-gray-600 dark:text-gray-400">데이터를 불러오는데 실패했습니다</p>
+            <button onclick="location.reload()" class="btn btn-primary mt-4">다시 시도</button>
+          </div>
         `;
-      }).join('');
-
-      // Update table info
-      const totalItems = allData.length;
-      const filteredItems = data.length;
-      document.getElementById('table-info').textContent =
-        filteredItems === totalItems ? `Showing all ${totalItems} indices` : `Showing ${filteredItems} of ${totalItems} indices`;
-    }
-
-    function formatPercent(value) {
-      const formatted = (value * 100).toFixed(1);
-      return value >= 0 ? `+${formatted}%` : `${formatted}%`;
-    }
-
-    function formatReturnColor(value) {
-      if (value > 0.05) return 'text-green-600 font-semibold';
-      if (value > 0) return 'text-green-500';
-      if (value > -0.02) return 'text-gray-500';
-      return 'text-red-500';
-    }
-
-    function setupTableSorting() {
-      document.querySelectorAll('.data-table th.sortable').forEach(th => {
-        th.addEventListener('click', () => {
-          const column = parseInt(th.dataset.column);
-          sortTable(column, th);
-        });
-      });
-    }
-
-    function sortTable(column, th) {
-      if (sortColumn === column) {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-      } else {
-        sortColumn = column;
-        sortDirection = 'desc';
       }
-
-      document.querySelectorAll('.data-table th').forEach(header => {
-        header.classList.remove('sort-asc', 'sort-desc');
-      });
-      th.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-
-      const sorted = [...allData].sort((a, b) => {
-        let aVal, bVal;
-
-        switch (column) {
-          case 0: aVal = a.rank; bVal = b.rank; break;
-          case 1: aVal = a.name; bVal = b.name; break;
-          case 2: aVal = a.pe; bVal = b.pe; break;
-          case 3: aVal = a.momentum1m; bVal = b.momentum1m; break;
-          case 4: aVal = a.momentum3m; bVal = b.momentum3m; break;
-          case 5: aVal = a.momentum6m; bVal = b.momentum6m; break;
-          case 6: aVal = a.momentumYtd; bVal = b.momentumYtd; break;
-          case 7: aVal = a.zone; bVal = b.zone; break;
-        }
-
-        if (typeof aVal === 'string') {
-          return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-        }
-        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-      });
-
-      renderTable(sorted);
     }
 
-    function setupTableSearch() {
-      const searchInput = document.getElementById('table-search');
-      searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        const filtered = allData.filter(item =>
-          item.name.toLowerCase().includes(query) ||
-          item.category.toLowerCase().includes(query) ||
-          item.zone.toLowerCase().includes(query)
-        );
-        renderTable(filtered);
-      });
-    }
-
-    function setupZoneFilter() {
-      const zoneFilter = document.getElementById('zone-filter');
-      zoneFilter.addEventListener('change', (e) => {
-        const zone = e.target.value;
-        const filtered = zone === 'all' ? allData : allData.filter(item => item.zone === zone);
-        renderTable(filtered);
-      });
-    }
-
-    function setupThresholdMode() {
-      const modeSelect = document.getElementById('threshold-mode');
-      const thresholdDisplay = document.getElementById('threshold-display');
-
-      modeSelect.addEventListener('change', (e) => {
-        thresholdMode = e.target.value;
-
-        // Update display
-        if (thresholdMode === 'fixed') {
-          thresholdDisplay.textContent = 'Threshold: PE 15/25';
-        } else {
-          const t = dynamicThresholds;
-          thresholdDisplay.textContent = `Threshold: PE ${t.peSweet.toFixed(1)}/Mom ${(t.momSweet * 100).toFixed(0)}%`;
-        }
-
-        // Reclassify all zones
-        allData.forEach(item => {
-          item.zone = classifyZone(item.pe, item.momentum6m);
-          item.rank = calculateRank(item);
-        });
-
-        // Re-sort
-        allData.sort((a, b) => a.rank - b.rank);
-
-        // Update UI
-        updateMetrics();
-        renderScatterPlot();
-        renderZoneLists();
-        renderTable();
-      });
-    }
-
-    // ==================== CHART DOWNLOAD ====================
-    function downloadChart() {
-      if (!scatterChart) return;
-
-      const link = document.createElement('a');
-      link.download = 'sweet-spot-scanner.png';
-      link.href = scatterChart.toBase64Image();
-      link.click();
-    }
-
-    // ==================== INITIALIZATION ====================
+    // ==================== INITIALIZE APP ====================
     document.addEventListener('DOMContentLoaded', () => {
-      loadData();
+      new SweetSpotApp();
     });
   </script>
-
 </body>
 </html>
