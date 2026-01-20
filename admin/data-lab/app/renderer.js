@@ -49,7 +49,11 @@ const Renderer = (function() {
       };
     });
 
-    elements.cardsContainer.innerHTML = StatusCard.renderAll(foldersWithSchemas, freshness);
+    // Pass clickHandler option to open details panel
+    const options = {
+      clickHandler: (folderName) => `DataLabUI.showFolderDetails('${folderName}')`
+    };
+    elements.cardsContainer.innerHTML = StatusCard.renderAll(foldersWithSchemas, freshness, options);
   }
 
   /**
@@ -118,7 +122,7 @@ const Renderer = (function() {
           <div class="flex items-center justify-between">
             <span class="text-lg">${freshness.signal} ${freshness.label}</span>
             <span class="text-sm ${statusClasses.text}">
-              Updated ${FreshnessChecker.formatDaysAgo(freshness.daysAgo)}
+              업데이트 ${FreshnessChecker.formatDaysAgo(freshness.daysAgo)}
             </span>
           </div>
         </div>
@@ -126,25 +130,25 @@ const Renderer = (function() {
         <!-- Info Grid -->
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="bg-gray-50 rounded-lg p-4">
-            <div class="text-sm text-gray-500">Version</div>
+            <div class="text-sm text-gray-500">버전</div>
             <div class="text-lg font-semibold">${Formatters.formatVersion(config.version)}</div>
           </div>
           <div class="bg-gray-50 rounded-lg p-4">
-            <div class="text-sm text-gray-500">Files</div>
+            <div class="text-sm text-gray-500">파일</div>
             <div class="text-lg font-semibold">${Formatters.formatNumber(config.file_count, 0)}</div>
           </div>
           <div class="bg-gray-50 rounded-lg p-4">
-            <div class="text-sm text-gray-500">Update Frequency</div>
+            <div class="text-sm text-gray-500">업데이트 주기</div>
             <div class="text-lg font-semibold capitalize">${config.update_frequency || '-'}</div>
           </div>
           <div class="bg-gray-50 rounded-lg p-4">
-            <div class="text-sm text-gray-500">Source</div>
+            <div class="text-sm text-gray-500">소스</div>
             <div class="text-lg font-semibold truncate" title="${config.source || '-'}">${config.source || '-'}</div>
           </div>
         </div>
 
         <!-- Schema Info -->
-        ${schema ? renderSchemaInfo(schema) : '<p class="text-gray-400 text-sm italic">No schema defined</p>'}
+        ${schema ? renderSchemaInfo(schema) : '<p class="text-gray-400 text-sm italic">스키마 없음</p>'}
       </div>
     `;
 
@@ -162,21 +166,21 @@ const Renderer = (function() {
 
     return `
       <div class="border-t pt-6">
-        <h3 class="font-semibold text-gray-700 mb-3">Schema Information</h3>
+        <h3 class="font-semibold text-gray-700 mb-3">스키마 정보</h3>
         <div class="bg-gray-50 rounded-lg p-4">
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span class="text-gray-500">Schema Version:</span>
+              <span class="text-gray-500">스키마 버전:</span>
               <span class="font-medium ml-2">${schema.version || '-'}</span>
             </div>
             <div>
-              <span class="text-gray-500">Files Defined:</span>
+              <span class="text-gray-500">정의된 파일:</span>
               <span class="font-medium ml-2">${filesSection}</span>
             </div>
           </div>
           ${schema.files ? `
             <div class="mt-4">
-              <div class="text-gray-500 text-sm mb-2">Defined Files:</div>
+              <div class="text-gray-500 text-sm mb-2">파일 목록:</div>
               <div class="flex flex-wrap gap-2">
                 ${Object.keys(schema.files).map(f => `
                   <span class="px-2 py-1 bg-gray-200 rounded text-xs">${f}</span>
@@ -204,7 +208,7 @@ const Renderer = (function() {
    */
   function updateTimestamp(timestamp) {
     if (elements?.timestampEl) {
-      elements.timestampEl.textContent = `Last updated: ${Formatters.formatDate(timestamp, 'MMM DD, YYYY')}`;
+      elements.timestampEl.textContent = `마지막 업데이트: ${Formatters.formatDate(timestamp, 'YYYY-MM-DD')}`;
     }
   }
 
