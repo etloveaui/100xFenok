@@ -255,19 +255,19 @@
           datasets: [
             {
               label: 'Sweet Spot',
-              data: allData.filter(d => d.zone === 'sweet-spot').map(d => ({ x: d.pe, y: d.momentum6m * 100 })),
+              data: allData.filter(d => d.zone === 'sweet-spot').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
               backgroundColor: 'rgba(34, 197, 94, 0.7)',
               pointRadius: 10
             },
             {
               label: 'Danger Zone',
-              data: allData.filter(d => d.zone === 'danger-zone').map(d => ({ x: d.pe, y: d.momentum6m * 100 })),
+              data: allData.filter(d => d.zone === 'danger-zone').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
               backgroundColor: 'rgba(239, 68, 68, 0.7)',
               pointRadius: 10
             },
             {
               label: 'Neutral',
-              data: allData.filter(d => d.zone === 'neutral').map(d => ({ x: d.pe, y: d.momentum6m * 100 })),
+              data: allData.filter(d => d.zone === 'neutral').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
               backgroundColor: 'rgba(156, 163, 175, 0.5)',
               pointRadius: 6
             }
@@ -282,7 +282,8 @@
           plugins: {
             tooltip: {
               callbacks: {
-                label: (ctx) => `${ctx.raw.name}: P/E ${ctx.raw.x.toFixed(1)}, 6M ${ctx.raw.y.toFixed(1)}%`
+                label: function(ctx) {
+                  return `${ctx.raw.name}: P/E ${ctx.raw.x.toFixed(1)}, 6M ${ctx.raw.y.toFixed(1)}%`;
                 }
               }
             }
