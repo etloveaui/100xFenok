@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="ko" class="antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sweet Spot Scanner v2.0 - 100xFenok</title>
+  <meta name="description" content="Valuation vs Momentum analysis identifying optimal buying opportunities">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.5s ease-out',
+            'shimmer': 'shimmer 2s linear infinite'
+          },
+          keyframes: {
+            fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
+            slideUp: { from: { opacity: '0', transform: 'translateY(10px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+            shimmer: { from: { backgroundPosition: '-200% 0' }, to: { backgroundPosition: '200% 0' } }
+          },
+          boxShadow: {
+            'glow-green': '0 0 20px rgba(34, 197, 94, 0.3)',
+            'glow-red': '0 0 20px rgba(239, 68, 68, 0.3)',
+            'inner-glow': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --sweet-spot-bg: #dcfce7;
+      --sweet-spot-bg-hover: #bbf7d0;
+      --sweet-spot-border: #22c55e;
+      --sweet-spot-text: #166534;
+      --danger-bg: #fee2e2;
+      --danger-bg-hover: #fecaca;
+      --danger-border: #ef4444;
+      --danger-text: #991b1b;
+      --neutral-bg: #f1f5f9;
+      --neutral-border: #cbd5e1;
+      --neutral-text: #64748b;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .dark .glass {
+      background: rgba(17, 24, 39, 0.85);
+    }
+
+    .zone-sweet-spot {
+      background: linear-gradient(135deg, var(--sweet-spot-bg) 0%, var(--sweet-spot-bg-hover) 100%);
+      border-color: var(--sweet-spot-border);
+      color: var(--sweet-spot-text);
+    }
+
+    .zone-danger {
+      background: linear-gradient(135deg, var(--danger-bg) 0%, var(--danger-bg-hover) 100%);
+      border-color: var(--danger-border);
+      color: var(--danger-text);
+    }
+
+    .zone-neutral {
+      background: var(--neutral-bg);
+      border-color: var(--neutral-border);
+      color: var(--neutral-text);
+    }
+
+    .metric-card {
+      transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15);
+    }
+
+    .loading-skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    .dark .loading-skeleton {
+      background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+      background-size: 200% 100%;
+    }
+
+    /* Table Styles */
+    .data-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .data-table th {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      z-index: 10;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s;
+    }
+
+    .dark .data-table th {
+      background: #1e293b;
+    }
+
+    .data-table th:hover {
+      background: #e2e8f0;
+    }
+
+    .dark .data-table th:hover {
+      background: #334155;
+    }
+
+    .data-table tbody tr {
+      transition: background 0.2s;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .sortable::after {
+      content: ' \2195';
+      opacity: 0.3;
+      font-size: 0.75em;
+      margin-left: 4px;
+    }
+
+    .sort-asc::after {
+      content: ' \2191';
+      opacity: 1;
+    }
+
+    .sort-desc::after {
+      content: ' \2193';
+      opacity: 1;
+    }
+
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #4b5563;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Tooltip enhancement */
+    .chart-tooltip {
+      backdrop-filter: blur(8px);
+    }
+
+    /* Zone badge animation */
+    .zone-badge {
+      transition: all 0.2s ease;
+    }
+
+    .zone-badge:hover {
+      transform: scale(1.05);
+    }
+
+    /* Insight card */
+    .insight-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .insight-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+    }
+
+    .insight-card.danger::before {
+      background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+
+  <!-- Header -->
+  <header class="glass sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-700/50">
+    <div class="container mx-auto px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30">
+            <i class="fas fa-crosshairs text-white text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              Sweet Spot Scanner
+            </h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              Valuation vs Momentum Analysis
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Threshold Mode Toggle -->
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Mode:</span>
+            <select id="threshold-mode" class="text-xs bg-transparent border-none focus:outline-none focus:ring-0 cursor-pointer">
+              <option value="fixed">Fixed (PE 15/25)</option>
+              <option value="median">Median-based</option>
+            </select>
+          </div>
+          <!-- Data date -->
+          <div id="data-date" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span class="text-xs text-gray-600 dark:text-gray-400" id="date-text">Loading...</span>
+          </div>
+          <!-- Dark mode toggle -->
+          <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Toggle dark mode">
+            <i class="fas fa-moon dark:hidden text-gray-600"></i>
+            <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
+          </button>
+          <!-- Download chart -->
+          <button onclick="downloadChart()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Download chart">
+            <i class="fas fa-download text-gray-600 dark:text-gray-400"></i>
+          </button>
+          <!-- Print -->
+          <button onclick="window.print()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Print">
+            <i class="fas fa-print text-gray-600 dark:text-gray-400"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-6">
+
+    <!-- Summary Metrics -->
+    <section id="metrics-section" class="mb-6 fade-in">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <!-- Sweet Spot Count -->
+        <div class="metric-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border-2 border-green-500 shadow-lg shadow-green-500/10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Sweet Spot</p>
+              <p class="text-2xl sm:text-3xl font-bold text-green-600" id="sweet-spot-count">-</p>
+              <p class="text-xs text-gray-400 mt-1">Low P/E + High Momentum</p>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+              <i class="fas fa-gem text-green-600 text-base sm:text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone Count -->
+        <div class="metric-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border-2 border-red-500 shadow-lg shadow-red-500/10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Danger Zone</p>
+              <p class="text-2xl sm:text-3xl font-bold text-red-600" id="danger-count">-</p>
+              <p class="text-xs text-gray-400 mt-1">High P/E + Low Momentum</p>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+              <i class="fas fa-exclamation-triangle text-red-600 text-base sm:text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Correlation -->
+        <div class="metric-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 shadow-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Correlation</p>
+              <p class="text-2xl sm:text-3xl font-bold text-blue-600" id="correlation">-</p>
+              <p class="text-xs text-gray-400 mt-1">P/E vs 6M Momentum</p>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+              <i class="fas fa-chart-line text-blue-600 text-base sm:text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Indices -->
+        <div class="metric-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 shadow-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Total Indices</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-700 dark:text-gray-300" id="total-count">-</p>
+              <p class="text-xs text-gray-400 mt-1" id="threshold-display">Threshold: PE 15/25</p>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+              <i class="fas fa-list text-gray-600 dark:text-gray-400 text-base sm:text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Correlation Insight -->
+      <div id="correlation-insight" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 hidden">
+        <div class="flex items-start gap-3">
+          <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+          <div>
+            <p class="text-sm font-medium text-blue-900 dark:text-blue-100">Negative Correlation Detected</p>
+            <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
+              The correlation coefficient of <strong id="correlation-value">-0.399</strong> indicates that lower valuation (P/E) tends to be associated with higher momentum returns. This validates the "value + momentum" approach.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Loading State -->
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-gray-500">Loading benchmark data...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="hidden">
+      <!-- Scatter Plot Section -->
+      <section class="mb-6 fade-in">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-base sm:text-lg font-semibold">
+                <i class="fas fa-chart-scatter mr-2 text-green-600"></i>Valuation vs Momentum Scatter Plot
+              </h2>
+              <p class="text-xs text-gray-500 mt-1">X-axis: P/E Ratio | Y-axis: 6M Momentum</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs">
+              <span class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Sweet Spot
+              </span>
+              <span class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Danger Zone
+              </span>
+              <span class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span> Neutral
+              </span>
+            </div>
+          </div>
+          <div class="relative" style="height: 350px;">
+            <canvas id="scatterChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Zone Lists -->
+      <section class="mb-6 fade-in">
+        <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
+          <!-- Sweet Spot List -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border-2 border-green-500 overflow-hidden">
+            <div class="zone-sweet-spot px-4 py-3">
+              <h3 class="font-bold text-base sm:text-lg">
+                <i class="fas fa-gem mr-2"></i>Sweet Spot
+                <span class="text-xs sm:text-sm font-normal ml-2 opacity-80">(Low P/E + High Momentum)</span>
+              </h3>
+            </div>
+            <div id="sweet-spot-list" class="p-3 sm:p-4 space-y-2 max-h-80 sm:max-h-96 overflow-y-auto custom-scrollbar">
+              <!-- Sweet spot items will be inserted here -->
+            </div>
+          </div>
+
+          <!-- Danger Zone List -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border-2 border-red-500 overflow-hidden">
+            <div class="zone-danger px-4 py-3">
+              <h3 class="font-bold text-base sm:text-lg">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Danger Zone
+                <span class="text-xs sm:text-sm font-normal ml-2 opacity-80">(High P/E + Low Momentum)</span>
+              </h3>
+            </div>
+            <div id="danger-zone-list" class="p-3 sm:p-4 space-y-2 max-h-80 sm:max-h-96 overflow-y-auto custom-scrollbar">
+              <!-- Danger zone items will be inserted here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Full Analysis Table -->
+      <section class="mb-6 fade-in">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 class="text-base sm:text-lg font-semibold">
+              <i class="fas fa-table mr-2 text-green-600"></i>Full Analysis
+            </h2>
+            <div class="flex items-center gap-2">
+              <!-- Zone filter -->
+              <select id="zone-filter" class="px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <option value="all">All Zones</option>
+                <option value="sweet-spot">Sweet Spot</option>
+                <option value="danger-zone">Danger Zone</option>
+                <option value="neutral">Neutral</option>
+              </select>
+              <!-- Search -->
+              <input type="text" id="table-search" placeholder="Search..."
+                class="px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg w-32 sm:w-auto bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="data-table text-xs sm:text-sm" id="analysis-table">
+              <thead>
+                <tr>
+                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="0">Rank</th>
+                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="1">Index</th>
+                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="2">P/E</th>
+                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="3">1M</th>
+                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="4">3M</th>
+                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="5">6M</th>
+                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="6">YTD</th>
+                  <th class="sortable px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" data-column="7">Zone</th>
+                </tr>
+              </thead>
+              <tbody id="analysis-tbody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                <!-- Table rows will be inserted here -->
+              </tbody>
+            </table>
+          </div>
+          <!-- Table footer with count -->
+          <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
+            <span id="table-info">Showing all indices</span>
+            <span id="filtered-count"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Methodology -->
+      <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 fade-in">
+        <h2 class="text-base sm:text-lg font-semibold mb-4">
+          <i class="fas fa-info-circle mr-2 text-blue-600"></i>Methodology
+        </h2>
+        <div class="grid sm:grid-cols-2 gap-4 sm:gap-6">
+          <div>
+            <h3 class="text-sm font-semibold text-green-600 mb-2">Sweet Spot Criteria</h3>
+            <ul class="space-y-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              <li class="flex items-center gap-2">
+                <i class="fas fa-check text-green-500"></i>
+                <span><strong>P/E Ratio:</strong> Below threshold</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fas fa-check text-green-500"></i>
+                <span><strong>6M Momentum:</strong> Above threshold</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-red-600 mb-2">Danger Zone Criteria</h3>
+            <ul class="space-y-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              <li class="flex items-center gap-2">
+                <i class="fas fa-times text-red-500"></i>
+                <span><strong>P/E Ratio:</strong> Above threshold</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fas fa-times text-red-500"></i>
+                <span><strong>6M Momentum:</strong> Below threshold</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Threshold Modes</h3>
+          <div class="grid sm:grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400">
+            <div class="p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+              <span class="font-medium">Fixed Mode:</span> P/E 15 (Sweet), 25 (Danger), Momentum 20%/5%
+            </div>
+            <div class="p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+              <span class="font-medium">Median Mode:</span> Dynamic thresholds based on median values
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 text-xs text-gray-500 dark:text-gray-500">
+          <strong>Data Sources:</strong> Bloomberg Terminal | <strong>Correlation:</strong> Pearson coefficient between P/E and 6M returns
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-4 mt-8">
+    <div class="container mx-auto px-4 text-center">
+      <p class="text-xs sm:text-sm text-gray-500">
+        Sweet Spot Scanner v2.0 - 100xFenok Platform | Data: Bloomberg Terminal
+      </p>
+    </div>
+  </footer>
+
+  <!-- Chart.js & Plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+  <script>
+    // ==================== CONSTANTS & CONFIG ====================
+    const FIXED_SWEET_SPOT_PE = 15;
+    const FIXED_SWEET_SPOT_MOMENTUM = 0.20;  // 20%
+    const FIXED_DANGER_PE = 25;
+    const FIXED_DANGER_MOMENTUM = 0.05;  // 5%
+
+    // Complete index mapping from all data sources
+    const INDEX_CONFIG = {
+      // US Major Indices (from us.json structure)
+      'sp500': { name: 'S&P 500', category: 'US Major', source: 'us' },
+      'nasdaq100': { name: 'NASDAQ 100', category: 'US Major', source: 'us' },
+      'nasdaq_composite': { name: 'NASDAQ Composite', category: 'US Major', source: 'us' },
+      'russell2000': { name: 'Russell 2000', category: 'US Major', source: 'us' },
+
+      // US Sectors
+      'financials': { name: 'Financials', category: 'US Sector', source: 'us_sectors' },
+      'consumer_discretionary': { name: 'Consumer Discretionary', category: 'US Sector', source: 'us_sectors' },
+      'information_technology': { name: 'Information Technology', category: 'US Sector', source: 'us_sectors' },
+      'industrials': { name: 'Industrials', category: 'US Sector', source: 'us_sectors' },
+      'energy': { name: 'Energy', category: 'US Sector', source: 'us_sectors' },
+      'materials': { name: 'Materials', category: 'US Sector', source: 'us_sectors' },
+      'consumer_staples': { name: 'Consumer Staples', category: 'US Sector', source: 'us_sectors' },
+      'health_care': { name: 'Health Care', category: 'US Sector', source: 'us_sectors' },
+      'communication_services': { name: 'Communication Services', category: 'US Sector', source: 'us_sectors' },
+      'utilities': { name: 'Utilities', category: 'US Sector', source: 'us_sectors' },
+      'real_estate': { name: 'Real Estate', category: 'US Sector', source: 'us_sectors' },
+      'homebuilders': { name: 'Homebuilders', category: 'US Sector', source: 'us_sectors' },
+
+      // Developed Markets
+      'euro_stoxx_50': { name: 'Euro Stoxx 50', category: 'Developed', source: 'developed' },
+      'topix': { name: 'TOPIX', category: 'Developed', source: 'developed' },
+      'nikkei': { name: 'Nikkei 225', category: 'Developed', source: 'developed' },
+
+      // Emerging Markets
+      'shanghai': { name: 'Shanghai', category: 'Emerging', source: 'emerging' },
+      'hong_kong': { name: 'Hong Kong', category: 'Emerging', source: 'developed' },
+      'kospi': { name: 'KOSPI', category: 'Emerging', source: 'developed' },
+      'brazil': { name: 'Brazil', category: 'Emerging', source: 'developed' },
+      'vietnam': { name: 'Vietnam', category: 'Emerging', source: 'developed' },
+      'india_sensex': { name: 'India Sensex', category: 'Emerging', source: 'developed' },
+      'hang_seng_h': { name: 'Hang Seng H', category: 'Emerging', source: 'developed' },
+      'hang_seng_tech': { name: 'Hang Seng Tech', category: 'Emerging', source: 'developed' },
+
+      // MSCI Indices
+      'world': { name: 'MSCI World', category: 'MSCI', source: 'msci' },
+      'developed': { name: 'MSCI Developed', category: 'MSCI', source: 'msci' },
+      'emerging': { name: 'MSCI Emerging', category: 'MSCI', source: 'msci' },
+      'eafe': { name: 'MSCI EAFE', category: 'MSCI', source: 'msci' },
+      'japan': { name: 'MSCI Japan', category: 'MSCI', source: 'msci' },
+      'korea': { name: 'MSCI Korea', category: 'MSCI', source: 'msci' },
+      'china': { name: 'MSCI China', category: 'MSCI', source: 'msci' },
+      'india': { name: 'MSCI India', category: 'MSCI', source: 'msci' },
+      'brazil': { name: 'MSCI Brazil', category: 'MSCI', source: 'msci' },
+      'taiwan': { name: 'MSCI Taiwan', category: 'MSCI', source: 'msci' },
+      'mexico': { name: 'MSCI Mexico', category: 'MSCI', source: 'msci' },
+
+      // Micro Sectors
+      'philadelphia_semi': { name: 'Philadelphia Semi', category: 'Sector', source: 'micro_sectors' },
+      'us_regional_banks': { name: 'US Regional Banks', category: 'Sector', source: 'micro_sectors' },
+      'us_biotech': { name: 'US Biotech', category: 'Sector', source: 'micro_sectors' }
+    };
+
+    // ==================== STATE ====================
+    let allData = [];
+    let scatterChart = null;
+    let sortColumn = -1;
+    let sortDirection = 'desc';
+    let thresholdMode = 'fixed';
+    let dynamicThresholds = { peSweet: 15, peDanger: 25, momSweet: 0.20, momDanger: 0.05 };
+
+    // ==================== DARK MODE ====================
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+    }
+
+    // Initialize dark mode from preference
+    if (localStorage.getItem('darkMode') === 'true' ||
+        (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // ==================== DATA LOADING ====================
+    async function loadData() {
+      try {
+        // Load momentum data
+        const summariesResponse = await fetch('../../data/benchmarks/summaries.json');
+        const summariesData = await summariesResponse.json();
+
+        // Load all P/E data files in parallel
+        const [secturesData, msciData, developedData, emergingData, microSectorsData] = await Promise.all([
+          fetch('../../data/benchmarks/us_sectors.json').then(r => r.json()),
+          fetch('../../data/benchmarks/msci.json').then(r => r.json()),
+          fetch('../../data/benchmarks/developed.json').then(r => r.json()),
+          fetch('../../data/benchmarks/emerging.json').then(r => r.json()),
+          fetch('../../data/benchmarks/micro_sectors.json').then(r => r.json())
+        ]);
+
+        // Update data date
+        const generatedDate = summariesData.metadata?.generated || new Date().toISOString();
+        document.getElementById('date-text').textContent = new Date(generatedDate).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+
+        // Process data
+        processData(summariesData, secturesData, msciData, developedData, emergingData, microSectorsData);
+
+        // Hide loading, show content
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('loading').innerHTML = `
+          <div class="text-red-500">
+            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+            <p class="font-medium">Error loading data</p>
+            <p class="text-sm text-gray-400 mt-2">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // ==================== DATA PROCESSING ====================
+    function processData(summariesData, sectorsData, msciData, developedData, emergingData, microSectorsData) {
+      const momentum = summariesData.momentum || {};
+      allData = [];
+
+      // Combine all data sources
+      const allSources = {
+        us_sectors: sectorsData.sections,
+        msci: msciData.sections,
+        developed: developedData.sections,
+        emerging: emergingData.sections,
+        micro_sectors: microSectorsData.sections
+      };
+
+      // Process each index from config
+      for (const [key, config] of Object.entries(INDEX_CONFIG)) {
+        // Get P/E data
+        let peData = null;
+        const source = allSources[config.source];
+        if (source && source[key]) {
+          const data = source[key].data;
+          if (data && data.length > 0) {
+            peData = data[data.length - 1].best_pe_ratio;
+          }
+        }
+
+        // Get momentum data
+        const momData = momentum[key];
+
+        if (peData !== null && peData !== undefined && momData) {
+          allData.push({
+            id: key,
+            name: config.name,
+            category: config.category,
+            pe: peData,
+            momentum1m: momData['1m'] || 0,
+            momentum3m: momData['3m'] || 0,
+            momentum6m: momData['6m'] || 0,
+            momentumYtd: momData['ytd'] || 0
+          });
+        }
+      }
+
+      // Calculate dynamic thresholds (median-based)
+      calculateDynamicThresholds();
+
+      // Classify zones
+      allData.forEach(item => {
+        item.zone = classifyZone(item.pe, item.momentum6m);
+        item.rank = calculateRank(item);
+      });
+
+      // Sort by rank for display
+      allData.sort((a, b) => a.rank - b.rank);
+
+      // Update metrics
+      updateMetrics();
+
+      // Render components
+      renderScatterPlot();
+      renderZoneLists();
+      renderTable();
+      setupTableSorting();
+      setupTableSearch();
+      setupZoneFilter();
+      setupThresholdMode();
+
+      // Show correlation insight
+      document.getElementById('correlation-insight').classList.remove('hidden');
+    }
+
+    function calculateDynamicThresholds() {
+      const peValues = allData.map(d => d.pe).filter(v => v != null);
+      const momValues = allData.map(d => d.momentum6m).filter(v => v != null);
+
+      if (peValues.length > 0 && momValues.length > 0) {
+        // Calculate medians
+        const peMedian = median(peValues);
+        const momMedian = median(momValues);
+
+        // Set thresholds
+        dynamicThresholds = {
+          peSweet: peMedian,
+          peDanger: peMedian,
+          momSweet: momMedian,
+          momDanger: momMedian
+        };
+      }
+    }
+
+    function median(values) {
+      if (values.length === 0) return 0;
+      const sorted = [...values].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    function getThresholds() {
+      return thresholdMode === 'fixed' ? {
+        peSweet: FIXED_SWEET_SPOT_PE,
+        peDanger: FIXED_DANGER_PE,
+        momSweet: FIXED_SWEET_SPOT_MOMENTUM,
+        momDanger: FIXED_DANGER_MOMENTUM
+      } : dynamicThresholds;
+    }
+
+    function classifyZone(pe, momentum6m) {
+      const t = getThresholds();
+
+      if (pe < t.peSweet && momentum6m > t.momSweet) {
+        return 'sweet-spot';
+      }
+      if (pe > t.peDanger && momentum6m < t.momDanger) {
+        return 'danger-zone';
+      }
+      return 'neutral';
+    }
+
+    function calculateRank(item) {
+      let baseRank;
+      if (item.zone === 'sweet-spot') {
+        baseRank = 1;
+      } else if (item.zone === 'neutral') {
+        baseRank = 1000;
+      } else {
+        baseRank = 2000;
+      }
+      return baseRank + (1 - item.momentum6m) * 100 + item.pe;
+    }
+
+    // ==================== METRICS ====================
+    function updateMetrics() {
+      const sweetSpotCount = allData.filter(d => d.zone === 'sweet-spot').length;
+      const dangerCount = allData.filter(d => d.zone === 'danger-zone').length;
+
+      document.getElementById('sweet-spot-count').textContent = sweetSpotCount;
+      document.getElementById('danger-count').textContent = dangerCount;
+      document.getElementById('total-count').textContent = allData.length;
+
+      // Calculate correlation
+      const correlation = calculateCorrelation();
+      document.getElementById('correlation').textContent = correlation.toFixed(3);
+      document.getElementById('correlation-value').textContent = correlation.toFixed(3);
+    }
+
+    function calculateCorrelation() {
+      const validData = allData.filter(d => d.pe != null && d.momentum6m != null);
+      const n = validData.length;
+      if (n < 2) return 0;
+
+      const sumX = validData.reduce((sum, d) => sum + d.pe, 0);
+      const sumY = validData.reduce((sum, d) => sum + d.momentum6m, 0);
+      const sumXY = validData.reduce((sum, d) => sum + d.pe * d.momentum6m, 0);
+      const sumX2 = validData.reduce((sum, d) => sum + d.pe * d.pe, 0);
+      const sumY2 = validData.reduce((sum, d) => sum + d.momentum6m * d.momentum6m, 0);
+
+      const numerator = n * sumXY - sumX * sumY;
+      const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+      return denominator === 0 ? 0 : numerator / denominator;
+    }
+
+    // ==================== SCATTER PLOT ====================
+    function renderScatterPlot() {
+      const ctx = document.getElementById('scatterChart').getContext('2d');
+
+      const t = getThresholds();
+
+      const sweetSpotData = allData.filter(d => d.zone === 'sweet-spot').map(d => ({
+        x: d.pe,
+        y: d.momentum6m * 100,
+        label: d.name
+      }));
+
+      const dangerData = allData.filter(d => d.zone === 'danger-zone').map(d => ({
+        x: d.pe,
+        y: d.momentum6m * 100,
+        label: d.name
+      }));
+
+      const neutralData = allData.filter(d => d.zone === 'neutral').map(d => ({
+        x: d.pe,
+        y: d.momentum6m * 100,
+        label: d.name
+      }));
+
+      // Destroy existing chart
+      if (scatterChart) {
+        scatterChart.destroy();
+      }
+
+      scatterChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Sweet Spot',
+              data: sweetSpotData,
+              backgroundColor: 'rgba(34, 197, 94, 0.75)',
+              borderColor: '#22c55e',
+              borderWidth: 2,
+              pointRadius: 8,
+              pointHoverRadius: 12,
+              pointHoverBackgroundColor: '#16a34a'
+            },
+            {
+              label: 'Danger Zone',
+              data: dangerData,
+              backgroundColor: 'rgba(239, 68, 68, 0.75)',
+              borderColor: '#ef4444',
+              borderWidth: 2,
+              pointRadius: 8,
+              pointHoverRadius: 12,
+              pointHoverBackgroundColor: '#dc2626'
+            },
+            {
+              label: 'Neutral',
+              data: neutralData,
+              backgroundColor: 'rgba(148, 163, 184, 0.5)',
+              borderColor: '#94a3b8',
+              borderWidth: 1,
+              pointRadius: 6,
+              pointHoverRadius: 10,
+              pointHoverBackgroundColor: '#64748b'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              padding: 12,
+              titleFont: { size: 14, weight: 'bold' },
+              bodyFont: { size: 13 },
+              cornerRadius: 8,
+              callbacks: {
+                label: function(context) {
+                  const point = context.raw;
+                  return `${point.label}: P/E ${point.x.toFixed(2)}, 6M ${point.y.toFixed(1)}%`;
+                }
+              }
+            },
+            annotation: {
+              annotations: {
+                sweetSpotBox: {
+                  type: 'box',
+                  xMin: 0,
+                  xMax: t.peSweet,
+                  yMin: t.momSweet * 100,
+                  yMax: 100,
+                  backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                  borderColor: 'rgba(34, 197, 94, 0.2)',
+                  borderWidth: 1
+                },
+                dangerBox: {
+                  type: 'box',
+                  xMin: t.peDanger,
+                  xMax: 50,
+                  yMin: -20,
+                  yMax: t.momDanger * 100,
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  borderColor: 'rgba(239, 68, 68, 0.2)',
+                  borderWidth: 1
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'P/E Ratio',
+                font: { weight: 'bold', size: 12 }
+              },
+              min: 0,
+              max: 45,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: '6M Momentum (%)',
+                font: { weight: 'bold', size: 12 }
+              },
+              min: -10,
+              max: 80,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ==================== ZONE LISTS ====================
+    function renderZoneLists() {
+      // Sweet Spot List
+      const sweetSpotList = document.getElementById('sweet-spot-list');
+      const sweetSpotData = allData.filter(d => d.zone === 'sweet-spot')
+        .sort((a, b) => b.momentum6m - a.momentum6m);
+
+      if (sweetSpotData.length === 0) {
+        sweetSpotList.innerHTML = '<p class="text-gray-500 text-center py-8 text-sm">No indices in Sweet Spot</p>';
+      } else {
+        sweetSpotList.innerHTML = sweetSpotData.map((item, index) => `
+          <div class="zone-sweet-spot zone-badge rounded-lg p-3 border-l-4 cursor-pointer" onclick="highlightIndex('${item.id}')">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-sm sm:text-base">${index + 1}.</span>
+                  <span class="font-semibold text-sm sm:text-base truncate">${item.name}</span>
+                </div>
+                <span class="text-xs px-2 py-0.5 bg-white/50 rounded-full mt-1 inline-block">${item.category}</span>
+              </div>
+              <div class="text-right ml-2">
+                <div class="text-sm">
+                  <span class="font-mono font-bold">${item.pe.toFixed(2)}</span> <span class="text-xs">P/E</span>
+                </div>
+                <div class="text-sm text-green-700 font-semibold">
+                  <i class="fas fa-arrow-up text-xs"></i>
+                  <span class="font-mono">${(item.momentum6m * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Danger Zone List
+      const dangerList = document.getElementById('danger-zone-list');
+      const dangerData = allData.filter(d => d.zone === 'danger-zone')
+        .sort((a, b) => a.pe - b.pe);
+
+      if (dangerData.length === 0) {
+        dangerList.innerHTML = '<p class="text-gray-500 text-center py-8 text-sm">No indices in Danger Zone</p>';
+      } else {
+        dangerList.innerHTML = dangerData.map((item, index) => `
+          <div class="zone-danger zone-badge rounded-lg p-3 border-l-4 cursor-pointer" onclick="highlightIndex('${item.id}')">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-sm sm:text-base">${index + 1}.</span>
+                  <span class="font-semibold text-sm sm:text-base truncate">${item.name}</span>
+                </div>
+                <span class="text-xs px-2 py-0.5 bg-white/50 rounded-full mt-1 inline-block">${item.category}</span>
+              </div>
+              <div class="text-right ml-2">
+                <div class="text-sm">
+                  <span class="font-mono font-bold">${item.pe.toFixed(2)}</span> <span class="text-xs">P/E</span>
+                </div>
+                <div class="text-sm">
+                  <i class="fas fa-arrow-right text-xs"></i>
+                  <span class="font-mono">${(item.momentum6m * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function highlightIndex(indexId) {
+      // Scroll to table row and highlight
+      const table = document.getElementById('analysis-table');
+      const rows = table.querySelectorAll('tbody tr');
+      rows.forEach((row, i) => {
+        if (allData[i] && allData[i].id === indexId) {
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          row.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+          setTimeout(() => {
+            row.style.backgroundColor = '';
+          }, 2000);
+        }
+      });
+    }
+
+    // ==================== TABLE ====================
+    function renderTable(data = allData) {
+      const tbody = document.getElementById('analysis-tbody');
+
+      tbody.innerHTML = data.map(item => {
+        const zoneClass = item.zone === 'sweet-spot' ? 'zone-sweet-spot' :
+                         item.zone === 'danger-zone' ? 'zone-danger' : 'zone-neutral';
+
+        const zoneLabel = item.zone === 'sweet-spot' ? 'Sweet Spot' :
+                         item.zone === 'danger-zone' ? 'Danger Zone' : 'Neutral';
+
+        const starIcon = item.zone === 'sweet-spot' ? '<i class="fas fa-star text-yellow-500 mr-1"></i>' :
+                        item.zone === 'danger-zone' ? '<i class="fas fa-exclamation-circle text-red-500 mr-1"></i>' : '';
+
+        return `
+          <tr class="transition-colors" data-zone="${item.zone}">
+            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm text-gray-500">${starIcon}</td>
+            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-medium">${item.name}</td>
+            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono">${item.pe.toFixed(2)}</td>
+            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono ${formatReturnColor(item.momentum1m)}">${formatPercent(item.momentum1m)}</td>
+            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono ${formatReturnColor(item.momentum3m)}">${formatPercent(item.momentum3m)}</td>
+            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono font-semibold ${formatReturnColor(item.momentum6m)}">${formatPercent(item.momentum6m)}</td>
+            <td class="px-2 sm:px-4 py-2 sm:py-3 text-sm font-mono ${formatReturnColor(item.momentumYtd)}">${formatPercent(item.momentumYtd)}</td>
+            <td class="px-2 sm:px-4 py-2 sm:py-3">
+              <span class="zone-badge px-2 py-1 text-xs font-medium rounded inline-block ${zoneClass}">${zoneLabel}</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Update table info
+      const totalItems = allData.length;
+      const filteredItems = data.length;
+      document.getElementById('table-info').textContent =
+        filteredItems === totalItems ? `Showing all ${totalItems} indices` : `Showing ${filteredItems} of ${totalItems} indices`;
+    }
+
+    function formatPercent(value) {
+      const formatted = (value * 100).toFixed(1);
+      return value >= 0 ? `+${formatted}%` : `${formatted}%`;
+    }
+
+    function formatReturnColor(value) {
+      if (value > 0.05) return 'text-green-600 font-semibold';
+      if (value > 0) return 'text-green-500';
+      if (value > -0.02) return 'text-gray-500';
+      return 'text-red-500';
+    }
+
+    function setupTableSorting() {
+      document.querySelectorAll('.data-table th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const column = parseInt(th.dataset.column);
+          sortTable(column, th);
+        });
+      });
+    }
+
+    function sortTable(column, th) {
+      if (sortColumn === column) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumn = column;
+        sortDirection = 'desc';
+      }
+
+      document.querySelectorAll('.data-table th').forEach(header => {
+        header.classList.remove('sort-asc', 'sort-desc');
+      });
+      th.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+
+      const sorted = [...allData].sort((a, b) => {
+        let aVal, bVal;
+
+        switch (column) {
+          case 0: aVal = a.rank; bVal = b.rank; break;
+          case 1: aVal = a.name; bVal = b.name; break;
+          case 2: aVal = a.pe; bVal = b.pe; break;
+          case 3: aVal = a.momentum1m; bVal = b.momentum1m; break;
+          case 4: aVal = a.momentum3m; bVal = b.momentum3m; break;
+          case 5: aVal = a.momentum6m; bVal = b.momentum6m; break;
+          case 6: aVal = a.momentumYtd; bVal = b.momentumYtd; break;
+          case 7: aVal = a.zone; bVal = b.zone; break;
+        }
+
+        if (typeof aVal === 'string') {
+          return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+
+      renderTable(sorted);
+    }
+
+    function setupTableSearch() {
+      const searchInput = document.getElementById('table-search');
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        const filtered = allData.filter(item =>
+          item.name.toLowerCase().includes(query) ||
+          item.category.toLowerCase().includes(query) ||
+          item.zone.toLowerCase().includes(query)
+        );
+        renderTable(filtered);
+      });
+    }
+
+    function setupZoneFilter() {
+      const zoneFilter = document.getElementById('zone-filter');
+      zoneFilter.addEventListener('change', (e) => {
+        const zone = e.target.value;
+        const filtered = zone === 'all' ? allData : allData.filter(item => item.zone === zone);
+        renderTable(filtered);
+      });
+    }
+
+    function setupThresholdMode() {
+      const modeSelect = document.getElementById('threshold-mode');
+      const thresholdDisplay = document.getElementById('threshold-display');
+
+      modeSelect.addEventListener('change', (e) => {
+        thresholdMode = e.target.value;
+
+        // Update display
+        if (thresholdMode === 'fixed') {
+          thresholdDisplay.textContent = 'Threshold: PE 15/25';
+        } else {
+          const t = dynamicThresholds;
+          thresholdDisplay.textContent = `Threshold: PE ${t.peSweet.toFixed(1)}/Mom ${(t.momSweet * 100).toFixed(0)}%`;
+        }
+
+        // Reclassify all zones
+        allData.forEach(item => {
+          item.zone = classifyZone(item.pe, item.momentum6m);
+          item.rank = calculateRank(item);
+        });
+
+        // Re-sort
+        allData.sort((a, b) => a.rank - b.rank);
+
+        // Update UI
+        updateMetrics();
+        renderScatterPlot();
+        renderZoneLists();
+        renderTable();
+      });
+    }
+
+    // ==================== CHART DOWNLOAD ====================
+    function downloadChart() {
+      if (!scatterChart) return;
+
+      const link = document.createElement('a');
+      link.download = 'sweet-spot-scanner.png';
+      link.href = scatterChart.toBase64Image();
+      link.click();
+    }
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+    });
+  </script>
+
+</body>
+</html>
