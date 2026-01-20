@@ -72,6 +72,15 @@
     th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
     th { background: #f9fafb; cursor: pointer; }
     th:hover { background: #f3f4f6; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .badge-country { background: #dbeafe; color: #1e40af; }
+    .badge-sector { background: #fef3c7; color: #92400e; }
   </style>
 </head>
 <body>
@@ -123,6 +132,7 @@
         <thead>
           <tr>
             <th onclick="sortTable('name')">Index</th>
+            <th onclick="sortTable('type')">Type</th>
             <th onclick="sortTable('pe')">P/E</th>
             <th onclick="sortTable('momentum6m')">6M</th>
             <th onclick="sortTable('zone')">Zone</th>
@@ -146,7 +156,7 @@
     // ==================== CONFIG ====================
     const CONFIG = {
       dataPath: '../../../data/benchmarks/',
-      files: ['us.json', 'us_sectors.json', 'developed.json', 'emerging.json', 'msci.json'],
+      files: ['us.json', 'us_sectors.json', 'developed.json', 'emerging.json', 'msci.json', 'micro_sectors.json'],
       SWEET_PE: 15,
       SWEET_MOMENTUM: 0.20,
       DANGER_PE: 25,
@@ -186,10 +196,14 @@
               const latest = section.data?.[section.data.length - 1] || {};
               const momentum = summaries.momentum[key] || {};
 
+              // Determine type based on file and key
+              const type = determineType(file, key);
+
               allData.push({
                 name: section.name || key,
                 pe: latest.best_pe_ratio || latest.pe_ratio || null,
-                momentum6m: momentum['6m'] || null
+                momentum6m: momentum['6m'] || null,
+                type: type
               });
             }
           }
@@ -199,6 +213,23 @@
       }
 
       return allData.filter(d => d.pe != null || d.momentum6m != null);
+    }
+
+    // Determine if index is a Country or Sector
+    function determineType(file, key) {
+      // Sector files
+      if (file === 'us_sectors.json' || file === 'micro_sectors.json') {
+        return 'Sector';
+      }
+      // Sector keys (GICS sectors)
+      const sectorKeys = ['energy', 'materials', 'industrials', 'consumer-discretionary',
+                          'consumer-staples', 'health-care', 'financials', 'it',
+                          'communication-services', 'utilities', 'real-estate'];
+      if (sectorKeys.some(sk => key.toLowerCase().includes(sk))) {
+        return 'Sector';
+      }
+      // Default to Country for MSCI, developed, emerging, us indices
+      return 'Country';
     }
 
     // ==================== PROCESSING ====================
@@ -322,9 +353,11 @@
       tbody.innerHTML = data.map(item => {
         const zoneClass = item.zone === 'sweet-spot' ? 'text-green-600'
                         : item.zone === 'danger-zone' ? 'text-red-600' : 'text-gray-600';
+        const badgeClass = item.type === 'Country' ? 'badge-country' : 'badge-sector';
         return `
           <tr>
             <td>${item.name}</td>
+            <td><span class="badge ${badgeClass}">${item.type}</span></td>
             <td>${item.pe ? item.pe.toFixed(2) : 'N/A'}</td>
             <td class="${item.momentum6m > 0 ? 'text-green-600' : 'text-red-600'}">
               ${formatPercent(item.momentum6m)}
