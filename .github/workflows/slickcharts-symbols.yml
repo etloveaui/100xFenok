@@ -151,7 +151,7 @@ jobs:
         run: |
           pip install requests beautifulsoup4
 
-      - name: Run Symbol scraper (single: ${{ github.event.inputs.symbol }})
+      - name: "Run Symbol scraper (single: ${{ github.event.inputs.symbol }})"
         run: |
           python scripts/scrapers/symbol-scraper.py \
             --symbol ${{ github.event.inputs.symbol }} \

@@ -149,6 +149,10 @@ if (inputHash === storedHash) {
 
 > Details: `docs/CHANGELOG.md`
 
+### 2026-01-20: Data Lab Bug Fix + Localization
+- Fixed: Details panel click not working (function clickHandler support)
+- Korean localization: index.html, status-card.js, renderer.js
+
 ### 2026-01-20: Unified Shared Modules
 - Created `admin/shared/` folder with 7 modules
 - CacheManager: Added `setPrefix()` for multi-lab support

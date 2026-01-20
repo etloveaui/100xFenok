@@ -276,14 +276,14 @@ jobs:
         run: |
           pip install requests beautifulsoup4
 
-      - name: Run Returns scraper (single: ${{ github.event.inputs.symbol }})
+      - name: "Run Returns scraper (single: ${{ github.event.inputs.symbol }})"
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'returns' }}
         run: |
           python scripts/scrapers/symbol-returns-scraper.py \
             --symbol ${{ github.event.inputs.symbol }} \
             --pretty
 
-      - name: Run Dividends scraper (single: ${{ github.event.inputs.symbol }})
+      - name: "Run Dividends scraper (single: ${{ github.event.inputs.symbol }})"
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dividends' }}
         run: |
           python scripts/scrapers/symbol-dividend-scraper.py \

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data Lab - 100x FenoK</title>
+  <title>데이터 랩 - 100x FenoK</title>
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="Data Health Monitoring Dashboard - Manifest-driven data source status">
+  <meta name="description" content="데이터 상태 모니터링 대시보드">
   <link rel="icon" type="image/x-icon" href="../../favicon.ico">
 
   <!-- Tailwind CSS -->
@@ -28,18 +28,18 @@
             <i class="fas fa-database text-emerald-500"></i>
           </div>
           <div>
-            <h1 class="text-xl font-bold">Data Lab</h1>
-            <p class="text-gray-500 text-sm">Data Health Monitoring Dashboard</p>
+            <h1 class="text-xl font-bold">데이터 랩</h1>
+            <p class="text-gray-500 text-sm">데이터 상태 모니터링</p>
           </div>
         </div>
         <div class="flex items-center gap-4">
           <span id="last-updated" class="text-xs text-gray-400"></span>
-          <button onclick="DataLabUI.refresh()" class="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Refresh">
+          <button onclick="DataLabUI.refresh()" class="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="새로고침">
             <i class="fas fa-refresh"></i>
           </button>
           <a href="../" class="text-gray-500 hover:text-blue-600 flex items-center gap-1">
             <i class="fas fa-arrow-left"></i>
-            <span class="hidden sm:inline">Admin</span>
+            <span class="hidden sm:inline">관리자</span>
           </a>
         </div>
       </div>
@@ -57,7 +57,7 @@
     <!-- Data Sources Grid -->
     <section class="mb-8">
       <h2 class="text-lg font-semibold text-gray-600 mb-4">
-        <i class="fas fa-signal text-emerald-500 mr-2"></i>Data Sources
+        <i class="fas fa-signal text-emerald-500 mr-2"></i>데이터 소스
       </h2>
       <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Rendered by Renderer.renderCards() -->
@@ -74,9 +74,9 @@
   <!-- Footer -->
   <footer class="border-t bg-white py-4 mt-auto">
     <div class="container mx-auto px-4 text-center text-sm text-gray-500">
-      <p>Data Lab v2.0 - Manifest-driven architecture</p>
+      <p>데이터 랩 v2.0</p>
       <p class="text-xs mt-1">
-        <a href="#" onclick="console.log(DataLabUI.debug()); alert('Debug info logged to console');" class="hover:text-emerald-600">Debug</a>
+        <a href="#" onclick="console.log(DataLabUI.debug()); alert('디버그 정보가 콘솔에 출력되었습니다.');" class="hover:text-emerald-600">디버그</a>
       </p>
     </div>
   </footer>

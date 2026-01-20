@@ -71,8 +71,13 @@ const StatusCard = (function() {
     const version = config.version || '-';
     const frequency = config.update_frequency || '-';
 
-    // Customizable click handler
-    const clickHandler = options.clickHandler || `StatusCard.defaultClickHandler('${folderName}')`;
+    // Customizable click handler (supports function or string)
+    let clickHandler;
+    if (typeof options.clickHandler === 'function') {
+      clickHandler = options.clickHandler(folderName);
+    } else {
+      clickHandler = options.clickHandler || `StatusCard.defaultClickHandler('${folderName}')`;
+    }
 
     return `
       <div class="bg-white rounded-xl p-5 shadow hover:shadow-md transition-shadow"
@@ -94,12 +99,12 @@ const StatusCard = (function() {
 
         <div class="text-sm text-gray-600 space-y-1">
           <p>
-            <span class="text-gray-400">Files:</span>
+            <span class="text-gray-400">파일:</span>
             <span class="font-medium">${Formatters.formatNumber(fileCount, 0)}</span>
             <span class="text-xs text-gray-400">(${frequency})</span>
           </p>
           <p>
-            <span class="text-gray-400">Updated:</span>
+            <span class="text-gray-400">업데이트:</span>
             <span class="font-medium">${Formatters.formatDate(config.updated)}</span>
             <span class="text-xs text-gray-400">(${FreshnessChecker.formatDaysAgo(freshness.daysAgo)})</span>
           </p>
@@ -109,7 +114,7 @@ const StatusCard = (function() {
           <span class="text-xs text-gray-400">v${version}</span>
           <button class="text-xs text-${color}-600 hover:text-${color}-800 font-medium"
                   onclick="${clickHandler}">
-            Details
+            상세
           </button>
         </div>
       </div>
@@ -149,7 +154,7 @@ const StatusCard = (function() {
       <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 text-white shadow-lg">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h2 class="text-lg font-semibold">Data Health Overview</h2>
+            <h2 class="text-lg font-semibold">데이터 상태 개요</h2>
             <p class="text-slate-300 text-sm">${health.description}</p>
           </div>
           <div class="text-4xl">${health.signal}</div>
@@ -158,19 +163,19 @@ const StatusCard = (function() {
         <div class="grid grid-cols-4 gap-4 text-center">
           <div class="bg-white/10 rounded-lg p-3">
             <div class="text-2xl font-bold">${summary.total}</div>
-            <div class="text-xs text-slate-300">Total</div>
+            <div class="text-xs text-slate-300">전체</div>
           </div>
           <div class="bg-green-500/20 rounded-lg p-3">
             <div class="text-2xl font-bold text-green-400">${summary.fresh}</div>
-            <div class="text-xs text-green-300">Fresh</div>
+            <div class="text-xs text-green-300">최신</div>
           </div>
           <div class="bg-yellow-500/20 rounded-lg p-3">
             <div class="text-2xl font-bold text-yellow-400">${summary.stale}</div>
-            <div class="text-xs text-yellow-300">Stale</div>
+            <div class="text-xs text-yellow-300">오래됨</div>
           </div>
           <div class="bg-red-500/20 rounded-lg p-3">
             <div class="text-2xl font-bold text-red-400">${summary.critical}</div>
-            <div class="text-xs text-red-300">Critical</div>
+            <div class="text-xs text-red-300">위험</div>
           </div>
         </div>
       </div>
