@@ -2058,10 +2058,31 @@
         });
 
         const validData = this.allData.filter(d => d.pe != null && d.momentum6m != null);
-        this.stats = this.statsEngine.calculateLinearRegression(
-          validData.map(d => d.pe),
-          validData.map(d => d.momentum6m * 100)
-        );
+
+        // Ensure we have valid data before calculating stats
+        if (validData.length < 2) {
+          console.warn('Not enough valid data for statistics calculation. Valid items:', validData.length);
+          this.stats = {
+            slope: 0,
+            intercept: 0,
+            rSquared: 0,
+            correlation: 0,
+            stdError: 0,
+            pValue: 1,
+            equation: 'N/A (insufficient data)'
+          };
+        } else {
+          this.stats = this.statsEngine.calculateLinearRegression(
+            validData.map(d => d.pe),
+            validData.map(d => d.momentum6m * 100)
+          );
+        }
+
+        console.log('Processed data:', {
+          total: this.allData.length,
+          valid: validData.length,
+          stats: this.stats
+        });
       },
 
       render() {

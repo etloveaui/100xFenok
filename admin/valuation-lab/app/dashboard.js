@@ -17,7 +17,7 @@ const ValuationLabUI = (function() {
       { name: 'Percentile Chart', link: 'percentile.html', icon: 'fa-chart-bar', desc: 'Historical Percentiles' },
       { name: 'Signal Light', link: 'signal-light.html', icon: 'fa-traffic-light', desc: 'Simple Status View' },
       { name: 'One Liner', link: 'one-liner.html', icon: 'fa-align-left', desc: 'Natural Language Summary' },
-      { name: 'Sweet Spot Scanner', link: '../../tools/benchmark/sweet-spot.html', icon: 'fa-crosshairs', desc: 'P/E + Momentum Analysis' },
+      { name: 'Sweet Spot Scanner', link: 'expansion/sweet-spot.html', icon: 'fa-crosshairs', desc: 'P/E + Momentum Analysis' },
       { name: 'Momentum Dashboard', link: 'expansion/momentum.html', icon: 'fa-bolt', desc: '30+ Index Momentum Tracking' }
     ],
     'global-scouter': [
