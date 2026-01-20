@@ -1,18 +1,19 @@
 /**
- * 공통 Formatters
+ * Common Formatters (Unified)
  *
- * 숫자, 퍼센트, 날짜, 신호등 등 포맷팅 유틸리티
+ * Number, percent, date, signal formatting utilities
  *
  * @module formatters
+ * @version 3.0.0 (unified for admin/shared)
  */
 
 const Formatters = (function() {
 
   /**
-   * 숫자 포맷팅
-   * @param {number} num - 숫자
-   * @param {number} decimals - 소수점 자릿수 (기본: 2)
-   * @param {string} fallback - null/undefined 시 반환값 (기본: '-')
+   * Format number
+   * @param {number} num - number
+   * @param {number} decimals - decimal places (default: 2)
+   * @param {string} fallback - fallback for null/undefined (default: '-')
    * @returns {string}
    */
   function formatNumber(num, decimals = 2, fallback = '-') {
@@ -26,11 +27,11 @@ const Formatters = (function() {
   }
 
   /**
-   * 퍼센트 포맷팅
-   * @param {number} num - 숫자 (0.15 = 15%)
-   * @param {number} decimals - 소수점 자릿수 (기본: 1)
-   * @param {boolean} showSign - 부호 표시 여부 (기본: false)
-   * @param {string} fallback - null/undefined 시 반환값
+   * Format percent
+   * @param {number} num - number (0.15 = 15%)
+   * @param {number} decimals - decimal places (default: 1)
+   * @param {boolean} showSign - show +/- sign (default: false)
+   * @param {string} fallback - fallback for null/undefined
    * @returns {string}
    */
   function formatPercent(num, decimals = 1, showSign = false, fallback = '-') {
@@ -44,9 +45,9 @@ const Formatters = (function() {
   }
 
   /**
-   * 날짜 포맷팅
-   * @param {string|Date} date - 날짜
-   * @param {string} format - 포맷 ('YYYY-MM-DD', 'MM/DD', 'YYYY년 MM월')
+   * Format date
+   * @param {string|Date} date - date
+   * @param {string} format - format ('YYYY-MM-DD', 'MM/DD', 'YYYY.MM.DD')
    * @returns {string}
    */
   function formatDate(date, format = 'YYYY-MM-DD') {
@@ -64,20 +65,20 @@ const Formatters = (function() {
         return `${year}-${month}-${day}`;
       case 'MM/DD':
         return `${month}/${day}`;
-      case 'YYYY년 MM월':
-        return `${year}년 ${parseInt(month)}월`;
       case 'YYYY.MM.DD':
         return `${year}.${month}.${day}`;
+      case 'MMM DD, YYYY':
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       default:
         return `${year}-${month}-${day}`;
     }
   }
 
   /**
-   * 신호등 포맷팅 (분위수 기반)
-   * @param {number} percentile - 분위수 (0-100)
-   * @param {Object} thresholds - 임계값 객체
-   * @returns {Object} { signal: '🟢'|'🟡'|'🔴', label: string, color: string }
+   * Format signal (percentile-based)
+   * @param {number} percentile - percentile (0-100)
+   * @param {Object} thresholds - threshold object
+   * @returns {Object} { signal, label, color }
    */
   function formatSignal(percentile, thresholds = { CHEAP: 30, EXPENSIVE: 70 }) {
     if (percentile === null || percentile === undefined || isNaN(percentile)) {
@@ -85,40 +86,28 @@ const Formatters = (function() {
     }
 
     if (percentile <= thresholds.CHEAP) {
-      return { signal: '🟢', label: '저평가', color: 'green' };
+      return { signal: '🟢', label: 'Good', color: 'green' };
     } else if (percentile >= thresholds.EXPENSIVE) {
-      return { signal: '🔴', label: '고평가', color: 'red' };
+      return { signal: '🔴', label: 'Warning', color: 'red' };
     } else {
-      return { signal: '🟡', label: '적정', color: 'yellow' };
+      return { signal: '🟡', label: 'Normal', color: 'yellow' };
     }
   }
 
   /**
-   * P/E 비율 포맷팅
-   * @param {number} pe - P/E 비율
+   * Format file count
+   * @param {number} count
    * @returns {string}
    */
-  function formatPE(pe) {
-    if (pe === null || pe === undefined || isNaN(pe) || pe <= 0) {
+  function formatFileCount(count) {
+    if (count === null || count === undefined || isNaN(count)) {
       return '-';
     }
-    return pe.toFixed(1) + 'x';
+    return `${formatNumber(count, 0)} files`;
   }
 
   /**
-   * P/B 비율 포맷팅
-   * @param {number} pb - P/B 비율
-   * @returns {string}
-   */
-  function formatPB(pb) {
-    if (pb === null || pb === undefined || isNaN(pb) || pb <= 0) {
-      return '-';
-    }
-    return pb.toFixed(2) + 'x';
-  }
-
-  /**
-   * 큰 숫자 축약 (K, M, B)
+   * Format compact number (K, M, B)
    * @param {number} num
    * @param {number} decimals
    * @returns {string}
@@ -143,13 +132,37 @@ const Formatters = (function() {
     return sign + absNum.toFixed(decimals);
   }
 
+  /**
+   * Format bytes to human readable
+   * @param {number} bytes
+   * @returns {string}
+   */
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  /**
+   * Format version string
+   * @param {string} version
+   * @returns {string}
+   */
+  function formatVersion(version) {
+    if (!version) return '-';
+    return `v${version}`;
+  }
+
   return {
     formatNumber,
     formatPercent,
     formatDate,
     formatSignal,
-    formatPE,
-    formatPB,
-    formatCompact
+    formatFileCount,
+    formatCompact,
+    formatBytes,
+    formatVersion
   };
 })();
