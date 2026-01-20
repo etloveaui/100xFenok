@@ -8,28 +8,10 @@
   <link rel="icon" type="image/x-icon" href="../../favicon.ico">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    html { scroll-behavior: smooth; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .card {
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 1rem;
-      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-    }
-    .card-hover:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
-    }
-    .flash {
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35);
-      transition: box-shadow 0.3s ease;
-    }
-  </style>
+  <link rel="stylesheet" href="styles/dashboard.css">
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
 
-  <!-- Shared Modules -->
   <!-- Shared Modules -->
   <script src="../shared/config/manifest-loader.js"></script>
   <script src="../shared/core/cache-manager.js"></script>
@@ -37,15 +19,19 @@
   <script src="../shared/core/formatters.js"></script>
   <script src="../shared/validators/freshness-checker.js"></script>
 
-  <!-- Valuation Lab Specific -->
+  <!-- Valuation Lab Config -->
+  <script src="shared/vlab-config.js"></script>
   <script src="shared/constants.js"></script>
   <script src="shared/calculations.js"></script>
   <script src="shared/indicators.js"></script>
   <script src="shared/security.js"></script>
   <script src="shared/validator.js"></script>
 
+  <!-- App Modules (DEC-108: Data Lab Pattern) -->
+  <script src="app/state-manager.js"></script>
+  <script src="app/renderer.js"></script>
+
   <script>
-    // Set prefix for Valuation Lab
     if (window.CacheManager) CacheManager.setPrefix('vlab_cache_');
   </script>
 
@@ -58,314 +44,50 @@
           </div>
           <div>
             <h1 class="text-xl font-bold">밸류에이션 실험실</h1>
-            <p class="text-gray-500 text-sm">데이터 → MVP → 확장 → 배포 흐름 관리</p>
+            <p class="text-gray-500 text-sm">7개 데이터 소스 → MVP → 확장 → 배포</p>
           </div>
         </div>
-        <a href="../" class="text-gray-500 hover:text-blue-600 text-sm">
-          <i class="fas fa-arrow-left mr-1"></i> Admin
-        </a>
+        <div class="flex items-center gap-4">
+          <span id="load-status" class="text-xs text-gray-400"></span>
+          <a href="../" class="text-gray-500 hover:text-blue-600 text-sm">
+            <i class="fas fa-arrow-left mr-1"></i> Admin
+          </a>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="container mx-auto px-4 py-8 space-y-10">
-
-    <section class="card p-6">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800">오늘의 판단</h2>
-          <p class="text-xs text-gray-500">우선순위와 다음 액션</p>
-        </div>
-        <a href="../data-lab/" class="text-xs text-emerald-600 hover:underline">Data Lab →</a>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-        <div class="border rounded-lg p-4">
-          <div class="text-xs text-gray-500 mb-1">Benchmarks</div>
-          <div class="font-semibold">이관 체크리스트 확정</div>
-          <div class="text-xs text-gray-400 mt-1">UI/문서 완료 여부 확정</div>
-        </div>
-        <div class="border rounded-lg p-4">
-          <div class="text-xs text-gray-500 mb-1">Global Scouter</div>
-          <div class="font-semibold">UX 점검 기준 확정</div>
-          <div class="text-xs text-gray-400 mt-1">스크리너/대시보드 기준</div>
-        </div>
-        <div class="border rounded-lg p-4">
-          <div class="text-xs text-gray-500 mb-1">Damodaran</div>
-          <div class="font-semibold">활용 전략 정리</div>
-          <div class="text-xs text-gray-400 mt-1">시나리오/이관 조건</div>
-        </div>
-        <div class="border rounded-lg p-4">
-          <div class="text-xs text-gray-500 mb-1">SEC 13F</div>
-          <div class="font-semibold">위젯 개발 준비</div>
-          <div class="text-xs text-gray-400 mt-1">투자자 포트폴리오 UI</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card p-6">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800">실험 파이프라인</h2>
-          <p class="text-xs text-gray-500">단계별 현재 위치 표시</p>
-        </div>
-        <div class="flex items-center gap-2 text-xs">
-          <span class="inline-flex items-center px-2 py-1 rounded bg-emerald-100 text-emerald-700">검증됨</span>
-          <span class="inline-flex items-center px-2 py-1 rounded bg-indigo-100 text-indigo-700">확장 검증</span>
-          <span class="inline-flex items-center px-2 py-1 rounded bg-amber-100 text-amber-700">검토 대기</span>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 text-sm">
-        <div class="border rounded-lg p-3">
-          <div class="font-semibold text-emerald-700">1. 데이터 검증</div>
-          <div class="text-xs text-gray-500">Data Lab로 통합</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="font-semibold text-amber-700">2. MVP 테스트</div>
-          <div class="text-xs text-gray-500">Benchmarks 완료</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="font-semibold text-indigo-700">3. 확장 검증</div>
-          <div class="text-xs text-gray-500">Global Scouter / Damodaran</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="font-semibold text-gray-700">4. 배포</div>
-          <div class="text-xs text-gray-500">승인 대상 확정 전</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="workstreams" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div id="stream-bench" class="card p-6">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold">Benchmarks</h3>
-          <span class="text-xs px-2 py-1 rounded bg-amber-100 text-amber-700">검토 대기</span>
-        </div>
-        <div class="text-sm text-gray-500">Layer 0~1B 완료 · 20/20</div>
-        <div class="mt-4">
-          <div class="text-xs text-gray-500">구성요소</div>
-          <div class="mt-2 flex flex-wrap gap-2 text-xs">
-            <a href="signal-light.html" class="px-2 py-1 rounded bg-amber-50 text-amber-700 border border-amber-100">신호등</a>
-            <a href="one-liner.html" class="px-2 py-1 rounded bg-amber-50 text-amber-700 border border-amber-100">1문장</a>
-            <a href="percentile.html" class="px-2 py-1 rounded bg-amber-50 text-amber-700 border border-amber-100">분위수</a>
-            <a href="card.html" class="px-2 py-1 rounded bg-amber-50 text-amber-700 border border-amber-100">카드</a>
-          </div>
-        </div>
-        <div class="mt-4">
-          <div class="text-xs text-gray-500">연계 기능</div>
-          <div class="mt-2 flex flex-wrap gap-2 text-xs">
-            <a href="expansion/regime-presets.html" class="px-2 py-1 rounded bg-sky-50 text-sky-700 border border-sky-100">국면 프리셋</a>
-            <a href="expansion/composite-report.html" class="px-2 py-1 rounded bg-sky-50 text-sky-700 border border-sky-100">Composite</a>
-          </div>
-        </div>
-        <div class="mt-4 text-xs text-gray-500">콘솔/검증은 Data Lab로 통합</div>
-      </div>
-
-      <div id="stream-scouter" class="card p-6">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold">Global Scouter</h3>
-          <span class="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700">확장 검증</span>
-        </div>
-        <div class="text-sm text-gray-500">A~E 대시보드/스크리너</div>
-        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
-          <a href="expansion/dashboard.html" class="border rounded-lg p-2 hover:shadow-sm">통합 대시보드</a>
-          <a href="expansion/per-band.html" class="border rounded-lg p-2 hover:shadow-sm">PER 밴드</a>
-          <a href="expansion/sector-gap.html" class="border rounded-lg p-2 hover:shadow-sm">섹터 갭</a>
-          <a href="expansion/eps-growth.html" class="border rounded-lg p-2 hover:shadow-sm">EPS 성장</a>
-        </div>
-      </div>
-
-      <div id="stream-damodaran" class="card p-6">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold">Damodaran</h3>
-          <span class="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700">확장 검증</span>
-        </div>
-        <div class="text-sm text-gray-500">ERP/EV 벤치마크</div>
-        <div class="mt-4 grid grid-cols-3 gap-2 text-xs">
-          <a href="expansion/damodaran-hub.html" class="border rounded-lg p-2 hover:shadow-sm">허브</a>
-          <a href="expansion/erp-rank.html" class="border rounded-lg p-2 hover:shadow-sm">ERP 랭킹</a>
-          <a href="expansion/ev-sales.html" class="border rounded-lg p-2 hover:shadow-sm">EV/Sales</a>
-        </div>
-      </div>
-
-      <div id="stream-13f" class="card p-6">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold">SEC 13F</h3>
-          <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">준비 중</span>
-        </div>
-        <div class="text-sm text-gray-500">유명 투자자 포트폴리오 (17명)</div>
-        <div class="mt-4 text-xs text-gray-500 space-y-2">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-user-tie text-gray-400"></i>
-            <span>Warren Buffett, Michael Burry, Bill Ackman...</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <i class="fas fa-chart-pie text-gray-400"></i>
-            <span>분기별 포지션 변동 추적</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <i class="fas fa-database text-gray-400"></i>
-            <span>데이터 준비됨 · 기능 개발 대기</span>
-          </div>
-        </div>
-        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
-          <span class="border rounded-lg p-2 text-gray-400 cursor-not-allowed">투자자 포트폴리오</span>
-          <span class="border rounded-lg p-2 text-gray-400 cursor-not-allowed">Top 종목</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="card p-6">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800">이관 체크리스트</h2>
-          <p class="text-xs text-gray-500">확정 전 확인 항목</p>
-        </div>
-        <span class="text-xs text-gray-500">확정 후 배포 섹션으로 이동</span>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 text-sm">
-        <div class="border rounded-lg p-3">
-          <div class="font-semibold">Benchmarks</div>
-          <div class="text-xs text-gray-500">데이터 검증 ✅ · UI 테스트 ⏳ · 문서 ⏳</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="font-semibold">Global Scouter</div>
-          <div class="text-xs text-gray-500">데이터 검증 ✅ · UX 점검 ⏳ · 운영 기준 ⏳</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="font-semibold">Damodaran</div>
-          <div class="text-xs text-gray-500">데이터 검증 ✅ · 활용 전략 ⏳ · 운영 기준 ⏳</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="font-semibold">SEC 13F</div>
-          <div class="text-xs text-gray-500">데이터 준비 ✅ · 위젯 개발 ⏳ · UI 테스트 ⏳</div>
-        </div>
-      </div>
-    </section>
-
+    <!-- Dynamic sections rendered by Renderer -->
+    <section id="today-judgment"></section>
+    <section id="pipeline"></section>
+    <section id="workstreams" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></section>
+    <section id="checklist"></section>
   </main>
 
   <script>
-    function setStatus(elId, ok, label) {
-      const el = document.getElementById(elId);
-      if (!el) return;
-      if (ok) {
-        el.textContent = label || '정상';
-        el.className = 'text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700';
-      } else {
-        el.textContent = label || '오류';
-        el.className = 'text-xs px-2 py-1 rounded bg-rose-100 text-rose-700';
-      }
-    }
+    // Initialize on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('[Valuation Lab] Initializing...');
 
-    function setText(id, value) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    }
-
-    function parseDate(value) {
-      const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? null : date;
-    }
-
-    function formatDate(value) {
-      if (!value) return '-';
-      return value.toISOString().slice(0, 10);
-    }
-
-    async function loadBenchmarks() {
-      const base = getBasePath();
-      const files = [
-        '/data/benchmarks/us.json',
-        '/data/benchmarks/us_sectors.json',
-        '/data/benchmarks/micro_sectors.json',
-        '/data/benchmarks/developed.json',
-        '/data/benchmarks/emerging.json',
-        '/data/benchmarks/msci.json'
-      ];
-      let sections = 0;
-      let latestGenerated = null;
-      let latestData = null;
-      for (const relPath of files) {
-        const res = await fetch(base + relPath);
-        if (!res.ok) throw new Error('Benchmarks 로딩 실패');
-        const data = await res.json();
-        const generated = parseDate(data?.metadata?.generated);
-        if (generated && (!latestGenerated || generated > latestGenerated)) {
-          latestGenerated = generated;
+      // Subscribe to state changes
+      StateManager.subscribe('loading', (loading) => {
+        const statusEl = document.getElementById('load-status');
+        if (statusEl) {
+          statusEl.textContent = loading ? '로딩 중...' : `로드 완료 (${StateManager.get('loadTime')}ms)`;
         }
-        const sectionEntries = Object.entries(data?.sections || {});
-        sections += sectionEntries.length;
-        for (const [, section] of sectionEntries) {
-          const rows = section?.data || [];
-          if (rows.length) {
-            const last = parseDate(rows[rows.length - 1]?.date);
-            if (last && (!latestData || last > latestData)) {
-              latestData = last;
-            }
-          }
-        }
-      }
-      setText('bench-files', files.length.toString());
-      setText('bench-sections', sections.toString());
-      setText('bench-latest', formatDate(latestData || latestGenerated));
-      setStatus('bench-status', true, '정상');
-    }
+      });
 
-    async function loadScouter() {
-      const base = getBasePath();
-      // v2.0: 메타데이터 사용 (core/metadata.json)
-      const res = await fetch(base + '/data/global-scouter/core/metadata.json');
-      if (!res.ok) throw new Error('Global Scouter 로딩 실패');
-      const data = await res.json();
-      const count = data?.counts?.stocks || 0;
-      const generated = data?.generated_at;
-      setText('scouter-count', count ? count.toString() : '-');
-      setText('scouter-date', data?.source_date || '-');
-      setText('scouter-generated', generated ? generated.toString().slice(0, 10) : '-');
-      setStatus('scouter-status', true, 'v2.0');
-    }
+      // Render UI first (shows structure immediately)
+      Renderer.render();
 
-    async function loadDamodaran() {
-      const base = getBasePath();
-      const erpRes = await fetch(base + '/data/damodaran/erp.json');
-      const evRes = await fetch(base + '/data/damodaran/ev_sales.json');
-      if (!erpRes.ok || !evRes.ok) throw new Error('Damodaran 로딩 실패');
-      const erp = await erpRes.json();
-      const ev = await evRes.json();
-      const erpCount = Object.keys(erp?.countries || {}).length;
-      const evCount = Object.keys(ev?.sectors || {}).length;
-      const erpDate = parseDate(erp?.metadata?.generated_at);
-      const evDate = parseDate(ev?.metadata?.generated_at);
-      const latest = [erpDate, evDate].filter(Boolean).sort((a, b) => b - a)[0] || null;
-      setText('damodaran-erp', erpCount ? erpCount.toString() : '-');
-      setText('damodaran-ev', evCount ? evCount.toString() : '-');
-      setText('damodaran-date', formatDate(latest));
-      setStatus('damodaran-status', true, '정상');
-    }
+      // Then initialize data (async verification)
+      await StateManager.initialize();
 
-    function focusSection(id) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      el.classList.add('flash');
-      setTimeout(() => el.classList.remove('flash'), 900);
-    }
+      // Re-render workstreams with status indicators
+      Renderer.renderWorkstreams();
 
-    document.querySelectorAll('[data-action="focus-bench"]').forEach(btn => {
-      btn.addEventListener('click', () => focusSection('stream-bench'));
-    });
-    document.querySelectorAll('[data-action="focus-scouter"]').forEach(btn => {
-      btn.addEventListener('click', () => focusSection('stream-scouter'));
-    });
-    document.querySelectorAll('[data-action="focus-damodaran"]').forEach(btn => {
-      btn.addEventListener('click', () => focusSection('stream-damodaran'));
-    });
-
-    Promise.all([loadBenchmarks(), loadScouter(), loadDamodaran()]).catch(err => {
-      setStatus('bench-status', false, '오류');
-      setStatus('scouter-status', false, '오류');
-      setStatus('damodaran-status', false, '오류');
-      console.error(err);
+      console.log('[Valuation Lab] Ready');
     });
   </script>
 
