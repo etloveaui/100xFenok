@@ -12,19 +12,19 @@
 tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875rem',base:'1rem'},animation:{'fade-in':'fadeIn .3s ease-out','slide-up':'slideUp .3s ease-out'},keyframes:{fadeIn:{from:{opacity:0},to:{opacity:1}},slideUp:{from:{opacity:0,transform:'translateY(10px)'},to:{opacity:1,transform:'translateY(0)'}}}}}
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="momentum.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 @media (max-width:640px){body{font-size:16px!important}.touch-target{min-height:44px!important;min-width:44px!important}.chart-mobile{height:280px!important}}
 @media (max-width:380px){.xs\:hidden{display:none!important}}
 </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300 touch-manipulation">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
 <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-[calc(100vw-2rem)]"></div>
 <div id="pull-refresh" class="pull-refresh bg-gradient-to-r from-blue-500 to-purple-500 text-white"><i class="fas fa-arrow-down mr-2"></i><span class="text-sm font-medium">당기면 새로고침</span></div>
+
 <header class="glass sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-700/50 safe-area-top">
 <div class="container mx-auto px-3 py-3">
-<div class="header-mobile flex items-center justify-between gap-2">
+<div class="flex items-center justify-between gap-2">
 <div class="flex items-center gap-3">
 <div class="relative group touch-target rounded-lg">
 <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30 transition-shadow cursor-pointer active:scale-95" onclick="toggleQ()" tabindex="0" role="button"><i class="fas fa-rocket text-white text-lg sm:text-xl"></i></div>
@@ -43,7 +43,9 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 </div>
 </div>
 </header>
+
 <div id="quick-actions-backdrop" onclick="closeQ()" class="hidden fixed inset-0 z-40 bg-black/20 dark:bg-black/40"></div>
+
 <main class="container mx-auto px-3 py-4 relative" id="main-content">
 <div id="compare-banner" class="hidden mb-4">
 <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-3 text-white shadow-lg">
@@ -52,8 +54,9 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 </div>
 </div>
 </div>
+
 <section class="mb-4">
-<div class="group-scroll flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide -webkit-overflow-scrolling:touch" style="scroll-snap-type:x mandatory" role="tablist" aria-label="인덱스 그룹">
+<div class="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide -webkit-overflow-scrolling:touch" style="scroll-snap-type:x mandatory" role="tablist" aria-label="인덱스 그룹">
 <button class="index-chip touch-target flex-shrink-0 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm rounded-lg font-medium shadow-sm bg-blue-500 text-white scroll-snap-align" data-group="us" role="tab" aria-selected="true">🇺🇸<span class="hidden sm:inline"> US</span></button>
 <button class="index-chip touch-target flex-shrink-0 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm rounded-lg font-medium shadow-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 scroll-snap-align" data-group="sec" role="tab" aria-selected="false">📊<span class="hidden sm:inline"> Sectors</span></button>
 <button class="index-chip touch-target flex-shrink-0 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm rounded-lg font-medium shadow-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 scroll-snap-align" data-group="dev" role="tab" aria-selected="false">🌍<span class="hidden sm:inline"> Developed</span></button>
@@ -62,8 +65,9 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 <button class="index-chip touch-target flex-shrink-0 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm rounded-lg font-medium shadow-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 scroll-snap-align" data-group="micro" role="tab" aria-selected="false">🔬<span class="hidden sm:inline"> Micro</span></button>
 </div>
 </section>
+
 <section class="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-<div class="glass rounded-xl p-4 shadow-lg card-mobile">
+<div class="glass rounded-xl p-4 shadow-lg">
 <div class="flex items-center justify-between mb-3">
 <h2 class="text-xs sm:text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5"><i class="fas fa-crown"></i><span>Top 5</span></h2>
 <span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-lg">6M</span>
@@ -73,7 +77,7 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 <div class="skeleton h-16 sm:h-20 rounded-lg"></div>
 </div>
 </div>
-<div class="glass rounded-xl p-4 shadow-lg card-mobile">
+<div class="glass rounded-xl p-4 shadow-lg">
 <div class="flex items-center justify-between mb-3">
 <h2 class="text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5"><i class="fas fa-exclamation-circle"></i><span>Bottom 5</span></h2>
 <span class="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-lg">6M</span>
@@ -84,6 +88,7 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 </div>
 </div>
 </section>
+
 <section class="mb-4">
 <div class="glass rounded-xl shadow-lg overflow-hidden">
 <div class="p-3 border-b border-gray-200/50 dark:border-gray-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -95,30 +100,15 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 <i class="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
 </div>
 </div>
-<div class="overflow-x-auto -webkit-overflow-scrolling:touch" style="scroll-snap-type:x mandatory">
-<table class="w-full text-xs sm:text-sm" role="grid" aria-label="모멘텀 테이블">
-<thead class="bg-gray-50/80 dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 sticky top-0 z-10">
-<tr>
-<th class="px-2 py-2.5 text-left font-semibold cursor-pointer touch-target hover:bg-gray-100 dark:hover:bg-gray-700 scroll-snap-align" data-sort="name" role="columnheader">Index</th>
-<th class="px-2 py-2.5 text-right font-semibold cursor-pointer touch-target hover:bg-gray-100 dark:hover:bg-gray-700 scroll-snap-align" data-sort="1m" role="columnheader">1M</th>
-<th class="px-2 py-2.5 text-right font-semibold cursor-pointer touch-target hover:bg-gray-100 dark:hover:bg-gray-700 scroll-snap-align" data-sort="3m" role="columnheader">3M</th>
-<th class="px-2 py-2.5 text-right font-semibold cursor-pointer touch-target hover:bg-gray-100 dark:hover:bg-gray-700 scroll-snap-align" data-sort="6m" role="columnheader">6M</th>
-<th class="px-2 py-2.5 text-right font-semibold cursor-pointer touch-target hover:bg-gray-100 dark:hover:bg-gray-700 scroll-snap-align" data-sort="ytd" role="columnheader">YTD</th>
-<th class="px-2 py-2.5 text-right font-semibold cursor-pointer touch-target hover:bg-gray-100 dark:hover:bg-gray-700 scroll-snap-align" data-sort="2025" role="columnheader">25</th>
-</tr>
-</thead>
-<tbody id="momentum-tbody" class="divide-y divide-gray-100 dark:divide-gray-800">
-<tr><td colspan="6" class="px-3 py-12 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-xl mb-2"></i><br>로딩 중...</td></tr>
-</tbody>
-</table>
-</div>
+<div id="momentum-table" class="overflow-x-auto -webkit-overflow-scrolling:touch"></div>
 <div class="p-2.5 bg-gray-50/80 dark:bg-gray-800/80 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between text-xs text-gray-500">
 <div class="flex items-center gap-3 overflow-x-auto"><span>정렬: 헤더</span><span>검색: 입력</span><span class="hidden xs:inline">/?:단축키</span></div><span id="last-updated" class="whitespace-nowrap"></span>
 </div>
 </div>
 </section>
+
 <section class="mb-4">
-<div class="glass rounded-xl shadow-lg p-4 card-mobile">
+<div class="glass rounded-xl shadow-lg p-4">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
 <h2 class="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1.5"><i class="fas fa-chart-line text-purple-500"></i><span>Yearly Returns</span></h2>
 <div class="flex flex-wrap items-center gap-1.5">
@@ -139,6 +129,7 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 </div>
 </section>
 </main>
+
 <div id="quick-actions" class="quick-actions hidden fixed top-16 left-2 sm:left-auto sm:right-4 z-50 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-2">
 <button onclick="toggleD();closeQ()" class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3 touch-target"><i class="fas fa-moon w-5 text-center"></i>다크 모드</button>
 <button onclick="toggleCmp();closeQ()" class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3 touch-target"><i class="fas fa-balance-scale w-5 text-center"></i>비교 모드</button>
@@ -147,6 +138,7 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 <hr class="my-1.5 border-gray-200 dark:border-gray-700">
 <button onclick="showK();closeQ()" class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3 touch-target"><i class="fas fa-keyboard w-5 text-center"></i>단축키</button>
 </div>
+
 <div id="detail-modal" class="hidden fixed inset-0 bg-black/50 z-50 overflow-y-auto">
 <div class="min-h-screen flex items-center justify-center p-3">
 <div class="fixed inset-0 bg-black/50" onclick="closeM()"></div>
@@ -158,6 +150,7 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 </div>
 </div>
 </div>
+
 <div id="shortcuts-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
 <div class="fixed inset-0 bg-black/50" onclick="closeK()"></div>
 <div class="modal-content relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-xs sm:max-w-md w-full p-4">
@@ -173,6 +166,7 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 </div>
 </div>
 </div>
+
 <div id="share-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
 <div class="fixed inset-0 bg-black/50" onclick="M.shareClose()"></div>
 <div class="modal-content relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-xs sm:max-w-sm w-full p-4">
@@ -183,17 +177,29 @@ tailwind.config={darkMode:'class',theme:{extend:{fontSize:{xs:'.75rem',sm:'.875r
 </div>
 </div>
 </div>
+
 <footer class="border-t border-gray-200/50 dark:border-gray-700/50 glass py-3 mt-auto">
 <div class="container mx-auto px-3 text-center text-xs text-gray-500">
-<p class="font-medium">Momentum Dashboard v3.6</p>
+<p class="font-medium">Momentum Dashboard v3.7</p>
 <p class="mt-0.5 opacity-75">Bloomberg Data • P/E Band: +434% vs +49%</p>
 </div>
 </footer>
+
 <div class="safe-area-bottom h-4 sm:h-0"></div>
+
+<!-- Shared Components -->
+<script src="../../shared/core/formatters.js"></script>
+<script src="../../shared/ui/metric-card.js"></script>
+<script src="../../shared/ui/data-table.js"></script>
+
 <style>
 .safe-area-top{padding-top:env(safe-area-inset-top,0)}
 .safe-area-bottom{padding-bottom:env(safe-area-inset-bottom,0)}
+:root{--g:#fff;--b:#fff3}.dark{--g:#1e1e1e;--b:#fff1}body{transition:.3s;-webkit-tap-highlight-color:transparent}.glass{background:var(--g);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--b)}.metric-card{transition:.3s}.metric-card:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 15px 30px -10px rgba(0,0,0,.12)}.index-chip{cursor:pointer;transition:.2s;white-space:nowrap}.index-chip:hover{transform:translateY(-2px) scale(1.02)}.index-chip.active{transform:scale(1.02);box-shadow:0 6px 20px rgba(59,130,246,.35)}.table-row{transition:.2s}.table-row:hover{transform:translateX(2px)}.modal-content{animation:si .2s}.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:sha 1.5s infinite}.dark .skeleton{background:linear-gradient(90deg,#374151 25%,#4b5563 50%,#374151 75%);background-size:200% 100%}::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:rgba(156,163,175,.4);border-radius:3px}.scrollbar-hide{scrollbar-width:none;-ms-overflow-style:none}.scrollbar-hide::-webkit-scrollbar{display:none}.pull-refresh{position:absolute;top:-60px;left:0;right:0;height:60px;display:flex;align-items:center;justify-content:center;transition:top .3s}.pull-refresh.active{top:0}.toast-enter{animation:sir .3s}.quick-actions{animation:si .2s}@keyframes sha{from{background-position:-200% 0}to{background-position:200% 0}}@keyframes si{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}@keyframes sir{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 </style>
-<script src="momentum.js"></script>
+
+<script>
+const C={c:3e5,n:5,a:800,y:['2018','19','20','21','22','23','24','25']},G={us:['sp500','ndx','ndxc','r2k'],sec:['it','hc','fin','cd','cs','ind','cs2','ene','uti','re','mat','hb'],dev:['es50','topix','hk','nikkei'],em:['shanghai','sensex','kospi','brazil','vietnam','hscei'],msci:['world','dev','em','china','india','korea'],micro:['semi','banks','hstech','biotech']},N={sp500:'S&P 500',ndx:'Nasdaq 100',ndxc:'Nasdaq Composite',r2k:'Russell 2000',it:'Info Tech',hc:'Healthcare',fin:'Financials',cd:'Consumer Disc',cs:'Comm Services',ind:'Industrials',cs2:'Consumer Staples',ene:'Energy',uti:'Utilities',re:'Real Estate',mat:'Materials',hb:'Homebuilders',es50:'Euro Stoxx 50',topix:'TOPIX',hk:'Hong Kong',nikkei:'Nikkei 225',shanghai:'Shanghai',sensex:'India Sensex',kospi:'KOSPI',brazil:'Bovespa',vietnam:'VN-Index',hscei:'HSCEI',world:'MSCI World',dev:'MSCI Dev',em:'MSCI EM',china:'MSCI China',india:'MSCI India',korea:'MSCI Korea',semi:'SOX',banks:'Regional Banks',hstech:'HS Tech',biotech:'Biotech'},Cc=['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#eab308','#f87171'],S={d:null,g:'us',st:{k:'6m',a:!1},cs:new Set(),fs:new Set(),cm:!1,q:''};let ci=null,to=null;const $=id=>document.getElementById(id),q$=id=>document.querySelector(id),fp=v=>({v:p=v*100,s:p>0?'+':'',c:p>0?'text-green':p<0?'text-red':'text-gray',t:(p>0?'+':'')+p.toFixed(1)+'%'}),rt=d=>d<6e4?'방금 전':d<36e5?Math.floor(d/6e4)+'분 전':d<864e5?Math.floor(d/36e5)+'시간 전':Math.floor(d/864e5)+'일 전',toast=(m,t='i')=>{const e=document.createElement('div');e.className='toast-enter '+(t==='s'?'bg-green':t==='i'?'bg-blue':t==='w'?'bg-yellow':'bg-red')+' text-white px-4 py-3 rounded-xl flex items-center gap-3';e.innerHTML='<i class="fas '+(t==='s'?'fa-check':t==='i'?'fa-info':t==='w'?'fa-exclamation':'fa-times')+'"></i><span>'+m+'</span>';$('toast-container').appendChild(e);setTimeout(()=>e.remove(),3e3)},err=m=>{q$('main').innerHTML='<div class="text-center py-16"><div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-exclamation-triangle text-4xl text-red-500"></i></div><p class="text-gray-700 text-lg mb-2 font-medium">데이터 불가</p><p class="text-gray-500 text-sm mb-4">'+m+'</p><button onclick="location.reload()" class="px-6 py-2 bg-blue-500 text-white rounded-lg">다시 시도</button></div>'};async function load(){try{const cd=localStorage.getItem('mD'),ct=localStorage.getItem('mT');if(cd&&ct&&Date.now()-ct<C.c){S.d=JSON.parse(cd);toast('캐시','s')}else{const r=await fetch('../../../data/benchmarks/summaries.json');if(!r.ok)throw new Error('실패');S.d=await r.json();localStorage.setItem('mD',JSON.stringify(S.d));localStorage.setItem('mT',Date.now());toast('업데이트','s')}$('relative-time').textContent=rt(Date.now()-(localStorage.getItem('mT')|0));$('data-freshness').classList.remove('hidden');S.d?.metadata?.generated&&($('last-updated').textContent='업데이트: '+new Date(S.d.metadata.generated).toLocaleString('ko-KR'));renderAll()}catch(e){err(e.message)}}function refresh(){$('refresh-icon').classList.add('animate-spin');localStorage.removeItem('mD');localStorage.removeItem('mT');setTimeout(()=>location.reload(),500)}function upFav(){const h=G[S.g].some(k=>S.fs.has(k));$('fav-icon').classList.toggle('text-yellow-500',h);$('fav-icon').classList.toggle('text-gray-400',!h)}function renderAll(){const ig=G[S.g],rk=ig.map(k=>({k,n:N[k]||k,m6:S.d.momentum[k]?.['6m']||0,m1:S.d.momentum[k]?.['1m']||0,ytd:S.d.momentum[k]?.['ytd']||0,f:S.fs.has(k)})).sort((a,b)=>b.m6-a.m6);const topMetrics=rk.slice(0,5).map((i,n)=>({title:i.n,value:fp(i.m6).t,status:i.m6>0.1?'bullish':i.m6<-0.05?'bearish':'neutral',change:i.m1,changeFormat:'percent',changePeriod:'1M',emoji:n===0?'🥇':n===1?'🥈':n===2?'🥉':'',subtitle:'6M Momentum'+(i.f?' ★':''),className:n===0?'border-yellow-400':''}));const botMetrics=rk.slice(-5).reverse().map((i,n)=>{const r=ig.length-n;return{title:i.n,value:fp(i.m6).t,status:'bearish',change:i.m1,changeFormat:'percent',changePeriod:'1M',emoji:'',subtitle:'#'+r+(i.f?' ★':'')}});$('top5-cards').innerHTML=MetricCard.renderGrid(topMetrics,{cols:1,gap:'gap-2'});$('bottom5-cards').innerHTML=MetricCard.renderGrid(botMetrics,{cols:1,gap:'gap-2'});const tableData=ig.filter(k=>(N[k]||k).toLowerCase().includes(S.q.toLowerCase())).map(k=>{const m=S.d.momentum[k]||{},r=S.d.yearly_returns[k]||{};return{k,n:N[k]||k,'1m':m['1m'],'3m':m['3m'],'6m':m['6m'],ytd:m.ytd,'2025':r['2025'],f:S.fs.has(k),ic:S.cs.has(k)}});tableData.sort((a,b)=>{const av=a[S.st.k]||0,bv=b[S.st.k]||0;return S.st.a?av-bv:bv-av});$('table-count').textContent=tableData.length+'개';DataTable.render('#momentum-table',{columns:[{key:'n',label:'Index',width:'140px'},{key:'1m',label:'1M',type:'percent',decimals:1,align:'right'},{key:'3m',label:'3M',type:'percent',decimals:1,align:'right'},{key:'6m',label:'6M',type:'percent',decimals:1,align:'right'},{key:'ytd',label:'YTD',type:'percent',decimals:1,align:'right'},{key:'2025',label:'25',type:'percent',decimals:1,align:'right'}],data:tableData,options:{pageSize:15,searchable:!0,sortable:!0,onRowClick:(row)=>{M.toggleC(row.k)}}});G[S.g].slice(0,C.n).forEach(k=>S.cs.add(k));renderChart()}function renderChart(){const ctx=$('chartCanvas').getContext('2d');if(S.cs.size===0){$('chart-empty').classList.remove('hidden');ci&&(ci.destroy(),ci=null)}else{$('chart-empty').classList.add('hidden');const ds=Array.from(S.cs).map((k,i)=>({label:N[k]||k,data:C.y.map(y=>{const v=S.d.yearly_returns[k]?.[y];return v!==undefined?v*100:null}),borderColor:Cc[i%10],backgroundColor:Cc[i%10]+'15',tension:.4,pointRadius:5,pointHoverRadius:8,borderWidth:2.5,fill:!1}));ci&&ci.destroy();ci=new Chart(ctx,{type:'line',data:{labels:C.y,datasets:ds},options:{responsive:!0,maintainAspectRatio:!1,interaction:{intersect:!1,mode:'index'},plugins:{legend:{position:'top',align:'end',labels:{boxWidth:12,usePointStyle:!0,padding:15,font:{size:12}}},tooltip:{backgroundColor:'rgba(255,255,255,0.98)',borderColor:'#e5e7eb',borderWidth:1,cornerRadius:8,padding:12}},scales:{y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{callback:v=>v+'%'}},x:{grid:{display:!1}}}}})}}function chartAll(){G[S.g].forEach(k=>S.cs.add(k));renderChart();toast('전체 선택','s')}function chartTop5(){const rk=G[S.g].map(k=>({k,v:S.d.momentum[k]?.['6m']||0})).sort((a,b)=>b.v-a.v);S.cs.clear();rk.slice(0,5).forEach(i=>S.cs.add(i.k));renderChart();toast('Top 5','s')}function chartClear(){S.cs.clear();renderChart();toast('초기화','i')}function exportChart(){if(!ci)return;const l=document.createElement('a');l.download='momentum-'+S.g+'-'+Date.now()+'.png';l.href=ci.toBase64Image();l.click();toast('차트 저장','s')}function exportCSV(){const ig=G[S.g],h=['Index','1M','3M','6M','YTD','2024','2025'],r=ig.map(k=>{const m=S.d.momentum[k]||{},r=S.d.yearly_returns[k]||{};return[N[k]||k,(m['1m']*100).toFixed(2),(m['3m']*100).toFixed(2),(m['6m']*100).toFixed(2),(m.ytd*100).toFixed(2),(r['2024']*100).toFixed(2),(r['2025']*100).toFixed(2)].join(',')}).join('\n');const b=new Blob([h.join(',')+'\n'+r],{type:'text/csv'});const l=document.createElement('a');l.download='momentum-'+S.g+'-'+Date.now()+'.csv';l.href=URL.createObjectURL(b);l.click();toast('CSV 저장','s')}const M={show:k=>{const m=S.d.momentum[k]||{},r=S.d.yearly_returns[k]||{},n=N[k]||k;$('modal-title').textContent=n;$('modal-subtitle').textContent='Summary';$('modal-content').innerHTML='<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">'+['1m','3m','6m','ytd'].map(p=>{const c=fp(m[p]||0);return'<div class="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 text-center"><div class="text-xs text-blue-600 uppercase mb-1">'+p+'</div><div class="text-xl font-bold '+c.c+'">'+c.t+'</div></div>'}).join('')+'</div><div class="space-y-2"><h4 class="font-semibold text-gray-700 mb-3">연간 수익률</h4>'+['2025','24','23','22','21'].map(y=>{const v=r[y];if(v===undefined)return'';const c=fp(v);return'<div class="flex justify-between py-2 border-b"><span class="text-gray-600">20'+y+'</span><span class="font-semibold '+c.c+'">'+c.t+'</span></div>'}).join('')+'</div>';$('detail-modal').classList.remove('hidden');document.body.style.overflow='hidden'},closeM:()=>{$('detail-modal').classList.add('hidden');document.body.style.overflow=''},showK:()=>{$('shortcuts-modal').classList.remove('hidden')},closeK:()=>{$('shortcuts-modal').classList.add('hidden')},shareShow:()=>$('share-modal').classList.remove('hidden'),shareClose:()=>$('share-modal').classList.add('hidden'),shareCopy:()=>{navigator.clipboard.writeText(location.origin+location.pathname+'?g='+S.g);toast('링크 복사','s');$('share-modal').classList.add('hidden')},shareTW:()=>window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent('Momentum - '+S.g.toUpperCase()),'_blank'),toggleC:k=>{if(S.cs.has(k)){if(S.cs.size>1){S.cs.delete(k);toast((N[k]||k)+' 제거','i')}}else{S.cs.add(k);toast((N[k]||k)+' 추가','s')}renderChart()},toggleF:k=>{S.fs.has(k)?(S.fs.delete(k),toast('즐겨찾기 해제','i')):(S.fs.add(k),toast('즐겨찾기 추가','s'));localStorage.setItem('mF',JSON.stringify([...S.fs]));upFav();renderAll()}};function toggleCmp(){S.cm=!S.cm;const b=$('compare-banner');S.cm?(b.classList.remove('hidden'),toast('비교 모드','i')):(b.classList.add('hidden'),S.ci=[])}function toggleD(){const d=document.documentElement.classList.toggle('dark');localStorage.setItem('darkMode',d);toast(d?'다크':'라이트','i')}function toggleFavV(){S.q='☆';$('table-search').value='';renderAll();toast('즐겨찾기','i')}function toggleQ(){const m=$('quick-actions'),b=$('quick-actions-backdrop');m.classList.toggle('hidden');b.classList.toggle('hidden')}function closeQ(){$('quick-actions').classList.add('hidden');$('quick-actions-backdrop').classList.add('hidden')}q$('.index-chip').forEach(c=>{c.onclick=e=>{const g=e.target.dataset.group||e.target.closest('.index-chip').dataset.group;if(g===S.g)return;q$('.index-chip').forEach(x=>{x.className='index-chip flex-shrink-0 px-4 py-2.5 text-sm rounded-xl font-medium shadow-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200'});const t=e.target.classList.contains('index-chip')?e.target:e.target.closest('.index-chip');t.className='index-chip flex-shrink-0 px-4 py-2.5 text-sm rounded-xl font-medium shadow-md bg-blue-500 text-white';S.g=g;S.cs.clear();renderAll()}});$('table-search').oninput=e=>{clearTimeout(to);to=setTimeout(()=>{S.q=e.target.value;renderAll()},200)};document.onkeydown=e=>{if(e.target.tagName==='INPUT')return;switch(e.key.toLowerCase()){case'r':refresh();break;case'/':e.preventDefault();$('table-search').focus();break;case'd':toggleD();break;case'c':toggleCmp();break;case'?':M.showK();break;case'escape':M.closeM();M.closeK();$('share-modal').classList.add('hidden');closeQ();break}};let sy=0,cy=0;const pr=$('pull-refresh'),mc=$('main-content');mc.ontouchstart=e=>{if(window.scrollY===0)sy=e.touches[0].clientY};mc.ontouchmove=e=>{if(window.scrollY===0&&sy>0){cy=e.touches[0].clientY-sy;if(cy>50)pr.classList.add('active')}};mc.ontouchend=()=>{if(cy>100)refresh();pr.classList.remove('active');sy=0;cy=0};const d=localStorage.getItem('darkMode')==='true'||(!localStorage.getItem('darkMode')&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');const sf=localStorage.getItem('mF');if(sf)S.fs=new Set(JSON.parse(sf));upFav();load();
+</script>
 </body>
 </html>
