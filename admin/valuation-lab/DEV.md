@@ -67,7 +67,7 @@
 | 17 | 신호등 | 4h | `signal-light.html` |
 | 18 | 1문장 해석 | 2h | `one-liner.html` |
 | 19 | 분위수 차트 | 4h | `percentile.html` |
-| 20 | 밸류에이션 카드 | 6h | `card.html` |
+| 20 | Valuation Card 2.0 | 8h | `card.html` (Index + Stock + Industry Comparison) |
 
 ---
 
@@ -129,9 +129,15 @@
 
 ### Damodaran
 
-- `expansion/damodaran-hub.html` (EV/Sales + ERP 요약)
-- `expansion/ev-sales.html` (EV/Sales 섹터 대시보드)
-- `expansion/erp-rank.html` (국가 ERP 랭킹)
+- `expansion/damodaran-hub.html` (EV/Sales + ERP 요약) ✅ v2.0.0
+- `expansion/ev-sales.html` (EV/Sales 섹터 대시보드) ✅ v2.0.0
+- `expansion/erp-rank.html` (국가 ERP 랭킹) ✅ Compatible
+- `expansion/damodaran-relative.html` (상대 벤치마크) ✅ v2.0.0
+- `expansion/composite-report.html` (Composite 리포트) ✅ v2.0.0
+
+**v2.0.0 Migration (2026-01-20)**: `ev_sales.json` → `industries.json`
+- Path: `/data/damodaran/industries.json`
+- Structure: `industries[name].multiples.ev_sales`, `industries[name].margins.net`
 
 **상세**: `docs/planning/valuation-lab-expansion.md`
 

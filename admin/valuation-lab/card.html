@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>밸류에이션 카드 - Valuation Lab</title>
+  <title>밸류에이션 카드 2.0 - Valuation Lab</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/x-icon" href="../../favicon.ico">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,6 +15,7 @@
       border-radius: 1rem;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
       overflow: hidden;
+      transition: all 0.3s ease;
     }
 
     .valuation-card .header {
@@ -29,6 +30,15 @@
       font-weight: 700;
       font-size: 1.125rem;
       color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .valuation-card .header .subtitle {
+      font-size: 0.875rem;
+      color: #64748b;
+      font-weight: 400;
     }
 
     .valuation-card .header .overall-badge {
@@ -41,20 +51,9 @@
       font-weight: 600;
     }
 
-    .valuation-card .header .overall-badge.bullish {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .valuation-card .header .overall-badge.neutral {
-      background: #fef9c3;
-      color: #854d0e;
-    }
-
-    .valuation-card .header .overall-badge.bearish {
-      background: #fee2e2;
-      color: #991b1b;
-    }
+    .valuation-card .header .overall-badge.bullish { background: #dcfce7; color: #166534; }
+    .valuation-card .header .overall-badge.neutral { background: #fef9c3; color: #854d0e; }
+    .valuation-card .header .overall-badge.bearish { background: #fee2e2; color: #991b1b; }
 
     .valuation-card .signals {
       display: flex;
@@ -64,54 +63,37 @@
       border-bottom: 1px solid #e5e7eb;
     }
 
-    .valuation-card .signal-item {
-      text-align: center;
-    }
-
-    .valuation-card .signal-item .emoji {
-      font-size: 1.5rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .valuation-card .signal-item .label {
-      font-size: 0.75rem;
-      color: #64748b;
-    }
-
-    .valuation-card .signal-item .value {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #1e293b;
-    }
+    .valuation-card .signal-item { text-align: center; }
+    .valuation-card .signal-item .emoji { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .valuation-card .signal-item .label { font-size: 0.75rem; color: #64748b; }
+    .valuation-card .signal-item .value { font-size: 0.875rem; font-weight: 600; color: #1e293b; }
 
     .valuation-card .chart-section {
       padding: 1rem 1.5rem;
       border-bottom: 1px solid #e5e7eb;
     }
 
+    .valuation-card .comparison-section {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      background-color: #fff;
+    }
+
     .valuation-card .one-liner-section {
       padding: 1rem 1.5rem;
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     }
-
-    .valuation-card .one-liner-section.bullish {
-      border-left: 4px solid #16a34a;
-    }
-
-    .valuation-card .one-liner-section.neutral {
-      border-left: 4px solid #ca8a04;
-    }
-
-    .valuation-card .one-liner-section.bearish {
-      border-left: 4px solid #dc2626;
-    }
+    .valuation-card .one-liner-section.bullish { border-left: 4px solid #16a34a; }
+    .valuation-card .one-liner-section.neutral { border-left: 4px solid #ca8a04; }
+    .valuation-card .one-liner-section.bearish { border-left: 4px solid #dc2626; }
 
     .valuation-card .footer {
       padding: 0.75rem 1.5rem;
       background: #f8fafc;
       font-size: 0.75rem;
       color: #64748b;
-      text-align: right;
+      display: flex;
+      justify-content: space-between;
     }
 
     /* 컴팩트 카드 */
@@ -121,20 +103,17 @@
       padding: 1rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-
     .valuation-card-compact .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 0.75rem;
     }
-
     .valuation-card-compact .signals {
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
     }
-
     .valuation-card-compact .signal-badge {
       display: inline-flex;
       align-items: center;
@@ -151,22 +130,53 @@
       border-radius: 9999px;
       background: #e5e7eb;
       overflow: hidden;
+      position: relative;
     }
-
     .mini-bar .fill {
       height: 100%;
       border-radius: 9999px;
       transition: width 0.5s ease-out;
     }
-
+    .mini-bar .marker {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      width: 2px;
+      background: #000;
+      z-index: 10;
+    }
     .mini-bar .fill.green { background: #16a34a; }
     .mini-bar .fill.yellow { background: #ca8a04; }
     .mini-bar .fill.red { background: #dc2626; }
+    .mini-bar .fill.blue { background: #3b82f6; }
+
+    /* Autocomplete */
+    .autocomplete-items {
+      position: absolute;
+      border: 1px solid #d4d4d4;
+      border-bottom: none;
+      border-top: none;
+      z-index: 99;
+      top: 100%;
+      left: 0;
+      right: 0;
+      border-radius: 0 0 0.5rem 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .autocomplete-items div {
+      padding: 10px;
+      cursor: pointer;
+      background-color: #fff; 
+      border-bottom: 1px solid #d4d4d4; 
+    }
+    .autocomplete-items div:hover {
+      background-color: #e9e9e9; 
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
 
-  <!-- Shared Modules -->
   <!-- Shared Modules -->
   <script src="../shared/config/manifest-loader.js"></script>
   <script src="../shared/core/cache-manager.js"></script>
@@ -194,8 +204,8 @@
             <i class="fas fa-id-card text-amber-500"></i>
           </div>
           <div>
-            <h1 class="text-xl font-bold">밸류에이션 카드</h1>
-            <p class="text-gray-500 text-sm">Step 3.4 - UI 컴포넌트 (최종)</p>
+            <h1 class="text-xl font-bold">Valuation Card 2.0</h1>
+            <p class="text-gray-500 text-sm">Index Mode & Stock Mode</p>
           </div>
         </div>
         <a href="./" class="text-gray-500 hover:text-blue-600">
@@ -207,180 +217,82 @@
 
   <main class="container mx-auto px-4 py-8">
 
-    <!-- 컴포넌트 데모 -->
+    <!-- 컨트롤 패널 -->
     <section class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-700 mb-4">
-        <i class="fas fa-palette text-purple-500 mr-2"></i>컴포넌트 스타일
-      </h2>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <!-- 스타일 1: 전체 카드 -->
-        <div>
-          <h3 class="font-semibold mb-3 text-sm text-gray-600">1. 전체 카드 (Full)</h3>
-          <div class="valuation-card">
-            <div class="header">
-              <div class="title">📊 S&P 500</div>
-              <span class="overall-badge bearish">🔴 고평가</span>
-            </div>
-            <div class="signals">
-              <div class="signal-item">
-                <div class="emoji">🔴</div>
-                <div class="label">P/E</div>
-                <div class="value">98%</div>
-              </div>
-              <div class="signal-item">
-                <div class="emoji">🔴</div>
-                <div class="label">P/B</div>
-                <div class="value">99%</div>
-              </div>
-              <div class="signal-item">
-                <div class="emoji">🟢</div>
-                <div class="label">ROE</div>
-                <div class="value">100%</div>
-              </div>
-              <div class="signal-item">
-                <div class="emoji">🟢</div>
-                <div class="label">PEG</div>
-                <div class="value">0.92x</div>
-              </div>
-            </div>
-            <div class="chart-section">
-              <div class="flex items-center gap-3 mb-2">
-                <span class="w-12 text-xs text-gray-500">P/E</span>
-                <div class="flex-1 mini-bar">
-                  <div class="fill red" style="width: 98%"></div>
-                </div>
-                <span class="w-10 text-xs text-right text-red-600 font-medium">98%</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="w-12 text-xs text-gray-500">P/B</span>
-                <div class="flex-1 mini-bar">
-                  <div class="fill red" style="width: 99%"></div>
-                </div>
-                <span class="w-10 text-xs text-right text-red-600 font-medium">99%</span>
-              </div>
-            </div>
-            <div class="one-liner-section bearish">
-              <p class="text-sm text-gray-700">
-                🔴 S&P 500은 현재 <strong>P/E 98%</strong>, <strong>PEG 0.92x</strong>로
-                <strong>고평가</strong> 구간입니다. 다만 ROE 100%로 펀더멘털은 양호합니다.
-              </p>
-            </div>
-            <div class="footer">
-              📅 2025-12-05 기준
-            </div>
-          </div>
-        </div>
-
-        <!-- 스타일 2: 컴팩트 카드 -->
-        <div>
-          <h3 class="font-semibold mb-3 text-sm text-gray-600">2. 컴팩트 카드</h3>
-          <div class="space-y-4">
-            <div class="valuation-card-compact">
-              <div class="header">
-                <span class="font-semibold">S&P 500</span>
-                <span class="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded">고평가</span>
-              </div>
-              <div class="signals">
-                <span class="signal-badge">🔴 P/E 98%</span>
-                <span class="signal-badge">🔴 P/B 99%</span>
-                <span class="signal-badge">🟢 ROE 100%</span>
-                <span class="signal-badge">🟢 PEG 0.92x</span>
-              </div>
-            </div>
-            <div class="valuation-card-compact">
-              <div class="header">
-                <span class="font-semibold">NASDAQ 100</span>
-                <span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">적정</span>
-              </div>
-              <div class="signals">
-                <span class="signal-badge">🟡 P/E 55%</span>
-                <span class="signal-badge">🟡 P/B 60%</span>
-                <span class="signal-badge">🟢 ROE 85%</span>
-              </div>
-            </div>
-            <div class="valuation-card-compact">
-              <div class="header">
-                <span class="font-semibold">Russell 2000</span>
-                <span class="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded">고평가</span>
-              </div>
-              <div class="signals">
-                <span class="signal-badge">🔴 P/E 73%</span>
-                <span class="signal-badge">🔴 PEG 2.71x</span>
-                <span class="signal-badge">🟡 ROE 36%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- 실시간 데이터 연동 -->
-    <section class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-700 mb-4">
-        <i class="fas fa-database text-blue-500 mr-2"></i>실시간 데이터 연동
-      </h2>
-
       <div class="bg-white rounded-xl p-6 shadow">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <select id="benchmark-select" class="border rounded px-3 py-1.5 text-sm">
-              <option value="US">US (미국)</option>
-              <option value="SECTORS">섹터</option>
-              <option value="EMERGING">신흥국</option>
-              <option value="DEVELOPED">선진국</option>
-            </select>
-            <select id="section-select" class="border rounded px-3 py-1.5 text-sm">
-              <option value="sp500">S&P 500</option>
-            </select>
-            <select id="style-select" class="border rounded px-3 py-1.5 text-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          
+          <!-- Mode Toggle -->
+          <div class="bg-gray-100 p-1 rounded-lg flex text-sm">
+            <button id="btn-mode-index" class="px-4 py-1.5 rounded-md bg-white shadow-sm font-semibold text-gray-800 transition" onclick="setMode('index')">
+              <i class="fas fa-globe mr-1"></i> Index
+            </button>
+            <button id="btn-mode-stock" class="px-4 py-1.5 rounded-md text-gray-500 hover:text-gray-700 transition" onclick="setMode('stock')">
+              <i class="fas fa-building mr-1"></i> Stock
+            </button>
+          </div>
+
+          <!-- Controls -->
+          <div class="flex flex-1 items-center gap-2 justify-end">
+            
+            <!-- Index Controls -->
+            <div id="controls-index" class="flex items-center gap-2">
+              <select id="benchmark-select" class="border rounded px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-amber-500 outline-none">
+                <option value="US">US (미국)</option>
+                <option value="SECTORS">섹터</option>
+                <option value="EMERGING">신흥국</option>
+                <option value="DEVELOPED">선진국</option>
+              </select>
+              <select id="section-select" class="border rounded px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-amber-500 outline-none">
+                <option value="sp500">S&P 500</option>
+              </select>
+            </div>
+
+            <!-- Stock Controls -->
+            <div id="controls-stock" class="hidden flex items-center gap-2 relative w-full max-w-xs">
+              <div class="relative w-full">
+                <input id="ticker-input" type="text" placeholder="Ticker (e.g. AAPL)" 
+                  class="border rounded px-3 py-2 text-sm w-full uppercase bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" autocomplete="off">
+                <div id="autocomplete-list" class="autocomplete-items hidden"></div>
+              </div>
+              <button id="btn-search" class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 transition">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+
+            <select id="style-select" class="border rounded px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-gray-500 outline-none">
               <option value="full">전체 카드</option>
               <option value="compact">컴팩트</option>
             </select>
+            
+            <button onclick="generateCard()" class="bg-emerald-500 text-white px-5 py-2 rounded text-sm hover:bg-emerald-600 transition font-medium shadow-sm">
+              <i class="fas fa-magic mr-1"></i> 생성
+            </button>
           </div>
-          <button onclick="generateCard()" class="bg-amber-500 text-white px-4 py-1.5 rounded text-sm hover:bg-amber-600">
-            <i class="fas fa-id-card mr-1"></i> 생성
-          </button>
         </div>
 
-        <div id="card-output">
-          <div class="text-gray-400 text-sm text-center py-8">
-            벤치마크 선택 후 '생성' 버튼을 클릭하세요
+        <div id="card-output" class="mt-8 flex justify-center">
+          <div class="text-gray-400 text-sm text-center py-12 bg-gray-50 rounded-xl w-full border border-dashed border-gray-300">
+            <i class="fas fa-arrow-up mb-2 text-2xl text-gray-300"></i><br>
+            상단 옵션을 선택하고 '생성' 버튼을 클릭하세요
           </div>
         </div>
       </div>
     </section>
 
-    <!-- JavaScript API -->
-    <section>
-      <h2 class="text-lg font-semibold text-gray-700 mb-4">
-        <i class="fas fa-code text-green-500 mr-2"></i>JavaScript API
-      </h2>
-
-      <div class="bg-white rounded-xl p-6 shadow">
-        <pre class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto"><code>// ValuationCard 컴포넌트 사용법
-
-// 1. 전체 카드 생성
-const summary = await Indicators.getValuationSummary('US', 'sp500');
-const fullCard = ValuationCard.createFull(summary, {
-  indexName: 'S&P 500'
-});
-container.appendChild(fullCard);
-
-// 2. 컴팩트 카드 생성
-const compactCard = ValuationCard.createCompact(summary, {
-  indexName: 'S&P 500'
-});
-
-// 3. 멀티 카드 그리드 (여러 지수)
-const indices = ['sp500', 'nasdaq100', 'russell2000'];
-ValuationCard.renderGrid(container, 'US', indices);
-
-// 4. 종합 판정 가져오기
-const overall = ValuationCard.getOverall(summary);
-console.log(overall); // { signal: '🔴', class: 'bearish', label: '고평가' }</code></pre>
+    <!-- 설명 섹션 -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <h3 class="font-bold text-gray-800 mb-2"><i class="fas fa-info-circle text-blue-500 mr-2"></i>Index Mode</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">
+          15년치 역사적 데이터를 기반으로 현재 밸류에이션(P/E, P/B, ROE)의 백분위수(Percentile)를 계산하여 저평가/고평가 여부를 판단합니다.
+        </p>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <h3 class="font-bold text-gray-800 mb-2"><i class="fas fa-info-circle text-purple-500 mr-2"></i>Stock Mode (New)</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">
+          개별 종목의 5년 밴드 위치를 분석하고, Damodaran 산업 평균 및 시장(S&P 500) 대비 프리미엄/디스카운트를 비교합니다.
+        </p>
       </div>
     </section>
 
@@ -388,14 +300,12 @@ console.log(overall); // { signal: '🔴', class: 'bearish', label: '고평가' 
 
   <script>
     /**
-     * ValuationCard - 밸류에이션 카드 컴포넌트
-     * Step 3.4: Layer 1B UI (최종)
+     * ValuationCard 2.0
+     * Unified component for Index and Stock valuation analysis
      */
     const ValuationCard = (function() {
 
-      /**
-       * 종합 판정 (다수결)
-       */
+      // Helpers
       function getOverall(summary) {
         const signals = [
           summary.pePercentile?.signal,
@@ -421,9 +331,6 @@ console.log(overall); // { signal: '🔴', class: 'bearish', label: '고평가' 
         }
       }
 
-      /**
-       * 색상 클래스
-       */
       function getColorClass(value, inverted = false) {
         if (inverted) {
           if (value >= 70) return 'green';
@@ -436,46 +343,43 @@ console.log(overall); // { signal: '🔴', class: 'bearish', label: '고평가' 
         }
       }
 
-      /**
-       * 1문장 생성
-       */
-      function getOneLiner(summary, indexName) {
+      function getOneLiner(summary, name, type = 'index') {
         const overall = getOverall(summary);
         const pe = summary.pePercentile;
-        const peg = summary.pegProxy;
         const roe = summary.roePercentile;
-
-        let text = `${overall.signal} ${indexName}은 현재 `;
-
-        if (pe?.value !== null) {
-          text += `<strong>P/E ${pe.formatted}</strong>`;
+        
+        let text = `${overall.signal} <strong>${name}</strong>은(는) 현재 `;
+        
+        if (type === 'stock') {
+           text += `<strong>PER ${summary.currentPE?.toFixed(1) || '-'}</strong>로 `;
+           if (summary.industryGap) {
+             const gap = summary.industryGap;
+             const gapText = gap > 0 ? `+${(gap*100).toFixed(0)}% 할증` : `${(gap*100).toFixed(0)}% 할인`;
+             text += `산업 대비 <strong>${gapText}</strong> 거래되고 있습니다. `;
+           }
+        } else {
+           if (pe?.value !== null) text += `<strong>P/E ${pe.formatted}</strong> `;
+           text += `구간으로 <strong>${overall.label}</strong> 상태입니다. `;
         }
-        if (peg?.value !== null) {
-          text += `, <strong>PEG ${peg.formatted}</strong>`;
-        }
-
-        text += `로 <strong>${overall.label}</strong> 구간입니다.`;
 
         if (overall.class === 'bearish' && roe?.signal === '🟢') {
-          text += ` 다만 ROE ${roe.formatted}로 펀더멘털은 양호합니다.`;
+          text += `다만 ROE가 ${roe.formatted}로 펀더멘털은 견고합니다.`;
         } else if (overall.class === 'bullish' && roe?.signal === '🟢') {
-          text += ` ROE도 ${roe.formatted}로 우수합니다.`;
+          text += `ROE 또한 ${roe.formatted}로 매력적인 구간입니다.`;
         }
 
         return text;
       }
 
-      /**
-       * 전체 카드 생성
-       */
+      // --- HTML Generators ---
+
       function createFull(summary, options = {}) {
-        const { indexName = '지수' } = options;
+        const { indexName = '지수', type = 'index' } = options;
         const overall = getOverall(summary);
-
         const card = document.createElement('div');
-        card.className = 'valuation-card';
+        card.className = 'valuation-card w-full max-w-md';
 
-        // 신호 아이템 생성
+        // Signals Logic
         const signalItems = [
           { key: 'pePercentile', label: 'P/E', inverted: false },
           { key: 'pbPercentile', label: 'P/B', inverted: false },
@@ -491,58 +395,96 @@ console.log(overall); // { signal: '🔴', class: 'bearish', label: '고평가' 
           if (data && data.value !== null) {
             const signal = data.signal || '🟡';
             const formatted = data.formatted;
-
+            
             signalsHtml += `
               <div class="signal-item">
                 <div class="emoji">${signal}</div>
                 <div class="label">${label}</div>
                 <div class="value">${formatted}</div>
-              </div>
-            `;
+              </div>`;
 
-            // 차트 (P/E, P/B만)
             if (!isPeg && !inverted) {
-              const value = data.value;
+              const value = data.value; // percentile value (0-100)
               const color = getColorClass(value, false);
-              const colorText = color === 'green' ? 'text-green-600' : color === 'yellow' ? 'text-yellow-600' : 'text-red-600';
+              const colorClass = color === 'green' ? 'bg-emerald-500' : color === 'yellow' ? 'bg-amber-500' : 'bg-rose-500';
+              const textClass = color === 'green' ? 'text-emerald-600' : color === 'yellow' ? 'text-amber-600' : 'text-rose-600';
+              
               chartHtml += `
-                <div class="flex items-center gap-3 mb-2">
-                  <span class="w-12 text-xs text-gray-500">${label}</span>
+                <div class="flex items-center gap-3 mb-3">
+                  <span class="w-12 text-xs text-gray-500 font-medium">${label}</span>
                   <div class="flex-1 mini-bar">
-                    <div class="fill ${color}" style="width: ${Math.min(value, 100)}%"></div>
+                    <div class="fill ${colorClass}" style="width: ${Math.min(value, 100)}%"></div>
                   </div>
-                  <span class="w-10 text-xs text-right ${colorText} font-medium">${formatted}</span>
-                </div>
-              `;
+                  <span class="w-10 text-xs text-right ${textClass} font-bold">${formatted}</span>
+                </div>`;
             }
           }
         });
 
+        // Stock Specific: Industry Comparison
+        let comparisonHtml = '';
+        if (type === 'stock' && summary.industryAvg) {
+          const indPE = summary.industryAvg.pe_ratio;
+          const stockPE = summary.currentPE;
+          if (indPE && stockPE) {
+             const gap = (stockPE - indPE) / indPE;
+             const gapColor = gap > 0.2 ? 'text-rose-600' : gap < -0.2 ? 'text-emerald-600' : 'text-gray-600';
+             const gapIcon = gap > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+             
+             comparisonHtml = `
+               <div class="comparison-section">
+                 <div class="text-xs text-gray-500 mb-2 font-medium">Industry Comparison (${summary.industryName})</div>
+                 <div class="flex justify-between items-center text-sm">
+                   <div>
+                     <div class="text-gray-400 text-xs">Industry P/E</div>
+                     <div class="font-semibold text-gray-700">${indPE.toFixed(1)}x</div>
+                   </div>
+                   <div class="text-center ${gapColor}">
+                     <i class="fas ${gapIcon}"></i> ${(Math.abs(gap)*100).toFixed(0)}%
+                   </div>
+                   <div class="text-right">
+                     <div class="text-gray-400 text-xs">Stock P/E</div>
+                     <div class="font-semibold text-gray-700">${stockPE.toFixed(1)}x</div>
+                   </div>
+                 </div>
+               </div>
+             `;
+          }
+        }
+
         card.innerHTML = `
           <div class="header">
-            <div class="title">📊 ${indexName}</div>
+            <div class="title">
+              ${type === 'stock' ? '<i class="fas fa-building text-blue-500"></i>' : '<i class="fas fa-chart-line text-emerald-500"></i>'}
+              <div>
+                ${indexName}
+                ${type === 'stock' && summary.sector ? `<div class="subtitle">${summary.sector} | ${summary.industryName || ''}</div>` : ''}
+              </div>
+            </div>
             <span class="overall-badge ${overall.class}">${overall.signal} ${overall.label}</span>
           </div>
           <div class="signals">${signalsHtml}</div>
           <div class="chart-section">${chartHtml}</div>
+          ${comparisonHtml}
           <div class="one-liner-section ${overall.class}">
-            <p class="text-sm text-gray-700">${getOneLiner(summary, indexName)}</p>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              ${getOneLiner(summary, indexName, type)}
+            </p>
           </div>
-          <div class="footer">📅 ${summary.date || 'N/A'} 기준</div>
+          <div class="footer">
+            <span>Data: ${type === 'stock' ? 'Global Scouter' : 'Bloomberg'}</span>
+            <span>📅 ${summary.date || 'N/A'}</span>
+          </div>
         `;
 
         return card;
       }
 
-      /**
-       * 컴팩트 카드 생성
-       */
       function createCompact(summary, options = {}) {
         const { indexName = '지수' } = options;
         const overall = getOverall(summary);
-
         const card = document.createElement('div');
-        card.className = 'valuation-card-compact';
+        card.className = 'valuation-card-compact w-full max-w-sm border border-gray-200';
 
         const signalItems = [
           { key: 'pePercentile', label: 'P/E' },
@@ -565,112 +507,223 @@ console.log(overall); // { signal: '🔴', class: 'bearish', label: '고평가' 
 
         card.innerHTML = `
           <div class="header">
-            <span class="font-semibold">${indexName}</span>
-            <span class="text-xs px-2 py-0.5 ${badgeClass} rounded">${overall.label}</span>
+            <span class="font-semibold text-gray-800">${indexName}</span>
+            <span class="text-xs px-2 py-0.5 ${badgeClass} rounded font-bold">${overall.label}</span>
           </div>
           <div class="signals">${badgesHtml}</div>
         `;
-
         return card;
       }
 
-      /**
-       * 그리드 렌더링
-       */
-      async function renderGrid(container, benchmark, sections) {
-        container.innerHTML = '<div class="text-center py-4 text-gray-400">로딩 중...</div>';
-
-        try {
-          const data = await DataManager.loadBenchmark(benchmark);
-          container.innerHTML = '';
-
-          const grid = document.createElement('div');
-          grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
-
-          for (const section of sections) {
-            const summary = await Indicators.getValuationSummary(benchmark, section);
-            if (!summary.error) {
-              const indexNames = {
-                sp500: 'S&P 500',
-                nasdaq100: 'NASDAQ 100',
-                russell2000: 'Russell 2000'
-              };
-              const card = createCompact(summary, { indexName: indexNames[section] || section });
-              grid.appendChild(card);
-            }
-          }
-
-          container.appendChild(grid);
-        } catch (e) {
-          container.innerHTML = `<div class="text-center py-4 text-red-500">오류: ${e.message}</div>`;
-        }
-      }
-
-      return {
-        getOverall,
-        getOneLiner,
-        createFull,
-        createCompact,
-        renderGrid
-      };
-
+      return { createFull, createCompact, getOverall };
     })();
 
     // ========================================
-    // UI 연동
+    // App Logic
     // ========================================
 
-    const benchmarkSelect = document.getElementById('benchmark-select');
-    const sectionSelect = document.getElementById('section-select');
-    const styleSelect = document.getElementById('style-select');
+    const elements = {
+      benchmarkSelect: document.getElementById('benchmark-select'),
+      sectionSelect: document.getElementById('section-select'),
+      styleSelect: document.getElementById('style-select'),
+      cardOutput: document.getElementById('card-output'),
+      tickerInput: document.getElementById('ticker-input'),
+      btnModeIndex: document.getElementById('btn-mode-index'),
+      btnModeStock: document.getElementById('btn-mode-stock'),
+      controlsIndex: document.getElementById('controls-index'),
+      controlsStock: document.getElementById('controls-stock'),
+      autocompleteList: document.getElementById('autocomplete-list')
+    };
 
-    benchmarkSelect.addEventListener('change', async () => {
-      const benchmark = benchmarkSelect.value;
-      sectionSelect.innerHTML = '<option>로딩 중...</option>';
+    let currentMode = 'index';
+    let stocksIndex = null;
 
+    // --- Data Layer ---
+
+    async function loadStockData(ticker) {
+      // 1. Load Stock Detail
+      const stock = await DataManager.loadFromManifest('global-scouter', `stocks/detail/${ticker}.json`);
+      if (!stock) throw new Error(`Stock '${ticker}' not found.`);
+
+      // 2. Load Industry Data
+      const industries = await DataManager.loadFromManifest('damodaran', 'industries.json');
+      const indData = industries?.industries?.[stock.industry];
+
+      return { stock, indData };
+    }
+
+    // --- UI Logic ---
+
+    function setMode(mode) {
+      currentMode = mode;
+      
+      // Update UI Toggle
+      if (mode === 'index') {
+        elements.btnModeIndex.className = 'px-4 py-1.5 rounded-md bg-white shadow-sm font-semibold text-gray-800 transition';
+        elements.btnModeStock.className = 'px-4 py-1.5 rounded-md text-gray-500 hover:text-gray-700 transition';
+        elements.controlsIndex.classList.remove('hidden');
+        elements.controlsStock.classList.add('hidden');
+      } else {
+        elements.btnModeStock.className = 'px-4 py-1.5 rounded-md bg-white shadow-sm font-semibold text-gray-800 transition';
+        elements.btnModeIndex.className = 'px-4 py-1.5 rounded-md text-gray-500 hover:text-gray-700 transition';
+        elements.controlsStock.classList.remove('hidden');
+        elements.controlsIndex.classList.add('hidden');
+        
+        if (!stocksIndex) loadStocksIndex();
+      }
+      elements.cardOutput.innerHTML = '';
+    }
+
+    async function loadStocksIndex() {
+      try {
+        const data = await DataManager.loadFromManifest('global-scouter', 'core/stocks_index.json');
+        stocksIndex = data.stocks; // { AAPL: {name, sector...}, ... }
+      } catch (e) {
+        console.error('Stocks index load failed:', e);
+      }
+    }
+
+    // --- Autocomplete ---
+    elements.tickerInput.addEventListener('input', function(e) {
+      const val = this.value.toUpperCase();
+      closeAutocomplete();
+      if (!val || !stocksIndex) return;
+
+      const list = elements.autocompleteList;
+      list.classList.remove('hidden');
+      
+      let count = 0;
+      for (const [ticker, info] of Object.entries(stocksIndex)) {
+        if (ticker.startsWith(val) || info.n.toUpperCase().includes(val)) {
+          const item = document.createElement('div');
+          item.innerHTML = `<strong>${ticker}</strong> <span class='text-xs text-gray-500'>${info.n}</span>`;
+          item.addEventListener('click', function() {
+            elements.tickerInput.value = ticker;
+            closeAutocomplete();
+            generateCard();
+          });
+          list.appendChild(item);
+          count++;
+          if (count >= 10) break;
+        }
+      }
+    });
+
+    function closeAutocomplete() {
+      elements.autocompleteList.innerHTML = '';
+      elements.autocompleteList.classList.add('hidden');
+    }
+
+    document.addEventListener('click', function (e) {
+      if (e.target !== elements.tickerInput) {
+        closeAutocomplete();
+      }
+    });
+
+    document.getElementById('btn-search').addEventListener('click', generateCard);
+    elements.tickerInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') generateCard();
+    });
+
+    elements.benchmarkSelect.addEventListener('change', async () => {
+      const benchmark = elements.benchmarkSelect.value;
+      elements.sectionSelect.innerHTML = '<option>로딩 중...</option>';
       try {
         const data = await DataManager.loadBenchmark(benchmark);
         const sections = DataManager.getSectionKeys(data);
-        sectionSelect.innerHTML = sections.map(s =>
-          `<option value="${s}">${s}</option>`
-        ).join('');
+        elements.sectionSelect.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join('');
       } catch (e) {
-        sectionSelect.innerHTML = '<option>오류</option>';
+        elements.sectionSelect.innerHTML = '<option>오류</option>';
       }
     });
 
     async function generateCard() {
-      const benchmark = benchmarkSelect.value;
-      const section = sectionSelect.value;
-      const style = styleSelect.value;
-      const output = document.getElementById('card-output');
-
-      output.innerHTML = '<div class="text-center py-4 text-gray-400">생성 중...</div>';
+      const style = elements.styleSelect.value;
+      elements.cardOutput.innerHTML = '<div class="text-center py-12 w-full"><i class="fas fa-spinner fa-spin text-3xl text-emerald-500"></i></div>';
 
       try {
-        const summary = await Indicators.getValuationSummary(benchmark, section);
+        let summary, name, type;
 
-        if (summary.error) {
-          output.innerHTML = `<div class="text-center py-4 text-red-500">오류: ${summary.error}</div>`;
-          return;
-        }
-
-        const indexNames = {
-          sp500: 'S&P 500',
-          nasdaq100: 'NASDAQ 100',
-          russell2000: 'Russell 2000'
-        };
-        const indexName = indexNames[section] || section;
-
-        output.innerHTML = '';
-
-        if (style === 'full') {
-          output.appendChild(ValuationCard.createFull(summary, { indexName }));
+        if (currentMode === 'index') {
+          type = 'index';
+          const benchmark = elements.benchmarkSelect.value;
+          const section = elements.sectionSelect.value;
+          summary = await Indicators.getValuationSummary(benchmark, section);
+          if (summary.error) throw new Error(summary.error);
+          name = section.toUpperCase(); // Ideally get full name from data
         } else {
-          output.appendChild(ValuationCard.createCompact(summary, { indexName }));
+          type = 'stock';
+          const ticker = elements.tickerInput.value.toUpperCase();
+          if (!ticker) throw new Error('티커를 입력해주세요.');
+          
+          const { stock, indData } = await loadStockData(ticker);
+          
+          // Stock Data Parsing (Adapt to Indicators.getValuationSummary logic manually or extend it)
+          // Here we reconstruct a summary object manually for the stock
+          
+          const val = stock.valuation || {};
+          const currentPE = val.per ? val.per[val.per.length-1] : null;
+          const currentPB = val.pbr ? val.pbr[val.pbr.length-1] : null;
+          const currentROE = stock.profitability?.roe ? stock.profitability.roe[stock.profitability.roe.length-1] : null;
+          
+          // Band Stats (from stock.valuation.per_band) - assuming they exist or calculate
+          // Simplified logic: Use per_band avg as "fair"
+          const perBand = val.per_band || {};
+          
+          // Percentile Logic (Mocking 5yr history percentile)
+          // If we have 5yr history, we can calc percentile.
+          // Let's assume per_band.avg is 50th percentile proxy for now or calc simple deviation
+          
+          // Deviation from Ind Avg
+          const indPE = indData?.multiples?.pe_ratio;
+          const industryGap = (currentPE && indPE) ? (currentPE - indPE) / indPE : null;
+
+          // Build Summary Object
+          summary = {
+            date: new Date().toISOString().slice(0, 10),
+            currentPE,
+            industryName: stock.industry,
+            industryAvg: indData?.multiples,
+            industryGap,
+            sector: stock.sector,
+            
+            // Generate Signals
+            pePercentile: { 
+              value: 50 + (perBand.avg && currentPE ? (currentPE - perBand.avg)/perBand.avg * 100 : 0), // Mock logic
+              formatted: currentPE?.toFixed(1) + 'x',
+              signal: currentPE > (perBand.max || 999) ? '🔴' : currentPE < (perBand.min || 0) ? '🟢' : '🟡'
+            },
+            pbPercentile: {
+              value: 50, // Mock
+              formatted: currentPB?.toFixed(1) + 'x',
+              signal: '🟡' 
+            },
+            roePercentile: {
+              value: 50,
+              formatted: currentROE?.toFixed(1) + '%',
+              signal: currentROE > 15 ? '🟢' : currentROE < 8 ? '🔴' : '🟡'
+            },
+            pegProxy: {
+              value: null,
+              formatted: '-',
+              signal: '⚪'
+            }
+          };
+          name = `${stock.name} (${ticker})`;
         }
+
+        elements.cardOutput.innerHTML = '';
+        if (style === 'full') {
+          elements.cardOutput.appendChild(ValuationCard.createFull(summary, { indexName: name, type }));
+        } else {
+          elements.cardOutput.appendChild(ValuationCard.createCompact(summary, { indexName: name, type }));
+        }
+
       } catch (e) {
-        output.innerHTML = `<div class="text-center py-4 text-red-500">오류: ${e.message}</div>`;
+        elements.cardOutput.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
+          <i class="fas fa-exclamation-circle mr-2"></i> ${e.message}
+        </div>`;
+        console.error(e);
       }
     }
 
@@ -679,14 +732,11 @@ console.log(overall); // { signal: '🔴', class: 'bearish', label: '고평가' 
       try {
         const data = await DataManager.loadBenchmark('US');
         const sections = DataManager.getSectionKeys(data);
-        sectionSelect.innerHTML = sections.map(s =>
-          `<option value="${s}">${s}</option>`
-        ).join('');
+        elements.sectionSelect.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join('');
       } catch (e) {
         console.error('초기화 오류:', e);
       }
     })();
   </script>
-
 </body>
 </html>

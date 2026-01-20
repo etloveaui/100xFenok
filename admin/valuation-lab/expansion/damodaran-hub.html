@@ -124,7 +124,7 @@
     };
 
     const base = buildBase();
-    const evUrl = `${base}/data/damodaran/ev_sales.json`;
+    const evUrl = `${base}/data/damodaran/industries.json`;
     const erpUrl = `${base}/data/damodaran/erp.json`;
 
     const elements = {
@@ -161,10 +161,10 @@
       const res = await fetch(evUrl);
       if (!res.ok) throw new Error('EV/Sales 데이터 로딩 실패');
       const data = await res.json();
-      const sectors = data.sectors || {};
-      const rows = Object.entries(sectors).map(([name, row]) => ({
+      const industries = data.industries || {};
+      const rows = Object.entries(industries).map(([name, row]) => ({
         name,
-        ev_sales: row.ev_sales ?? null
+        ev_sales: row.multiples?.ev_sales ?? null
       })).filter(row => row.ev_sales !== null);
 
       const sorted = [...rows].sort((a, b) => b.ev_sales - a.ev_sales);
