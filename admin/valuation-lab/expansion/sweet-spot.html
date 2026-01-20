@@ -178,7 +178,7 @@
       } catch (error) {
         console.error('Init error:', error);
         showError('Failed to load data');
-        document.getElementById('loadingOverlay').classList.add('hidden');
+        // Note: showError replaces body, so loadingOverlay no longer exists
       }
     }
 
@@ -235,6 +235,11 @@
     // ==================== PROCESSING ====================
     function processData(data) {
       data.forEach(item => {
+        // Skip classification if pe or momentum is null/undefined
+        if (item.pe == null || item.momentum6m == null) {
+          item.zone = 'neutral';
+          return;
+        }
         if (item.pe < CONFIG.SWEET_PE && item.momentum6m > CONFIG.SWEET_MOMENTUM) {
           item.zone = 'sweet-spot';
         } else if (item.pe > CONFIG.DANGER_PE && item.momentum6m < CONFIG.DANGER_MOMENTUM) {
@@ -333,7 +338,7 @@
         ? sweet.map((item, i) => `
             <div class="zone-item sweet-spot">
               <span>#${i + 1} ${item.name}</span>
-              <strong>${formatPercent(item.momentum6m)}</strong> (P/E: ${item.pe.toFixed(1)})
+              <strong>${formatPercent(item.momentum6m)}</strong> (P/E: ${item.pe?.toFixed(1) || '-'})
             </div>
           `).join('')
         : '<p class="text-gray-500">No Sweet Spot indices</p>';
@@ -342,7 +347,7 @@
         ? danger.map((item, i) => `
             <div class="zone-item danger-zone">
               <span>#${i + 1} ${item.name}</span>
-              <strong>${formatPercent(item.momentum6m)}</strong> (P/E: ${item.pe.toFixed(1)})
+              <strong>${formatPercent(item.momentum6m)}</strong> (P/E: ${item.pe?.toFixed(1) || '-'})
             </div>
           `).join('')
         : '<p class="text-gray-500">No Danger Zone indices</p>';
