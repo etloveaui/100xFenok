@@ -149,6 +149,12 @@ if (inputHash === storedHash) {
 
 > Details: `docs/CHANGELOG.md`
 
+### 2026-01-21: Momentum Dashboard Tab Switch Bug Fix
+- Fixed: Tab UI changes but table data doesn't update
+- Added try-catch error isolation in render() function (line 287-293)
+- Each render function now executes independently
+- Reference: CHANGELOG.md, BACKLOG #184
+
 ### 2026-01-20: Data Lab Bug Fix + Localization
 - Fixed: Details panel click not working (function clickHandler support)
 - Korean localization: index.html, status-card.js, renderer.js

@@ -285,9 +285,9 @@ async function init() {
 }
 
 function render() {
-  renderTopBottom5();
-  renderTable();
-  renderChart();
+  try { renderTopBottom5(); } catch(e) { console.error('Top5:', e); }
+  try { renderTable(); } catch(e) { console.error('Table:', e); }
+  try { renderChart(); } catch(e) { console.error('Chart:', e); }
   updateRelativeTime();
   updateFavorites();
 }
