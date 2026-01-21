@@ -81,6 +81,18 @@
     }
     .badge-country { background: #dbeafe; color: #1e40af; }
     .badge-sector { background: #fef3c7; color: #92400e; }
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .tab-btn.active { background: #3b82f6; color: white; }
+    .tab-btn:not(.active) { background: #f1f5f9; color: #475569; }
+    .tab-btn:not(.active):hover { background: #e2e8f0; }
   </style>
 </head>
 <body>
@@ -99,6 +111,15 @@
           <p class="text-gray-500">P/E vs Momentum - Finding Optimal Entry Points</p>
         </div>
         <a href="../" class="text-blue-500 hover:underline">← Back</a>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="card">
+      <div class="flex gap-2">
+        <button id="tab-all" onclick="setFilter('all')" class="tab-btn active">All (36)</button>
+        <button id="tab-country" onclick="setFilter('Country')" class="tab-btn">Country (16)</button>
+        <button id="tab-sector" onclick="setFilter('Sector')" class="tab-btn">Sector (20)</button>
       </div>
     </div>
 
@@ -166,6 +187,7 @@
 
     let allData = [];
     let currentSort = { column: 'momentum6m', direction: 'desc' };
+    let currentFilter = 'all';
 
     // ==================== INITIALIZATION ====================
     async function init() {
@@ -184,12 +206,34 @@
 
     // ==================== DATA LOADING ====================
     async function loadData() {
-      const summaries = await fetch(CONFIG.dataPath + 'summaries.json').then(r => r.json());
+      console.log('🔄 Loading data from:', CONFIG.dataPath);
+
+      let summaries;
+      try {
+        const summariesUrl = CONFIG.dataPath + 'summaries.json';
+        console.log('📊 Fetching summaries from:', summariesUrl);
+        const summariesResponse = await fetch(summariesUrl);
+        if (!summariesResponse.ok) {
+          throw new Error(`Failed to load summaries.json: ${summariesResponse.status} ${summariesResponse.statusText}`);
+        }
+        summaries = await summariesResponse.json();
+        console.log('✅ Summaries loaded:', Object.keys(summaries));
+      } catch (e) {
+        console.error('❌ Summaries loading error:', e);
+        throw new Error(`Cannot load summaries.json: ${e.message}`);
+      }
 
       for (const file of CONFIG.files) {
         try {
-          const response = await fetch(CONFIG.dataPath + file);
+          const fileUrl = CONFIG.dataPath + file;
+          console.log(`📁 Loading ${file}...`);
+          const response = await fetch(fileUrl);
+          if (!response.ok) {
+            console.warn(`⚠️ Failed to fetch ${file}: ${response.status} ${response.statusText}`);
+            continue;
+          }
           const data = await response.json();
+          console.log(`✅ ${file} loaded:`, Object.keys(data));
 
           if (data.sections) {
             for (const [key, section] of Object.entries(data.sections)) {
@@ -199,20 +243,29 @@
               // Determine type based on file and key
               const type = determineType(file, key);
 
-              allData.push({
+              const item = {
                 name: section.name || key,
                 pe: latest.best_pe_ratio || latest.pe_ratio || null,
                 momentum6m: momentum['6m'] || null,
                 type: type
-              });
+              };
+              allData.push(item);
             }
+            console.log(`  → Processed ${Object.keys(data.sections).length} sections from ${file}`);
           }
         } catch (e) {
-          console.warn(`Failed to load ${file}:`, e);
+          console.error(`❌ Error processing ${file}:`, e);
         }
       }
 
-      return allData.filter(d => d.pe != null || d.momentum6m != null);
+      const validData = allData.filter(d => d.pe != null || d.momentum6m != null);
+      console.log(`✅ Total data loaded: ${allData.length} items (${validData.length} valid)`);
+      console.log('📊 Data breakdown:', {
+        country: allData.filter(d => d.type === 'Country').length,
+        sector: allData.filter(d => d.type === 'Sector').length
+      });
+
+      return validData;
     }
 
     // Determine if index is a Country or Sector
@@ -252,15 +305,22 @@
 
     // ==================== RENDERING ====================
     function render() {
-      renderMetrics();
-      renderChart();
-      renderZones();
-      renderTable(allData);
+      const filtered = getFilteredData();
+      renderMetrics(filtered);
+      renderChart(filtered);
+      renderZones(filtered);
+      renderTable(filtered);
+      updateTabCounts();
     }
 
-    function renderMetrics() {
-      const sweet = allData.filter(d => d.zone === 'sweet-spot').length;
-      const danger = allData.filter(d => d.zone === 'danger-zone').length;
+    function getFilteredData() {
+      if (currentFilter === 'all') return allData;
+      return allData.filter(d => d.type === currentFilter);
+    }
+
+    function renderMetrics(data) {
+      const sweet = data.filter(d => d.zone === 'sweet-spot').length;
+      const danger = data.filter(d => d.zone === 'danger-zone').length;
 
       document.getElementById('metrics').innerHTML = `
         <div class="metric metric-sweet">
@@ -276,34 +336,41 @@
           <div class="metric-label">Correlation</div>
         </div>
         <div class="metric">
-          <div class="metric-value text-blue-600">${allData.length}</div>
+          <div class="metric-value text-blue-600">${data.length}</div>
           <div class="metric-label">Total</div>
         </div>
       `;
     }
 
-    function renderChart() {
+    let chartInstance = null;
+
+    function renderChart(data) {
       const ctx = document.getElementById('scatterChart').getContext('2d');
 
-      new Chart(ctx, {
+      // Destroy previous chart instance
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      chartInstance = new Chart(ctx, {
         type: 'scatter',
         data: {
           datasets: [
             {
               label: 'Sweet Spot',
-              data: allData.filter(d => d.zone === 'sweet-spot').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
+              data: data.filter(d => d.zone === 'sweet-spot').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
               backgroundColor: 'rgba(34, 197, 94, 0.7)',
               pointRadius: 10
             },
             {
               label: 'Danger Zone',
-              data: allData.filter(d => d.zone === 'danger-zone').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
+              data: data.filter(d => d.zone === 'danger-zone').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
               backgroundColor: 'rgba(239, 68, 68, 0.7)',
               pointRadius: 10
             },
             {
               label: 'Neutral',
-              data: allData.filter(d => d.zone === 'neutral').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
+              data: data.filter(d => d.zone === 'neutral').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
               backgroundColor: 'rgba(156, 163, 175, 0.5)',
               pointRadius: 6
             }
@@ -328,10 +395,10 @@
       });
     }
 
-    function renderZones() {
-      const sweet = allData.filter(d => d.zone === 'sweet-spot')
+    function renderZones(data) {
+      const sweet = data.filter(d => d.zone === 'sweet-spot')
         .sort((a, b) => b.momentum6m - a.momentum6m);
-      const danger = allData.filter(d => d.zone === 'danger-zone')
+      const danger = data.filter(d => d.zone === 'danger-zone')
         .sort((a, b) => a.momentum6m - b.momentum6m);
 
       document.getElementById('sweetSpotList').innerHTML = sweet.length > 0
@@ -386,7 +453,8 @@
         currentSort.direction = 'desc';
       }
 
-      const sorted = [...allData].sort((a, b) => {
+      const filtered = getFilteredData();
+      const sorted = [...filtered].sort((a, b) => {
         let aVal = a[column], bVal = b[column];
         if (column === 'zone') {
           const order = { 'sweet-spot': 1, 'neutral': 2, 'danger-zone': 3 };
@@ -401,9 +469,30 @@
       renderTable(sorted);
     }
 
+    function setFilter(type) {
+      currentFilter = type;
+
+      // Update tab active states
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const tabId = type === 'all' ? 'tab-all' : `tab-${type.toLowerCase()}`;
+      document.getElementById(tabId).classList.add('active');
+
+      // Re-render with filtered data
+      render();
+    }
+
+    function updateTabCounts() {
+      const countryCount = allData.filter(d => d.type === 'Country').length;
+      const sectorCount = allData.filter(d => d.type === 'Sector').length;
+
+      document.getElementById('tab-all').textContent = `All (${allData.length})`;
+      document.getElementById('tab-country').textContent = `Country (${countryCount})`;
+      document.getElementById('tab-sector').textContent = `Sector (${sectorCount})`;
+    }
+
     function filterTable() {
       const query = document.getElementById('search').value.toLowerCase();
-      const filtered = allData.filter(item => item.name.toLowerCase().includes(query));
+      const filtered = getFilteredData().filter(item => item.name.toLowerCase().includes(query));
       renderTable(filtered);
     }
 
