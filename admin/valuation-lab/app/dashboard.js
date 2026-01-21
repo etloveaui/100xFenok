@@ -14,11 +14,9 @@ const ValuationLabUI = (function() {
   const FOLDER_TOOLS = {
     benchmarks: [
       { name: 'Valuation Card (Index)', link: 'card.html', icon: 'fa-id-card', desc: 'S&P 500, NASDAQ Valuation' },
-      { name: 'Percentile Chart', link: 'percentile.html', icon: 'fa-chart-bar', desc: 'Historical Percentiles' },
-      { name: 'Signal Light', link: 'signal-light.html', icon: 'fa-traffic-light', desc: 'Simple Status View' },
-      { name: 'One Liner', link: 'one-liner.html', icon: 'fa-align-left', desc: 'Natural Language Summary' },
       { name: 'Sweet Spot Scanner', link: 'expansion/sweet-spot.html', icon: 'fa-crosshairs', desc: 'P/E + Momentum Analysis' },
-      { name: 'Momentum Dashboard', link: 'expansion/momentum.html', icon: 'fa-bolt', desc: '30+ Index Momentum Tracking' }
+      { name: 'Momentum Dashboard', link: 'expansion/momentum.html', icon: 'fa-bolt', desc: '30+ Index Momentum Tracking' },
+      { name: 'Benchmarks Explorer', link: 'expansion/benchmarks-explorer.html', icon: 'fa-compass', desc: '36 Indices Full History Analysis' }
     ],
     'global-scouter': [
       { name: 'Valuation Card (Stock)', link: 'card.html?mode=stock', icon: 'fa-building', desc: 'Individual Stock Analysis' },
