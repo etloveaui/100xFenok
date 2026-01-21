@@ -163,6 +163,12 @@ valuation-lab/
 
 - `expansion/dashboard.html` (A~E 요약 대시보드)
 - `expansion/custom-screener.html` (가중치 기반 스크리너)
+- `expansion/benchmarks-explorer.html` (Multi-Index Comparison Tool) ✅ (2026-01-21)
+  - **Features**: Index Screener + Sparkline + Time Series Comparison
+  - **Data**: 6 JSON files, 36 indices × 829 weeks = 29,592 data points
+  - **Metrics**: P/E, EPS, ROE, Price (Normalized)
+  - **Periods**: 1Y / 3Y / 5Y / 10Y / All
+  - **Selection**: Up to 5 indices with checkbox + sparkline preview
 
 ### Damodaran
 
