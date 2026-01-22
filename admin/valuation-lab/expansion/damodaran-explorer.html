@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Damodaran Explorer - 100xFenok</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Loading State */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #f59e0b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Content Tabs */
+    .content-tab {
+      padding: 12px 20px;
+      border-radius: 8px 8px 0 0;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      background: transparent;
+      color: #64748b;
+      border-bottom: 3px solid transparent;
+    }
+    .content-tab.active {
+      background: white;
+      color: #f59e0b;
+      border-bottom-color: #f59e0b;
+    }
+    .content-tab:not(.active):hover {
+      background: rgba(255,255,255,0.5);
+      color: #475569;
+    }
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+    }
+
+    /* Filter Tabs */
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .tab-btn.active { background: #f59e0b; color: white; }
+    .tab-btn:not(.active) { background: #f1f5f9; color: #475569; }
+    .tab-btn:not(.active):hover { background: #e2e8f0; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #6b7280; cursor: pointer; }
+    tbody tr { transition: all 0.2s; cursor: pointer; }
+    tbody tr:hover { background: #fef3c7; }
+    tbody tr.selected { background: #fde68a !important; }
+
+    /* Mono font */
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    /* Chart Container */
+    .chart-container { height: 400px; position: relative; }
+
+    /* Badge */
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .badge-region { background: #dbeafe; color: #1e40af; }
+    .badge-rating { background: #d1fae5; color: #065f46; }
+
+    /* Export Buttons */
+    .export-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #64748b;
+    }
+    .export-btn:hover { background: #f8fafc; }
+    .export-btn.primary { background: #f59e0b; color: white; border-color: #f59e0b; }
+    .export-btn.primary:hover { background: #d97706; }
+
+    /* Value colors */
+    .positive { color: #16a34a; }
+    .negative { color: #dc2626; }
+
+    /* Metric Cards */
+    .metric-card {
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    /* Period Selector */
+    .period-selector { display: flex; gap: 6px; }
+    .period-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+    }
+    .period-btn.active { background: #f59e0b; color: white; border-color: #f59e0b; }
+    .period-btn:not(.active) { background: white; color: #64748b; }
+    .period-btn:not(.active):hover { background: #f8fafc; }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="text-gray-600 mt-4">Loading Damodaran data...</p>
+    <p class="text-gray-400 text-sm mt-2">96 industries + 178 countries + 66 years ERP history</p>
+  </div>
+
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="card">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Damodaran Explorer</h1>
+          <p class="text-gray-500">Industries • Countries • ERP History • Analysis</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportCSV()" class="export-btn">
+            <i class="fas fa-file-csv mr-1"></i>CSV
+          </button>
+          <a href="../" class="text-amber-600 hover:underline ml-2">← Back</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Tabs -->
+    <div class="flex gap-1 bg-amber-100 rounded-t-lg p-1 mb-0">
+      <button class="content-tab active" data-tab="industries" onclick="setContentTab('industries')">
+        <i class="fas fa-industry mr-2"></i>Industries (96)
+      </button>
+      <button class="content-tab" data-tab="countries" onclick="setContentTab('countries')">
+        <i class="fas fa-globe mr-2"></i>Countries (178)
+      </button>
+      <button class="content-tab" data-tab="erp-history" onclick="setContentTab('erp-history')">
+        <i class="fas fa-chart-line mr-2"></i>ERP History
+      </button>
+      <button class="content-tab" data-tab="analysis" onclick="setContentTab('analysis')">
+        <i class="fas fa-calculator mr-2"></i>Analysis
+      </button>
+    </div>
+
+    <!-- ==================== INDUSTRIES TAB ==================== -->
+    <div id="section-industries" class="content-section active">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-table text-amber-500 mr-2"></i>Industry Screener
+          </h2>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500">96 industries from 6 Damodaran datasets</span>
+          </div>
+        </div>
+
+        <input id="industrySearch" type="text" placeholder="Search industries..."
+               class="w-full p-3 border rounded-lg mb-4" oninput="filterIndustryTable()">
+
+        <div style="overflow-x: auto;">
+          <table id="industryTable">
+            <thead>
+              <tr>
+                <th onclick="sortIndustryTable('name')">Industry <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortIndustryTable('firms')">Firms <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortIndustryTable('beta')">Beta <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortIndustryTable('roe')">ROE <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortIndustryTable('wacc')">WACC <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortIndustryTable('net_margin')">Net Margin <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortIndustryTable('ev_sales')">EV/Sales <i class="fas fa-sort text-xs ml-1"></i></th>
+              </tr>
+            </thead>
+            <tbody id="industryTableBody"></tbody>
+          </table>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-3">
+          <i class="fas fa-info-circle mr-1"></i>
+          Data: Beta, Margins, EVA, Debt, Growth, Multiples merged from Damodaran Online
+        </p>
+      </div>
+    </div>
+
+    <!-- ==================== COUNTRIES TAB ==================== -->
+    <div id="section-countries" class="content-section">
+      <!-- Region Filter -->
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button id="region-all" onclick="setRegionFilter('all')" class="tab-btn active">All (178)</button>
+          <button id="region-western-europe" onclick="setRegionFilter('Western Europe')" class="tab-btn">🇪🇺 Western Europe</button>
+          <button id="region-asia" onclick="setRegionFilter('Asia')" class="tab-btn">🌏 Asia</button>
+          <button id="region-americas" onclick="setRegionFilter('Central and South America')" class="tab-btn">🌎 Americas</button>
+          <button id="region-africa" onclick="setRegionFilter('Africa')" class="tab-btn">🌍 Africa</button>
+          <button id="region-eastern-europe" onclick="setRegionFilter('Eastern Europe & Russia')" class="tab-btn">🇷🇺 Eastern Europe</button>
+          <button id="region-middle-east" onclick="setRegionFilter('Middle East')" class="tab-btn">🕌 Middle East</button>
+        </div>
+      </div>
+
+      <!-- Top/Bottom ERP Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-green-600 flex items-center gap-1.5">
+              <i class="fas fa-shield-alt"></i>Lowest ERP (Safest)
+            </h2>
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-lg">ERP</span>
+          </div>
+          <div id="low-erp-cards" class="space-y-2"></div>
+        </div>
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-red-600 flex items-center gap-1.5">
+              <i class="fas fa-exclamation-triangle"></i>Highest ERP (Risky)
+            </h2>
+            <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-lg">ERP</span>
+          </div>
+          <div id="high-erp-cards" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- Countries Table -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-earth-americas text-blue-500 mr-2"></i>Country Risk Premiums
+          </h2>
+          <input id="countrySearch" type="text" placeholder="Search countries..."
+                 class="p-2 border rounded-lg text-sm w-48" oninput="filterCountryTable()">
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table id="countryTable">
+            <thead>
+              <tr>
+                <th onclick="sortCountryTable('name')">Country <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortCountryTable('region')">Region <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortCountryTable('erp')">ERP <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortCountryTable('crp')">Country RP <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortCountryTable('rating')">Rating <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortCountryTable('tax')">Tax Rate <i class="fas fa-sort text-xs ml-1"></i></th>
+              </tr>
+            </thead>
+            <tbody id="countryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ERP HISTORY TAB ==================== -->
+    <div id="section-erp-history" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-chart-line text-purple-500 mr-2"></i>US Equity Risk Premium History (1960-2025)
+          </h2>
+          <div class="period-selector">
+            <button class="period-btn" data-period="10y" onclick="setERPPeriod('10y')">10Y</button>
+            <button class="period-btn" data-period="20y" onclick="setERPPeriod('20y')">20Y</button>
+            <button class="period-btn" data-period="40y" onclick="setERPPeriod('40y')">40Y</button>
+            <button class="period-btn active" data-period="all" onclick="setERPPeriod('all')">All</button>
+          </div>
+        </div>
+
+        <div id="erpChartContainer" class="chart-container">
+          <canvas id="erpChart"></canvas>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+          <div class="bg-amber-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">Current ERP (DDM)</div>
+            <div class="text-xl font-bold text-amber-600 mono" id="currentErpDDM">-</div>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">Current ERP (FCFE)</div>
+            <div class="text-xl font-bold text-blue-600 mono" id="currentErpFCFE">-</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">T-Bond Rate</div>
+            <div class="text-xl font-bold text-gray-600 mono" id="currentTBond">-</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">Historical Average</div>
+            <div class="text-xl font-bold text-purple-600 mono" id="avgErp">-</div>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-4">
+          <i class="fas fa-info-circle mr-1"></i>
+          DDM: Dividend Discount Model | FCFE: Free Cash Flow to Equity (available 2001+)
+        </p>
+      </div>
+    </div>
+
+    <!-- ==================== ANALYSIS TAB ==================== -->
+    <div id="section-analysis" class="content-section">
+      <!-- WACC Calculator -->
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-calculator text-green-500 mr-2"></i>WACC Calculator
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700">Select Industry</label>
+              <select id="waccIndustry" onchange="updateWACC()" class="w-full p-2 border rounded-lg mt-1">
+                <option value="">-- Choose Industry --</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700">Select Country</label>
+              <select id="waccCountry" onchange="updateWACC()" class="w-full p-2 border rounded-lg mt-1">
+                <option value="">-- Choose Country --</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700">Risk-Free Rate (US T-Bond)</label>
+              <input type="number" id="waccRfr" value="4.18" step="0.01" onchange="updateWACC()"
+                     class="w-full p-2 border rounded-lg mt-1 mono">
+            </div>
+          </div>
+
+          <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-6">
+            <h3 class="text-sm font-bold text-gray-700 mb-4">Calculated Results</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-gray-600">Industry Beta (Levered)</span>
+                <span class="font-bold mono" id="calcBeta">-</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">US ERP</span>
+                <span class="font-bold mono" id="calcUsErp">4.18%</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Country Risk Premium</span>
+                <span class="font-bold mono" id="calcCrp">-</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Total ERP</span>
+                <span class="font-bold mono" id="calcTotalErp">-</span>
+              </div>
+              <hr class="my-2">
+              <div class="flex justify-between text-lg">
+                <span class="font-bold text-gray-800">Cost of Equity</span>
+                <span class="font-bold text-amber-600 mono" id="calcCoe">-</span>
+              </div>
+              <div class="flex justify-between text-lg">
+                <span class="font-bold text-gray-800">Industry WACC</span>
+                <span class="font-bold text-green-600 mono" id="calcWacc">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-4">
+          <i class="fas fa-info-circle mr-1"></i>
+          Cost of Equity = Rf + Beta × (US ERP + Country RP) | WACC from industry averages
+        </p>
+      </div>
+
+      <!-- Credit Rating Lookup -->
+      <div class="card">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-star text-yellow-500 mr-2"></i>Credit Rating Lookup
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700">Company Type</label>
+              <select id="ratingCompanyType" onchange="lookupRating()" class="w-full p-2 border rounded-lg mt-1">
+                <option value="large_manufacturing">Large Manufacturing</option>
+                <option value="small_risky">Small/Risky Firms</option>
+                <option value="financial">Financial Services</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700">Interest Coverage Ratio</label>
+              <input type="number" id="ratingCoverage" value="5.0" step="0.1" onchange="lookupRating()"
+                     class="w-full p-2 border rounded-lg mt-1 mono">
+              <p class="text-xs text-gray-400 mt-1">EBIT / Interest Expense</p>
+            </div>
+          </div>
+
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6">
+            <h3 class="text-sm font-bold text-gray-700 mb-4">Rating Result</h3>
+            <div class="text-center">
+              <div class="text-4xl font-bold text-blue-600 mb-2" id="ratingResult">-</div>
+              <div class="text-sm text-gray-600">Default Spread: <span class="mono font-bold" id="ratingSpread">-</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ================== DATA & STATE ==================
+    const buildBase = () => {
+      const host = location.hostname;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.');
+      const isCloudflare = host.endsWith('pages.dev');
+      return (isLocal || isCloudflare) ? '' : '/100xFenok';
+    };
+
+    const BASE = buildBase();
+    const DATA_URLS = {
+      industries: `${BASE}/data/damodaran/industries.json`,
+      erp: `${BASE}/data/damodaran/erp.json`,
+      historical: `${BASE}/data/damodaran/historical_erp.json`,
+      ratings: `${BASE}/data/damodaran/credit_ratings.json`
+    };
+
+    let state = {
+      industries: {},
+      countries: {},
+      historical: {},
+      ratings: {},
+      currentTab: 'industries',
+      regionFilter: 'all',
+      industrySort: { key: 'name', asc: true },
+      countrySort: { key: 'erp', asc: false },
+      erpPeriod: 'all'
+    };
+
+    let erpChart = null;
+
+    // ================== INITIALIZATION ==================
+    async function init() {
+      try {
+        const [indRes, erpRes, histRes, ratRes] = await Promise.all([
+          fetch(DATA_URLS.industries),
+          fetch(DATA_URLS.erp),
+          fetch(DATA_URLS.historical),
+          fetch(DATA_URLS.ratings)
+        ]);
+
+        const industries = await indRes.json();
+        const erp = await erpRes.json();
+        const historical = await histRes.json();
+        const ratings = await ratRes.json();
+
+        state.industries = industries.industries || {};
+        state.countries = erp.countries || {};
+        state.historical = historical.years || {};
+        state.ratings = ratings.lookup_tables || {};
+
+        // Render all tabs
+        renderIndustryTable();
+        renderCountryTable();
+        renderERPChart();
+        populateWACCSelectors();
+        lookupRating();
+
+        // Hide loading
+        document.getElementById('loadingOverlay').style.display = 'none';
+      } catch (err) {
+        console.error('Failed to load data:', err);
+        document.getElementById('loadingOverlay').innerHTML = `
+          <div class="text-red-500 text-center">
+            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+            <p class="text-lg font-bold">Failed to load data</p>
+            <p class="text-sm mt-2">${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // ================== TAB NAVIGATION ==================
+    function setContentTab(tabName) {
+      state.currentTab = tabName;
+      document.querySelectorAll('.content-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.toggle('active', section.id === `section-${tabName}`);
+      });
+    }
+
+    // ================== INDUSTRIES TAB ==================
+    function renderIndustryTable() {
+      const tbody = document.getElementById('industryTableBody');
+      const searchTerm = (document.getElementById('industrySearch')?.value || '').toLowerCase();
+
+      let rows = Object.entries(state.industries)
+        .map(([name, data]) => ({ name, ...data }))
+        .filter(row => row.name.toLowerCase().includes(searchTerm));
+
+      // Sort
+      const { key, asc } = state.industrySort;
+      rows.sort((a, b) => {
+        let valA, valB;
+        switch (key) {
+          case 'name': valA = a.name; valB = b.name; break;
+          case 'firms': valA = a.num_firms || 0; valB = b.num_firms || 0; break;
+          case 'beta': valA = a.beta?.levered || 0; valB = b.beta?.levered || 0; break;
+          case 'roe': valA = a.eva?.roe || 0; valB = b.eva?.roe || 0; break;
+          case 'wacc': valA = a.eva?.wacc || 0; valB = b.eva?.wacc || 0; break;
+          case 'net_margin': valA = a.margins?.net || 0; valB = b.margins?.net || 0; break;
+          case 'ev_sales': valA = a.multiples?.ev_sales || 0; valB = b.multiples?.ev_sales || 0; break;
+          default: valA = a.name; valB = b.name;
+        }
+        if (typeof valA === 'string') {
+          return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return asc ? valA - valB : valB - valA;
+      });
+
+      tbody.innerHTML = rows.map(row => `
+        <tr onclick="selectIndustry('${row.name}')">
+          <td class="font-medium text-gray-800">${row.name}</td>
+          <td class="mono text-gray-600">${row.num_firms || '-'}</td>
+          <td class="mono ${(row.beta?.levered || 0) > 1.2 ? 'text-red-600' : 'text-green-600'}">${formatNumber(row.beta?.levered, 2)}</td>
+          <td class="mono ${(row.eva?.roe || 0) < 0 ? 'negative' : 'positive'}">${formatPercent(row.eva?.roe)}</td>
+          <td class="mono">${formatPercent(row.eva?.wacc)}</td>
+          <td class="mono ${(row.margins?.net || 0) < 0 ? 'negative' : ''}">${formatPercent(row.margins?.net)}</td>
+          <td class="mono font-medium">${formatNumber(row.multiples?.ev_sales, 2)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function sortIndustryTable(key) {
+      if (state.industrySort.key === key) {
+        state.industrySort.asc = !state.industrySort.asc;
+      } else {
+        state.industrySort = { key, asc: true };
+      }
+      renderIndustryTable();
+    }
+
+    function filterIndustryTable() {
+      renderIndustryTable();
+    }
+
+    function selectIndustry(name) {
+      document.getElementById('waccIndustry').value = name;
+      updateWACC();
+    }
+
+    // ================== COUNTRIES TAB ==================
+    function renderCountryTable() {
+      const tbody = document.getElementById('countryTableBody');
+      const searchTerm = (document.getElementById('countrySearch')?.value || '').toLowerCase();
+
+      let rows = Object.entries(state.countries)
+        .map(([name, data]) => ({ name, ...data }))
+        .filter(row => {
+          if (!row.name.toLowerCase().includes(searchTerm)) return false;
+          if (state.regionFilter !== 'all' && row.region !== state.regionFilter) return false;
+          return true;
+        });
+
+      // Sort
+      const { key, asc } = state.countrySort;
+      rows.sort((a, b) => {
+        let valA, valB;
+        switch (key) {
+          case 'name': valA = a.name; valB = b.name; break;
+          case 'region': valA = a.region || ''; valB = b.region || ''; break;
+          case 'erp': valA = a.equity_risk_premium || 0; valB = b.equity_risk_premium || 0; break;
+          case 'crp': valA = a.country_risk_premium || 0; valB = b.country_risk_premium || 0; break;
+          case 'rating': valA = a.rating || ''; valB = b.rating || ''; break;
+          case 'tax': valA = a.corporate_tax_rate || 0; valB = b.corporate_tax_rate || 0; break;
+          default: valA = a.erp || 0; valB = b.erp || 0;
+        }
+        if (typeof valA === 'string') {
+          return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return asc ? valA - valB : valB - valA;
+      });
+
+      tbody.innerHTML = rows.map(row => `
+        <tr onclick="selectCountry('${row.name}')">
+          <td class="font-medium text-gray-800">${row.name}</td>
+          <td><span class="badge badge-region">${row.region || '-'}</span></td>
+          <td class="mono font-bold ${row.equity_risk_premium > 0.08 ? 'text-red-600' : 'text-green-600'}">${formatPercent(row.equity_risk_premium)}</td>
+          <td class="mono">${formatPercent(row.country_risk_premium)}</td>
+          <td><span class="badge badge-rating">${row.rating || '-'}</span></td>
+          <td class="mono">${formatPercent(row.corporate_tax_rate)}</td>
+        </tr>
+      `).join('');
+
+      // Render Top/Bottom ERP cards
+      renderERPCards(rows);
+    }
+
+    function renderERPCards(rows) {
+      const sorted = [...rows].sort((a, b) => (a.equity_risk_premium || 0) - (b.equity_risk_premium || 0));
+      const lowest = sorted.slice(0, 5);
+      const highest = sorted.slice(-5).reverse();
+
+      document.getElementById('low-erp-cards').innerHTML = lowest.map(row => `
+        <div class="metric-card flex items-center justify-between p-2 bg-green-50 rounded-lg">
+          <span class="font-medium text-sm">${row.name}</span>
+          <span class="mono text-green-700 font-bold">${formatPercent(row.equity_risk_premium)}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('high-erp-cards').innerHTML = highest.map(row => `
+        <div class="metric-card flex items-center justify-between p-2 bg-red-50 rounded-lg">
+          <span class="font-medium text-sm">${row.name}</span>
+          <span class="mono text-red-700 font-bold">${formatPercent(row.equity_risk_premium)}</span>
+        </div>
+      `).join('');
+    }
+
+    function sortCountryTable(key) {
+      if (state.countrySort.key === key) {
+        state.countrySort.asc = !state.countrySort.asc;
+      } else {
+        state.countrySort = { key, asc: key === 'name' || key === 'region' };
+      }
+      renderCountryTable();
+    }
+
+    function filterCountryTable() {
+      renderCountryTable();
+    }
+
+    function setRegionFilter(region) {
+      state.regionFilter = region;
+      document.querySelectorAll('[id^="region-"]').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `region-${region.toLowerCase().replace(/ /g, '-')}`);
+      });
+      document.getElementById('region-all').classList.toggle('active', region === 'all');
+      renderCountryTable();
+    }
+
+    function selectCountry(name) {
+      document.getElementById('waccCountry').value = name;
+      updateWACC();
+    }
+
+    // ================== ERP HISTORY TAB ==================
+    function renderERPChart() {
+      const ctx = document.getElementById('erpChart').getContext('2d');
+
+      let years = Object.keys(state.historical).sort();
+
+      // Apply period filter
+      if (state.erpPeriod !== 'all') {
+        const currentYear = new Date().getFullYear();
+        const periodYears = parseInt(state.erpPeriod);
+        years = years.filter(y => parseInt(y) >= currentYear - periodYears);
+      }
+
+      const tbondData = years.map(y => (state.historical[y]?.tbond_rate || 0) * 100);
+      const erpDDMData = years.map(y => (state.historical[y]?.implied_erp_ddm || null) ? state.historical[y].implied_erp_ddm * 100 : null);
+      const erpFCFEData = years.map(y => (state.historical[y]?.implied_erp_fcfe || null) ? state.historical[y].implied_erp_fcfe * 100 : null);
+
+      if (erpChart) erpChart.destroy();
+
+      erpChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: [
+            {
+              label: 'ERP (DDM)',
+              data: erpDDMData,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              fill: true,
+              tension: 0.3,
+              spanGaps: true
+            },
+            {
+              label: 'ERP (FCFE)',
+              data: erpFCFEData,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.3,
+              spanGaps: true
+            },
+            {
+              label: 'T-Bond Rate',
+              data: tbondData,
+              borderColor: '#6b7280',
+              borderDash: [5, 5],
+              fill: false,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${ctx.raw?.toFixed(2) || '-'}%`
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: { callback: v => v + '%' }
+            }
+          }
+        }
+      });
+
+      // Update current values
+      const latestYear = Object.keys(state.historical).sort().pop();
+      const latest = state.historical[latestYear] || {};
+      document.getElementById('currentErpDDM').textContent = formatPercent(latest.implied_erp_ddm);
+      document.getElementById('currentErpFCFE').textContent = formatPercent(latest.implied_erp_fcfe);
+      document.getElementById('currentTBond').textContent = formatPercent(latest.tbond_rate);
+
+      // Calculate average
+      const allDDM = Object.values(state.historical).map(v => v.implied_erp_ddm).filter(v => v != null);
+      const avgDDM = allDDM.reduce((a, b) => a + b, 0) / allDDM.length;
+      document.getElementById('avgErp').textContent = formatPercent(avgDDM);
+    }
+
+    function setERPPeriod(period) {
+      state.erpPeriod = period;
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.period === period);
+      });
+      renderERPChart();
+    }
+
+    // ================== ANALYSIS TAB ==================
+    function populateWACCSelectors() {
+      const industrySelect = document.getElementById('waccIndustry');
+      const countrySelect = document.getElementById('waccCountry');
+
+      Object.keys(state.industries).sort().forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        industrySelect.appendChild(opt);
+      });
+
+      Object.keys(state.countries).sort().forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        countrySelect.appendChild(opt);
+      });
+    }
+
+    function updateWACC() {
+      const industryName = document.getElementById('waccIndustry').value;
+      const countryName = document.getElementById('waccCountry').value;
+      const rfr = parseFloat(document.getElementById('waccRfr').value) || 4.18;
+
+      const industry = state.industries[industryName];
+      const country = state.countries[countryName];
+
+      const beta = industry?.beta?.levered || 0;
+      const usErp = 4.18; // Current US ERP
+      const crp = country?.country_risk_premium || 0;
+      const totalErp = usErp / 100 + crp;
+      const coe = rfr / 100 + beta * totalErp;
+      const wacc = industry?.eva?.wacc || 0;
+
+      document.getElementById('calcBeta').textContent = formatNumber(beta, 2);
+      document.getElementById('calcUsErp').textContent = formatPercent(usErp / 100);
+      document.getElementById('calcCrp').textContent = formatPercent(crp);
+      document.getElementById('calcTotalErp').textContent = formatPercent(totalErp);
+      document.getElementById('calcCoe').textContent = industry && country ? formatPercent(coe) : '-';
+      document.getElementById('calcWacc').textContent = formatPercent(wacc);
+    }
+
+    function lookupRating() {
+      const companyType = document.getElementById('ratingCompanyType').value;
+      const coverage = parseFloat(document.getElementById('ratingCoverage').value) || 0;
+      const table = state.ratings[companyType] || [];
+
+      let result = { rating: '-', spread: 0 };
+      for (const row of table) {
+        const min = row.min_coverage ?? -Infinity;
+        const max = row.max_coverage ?? Infinity;
+        if (coverage >= min && coverage < max) {
+          result = row;
+          break;
+        }
+      }
+
+      document.getElementById('ratingResult').textContent = result.rating;
+      document.getElementById('ratingSpread').textContent = formatPercent(result.spread);
+    }
+
+    // ================== UTILITIES ==================
+    function formatNumber(val, decimals = 2) {
+      if (val == null || isNaN(val)) return '-';
+      return Number(val).toFixed(decimals);
+    }
+
+    function formatPercent(val) {
+      if (val == null || isNaN(val)) return '-';
+      return (val * 100).toFixed(2) + '%';
+    }
+
+    function exportCSV() {
+      let csv = '';
+      if (state.currentTab === 'industries') {
+        csv = 'Industry,Firms,Beta,ROE,WACC,Net Margin,EV/Sales\n';
+        Object.entries(state.industries).forEach(([name, data]) => {
+          csv += `"${name}",${data.num_firms || ''},${data.beta?.levered || ''},${data.eva?.roe || ''},${data.eva?.wacc || ''},${data.margins?.net || ''},${data.multiples?.ev_sales || ''}\n`;
+        });
+      } else if (state.currentTab === 'countries') {
+        csv = 'Country,Region,ERP,Country RP,Rating,Tax Rate\n';
+        Object.entries(state.countries).forEach(([name, data]) => {
+          csv += `"${name}","${data.region || ''}",${data.equity_risk_premium || ''},${data.country_risk_premium || ''},${data.rating || ''},${data.corporate_tax_rate || ''}\n`;
+        });
+      } else {
+        alert('CSV export available for Industries and Countries tabs');
+        return;
+      }
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `damodaran-${state.currentTab}-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+    }
+
+    // ================== INIT ==================
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

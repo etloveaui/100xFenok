@@ -27,10 +27,10 @@ const ValuationLabUI = (function() {
       { name: 'Target Price', link: 'expansion/target-price.html', icon: 'fa-bullseye', desc: 'Fair Value Calculator' }
     ],
     damodaran: [
-      { name: 'Damodaran Hub', link: 'expansion/damodaran-hub.html', icon: 'fa-university', desc: 'Main Hub' },
+      { name: 'Damodaran Explorer', link: 'expansion/damodaran-explorer.html', icon: 'fa-compass', desc: '96 Industries + 178 Countries + ERP History' },
+      { name: 'Damodaran Hub', link: 'expansion/damodaran-hub.html', icon: 'fa-university', desc: 'Quick Overview' },
       { name: 'EV/Sales Dashboard', link: 'expansion/ev-sales.html', icon: 'fa-chart-pie', desc: 'Sector Multiples' },
-      { name: 'ERP Ranking', link: 'expansion/erp-rank.html', icon: 'fa-earth-americas', desc: 'Country Risk Premiums' },
-      { name: 'Composite Report', link: 'expansion/composite-report.html', icon: 'fa-file-lines', desc: 'Combined Analysis' }
+      { name: 'ERP Ranking', link: 'expansion/erp-rank.html', icon: 'fa-earth-americas', desc: 'Country Risk Premiums' }
     ],
     slickcharts: [
       { name: 'Historical Returns', link: 'expansion/slickcharts-historical.html', icon: 'fa-clock-rotate-left', desc: '47yr Returns + Dividends' }
