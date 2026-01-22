@@ -24,7 +24,6 @@ const ValuationLabUI = (function() {
       { name: 'PER Band Screener', link: 'expansion/per-band.html', icon: 'fa-chart-line', desc: 'Band Deviation Analysis' },
       { name: 'EPS Growth', link: 'expansion/eps-growth.html', icon: 'fa-arrow-trend-up', desc: 'Growth Ranking' },
       { name: 'Sector Gap', link: 'expansion/sector-gap.html', icon: 'fa-layer-group', desc: 'Sector Comparison' },
-      { name: 'Stability Score', link: 'expansion/stability-score.html', icon: 'fa-shield-halved', desc: 'Low Volatility Finder' },
       { name: 'Target Price', link: 'expansion/target-price.html', icon: 'fa-bullseye', desc: 'Fair Value Calculator' }
     ],
     damodaran: [

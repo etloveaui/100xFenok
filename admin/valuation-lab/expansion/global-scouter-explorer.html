@@ -638,10 +638,9 @@
               <tr>
                 <th>티커</th>
                 <th>이름</th>
-                <th>섹터</th>
+                <th>카테고리</th>
                 <th>시총</th>
-                <th>P/E</th>
-                <th>배당률</th>
+                <th>1년 수익률</th>
               </tr>
             </thead>
             <tbody id="etfTableBody"></tbody>
@@ -758,7 +757,16 @@
         try {
           const etfsRes = await fetch(DATA_URLS.etfs);
           const etfsData = await etfsRes.json();
-          state.etfs = etfsData.etfs || [];
+          // Convert ETFs object to array
+          if (etfsData.etfs && typeof etfsData.etfs === 'object' && !Array.isArray(etfsData.etfs)) {
+            state.etfs = Object.entries(etfsData.etfs).map(([name, data]) => ({
+              name,
+              ticker: data.ticker || name,
+              ...data
+            }));
+          } else {
+            state.etfs = etfsData.etfs || [];
+          }
         } catch (e) {
           console.warn('ETFs data not available:', e);
           state.etfs = [];
@@ -767,7 +775,22 @@
         try {
           const econRes = await fetch(DATA_URLS.economic);
           const econData = await econRes.json();
-          state.economic = econData.indicators || econData || [];
+          // Economic data structure: { records: [...] }
+          if (econData.records && Array.isArray(econData.records)) {
+            // Flatten records into indicator list
+            const firstRecord = econData.records[0] || {};
+            state.economic = Object.entries(firstRecord)
+              .filter(([key]) => key !== 'date')
+              .map(([key, value]) => ({
+                indicator: key.toUpperCase().replace(/_/g, ' '),
+                name: key.toUpperCase().replace(/_/g, ' '),
+                value: value,
+                unit: 'ratio',
+                date: firstRecord.date
+              }));
+          } else {
+            state.economic = econData.indicators || econData || [];
+          }
         } catch (e) {
           console.warn('Economic data not available:', e);
           state.economic = [];
@@ -1586,20 +1609,22 @@
     function renderETFTable() {
       const tbody = document.getElementById('etfTableBody');
       if (!state.etfs || state.etfs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-8">ETF 데이터 없음</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-8">ETF 데이터 없음</td></tr>';
         return;
       }
 
-      tbody.innerHTML = state.etfs.map(etf => `
+      tbody.innerHTML = state.etfs.map(etf => {
+        const cagr5y = etf.cagr?.['5y'] || 0;
+        const returns1y = etf.returns?.['1y'] || 0;
+        return `
         <tr>
-          <td class="font-bold text-indigo-600">${etf.ticker || etf.symbol || '-'}</td>
-          <td>${etf.name || '-'}</td>
-          <td><span class="badge badge-sector">${etf.sector || '-'}</span></td>
-          <td class="mono">${formatMarketCap(etf.mc || etf.market_cap)}</td>
-          <td class="mono">${formatNumber(etf.pe, 1)}</td>
-          <td class="mono">${formatPercent(etf.dy || etf.dividend_yield)}</td>
+          <td class="font-bold text-indigo-600">${etf.ticker || etf.name || '-'}</td>
+          <td>${etf.name || etf.ticker || '-'}</td>
+          <td><span class="badge badge-sector">${etf.category || '-'}</span></td>
+          <td class="mono">${formatMarketCap(etf.market_cap || etf.mc)}</td>
+          <td class="mono ${returns1y >= 0 ? 'positive' : 'negative'}">${formatPercent(returns1y)}</td>
         </tr>
-      `).join('');
+      `}).join('');
     }
 
     // ================== MACRO TABLE ==================
