@@ -245,6 +245,10 @@
     .ts-dropdown-content { max-height: 300px; }
     .ts-dropdown .option { padding: 8px 12px; }
     .ts-dropdown .option.active { background: #ecfdf5; color: #065f46; }
+
+    /* v3: ETF 테이블 모바일 대응 */
+    #etfTable { min-width: 1400px; }
+    #etfTable th, #etfTable td { white-space: nowrap; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -274,9 +278,6 @@
         <div class="flex items-center gap-2">
           <button onclick="exportCSV()" class="export-btn">
             <i class="fas fa-file-csv mr-1"></i>CSV
-          </button>
-          <button onclick="exportPNG()" class="export-btn">
-            <i class="fas fa-image mr-1"></i>PNG
           </button>
           <a href="../" class="text-emerald-500 hover:underline ml-2">← 뒤로</a>
         </div>
@@ -684,9 +685,13 @@
           <h2 class="text-lg font-bold text-gray-800">
             <i class="fas fa-globe text-teal-500 mr-2"></i>매크로 지표 시계열 (1,045 records)
           </h2>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <select id="macroIndicatorSelect" onchange="renderMacroChart()" class="p-2 border rounded-lg text-sm">
-              <option value="">지표 선택...</option>
+              <option value="">주 지표...</option>
+            </select>
+            <span class="text-gray-400 text-sm font-medium">vs</span>
+            <select id="macroIndicator2Select" onchange="renderMacroChart()" class="p-2 border rounded-lg text-sm">
+              <option value="">비교 지표 (선택)</option>
             </select>
           </div>
         </div>
@@ -703,23 +708,44 @@
           </div>
         </div>
 
-        <!-- Macro Summary Cards -->
-        <div id="macroSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 hidden">
-          <div class="bg-teal-50 rounded-lg p-3 text-center">
-            <div class="text-xs text-gray-500">최신값</div>
-            <div class="text-lg font-bold text-teal-600 mono" id="macroLatest">-</div>
+        <!-- Macro Summary Cards - Primary -->
+        <div id="macroSummary" class="mb-4 hidden">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+            <div class="bg-teal-50 rounded-lg p-3 text-center">
+              <div class="text-xs text-gray-500">최신값 <span id="macroLabel1" class="text-teal-600"></span></div>
+              <div class="text-lg font-bold text-teal-600 mono" id="macroLatest">-</div>
+            </div>
+            <div class="bg-blue-50 rounded-lg p-3 text-center">
+              <div class="text-xs text-gray-500">평균</div>
+              <div class="text-lg font-bold text-blue-600 mono" id="macroAvg">-</div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3 text-center">
+              <div class="text-xs text-gray-500">최저</div>
+              <div class="text-lg font-bold text-gray-600 mono" id="macroMin">-</div>
+            </div>
+            <div class="bg-amber-50 rounded-lg p-3 text-center">
+              <div class="text-xs text-gray-500">최고</div>
+              <div class="text-lg font-bold text-amber-600 mono" id="macroMax">-</div>
+            </div>
           </div>
-          <div class="bg-blue-50 rounded-lg p-3 text-center">
-            <div class="text-xs text-gray-500">평균</div>
-            <div class="text-lg font-bold text-blue-600 mono" id="macroAvg">-</div>
-          </div>
-          <div class="bg-gray-50 rounded-lg p-3 text-center">
-            <div class="text-xs text-gray-500">최저</div>
-            <div class="text-lg font-bold text-gray-600 mono" id="macroMin">-</div>
-          </div>
-          <div class="bg-amber-50 rounded-lg p-3 text-center">
-            <div class="text-xs text-gray-500">최고</div>
-            <div class="text-lg font-bold text-amber-600 mono" id="macroMax">-</div>
+          <!-- Secondary Indicator Stats (shown when comparing) -->
+          <div id="macroSummary2" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+            <div class="bg-purple-50 rounded-lg p-3 text-center">
+              <div class="text-xs text-gray-500">최신값 <span id="macroLabel2" class="text-purple-600"></span></div>
+              <div class="text-lg font-bold text-purple-600 mono" id="macroLatest2">-</div>
+            </div>
+            <div class="bg-purple-50/50 rounded-lg p-3 text-center">
+              <div class="text-xs text-gray-500">평균</div>
+              <div class="text-lg font-bold text-purple-600 mono" id="macroAvg2">-</div>
+            </div>
+            <div class="bg-purple-50/30 rounded-lg p-3 text-center">
+              <div class="text-xs text-gray-500">최저</div>
+              <div class="text-lg font-bold text-purple-500 mono" id="macroMin2">-</div>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-3 text-center">
+              <div class="text-xs text-gray-500">최고</div>
+              <div class="text-lg font-bold text-purple-700 mono" id="macroMax2">-</div>
+            </div>
           </div>
         </div>
 
@@ -1062,38 +1088,6 @@
       renderTable();
     }
 
-    // ================== SELECTION ==================
-    function toggleSelection(ticker) {
-      const idx = state.selected.indexOf(ticker);
-      if (idx >= 0) {
-        state.selected.splice(idx, 1);
-      } else if (state.selected.length < 5) {
-        state.selected.push(ticker);
-        loadDetailData(ticker);
-      }
-      renderTable();
-      updateSelectors();
-    }
-
-    function clearSelection() {
-      state.selected = [];
-      renderTable();
-      updateSelectors();
-    }
-
-    function toggleSelectAll() {
-      const checkbox = document.getElementById('selectAll');
-      if (checkbox.checked) {
-        const filtered = getFilteredStocks().slice(0, 5);
-        state.selected = filtered.map(s => s.ticker);
-        filtered.forEach(s => loadDetailData(s.ticker));
-      } else {
-        state.selected = [];
-      }
-      renderTable();
-      updateSelectors();
-    }
-
     // ================== TOP/BOTTOM ==================
     function renderTopBottom() {
       const filtered = getFilteredStocks();
@@ -1353,16 +1347,6 @@
           tomSelectInstances[id].setValue(ticker, true);
         }
       });
-    }
-
-    function updateSelectors() {
-      if (state.selected.length > 0) {
-        const ticker = state.selected[0];
-        ['financialSelector', 'valuationSelector', 'growthSelector', 'dividendSelector'].forEach(id => {
-          const select = document.getElementById(id);
-          if (select) select.value = ticker;
-        });
-      }
     }
 
     // ================== FINANCIALS CHART ==================
@@ -2070,10 +2054,6 @@
       `).join('');
     }
 
-    function filterMacroTable() {
-      renderMacroTable();
-    }
-
     // ================== MACRO CHART (v3: 레이블 한글화 + 이모지) ==================
 
     // v3: 지표명 한글화 + 이모지
@@ -2114,24 +2094,39 @@
     };
 
     function populateMacroSelector() {
-      const select = document.getElementById('macroIndicatorSelect');
-      if (!select || state.economicIndicators.length === 0) return;
+      const select1 = document.getElementById('macroIndicatorSelect');
+      const select2 = document.getElementById('macroIndicator2Select');
+      if (!select1 || state.economicIndicators.length === 0) return;
 
-      select.innerHTML = '<option value="">지표 선택...</option>';
+      // v3.1: Populate both dropdowns for multi-indicator comparison
+      select1.innerHTML = '<option value="">주 지표...</option>';
+      if (select2) select2.innerHTML = '<option value="">비교 지표 (선택)</option>';
+
       state.economicIndicators.forEach(ind => {
-        const opt = document.createElement('option');
-        opt.value = ind;
-        // v3: 한글 레이블 사용 (없으면 영문 대문자)
-        opt.textContent = INDICATOR_LABELS[ind] || ind.toUpperCase().replace(/_/g, ' ');
-        select.appendChild(opt);
+        const opt1 = document.createElement('option');
+        opt1.value = ind;
+        // v3: Korean labels (fallback to English uppercase)
+        opt1.textContent = INDICATOR_LABELS[ind] || ind.toUpperCase().replace(/_/g, ' ');
+        select1.appendChild(opt1);
+
+        // Copy to second selector
+        if (select2) {
+          const opt2 = opt1.cloneNode(true);
+          select2.appendChild(opt2);
+        }
       });
     }
 
     function renderMacroChart() {
-      const indicator = document.getElementById('macroIndicatorSelect').value;
-      state.macroIndicator = indicator;
+      const indicator1 = document.getElementById('macroIndicatorSelect').value;
+      const indicator2 = document.getElementById('macroIndicator2Select')?.value || '';
+      state.macroIndicator = indicator1;
 
-      if (!indicator || state.economicRecords.length === 0) {
+      // Hide secondary stats by default
+      const summary2 = document.getElementById('macroSummary2');
+      if (summary2) summary2.classList.add('hidden');
+
+      if (!indicator1 || state.economicRecords.length === 0) {
         document.getElementById('macroEmptyState').style.display = 'flex';
         document.getElementById('macroSummary').classList.add('hidden');
         return;
@@ -2142,42 +2137,94 @@
 
       const ctx = document.getElementById('macroChart').getContext('2d');
 
-      // Extract time series data
+      // Extract time series data for indicator 1
       const labels = [];
-      const values = [];
+      const values1 = [];
       state.economicRecords.forEach(record => {
-        if (record.date && record[indicator] != null) {
+        if (record.date && record[indicator1] != null) {
           labels.push(record.date);
-          values.push(record[indicator]);
+          values1.push(record[indicator1]);
         }
       });
 
       // Reverse to show oldest first
       labels.reverse();
-      values.reverse();
+      values1.reverse();
+
+      // v3: Korean labels
+      const label1 = INDICATOR_LABELS[indicator1] || indicator1.toUpperCase().replace(/_/g, ' ');
+
+      // Build datasets
+      const datasets = [{
+        label: label1,
+        data: values1,
+        borderColor: '#14b8a6',
+        backgroundColor: 'rgba(20, 184, 166, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        yAxisID: 'y'
+      }];
+
+      // v3.1: Add second indicator for comparison (dual-axis)
+      let values2 = [];
+      let label2 = '';
+      const hasComparison = indicator2 && indicator2 !== indicator1;
+
+      if (hasComparison) {
+        label2 = INDICATOR_LABELS[indicator2] || indicator2.toUpperCase().replace(/_/g, ' ');
+
+        // Extract values2 aligned with labels
+        state.economicRecords.forEach(record => {
+          if (record.date && record[indicator1] != null) {
+            values2.push(record[indicator2] != null ? record[indicator2] : null);
+          }
+        });
+        values2.reverse();
+
+        datasets.push({
+          label: label2,
+          data: values2,
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.05)',
+          fill: false,
+          tension: 0.3,
+          pointRadius: 0,
+          borderDash: [5, 5],
+          yAxisID: 'y1'
+        });
+      }
 
       if (charts.macro) charts.macro.destroy();
 
-      // v3: 한글 레이블 사용
-      const indicatorLabel = INDICATOR_LABELS[indicator] || indicator.toUpperCase().replace(/_/g, ' ');
+      // Build scales
+      const scales = {
+        x: { ticks: { maxTicksLimit: 12 } },
+        y: {
+          type: 'linear',
+          position: 'left',
+          title: { display: hasComparison, text: label1.replace(/[🇺🇸🌍🇪🇺📉📈🛡️😰💵🥇🛢️🔶]/g, '').trim(), color: '#14b8a6' },
+          ticks: { color: '#14b8a6' }
+        }
+      };
+
+      if (hasComparison) {
+        scales.y1 = {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: label2.replace(/[🇺🇸🌍🇪🇺📉📈🛡️😰💵🥇🛢️🔶]/g, '').trim(), color: '#8b5cf6' },
+          ticks: { color: '#8b5cf6' },
+          grid: { drawOnChartArea: false }
+        };
+      }
 
       charts.macro = new Chart(ctx, {
         type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: indicatorLabel,
-            data: values,
-            borderColor: '#14b8a6',
-            backgroundColor: 'rgba(20, 184, 166, 0.1)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 0
-          }]
-        },
+        data: { labels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { display: true, position: 'top' },
             tooltip: {
@@ -2186,24 +2233,42 @@
               }
             }
           },
-          scales: {
-            x: {
-              ticks: { maxTicksLimit: 12 }
-            }
-          }
+          scales
         }
       });
 
-      // Update summary
-      const latest = values[values.length - 1] || 0;
-      const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      const min = Math.min(...values);
-      const max = Math.max(...values);
+      // Update primary summary
+      const latest1 = values1[values1.length - 1] || 0;
+      const avg1 = values1.reduce((a, b) => a + b, 0) / values1.length;
+      const min1 = Math.min(...values1);
+      const max1 = Math.max(...values1);
 
-      document.getElementById('macroLatest').textContent = formatNumber(latest, 4);
-      document.getElementById('macroAvg').textContent = formatNumber(avg, 4);
-      document.getElementById('macroMin').textContent = formatNumber(min, 4);
-      document.getElementById('macroMax').textContent = formatNumber(max, 4);
+      document.getElementById('macroLatest').textContent = formatNumber(latest1, 4);
+      document.getElementById('macroAvg').textContent = formatNumber(avg1, 4);
+      document.getElementById('macroMin').textContent = formatNumber(min1, 4);
+      document.getElementById('macroMax').textContent = formatNumber(max1, 4);
+
+      // Update label if exists
+      const labelEl1 = document.getElementById('macroLabel1');
+      if (labelEl1) labelEl1.textContent = '';
+
+      // v3.1: Update secondary summary if comparing
+      if (hasComparison && summary2) {
+        summary2.classList.remove('hidden');
+        const validValues2 = values2.filter(v => v != null);
+        const latest2 = validValues2[validValues2.length - 1] || 0;
+        const avg2 = validValues2.length ? validValues2.reduce((a, b) => a + b, 0) / validValues2.length : 0;
+        const min2 = validValues2.length ? Math.min(...validValues2) : 0;
+        const max2 = validValues2.length ? Math.max(...validValues2) : 0;
+
+        document.getElementById('macroLatest2').textContent = formatNumber(latest2, 4);
+        document.getElementById('macroAvg2').textContent = formatNumber(avg2, 4);
+        document.getElementById('macroMin2').textContent = formatNumber(min2, 4);
+        document.getElementById('macroMax2').textContent = formatNumber(max2, 4);
+
+        const labelEl2 = document.getElementById('macroLabel2');
+        if (labelEl2) labelEl2.textContent = '';
+      }
     }
 
     // ================== EXPORT ==================
@@ -2220,11 +2285,6 @@
       a.href = url;
       a.download = `global-scouter-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
-    }
-
-    function exportPNG() {
-      alert('PNG 내보내기: 현재 탭의 차트를 이미지로 저장합니다.');
-      // Implementation would use canvas.toDataURL()
     }
 
     // ================== UTILITIES ==================
