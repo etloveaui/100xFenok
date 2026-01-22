@@ -263,6 +263,9 @@
       <button class="content-tab" data-tab="yearly" onclick="setContentTab('yearly')">
         <i class="fas fa-calendar-alt mr-2"></i>Yearly Returns
       </button>
+      <button class="content-tab" data-tab="analysis" onclick="setContentTab('analysis')">
+        <i class="fas fa-microscope mr-2"></i>Analysis
+      </button>
     </div>
 
     <!-- Filter Tabs (Shared) -->
@@ -476,6 +479,88 @@
       </div>
     </div>
 
+    <!-- ==================== ANALYSIS TAB (New) ==================== -->
+    <div id="section-analysis" class="content-section">
+      <!-- Index Selector -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-microscope text-purple-500 mr-2"></i>Deep Analysis
+          </h2>
+          <div class="flex items-center gap-3">
+            <label for="analysisIndexSelector" class="text-sm text-gray-600">Select Index:</label>
+            <select id="analysisIndexSelector" onchange="renderAnalysis()" class="p-2 border rounded-lg text-sm min-w-48">
+              <option value="">-- Choose Index --</option>
+            </select>
+          </div>
+        </div>
+        <p class="text-sm text-gray-500">
+          <i class="fas fa-info-circle mr-1"></i>
+          Select an index to view P/E Band, EPS Trend, ROE Trend, and Factor Radar analysis
+        </p>
+      </div>
+
+      <!-- Analysis Grid (2x2) -->
+      <div id="analysisContent" class="hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- P/E Band Chart -->
+          <div class="card">
+            <h3 class="text-md font-bold text-gray-800 mb-3">
+              <i class="fas fa-chart-area text-blue-500 mr-2"></i>P/E Band (16Y Historical)
+            </h3>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="peBandChart"></canvas>
+            </div>
+            <div id="peBandStats" class="mt-3 grid grid-cols-5 gap-2 text-center text-xs"></div>
+          </div>
+
+          <!-- EPS Trend Chart -->
+          <div class="card">
+            <h3 class="text-md font-bold text-gray-800 mb-3">
+              <i class="fas fa-dollar-sign text-green-500 mr-2"></i>EPS Trend & Growth
+            </h3>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="epsTrendChart"></canvas>
+            </div>
+            <div id="epsStats" class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"></div>
+          </div>
+
+          <!-- ROE Trend Chart -->
+          <div class="card">
+            <h3 class="text-md font-bold text-gray-800 mb-3">
+              <i class="fas fa-percent text-amber-500 mr-2"></i>ROE Trend
+            </h3>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="roeTrendChart"></canvas>
+            </div>
+            <div id="roeStats" class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"></div>
+          </div>
+
+          <!-- Factor Radar Chart -->
+          <div class="card">
+            <h3 class="text-md font-bold text-gray-800 mb-3">
+              <i class="fas fa-bullseye text-purple-500 mr-2"></i>Factor Radar
+            </h3>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="factorRadarChart"></canvas>
+            </div>
+            <div id="radarStats" class="mt-3 text-center text-xs text-gray-500">
+              Normalized scores (0-100) based on all 36 indices
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="analysisEmptyState" class="card">
+        <div class="text-center py-12 text-gray-400">
+          <i class="fas fa-microscope text-5xl mb-4"></i>
+          <p class="text-lg font-medium">Select an index to begin analysis</p>
+          <p class="text-sm mt-2">Choose from the dropdown above to view detailed metrics</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Methodology -->
     <div class="card">
       <h3 class="font-bold mb-2 text-gray-800">
@@ -489,6 +574,7 @@
           <li><strong>Comparison</strong>: Multi-index time series chart with metric/period selection</li>
           <li><strong>Momentum</strong>: Top5/Bottom5 cards + 1M/3M/6M/YTD momentum table</li>
           <li><strong>Yearly Returns</strong>: 2018-2025 returns chart and table</li>
+          <li><strong>Analysis</strong>: P/E Band, EPS Trend, ROE Trend, Factor Radar (single index deep dive)</li>
         </ul>
         <p><strong>Source:</strong> Bloomberg Terminal via weekly snapshots + summaries.json</p>
       </div>
@@ -561,6 +647,12 @@
     let yearlyChart = null;
     let momentumSort = { column: '6m', direction: 'desc' };
     let yearlyChartSelected = new Set();
+    // Analysis Tab State
+    let peBandChart = null;
+    let epsTrendChart = null;
+    let roeTrendChart = null;
+    let factorRadarChart = null;
+    let currentAnalysisIndex = null;
 
     // ==================== INITIALIZATION ====================
     async function init() {
@@ -650,6 +742,7 @@
       renderComparisonChart();
       renderMomentumSection();
       renderYearlySection();
+      populateAnalysisSelector();
       updateSelectionCounter();
     }
 
@@ -715,8 +808,9 @@
       ctx.strokeStyle = '#3b82f6';
       ctx.lineWidth = 1.5;
 
+      const xStep = data.length > 1 ? 80 / (data.length - 1) : 0;
       data.forEach((value, i) => {
-        const x = (i / (data.length - 1)) * 80;
+        const x = data.length === 1 ? 40 : i * xStep;
         const y = 30 - ((value - min) / range) * 28;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -1370,6 +1464,489 @@
             <i class="fas fa-redo mr-2"></i>Retry
           </button>
         </div>
+      `;
+    }
+
+    // ==================== ANALYSIS SECTION (New) ====================
+    function populateAnalysisSelector() {
+      const selector = document.getElementById('analysisIndexSelector');
+      if (!selector) return;
+
+      // Keep existing selection
+      const currentValue = selector.value;
+
+      // Build options from all loaded indices
+      const indices = Object.keys(allIndices).sort((a, b) => {
+        const nameA = allIndices[a].name;
+        const nameB = allIndices[b].name;
+        return nameA.localeCompare(nameB);
+      });
+
+      selector.innerHTML = '<option value="">-- Choose Index --</option>' +
+        indices.map(key => `<option value="${key}">${allIndices[key].name}</option>`).join('');
+
+      // Restore selection if valid
+      if (currentValue && allIndices[currentValue]) {
+        selector.value = currentValue;
+      }
+    }
+
+    function renderAnalysis() {
+      const selector = document.getElementById('analysisIndexSelector');
+      const selectedKey = selector?.value;
+
+      if (!selectedKey || !allIndices[selectedKey]) {
+        document.getElementById('analysisEmptyState').classList.remove('hidden');
+        document.getElementById('analysisContent').classList.add('hidden');
+        return;
+      }
+
+      currentAnalysisIndex = selectedKey;
+      document.getElementById('analysisEmptyState').classList.add('hidden');
+      document.getElementById('analysisContent').classList.remove('hidden');
+
+      // Render each chart with error isolation
+      try { renderPEBandChart(selectedKey); } catch (e) { console.error('P/E Band Chart error:', e); }
+      try { renderEPSTrendChart(selectedKey); } catch (e) { console.error('EPS Trend Chart error:', e); }
+      try { renderROETrendChart(selectedKey); } catch (e) { console.error('ROE Trend Chart error:', e); }
+      try { renderFactorRadarChart(selectedKey); } catch (e) { console.error('Factor Radar error:', e); }
+    }
+
+    // ==================== P/E BAND CHART ====================
+    function renderPEBandChart(key) {
+      const index = allIndices[key];
+      const canvas = document.getElementById('peBandChart');
+      const ctx = canvas.getContext('2d');
+
+      // Get P/E data and filter nulls
+      const peData = index.timeSeries.pe.filter(v => v !== null);
+      const dates = index.timeSeries.dates.filter((d, i) => index.timeSeries.pe[i] !== null);
+
+      if (peData.length === 0) {
+        if (peBandChart) peBandChart.destroy();
+        document.getElementById('peBandStats').innerHTML = '<p class="col-span-5 text-gray-400">No P/E data available</p>';
+        return;
+      }
+
+      // Calculate percentiles with edge case handling
+      const sorted = [...peData].sort((a, b) => a - b);
+      const getPercentile = (arr, p) => {
+        if (arr.length === 0) return null;
+        if (arr.length === 1) return arr[0];
+        const idx = Math.min(Math.floor(arr.length * p), arr.length - 1);
+        return arr[idx];
+      };
+      const p10 = getPercentile(sorted, 0.10);
+      const p25 = getPercentile(sorted, 0.25);
+      const p50 = getPercentile(sorted, 0.50);
+      const p75 = getPercentile(sorted, 0.75);
+      const p90 = getPercentile(sorted, 0.90);
+      const current = peData[peData.length - 1];
+
+      // Determine current percentile position
+      let currentPercentile = 0;
+      for (let i = 0; i < sorted.length; i++) {
+        if (current <= sorted[i]) {
+          currentPercentile = Math.round((i / sorted.length) * 100);
+          break;
+        }
+      }
+      if (current > sorted[sorted.length - 1]) currentPercentile = 100;
+
+      if (peBandChart) peBandChart.destroy();
+
+      peBandChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'P/E Ratio',
+              data: peData,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 2
+            },
+            {
+              label: 'P90',
+              data: Array(dates.length).fill(p90),
+              borderColor: '#ef4444',
+              borderDash: [5, 5],
+              borderWidth: 1,
+              pointRadius: 0
+            },
+            {
+              label: 'P75',
+              data: Array(dates.length).fill(p75),
+              borderColor: '#f97316',
+              borderDash: [3, 3],
+              borderWidth: 1,
+              pointRadius: 0
+            },
+            {
+              label: 'P50 (Median)',
+              data: Array(dates.length).fill(p50),
+              borderColor: '#10b981',
+              borderWidth: 1.5,
+              pointRadius: 0
+            },
+            {
+              label: 'P25',
+              data: Array(dates.length).fill(p25),
+              borderColor: '#06b6d4',
+              borderDash: [3, 3],
+              borderWidth: 1,
+              pointRadius: 0
+            },
+            {
+              label: 'P10',
+              data: Array(dates.length).fill(p10),
+              borderColor: '#8b5cf6',
+              borderDash: [5, 5],
+              borderWidth: 1,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            y: { title: { display: true, text: 'P/E Ratio' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }
+          }
+        }
+      });
+
+      // Update stats
+      const positionColor = currentPercentile > 75 ? 'text-red-600' : currentPercentile > 50 ? 'text-amber-600' : currentPercentile > 25 ? 'text-green-600' : 'text-blue-600';
+      document.getElementById('peBandStats').innerHTML = `
+        <div class="bg-purple-50 rounded p-2"><div class="text-gray-500">P10</div><div class="font-bold">${p10.toFixed(1)}</div></div>
+        <div class="bg-cyan-50 rounded p-2"><div class="text-gray-500">P25</div><div class="font-bold">${p25.toFixed(1)}</div></div>
+        <div class="bg-green-50 rounded p-2"><div class="text-gray-500">P50</div><div class="font-bold">${p50.toFixed(1)}</div></div>
+        <div class="bg-orange-50 rounded p-2"><div class="text-gray-500">P75</div><div class="font-bold">${p75.toFixed(1)}</div></div>
+        <div class="bg-red-50 rounded p-2"><div class="text-gray-500">P90</div><div class="font-bold">${p90.toFixed(1)}</div></div>
+        <div class="col-span-5 mt-2 bg-blue-50 rounded p-2">
+          <span class="text-gray-600">Current:</span>
+          <span class="font-bold text-blue-600">${current.toFixed(1)}</span>
+          <span class="mx-2">|</span>
+          <span class="text-gray-600">Percentile:</span>
+          <span class="font-bold ${positionColor}">${currentPercentile}%</span>
+        </div>
+      `;
+    }
+
+    // ==================== EPS TREND CHART ====================
+    function renderEPSTrendChart(key) {
+      const index = allIndices[key];
+      const canvas = document.getElementById('epsTrendChart');
+      const ctx = canvas.getContext('2d');
+
+      // Get EPS data
+      const epsData = index.timeSeries.eps;
+      const dates = index.timeSeries.dates;
+
+      // Calculate YoY growth (52 weeks = 1 year)
+      const growthData = epsData.map((eps, i) => {
+        if (i < 52 || eps === null || epsData[i - 52] === null || epsData[i - 52] === 0) return null;
+        return ((eps - epsData[i - 52]) / Math.abs(epsData[i - 52])) * 100;
+      });
+
+      const validEps = epsData.filter(v => v !== null);
+      if (validEps.length === 0) {
+        if (epsTrendChart) epsTrendChart.destroy();
+        document.getElementById('epsStats').innerHTML = '<p class="col-span-3 text-gray-400">No EPS data available</p>';
+        return;
+      }
+
+      if (epsTrendChart) epsTrendChart.destroy();
+
+      epsTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'EPS',
+              data: epsData,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 2,
+              yAxisID: 'y'
+            },
+            {
+              label: 'YoY Growth %',
+              data: growthData,
+              borderColor: '#f59e0b',
+              backgroundColor: 'transparent',
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: function(ctx) {
+                  if (ctx.datasetIndex === 0) return `EPS: $${ctx.parsed.y?.toFixed(2) || 'N/A'}`;
+                  return `YoY: ${ctx.parsed.y?.toFixed(1) || 'N/A'}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: { display: true, text: 'EPS ($)' },
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              title: { display: true, text: 'YoY Growth (%)' },
+              grid: { drawOnChartArea: false }
+            },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }
+          }
+        }
+      });
+
+      // Calculate stats
+      const currentEps = validEps[validEps.length - 1];
+      const validGrowth = growthData.filter(v => v !== null);
+      const avgGrowth = validGrowth.length > 0 ? validGrowth.reduce((a, b) => a + b, 0) / validGrowth.length : null;
+      const latestGrowth = validGrowth.length > 0 ? validGrowth[validGrowth.length - 1] : null;
+
+      document.getElementById('epsStats').innerHTML = `
+        <div class="bg-green-50 rounded p-2"><div class="text-gray-500">Current EPS</div><div class="font-bold text-green-600">$${currentEps.toFixed(2)}</div></div>
+        <div class="bg-amber-50 rounded p-2"><div class="text-gray-500">Latest YoY</div><div class="font-bold ${latestGrowth > 0 ? 'text-green-600' : 'text-red-600'}">${latestGrowth ? (latestGrowth > 0 ? '+' : '') + latestGrowth.toFixed(1) + '%' : 'N/A'}</div></div>
+        <div class="bg-blue-50 rounded p-2"><div class="text-gray-500">Avg YoY (16Y)</div><div class="font-bold ${avgGrowth > 0 ? 'text-green-600' : 'text-red-600'}">${avgGrowth ? (avgGrowth > 0 ? '+' : '') + avgGrowth.toFixed(1) + '%' : 'N/A'}</div></div>
+      `;
+    }
+
+    // ==================== ROE TREND CHART ====================
+    function renderROETrendChart(key) {
+      const index = allIndices[key];
+      const canvas = document.getElementById('roeTrendChart');
+      const ctx = canvas.getContext('2d');
+
+      // Get ROE data (convert to percentage)
+      const roeData = index.timeSeries.roe.map(v => v !== null ? v * 100 : null);
+      const dates = index.timeSeries.dates;
+
+      const validRoe = roeData.filter(v => v !== null);
+      if (validRoe.length === 0) {
+        if (roeTrendChart) roeTrendChart.destroy();
+        document.getElementById('roeStats').innerHTML = '<p class="col-span-3 text-gray-400">No ROE data available</p>';
+        return;
+      }
+
+      // Calculate average ROE
+      const avgRoe = validRoe.reduce((a, b) => a + b, 0) / validRoe.length;
+
+      if (roeTrendChart) roeTrendChart.destroy();
+
+      roeTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'ROE',
+              data: roeData,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 2
+            },
+            {
+              label: 'Average',
+              data: Array(dates.length).fill(avgRoe),
+              borderColor: '#6b7280',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: function(ctx) {
+                  return `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { title: { display: true, text: 'ROE (%)' }, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: v => v + '%' } },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }
+          }
+        }
+      });
+
+      // Calculate stats
+      const currentRoe = validRoe[validRoe.length - 1];
+      const minRoe = Math.min(...validRoe);
+      const maxRoe = Math.max(...validRoe);
+
+      document.getElementById('roeStats').innerHTML = `
+        <div class="bg-amber-50 rounded p-2"><div class="text-gray-500">Current</div><div class="font-bold text-amber-600">${currentRoe.toFixed(1)}%</div></div>
+        <div class="bg-gray-50 rounded p-2"><div class="text-gray-500">16Y Avg</div><div class="font-bold">${avgRoe.toFixed(1)}%</div></div>
+        <div class="bg-blue-50 rounded p-2"><div class="text-gray-500">Range</div><div class="font-bold">${minRoe.toFixed(1)}% - ${maxRoe.toFixed(1)}%</div></div>
+      `;
+    }
+
+    // ==================== FACTOR RADAR CHART ====================
+    function renderFactorRadarChart(key) {
+      const index = allIndices[key];
+      const canvas = document.getElementById('factorRadarChart');
+      const ctx = canvas.getContext('2d');
+
+      // Validate data availability
+      if (!index || Object.keys(allIndices).length === 0) {
+        if (factorRadarChart) factorRadarChart.destroy();
+        document.getElementById('radarStats').innerHTML = '<p class="text-gray-400">Insufficient data for radar analysis</p>';
+        return;
+      }
+
+      // Calculate normalized scores (0-100) relative to all indices
+      const allPE = Object.values(allIndices).map(i => i.pe).filter(v => v !== null);
+      const allPB = Object.values(allIndices).map(i => i.pb).filter(v => v !== null);
+      const allROE = Object.values(allIndices).map(i => i.roe).filter(v => v !== null);
+
+      // Get 6M momentum from summaryData
+      let momentum6m = 0;
+      if (summaryData?.momentum) {
+        // Try different key formats
+        const momKey = key.startsWith('msci_') ? key.replace('msci_', '') : key;
+        momentum6m = summaryData.momentum[momKey]?.['6m'] || summaryData.momentum[key]?.['6m'] || 0;
+      }
+      const allMomentum = summaryData?.momentum ?
+        Object.values(summaryData.momentum).map(m => m['6m'] || 0) : [0];
+
+      // Normalize function (inverse for P/E and P/B - lower is better)
+      const normalize = (value, arr, inverse = false) => {
+        if (value === null || arr.length === 0) return 50;
+        const min = Math.min(...arr);
+        const max = Math.max(...arr);
+        if (max === min) return 50;
+        let score = ((value - min) / (max - min)) * 100;
+        return inverse ? 100 - score : score;
+      };
+
+      const peScore = normalize(index.pe, allPE, true);  // Lower P/E is better
+      const pbScore = normalize(index.pb, allPB, true);  // Lower P/B is better
+      const roeScore = normalize(index.roe, allROE, false);  // Higher ROE is better
+      const momentumScore = normalize(momentum6m, allMomentum, false);  // Higher momentum is better
+
+      if (factorRadarChart) factorRadarChart.destroy();
+
+      factorRadarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['P/E (Value)', 'P/B (Value)', 'ROE (Quality)', '6M Momentum'],
+          datasets: [{
+            label: index.name,
+            data: [peScore, pbScore, roeScore, momentumScore],
+            fill: true,
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            borderColor: '#6366f1',
+            pointBackgroundColor: '#6366f1',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#6366f1'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: function(ctx) {
+                  const labels = ['P/E', 'P/B', 'ROE', '6M Mom'];
+                  const values = [
+                    index.pe ? index.pe.toFixed(1) : 'N/A',
+                    index.pb ? index.pb.toFixed(1) : 'N/A',
+                    index.roe ? (index.roe * 100).toFixed(1) + '%' : 'N/A',
+                    (momentum6m * 100).toFixed(1) + '%'
+                  ];
+                  return `${labels[ctx.dataIndex]}: ${values[ctx.dataIndex]} (Score: ${ctx.parsed.r.toFixed(0)})`;
+                }
+              }
+            }
+          },
+          scales: {
+            r: {
+              angleLines: { color: 'rgba(0,0,0,0.1)' },
+              grid: { color: 'rgba(0,0,0,0.1)' },
+              pointLabels: { font: { size: 11 } },
+              suggestedMin: 0,
+              suggestedMax: 100,
+              ticks: { stepSize: 25, display: false }
+            }
+          }
+        }
+      });
+
+      // Calculate composite score
+      const compositeScore = ((peScore + pbScore + roeScore + momentumScore) / 4).toFixed(0);
+      document.getElementById('radarStats').innerHTML = `
+        <span class="text-gray-600">Composite Score:</span>
+        <span class="font-bold text-lg ml-2 ${compositeScore >= 60 ? 'text-green-600' : compositeScore >= 40 ? 'text-amber-600' : 'text-red-600'}">${compositeScore}/100</span>
+        <span class="text-gray-400 ml-2">(Higher = Better Value & Quality)</span>
       `;
     }
 
