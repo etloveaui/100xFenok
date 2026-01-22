@@ -27,10 +27,8 @@ const ValuationLabUI = (function() {
       { name: 'Target Price', link: 'expansion/target-price.html', icon: 'fa-bullseye', desc: 'Fair Value Calculator' }
     ],
     damodaran: [
-      { name: 'Damodaran Explorer', link: 'expansion/damodaran-explorer.html', icon: 'fa-compass', desc: '96 Industries + 178 Countries + ERP History' },
-      { name: 'Damodaran Hub', link: 'expansion/damodaran-hub.html', icon: 'fa-university', desc: 'Quick Overview' },
-      { name: 'EV/Sales Dashboard', link: 'expansion/ev-sales.html', icon: 'fa-chart-pie', desc: 'Sector Multiples' },
-      { name: 'ERP Ranking', link: 'expansion/erp-rank.html', icon: 'fa-earth-americas', desc: 'Country Risk Premiums' }
+      { name: 'Damodaran Explorer', link: 'expansion/damodaran-explorer.html', icon: 'fa-compass', desc: '산업 · 국가 · ERP 히스토리 · 분석' },
+      { name: '빠른 요약', link: 'expansion/damodaran-hub.html', icon: 'fa-gauge', desc: '핵심 지표 한눈에' }
     ],
     slickcharts: [
       { name: 'Historical Returns', link: 'expansion/slickcharts-historical.html', icon: 'fa-clock-rotate-left', desc: '47yr Returns + Dividends' }

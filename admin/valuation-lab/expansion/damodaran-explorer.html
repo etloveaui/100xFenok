@@ -160,8 +160,8 @@
   <!-- Loading Overlay -->
   <div id="loadingOverlay" class="loading-overlay">
     <div class="spinner"></div>
-    <p class="text-gray-600 mt-4">Loading Damodaran data...</p>
-    <p class="text-gray-400 text-sm mt-2">96 industries + 178 countries + 66 years ERP history</p>
+    <p class="text-gray-600 mt-4">Damodaran 데이터 로딩 중...</p>
+    <p class="text-gray-400 text-sm mt-2">96개 산업 + 178개 국가 + 66년 ERP 히스토리</p>
   </div>
 
   <div class="max-w-7xl mx-auto">
@@ -170,13 +170,13 @@
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 class="text-2xl font-bold text-gray-800">Damodaran Explorer</h1>
-          <p class="text-gray-500">Industries • Countries • ERP History • Analysis</p>
+          <p class="text-gray-500">산업 • 국가 • ERP 히스토리 • 분석</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="exportCSV()" class="export-btn">
             <i class="fas fa-file-csv mr-1"></i>CSV
           </button>
-          <a href="../" class="text-amber-600 hover:underline ml-2">← Back</a>
+          <a href="../" class="text-amber-600 hover:underline ml-2">← 뒤로</a>
         </div>
       </div>
     </div>
@@ -184,16 +184,16 @@
     <!-- Content Tabs -->
     <div class="flex gap-1 bg-amber-100 rounded-t-lg p-1 mb-0">
       <button class="content-tab active" data-tab="industries" onclick="setContentTab('industries')">
-        <i class="fas fa-industry mr-2"></i>Industries (96)
+        <i class="fas fa-industry mr-2"></i>산업 (96)
       </button>
       <button class="content-tab" data-tab="countries" onclick="setContentTab('countries')">
-        <i class="fas fa-globe mr-2"></i>Countries (178)
+        <i class="fas fa-globe mr-2"></i>국가 (178)
       </button>
       <button class="content-tab" data-tab="erp-history" onclick="setContentTab('erp-history')">
-        <i class="fas fa-chart-line mr-2"></i>ERP History
+        <i class="fas fa-chart-line mr-2"></i>ERP 히스토리
       </button>
       <button class="content-tab" data-tab="analysis" onclick="setContentTab('analysis')">
-        <i class="fas fa-calculator mr-2"></i>Analysis
+        <i class="fas fa-calculator mr-2"></i>분석
       </button>
     </div>
 
@@ -202,14 +202,14 @@
       <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-table text-amber-500 mr-2"></i>Industry Screener
+            <i class="fas fa-table text-amber-500 mr-2"></i>산업 스크리너
           </h2>
           <div class="flex items-center gap-3">
-            <span class="text-sm text-gray-500">96 industries from 6 Damodaran datasets</span>
+            <span class="text-sm text-gray-500">Damodaran 6개 데이터셋 기반 96개 산업</span>
           </div>
         </div>
 
-        <input id="industrySearch" type="text" placeholder="Search industries..."
+        <input id="industrySearch" type="text" placeholder="산업 검색..."
                class="w-full p-3 border rounded-lg mb-4" oninput="filterIndustryTable()">
 
         <div style="overflow-x: auto;">
@@ -231,8 +231,20 @@
 
         <p class="text-xs text-gray-500 mt-3">
           <i class="fas fa-info-circle mr-1"></i>
-          Data: Beta, Margins, EVA, Debt, Growth, Multiples merged from Damodaran Online
+          데이터: Damodaran Online의 Beta, Margins, EVA, Debt, Growth, Multiples 통합
         </p>
+
+        <!-- 사용법 섹션 -->
+        <div class="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+          <h4 class="text-sm font-bold text-amber-800 mb-2"><i class="fas fa-lightbulb mr-1"></i>용어 해석</h4>
+          <ul class="text-xs text-amber-700 space-y-1">
+            <li><b>Beta</b>: 시장 대비 변동성 (1.0=시장평균, >1.2=고위험)</li>
+            <li><b>ROE</b>: 자기자본이익률 (높을수록 좋음, 음수=손실)</li>
+            <li><b>WACC</b>: 가중평균자본비용 (할인율로 사용)</li>
+            <li><b>Net Margin</b>: 순이익률 (매출 대비 순이익)</li>
+            <li><b>EV/Sales</b>: 기업가치/매출 배수 (섹터 비교용)</li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -241,13 +253,13 @@
       <!-- Region Filter -->
       <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
         <div class="flex flex-wrap gap-2 mb-4">
-          <button id="region-all" onclick="setRegionFilter('all')" class="tab-btn active">All (178)</button>
-          <button id="region-western-europe" onclick="setRegionFilter('Western Europe')" class="tab-btn">🇪🇺 Western Europe</button>
-          <button id="region-asia" onclick="setRegionFilter('Asia')" class="tab-btn">🌏 Asia</button>
-          <button id="region-americas" onclick="setRegionFilter('Central and South America')" class="tab-btn">🌎 Americas</button>
-          <button id="region-africa" onclick="setRegionFilter('Africa')" class="tab-btn">🌍 Africa</button>
-          <button id="region-eastern-europe" onclick="setRegionFilter('Eastern Europe & Russia')" class="tab-btn">🇷🇺 Eastern Europe</button>
-          <button id="region-middle-east" onclick="setRegionFilter('Middle East')" class="tab-btn">🕌 Middle East</button>
+          <button id="region-all" onclick="setRegionFilter('all')" class="tab-btn active">전체 (178)</button>
+          <button id="region-western-europe" onclick="setRegionFilter('Western Europe')" class="tab-btn">🇪🇺 서유럽</button>
+          <button id="region-asia" onclick="setRegionFilter('Asia')" class="tab-btn">🌏 아시아</button>
+          <button id="region-americas" onclick="setRegionFilter('Central and South America')" class="tab-btn">🌎 아메리카</button>
+          <button id="region-africa" onclick="setRegionFilter('Africa')" class="tab-btn">🌍 아프리카</button>
+          <button id="region-eastern-europe" onclick="setRegionFilter('Eastern Europe & Russia')" class="tab-btn">🇷🇺 동유럽</button>
+          <button id="region-middle-east" onclick="setRegionFilter('Middle East')" class="tab-btn">🕌 중동</button>
         </div>
       </div>
 
@@ -256,7 +268,7 @@
         <div class="card">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-sm font-bold text-green-600 flex items-center gap-1.5">
-              <i class="fas fa-shield-alt"></i>Lowest ERP (Safest)
+              <i class="fas fa-shield-alt"></i>최저 ERP (안전)
             </h2>
             <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-lg">ERP</span>
           </div>
@@ -265,7 +277,7 @@
         <div class="card">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-sm font-bold text-red-600 flex items-center gap-1.5">
-              <i class="fas fa-exclamation-triangle"></i>Highest ERP (Risky)
+              <i class="fas fa-exclamation-triangle"></i>최고 ERP (위험)
             </h2>
             <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-lg">ERP</span>
           </div>
@@ -277,9 +289,9 @@
       <div class="card">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-earth-americas text-blue-500 mr-2"></i>Country Risk Premiums
+            <i class="fas fa-earth-americas text-blue-500 mr-2"></i>국가 위험 프리미엄
           </h2>
-          <input id="countrySearch" type="text" placeholder="Search countries..."
+          <input id="countrySearch" type="text" placeholder="국가 검색..."
                  class="p-2 border rounded-lg text-sm w-48" oninput="filterCountryTable()">
         </div>
 
@@ -298,6 +310,17 @@
             <tbody id="countryTableBody"></tbody>
           </table>
         </div>
+
+        <!-- 사용법 섹션 -->
+        <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h4 class="text-sm font-bold text-blue-800 mb-2"><i class="fas fa-lightbulb mr-1"></i>용어 해석</h4>
+          <ul class="text-xs text-blue-700 space-y-1">
+            <li><b>ERP</b>: 주식위험프리미엄 - 주식 투자 시 추가 요구 수익률</li>
+            <li><b>Country RP</b>: 국가위험프리미엄 (선진국=0%, 신흥국=높음)</li>
+            <li><b>Rating</b>: 국가 신용등급 (Aaa=최고, C=최저)</li>
+            <li><b>Tax Rate</b>: 법인세율</li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -306,13 +329,13 @@
       <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-chart-line text-purple-500 mr-2"></i>US Equity Risk Premium History (1960-2025)
+            <i class="fas fa-chart-line text-purple-500 mr-2"></i>미국 주식위험프리미엄 히스토리 (1960-2025)
           </h2>
           <div class="period-selector">
-            <button class="period-btn" data-period="10y" onclick="setERPPeriod('10y')">10Y</button>
-            <button class="period-btn" data-period="20y" onclick="setERPPeriod('20y')">20Y</button>
-            <button class="period-btn" data-period="40y" onclick="setERPPeriod('40y')">40Y</button>
-            <button class="period-btn active" data-period="all" onclick="setERPPeriod('all')">All</button>
+            <button class="period-btn" data-period="10y" onclick="setERPPeriod('10y')">10년</button>
+            <button class="period-btn" data-period="20y" onclick="setERPPeriod('20y')">20년</button>
+            <button class="period-btn" data-period="40y" onclick="setERPPeriod('40y')">40년</button>
+            <button class="period-btn active" data-period="all" onclick="setERPPeriod('all')">전체</button>
           </div>
         </div>
 
@@ -322,27 +345,33 @@
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           <div class="bg-amber-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">Current ERP (DDM)</div>
+            <div class="text-xs text-gray-500">현재 ERP (DDM)</div>
             <div class="text-xl font-bold text-amber-600 mono" id="currentErpDDM">-</div>
           </div>
           <div class="bg-blue-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">Current ERP (FCFE)</div>
+            <div class="text-xs text-gray-500">현재 ERP (FCFE)</div>
             <div class="text-xl font-bold text-blue-600 mono" id="currentErpFCFE">-</div>
           </div>
           <div class="bg-gray-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">T-Bond Rate</div>
+            <div class="text-xs text-gray-500">T-Bond 금리</div>
             <div class="text-xl font-bold text-gray-600 mono" id="currentTBond">-</div>
           </div>
           <div class="bg-purple-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">Historical Average</div>
+            <div class="text-xs text-gray-500">66년 평균</div>
             <div class="text-xl font-bold text-purple-600 mono" id="avgErp">-</div>
           </div>
         </div>
 
-        <p class="text-xs text-gray-500 mt-4">
-          <i class="fas fa-info-circle mr-1"></i>
-          DDM: Dividend Discount Model | FCFE: Free Cash Flow to Equity (available 2001+)
-        </p>
+        <!-- 사용법 섹션 -->
+        <div class="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <h4 class="text-sm font-bold text-purple-800 mb-2"><i class="fas fa-lightbulb mr-1"></i>용어 해석</h4>
+          <ul class="text-xs text-purple-700 space-y-1">
+            <li><b>DDM</b>: 배당할인모델 기반 ERP (Implied ERP)</li>
+            <li><b>FCFE</b>: 잉여현금흐름 기반 ERP (2001년부터 데이터)</li>
+            <li><b>T-Bond</b>: 미국 10년 국채 수익률 (무위험수익률)</li>
+            <li><b>평균</b>: 66년(1960~) 역사적 평균 ERP</li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -351,35 +380,35 @@
       <!-- WACC Calculator -->
       <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
         <h2 class="text-lg font-bold text-gray-800 mb-4">
-          <i class="fas fa-calculator text-green-500 mr-2"></i>WACC Calculator
+          <i class="fas fa-calculator text-green-500 mr-2"></i>WACC 계산기
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-4">
             <div>
-              <label class="text-sm font-medium text-gray-700">Select Industry</label>
+              <label class="text-sm font-medium text-gray-700">산업 선택</label>
               <select id="waccIndustry" onchange="updateWACC()" class="w-full p-2 border rounded-lg mt-1">
-                <option value="">-- Choose Industry --</option>
+                <option value="">-- 산업 선택 --</option>
               </select>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700">Select Country</label>
+              <label class="text-sm font-medium text-gray-700">국가 선택</label>
               <select id="waccCountry" onchange="updateWACC()" class="w-full p-2 border rounded-lg mt-1">
-                <option value="">-- Choose Country --</option>
+                <option value="">-- 국가 선택 --</option>
               </select>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700">Risk-Free Rate (US T-Bond)</label>
+              <label class="text-sm font-medium text-gray-700">무위험수익률 (US T-Bond)</label>
               <input type="number" id="waccRfr" value="4.18" step="0.01" onchange="updateWACC()"
                      class="w-full p-2 border rounded-lg mt-1 mono">
             </div>
           </div>
 
           <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-6">
-            <h3 class="text-sm font-bold text-gray-700 mb-4">Calculated Results</h3>
+            <h3 class="text-sm font-bold text-gray-700 mb-4">계산 결과</h3>
             <div class="space-y-3">
               <div class="flex justify-between">
-                <span class="text-gray-600">Industry Beta (Levered)</span>
+                <span class="text-gray-600">산업 Beta (Levered)</span>
                 <span class="font-bold mono" id="calcBeta">-</span>
               </div>
               <div class="flex justify-between">
@@ -387,63 +416,78 @@
                 <span class="font-bold mono" id="calcUsErp">4.18%</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-600">Country Risk Premium</span>
+                <span class="text-gray-600">국가 위험 프리미엄</span>
                 <span class="font-bold mono" id="calcCrp">-</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-600">Total ERP</span>
+                <span class="text-gray-600">총 ERP</span>
                 <span class="font-bold mono" id="calcTotalErp">-</span>
               </div>
               <hr class="my-2">
               <div class="flex justify-between text-lg">
-                <span class="font-bold text-gray-800">Cost of Equity</span>
+                <span class="font-bold text-gray-800">자기자본비용</span>
                 <span class="font-bold text-amber-600 mono" id="calcCoe">-</span>
               </div>
               <div class="flex justify-between text-lg">
-                <span class="font-bold text-gray-800">Industry WACC</span>
+                <span class="font-bold text-gray-800">산업 WACC</span>
                 <span class="font-bold text-green-600 mono" id="calcWacc">-</span>
               </div>
             </div>
           </div>
         </div>
 
-        <p class="text-xs text-gray-500 mt-4">
-          <i class="fas fa-info-circle mr-1"></i>
-          Cost of Equity = Rf + Beta × (US ERP + Country RP) | WACC from industry averages
-        </p>
+        <!-- 사용법 섹션 -->
+        <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <h4 class="text-sm font-bold text-green-800 mb-2"><i class="fas fa-lightbulb mr-1"></i>계산 공식</h4>
+          <ul class="text-xs text-green-700 space-y-1">
+            <li><b>자기자본비용</b> = Rf + β × (US ERP + Country RP)</li>
+            <li><b>WACC</b>: 산업 평균 가중평균자본비용</li>
+            <li><b>활용</b>: DCF 할인율, 투자 의사결정 기준</li>
+          </ul>
+        </div>
       </div>
 
       <!-- Credit Rating Lookup -->
       <div class="card">
         <h2 class="text-lg font-bold text-gray-800 mb-4">
-          <i class="fas fa-star text-yellow-500 mr-2"></i>Credit Rating Lookup
+          <i class="fas fa-star text-yellow-500 mr-2"></i>신용등급 조회
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-4">
             <div>
-              <label class="text-sm font-medium text-gray-700">Company Type</label>
+              <label class="text-sm font-medium text-gray-700">기업 유형</label>
               <select id="ratingCompanyType" onchange="lookupRating()" class="w-full p-2 border rounded-lg mt-1">
-                <option value="large_manufacturing">Large Manufacturing</option>
-                <option value="small_risky">Small/Risky Firms</option>
-                <option value="financial">Financial Services</option>
+                <option value="large_manufacturing">대형 제조업</option>
+                <option value="small_risky">소형/고위험 기업</option>
+                <option value="financial">금융 서비스</option>
               </select>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700">Interest Coverage Ratio</label>
+              <label class="text-sm font-medium text-gray-700">이자보상배율</label>
               <input type="number" id="ratingCoverage" value="5.0" step="0.1" onchange="lookupRating()"
                      class="w-full p-2 border rounded-lg mt-1 mono">
-              <p class="text-xs text-gray-400 mt-1">EBIT / Interest Expense</p>
+              <p class="text-xs text-gray-400 mt-1">EBIT ÷ 이자비용</p>
             </div>
           </div>
 
           <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6">
-            <h3 class="text-sm font-bold text-gray-700 mb-4">Rating Result</h3>
+            <h3 class="text-sm font-bold text-gray-700 mb-4">조회 결과</h3>
             <div class="text-center">
               <div class="text-4xl font-bold text-blue-600 mb-2" id="ratingResult">-</div>
-              <div class="text-sm text-gray-600">Default Spread: <span class="mono font-bold" id="ratingSpread">-</span></div>
+              <div class="text-sm text-gray-600">부도 스프레드: <span class="mono font-bold" id="ratingSpread">-</span></div>
             </div>
           </div>
+        </div>
+
+        <!-- 사용법 섹션 -->
+        <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+          <h4 class="text-sm font-bold text-yellow-800 mb-2"><i class="fas fa-lightbulb mr-1"></i>용어 해석</h4>
+          <ul class="text-xs text-yellow-700 space-y-1">
+            <li><b>이자보상배율</b>: EBIT ÷ 이자비용 (높을수록 안전)</li>
+            <li><b>부도 스프레드</b>: 무위험수익률 대비 가산 금리</li>
+            <li><b>활용</b>: 부채비용(Cost of Debt) 추정</li>
+          </ul>
         </div>
       </div>
     </div>

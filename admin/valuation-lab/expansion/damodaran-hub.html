@@ -3,31 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Damodaran 통합 허브</title>
+  <title>Damodaran 허브 - 빠른 요약</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; }
+    .stat-value { font-size: 1.25rem; font-weight: 700; }
+    .stat-label { font-size: 0.75rem; color: #6b7280; }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+<body class="bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen text-gray-800">
 
-  <header class="py-6 border-b bg-white">
+  <header class="py-6 border-b bg-white/80 backdrop-blur">
     <div class="container mx-auto px-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-            <i class="fas fa-compass text-amber-500"></i>
+            <i class="fas fa-gauge text-amber-500"></i>
           </div>
           <div>
-            <h1 class="text-xl font-bold">Damodaran 통합 허브</h1>
-            <p class="text-gray-500 text-sm">EV/Sales + ERP 요약</p>
+            <h1 class="text-xl font-bold">Damodaran 허브</h1>
+            <p class="text-gray-500 text-sm">핵심 지표 빠른 요약</p>
           </div>
         </div>
-        <a href="./" class="text-gray-500 hover:text-blue-600">
-          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        <a href="../" class="text-amber-600 hover:underline">
+          <i class="fas fa-arrow-left mr-1"></i> 뒤로
         </a>
       </div>
     </div>
@@ -35,80 +38,165 @@
 
   <main class="container mx-auto px-4 py-8 space-y-6">
 
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white rounded-xl p-5 shadow">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="font-semibold text-gray-700">EV/Sales 섹터 대시보드</h2>
-            <p class="text-xs text-gray-500">섹터 EV/Sales 비교</p>
-          </div>
-          <a href="ev-sales.html" class="text-xs text-emerald-600 hover:underline">페이지 이동</a>
-        </div>
-        <div class="grid grid-cols-2 gap-3 text-sm text-gray-600">
-          <div>
-            <span class="font-semibold text-gray-700">기준일</span>
-            <div class="mono" id="ev-date">-</div>
+    <!-- 4-Grid Summary -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- 산업 요약 -->
+      <div class="card">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-industry text-amber-600"></i>
           </div>
           <div>
-            <span class="font-semibold text-gray-700">섹터 수</span>
-            <div class="mono" id="ev-count">-</div>
-          </div>
-          <div>
-            <span class="font-semibold text-gray-700">중앙값 EV/Sales</span>
-            <div class="mono" id="ev-median">-</div>
-          </div>
-          <div>
-            <span class="font-semibold text-gray-700">최고 섹터</span>
-            <div class="mono" id="ev-top">-</div>
+            <h2 class="font-bold text-gray-800">산업 요약</h2>
+            <p class="text-xs text-gray-500">industries.json</p>
           </div>
         </div>
-        <div class="mt-4 text-xs text-gray-500">하위 섹터: <span class="mono" id="ev-bottom">-</span></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-amber-50 rounded-lg p-3 text-center">
+            <div class="stat-label">산업 수</div>
+            <div class="stat-value text-amber-600 mono" id="ind-count">-</div>
+          </div>
+          <div class="bg-amber-50 rounded-lg p-3 text-center">
+            <div class="stat-label">EV/Sales 중앙값</div>
+            <div class="stat-value text-amber-600 mono" id="ind-median">-</div>
+          </div>
+        </div>
+        <div class="mt-4 text-xs space-y-1">
+          <div class="flex justify-between">
+            <span class="text-gray-500">최고 EV/Sales</span>
+            <span class="mono text-green-600" id="ind-top">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">최저 EV/Sales</span>
+            <span class="mono text-red-600" id="ind-bottom">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">최고 Beta</span>
+            <span class="mono" id="ind-high-beta">-</span>
+          </div>
+        </div>
       </div>
 
-      <div class="bg-white rounded-xl p-5 shadow">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="font-semibold text-gray-700">국가 ERP 랭킹</h2>
-            <p class="text-xs text-gray-500">국가 위험 프리미엄</p>
-          </div>
-          <a href="erp-rank.html" class="text-xs text-sky-600 hover:underline">페이지 이동</a>
-        </div>
-        <div class="grid grid-cols-2 gap-3 text-sm text-gray-600">
-          <div>
-            <span class="font-semibold text-gray-700">기준일</span>
-            <div class="mono" id="erp-date">-</div>
+      <!-- 국가 요약 -->
+      <div class="card">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-earth-americas text-blue-600"></i>
           </div>
           <div>
-            <span class="font-semibold text-gray-700">국가 수</span>
-            <div class="mono" id="erp-count">-</div>
-          </div>
-          <div>
-            <span class="font-semibold text-gray-700">US ERP</span>
-            <div class="mono" id="erp-us">-</div>
-          </div>
-          <div>
-            <span class="font-semibold text-gray-700">최고 ERP</span>
-            <div class="mono" id="erp-top">-</div>
+            <h2 class="font-bold text-gray-800">국가 요약</h2>
+            <p class="text-xs text-gray-500">erp.json</p>
           </div>
         </div>
-        <div class="mt-4 text-xs text-gray-500">최저 ERP: <span class="mono" id="erp-bottom">-</span></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 rounded-lg p-3 text-center">
+            <div class="stat-label">국가 수</div>
+            <div class="stat-value text-blue-600 mono" id="country-count">-</div>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-3 text-center">
+            <div class="stat-label">현재 US ERP</div>
+            <div class="stat-value text-blue-600 mono" id="us-erp">-</div>
+          </div>
+        </div>
+        <div class="mt-4 text-xs space-y-1">
+          <div class="flex justify-between">
+            <span class="text-gray-500">최저 ERP (안전)</span>
+            <span class="mono text-green-600" id="country-low">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">최고 ERP (위험)</span>
+            <span class="mono text-red-600" id="country-high">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">Tax Rate 범위</span>
+            <span class="mono" id="tax-range">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ERP 히스토리 요약 -->
+      <div class="card">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-chart-line text-purple-600"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-gray-800">ERP 히스토리</h2>
+            <p class="text-xs text-gray-500">historical_erp.json (1960~)</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-purple-50 rounded-lg p-3 text-center">
+            <div class="stat-label">현재 ERP (DDM)</div>
+            <div class="stat-value text-purple-600 mono" id="erp-ddm">-</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-3 text-center">
+            <div class="stat-label">현재 ERP (FCFE)</div>
+            <div class="stat-value text-purple-600 mono" id="erp-fcfe">-</div>
+          </div>
+        </div>
+        <div class="mt-4 text-xs space-y-1">
+          <div class="flex justify-between">
+            <span class="text-gray-500">66년 평균 (DDM)</span>
+            <span class="mono" id="erp-avg">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">현재 T-Bond</span>
+            <span class="mono" id="tbond-rate">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">데이터 기간</span>
+            <span class="mono" id="erp-period">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 신용등급 요약 -->
+      <div class="card">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-star text-yellow-600"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-gray-800">신용등급 조회</h2>
+            <p class="text-xs text-gray-500">credit_ratings.json</p>
+          </div>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-4 text-center">
+          <div class="text-sm text-gray-600 mb-2">이자보상배율로 신용등급 추정</div>
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <div class="bg-white rounded p-2">
+              <div class="font-bold text-yellow-700">대형 제조업</div>
+              <div class="text-gray-500" id="rating-large">-</div>
+            </div>
+            <div class="bg-white rounded p-2">
+              <div class="font-bold text-yellow-700">소형/고위험</div>
+              <div class="text-gray-500" id="rating-small">-</div>
+            </div>
+            <div class="bg-white rounded p-2">
+              <div class="font-bold text-yellow-700">금융</div>
+              <div class="text-gray-500" id="rating-fin">-</div>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-3">
+          <i class="fas fa-info-circle mr-1"></i>
+          Explorer에서 상세 조회 가능
+        </p>
       </div>
     </section>
 
-    <section class="bg-white rounded-xl p-5 shadow">
-      <h2 class="font-semibold text-gray-700 mb-4">빠른 접근</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-        <a href="ev-sales.html" class="border rounded-lg p-3 hover:shadow-sm">
-          <div class="font-semibold text-emerald-600">EV/Sales 섹터</div>
-          <div class="text-xs text-gray-500">상/하위 섹터 비교</div>
-        </a>
-        <a href="erp-rank.html" class="border rounded-lg p-3 hover:shadow-sm">
-          <div class="font-semibold text-sky-600">ERP 국가 랭킹</div>
-          <div class="text-xs text-gray-500">국가 위험 프리미엄</div>
-        </a>
-        <a href="dashboard.html" class="border rounded-lg p-3 hover:shadow-sm">
-          <div class="font-semibold text-indigo-600">확장 대시보드</div>
-          <div class="text-xs text-gray-500">A~E 요약</div>
+    <!-- CTA -->
+    <section class="card bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h2 class="text-lg font-bold">더 자세한 분석이 필요하신가요?</h2>
+          <p class="text-amber-100 text-sm">Damodaran Explorer에서 96개 산업, 178개 국가, 66년 ERP 히스토리를 탐색하세요</p>
+        </div>
+        <a href="damodaran-explorer.html" class="bg-white text-amber-600 px-6 py-3 rounded-lg font-bold hover:bg-amber-50 transition-colors flex items-center gap-2">
+          <i class="fas fa-compass"></i>
+          Explorer 열기
         </a>
       </div>
     </section>
@@ -118,36 +206,27 @@
   <script>
     const buildBase = () => {
       const host = location.hostname;
-      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.');
       const isCloudflare = host.endsWith('pages.dev');
       return (isLocal || isCloudflare) ? '' : '/100xFenok';
     };
 
-    const base = buildBase();
-    const evUrl = `${base}/data/damodaran/industries.json`;
-    const erpUrl = `${base}/data/damodaran/erp.json`;
-
-    const elements = {
-      evDate: document.getElementById('ev-date'),
-      evCount: document.getElementById('ev-count'),
-      evMedian: document.getElementById('ev-median'),
-      evTop: document.getElementById('ev-top'),
-      evBottom: document.getElementById('ev-bottom'),
-      erpDate: document.getElementById('erp-date'),
-      erpCount: document.getElementById('erp-count'),
-      erpUs: document.getElementById('erp-us'),
-      erpTop: document.getElementById('erp-top'),
-      erpBottom: document.getElementById('erp-bottom')
+    const BASE = buildBase();
+    const DATA_URLS = {
+      industries: `${BASE}/data/damodaran/industries.json`,
+      erp: `${BASE}/data/damodaran/erp.json`,
+      historical: `${BASE}/data/damodaran/historical_erp.json`,
+      ratings: `${BASE}/data/damodaran/credit_ratings.json`
     };
 
-    function formatNumber(value) {
-      if (value === null || value === undefined || Number.isNaN(value)) return '-';
-      return Number(value).toFixed(2);
+    function formatNumber(val, dec = 2) {
+      if (val == null || isNaN(val)) return '-';
+      return Number(val).toFixed(dec);
     }
 
-    function formatPercent(value) {
-      if (value === null || value === undefined || Number.isNaN(value)) return '-';
-      return `${(Number(value) * 100).toFixed(2)}%`;
+    function formatPercent(val) {
+      if (val == null || isNaN(val)) return '-';
+      return (val * 100).toFixed(2) + '%';
     }
 
     function median(values) {
@@ -157,52 +236,78 @@
       return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     }
 
-    async function loadEvSales() {
-      const res = await fetch(evUrl);
-      if (!res.ok) throw new Error('EV/Sales 데이터 로딩 실패');
-      const data = await res.json();
-      const industries = data.industries || {};
-      const rows = Object.entries(industries).map(([name, row]) => ({
-        name,
-        ev_sales: row.multiples?.ev_sales ?? null
-      })).filter(row => row.ev_sales !== null);
+    async function loadAllData() {
+      try {
+        const [indRes, erpRes, histRes, ratRes] = await Promise.all([
+          fetch(DATA_URLS.industries),
+          fetch(DATA_URLS.erp),
+          fetch(DATA_URLS.historical),
+          fetch(DATA_URLS.ratings)
+        ]);
 
-      const sorted = [...rows].sort((a, b) => b.ev_sales - a.ev_sales);
-      elements.evDate.textContent = data.metadata?.generated_at || '-';
-      elements.evCount.textContent = rows.length.toString();
-      elements.evMedian.textContent = formatNumber(median(rows.map(r => r.ev_sales)));
-      elements.evTop.textContent = sorted[0] ? `${sorted[0].name} (${formatNumber(sorted[0].ev_sales)})` : '-';
-      elements.evBottom.textContent = sorted[sorted.length - 1]
-        ? `${sorted[sorted.length - 1].name} (${formatNumber(sorted[sorted.length - 1].ev_sales)})`
-        : '-';
+        const industries = await indRes.json();
+        const erp = await erpRes.json();
+        const historical = await histRes.json();
+        const ratings = await ratRes.json();
+
+        // 산업 요약
+        const indRows = Object.entries(industries.industries || {}).map(([name, d]) => ({
+          name,
+          ev_sales: d.multiples?.ev_sales,
+          beta: d.beta?.levered
+        }));
+        const evSalesVals = indRows.filter(r => r.ev_sales != null).map(r => r.ev_sales);
+        const sortedEV = [...indRows].filter(r => r.ev_sales != null).sort((a, b) => b.ev_sales - a.ev_sales);
+        const sortedBeta = [...indRows].filter(r => r.beta != null).sort((a, b) => b.beta - a.beta);
+
+        document.getElementById('ind-count').textContent = indRows.length;
+        document.getElementById('ind-median').textContent = formatNumber(median(evSalesVals));
+        document.getElementById('ind-top').textContent = sortedEV[0] ? `${sortedEV[0].name} (${formatNumber(sortedEV[0].ev_sales)})` : '-';
+        document.getElementById('ind-bottom').textContent = sortedEV.length ? `${sortedEV[sortedEV.length-1].name} (${formatNumber(sortedEV[sortedEV.length-1].ev_sales)})` : '-';
+        document.getElementById('ind-high-beta').textContent = sortedBeta[0] ? `${sortedBeta[0].name} (${formatNumber(sortedBeta[0].beta)})` : '-';
+
+        // 국가 요약
+        const countryRows = Object.entries(erp.countries || {}).map(([name, d]) => ({
+          name,
+          erp: d.equity_risk_premium,
+          tax: d.corporate_tax_rate
+        }));
+        const sortedERP = [...countryRows].filter(r => r.erp != null).sort((a, b) => a.erp - b.erp);
+        const taxes = countryRows.filter(r => r.tax != null).map(r => r.tax);
+        const taxMin = Math.min(...taxes);
+        const taxMax = Math.max(...taxes);
+
+        document.getElementById('country-count').textContent = countryRows.length;
+        document.getElementById('us-erp').textContent = formatPercent(erp.us_erp);
+        document.getElementById('country-low').textContent = sortedERP[0] ? `${sortedERP[0].name} (${formatPercent(sortedERP[0].erp)})` : '-';
+        document.getElementById('country-high').textContent = sortedERP.length ? `${sortedERP[sortedERP.length-1].name} (${formatPercent(sortedERP[sortedERP.length-1].erp)})` : '-';
+        document.getElementById('tax-range').textContent = `${formatPercent(taxMin)} ~ ${formatPercent(taxMax)}`;
+
+        // ERP 히스토리 요약
+        const years = Object.keys(historical.years || {}).sort();
+        const latestYear = years[years.length - 1];
+        const latest = historical.years?.[latestYear] || {};
+        const allDDM = Object.values(historical.years || {}).map(v => v.implied_erp_ddm).filter(v => v != null);
+        const avgDDM = allDDM.reduce((a, b) => a + b, 0) / allDDM.length;
+
+        document.getElementById('erp-ddm').textContent = formatPercent(latest.implied_erp_ddm);
+        document.getElementById('erp-fcfe').textContent = formatPercent(latest.implied_erp_fcfe);
+        document.getElementById('erp-avg').textContent = formatPercent(avgDDM);
+        document.getElementById('tbond-rate').textContent = formatPercent(latest.tbond_rate);
+        document.getElementById('erp-period').textContent = `${years[0]} ~ ${latestYear}`;
+
+        // 신용등급 요약
+        const ratingsTable = ratings.lookup_tables || {};
+        document.getElementById('rating-large').textContent = `${ratingsTable.large_manufacturing?.length || 0} 구간`;
+        document.getElementById('rating-small').textContent = `${ratingsTable.small_risky?.length || 0} 구간`;
+        document.getElementById('rating-fin').textContent = `${ratingsTable.financial?.length || 0} 구간`;
+
+      } catch (err) {
+        console.error('Data loading failed:', err);
+      }
     }
 
-    async function loadErp() {
-      const res = await fetch(erpUrl);
-      if (!res.ok) throw new Error('ERP 데이터 로딩 실패');
-      const data = await res.json();
-      const countries = data.countries || {};
-      const rows = Object.entries(countries).map(([name, row]) => ({
-        name,
-        equity_risk_premium: row.equity_risk_premium ?? null
-      })).filter(row => row.equity_risk_premium !== null);
-
-      const sorted = [...rows].sort((a, b) => b.equity_risk_premium - a.equity_risk_premium);
-      elements.erpDate.textContent = data.metadata?.generated_at || '-';
-      elements.erpCount.textContent = rows.length.toString();
-      elements.erpUs.textContent = formatPercent(data.us_erp ?? null);
-      elements.erpTop.textContent = sorted[0]
-        ? `${sorted[0].name} (${formatPercent(sorted[0].equity_risk_premium)})`
-        : '-';
-      elements.erpBottom.textContent = sorted[sorted.length - 1]
-        ? `${sorted[sorted.length - 1].name} (${formatPercent(sorted[sorted.length - 1].equity_risk_premium)})`
-        : '-';
-    }
-
-    Promise.all([loadEvSales(), loadErp()]).catch(err => {
-      elements.evTop.textContent = err.message;
-      elements.erpTop.textContent = err.message;
-    });
+    document.addEventListener('DOMContentLoaded', loadAllData);
   </script>
 </body>
 </html>
