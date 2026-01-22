@@ -18,13 +18,7 @@ const ValuationLabUI = (function() {
       { name: 'Valuation Card', link: 'card.html', icon: 'fa-id-card', desc: 'Index/Stock Valuation' }
     ],
     'global-scouter': [
-      { name: 'Global Scouter Explorer', link: 'expansion/global-scouter-explorer.html', icon: 'fa-compass', desc: '1,243 종목 통합 탐색기' },
-      { name: 'Valuation Card (Stock)', link: 'card.html?mode=stock', icon: 'fa-building', desc: 'Individual Stock Analysis' },
-      { name: 'Dashboard', link: 'expansion/dashboard.html', icon: 'fa-gauge-high', desc: 'Integrated Dashboard' },
-      { name: 'PER Band Screener', link: 'expansion/per-band.html', icon: 'fa-chart-line', desc: 'Band Deviation Analysis' },
-      { name: 'EPS Growth', link: 'expansion/eps-growth.html', icon: 'fa-arrow-trend-up', desc: 'Growth Ranking' },
-      { name: 'Sector Gap', link: 'expansion/sector-gap.html', icon: 'fa-layer-group', desc: 'Sector Comparison' },
-      { name: 'Target Price', link: 'expansion/target-price.html', icon: 'fa-bullseye', desc: 'Fair Value Calculator' }
+      { name: 'Global Scouter Explorer', link: 'expansion/global-scouter-explorer.html', icon: 'fa-compass', desc: '1,243 종목 통합 탐색기 (100% Data)' }
     ],
     damodaran: [
       { name: 'Damodaran Explorer', link: 'expansion/damodaran-explorer.html', icon: 'fa-compass', desc: '산업 · 국가 · ERP 히스토리 · 분석' }

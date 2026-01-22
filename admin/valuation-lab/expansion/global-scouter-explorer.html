@@ -316,14 +316,8 @@
           <h2 class="text-lg font-bold text-gray-800">
             <i class="fas fa-table text-emerald-500 mr-2"></i>종목 스크리너
           </h2>
-          <div class="flex items-center gap-3">
-            <span class="selection-counter">
-              <i class="fas fa-check-circle"></i>
-              <span id="selectedCount">0</span> / 5 선택
-            </span>
-            <button onclick="clearSelection()" class="text-sm text-gray-500 hover:text-red-600">
-              <i class="fas fa-times mr-1"></i>초기화
-            </button>
+          <div class="text-sm text-gray-500">
+            <i class="fas fa-mouse-pointer mr-1"></i>행 클릭 시 상세 정보 표시
           </div>
         </div>
 
@@ -334,9 +328,6 @@
           <table id="screenerTable">
             <thead>
               <tr>
-                <th class="checkbox-cell">
-                  <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                </th>
                 <th onclick="sortTable('ticker')">티커 <i class="fas fa-sort text-xs ml-1"></i></th>
                 <th onclick="sortTable('name')">종목명 <i class="fas fa-sort text-xs ml-1"></i></th>
                 <th onclick="sortTable('sector')">섹터 <i class="fas fa-sort text-xs ml-1"></i></th>
@@ -356,7 +347,7 @@
 
         <p class="text-xs text-gray-500 mt-3">
           <i class="fas fa-info-circle mr-1"></i>
-          행 클릭 시 상세 정보 표시 • 최대 5개 선택 가능 • 클릭 시 재무 데이터 로딩
+          행 클릭 시 상세 패널 표시 • 탭 전환으로 재무/밸류에이션/성장성/배당 분석
         </p>
       </div>
 
@@ -422,9 +413,13 @@
 
         <div class="metric-tabs flex flex-wrap gap-2 mb-4">
           <button class="tab-btn active" data-metric="revenue" onclick="setFinancialMetric('revenue')">매출액</button>
+          <button class="tab-btn" data-metric="gross_profit" onclick="setFinancialMetric('gross_profit')">매출총이익</button>
           <button class="tab-btn" data-metric="operating_income" onclick="setFinancialMetric('operating_income')">영업이익</button>
           <button class="tab-btn" data-metric="net_income" onclick="setFinancialMetric('net_income')">순이익</button>
+          <button class="tab-btn" data-metric="sga" onclick="setFinancialMetric('sga')">판관비</button>
           <button class="tab-btn" data-metric="fcf" onclick="setFinancialMetric('fcf')">FCF</button>
+          <button class="tab-btn" data-metric="cfi" onclick="setFinancialMetric('cfi')">투자CF</button>
+          <button class="tab-btn" data-metric="cff" onclick="setFinancialMetric('cff')">재무CF</button>
         </div>
 
         <div id="financialsChartContainer" class="chart-container">
@@ -479,6 +474,8 @@
           <button class="tab-btn active" data-metric="per" onclick="setValuationMetric('per')">P/E Band</button>
           <button class="tab-btn" data-metric="pbr" onclick="setValuationMetric('pbr')">P/B Band</button>
           <button class="tab-btn" data-metric="psr" onclick="setValuationMetric('psr')">P/S Ratio</button>
+          <button class="tab-btn" data-metric="pcr" onclick="setValuationMetric('pcr')">P/C Ratio</button>
+          <button class="tab-btn" data-metric="peg" onclick="setValuationMetric('peg')">PEG</button>
         </div>
 
         <div id="valuationsChartContainer" class="chart-container">
@@ -493,10 +490,14 @@
         </div>
 
         <!-- Valuation Summary Cards -->
-        <div id="valuationSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 hidden">
+        <div id="valuationSummary" class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4 hidden">
           <div class="bg-emerald-50 rounded-lg p-4 text-center">
             <div class="text-xs text-gray-500">현재 P/E</div>
             <div class="text-xl font-bold text-emerald-600 mono" id="currentPE">-</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">Forward P/E</div>
+            <div class="text-xl font-bold text-purple-600 mono" id="forwardPE">-</div>
           </div>
           <div class="bg-blue-50 rounded-lg p-4 text-center">
             <div class="text-xs text-gray-500">5Y 평균</div>
@@ -531,8 +532,10 @@
 
         <div class="metric-tabs flex flex-wrap gap-2 mb-4">
           <button class="tab-btn active" data-metric="revenue_growth" onclick="setGrowthMetric('revenue_growth')">매출 성장률</button>
+          <button class="tab-btn" data-metric="op_income_growth" onclick="setGrowthMetric('op_income_growth')">영업이익 성장률</button>
+          <button class="tab-btn" data-metric="net_income_growth" onclick="setGrowthMetric('net_income_growth')">순이익 성장률</button>
           <button class="tab-btn" data-metric="eps_growth" onclick="setGrowthMetric('eps_growth')">EPS 성장률</button>
-          <button class="tab-btn" data-metric="estimates" onclick="setGrowthMetric('estimates')">컨센서스</button>
+          <button class="tab-btn" data-metric="estimates" onclick="setGrowthMetric('estimates')">EPS 컨센서스</button>
         </div>
 
         <div id="growthChartContainer" class="chart-container">
@@ -587,6 +590,10 @@
           <button class="tab-btn active" data-metric="dps" onclick="setDividendMetric('dps')">주당 배당금</button>
           <button class="tab-btn" data-metric="div_yield" onclick="setDividendMetric('div_yield')">배당 수익률</button>
           <button class="tab-btn" data-metric="roe" onclick="setDividendMetric('roe')">ROE</button>
+          <button class="tab-btn" data-metric="roa" onclick="setDividendMetric('roa')">ROA</button>
+          <button class="tab-btn" data-metric="gross_margin" onclick="setDividendMetric('gross_margin')">매출총이익률</button>
+          <button class="tab-btn" data-metric="operating_margin" onclick="setDividendMetric('operating_margin')">영업이익률</button>
+          <button class="tab-btn" data-metric="net_margin" onclick="setDividendMetric('net_margin')">순이익률</button>
         </div>
 
         <div id="dividendChartContainer" class="chart-container">
@@ -640,7 +647,13 @@
                 <th>이름</th>
                 <th>카테고리</th>
                 <th>시총</th>
-                <th>1년 수익률</th>
+                <th>YTD</th>
+                <th>1Y</th>
+                <th>3Y CAGR</th>
+                <th>5Y CAGR</th>
+                <th>10Y CAGR</th>
+                <th>Beta</th>
+                <th>비용</th>
               </tr>
             </thead>
             <tbody id="etfTableBody"></tbody>
@@ -650,27 +663,67 @@
 
       <!-- Macro Section -->
       <div class="card">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-globe text-teal-500 mr-2"></i>매크로 지표 (1,045 records)
+            <i class="fas fa-globe text-teal-500 mr-2"></i>매크로 지표 시계열 (1,045 records)
           </h2>
-          <input id="macroSearch" type="text" placeholder="지표 검색..."
-                 class="p-2 border rounded-lg text-sm w-48" oninput="filterMacroTable()">
+          <div class="flex items-center gap-2">
+            <select id="macroIndicatorSelect" onchange="renderMacroChart()" class="p-2 border rounded-lg text-sm">
+              <option value="">지표 선택...</option>
+            </select>
+          </div>
         </div>
 
-        <div style="overflow-x: auto; max-height: 400px;">
-          <table id="macroTable">
-            <thead>
-              <tr>
-                <th>지표명</th>
-                <th>값</th>
-                <th>단위</th>
-                <th>날짜</th>
-              </tr>
-            </thead>
-            <tbody id="macroTableBody"></tbody>
-          </table>
+        <!-- Macro Time Series Chart -->
+        <div id="macroChartContainer" class="chart-container mb-4">
+          <canvas id="macroChart"></canvas>
+          <div id="macroEmptyState" class="chart-empty-state">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-chart-area text-5xl mb-3"></i>
+              <p class="text-lg font-medium">지표를 선택하세요</p>
+              <p class="text-sm mt-1">4년 히스토리 시계열 확인</p>
+            </div>
+          </div>
         </div>
+
+        <!-- Macro Summary Cards -->
+        <div id="macroSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 hidden">
+          <div class="bg-teal-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-gray-500">최신값</div>
+            <div class="text-lg font-bold text-teal-600 mono" id="macroLatest">-</div>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-gray-500">평균</div>
+            <div class="text-lg font-bold text-blue-600 mono" id="macroAvg">-</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-gray-500">최저</div>
+            <div class="text-lg font-bold text-gray-600 mono" id="macroMin">-</div>
+          </div>
+          <div class="bg-amber-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-gray-500">최고</div>
+            <div class="text-lg font-bold text-amber-600 mono" id="macroMax">-</div>
+          </div>
+        </div>
+
+        <details class="mt-4">
+          <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700">
+            <i class="fas fa-table mr-1"></i>테이블 보기 (최신 100개)
+          </summary>
+          <div style="overflow-x: auto; max-height: 300px;" class="mt-2">
+            <table id="macroTable">
+              <thead>
+                <tr>
+                  <th>지표명</th>
+                  <th>값</th>
+                  <th>단위</th>
+                  <th>날짜</th>
+                </tr>
+              </thead>
+              <tbody id="macroTableBody"></tbody>
+            </table>
+          </div>
+        </details>
       </div>
     </div>
   </div>
@@ -700,6 +753,8 @@
       dashboard: null,
       etfs: [],
       economic: [],
+      economicRecords: [], // Full time series records
+      economicIndicators: [], // Available indicator names
       detailCache: {},
       currentTab: 'overview',
       filter: 'all',
@@ -707,18 +762,19 @@
       search: '',
       page: 1,
       pageSize: 50,
-      selected: [],
       financialMetric: 'revenue',
       valuationMetric: 'per',
       growthMetric: 'revenue_growth',
-      dividendMetric: 'dps'
+      dividendMetric: 'dps',
+      macroIndicator: ''
     };
 
     let charts = {
       financials: null,
       valuations: null,
       growth: null,
-      dividend: null
+      dividend: null,
+      macro: null
     };
 
     // ================== INITIALIZATION ==================
@@ -777,23 +833,28 @@
           const econData = await econRes.json();
           // Economic data structure: { records: [...] }
           if (econData.records && Array.isArray(econData.records)) {
-            // Flatten records into indicator list
+            state.economicRecords = econData.records;
+            // Extract indicator names from first record
             const firstRecord = econData.records[0] || {};
-            state.economic = Object.entries(firstRecord)
-              .filter(([key]) => key !== 'date')
-              .map(([key, value]) => ({
-                indicator: key.toUpperCase().replace(/_/g, ' '),
-                name: key.toUpperCase().replace(/_/g, ' '),
-                value: value,
-                unit: 'ratio',
-                date: firstRecord.date
-              }));
+            state.economicIndicators = Object.keys(firstRecord).filter(k => k !== 'date');
+            // Flatten latest records into indicator list for table
+            state.economic = state.economicIndicators.map(key => ({
+              indicator: key.toUpperCase().replace(/_/g, ' '),
+              name: key.toUpperCase().replace(/_/g, ' '),
+              value: firstRecord[key],
+              unit: 'ratio',
+              date: firstRecord.date
+            }));
           } else {
             state.economic = econData.indicators || econData || [];
+            state.economicRecords = [];
+            state.economicIndicators = [];
           }
         } catch (e) {
           console.warn('Economic data not available:', e);
           state.economic = [];
+          state.economicRecords = [];
+          state.economicIndicators = [];
         }
 
         // Update counts
@@ -804,6 +865,7 @@
         renderTopBottom();
         renderSectorSummary();
         populateSelectors();
+        populateMacroSelector();
         renderETFTable();
         renderMacroTable();
 
@@ -909,13 +971,9 @@
       const pageData = filtered.slice(start, start + state.pageSize);
 
       tbody.innerHTML = pageData.map(stock => {
-        const isSelected = state.selected.includes(stock.ticker);
         const r12Class = stock.r12 >= 0 ? 'positive' : 'negative';
         return `
-          <tr class="${isSelected ? 'selected' : ''}" onclick="toggleSelection('${stock.ticker}')">
-            <td class="checkbox-cell">
-              <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelection('${stock.ticker}')">
-            </td>
+          <tr onclick="openDetail('${stock.ticker}')" class="hover:bg-emerald-50">
             <td class="font-bold text-emerald-600">${stock.ticker}</td>
             <td class="text-gray-800">${stock.name}</td>
             <td><span class="badge badge-sector">${stock.sector}</span></td>
@@ -929,7 +987,6 @@
       }).join('');
 
       renderPagination(totalPages);
-      document.getElementById('selectedCount').textContent = state.selected.length;
     }
 
     function renderPagination(totalPages) {
@@ -1268,6 +1325,10 @@
           chartData = data.income_statement?.revenue || [];
           label = '매출액';
           break;
+        case 'gross_profit':
+          chartData = data.income_statement?.gross_profit || [];
+          label = '매출총이익';
+          break;
         case 'operating_income':
           chartData = data.income_statement?.operating_income || [];
           label = '영업이익';
@@ -1276,9 +1337,21 @@
           chartData = data.income_statement?.net_income || [];
           label = '순이익';
           break;
+        case 'sga':
+          chartData = data.income_statement?.sga || [];
+          label = '판관비(SG&A)';
+          break;
         case 'fcf':
           chartData = data.cash_flow?.fcf || [];
           label = 'Free Cash Flow';
+          break;
+        case 'cfi':
+          chartData = data.cash_flow?.cfi || [];
+          label = '투자활동 현금흐름';
+          break;
+        case 'cff':
+          chartData = data.cash_flow?.cff || [];
+          label = '재무활동 현금흐름';
           break;
       }
 
@@ -1371,6 +1444,18 @@
           label = 'P/S Ratio';
           color = '#f59e0b';
           break;
+        case 'pcr':
+          chartData = data.valuation?.pcr || [];
+          band = {};
+          label = 'P/C Ratio (Price-to-Cash)';
+          color = '#3b82f6';
+          break;
+        case 'peg':
+          chartData = data.valuation?.peg || [];
+          band = {};
+          label = 'PEG Ratio';
+          color = '#ec4899';
+          break;
       }
 
       if (charts.valuations) charts.valuations.destroy();
@@ -1415,7 +1500,12 @@
 
       // Update summary
       const current = chartData[chartData.length - 1] || 0;
+      const stock = state.stocksList.find(s => s.ticker === ticker);
+      const fy1Eps = data.estimates?.eps?.fy1 || 0;
+      const forwardPE = (stock?.price && fy1Eps > 0) ? stock.price / fy1Eps : 0;
+
       document.getElementById('currentPE').textContent = formatNumber(current, 2);
+      document.getElementById('forwardPE').textContent = forwardPE > 0 ? formatNumber(forwardPE, 2) : '-';
       document.getElementById('avgPE').textContent = formatNumber(band.avg, 2);
       document.getElementById('minPE').textContent = formatNumber(band.min, 2);
       document.getElementById('maxPE').textContent = formatNumber(band.max, 2);
@@ -1456,7 +1546,13 @@
       } else {
         labels = data.years || ['FY-4', 'FY-3', 'FY-2', 'FY-1', 'FY0'];
         chartData = data.growth?.[state.growthMetric] || [];
-        label = state.growthMetric === 'revenue_growth' ? '매출 성장률' : 'EPS 성장률';
+        const metricLabels = {
+          'revenue_growth': '매출 성장률',
+          'op_income_growth': '영업이익 성장률',
+          'net_income_growth': '순이익 성장률',
+          'eps_growth': 'EPS 성장률'
+        };
+        label = metricLabels[state.growthMetric] || state.growthMetric;
         color = '#f97316';
       }
 
@@ -1551,6 +1647,26 @@
           label = 'ROE';
           color = '#8b5cf6';
           break;
+        case 'roa':
+          chartData = data.profitability?.roa || [];
+          label = 'ROA';
+          color = '#6366f1';
+          break;
+        case 'gross_margin':
+          chartData = data.profitability?.gross_margin || [];
+          label = '매출총이익률';
+          color = '#14b8a6';
+          break;
+        case 'operating_margin':
+          chartData = data.profitability?.operating_margin || [];
+          label = '영업이익률';
+          color = '#f97316';
+          break;
+        case 'net_margin':
+          chartData = data.profitability?.net_margin || [];
+          label = '순이익률';
+          color = '#ec4899';
+          break;
       }
 
       if (charts.dividend) charts.dividend.destroy();
@@ -1609,22 +1725,38 @@
     function renderETFTable() {
       const tbody = document.getElementById('etfTableBody');
       if (!state.etfs || state.etfs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-8">ETF 데이터 없음</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-gray-400 py-8">ETF 데이터 없음</td></tr>';
         return;
       }
 
       tbody.innerHTML = state.etfs.map(etf => {
-        const cagr5y = etf.cagr?.['5y'] || 0;
+        const returnsYtd = etf.returns?.['ytd'] || 0;
         const returns1y = etf.returns?.['1y'] || 0;
+        const cagr3y = etf.cagr?.['3y'] || 0;
+        const cagr5y = etf.cagr?.['5y'] || 0;
+        const cagr10y = etf.cagr?.['10y'] || 0;
+        const beta = etf.beta || 0;
+        const expense = etf.expense_ratio || 0;
         return `
         <tr>
           <td class="font-bold text-indigo-600">${etf.ticker || etf.name || '-'}</td>
           <td>${etf.name || etf.ticker || '-'}</td>
           <td><span class="badge badge-sector">${etf.category || '-'}</span></td>
           <td class="mono">${formatMarketCap(etf.market_cap || etf.mc)}</td>
-          <td class="mono ${returns1y >= 0 ? 'positive' : 'negative'}">${formatPercent(returns1y)}</td>
+          <td class="mono ${returnsYtd >= 0 ? 'positive' : 'negative'}">${formatPctValue(returnsYtd)}</td>
+          <td class="mono ${returns1y >= 0 ? 'positive' : 'negative'}">${formatPctValue(returns1y)}</td>
+          <td class="mono ${cagr3y >= 0 ? 'positive' : 'negative'}">${formatPctValue(cagr3y)}</td>
+          <td class="mono ${cagr5y >= 0 ? 'positive' : 'negative'}">${formatPctValue(cagr5y)}</td>
+          <td class="mono ${cagr10y >= 0 ? 'positive' : 'negative'}">${formatPctValue(cagr10y)}</td>
+          <td class="mono">${beta ? formatNumber(beta, 2) : '-'}</td>
+          <td class="mono">${expense ? formatPctValue(expense) : '-'}</td>
         </tr>
       `}).join('');
+    }
+
+    function formatPctValue(val) {
+      if (val == null || isNaN(val)) return '-';
+      return (val * 100).toFixed(1) + '%';
     }
 
     // ================== MACRO TABLE ==================
@@ -1660,6 +1792,96 @@
 
     function filterMacroTable() {
       renderMacroTable();
+    }
+
+    // ================== MACRO CHART ==================
+    function populateMacroSelector() {
+      const select = document.getElementById('macroIndicatorSelect');
+      if (!select || state.economicIndicators.length === 0) return;
+
+      select.innerHTML = '<option value="">지표 선택...</option>';
+      state.economicIndicators.forEach(ind => {
+        const opt = document.createElement('option');
+        opt.value = ind;
+        opt.textContent = ind.toUpperCase().replace(/_/g, ' ');
+        select.appendChild(opt);
+      });
+    }
+
+    function renderMacroChart() {
+      const indicator = document.getElementById('macroIndicatorSelect').value;
+      state.macroIndicator = indicator;
+
+      if (!indicator || state.economicRecords.length === 0) {
+        document.getElementById('macroEmptyState').style.display = 'flex';
+        document.getElementById('macroSummary').classList.add('hidden');
+        return;
+      }
+
+      document.getElementById('macroEmptyState').style.display = 'none';
+      document.getElementById('macroSummary').classList.remove('hidden');
+
+      const ctx = document.getElementById('macroChart').getContext('2d');
+
+      // Extract time series data
+      const labels = [];
+      const values = [];
+      state.economicRecords.forEach(record => {
+        if (record.date && record[indicator] != null) {
+          labels.push(record.date);
+          values.push(record[indicator]);
+        }
+      });
+
+      // Reverse to show oldest first
+      labels.reverse();
+      values.reverse();
+
+      if (charts.macro) charts.macro.destroy();
+
+      charts.macro = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: indicator.toUpperCase().replace(/_/g, ' '),
+            data: values,
+            borderColor: '#14b8a6',
+            backgroundColor: 'rgba(20, 184, 166, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${formatNumber(ctx.raw, 4)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { maxTicksLimit: 12 }
+            }
+          }
+        }
+      });
+
+      // Update summary
+      const latest = values[values.length - 1] || 0;
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+
+      document.getElementById('macroLatest').textContent = formatNumber(latest, 4);
+      document.getElementById('macroAvg').textContent = formatNumber(avg, 4);
+      document.getElementById('macroMin').textContent = formatNumber(min, 4);
+      document.getElementById('macroMax').textContent = formatNumber(max, 4);
     }
 
     // ================== EXPORT ==================
