@@ -18,6 +18,7 @@ const ValuationLabUI = (function() {
       { name: 'Valuation Card', link: 'card.html', icon: 'fa-id-card', desc: 'Index/Stock Valuation' }
     ],
     'global-scouter': [
+      { name: 'Global Scouter Explorer', link: 'expansion/global-scouter-explorer.html', icon: 'fa-compass', desc: '1,243 종목 통합 탐색기' },
       { name: 'Valuation Card (Stock)', link: 'card.html?mode=stock', icon: 'fa-building', desc: 'Individual Stock Analysis' },
       { name: 'Dashboard', link: 'expansion/dashboard.html', icon: 'fa-gauge-high', desc: 'Integrated Dashboard' },
       { name: 'PER Band Screener', link: 'expansion/per-band.html', icon: 'fa-chart-line', desc: 'Band Deviation Analysis' },
@@ -27,8 +28,7 @@ const ValuationLabUI = (function() {
       { name: 'Target Price', link: 'expansion/target-price.html', icon: 'fa-bullseye', desc: 'Fair Value Calculator' }
     ],
     damodaran: [
-      { name: 'Damodaran Explorer', link: 'expansion/damodaran-explorer.html', icon: 'fa-compass', desc: '산업 · 국가 · ERP 히스토리 · 분석' },
-      { name: '빠른 요약', link: 'expansion/damodaran-hub.html', icon: 'fa-gauge', desc: '핵심 지표 한눈에' }
+      { name: 'Damodaran Explorer', link: 'expansion/damodaran-explorer.html', icon: 'fa-compass', desc: '산업 · 국가 · ERP 히스토리 · 분석' }
     ],
     slickcharts: [
       { name: 'Historical Returns', link: 'expansion/slickcharts-historical.html', icon: 'fa-clock-rotate-left', desc: '47yr Returns + Dividends' }

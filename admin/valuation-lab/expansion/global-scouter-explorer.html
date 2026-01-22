@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Scouter Explorer - 100xFenok</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Loading State */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Content Tabs */
+    .content-tab {
+      padding: 12px 20px;
+      border-radius: 8px 8px 0 0;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      background: transparent;
+      color: #64748b;
+      border-bottom: 3px solid transparent;
+    }
+    .content-tab.active {
+      background: white;
+      color: #10b981;
+      border-bottom-color: #10b981;
+    }
+    .content-tab:not(.active):hover {
+      background: rgba(255,255,255,0.5);
+      color: #475569;
+    }
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+    }
+
+    /* Filter Tabs */
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .tab-btn.active { background: #10b981; color: white; }
+    .tab-btn:not(.active) { background: #f1f5f9; color: #475569; }
+    .tab-btn:not(.active):hover { background: #e2e8f0; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #6b7280; cursor: pointer; }
+    tbody tr { transition: all 0.2s; cursor: pointer; }
+    tbody tr:hover { background: #ecfdf5; }
+    tbody tr.selected { background: #d1fae5 !important; }
+
+    /* Checkbox */
+    .checkbox-cell { width: 40px; text-align: center; }
+    input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+
+    /* Sparkline */
+    .sparkline { display: inline-block; vertical-align: middle; }
+
+    /* Badge */
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .badge-country { background: #dbeafe; color: #1e40af; }
+    .badge-sector { background: #fef3c7; color: #92400e; }
+    .badge-exchange { background: #e0e7ff; color: #3730a3; }
+
+    /* Selection Counter */
+    .selection-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #d1fae5;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #065f46;
+    }
+
+    /* Chart Container */
+    .chart-container { height: 400px; position: relative; }
+    .chart-empty-state {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(249, 250, 251, 0.9);
+      border-radius: 8px;
+    }
+
+    /* Metric Cards */
+    .metric-card {
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    /* Period Selector */
+    .period-selector { display: flex; gap: 6px; }
+    .period-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+    }
+    .period-btn.active { background: #10b981; color: white; border-color: #10b981; }
+    .period-btn:not(.active) { background: white; color: #64748b; }
+    .period-btn:not(.active):hover { background: #f8fafc; }
+
+    /* Export Buttons */
+    .export-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #64748b;
+    }
+    .export-btn:hover { background: #f8fafc; }
+    .export-btn.primary { background: #10b981; color: white; border-color: #10b981; }
+    .export-btn.primary:hover { background: #059669; }
+
+    /* Value colors */
+    .positive { color: #16a34a; }
+    .negative { color: #dc2626; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    /* Detail Panel */
+    .detail-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 500px;
+      max-width: 90vw;
+      height: 100vh;
+      background: white;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+    }
+    .detail-panel.open {
+      transform: translateX(0);
+    }
+    .detail-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 999;
+      display: none;
+    }
+    .detail-overlay.open {
+      display: block;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .page-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #64748b;
+    }
+    .page-btn.active { background: #10b981; color: white; border-color: #10b981; }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="text-gray-600 mt-4">Global Scouter 데이터 로딩 중...</p>
+    <p class="text-gray-400 text-sm mt-2">1,243 종목 + 23 ETF + 1,045 매크로 지표</p>
+  </div>
+
+  <!-- Detail Overlay -->
+  <div id="detailOverlay" class="detail-overlay" onclick="closeDetail()"></div>
+
+  <!-- Detail Panel -->
+  <div id="detailPanel" class="detail-panel">
+    <div id="detailContent" class="p-6"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="card">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Global Scouter Explorer</h1>
+          <p class="text-gray-500">종목 • 재무제표 • 밸류에이션 • 성장성 • 배당 • ETF/매크로</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportCSV()" class="export-btn">
+            <i class="fas fa-file-csv mr-1"></i>CSV
+          </button>
+          <button onclick="exportPNG()" class="export-btn">
+            <i class="fas fa-image mr-1"></i>PNG
+          </button>
+          <a href="../" class="text-emerald-500 hover:underline ml-2">← 뒤로</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Tabs -->
+    <div class="flex gap-1 bg-emerald-100 rounded-t-lg p-1 mb-0 overflow-x-auto">
+      <button class="content-tab active" data-tab="overview" onclick="setContentTab('overview')">
+        <i class="fas fa-table mr-2"></i>전체보기
+      </button>
+      <button class="content-tab" data-tab="financials" onclick="setContentTab('financials')">
+        <i class="fas fa-receipt mr-2"></i>재무제표
+      </button>
+      <button class="content-tab" data-tab="valuations" onclick="setContentTab('valuations')">
+        <i class="fas fa-chart-bar mr-2"></i>밸류에이션
+      </button>
+      <button class="content-tab" data-tab="growth" onclick="setContentTab('growth')">
+        <i class="fas fa-arrow-trend-up mr-2"></i>성장성
+      </button>
+      <button class="content-tab" data-tab="dividends" onclick="setContentTab('dividends')">
+        <i class="fas fa-coins mr-2"></i>배당
+      </button>
+      <button class="content-tab" data-tab="etfs" onclick="setContentTab('etfs')">
+        <i class="fas fa-globe mr-2"></i>ETF/매크로
+      </button>
+    </div>
+
+    <!-- ==================== OVERVIEW TAB ==================== -->
+    <div id="section-overview" class="content-section active">
+      <!-- Filter Tabs -->
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex flex-wrap gap-2">
+          <button id="tab-all" onclick="setFilter('all')" class="tab-btn active">전체 (<span id="count-all">0</span>)</button>
+          <button id="tab-us" onclick="setFilter('US')" class="tab-btn">🇺🇸 미국 (<span id="count-us">0</span>)</button>
+          <button id="tab-kr" onclick="setFilter('KR')" class="tab-btn">🇰🇷 한국 (<span id="count-kr">0</span>)</button>
+          <button id="tab-cn" onclick="setFilter('CN')" class="tab-btn">🇨🇳 중국 (<span id="count-cn">0</span>)</button>
+          <button id="tab-jp" onclick="setFilter('JP')" class="tab-btn">🇯🇵 일본 (<span id="count-jp">0</span>)</button>
+          <button id="tab-hk" onclick="setFilter('HK')" class="tab-btn">🇭🇰 홍콩 (<span id="count-hk">0</span>)</button>
+          <button id="tab-eu" onclick="setFilter('EU')" class="tab-btn">🇪🇺 유럽 (<span id="count-eu">0</span>)</button>
+        </div>
+      </div>
+
+      <!-- Screener Table -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-table text-emerald-500 mr-2"></i>종목 스크리너
+          </h2>
+          <div class="flex items-center gap-3">
+            <span class="selection-counter">
+              <i class="fas fa-check-circle"></i>
+              <span id="selectedCount">0</span> / 5 선택
+            </span>
+            <button onclick="clearSelection()" class="text-sm text-gray-500 hover:text-red-600">
+              <i class="fas fa-times mr-1"></i>초기화
+            </button>
+          </div>
+        </div>
+
+        <input id="search" type="text" placeholder="종목 검색 (티커, 이름, 섹터)..."
+               class="w-full p-3 border rounded-lg mb-4" oninput="filterTable()">
+
+        <div style="overflow-x: auto;">
+          <table id="screenerTable">
+            <thead>
+              <tr>
+                <th class="checkbox-cell">
+                  <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                </th>
+                <th onclick="sortTable('ticker')">티커 <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('name')">종목명 <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('sector')">섹터 <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('mc')">시총 <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('pe')">P/E <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('pb')">P/B <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('dy')">배당률 <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('r12')">12M 수익률 <i class="fas fa-sort text-xs ml-1"></i></th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination"></div>
+
+        <p class="text-xs text-gray-500 mt-3">
+          <i class="fas fa-info-circle mr-1"></i>
+          행 클릭 시 상세 정보 표시 • 최대 5개 선택 가능 • 클릭 시 재무 데이터 로딩
+        </p>
+      </div>
+
+      <!-- Top/Bottom Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-green-600 flex items-center gap-1.5">
+              <i class="fas fa-crown"></i>Top 5 (12M 수익률)
+            </h2>
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-lg">YoY Return</span>
+          </div>
+          <div id="top5-cards" class="space-y-2"></div>
+        </div>
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-red-600 flex items-center gap-1.5">
+              <i class="fas fa-exclamation-circle"></i>Bottom 5 (12M 수익률)
+            </h2>
+            <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-lg">YoY Return</span>
+          </div>
+          <div id="bottom5-cards" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- Sector & Country Summary (from dashboard.json) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-amber-600 flex items-center gap-1.5">
+              <i class="fas fa-layer-group"></i>섹터별 현황 (26개)
+            </h2>
+            <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg">dashboard.json</span>
+          </div>
+          <div id="sector-summary" class="space-y-1 max-h-64 overflow-y-auto text-sm"></div>
+        </div>
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-blue-600 flex items-center gap-1.5">
+              <i class="fas fa-globe"></i>국가별 현황 (5개)
+            </h2>
+            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg">dashboard.json</span>
+          </div>
+          <div id="country-summary" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FINANCIALS TAB ==================== -->
+    <div id="section-financials" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-receipt text-blue-500 mr-2"></i>재무제표 비교
+          </h2>
+          <div class="flex items-center gap-3">
+            <label for="financialSelector" class="text-sm text-gray-600">종목:</label>
+            <select id="financialSelector" onchange="renderFinancialsChart()" class="p-2 border rounded-lg text-sm min-w-48">
+              <option value="">-- 종목 선택 --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="metric-tabs flex flex-wrap gap-2 mb-4">
+          <button class="tab-btn active" data-metric="revenue" onclick="setFinancialMetric('revenue')">매출액</button>
+          <button class="tab-btn" data-metric="operating_income" onclick="setFinancialMetric('operating_income')">영업이익</button>
+          <button class="tab-btn" data-metric="net_income" onclick="setFinancialMetric('net_income')">순이익</button>
+          <button class="tab-btn" data-metric="fcf" onclick="setFinancialMetric('fcf')">FCF</button>
+        </div>
+
+        <div id="financialsChartContainer" class="chart-container">
+          <canvas id="financialsChart"></canvas>
+          <div id="financialsEmptyState" class="chart-empty-state">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-chart-bar text-5xl mb-3"></i>
+              <p class="text-lg font-medium">종목을 선택하세요</p>
+              <p class="text-sm mt-1">Overview 탭에서 종목 클릭 또는 위 드롭다운에서 선택</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Summary Table -->
+        <div id="financialSummary" class="mt-6 hidden">
+          <h3 class="text-sm font-bold text-gray-700 mb-3">5개년 재무 요약</h3>
+          <div style="overflow-x: auto;">
+            <table class="text-sm">
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>FY-4</th>
+                  <th>FY-3</th>
+                  <th>FY-2</th>
+                  <th>FY-1</th>
+                  <th>FY0</th>
+                </tr>
+              </thead>
+              <tbody id="financialSummaryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VALUATIONS TAB ==================== -->
+    <div id="section-valuations" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-chart-bar text-purple-500 mr-2"></i>밸류에이션 밴드
+          </h2>
+          <div class="flex items-center gap-3">
+            <label for="valuationSelector" class="text-sm text-gray-600">종목:</label>
+            <select id="valuationSelector" onchange="renderValuationsChart()" class="p-2 border rounded-lg text-sm min-w-48">
+              <option value="">-- 종목 선택 --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="metric-tabs flex flex-wrap gap-2 mb-4">
+          <button class="tab-btn active" data-metric="per" onclick="setValuationMetric('per')">P/E Band</button>
+          <button class="tab-btn" data-metric="pbr" onclick="setValuationMetric('pbr')">P/B Band</button>
+          <button class="tab-btn" data-metric="psr" onclick="setValuationMetric('psr')">P/S Ratio</button>
+        </div>
+
+        <div id="valuationsChartContainer" class="chart-container">
+          <canvas id="valuationsChart"></canvas>
+          <div id="valuationsEmptyState" class="chart-empty-state">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-chart-line text-5xl mb-3"></i>
+              <p class="text-lg font-medium">종목을 선택하세요</p>
+              <p class="text-sm mt-1">5개년 밸류에이션 밴드 확인</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Valuation Summary Cards -->
+        <div id="valuationSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 hidden">
+          <div class="bg-emerald-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">현재 P/E</div>
+            <div class="text-xl font-bold text-emerald-600 mono" id="currentPE">-</div>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">5Y 평균</div>
+            <div class="text-xl font-bold text-blue-600 mono" id="avgPE">-</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">5Y 최저</div>
+            <div class="text-xl font-bold text-gray-600 mono" id="minPE">-</div>
+          </div>
+          <div class="bg-amber-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">5Y 최고</div>
+            <div class="text-xl font-bold text-amber-600 mono" id="maxPE">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== GROWTH TAB ==================== -->
+    <div id="section-growth" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-arrow-trend-up text-orange-500 mr-2"></i>성장성 분석
+          </h2>
+          <div class="flex items-center gap-3">
+            <label for="growthSelector" class="text-sm text-gray-600">종목:</label>
+            <select id="growthSelector" onchange="renderGrowthChart()" class="p-2 border rounded-lg text-sm min-w-48">
+              <option value="">-- 종목 선택 --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="metric-tabs flex flex-wrap gap-2 mb-4">
+          <button class="tab-btn active" data-metric="revenue_growth" onclick="setGrowthMetric('revenue_growth')">매출 성장률</button>
+          <button class="tab-btn" data-metric="eps_growth" onclick="setGrowthMetric('eps_growth')">EPS 성장률</button>
+          <button class="tab-btn" data-metric="estimates" onclick="setGrowthMetric('estimates')">컨센서스</button>
+        </div>
+
+        <div id="growthChartContainer" class="chart-container">
+          <canvas id="growthChart"></canvas>
+          <div id="growthEmptyState" class="chart-empty-state">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-chart-area text-5xl mb-3"></i>
+              <p class="text-lg font-medium">종목을 선택하세요</p>
+              <p class="text-sm mt-1">과거 성장률 + 향후 컨센서스</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Growth Summary -->
+        <div id="growthSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 hidden">
+          <div class="bg-orange-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">매출 CAGR (5Y)</div>
+            <div class="text-xl font-bold text-orange-600 mono" id="revCAGR">-</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">EPS CAGR (5Y)</div>
+            <div class="text-xl font-bold text-purple-600 mono" id="epsCAGR">-</div>
+          </div>
+          <div class="bg-emerald-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">FY1 EPS 예상</div>
+            <div class="text-xl font-bold text-emerald-600 mono" id="fy1EPS">-</div>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">FY2 EPS 예상</div>
+            <div class="text-xl font-bold text-blue-600 mono" id="fy2EPS">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== DIVIDENDS TAB ==================== -->
+    <div id="section-dividends" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-coins text-yellow-500 mr-2"></i>배당 분석
+          </h2>
+          <div class="flex items-center gap-3">
+            <label for="dividendSelector" class="text-sm text-gray-600">종목:</label>
+            <select id="dividendSelector" onchange="renderDividendChart()" class="p-2 border rounded-lg text-sm min-w-48">
+              <option value="">-- 종목 선택 --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="metric-tabs flex flex-wrap gap-2 mb-4">
+          <button class="tab-btn active" data-metric="dps" onclick="setDividendMetric('dps')">주당 배당금</button>
+          <button class="tab-btn" data-metric="div_yield" onclick="setDividendMetric('div_yield')">배당 수익률</button>
+          <button class="tab-btn" data-metric="roe" onclick="setDividendMetric('roe')">ROE</button>
+        </div>
+
+        <div id="dividendChartContainer" class="chart-container">
+          <canvas id="dividendChart"></canvas>
+          <div id="dividendEmptyState" class="chart-empty-state">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-money-bill-wave text-5xl mb-3"></i>
+              <p class="text-lg font-medium">종목을 선택하세요</p>
+              <p class="text-sm mt-1">배당금 추이 + 수익률 확인</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dividend Summary -->
+        <div id="dividendSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 hidden">
+          <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">현재 DPS</div>
+            <div class="text-xl font-bold text-yellow-600 mono" id="currentDPS">-</div>
+          </div>
+          <div class="bg-green-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">배당 수익률</div>
+            <div class="text-xl font-bold text-green-600 mono" id="currentYield">-</div>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">DPS CAGR (5Y)</div>
+            <div class="text-xl font-bold text-blue-600 mono" id="dpsCAGR">-</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-4 text-center">
+            <div class="text-xs text-gray-500">평균 ROE</div>
+            <div class="text-xl font-bold text-purple-600 mono" id="avgROE">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ETFs/MACRO TAB ==================== -->
+    <div id="section-etfs" class="content-section">
+      <!-- ETF Section -->
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-layer-group text-indigo-500 mr-2"></i>ETF 목록 (23개)
+          </h2>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table id="etfTable">
+            <thead>
+              <tr>
+                <th>티커</th>
+                <th>이름</th>
+                <th>섹터</th>
+                <th>시총</th>
+                <th>P/E</th>
+                <th>배당률</th>
+              </tr>
+            </thead>
+            <tbody id="etfTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Macro Section -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-globe text-teal-500 mr-2"></i>매크로 지표 (1,045 records)
+          </h2>
+          <input id="macroSearch" type="text" placeholder="지표 검색..."
+                 class="p-2 border rounded-lg text-sm w-48" oninput="filterMacroTable()">
+        </div>
+
+        <div style="overflow-x: auto; max-height: 400px;">
+          <table id="macroTable">
+            <thead>
+              <tr>
+                <th>지표명</th>
+                <th>값</th>
+                <th>단위</th>
+                <th>날짜</th>
+              </tr>
+            </thead>
+            <tbody id="macroTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ================== DATA & STATE ==================
+    const buildBase = () => {
+      const host = location.hostname;
+      const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.');
+      const isCloudflare = host.endsWith('pages.dev');
+      return (isLocal || isCloudflare) ? '' : '/100xFenok';
+    };
+
+    const BASE = buildBase();
+    const DATA_URLS = {
+      stocksIndex: `${BASE}/data/global-scouter/core/stocks_index.json`,
+      metadata: `${BASE}/data/global-scouter/core/metadata.json`,
+      dashboard: `${BASE}/data/global-scouter/core/dashboard.json`,
+      etfs: `${BASE}/data/global-scouter/etfs/index.json`,
+      economic: `${BASE}/data/global-scouter/indicators/economic.json`,
+      stockDetail: (ticker) => `${BASE}/data/global-scouter/stocks/detail/${ticker}.json`
+    };
+
+    let state = {
+      stocks: {},
+      stocksList: [],
+      dashboard: null,
+      etfs: [],
+      economic: [],
+      detailCache: {},
+      currentTab: 'overview',
+      filter: 'all',
+      sort: { key: 'mc', asc: false },
+      search: '',
+      page: 1,
+      pageSize: 50,
+      selected: [],
+      financialMetric: 'revenue',
+      valuationMetric: 'per',
+      growthMetric: 'revenue_growth',
+      dividendMetric: 'dps'
+    };
+
+    let charts = {
+      financials: null,
+      valuations: null,
+      growth: null,
+      dividend: null
+    };
+
+    // ================== INITIALIZATION ==================
+    async function init() {
+      try {
+        // Load stocks index
+        const stocksRes = await fetch(DATA_URLS.stocksIndex);
+        const stocksData = await stocksRes.json();
+        state.stocks = stocksData.stocks || {};
+
+        // Convert to array for easier manipulation
+        state.stocksList = Object.entries(state.stocks).map(([ticker, data]) => ({
+          ticker,
+          name: data.n || ticker,
+          exchange: data.x || '-',
+          sector: data.s || '-',
+          country: data.c || '-',
+          price: data.p || 0,
+          mc: data.mc || 0,
+          pe: data.pe || 0,
+          pb: data.pb || 0,
+          dy: data.dy || 0,
+          r12: data.r12 || 0
+        }));
+
+        // Try loading dashboard summary
+        try {
+          const dashRes = await fetch(DATA_URLS.dashboard);
+          state.dashboard = await dashRes.json();
+        } catch (e) {
+          console.warn('Dashboard data not available:', e);
+          state.dashboard = null;
+        }
+
+        // Try loading ETFs and economic (may not exist)
+        try {
+          const etfsRes = await fetch(DATA_URLS.etfs);
+          const etfsData = await etfsRes.json();
+          state.etfs = etfsData.etfs || [];
+        } catch (e) {
+          console.warn('ETFs data not available:', e);
+          state.etfs = [];
+        }
+
+        try {
+          const econRes = await fetch(DATA_URLS.economic);
+          const econData = await econRes.json();
+          state.economic = econData.indicators || econData || [];
+        } catch (e) {
+          console.warn('Economic data not available:', e);
+          state.economic = [];
+        }
+
+        // Update counts
+        updateFilterCounts();
+
+        // Render
+        renderTable();
+        renderTopBottom();
+        renderSectorSummary();
+        populateSelectors();
+        renderETFTable();
+        renderMacroTable();
+
+        // Hide loading
+        document.getElementById('loadingOverlay').style.display = 'none';
+      } catch (err) {
+        console.error('Failed to load data:', err);
+        document.getElementById('loadingOverlay').innerHTML = `
+          <div class="text-red-500 text-center">
+            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+            <p class="text-lg font-bold">데이터 로딩 실패</p>
+            <p class="text-sm mt-2">${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // ================== FILTER COUNTS ==================
+    function updateFilterCounts() {
+      const countryCounts = { all: state.stocksList.length };
+      const countryMap = { US: 'us', KR: 'kr', CN: 'cn', JP: 'jp', HK: 'hk' };
+
+      state.stocksList.forEach(stock => {
+        const c = stock.country;
+        const key = countryMap[c] || 'eu';
+        countryCounts[key] = (countryCounts[key] || 0) + 1;
+      });
+
+      document.getElementById('count-all').textContent = countryCounts.all || 0;
+      document.getElementById('count-us').textContent = countryCounts.us || 0;
+      document.getElementById('count-kr').textContent = countryCounts.kr || 0;
+      document.getElementById('count-cn').textContent = countryCounts.cn || 0;
+      document.getElementById('count-jp').textContent = countryCounts.jp || 0;
+      document.getElementById('count-hk').textContent = countryCounts.hk || 0;
+      document.getElementById('count-eu').textContent = countryCounts.eu || 0;
+    }
+
+    // ================== TAB NAVIGATION ==================
+    function setContentTab(tabName) {
+      state.currentTab = tabName;
+      document.querySelectorAll('.content-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.toggle('active', section.id === `section-${tabName}`);
+      });
+    }
+
+    // ================== FILTER ==================
+    function setFilter(filter) {
+      state.filter = filter;
+      state.page = 1;
+      document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+        const btnFilter = btn.id.replace('tab-', '').toUpperCase();
+        btn.classList.toggle('active', btnFilter === filter.toUpperCase() || (filter === 'all' && btn.id === 'tab-all'));
+      });
+      renderTable();
+      renderTopBottom();
+    }
+
+    // ================== TABLE RENDERING ==================
+    function getFilteredStocks() {
+      let filtered = [...state.stocksList];
+
+      // Country filter
+      if (state.filter !== 'all') {
+        if (state.filter === 'EU') {
+          filtered = filtered.filter(s => !['US', 'KR', 'CN', 'JP', 'HK'].includes(s.country));
+        } else {
+          filtered = filtered.filter(s => s.country === state.filter);
+        }
+      }
+
+      // Search filter
+      if (state.search) {
+        const term = state.search.toLowerCase();
+        filtered = filtered.filter(s =>
+          s.ticker.toLowerCase().includes(term) ||
+          s.name.toLowerCase().includes(term) ||
+          s.sector.toLowerCase().includes(term)
+        );
+      }
+
+      // Sort
+      const { key, asc } = state.sort;
+      filtered.sort((a, b) => {
+        let valA = a[key];
+        let valB = b[key];
+        if (typeof valA === 'string') {
+          return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return asc ? valA - valB : valB - valA;
+      });
+
+      return filtered;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      const filtered = getFilteredStocks();
+      const totalPages = Math.ceil(filtered.length / state.pageSize);
+      const start = (state.page - 1) * state.pageSize;
+      const pageData = filtered.slice(start, start + state.pageSize);
+
+      tbody.innerHTML = pageData.map(stock => {
+        const isSelected = state.selected.includes(stock.ticker);
+        const r12Class = stock.r12 >= 0 ? 'positive' : 'negative';
+        return `
+          <tr class="${isSelected ? 'selected' : ''}" onclick="toggleSelection('${stock.ticker}')">
+            <td class="checkbox-cell">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelection('${stock.ticker}')">
+            </td>
+            <td class="font-bold text-emerald-600">${stock.ticker}</td>
+            <td class="text-gray-800">${stock.name}</td>
+            <td><span class="badge badge-sector">${stock.sector}</span></td>
+            <td class="mono">${formatMarketCap(stock.mc)}</td>
+            <td class="mono">${formatNumber(stock.pe, 1)}</td>
+            <td class="mono">${formatNumber(stock.pb, 2)}</td>
+            <td class="mono">${formatPercent(stock.dy)}</td>
+            <td class="mono ${r12Class}">${formatPercent(stock.r12)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination(totalPages);
+      document.getElementById('selectedCount').textContent = state.selected.length;
+    }
+
+    function renderPagination(totalPages) {
+      const container = document.getElementById('pagination');
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = `
+        <button class="page-btn" onclick="goToPage(1)" ${state.page === 1 ? 'disabled' : ''}>
+          <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button class="page-btn" onclick="goToPage(${state.page - 1})" ${state.page === 1 ? 'disabled' : ''}>
+          <i class="fas fa-angle-left"></i>
+        </button>
+      `;
+
+      const start = Math.max(1, state.page - 2);
+      const end = Math.min(totalPages, state.page + 2);
+
+      for (let i = start; i <= end; i++) {
+        html += `<button class="page-btn ${i === state.page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      }
+
+      html += `
+        <button class="page-btn" onclick="goToPage(${state.page + 1})" ${state.page === totalPages ? 'disabled' : ''}>
+          <i class="fas fa-angle-right"></i>
+        </button>
+        <button class="page-btn" onclick="goToPage(${totalPages})" ${state.page === totalPages ? 'disabled' : ''}>
+          <i class="fas fa-angle-double-right"></i>
+        </button>
+        <span class="text-sm text-gray-500 ml-2">${state.page} / ${totalPages}</span>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      state.page = page;
+      renderTable();
+    }
+
+    function sortTable(key) {
+      if (state.sort.key === key) {
+        state.sort.asc = !state.sort.asc;
+      } else {
+        state.sort = { key, asc: key === 'ticker' || key === 'name' };
+      }
+      renderTable();
+    }
+
+    function filterTable() {
+      state.search = document.getElementById('search').value;
+      state.page = 1;
+      renderTable();
+    }
+
+    // ================== SELECTION ==================
+    function toggleSelection(ticker) {
+      const idx = state.selected.indexOf(ticker);
+      if (idx >= 0) {
+        state.selected.splice(idx, 1);
+      } else if (state.selected.length < 5) {
+        state.selected.push(ticker);
+        loadDetailData(ticker);
+      }
+      renderTable();
+      updateSelectors();
+    }
+
+    function clearSelection() {
+      state.selected = [];
+      renderTable();
+      updateSelectors();
+    }
+
+    function toggleSelectAll() {
+      const checkbox = document.getElementById('selectAll');
+      if (checkbox.checked) {
+        const filtered = getFilteredStocks().slice(0, 5);
+        state.selected = filtered.map(s => s.ticker);
+        filtered.forEach(s => loadDetailData(s.ticker));
+      } else {
+        state.selected = [];
+      }
+      renderTable();
+      updateSelectors();
+    }
+
+    // ================== TOP/BOTTOM ==================
+    function renderTopBottom() {
+      const filtered = getFilteredStocks();
+      const sorted = [...filtered].sort((a, b) => b.r12 - a.r12);
+      const top5 = sorted.slice(0, 5);
+      const bottom5 = sorted.slice(-5).reverse();
+
+      document.getElementById('top5-cards').innerHTML = top5.map(s => `
+        <div class="metric-card flex items-center justify-between p-2 bg-green-50 rounded-lg" onclick="openDetail('${s.ticker}')">
+          <div>
+            <span class="font-bold text-emerald-700">${s.ticker}</span>
+            <span class="text-xs text-gray-500 ml-2">${s.name}</span>
+          </div>
+          <span class="mono font-bold text-green-600">${formatPercent(s.r12)}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('bottom5-cards').innerHTML = bottom5.map(s => `
+        <div class="metric-card flex items-center justify-between p-2 bg-red-50 rounded-lg" onclick="openDetail('${s.ticker}')">
+          <div>
+            <span class="font-bold text-red-700">${s.ticker}</span>
+            <span class="text-xs text-gray-500 ml-2">${s.name}</span>
+          </div>
+          <span class="mono font-bold text-red-600">${formatPercent(s.r12)}</span>
+        </div>
+      `).join('');
+    }
+
+    // ================== SECTOR/COUNTRY SUMMARY ==================
+    function renderSectorSummary() {
+      if (!state.dashboard) return;
+
+      const { sectors, countries, summary } = state.dashboard;
+
+      // Sector Summary (sorted by count)
+      const sectorContainer = document.getElementById('sector-summary');
+      if (sectorContainer && sectors) {
+        const sortedSectors = Object.entries(sectors)
+          .sort((a, b) => b[1].count - a[1].count);
+
+        sectorContainer.innerHTML = sortedSectors.map(([name, data]) => `
+          <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+            <span class="text-gray-700">${name}</span>
+            <div class="flex items-center gap-4">
+              <span class="text-xs text-gray-500">${data.count}개</span>
+              <span class="text-xs text-blue-600 mono">${formatMarketCap(data.market_cap)}</span>
+              <span class="text-xs text-emerald-600 mono">P/E ${formatNumber(data.avg_per, 1)}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Country Summary
+      const countryContainer = document.getElementById('country-summary');
+      if (countryContainer && countries) {
+        const countryFlags = { US: '🇺🇸', KR: '🇰🇷', CN: '🇨🇳', JP: '🇯🇵', HK: '🇭🇰' };
+        const countryNames = { US: '미국', KR: '한국', CN: '중국', JP: '일본', HK: '홍콩' };
+        const sortedCountries = Object.entries(countries)
+          .sort((a, b) => b[1].count - a[1].count);
+
+        countryContainer.innerHTML = sortedCountries.map(([code, data]) => `
+          <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">${countryFlags[code] || '🌐'}</span>
+              <span class="font-medium text-gray-700">${countryNames[code] || code}</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-sm text-gray-600">${data.count}개</span>
+              <span class="text-sm font-bold text-blue-600 mono">${formatMarketCap(data.market_cap)}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ================== DETAIL LOADING ==================
+    async function loadDetailData(ticker) {
+      if (state.detailCache[ticker]) return state.detailCache[ticker];
+
+      try {
+        const res = await fetch(DATA_URLS.stockDetail(ticker));
+        const data = await res.json();
+        state.detailCache[ticker] = data;
+        return data;
+      } catch (e) {
+        console.warn(`Failed to load detail for ${ticker}:`, e);
+        return null;
+      }
+    }
+
+    async function openDetail(ticker) {
+      const data = await loadDetailData(ticker);
+      if (!data) {
+        alert('상세 데이터를 불러올 수 없습니다.');
+        return;
+      }
+
+      const stock = state.stocksList.find(s => s.ticker === ticker);
+      const panel = document.getElementById('detailPanel');
+      const content = document.getElementById('detailContent');
+      const overlay = document.getElementById('detailOverlay');
+
+      content.innerHTML = `
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-emerald-600">${ticker}</h2>
+            <p class="text-gray-500">${stock?.name || ticker}</p>
+          </div>
+          <button onclick="closeDetail()" class="p-2 text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-emerald-50 rounded-lg p-4">
+            <div class="text-xs text-gray-500">시가총액</div>
+            <div class="text-lg font-bold text-emerald-600 mono">${formatMarketCap(stock?.mc)}</div>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-4">
+            <div class="text-xs text-gray-500">P/E</div>
+            <div class="text-lg font-bold text-blue-600 mono">${formatNumber(data.valuation?.per?.[4] || stock?.pe, 1)}</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-4">
+            <div class="text-xs text-gray-500">ROE</div>
+            <div class="text-lg font-bold text-purple-600 mono">${formatPercent((data.profitability?.roe?.[4] || 0) / 100)}</div>
+          </div>
+          <div class="bg-amber-50 rounded-lg p-4">
+            <div class="text-xs text-gray-500">배당률</div>
+            <div class="text-lg font-bold text-amber-600 mono">${formatPercent((data.dividend?.div_yield?.[4] || 0) / 100)}</div>
+          </div>
+        </div>
+
+        <h3 class="font-bold text-gray-700 mb-3">5개년 재무 하이라이트</h3>
+        <table class="text-sm w-full mb-6">
+          <thead>
+            <tr>
+              <th class="text-left">항목</th>
+              ${data.years?.map(y => `<th class="text-right">${y}</th>`).join('') || ''}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>매출액</td>
+              ${data.income_statement?.revenue?.map(v => `<td class="text-right mono">${formatB(v)}</td>`).join('') || ''}
+            </tr>
+            <tr>
+              <td>순이익</td>
+              ${data.income_statement?.net_income?.map(v => `<td class="text-right mono">${formatB(v)}</td>`).join('') || ''}
+            </tr>
+            <tr>
+              <td>EPS</td>
+              ${data.per_share?.eps?.map(v => `<td class="text-right mono">$${formatNumber(v, 2)}</td>`).join('') || ''}
+            </tr>
+            <tr>
+              <td>P/E</td>
+              ${data.valuation?.per?.map(v => `<td class="text-right mono">${formatNumber(v, 1)}</td>`).join('') || ''}
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 class="font-bold text-gray-700 mb-3">컨센서스 (Estimates)</h3>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-gray-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-gray-500">FY1 EPS</div>
+            <div class="font-bold text-emerald-600 mono">$${formatNumber(data.estimates?.eps?.fy1, 2)}</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-gray-500">FY2 EPS</div>
+            <div class="font-bold text-blue-600 mono">$${formatNumber(data.estimates?.eps?.fy2, 2)}</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-gray-500">FY3 EPS</div>
+            <div class="font-bold text-purple-600 mono">$${formatNumber(data.estimates?.eps?.fy3, 2)}</div>
+          </div>
+        </div>
+      `;
+
+      panel.classList.add('open');
+      overlay.classList.add('open');
+    }
+
+    function closeDetail() {
+      document.getElementById('detailPanel').classList.remove('open');
+      document.getElementById('detailOverlay').classList.remove('open');
+    }
+
+    // ================== SELECTORS ==================
+    function populateSelectors() {
+      const selectors = ['financialSelector', 'valuationSelector', 'growthSelector', 'dividendSelector'];
+      const sorted = [...state.stocksList].sort((a, b) => b.mc - a.mc).slice(0, 100);
+
+      selectors.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        const current = select.value;
+        select.innerHTML = '<option value="">-- 종목 선택 --</option>';
+        sorted.forEach(stock => {
+          const opt = document.createElement('option');
+          opt.value = stock.ticker;
+          opt.textContent = `${stock.ticker} - ${stock.name}`;
+          select.appendChild(opt);
+        });
+        if (current) select.value = current;
+      });
+    }
+
+    function updateSelectors() {
+      if (state.selected.length > 0) {
+        const ticker = state.selected[0];
+        ['financialSelector', 'valuationSelector', 'growthSelector', 'dividendSelector'].forEach(id => {
+          const select = document.getElementById(id);
+          if (select) select.value = ticker;
+        });
+      }
+    }
+
+    // ================== FINANCIALS CHART ==================
+    function setFinancialMetric(metric) {
+      state.financialMetric = metric;
+      document.querySelectorAll('#section-financials .metric-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.metric === metric);
+      });
+      renderFinancialsChart();
+    }
+
+    async function renderFinancialsChart() {
+      const ticker = document.getElementById('financialSelector').value;
+      if (!ticker) {
+        document.getElementById('financialsEmptyState').style.display = 'flex';
+        document.getElementById('financialSummary').classList.add('hidden');
+        return;
+      }
+
+      const data = await loadDetailData(ticker);
+      if (!data) return;
+
+      document.getElementById('financialsEmptyState').style.display = 'none';
+      document.getElementById('financialSummary').classList.remove('hidden');
+
+      const ctx = document.getElementById('financialsChart').getContext('2d');
+      const years = data.years || ['FY-4', 'FY-3', 'FY-2', 'FY-1', 'FY0'];
+
+      let chartData, label;
+      switch (state.financialMetric) {
+        case 'revenue':
+          chartData = data.income_statement?.revenue || [];
+          label = '매출액';
+          break;
+        case 'operating_income':
+          chartData = data.income_statement?.operating_income || [];
+          label = '영업이익';
+          break;
+        case 'net_income':
+          chartData = data.income_statement?.net_income || [];
+          label = '순이익';
+          break;
+        case 'fcf':
+          chartData = data.cash_flow?.fcf || [];
+          label = 'Free Cash Flow';
+          break;
+      }
+
+      if (charts.financials) charts.financials.destroy();
+
+      charts.financials = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: years,
+          datasets: [{
+            label: label,
+            data: chartData,
+            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+            borderColor: '#10b981',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${formatB(ctx.raw)}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: { callback: v => formatB(v) }
+            }
+          }
+        }
+      });
+
+      // Summary table
+      const summary = document.getElementById('financialSummaryBody');
+      summary.innerHTML = `
+        <tr><td>매출액</td>${(data.income_statement?.revenue || []).map(v => `<td class="mono text-right">${formatB(v)}</td>`).join('')}</tr>
+        <tr><td>영업이익</td>${(data.income_statement?.operating_income || []).map(v => `<td class="mono text-right">${formatB(v)}</td>`).join('')}</tr>
+        <tr><td>순이익</td>${(data.income_statement?.net_income || []).map(v => `<td class="mono text-right">${formatB(v)}</td>`).join('')}</tr>
+        <tr><td>FCF</td>${(data.cash_flow?.fcf || []).map(v => `<td class="mono text-right">${formatB(v)}</td>`).join('')}</tr>
+      `;
+    }
+
+    // ================== VALUATIONS CHART ==================
+    function setValuationMetric(metric) {
+      state.valuationMetric = metric;
+      document.querySelectorAll('#section-valuations .metric-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.metric === metric);
+      });
+      renderValuationsChart();
+    }
+
+    async function renderValuationsChart() {
+      const ticker = document.getElementById('valuationSelector').value;
+      if (!ticker) {
+        document.getElementById('valuationsEmptyState').style.display = 'flex';
+        document.getElementById('valuationSummary').classList.add('hidden');
+        return;
+      }
+
+      const data = await loadDetailData(ticker);
+      if (!data) return;
+
+      document.getElementById('valuationsEmptyState').style.display = 'none';
+      document.getElementById('valuationSummary').classList.remove('hidden');
+
+      const ctx = document.getElementById('valuationsChart').getContext('2d');
+      const years = data.years || ['FY-4', 'FY-3', 'FY-2', 'FY-1', 'FY0'];
+
+      let chartData, band, label, color;
+      switch (state.valuationMetric) {
+        case 'per':
+          chartData = data.valuation?.per || [];
+          band = data.valuation?.per_band || {};
+          label = 'P/E Ratio';
+          color = '#10b981';
+          break;
+        case 'pbr':
+          chartData = data.valuation?.pbr || [];
+          band = data.valuation?.pbr_band || {};
+          label = 'P/B Ratio';
+          color = '#8b5cf6';
+          break;
+        case 'psr':
+          chartData = data.valuation?.psr || [];
+          band = {};
+          label = 'P/S Ratio';
+          color = '#f59e0b';
+          break;
+      }
+
+      if (charts.valuations) charts.valuations.destroy();
+
+      const datasets = [{
+        label: label,
+        data: chartData,
+        borderColor: color,
+        backgroundColor: `${color}33`,
+        fill: true,
+        tension: 0.3
+      }];
+
+      // Add band lines if available
+      if (band.avg) {
+        datasets.push({
+          label: '평균',
+          data: new Array(years.length).fill(band.avg),
+          borderColor: '#6b7280',
+          borderDash: [5, 5],
+          fill: false,
+          pointRadius: 0
+        });
+      }
+
+      charts.valuations = new Chart(ctx, {
+        type: 'line',
+        data: { labels: years, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${formatNumber(ctx.raw, 2)}`
+              }
+            }
+          }
+        }
+      });
+
+      // Update summary
+      const current = chartData[chartData.length - 1] || 0;
+      document.getElementById('currentPE').textContent = formatNumber(current, 2);
+      document.getElementById('avgPE').textContent = formatNumber(band.avg, 2);
+      document.getElementById('minPE').textContent = formatNumber(band.min, 2);
+      document.getElementById('maxPE').textContent = formatNumber(band.max, 2);
+    }
+
+    // ================== GROWTH CHART ==================
+    function setGrowthMetric(metric) {
+      state.growthMetric = metric;
+      document.querySelectorAll('#section-growth .metric-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.metric === metric);
+      });
+      renderGrowthChart();
+    }
+
+    async function renderGrowthChart() {
+      const ticker = document.getElementById('growthSelector').value;
+      if (!ticker) {
+        document.getElementById('growthEmptyState').style.display = 'flex';
+        document.getElementById('growthSummary').classList.add('hidden');
+        return;
+      }
+
+      const data = await loadDetailData(ticker);
+      if (!data) return;
+
+      document.getElementById('growthEmptyState').style.display = 'none';
+      document.getElementById('growthSummary').classList.remove('hidden');
+
+      const ctx = document.getElementById('growthChart').getContext('2d');
+
+      let chartData, labels, label, color;
+      if (state.growthMetric === 'estimates') {
+        labels = ['FY0', 'FY1(E)', 'FY2(E)', 'FY3(E)'];
+        const eps0 = data.per_share?.eps?.[4] || 0;
+        chartData = [eps0, data.estimates?.eps?.fy1 || 0, data.estimates?.eps?.fy2 || 0, data.estimates?.eps?.fy3 || 0];
+        label = 'EPS (실적 + 예상)';
+        color = '#10b981';
+      } else {
+        labels = data.years || ['FY-4', 'FY-3', 'FY-2', 'FY-1', 'FY0'];
+        chartData = data.growth?.[state.growthMetric] || [];
+        label = state.growthMetric === 'revenue_growth' ? '매출 성장률' : 'EPS 성장률';
+        color = '#f97316';
+      }
+
+      if (charts.growth) charts.growth.destroy();
+
+      charts.growth = new Chart(ctx, {
+        type: state.growthMetric === 'estimates' ? 'line' : 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data: chartData,
+            borderColor: color,
+            backgroundColor: state.growthMetric === 'estimates' ? `${color}33` : chartData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(220, 38, 38, 0.7)'),
+            fill: state.growthMetric === 'estimates',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => state.growthMetric === 'estimates' ? `$${formatNumber(ctx.raw, 2)}` : `${formatNumber(ctx.raw, 1)}%`
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: v => state.growthMetric === 'estimates' ? `$${v}` : `${v}%`
+              }
+            }
+          }
+        }
+      });
+
+      // Calculate CAGR
+      const revGrowth = data.growth?.revenue_growth || [];
+      const epsGrowth = data.growth?.eps_growth || [];
+      const revCAGR = revGrowth.length > 0 ? revGrowth.reduce((a, b) => a + b, 0) / revGrowth.length : 0;
+      const epsCAGR = epsGrowth.length > 0 ? epsGrowth.reduce((a, b) => a + b, 0) / epsGrowth.length : 0;
+
+      document.getElementById('revCAGR').textContent = `${formatNumber(revCAGR, 1)}%`;
+      document.getElementById('epsCAGR').textContent = `${formatNumber(epsCAGR, 1)}%`;
+      document.getElementById('fy1EPS').textContent = `$${formatNumber(data.estimates?.eps?.fy1, 2)}`;
+      document.getElementById('fy2EPS').textContent = `$${formatNumber(data.estimates?.eps?.fy2, 2)}`;
+    }
+
+    // ================== DIVIDEND CHART ==================
+    function setDividendMetric(metric) {
+      state.dividendMetric = metric;
+      document.querySelectorAll('#section-dividends .metric-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.metric === metric);
+      });
+      renderDividendChart();
+    }
+
+    async function renderDividendChart() {
+      const ticker = document.getElementById('dividendSelector').value;
+      if (!ticker) {
+        document.getElementById('dividendEmptyState').style.display = 'flex';
+        document.getElementById('dividendSummary').classList.add('hidden');
+        return;
+      }
+
+      const data = await loadDetailData(ticker);
+      if (!data) return;
+
+      document.getElementById('dividendEmptyState').style.display = 'none';
+      document.getElementById('dividendSummary').classList.remove('hidden');
+
+      const ctx = document.getElementById('dividendChart').getContext('2d');
+      const years = data.years || ['FY-4', 'FY-3', 'FY-2', 'FY-1', 'FY0'];
+
+      let chartData, label, color;
+      switch (state.dividendMetric) {
+        case 'dps':
+          chartData = data.dividend?.dps || [];
+          label = '주당 배당금 (DPS)';
+          color = '#f59e0b';
+          break;
+        case 'div_yield':
+          chartData = data.dividend?.div_yield || [];
+          label = '배당 수익률';
+          color = '#10b981';
+          break;
+        case 'roe':
+          chartData = data.profitability?.roe || [];
+          label = 'ROE';
+          color = '#8b5cf6';
+          break;
+      }
+
+      if (charts.dividend) charts.dividend.destroy();
+
+      charts.dividend = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: years,
+          datasets: [{
+            label,
+            data: chartData,
+            backgroundColor: `${color}aa`,
+            borderColor: color,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => state.dividendMetric === 'dps' ? `$${formatNumber(ctx.raw, 2)}` : `${formatNumber(ctx.raw, 2)}%`
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: v => state.dividendMetric === 'dps' ? `$${v}` : `${v}%`
+              }
+            }
+          }
+        }
+      });
+
+      // Update summary
+      const dps = data.dividend?.dps || [];
+      const dy = data.dividend?.div_yield || [];
+      const roe = data.profitability?.roe || [];
+
+      document.getElementById('currentDPS').textContent = `$${formatNumber(dps[dps.length - 1], 2)}`;
+      document.getElementById('currentYield').textContent = `${formatNumber(dy[dy.length - 1], 2)}%`;
+
+      const dpsStart = dps[0] || 0;
+      const dpsEnd = dps[dps.length - 1] || 0;
+      const dpsCAGR = dpsStart > 0 ? ((Math.pow(dpsEnd / dpsStart, 1 / 4) - 1) * 100) : 0;
+      document.getElementById('dpsCAGR').textContent = `${formatNumber(dpsCAGR, 1)}%`;
+
+      const avgROE = roe.length > 0 ? roe.reduce((a, b) => a + b, 0) / roe.length : 0;
+      document.getElementById('avgROE').textContent = `${formatNumber(avgROE, 1)}%`;
+    }
+
+    // ================== ETF TABLE ==================
+    function renderETFTable() {
+      const tbody = document.getElementById('etfTableBody');
+      if (!state.etfs || state.etfs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-8">ETF 데이터 없음</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = state.etfs.map(etf => `
+        <tr>
+          <td class="font-bold text-indigo-600">${etf.ticker || etf.symbol || '-'}</td>
+          <td>${etf.name || '-'}</td>
+          <td><span class="badge badge-sector">${etf.sector || '-'}</span></td>
+          <td class="mono">${formatMarketCap(etf.mc || etf.market_cap)}</td>
+          <td class="mono">${formatNumber(etf.pe, 1)}</td>
+          <td class="mono">${formatPercent(etf.dy || etf.dividend_yield)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ================== MACRO TABLE ==================
+    function renderMacroTable() {
+      const tbody = document.getElementById('macroTableBody');
+      const search = (document.getElementById('macroSearch')?.value || '').toLowerCase();
+
+      let filtered = state.economic;
+      if (Array.isArray(filtered) && filtered.length > 0) {
+        if (search) {
+          filtered = filtered.filter(item => {
+            const name = item.name || item.indicator || '';
+            return name.toLowerCase().includes(search);
+          });
+        }
+        filtered = filtered.slice(0, 100); // Limit display
+      }
+
+      if (!filtered || filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-400 py-8">매크로 데이터 없음</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(item => `
+        <tr>
+          <td>${item.name || item.indicator || '-'}</td>
+          <td class="mono">${formatNumber(item.value, 2)}</td>
+          <td>${item.unit || '-'}</td>
+          <td class="text-gray-500 text-sm">${item.date || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function filterMacroTable() {
+      renderMacroTable();
+    }
+
+    // ================== EXPORT ==================
+    function exportCSV() {
+      const filtered = getFilteredStocks();
+      let csv = 'Ticker,Name,Sector,Country,Exchange,MarketCap,PE,PB,DividendYield,12MReturn\n';
+      filtered.forEach(s => {
+        csv += `"${s.ticker}","${s.name}","${s.sector}","${s.country}","${s.exchange}",${s.mc},${s.pe},${s.pb},${s.dy},${s.r12}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `global-scouter-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+    }
+
+    function exportPNG() {
+      alert('PNG 내보내기: 현재 탭의 차트를 이미지로 저장합니다.');
+      // Implementation would use canvas.toDataURL()
+    }
+
+    // ================== UTILITIES ==================
+    function formatNumber(val, decimals = 2) {
+      if (val == null || isNaN(val)) return '-';
+      return Number(val).toFixed(decimals);
+    }
+
+    function formatPercent(val) {
+      if (val == null || isNaN(val)) return '-';
+      return (val * 100).toFixed(2) + '%';
+    }
+
+    function formatMarketCap(val) {
+      if (val == null || isNaN(val)) return '-';
+      if (val >= 1000000) return (val / 1000000).toFixed(1) + 'T';
+      if (val >= 1000) return (val / 1000).toFixed(1) + 'B';
+      return val.toFixed(0) + 'M';
+    }
+
+    function formatB(val) {
+      if (val == null || isNaN(val)) return '-';
+      if (Math.abs(val) >= 1000000) return (val / 1000000).toFixed(1) + 'T';
+      if (Math.abs(val) >= 1000) return (val / 1000).toFixed(1) + 'B';
+      return val.toFixed(0) + 'M';
+    }
+
+    // ================== INIT ==================
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
