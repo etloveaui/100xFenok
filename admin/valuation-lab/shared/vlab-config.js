@@ -28,10 +28,9 @@ const VLAB_CONFIG = {
         '/data/benchmarks/msci.json'
       ],
       tools: [
-        { href: 'signal-light.html', label: '신호등' },
-        { href: 'one-liner.html', label: '1문장' },
-        { href: 'percentile.html', label: '분위수' },
-        { href: 'card.html', label: '카드' }
+        { href: 'expansion/benchmarks-explorer.html', label: 'Explorer' },
+        { href: 'expansion/sweet-spot.html', label: 'Sweet Spot' },
+        { href: 'card.html', label: 'Card' }
       ],
       expansions: [
         { href: 'expansion/regime-presets.html', label: '국면 프리셋' },
