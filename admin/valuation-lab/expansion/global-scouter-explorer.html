@@ -6,6 +6,8 @@
   <title>Global Scouter Explorer - 100xFenok</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
@@ -235,6 +237,14 @@
     }
     .page-btn.active { background: #10b981; color: white; border-color: #10b981; }
     .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* TomSelect Custom Styles */
+    .ts-wrapper { min-width: 220px; }
+    .ts-control { border-radius: 8px !important; padding: 8px 12px !important; }
+    .ts-dropdown { border-radius: 8px !important; }
+    .ts-dropdown-content { max-height: 300px; }
+    .ts-dropdown .option { padding: 8px 12px; }
+    .ts-dropdown .option.active { background: #ecfdf5; color: #065f46; }
   </style>
 </head>
 <body>
@@ -639,6 +649,7 @@
           </h2>
         </div>
 
+        <!-- v3: ETF 테이블 17개 컬럼 확장 -->
         <div style="overflow-x: auto;">
           <table id="etfTable">
             <thead>
@@ -647,8 +658,14 @@
                 <th>이름</th>
                 <th>카테고리</th>
                 <th>시총</th>
+                <th>1M</th>
+                <th>3M</th>
+                <th>6M</th>
                 <th>YTD</th>
                 <th>1Y</th>
+                <th>3Y</th>
+                <th>5Y</th>
+                <th>10Y</th>
                 <th>3Y CAGR</th>
                 <th>5Y CAGR</th>
                 <th>10Y CAGR</th>
@@ -1174,6 +1191,9 @@
         return;
       }
 
+      // v3: 모든 드롭다운에 선택값 자동 설정
+      setSelectorsValue(ticker);
+
       const stock = state.stocksList.find(s => s.ticker === ticker);
       const panel = document.getElementById('detailPanel');
       const content = document.getElementById('detailContent');
@@ -1238,7 +1258,7 @@
         </table>
 
         <h3 class="font-bold text-gray-700 mb-3">컨센서스 (Estimates)</h3>
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-3 gap-4 mb-6">
           <div class="bg-gray-50 rounded-lg p-3 text-center">
             <div class="text-xs text-gray-500">FY1 EPS</div>
             <div class="font-bold text-emerald-600 mono">$${formatNumber(data.estimates?.eps?.fy1, 2)}</div>
@@ -1252,6 +1272,32 @@
             <div class="font-bold text-purple-600 mono">$${formatNumber(data.estimates?.eps?.fy3, 2)}</div>
           </div>
         </div>
+
+        <!-- v3: Scale 데이터 활용 - 시가총액 추이 -->
+        ${data.scale?.market_cap ? `
+        <h3 class="font-bold text-gray-700 mb-3">시가총액 추이</h3>
+        <div class="flex gap-2 overflow-x-auto pb-2">
+          ${data.scale.market_cap.map((v, i) => `
+            <div class="bg-gradient-to-b from-emerald-50 to-white p-2 rounded-lg text-center min-w-16 flex-shrink-0 border border-emerald-100">
+              <div class="text-xs text-gray-400">${data.years?.[i] || 'FY'}</div>
+              <div class="font-bold text-emerald-700 mono text-sm">${formatMarketCap(v)}</div>
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+
+        <!-- v3: Forward P/E 계산 표시 -->
+        ${stock?.price && data.estimates?.eps?.fy1 ? `
+        <div class="mt-4 p-3 bg-purple-50 rounded-lg">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-purple-700">Forward P/E (FY+1)</span>
+            <span class="font-bold text-purple-600 mono">${formatNumber(stock.price / data.estimates.eps.fy1, 2)}</span>
+          </div>
+          <div class="text-xs text-purple-500 mt-1">
+            현재가 $${formatNumber(stock.price, 2)} ÷ FY+1 EPS $${formatNumber(data.estimates.eps.fy1, 2)}
+          </div>
+        </div>
+        ` : ''}
       `;
 
       panel.classList.add('open');
@@ -1263,15 +1309,24 @@
       document.getElementById('detailOverlay').classList.remove('open');
     }
 
-    // ================== SELECTORS ==================
+    // ================== SELECTORS (v3: TomSelect + 전체 종목) ==================
+    let tomSelectInstances = {};
+
     function populateSelectors() {
       const selectors = ['financialSelector', 'valuationSelector', 'growthSelector', 'dividendSelector'];
-      const sorted = [...state.stocksList].sort((a, b) => b.mc - a.mc).slice(0, 100);
+      // v3: slice(0, 100) 제거 → 전체 1,243개 종목
+      const sorted = [...state.stocksList].sort((a, b) => b.mc - a.mc);
 
       selectors.forEach(id => {
         const select = document.getElementById(id);
         if (!select) return;
-        const current = select.value;
+
+        // TomSelect 이미 초기화된 경우 destroy
+        if (tomSelectInstances[id]) {
+          tomSelectInstances[id].destroy();
+          delete tomSelectInstances[id];
+        }
+
         select.innerHTML = '<option value="">-- 종목 선택 --</option>';
         sorted.forEach(stock => {
           const opt = document.createElement('option');
@@ -1279,7 +1334,24 @@
           opt.textContent = `${stock.ticker} - ${stock.name}`;
           select.appendChild(opt);
         });
-        if (current) select.value = current;
+
+        // TomSelect 초기화
+        tomSelectInstances[id] = new TomSelect(select, {
+          maxItems: 1,
+          placeholder: '티커/회사명 검색...',
+          allowEmptyOption: true,
+          create: false,
+          sortField: { field: 'text', direction: 'asc' }
+        });
+      });
+    }
+
+    // 드롭다운 값 설정 (TomSelect 호환)
+    function setSelectorsValue(ticker) {
+      ['financialSelector', 'valuationSelector', 'growthSelector', 'dividendSelector'].forEach(id => {
+        if (tomSelectInstances[id]) {
+          tomSelectInstances[id].setValue(ticker, true);
+        }
       });
     }
 
@@ -1357,17 +1429,64 @@
 
       if (charts.financials) charts.financials.destroy();
 
+      // v3: 과거 실적 + 미래 예측 데이터 조화
+      const datasets = [];
+      let allLabels = [...years];
+
+      // 기본 실적 데이터
+      datasets.push({
+        label: `${label} (실적)`,
+        data: chartData,
+        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+        borderColor: '#10b981',
+        borderWidth: 1,
+        order: 1
+      });
+
+      // 미래 예측 데이터 추가 (매출/순이익/EPS)
+      let estimateData = [];
+      let estimateLabels = ['FY+1', 'FY+2', 'FY+3'];
+
+      if (state.financialMetric === 'revenue' && data.estimates?.revenue) {
+        estimateData = [
+          data.estimates.revenue.fy1,
+          data.estimates.revenue.fy2,
+          data.estimates.revenue.fy3
+        ].filter(v => v != null);
+      } else if (state.financialMetric === 'net_income' && data.estimates?.net_income) {
+        estimateData = [
+          data.estimates.net_income.fy1,
+          data.estimates.net_income.fy2,
+          data.estimates.net_income.fy3
+        ].filter(v => v != null);
+      }
+
+      // 예측 데이터가 있으면 확장
+      if (estimateData.length > 0) {
+        allLabels = [...years, ...estimateLabels.slice(0, estimateData.length)];
+
+        // 실적 데이터에 null 패딩
+        const paddedHistorical = [...chartData, ...new Array(estimateData.length).fill(null)];
+        datasets[0].data = paddedHistorical;
+
+        // 예측 데이터 (반투명 + 패턴)
+        const paddedEstimate = [...new Array(years.length).fill(null), ...estimateData];
+        datasets.push({
+          label: `${label} (예측)`,
+          data: paddedEstimate,
+          backgroundColor: 'rgba(139, 92, 246, 0.4)', // 보라색 반투명
+          borderColor: '#8b5cf6',
+          borderWidth: 2,
+          borderDash: [4, 4],
+          order: 2
+        });
+      }
+
       charts.financials = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: years,
-          datasets: [{
-            label: label,
-            data: chartData,
-            backgroundColor: 'rgba(16, 185, 129, 0.7)',
-            borderColor: '#10b981',
-            borderWidth: 1
-          }]
+          labels: allLabels,
+          datasets
         },
         options: {
           responsive: true,
@@ -1460,51 +1579,162 @@
 
       if (charts.valuations) charts.valuations.destroy();
 
-      const datasets = [{
-        label: label,
-        data: chartData,
-        borderColor: color,
-        backgroundColor: `${color}33`,
-        fill: true,
-        tension: 0.3
-      }];
+      // v3: 업계 표준 P/E Band 차트 - Min/Max 영역 + Forward P/E
+      const datasets = [];
+      const stock = state.stocksList.find(s => s.ticker === ticker);
+      const fy1Eps = data.estimates?.eps?.fy1 || 0;
+      const forwardPE = (stock?.price && fy1Eps > 0) ? stock.price / fy1Eps : 0;
 
-      // Add band lines if available
-      if (band.avg) {
+      // 확장 레이블 (Forward P/E가 있으면 FY+1 추가)
+      const extendedLabels = forwardPE > 0 ? [...years, 'FY+1'] : years;
+
+      // 1. Min 밴드 (하단 경계)
+      if (band.min != null) {
         datasets.push({
-          label: '평균',
-          data: new Array(years.length).fill(band.avg),
+          label: 'Min',
+          data: new Array(extendedLabels.length).fill(band.min),
+          borderColor: 'rgba(107, 114, 128, 0.4)',
+          backgroundColor: 'transparent',
+          borderDash: [2, 2],
+          borderWidth: 1,
+          pointRadius: 0,
+          fill: false,
+          order: 4
+        });
+      }
+
+      // 2. Max 밴드 (상단 경계) + 영역 채우기
+      if (band.max != null && band.min != null) {
+        datasets.push({
+          label: 'Max',
+          data: new Array(extendedLabels.length).fill(band.max),
+          borderColor: 'rgba(107, 114, 128, 0.4)',
+          backgroundColor: 'rgba(107, 114, 128, 0.08)', // 밴드 영역 색
+          borderDash: [2, 2],
+          borderWidth: 1,
+          pointRadius: 0,
+          fill: '-1', // 이전 dataset(Min)과 사이 채우기
+          order: 3
+        });
+      }
+
+      // 3. 5Y 평균선
+      if (band.avg != null) {
+        datasets.push({
+          label: '5Y 평균',
+          data: new Array(extendedLabels.length).fill(band.avg),
           borderColor: '#6b7280',
           borderDash: [5, 5],
+          borderWidth: 2,
+          pointRadius: 0,
           fill: false,
-          pointRadius: 0
+          order: 2
+        });
+      }
+
+      // 4. 실제 P/E (실선) - 과거 데이터
+      const historicalData = forwardPE > 0 ? [...chartData, null] : chartData;
+      datasets.push({
+        label: label,
+        data: historicalData,
+        borderColor: color,
+        backgroundColor: `${color}33`,
+        fill: false,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: color,
+        borderWidth: 2,
+        order: 1
+      });
+
+      // 5. Forward P/E (FY+1 위치에 점선 연결)
+      if (forwardPE > 0) {
+        // 마지막 실제 P/E → Forward P/E 연결선
+        const lastActual = chartData[chartData.length - 1] || 0;
+        const forwardConnectData = [...chartData.map(() => null), lastActual];
+        forwardConnectData[chartData.length - 1] = lastActual;
+        forwardConnectData[chartData.length] = forwardPE;
+
+        datasets.push({
+          label: 'Forward P/E',
+          data: [...chartData.map(() => null), forwardPE],
+          borderColor: '#8b5cf6',
+          backgroundColor: '#8b5cf6',
+          borderDash: [3, 3],
+          borderWidth: 2,
+          pointRadius: 8,
+          pointStyle: 'triangle',
+          fill: false,
+          order: 0,
+          // 연결선 표시를 위한 추가 포인트
+          segment: {
+            borderDash: ctx => ctx.p0DataIndex === chartData.length - 1 ? [3, 3] : undefined
+          }
+        });
+
+        // 연결선 추가
+        datasets.push({
+          label: '_connector',
+          data: forwardConnectData,
+          borderColor: '#8b5cf680',
+          borderDash: [4, 4],
+          borderWidth: 1,
+          pointRadius: 0,
+          fill: false,
+          order: 1.5
+        });
+      }
+
+      // 6. 현재 P/E 위치 마커 (수평선)
+      const currentPE = chartData[chartData.length - 1] || 0;
+      if (currentPE > 0) {
+        datasets.push({
+          label: '현재',
+          data: new Array(extendedLabels.length).fill(currentPE),
+          borderColor: '#10b98180',
+          borderWidth: 1,
+          borderDash: [8, 4],
+          pointRadius: 0,
+          fill: false,
+          order: 2.5
         });
       }
 
       charts.valuations = new Chart(ctx, {
         type: 'line',
-        data: { labels: years, datasets },
+        data: { labels: extendedLabels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: true, position: 'top' },
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                filter: item => !item.text.startsWith('_') // _connector 숨기기
+              }
+            },
             tooltip: {
               callbacks: {
-                label: ctx => `${ctx.dataset.label}: ${formatNumber(ctx.raw, 2)}`
+                label: ctx => {
+                  if (ctx.dataset.label.startsWith('_')) return null;
+                  return `${ctx.dataset.label}: ${formatNumber(ctx.raw, 2)}`;
+                }
               }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              suggestedMin: band.min ? band.min * 0.8 : undefined,
+              suggestedMax: band.max ? band.max * 1.2 : undefined
             }
           }
         }
       });
 
       // Update summary
-      const current = chartData[chartData.length - 1] || 0;
-      const stock = state.stocksList.find(s => s.ticker === ticker);
-      const fy1Eps = data.estimates?.eps?.fy1 || 0;
-      const forwardPE = (stock?.price && fy1Eps > 0) ? stock.price / fy1Eps : 0;
-
-      document.getElementById('currentPE').textContent = formatNumber(current, 2);
+      document.getElementById('currentPE').textContent = formatNumber(currentPE, 2);
       document.getElementById('forwardPE').textContent = forwardPE > 0 ? formatNumber(forwardPE, 2) : '-';
       document.getElementById('avgPE').textContent = formatNumber(band.avg, 2);
       document.getElementById('minPE').textContent = formatNumber(band.min, 2);
@@ -1537,11 +1767,43 @@
       const ctx = document.getElementById('growthChart').getContext('2d');
 
       let chartData, labels, label, color;
+      let datasets = [];
+
       if (state.growthMetric === 'estimates') {
-        labels = ['FY0', 'FY1(E)', 'FY2(E)', 'FY3(E)'];
+        // v3: EPS 컨센서스 - 실적 vs 예측 시각 구분
+        labels = ['FY0', 'FY+1(E)', 'FY+2(E)', 'FY+3(E)'];
         const eps0 = data.per_share?.eps?.[4] || 0;
-        chartData = [eps0, data.estimates?.eps?.fy1 || 0, data.estimates?.eps?.fy2 || 0, data.estimates?.eps?.fy3 || 0];
-        label = 'EPS (실적 + 예상)';
+        const eps1 = data.estimates?.eps?.fy1 || 0;
+        const eps2 = data.estimates?.eps?.fy2 || 0;
+        const eps3 = data.estimates?.eps?.fy3 || 0;
+        chartData = [eps0, eps1, eps2, eps3];
+
+        // 실적 (실선, 진한 색) vs 예측 (점선, 연한 색)
+        datasets = [
+          {
+            label: 'EPS 실적',
+            data: [eps0, null, null, null],
+            borderColor: '#10b981',
+            backgroundColor: '#10b981',
+            pointRadius: 8,
+            pointStyle: 'circle',
+            fill: false,
+            order: 1
+          },
+          {
+            label: 'EPS 예측',
+            data: [eps0, eps1, eps2, eps3], // 연결을 위해 FY0부터 시작
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            borderDash: [5, 5],
+            fill: true,
+            tension: 0.3,
+            pointRadius: [0, 6, 6, 6], // FY0는 숨김
+            pointStyle: 'triangle',
+            order: 2
+          }
+        ];
+        label = 'EPS';
         color = '#10b981';
       } else {
         labels = data.years || ['FY-4', 'FY-3', 'FY-2', 'FY-1', 'FY0'];
@@ -1554,23 +1816,22 @@
         };
         label = metricLabels[state.growthMetric] || state.growthMetric;
         color = '#f97316';
+
+        datasets = [{
+          label,
+          data: chartData,
+          borderColor: color,
+          backgroundColor: chartData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(220, 38, 38, 0.7)'),
+          fill: false,
+          tension: 0.3
+        }];
       }
 
       if (charts.growth) charts.growth.destroy();
 
       charts.growth = new Chart(ctx, {
         type: state.growthMetric === 'estimates' ? 'line' : 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label,
-            data: chartData,
-            borderColor: color,
-            backgroundColor: state.growthMetric === 'estimates' ? `${color}33` : chartData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(220, 38, 38, 0.7)'),
-            fill: state.growthMetric === 'estimates',
-            tension: 0.3
-          }]
-        },
+        data: { labels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -1721,35 +1982,54 @@
       document.getElementById('avgROE').textContent = `${formatNumber(avgROE, 1)}%`;
     }
 
-    // ================== ETF TABLE ==================
+    // ================== ETF TABLE (v3: 17개 컬럼 완전화) ==================
     function renderETFTable() {
       const tbody = document.getElementById('etfTableBody');
       if (!state.etfs || state.etfs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-gray-400 py-8">ETF 데이터 없음</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="17" class="text-center text-gray-400 py-8">ETF 데이터 없음</td></tr>';
         return;
       }
 
+      // v3: 모든 필드 + null-safe 헬퍼
+      const fmt = (v, decimals = 2) => v != null && !isNaN(v) ? formatNumber(v, decimals) : '-';
+      const fmtPct = (v) => v != null && !isNaN(v) ? formatPctValue(v) : '-';
+      const fmtPctClass = (v) => v != null && !isNaN(v) ? (v >= 0 ? 'positive' : 'negative') : '';
+
       tbody.innerHTML = state.etfs.map(etf => {
-        const returnsYtd = etf.returns?.['ytd'] || 0;
-        const returns1y = etf.returns?.['1y'] || 0;
-        const cagr3y = etf.cagr?.['3y'] || 0;
-        const cagr5y = etf.cagr?.['5y'] || 0;
-        const cagr10y = etf.cagr?.['10y'] || 0;
-        const beta = etf.beta || 0;
-        const expense = etf.expense_ratio || 0;
+        // Returns (1m, 3m, 6m, ytd, 1y, 3y, 5y, 10y)
+        const r1m = etf.returns?.['1m'];
+        const r3m = etf.returns?.['3m'];
+        const r6m = etf.returns?.['6m'];
+        const rYtd = etf.returns?.['ytd'];
+        const r1y = etf.returns?.['1y'];
+        const r3y = etf.returns?.['3y'];
+        const r5y = etf.returns?.['5y'];
+        const r10y = etf.returns?.['10y'];
+
+        // CAGR (3y, 5y, 10y)
+        const cagr3y = etf.cagr?.['3y'];
+        const cagr5y = etf.cagr?.['5y'];
+        const cagr10y = etf.cagr?.['10y'];
+
         return `
         <tr>
           <td class="font-bold text-indigo-600">${etf.ticker || etf.name || '-'}</td>
-          <td>${etf.name || etf.ticker || '-'}</td>
+          <td class="text-sm">${etf.name || etf.ticker || '-'}</td>
           <td><span class="badge badge-sector">${etf.category || '-'}</span></td>
           <td class="mono">${formatMarketCap(etf.market_cap || etf.mc)}</td>
-          <td class="mono ${returnsYtd >= 0 ? 'positive' : 'negative'}">${formatPctValue(returnsYtd)}</td>
-          <td class="mono ${returns1y >= 0 ? 'positive' : 'negative'}">${formatPctValue(returns1y)}</td>
-          <td class="mono ${cagr3y >= 0 ? 'positive' : 'negative'}">${formatPctValue(cagr3y)}</td>
-          <td class="mono ${cagr5y >= 0 ? 'positive' : 'negative'}">${formatPctValue(cagr5y)}</td>
-          <td class="mono ${cagr10y >= 0 ? 'positive' : 'negative'}">${formatPctValue(cagr10y)}</td>
-          <td class="mono">${beta ? formatNumber(beta, 2) : '-'}</td>
-          <td class="mono">${expense ? formatPctValue(expense) : '-'}</td>
+          <td class="mono ${fmtPctClass(r1m)}">${fmtPct(r1m)}</td>
+          <td class="mono ${fmtPctClass(r3m)}">${fmtPct(r3m)}</td>
+          <td class="mono ${fmtPctClass(r6m)}">${fmtPct(r6m)}</td>
+          <td class="mono ${fmtPctClass(rYtd)}">${fmtPct(rYtd)}</td>
+          <td class="mono ${fmtPctClass(r1y)}">${fmtPct(r1y)}</td>
+          <td class="mono ${fmtPctClass(r3y)}">${fmtPct(r3y)}</td>
+          <td class="mono ${fmtPctClass(r5y)}">${fmtPct(r5y)}</td>
+          <td class="mono ${fmtPctClass(r10y)}">${fmtPct(r10y)}</td>
+          <td class="mono ${fmtPctClass(cagr3y)}">${fmtPct(cagr3y)}</td>
+          <td class="mono ${fmtPctClass(cagr5y)}">${fmtPct(cagr5y)}</td>
+          <td class="mono ${fmtPctClass(cagr10y)}">${fmtPct(cagr10y)}</td>
+          <td class="mono">${fmt(etf.beta)}</td>
+          <td class="mono">${fmtPct(etf.expense_ratio)}</td>
         </tr>
       `}).join('');
     }
@@ -1794,7 +2074,45 @@
       renderMacroTable();
     }
 
-    // ================== MACRO CHART ==================
+    // ================== MACRO CHART (v3: 레이블 한글화 + 이모지) ==================
+
+    // v3: 지표명 한글화 + 이모지
+    const INDICATOR_LABELS = {
+      // HY Spreads
+      hys_us: '🇺🇸 미국 HY 스프레드 (1Y)',
+      hys_em: '🌍 신흥국 HY 스프레드 (1Y)',
+      hys_eu: '🇪🇺 유럽 HY 스프레드 (1Y)',
+      hyy_us: '🇺🇸 미국 HY 스프레드 (YTD)',
+      hyy_em: '🌍 신흥국 HY 스프레드 (YTD)',
+      hyy_eu: '🇪🇺 유럽 HY 스프레드 (YTD)',
+      // Treasury Yields
+      t30y: '🇺🇸 30년 국채 금리',
+      t20y: '🇺🇸 20년 국채 금리',
+      t10y: '🇺🇸 10년 국채 금리',
+      t5y: '🇺🇸 5년 국채 금리',
+      t2y: '🇺🇸 2년 국채 금리',
+      t1y: '🇺🇸 1년 국채 금리',
+      t6m: '🇺🇸 6개월 국채 금리',
+      t3m: '🇺🇸 3개월 국채 금리',
+      // Spreads
+      t10y_2y_spread: '📉 10Y-2Y 스프레드 (역전 신호)',
+      t10y_3m_spread: '📉 10Y-3M 스프레드',
+      // Inflation
+      bei_10y: '📈 10년 기대 인플레',
+      bei_5y: '📈 5년 기대 인플레',
+      bei_2y: '📈 2년 기대 인플레',
+      // TIPS
+      tips_10y: '🛡️ 10년 TIPS 금리',
+      tips_5y: '🛡️ 5년 TIPS 금리',
+      // Other
+      vix: '😰 VIX (공포 지수)',
+      move: '📊 MOVE (채권 변동성)',
+      dxy: '💵 달러 인덱스',
+      gold: '🥇 금 가격',
+      oil: '🛢️ 유가 (WTI)',
+      copper: '🔶 구리 가격'
+    };
+
     function populateMacroSelector() {
       const select = document.getElementById('macroIndicatorSelect');
       if (!select || state.economicIndicators.length === 0) return;
@@ -1803,7 +2121,8 @@
       state.economicIndicators.forEach(ind => {
         const opt = document.createElement('option');
         opt.value = ind;
-        opt.textContent = ind.toUpperCase().replace(/_/g, ' ');
+        // v3: 한글 레이블 사용 (없으면 영문 대문자)
+        opt.textContent = INDICATOR_LABELS[ind] || ind.toUpperCase().replace(/_/g, ' ');
         select.appendChild(opt);
       });
     }
@@ -1839,12 +2158,15 @@
 
       if (charts.macro) charts.macro.destroy();
 
+      // v3: 한글 레이블 사용
+      const indicatorLabel = INDICATOR_LABELS[indicator] || indicator.toUpperCase().replace(/_/g, ' ');
+
       charts.macro = new Chart(ctx, {
         type: 'line',
         data: {
           labels,
           datasets: [{
-            label: indicator.toUpperCase().replace(/_/g, ' '),
+            label: indicatorLabel,
             data: values,
             borderColor: '#14b8a6',
             backgroundColor: 'rgba(20, 184, 166, 0.1)',
