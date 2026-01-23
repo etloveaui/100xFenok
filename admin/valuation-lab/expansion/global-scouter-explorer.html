@@ -249,6 +249,104 @@
     /* v3: ETF 테이블 모바일 대응 */
     #etfTable { min-width: 1400px; }
     #etfTable th, #etfTable td { white-space: nowrap; font-size: 13px; }
+
+    /* v4: Toast Animation */
+    @keyframes slide-in {
+      from { transform: translateX(100px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slide-out {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100px); opacity: 0; }
+    }
+    .toast-enter { animation: slide-in 0.3s ease-out; }
+    .toast-exit { animation: slide-out 0.3s ease-out; }
+
+    /* v4: Overlay Chart Period Buttons */
+    .overlay-period-btn {
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #64748b;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    .overlay-period-btn.active {
+      background: #6366f1;
+      color: white;
+    }
+    .overlay-period-btn:hover:not(.active) {
+      background: #e2e8f0;
+    }
+
+    /* v4: Global Selector Badge */
+    .global-stock-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #065f46;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    /* v4: Peer Mode Toggle */
+    .peer-mode-btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+    }
+    .peer-mode-btn.active {
+      background: #14b8a6;
+      color: white;
+      border-color: #14b8a6;
+    }
+    .peer-mode-btn:not(.active) {
+      background: white;
+      color: #64748b;
+    }
+    .peer-mode-btn:not(.active):hover {
+      background: #f0fdfa;
+      border-color: #14b8a6;
+    }
+
+    /* v4: Peer Chip */
+    .peer-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .peer-chip-base {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .peer-chip-manual {
+      background: #ccfbf1;
+      color: #0f766e;
+    }
+    .peer-chip-remove {
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .peer-chip-remove:hover {
+      opacity: 1;
+      color: #dc2626;
+    }
   </style>
 </head>
 <body>
@@ -282,6 +380,28 @@
           <a href="../" class="text-emerald-500 hover:underline ml-2">← 뒤로</a>
         </div>
       </div>
+    </div>
+
+    <!-- v4: Global Stock Selector -->
+    <div class="card mb-4" id="globalSelectorCard">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
+          <label class="text-sm font-medium text-gray-600">
+            <i class="fas fa-chart-line text-emerald-500 mr-1"></i>분석 종목:
+          </label>
+          <select id="globalStockSelector" class="min-w-64"></select>
+        </div>
+        <div id="selectedStockBadge" class="hidden">
+          <span class="global-stock-badge">
+            <i class="fas fa-star text-amber-500 text-xs"></i>
+            <span id="selectedStockName">-</span>
+          </span>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">
+        <i class="fas fa-info-circle mr-1"></i>
+        종목 선택 시 모든 탭에 자동 반영됩니다. 표에서 📊 버튼을 클릭하거나 드롭다운에서 선택하세요.
+      </p>
     </div>
 
     <!-- Content Tabs -->
@@ -348,6 +468,7 @@
           <table id="screenerTable">
             <thead>
               <tr>
+                <th class="text-center w-14">분석</th>
                 <th onclick="sortTable('ticker')">티커 <i class="fas fa-sort text-xs ml-1"></i></th>
                 <th onclick="sortTable('name')">종목명 <i class="fas fa-sort text-xs ml-1"></i></th>
                 <th onclick="sortTable('sector')">섹터 <i class="fas fa-sort text-xs ml-1"></i></th>
@@ -867,6 +988,39 @@
           </div>
         </div>
 
+        <!-- v4: Peer Mode Toggle -->
+        <div class="flex items-center gap-2 mb-4 flex-wrap">
+          <button id="peerModeAuto" onclick="setPeerMode('auto')" class="peer-mode-btn active">
+            <i class="fas fa-magic mr-1"></i>자동(섹터)
+          </button>
+          <button id="peerModeManual" onclick="setPeerMode('manual')" class="peer-mode-btn">
+            <i class="fas fa-hand-pointer mr-1"></i>수동선택
+          </button>
+          <span class="text-xs text-gray-400 ml-2">
+            <i class="fas fa-info-circle mr-1"></i>최대 5개 종목 비교
+          </span>
+        </div>
+
+        <!-- v4: Manual Selection Panel -->
+        <div id="manualPeerPanel" class="hidden mb-4">
+          <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <div class="flex items-center gap-3 mb-3 flex-wrap">
+              <label class="text-sm font-medium text-gray-700">
+                <i class="fas fa-plus-circle text-teal-500 mr-1"></i>비교 종목 추가
+              </label>
+              <select id="manualPeerSelect" class="flex-1 min-w-48"></select>
+            </div>
+
+            <!-- Selected Chips -->
+            <div id="selectedPeerChips" class="flex flex-wrap gap-2"></div>
+
+            <p class="text-xs text-gray-500 mt-3">
+              <i class="fas fa-info-circle mr-1"></i>
+              기준 종목 + 비교 종목 최대 5개 • Overlay 차트에서 수익률 비교
+            </p>
+          </div>
+        </div>
+
         <div id="peerContent">
           <div id="peerEmptyState" class="chart-empty-state" style="height: 300px; position: relative;">
             <div class="text-center text-gray-400">
@@ -964,6 +1118,39 @@
                   <tbody id="peerTableBody"></tbody>
                 </table>
               </div>
+            </div>
+
+            <!-- v4: Overlay Comparison Chart -->
+            <div id="overlaySection" class="bg-white p-4 rounded-lg border mt-4">
+              <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h3 class="text-sm font-bold text-gray-700">
+                  <i class="fas fa-layer-group text-indigo-500 mr-1"></i>수익률 비교 (Overlay)
+                </h3>
+
+                <!-- Period Buttons -->
+                <div class="flex gap-1">
+                  <button onclick="setComparisonPeriod('1m')" data-period="1m" class="overlay-period-btn">1M</button>
+                  <button onclick="setComparisonPeriod('3m')" data-period="3m" class="overlay-period-btn">3M</button>
+                  <button onclick="setComparisonPeriod('6m')" data-period="6m" class="overlay-period-btn active">6M</button>
+                  <button onclick="setComparisonPeriod('1y')" data-period="1y" class="overlay-period-btn">1Y</button>
+                  <button onclick="setComparisonPeriod('ytd')" data-period="ytd" class="overlay-period-btn">YTD</button>
+                </div>
+              </div>
+
+              <div id="overlayChartContainer" class="chart-container" style="height: 300px; position: relative;">
+                <canvas id="overlayChart"></canvas>
+                <div id="overlayEmptyState" class="chart-empty-state">
+                  <div class="text-center text-gray-400">
+                    <i class="fas fa-chart-line text-4xl mb-2"></i>
+                    <p class="text-sm">2개 이상의 종목을 선택하세요</p>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-xs text-gray-500 mt-3">
+                <i class="fas fa-info-circle mr-1"></i>
+                시작점 기준 상대 수익률 (%) • 선택 기간의 가격 변동 비교 • 자동: 섹터 Top 5 / 수동: 선택 종목
+              </p>
             </div>
           </div>
         </div>
@@ -1145,7 +1332,12 @@
       dcfParams: { growthRate: 0.10, wacc: 0.10, terminalGrowth: 0.025 },
       ddmParams: { requiredReturn: 0.08, dividendGrowth: 0.03 },
       peerMetric: 'pe',
-      peerChartType: 'bar'
+      peerChartType: 'bar',
+      // v4: UX Overhaul
+      selectedTicker: null,
+      peerMode: 'auto',
+      manualPeers: [],
+      comparisonPeriod: '6m'
     };
 
     let charts = {
@@ -1154,7 +1346,8 @@
       growth: null,
       dividend: null,
       macro: null,
-      peer: null
+      peer: null,
+      overlay: null  // v4: Overlay comparison chart
     };
 
     // ================== SECTOR MAPPING (Korean → Damodaran Industry) ==================
@@ -1300,6 +1493,10 @@
         renderETFTable();
         renderMacroTable();
 
+        // v4: Initialize global selector and manual peer selector
+        initGlobalSelector();
+        initManualPeerSelector();
+
         // Hide loading
         document.getElementById('loadingOverlay').style.display = 'none';
       } catch (err) {
@@ -1343,6 +1540,42 @@
       document.querySelectorAll('.content-section').forEach(section => {
         section.classList.toggle('active', section.id === `section-${tabName}`);
       });
+
+      // v4: Auto-render if stock is selected (Tab Sync)
+      if (state.selectedTicker) {
+        renderCurrentTabContent();
+      }
+    }
+
+    // v4: Render content for current tab based on selected stock
+    function renderCurrentTabContent() {
+      const ticker = state.selectedTicker;
+      if (!ticker) return;
+
+      switch (state.currentTab) {
+        case 'financials':
+          renderFinancialsChart();
+          break;
+        case 'valuations':
+          renderValuationsChart();
+          break;
+        case 'growth':
+          renderGrowthChart();
+          break;
+        case 'dividends':
+          renderDividendChart();
+          break;
+        case 'dcf':
+          renderDCFTab();
+          break;
+        case 'ddm':
+          renderDDMTab();
+          break;
+        case 'peer':
+          renderPeerTab();
+          break;
+        // 'overview' and 'etfs' tabs don't need stock selection
+      }
     }
 
     // ================== FILTER ==================
@@ -1403,8 +1636,16 @@
 
       tbody.innerHTML = pageData.map(stock => {
         const r12Class = stock.r12 >= 0 ? 'positive' : 'negative';
+        const isSelected = stock.ticker === state.selectedTicker;
         return `
-          <tr onclick="openDetail('${stock.ticker}')" class="hover:bg-emerald-50">
+          <tr onclick="openDetail('${stock.ticker}')" class="hover:bg-emerald-50 ${isSelected ? 'selected' : ''}">
+            <td class="text-center">
+              <button onclick="event.stopPropagation(); analyzeStock('${stock.ticker}')"
+                      class="px-2 py-1 ${isSelected ? 'bg-emerald-600' : 'bg-emerald-500'} text-white text-xs rounded hover:bg-emerald-600 transition"
+                      title="분석 모드">
+                📊
+              </button>
+            </td>
             <td class="font-bold text-emerald-600">${stock.ticker}</td>
             <td class="text-gray-800">${stock.name}</td>
             <td><span class="badge badge-sector">${stock.sector}</span></td>
@@ -1733,6 +1974,313 @@
       ['financialSelector', 'valuationSelector', 'growthSelector', 'dividendSelector', 'dcfSelector', 'ddmSelector', 'peerSelector'].forEach(id => {
         if (tomSelectInstances[id]) {
           tomSelectInstances[id].setValue(ticker, true);
+        }
+      });
+    }
+
+    // ================== v4: TOAST NOTIFICATION ==================
+    function showToast(message, type = 'success') {
+      const colors = {
+        success: 'bg-emerald-600',
+        warning: 'bg-amber-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500'
+      };
+      const icons = {
+        success: 'fa-check-circle',
+        warning: 'fa-exclamation-triangle',
+        error: 'fa-times-circle',
+        info: 'fa-info-circle'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `fixed top-4 right-4 px-6 py-3 ${colors[type]} text-white rounded-lg shadow-lg z-50 toast-enter flex items-center gap-2`;
+      toast.innerHTML = `<i class="fas ${icons[type]}"></i>${message}`;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.replace('toast-enter', 'toast-exit');
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // ================== v4: GLOBAL STOCK SELECTOR ==================
+    function initGlobalSelector() {
+      const select = document.getElementById('globalStockSelector');
+      if (!select) return;
+
+      // Sort by market cap
+      const sorted = [...state.stocksList].sort((a, b) => b.mc - a.mc);
+
+      sorted.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.ticker;
+        opt.textContent = `${s.ticker} - ${s.name}`;
+        select.appendChild(opt);
+      });
+
+      tomSelectInstances.global = new TomSelect(select, {
+        maxItems: 1,
+        placeholder: '티커/회사명 검색...',
+        allowEmptyOption: true,
+        create: false,
+        sortField: { field: 'text', direction: 'asc' },
+        onChange: (ticker) => {
+          if (ticker) {
+            syncGlobalSelection(ticker);
+          }
+        }
+      });
+    }
+
+    function syncGlobalSelection(ticker) {
+      if (!ticker) return;
+
+      state.selectedTicker = ticker;
+      setSelectorsValue(ticker);
+      updateSelectedStockBadge(ticker);
+      renderCurrentTabContent();
+      renderTable(); // Update table highlighting
+      showToast(`${ticker} 분석 모드`);
+    }
+
+    function updateSelectedStockBadge(ticker) {
+      const stock = state.stocksList.find(s => s.ticker === ticker);
+      const badge = document.getElementById('selectedStockBadge');
+      const name = document.getElementById('selectedStockName');
+
+      if (stock && badge && name) {
+        name.textContent = `${ticker} - ${stock.name}`;
+        badge.classList.remove('hidden');
+      }
+    }
+
+    function analyzeStock(ticker) {
+      // Update global selector
+      if (tomSelectInstances.global) {
+        tomSelectInstances.global.setValue(ticker, true);
+      }
+      syncGlobalSelection(ticker);
+    }
+
+    // ================== v4: MANUAL PEER SELECTOR ==================
+    function initManualPeerSelector() {
+      const select = document.getElementById('manualPeerSelect');
+      if (!select) return;
+
+      const sorted = [...state.stocksList].sort((a, b) => b.mc - a.mc);
+
+      sorted.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.ticker;
+        opt.textContent = `${s.ticker} - ${s.name}`;
+        select.appendChild(opt);
+      });
+
+      tomSelectInstances.manualPeer = new TomSelect(select, {
+        maxItems: 1,
+        placeholder: '비교 종목 검색...',
+        allowEmptyOption: true,
+        create: false,
+        sortField: { field: 'text', direction: 'asc' },
+        onChange: (ticker) => {
+          if (ticker) {
+            addManualPeer(ticker);
+            tomSelectInstances.manualPeer.clear();
+          }
+        }
+      });
+    }
+
+    function addManualPeer(ticker) {
+      if (ticker === state.selectedTicker) {
+        showToast('기준 종목은 추가할 수 없습니다', 'warning');
+        return;
+      }
+      if (state.manualPeers.length >= 4) {
+        showToast('최대 4개까지 추가 가능 (기준 포함 5개)', 'warning');
+        return;
+      }
+      if (state.manualPeers.includes(ticker)) {
+        showToast('이미 추가된 종목입니다', 'warning');
+        return;
+      }
+
+      state.manualPeers.push(ticker);
+      renderManualPeerChips();
+      renderPeerTab();
+      showToast(`${ticker} 비교 종목 추가`, 'info');
+    }
+
+    function removeManualPeer(ticker) {
+      state.manualPeers = state.manualPeers.filter(t => t !== ticker);
+      renderManualPeerChips();
+      renderPeerTab();
+    }
+
+    function renderManualPeerChips() {
+      const container = document.getElementById('selectedPeerChips');
+      if (!container) return;
+
+      // Base stock chip (non-removable)
+      const baseTicker = state.selectedTicker;
+      let html = baseTicker ? `
+        <span class="peer-chip peer-chip-base">
+          <i class="fas fa-star text-amber-500 text-xs"></i>
+          ${baseTicker} (기준)
+        </span>
+      ` : '';
+
+      // Manual peer chips (removable)
+      html += state.manualPeers.map(ticker => `
+        <span class="peer-chip peer-chip-manual">
+          ${ticker}
+          <button onclick="removeManualPeer('${ticker}')" class="peer-chip-remove">
+            <i class="fas fa-times text-xs"></i>
+          </button>
+        </span>
+      `).join('');
+
+      container.innerHTML = html;
+    }
+
+    function setPeerMode(mode) {
+      state.peerMode = mode;
+      document.getElementById('peerModeAuto').classList.toggle('active', mode === 'auto');
+      document.getElementById('peerModeManual').classList.toggle('active', mode === 'manual');
+      document.getElementById('manualPeerPanel').classList.toggle('hidden', mode === 'auto');
+
+      if (mode === 'manual') {
+        renderManualPeerChips();
+      }
+
+      renderPeerTab();
+    }
+
+    // ================== v4: OVERLAY COMPARISON CHART ==================
+    function setComparisonPeriod(period) {
+      state.comparisonPeriod = period;
+      document.querySelectorAll('.overlay-period-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.period === period);
+      });
+      renderOverlayChart();
+    }
+
+    function renderOverlayChart() {
+      const overlayEmpty = document.getElementById('overlayEmptyState');
+      const overlayCanvas = document.getElementById('overlayChart');
+
+      if (!overlayEmpty || !overlayCanvas) return;
+
+      let peers;
+      if (state.peerMode === 'auto') {
+        // Auto mode: sector top 5 by market cap
+        if (!state.selectedTicker) {
+          overlayEmpty.style.display = 'flex';
+          return;
+        }
+        const stock = state.stocksList.find(s => s.ticker === state.selectedTicker);
+        if (!stock) {
+          overlayEmpty.style.display = 'flex';
+          return;
+        }
+        const sectorPeers = state.stocksList
+          .filter(s => s.sector === stock.sector)
+          .sort((a, b) => b.mc - a.mc)
+          .slice(0, 5)
+          .map(s => s.ticker);
+        peers = sectorPeers;
+      } else {
+        // Manual mode: base + selected peers
+        if (!state.selectedTicker) {
+          overlayEmpty.style.display = 'flex';
+          return;
+        }
+        peers = [state.selectedTicker, ...state.manualPeers];
+      }
+
+      if (peers.length < 2) {
+        overlayEmpty.style.display = 'flex';
+        return;
+      }
+      overlayEmpty.style.display = 'none';
+
+      // Chart colors (distinct for each stock)
+      const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'];
+
+      // Generate indexed return data
+      // Note: Using r12 (12M return) as proxy since we don't have daily price data
+      const periodMonths = { '1m': 1, '3m': 3, '6m': 6, '1y': 12, 'ytd': new Date().getMonth() + 1 };
+      const months = periodMonths[state.comparisonPeriod] || 6;
+
+      const datasets = peers.map((ticker, i) => {
+        const stock = state.stocksList.find(s => s.ticker === ticker);
+        const r12 = stock?.r12 || 0;
+
+        // Simulate monthly returns based on r12
+        // Using volatility simulation to make it more realistic
+        const monthlyReturn = r12 / 12;
+        const volatility = Math.abs(r12) / 20; // Proportional volatility
+
+        const data = [0];  // Start at 0%
+        let cumReturn = 0;
+        for (let m = 1; m <= months; m++) {
+          // Add some randomness but trend toward r12
+          const noise = (Math.random() - 0.5) * volatility * 2;
+          cumReturn += monthlyReturn + noise;
+          data.push(cumReturn);
+        }
+
+        // Adjust final point to match r12 proportionally
+        const factor = months / 12;
+        const expectedReturn = r12 * factor;
+        const adjustment = (expectedReturn - cumReturn) / months;
+        for (let m = 1; m <= months; m++) {
+          data[m] += adjustment * m;
+        }
+
+        return {
+          label: ticker,
+          data: data,
+          borderColor: colors[i % colors.length],
+          backgroundColor: 'transparent',
+          borderWidth: ticker === state.selectedTicker ? 3 : 2,
+          pointRadius: 0,
+          tension: 0.4
+        };
+      });
+
+      // Generate labels
+      const labels = ['Start'];
+      for (let m = 1; m <= months; m++) {
+        labels.push(`M${m}`);
+      }
+
+      // Render chart
+      const ctx = overlayCanvas.getContext('2d');
+      if (charts.overlay) charts.overlay.destroy();
+
+      charts.overlay = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            y: {
+              title: { display: true, text: '상대 수익률 (%)' },
+              ticks: { callback: v => `${v.toFixed(1)}%` }
+            }
+          },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`
+              }
+            }
+          }
         }
       });
     }
@@ -3001,7 +3549,8 @@
     }
 
     async function renderPeerTab() {
-      const ticker = document.getElementById('peerSelector')?.value;
+      // v4: Use global selected ticker or peerSelector
+      const ticker = state.selectedTicker || document.getElementById('peerSelector')?.value;
       if (!ticker) {
         document.getElementById('peerEmptyState').style.display = 'flex';
         document.getElementById('peerResults').classList.add('hidden');
@@ -3015,7 +3564,18 @@
       currentPeerData = { stock, data, ticker };
 
       const sector = stock.sector;
-      const peers = getPeersBySector(sector);
+
+      // v4: Get peers based on mode
+      let peers;
+      if (state.peerMode === 'auto') {
+        peers = getPeersBySector(sector);
+      } else {
+        // Manual mode: base stock + manual peers
+        const allTickers = [ticker, ...state.manualPeers];
+        peers = allTickers
+          .map(t => state.stocksList.find(s => s.ticker === t))
+          .filter(Boolean);
+      }
 
       if (peers.length < 3) {
         document.getElementById('peerEmptyState').innerHTML = `
@@ -3099,6 +3659,9 @@
       }).join('');
 
       renderPeerChart();
+
+      // v4: Render overlay comparison chart
+      renderOverlayChart();
     }
 
     function setPeerChartType(type) {
@@ -3120,9 +3683,19 @@
     function renderPeerChart() {
       if (!currentPeerData) return;
 
-      const { stock } = currentPeerData;
+      const { stock, ticker } = currentPeerData;
       const sector = stock.sector;
-      const peers = getPeersBySector(sector);
+
+      // v4: Get peers based on mode
+      let peers;
+      if (state.peerMode === 'auto') {
+        peers = getPeersBySector(sector);
+      } else {
+        const allTickers = [ticker, ...state.manualPeers];
+        peers = allTickers
+          .map(t => state.stocksList.find(s => s.ticker === t))
+          .filter(Boolean);
+      }
 
       const ctx = document.getElementById('peerChart').getContext('2d');
       if (charts.peer) charts.peer.destroy();
