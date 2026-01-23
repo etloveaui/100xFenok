@@ -26,7 +26,10 @@ const ValuationLabUI = (function() {
     slickcharts: [
       { name: 'Historical Returns', link: 'expansion/slickcharts-historical.html', icon: 'fa-clock-rotate-left', desc: '47yr Returns + Dividends' }
     ],
-    'sec-13f': [], // Data only
+    'sec-13f': [
+      { name: 'Guru Tracker (OpenCode)', link: 'expansion/sec-13f-explorer-opencode.html', icon: 'fa-users', desc: '17 Investors · 8 Quarters (v1)' },
+      { name: 'Guru Tracker (Regular)', link: 'expansion/sec-13f-explorer.html', icon: 'fa-briefcase', desc: '17 Investors · 8 Quarters (v2)' }
+    ],
     sentiment: [], // Data only
     indices: [], // Legacy or data only
     'macro-rates': [] // Virtual folder for FRED
