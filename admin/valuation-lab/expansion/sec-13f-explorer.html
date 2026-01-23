@@ -184,19 +184,19 @@
     <!-- Content Tabs -->
     <div class="flex gap-1 bg-blue-100 rounded-t-lg p-1 mb-0 overflow-x-auto">
       <button class="content-tab active" data-tab="overview" onclick="setContentTab('overview')">
-        <i class="fas fa-th-large mr-2"></i>Overview
+        <i class="fas fa-th-large mr-2"></i>개요
       </button>
       <button class="content-tab" data-tab="investor" onclick="setContentTab('investor')">
-        <i class="fas fa-user-tie mr-2"></i>Investor
+        <i class="fas fa-user-tie mr-2"></i>투자자
       </button>
       <button class="content-tab" data-tab="stock" onclick="setContentTab('stock')">
-        <i class="fas fa-search-dollar mr-2"></i>Stock Lookup
+        <i class="fas fa-search-dollar mr-2"></i>종목 조회
       </button>
       <button class="content-tab" data-tab="sector" onclick="setContentTab('sector')">
-        <i class="fas fa-industry mr-2"></i>Sector
+        <i class="fas fa-industry mr-2"></i>섹터
       </button>
       <button class="content-tab" data-tab="changes" onclick="setContentTab('changes')">
-        <i class="fas fa-exchange-alt mr-2"></i>Changes
+        <i class="fas fa-exchange-alt mr-2"></i>변동사항
       </button>
     </div>
 
@@ -207,19 +207,19 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div class="bg-blue-50 rounded-lg p-4 text-center">
             <div class="text-2xl font-bold text-blue-600" id="totalAum">-</div>
-            <div class="text-xs text-gray-500">Total AUM</div>
+            <div class="text-xs text-gray-500">총 운용자산</div>
           </div>
           <div class="bg-green-50 rounded-lg p-4 text-center">
             <div class="text-2xl font-bold text-green-600" id="investorCount">17</div>
-            <div class="text-xs text-gray-500">Investors</div>
+            <div class="text-xs text-gray-500">투자자 수</div>
           </div>
           <div class="bg-purple-50 rounded-lg p-4 text-center">
             <div class="text-2xl font-bold text-purple-600" id="quartersCovered">8</div>
-            <div class="text-xs text-gray-500">Quarters</div>
+            <div class="text-xs text-gray-500">분기</div>
           </div>
           <div class="bg-amber-50 rounded-lg p-4 text-center">
             <div class="text-2xl font-bold text-amber-600" id="stockCount">-</div>
-            <div class="text-xs text-gray-500">Stocks Tracked</div>
+            <div class="text-xs text-gray-500">추적 종목</div>
           </div>
         </div>
 
@@ -237,22 +237,22 @@
 
         <!-- Investor Cards Grid -->
         <h2 class="text-lg font-bold text-gray-800 mb-3">
-          <i class="fas fa-users text-blue-500 mr-2"></i>Guru Portfolio Overview
+          <i class="fas fa-users text-blue-500 mr-2"></i>구루 포트폴리오 개요
         </h2>
         <div id="investorCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
 
         <!-- Top 20 Stocks -->
         <h2 class="text-lg font-bold text-gray-800 mb-3">
-          <i class="fas fa-star text-amber-500 mr-2"></i>Top 20 Most Popular Stocks
+          <i class="fas fa-star text-amber-500 mr-2"></i>인기 종목 Top 20
         </h2>
         <div style="overflow-x: auto;">
           <table id="topStocksTable">
             <thead>
               <tr>
-                <th>Rank</th>
-                <th>Ticker</th>
-                <th>Holders</th>
-                <th>Total Value</th>
+                <th>순위</th>
+                <th>티커</th>
+                <th>보유자</th>
+                <th>총가치</th>
               </tr>
             </thead>
             <tbody id="topStocksBody"></tbody>
@@ -266,12 +266,12 @@
       <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-briefcase text-blue-500 mr-2"></i>Investor Portfolio
+            <i class="fas fa-briefcase text-blue-500 mr-2"></i>투자자 포트폴리오
           </h2>
           <div class="flex items-center gap-3">
-            <label class="text-sm text-gray-600">Investor:</label>
+            <label class="text-sm text-gray-600">투자자:</label>
             <select id="investorSelector" class="p-2 border rounded-lg text-sm"></select>
-            <label class="text-sm text-gray-600 ml-4">Quarter:</label>
+            <label class="text-sm text-gray-600 ml-4">분기:</label>
             <select id="quarterSelector" class="p-2 border rounded-lg text-sm"></select>
           </div>
         </div>
@@ -290,15 +290,15 @@
             <div class="grid grid-cols-3 gap-6 text-center">
               <div>
                 <div id="profileAum" class="text-lg font-bold text-blue-600">-</div>
-                <div class="text-xs text-gray-500">AUM</div>
+                <div class="text-xs text-gray-500">운용자산</div>
               </div>
               <div>
                 <div id="profileHoldings" class="text-lg font-bold text-green-600">-</div>
-                <div class="text-xs text-gray-500">Holdings</div>
+                <div class="text-xs text-gray-500">보유종목</div>
               </div>
               <div>
                 <div id="profileTop10" class="text-lg font-bold text-purple-600">-</div>
-                <div class="text-xs text-gray-500">Top 10 Weight</div>
+                <div class="text-xs text-gray-500">Top 10 비중</div>
               </div>
             </div>
           </div>
@@ -307,19 +307,19 @@
         <!-- Portfolio Pie Chart -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <div>
-            <h3 class="text-sm font-bold text-gray-700 mb-2">Portfolio Composition (Top 10)</h3>
+            <h3 class="text-sm font-bold text-gray-700 mb-2">포트폴리오 구성 (Top 10)</h3>
             <div class="chart-container" style="height: 300px;">
               <canvas id="portfolioChart"></canvas>
             </div>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-gray-700 mb-2">Quarterly Changes Summary</h3>
+            <h3 class="text-sm font-bold text-gray-700 mb-2">분기별 변동 요약</h3>
             <div id="changesSummary" class="space-y-2"></div>
           </div>
         </div>
 
         <!-- Holdings Table -->
-        <h3 class="text-sm font-bold text-gray-700 mb-2">All Holdings</h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-2">전체 보유종목</h3>
         <div class="flex flex-wrap gap-2 mb-3">
           <button class="filter-btn active" data-change="all" onclick="filterHoldings('all')">전체</button>
           <button class="filter-btn" data-change="NEW" onclick="filterHoldings('NEW')">NEW</button>
@@ -354,10 +354,10 @@
       <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-search-dollar text-green-500 mr-2"></i>Stock Lookup - Who Owns This?
+            <i class="fas fa-search-dollar text-green-500 mr-2"></i>종목 조회 - 누가 보유하고 있나?
           </h2>
           <div class="flex items-center gap-3">
-            <label class="text-sm text-gray-600">Stock:</label>
+            <label class="text-sm text-gray-600">종목:</label>
             <select id="stockSelector" class="p-2 border rounded-lg text-sm"></select>
           </div>
         </div>
@@ -372,11 +372,11 @@
             <div class="grid grid-cols-2 gap-6 text-center">
               <div>
                 <div id="stockHolders" class="text-lg font-bold text-green-600">-</div>
-                <div class="text-xs text-gray-500">Holders</div>
+                <div class="text-xs text-gray-500">보유자 수</div>
               </div>
               <div>
                 <div id="stockTotalShares" class="text-lg font-bold text-blue-600">-</div>
-                <div class="text-xs text-gray-500">Total Shares</div>
+                <div class="text-xs text-gray-500">총 주식수</div>
               </div>
             </div>
           </div>
@@ -385,13 +385,13 @@
         <!-- Holders Chart -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <div>
-            <h3 class="text-sm font-bold text-gray-700 mb-2">Holder Distribution by Group</h3>
+            <h3 class="text-sm font-bold text-gray-700 mb-2">그룹별 보유자 분포</h3>
             <div class="chart-container" style="height: 300px;">
               <canvas id="holderGroupChart"></canvas>
             </div>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-gray-700 mb-2">Top Holders by Weight</h3>
+            <h3 class="text-sm font-bold text-gray-700 mb-2">비중별 Top 보유자</h3>
             <div class="chart-container" style="height: 300px;">
               <canvas id="holderWeightChart"></canvas>
             </div>
@@ -399,7 +399,7 @@
         </div>
 
         <!-- Holders Table -->
-        <h3 class="text-sm font-bold text-gray-700 mb-2">All Holders</h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-2">전체 보유자</h3>
         <div class="flex flex-wrap gap-2 mb-3">
           <button class="filter-btn active" data-group="all" onclick="filterStockHolders('all')">전체</button>
           <button class="filter-btn" data-group="value" onclick="filterStockHolders('value')">Value</button>
@@ -408,9 +408,9 @@
           <button class="filter-btn" data-group="quant" onclick="filterStockHolders('quant')">Quant</button>
         </div>
         <div class="flex flex-wrap gap-3 mb-3">
-          <label class="text-sm text-gray-600">Min Weight:</label>
+          <label class="text-sm text-gray-600">최소 비중:</label>
           <select id="stockMinWeight" class="p-1 border rounded text-sm" onchange="filterStockByWeight()">
-            <option value="0">All</option>
+            <option value="0">전체</option>
             <option value="0.01">1%+</option>
             <option value="0.02">2%+</option>
             <option value="0.05">5%+</option>
@@ -421,11 +421,11 @@
           <table>
             <thead>
               <tr>
-                <th>Rank</th>
-                <th>Investor</th>
-                <th>Group</th>
-                <th>Shares</th>
-                <th>Weight</th>
+                <th>순위</th>
+                <th>투자자</th>
+                <th>그룹</th>
+                <th>주식수</th>
+                <th>비중</th>
               </tr>
             </thead>
             <tbody id="stockHoldersBody"></tbody>
@@ -438,20 +438,20 @@
     <div id="section-sector" class="content-section">
       <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
         <h2 class="text-lg font-bold text-gray-800 mb-4">
-          <i class="fas fa-industry text-purple-500 mr-2"></i>Sector Analysis
+          <i class="fas fa-industry text-purple-500 mr-2"></i>섹터 분석
         </h2>
 
         <!-- Sector Overview Cards -->
         <div id="sectorCards" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"></div>
 
         <!-- Investor-Sector Heatmap -->
-        <h3 class="text-sm font-bold text-gray-700 mb-3">Investor-Sector Heatmap (Avg Weight)</h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-3">투자자-섹터 히트맵 (투자 여부)</h3>
         <div style="overflow-x: auto;">
           <div id="heatmapContainer" class="min-w-[800px]"></div>
         </div>
 
         <!-- Sector Detail -->
-        <h3 class="text-sm font-bold text-gray-700 mt-6 mb-3">Sector Details</h3>
+        <h3 class="text-sm font-bold text-gray-700 mt-6 mb-3">섹터 상세</h3>
         <div id="sectorDetails" class="space-y-3"></div>
       </div>
     </div>
@@ -461,10 +461,10 @@
       <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-exchange-alt text-orange-500 mr-2"></i>Portfolio Changes
+            <i class="fas fa-exchange-alt text-orange-500 mr-2"></i>포트폴리오 변동사항
           </h2>
           <div class="flex items-center gap-3">
-            <label class="text-sm text-gray-600">Quarter:</label>
+            <label class="text-sm text-gray-600">분기:</label>
             <select id="changesQuarterSelector" class="p-2 border rounded-lg text-sm"></select>
           </div>
         </div>
@@ -473,20 +473,20 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           <div>
             <h3 class="text-sm font-bold text-green-600 mb-2">
-              <i class="fas fa-arrow-up mr-1"></i>Top Buys This Quarter
+              <i class="fas fa-arrow-up mr-1"></i>이번 분기 Top 매수
             </h3>
             <div id="topBuysTable" style="overflow-x: auto; max-height: 300px;"></div>
           </div>
           <div>
             <h3 class="text-sm font-bold text-red-600 mb-2">
-              <i class="fas fa-arrow-down mr-1"></i>Top Sells This Quarter
+              <i class="fas fa-arrow-down mr-1"></i>이번 분기 Top 매도
             </h3>
             <div id="topSellsTable" style="overflow-x: auto; max-height: 300px;"></div>
           </div>
         </div>
 
         <!-- AUM Trend Chart -->
-        <h3 class="text-sm font-bold text-gray-700 mb-2">AUM Trend (8 Quarters)</h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-2">운용자산 추이 (8분기)</h3>
         <div class="flex flex-wrap gap-2 mb-3" id="aumToggleContainer"></div>
         <div class="chart-container">
           <canvas id="aumTrendChart"></canvas>
@@ -511,6 +511,9 @@
     // TomSelect instances
     let investorSelect = null;
     let stockSelect = null;
+
+    // Holdings with change data (for filter/pagination reuse)
+    let currentHoldingsWithChange = [];
 
     // Chart instances
     let portfolioChart = null;
@@ -548,14 +551,10 @@
 
       holdingsPage = 1; // Reset page on sort
 
-      // Re-render with current filter
-      if (currentInvestor && investorCache[currentInvestor]) {
-        const filing = investorCache[currentInvestor].investor.filings
-          .find(f => f.quarter === currentQuarter);
-        if (filing) {
-          const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
-          renderHoldingsTable(filing.holdings, currentFilter);
-        }
+      // Re-render with current filter using cached holdingsWithChange
+      if (currentHoldingsWithChange.length > 0) {
+        const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
+        renderHoldingsTable(currentHoldingsWithChange, currentFilter);
       }
     }
 
@@ -628,7 +627,7 @@
 
     async function loadInvestor(name) {
       if (investorCache[name]) return investorCache[name];
-      
+
       try {
         const data = await fetch(`${BASE_PATH}/investors/${name}.json`).then(r => r.json());
         investorCache[name] = data;
@@ -637,6 +636,61 @@
         console.error(`Failed to load investor ${name}:`, error);
         return null;
       }
+    }
+
+    // ==================== COMPUTE DIFF (핵심 로직) ====================
+    // 이전 분기와 현재 분기 비교하여 change 타입 계산
+    function computeDiff(currentHoldings, previousHoldings) {
+      // Aggregate previous holdings by ticker for O(1) lookup
+      const prevMap = new Map();
+      (previousHoldings || []).forEach(h => {
+        const key = h.ticker;
+        if (!prevMap.has(key)) prevMap.set(key, 0);
+        prevMap.set(key, prevMap.get(key) + h.shares);
+      });
+
+      // Aggregate current holdings by ticker
+      const currMap = new Map();
+      currentHoldings.forEach(h => {
+        const key = h.ticker;
+        if (!currMap.has(key)) currMap.set(key, 0);
+        currMap.set(key, currMap.get(key) + h.shares);
+      });
+
+      // Calculate change type for each current holding
+      return currentHoldings.map(h => {
+        const prevShares = prevMap.get(h.ticker) || 0;
+        const currShares = currMap.get(h.ticker) || 0;
+
+        let change;
+        if (prevShares === 0) {
+          change = 'NEW';
+        } else if (currShares > prevShares) {
+          change = 'INCREASED';
+        } else if (currShares < prevShares) {
+          change = 'DECREASED';
+        } else {
+          change = 'UNCHANGED';
+        }
+
+        return { ...h, change };
+      });
+    }
+
+    // Get SOLD positions (present in previous quarter, not in current)
+    function getSoldPositions(currentHoldings, previousHoldings) {
+      const currTickers = new Set(currentHoldings.map(h => h.ticker));
+      const sold = [];
+      const seen = new Set();
+
+      (previousHoldings || []).forEach(h => {
+        if (!currTickers.has(h.ticker) && !seen.has(h.ticker)) {
+          seen.add(h.ticker);
+          sold.push({ ...h, change: 'SOLD' });
+        }
+      });
+
+      return sold;
     }
 
     // ==================== TAB MANAGEMENT ====================
@@ -658,7 +712,10 @@
       }
       if (tab === 'stock' && !currentStock) {
         const firstStock = Object.keys(byTickerData)[0];
-        stockSelect?.setValue(firstStock);
+        if (firstStock) {
+          stockSelect?.setValue(firstStock);
+          renderStockLookup(firstStock);  // Direct render call to fix initialization
+        }
       }
       if (tab === 'sector') {
         renderSectorAnalysis();
@@ -773,22 +830,33 @@
     }
 
     function renderQuarterData(investorData, quarter) {
-      const filing = investorData.investor.filings.find(f => f.quarter === quarter);
+      const filings = investorData.investor.filings;
+      const currentIdx = filings.findIndex(f => f.quarter === quarter);
+      const filing = filings[currentIdx];
       if (!filing) return;
+
+      // Get previous quarter for diff calculation (filings are sorted newest first)
+      const prevFiling = filings[currentIdx + 1];
+
+      // Compute diff - this adds 'change' field to each holding
+      const holdingsWithChange = computeDiff(filing.holdings, prevFiling?.holdings);
+
+      // Store for pagination/filter reuse
+      currentHoldingsWithChange = holdingsWithChange;
 
       // Profile stats
       document.getElementById('profileAum').textContent = formatCurrency(filing.aum_total);
       document.getElementById('profileHoldings').textContent = filing.holdings_count;
       document.getElementById('profileTop10').textContent = formatPercent(filing.top_10_weight);
 
-      // Holdings table
-      renderHoldingsTable(filing.holdings);
+      // Holdings table (with computed change data)
+      renderHoldingsTable(holdingsWithChange);
 
       // Portfolio chart
-      renderPortfolioChart(filing.holdings);
+      renderPortfolioChart(holdingsWithChange);
 
       // Changes summary
-      renderChangesSummary(filing.holdings);
+      renderChangesSummary(holdingsWithChange);
     }
 
     function renderHoldingsTable(holdings, filter = 'all') {
@@ -875,26 +943,18 @@
     function prevHoldingsPage() {
       if (holdingsPage > 1) {
         holdingsPage--;
-        if (currentInvestor && investorCache[currentInvestor]) {
-          const filing = investorCache[currentInvestor].investor.filings
-            .find(f => f.quarter === currentQuarter);
-          if (filing) {
-            const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
-            renderHoldingsTable(filing.holdings, currentFilter);
-          }
+        if (currentHoldingsWithChange.length > 0) {
+          const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
+          renderHoldingsTable(currentHoldingsWithChange, currentFilter);
         }
       }
     }
 
     function nextHoldingsPage() {
       holdingsPage++;
-      if (currentInvestor && investorCache[currentInvestor]) {
-        const filing = investorCache[currentInvestor].investor.filings
-          .find(f => f.quarter === currentQuarter);
-        if (filing) {
-          const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
-          renderHoldingsTable(filing.holdings, currentFilter);
-        }
+      if (currentHoldingsWithChange.length > 0) {
+        const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
+        renderHoldingsTable(currentHoldingsWithChange, currentFilter);
       }
     }
 
@@ -905,10 +965,8 @@
 
       holdingsPage = 1; // Reset page on filter change
 
-      if (currentInvestor && investorCache[currentInvestor]) {
-        const filing = investorCache[currentInvestor].investor.filings
-          .find(f => f.quarter === currentQuarter);
-        if (filing) renderHoldingsTable(filing.holdings, filter);
+      if (currentHoldingsWithChange.length > 0) {
+        renderHoldingsTable(currentHoldingsWithChange, filter);
       }
     }
 
@@ -957,30 +1015,38 @@
 
     function renderChangesSummary(holdings) {
       const container = document.getElementById('changesSummary');
-      const counts = { NEW: 0, INCREASED: 0, DECREASED: 0, SOLD: 0 };
-      
+      const counts = { NEW: 0, INCREASED: 0, DECREASED: 0, UNCHANGED: 0 };
+
+      // Aggregate by ticker to count unique positions
+      const tickerChanges = {};
       holdings.forEach(h => {
-        if (h.change && counts[h.change] !== undefined) {
-          counts[h.change]++;
+        if (!tickerChanges[h.ticker]) {
+          tickerChanges[h.ticker] = h.change;
+        }
+      });
+
+      Object.values(tickerChanges).forEach(change => {
+        if (change && counts[change] !== undefined) {
+          counts[change]++;
         }
       });
 
       container.innerHTML = `
         <div class="flex items-center justify-between p-2 bg-green-50 rounded">
-          <span class="text-sm">NEW positions</span>
+          <span class="text-sm">신규 포지션</span>
           <span class="font-bold text-green-600">${counts.NEW}</span>
         </div>
         <div class="flex items-center justify-between p-2 bg-blue-50 rounded">
-          <span class="text-sm">INCREASED</span>
+          <span class="text-sm">증가</span>
           <span class="font-bold text-blue-600">${counts.INCREASED}</span>
         </div>
         <div class="flex items-center justify-between p-2 bg-amber-50 rounded">
-          <span class="text-sm">DECREASED</span>
+          <span class="text-sm">감소</span>
           <span class="font-bold text-amber-600">${counts.DECREASED}</span>
         </div>
-        <div class="flex items-center justify-between p-2 bg-red-50 rounded">
-          <span class="text-sm">SOLD</span>
-          <span class="font-bold text-red-600">${counts.SOLD}</span>
+        <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+          <span class="text-sm">변동 없음</span>
+          <span class="font-bold text-gray-600">${counts.UNCHANGED}</span>
         </div>
       `;
     }
@@ -1195,18 +1261,18 @@
       const sectors = Object.keys(bySectorData);
       const investors = Object.keys(summaryData.investors);
 
-      // Build heatmap data
+      // Build heatmap data - show if investor invests in sector (1) or not (0)
       const heatmapData = {};
       sectors.forEach(sector => {
         heatmapData[sector] = {};
         const sectorInvestors = bySectorData[sector].investors;
         investors.forEach(inv => {
-          heatmapData[sector][inv] = sectorInvestors.includes(inv) ? bySectorData[sector].avg_weight : 0;
+          heatmapData[sector][inv] = sectorInvestors.includes(inv) ? 1 : 0;
         });
       });
 
-      // Render as HTML table
-      let html = '<table class="text-xs"><thead><tr><th></th>';
+      // Render with checkmark/dash instead of misleading percentages
+      let html = '<table class="text-xs"><thead><tr><th>투자자</th>';
       sectors.forEach(s => { html += `<th class="text-center">${s.substring(0, 8)}</th>`; });
       html += '</tr></thead><tbody>';
 
@@ -1214,12 +1280,12 @@
         const name = summaryData.investors[inv]?.name || inv;
         html += `<tr><td class="font-medium pr-2">${name.split(' ')[0]}</td>`;
         sectors.forEach(sector => {
-          const weight = heatmapData[sector][inv];
-          const intensity = Math.min(weight * 50, 1);
-          const bgColor = weight > 0 ? `rgba(59, 130, 246, ${intensity})` : '#f8fafc';
-          const textColor = intensity > 0.5 ? 'white' : '#64748b';
-          html += `<td class="heatmap-cell" style="background: ${bgColor}; color: ${textColor}">
-            ${weight > 0 ? formatPercent(weight) : '-'}
+          const invests = heatmapData[sector][inv];
+          const bgColor = invests ? '#dbeafe' : '#f8fafc';
+          const icon = invests ? '✓' : '-';
+          const textColor = invests ? '#1e40af' : '#cbd5e1';
+          html += `<td class="heatmap-cell text-center" style="background: ${bgColor}; color: ${textColor}">
+            ${icon}
           </td>`;
         });
         html += '</tr>';
@@ -1270,16 +1336,27 @@
       Object.keys(summaryData.investors).forEach(inv => {
         const data = investorCache[inv];
         if (!data) return;
-        
-        const filing = data.investor.filings.find(f => f.quarter === quarter);
+
+        const filings = data.investor.filings;
+        const currentIdx = filings.findIndex(f => f.quarter === quarter);
+        const filing = filings[currentIdx];
+        const prevFiling = filings[currentIdx + 1];
         if (!filing) return;
 
-        filing.holdings.forEach(h => {
+        // Compute diff for this investor
+        const holdingsWithChange = computeDiff(filing.holdings, prevFiling?.holdings);
+        const soldPositions = getSoldPositions(filing.holdings, prevFiling?.holdings);
+
+        holdingsWithChange.forEach(h => {
           if (h.change === 'NEW' || h.change === 'INCREASED') {
             buys.push({ investor: inv, ...h });
-          } else if (h.change === 'DECREASED' || h.change === 'SOLD') {
+          } else if (h.change === 'DECREASED') {
             sells.push({ investor: inv, ...h });
           }
+        });
+
+        soldPositions.forEach(h => {
+          sells.push({ investor: inv, ...h });
         });
       });
 
@@ -1293,16 +1370,16 @@
     }
 
     function renderChangesTable(items, type) {
-      if (items.length === 0) return '<p class="text-gray-400 text-sm">No data</p>';
-      
+      if (items.length === 0) return '<p class="text-gray-400 text-sm">데이터 없음</p>';
+
       return `
         <table class="text-sm">
           <thead>
             <tr>
-              <th>Investor</th>
-              <th>Ticker</th>
-              <th>Value</th>
-              <th>Action</th>
+              <th>투자자</th>
+              <th>티커</th>
+              <th>가치</th>
+              <th>액션</th>
             </tr>
           </thead>
           <tbody>
