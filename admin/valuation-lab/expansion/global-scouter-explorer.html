@@ -386,6 +386,103 @@
     .param-guide-toggle:hover { border-color: inherit; }
     .param-guide-content { transition: all 0.3s ease; }
     .rotate-180 { transform: rotate(180deg); }
+
+    /* #196: DDM Yield Warning */
+    .ddm-yield-warning {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .ddm-yield-warning.error {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border: 1px solid #fecaca;
+    }
+    .ddm-yield-warning.warning {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border: 1px solid #fde68a;
+    }
+    .ddm-yield-warning-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .ddm-yield-warning.error .ddm-yield-warning-icon { color: #dc2626; }
+    .ddm-yield-warning.warning .ddm-yield-warning-icon { color: #d97706; }
+
+    /* #196: Peer Quick Add */
+    .peer-quick-add {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .peer-quick-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border: 1px solid #a7f3d0;
+      border-radius: 20px;
+      color: #065f46;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .peer-quick-btn:hover {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      border-color: #6ee7b7;
+      transform: translateY(-1px);
+    }
+    .peer-quick-btn i { color: #10b981; }
+
+    /* #196: Macro Alert */
+    .macro-alert-banner {
+      margin-bottom: 16px;
+    }
+    .macro-alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .macro-alert:last-child { margin-bottom: 0; }
+    .macro-alert-danger {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border-left: 4px solid #dc2626;
+    }
+    .macro-alert-warning {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border-left: 4px solid #f59e0b;
+    }
+    .macro-alert-info {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-left: 4px solid #3b82f6;
+    }
+    .macro-alert-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .macro-alert-danger .macro-alert-header { color: #991b1b; }
+    .macro-alert-warning .macro-alert-header { color: #92400e; }
+    .macro-alert-info .macro-alert-header { color: #1e40af; }
+    .macro-alert-body {
+      font-size: 13px;
+      color: #4b5563;
+      margin-left: 24px;
+    }
+    .macro-alert-meta {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-left: 24px;
+    }
   </style>
 </head>
 <body>
@@ -1089,6 +1186,9 @@
               </div>
             </div>
 
+            <!-- #196: DDM Yield Warning -->
+            <div id="ddmYieldWarning" class="hidden"></div>
+
             <!-- 밸류에이션 결과 카드 -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               <div class="bg-amber-50 rounded-lg p-4 text-center">
@@ -1186,31 +1286,25 @@
           </div>
         </div>
 
-        <!-- v4: Peer Mode Toggle -->
-        <div class="flex items-center gap-2 mb-4 flex-wrap">
-          <button id="peerModeAuto" onclick="setPeerMode('auto')" class="peer-mode-btn active">
-            <i class="fas fa-magic mr-1"></i>자동(섹터)
-          </button>
-          <button id="peerModeManual" onclick="setPeerMode('manual')" class="peer-mode-btn">
-            <i class="fas fa-hand-pointer mr-1"></i>수동선택
-          </button>
-          <span class="text-xs text-gray-400 ml-2">
-            <i class="fas fa-info-circle mr-1"></i>최대 5개 종목 비교
-          </span>
-        </div>
-
-        <!-- v4: Manual Selection Panel -->
-        <div id="manualPeerPanel" class="hidden mb-4">
+        <!-- #196: Simplified Peer Selection (C안) -->
+        <div id="peerSelectionPanel" class="mb-4">
           <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div class="flex items-center gap-3 mb-3 flex-wrap">
+            <!-- Selected Chips (Base + Manual) -->
+            <div id="selectedPeerChips" class="flex flex-wrap gap-2 mb-3"></div>
+
+            <!-- Inline Search -->
+            <div class="flex items-center gap-3 flex-wrap">
               <label class="text-sm font-medium text-gray-700">
-                <i class="fas fa-plus-circle text-teal-500 mr-1"></i>비교 종목 추가
+                <i class="fas fa-plus-circle text-teal-500 mr-1"></i>종목 추가
               </label>
               <select id="manualPeerSelect" class="flex-1 min-w-48"></select>
             </div>
 
-            <!-- Selected Chips -->
-            <div id="selectedPeerChips" class="flex flex-wrap gap-2"></div>
+            <!-- Quick Add Suggestions -->
+            <div id="peerQuickAdd" class="peer-quick-add hidden">
+              <span class="text-xs text-gray-500 mr-2"><i class="fas fa-lightbulb text-amber-400 mr-1"></i>추천:</span>
+              <!-- Dynamically populated -->
+            </div>
 
             <p class="text-xs text-gray-500 mt-3">
               <i class="fas fa-info-circle mr-1"></i>
@@ -1411,6 +1505,9 @@
           </div>
         </div>
 
+        <!-- #196: Macro Alert Banner -->
+        <div id="macroAlertBanner" class="macro-alert-banner hidden"></div>
+
         <!-- Macro Time Series Chart -->
         <div id="macroChartContainer" class="chart-container mb-4">
           <canvas id="macroChart"></canvas>
@@ -1533,9 +1630,11 @@
       peerChartType: 'bar',
       // v4: UX Overhaul
       selectedTicker: null,
-      peerMode: 'auto',
+      peerMode: 'manual',  // #196: Default to manual (C안)
       manualPeers: [],
-      comparisonPeriod: '6m'
+      comparisonPeriod: '6m',
+      // #196: Macro Alert
+      vixData: null
     };
 
     let charts = {
@@ -1694,6 +1793,10 @@
         // v4: Initialize global selector and manual peer selector
         initGlobalSelector();
         initManualPeerSelector();
+
+        // #196: Load VIX data and update Macro Alerts
+        await loadVIXData();
+        updateMacroAlerts();
 
         // Hide loading
         document.getElementById('loadingOverlay').style.display = 'none';
@@ -2313,6 +2416,7 @@
     function removeManualPeer(ticker) {
       state.manualPeers = state.manualPeers.filter(t => t !== ticker);
       renderManualPeerChips();
+      renderPeerQuickAdd();  // #196
       renderPeerTab();
     }
 
@@ -2340,19 +2444,61 @@
       `).join('');
 
       container.innerHTML = html;
+
+      // #196: Update quick-add suggestions
+      renderPeerQuickAdd();
     }
 
-    function setPeerMode(mode) {
-      state.peerMode = mode;
-      document.getElementById('peerModeAuto').classList.toggle('active', mode === 'auto');
-      document.getElementById('peerModeManual').classList.toggle('active', mode === 'manual');
-      document.getElementById('manualPeerPanel').classList.toggle('hidden', mode === 'auto');
-
-      if (mode === 'manual') {
-        renderManualPeerChips();
+    // #196: Quick-add peer suggestions
+    function renderPeerQuickAdd() {
+      const container = document.getElementById('peerQuickAdd');
+      if (!container || !state.selectedTicker) {
+        if (container) container.classList.add('hidden');
+        return;
       }
 
+      const stock = state.stocksList.find(s => s.ticker === state.selectedTicker);
+      if (!stock) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      // Get sector peers sorted by market cap, exclude base and already added
+      const sectorPeers = state.stocksList
+        .filter(s => s.sector === stock.sector && s.ticker !== state.selectedTicker && !state.manualPeers.includes(s.ticker))
+        .sort((a, b) => b.mc - a.mc)
+        .slice(0, 3);
+
+      if (sectorPeers.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      const buttonsHtml = sectorPeers.map(p => `
+        <button class="peer-quick-btn" onclick="addQuickPeer('${p.ticker}')">
+          <i class="fas fa-plus"></i>${p.ticker}
+        </button>
+      `).join('');
+
+      container.innerHTML = `
+        <span class="text-xs text-gray-500 mr-2"><i class="fas fa-lightbulb text-amber-400 mr-1"></i>추천:</span>
+        ${buttonsHtml}
+      `;
+      container.classList.remove('hidden');
+    }
+
+    function addQuickPeer(ticker) {
+      if (state.manualPeers.includes(ticker)) return;
+      if (state.manualPeers.length >= 4) {
+        showToast('최대 5개 종목까지 비교 가능합니다', 'warning');
+        return;
+      }
+
+      state.manualPeers.push(ticker);
+      renderManualPeerChips();
+      renderPeerQuickAdd();
       renderPeerTab();
+      showToast(`${ticker} 추가됨`, 'info');
     }
 
     // ================== v4: OVERLAY COMPARISON CHART ==================
@@ -3719,6 +3865,35 @@
       document.getElementById('ddmNoDividend').classList.add('hidden');
       document.getElementById('ddmDPSData').parentElement.classList.remove('hidden');
 
+      // #196: DDM Yield Warning
+      const dividendYield = (lastDPS / stock.price) * 100;
+      const yieldWarningEl = document.getElementById('ddmYieldWarning');
+
+      if (dividendYield < 1) {
+        yieldWarningEl.className = 'ddm-yield-warning error';
+        yieldWarningEl.innerHTML = `
+          <i class="fas fa-exclamation-circle ddm-yield-warning-icon"></i>
+          <div>
+            <div class="font-medium text-red-800">DDM 부적합 - 성장주입니다</div>
+            <div class="text-sm text-red-700 mt-1">배당수익률 ${dividendYield.toFixed(2)}%는 너무 낮습니다. DDM은 배당주 전용 모델입니다.</div>
+            <div class="text-sm text-red-600 mt-1"><i class="fas fa-arrow-right mr-1"></i>DCF 탭에서 현금흐름 기반 밸류에이션을 사용하세요.</div>
+          </div>
+        `;
+        yieldWarningEl.classList.remove('hidden');
+      } else if (dividendYield < 2) {
+        yieldWarningEl.className = 'ddm-yield-warning warning';
+        yieldWarningEl.innerHTML = `
+          <i class="fas fa-exclamation-triangle ddm-yield-warning-icon"></i>
+          <div>
+            <div class="font-medium text-amber-800">배당수익률 낮음 - DDM 신뢰도 낮음</div>
+            <div class="text-sm text-amber-700 mt-1">배당수익률 ${dividendYield.toFixed(2)}%는 DDM에 적합한 수준(2%+)보다 낮습니다.</div>
+          </div>
+        `;
+        yieldWarningEl.classList.remove('hidden');
+      } else {
+        yieldWarningEl.classList.add('hidden');
+      }
+
       // Display DPS data
       document.getElementById('ddmDPSData').innerHTML = dps.map((v, i) => `
         <div class="bg-white rounded p-2 border border-amber-100">
@@ -4108,6 +4283,114 @@
           }
         });
       }
+    }
+
+    // ================== #196: MACRO ALERT SYSTEM ==================
+    async function loadVIXData() {
+      try {
+        const resp = await fetch(`${BASE}/data/sentiment/vix.json`);
+        if (!resp.ok) throw new Error('VIX data not found');
+        const data = await resp.json();
+        state.vixData = data;
+        return data;
+      } catch (err) {
+        console.warn('Failed to load VIX data:', err);
+        return null;
+      }
+    }
+
+    function checkVIXAlert(vixValue) {
+      if (vixValue >= 30) return { level: 'danger', title: 'VIX 30+ 극심한 변동성', msg: '시장 공포 지수가 매우 높습니다. 급락 또는 급등 가능성에 유의하세요.', icon: 'exclamation-circle' };
+      if (vixValue >= 25) return { level: 'warning', title: 'VIX 25+ 높은 변동성', msg: '변동성이 평소보다 높습니다. 포지션 관리에 주의하세요.', icon: 'exclamation-triangle' };
+      if (vixValue <= 12) return { level: 'info', title: 'VIX <12 낮은 변동성', msg: '시장 자만 구간일 수 있습니다. 급락 전 징후일 수 있으니 주의하세요.', icon: 'info-circle' };
+      return null;
+    }
+
+    function checkYieldCurveAlert(spread) {
+      if (spread == null) return null;
+      if (spread < 0) return { level: 'danger', title: '수익률곡선 역전!', msg: '10Y-2Y 스프레드가 음수입니다. 역사적으로 경기침체 선행 신호입니다.', icon: 'exclamation-circle' };
+      if (spread < 0.25) return { level: 'warning', title: '수익률곡선 평탄화', msg: '스프레드가 25bp 미만으로 좁혀졌습니다. 경기둔화 가능성을 모니터링하세요.', icon: 'exclamation-triangle' };
+      return null;
+    }
+
+    function checkHYSpreadAlert(hysUS) {
+      if (hysUS == null) return null;
+      if (hysUS > 0.05) return { level: 'danger', title: 'HY스프레드 5%+ 신용위험', msg: '하이일드 스프레드가 급등했습니다. 신용시장 스트레스 신호입니다.', icon: 'exclamation-circle' };
+      if (hysUS > 0.04) return { level: 'warning', title: 'HY스프레드 4%+ 주의', msg: '하이일드 스프레드가 상승 중입니다. 신용위험 모니터링이 필요합니다.', icon: 'exclamation-triangle' };
+      return null;
+    }
+
+    function updateMacroAlerts() {
+      const alerts = [];
+
+      // VIX check (latest from vix.json - array is ascending, so last is latest)
+      if (state.vixData?.length > 0) {
+        const latestVIX = state.vixData[state.vixData.length - 1];
+        const vixAlert = checkVIXAlert(latestVIX.value);
+        if (vixAlert) {
+          alerts.push({
+            ...vixAlert,
+            indicator: 'VIX',
+            value: latestVIX.value.toFixed(2),
+            date: latestVIX.date
+          });
+        }
+      }
+
+      // Yield curve & HY spread check (from economic.json - array is descending, first is latest)
+      if (state.economic?.records?.length > 0) {
+        const latest = state.economic.records[0];
+
+        const ycAlert = checkYieldCurveAlert(latest.t10y_2y_spread);
+        if (ycAlert) {
+          alerts.push({
+            ...ycAlert,
+            indicator: '10Y-2Y Spread',
+            value: (latest.t10y_2y_spread * 100).toFixed(0) + 'bp',
+            threshold: '0bp',
+            date: latest.date
+          });
+        }
+
+        const hyAlert = checkHYSpreadAlert(latest.hys_us);
+        if (hyAlert) {
+          alerts.push({
+            ...hyAlert,
+            indicator: 'HY Spread (US)',
+            value: (latest.hys_us * 100).toFixed(2) + '%',
+            threshold: '4%/5%',
+            date: latest.date
+          });
+        }
+      }
+
+      renderMacroAlerts(alerts);
+    }
+
+    function renderMacroAlerts(alerts) {
+      const banner = document.getElementById('macroAlertBanner');
+      if (!banner) return;
+
+      if (alerts.length === 0) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      const html = alerts.map(alert => `
+        <div class="macro-alert macro-alert-${alert.level}">
+          <div class="macro-alert-header">
+            <i class="fas fa-${alert.icon}"></i>
+            <span>${alert.title}</span>
+          </div>
+          <p class="macro-alert-body">${alert.msg}</p>
+          <p class="macro-alert-meta">
+            ${alert.indicator}: ${alert.value}${alert.threshold ? ` (기준: ${alert.threshold})` : ''} • ${alert.date}
+          </p>
+        </div>
+      `).join('');
+
+      banner.innerHTML = html;
+      banner.classList.remove('hidden');
     }
 
     // ================== UTILITIES ==================
