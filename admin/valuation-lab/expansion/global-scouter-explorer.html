@@ -483,6 +483,194 @@
       color: #9ca3af;
       margin-left: 24px;
     }
+
+    /* #197: Indicator Guide System - Level 1 Tooltip */
+    .indicator-label {
+      position: relative;
+      cursor: help;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .indicator-label[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f2937;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 400;
+      white-space: nowrap;
+      max-width: 280px;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .indicator-label[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% - 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #1f2937;
+      z-index: 100;
+    }
+    .indicator-help-icon {
+      font-size: 10px;
+      color: #9ca3af;
+      transition: color 0.2s;
+    }
+    .indicator-label:hover .indicator-help-icon {
+      color: #6b7280;
+    }
+
+    /* #197: Level 2 Context Badge */
+    .context-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .context-low { background: #dcfce7; color: #166534; }
+    .context-high { background: #fee2e2; color: #991b1b; }
+    .context-neutral { background: #f3f4f6; color: #4b5563; }
+    .context-warning { background: #fef3c7; color: #92400e; }
+
+    /* #197: Level 3 Guide Panel */
+    .guide-toggle {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #0369a1;
+      transition: all 0.2s;
+    }
+    .guide-toggle:hover {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+      border-color: #7dd3fc;
+    }
+    .guide-toggle i {
+      transition: transform 0.3s;
+    }
+    .guide-toggle.open i {
+      transform: rotate(180deg);
+    }
+    .guide-panel {
+      margin-top: 12px;
+      padding: 16px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      display: none;
+    }
+    .guide-panel.open {
+      display: block;
+    }
+    .guide-card {
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      background: #fafafa;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+    }
+    .guide-card:last-child {
+      margin-bottom: 0;
+    }
+    .guide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .guide-title {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 14px;
+    }
+    .guide-formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: #6b7280;
+      font-size: 12px;
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .guide-what, .guide-meaning {
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: #374151;
+      line-height: 1.5;
+    }
+    .guide-interpretation {
+      background: white;
+      border-radius: 6px;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #e5e7eb;
+    }
+    .interp-row {
+      display: flex;
+      gap: 12px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      align-items: center;
+    }
+    .interp-row:last-child {
+      margin-bottom: 0;
+    }
+    .interp-range {
+      font-weight: 600;
+      min-width: 80px;
+      font-size: 12px;
+    }
+    .interp-text {
+      font-size: 12px;
+      color: #4b5563;
+    }
+    .interp-low { background: #dcfce7; }
+    .interp-neutral { background: #f3f4f6; }
+    .interp-high { background: #fef3c7; }
+    .interp-danger { background: #fee2e2; }
+    .guide-warning {
+      font-size: 12px;
+      color: #dc2626;
+      margin-top: 10px;
+      padding: 10px;
+      background: #fef2f2;
+      border-radius: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .guide-warning i {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .guide-tip {
+      font-size: 12px;
+      color: #0369a1;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f0f9ff;
+      border-radius: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
   </style>
 </head>
 <body>
@@ -567,7 +755,10 @@
         <i class="fas fa-users mr-2"></i>Peer비교
       </button>
       <button class="content-tab" data-tab="etfs" onclick="setContentTab('etfs')">
-        <i class="fas fa-globe mr-2"></i>ETF/매크로
+        <i class="fas fa-layer-group mr-2"></i>ETFs
+      </button>
+      <button class="content-tab" data-tab="macro" onclick="setContentTab('macro')">
+        <i class="fas fa-globe mr-2"></i>Macro
       </button>
     </div>
 
@@ -729,6 +920,124 @@
             </table>
           </div>
         </div>
+
+        <!-- #197: Financials Indicator Guide -->
+        <div class="mt-6">
+          <button onclick="toggleIndicatorGuide('financials')" class="guide-toggle" id="financialsGuideToggle">
+            <span><i class="fas fa-book-open mr-2"></i>재무제표 지표 가이드 (초보자용)</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div id="financialsGuideContent" class="guide-panel">
+            <!-- Revenue -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">매출액 (Revenue)</span>
+                <span class="guide-formula">= 판매량 × 판매가격</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 제품/서비스 판매로 얻은 총 수익</p>
+              <p class="guide-meaning"><strong>의미:</strong> 사업 규모와 시장 점유율 반영</p>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>매출 자체보다 성장률이 더 중요. 동종 업계와 비교 필요</span>
+              </div>
+            </div>
+            <!-- Gross Profit -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">매출총이익 (Gross Profit)</span>
+                <span class="guide-formula">= 매출액 - 매출원가</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 제품 원가를 제외한 이익</p>
+              <p class="guide-meaning"><strong>의미:</strong> 제품/서비스의 기본적인 수익성</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-high">
+                  <span class="interp-range">마진 50%+</span>
+                  <span class="interp-text">소프트웨어, SaaS 등 고마진 사업</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">마진 20~50%</span>
+                  <span class="interp-text">제조업 일반 수준</span>
+                </div>
+                <div class="interp-row interp-low">
+                  <span class="interp-range">마진 20% 미만</span>
+                  <span class="interp-text">유통, 원자재 등 저마진 사업</span>
+                </div>
+              </div>
+            </div>
+            <!-- Operating Income -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">영업이익 (Operating Income)</span>
+                <span class="guide-formula">= 매출총이익 - 판관비</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 본업 활동에서 발생한 이익</p>
+              <p class="guide-meaning"><strong>의미:</strong> 기업의 핵심 사업 수익력</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-high">
+                  <span class="interp-range">마진 15%+</span>
+                  <span class="interp-text">우수한 영업 효율성</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">마진 5~15%</span>
+                  <span class="interp-text">양호한 수준</span>
+                </div>
+                <div class="interp-row interp-danger">
+                  <span class="interp-range">마진 0% 미만</span>
+                  <span class="interp-text">영업적자 (본업 수익성 문제)</span>
+                </div>
+              </div>
+            </div>
+            <!-- Net Income -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">순이익 (Net Income)</span>
+                <span class="guide-formula">= 영업이익 ± 영업외손익 - 세금</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 모든 비용을 제외한 최종 이익</p>
+              <p class="guide-meaning"><strong>의미:</strong> 주주에게 귀속되는 실제 이익</p>
+              <div class="guide-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>일회성 항목(자산매각, 소송 등) 제외하고 판단해야 정확</span>
+              </div>
+            </div>
+            <!-- FCF -->
+            <div class="guide-card" style="border-left-color: #10b981;">
+              <div class="guide-header">
+                <span class="guide-title">FCF (잉여현금흐름)</span>
+                <span class="guide-formula">= 영업CF - CapEx</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 사업 유지에 필요한 투자를 제외한 현금</p>
+              <p class="guide-meaning"><strong>의미:</strong> 배당, 자사주 매입, 부채 상환에 사용 가능한 실제 현금</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-high">
+                  <span class="interp-range">양수 지속</span>
+                  <span class="interp-text">건전한 현금 창출력 (DCF의 핵심)</span>
+                </div>
+                <div class="interp-row interp-danger">
+                  <span class="interp-range">지속적 음수</span>
+                  <span class="interp-text">현금 유출 지속 → 자금 조달 필요</span>
+                </div>
+              </div>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>성장 기업은 FCF 음수가 정상일 수 있음 (투자 확대 중)</span>
+              </div>
+            </div>
+            <!-- SG&A -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">판관비 (SG&A)</span>
+                <span class="guide-formula">= 판매비 + 일반관리비</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 영업/마케팅, 관리 등 운영 비용</p>
+              <p class="guide-meaning"><strong>의미:</strong> 매출 대비 비율로 효율성 판단</p>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>매출 성장 시 판관비율 하락 → 규모의 경제 달성</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -789,6 +1098,125 @@
             <div class="text-xl font-bold text-amber-600 mono" id="maxPE">-</div>
           </div>
         </div>
+
+        <!-- #197: Valuations Indicator Guide -->
+        <div class="mt-6">
+          <button onclick="toggleIndicatorGuide('valuations')" class="guide-toggle" id="valuationsGuideToggle">
+            <span><i class="fas fa-book-open mr-2"></i>밸류에이션 지표 가이드 (초보자용)</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div id="valuationsGuideContent" class="guide-panel">
+            <!-- P/E -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">P/E (주가수익비율)</span>
+                <span class="guide-formula">= 주가 ÷ EPS</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 현재 주가가 주당순이익(EPS)의 몇 배인지 나타내는 지표</p>
+              <p class="guide-meaning"><strong>의미:</strong> 투자자들이 이 회사의 $1 이익에 얼마를 지불하는가</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-low">
+                  <span class="interp-range">10 이하</span>
+                  <span class="interp-text">저평가 가능성 (또는 성장 둔화 우려)</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">15~25</span>
+                  <span class="interp-text">시장 평균 수준 (업종별 차이 큼)</span>
+                </div>
+                <div class="interp-row interp-high">
+                  <span class="interp-range">30+</span>
+                  <span class="interp-text">고평가 (또는 고성장 기대 반영)</span>
+                </div>
+              </div>
+              <div class="guide-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>적자 기업은 P/E 의미 없음 → P/S 또는 EV/EBITDA 활용</span>
+              </div>
+            </div>
+            <!-- Forward P/E -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">Forward P/E (선행 PER)</span>
+                <span class="guide-formula">= 주가 ÷ 예상 EPS</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 미래 예상 이익 기준의 P/E</p>
+              <p class="guide-meaning"><strong>의미:</strong> 시장이 미래 실적을 어떻게 평가하는지 보여줌</p>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>Forward P/E가 현재 P/E보다 낮으면 → 이익 성장 기대</span>
+              </div>
+            </div>
+            <!-- P/B -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">P/B (주가순자산비율)</span>
+                <span class="guide-formula">= 주가 ÷ BPS</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 주가가 1주당 순자산(장부가치)의 몇 배인지</p>
+              <p class="guide-meaning"><strong>의미:</strong> 기업의 순자산 대비 시장 평가</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-low">
+                  <span class="interp-range">1 미만</span>
+                  <span class="interp-text">장부가치 이하 거래 (저평가 또는 문제 기업)</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">1~3</span>
+                  <span class="interp-text">적정 수준 (업종에 따라 다름)</span>
+                </div>
+                <div class="interp-row interp-high">
+                  <span class="interp-range">3+</span>
+                  <span class="interp-text">프리미엄 평가 (브랜드 가치, 무형자산)</span>
+                </div>
+              </div>
+            </div>
+            <!-- P/S -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">P/S (주가매출비율)</span>
+                <span class="guide-formula">= 주가 ÷ SPS</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 주가가 1주당 매출의 몇 배인지</p>
+              <p class="guide-meaning"><strong>의미:</strong> 적자 기업이나 고성장 기업 평가에 유용</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">1~2</span>
+                  <span class="interp-text">전통 기업 적정 수준</span>
+                </div>
+                <div class="interp-row interp-high">
+                  <span class="interp-range">10+</span>
+                  <span class="interp-text">SaaS/고성장 기업은 높을 수 있음</span>
+                </div>
+              </div>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>적자 기업도 P/S로 비교 가능 (매출은 항상 양수)</span>
+              </div>
+            </div>
+            <!-- PEG -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">PEG (주가수익성장비율)</span>
+                <span class="guide-formula">= P/E ÷ EPS 성장률</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> P/E를 이익 성장률로 나눈 값</p>
+              <p class="guide-meaning"><strong>의미:</strong> 성장률을 감안한 밸류에이션 적정성 판단</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-low">
+                  <span class="interp-range">1 미만</span>
+                  <span class="interp-text">저평가 (성장률 대비 P/E 낮음)</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">1</span>
+                  <span class="interp-text">적정 평가</span>
+                </div>
+                <div class="interp-row interp-high">
+                  <span class="interp-range">1 초과</span>
+                  <span class="interp-text">고평가 (성장률 대비 P/E 높음)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -843,6 +1271,92 @@
           <div class="bg-blue-50 rounded-lg p-4 text-center">
             <div class="text-xs text-gray-500">FY2 EPS 예상</div>
             <div class="text-xl font-bold text-blue-600 mono" id="fy2EPS">-</div>
+          </div>
+        </div>
+
+        <!-- #197: Growth Indicator Guide -->
+        <div class="mt-6">
+          <button onclick="toggleIndicatorGuide('growth')" class="guide-toggle" id="growthGuideToggle">
+            <span><i class="fas fa-book-open mr-2"></i>성장성 지표 가이드 (초보자용)</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div id="growthGuideContent" class="guide-panel">
+            <!-- Revenue Growth -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">매출 성장률 (Revenue Growth)</span>
+                <span class="guide-formula">= (금년 매출 - 전년 매출) ÷ 전년 매출</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 전년 대비 매출 증가율</p>
+              <p class="guide-meaning"><strong>의미:</strong> 사업 확장 속도, 시장 점유율 확대 여부</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-high">
+                  <span class="interp-range">20%+</span>
+                  <span class="interp-text">고성장주 (Tech, 바이오 등)</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">5~20%</span>
+                  <span class="interp-text">안정적 성장</span>
+                </div>
+                <div class="interp-row interp-danger">
+                  <span class="interp-range">마이너스</span>
+                  <span class="interp-text">역성장 (시장 축소 또는 경쟁 열위)</span>
+                </div>
+              </div>
+            </div>
+            <!-- EPS Growth -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">EPS 성장률 (EPS Growth)</span>
+                <span class="guide-formula">= (금년 EPS - 전년 EPS) ÷ 전년 EPS</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 주당순이익 증가율</p>
+              <p class="guide-meaning"><strong>의미:</strong> 수익성 개선 속도, 주주가치 창출력</p>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>EPS 성장률 > 매출 성장률 → 운영 효율 개선 중</span>
+              </div>
+            </div>
+            <!-- CAGR -->
+            <div class="guide-card" style="border-left-color: #f59e0b;">
+              <div class="guide-header">
+                <span class="guide-title">CAGR (연평균 성장률)</span>
+                <span class="guide-formula">= (최종값/최초값)^(1/기간) - 1</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 여러 해에 걸친 평균 성장률</p>
+              <p class="guide-meaning"><strong>의미:</strong> 장기 성장 추세를 단일 숫자로 표현</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-high">
+                  <span class="interp-range">15%+ (5Y)</span>
+                  <span class="interp-text">우수한 장기 성장</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">5~15%</span>
+                  <span class="interp-text">양호한 성장</span>
+                </div>
+                <div class="interp-row interp-low">
+                  <span class="interp-range">5% 미만</span>
+                  <span class="interp-text">저성장 (성숙기업 또는 정체)</span>
+                </div>
+              </div>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>단년도 급등락보다 CAGR이 더 신뢰성 있는 지표</span>
+              </div>
+            </div>
+            <!-- Estimates -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">EPS 컨센서스 (Estimates)</span>
+                <span class="guide-formula">= 애널리스트 예상 EPS 평균</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 증권사 애널리스트들의 이익 전망치 평균</p>
+              <p class="guide-meaning"><strong>의미:</strong> 시장의 기대치, 실적 서프라이즈 판단 기준</p>
+              <div class="guide-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>실적 발표 시 컨센서스 대비 Beat/Miss 여부가 주가에 큰 영향</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -901,6 +1415,133 @@
           <div class="bg-purple-50 rounded-lg p-4 text-center">
             <div class="text-xs text-gray-500">평균 ROE</div>
             <div class="text-xl font-bold text-purple-600 mono" id="avgROE">-</div>
+          </div>
+        </div>
+
+        <!-- #197: Dividends Indicator Guide -->
+        <div class="mt-6">
+          <button onclick="toggleIndicatorGuide('dividends')" class="guide-toggle" id="dividendsGuideToggle">
+            <span><i class="fas fa-book-open mr-2"></i>배당/수익성 지표 가이드 (초보자용)</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div id="dividendsGuideContent" class="guide-panel">
+            <!-- DPS -->
+            <div class="guide-card" style="border-left-color: #eab308;">
+              <div class="guide-header">
+                <span class="guide-title">DPS (주당 배당금)</span>
+                <span class="guide-formula">= 총 배당금 ÷ 발행주식수</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 1주당 지급받는 배당금</p>
+              <p class="guide-meaning"><strong>의미:</strong> 주주환원 규모, 안정적 현금흐름 신호</p>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>DPS 상승 추세 = 경영진의 주주환원 의지 + 이익 안정성</span>
+              </div>
+            </div>
+            <!-- Dividend Yield -->
+            <div class="guide-card" style="border-left-color: #22c55e;">
+              <div class="guide-header">
+                <span class="guide-title">배당 수익률 (Dividend Yield)</span>
+                <span class="guide-formula">= DPS ÷ 주가 × 100</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 현재 주가 대비 연간 배당금 비율</p>
+              <p class="guide-meaning"><strong>의미:</strong> 투자금 대비 배당 수익률</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-low">
+                  <span class="interp-range">1% 미만</span>
+                  <span class="interp-text">성장주 (배당보다 재투자 우선)</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">2~4%</span>
+                  <span class="interp-text">안정적 배당 (S&P 500 평균 수준)</span>
+                </div>
+                <div class="interp-row interp-high">
+                  <span class="interp-range">5%+</span>
+                  <span class="interp-text">고배당 (지속성 검토 필요)</span>
+                </div>
+              </div>
+              <div class="guide-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>수익률이 너무 높으면 → 주가 급락 또는 배당 지속 불가 신호일 수 있음</span>
+              </div>
+            </div>
+            <!-- ROE -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">ROE (자기자본이익률)</span>
+                <span class="guide-formula">= 순이익 ÷ 자기자본 × 100</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 주주 투자금 대비 이익 창출 효율</p>
+              <p class="guide-meaning"><strong>의미:</strong> 자본 활용 효율성, 복리 성장 잠재력</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-high">
+                  <span class="interp-range">15%+</span>
+                  <span class="interp-text">우수 (버핏 기준: 15% 이상 지속)</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">10~15%</span>
+                  <span class="interp-text">양호</span>
+                </div>
+                <div class="interp-row interp-low">
+                  <span class="interp-range">10% 미만</span>
+                  <span class="interp-text">저조 (자본 활용 비효율)</span>
+                </div>
+              </div>
+            </div>
+            <!-- ROA -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">ROA (총자산이익률)</span>
+                <span class="guide-formula">= 순이익 ÷ 총자산 × 100</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 총자산 대비 이익 창출 효율</p>
+              <p class="guide-meaning"><strong>의미:</strong> 자산 활용 효율 (부채 포함 전체 자원)</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-high">
+                  <span class="interp-range">5%+</span>
+                  <span class="interp-text">우수</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">2~5%</span>
+                  <span class="interp-text">양호</span>
+                </div>
+                <div class="interp-row interp-low">
+                  <span class="interp-range">2% 미만</span>
+                  <span class="interp-text">저조</span>
+                </div>
+              </div>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>ROE와 ROA 차이가 크면 → 레버리지(부채) 의존도 높음</span>
+              </div>
+            </div>
+            <!-- Margins -->
+            <div class="guide-card">
+              <div class="guide-header">
+                <span class="guide-title">이익률 (Profit Margins)</span>
+                <span class="guide-formula">= 이익 ÷ 매출 × 100</span>
+              </div>
+              <p class="guide-what"><strong>정의:</strong> 매출 대비 각 단계별 이익 비율</p>
+              <p class="guide-meaning"><strong>의미:</strong> 비용 통제력, 가격 결정력</p>
+              <div class="guide-interpretation">
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">매출총이익률</span>
+                  <span class="interp-text">제품/서비스 기본 마진 (원가 경쟁력)</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">영업이익률</span>
+                  <span class="interp-text">본업 수익성 (운영 효율성)</span>
+                </div>
+                <div class="interp-row interp-neutral">
+                  <span class="interp-range">순이익률</span>
+                  <span class="interp-text">최종 수익성 (세금, 이자 포함)</span>
+                </div>
+              </div>
+              <div class="guide-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>마진 개선 추세 = 규모의 경제 또는 비용 절감 성공</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1488,8 +2129,14 @@
         </div>
       </div>
 
-      <!-- Macro Section -->
-      <div class="card">
+    </div>
+
+    <!-- ==================== MACRO TAB (#197) ==================== -->
+    <div id="section-macro" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <!-- #196: Macro Alert Banner -->
+        <div id="macroAlertBanner" class="macro-alert-banner hidden"></div>
+
         <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 class="text-lg font-bold text-gray-800">
             <i class="fas fa-globe text-teal-500 mr-2"></i>매크로 지표 시계열 (1,045 records)
@@ -1504,9 +2151,6 @@
             </select>
           </div>
         </div>
-
-        <!-- #196: Macro Alert Banner -->
-        <div id="macroAlertBanner" class="macro-alert-banner hidden"></div>
 
         <!-- Macro Time Series Chart -->
         <div id="macroChartContainer" class="chart-container mb-4">
@@ -1832,6 +2476,22 @@
       document.getElementById('count-eu').textContent = countryCounts.eu || 0;
     }
 
+    // ================== #197: INDICATOR GUIDE TOGGLE ==================
+    function toggleIndicatorGuide(guideId) {
+      const toggle = document.getElementById(`${guideId}GuideToggle`);
+      const content = document.getElementById(`${guideId}GuideContent`);
+      if (!toggle || !content) return;
+
+      const isOpen = content.classList.contains('open');
+      if (isOpen) {
+        content.classList.remove('open');
+        toggle.classList.remove('open');
+      } else {
+        content.classList.add('open');
+        toggle.classList.add('open');
+      }
+    }
+
     // ================== TAB NAVIGATION ==================
     function setContentTab(tabName) {
       state.currentTab = tabName;
@@ -1875,9 +2535,12 @@
         case 'peer':
           renderPeerTab();
           break;
-        // 'overview' and 'etfs' tabs don't need stock selection
+        // 'overview', 'etfs', and 'macro' tabs don't need stock selection
       }
     }
+
+    // #197: setContentTab already triggers Macro Alerts via init()
+    // Macro tab uses updateMacroAlerts() called during init
 
     // ================== FILTER ==================
     function setFilter(filter) {
