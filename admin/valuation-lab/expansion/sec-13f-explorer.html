@@ -841,22 +841,25 @@
       // Compute diff - this adds 'change' field to each holding
       const holdingsWithChange = computeDiff(filing.holdings, prevFiling?.holdings);
 
-      // Store for pagination/filter reuse
-      currentHoldingsWithChange = holdingsWithChange;
+      // Add SOLD positions (existed in previous quarter, not in current)
+      const soldPositions = getSoldPositions(filing.holdings, prevFiling?.holdings);
+
+      // Combine current holdings with SOLD positions
+      currentHoldingsWithChange = [...holdingsWithChange, ...soldPositions];
 
       // Profile stats
       document.getElementById('profileAum').textContent = formatCurrency(filing.aum_total);
       document.getElementById('profileHoldings').textContent = filing.holdings_count;
       document.getElementById('profileTop10').textContent = formatPercent(filing.top_10_weight);
 
-      // Holdings table (with computed change data)
-      renderHoldingsTable(holdingsWithChange);
+      // Holdings table (with computed change data including SOLD)
+      renderHoldingsTable(currentHoldingsWithChange);
 
-      // Portfolio chart
+      // Portfolio chart (only current holdings, not SOLD)
       renderPortfolioChart(holdingsWithChange);
 
-      // Changes summary
-      renderChangesSummary(holdingsWithChange);
+      // Changes summary (includes SOLD count)
+      renderChangesSummary(currentHoldingsWithChange);
     }
 
     function renderHoldingsTable(holdings, filter = 'all') {
@@ -889,14 +892,14 @@
         return holdingsSortAsc ? valA - valB : valB - valA;
       });
 
-      // Update table headers with sort icons
+      // Update table headers with sort icons (Korean)
       thead.innerHTML = `
-        <th onclick="sortHoldings('ticker')" class="cursor-pointer">Ticker ${getSortIcon('ticker')}</th>
-        <th onclick="sortHoldings('name')" class="cursor-pointer">Name ${getSortIcon('name')}</th>
-        <th onclick="sortHoldings('shares')" class="cursor-pointer">Shares ${getSortIcon('shares')}</th>
-        <th onclick="sortHoldings('market_value')" class="cursor-pointer">Value ${getSortIcon('market_value')}</th>
-        <th onclick="sortHoldings('weight')" class="cursor-pointer">Weight ${getSortIcon('weight')}</th>
-        <th>Change</th>
+        <th onclick="sortHoldings('ticker')" class="cursor-pointer">티커 ${getSortIcon('ticker')}</th>
+        <th onclick="sortHoldings('name')" class="cursor-pointer">종목명 ${getSortIcon('name')}</th>
+        <th onclick="sortHoldings('shares')" class="cursor-pointer">주식수 ${getSortIcon('shares')}</th>
+        <th onclick="sortHoldings('market_value')" class="cursor-pointer">가치 ${getSortIcon('market_value')}</th>
+        <th onclick="sortHoldings('weight')" class="cursor-pointer">비중 ${getSortIcon('weight')}</th>
+        <th>변동</th>
       `;
 
       // Apply pagination
@@ -1015,7 +1018,7 @@
 
     function renderChangesSummary(holdings) {
       const container = document.getElementById('changesSummary');
-      const counts = { NEW: 0, INCREASED: 0, DECREASED: 0, UNCHANGED: 0 };
+      const counts = { NEW: 0, INCREASED: 0, DECREASED: 0, UNCHANGED: 0, SOLD: 0 };
 
       // Aggregate by ticker to count unique positions
       const tickerChanges = {};
@@ -1043,6 +1046,10 @@
         <div class="flex items-center justify-between p-2 bg-amber-50 rounded">
           <span class="text-sm">감소</span>
           <span class="font-bold text-amber-600">${counts.DECREASED}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 bg-red-50 rounded">
+          <span class="text-sm">전량 매도</span>
+          <span class="font-bold text-red-600">${counts.SOLD}</span>
         </div>
         <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
           <span class="text-sm">변동 없음</span>
