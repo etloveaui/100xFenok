@@ -27,8 +27,7 @@ const ValuationLabUI = (function() {
       { name: 'Historical Returns', link: 'expansion/slickcharts-historical.html', icon: 'fa-clock-rotate-left', desc: '47yr Returns + Dividends' }
     ],
     'sec-13f': [
-      { name: 'Guru Tracker (OpenCode)', link: 'expansion/sec-13f-explorer-opencode.html', icon: 'fa-users', desc: '17 Investors · 8 Quarters (v1)' },
-      { name: 'Guru Tracker (Regular)', link: 'expansion/sec-13f-explorer.html', icon: 'fa-briefcase', desc: '17 Investors · 8 Quarters (v2)' }
+      { name: 'Guru Tracker Premium', link: 'expansion/sec-13f-explorer.html', icon: 'fa-crown', desc: '17 Investors • 500+ Stocks • 8 Quarters • Sort & Filter • Shortcuts' }
     ],
     sentiment: [], // Data only
     indices: [], // Legacy or data only

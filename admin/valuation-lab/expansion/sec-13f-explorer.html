@@ -1,1333 +1,1468 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEC 13F 기관 투자자 정보</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-    <style>
-        body {
-            background-color: #f8f9fa;
-            background-image: linear-gradient(to bottom right, #f8f9fa, #e9ecef);
-        }
-        .card {
-            background-color: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            padding: 1.5rem;
-            transition: all 0.2s ease-in-out;
-        }
-        .content-tab {
-            cursor: pointer;
-            padding: 0.75rem 1.25rem;
-            color: #495057;
-            font-weight: 600;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s ease-in-out;
-        }
-        .content-tab:hover {
-            color: #000;
-            background-color: #f1f3f5;
-        }
-        .content-tab.active {
-            color: #0d6efd;
-            border-bottom-color: #0d6efd;
-        }
-        .content-section {
-            display: none;
-        }
-        .content-section.active {
-            display: block;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            background-color: #fff;
-            border-radius: 0.5rem;
-            padding: 1rem;
-        }
-        .styled-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .styled-table thead th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 2px solid #dee2e6;
-        }
-        .styled-table tbody tr:nth-of-type(even) {
-            background-color: #f8f9fa;
-        }
-        .styled-table tbody tr:hover {
-            background-color: #e9ecef;
-        }
-        .styled-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .mono {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        }
-        #loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.8);
-            z-index: 9999;
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-        #error-banner {
-            display: none;
-            position: fixed;
-            top: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEC-13F Guru Tracker Explorer - 100xFenok</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Loading State */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Content Tabs */
+    .content-tab {
+      padding: 12px 20px;
+      border-radius: 8px 8px 0 0;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      background: transparent;
+      color: #64748b;
+      border-bottom: 3px solid transparent;
+    }
+    .content-tab.active {
+      background: white;
+      color: #3b82f6;
+      border-bottom-color: #3b82f6;
+    }
+    .content-tab:not(.active):hover {
+      background: rgba(255,255,255,0.5);
+      color: #475569;
+    }
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+    }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #6b7280; cursor: pointer; }
+    tbody tr { transition: all 0.2s; cursor: pointer; }
+    tbody tr:hover { background: #eff6ff; }
+
+    /* Badge */
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .badge-value { background: #dbeafe; color: #1e40af; }
+    .badge-macro { background: #fef3c7; color: #92400e; }
+    .badge-hedge { background: #fce7f3; color: #9d174d; }
+    .badge-quant { background: #e0e7ff; color: #3730a3; }
+    .badge-growth { background: #d1fae5; color: #065f46; }
+    .badge-activist { background: #fee2e2; color: #991b1b; }
+    .badge-event { background: #f3e8ff; color: #6b21a8; }
+
+    /* Investor Card */
+    .investor-card {
+      transition: all 0.3s;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .investor-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border-color: #3b82f6;
+    }
+
+    /* Chart Container */
+    .chart-container { height: 400px; position: relative; }
+
+    /* Value colors */
+    .positive { color: #16a34a; }
+    .negative { color: #dc2626; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    /* Heatmap */
+    .heatmap-cell {
+      padding: 8px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 4px;
+      min-width: 60px;
+    }
+
+    /* TomSelect Custom */
+    .ts-wrapper { min-width: 280px; }
+    .ts-control { border-radius: 8px !important; padding: 8px 12px !important; }
+    .ts-dropdown { border-radius: 8px !important; }
+    .ts-dropdown-content { max-height: 300px; }
+
+    /* Filter Tabs */
+    .filter-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+      background: white;
+    }
+    .filter-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .filter-btn:not(.active):hover { background: #f8fafc; }
+
+    /* Change indicators */
+    .change-new { background: #dcfce7; color: #166534; }
+    .change-increased { background: #dbeafe; color: #1e40af; }
+    .change-decreased { background: #fef3c7; color: #92400e; }
+    .change-sold { background: #fee2e2; color: #991b1b; }
+  </style>
 </head>
-<body class="p-4 sm:p-6 lg:p-8">
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="text-gray-600 mt-4">SEC 13F 데이터 로딩 중...</p>
+    <p class="text-gray-400 text-sm mt-2">17명 구루 • 500+ 종목 • 8분기 데이터</p>
+  </div>
 
-    <div id="loading-overlay">
-        <div class="text-center">
-            <i class="fas fa-spinner fa-spin fa-3x text-blue-600"></i>
-            <p class="mt-4 text-lg font-semibold text-gray-700">데이터를 불러오는 중입니다...</p>
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="card">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-user-tie text-blue-500 mr-2"></i>SEC-13F Guru Tracker Premium
+          </h1>
+          <p class="text-gray-500">17명 구루 포트폴리오 • 500+ 종목 • 8분기 • 정렬 & 필터 • 단축키</p>
+          <p class="text-xs text-gray-400 mt-1">
+            Shortcuts: 1-5 (tabs) • Ctrl+K (search) • Ctrl+E (export)
+          </p>
         </div>
+        <div class="flex items-center gap-2">
+          <span id="dataInfo" class="text-xs text-gray-400"></span>
+          <a href="../" class="text-blue-500 hover:underline ml-2">← 뒤로</a>
+        </div>
+      </div>
     </div>
 
-    <div id="error-banner" class="w-full max-w-xl bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg">
-        <strong class="font-bold">오류 발생:</strong>
-        <span class="block sm:inline" id="error-message">데이터를 가져오는 데 실패했습니다.</span>
+    <!-- Content Tabs -->
+    <div class="flex gap-1 bg-blue-100 rounded-t-lg p-1 mb-0 overflow-x-auto">
+      <button class="content-tab active" data-tab="overview" onclick="setContentTab('overview')">
+        <i class="fas fa-th-large mr-2"></i>Overview
+      </button>
+      <button class="content-tab" data-tab="investor" onclick="setContentTab('investor')">
+        <i class="fas fa-user-tie mr-2"></i>Investor
+      </button>
+      <button class="content-tab" data-tab="stock" onclick="setContentTab('stock')">
+        <i class="fas fa-search-dollar mr-2"></i>Stock Lookup
+      </button>
+      <button class="content-tab" data-tab="sector" onclick="setContentTab('sector')">
+        <i class="fas fa-industry mr-2"></i>Sector
+      </button>
+      <button class="content-tab" data-tab="changes" onclick="setContentTab('changes')">
+        <i class="fas fa-exchange-alt mr-2"></i>Changes
+      </button>
     </div>
 
-    <div class="max-w-7xl mx-auto">
-        <!-- Header Card -->
-        <div class="card mb-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">SEC 13F 기관 투자자 정보</h1>
-                    <p class="text-gray-500 mt-1">기관 투자자의 13F 공시를 기반으로 포트폴리오를 탐색합니다.</p>
-                </div>
-                <a href="../" class="text-blue-600 hover:text-blue-800 transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>돌아가기
-                </a>
+    <!-- ==================== TAB 1: OVERVIEW ==================== -->
+    <div id="section-overview" class="content-section active">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-blue-50 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600" id="totalAum">-</div>
+            <div class="text-xs text-gray-500">Total AUM</div>
+          </div>
+          <div class="bg-green-50 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-green-600" id="investorCount">17</div>
+            <div class="text-xs text-gray-500">Investors</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-purple-600" id="quartersCovered">8</div>
+            <div class="text-xs text-gray-500">Quarters</div>
+          </div>
+          <div class="bg-amber-50 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-amber-600" id="stockCount">-</div>
+            <div class="text-xs text-gray-500">Stocks Tracked</div>
+          </div>
+        </div>
+
+        <!-- Filter by Group -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button class="filter-btn active" data-group="all" onclick="filterInvestors('all')">전체</button>
+          <button class="filter-btn" data-group="value" onclick="filterInvestors('value')">Value</button>
+          <button class="filter-btn" data-group="macro" onclick="filterInvestors('macro')">Macro</button>
+          <button class="filter-btn" data-group="hedge" onclick="filterInvestors('hedge')">Hedge</button>
+          <button class="filter-btn" data-group="quant" onclick="filterInvestors('quant')">Quant</button>
+          <button class="filter-btn" data-group="growth" onclick="filterInvestors('growth')">Growth</button>
+          <button class="filter-btn" data-group="activist" onclick="filterInvestors('activist')">Activist</button>
+          <button class="filter-btn" data-group="event" onclick="filterInvestors('event')">Event</button>
+        </div>
+
+        <!-- Investor Cards Grid -->
+        <h2 class="text-lg font-bold text-gray-800 mb-3">
+          <i class="fas fa-users text-blue-500 mr-2"></i>Guru Portfolio Overview
+        </h2>
+        <div id="investorCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+
+        <!-- Top 20 Stocks -->
+        <h2 class="text-lg font-bold text-gray-800 mb-3">
+          <i class="fas fa-star text-amber-500 mr-2"></i>Top 20 Most Popular Stocks
+        </h2>
+        <div style="overflow-x: auto;">
+          <table id="topStocksTable">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Ticker</th>
+                <th>Holders</th>
+                <th>Total Value</th>
+              </tr>
+            </thead>
+            <tbody id="topStocksBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: INVESTOR PORTFOLIO ==================== -->
+    <div id="section-investor" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-briefcase text-blue-500 mr-2"></i>Investor Portfolio
+          </h2>
+          <div class="flex items-center gap-3">
+            <label class="text-sm text-gray-600">Investor:</label>
+            <select id="investorSelector" class="p-2 border rounded-lg text-sm"></select>
+            <label class="text-sm text-gray-600 ml-4">Quarter:</label>
+            <select id="quarterSelector" class="p-2 border rounded-lg text-sm"></select>
+          </div>
+        </div>
+
+        <!-- Investor Profile -->
+        <div id="investorProfile" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4 hidden">
+          <div class="flex items-center gap-4 flex-wrap">
+            <div class="text-4xl"><i class="fas fa-user-circle text-blue-400"></i></div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span id="profileName" class="text-xl font-bold text-gray-800"></span>
+                <span id="profileBadge" class="badge"></span>
+              </div>
+              <div id="profileEntity" class="text-sm text-gray-500"></div>
             </div>
-        </div>
-
-        <!-- Tab Navigation -->
-        <div class="card mb-6 p-0">
-            <div class="flex border-b border-gray-200" role="tablist" aria-label="13F 익스플로러 탭">
-                <button role="tab" class="content-tab active" onclick="switchTab(event, 'overview')" aria-controls="overview" aria-selected="true">개요</button>
-                <button role="tab" class="content-tab" onclick="switchTab(event, 'investor')" aria-controls="investor" aria-selected="false">기관별 분석</button>
-                <button role="tab" class="content-tab" onclick="switchTab(event, 'stock')" aria-controls="stock" aria-selected="false">종목별 분석</button>
-                <button role="tab" class="content-tab" onclick="switchTab(event, 'sector')" aria-controls="sector" aria-selected="false">섹터별 분석</button>
-                <button role="tab" class="content-tab" onclick="switchTab(event, 'changes')" aria-controls="changes" aria-selected="false">주요 변동</button>
+            <div class="grid grid-cols-3 gap-6 text-center">
+              <div>
+                <div id="profileAum" class="text-lg font-bold text-blue-600">-</div>
+                <div class="text-xs text-gray-500">AUM</div>
+              </div>
+              <div>
+                <div id="profileHoldings" class="text-lg font-bold text-green-600">-</div>
+                <div class="text-xs text-gray-500">Holdings</div>
+              </div>
+              <div>
+                <div id="profileTop10" class="text-lg font-bold text-purple-600">-</div>
+                <div class="text-xs text-gray-500">Top 10 Weight</div>
+              </div>
             </div>
+          </div>
         </div>
 
-        <!-- Tab Content -->
-        <div id="tab-content">
-            <!-- Overview Tab -->
-            <section id="overview" class="content-section active card" role="tabpanel" aria-labelledby="overview-tab">
-                <h2 class="text-xl font-bold mb-4 text-gray-700">전체 개요</h2>
-                <div id="overviewStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-sm text-gray-500">총 기관 수</p><p class="text-2xl font-bold">1,234</p></div>
-                    <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-sm text-gray-500">총 보유자산 (AUM)</p><p class="text-2xl font-bold">$12.3T</p></div>
-                    <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-sm text-gray-500">고유 종목 수</p><p class="text-2xl font-bold">5,678</p></div>
-                    <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-sm text-gray-500">최신 분기</p><p class="text-2xl font-bold">2023 Q4</p></div>
-                </div>
-                <div id="overviewInvestorGrid" class="mb-6">
-                    <h3 class="text-lg font-semibold mb-3 text-gray-600">주요 기관 투자자</h3>
-                    <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">투자자 그리드 Placeholder</div>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-3 text-gray-600">가장 많이 보유된 상위 종목</h3>
-                    <table class="styled-table">
-                        <thead><tr><th>순위</th><th>종목</th><th>티커</th><th>보유 기관 수</th><th>총 보유 가치</th><th>AUM 비중</th></tr></thead>
-                        <tbody id="overviewTopStocksTableBody">
-                            <tr><td colspan="6" class="text-center py-8">데이터 로딩 중...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Investor Portfolio Tab -->
-            <section id="investor" class="content-section card" role="tabpanel" aria-labelledby="investor-tab">
-                <div class="flex flex-wrap gap-4 items-center mb-6">
-                    <div class="flex-grow">
-                        <label for="investorSelect" class="block text-sm font-medium text-gray-700 mb-1">투자자 선택</label>
-                        <select id="investorSelect" placeholder="기관 투자자 검색..."></select>
-                    </div>
-                    <div class="flex-grow sm:flex-grow-0">
-                        <label for="investorQuarterSelect" class="block text-sm font-medium text-gray-700 mb-1">분기 선택</label>
-                        <select id="investorQuarterSelect" class="block w-full rounded-md border-gray-300 shadow-sm"></select>
-                    </div>
-                    <button id="investorExportBtn" class="self-end bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"><i class="fas fa-file-excel mr-2"></i>내보내기</button>
-                </div>
-                <div id="investorProfile" class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6 h-32 flex items-center justify-center text-gray-500">투자자 프로필 Placeholder</div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <div class="lg:col-span-1">
-                        <h3 class="text-lg font-semibold mb-3 text-gray-600">포트폴리오 구성</h3>
-                        <div id="investorPieChartContainer" class="chart-container">
-                            <canvas id="investorPieChart" height="250"></canvas>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <h3 class="text-lg font-semibold mb-3 text-gray-600">주요 보유 종목</h3>
-                        <div class="overflow-auto max-h-80">
-                            <table class="styled-table">
-                                <thead><tr><th>종목</th><th>비중</th><th>수량</th><th>가치</th></tr></thead>
-                                <tbody id="investorHoldingsTableBody"><tr><td colspan="4" class="text-center py-8">투자자를 선택하세요.</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-3 text-gray-600">최근 주요 변경 내역</h3>
-                    <div class="overflow-auto max-h-80">
-                        <table class="styled-table">
-                            <thead><tr><th>종목</th><th>변경 유형</th><th>변경 수량</th><th>변경 후 비중</th></tr></thead>
-                            <tbody id="investorChangesTableBody"><tr><td colspan="4" class="text-center py-8">투자자를 선택하세요.</td></tr></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Stock Lookup Tab -->
-            <section id="stock" class="content-section card" role="tabpanel" aria-labelledby="stock-tab">
-                 <div class="flex flex-wrap gap-4 items-center mb-6">
-                    <div class="flex-grow">
-                        <label for="tickerSelect" class="block text-sm font-medium text-gray-700 mb-1">종목 선택</label>
-                        <select id="tickerSelect" placeholder="티커 또는 회사명 검색..."></select>
-                    </div>
-                     <div id="stockFilters" class="flex items-center gap-4 self-end">
-                        <span class="text-sm font-medium text-gray-700">필터:</span>
-                        <div class="h-8 bg-gray-100 rounded-md w-48 flex items-center justify-center text-gray-400">필터 Placeholder</div>
-                     </div>
-                </div>
-                <div id="stockSummary" class="p-4 bg-indigo-50 border border-indigo-200 rounded-lg mb-6 h-24 flex items-center justify-center text-gray-500">종목 요약 정보 Placeholder</div>
-                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    <div class="lg:col-span-3">
-                        <h3 class="text-lg font-semibold mb-3 text-gray-600">주요 기관 주주</h3>
-                        <div class="overflow-auto max-h-96">
-                            <table class="styled-table">
-                                <thead><tr><th>기관명</th><th>보유 비중</th><th>보유 가치</th></tr></thead>
-                                <tbody id="stockHoldersTableBody"><tr><td colspan="3" class="text-center py-8">종목을 선택하세요.</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <h3 class="text-lg font-semibold mb-3 text-gray-600">주주 그룹</h3>
-                         <div id="stockGroupChartContainer" class="chart-container">
-                            <canvas id="stockGroupChart" height="350"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Sector Analysis Tab -->
-            <section id="sector" class="content-section card" role="tabpanel" aria-labelledby="sector-tab">
-                <h2 class="text-xl font-bold mb-4 text-gray-700">섹터 분석</h2>
-                <div id="sectorSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                     <div class="p-4 bg-gray-50 rounded-lg"><p class="text-sm text-gray-500">가장 많이 투자된 섹터</p><p class="text-xl font-bold">기술</p></div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><p class="text-sm text-gray-500">가장 적게 투자된 섹터</p><p class="text-xl font-bold">유틸리티</p></div>
-                </div>
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-3 text-gray-600">섹터별 투자 비중 히트맵</h3>
-                    <div id="sectorHeatmap" class="w-full h-96 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">히트맵 Placeholder</div>
-                </div>
-                <div>
-                     <h3 class="text-lg font-semibold mb-3 text-gray-600">섹터 상세 정보</h3>
-                     <div id="sectorDetail" class="h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">섹터 상세 정보 Placeholder</div>
-                </div>
-            </section>
-
-            <!-- Portfolio Changes Tab -->
-            <section id="changes" class="content-section card" role="tabpanel" aria-labelledby="changes-tab">
-                <div class="flex flex-wrap gap-4 items-center mb-6">
-                    <h2 class="text-xl font-bold text-gray-700">전체 포트폴리오 변경 내역</h2>
-                    <div class="flex-grow"></div>
-                    <div>
-                        <label for="changesQuarterSelect" class="block text-sm font-medium text-gray-700 mb-1">분기 선택</label>
-                        <select id="changesQuarterSelect" class="block w-full rounded-md border-gray-300 shadow-sm"></select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div>
-                         <h3 class="text-lg font-semibold mb-3 text-gray-600">신규 매수 상위 (Top Buys)</h3>
-                         <div class="overflow-auto max-h-96">
-                            <table class="styled-table">
-                                <thead><tr><th>종목</th><th>매수 기관 수</th><th>총 매수 가치</th></tr></thead>
-                                <tbody id="topBuysTableBody"><tr><td colspan="3" class="text-center py-8">데이터 로딩 중...</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
-                     <div>
-                         <h3 class="text-lg font-semibold mb-3 text-gray-600">전량 매도 상위 (Top Sells)</h3>
-                         <div class="overflow-auto max-h-96">
-                             <table class="styled-table">
-                                <thead><tr><th>종목</th><th>매도 기관 수</th><th>총 매도 가치</th></tr></thead>
-                                <tbody id="topSellsTableBody"><tr><td colspan="3" class="text-center py-8">데이터 로딩 중...</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-3 text-gray-600">분기별 총 AUM 추이</h3>
-                    <div id="aumTrendChartContainer" class="chart-container">
-                        <canvas id="aumTrendChart" height="150"></canvas>
-                    </div>
-                </div>
-            </section>
+        <!-- Portfolio Pie Chart -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-gray-700 mb-2">Portfolio Composition (Top 10)</h3>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="portfolioChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-gray-700 mb-2">Quarterly Changes Summary</h3>
+            <div id="changesSummary" class="space-y-2"></div>
+          </div>
         </div>
+
+        <!-- Holdings Table -->
+        <h3 class="text-sm font-bold text-gray-700 mb-2">All Holdings</h3>
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button class="filter-btn active" data-change="all" onclick="filterHoldings('all')">전체</button>
+          <button class="filter-btn" data-change="NEW" onclick="filterHoldings('NEW')">NEW</button>
+          <button class="filter-btn" data-change="INCREASED" onclick="filterHoldings('INCREASED')">INCREASED</button>
+          <button class="filter-btn" data-change="DECREASED" onclick="filterHoldings('DECREASED')">DECREASED</button>
+          <button class="filter-btn" data-change="SOLD" onclick="filterHoldings('SOLD')">SOLD</button>
+        </div>
+        <div style="overflow-x: auto; max-height: 400px;">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortHoldings('ticker')">Ticker</th>
+                <th onclick="sortHoldings('name')">Name</th>
+                <th onclick="sortHoldings('shares')">Shares</th>
+                <th onclick="sortHoldings('value')">Value</th>
+                <th onclick="sortHoldings('weight')">Weight</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody id="holdingsBody"></tbody>
+          </table>
+        </div>
+        <div id="holdingsPagination" class="mt-3"></div>
+        <button onclick="exportHoldingsCSV()" class="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">
+          <i class="fas fa-download mr-1"></i>Export CSV
+        </button>
+      </div>
     </div>
 
-    <script>
-        // ================== BASE & URLS ==================
-        const buildBase = () => {
-            const host = location.hostname;
-            const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.');
-            const isCloudflare = host.endsWith('pages.dev');
-            return (isLocal || isCloudflare) ? '' : '/100xFenok';
-        };
+    <!-- ==================== TAB 3: STOCK LOOKUP ==================== -->
+    <div id="section-stock" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-search-dollar text-green-500 mr-2"></i>Stock Lookup - Who Owns This?
+          </h2>
+          <div class="flex items-center gap-3">
+            <label class="text-sm text-gray-600">Stock:</label>
+            <select id="stockSelector" class="p-2 border rounded-lg text-sm"></select>
+          </div>
+        </div>
 
-        const BASE = buildBase();
-        const DATA_URLS = {
-            summary: `${BASE}/data/sec-13f/summary.json`,
-            bySector: `${BASE}/data/sec-13f/by_sector.json`,
-            byTicker: `${BASE}/data/sec-13f/by_ticker.json`,
-            investor: (key) => `${BASE}/data/sec-13f/investors/${key}.json`
-        };
+        <!-- Stock Summary -->
+        <div id="stockSummary" class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 mb-4 hidden">
+          <div class="flex items-center gap-4 flex-wrap">
+            <div class="text-4xl"><i class="fas fa-chart-line text-green-400"></i></div>
+            <div class="flex-1">
+              <span id="stockTicker" class="text-xl font-bold text-gray-800"></span>
+            </div>
+            <div class="grid grid-cols-2 gap-6 text-center">
+              <div>
+                <div id="stockHolders" class="text-lg font-bold text-green-600">-</div>
+                <div class="text-xs text-gray-500">Holders</div>
+              </div>
+              <div>
+                <div id="stockTotalShares" class="text-lg font-bold text-blue-600">-</div>
+                <div class="text-xs text-gray-500">Total Shares</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        // ================== STATE ==================
-        const state = {
-            summary: null,
-            bySector: null,
-            byTicker: null,
-            investorCache: new Map(),
-            investorsLoadedForChanges: false,
+        <!-- Holders Chart -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-gray-700 mb-2">Holder Distribution by Group</h3>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="holderGroupChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-gray-700 mb-2">Top Holders by Weight</h3>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="holderWeightChart"></canvas>
+            </div>
+          </div>
+        </div>
 
-            selectedInvestor: null,
-            selectedInvestorQuarter: null,
-            selectedTicker: null,
-            selectedChangesQuarter: null,
-            currentTab: 'overview'
-        };
+        <!-- Holders Table -->
+        <h3 class="text-sm font-bold text-gray-700 mb-2">All Holders</h3>
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button class="filter-btn active" data-group="all" onclick="filterStockHolders('all')">전체</button>
+          <button class="filter-btn" data-group="value" onclick="filterStockHolders('value')">Value</button>
+          <button class="filter-btn" data-group="macro" onclick="filterStockHolders('macro')">Macro</button>
+          <button class="filter-btn" data-group="hedge" onclick="filterStockHolders('hedge')">Hedge</button>
+          <button class="filter-btn" data-group="quant" onclick="filterStockHolders('quant')">Quant</button>
+        </div>
+        <div class="flex flex-wrap gap-3 mb-3">
+          <label class="text-sm text-gray-600">Min Weight:</label>
+          <select id="stockMinWeight" class="p-1 border rounded text-sm" onchange="filterStockByWeight()">
+            <option value="0">All</option>
+            <option value="0.01">1%+</option>
+            <option value="0.02">2%+</option>
+            <option value="0.05">5%+</option>
+            <option value="0.10">10%+</option>
+          </select>
+        </div>
+        <div style="overflow-x: auto; max-height: 400px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Investor</th>
+                <th>Group</th>
+                <th>Shares</th>
+                <th>Weight</th>
+              </tr>
+            </thead>
+            <tbody id="stockHoldersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-        const ui = {
-            loading: () => document.getElementById('loading-overlay'),
-            errorBanner: () => document.getElementById('error-banner'),
-            errorMessage: () => document.getElementById('error-message'),
+    <!-- ==================== TAB 4: SECTOR ANALYSIS ==================== -->
+    <div id="section-sector" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-industry text-purple-500 mr-2"></i>Sector Analysis
+        </h2>
 
-            overviewStats: () => document.getElementById('overviewStats'),
-            overviewInvestorGrid: () => document.getElementById('overviewInvestorGrid'),
-            overviewTopStocksTableBody: () => document.getElementById('overviewTopStocksTableBody'),
+        <!-- Sector Overview Cards -->
+        <div id="sectorCards" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"></div>
 
-            investorSelect: () => document.getElementById('investorSelect'),
-            investorQuarterSelect: () => document.getElementById('investorQuarterSelect'),
-            investorProfile: () => document.getElementById('investorProfile'),
-            investorHoldingsTableBody: () => document.getElementById('investorHoldingsTableBody'),
-            investorChangesTableBody: () => document.getElementById('investorChangesTableBody'),
-            investorExportBtn: () => document.getElementById('investorExportBtn'),
+        <!-- Investor-Sector Heatmap -->
+        <h3 class="text-sm font-bold text-gray-700 mb-3">Investor-Sector Heatmap (Avg Weight)</h3>
+        <div style="overflow-x: auto;">
+          <div id="heatmapContainer" class="min-w-[800px]"></div>
+        </div>
 
-            tickerSelect: () => document.getElementById('tickerSelect'),
-            stockSummary: () => document.getElementById('stockSummary'),
-            stockHoldersTableBody: () => document.getElementById('stockHoldersTableBody'),
+        <!-- Sector Detail -->
+        <h3 class="text-sm font-bold text-gray-700 mt-6 mb-3">Sector Details</h3>
+        <div id="sectorDetails" class="space-y-3"></div>
+      </div>
+    </div>
 
-            sectorSummary: () => document.getElementById('sectorSummary'),
-            sectorHeatmap: () => document.getElementById('sectorHeatmap'),
-            sectorDetail: () => document.getElementById('sectorDetail'),
+    <!-- ==================== TAB 5: PORTFOLIO CHANGES ==================== -->
+    <div id="section-changes" class="content-section">
+      <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-exchange-alt text-orange-500 mr-2"></i>Portfolio Changes
+          </h2>
+          <div class="flex items-center gap-3">
+            <label class="text-sm text-gray-600">Quarter:</label>
+            <select id="changesQuarterSelector" class="p-2 border rounded-lg text-sm"></select>
+          </div>
+        </div>
 
-            changesQuarterSelect: () => document.getElementById('changesQuarterSelect'),
-            topBuysTableBody: () => document.getElementById('topBuysTableBody'),
-            topSellsTableBody: () => document.getElementById('topSellsTableBody')
-        };
+        <!-- Top Buys/Sells -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div>
+            <h3 class="text-sm font-bold text-green-600 mb-2">
+              <i class="fas fa-arrow-up mr-1"></i>Top Buys This Quarter
+            </h3>
+            <div id="topBuysTable" style="overflow-x: auto; max-height: 300px;"></div>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-red-600 mb-2">
+              <i class="fas fa-arrow-down mr-1"></i>Top Sells This Quarter
+            </h3>
+            <div id="topSellsTable" style="overflow-x: auto; max-height: 300px;"></div>
+          </div>
+        </div>
 
-        const tom = {
-            investor: null,
-            ticker: null
-        };
+        <!-- AUM Trend Chart -->
+        <h3 class="text-sm font-bold text-gray-700 mb-2">AUM Trend (8 Quarters)</h3>
+        <div class="flex flex-wrap gap-2 mb-3" id="aumToggleContainer"></div>
+        <div class="chart-container">
+          <canvas id="aumTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
 
-        const charts = {
-            investorPie: null,
-            stockGroup: null,
-            aumTrend: null
-        };
+  </div>
 
-        // ================== UTILITIES ==================
-        function showLoading(label) {
-            const el = ui.loading();
-            if (!el) return;
-            el.style.display = 'flex';
-            const p = el.querySelector('p');
-            if (p && label) p.textContent = label;
+  <script>
+    // ==================== GLOBAL STATE ====================
+    const BASE_PATH = '/data/sec-13f';
+    let summaryData = null;
+    let bySectorData = null;
+    let byTickerData = null;
+    let investorCache = {};
+    let currentTab = 'overview';
+    let currentInvestor = null;
+    let currentQuarter = null;
+    let currentStock = null;
+
+    // TomSelect instances
+    let investorSelect = null;
+    let stockSelect = null;
+
+    // Chart instances
+    let portfolioChart = null;
+    let holderGroupChart = null;
+    let holderWeightChart = null;
+    let aumTrendChart = null;
+
+    // ==================== UTILITY FUNCTIONS ====================
+    async function mapLimit(items, limit, fn) {
+      const results = new Array(items.length);
+      let idx = 0;
+      const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+        while (idx < items.length) {
+          const myIdx = idx++;
+          results[myIdx] = await fn(items[myIdx], myIdx);
         }
+      });
+      await Promise.all(workers);
+      return results;
+    }
 
-        function hideLoading() {
-            const el = ui.loading();
-            if (!el) return;
-            el.style.display = 'none';
+    // Holdings table sorting and pagination state
+    let holdingsSortKey = 'weight';
+    let holdingsSortAsc = false;
+    let holdingsPage = 1;
+    const HOLDINGS_PER_PAGE = 50;
+
+    function sortHoldings(key) {
+      if (holdingsSortKey === key) {
+        holdingsSortAsc = !holdingsSortAsc;
+      } else {
+        holdingsSortKey = key;
+        holdingsSortAsc = false; // Default descending
+      }
+
+      holdingsPage = 1; // Reset page on sort
+
+      // Re-render with current filter
+      if (currentInvestor && investorCache[currentInvestor]) {
+        const filing = investorCache[currentInvestor].investor.filings
+          .find(f => f.quarter === currentQuarter);
+        if (filing) {
+          const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
+          renderHoldingsTable(filing.holdings, currentFilter);
         }
+      }
+    }
 
-        function showError(message) {
-            const banner = ui.errorBanner();
-            const msg = ui.errorMessage();
-            if (msg) msg.textContent = message || '데이터를 가져오는 데 실패했습니다.';
-            if (banner) {
-                banner.style.display = 'block';
-                setTimeout(() => {
-                    banner.style.display = 'none';
-                }, 4500);
+    function getSortIcon(key) {
+      if (holdingsSortKey !== key) return '<i class="fas fa-sort text-gray-300 ml-1"></i>';
+      return holdingsSortAsc
+        ? '<i class="fas fa-sort-up text-blue-500 ml-1"></i>'
+        : '<i class="fas fa-sort-down text-blue-500 ml-1"></i>';
+    }
+    function formatCurrency(value) {
+      if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
+      if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
+      if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+      return `$${value.toLocaleString()}`;
+    }
+
+    function formatNumber(value) {
+      if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
+      if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
+      if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
+      return value.toLocaleString();
+    }
+
+    function formatPercent(value) {
+      return `${(value * 100).toFixed(2)}%`;
+    }
+
+    function getGroupBadge(group) {
+      const classes = {
+        'value': 'badge-value',
+        'macro': 'badge-macro',
+        'hedge': 'badge-hedge',
+        'quant': 'badge-quant',
+        'growth': 'badge-growth',
+        'activist': 'badge-activist',
+        'event': 'badge-event'
+      };
+      return `<span class="badge ${classes[group] || 'badge-value'}">${group.toUpperCase()}</span>`;
+    }
+
+    function getChangeClass(change) {
+      const classes = {
+        'NEW': 'change-new',
+        'INCREASED': 'change-increased',
+        'DECREASED': 'change-decreased',
+        'SOLD': 'change-sold'
+      };
+      return classes[change] || '';
+    }
+
+    // ==================== DATA LOADING ====================
+    async function loadAllData() {
+      try {
+        const [summary, bySector, byTicker] = await Promise.all([
+          fetch(`${BASE_PATH}/summary.json`).then(r => r.json()),
+          fetch(`${BASE_PATH}/by_sector.json`).then(r => r.json()),
+          fetch(`${BASE_PATH}/by_ticker.json`).then(r => r.json())
+        ]);
+        
+        summaryData = summary;
+        bySectorData = bySector;
+        byTickerData = byTicker;
+
+        return true;
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        return false;
+      }
+    }
+
+    async function loadInvestor(name) {
+      if (investorCache[name]) return investorCache[name];
+      
+      try {
+        const data = await fetch(`${BASE_PATH}/investors/${name}.json`).then(r => r.json());
+        investorCache[name] = data;
+        return data;
+      } catch (error) {
+        console.error(`Failed to load investor ${name}:`, error);
+        return null;
+      }
+    }
+
+    // ==================== TAB MANAGEMENT ====================
+    function setContentTab(tab) {
+      currentTab = tab;
+      
+      document.querySelectorAll('.content-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.toggle('active', section.id === `section-${tab}`);
+      });
+
+      // Initialize tab-specific content
+      if (tab === 'investor' && !currentInvestor) {
+        const firstInvestor = Object.keys(summaryData.investors)[0];
+        investorSelect?.setValue(firstInvestor);
+      }
+      if (tab === 'stock' && !currentStock) {
+        const firstStock = Object.keys(byTickerData)[0];
+        stockSelect?.setValue(firstStock);
+      }
+      if (tab === 'sector') {
+        renderSectorAnalysis();
+      }
+      if (tab === 'changes') {
+        renderChangesTab();
+      }
+    }
+
+    // ==================== TAB 1: OVERVIEW ====================
+    function renderOverview() {
+      // Summary stats
+      const totalAum = Object.values(summaryData.investors)
+        .reduce((sum, inv) => sum + inv.aum, 0);
+      document.getElementById('totalAum').textContent = formatCurrency(totalAum);
+      document.getElementById('investorCount').textContent = summaryData.metadata.investor_count;
+      document.getElementById('quartersCovered').textContent = summaryData.metadata.quarters_covered.length;
+      document.getElementById('stockCount').textContent = Object.keys(byTickerData).length;
+      document.getElementById('dataInfo').textContent = `Data: ${summaryData.metadata.quarters_covered[0]}`;
+
+      // Investor cards
+      renderInvestorCards('all');
+
+      // Top stocks table
+      renderTopStocksTable();
+    }
+
+    function renderInvestorCards(groupFilter) {
+      const container = document.getElementById('investorCardsGrid');
+      const investors = Object.entries(summaryData.investors);
+      
+      const filtered = groupFilter === 'all' 
+        ? investors 
+        : investors.filter(([_, inv]) => inv.group === groupFilter);
+
+      container.innerHTML = filtered.map(([key, inv]) => `
+        <div class="investor-card card p-4" onclick="viewInvestor('${key}')">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-gray-800">${inv.name}</span>
+            ${getGroupBadge(inv.group)}
+          </div>
+          <div class="text-2xl font-bold text-blue-600 mb-1">${formatCurrency(inv.aum)}</div>
+          <div class="text-xs text-gray-500 mb-2">${inv.holdings_count} holdings • ${inv.quarter}</div>
+          <div class="text-xs text-gray-400">
+            Top 5: ${inv.top5.slice(0, 5).join(', ')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterInvestors(group) {
+      document.querySelectorAll('[data-group]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.group === group);
+      });
+      renderInvestorCards(group);
+    }
+
+    function renderTopStocksTable() {
+      const tbody = document.getElementById('topStocksBody');
+      const stocks = Object.entries(summaryData.top_stocks)
+        .sort((a, b) => b[1].total_value - a[1].total_value);
+
+      tbody.innerHTML = stocks.map(([ticker, data], idx) => `
+        <tr onclick="viewStock('${ticker}')">
+          <td class="font-bold text-gray-400">${idx + 1}</td>
+          <td class="font-bold text-blue-600">${ticker}</td>
+          <td>${data.holders}</td>
+          <td class="mono">${formatCurrency(data.total_value)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function viewInvestor(key) {
+      setContentTab('investor');
+      investorSelect?.setValue(key);
+    }
+
+    function viewStock(ticker) {
+      setContentTab('stock');
+      stockSelect?.setValue(ticker);
+    }
+
+    // ==================== TAB 2: INVESTOR PORTFOLIO ====================
+    async function renderInvestorPortfolio(investorKey) {
+      if (!investorKey) return;
+      
+      currentInvestor = investorKey;
+      const investorData = await loadInvestor(investorKey);
+      if (!investorData) return;
+
+      const summaryInfo = summaryData.investors[investorKey];
+      const profile = document.getElementById('investorProfile');
+      profile.classList.remove('hidden');
+
+      // Profile info
+      document.getElementById('profileName').textContent = investorData.investor.name;
+      document.getElementById('profileBadge').innerHTML = getGroupBadge(investorData.investor.group);
+      document.getElementById('profileEntity').textContent = investorData.investor.entity;
+
+      // Populate quarter selector
+      const quarterSelector = document.getElementById('quarterSelector');
+      quarterSelector.innerHTML = investorData.metadata.quarters_covered
+        .map(q => `<option value="${q}">${q}</option>`).join('');
+      
+      currentQuarter = quarterSelector.value;
+      quarterSelector.onchange = () => {
+        currentQuarter = quarterSelector.value;
+        renderQuarterData(investorData, currentQuarter);
+      };
+
+      renderQuarterData(investorData, currentQuarter);
+    }
+
+    function renderQuarterData(investorData, quarter) {
+      const filing = investorData.investor.filings.find(f => f.quarter === quarter);
+      if (!filing) return;
+
+      // Profile stats
+      document.getElementById('profileAum').textContent = formatCurrency(filing.aum_total);
+      document.getElementById('profileHoldings').textContent = filing.holdings_count;
+      document.getElementById('profileTop10').textContent = formatPercent(filing.top_10_weight);
+
+      // Holdings table
+      renderHoldingsTable(filing.holdings);
+
+      // Portfolio chart
+      renderPortfolioChart(filing.holdings);
+
+      // Changes summary
+      renderChangesSummary(filing.holdings);
+    }
+
+    function renderHoldingsTable(holdings, filter = 'all') {
+      const tbody = document.getElementById('holdingsBody');
+      const thead = tbody.parentElement.querySelector('thead tr');
+
+      // Aggregate by ticker
+      const aggregated = {};
+      holdings.forEach(h => {
+        if (!aggregated[h.ticker]) {
+          aggregated[h.ticker] = { ...h, shares: 0, market_value: 0, weight: 0 };
+        }
+        aggregated[h.ticker].shares += h.shares;
+        aggregated[h.ticker].market_value += h.market_value;
+        aggregated[h.ticker].weight += h.weight;
+      });
+
+      let filtered = Object.values(aggregated);
+      if (filter !== 'all') {
+        filtered = filtered.filter(h => h.change === filter);
+      }
+
+      // Apply sorting
+      filtered.sort((a, b) => {
+        let valA = a[holdingsSortKey];
+        let valB = b[holdingsSortKey];
+        if (typeof valA === 'string') {
+          return holdingsSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return holdingsSortAsc ? valA - valB : valB - valA;
+      });
+
+      // Update table headers with sort icons
+      thead.innerHTML = `
+        <th onclick="sortHoldings('ticker')" class="cursor-pointer">Ticker ${getSortIcon('ticker')}</th>
+        <th onclick="sortHoldings('name')" class="cursor-pointer">Name ${getSortIcon('name')}</th>
+        <th onclick="sortHoldings('shares')" class="cursor-pointer">Shares ${getSortIcon('shares')}</th>
+        <th onclick="sortHoldings('market_value')" class="cursor-pointer">Value ${getSortIcon('market_value')}</th>
+        <th onclick="sortHoldings('weight')" class="cursor-pointer">Weight ${getSortIcon('weight')}</th>
+        <th>Change</th>
+      `;
+
+      // Apply pagination
+      const totalPages = Math.ceil(filtered.length / HOLDINGS_PER_PAGE);
+      const startIdx = (holdingsPage - 1) * HOLDINGS_PER_PAGE;
+      const endIdx = startIdx + HOLDINGS_PER_PAGE;
+      const paged = filtered.slice(startIdx, endIdx);
+
+      tbody.innerHTML = paged.map(h => `
+        <tr onclick="viewStock('${h.ticker}')">
+          <td class="font-bold text-blue-600">${h.ticker}</td>
+          <td class="text-sm">${h.name}</td>
+          <td class="mono">${formatNumber(h.shares)}</td>
+          <td class="mono">${formatCurrency(h.market_value)}</td>
+          <td class="mono">${formatPercent(h.weight)}</td>
+          <td><span class="badge ${getChangeClass(h.change)}">${h.change || '-'}</span></td>
+        </tr>
+      `).join('');
+
+      // Render pagination controls
+      const paginationContainer = document.getElementById('holdingsPagination');
+      if (paginationContainer) {
+        paginationContainer.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-500">
+              Showing ${startIdx + 1}-${Math.min(endIdx, filtered.length)} of ${filtered.length}
+            </span>
+            <div class="flex gap-2">
+              <button onclick="prevHoldingsPage()" ${holdingsPage === 1 ? 'disabled' : ''}
+                      class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <span class="px-3 py-1">${holdingsPage} / ${totalPages || 1}</span>
+              <button onclick="nextHoldingsPage()" ${endIdx >= filtered.length ? 'disabled' : ''}
+                      class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function prevHoldingsPage() {
+      if (holdingsPage > 1) {
+        holdingsPage--;
+        if (currentInvestor && investorCache[currentInvestor]) {
+          const filing = investorCache[currentInvestor].investor.filings
+            .find(f => f.quarter === currentQuarter);
+          if (filing) {
+            const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
+            renderHoldingsTable(filing.holdings, currentFilter);
+          }
+        }
+      }
+    }
+
+    function nextHoldingsPage() {
+      holdingsPage++;
+      if (currentInvestor && investorCache[currentInvestor]) {
+        const filing = investorCache[currentInvestor].investor.filings
+          .find(f => f.quarter === currentQuarter);
+        if (filing) {
+          const currentFilter = document.querySelector('[data-change].active')?.dataset.change || 'all';
+          renderHoldingsTable(filing.holdings, currentFilter);
+        }
+      }
+    }
+
+    function filterHoldings(filter) {
+      document.querySelectorAll('[data-change]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.change === filter);
+      });
+
+      holdingsPage = 1; // Reset page on filter change
+
+      if (currentInvestor && investorCache[currentInvestor]) {
+        const filing = investorCache[currentInvestor].investor.filings
+          .find(f => f.quarter === currentQuarter);
+        if (filing) renderHoldingsTable(filing.holdings, filter);
+      }
+    }
+
+    function renderPortfolioChart(holdings) {
+      // Aggregate and get top 10
+      const aggregated = {};
+      holdings.forEach(h => {
+        if (!aggregated[h.ticker]) aggregated[h.ticker] = 0;
+        aggregated[h.ticker] += h.weight;
+      });
+
+      const sorted = Object.entries(aggregated)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+      const ctx = document.getElementById('portfolioChart').getContext('2d');
+      
+      if (portfolioChart) portfolioChart.destroy();
+      
+      portfolioChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: sorted.map(([t]) => t),
+          datasets: [{
+            data: sorted.map(([_, w]) => w * 100),
+            backgroundColor: [
+              '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+              '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.label}: ${ctx.parsed.toFixed(2)}%`
+              }
             }
+          }
         }
+      });
+    }
 
-        async function fetchJson(url) {
-            const res = await fetch(url, { cache: 'no-store' });
-            if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-            return res.json();
+    function renderChangesSummary(holdings) {
+      const container = document.getElementById('changesSummary');
+      const counts = { NEW: 0, INCREASED: 0, DECREASED: 0, SOLD: 0 };
+      
+      holdings.forEach(h => {
+        if (h.change && counts[h.change] !== undefined) {
+          counts[h.change]++;
         }
+      });
 
-        function escapeHtml(s) {
-            return String(s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+      container.innerHTML = `
+        <div class="flex items-center justify-between p-2 bg-green-50 rounded">
+          <span class="text-sm">NEW positions</span>
+          <span class="font-bold text-green-600">${counts.NEW}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 bg-blue-50 rounded">
+          <span class="text-sm">INCREASED</span>
+          <span class="font-bold text-blue-600">${counts.INCREASED}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 bg-amber-50 rounded">
+          <span class="text-sm">DECREASED</span>
+          <span class="font-bold text-amber-600">${counts.DECREASED}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 bg-red-50 rounded">
+          <span class="text-sm">SOLD</span>
+          <span class="font-bold text-red-600">${counts.SOLD}</span>
+        </div>
+      `;
+    }
+
+    function exportHoldingsCSV() {
+      if (!currentInvestor || !investorCache[currentInvestor]) return;
+
+      const filing = investorCache[currentInvestor].investor.filings
+        .find(f => f.quarter === currentQuarter);
+      if (!filing) return;
+
+      const rows = [['Ticker', 'Name', 'Shares', 'Value', 'Weight', 'Change']];
+      filing.holdings.forEach(h => {
+        rows.push([h.ticker, h.name, h.shares, h.market_value, h.weight, h.change || '']);
+      });
+
+      const BOM = '\uFEFF'; // UTF-8 BOM for Korean support
+      const csv = rows.map(r => r.map(cell => {
+        const s = String(cell ?? '');
+        if (/[\n",]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+        return s;
+      }).join(',')).join('\n');
+
+      const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentInvestor}_${currentQuarter}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ==================== TAB 3: STOCK LOOKUP ====================
+    function renderStockLookup(ticker) {
+      if (!ticker || !byTickerData[ticker]) return;
+      
+      currentStock = ticker;
+      const stockData = byTickerData[ticker];
+
+      // Show summary
+      const summary = document.getElementById('stockSummary');
+      summary.classList.remove('hidden');
+      
+      document.getElementById('stockTicker').textContent = ticker;
+      document.getElementById('stockHolders').textContent = new Set(stockData.holders).size;
+      document.getElementById('stockTotalShares').textContent = formatNumber(stockData.total_shares);
+
+      // Render tables and charts (with minWeight filter)
+      const minWeight = parseFloat(document.getElementById('stockMinWeight')?.value || 0);
+      renderStockHoldersTable(stockData, 'all', minWeight);
+      renderHolderGroupChart(stockData);
+      renderHolderWeightChart(stockData);
+    }
+
+    function renderStockHoldersTable(stockData, groupFilter, minWeight = 0) {
+      const tbody = document.getElementById('stockHoldersBody');
+
+      // Aggregate by investor
+      const aggregated = {};
+      stockData.holder_details.forEach(h => {
+        if (!aggregated[h.investor]) {
+          aggregated[h.investor] = { shares: 0, weight: 0 };
         }
+        aggregated[h.investor].shares += h.shares;
+        aggregated[h.investor].weight += h.weight;
+      });
 
-        function formatInt(n) {
-            const v = Number(n);
-            if (!Number.isFinite(v)) return '-';
-            return v.toLocaleString('en-US');
+      let holders = Object.entries(aggregated)
+        .map(([inv, data]) => ({
+          investor: inv,
+          group: summaryData.investors[inv]?.group || 'unknown',
+          name: summaryData.investors[inv]?.name || inv,
+          ...data
+        }))
+        .sort((a, b) => b.shares - a.shares);
+
+      if (groupFilter !== 'all') {
+        holders = holders.filter(h => h.group === groupFilter);
+      }
+
+      if (minWeight > 0) {
+        holders = holders.filter(h => h.weight >= minWeight);
+      }
+
+      tbody.innerHTML = holders.map((h, idx) => `
+        <tr onclick="viewInvestor('${h.investor}')">
+          <td class="font-bold text-gray-400">${idx + 1}</td>
+          <td class="font-bold text-blue-600">${h.name}</td>
+          <td>${getGroupBadge(h.group)}</td>
+          <td class="mono">${formatNumber(h.shares)}</td>
+          <td class="mono">${formatPercent(h.weight)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function filterStockHolders(group) {
+      document.querySelectorAll('#section-stock [data-group]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.group === group);
+      });
+
+      if (currentStock && byTickerData[currentStock]) {
+        const minWeight = parseFloat(document.getElementById('stockMinWeight')?.value || 0);
+        renderStockHoldersTable(byTickerData[currentStock], group, minWeight);
+      }
+    }
+
+    function filterStockByWeight() {
+      const minWeight = parseFloat(document.getElementById('stockMinWeight').value);
+      const groupFilter = document.querySelector('#section-stock [data-group].active')?.dataset.group || 'all';
+
+      if (currentStock && byTickerData[currentStock]) {
+        renderStockHoldersTable(byTickerData[currentStock], groupFilter, minWeight);
+      }
+    }
+
+    function renderHolderGroupChart(stockData) {
+      // Count by group
+      const groupCounts = {};
+      const seen = new Set();
+      
+      stockData.holder_details.forEach(h => {
+        if (seen.has(h.investor)) return;
+        seen.add(h.investor);
+        const group = summaryData.investors[h.investor]?.group || 'unknown';
+        groupCounts[group] = (groupCounts[group] || 0) + 1;
+      });
+
+      const ctx = document.getElementById('holderGroupChart').getContext('2d');
+      
+      if (holderGroupChart) holderGroupChart.destroy();
+      
+      holderGroupChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(groupCounts),
+          datasets: [{
+            data: Object.values(groupCounts),
+            backgroundColor: ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#ef4444', '#6366f1']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right' } }
         }
+      });
+    }
 
-        function formatPercent01(n) {
-            const v = Number(n);
-            if (!Number.isFinite(v)) return '-';
-            return `${(v * 100).toFixed(2)}%`;
-        }
+    function renderHolderWeightChart(stockData) {
+      // Aggregate and sort by weight
+      const aggregated = {};
+      stockData.holder_details.forEach(h => {
+        if (!aggregated[h.investor]) aggregated[h.investor] = 0;
+        aggregated[h.investor] += h.weight;
+      });
 
-        function formatMoney(n) {
-            const v = Number(n);
-            if (!Number.isFinite(v)) return '-';
-            const abs = Math.abs(v);
-            const sign = v < 0 ? '-' : '';
-            if (abs >= 1e12) return `${sign}$${(abs / 1e12).toFixed(2)}T`;
-            if (abs >= 1e9) return `${sign}$${(abs / 1e9).toFixed(2)}B`;
-            if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(2)}M`;
-            if (abs >= 1e3) return `${sign}$${(abs / 1e3).toFixed(2)}K`;
-            return `${sign}$${abs.toFixed(0)}`;
-        }
+      const sorted = Object.entries(aggregated)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
 
-        function sum(arr) {
-            return arr.reduce((a, b) => a + b, 0);
-        }
-
-        function normalizeFilings(investorJson) {
-            const invObj = investorJson?.investor || {};
-            const filings = investorJson?.filings || invObj?.filings || [];
-            const metadata = investorJson?.metadata || {};
-            return {
-                metadata,
-                investor: {
-                    name: invObj?.name || investorJson?.investor?.name || investorJson?.investor || '',
-                    entity: invObj?.entity || '',
-                    cik: invObj?.cik || '',
-                    group: invObj?.group || ''
-                },
-                filings
-            };
-        }
-
-        function aggregateHoldings(holdings) {
-            const map = new Map();
-            for (const h of (holdings || [])) {
-                const t = h?.ticker;
-                if (!t) continue;
-                const prev = map.get(t) || { ticker: t, name: h?.name || t, cusip: h?.cusip || '', shares: 0, market_value: 0, weight: 0 };
-                prev.shares += Number(h?.shares || 0);
-                prev.market_value += Number(h?.market_value || 0);
-                prev.weight += Number(h?.weight || 0);
-                map.set(t, prev);
+      const ctx = document.getElementById('holderWeightChart').getContext('2d');
+      
+      if (holderWeightChart) holderWeightChart.destroy();
+      
+      holderWeightChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(([inv]) => summaryData.investors[inv]?.name || inv),
+          datasets: [{
+            label: 'Portfolio Weight (%)',
+            data: sorted.map(([_, w]) => w * 100),
+            backgroundColor: '#3b82f6'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { 
+              title: { display: true, text: 'Weight (%)' }
             }
-            return map;
+          }
         }
+      });
+    }
 
-        function getQuarterFiling(filings, quarter) {
-            if (!quarter) return null;
-            return (filings || []).find(f => f?.quarter === quarter) || null;
-        }
+    // ==================== TAB 4: SECTOR ANALYSIS ====================
+    function renderSectorAnalysis() {
+      renderSectorCards();
+      renderHeatmap();
+      renderSectorDetails();
+    }
 
-        function computeDiff(currMap, prevMap) {
-            const tickers = new Set([...(currMap?.keys() || []), ...(prevMap?.keys() || [])]);
-            const changes = [];
-            for (const t of tickers) {
-                const c = currMap?.get(t);
-                const p = prevMap?.get(t);
-                const cShares = Number(c?.shares || 0);
-                const pShares = Number(p?.shares || 0);
-                const cVal = Number(c?.market_value || 0);
-                const pVal = Number(p?.market_value || 0);
-                if (cShares === 0 && pShares === 0) continue;
+    function renderSectorCards() {
+      const container = document.getElementById('sectorCards');
+      const sectors = Object.entries(bySectorData);
 
-                let action = 'UNCHANGED';
-                if (pShares === 0 && cShares > 0) action = 'NEW';
-                else if (pShares > 0 && cShares === 0) action = 'SOLD';
-                else if (cShares > pShares) action = 'INCREASED';
-                else if (cShares < pShares) action = 'DECREASED';
+      container.innerHTML = sectors.map(([sector, data]) => `
+        <div class="bg-purple-50 rounded-lg p-3 text-center">
+          <div class="font-bold text-gray-800 text-sm mb-1">${sector}</div>
+          <div class="text-lg font-bold text-purple-600">${data.investors.length}</div>
+          <div class="text-xs text-gray-500">investors</div>
+          <div class="text-xs text-gray-400 mt-1">Avg: ${formatPercent(data.avg_weight)}</div>
+        </div>
+      `).join('');
+    }
 
-                if (action === 'UNCHANGED') continue;
+    function renderHeatmap() {
+      const container = document.getElementById('heatmapContainer');
+      const sectors = Object.keys(bySectorData);
+      const investors = Object.keys(summaryData.investors);
 
-                changes.push({
-                    ticker: t,
-                    name: c?.name || p?.name || t,
-                    action,
-                    deltaShares: cShares - pShares,
-                    deltaValue: cVal - pVal,
-                    weightAfter: Number(c?.weight || 0)
-                });
+      // Build heatmap data
+      const heatmapData = {};
+      sectors.forEach(sector => {
+        heatmapData[sector] = {};
+        const sectorInvestors = bySectorData[sector].investors;
+        investors.forEach(inv => {
+          heatmapData[sector][inv] = sectorInvestors.includes(inv) ? bySectorData[sector].avg_weight : 0;
+        });
+      });
+
+      // Render as HTML table
+      let html = '<table class="text-xs"><thead><tr><th></th>';
+      sectors.forEach(s => { html += `<th class="text-center">${s.substring(0, 8)}</th>`; });
+      html += '</tr></thead><tbody>';
+
+      investors.forEach(inv => {
+        const name = summaryData.investors[inv]?.name || inv;
+        html += `<tr><td class="font-medium pr-2">${name.split(' ')[0]}</td>`;
+        sectors.forEach(sector => {
+          const weight = heatmapData[sector][inv];
+          const intensity = Math.min(weight * 50, 1);
+          const bgColor = weight > 0 ? `rgba(59, 130, 246, ${intensity})` : '#f8fafc';
+          const textColor = intensity > 0.5 ? 'white' : '#64748b';
+          html += `<td class="heatmap-cell" style="background: ${bgColor}; color: ${textColor}">
+            ${weight > 0 ? formatPercent(weight) : '-'}
+          </td>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function renderSectorDetails() {
+      const container = document.getElementById('sectorDetails');
+      const sectors = Object.entries(bySectorData);
+
+      container.innerHTML = sectors.map(([sector, data]) => `
+        <div class="bg-gray-50 rounded-lg p-3">
+          <div class="font-bold text-gray-800 mb-2">${sector}</div>
+          <div class="text-sm text-gray-600 mb-1">
+            <strong>Top Holdings:</strong> ${data.top_holdings.join(', ')}
+          </div>
+          <div class="text-xs text-gray-400">
+            <strong>Investors:</strong> ${data.investors.map(i => summaryData.investors[i]?.name || i).join(', ')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ==================== TAB 5: PORTFOLIO CHANGES ====================
+    async function renderChangesTab() {
+      // Populate quarter selector
+      const selector = document.getElementById('changesQuarterSelector');
+      if (selector.options.length === 0) {
+        selector.innerHTML = summaryData.metadata.quarters_covered
+          .map(q => `<option value="${q}">${q}</option>`).join('');
+        selector.onchange = () => renderChangesForQuarter(selector.value);
+      }
+      
+      // Load all investors for comparison (use mapLimit to prevent browser freeze)
+      await mapLimit(Object.keys(summaryData.investors), 3, loadInvestor);
+      
+      renderChangesForQuarter(selector.value);
+      renderAumTrendChart();
+    }
+
+    function renderChangesForQuarter(quarter) {
+      const buys = [];
+      const sells = [];
+
+      Object.keys(summaryData.investors).forEach(inv => {
+        const data = investorCache[inv];
+        if (!data) return;
+        
+        const filing = data.investor.filings.find(f => f.quarter === quarter);
+        if (!filing) return;
+
+        filing.holdings.forEach(h => {
+          if (h.change === 'NEW' || h.change === 'INCREASED') {
+            buys.push({ investor: inv, ...h });
+          } else if (h.change === 'DECREASED' || h.change === 'SOLD') {
+            sells.push({ investor: inv, ...h });
+          }
+        });
+      });
+
+      // Sort by value
+      buys.sort((a, b) => b.market_value - a.market_value);
+      sells.sort((a, b) => b.market_value - a.market_value);
+
+      // Render tables
+      document.getElementById('topBuysTable').innerHTML = renderChangesTable(buys.slice(0, 15), 'buy');
+      document.getElementById('topSellsTable').innerHTML = renderChangesTable(sells.slice(0, 15), 'sell');
+    }
+
+    function renderChangesTable(items, type) {
+      if (items.length === 0) return '<p class="text-gray-400 text-sm">No data</p>';
+      
+      return `
+        <table class="text-sm">
+          <thead>
+            <tr>
+              <th>Investor</th>
+              <th>Ticker</th>
+              <th>Value</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr>
+                <td>${summaryData.investors[item.investor]?.name || item.investor}</td>
+                <td class="font-bold text-blue-600">${item.ticker}</td>
+                <td class="mono">${formatCurrency(item.market_value)}</td>
+                <td><span class="badge ${getChangeClass(item.change)}">${item.change}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderAumTrendChart() {
+      const quarters = summaryData.metadata.quarters_covered.slice().reverse();
+      const datasets = [];
+      const colors = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4',
+        '#84cc16', '#f97316', '#6366f1', '#14b8a6', '#f43f5e', '#a855f7', '#22d3ee',
+        '#facc15', '#fb923c', '#e879f9'
+      ];
+
+      let colorIdx = 0;
+      Object.keys(summaryData.investors).forEach(inv => {
+        const data = investorCache[inv];
+        if (!data) return;
+
+        const aumData = quarters.map(q => {
+          const filing = data.investor.filings.find(f => f.quarter === q);
+          return filing ? filing.aum_total / 1e9 : null;
+        });
+
+        datasets.push({
+          label: summaryData.investors[inv].name,
+          data: aumData,
+          borderColor: colors[colorIdx % colors.length],
+          tension: 0.3,
+          fill: false
+        });
+        colorIdx++;
+      });
+
+      const ctx = document.getElementById('aumTrendChart').getContext('2d');
+      
+      if (aumTrendChart) aumTrendChart.destroy();
+      
+      aumTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: quarters, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y?.toFixed(1)}B`
+              }
             }
-            return changes;
-        }
-
-        async function loadInvestor(key) {
-            if (state.investorCache.has(key)) return state.investorCache.get(key);
-            const json = await fetchJson(DATA_URLS.investor(key));
-            const norm = normalizeFilings(json);
-            state.investorCache.set(key, norm);
-            return norm;
-        }
-
-        async function mapLimit(items, limit, fn) {
-            const results = new Array(items.length);
-            let idx = 0;
-            const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
-                while (idx < items.length) {
-                    const myIdx = idx++;
-                    results[myIdx] = await fn(items[myIdx], myIdx);
-                }
-            });
-            await Promise.all(workers);
-            return results;
-        }
-
-        function getInvestorDisplay(key) {
-            const inv = state.summary?.investors?.[key];
-            if (!inv) return key;
-            return inv?.name || key;
-        }
-
-        function getInvestorGroup(key) {
-            const inv = state.summary?.investors?.[key];
-            return inv?.group || '-';
-        }
-
-        function selectInvestor(key) {
-            state.selectedInvestor = key;
-            if (tom.investor && key) tom.investor.setValue(key, true);
-        }
-
-        function selectTicker(ticker) {
-            state.selectedTicker = ticker;
-            if (tom.ticker && ticker) tom.ticker.setValue(ticker, true);
-        }
-
-        // ================== TABS ==================
-        function switchTab(event, tabId) {
-            const tabContainer = document.getElementById('tab-content');
-            const tabButtonsContainer = event.target.parentElement;
-
-            tabContainer.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
-            tabButtonsContainer.querySelectorAll('.content-tab').forEach(tab => {
-                tab.classList.remove('active');
-                tab.setAttribute('aria-selected', 'false');
-            });
-
-            document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
-            event.target.setAttribute('aria-selected', 'true');
-
-            state.currentTab = tabId;
-            renderActiveTab();
-        }
-
-        function renderActiveTab() {
-            if (!state.summary) return;
-            if (state.currentTab === 'overview') return renderOverview();
-            if (state.currentTab === 'investor') return renderInvestor();
-            if (state.currentTab === 'stock') return renderStock();
-            if (state.currentTab === 'sector') return renderSector();
-            if (state.currentTab === 'changes') return renderChanges();
-        }
-
-        // ================== OVERVIEW ==================
-        function renderOverview() {
-            const investors = state.summary?.investors || {};
-            const invEntries = Object.entries(investors);
-            const quarters = state.summary?.metadata?.quarters_covered || [];
-            const latestQuarter = quarters[0] || '-';
-            const totalAum = sum(invEntries.map(([, v]) => Number(v?.aum || 0)));
-            const stocksCount = Object.keys(state.byTicker || {}).length;
-
-            ui.overviewStats().innerHTML = [
-                { label: '총 기관 수', value: formatInt(state.summary?.metadata?.investor_count || invEntries.length) },
-                { label: '총 보유자산 (AUM)', value: formatMoney(totalAum) },
-                { label: '고유 종목 수', value: formatInt(stocksCount) },
-                { label: '최신 분기', value: escapeHtml(latestQuarter) }
-            ].map(x => `
-                <div class="p-4 bg-gray-50 rounded-lg text-center">
-                    <p class="text-sm text-gray-500">${escapeHtml(x.label)}</p>
-                    <p class="text-2xl font-bold">${escapeHtml(x.value)}</p>
-                </div>
-            `).join('');
-
-            // Investor cards
-            const topInvestors = invEntries
-                .map(([key, v]) => ({ key, ...v }))
-                .sort((a, b) => Number(b.aum || 0) - Number(a.aum || 0))
-                .slice(0, 17);
-
-            ui.overviewInvestorGrid().innerHTML = `
-                <h3 class="text-lg font-semibold mb-3 text-gray-600">주요 기관 투자자</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    ${topInvestors.map(inv => `
-                        <button class="text-left p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow transition" data-investor="${escapeHtml(inv.key)}">
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <div class="text-sm text-gray-500">${escapeHtml(inv.group || '-')}</div>
-                                    <div class="text-base font-bold text-gray-800">${escapeHtml(inv.name || inv.key)}</div>
-                                </div>
-                                <div class="text-sm font-semibold text-blue-700">${escapeHtml(formatMoney(inv.aum || 0))}</div>
-                            </div>
-                            <div class="mt-2 text-xs text-gray-500">보유 종목: ${escapeHtml(formatInt(inv.holdings_count || 0))} | 분기: ${escapeHtml(inv.quarter || latestQuarter)}</div>
-                            <div class="mt-1 text-xs text-gray-500">Top5: <span class="mono">${escapeHtml((inv.top5 || []).slice(0,5).join(', ') || '-')}</span></div>
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-
-            ui.overviewInvestorGrid().querySelectorAll('button[data-investor]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const key = btn.getAttribute('data-investor');
-                    selectInvestor(key);
-                    // Switch to investor tab programmatically
-                    const investorTabBtn = document.querySelector('button.content-tab[aria-controls="investor"]');
-                    if (investorTabBtn) investorTabBtn.click();
-                });
-            });
-
-            // Top stocks table
-            const topStocksObj = state.summary?.top_stocks || {};
-            const topStocks = Object.entries(topStocksObj)
-                .map(([ticker, v]) => ({ ticker, holders: Number(v?.holders || 0), total_value: Number(v?.total_value || 0) }))
-                .sort((a, b) => b.total_value - a.total_value);
-
-            ui.overviewTopStocksTableBody().innerHTML = topStocks.map((s, idx) => {
-                const pct = totalAum > 0 ? (s.total_value / totalAum) : 0;
-                return `
-                    <tr class="cursor-pointer" data-ticker="${escapeHtml(s.ticker)}">
-                        <td>${idx + 1}</td>
-                        <td class="font-semibold">${escapeHtml(s.ticker)}</td>
-                        <td class="mono">${escapeHtml(s.ticker)}</td>
-                        <td>${escapeHtml(formatInt(s.holders))}</td>
-                        <td class="mono">${escapeHtml(formatMoney(s.total_value))}</td>
-                        <td>${escapeHtml(formatPercent01(pct))}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            ui.overviewTopStocksTableBody().querySelectorAll('tr[data-ticker]').forEach(tr => {
-                tr.addEventListener('click', () => {
-                    const ticker = tr.getAttribute('data-ticker');
-                    selectTicker(ticker);
-                    const stockTabBtn = document.querySelector('button.content-tab[aria-controls="stock"]');
-                    if (stockTabBtn) stockTabBtn.click();
-                });
-            });
-        }
-
-        // ================== INVESTOR ==================
-        async function renderInvestor() {
-            if (!state.selectedInvestor) {
-                ui.investorProfile().textContent = '투자자를 선택하세요.';
-                ui.investorHoldingsTableBody().innerHTML = '<tr><td colspan="4" class="text-center py-8">투자자를 선택하세요.</td></tr>';
-                ui.investorChangesTableBody().innerHTML = '<tr><td colspan="4" class="text-center py-8">투자자를 선택하세요.</td></tr>';
-                return;
+          },
+          scales: {
+            y: {
+              title: { display: true, text: 'AUM (Billions $)' }
             }
-
-            try {
-                showLoading('투자자 데이터를 불러오는 중입니다...');
-                const key = state.selectedInvestor;
-                const data = await loadInvestor(key);
-                const filings = data.filings || [];
-                const quarters = (data.metadata?.quarters_covered || state.summary?.metadata?.quarters_covered || [])
-                    .slice();
-                const defaultQuarter = quarters[0] || filings[0]?.quarter;
-                if (!state.selectedInvestorQuarter) state.selectedInvestorQuarter = defaultQuarter;
-
-                // Populate quarter select
-                ui.investorQuarterSelect().innerHTML = quarters.map(q => `<option value="${escapeHtml(q)}">${escapeHtml(q)}</option>`).join('');
-                ui.investorQuarterSelect().value = state.selectedInvestorQuarter;
-
-                const currentQuarter = state.selectedInvestorQuarter;
-                const qIndex = quarters.indexOf(currentQuarter);
-                const prevQuarter = qIndex >= 0 ? quarters[qIndex + 1] : null;
-
-                const filing = getQuarterFiling(filings, currentQuarter) || filings[0] || null;
-                const prevFiling = prevQuarter ? getQuarterFiling(filings, prevQuarter) : null;
-
-                const currMap = aggregateHoldings(filing?.holdings || []);
-                const prevMap = aggregateHoldings(prevFiling?.holdings || []);
-                const holdingsArr = [...currMap.values()].sort((a, b) => Number(b.market_value) - Number(a.market_value));
-
-                // Profile card
-                const profileHtml = `
-                    <div class="w-full">
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <div class="text-sm text-gray-500">${escapeHtml(getInvestorGroup(key))}</div>
-                                <div class="text-xl font-bold text-gray-800">${escapeHtml(data.investor?.name || getInvestorDisplay(key))}</div>
-                                <div class="text-sm text-gray-600">${escapeHtml(data.investor?.entity || '')}</div>
-                                <div class="text-xs text-gray-500 mt-1">CIK: <span class="mono">${escapeHtml(data.investor?.cik || '-')}</span></div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm text-gray-500">${escapeHtml(currentQuarter)}</div>
-                                <div class="text-lg font-bold text-blue-700">${escapeHtml(formatMoney(filing?.aum_total || 0))}</div>
-                                <div class="text-xs text-gray-500">보유 종목: ${escapeHtml(formatInt(filing?.holdings_count || holdingsArr.length))}</div>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-sm text-gray-600">
-                            공시일: <span class="mono">${escapeHtml(filing?.filing_date || '-')}</span>
-                            | Top10 비중: <span class="font-semibold">${escapeHtml(formatPercent01(filing?.top_10_weight || 0))}</span>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-500">변동은 이전 분기 대비(가능한 경우) 계산합니다. (데이터에 change 필드가 없어 비교로 산출)</div>
-                    </div>
-                `;
-                ui.investorProfile().className = 'p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6';
-                ui.investorProfile().innerHTML = profileHtml;
-
-                // Holdings table
-                ui.investorHoldingsTableBody().innerHTML = holdingsArr.slice(0, 200).map(h => `
-                    <tr class="cursor-pointer" data-ticker="${escapeHtml(h.ticker)}">
-                        <td><span class="font-semibold mono">${escapeHtml(h.ticker)}</span><div class="text-xs text-gray-500">${escapeHtml(h.name || '')}</div></td>
-                        <td>${escapeHtml(formatPercent01(h.weight || 0))}</td>
-                        <td class="mono">${escapeHtml(formatInt(h.shares || 0))}</td>
-                        <td class="mono">${escapeHtml(formatMoney(h.market_value || 0))}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="4" class="text-center py-8">보유 종목이 없습니다.</td></tr>';
-
-                ui.investorHoldingsTableBody().querySelectorAll('tr[data-ticker]').forEach(tr => {
-                    tr.addEventListener('click', () => {
-                        const ticker = tr.getAttribute('data-ticker');
-                        selectTicker(ticker);
-                        const stockTabBtn = document.querySelector('button.content-tab[aria-controls="stock"]');
-                        if (stockTabBtn) stockTabBtn.click();
-                    });
-                });
-
-                // Changes
-                const changes = computeDiff(currMap, prevMap)
-                    .sort((a, b) => Math.abs(b.deltaValue) - Math.abs(a.deltaValue))
-                    .slice(0, 200);
-
-                ui.investorChangesTableBody().innerHTML = changes.map(c => {
-                    const badge = c.action;
-                    const deltaShares = c.deltaShares;
-                    const deltaVal = c.deltaValue;
-                    const deltaSharesStr = `${deltaShares >= 0 ? '+' : ''}${formatInt(deltaShares)}`;
-                    const deltaValStr = `${deltaVal >= 0 ? '+' : ''}${formatMoney(deltaVal)}`;
-                    const badgeClass = c.action === 'NEW' ? 'bg-green-100 text-green-800' :
-                        c.action === 'SOLD' ? 'bg-red-100 text-red-800' :
-                        c.action === 'INCREASED' ? 'bg-blue-100 text-blue-800' :
-                        'bg-amber-100 text-amber-800';
-                    return `
-                        <tr>
-                            <td><span class="font-semibold mono">${escapeHtml(c.ticker)}</span><div class="text-xs text-gray-500">${escapeHtml(c.name || '')}</div></td>
-                            <td><span class="inline-flex px-2 py-1 rounded text-xs font-semibold ${badgeClass}">${escapeHtml(badge)}</span></td>
-                            <td class="mono">${escapeHtml(deltaSharesStr)}<div class="text-xs text-gray-500">${escapeHtml(deltaValStr)}</div></td>
-                            <td>${escapeHtml(formatPercent01(c.weightAfter || 0))}</td>
-                        </tr>
-                    `;
-                }).join('') || '<tr><td colspan="4" class="text-center py-8">이전 분기 데이터가 없어 변동을 계산할 수 없습니다.</td></tr>';
-
-                // Pie chart (top 10 + Others)
-                const top10 = holdingsArr.slice(0, 10);
-                const labels = top10.map(h => h.ticker);
-                const values = top10.map(h => Number(h.market_value || 0));
-                const othersValue = sum(holdingsArr.slice(10).map(h => Number(h.market_value || 0)));
-                if (othersValue > 0) {
-                    labels.push('OTHERS');
-                    values.push(othersValue);
-                }
-
-                initInvestorPieChart();
-                charts.investorPie.data.labels = labels;
-                charts.investorPie.data.datasets[0].data = values;
-                charts.investorPie.update();
-
-                hideLoading();
-            } catch (e) {
-                hideLoading();
-                console.error(e);
-                showError('투자자 데이터를 불러오는 데 실패했습니다.');
-            }
+          }
         }
+      });
 
-        function initInvestorPieChart() {
-            if (charts.investorPie) return;
-            const ctx = document.getElementById('investorPieChart')?.getContext('2d');
-            if (!ctx) return;
-            charts.investorPie = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: [
-                    '#0d6efd','#6610f2','#6f42c1','#d63384','#dc3545','#fd7e14','#ffc107','#198754','#20c997','#0dcaf0','#adb5bd'
-                ] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
+      // Toggle buttons
+      const toggleContainer = document.getElementById('aumToggleContainer');
+      toggleContainer.innerHTML = Object.keys(summaryData.investors).map((inv, idx) => `
+        <button class="filter-btn active" onclick="toggleAumLine(${idx})">${summaryData.investors[inv].name.split(' ')[0]}</button>
+      `).join('');
+    }
+
+    function toggleAumLine(idx) {
+      const meta = aumTrendChart.getDatasetMeta(idx);
+      meta.hidden = !meta.hidden;
+      aumTrendChart.update();
+    }
+
+    // ==================== INITIALIZATION ====================
+    async function init() {
+      const success = await loadAllData();
+      
+      if (!success) {
+        document.getElementById('loadingOverlay').innerHTML = `
+          <div class="text-red-500 text-center">
+            <i class="fas fa-exclamation-triangle text-5xl mb-4"></i>
+            <p class="text-xl font-bold">데이터 로딩 실패</p>
+            <p class="text-sm mt-2">네트워크 연결을 확인하세요</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Initialize TomSelect for investors
+      const investorOptions = Object.entries(summaryData.investors)
+        .map(([key, inv]) => ({ value: key, text: `${inv.name} (${inv.group})` }));
+      
+      investorSelect = new TomSelect('#investorSelector', {
+        options: investorOptions,
+        onChange: value => renderInvestorPortfolio(value)
+      });
+
+      // Initialize TomSelect for stocks
+      const stockOptions = Object.keys(byTickerData)
+        .sort()
+        .map(ticker => ({ value: ticker, text: ticker }));
+      
+      stockSelect = new TomSelect('#stockSelector', {
+        options: stockOptions,
+        onChange: value => renderStockLookup(value)
+      });
+
+      // Render initial view
+      renderOverview();
+
+      // Hide loading
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // ==================== KEYBOARD SHORTCUTS ====================
+    document.addEventListener('keydown', (e) => {
+      // Don't trigger if typing in input/select
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Tab navigation: 1-5
+      if (e.key >= '1' && e.key <= '5' && !e.ctrlKey && !e.metaKey) {
+        const tabs = ['overview', 'investor', 'stock', 'sector', 'changes'];
+        const idx = parseInt(e.key) - 1;
+        if (tabs[idx]) {
+          setContentTab(tabs[idx]);
+          e.preventDefault();
         }
+      }
 
-        // ================== STOCK ==================
-        async function renderStock() {
-            if (!state.selectedTicker) {
-                ui.stockSummary().textContent = '종목을 선택하세요.';
-                ui.stockHoldersTableBody().innerHTML = '<tr><td colspan="3" class="text-center py-8">종목을 선택하세요.</td></tr>';
-                initStockGroupChart();
-                charts.stockGroup.data.labels = [];
-                charts.stockGroup.data.datasets[0].data = [];
-                charts.stockGroup.update();
-                return;
-            }
+      // Ctrl+K: Focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        if (currentTab === 'investor') investorSelect?.focus();
+        if (currentTab === 'stock') stockSelect?.focus();
+        e.preventDefault();
+      }
 
-            const ticker = state.selectedTicker;
-            const tickerObj = state.byTicker?.[ticker];
-            if (!tickerObj) {
-                ui.stockSummary().textContent = '해당 종목 데이터가 없습니다.';
-                ui.stockHoldersTableBody().innerHTML = '<tr><td colspan="3" class="text-center py-8">데이터 없음</td></tr>';
-                return;
-            }
-
-            // Deduplicate holder_details by investor
-            const rawDetails = Array.isArray(tickerObj.holder_details) ? tickerObj.holder_details : [];
-            const byInvestor = new Map();
-            for (const d of rawDetails) {
-                const k = d?.investor;
-                if (!k) continue;
-                const prev = byInvestor.get(k) || { investor: k, shares: 0, weight: 0 };
-                prev.shares += Number(d?.shares || 0);
-                prev.weight += Number(d?.weight || 0);
-                byInvestor.set(k, prev);
-            }
-
-            const holders = [...byInvestor.values()].sort((a, b) => Number(b.weight) - Number(a.weight));
-            const uniqueHolders = Array.isArray(tickerObj.holders) ? new Set(tickerObj.holders).size : holders.length;
-            const topStockMeta = state.summary?.top_stocks?.[ticker];
-            const groups = {};
-            for (const h of holders) {
-                const g = getInvestorGroup(h.investor);
-                groups[g] = (groups[g] || 0) + 1;
-            }
-
-            // Summary
-            ui.stockSummary().className = 'p-4 bg-indigo-50 border border-indigo-200 rounded-lg mb-6';
-            ui.stockSummary().innerHTML = `
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <div class="text-sm text-gray-500">종목</div>
-                        <div class="text-xl font-bold text-gray-800 mono">${escapeHtml(ticker)}</div>
-                        <div class="text-xs text-gray-500 mt-1">총 보유 기관: <span class="font-semibold">${escapeHtml(formatInt(uniqueHolders))}</span> | 총 주식수(합계): <span class="mono">${escapeHtml(formatInt(tickerObj.total_shares || 0))}</span></div>
-                        <div class="text-xs text-gray-500 mt-1">Top20(요약) 총 보유 가치: <span class="mono">${escapeHtml(topStockMeta ? formatMoney(topStockMeta.total_value || 0) : '-')}</span></div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm text-gray-500">그룹 분포</div>
-                        <div class="text-sm text-gray-700">${escapeHtml(Object.entries(groups).map(([k,v]) => `${k}:${v}`).join(' · ') || '-') }</div>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs text-gray-500">보유가치(Value)는 investor 파일의 해당 분기 market_value로 계산합니다(없으면 '-').</div>
-            `;
-
-            // Render group chart
-            initStockGroupChart();
-            const groupLabels = Object.keys(groups);
-            charts.stockGroup.data.labels = groupLabels;
-            charts.stockGroup.data.datasets[0].data = groupLabels.map(k => groups[k]);
-            charts.stockGroup.update();
-
-            // Holders table (async values)
-            ui.stockHoldersTableBody().innerHTML = '<tr><td colspan="3" class="text-center py-8">보유 기관 정보를 계산 중...</td></tr>';
-
-            const quarter = state.summary?.metadata?.quarters_covered?.[0] || null;
-            const rows = await mapLimit(holders.slice(0, 80), 4, async (h) => {
-                let value = null;
-                try {
-                    const inv = await loadInvestor(h.investor);
-                    const filing = getQuarterFiling(inv.filings, quarter) || inv.filings?.[0] || null;
-                    const agg = aggregateHoldings(filing?.holdings || []);
-                    const entry = agg.get(ticker);
-                    if (entry && Number.isFinite(Number(entry.market_value))) value = Number(entry.market_value);
-                } catch (e) {
-                    value = null;
-                }
-                return {
-                    investorKey: h.investor,
-                    investorName: getInvestorDisplay(h.investor),
-                    group: getInvestorGroup(h.investor),
-                    weight: h.weight,
-                    value
-                };
-            });
-
-            ui.stockHoldersTableBody().innerHTML = rows
-                .sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0))
-                .map(r => `
-                    <tr class="cursor-pointer" data-investor="${escapeHtml(r.investorKey)}">
-                        <td>
-                            <div class="font-semibold text-gray-800">${escapeHtml(r.investorName)}</div>
-                            <div class="text-xs text-gray-500">${escapeHtml(r.group)} · ${escapeHtml(r.investorKey)}</div>
-                        </td>
-                        <td class="mono">${escapeHtml(formatPercent01(r.weight || 0))}</td>
-                        <td class="mono">${escapeHtml(r.value == null ? '-' : formatMoney(r.value))}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="3" class="text-center py-8">보유 기관이 없습니다.</td></tr>';
-
-            ui.stockHoldersTableBody().querySelectorAll('tr[data-investor]').forEach(tr => {
-                tr.addEventListener('click', () => {
-                    const key = tr.getAttribute('data-investor');
-                    selectInvestor(key);
-                    const investorTabBtn = document.querySelector('button.content-tab[aria-controls="investor"]');
-                    if (investorTabBtn) investorTabBtn.click();
-                });
-            });
+      // Ctrl+E: Export CSV
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        if (currentTab === 'investor' && currentInvestor) {
+          exportHoldingsCSV();
+          e.preventDefault();
         }
+      }
+    });
 
-        function initStockGroupChart() {
-            if (charts.stockGroup) return;
-            const ctx = document.getElementById('stockGroupChart')?.getContext('2d');
-            if (!ctx) return;
-            charts.stockGroup = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: '보유 기관 수', data: [], backgroundColor: '#0d6efd' }] },
-                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
-            });
-        }
-
-        // ================== SECTOR ==================
-        function renderSector() {
-            const sectors = state.bySector || {};
-            const sectorEntries = Object.entries(sectors)
-                .map(([name, v]) => ({ name, investors: v?.investors || [], avg_weight: Number(v?.avg_weight || 0), top_holdings: v?.top_holdings || [] }))
-                .sort((a, b) => b.avg_weight - a.avg_weight);
-
-            if (sectorEntries.length === 0) {
-                ui.sectorSummary().innerHTML = '<div class="p-4 bg-gray-50 rounded-lg">섹터 데이터가 없습니다.</div>';
-                ui.sectorHeatmap().textContent = '데이터 없음';
-                ui.sectorDetail().textContent = '데이터 없음';
-                return;
-            }
-
-            const top = sectorEntries[0];
-            const bottom = sectorEntries[sectorEntries.length - 1];
-
-            ui.sectorSummary().innerHTML = `
-                <div class="p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-500">가장 높은 평균 비중</p>
-                    <p class="text-xl font-bold">${escapeHtml(top.name)}</p>
-                    <p class="text-xs text-gray-500 mt-1">avg_weight: ${escapeHtml(formatPercent01(top.avg_weight))} · 기관: ${escapeHtml(formatInt(top.investors.length))}</p>
-                </div>
-                <div class="p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-500">가장 낮은 평균 비중</p>
-                    <p class="text-xl font-bold">${escapeHtml(bottom.name)}</p>
-                    <p class="text-xs text-gray-500 mt-1">avg_weight: ${escapeHtml(formatPercent01(bottom.avg_weight))} · 기관: ${escapeHtml(formatInt(bottom.investors.length))}</p>
-                </div>
-            `;
-
-            // Heatmap: membership matrix (data does not include per-investor weights)
-            const investorKeys = Object.keys(state.summary?.investors || {});
-            const sectorNames = sectorEntries.map(s => s.name);
-            const lookup = new Map(sectorEntries.map(s => [s.name, new Set(s.investors)]));
-            const wLookup = new Map(sectorEntries.map(s => [s.name, s.avg_weight]));
-
-            const heatmapHtml = `
-                <div class="overflow-auto">
-                    <table class="styled-table" style="min-width: 900px;">
-                        <thead>
-                            <tr>
-                                <th>기관</th>
-                                ${sectorNames.map(n => `<th class="cursor-pointer" data-sector="${escapeHtml(n)}">${escapeHtml(n)}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${investorKeys.map(k => {
-                                const name = getInvestorDisplay(k);
-                                return `
-                                    <tr>
-                                        <td>
-                                            <div class="font-semibold">${escapeHtml(name)}</div>
-                                            <div class="text-xs text-gray-500">${escapeHtml(getInvestorGroup(k))} · ${escapeHtml(k)}</div>
-                                        </td>
-                                        ${sectorNames.map(sn => {
-                                            const present = lookup.get(sn)?.has(k);
-                                            const intensity = Math.min(1, Math.max(0, Number(wLookup.get(sn) || 0) * 8));
-                                            const bg = present ? `rgba(13,110,253,${0.15 + intensity * 0.55})` : 'transparent';
-                                            return `<td style="background:${bg};" title="${escapeHtml(sn)}">${present ? '●' : ''}</td>`;
-                                        }).join('')}
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="text-xs text-gray-500 mt-2">주의: 섹터별로 investor 목록과 avg_weight만 제공되어, 히트맵은 '해당 섹터 보유 여부' 기반으로 표시합니다.</div>
-            `;
-
-            ui.sectorHeatmap().innerHTML = heatmapHtml;
-            ui.sectorHeatmap().classList.remove('flex', 'items-center', 'justify-center', 'text-gray-400');
-            ui.sectorHeatmap().classList.add('text-gray-700');
-
-            // Sector detail default
-            renderSectorDetail(top.name);
-            ui.sectorHeatmap().querySelectorAll('th[data-sector]').forEach(th => {
-                th.addEventListener('click', () => renderSectorDetail(th.getAttribute('data-sector')));
-            });
-        }
-
-        function renderSectorDetail(sectorName) {
-            const s = state.bySector?.[sectorName];
-            if (!s) {
-                ui.sectorDetail().textContent = '섹터 데이터 없음';
-                return;
-            }
-            const investorKeys = s?.investors || [];
-            const investors = investorKeys.map(k => ({ key: k, name: getInvestorDisplay(k), group: getInvestorGroup(k) }));
-            ui.sectorDetail().innerHTML = `
-                <div class="p-4 bg-gray-50 rounded-lg">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <div class="text-sm text-gray-500">섹터</div>
-                            <div class="text-xl font-bold text-gray-800">${escapeHtml(sectorName)}</div>
-                            <div class="text-xs text-gray-500 mt-1">avg_weight: ${escapeHtml(formatPercent01(s.avg_weight || 0))} · 기관 수: ${escapeHtml(formatInt(investorKeys.length))}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-sm text-gray-500">Top Holdings</div>
-                            <div class="text-sm text-gray-700 mono">${escapeHtml((s.top_holdings || []).slice(0, 10).join(', ') || '-')}</div>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <div class="text-sm font-semibold text-gray-700 mb-2">보유 기관</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            ${investors.map(inv => `
-                                <button class="text-left p-3 bg-white border border-gray-200 rounded hover:border-blue-300" data-investor="${escapeHtml(inv.key)}">
-                                    <div class="font-semibold">${escapeHtml(inv.name)}</div>
-                                    <div class="text-xs text-gray-500">${escapeHtml(inv.group)} · ${escapeHtml(inv.key)}</div>
-                                </button>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-            ui.sectorDetail().classList.remove('flex', 'items-center', 'justify-center', 'text-gray-400');
-            ui.sectorDetail().style.overflow = 'auto';
-
-            ui.sectorDetail().querySelectorAll('button[data-investor]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const key = btn.getAttribute('data-investor');
-                    selectInvestor(key);
-                    const investorTabBtn = document.querySelector('button.content-tab[aria-controls="investor"]');
-                    if (investorTabBtn) investorTabBtn.click();
-                });
-            });
-        }
-
-        // ================== CHANGES (CROSS-INVESTOR) ==================
-        async function renderChanges() {
-            try {
-                const quarters = state.summary?.metadata?.quarters_covered || [];
-                if (!state.selectedChangesQuarter) state.selectedChangesQuarter = quarters[0] || null;
-                ui.changesQuarterSelect().innerHTML = quarters.map(q => `<option value="${escapeHtml(q)}">${escapeHtml(q)}</option>`).join('');
-                ui.changesQuarterSelect().value = state.selectedChangesQuarter;
-
-                // Load all investors once for this tab
-                if (!state.investorsLoadedForChanges) {
-                    showLoading('전체 투자자 데이터를 불러오는 중입니다...');
-                    const invKeys = Object.keys(state.summary?.investors || {});
-                    await mapLimit(invKeys, 4, async (k) => loadInvestor(k));
-                    state.investorsLoadedForChanges = true;
-                    hideLoading();
-                }
-
-                const q = state.selectedChangesQuarter;
-                const qIdx = quarters.indexOf(q);
-                const prevQ = qIdx >= 0 ? quarters[qIdx + 1] : null;
-                if (!prevQ) {
-                    ui.topBuysTableBody().innerHTML = '<tr><td colspan="3" class="text-center py-8">이전 분기 데이터가 없어 비교할 수 없습니다.</td></tr>';
-                    ui.topSellsTableBody().innerHTML = '<tr><td colspan="3" class="text-center py-8">이전 분기 데이터가 없어 비교할 수 없습니다.</td></tr>';
-                }
-
-                const invKeys = Object.keys(state.summary?.investors || {});
-                const allChanges = [];
-                for (const key of invKeys) {
-                    const inv = state.investorCache.get(key);
-                    if (!inv) continue;
-                    const currF = getQuarterFiling(inv.filings, q);
-                    const prevF = prevQ ? getQuarterFiling(inv.filings, prevQ) : null;
-                    if (!currF || !prevF) continue;
-                    const currMap = aggregateHoldings(currF.holdings || []);
-                    const prevMap = aggregateHoldings(prevF.holdings || []);
-                    const changes = computeDiff(currMap, prevMap);
-                    for (const c of changes) {
-                        allChanges.push({
-                            investorKey: key,
-                            investorName: getInvestorDisplay(key),
-                            group: getInvestorGroup(key),
-                            quarter: q,
-                            prevQuarter: prevQ,
-                            ...c
-                        });
-                    }
-                }
-
-                const buys = allChanges
-                    .filter(c => c.action === 'NEW' || c.action === 'INCREASED')
-                    .sort((a, b) => (b.deltaValue) - (a.deltaValue));
-
-                const sells = allChanges
-                    .filter(c => c.action === 'SOLD' || c.action === 'DECREASED')
-                    .sort((a, b) => (a.deltaValue) - (b.deltaValue));
-
-                // Aggregate by ticker
-                function aggregateTicker(list) {
-                    const m = new Map();
-                    for (const x of list) {
-                        const prev = m.get(x.ticker) || { ticker: x.ticker, count: 0, totalDelta: 0 };
-                        prev.count += 1;
-                        prev.totalDelta += Number(x.deltaValue || 0);
-                        m.set(x.ticker, prev);
-                    }
-                    return [...m.values()];
-                }
-
-                const topBuys = aggregateTicker(buys)
-                    .sort((a, b) => b.totalDelta - a.totalDelta)
-                    .slice(0, 20);
-
-                const topSells = aggregateTicker(sells)
-                    .sort((a, b) => a.totalDelta - b.totalDelta)
-                    .slice(0, 20);
-
-                ui.topBuysTableBody().innerHTML = topBuys.map(r => `
-                    <tr class="cursor-pointer" data-ticker="${escapeHtml(r.ticker)}">
-                        <td class="mono font-semibold">${escapeHtml(r.ticker)}</td>
-                        <td>${escapeHtml(formatInt(r.count))}</td>
-                        <td class="mono">+${escapeHtml(formatMoney(r.totalDelta))}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="3" class="text-center py-8">데이터 없음</td></tr>';
-
-                ui.topSellsTableBody().innerHTML = topSells.map(r => `
-                    <tr class="cursor-pointer" data-ticker="${escapeHtml(r.ticker)}">
-                        <td class="mono font-semibold">${escapeHtml(r.ticker)}</td>
-                        <td>${escapeHtml(formatInt(r.count))}</td>
-                        <td class="mono">${escapeHtml(formatMoney(r.totalDelta))}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="3" class="text-center py-8">데이터 없음</td></tr>';
-
-                ui.topBuysTableBody().querySelectorAll('tr[data-ticker]').forEach(tr => {
-                    tr.addEventListener('click', () => {
-                        const t = tr.getAttribute('data-ticker');
-                        selectTicker(t);
-                        const stockTabBtn = document.querySelector('button.content-tab[aria-controls="stock"]');
-                        if (stockTabBtn) stockTabBtn.click();
-                    });
-                });
-                ui.topSellsTableBody().querySelectorAll('tr[data-ticker]').forEach(tr => {
-                    tr.addEventListener('click', () => {
-                        const t = tr.getAttribute('data-ticker');
-                        selectTicker(t);
-                        const stockTabBtn = document.querySelector('button.content-tab[aria-controls="stock"]');
-                        if (stockTabBtn) stockTabBtn.click();
-                    });
-                });
-
-                renderAumTrendChart();
-            } catch (e) {
-                console.error(e);
-                showError('변동 탭 데이터를 불러오는 데 실패했습니다.');
-            }
-        }
-
-        function renderAumTrendChart() {
-            const quarters = state.summary?.metadata?.quarters_covered || [];
-            const invKeys = Object.keys(state.summary?.investors || {});
-            const datasets = invKeys.map((k, idx) => {
-                const inv = state.investorCache.get(k);
-                const filings = inv?.filings || [];
-                const byQuarter = new Map(filings.map(f => [f.quarter, Number(f.aum_total || 0)]));
-                const data = quarters.map(q => byQuarter.get(q) ?? null);
-                const palette = [
-                    '#0d6efd','#6610f2','#6f42c1','#d63384','#dc3545','#fd7e14','#ffc107','#198754','#20c997','#0dcaf0',
-                    '#6c757d','#343a40','#0b7285','#5c940d','#e8590c','#a61e4d','#364fc7'
-                ];
-                return {
-                    label: getInvestorDisplay(k),
-                    data,
-                    borderColor: palette[idx % palette.length],
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointRadius: 1,
-                    tension: 0.15
-                };
-            });
-
-            if (!charts.aumTrend) {
-                const ctx = document.getElementById('aumTrendChart')?.getContext('2d');
-                if (!ctx) return;
-                charts.aumTrend = new Chart(ctx, {
-                    type: 'line',
-                    data: { labels: quarters.slice().reverse(), datasets: datasets.map(ds => ({ ...ds, data: ds.data.slice().reverse() })) },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { boxWidth: 10 } }
-                        },
-                        scales: {
-                            y: { ticks: { callback: (v) => formatMoney(v) } }
-                        }
-                    }
-                });
-                return;
-            }
-
-            charts.aumTrend.data.labels = quarters.slice().reverse();
-            charts.aumTrend.data.datasets = datasets.map(ds => ({ ...ds, data: ds.data.slice().reverse() }));
-            charts.aumTrend.update();
-        }
-
-        // ================== CSV EXPORT ==================
-        function downloadCsv(filename, rows) {
-            const csv = rows.map(r => r.map(x => {
-                const s = String(x ?? '');
-                if (/[\n",]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-                return s;
-            }).join(',')).join('\n');
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // ================== INIT ==================
-        async function init() {
-            try {
-                showLoading('SEC 13F 데이터를 불러오는 중입니다...');
-                const [summary, bySector, byTicker] = await Promise.all([
-                    fetchJson(DATA_URLS.summary),
-                    fetchJson(DATA_URLS.bySector),
-                    fetchJson(DATA_URLS.byTicker)
-                ]);
-                state.summary = summary;
-                state.bySector = bySector;
-                state.byTicker = byTicker;
-
-                // Select defaults
-                const quarters = state.summary?.metadata?.quarters_covered || [];
-                state.selectedChangesQuarter = quarters[0] || null;
-
-                initializeSelectors();
-                bindEvents();
-
-                hideLoading();
-                renderOverview();
-            } catch (e) {
-                console.error(e);
-                hideLoading();
-                showError('초기 데이터를 불러오는 데 실패했습니다. 경로를 확인하세요.');
-            }
-        }
-
-        function initializeSelectors() {
-            const investors = Object.entries(state.summary?.investors || {})
-                .map(([key, v]) => ({ value: key, text: `${v?.name || key} (${v?.group || '-'})` }));
-
-            tom.investor = new TomSelect('#investorSelect', {
-                create: false,
-                options: investors,
-                sortField: { field: 'text', direction: 'asc' },
-                placeholder: '기관 투자자 검색...'
-            });
-
-            const tickers = Object.keys(state.byTicker || {}).map(t => ({ value: t, text: t }));
-            tom.ticker = new TomSelect('#tickerSelect', {
-                create: false,
-                options: tickers,
-                sortField: { field: 'text', direction: 'asc' },
-                placeholder: '티커 또는 회사명 검색...'
-            });
-
-            const quarters = state.summary?.metadata?.quarters_covered || [];
-            ui.changesQuarterSelect().innerHTML = quarters.map(q => `<option value="${escapeHtml(q)}">${escapeHtml(q)}</option>`).join('');
-            ui.changesQuarterSelect().value = state.selectedChangesQuarter;
-        }
-
-        function bindEvents() {
-            tom.investor.on('change', async (val) => {
-                state.selectedInvestor = val || null;
-                state.selectedInvestorQuarter = null;
-                if (state.currentTab === 'investor') await renderInvestor();
-            });
-
-            tom.ticker.on('change', async (val) => {
-                state.selectedTicker = val || null;
-                if (state.currentTab === 'stock') await renderStock();
-            });
-
-            ui.investorQuarterSelect().addEventListener('change', async (e) => {
-                state.selectedInvestorQuarter = e.target.value;
-                if (state.currentTab === 'investor') await renderInvestor();
-            });
-
-            ui.changesQuarterSelect().addEventListener('change', async (e) => {
-                state.selectedChangesQuarter = e.target.value;
-                if (state.currentTab === 'changes') await renderChanges();
-            });
-
-            ui.investorExportBtn().addEventListener('click', async () => {
-                if (!state.selectedInvestor) return;
-                try {
-                    const inv = await loadInvestor(state.selectedInvestor);
-                    const quarter = state.selectedInvestorQuarter || inv.metadata?.quarters_covered?.[0] || inv.filings?.[0]?.quarter;
-                    const filing = getQuarterFiling(inv.filings, quarter) || inv.filings?.[0];
-                    const agg = aggregateHoldings(filing?.holdings || []);
-                    const rows = [['ticker','name','shares','market_value','weight']];
-                    for (const h of [...agg.values()].sort((a,b) => Number(b.market_value)-Number(a.market_value))) {
-                        rows.push([h.ticker, h.name, h.shares, h.market_value, h.weight]);
-                    }
-                    downloadCsv(`sec-13f_${state.selectedInvestor}_${quarter}.csv`, rows);
-                } catch (e) {
-                    console.error(e);
-                    showError('CSV 내보내기에 실패했습니다.');
-                }
-            });
-        }
-
-        // Legacy function placeholder referenced by older code
-        function bindEventsLegacy() {}
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+    // Start
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
 </html>

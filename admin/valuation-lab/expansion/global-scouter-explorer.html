@@ -347,6 +347,45 @@
       opacity: 1;
       color: #dc2626;
     }
+
+    /* #195: Parameter Hints */
+    .param-hint {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 4px;
+      padding: 4px 8px;
+      background: linear-gradient(to right, rgba(139, 92, 246, 0.05), transparent);
+      border-left: 2px solid #8b5cf6;
+      border-radius: 0 4px 4px 0;
+    }
+    .param-hint-icon { color: #8b5cf6; margin-right: 4px; }
+    .param-range {
+      display: inline-flex;
+      gap: 8px;
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+    .param-range span {
+      padding: 2px 6px;
+      background: #f3f4f6;
+      border-radius: 4px;
+    }
+    .param-guide-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid;
+      transition: all 0.2s;
+      cursor: pointer;
+      background: transparent;
+    }
+    .param-guide-toggle:hover { border-color: inherit; }
+    .param-guide-content { transition: all 0.3s ease; }
+    .rotate-180 { transform: rotate(180deg); }
   </style>
 </head>
 <body>
@@ -820,6 +859,15 @@
                     </div>
                     <input type="range" id="dcfGrowthSlider" min="0" max="30" step="0.5" value="10"
                            class="w-full h-2 bg-purple-200 rounded-lg cursor-pointer" oninput="updateDCFCalc()">
+                    <div class="param-hint" id="dcfGrowthHint">
+                      <i class="fas fa-lightbulb param-hint-icon"></i>
+                      <span id="dcfGrowthSectorRef">섹터 데이터 로딩...</span>
+                    </div>
+                    <div class="param-range">
+                      <span>보수적: 3-5%</span>
+                      <span>중립: 8-12%</span>
+                      <span>공격적: 15%+</span>
+                    </div>
                   </div>
                   <div>
                     <div class="flex justify-between text-xs mb-1">
@@ -828,6 +876,15 @@
                     </div>
                     <input type="range" id="dcfWACCSlider" min="4" max="20" step="0.25" value="10"
                            class="w-full h-2 bg-purple-200 rounded-lg cursor-pointer" oninput="updateDCFCalc()">
+                    <div class="param-hint" id="dcfWACCHint">
+                      <i class="fas fa-lightbulb param-hint-icon"></i>
+                      <span id="dcfWACCSectorRef">Damodaran 섹터 WACC 자동 적용</span>
+                    </div>
+                    <div class="param-range">
+                      <span>유틸리티: 5-7%</span>
+                      <span>일반: 8-10%</span>
+                      <span>기술주: 10-14%</span>
+                    </div>
                   </div>
                   <div>
                     <div class="flex justify-between text-xs mb-1">
@@ -836,6 +893,15 @@
                     </div>
                     <input type="range" id="dcfTerminalSlider" min="0" max="5" step="0.25" value="2.5"
                            class="w-full h-2 bg-purple-200 rounded-lg cursor-pointer" oninput="updateDCFCalc()">
+                    <div class="param-hint" id="dcfTerminalHint">
+                      <i class="fas fa-lightbulb param-hint-icon"></i>
+                      장기 GDP 성장률 (2-3%) 기준
+                    </div>
+                    <div class="param-range">
+                      <span>보수적: 1-2%</span>
+                      <span>일반: 2-3%</span>
+                      <span>낙관: 3-4%</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -869,6 +935,69 @@
                   <thead id="dcfSensitivityHead"></thead>
                   <tbody id="dcfSensitivityBody"></tbody>
                 </table>
+              </div>
+            </div>
+
+            <!-- #195: DCF Parameter Guide (Collapsible) -->
+            <div class="mt-4">
+              <button onclick="toggleDCFGuide()" class="param-guide-toggle bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-100 hover:border-indigo-200">
+                <span class="text-sm font-medium text-indigo-700">
+                  <i class="fas fa-book-open mr-2"></i>📖 DCF 파라미터 설정 가이드 (초보자용)
+                </span>
+                <i id="dcfGuideIcon" class="fas fa-chevron-down text-indigo-500 transition-transform"></i>
+              </button>
+
+              <div id="dcfGuideContent" class="hidden mt-2 p-4 bg-white border border-indigo-100 rounded-lg param-guide-content">
+                <div class="grid md:grid-cols-3 gap-4 text-sm">
+                  <!-- Growth Rate Guide Card -->
+                  <div class="bg-purple-50 p-3 rounded-lg">
+                    <h4 class="font-bold text-purple-700 mb-2">
+                      <i class="fas fa-chart-line mr-1"></i>성장률 (g)
+                    </h4>
+                    <p class="text-gray-600 mb-2"><strong>정의:</strong> 향후 FCF 연간 성장 예측</p>
+                    <ul class="text-gray-500 text-xs space-y-1 ml-3">
+                      <li>• 과거 FCF CAGR 확인</li>
+                      <li>• 산업 성장률 벤치마크</li>
+                      <li>• 성숙기업: 5-8%</li>
+                      <li>• 성장기업: 10-20%</li>
+                    </ul>
+                  </div>
+
+                  <!-- WACC Guide Card -->
+                  <div class="bg-blue-50 p-3 rounded-lg">
+                    <h4 class="font-bold text-blue-700 mb-2">
+                      <i class="fas fa-percentage mr-1"></i>WACC (할인율)
+                    </h4>
+                    <p class="text-gray-600 mb-2"><strong>정의:</strong> 투자의 기회비용</p>
+                    <ul class="text-gray-500 text-xs space-y-1 ml-3">
+                      <li>• Damodaran 섹터별 자동 연동</li>
+                      <li>• 높을수록 → 적정가치 ↓</li>
+                      <li>• 기술주: 10-14%</li>
+                      <li>• 유틸리티: 5-7%</li>
+                    </ul>
+                  </div>
+
+                  <!-- Terminal Growth Guide Card -->
+                  <div class="bg-emerald-50 p-3 rounded-lg">
+                    <h4 class="font-bold text-emerald-700 mb-2">
+                      <i class="fas fa-infinity mr-1"></i>터미널 성장률
+                    </h4>
+                    <p class="text-gray-600 mb-2"><strong>정의:</strong> 영구 성장률 (Gordon)</p>
+                    <ul class="text-gray-500 text-xs space-y-1 ml-3">
+                      <li>• 미국 평균: 2-3%</li>
+                      <li>• 인플레이션 수준</li>
+                      <li>• WACC보다 낮아야 함 (필수)</li>
+                      <li>• 결과에 가장 큰 영향</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                  <p class="text-xs text-amber-700">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    <strong>주의:</strong> DCF는 가정에 민감합니다. 민감도 분석 테이블로 범위를 확인하세요.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -926,6 +1055,15 @@
                     </div>
                     <input type="range" id="ddmRequiredSlider" min="4" max="20" step="0.5" value="8"
                            class="w-full h-2 bg-blue-200 rounded-lg cursor-pointer" oninput="updateDDMCalc()">
+                    <div class="param-hint" id="ddmRequiredHint" style="border-color: #3b82f6; background: linear-gradient(to right, rgba(59, 130, 246, 0.05), transparent);">
+                      <i class="fas fa-lightbulb param-hint-icon" style="color: #3b82f6;"></i>
+                      <span id="ddmRequiredSectorRef">CAPM: 무위험이자율 + β×MRP</span>
+                    </div>
+                    <div class="param-range">
+                      <span>안정주: 6-8%</span>
+                      <span>성장주: 10-12%</span>
+                      <span>고위험: 15%+</span>
+                    </div>
                   </div>
                   <div>
                     <div class="flex justify-between text-xs mb-1">
@@ -934,6 +1072,15 @@
                     </div>
                     <input type="range" id="ddmGrowthSlider" min="0" max="15" step="0.5" value="3"
                            class="w-full h-2 bg-blue-200 rounded-lg cursor-pointer" oninput="updateDDMCalc()">
+                    <div class="param-hint" id="ddmGrowthHint" style="border-color: #f59e0b; background: linear-gradient(to right, rgba(245, 158, 11, 0.05), transparent);">
+                      <i class="fas fa-lightbulb param-hint-icon" style="color: #f59e0b;"></i>
+                      <span id="ddmGrowthSectorRef">과거 DPS CAGR 참고</span>
+                    </div>
+                    <div class="param-range">
+                      <span>안정배당: 2-4%</span>
+                      <span>성장배당: 5-8%</span>
+                      <span>고성장: 10%+</span>
+                    </div>
                   </div>
                   <div id="ddmWarning" class="hidden bg-red-100 text-red-700 text-xs p-2 rounded">
                     <i class="fas fa-exclamation-triangle mr-1"></i>요구수익률(r)이 배당성장률(g)보다 높아야 합니다
@@ -967,6 +1114,57 @@
               <i class="fas fa-info-circle text-amber-600 text-2xl mb-2"></i>
               <p class="text-amber-700 font-medium">N/A - 해당 종목은 배당 이력이 없습니다</p>
               <p class="text-amber-600 text-sm mt-1">DDM은 배당주 전용 밸류에이션 모델입니다</p>
+            </div>
+
+            <!-- #195: DDM Parameter Guide (Collapsible) -->
+            <div class="mt-4">
+              <button onclick="toggleDDMGuide()" class="param-guide-toggle bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-100 hover:border-amber-200">
+                <span class="text-sm font-medium text-amber-700">
+                  <i class="fas fa-book-open mr-2"></i>📖 DDM 파라미터 설정 가이드 (초보자용)
+                </span>
+                <i id="ddmGuideIcon" class="fas fa-chevron-down text-amber-500 transition-transform"></i>
+              </button>
+
+              <div id="ddmGuideContent" class="hidden mt-2 p-4 bg-white border border-amber-100 rounded-lg param-guide-content">
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                  <!-- Required Return Guide -->
+                  <div class="bg-blue-50 p-3 rounded-lg">
+                    <h4 class="font-bold text-blue-700 mb-2">
+                      <i class="fas fa-bullseye mr-1"></i>요구수익률 (r)
+                    </h4>
+                    <p class="text-gray-600 mb-2"><strong>정의:</strong> 투자자 기대 최소 수익률</p>
+                    <ul class="text-gray-500 text-xs space-y-1 ml-3">
+                      <li>• CAPM: Rf + β × MRP</li>
+                      <li>• Rf(무위험): 국채금리 ~4-5%</li>
+                      <li>• MRP(시장프리미엄): ~5-6%</li>
+                      <li>• 안정배당주: 6-8%</li>
+                      <li>• 성장배당주: 10-12%</li>
+                    </ul>
+                  </div>
+
+                  <!-- Dividend Growth Guide -->
+                  <div class="bg-amber-50 p-3 rounded-lg">
+                    <h4 class="font-bold text-amber-700 mb-2">
+                      <i class="fas fa-seedling mr-1"></i>배당성장률 (g)
+                    </h4>
+                    <p class="text-gray-600 mb-2"><strong>정의:</strong> 배당금 연간 증가율</p>
+                    <ul class="text-gray-500 text-xs space-y-1 ml-3">
+                      <li>• 과거 DPS CAGR 참고</li>
+                      <li>• g = ROE × (1 - 배당성향)</li>
+                      <li>• 성숙기업: 2-4%</li>
+                      <li>• 성장기업: 5-10%</li>
+                      <li>• <strong>필수:</strong> g &lt; r</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
+                  <p class="text-xs text-red-700">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    <strong>Gordon Growth Model 제약:</strong> r &gt; g 필수. g ≥ r이면 무한대로 발산합니다.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -3338,6 +3536,9 @@
 
       document.getElementById('dcfCurrentPrice').textContent = `$${formatNumber(stock.price, 2)}`;
 
+      // #195: Update parameter hints
+      updateDCFHints(ticker, getSectorWACC(sector), fcfCAGR);
+
       updateDCFCalc();
     }
 
@@ -3417,6 +3618,65 @@
       document.getElementById('dcfSensitivityBody').innerHTML = bodyHTML;
     }
 
+    // ================== PARAMETER GUIDE FUNCTIONS (#195) ==================
+
+    // Toggle Guide Panels
+    function toggleDCFGuide() {
+      const content = document.getElementById('dcfGuideContent');
+      const icon = document.getElementById('dcfGuideIcon');
+      content.classList.toggle('hidden');
+      icon.classList.toggle('rotate-180');
+    }
+
+    function toggleDDMGuide() {
+      const content = document.getElementById('ddmGuideContent');
+      const icon = document.getElementById('ddmGuideIcon');
+      content.classList.toggle('hidden');
+      icon.classList.toggle('rotate-180');
+    }
+
+    // Dynamic DCF Hints (call in renderDCFTab)
+    function updateDCFHints(ticker, waccData, fcfCAGR) {
+      const stock = state.stocksList.find(s => s.ticker === ticker);
+      const sector = stock?.sector || '-';
+      const damodaranIndustry = SECTOR_MAPPING[sector] || 'Diversified';
+
+      const growthHint = document.getElementById('dcfGrowthSectorRef');
+      if (growthHint) {
+        if (fcfCAGR !== null && !isNaN(fcfCAGR)) {
+          growthHint.innerHTML = `${sector}: 과거 FCF CAGR <strong>${fcfCAGR.toFixed(1)}%</strong>`;
+        } else {
+          growthHint.textContent = `${sector}: FCF CAGR 데이터 없음`;
+        }
+      }
+
+      const waccHint = document.getElementById('dcfWACCSectorRef');
+      if (waccHint && waccData) {
+        waccHint.innerHTML = `Damodaran ${damodaranIndustry}: <strong>${(waccData * 100).toFixed(2)}%</strong>`;
+      }
+    }
+
+    // Dynamic DDM Hints (call in renderDDMTab)
+    function updateDDMHints(ticker, dpsCAGR) {
+      const stock = state.stocksList.find(s => s.ticker === ticker);
+
+      const requiredHint = document.getElementById('ddmRequiredSectorRef');
+      if (requiredHint) {
+        const beta = stock?.beta || 1;
+        const estimatedR = 4.5 + beta * 5.5; // Rf + β × MRP (simplified CAPM)
+        requiredHint.innerHTML = `CAPM 추정: β=${beta.toFixed(2)} → <strong>${estimatedR.toFixed(1)}%</strong>`;
+      }
+
+      const growthHint = document.getElementById('ddmGrowthSectorRef');
+      if (growthHint) {
+        if (dpsCAGR !== null && !isNaN(dpsCAGR)) {
+          growthHint.innerHTML = `과거 DPS CAGR: <strong>${dpsCAGR.toFixed(1)}%</strong>`;
+        } else {
+          growthHint.textContent = '과거 DPS CAGR 데이터 없음';
+        }
+      }
+    }
+
     // ================== DDM CALCULATOR (#193) ==================
 
     let currentDDMData = null;
@@ -3477,6 +3737,9 @@
       document.getElementById('ddmGrowthValue').textContent = `${initialGrowth.toFixed(1)}%`;
 
       document.getElementById('ddmCurrentPrice').textContent = `$${formatNumber(stock.price, 2)}`;
+
+      // #195: Update parameter hints
+      updateDDMHints(ticker, dpsCAGR);
 
       updateDDMCalc();
     }
@@ -3577,12 +3840,17 @@
           .filter(Boolean);
       }
 
-      if (peers.length < 3) {
+      // v4: Different minimum requirements for Auto vs Manual mode
+      const minPeers = state.peerMode === 'auto' ? 3 : 2;
+      if (peers.length < minPeers) {
+        const message = state.peerMode === 'auto'
+          ? `${sector} 섹터에 ${peers.length}개 종목만 있습니다 (최소 3개 필요)`
+          : `비교 종목을 추가하세요 (현재 ${peers.length}개, 최소 2개 필요)`;
         document.getElementById('peerEmptyState').innerHTML = `
           <div class="text-center text-amber-500">
             <i class="fas fa-exclamation-triangle text-5xl mb-3"></i>
-            <p class="text-lg font-medium">Peer 부족</p>
-            <p class="text-sm mt-1">${sector} 섹터에 ${peers.length}개 종목만 있습니다 (최소 3개 필요)</p>
+            <p class="text-lg font-medium">${state.peerMode === 'auto' ? 'Peer 부족' : '비교 종목 추가 필요'}</p>
+            <p class="text-sm mt-1">${message}</p>
           </div>`;
         document.getElementById('peerEmptyState').style.display = 'flex';
         document.getElementById('peerResults').classList.add('hidden');
