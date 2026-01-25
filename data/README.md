@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-01-12
+> **Last Updated**: 2026-01-25
 > **Total Files**: 1,845 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -12,7 +12,7 @@
 |--------|-------|------------------|--------|
 | [benchmarks/](benchmarks/DEV.md) | 7 | Weekly | Bloomberg Terminal |
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
-| [global-scouter/](global-scouter/README.md) | 1,249 | On-demand | Global Scouter Tool |
+| [global-scouter/](global-scouter/README.md) | 1,248 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [sec-13f/](sec-13f/README.md) | 20 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
@@ -40,7 +40,7 @@
 - 12+ indicators
 
 ### Stock Screening (global-scouter/)
-- 1,244 stock profiles + ETFs (23) + Economic Indicators (1,044 records)
+- 1,243 stock profiles + ETFs (23) + Economic Indicators (1,046 records)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
 - On-demand updates
 
