@@ -1078,28 +1078,28 @@
         <!-- Valuation Summary Cards -->
         <div id="valuationSummary" class="grid grid-cols-2 md:grid-cols-6 gap-4 mt-4 hidden">
           <div class="bg-emerald-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">현재 P/E</div>
+            <div class="text-xs text-gray-500" id="currentPELabel">현재 P/E</div>
             <div class="text-xl font-bold text-emerald-600 mono" id="currentPE">-</div>
           </div>
           <div class="bg-purple-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">Forward P/E</div>
+            <div class="text-xs text-gray-500" id="forwardPELabel">Forward P/E</div>
             <div class="text-xl font-bold text-purple-600 mono" id="forwardPE">-</div>
           </div>
           <div class="bg-blue-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">8Y 평균</div>
+            <div class="text-xs text-gray-500" id="avgPELabel">8Y 평균 P/E</div>
             <div class="text-xl font-bold text-blue-600 mono" id="avgPE">-</div>
           </div>
           <div class="bg-gray-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">8Y 최저</div>
+            <div class="text-xs text-gray-500" id="minPELabel">8Y 최저 P/E</div>
             <div class="text-xl font-bold text-gray-600 mono" id="minPE">-</div>
           </div>
           <div class="bg-amber-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">8Y 최고</div>
+            <div class="text-xs text-gray-500" id="maxPELabel">8Y 최고 P/E</div>
             <div class="text-xl font-bold text-amber-600 mono" id="maxPE">-</div>
           </div>
           <!-- P/E Position Badge (v4.3) -->
           <div id="pePositionCard" class="rounded-lg p-4 text-center" role="status" aria-live="polite">
-            <div class="text-xs text-gray-500">밸류에이션 위치</div>
+            <div class="text-xs text-gray-500" id="positionLabel">밸류에이션 위치</div>
             <div class="text-lg font-bold" id="pePositionBadge">-</div>
           </div>
         </div>
@@ -1969,12 +1969,18 @@
             <!-- Selected Chips (Base + Manual) -->
             <div id="selectedPeerChips" class="flex flex-wrap gap-2 mb-3"></div>
 
-            <!-- Inline Search -->
+            <!-- v4.3.1: Inline Search (direct typing) -->
             <div class="flex items-center gap-3 flex-wrap">
               <label class="text-sm font-medium text-gray-700">
                 <i class="fas fa-plus-circle text-teal-500 mr-1"></i>종목 추가
               </label>
-              <select id="manualPeerSelect" class="flex-1 min-w-48"></select>
+              <div class="relative flex-1 min-w-48">
+                <input type="text" id="peerSearchInput"
+                       placeholder="종목 검색 (티커 또는 이름)..."
+                       autocomplete="off"
+                       class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                <div id="peerSearchResults" class="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto hidden"></div>
+              </div>
             </div>
 
             <!-- Quick Add Suggestions -->
@@ -2136,28 +2142,28 @@
           </h2>
         </div>
 
-        <!-- v3: ETF 테이블 17개 컬럼 확장 -->
+        <!-- v3: ETF 테이블 17개 컬럼 확장 + v4.3.1: 정렬 기능 -->
         <div style="overflow-x: auto;">
           <table id="etfTable">
             <thead>
               <tr>
-                <th>티커</th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('ticker')">티커 <span id="etfSort-ticker"></span></th>
                 <th>이름</th>
-                <th>카테고리</th>
-                <th>시총</th>
-                <th>1M</th>
-                <th>3M</th>
-                <th>6M</th>
-                <th>YTD</th>
-                <th>1Y</th>
-                <th>3Y</th>
-                <th>5Y</th>
-                <th>10Y</th>
-                <th>3Y CAGR</th>
-                <th>5Y CAGR</th>
-                <th>10Y CAGR</th>
-                <th>Beta</th>
-                <th>비용</th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('category')">카테고리 <span id="etfSort-category"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('market_cap')">시총 <span id="etfSort-market_cap"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('r1m')">1M <span id="etfSort-r1m"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('r3m')">3M <span id="etfSort-r3m"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('r6m')">6M <span id="etfSort-r6m"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('ytd')">YTD <span id="etfSort-ytd"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('r1y')">1Y <span id="etfSort-r1y"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('r3y')">3Y <span id="etfSort-r3y"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('r5y')">5Y <span id="etfSort-r5y"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('r10y')">10Y <span id="etfSort-r10y"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('cagr3y')">3Y CAGR <span id="etfSort-cagr3y"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('cagr5y')">5Y CAGR <span id="etfSort-cagr5y"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('cagr10y')">10Y CAGR <span id="etfSort-cagr10y"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('beta')">Beta <span id="etfSort-beta"></span></th>
+                <th class="cursor-pointer hover:bg-gray-100 select-none" onclick="sortETFs('expense_ratio')">비용 <span id="etfSort-expense_ratio"></span></th>
               </tr>
             </thead>
             <tbody id="etfTableBody"></tbody>
@@ -2314,7 +2320,10 @@
       manualPeers: [],
       comparisonPeriod: '6m',
       // #196: Macro Alert
-      vixData: null
+      vixData: null,
+      // v4.3.1: ETF sorting
+      etfSortKey: 'market_cap',
+      etfSortDir: 'desc'
     };
 
     let charts = {
@@ -3070,33 +3079,91 @@
       syncGlobalSelection(ticker);
     }
 
-    // ================== v4: MANUAL PEER SELECTOR ==================
-    function initManualPeerSelector() {
-      const select = document.getElementById('manualPeerSelect');
-      if (!select) return;
+    // ================== v4.3.1: PEER SEARCH (Direct Typing) ==================
+    // Debounce utility
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
 
-      const sorted = [...state.stocksList].sort((a, b) => b.mc - a.mc);
+    function initPeerSearch() {
+      const input = document.getElementById('peerSearchInput');
+      const results = document.getElementById('peerSearchResults');
+      if (!input || !results) return;
 
-      sorted.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.ticker;
-        opt.textContent = `${s.ticker} - ${s.name}`;
-        select.appendChild(opt);
+      const debouncedSearch = debounce(() => {
+        const query = input.value.toLowerCase().trim();
+        if (query.length < 1) {
+          results.classList.add('hidden');
+          return;
+        }
+
+        const matches = state.stocksList
+          .filter(s =>
+            s.ticker.toLowerCase().includes(query) ||
+            s.name.toLowerCase().includes(query)
+          )
+          .slice(0, 10);
+
+        if (matches.length === 0) {
+          results.innerHTML = '<div class="p-3 text-gray-500 text-sm">검색 결과 없음</div>';
+          results.classList.remove('hidden');
+          return;
+        }
+
+        results.innerHTML = matches.map(s => `
+          <div class="peer-search-item p-2 hover:bg-teal-50 cursor-pointer border-b last:border-b-0"
+               data-ticker="${s.ticker}">
+            <span class="font-medium text-teal-700">${s.ticker}</span>
+            <span class="text-gray-500 text-sm ml-2">${s.name}</span>
+          </div>
+        `).join('');
+        results.classList.remove('hidden');
+
+        // Click handler for results
+        results.querySelectorAll('.peer-search-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const ticker = item.dataset.ticker;
+            addManualPeer(ticker);
+            input.value = '';
+            results.classList.add('hidden');
+          });
+        });
+      }, 200);
+
+      input.addEventListener('input', debouncedSearch);
+
+      // Hide results on click outside
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !results.contains(e.target)) {
+          results.classList.add('hidden');
+        }
       });
 
-      tomSelectInstances.manualPeer = new TomSelect(select, {
-        maxItems: 1,
-        placeholder: '비교 종목 검색...',
-        allowEmptyOption: true,
-        create: false,
-        sortField: { field: 'text', direction: 'asc' },
-        onChange: (ticker) => {
-          if (ticker) {
+      // Enter key to add first match
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const firstItem = results.querySelector('.peer-search-item');
+          if (firstItem) {
+            const ticker = firstItem.dataset.ticker;
             addManualPeer(ticker);
-            tomSelectInstances.manualPeer.clear();
+            input.value = '';
+            results.classList.add('hidden');
           }
         }
       });
+    }
+
+    // Legacy function name for backward compatibility
+    function initManualPeerSelector() {
+      initPeerSearch();
     }
 
     function addManualPeer(ticker) {
@@ -3488,6 +3555,18 @@
     }
 
     // ================== VALUATIONS CHART ==================
+    // v4.3.1: Metric-specific label mapping
+    function getMetricLabels(metric) {
+      const labels = {
+        per: { current: '현재 P/E', forward: 'Forward P/E', avg: '8Y 평균 P/E', min: '8Y 최저 P/E', max: '8Y 최고 P/E', position: '밸류에이션 위치' },
+        pbr: { current: '현재 P/B', forward: '-', avg: '5Y 평균 P/B', min: '5Y 최저 P/B', max: '5Y 최고 P/B', position: 'P/B 위치' },
+        psr: { current: '현재 P/S', forward: '-', avg: '-', min: '-', max: '-', position: '-' },
+        pcr: { current: '현재 P/C', forward: '-', avg: '-', min: '-', max: '-', position: '-' },
+        peg: { current: '현재 PEG', forward: '-', avg: '-', min: '-', max: '-', position: '-' }
+      };
+      return labels[metric] || labels.per;
+    }
+
     function setValuationMetric(metric) {
       state.valuationMetric = metric;
       document.querySelectorAll('#section-valuations .metric-tabs .tab-btn').forEach(btn => {
@@ -3727,22 +3806,38 @@
         }
       });
 
-      // Update summary
+      // Update summary values
       document.getElementById('currentPE').textContent = formatNumber(currentPE, 2);
       document.getElementById('forwardPE').textContent = forwardPE > 0 ? formatNumber(forwardPE, 2) : '-';
-      document.getElementById('avgPE').textContent = formatNumber(band.avg, 2);
-      document.getElementById('minPE').textContent = formatNumber(band.min, 2);
-      document.getElementById('maxPE').textContent = formatNumber(band.max, 2);
+      document.getElementById('avgPE').textContent = band.avg != null ? formatNumber(band.avg, 2) : '-';
+      document.getElementById('minPE').textContent = band.min != null ? formatNumber(band.min, 2) : '-';
+      document.getElementById('maxPE').textContent = band.max != null ? formatNumber(band.max, 2) : '-';
 
-      // v4.3: P/E Position Badge (per_bands 기반)
-      const pePosition = getPEPosition(data.per_bands);
+      // v4.3.1: Dynamic label update based on metric
+      const metricLabels = getMetricLabels(state.valuationMetric);
+      document.getElementById('currentPELabel').textContent = metricLabels.current;
+      document.getElementById('forwardPELabel').textContent = metricLabels.forward;
+      document.getElementById('avgPELabel').textContent = metricLabels.avg;
+      document.getElementById('minPELabel').textContent = metricLabels.min;
+      document.getElementById('maxPELabel').textContent = metricLabels.max;
+      document.getElementById('positionLabel').textContent = metricLabels.position;
+
+      // v4.3: P/E Position Badge (per_bands 기반) - only show for P/E metric
       const positionCard = document.getElementById('pePositionCard');
       const positionBadge = document.getElementById('pePositionBadge');
-      if (pePosition) {
-        positionBadge.textContent = `${pePosition.badge} ${pePosition.label}`;
-        positionCard.className = `rounded-lg p-4 text-center ${pePosition.bgColor}`;
-        positionBadge.className = `text-lg font-bold ${pePosition.color}`;
+      if (state.valuationMetric === 'per') {
+        const pePosition = getPEPosition(data.per_bands);
+        if (pePosition) {
+          positionBadge.textContent = `${pePosition.badge} ${pePosition.label}`;
+          positionCard.className = `rounded-lg p-4 text-center ${pePosition.bgColor}`;
+          positionBadge.className = `text-lg font-bold ${pePosition.color}`;
+        } else {
+          positionBadge.textContent = '-';
+          positionCard.className = 'rounded-lg p-4 text-center bg-gray-50';
+          positionBadge.className = 'text-lg font-bold text-gray-400';
+        }
       } else {
+        // Non-P/E metrics: show dash
         positionBadge.textContent = '-';
         positionCard.className = 'rounded-lg p-4 text-center bg-gray-50';
         positionBadge.className = 'text-lg font-bold text-gray-400';
@@ -4010,7 +4105,57 @@
       document.getElementById('avgROE').textContent = `${formatNumber(avgROE, 1)}%`;
     }
 
-    // ================== ETF TABLE (v3: 17개 컬럼 완전화) ==================
+    // ================== ETF TABLE (v3: 17개 컬럼 완전화 + v4.3.1: 정렬) ==================
+    // v4.3.1: ETF sorting function
+    function sortETFs(key) {
+      if (state.etfSortKey === key) {
+        state.etfSortDir = state.etfSortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.etfSortKey = key;
+        state.etfSortDir = 'desc'; // Default to descending for numbers
+      }
+      renderETFTable();
+    }
+
+    // v4.3.1: Update sort icons
+    function updateETFSortIcons() {
+      const keys = ['ticker', 'category', 'market_cap', 'r1m', 'r3m', 'r6m', 'ytd', 'r1y', 'r3y', 'r5y', 'r10y', 'cagr3y', 'cagr5y', 'cagr10y', 'beta', 'expense_ratio'];
+      keys.forEach(k => {
+        const el = document.getElementById(`etfSort-${k}`);
+        if (el) {
+          if (state.etfSortKey === k) {
+            el.textContent = state.etfSortDir === 'asc' ? '▲' : '▼';
+            el.className = 'text-teal-600 font-bold';
+          } else {
+            el.textContent = '';
+          }
+        }
+      });
+    }
+
+    // v4.3.1: Get ETF value for sorting
+    function getETFSortValue(etf, key) {
+      switch (key) {
+        case 'ticker': return etf.ticker || '';
+        case 'category': return etf.category || '';
+        case 'market_cap': return etf.market_cap || etf.mc || 0;
+        case 'r1m': return etf.returns?.['1m'] ?? -Infinity;
+        case 'r3m': return etf.returns?.['3m'] ?? -Infinity;
+        case 'r6m': return etf.returns?.['6m'] ?? -Infinity;
+        case 'ytd': return etf.returns?.['ytd'] ?? -Infinity;
+        case 'r1y': return etf.returns?.['1y'] ?? -Infinity;
+        case 'r3y': return etf.returns?.['3y'] ?? -Infinity;
+        case 'r5y': return etf.returns?.['5y'] ?? -Infinity;
+        case 'r10y': return etf.returns?.['10y'] ?? -Infinity;
+        case 'cagr3y': return etf.cagr?.['3y'] ?? -Infinity;
+        case 'cagr5y': return etf.cagr?.['5y'] ?? -Infinity;
+        case 'cagr10y': return etf.cagr?.['10y'] ?? -Infinity;
+        case 'beta': return etf.beta ?? -Infinity;
+        case 'expense_ratio': return etf.expense_ratio ?? -Infinity;
+        default: return 0;
+      }
+    }
+
     function renderETFTable() {
       const tbody = document.getElementById('etfTableBody');
       if (!state.etfs || state.etfs.length === 0) {
@@ -4023,7 +4168,21 @@
       const fmtPct = (v) => v != null && !isNaN(v) ? formatPctValue(v) : '-';
       const fmtPctClass = (v) => v != null && !isNaN(v) ? (v >= 0 ? 'positive' : 'negative') : '';
 
-      tbody.innerHTML = state.etfs.map(etf => {
+      // v4.3.1: Sort ETFs
+      const sortedETFs = [...state.etfs].sort((a, b) => {
+        const aVal = getETFSortValue(a, state.etfSortKey);
+        const bVal = getETFSortValue(b, state.etfSortKey);
+        const dir = state.etfSortDir === 'asc' ? 1 : -1;
+        if (typeof aVal === 'string') {
+          return dir * aVal.localeCompare(bVal);
+        }
+        return dir * (aVal - bVal);
+      });
+
+      // Update sort icons
+      updateETFSortIcons();
+
+      tbody.innerHTML = sortedETFs.map(etf => {
         // Returns (1m, 3m, 6m, ytd, 1y, 3y, 5y, 10y)
         const r1m = etf.returns?.['1m'];
         const r3m = etf.returns?.['3m'];
