@@ -262,6 +262,25 @@
     .toast-enter { animation: slide-in 0.3s ease-out; }
     .toast-exit { animation: slide-out 0.3s ease-out; }
 
+    /* v4.3.2: Peer Detail Tabs */
+    .peer-detail-tab {
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: white;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .peer-detail-tab.active {
+      background: #6366f1;
+      color: white;
+      border-color: #6366f1;
+    }
+    .peer-detail-tab:hover:not(.active) {
+      background: #f1f5f9;
+    }
+
     /* v4: Overlay Chart Period Buttons */
     .overlay-period-btn {
       padding: 4px 12px;
@@ -2102,26 +2121,26 @@
             </div>
 
             <!-- v4.3.2: Peer Detail Comparison -->
+            <!-- v4.3.2: 종합 상세 비교 (카테고리별 탭) -->
             <div id="peerDetailSection" class="mt-4 hidden">
-              <h3 class="text-sm font-bold text-gray-700 mb-3">
-                <i class="fas fa-microscope text-indigo-500 mr-1"></i>상세 비교 (Detail JSON 기반)
-              </h3>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-gray-700">
+                  <i class="fas fa-microscope text-indigo-500 mr-1"></i>종합 상세 비교
+                </h3>
+                <div class="flex gap-1">
+                  <button onclick="setPeerDetailTab('profitability')" data-detail-tab="profitability" class="peer-detail-tab active">수익성</button>
+                  <button onclick="setPeerDetailTab('growth')" data-detail-tab="growth" class="peer-detail-tab">성장성</button>
+                  <button onclick="setPeerDetailTab('valuation')" data-detail-tab="valuation" class="peer-detail-tab">밸류에이션</button>
+                  <button onclick="setPeerDetailTab('cashflow')" data-detail-tab="cashflow" class="peer-detail-tab">현금흐름</button>
+                  <button onclick="setPeerDetailTab('consensus')" data-detail-tab="consensus" class="peer-detail-tab">컨센서스</button>
+                </div>
+              </div>
               <div id="peerDetailLoading" class="text-center py-4 text-gray-500 hidden">
                 <i class="fas fa-spinner fa-spin mr-2"></i>Detail 데이터 로딩 중...
               </div>
               <div style="overflow-x: auto;">
                 <table class="text-sm w-full" id="peerDetailTable">
-                  <thead>
-                    <tr>
-                      <th>티커</th>
-                      <th>ROE</th>
-                      <th>순이익률</th>
-                      <th>영업이익률</th>
-                      <th>매출성장</th>
-                      <th>EPS성장</th>
-                      <th>FCF마진</th>
-                    </tr>
-                  </thead>
+                  <thead id="peerDetailHead"></thead>
                   <tbody id="peerDetailBody"></tbody>
                 </table>
               </div>
@@ -2355,7 +2374,10 @@
       vixData: null,
       // v4.3.1: ETF sorting
       etfSortKey: 'market_cap',
-      etfSortDir: 'desc'
+      etfSortDir: 'desc',
+      // v4.3.2: Peer detail comparison
+      peerDetailTab: 'profitability',
+      peerDetailData: []  // [{ticker, stock, detail}, ...]
     };
 
     let charts = {
@@ -5109,11 +5131,9 @@
 
       const section = document.getElementById('peerDetailSection');
       const loading = document.getElementById('peerDetailLoading');
-      const body = document.getElementById('peerDetailBody');
 
       section.classList.remove('hidden');
       loading.classList.remove('hidden');
-      body.innerHTML = '';
 
       // Compare selected stock + manually added peers
       const tickersToCompare = [state.selectedTicker, ...state.manualPeers];
@@ -5125,51 +5145,212 @@
       const detailPromises = stocksToCompare.map(p => loadDetailData(p.ticker).catch(() => null));
       const details = await Promise.all(detailPromises);
 
+      // Store in state
+      state.peerDetailData = stocksToCompare.map((stock, i) => ({
+        ticker: stock.ticker,
+        stock: stock,
+        detail: details[i]
+      }));
+
       loading.classList.add('hidden');
 
-      if (stocksToCompare.length === 1) {
-        body.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-4">비교할 종목을 추가하세요 (위 검색창에서 추가)</td></tr>';
+      // Render with current tab
+      renderPeerDetailTable();
+    }
+
+    // v4.3.2: Switch peer detail tab
+    function setPeerDetailTab(tab) {
+      state.peerDetailTab = tab;
+      document.querySelectorAll('.peer-detail-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.detailTab === tab);
+      });
+      renderPeerDetailTable();
+    }
+
+    // v4.3.2: Render peer detail table based on current tab
+    function renderPeerDetailTable() {
+      const head = document.getElementById('peerDetailHead');
+      const body = document.getElementById('peerDetailBody');
+      const data = state.peerDetailData;
+
+      if (!data || data.length === 0) {
+        head.innerHTML = '';
+        body.innerHTML = '<tr><td class="text-center text-gray-500 py-4">종목을 선택하세요</td></tr>';
         return;
       }
 
-      // Render detail comparison table
-      body.innerHTML = stocksToCompare.map((p, i) => {
-        const d = details[i];
-        const isSelected = p.ticker === state.selectedTicker;
+      if (data.length === 1) {
+        head.innerHTML = '';
+        body.innerHTML = '<tr><td class="text-center text-gray-500 py-4">비교할 종목을 추가하세요 (위 검색창에서 추가)</td></tr>';
+        return;
+      }
 
-        if (!d) {
+      const tab = state.peerDetailTab;
+      const formatVal = (v, suffix = '%', decimals = 1) => v != null ? `${formatNumber(v, decimals)}${suffix}` : '-';
+      const colorClass = (v) => v == null ? 'text-gray-400' : (v >= 0 ? 'text-green-600' : 'text-red-600');
+      const neutralClass = (v) => v == null ? 'text-gray-400' : '';
+
+      // Define columns per tab
+      const tabConfig = {
+        profitability: {
+          label: '수익성 지표',
+          columns: [
+            { key: 'gross_margin', label: '매출총이익률', suffix: '%' },
+            { key: 'operating_margin', label: '영업이익률', suffix: '%' },
+            { key: 'net_margin', label: '순이익률', suffix: '%' },
+            { key: 'roe', label: 'ROE', suffix: '%' },
+            { key: 'roa', label: 'ROA', suffix: '%' }
+          ],
+          getData: (d) => ({
+            gross_margin: d.profitability?.gross_margin?.[4] ?? d.profitability?.gross_margin?.[3] ?? null,
+            operating_margin: d.profitability?.operating_margin?.[4] ?? d.profitability?.operating_margin?.[3] ?? null,
+            net_margin: d.profitability?.net_margin?.[4] ?? d.profitability?.net_margin?.[3] ?? null,
+            roe: d.profitability?.roe?.[4] ?? d.profitability?.roe?.[3] ?? null,
+            roa: d.profitability?.roa?.[4] ?? d.profitability?.roa?.[3] ?? null
+          })
+        },
+        growth: {
+          label: '성장성 지표',
+          columns: [
+            { key: 'revenue_growth', label: '매출성장', suffix: '%' },
+            { key: 'op_income_growth', label: '영업이익성장', suffix: '%' },
+            { key: 'net_income_growth', label: '순이익성장', suffix: '%' },
+            { key: 'eps_growth', label: 'EPS성장', suffix: '%' },
+            { key: 'rev_7y', label: '매출7Y', suffix: '%', colored: false },
+            { key: 'earn_7y', label: '이익7Y', suffix: '%', colored: false }
+          ],
+          getData: (d) => ({
+            revenue_growth: d.growth?.revenue_growth?.[3] ?? d.growth?.revenue_growth?.[2] ?? null,
+            op_income_growth: d.growth?.op_income_growth?.[3] ?? d.growth?.op_income_growth?.[2] ?? null,
+            net_income_growth: d.growth?.net_income_growth?.[3] ?? d.growth?.net_income_growth?.[2] ?? null,
+            eps_growth: d.growth?.eps_growth?.[3] ?? d.growth?.eps_growth?.[2] ?? null,
+            rev_7y: d.growth_consensus?.revenue_7y ?? null,
+            earn_7y: d.growth_consensus?.earnings_7y ?? null
+          })
+        },
+        valuation: {
+          label: '밸류에이션 지표',
+          columns: [
+            { key: 'per', label: 'P/E', suffix: 'x', decimals: 1, colored: false },
+            { key: 'pbr', label: 'P/B', suffix: 'x', decimals: 2, colored: false },
+            { key: 'psr', label: 'P/S', suffix: 'x', decimals: 2, colored: false },
+            { key: 'per_current', label: 'P/E현재', suffix: 'x', decimals: 1, colored: false },
+            { key: 'per_8y_avg', label: 'P/E8Y평균', suffix: 'x', decimals: 1, colored: false },
+            { key: 'per_8y_min', label: 'P/E8Y최저', suffix: 'x', decimals: 1, colored: false },
+            { key: 'per_8y_max', label: 'P/E8Y최고', suffix: 'x', decimals: 1, colored: false }
+          ],
+          getData: (d, stock) => ({
+            per: stock.pe,
+            pbr: stock.pb,
+            psr: d.valuation?.psr?.[4] ?? d.valuation?.psr?.[3] ?? null,
+            per_current: d.per_bands?.current ?? null,
+            per_8y_avg: d.per_bands?.avg_8y ?? null,
+            per_8y_min: d.per_bands?.min_8y ?? null,
+            per_8y_max: d.per_bands?.max_8y ?? null
+          })
+        },
+        cashflow: {
+          label: '현금흐름 지표',
+          columns: [
+            { key: 'cfo', label: '영업CF', suffix: '', scale: true },
+            { key: 'cfi', label: '투자CF', suffix: '', scale: true },
+            { key: 'cff', label: '재무CF', suffix: '', scale: true },
+            { key: 'capex', label: 'CAPEX', suffix: '', scale: true },
+            { key: 'fcf', label: 'FCF', suffix: '', scale: true },
+            { key: 'fcf_margin', label: 'FCF마진', suffix: '%' }
+          ],
+          getData: (d) => {
+            const cfo = d.cash_flow?.cfo?.[4] ?? d.cash_flow?.cfo?.[3] ?? null;
+            const cfi = d.cash_flow?.cfi?.[4] ?? d.cash_flow?.cfi?.[3] ?? null;
+            const cff = d.cash_flow?.cff?.[4] ?? d.cash_flow?.cff?.[3] ?? null;
+            const capex = d.cash_flow?.capex?.[4] ?? d.cash_flow?.capex?.[3] ?? null;
+            const fcf = d.cash_flow?.fcf?.[4] ?? d.cash_flow?.fcf?.[3] ?? null;
+            const revenue = d.income_statement?.revenue?.[4] ?? d.income_statement?.revenue?.[3] ?? 0;
+            const fcfMargin = (fcf != null && revenue > 0) ? (fcf / revenue) * 100 : null;
+            return { cfo, cfi, cff, capex, fcf, fcf_margin: fcfMargin };
+          }
+        },
+        consensus: {
+          label: '컨센서스 지표',
+          columns: [
+            { key: 'eps_fy1', label: 'EPS FY+1', suffix: '', decimals: 2, colored: false },
+            { key: 'eps_fy2', label: 'EPS FY+2', suffix: '', decimals: 2, colored: false },
+            { key: 'eps_fy3', label: 'EPS FY+3', suffix: '', decimals: 2, colored: false },
+            { key: 'rev_3y', label: '매출3Y', suffix: '%', colored: false },
+            { key: 'rev_7y', label: '매출7Y', suffix: '%', colored: false },
+            { key: 'earn_3y', label: '이익3Y', suffix: '%', colored: false },
+            { key: 'earn_7y', label: '이익7Y', suffix: '%', colored: false }
+          ],
+          getData: (d) => ({
+            eps_fy1: d.eps_consensus?.fy_plus_1 ?? null,
+            eps_fy2: d.eps_consensus?.fy_plus_2 ?? null,
+            eps_fy3: d.eps_consensus?.fy_plus_3 ?? null,
+            rev_3y: d.growth_consensus?.revenue_3y ?? null,
+            rev_7y: d.growth_consensus?.revenue_7y ?? null,
+            earn_3y: d.growth_consensus?.earnings_3y ?? null,
+            earn_7y: d.growth_consensus?.earnings_7y ?? null
+          })
+        }
+      };
+
+      const config = tabConfig[tab];
+      if (!config) return;
+
+      // Get scale for current data (for cash flow display)
+      const firstDetail = data.find(d => d.detail)?.detail;
+      const scale = firstDetail?.scale || 'M';
+      const scaleLabel = scale === 'B' ? '십억' : scale === 'M' ? '백만' : '';
+
+      // Render thead
+      head.innerHTML = `
+        <tr class="bg-gray-50 text-xs text-gray-600">
+          <th class="py-2 px-2 text-left font-medium">티커</th>
+          <th class="py-2 px-1 text-left font-medium">종목명</th>
+          ${config.columns.map(col => `
+            <th class="py-2 px-2 text-right font-medium">${col.label}${col.scale ? `<br><span class="text-gray-400">(${scaleLabel})</span>` : ''}</th>
+          `).join('')}
+        </tr>
+      `;
+
+      // Render tbody
+      body.innerHTML = data.map(({ ticker, stock, detail }) => {
+        const isSelected = ticker === state.selectedTicker;
+        const rowClass = isSelected ? 'bg-teal-50 font-semibold' : '';
+
+        if (!detail) {
           return `
-            <tr class="${isSelected ? 'bg-teal-100 font-bold' : ''}">
-              <td class="mono">${p.ticker}</td>
-              <td colspan="6" class="text-gray-400 text-center">데이터 없음</td>
+            <tr class="${rowClass}">
+              <td class="mono py-1 px-2">${ticker}</td>
+              <td class="py-1 px-1 truncate max-w-[120px]">${stock.name}</td>
+              <td colspan="${config.columns.length}" class="text-gray-400 text-center">데이터 없음</td>
             </tr>
           `;
         }
 
-        // Extract metrics from detail data
-        const roe = d.profitability?.roe?.[4] || d.profitability?.roe?.[3] || null;
-        const netMargin = d.profitability?.net_margin?.[4] || d.profitability?.net_margin?.[3] || null;
-        const opMargin = d.profitability?.op_margin?.[4] || d.profitability?.op_margin?.[3] || null;
-        const revGrowth = d.growth?.revenue_growth?.[3] || d.growth?.revenue_growth?.[2] || null;
-        const epsGrowth = d.growth?.eps_growth?.[3] || d.growth?.eps_growth?.[2] || null;
-
-        // FCF margin = FCF / Revenue (latest year)
-        const fcf = d.cash_flow?.fcf?.[4] || d.cash_flow?.fcf?.[3] || 0;
-        const revenue = d.income_statement?.revenue?.[4] || d.income_statement?.revenue?.[3] || 0;
-        const fcfMargin = revenue > 0 ? (fcf / revenue) * 100 : null;
-
-        const formatVal = (v, suffix = '%') => v != null ? `${formatNumber(v, 1)}${suffix}` : '-';
-        const colorClass = (v) => v == null ? 'text-gray-400' : (v >= 0 ? 'text-green-600' : 'text-red-600');
+        const values = config.getData(detail, stock);
 
         return `
-          <tr class="${isSelected ? 'bg-teal-100 font-bold' : ''}">
-            <td class="mono">${p.ticker}</td>
-            <td class="mono text-right ${colorClass(roe)}">${formatVal(roe)}</td>
-            <td class="mono text-right ${colorClass(netMargin)}">${formatVal(netMargin)}</td>
-            <td class="mono text-right ${colorClass(opMargin)}">${formatVal(opMargin)}</td>
-            <td class="mono text-right ${colorClass(revGrowth)}">${formatVal(revGrowth)}</td>
-            <td class="mono text-right ${colorClass(epsGrowth)}">${formatVal(epsGrowth)}</td>
-            <td class="mono text-right ${colorClass(fcfMargin)}">${formatVal(fcfMargin)}</td>
+          <tr class="${rowClass} hover:bg-gray-50">
+            <td class="mono py-1 px-2 text-indigo-600">${ticker}</td>
+            <td class="py-1 px-1 truncate max-w-[120px]" title="${stock.name}">${stock.name}</td>
+            ${config.columns.map(col => {
+              const v = values[col.key];
+              const suffix = col.suffix || '';
+              const decimals = col.decimals ?? 1;
+              const useColor = col.colored !== false && suffix === '%';
+              const cls = useColor ? colorClass(v) : neutralClass(v);
+
+              let displayValue;
+              if (v == null) {
+                displayValue = '-';
+              } else if (col.scale) {
+                displayValue = formatNumber(v, 0);
+              } else {
+                displayValue = formatVal(v, suffix, decimals);
+              }
+
+              return `<td class="mono py-1 px-2 text-right ${cls}">${displayValue}</td>`;
+            }).join('')}
           </tr>
         `;
       }).join('');
