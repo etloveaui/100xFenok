@@ -236,6 +236,22 @@ valuation-lab/
 
 ---
 
+## expansion/ 도구 버전
+
+### Global Scouter Explorer
+
+| 버전 | 날짜 | 주요 변경 사항 |
+|------|------|---------------|
+| **v4.4** | 2026-01-26 | Peer UX Redesign: 검색창 초기 추천, 선택 종목 카드, 4색 Percentile, 비교 평균 행, Scatter/Radar Chart, Top 15 Peers 테이블 정렬 수정 |
+| v4.3.2 | 2026-01-25 | Forward P/E 조건부 표시, Peer r12 컬럼, 5-Category Detail Comparison |
+| v4.3.1 | 2026-01-25 | Dynamic labels, Direct typing search, ETF sorting |
+| v4.3 | 2026-01-24 | DCF/DDM/Peer tabs, UX Overhaul, Parameter Guide |
+| v3.2 | 2026-01-23 | Premium MVP with TomSelect, P/E Band, Estimates visualization |
+
+> Details: `docs/CHANGELOG.md`
+
+---
+
 ## 관련 문서
 
 | 문서 | 위치 |
