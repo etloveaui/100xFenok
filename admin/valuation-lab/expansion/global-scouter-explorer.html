@@ -2087,6 +2087,7 @@
                       <th>P/E</th>
                       <th>P/B</th>
                       <th>배당률</th>
+                      <th>12M수익률</th>
                       <th>시총</th>
                     </tr>
                   </thead>
@@ -3808,7 +3809,12 @@
 
       // Update summary values
       document.getElementById('currentPE').textContent = formatNumber(currentPE, 2);
-      document.getElementById('forwardPE').textContent = forwardPE > 0 ? formatNumber(forwardPE, 2) : '-';
+      // v4.3.2: Forward value only for P/E metric (EPS-based)
+      if (state.valuationMetric === 'per') {
+        document.getElementById('forwardPE').textContent = forwardPE > 0 ? formatNumber(forwardPE, 2) : '-';
+      } else {
+        document.getElementById('forwardPE').textContent = '-';
+      }
       document.getElementById('avgPE').textContent = band.avg != null ? formatNumber(band.avg, 2) : '-';
       document.getElementById('minPE').textContent = band.min != null ? formatNumber(band.min, 2) : '-';
       document.getElementById('maxPE').textContent = band.max != null ? formatNumber(band.max, 2) : '-';
@@ -5042,6 +5048,8 @@
       const topPeers = [...peers].sort((a, b) => b.mc - a.mc).slice(0, 15);
       document.getElementById('peerTableBody').innerHTML = topPeers.map(p => {
         const isSelected = p.ticker === ticker;
+        const r12Value = p.r12 || 0;
+        const r12Class = r12Value >= 0 ? 'text-green-600' : 'text-red-600';
         return `
           <tr class="${isSelected ? 'bg-teal-100 font-bold' : ''}">
             <td class="mono">${p.ticker}</td>
@@ -5049,6 +5057,7 @@
             <td class="mono text-right">${formatNumber(p.pe, 1)}</td>
             <td class="mono text-right">${formatNumber(p.pb, 2)}</td>
             <td class="mono text-right">${formatNumber(p.dy, 2)}%</td>
+            <td class="mono text-right ${r12Class}">${formatNumber(r12Value, 1)}%</td>
             <td class="mono text-right">${formatMarketCap(p.mc)}</td>
           </tr>
         `;
