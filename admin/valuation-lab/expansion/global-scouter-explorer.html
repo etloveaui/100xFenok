@@ -2120,6 +2120,45 @@
               </div>
             </div>
 
+            <!-- v4.4: Selected Stock Detail Card -->
+            <div id="selectedStockCard" class="mt-4 hidden">
+              <div class="bg-gradient-to-r from-teal-50 to-indigo-50 rounded-lg p-4 border border-teal-200">
+                <div class="flex items-start justify-between mb-3">
+                  <div>
+                    <span id="selectedStockTicker" class="text-lg font-bold text-teal-700"></span>
+                    <span id="selectedStockName" class="text-gray-600 ml-2"></span>
+                    <span id="selectedStockBadge" class="ml-2 px-2 py-0.5 text-xs rounded-full"></span>
+                  </div>
+                  <div class="text-right">
+                    <div id="selectedStockPrice" class="text-lg font-semibold"></div>
+                    <div id="selectedStockChange" class="text-sm"></div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div class="bg-white rounded p-2 text-center">
+                    <div class="text-xs text-gray-500">P/E vs 섹터</div>
+                    <div id="selectedStockPE" class="font-semibold"></div>
+                    <div id="selectedStockPEDiff" class="text-xs"></div>
+                  </div>
+                  <div class="bg-white rounded p-2 text-center">
+                    <div class="text-xs text-gray-500">ROE vs 섹터</div>
+                    <div id="selectedStockROE" class="font-semibold"></div>
+                    <div id="selectedStockROEDiff" class="text-xs"></div>
+                  </div>
+                  <div class="bg-white rounded p-2 text-center">
+                    <div class="text-xs text-gray-500">매출성장 vs 섹터</div>
+                    <div id="selectedStockGrowth" class="font-semibold"></div>
+                    <div id="selectedStockGrowthDiff" class="text-xs"></div>
+                  </div>
+                  <div class="bg-white rounded p-2 text-center">
+                    <div class="text-xs text-gray-500">FCF마진 vs 섹터</div>
+                    <div id="selectedStockFCF" class="font-semibold"></div>
+                    <div id="selectedStockFCFDiff" class="text-xs"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- v4.3.2: Peer Detail Comparison -->
             <!-- v4.3.2: 종합 상세 비교 (카테고리별 탭) -->
             <div id="peerDetailSection" class="mt-4 hidden">
@@ -2143,6 +2182,31 @@
                   <thead id="peerDetailHead"></thead>
                   <tbody id="peerDetailBody"></tbody>
                 </table>
+              </div>
+
+              <!-- v4.4: Scatter Plot (P/E vs ROE) and Radar Chart -->
+              <div id="peerChartsContainer" class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4 hidden">
+                <!-- Scatter Plot -->
+                <div class="bg-gray-50 rounded-lg p-3 border">
+                  <h4 class="text-xs font-bold text-gray-600 mb-2">
+                    <i class="fas fa-chart-scatter text-indigo-500 mr-1"></i>P/E vs ROE (밸류 vs 수익성)
+                  </h4>
+                  <div class="chart-container" style="height: 220px;">
+                    <canvas id="peerScatterChart"></canvas>
+                  </div>
+                  <p class="text-xs text-gray-400 mt-1">⭐ = 선택 종목 | 좌상단 = 저평가+고수익</p>
+                </div>
+
+                <!-- Radar Chart -->
+                <div class="bg-gray-50 rounded-lg p-3 border">
+                  <h4 class="text-xs font-bold text-gray-600 mb-2">
+                    <i class="fas fa-chart-radar text-indigo-500 mr-1"></i>종합 역량 비교 (5축)
+                  </h4>
+                  <div class="chart-container" style="height: 220px;">
+                    <canvas id="peerRadarChart"></canvas>
+                  </div>
+                  <p class="text-xs text-gray-400 mt-1">바깥쪽 = 우수 | Valuation은 낮을수록 좋음 (역산)</p>
+                </div>
               </div>
             </div>
 
@@ -2387,7 +2451,9 @@
       dividend: null,
       macro: null,
       peer: null,
-      overlay: null  // v4: Overlay comparison chart
+      overlay: null,  // v4: Overlay comparison chart
+      peerScatter: null,  // v4.4: Scatter plot
+      peerRadar: null     // v4.4: Radar chart
     };
 
     // ================== SECTOR MAPPING (Korean → Damodaran Industry) ==================
@@ -3152,10 +3218,69 @@
       const results = document.getElementById('peerSearchResults');
       if (!input || !results) return;
 
+      // v4.4: Show initial recommendations (same sector stocks)
+      function showInitialRecommendations() {
+        if (!state.selectedTicker) {
+          results.classList.add('hidden');
+          return;
+        }
+
+        const selectedStock = state.stocksList.find(s => s.ticker === state.selectedTicker);
+        if (!selectedStock) {
+          results.classList.add('hidden');
+          return;
+        }
+
+        // Get same sector peers, excluding selected and already added
+        const sameSectorPeers = state.stocksList
+          .filter(s =>
+            s.sector === selectedStock.sector &&
+            s.ticker !== state.selectedTicker &&
+            !state.manualPeers.includes(s.ticker)
+          )
+          .sort((a, b) => (b.mc || 0) - (a.mc || 0)) // Sort by market cap
+          .slice(0, 8);
+
+        if (sameSectorPeers.length === 0) {
+          results.innerHTML = '<div class="p-3 text-gray-500 text-sm">동일 섹터 종목이 없습니다</div>';
+          results.classList.remove('hidden');
+          return;
+        }
+
+        results.innerHTML = `
+          <div class="px-3 py-2 bg-gray-50 text-xs text-gray-500 border-b">
+            <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>${selectedStock.sector} 섹터 추천 (시총순)
+          </div>
+          ${sameSectorPeers.map(s => `
+            <div class="peer-search-item p-2 hover:bg-teal-50 cursor-pointer border-b last:border-b-0"
+                 data-ticker="${s.ticker}">
+              <span class="font-medium text-teal-700">${s.ticker}</span>
+              <span class="text-gray-500 text-sm ml-2">${s.name}</span>
+              <span class="text-xs text-gray-400 ml-2">${s.mc ? formatMarketCap(s.mc) : ''}</span>
+            </div>
+          `).join('')}
+        `;
+        results.classList.remove('hidden');
+        attachResultClickHandlers();
+      }
+
+      // Common click handler attachment
+      function attachResultClickHandlers() {
+        results.querySelectorAll('.peer-search-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const ticker = item.dataset.ticker;
+            addManualPeer(ticker);
+            input.value = '';
+            results.classList.add('hidden');
+          });
+        });
+      }
+
       const debouncedSearch = debounce(() => {
         const query = input.value.toLowerCase().trim();
         if (query.length < 1) {
-          results.classList.add('hidden');
+          // v4.4: Show recommendations instead of hiding
+          showInitialRecommendations();
           return;
         }
 
@@ -3180,19 +3305,17 @@
           </div>
         `).join('');
         results.classList.remove('hidden');
-
-        // Click handler for results
-        results.querySelectorAll('.peer-search-item').forEach(item => {
-          item.addEventListener('click', () => {
-            const ticker = item.dataset.ticker;
-            addManualPeer(ticker);
-            input.value = '';
-            results.classList.add('hidden');
-          });
-        });
+        attachResultClickHandlers();
       }, 200);
 
       input.addEventListener('input', debouncedSearch);
+
+      // v4.4: Show recommendations on focus
+      input.addEventListener('focus', () => {
+        if (input.value.trim().length < 1) {
+          showInitialRecommendations();
+        }
+      });
 
       // Hide results on click outside
       document.addEventListener('click', (e) => {
@@ -4998,6 +5121,34 @@
       return ascending ? percentile : (100 - percentile);
     }
 
+    // v4.4: 4-color percentile system for peer comparison
+    // Returns CSS classes based on percentile ranking
+    // higherIsBetter: true for ROE, Growth, FCF / false for P/E (lower is better)
+    function getPercentileColor(value, allValues, higherIsBetter = true) {
+      if (value == null) return { class: 'text-gray-400', rank: null };
+
+      const validValues = allValues.filter(v => v != null);
+      if (validValues.length < 2) return { class: '', rank: null };
+
+      const sorted = [...validValues].sort((a, b) => a - b);
+      const rank = sorted.indexOf(value);
+      const percentile = ((rank + 1) / sorted.length) * 100;
+
+      // Adjust percentile based on metric direction
+      const adjustedPercentile = higherIsBetter ? percentile : (100 - percentile);
+
+      // 4-tier color system
+      if (adjustedPercentile >= 75) {
+        return { class: 'text-green-600 font-semibold', rank: 'top25' };
+      } else if (adjustedPercentile >= 50) {
+        return { class: 'text-lime-600', rank: 'mid-high' };
+      } else if (adjustedPercentile >= 25) {
+        return { class: 'text-orange-500', rank: 'mid-low' };
+      } else {
+        return { class: 'text-red-600', rank: 'bottom25' };
+      }
+    }
+
     async function renderPeerTab() {
       // v4: Use global selected ticker or peerSelector
       const ticker = state.selectedTicker || document.getElementById('peerSelector')?.value;
@@ -5156,6 +5307,13 @@
 
       // Render with current tab
       renderPeerDetailTable();
+
+      // v4.4: Update selected stock card
+      updateSelectedStockCard();
+
+      // v4.4: Render advanced charts
+      renderPeerScatterChart();
+      renderPeerRadarChart();
     }
 
     // v4.3.2: Switch peer detail tab
@@ -5187,19 +5345,18 @@
 
       const tab = state.peerDetailTab;
       const formatVal = (v, suffix = '%', decimals = 1) => v != null ? `${formatNumber(v, decimals)}${suffix}` : '-';
-      const colorClass = (v) => v == null ? 'text-gray-400' : (v >= 0 ? 'text-green-600' : 'text-red-600');
       const neutralClass = (v) => v == null ? 'text-gray-400' : '';
 
-      // Define columns per tab
+      // Define columns per tab (v4.4: added higherIsBetter for percentile coloring)
       const tabConfig = {
         profitability: {
           label: '수익성 지표',
           columns: [
-            { key: 'gross_margin', label: '매출총이익률', suffix: '%' },
-            { key: 'operating_margin', label: '영업이익률', suffix: '%' },
-            { key: 'net_margin', label: '순이익률', suffix: '%' },
-            { key: 'roe', label: 'ROE', suffix: '%' },
-            { key: 'roa', label: 'ROA', suffix: '%' }
+            { key: 'gross_margin', label: '매출총이익률', suffix: '%', higherIsBetter: true },
+            { key: 'operating_margin', label: '영업이익률', suffix: '%', higherIsBetter: true },
+            { key: 'net_margin', label: '순이익률', suffix: '%', higherIsBetter: true },
+            { key: 'roe', label: 'ROE', suffix: '%', higherIsBetter: true },
+            { key: 'roa', label: 'ROA', suffix: '%', higherIsBetter: true }
           ],
           getData: (d) => ({
             gross_margin: d.profitability?.gross_margin?.[4] ?? d.profitability?.gross_margin?.[3] ?? null,
@@ -5212,12 +5369,12 @@
         growth: {
           label: '성장성 지표',
           columns: [
-            { key: 'revenue_growth', label: '매출성장', suffix: '%' },
-            { key: 'op_income_growth', label: '영업이익성장', suffix: '%' },
-            { key: 'net_income_growth', label: '순이익성장', suffix: '%' },
-            { key: 'eps_growth', label: 'EPS성장', suffix: '%' },
-            { key: 'rev_7y', label: '매출7Y', suffix: '%', colored: false },
-            { key: 'earn_7y', label: '이익7Y', suffix: '%', colored: false }
+            { key: 'revenue_growth', label: '매출성장', suffix: '%', higherIsBetter: true },
+            { key: 'op_income_growth', label: '영업이익성장', suffix: '%', higherIsBetter: true },
+            { key: 'net_income_growth', label: '순이익성장', suffix: '%', higherIsBetter: true },
+            { key: 'eps_growth', label: 'EPS성장', suffix: '%', higherIsBetter: true },
+            { key: 'rev_7y', label: '매출7Y', suffix: '%', higherIsBetter: true },
+            { key: 'earn_7y', label: '이익7Y', suffix: '%', higherIsBetter: true }
           ],
           getData: (d) => ({
             revenue_growth: d.growth?.revenue_growth?.[3] ?? d.growth?.revenue_growth?.[2] ?? null,
@@ -5231,13 +5388,13 @@
         valuation: {
           label: '밸류에이션 지표',
           columns: [
-            { key: 'per', label: 'P/E', suffix: 'x', decimals: 1, colored: false },
-            { key: 'pbr', label: 'P/B', suffix: 'x', decimals: 2, colored: false },
-            { key: 'psr', label: 'P/S', suffix: 'x', decimals: 2, colored: false },
-            { key: 'per_current', label: 'P/E현재', suffix: 'x', decimals: 1, colored: false },
-            { key: 'per_8y_avg', label: 'P/E8Y평균', suffix: 'x', decimals: 1, colored: false },
-            { key: 'per_8y_min', label: 'P/E8Y최저', suffix: 'x', decimals: 1, colored: false },
-            { key: 'per_8y_max', label: 'P/E8Y최고', suffix: 'x', decimals: 1, colored: false }
+            { key: 'per', label: 'P/E', suffix: 'x', decimals: 1, higherIsBetter: false },
+            { key: 'pbr', label: 'P/B', suffix: 'x', decimals: 2, higherIsBetter: false },
+            { key: 'psr', label: 'P/S', suffix: 'x', decimals: 2, higherIsBetter: false },
+            { key: 'per_current', label: 'P/E현재', suffix: 'x', decimals: 1, higherIsBetter: false },
+            { key: 'per_8y_avg', label: 'P/E8Y평균', suffix: 'x', decimals: 1, noColor: true },
+            { key: 'per_8y_min', label: 'P/E8Y최저', suffix: 'x', decimals: 1, noColor: true },
+            { key: 'per_8y_max', label: 'P/E8Y최고', suffix: 'x', decimals: 1, noColor: true }
           ],
           getData: (d, stock) => ({
             per: stock.pe,
@@ -5252,12 +5409,12 @@
         cashflow: {
           label: '현금흐름 지표',
           columns: [
-            { key: 'cfo', label: '영업CF', suffix: '', scale: true },
-            { key: 'cfi', label: '투자CF', suffix: '', scale: true },
-            { key: 'cff', label: '재무CF', suffix: '', scale: true },
-            { key: 'capex', label: 'CAPEX', suffix: '', scale: true },
-            { key: 'fcf', label: 'FCF', suffix: '', scale: true },
-            { key: 'fcf_margin', label: 'FCF마진', suffix: '%' }
+            { key: 'cfo', label: '영업CF', suffix: '', scale: true, higherIsBetter: true },
+            { key: 'cfi', label: '투자CF', suffix: '', scale: true, noColor: true },
+            { key: 'cff', label: '재무CF', suffix: '', scale: true, noColor: true },
+            { key: 'capex', label: 'CAPEX', suffix: '', scale: true, noColor: true },
+            { key: 'fcf', label: 'FCF', suffix: '', scale: true, higherIsBetter: true },
+            { key: 'fcf_margin', label: 'FCF마진', suffix: '%', higherIsBetter: true }
           ],
           getData: (d) => {
             const cfo = d.cash_flow?.cfo?.[4] ?? d.cash_flow?.cfo?.[3] ?? null;
@@ -5273,13 +5430,13 @@
         consensus: {
           label: '컨센서스 지표',
           columns: [
-            { key: 'eps_fy1', label: 'EPS FY+1', suffix: '', decimals: 2, colored: false },
-            { key: 'eps_fy2', label: 'EPS FY+2', suffix: '', decimals: 2, colored: false },
-            { key: 'eps_fy3', label: 'EPS FY+3', suffix: '', decimals: 2, colored: false },
-            { key: 'rev_3y', label: '매출3Y', suffix: '%', colored: false },
-            { key: 'rev_7y', label: '매출7Y', suffix: '%', colored: false },
-            { key: 'earn_3y', label: '이익3Y', suffix: '%', colored: false },
-            { key: 'earn_7y', label: '이익7Y', suffix: '%', colored: false }
+            { key: 'eps_fy1', label: 'EPS FY+1', suffix: '', decimals: 2, higherIsBetter: true },
+            { key: 'eps_fy2', label: 'EPS FY+2', suffix: '', decimals: 2, higherIsBetter: true },
+            { key: 'eps_fy3', label: 'EPS FY+3', suffix: '', decimals: 2, higherIsBetter: true },
+            { key: 'rev_3y', label: '매출3Y', suffix: '%', higherIsBetter: true },
+            { key: 'rev_7y', label: '매출7Y', suffix: '%', higherIsBetter: true },
+            { key: 'earn_3y', label: '이익3Y', suffix: '%', higherIsBetter: true },
+            { key: 'earn_7y', label: '이익7Y', suffix: '%', higherIsBetter: true }
           ],
           getData: (d) => ({
             eps_fy1: d.eps_consensus?.fy_plus_1 ?? null,
@@ -5337,8 +5494,21 @@
               const v = values[col.key];
               const suffix = col.suffix || '';
               const decimals = col.decimals ?? 1;
-              const useColor = col.colored !== false && suffix === '%';
-              const cls = useColor ? colorClass(v) : neutralClass(v);
+
+              // v4.4: 4-color percentile system
+              let cls = '';
+              if (col.noColor) {
+                cls = neutralClass(v);
+              } else if (col.higherIsBetter !== undefined) {
+                // Collect all values for this column from data
+                const allValues = data
+                  .filter(d => d.detail)
+                  .map(d => config.getData(d.detail, d.stock)[col.key])
+                  .filter(val => val != null);
+                cls = getPercentileColor(v, allValues, col.higherIsBetter).class;
+              } else {
+                cls = neutralClass(v);
+              }
 
               let displayValue;
               if (v == null) {
@@ -5354,6 +5524,334 @@
           </tr>
         `;
       }).join('');
+
+      // v4.4: Add sector average row at bottom
+      const validData = data.filter(d => d.detail);
+      if (validData.length >= 2) {
+        const avgValues = {};
+        config.columns.forEach(col => {
+          const values = validData
+            .map(d => config.getData(d.detail, d.stock)[col.key])
+            .filter(v => v != null);
+          avgValues[col.key] = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
+        });
+
+        body.innerHTML += `
+          <tr class="bg-indigo-50 border-t-2 border-indigo-200 text-xs">
+            <td class="py-1 px-2 font-medium text-indigo-600" colspan="2">📊 비교 평균</td>
+            ${config.columns.map(col => {
+              const avg = avgValues[col.key];
+              const suffix = col.suffix || '';
+              const decimals = col.decimals ?? 1;
+              let displayValue = avg != null ? formatVal(avg, suffix, decimals) : '-';
+              if (col.scale && avg != null) displayValue = formatNumber(avg, 0);
+              return `<td class="mono py-1 px-2 text-right text-indigo-600">${displayValue}</td>`;
+            }).join('')}
+          </tr>
+        `;
+      }
+    }
+
+    // v4.4: Update selected stock detail card with sector comparison
+    function updateSelectedStockCard() {
+      const card = document.getElementById('selectedStockCard');
+      if (!state.selectedTicker || !state.peerDetailData || state.peerDetailData.length === 0) {
+        card.classList.add('hidden');
+        return;
+      }
+
+      const selectedData = state.peerDetailData.find(d => d.ticker === state.selectedTicker);
+      if (!selectedData || !selectedData.stock) {
+        card.classList.add('hidden');
+        return;
+      }
+
+      const stock = selectedData.stock;
+      const detail = selectedData.detail;
+
+      // Calculate sector averages from peer data
+      const sectorPeers = state.stocksList.filter(s => s.sector === stock.sector && s.ticker !== stock.ticker);
+      const sectorAvg = {
+        pe: sectorPeers.reduce((sum, s) => sum + (s.pe || 0), 0) / sectorPeers.filter(s => s.pe).length || 0,
+        roe: 0,
+        growth: 0,
+        fcf: 0
+      };
+
+      // Get ROE, Growth, FCF from detail data if available
+      let stockROE = null, stockGrowth = null, stockFCF = null;
+      if (detail) {
+        stockROE = detail.profitability?.roe?.[4] ?? detail.profitability?.roe?.[3] ?? null;
+        stockGrowth = detail.growth?.revenue_growth?.[3] ?? detail.growth?.revenue_growth?.[2] ?? null;
+        const fcf = detail.cash_flow?.fcf?.[4] ?? detail.cash_flow?.fcf?.[3] ?? null;
+        const revenue = detail.income_statement?.revenue?.[4] ?? detail.income_statement?.revenue?.[3] ?? 0;
+        stockFCF = (fcf != null && revenue > 0) ? (fcf / revenue) * 100 : null;
+      }
+
+      // Calculate sector averages for ROE, Growth, FCF from peerDetailData
+      const peersWithDetail = state.peerDetailData.filter(d => d.detail && d.ticker !== stock.ticker);
+      if (peersWithDetail.length > 0) {
+        const roeVals = peersWithDetail.map(d => d.detail.profitability?.roe?.[4] ?? d.detail.profitability?.roe?.[3]).filter(v => v != null);
+        const growthVals = peersWithDetail.map(d => d.detail.growth?.revenue_growth?.[3] ?? d.detail.growth?.revenue_growth?.[2]).filter(v => v != null);
+        const fcfVals = peersWithDetail.map(d => {
+          const fcf = d.detail.cash_flow?.fcf?.[4] ?? d.detail.cash_flow?.fcf?.[3] ?? null;
+          const rev = d.detail.income_statement?.revenue?.[4] ?? d.detail.income_statement?.revenue?.[3] ?? 0;
+          return (fcf != null && rev > 0) ? (fcf / rev) * 100 : null;
+        }).filter(v => v != null);
+
+        if (roeVals.length > 0) sectorAvg.roe = roeVals.reduce((a, b) => a + b, 0) / roeVals.length;
+        if (growthVals.length > 0) sectorAvg.growth = growthVals.reduce((a, b) => a + b, 0) / growthVals.length;
+        if (fcfVals.length > 0) sectorAvg.fcf = fcfVals.reduce((a, b) => a + b, 0) / fcfVals.length;
+      }
+
+      // Format diff with color
+      const formatDiff = (val, avg, lowerIsBetter = false) => {
+        if (val == null || avg == null || avg === 0) return { text: '-', class: 'text-gray-400' };
+        const diff = val - avg;
+        const isGood = lowerIsBetter ? diff < 0 : diff > 0;
+        const sign = diff >= 0 ? '+' : '';
+        return {
+          text: `${sign}${diff.toFixed(1)}pp`,
+          class: isGood ? 'text-green-600' : 'text-red-500'
+        };
+      };
+
+      // Update card elements
+      card.classList.remove('hidden');
+      document.getElementById('selectedStockTicker').textContent = stock.ticker;
+      document.getElementById('selectedStockName').textContent = stock.name;
+
+      // Badge
+      const badge = document.getElementById('selectedStockBadge');
+      const growthRate = stockGrowth || 0;
+      if (growthRate >= 20) {
+        badge.textContent = 'High Growth';
+        badge.className = 'ml-2 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700';
+      } else if (growthRate >= 10) {
+        badge.textContent = 'Growth';
+        badge.className = 'ml-2 px-2 py-0.5 text-xs rounded-full bg-lime-100 text-lime-700';
+      } else if (growthRate >= 0) {
+        badge.textContent = 'Stable';
+        badge.className = 'ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700';
+      } else {
+        badge.textContent = 'Declining';
+        badge.className = 'ml-2 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700';
+      }
+
+      // Price and change
+      document.getElementById('selectedStockPrice').textContent = stock.price ? `$${formatNumber(stock.price, 2)}` : '-';
+      const ret12m = stock.return_12m;
+      const changeEl = document.getElementById('selectedStockChange');
+      if (ret12m != null) {
+        const sign = ret12m >= 0 ? '+' : '';
+        changeEl.textContent = `${sign}${formatNumber(ret12m, 1)}% (12M)`;
+        changeEl.className = `text-sm ${ret12m >= 0 ? 'text-green-600' : 'text-red-600'}`;
+      } else {
+        changeEl.textContent = '-';
+        changeEl.className = 'text-sm text-gray-400';
+      }
+
+      // P/E
+      document.getElementById('selectedStockPE').textContent = stock.pe ? `${formatNumber(stock.pe, 1)}x` : '-';
+      const peDiff = formatDiff(stock.pe, sectorAvg.pe, true);
+      const peDiffEl = document.getElementById('selectedStockPEDiff');
+      peDiffEl.textContent = peDiff.text;
+      peDiffEl.className = `text-xs ${peDiff.class}`;
+
+      // ROE
+      document.getElementById('selectedStockROE').textContent = stockROE != null ? `${formatNumber(stockROE, 1)}%` : '-';
+      const roeDiff = formatDiff(stockROE, sectorAvg.roe);
+      const roeDiffEl = document.getElementById('selectedStockROEDiff');
+      roeDiffEl.textContent = roeDiff.text;
+      roeDiffEl.className = `text-xs ${roeDiff.class}`;
+
+      // Growth
+      document.getElementById('selectedStockGrowth').textContent = stockGrowth != null ? `${formatNumber(stockGrowth, 1)}%` : '-';
+      const growthDiff = formatDiff(stockGrowth, sectorAvg.growth);
+      const growthDiffEl = document.getElementById('selectedStockGrowthDiff');
+      growthDiffEl.textContent = growthDiff.text;
+      growthDiffEl.className = `text-xs ${growthDiff.class}`;
+
+      // FCF
+      document.getElementById('selectedStockFCF').textContent = stockFCF != null ? `${formatNumber(stockFCF, 1)}%` : '-';
+      const fcfDiff = formatDiff(stockFCF, sectorAvg.fcf);
+      const fcfDiffEl = document.getElementById('selectedStockFCFDiff');
+      fcfDiffEl.textContent = fcfDiff.text;
+      fcfDiffEl.className = `text-xs ${fcfDiff.class}`;
+    }
+
+    // v4.4: Scatter Plot (P/E vs ROE) - Shows valuation vs profitability
+    function renderPeerScatterChart() {
+      const container = document.getElementById('peerChartsContainer');
+      const data = state.peerDetailData;
+
+      if (!data || data.length < 2) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+      const ctx = document.getElementById('peerScatterChart').getContext('2d');
+
+      // Destroy existing chart if exists
+      if (charts.peerScatter) charts.peerScatter.destroy();
+
+      // Prepare data points
+      const scatterData = data
+        .filter(d => d.stock?.pe != null && d.detail?.profitability?.roe)
+        .map(d => {
+          const roe = d.detail.profitability.roe[4] ?? d.detail.profitability.roe[3] ?? null;
+          return {
+            ticker: d.ticker,
+            x: d.stock.pe,
+            y: roe,
+            isSelected: d.ticker === state.selectedTicker
+          };
+        })
+        .filter(d => d.x != null && d.y != null && d.x > 0 && d.x < 100);
+
+      if (scatterData.length < 2) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      // Separate selected from others
+      const selectedPoint = scatterData.filter(d => d.isSelected);
+      const otherPoints = scatterData.filter(d => !d.isSelected);
+
+      charts.peerScatter = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: '비교 종목',
+              data: otherPoints.map(d => ({ x: d.x, y: d.y, ticker: d.ticker })),
+              backgroundColor: 'rgba(99, 102, 241, 0.6)',
+              borderColor: 'rgba(99, 102, 241, 1)',
+              borderWidth: 1,
+              pointRadius: 6,
+              pointHoverRadius: 8
+            },
+            {
+              label: '선택 종목',
+              data: selectedPoint.map(d => ({ x: d.x, y: d.y, ticker: d.ticker })),
+              backgroundColor: 'rgba(234, 179, 8, 0.9)',
+              borderColor: 'rgba(202, 138, 4, 1)',
+              borderWidth: 2,
+              pointRadius: 10,
+              pointHoverRadius: 12,
+              pointStyle: 'star'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              title: { display: true, text: 'P/E (낮을수록 저평가)', font: { size: 10 } },
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            y: {
+              title: { display: true, text: 'ROE % (높을수록 수익성)', font: { size: 10 } },
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const point = ctx.raw;
+                  return `${point.ticker}: P/E ${point.x.toFixed(1)}x, ROE ${point.y.toFixed(1)}%`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // v4.4: Radar Chart - 5-axis comprehensive comparison
+    function renderPeerRadarChart() {
+      const data = state.peerDetailData;
+      if (!data || data.length < 2) return;
+
+      const ctx = document.getElementById('peerRadarChart').getContext('2d');
+      if (charts.peerRadar) charts.peerRadar.destroy();
+
+      // Prepare radar data for each stock
+      const labels = ['밸류에이션', '수익성', '성장성', '현금흐름', '모멘텀'];
+
+      // Calculate normalized scores (0-100) for each metric
+      const radarDatasets = data.filter(d => d.detail).map(d => {
+        const detail = d.detail;
+        const stock = d.stock;
+
+        // Get raw values
+        const pe = stock.pe || 30;
+        const roe = detail.profitability?.roe?.[4] ?? detail.profitability?.roe?.[3] ?? 0;
+        const growth = detail.growth?.revenue_growth?.[3] ?? detail.growth?.revenue_growth?.[2] ?? 0;
+        const fcf = detail.cash_flow?.fcf?.[4] ?? detail.cash_flow?.fcf?.[3] ?? 0;
+        const revenue = detail.income_statement?.revenue?.[4] ?? detail.income_statement?.revenue?.[3] ?? 1;
+        const fcfMargin = (fcf / revenue) * 100 || 0;
+        const momentum = stock.return_12m || 0;
+
+        // Normalize to 0-100 (rough scaling)
+        const normalize = (val, min, max, invert = false) => {
+          const clamped = Math.max(min, Math.min(max, val));
+          const normalized = ((clamped - min) / (max - min)) * 100;
+          return invert ? (100 - normalized) : normalized;
+        };
+
+        return {
+          label: d.ticker,
+          data: [
+            normalize(pe, 5, 50, true),    // Valuation: lower P/E is better
+            normalize(roe, -10, 40),        // Profitability
+            normalize(growth, -20, 50),     // Growth
+            normalize(fcfMargin, -10, 30),  // Cash Flow
+            normalize(momentum, -50, 100)   // Momentum
+          ],
+          borderColor: d.ticker === state.selectedTicker ? 'rgba(234, 179, 8, 1)' : 'rgba(99, 102, 241, 0.7)',
+          backgroundColor: d.ticker === state.selectedTicker ? 'rgba(234, 179, 8, 0.2)' : 'rgba(99, 102, 241, 0.1)',
+          borderWidth: d.ticker === state.selectedTicker ? 3 : 1.5,
+          pointRadius: d.ticker === state.selectedTicker ? 4 : 2
+        };
+      });
+
+      charts.peerRadar = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: radarDatasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { display: false },
+              pointLabels: { font: { size: 9 } },
+              grid: { color: 'rgba(0,0,0,0.1)' }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { font: { size: 9 }, boxWidth: 12 }
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(0)}점`
+              }
+            }
+          }
+        }
+      });
     }
 
     function setPeerChartType(type) {
