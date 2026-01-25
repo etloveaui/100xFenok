@@ -24,22 +24,22 @@
       "description": "Industry valuation data, ERP, credit ratings"
     },
     "global-scouter": {
-      "version": "2.1.0",
+      "version": "2.2.0",
       "updated": "2026-01-25",
       "update_frequency": "on-demand",
       "source": "Custom aggregation",
       "file_count": 1248,
       "schema": true,
-      "description": "Stock screening, ETF benchmarks, economic indicators"
+      "description": "Stock screening (1,243), ETFs (23), indicators (1,046) + extended: eps_consensus, growth_consensus, per_bands"
     },
     "indices": {
-      "version": "1.0.0",
-      "updated": "2025-12-01",
-      "update_frequency": "manual",
-      "source": "Legacy",
+      "version": "2.0.0",
+      "updated": "2026-01-25",
+      "update_frequency": "daily",
+      "source": "Google Sheets (Apps Script)",
       "file_count": 2,
       "schema": true,
-      "description": "Legacy index data (use slickcharts for current)"
+      "description": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
     "sec-13f": {
       "version": "2.1.0",
@@ -74,8 +74,15 @@
     {
       "date": "2026-01-25",
       "folder": "global-scouter",
-      "version": "2.1.0",
-      "change": "Weekly data refresh: 1,243 stocks, 23 ETFs, 1,046 economic indicators",
+      "version": "2.2.0",
+      "change": "Extended fields: fiscal_month (100%), eps_consensus (100%), growth_consensus (100%), per_bands (95.7%)",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-25",
+      "folder": "indices",
+      "version": "2.0.0",
+      "change": "Documentation correction: LEGACY->ACTIVE, manual->daily, fixed schema to match actual data structure (price time series, not constituents)",
       "breaking": false
     },
     {
