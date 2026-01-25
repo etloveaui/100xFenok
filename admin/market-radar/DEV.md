@@ -16,10 +16,9 @@ Market Sentiment + Market Indices 차트 시각화. Signal Score Timeline, MA �
 ```
 admin/market-radar/
 ├── DEV.md           ← 이 파일
-├── charts/          ← 총 13개 차트
+├── charts/          ← 총 11개 차트 (Indices 2개는 Valuation Lab으로 이동)
 │   ├── [Sentiment 5개]
-│   ├── [CNN Sub 6개]
-│   └── [Indices 2개]
+│   └── [CNN Sub 6개]
 └── scripts/         ← Apps Script 백업
     ├── README.md
     ├── vix.gs
@@ -29,7 +28,9 @@ admin/market-radar/
 
 ---
 
-## Charts Overview (총 13개)
+## Charts Overview (총 11개)
+
+> **Note**: Indices 차트 2개는 Valuation Lab으로 이동됨 (2026-01-25)
 
 ### 1. Sentiment 차트 (5개) - Signal Score Timeline
 
@@ -54,10 +55,14 @@ admin/market-radar/
 
 ### 3. Market Indices 차트 (2개) - MA 오버레이
 
+> **⚠️ Relocated (2026-01-25)**: Moved to Valuation Lab for data-tool mapping consistency
+> - `../../valuation-lab/expansion/indices-sp500.html`
+> - `../../valuation-lab/expansion/indices-nasdaq.html`
+
 | 파일 | 지표 | 데이터 |
 |------|------|--------|
-| `chart-sp500.html` | S&P 500 | `sp500.json` (11,594개) |
-| `chart-nasdaq.html` | NASDAQ | `nasdaq.json` (11,594개) |
+| ~~`chart-sp500.html`~~ | S&P 500 | `sp500.json` (11,594개) |
+| ~~`chart-nasdaq.html`~~ | NASDAQ | `nasdaq.json` (11,594개) |
 
 ---
 

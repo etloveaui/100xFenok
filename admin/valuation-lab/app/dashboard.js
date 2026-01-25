@@ -29,8 +29,13 @@ const ValuationLabUI = (function() {
     'sec-13f': [
       { name: 'Guru Tracker Premium', link: 'expansion/sec-13f-explorer.html', icon: 'fa-crown', desc: '17 Investors • 500+ Stocks • 8 Quarters • Sort & Filter • Shortcuts' }
     ],
-    sentiment: [], // Data only
-    indices: [], // Legacy or data only
+    sentiment: [
+      { name: 'Combo Signals Dashboard', link: '../../../tools/macro-monitor/details/sentiment-signal/', icon: 'fa-gauge-high', desc: '13 Indicators · VIX/MOVE/CNN/AAII/CFTC' }
+    ],
+    indices: [
+      { name: 'S&P 500 Chart', link: 'expansion/indices-sp500.html', icon: 'fa-chart-line', desc: '46 Years · 200-day MA' },
+      { name: 'NASDAQ Chart', link: 'expansion/indices-nasdaq.html', icon: 'fa-chart-line', desc: '46 Years · 200-day MA' }
+    ],
     'macro-rates': [] // Virtual folder for FRED
   };
 
