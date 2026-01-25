@@ -2077,7 +2077,12 @@
 
             <!-- Peer Table -->
             <div class="mt-4">
-              <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-table mr-1"></i>Top 15 Peers (시총 기준)</h3>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-gray-700"><i class="fas fa-table mr-1"></i>Top 15 Peers (시총 기준)</h3>
+                <button onclick="loadPeerDetailComparison()" class="px-3 py-1 text-xs bg-indigo-500 text-white rounded hover:bg-indigo-600">
+                  <i class="fas fa-chart-bar mr-1"></i>상세 비교 (Top 5)
+                </button>
+              </div>
               <div style="overflow-x: auto;">
                 <table class="text-sm w-full">
                   <thead>
@@ -2092,6 +2097,32 @@
                     </tr>
                   </thead>
                   <tbody id="peerTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- v4.3.2: Peer Detail Comparison -->
+            <div id="peerDetailSection" class="mt-4 hidden">
+              <h3 class="text-sm font-bold text-gray-700 mb-3">
+                <i class="fas fa-microscope text-indigo-500 mr-1"></i>상세 비교 (Detail JSON 기반)
+              </h3>
+              <div id="peerDetailLoading" class="text-center py-4 text-gray-500 hidden">
+                <i class="fas fa-spinner fa-spin mr-2"></i>Detail 데이터 로딩 중...
+              </div>
+              <div style="overflow-x: auto;">
+                <table class="text-sm w-full" id="peerDetailTable">
+                  <thead>
+                    <tr>
+                      <th>티커</th>
+                      <th>ROE</th>
+                      <th>순이익률</th>
+                      <th>영업이익률</th>
+                      <th>매출성장</th>
+                      <th>EPS성장</th>
+                      <th>FCF마진</th>
+                    </tr>
+                  </thead>
+                  <tbody id="peerDetailBody"></tbody>
                 </table>
               </div>
             </div>
@@ -3645,8 +3676,8 @@
       const fy1Eps = data.eps_consensus?.fy_plus_1 || 0;
       const forwardPE = (stock?.price && fy1Eps > 0) ? stock.price / fy1Eps : 0;
 
-      // 확장 레이블 (Forward P/E가 있으면 FY+1 추가)
-      const extendedLabels = forwardPE > 0 ? [...years, 'FY+1'] : years;
+      // 확장 레이블 (Forward P/E가 있고 P/E metric일 때만 FY+1 추가)
+      const extendedLabels = (forwardPE > 0 && state.valuationMetric === 'per') ? [...years, 'FY+1'] : years;
 
       // 1. Min 밴드 (하단 경계)
       if (band.min != null) {
@@ -3721,8 +3752,8 @@
         order: 1
       });
 
-      // 5. Forward P/E (FY+1 위치에 점선 연결)
-      if (forwardPE > 0) {
+      // 5. Forward P/E (FY+1 위치에 점선 연결) - v4.3.2: P/E metric일 때만
+      if (forwardPE > 0 && state.valuationMetric === 'per') {
         // 마지막 실제 P/E → Forward P/E 연결선
         const lastActual = chartData[chartData.length - 1] || 0;
         const forwardConnectData = [...chartData.map(() => null), lastActual];
@@ -5067,6 +5098,76 @@
 
       // v4: Render overlay comparison chart
       renderOverlayChart();
+
+      // v4.3.2: Hide detail section when peer data changes
+      document.getElementById('peerDetailSection').classList.add('hidden');
+    }
+
+    // v4.3.2: Load peer detail data for comparison
+    async function loadPeerDetailComparison() {
+      if (!currentPeerData || !state.selectedTicker) return;
+
+      const section = document.getElementById('peerDetailSection');
+      const loading = document.getElementById('peerDetailLoading');
+      const body = document.getElementById('peerDetailBody');
+
+      section.classList.remove('hidden');
+      loading.classList.remove('hidden');
+      body.innerHTML = '';
+
+      // Get top 5 peers by market cap (including selected stock)
+      const { peers } = currentPeerData;
+      const topPeers = [...peers]
+        .sort((a, b) => b.mc - a.mc)
+        .slice(0, 5);
+
+      // Load detail data for each peer
+      const detailPromises = topPeers.map(p => loadDetailData(p.ticker).catch(() => null));
+      const details = await Promise.all(detailPromises);
+
+      loading.classList.add('hidden');
+
+      // Render detail comparison table
+      body.innerHTML = topPeers.map((p, i) => {
+        const d = details[i];
+        const isSelected = p.ticker === state.selectedTicker;
+
+        if (!d) {
+          return `
+            <tr class="${isSelected ? 'bg-teal-100 font-bold' : ''}">
+              <td class="mono">${p.ticker}</td>
+              <td colspan="6" class="text-gray-400 text-center">데이터 없음</td>
+            </tr>
+          `;
+        }
+
+        // Extract metrics from detail data
+        const roe = d.profitability?.roe?.[4] || d.profitability?.roe?.[3] || null;
+        const netMargin = d.profitability?.net_margin?.[4] || d.profitability?.net_margin?.[3] || null;
+        const opMargin = d.profitability?.op_margin?.[4] || d.profitability?.op_margin?.[3] || null;
+        const revGrowth = d.growth?.revenue_growth?.[3] || d.growth?.revenue_growth?.[2] || null;
+        const epsGrowth = d.growth?.eps_growth?.[3] || d.growth?.eps_growth?.[2] || null;
+
+        // FCF margin = FCF / Revenue (latest year)
+        const fcf = d.cash_flow?.fcf?.[4] || d.cash_flow?.fcf?.[3] || 0;
+        const revenue = d.income_statement?.revenue?.[4] || d.income_statement?.revenue?.[3] || 0;
+        const fcfMargin = revenue > 0 ? (fcf / revenue) * 100 : null;
+
+        const formatVal = (v, suffix = '%') => v != null ? `${formatNumber(v, 1)}${suffix}` : '-';
+        const colorClass = (v) => v == null ? 'text-gray-400' : (v >= 0 ? 'text-green-600' : 'text-red-600');
+
+        return `
+          <tr class="${isSelected ? 'bg-teal-100 font-bold' : ''}">
+            <td class="mono">${p.ticker}</td>
+            <td class="mono text-right ${colorClass(roe)}">${formatVal(roe)}</td>
+            <td class="mono text-right ${colorClass(netMargin)}">${formatVal(netMargin)}</td>
+            <td class="mono text-right ${colorClass(opMargin)}">${formatVal(opMargin)}</td>
+            <td class="mono text-right ${colorClass(revGrowth)}">${formatVal(revGrowth)}</td>
+            <td class="mono text-right ${colorClass(epsGrowth)}">${formatVal(epsGrowth)}</td>
+            <td class="mono text-right ${colorClass(fcfMargin)}">${formatVal(fcfMargin)}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function setPeerChartType(type) {
