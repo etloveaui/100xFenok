@@ -710,10 +710,10 @@
     <div class="card mb-4" id="globalSelectorCard">
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-3 flex-wrap">
-          <label class="text-sm font-medium text-gray-600">
+          <label for="globalStockSelector" class="text-sm font-medium text-gray-600">
             <i class="fas fa-chart-line text-emerald-500 mr-1"></i>분석 종목:
           </label>
-          <select id="globalStockSelector" class="min-w-64"></select>
+          <select id="globalStockSelector" class="min-w-64" aria-label="분석할 종목 선택"></select>
         </div>
         <div id="selectedStockBadge" class="hidden">
           <span class="global-stock-badge">
@@ -1076,7 +1076,7 @@
         </div>
 
         <!-- Valuation Summary Cards -->
-        <div id="valuationSummary" class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4 hidden">
+        <div id="valuationSummary" class="grid grid-cols-2 md:grid-cols-6 gap-4 mt-4 hidden">
           <div class="bg-emerald-50 rounded-lg p-4 text-center">
             <div class="text-xs text-gray-500">현재 P/E</div>
             <div class="text-xl font-bold text-emerald-600 mono" id="currentPE">-</div>
@@ -1086,16 +1086,21 @@
             <div class="text-xl font-bold text-purple-600 mono" id="forwardPE">-</div>
           </div>
           <div class="bg-blue-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">5Y 평균</div>
+            <div class="text-xs text-gray-500">8Y 평균</div>
             <div class="text-xl font-bold text-blue-600 mono" id="avgPE">-</div>
           </div>
           <div class="bg-gray-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">5Y 최저</div>
+            <div class="text-xs text-gray-500">8Y 최저</div>
             <div class="text-xl font-bold text-gray-600 mono" id="minPE">-</div>
           </div>
           <div class="bg-amber-50 rounded-lg p-4 text-center">
-            <div class="text-xs text-gray-500">5Y 최고</div>
+            <div class="text-xs text-gray-500">8Y 최고</div>
             <div class="text-xl font-bold text-amber-600 mono" id="maxPE">-</div>
+          </div>
+          <!-- P/E Position Badge (v4.3) -->
+          <div id="pePositionCard" class="rounded-lg p-4 text-center" role="status" aria-live="polite">
+            <div class="text-xs text-gray-500">밸류에이션 위치</div>
+            <div class="text-lg font-bold" id="pePositionBadge">-</div>
           </div>
         </div>
 
@@ -1271,6 +1276,35 @@
           <div class="bg-blue-50 rounded-lg p-4 text-center">
             <div class="text-xs text-gray-500">FY2 EPS 예상</div>
             <div class="text-xl font-bold text-blue-600 mono" id="fy2EPS">-</div>
+          </div>
+        </div>
+
+        <!-- v4.3: Growth Consensus (장기 성장 컨센서스) - 색상 2계열 (매출=Blue, 이익=Amber) -->
+        <div id="growthConsensus" class="mt-4 hidden">
+          <h4 class="text-sm font-semibold text-gray-600 mb-2">📊 장기 성장 컨센서스</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+            <!-- 매출 성장 (Blue 계열) -->
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 text-center border border-blue-200">
+              <div class="text-xs text-blue-700">매출 성장 (7Y)</div>
+              <div class="text-base md:text-lg font-bold text-blue-600 mono" id="revGrowth7y">-</div>
+            </div>
+            <div class="bg-gradient-to-br from-blue-50 to-sky-100 rounded-lg p-3 text-center border border-sky-200">
+              <div class="text-xs text-sky-700">매출 성장 (3Y)</div>
+              <div class="text-base md:text-lg font-bold text-sky-600 mono" id="revGrowth3y">-</div>
+            </div>
+            <!-- 이익 성장 (Amber 계열) -->
+            <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg p-3 text-center border border-orange-200">
+              <div class="text-xs text-orange-700">이익 성장 (7Y)</div>
+              <div class="text-base md:text-lg font-bold text-orange-600 mono" id="earnGrowth7y">-</div>
+            </div>
+            <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-3 text-center border border-amber-200">
+              <div class="text-xs text-amber-700">이익 성장 (3Y)</div>
+              <div class="text-base md:text-lg font-bold text-amber-600 mono" id="earnGrowth3y">-</div>
+            </div>
+          </div>
+          <div class="mt-2 flex items-center gap-2">
+            <span class="text-xs text-gray-500">종목 분류:</span>
+            <span id="growthBadge" class="px-2 py-1 rounded text-xs font-semibold">-</span>
           </div>
         </div>
 
@@ -1635,6 +1669,8 @@
                       <i class="fas fa-lightbulb param-hint-icon"></i>
                       장기 GDP 성장률 (2-3%) 기준
                     </div>
+                    <!-- v4.3: growth_consensus 기반 Terminal 권장값 -->
+                    <div class="param-hint text-indigo-600" id="dcfTerminalSectorRef"></div>
                     <div class="param-range">
                       <span>보수적: 1-2%</span>
                       <span>일반: 2-3%</span>
@@ -2786,13 +2822,20 @@
       const content = document.getElementById('detailContent');
       const overlay = document.getElementById('detailOverlay');
 
+      // v4.3: Growth Classification + Fiscal Month
+      const growthClass = classifyStock(data.growth_consensus);
+      const fiscalInfo = data.fiscal_month ? ` · 결산월: ${data.fiscal_month}` : '';
+
       content.innerHTML = `
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h2 class="text-xl font-bold text-emerald-600">${ticker}</h2>
-            <p class="text-gray-500">${stock?.name || ticker}</p>
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-emerald-600">${ticker}</h2>
+              <span class="px-2 py-1 rounded text-xs font-semibold ${growthClass.bgColor} ${growthClass.color}" title="7Y 이익성장 기준">${growthClass.badge} ${growthClass.label}</span>
+            </div>
+            <p class="text-gray-500">${stock?.name || ticker}${fiscalInfo}</p>
           </div>
-          <button onclick="closeDetail()" class="p-2 text-gray-400 hover:text-gray-600">
+          <button onclick="closeDetail()" class="p-2 text-gray-400 hover:text-gray-600" aria-label="닫기">
             <i class="fas fa-times text-xl"></i>
           </button>
         </div>
@@ -2844,19 +2887,19 @@
           </tbody>
         </table>
 
-        <h3 class="font-bold text-gray-700 mb-3">컨센서스 (Estimates)</h3>
+        <h3 class="font-bold text-gray-700 mb-3">EPS 컨센서스 (6주 평균)</h3>
         <div class="grid grid-cols-3 gap-4 mb-6">
           <div class="bg-gray-50 rounded-lg p-3 text-center">
-            <div class="text-xs text-gray-500">FY1 EPS</div>
-            <div class="font-bold text-emerald-600 mono">$${formatNumber(data.estimates?.eps?.fy1, 2)}</div>
+            <div class="text-xs text-gray-500">FY+1 EPS</div>
+            <div class="font-bold text-emerald-600 mono">$${formatNumber(data.eps_consensus?.fy_plus_1, 2)}</div>
           </div>
           <div class="bg-gray-50 rounded-lg p-3 text-center">
-            <div class="text-xs text-gray-500">FY2 EPS</div>
-            <div class="font-bold text-blue-600 mono">$${formatNumber(data.estimates?.eps?.fy2, 2)}</div>
+            <div class="text-xs text-gray-500">FY+2 EPS</div>
+            <div class="font-bold text-blue-600 mono">$${formatNumber(data.eps_consensus?.fy_plus_2, 2)}</div>
           </div>
           <div class="bg-gray-50 rounded-lg p-3 text-center">
-            <div class="text-xs text-gray-500">FY3 EPS</div>
-            <div class="font-bold text-purple-600 mono">$${formatNumber(data.estimates?.eps?.fy3, 2)}</div>
+            <div class="text-xs text-gray-500">FY+3 EPS</div>
+            <div class="font-bold text-purple-600 mono">$${formatNumber(data.eps_consensus?.fy_plus_3, 2)}</div>
           </div>
         </div>
 
@@ -2873,15 +2916,15 @@
         </div>
         ` : ''}
 
-        <!-- v3: Forward P/E 계산 표시 -->
-        ${stock?.price && data.estimates?.eps?.fy1 ? `
+        <!-- v4.3: Forward P/E 계산 - eps_consensus 사용 -->
+        ${stock?.price && data.eps_consensus?.fy_plus_1 ? `
         <div class="mt-4 p-3 bg-purple-50 rounded-lg">
           <div class="flex items-center justify-between">
             <span class="text-sm text-purple-700">Forward P/E (FY+1)</span>
-            <span class="font-bold text-purple-600 mono">${formatNumber(stock.price / data.estimates.eps.fy1, 2)}</span>
+            <span class="font-bold text-purple-600 mono">${formatNumber(stock.price / data.eps_consensus.fy_plus_1, 2)}</span>
           </div>
           <div class="text-xs text-purple-500 mt-1">
-            현재가 $${formatNumber(stock.price, 2)} ÷ FY+1 EPS $${formatNumber(data.estimates.eps.fy1, 2)}
+            현재가 $${formatNumber(stock.price, 2)} ÷ FY+1 컨센서스 EPS $${formatNumber(data.eps_consensus.fy_plus_1, 2)}
           </div>
         </div>
         ` : ''}
@@ -3470,17 +3513,27 @@
       const ctx = document.getElementById('valuationsChart').getContext('2d');
       const years = data.years || ['FY-4', 'FY-3', 'FY-2', 'FY-1', 'FY0'];
 
-      let chartData, band, label, color;
+      let chartData, band, label, color, bandPeriod;
       switch (state.valuationMetric) {
         case 'per':
           chartData = data.valuation?.per || [];
-          band = data.valuation?.per_band || {};
+          // v4.3: per_bands 8년 데이터 사용 (current, min_8y, max_8y, avg_8y)
+          const perBands = data.per_bands || {};
+          band = {
+            min: perBands.min_8y ?? data.valuation?.per_band?.min,
+            max: perBands.max_8y ?? data.valuation?.per_band?.max,
+            avg: perBands.avg_8y ?? data.valuation?.per_band?.avg,
+            current: perBands.current,
+            source: perBands.source
+          };
+          bandPeriod = perBands.min_8y ? '8Y' : '5Y';
           label = 'P/E Ratio';
           color = '#10b981';
           break;
         case 'pbr':
           chartData = data.valuation?.pbr || [];
           band = data.valuation?.pbr_band || {};
+          bandPeriod = '5Y';
           label = 'P/B Ratio';
           color = '#8b5cf6';
           break;
@@ -3506,10 +3559,10 @@
 
       if (charts.valuations) charts.valuations.destroy();
 
-      // v3: 업계 표준 P/E Band 차트 - Min/Max 영역 + Forward P/E
+      // v4.3: P/E Band 차트 - per_bands 8년 데이터 + eps_consensus Forward P/E
       const datasets = [];
       const stock = state.stocksList.find(s => s.ticker === ticker);
-      const fy1Eps = data.estimates?.eps?.fy1 || 0;
+      const fy1Eps = data.eps_consensus?.fy_plus_1 || 0;
       const forwardPE = (stock?.price && fy1Eps > 0) ? stock.price / fy1Eps : 0;
 
       // 확장 레이블 (Forward P/E가 있으면 FY+1 추가)
@@ -3545,10 +3598,10 @@
         });
       }
 
-      // 3. 5Y 평균선
+      // 3. 평균선 (8Y/5Y 동적)
       if (band.avg != null) {
         datasets.push({
-          label: '5Y 평균',
+          label: `${bandPeriod || '5Y'} 평균`,
           data: new Array(extendedLabels.length).fill(band.avg),
           borderColor: '#6b7280',
           borderDash: [5, 5],
@@ -3556,6 +3609,20 @@
           pointRadius: 0,
           fill: false,
           order: 2
+        });
+      }
+
+      // 3.5. v4.3: Current P/E 마커 (per_bands.current 활용) - 보라색으로 변경 (빨강=고평가와 구분)
+      if (band.current != null && state.valuationMetric === 'per') {
+        datasets.push({
+          label: '현재 P/E',
+          data: new Array(extendedLabels.length).fill(band.current),
+          borderColor: '#8b5cf6',
+          borderDash: [8, 4],
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false,
+          order: 1.5
         });
       }
 
@@ -3666,6 +3733,20 @@
       document.getElementById('avgPE').textContent = formatNumber(band.avg, 2);
       document.getElementById('minPE').textContent = formatNumber(band.min, 2);
       document.getElementById('maxPE').textContent = formatNumber(band.max, 2);
+
+      // v4.3: P/E Position Badge (per_bands 기반)
+      const pePosition = getPEPosition(data.per_bands);
+      const positionCard = document.getElementById('pePositionCard');
+      const positionBadge = document.getElementById('pePositionBadge');
+      if (pePosition) {
+        positionBadge.textContent = `${pePosition.badge} ${pePosition.label}`;
+        positionCard.className = `rounded-lg p-4 text-center ${pePosition.bgColor}`;
+        positionBadge.className = `text-lg font-bold ${pePosition.color}`;
+      } else {
+        positionBadge.textContent = '-';
+        positionCard.className = 'rounded-lg p-4 text-center bg-gray-50';
+        positionBadge.className = 'text-lg font-bold text-gray-400';
+      }
     }
 
     // ================== GROWTH CHART ==================
@@ -3697,12 +3778,12 @@
       let datasets = [];
 
       if (state.growthMetric === 'estimates') {
-        // v3: EPS 컨센서스 - 실적 vs 예측 시각 구분
+        // v4.3: eps_consensus 사용 - 6주 평균 컨센서스
         labels = ['FY0', 'FY+1(E)', 'FY+2(E)', 'FY+3(E)'];
         const eps0 = data.per_share?.eps?.[4] || 0;
-        const eps1 = data.estimates?.eps?.fy1 || 0;
-        const eps2 = data.estimates?.eps?.fy2 || 0;
-        const eps3 = data.estimates?.eps?.fy3 || 0;
+        const eps1 = data.eps_consensus?.fy_plus_1 || 0;
+        const eps2 = data.eps_consensus?.fy_plus_2 || 0;
+        const eps3 = data.eps_consensus?.fy_plus_3 || 0;
         chartData = [eps0, eps1, eps2, eps3];
 
         // 실적 (실선, 진한 색) vs 예측 (점선, 연한 색)
@@ -3788,8 +3869,28 @@
 
       document.getElementById('revCAGR').textContent = `${formatNumber(revCAGR, 1)}%`;
       document.getElementById('epsCAGR').textContent = `${formatNumber(epsCAGR, 1)}%`;
-      document.getElementById('fy1EPS').textContent = `$${formatNumber(data.estimates?.eps?.fy1, 2)}`;
-      document.getElementById('fy2EPS').textContent = `$${formatNumber(data.estimates?.eps?.fy2, 2)}`;
+      // v4.3: eps_consensus 사용
+      document.getElementById('fy1EPS').textContent = `$${formatNumber(data.eps_consensus?.fy_plus_1, 2)}`;
+      document.getElementById('fy2EPS').textContent = `$${formatNumber(data.eps_consensus?.fy_plus_2, 2)}`;
+
+      // v4.3: Growth Consensus 업데이트
+      const gc = data.growth_consensus;
+      const gcPanel = document.getElementById('growthConsensus');
+      if (gc && (gc.revenue_7y || gc.earnings_7y)) {
+        gcPanel.classList.remove('hidden');
+        document.getElementById('revGrowth7y').textContent = gc.revenue_7y ? `${formatNumber(gc.revenue_7y, 1)}%` : '-';
+        document.getElementById('revGrowth3y').textContent = gc.revenue_3y ? `${formatNumber(gc.revenue_3y, 1)}%` : '-';
+        document.getElementById('earnGrowth7y').textContent = gc.earnings_7y ? `${formatNumber(gc.earnings_7y, 1)}%` : '-';
+        document.getElementById('earnGrowth3y').textContent = gc.earnings_3y ? `${formatNumber(gc.earnings_3y, 1)}%` : '-';
+
+        // Growth Badge
+        const classification = classifyStock(gc);
+        const badgeEl = document.getElementById('growthBadge');
+        badgeEl.textContent = `${classification.badge} ${classification.label}`;
+        badgeEl.className = `px-2 py-1 rounded text-xs font-semibold ${classification.bgColor} ${classification.color}`;
+      } else {
+        gcPanel.classList.add('hidden');
+      }
     }
 
     // ================== DIVIDEND CHART ==================
@@ -4345,8 +4446,8 @@
 
       document.getElementById('dcfCurrentPrice').textContent = `$${formatNumber(stock.price, 2)}`;
 
-      // #195: Update parameter hints
-      updateDCFHints(ticker, getSectorWACC(sector), fcfCAGR);
+      // #195 + v4.3: Update parameter hints with growth_consensus
+      updateDCFHints(ticker, getSectorWACC(sector), fcfCAGR, data.growth_consensus);
 
       updateDCFCalc();
     }
@@ -4445,28 +4546,49 @@
     }
 
     // Dynamic DCF Hints (call in renderDCFTab)
-    function updateDCFHints(ticker, waccData, fcfCAGR) {
+    // v4.3: growth_consensus 파라미터 추가
+    function updateDCFHints(ticker, waccData, fcfCAGR, growthConsensus) {
       const stock = state.stocksList.find(s => s.ticker === ticker);
       const sector = stock?.sector || '-';
       const damodaranIndustry = SECTOR_MAPPING[sector] || 'Diversified';
 
       const growthHint = document.getElementById('dcfGrowthSectorRef');
       if (growthHint) {
+        let hintText = '';
         if (fcfCAGR !== null && !isNaN(fcfCAGR)) {
-          growthHint.innerHTML = `${sector}: 과거 FCF CAGR <strong>${fcfCAGR.toFixed(1)}%</strong>`;
+          hintText = `${sector}: 과거 FCF CAGR <strong>${fcfCAGR.toFixed(1)}%</strong>`;
         } else {
-          growthHint.textContent = `${sector}: FCF CAGR 데이터 없음`;
+          hintText = `${sector}: FCF CAGR 데이터 없음`;
         }
+        // v4.3: growth_consensus 추가 표시
+        if (growthConsensus?.earnings_3y) {
+          hintText += ` | 컨센서스 이익성장(3Y): <strong>${growthConsensus.earnings_3y.toFixed(1)}%</strong>`;
+        }
+        growthHint.innerHTML = hintText;
       }
 
       const waccHint = document.getElementById('dcfWACCSectorRef');
       if (waccHint && waccData) {
         waccHint.innerHTML = `Damodaran ${damodaranIndustry}: <strong>${(waccData * 100).toFixed(2)}%</strong>`;
       }
+
+      // v4.3: Terminal Growth 힌트에 growth_consensus 기반 권장값 추가
+      // 학계 표준: Terminal Growth는 장기 GDP 성장률(2-3%)을 초과하기 어려움
+      const terminalHint = document.getElementById('dcfTerminalSectorRef');
+      if (terminalHint && growthConsensus?.earnings_7y) {
+        const earnings7y = growthConsensus.earnings_7y;
+        let suggested;
+        if (earnings7y >= 20) suggested = '3-4% (고성장 → 장기 수렴)';
+        else if (earnings7y >= 10) suggested = '2.5-3.5% (성장주)';
+        else if (earnings7y >= 5) suggested = '2-3% (안정주)';
+        else suggested = '1.5-2.5% (가치/배당주)';
+        terminalHint.innerHTML = `7Y 이익성장 ${earnings7y.toFixed(1)}% → Terminal 권장: <strong>${suggested}</strong>`;
+      }
     }
 
     // Dynamic DDM Hints (call in renderDDMTab)
-    function updateDDMHints(ticker, dpsCAGR) {
+    // v4.3: growth_consensus 파라미터 추가
+    function updateDDMHints(ticker, dpsCAGR, growthConsensus) {
       const stock = state.stocksList.find(s => s.ticker === ticker);
 
       const requiredHint = document.getElementById('ddmRequiredSectorRef');
@@ -4478,11 +4600,20 @@
 
       const growthHint = document.getElementById('ddmGrowthSectorRef');
       if (growthHint) {
+        let hintText = '';
         if (dpsCAGR !== null && !isNaN(dpsCAGR)) {
-          growthHint.innerHTML = `과거 DPS CAGR: <strong>${dpsCAGR.toFixed(1)}%</strong>`;
+          hintText = `과거 DPS CAGR: <strong>${dpsCAGR.toFixed(1)}%</strong>`;
         } else {
-          growthHint.textContent = '과거 DPS CAGR 데이터 없음';
+          hintText = '과거 DPS CAGR 데이터 없음';
         }
+        // v4.3: growth_consensus 추가 표시
+        if (growthConsensus?.earnings_3y) {
+          hintText += ` | 이익성장 컨센서스(3Y): <strong>${growthConsensus.earnings_3y.toFixed(1)}%</strong>`;
+          // 배당성장은 이익성장의 일부를 따라가므로 가이드 제시
+          const suggestedDivGrowth = Math.min(growthConsensus.earnings_3y * 0.5, 8);
+          hintText += ` → 배당성장 ${suggestedDivGrowth.toFixed(1)}% 권장`;
+        }
+        growthHint.innerHTML = hintText;
       }
     }
 
@@ -4576,8 +4707,8 @@
 
       document.getElementById('ddmCurrentPrice').textContent = `$${formatNumber(stock.price, 2)}`;
 
-      // #195: Update parameter hints
-      updateDDMHints(ticker, dpsCAGR);
+      // #195 + v4.3: Update parameter hints with growth_consensus
+      updateDDMHints(ticker, dpsCAGR, data.growth_consensus);
 
       updateDDMCalc();
     }
@@ -5079,6 +5210,50 @@
       if (Math.abs(val) >= 1000000) return (val / 1000000).toFixed(1) + 'T';
       if (Math.abs(val) >= 1000) return (val / 1000).toFixed(1) + 'B';
       return val.toFixed(0) + 'M';
+    }
+
+    // ================== v4.3 NEW UTILITIES ==================
+
+    // Growth Badge: 종목 분류 (growth_consensus.earnings_7y 기반)
+    function classifyStock(growthConsensus) {
+      const earnings7y = growthConsensus?.earnings_7y || 0;
+      if (earnings7y >= 20) return { badge: '🚀', label: '고성장주', color: 'text-emerald-600', bgColor: 'bg-emerald-100' };
+      if (earnings7y >= 10) return { badge: '📈', label: '성장주', color: 'text-blue-600', bgColor: 'bg-blue-100' };
+      if (earnings7y >= 5) return { badge: '🏢', label: '안정주', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+      return { badge: '💰', label: '가치/배당주', color: 'text-amber-600', bgColor: 'bg-amber-100' };
+    }
+
+    // P/E Position: 현재 밸류에이션 위치 판단 (per_bands 기반)
+    function getPEPosition(perBands) {
+      const { current, min_8y, avg_8y, max_8y } = perBands || {};
+      if (current == null || min_8y == null || max_8y == null) return null;
+      const range = max_8y - min_8y;
+      if (range <= 0) return null;
+
+      // Edge case handling: current outside historical range
+      if (current < min_8y) {
+        return { badge: '🟢', label: '역사적 최저', color: 'text-green-600', bgColor: 'bg-green-100', position: 0 };
+      }
+      if (current > max_8y) {
+        return { badge: '🔴', label: '역사적 최고', color: 'text-red-600', bgColor: 'bg-red-100', position: 100 };
+      }
+
+      const position = ((current - min_8y) / range) * 100;
+      if (position < 30) return { badge: '🟢', label: '저평가 구간', color: 'text-green-600', bgColor: 'bg-green-100', position };
+      if (position < 70) return { badge: '🟡', label: '적정 구간', color: 'text-amber-600', bgColor: 'bg-amber-100', position };
+      return { badge: '🔴', label: '고평가 구간', color: 'text-red-600', bgColor: 'bg-red-100', position };
+    }
+
+    // Fiscal Year 라벨 생성 (fiscal_month 기반)
+    function getFiscalYearLabel(fiscalMonth, fyLabel) {
+      if (!fiscalMonth) return fyLabel;
+      const currentYear = new Date().getFullYear();
+      // FY-4, FY-3, FY-2, FY-1, FY0 → 실제 연도 계산
+      const match = fyLabel?.match(/FY([-+]?\d+)?/);
+      if (!match) return fyLabel;
+      const offset = parseInt(match[1] || '0');
+      const fyYear = currentYear + offset;
+      return `FY${fyYear} (${fiscalMonth})`;
     }
 
     // ================== INIT ==================
