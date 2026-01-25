@@ -2105,14 +2105,14 @@
               <div style="overflow-x: auto;">
                 <table class="text-sm w-full">
                   <thead>
-                    <tr>
-                      <th>티커</th>
-                      <th>종목명</th>
-                      <th>P/E</th>
-                      <th>P/B</th>
-                      <th>배당률</th>
-                      <th>12M수익률</th>
-                      <th>시총</th>
+                    <tr class="bg-gray-50 text-xs text-gray-600">
+                      <th class="py-2 px-2 text-left font-medium">티커</th>
+                      <th class="py-2 px-1 text-left font-medium">종목명</th>
+                      <th class="py-2 px-2 text-right font-medium">P/E</th>
+                      <th class="py-2 px-2 text-right font-medium">P/B</th>
+                      <th class="py-2 px-2 text-right font-medium">배당률</th>
+                      <th class="py-2 px-2 text-right font-medium">12M수익률</th>
+                      <th class="py-2 px-2 text-right font-medium">시총</th>
                     </tr>
                   </thead>
                   <tbody id="peerTableBody"></tbody>
@@ -5255,14 +5255,14 @@
         const r12Value = p.r12 || 0;
         const r12Class = r12Value >= 0 ? 'text-green-600' : 'text-red-600';
         return `
-          <tr class="${isSelected ? 'bg-teal-100 font-bold' : ''}">
-            <td class="mono">${p.ticker}</td>
-            <td>${p.name}</td>
-            <td class="mono text-right">${formatNumber(p.pe, 1)}</td>
-            <td class="mono text-right">${formatNumber(p.pb, 2)}</td>
-            <td class="mono text-right">${formatNumber(p.dy, 2)}%</td>
-            <td class="mono text-right ${r12Class}">${formatNumber(r12Value, 1)}%</td>
-            <td class="mono text-right">${formatMarketCap(p.mc)}</td>
+          <tr class="${isSelected ? 'bg-teal-100 font-bold' : ''} hover:bg-gray-50">
+            <td class="mono py-1 px-2">${p.ticker}</td>
+            <td class="py-1 px-1 truncate max-w-[120px]">${p.name}</td>
+            <td class="mono py-1 px-2 text-right">${formatNumber(p.pe, 1)}</td>
+            <td class="mono py-1 px-2 text-right">${formatNumber(p.pb, 2)}</td>
+            <td class="mono py-1 px-2 text-right">${formatNumber(p.dy, 2)}%</td>
+            <td class="mono py-1 px-2 text-right ${r12Class}">${formatNumber(r12Value, 1)}%</td>
+            <td class="mono py-1 px-2 text-right">${formatMarketCap(p.mc)}</td>
           </tr>
         `;
       }).join('');
