@@ -2080,7 +2080,7 @@
               <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold text-gray-700"><i class="fas fa-table mr-1"></i>Top 15 Peers (시총 기준)</h3>
                 <button onclick="loadPeerDetailComparison()" class="px-3 py-1 text-xs bg-indigo-500 text-white rounded hover:bg-indigo-600">
-                  <i class="fas fa-chart-bar mr-1"></i>상세 비교 (Top 5)
+                  <i class="fas fa-chart-bar mr-1"></i>선택 종목 상세 비교
                 </button>
               </div>
               <div style="overflow-x: auto;">
@@ -5103,9 +5103,9 @@
       document.getElementById('peerDetailSection').classList.add('hidden');
     }
 
-    // v4.3.2: Load peer detail data for comparison
+    // v4.3.2: Load peer detail data for comparison (selected + manualPeers)
     async function loadPeerDetailComparison() {
-      if (!currentPeerData || !state.selectedTicker) return;
+      if (!state.selectedTicker) return;
 
       const section = document.getElementById('peerDetailSection');
       const loading = document.getElementById('peerDetailLoading');
@@ -5115,20 +5115,25 @@
       loading.classList.remove('hidden');
       body.innerHTML = '';
 
-      // Get top 5 peers by market cap (including selected stock)
-      const { peers } = currentPeerData;
-      const topPeers = [...peers]
-        .sort((a, b) => b.mc - a.mc)
-        .slice(0, 5);
+      // Compare selected stock + manually added peers
+      const tickersToCompare = [state.selectedTicker, ...state.manualPeers];
+      const stocksToCompare = tickersToCompare
+        .map(t => state.stocksList.find(s => s.ticker === t))
+        .filter(Boolean);
 
-      // Load detail data for each peer
-      const detailPromises = topPeers.map(p => loadDetailData(p.ticker).catch(() => null));
+      // Load detail data for each stock
+      const detailPromises = stocksToCompare.map(p => loadDetailData(p.ticker).catch(() => null));
       const details = await Promise.all(detailPromises);
 
       loading.classList.add('hidden');
 
+      if (stocksToCompare.length === 1) {
+        body.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-4">비교할 종목을 추가하세요 (위 검색창에서 추가)</td></tr>';
+        return;
+      }
+
       // Render detail comparison table
-      body.innerHTML = topPeers.map((p, i) => {
+      body.innerHTML = stocksToCompare.map((p, i) => {
         const d = details[i];
         const isSelected = p.ticker === state.selectedTicker;
 
