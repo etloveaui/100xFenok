@@ -236,17 +236,17 @@
               <i class="fas fa-chart-bar text-blue-500"></i> Current Metrics
               <span id="detail-loading" class="text-xs text-blue-400 hidden"><i class="fas fa-spinner fa-spin"></i> Loading...</span>
             </h3>
-            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 text-sm">
               <div>
                 <div class="text-xs text-gray-500">Price</div>
                 <div id="detail-price" class="font-bold mono text-lg">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">P/E (Trailing)</div>
+                <div class="text-xs text-gray-500">P/E (TTM)</div>
                 <div id="detail-pe-ttm" class="font-semibold mono">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">P/E (Forward)</div>
+                <div class="text-xs text-gray-500">P/E (FWD)</div>
                 <div id="detail-pe-fwd" class="font-semibold mono">-</div>
               </div>
               <div>
@@ -254,8 +254,16 @@
                 <div id="detail-eps" class="font-semibold mono">-</div>
               </div>
               <div>
+                <div class="text-xs text-gray-500">EPS (FWD)</div>
+                <div id="detail-eps-fwd" class="font-semibold mono">-</div>
+              </div>
+              <div>
                 <div class="text-xs text-gray-500">Div Yield</div>
                 <div id="detail-div-current" class="font-semibold mono">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">Div TTM</div>
+                <div id="detail-div-ttm" class="font-semibold mono">-</div>
               </div>
               <div>
                 <div class="text-xs text-gray-500">Market Cap</div>
@@ -780,6 +788,33 @@
           </div>
         </div>
 
+        <!-- Inflation History Section -->
+        <div class="bg-white rounded-xl p-4 shadow">
+          <h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="fas fa-chart-area text-red-500"></i> US Inflation History (CPI)
+          </h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Current Inflation Stats -->
+            <div class="bg-red-50 rounded-lg p-3">
+              <div class="text-xs text-gray-500 mb-1">Latest Inflation</div>
+              <div id="inflation-current" class="text-2xl font-bold mono text-red-600">-</div>
+              <div id="inflation-year" class="text-xs text-gray-500">-</div>
+            </div>
+            <!-- Inflation Table -->
+            <div class="overflow-auto max-h-48">
+              <table class="min-w-full text-sm">
+                <thead class="bg-red-50 text-red-700 sticky top-0">
+                  <tr>
+                    <th class="text-left px-2 py-1">Year</th>
+                    <th class="text-right px-2 py-1">Rate</th>
+                  </tr>
+                </thead>
+                <tbody id="inflation-body" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- Crypto Prices Section -->
         <div class="bg-white rounded-xl p-4 shadow">
           <h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
@@ -866,6 +901,10 @@
         sp500Performance: null,
         nasdaq100Performance: null,
         dowjonesPerformance: null,
+        // Index yield (3 files)
+        sp500Yield: null,
+        nasdaq100Yield: null,
+        dowjonesYield: null,
         // Economy (6 files)
         treasury: null,
         mortgage: null,
@@ -966,6 +1005,7 @@
         const [
           sp500, nasdaq, dow, mag7,
           sp500Perf, nasdaqPerf, dowPerf,
+          sp500Yield, nasdaqYield, dowYield,
           mortgage, inflation, btcRet, ethRet
         ] = await Promise.all([
           fetchSlickChartsData('SP500').catch(() => null),
@@ -975,6 +1015,9 @@
           fetchSlickChartsData('SP500_PERFORMANCE').catch(() => null),
           fetchSlickChartsData('NASDAQ100_PERFORMANCE').catch(() => null),
           fetchSlickChartsData('DOWJONES_PERFORMANCE').catch(() => null),
+          fetchSlickChartsData('SP500_YIELD').catch(() => null),
+          fetchSlickChartsData('NASDAQ100_YIELD').catch(() => null),
+          fetchSlickChartsData('DOWJONES_YIELD').catch(() => null),
           fetchSlickChartsData('MORTGAGE').catch(() => null),
           fetchSlickChartsData('INFLATION').catch(() => null),
           fetchSlickChartsData('BTC_RETURNS').catch(() => null),
@@ -988,6 +1031,9 @@
         state.data.sp500Performance = sp500Perf;
         state.data.nasdaq100Performance = nasdaqPerf;
         state.data.dowjonesPerformance = dowPerf;
+        state.data.sp500Yield = sp500Yield;
+        state.data.nasdaq100Yield = nasdaqYield;
+        state.data.dowjonesYield = dowYield;
         state.data.mortgage = mortgage;
         state.data.inflation = inflation;
         state.data.btcReturns = btcRet;
@@ -1301,7 +1347,9 @@
       document.getElementById('detail-pe-ttm').textContent = '-';
       document.getElementById('detail-pe-fwd').textContent = '-';
       document.getElementById('detail-eps').textContent = '-';
+      document.getElementById('detail-eps-fwd').textContent = '-';
       document.getElementById('detail-div-current').textContent = '-';
+      document.getElementById('detail-div-ttm').textContent = '-';
       document.getElementById('detail-mktcap').textContent = '-';
       document.getElementById('detail-dividends-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
 
@@ -1320,7 +1368,9 @@
         document.getElementById('detail-pe-ttm').textContent = current.pe_trailing ? current.pe_trailing.toFixed(1) : '-';
         document.getElementById('detail-pe-fwd').textContent = current.pe_forward ? current.pe_forward.toFixed(1) : '-';
         document.getElementById('detail-eps').textContent = current.eps_trailing ? `$${current.eps_trailing.toFixed(2)}` : '-';
+        document.getElementById('detail-eps-fwd').textContent = current.eps_forward ? `$${current.eps_forward.toFixed(2)}` : '-';
         document.getElementById('detail-div-current').textContent = current.dividend_yield ? `${(current.dividend_yield * 100).toFixed(2)}%` : '-';
+        document.getElementById('detail-div-ttm').textContent = current.dividend_ttm ? `$${current.dividend_ttm.toFixed(2)}` : '-';
         document.getElementById('detail-mktcap').textContent = current.market_cap_billions ? `$${current.market_cap_billions.toFixed(0)}B` : '-';
 
         // Populate dividend history
@@ -1553,6 +1603,21 @@
       renderHoldings(state.data.sp500, 'sp500-holdings', 'sp500-count');
       renderHoldings(state.data.nasdaq100, 'nasdaq-holdings', 'nasdaq-count');
       renderHoldings(state.data.dowjones, 'dow-holdings', 'dow-count', 30);
+
+      // Display index dividend yields
+      const sp500Yield = state.data.sp500Yield?.yield;
+      const nasdaqYield = state.data.nasdaq100Yield?.yield;
+      const dowYield = state.data.dowjonesYield?.yield;
+
+      if (sp500Yield) {
+        document.getElementById('sp500-count').innerHTML += ` • <span class="text-green-600">Div Yield: ${sp500Yield.toFixed(2)}%</span>`;
+      }
+      if (nasdaqYield) {
+        document.getElementById('nasdaq-count').innerHTML += ` • <span class="text-green-600">Div Yield: ${nasdaqYield.toFixed(2)}%</span>`;
+      }
+      if (dowYield) {
+        document.getElementById('dow-count').innerHTML += ` • <span class="text-green-600">Div Yield: ${dowYield.toFixed(2)}%</span>`;
+      }
     }
 
     function renderIndexPerformance() {
@@ -1688,6 +1753,31 @@
         `).join('');
       } else {
         document.getElementById('eth-returns-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+      }
+
+      // Inflation History
+      const inflation = state.data.inflation;
+      if (inflation?.inflation) {
+        const inflationData = inflation.inflation;
+        const latest = inflationData[0];
+
+        // Current inflation display
+        document.getElementById('inflation-current').textContent = `${latest?.rate?.toFixed(2)}%`;
+        document.getElementById('inflation-year').textContent = `Year: ${latest?.year}`;
+
+        // Inflation table (last 20 years)
+        document.getElementById('inflation-body').innerHTML = inflationData.slice(0, 20).map(i => {
+          const isHigh = i.rate > 4;
+          const isLow = i.rate < 2;
+          return `
+            <tr class="hover:bg-red-50">
+              <td class="px-2 py-1 mono text-gray-700">${i.year}</td>
+              <td class="text-right px-2 py-1 mono font-semibold ${isHigh ? 'text-red-600' : isLow ? 'text-green-600' : ''}">${i.rate?.toFixed(2)}%</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        document.getElementById('inflation-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Loading...</td></tr>';
       }
 
       // Crypto Prices
