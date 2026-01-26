@@ -23,7 +23,7 @@ admin/
 │   ├── config/      # ManifestLoader
 │   ├── core/        # CacheManager, DataManager, Formatters
 │   ├── ui/          # StatusCard
-│   └── validators/  # FreshnessChecker, SchemaValidator
+│   └── validators/  # FreshnessChecker v2.1.0, SchemaValidator
 ├── valuation-lab/   ← Valuation analysis tools
 ├── data-lab/        ← Data management dashboard
 ├── design-lab/      ← Design experiments

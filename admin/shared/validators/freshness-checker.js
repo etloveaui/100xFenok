@@ -5,7 +5,7 @@
  * Returns status signals based on freshness thresholds.
  *
  * @module freshness-checker
- * @version 2.0.0 (unified for admin/shared)
+ * @version 2.1.0 (unified for admin/shared)
  */
 
 const FreshnessChecker = (function() {
@@ -38,8 +38,11 @@ const FreshnessChecker = (function() {
       };
     }
 
-    const updated = new Date(updateDate);
+    // Parse as local date to avoid timezone offset (YYYY-MM-DD → local midnight)
+    const [year, month, day] = updateDate.split('-').map(Number);
+    const updated = new Date(year, month - 1, day);
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // Compare dates only, not times
     const diffTime = now - updated;
     const daysAgo = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
@@ -85,9 +88,15 @@ const FreshnessChecker = (function() {
     if (daysAgo === 0) return 'Today';
     if (daysAgo === 1) return 'Yesterday';
     if (daysAgo < 7) return `${daysAgo} days ago`;
-    if (daysAgo < 30) return `${Math.floor(daysAgo / 7)} weeks ago`;
-    if (daysAgo < 365) return `${Math.floor(daysAgo / 30)} months ago`;
-    return `${Math.floor(daysAgo / 365)} years ago`;
+
+    const weeks = Math.floor(daysAgo / 7);
+    if (daysAgo < 30) return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+
+    const months = Math.floor(daysAgo / 30);
+    if (daysAgo < 365) return months === 1 ? '1 month ago' : `${months} months ago`;
+
+    const years = Math.floor(daysAgo / 365);
+    return years === 1 ? '1 year ago' : `${years} years ago`;
   }
 
   /**
