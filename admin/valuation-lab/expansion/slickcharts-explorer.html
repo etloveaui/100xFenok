@@ -50,16 +50,16 @@
             <i class="fas fa-chart-pie text-violet-500"></i>
           </div>
           <div>
-            <h1 class="text-xl font-bold">SlickCharts Explorer</h1>
-            <p class="text-gray-500 text-xs">6-Tab Integrated Tool • 37 Root + 516 Stock Files = 553 Total</p>
+            <h1 class="text-xl font-bold">슬릭차트 탐색기</h1>
+            <p class="text-gray-500 text-xs">6탭 통합 도구 • 37개 기본 + 516개 종목 = 553개 파일</p>
           </div>
         </div>
         <div class="flex items-center gap-3">
           <button id="export-btn" class="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">
-            <i class="fas fa-download"></i> Export
+            <i class="fas fa-download"></i> 내보내기
           </button>
           <a href="./" class="text-gray-500 hover:text-blue-600">
-            <i class="fas fa-arrow-left mr-1"></i> <span class="hidden sm:inline">Back</span>
+            <i class="fas fa-arrow-left mr-1"></i> <span class="hidden sm:inline">돌아가기</span>
           </a>
         </div>
       </div>
@@ -71,22 +71,22 @@
     <div class="container mx-auto px-4">
       <div class="flex gap-1" id="desktop-tabs">
         <button data-tab="returns" class="tab-active px-4 py-3 text-sm transition-colors">
-          <i class="fas fa-chart-line mr-1"></i> Returns
+          <i class="fas fa-chart-line mr-1"></i> 수익률
         </button>
         <button data-tab="details" class="tab-inactive px-4 py-3 text-sm transition-colors">
-          <i class="fas fa-info-circle mr-1"></i> Details
+          <i class="fas fa-info-circle mr-1"></i> 상세
         </button>
         <button data-tab="movers" class="tab-inactive px-4 py-3 text-sm transition-colors">
-          <i class="fas fa-arrows-up-down mr-1"></i> Movers
+          <i class="fas fa-arrows-up-down mr-1"></i> 등락
         </button>
         <button data-tab="dividends" class="tab-inactive px-4 py-3 text-sm transition-colors">
-          <i class="fas fa-coins mr-1"></i> Dividends
+          <i class="fas fa-coins mr-1"></i> 배당
         </button>
         <button data-tab="indices" class="tab-inactive px-4 py-3 text-sm transition-colors">
-          <i class="fas fa-layer-group mr-1"></i> Indices
+          <i class="fas fa-layer-group mr-1"></i> 지수
         </button>
         <button data-tab="economy" class="tab-inactive px-4 py-3 text-sm transition-colors">
-          <i class="fas fa-landmark mr-1"></i> Economy
+          <i class="fas fa-landmark mr-1"></i> 경제
         </button>
       </div>
     </div>
@@ -98,8 +98,8 @@
     <!-- Loading State -->
     <div id="loading-overlay" class="bg-white rounded-xl p-8 shadow text-center">
       <i class="fas fa-spinner fa-spin text-3xl text-violet-500 mb-4"></i>
-      <p class="text-gray-600">Loading SlickCharts data...</p>
-      <p class="text-xs text-gray-400 mt-2">516 stocks, 47 years of returns</p>
+      <p class="text-gray-600">슬릭차트 데이터 로딩중...</p>
+      <p class="text-xs text-gray-400 mt-2">516 종목, 47년간의 수익률 데이터</p>
     </div>
 
     <!-- Tab Content Container -->
@@ -111,15 +111,15 @@
         <div class="bg-white rounded-xl p-4 shadow">
           <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
             <div>
-              <span class="font-semibold text-gray-700">Updated:</span>
+              <span class="font-semibold text-gray-700">업데이트:</span>
               <span id="returns-updated" class="ml-1 mono">-</span>
             </div>
             <div>
-              <span class="font-semibold text-gray-700">Stocks:</span>
+              <span class="font-semibold text-gray-700">종목 수:</span>
               <span id="returns-count" class="ml-1 mono">-</span>
             </div>
             <div>
-              <span class="font-semibold text-gray-700">Filtered:</span>
+              <span class="font-semibold text-gray-700">필터됨:</span>
               <span id="returns-filtered" class="ml-1 mono">-</span>
             </div>
           </div>
@@ -127,41 +127,41 @@
 
         <!-- Filters -->
         <div class="bg-white rounded-xl p-4 shadow">
-          <h2 class="font-semibold text-gray-700 mb-3 text-sm">Filters</h2>
+          <h2 class="font-semibold text-gray-700 mb-3 text-sm">필터</h2>
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            <input id="returns-search" type="text" placeholder="Search ticker..."
+            <input id="returns-search" type="text" placeholder="티커 검색..."
               class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
 
             <select id="returns-period" class="w-full px-3 py-2 border rounded-lg text-sm">
-              <option value="5">5 years</option>
-              <option value="10">10 years</option>
-              <option value="20" selected>20 years</option>
-              <option value="30">30 years</option>
-              <option value="all">All (47yr)</option>
+              <option value="5">5년</option>
+              <option value="10">10년</option>
+              <option value="20" selected>20년</option>
+              <option value="30">30년</option>
+              <option value="all">전체 (47년)</option>
             </select>
 
             <select id="returns-dividend" class="w-full px-3 py-2 border rounded-lg text-sm">
-              <option value="">All stocks</option>
-              <option value="has-div">Has dividends</option>
-              <option value="no-div">No dividends</option>
+              <option value="">전체 종목</option>
+              <option value="has-div">배당 있음</option>
+              <option value="no-div">배당 없음</option>
             </select>
 
             <select id="returns-sort" class="w-full px-3 py-2 border rounded-lg text-sm">
-              <option value="cagr-desc">CAGR High→Low</option>
-              <option value="cagr-asc">CAGR Low→High</option>
-              <option value="vol-asc">Volatility Low→High</option>
-              <option value="ticker-asc">Ticker A-Z</option>
+              <option value="cagr-desc">CAGR 높은순</option>
+              <option value="cagr-asc">CAGR 낮은순</option>
+              <option value="vol-asc">변동성 낮은순</option>
+              <option value="ticker-asc">티커 A-Z</option>
             </select>
 
             <select id="returns-limit" class="w-full px-3 py-2 border rounded-lg text-sm">
-              <option value="50" selected>50 results</option>
-              <option value="100">100 results</option>
-              <option value="200">200 results</option>
-              <option value="all">All</option>
+              <option value="50" selected>50개</option>
+              <option value="100">100개</option>
+              <option value="200">200개</option>
+              <option value="all">전체</option>
             </select>
 
             <button id="returns-reset" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">
-              Reset
+              초기화
             </button>
           </div>
         </div>
@@ -171,19 +171,19 @@
           <table class="min-w-full text-sm">
             <thead class="bg-gray-50 text-gray-600">
               <tr>
-                <th class="text-left px-3 py-2">Ticker</th>
-                <th class="text-right px-3 py-2">Years</th>
+                <th class="text-left px-3 py-2">티커</th>
+                <th class="text-right px-3 py-2">기간</th>
                 <th class="text-right px-3 py-2">CAGR</th>
-                <th class="text-right px-3 py-2 hidden md:table-cell">Best Year</th>
-                <th class="text-right px-3 py-2 hidden md:table-cell">Worst Year</th>
-                <th class="text-right px-3 py-2">Volatility</th>
-                <th class="text-right px-3 py-2 hidden lg:table-cell">Div Yield</th>
-                <th class="text-center px-3 py-2 w-16">Action</th>
+                <th class="text-right px-3 py-2 hidden md:table-cell">최고 연도</th>
+                <th class="text-right px-3 py-2 hidden md:table-cell">최저 연도</th>
+                <th class="text-right px-3 py-2">변동성</th>
+                <th class="text-right px-3 py-2 hidden lg:table-cell">배당률</th>
+                <th class="text-center px-3 py-2 w-16">상세</th>
               </tr>
             </thead>
             <tbody id="returns-body" class="divide-y"></tbody>
           </table>
-          <p id="returns-empty" class="text-sm text-gray-500 mt-4 text-center hidden">No results to display.</p>
+          <p id="returns-empty" class="text-sm text-gray-500 mt-4 text-center hidden">표시할 결과가 없습니다.</p>
         </div>
       </section>
 
@@ -193,9 +193,9 @@
         <div class="bg-white rounded-xl p-4 shadow">
           <div class="flex flex-wrap items-center gap-3">
             <div class="flex-1 min-w-[200px]">
-              <label class="text-xs text-gray-500 mb-1 block">Select Stock</label>
+              <label class="text-xs text-gray-500 mb-1 block">종목 선택</label>
               <select id="details-stock" class="w-full px-3 py-2 border rounded-lg text-sm">
-                <option value="">-- Select a stock --</option>
+                <option value="">-- 종목을 선택하세요 --</option>
               </select>
             </div>
             <div class="flex gap-2 mt-5">
@@ -213,19 +213,19 @@
         <div id="details-content" class="hidden">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <div class="bg-white rounded-xl p-4 shadow">
-              <div class="text-xs text-gray-500 mb-1">Ticker</div>
+              <div class="text-xs text-gray-500 mb-1">티커</div>
               <div id="detail-ticker" class="text-xl font-bold mono">-</div>
             </div>
             <div class="bg-white rounded-xl p-4 shadow">
-              <div class="text-xs text-gray-500 mb-1">Data Years</div>
+              <div class="text-xs text-gray-500 mb-1">데이터 기간</div>
               <div id="detail-years" class="text-xl font-bold mono">-</div>
             </div>
             <div class="bg-white rounded-xl p-4 shadow">
-              <div class="text-xs text-gray-500 mb-1">20Y CAGR</div>
+              <div class="text-xs text-gray-500 mb-1">20년 CAGR</div>
               <div id="detail-cagr" class="text-xl font-bold mono">-</div>
             </div>
             <div class="bg-white rounded-xl p-4 shadow">
-              <div class="text-xs text-gray-500 mb-1">Volatility</div>
+              <div class="text-xs text-gray-500 mb-1">변동성</div>
               <div id="detail-vol" class="text-xl font-bold mono">-</div>
             </div>
           </div>
@@ -233,12 +233,12 @@
           <!-- Current Metrics (from individual stock file) -->
           <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 shadow mb-4">
             <h3 class="font-semibold text-gray-700 mb-3 text-sm flex items-center gap-2">
-              <i class="fas fa-chart-bar text-blue-500"></i> Current Metrics
-              <span id="detail-loading" class="text-xs text-blue-400 hidden"><i class="fas fa-spinner fa-spin"></i> Loading...</span>
+              <i class="fas fa-chart-bar text-blue-500"></i> 현재 지표
+              <span id="detail-loading" class="text-xs text-blue-400 hidden"><i class="fas fa-spinner fa-spin"></i> 로딩중...</span>
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 text-sm">
               <div>
-                <div class="text-xs text-gray-500">Price</div>
+                <div class="text-xs text-gray-500">주가</div>
                 <div id="detail-price" class="font-bold mono text-lg">-</div>
               </div>
               <div>
@@ -258,15 +258,15 @@
                 <div id="detail-eps-fwd" class="font-semibold mono">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">Div Yield</div>
+                <div class="text-xs text-gray-500">배당수익률</div>
                 <div id="detail-div-current" class="font-semibold mono">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">Div TTM</div>
+                <div class="text-xs text-gray-500">배당 TTM</div>
                 <div id="detail-div-ttm" class="font-semibold mono">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">Market Cap</div>
+                <div class="text-xs text-gray-500">시가총액</div>
                 <div id="detail-mktcap" class="font-semibold mono">-</div>
               </div>
             </div>
@@ -274,22 +274,22 @@
 
           <!-- Performance Summary -->
           <div class="bg-white rounded-xl p-4 shadow mb-4">
-            <h3 class="font-semibold text-gray-700 mb-3 text-sm">Performance Summary</h3>
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm">성과 요약</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <div class="text-xs text-gray-500">Best Year</div>
+                <div class="text-xs text-gray-500">최고 연도</div>
                 <div id="detail-best" class="font-semibold mono positive">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">Worst Year</div>
+                <div class="text-xs text-gray-500">최저 연도</div>
                 <div id="detail-worst" class="font-semibold mono negative">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">Div Yield (Hist)</div>
+                <div class="text-xs text-gray-500">배당수익률 (평균)</div>
                 <div id="detail-div-yield" class="font-semibold mono">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">Div Growth</div>
+                <div class="text-xs text-gray-500">배당성장률</div>
                 <div id="detail-div-growth" class="font-semibold mono">-</div>
               </div>
             </div>
@@ -299,13 +299,13 @@
           <div class="grid md:grid-cols-2 gap-4">
             <!-- Returns History Table -->
             <div class="bg-white rounded-xl p-4 shadow overflow-auto">
-              <h3 class="font-semibold text-gray-700 mb-3 text-sm">Annual Returns (Last 10 years)</h3>
+              <h3 class="font-semibold text-gray-700 mb-3 text-sm">연간 수익률 (최근 10년)</h3>
               <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                   <tr>
-                    <th class="text-left px-3 py-2">Year</th>
-                    <th class="text-right px-3 py-2">Return</th>
-                    <th class="text-left px-3 py-2 w-1/2">Bar</th>
+                    <th class="text-left px-3 py-2">연도</th>
+                    <th class="text-right px-3 py-2">수익률</th>
+                    <th class="text-left px-3 py-2 w-1/2">차트</th>
                   </tr>
                 </thead>
                 <tbody id="detail-returns-body" class="divide-y"></tbody>
@@ -315,15 +315,15 @@
             <!-- Dividend History (from individual stock file) -->
             <div class="bg-white rounded-xl p-4 shadow overflow-auto">
               <h3 class="font-semibold text-green-700 mb-3 text-sm flex items-center gap-2">
-                <i class="fas fa-coins text-green-500"></i> Dividend History
+                <i class="fas fa-coins text-green-500"></i> 배당 이력
               </h3>
               <div id="detail-dividends-container" class="max-h-64 overflow-auto">
                 <table class="min-w-full text-sm">
                   <thead class="bg-green-50 text-green-700 sticky top-0">
                     <tr>
-                      <th class="text-left px-3 py-2">Year</th>
-                      <th class="text-right px-3 py-2">Amount</th>
-                      <th class="text-right px-3 py-2">YoY</th>
+                      <th class="text-left px-3 py-2">연도</th>
+                      <th class="text-right px-3 py-2">금액</th>
+                      <th class="text-right px-3 py-2">전년비</th>
                     </tr>
                   </thead>
                   <tbody id="detail-dividends-body" class="divide-y"></tbody>
@@ -336,8 +336,8 @@
         <!-- Empty State -->
         <div id="details-empty" class="bg-white rounded-xl p-8 shadow text-center text-gray-400">
           <i class="fas fa-search text-3xl mb-3"></i>
-          <p>Select a stock from the dropdown above</p>
-          <p class="text-xs mt-1">or click "Details" from the Returns tab</p>
+          <p>위의 드롭다운에서 종목을 선택하세요</p>
+          <p class="text-xs mt-1">또는 수익률 탭에서 '상세' 버튼을 클릭하세요</p>
         </div>
       </section>
 
@@ -345,9 +345,9 @@
       <section id="tab-movers" class="hidden space-y-4 fade-in">
         <div class="bg-white rounded-xl p-4 shadow">
           <div class="flex items-center gap-4">
-            <h2 class="font-semibold text-gray-700">Daily Movers</h2>
+            <h2 class="font-semibold text-gray-700">일간 등락</h2>
             <select id="movers-date" class="px-3 py-1.5 border rounded-lg text-sm">
-              <option value="latest">Latest</option>
+              <option value="latest">최신</option>
             </select>
           </div>
         </div>
@@ -356,15 +356,15 @@
           <!-- Gainers -->
           <div class="bg-white rounded-xl p-4 shadow">
             <h3 class="font-semibold text-green-600 mb-3 flex items-center gap-2">
-              <i class="fas fa-arrow-trend-up"></i> Top Gainers
+              <i class="fas fa-arrow-trend-up"></i> 상승 종목
             </h3>
             <div class="overflow-auto">
               <table class="min-w-full text-sm">
                 <thead class="bg-green-50 text-green-700">
                   <tr>
                     <th class="text-left px-3 py-2">#</th>
-                    <th class="text-left px-3 py-2">Symbol</th>
-                    <th class="text-right px-3 py-2">Change</th>
+                    <th class="text-left px-3 py-2">심볼</th>
+                    <th class="text-right px-3 py-2">변동</th>
                   </tr>
                 </thead>
                 <tbody id="gainers-body" class="divide-y"></tbody>
@@ -375,15 +375,15 @@
           <!-- Losers -->
           <div class="bg-white rounded-xl p-4 shadow">
             <h3 class="font-semibold text-red-600 mb-3 flex items-center gap-2">
-              <i class="fas fa-arrow-trend-down"></i> Top Losers
+              <i class="fas fa-arrow-trend-down"></i> 하락 종목
             </h3>
             <div class="overflow-auto">
               <table class="min-w-full text-sm">
                 <thead class="bg-red-50 text-red-700">
                   <tr>
                     <th class="text-left px-3 py-2">#</th>
-                    <th class="text-left px-3 py-2">Symbol</th>
-                    <th class="text-right px-3 py-2">Change</th>
+                    <th class="text-left px-3 py-2">심볼</th>
+                    <th class="text-right px-3 py-2">변동</th>
                   </tr>
                 </thead>
                 <tbody id="losers-body" class="divide-y"></tbody>
@@ -397,16 +397,16 @@
       <section id="tab-dividends" class="hidden space-y-4 fade-in">
         <div class="bg-white rounded-xl p-4 shadow">
           <div class="flex flex-wrap items-center gap-4">
-            <h2 class="font-semibold text-gray-700">Dividend Analysis</h2>
+            <h2 class="font-semibold text-gray-700">배당 분석</h2>
             <select id="dividends-sort" class="px-3 py-1.5 border rounded-lg text-sm">
-              <option value="yield-desc">Yield High→Low</option>
-              <option value="growth-desc">Growth High→Low</option>
-              <option value="ticker-asc">Ticker A-Z</option>
+              <option value="yield-desc">수익률 높은순</option>
+              <option value="growth-desc">성장률 높은순</option>
+              <option value="ticker-asc">티커 A-Z</option>
             </select>
             <select id="dividends-limit" class="px-3 py-1.5 border rounded-lg text-sm">
-              <option value="50" selected>Top 50</option>
-              <option value="100">Top 100</option>
-              <option value="all">All</option>
+              <option value="50" selected>상위 50</option>
+              <option value="100">상위 100</option>
+              <option value="all">전체</option>
             </select>
           </div>
         </div>
@@ -415,16 +415,16 @@
           <table class="min-w-full text-sm">
             <thead class="bg-amber-50 text-amber-700">
               <tr>
-                <th class="text-left px-3 py-2">Ticker</th>
-                <th class="text-right px-3 py-2">Current Yield</th>
-                <th class="text-right px-3 py-2">5Y Div Growth</th>
-                <th class="text-right px-3 py-2 hidden md:table-cell">Latest Amount</th>
-                <th class="text-right px-3 py-2 hidden md:table-cell">Years of Data</th>
+                <th class="text-left px-3 py-2">티커</th>
+                <th class="text-right px-3 py-2">현재 수익률</th>
+                <th class="text-right px-3 py-2">5년 배당성장률</th>
+                <th class="text-right px-3 py-2 hidden md:table-cell">최근 금액</th>
+                <th class="text-right px-3 py-2 hidden md:table-cell">데이터 기간</th>
               </tr>
             </thead>
             <tbody id="dividends-body" class="divide-y"></tbody>
           </table>
-          <p id="dividends-empty" class="text-sm text-gray-500 mt-4 text-center hidden">No dividend data available.</p>
+          <p id="dividends-empty" class="text-sm text-gray-500 mt-4 text-center hidden">배당 데이터가 없습니다.</p>
         </div>
       </section>
 
@@ -432,10 +432,10 @@
       <section id="tab-indices" class="hidden space-y-4 fade-in">
         <!-- Index sub-tabs -->
         <div class="bg-white rounded-xl p-2 shadow flex gap-2 overflow-x-auto">
-          <button data-indextab="returns" class="px-3 py-1.5 text-sm rounded-lg bg-violet-100 text-violet-700 font-medium">Returns</button>
-          <button data-indextab="holdings" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">Holdings</button>
-          <button data-indextab="performance" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">YTD Performance</button>
-          <button data-indextab="mag7" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">Magnificent 7</button>
+          <button data-indextab="returns" class="px-3 py-1.5 text-sm rounded-lg bg-violet-100 text-violet-700 font-medium">수익률</button>
+          <button data-indextab="holdings" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">구성종목</button>
+          <button data-indextab="performance" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">YTD 성과</button>
+          <button data-indextab="mag7" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">매그니피센트 7</button>
         </div>
 
         <!-- Sub-tab: Returns (default) -->
@@ -449,15 +449,15 @@
               <div class="text-xs text-gray-500">20Y CAGR</div>
               <div class="mt-3 text-sm">
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Years</span>
+                  <span class="text-gray-500">기간</span>
                   <span class="mono" id="idx-sp500-years">-</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Best</span>
+                  <span class="text-gray-500">최고</span>
                   <span class="mono positive" id="idx-sp500-best">-</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Worst</span>
+                  <span class="text-gray-500">최저</span>
                   <span class="mono negative" id="idx-sp500-worst">-</span>
                 </div>
               </div>
@@ -471,15 +471,15 @@
               <div class="text-xs text-gray-500">20Y CAGR</div>
               <div class="mt-3 text-sm">
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Years</span>
+                  <span class="text-gray-500">기간</span>
                   <span class="mono" id="idx-nasdaq-years">-</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Best</span>
+                  <span class="text-gray-500">최고</span>
                   <span class="mono positive" id="idx-nasdaq-best">-</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Worst</span>
+                  <span class="text-gray-500">최저</span>
                   <span class="mono negative" id="idx-nasdaq-worst">-</span>
                 </div>
               </div>
@@ -493,15 +493,15 @@
               <div class="text-xs text-gray-500">20Y CAGR</div>
               <div class="mt-3 text-sm">
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Years</span>
+                  <span class="text-gray-500">기간</span>
                   <span class="mono" id="idx-dow-years">-</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Best</span>
+                  <span class="text-gray-500">최고</span>
                   <span class="mono positive" id="idx-dow-best">-</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Worst</span>
+                  <span class="text-gray-500">최저</span>
                   <span class="mono negative" id="idx-dow-worst">-</span>
                 </div>
               </div>
@@ -510,11 +510,11 @@
 
           <!-- Index Returns Table -->
           <div class="bg-white rounded-xl p-4 shadow overflow-auto">
-            <h3 class="font-semibold text-gray-700 mb-3 text-sm">Annual Returns Comparison (Last 10 Years)</h3>
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm">연간 수익률 비교 (최근 10년)</h3>
             <table class="min-w-full text-sm">
               <thead class="bg-gray-50 text-gray-600">
                 <tr>
-                  <th class="text-left px-3 py-2">Year</th>
+                  <th class="text-left px-3 py-2">연도</th>
                   <th class="text-right px-3 py-2">S&P 500</th>
                   <th class="text-right px-3 py-2">NASDAQ 100</th>
                   <th class="text-right px-3 py-2">Dow Jones</th>
@@ -531,16 +531,16 @@
             <!-- S&P 500 Holdings -->
             <div class="bg-white rounded-xl p-4 shadow">
               <h3 class="font-semibold text-blue-600 mb-3 flex items-center gap-2">
-                <i class="fas fa-list-ol"></i> S&P 500 Top 20
+                <i class="fas fa-list-ol"></i> S&P 500 상위 20
               </h3>
-              <div id="sp500-count" class="text-xs text-gray-500 mb-2">- constituents</div>
+              <div id="sp500-count" class="text-xs text-gray-500 mb-2">구성종목: -</div>
               <div class="overflow-auto max-h-80">
                 <table class="min-w-full text-xs">
                   <thead class="bg-blue-50 text-blue-700">
                     <tr>
                       <th class="text-left px-2 py-1">#</th>
-                      <th class="text-left px-2 py-1">Symbol</th>
-                      <th class="text-right px-2 py-1">Weight</th>
+                      <th class="text-left px-2 py-1">심볼</th>
+                      <th class="text-right px-2 py-1">비중</th>
                     </tr>
                   </thead>
                   <tbody id="sp500-holdings" class="divide-y"></tbody>
@@ -551,16 +551,16 @@
             <!-- NASDAQ 100 Holdings -->
             <div class="bg-white rounded-xl p-4 shadow">
               <h3 class="font-semibold text-teal-600 mb-3 flex items-center gap-2">
-                <i class="fas fa-list-ol"></i> NASDAQ 100 Top 20
+                <i class="fas fa-list-ol"></i> NASDAQ 100 상위 20
               </h3>
-              <div id="nasdaq-count" class="text-xs text-gray-500 mb-2">- constituents</div>
+              <div id="nasdaq-count" class="text-xs text-gray-500 mb-2">구성종목: -</div>
               <div class="overflow-auto max-h-80">
                 <table class="min-w-full text-xs">
                   <thead class="bg-teal-50 text-teal-700">
                     <tr>
                       <th class="text-left px-2 py-1">#</th>
-                      <th class="text-left px-2 py-1">Symbol</th>
-                      <th class="text-right px-2 py-1">Weight</th>
+                      <th class="text-left px-2 py-1">심볼</th>
+                      <th class="text-right px-2 py-1">비중</th>
                     </tr>
                   </thead>
                   <tbody id="nasdaq-holdings" class="divide-y"></tbody>
@@ -571,16 +571,16 @@
             <!-- Dow Jones Holdings -->
             <div class="bg-white rounded-xl p-4 shadow">
               <h3 class="font-semibold text-indigo-600 mb-3 flex items-center gap-2">
-                <i class="fas fa-list-ol"></i> Dow Jones 30
+                <i class="fas fa-list-ol"></i> 다우존스 30
               </h3>
-              <div id="dow-count" class="text-xs text-gray-500 mb-2">- constituents</div>
+              <div id="dow-count" class="text-xs text-gray-500 mb-2">구성종목: -</div>
               <div class="overflow-auto max-h-80">
                 <table class="min-w-full text-xs">
                   <thead class="bg-indigo-50 text-indigo-700">
                     <tr>
                       <th class="text-left px-2 py-1">#</th>
-                      <th class="text-left px-2 py-1">Symbol</th>
-                      <th class="text-right px-2 py-1">Weight</th>
+                      <th class="text-left px-2 py-1">심볼</th>
+                      <th class="text-right px-2 py-1">비중</th>
                     </tr>
                   </thead>
                   <tbody id="dow-holdings" class="divide-y"></tbody>
@@ -596,14 +596,14 @@
             <!-- Top Performers -->
             <div class="bg-white rounded-xl p-4 shadow">
               <h3 class="font-semibold text-green-600 mb-3 flex items-center gap-2">
-                <i class="fas fa-arrow-trend-up"></i> S&P 500 YTD Best
+                <i class="fas fa-arrow-trend-up"></i> S&P 500 YTD 최고
               </h3>
               <div class="overflow-auto max-h-80">
                 <table class="min-w-full text-sm">
                   <thead class="bg-green-50 text-green-700">
                     <tr>
                       <th class="text-left px-2 py-1">#</th>
-                      <th class="text-left px-2 py-1">Symbol</th>
+                      <th class="text-left px-2 py-1">심볼</th>
                       <th class="text-right px-2 py-1">YTD</th>
                     </tr>
                   </thead>
@@ -615,14 +615,14 @@
             <!-- Worst Performers -->
             <div class="bg-white rounded-xl p-4 shadow">
               <h3 class="font-semibold text-red-600 mb-3 flex items-center gap-2">
-                <i class="fas fa-arrow-trend-down"></i> S&P 500 YTD Worst
+                <i class="fas fa-arrow-trend-down"></i> S&P 500 YTD 최저
               </h3>
               <div class="overflow-auto max-h-80">
                 <table class="min-w-full text-sm">
                   <thead class="bg-red-50 text-red-700">
                     <tr>
                       <th class="text-left px-2 py-1">#</th>
-                      <th class="text-left px-2 py-1">Symbol</th>
+                      <th class="text-left px-2 py-1">심볼</th>
                       <th class="text-right px-2 py-1">YTD</th>
                     </tr>
                   </thead>
@@ -638,20 +638,20 @@
           <div class="bg-white rounded-xl p-4 shadow">
             <div class="flex items-center justify-between mb-4">
               <h3 class="font-semibold text-purple-600 flex items-center gap-2">
-                <i class="fas fa-star"></i> Magnificent 7
+                <i class="fas fa-star"></i> 매그니피센트 7
               </h3>
-              <span id="mag7-marketcap" class="text-sm text-gray-500">Total Market Cap: -</span>
+              <span id="mag7-marketcap" class="text-sm text-gray-500">총 시가총액: -</span>
             </div>
             <div class="overflow-auto">
               <table class="min-w-full text-sm">
                 <thead class="bg-purple-50 text-purple-700">
                   <tr>
                     <th class="text-left px-3 py-2">#</th>
-                    <th class="text-left px-3 py-2">Company</th>
-                    <th class="text-left px-3 py-2">Symbol</th>
-                    <th class="text-right px-3 py-2">Weight</th>
-                    <th class="text-right px-3 py-2">Price</th>
-                    <th class="text-right px-3 py-2">Change</th>
+                    <th class="text-left px-3 py-2">회사</th>
+                    <th class="text-left px-3 py-2">심볼</th>
+                    <th class="text-right px-3 py-2">비중</th>
+                    <th class="text-right px-3 py-2">주가</th>
+                    <th class="text-right px-3 py-2">변동</th>
                   </tr>
                 </thead>
                 <tbody id="mag7-body" class="divide-y"></tbody>
@@ -664,14 +664,14 @@
       <!-- Tab 6: Economy -->
       <section id="tab-economy" class="hidden space-y-4 fade-in">
         <div class="bg-white rounded-xl p-4 shadow">
-          <h2 class="font-semibold text-gray-700">Economic Indicators</h2>
-          <p class="text-xs text-gray-500 mt-1">Treasury, mortgage rates, and crypto returns</p>
+          <h2 class="font-semibold text-gray-700">경제 지표</h2>
+          <p class="text-xs text-gray-500 mt-1">국채금리, 모기지 금리, 암호화폐 수익률</p>
         </div>
 
         <!-- Treasury Yields -->
         <div class="bg-white rounded-xl p-4 shadow">
           <h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <i class="fas fa-landmark text-blue-500"></i> Treasury Yields (Current)
+            <i class="fas fa-landmark text-blue-500"></i> 국채 수익률 (현재)
           </h3>
           <div class="grid grid-cols-4 md:grid-cols-7 gap-2" id="treasury-grid">
             <div class="text-center p-2 bg-blue-50 rounded">
@@ -708,37 +708,37 @@
         <!-- Spread & Curve + Mortgage Rates -->
         <div class="grid md:grid-cols-3 gap-4">
           <div class="bg-white rounded-xl p-4 shadow">
-            <h3 class="font-semibold text-gray-700 mb-3 text-sm">Yield Spread</h3>
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm">금리 스프레드</h3>
             <div class="space-y-2">
               <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">10Y - 2Y Spread</span>
+                <span class="text-sm text-gray-600">10년-2년 스프레드</span>
                 <span class="mono font-semibold" id="spread-10y2y">-</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">10Y - 3M Spread</span>
+                <span class="text-sm text-gray-600">10년-3개월 스프레드</span>
                 <span class="mono font-semibold" id="spread-10y3m">-</span>
               </div>
             </div>
           </div>
           <div class="bg-white rounded-xl p-4 shadow">
-            <h3 class="font-semibold text-gray-700 mb-3 text-sm">Curve Status</h3>
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm">커브 상태</h3>
             <div id="curve-status" class="text-center py-4">
               <div class="text-2xl font-bold">-</div>
-              <div class="text-xs text-gray-500">Based on 10Y-2Y spread</div>
+              <div class="text-xs text-gray-500">10년-2년 스프레드 기준</div>
             </div>
           </div>
           <!-- Mortgage Rates -->
           <div class="bg-white rounded-xl p-4 shadow">
             <h3 class="font-semibold text-gray-700 mb-3 text-sm flex items-center gap-2">
-              <i class="fas fa-house text-green-500"></i> Mortgage Rates
+              <i class="fas fa-house text-green-500"></i> 모기지 금리
             </h3>
             <div class="space-y-2" id="mortgage-rates">
               <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">30Y Fixed</span>
+                <span class="text-sm text-gray-600">30년 고정</span>
                 <span class="mono font-semibold" id="mtg-30y">-</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">15Y Fixed</span>
+                <span class="text-sm text-gray-600">15년 고정</span>
                 <span class="mono font-semibold" id="mtg-15y">-</span>
               </div>
               <div class="flex justify-between items-center">
@@ -754,14 +754,14 @@
           <!-- BTC Returns -->
           <div class="bg-white rounded-xl p-4 shadow">
             <h3 class="font-semibold text-orange-600 mb-3 flex items-center gap-2">
-              <i class="fab fa-bitcoin"></i> Bitcoin Annual Returns
+              <i class="fab fa-bitcoin"></i> 비트코인 연간 수익률
             </h3>
             <div class="overflow-auto max-h-64">
               <table class="min-w-full text-sm">
                 <thead class="bg-orange-50 text-orange-700">
                   <tr>
-                    <th class="text-left px-3 py-1">Year</th>
-                    <th class="text-right px-3 py-1">Return</th>
+                    <th class="text-left px-3 py-1">연도</th>
+                    <th class="text-right px-3 py-1">수익률</th>
                   </tr>
                 </thead>
                 <tbody id="btc-returns-body" class="divide-y"></tbody>
@@ -772,14 +772,14 @@
           <!-- ETH Returns -->
           <div class="bg-white rounded-xl p-4 shadow">
             <h3 class="font-semibold text-indigo-600 mb-3 flex items-center gap-2">
-              <i class="fab fa-ethereum"></i> Ethereum Annual Returns
+              <i class="fab fa-ethereum"></i> 이더리움 연간 수익률
             </h3>
             <div class="overflow-auto max-h-64">
               <table class="min-w-full text-sm">
                 <thead class="bg-indigo-50 text-indigo-700">
                   <tr>
-                    <th class="text-left px-3 py-1">Year</th>
-                    <th class="text-right px-3 py-1">Return</th>
+                    <th class="text-left px-3 py-1">연도</th>
+                    <th class="text-right px-3 py-1">수익률</th>
                   </tr>
                 </thead>
                 <tbody id="eth-returns-body" class="divide-y"></tbody>
@@ -791,12 +791,12 @@
         <!-- Inflation History Section -->
         <div class="bg-white rounded-xl p-4 shadow">
           <h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <i class="fas fa-chart-area text-red-500"></i> US Inflation History (CPI)
+            <i class="fas fa-chart-area text-red-500"></i> 미국 인플레이션 (CPI)
           </h3>
           <div class="grid md:grid-cols-2 gap-4">
             <!-- Current Inflation Stats -->
             <div class="bg-red-50 rounded-lg p-3">
-              <div class="text-xs text-gray-500 mb-1">Latest Inflation</div>
+              <div class="text-xs text-gray-500 mb-1">최신 인플레이션</div>
               <div id="inflation-current" class="text-2xl font-bold mono text-red-600">-</div>
               <div id="inflation-year" class="text-xs text-gray-500">-</div>
             </div>
@@ -805,8 +805,8 @@
               <table class="min-w-full text-sm">
                 <thead class="bg-red-50 text-red-700 sticky top-0">
                   <tr>
-                    <th class="text-left px-2 py-1">Year</th>
-                    <th class="text-right px-2 py-1">Rate</th>
+                    <th class="text-left px-2 py-1">연도</th>
+                    <th class="text-right px-2 py-1">비율</th>
                   </tr>
                 </thead>
                 <tbody id="inflation-body" class="divide-y"></tbody>
@@ -818,17 +818,17 @@
         <!-- Crypto Prices Section -->
         <div class="bg-white rounded-xl p-4 shadow">
           <h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <i class="fas fa-coins text-yellow-500"></i> Top Cryptocurrencies (Current)
+            <i class="fas fa-coins text-yellow-500"></i> 암호화폐 시세 (현재)
           </h3>
           <div class="overflow-auto">
             <table class="min-w-full text-sm">
               <thead class="bg-yellow-50 text-yellow-700">
                 <tr>
                   <th class="text-left px-3 py-2">#</th>
-                  <th class="text-left px-3 py-2">Symbol</th>
-                  <th class="text-left px-3 py-2">Name</th>
-                  <th class="text-right px-3 py-2">Price</th>
-                  <th class="text-right px-3 py-2">24h Change</th>
+                  <th class="text-left px-3 py-2">심볼</th>
+                  <th class="text-left px-3 py-2">이름</th>
+                  <th class="text-right px-3 py-2">가격</th>
+                  <th class="text-right px-3 py-2">24시간 변동</th>
                 </tr>
               </thead>
               <tbody id="crypto-body" class="divide-y"></tbody>
@@ -844,27 +844,27 @@
   <nav class="mobile-tabs sm:hidden">
     <button data-tab="returns" class="mobile-tab active">
       <i class="fas fa-chart-line"></i>
-      <span>Returns</span>
+      <span>수익률</span>
     </button>
     <button data-tab="details" class="mobile-tab">
       <i class="fas fa-info-circle"></i>
-      <span>Details</span>
+      <span>상세</span>
     </button>
     <button data-tab="movers" class="mobile-tab">
       <i class="fas fa-arrows-up-down"></i>
-      <span>Movers</span>
+      <span>등락</span>
     </button>
     <button data-tab="dividends" class="mobile-tab">
       <i class="fas fa-coins"></i>
-      <span>Dividends</span>
+      <span>배당</span>
     </button>
     <button data-tab="indices" class="mobile-tab">
       <i class="fas fa-layer-group"></i>
-      <span>Indices</span>
+      <span>지수</span>
     </button>
     <button data-tab="economy" class="mobile-tab">
       <i class="fas fa-landmark"></i>
-      <span>Economy</span>
+      <span>경제</span>
     </button>
   </nav>
 
@@ -967,7 +967,7 @@
         el.loadingOverlay.innerHTML = `
           <div class="text-red-600">
             <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
-            <p class="font-semibold">Error loading data</p>
+            <p class="font-semibold">데이터 로딩 오류</p>
             <p class="text-sm mt-2">${err.message}</p>
           </div>
         `;
@@ -1351,7 +1351,7 @@
       document.getElementById('detail-div-current').textContent = '-';
       document.getElementById('detail-div-ttm').textContent = '-';
       document.getElementById('detail-mktcap').textContent = '-';
-      document.getElementById('detail-dividends-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+      document.getElementById('detail-dividends-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
 
       // Load individual stock file for detailed data
       loading.classList.remove('hidden');
@@ -1412,8 +1412,8 @@
       const losers = state.data.losers;
 
       if (!gainers || !losers) {
-        document.getElementById('gainers-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
-        document.getElementById('losers-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        document.getElementById('gainers-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
+        document.getElementById('losers-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
         return;
       }
 
@@ -1597,7 +1597,7 @@
             <td class="px-2 py-1 font-semibold mono">${h.symbol}</td>
             <td class="text-right px-2 py-1 mono">${h.weight?.toFixed(2) || '-'}%</td>
           </tr>
-        `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
       };
 
       renderHoldings(state.data.sp500, 'sp500-holdings', 'sp500-count');
@@ -1631,7 +1631,7 @@
           <td class="px-2 py-1 font-semibold mono">${p.symbol}</td>
           <td class="text-right px-2 py-1 mono positive">+${p.ytdReturn?.toFixed(1)}%</td>
         </tr>
-      `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+      `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
 
       // Worst performers (last 20)
       const worst = [...perf].reverse().slice(0, 20);
@@ -1641,14 +1641,14 @@
           <td class="px-2 py-1 font-semibold mono">${p.symbol}</td>
           <td class="text-right px-2 py-1 mono negative">${p.ytdReturn?.toFixed(1)}%</td>
         </tr>
-      `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+      `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
     }
 
     function renderMagnificent7() {
       const mag7 = state.data.magnificent7;
 
       if (!mag7?.holdings) {
-        document.getElementById('mag7-body').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        document.getElementById('mag7-body').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
         return;
       }
 
@@ -1737,7 +1737,7 @@
           </tr>
         `).join('');
       } else {
-        document.getElementById('btc-returns-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        document.getElementById('btc-returns-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
       }
 
       // ETH Annual Returns
@@ -1752,7 +1752,7 @@
           </tr>
         `).join('');
       } else {
-        document.getElementById('eth-returns-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        document.getElementById('eth-returns-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
       }
 
       // Inflation History
@@ -1777,7 +1777,7 @@
           `;
         }).join('');
       } else {
-        document.getElementById('inflation-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        document.getElementById('inflation-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
       }
 
       // Crypto Prices
@@ -1793,7 +1793,7 @@
           </tr>
         `).join('');
       } else {
-        document.getElementById('crypto-body').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        document.getElementById('crypto-body').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">로딩중...</td></tr>';
       }
     }
 
