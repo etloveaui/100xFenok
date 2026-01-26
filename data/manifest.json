@@ -3,7 +3,6 @@
   "created": "2026-01-20",
   "last_updated": "2026-01-26",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
-
   "folders": {
     "benchmarks": {
       "version": "3.7.0",
@@ -69,8 +68,14 @@
       "description": "Index holdings, returns, individual stocks"
     }
   },
-
   "recent_changes": [
+    {
+      "date": "2026-01-26",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "Weekly data update: 829 data points (2010-03-12 ~ 2026-01-23)",
+      "breaking": false
+    },
     {
       "date": "2026-01-26",
       "folder": "all",
@@ -114,7 +119,6 @@
       "breaking": false
     }
   ],
-
   "agent_instructions": {
     "on_session_start": "Read this manifest to understand current data structure",
     "on_schema_change": "Update folder schema.json AND this manifest recent_changes",

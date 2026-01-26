@@ -1,8 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-02-26 ~ present (15+ years, 829+ data points)
+> **Period**: 2010-03-12 ~ 2026-01-23 (16+ years, 829 data points)
 > **Version**: 3.7.0
+> **Last Update**: 2026-01-26
 
 ---
 
@@ -40,8 +41,8 @@
 ```json
 {
   "metadata": {
-    "version": "2026-01-17",
-    "generated": "2026-01-17T...",
+    "version": "2026-01-23",
+    "generated": "2026-01-26T16:43:59",
     "source": "Bloomberg Terminal",
     "update_frequency": "weekly"
   },

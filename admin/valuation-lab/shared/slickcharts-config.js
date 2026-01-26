@@ -14,22 +14,87 @@ const SLICKCHARTS_CONFIG = {
   DATA_BASE: getSlickBasePath() + '/data/slickcharts',
 
   FILES: {
-    // Primary data files (fast load)
+    // ===== STOCKS DATA (7 files) =====
     STOCKS_RETURNS: 'stocks-returns.json',              // ~641KB, 516 stocks, 47yr returns
     STOCKS_DIVIDENDS_RECENT: 'stocks-dividends-recent.json',  // ~540KB, 5yr dividends
-
-    // Secondary data files (lazy load)
     STOCKS_DIVIDENDS_HISTORICAL: 'stocks-dividends-historical.json', // ~1.4MB, 13yr dividends
+    STOCKS_DIVIDENDS: 'stocks-dividends.json',
+    UNIVERSE: 'universe.json',
+    SYMBOLS_ALL: 'symbols-all.json',
+    SYMBOLS: 'symbols.json',
+    MEMBERSHIP_CHANGES: 'membership-changes.json',
 
-    // Index returns for comparison
-    SP500_RETURNS: 'sp500-returns.json'
+    // ===== INDEX HOLDINGS (4 files) =====
+    SP500: 'sp500.json',
+    NASDAQ100: 'nasdaq100.json',
+    DOWJONES: 'dowjones.json',
+    MAGNIFICENT7: 'magnificent7.json',
+
+    // ===== INDEX RETURNS (3 files) =====
+    SP500_RETURNS: 'sp500-returns.json',
+    NASDAQ100_RETURNS: 'nasdaq100-returns.json',
+    DOWJONES_RETURNS: 'dowjones-returns.json',
+
+    // ===== INDEX PERFORMANCE (3 files) =====
+    SP500_PERFORMANCE: 'sp500-performance.json',
+    NASDAQ100_PERFORMANCE: 'nasdaq100-performance.json',
+    DOWJONES_PERFORMANCE: 'dowjones-performance.json',
+
+    // ===== INDEX YIELD (4 files) =====
+    SP500_YIELD: 'sp500-yield.json',
+    NASDAQ100_YIELD: 'nasdaq100-yield.json',
+    DOWJONES_YIELD: 'dowjones-yield.json',
+    NASDAQ100_RATIO: 'nasdaq100-ratio.json',
+
+    // ===== INDEX ANALYSIS (4 files) =====
+    SP500_ANALYSIS: 'sp500-analysis.json',
+    NASDAQ100_ANALYSIS: 'nasdaq100-analysis.json',
+    SP500_DRAWDOWN: 'sp500-drawdown.json',
+    SP500_MARKETCAP: 'sp500-marketcap.json',
+
+    // ===== DAILY MOVERS (2 files) =====
+    GAINERS: 'gainers.json',
+    LOSERS: 'losers.json',
+
+    // ===== RATES (3 files) =====
+    TREASURY: 'treasury.json',
+    MORTGAGE: 'mortgage.json',
+    INFLATION: 'inflation.json',
+
+    // ===== CRYPTO (3 files) =====
+    CURRENCY: 'currency.json',
+    BTC_RETURNS: 'btc-returns.json',
+    ETH_RETURNS: 'eth-returns.json',
+
+    // ===== SPECIAL (3 files) =====
+    BERKSHIRE: 'berkshire.json',
+    ETF: 'etf.json',
+    SCHEMA: 'schema.json'
+  },
+
+  // Individual stock file loader (516 files in stocks/ folder)
+  STOCK_FILES: {
+    BASE_PATH: 'stocks/',
+    getStockUrl: function(symbol) {
+      return `${SLICKCHARTS_CONFIG.DATA_BASE}/stocks/${symbol}.json`;
+    }
   },
 
   // Load strategy: 3-Tier caching + split files
   LOAD_STRATEGY: {
     INITIAL: ['STOCKS_RETURNS', 'STOCKS_DIVIDENDS_RECENT'],  // Load first
     LAZY: ['STOCKS_DIVIDENDS_HISTORICAL'],                   // Load on demand
-    REFERENCE: ['SP500_RETURNS']                             // Comparison data
+    REFERENCE: ['SP500_RETURNS'],                            // Comparison data
+    MOVERS: ['GAINERS', 'LOSERS'],                           // Daily movers
+    INDICES: {
+      HOLDINGS: ['SP500', 'NASDAQ100', 'DOWJONES', 'MAGNIFICENT7'],
+      RETURNS: ['SP500_RETURNS', 'NASDAQ100_RETURNS', 'DOWJONES_RETURNS'],
+      PERFORMANCE: ['SP500_PERFORMANCE', 'NASDAQ100_PERFORMANCE', 'DOWJONES_PERFORMANCE'],
+      YIELD: ['SP500_YIELD', 'NASDAQ100_YIELD', 'DOWJONES_YIELD', 'NASDAQ100_RATIO'],
+      ANALYSIS: ['SP500_ANALYSIS', 'NASDAQ100_ANALYSIS', 'SP500_DRAWDOWN', 'SP500_MARKETCAP']
+    },
+    ECONOMY: ['TREASURY', 'MORTGAGE', 'INFLATION', 'CURRENCY', 'BTC_RETURNS', 'ETH_RETURNS'],
+    SPECIAL: ['BERKSHIRE', 'ETF', 'MEMBERSHIP_CHANGES']
   },
 
   // Default filter settings
@@ -66,6 +131,18 @@ async function fetchSlickChartsData(fileKey) {
   const url = `${SLICKCHARTS_CONFIG.DATA_BASE}/${file}`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+  return response.json();
+}
+
+/**
+ * Fetch individual stock detail from stocks/{symbol}.json
+ * @param {string} symbol - Stock ticker symbol (e.g., 'AAPL', 'MSFT')
+ * @returns {Promise<Object>} Stock detail data including current, metrics_history, returns, dividends
+ */
+async function fetchStockDetail(symbol) {
+  const url = SLICKCHARTS_CONFIG.STOCK_FILES.getStockUrl(symbol);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch stock ${symbol}`);
   return response.json();
 }
 

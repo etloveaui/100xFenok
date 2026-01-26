@@ -1,7 +1,7 @@
 {
   "folder": "benchmarks",
   "version": "3.7.0",
-  "updated": "2026-01-20",
+  "updated": "2026-01-26",
   "source": "Bloomberg Terminal",
   "update_frequency": "weekly (Sunday)",
   "maintainer": "Manual upload from Bloomberg",
@@ -10,8 +10,8 @@
     "us.json": {
       "description": "S&P 500, Nasdaq 100, Nasdaq Composite, Russell 2000",
       "size_kb": 689,
-      "records_per_index": 780,
-      "date_range": ["2010-01", "2026-01"],
+      "records_per_index": 829,
+      "date_range": ["2010-03", "2026-01"],
       "schema": {
         "metadata": {
           "version": "string (YYYY-MM-DD)",
@@ -59,30 +59,24 @@
     },
     "summaries.json": {
       "added_in": "3.7.0",
-      "description": "Momentum (1M/3M/6M/YTD) + Yearly Returns for all indices",
+      "description": "Momentum (1M/3M/6M/YTD) + Yearly Returns for all 36 indices/sectors",
       "size_kb": 12,
+      "sections": 36,
       "schema": {
         "metadata": {
+          "version": "YYYY-MM-DD",
           "generated": "ISO timestamp",
-          "source_files": ["us.json", "developed.json", "emerging.json", "msci.json", "us_sectors.json", "micro_sectors.json"]
+          "type": "summary",
+          "source": "Bloomberg Terminal"
         },
-        "indices.{index_key}": {
-          "name": "string",
-          "latest": {
-            "date": "YYYY-MM-DD",
-            "pe": "number",
-            "pb": "number",
-            "roe": "number"
-          },
-          "momentum": {
-            "1m": "number (percent)",
-            "3m": "number (percent)",
-            "6m": "number (percent)",
-            "ytd": "number (percent)"
-          },
-          "returns": {
-            "YYYY": "number (percent, e.g., 2025, 2024, 2023)"
-          }
+        "momentum.{index_key}": {
+          "1m": "number (decimal, e.g., 0.0182 = 1.82%)",
+          "3m": "number (decimal)",
+          "6m": "number (decimal)",
+          "ytd": "number (decimal)"
+        },
+        "yearly_returns.{index_key}": {
+          "YYYY": "number (decimal, e.g., 2025, 2024, 2023...2018)"
         }
       }
     }

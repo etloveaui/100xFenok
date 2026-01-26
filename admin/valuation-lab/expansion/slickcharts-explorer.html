@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlickCharts Explorer - Valuation Lab</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .positive { color: #059669; }
+    .negative { color: #dc2626; }
+    .compare-row { background-color: #fef3c7 !important; }
+    .tab-active { border-bottom: 2px solid #7c3aed; color: #7c3aed; font-weight: 600; }
+    .tab-inactive { color: #6b7280; border-bottom: 2px solid transparent; }
+    .tab-inactive:hover { color: #4b5563; border-bottom-color: #d1d5db; }
+    .skeleton { animation: pulse 2s infinite; background: #e5e7eb; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .fade-in { animation: fadeIn 0.2s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Mobile bottom tabs */
+    @media (max-width: 640px) {
+      .mobile-tabs {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: white; border-top: 1px solid #e5e7eb;
+        display: flex; justify-content: space-around; padding: 0.5rem 0;
+        z-index: 50;
+      }
+      .mobile-tab {
+        display: flex; flex-direction: column; align-items: center;
+        font-size: 0.65rem; color: #6b7280; padding: 0.25rem;
+      }
+      .mobile-tab.active { color: #7c3aed; }
+      .mobile-tab i { font-size: 1rem; margin-bottom: 0.125rem; }
+      main { padding-bottom: 4rem !important; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-violet-100 min-h-screen text-gray-800">
+
+  <!-- Header -->
+  <header class="py-4 border-b bg-white sticky top-0 z-40">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-chart-pie text-violet-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">SlickCharts Explorer</h1>
+            <p class="text-gray-500 text-xs">6-Tab Integrated Tool • 37 Root + 516 Stock Files = 553 Total</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="export-btn" class="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">
+            <i class="fas fa-download"></i> Export
+          </button>
+          <a href="./" class="text-gray-500 hover:text-blue-600">
+            <i class="fas fa-arrow-left mr-1"></i> <span class="hidden sm:inline">Back</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Desktop Tabs -->
+  <nav class="bg-white border-b sticky top-[65px] z-30 hidden sm:block">
+    <div class="container mx-auto px-4">
+      <div class="flex gap-1" id="desktop-tabs">
+        <button data-tab="returns" class="tab-active px-4 py-3 text-sm transition-colors">
+          <i class="fas fa-chart-line mr-1"></i> Returns
+        </button>
+        <button data-tab="details" class="tab-inactive px-4 py-3 text-sm transition-colors">
+          <i class="fas fa-info-circle mr-1"></i> Details
+        </button>
+        <button data-tab="movers" class="tab-inactive px-4 py-3 text-sm transition-colors">
+          <i class="fas fa-arrows-up-down mr-1"></i> Movers
+        </button>
+        <button data-tab="dividends" class="tab-inactive px-4 py-3 text-sm transition-colors">
+          <i class="fas fa-coins mr-1"></i> Dividends
+        </button>
+        <button data-tab="indices" class="tab-inactive px-4 py-3 text-sm transition-colors">
+          <i class="fas fa-layer-group mr-1"></i> Indices
+        </button>
+        <button data-tab="economy" class="tab-inactive px-4 py-3 text-sm transition-colors">
+          <i class="fas fa-landmark mr-1"></i> Economy
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-6 space-y-4">
+
+    <!-- Loading State -->
+    <div id="loading-overlay" class="bg-white rounded-xl p-8 shadow text-center">
+      <i class="fas fa-spinner fa-spin text-3xl text-violet-500 mb-4"></i>
+      <p class="text-gray-600">Loading SlickCharts data...</p>
+      <p class="text-xs text-gray-400 mt-2">516 stocks, 47 years of returns</p>
+    </div>
+
+    <!-- Tab Content Container -->
+    <div id="tab-content" class="hidden">
+
+      <!-- Tab 1: Returns Screener -->
+      <section id="tab-returns" class="space-y-4 fade-in">
+        <!-- Meta Info -->
+        <div class="bg-white rounded-xl p-4 shadow">
+          <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">Updated:</span>
+              <span id="returns-updated" class="ml-1 mono">-</span>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">Stocks:</span>
+              <span id="returns-count" class="ml-1 mono">-</span>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">Filtered:</span>
+              <span id="returns-filtered" class="ml-1 mono">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl p-4 shadow">
+          <h2 class="font-semibold text-gray-700 mb-3 text-sm">Filters</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <input id="returns-search" type="text" placeholder="Search ticker..."
+              class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+
+            <select id="returns-period" class="w-full px-3 py-2 border rounded-lg text-sm">
+              <option value="5">5 years</option>
+              <option value="10">10 years</option>
+              <option value="20" selected>20 years</option>
+              <option value="30">30 years</option>
+              <option value="all">All (47yr)</option>
+            </select>
+
+            <select id="returns-dividend" class="w-full px-3 py-2 border rounded-lg text-sm">
+              <option value="">All stocks</option>
+              <option value="has-div">Has dividends</option>
+              <option value="no-div">No dividends</option>
+            </select>
+
+            <select id="returns-sort" class="w-full px-3 py-2 border rounded-lg text-sm">
+              <option value="cagr-desc">CAGR High→Low</option>
+              <option value="cagr-asc">CAGR Low→High</option>
+              <option value="vol-asc">Volatility Low→High</option>
+              <option value="ticker-asc">Ticker A-Z</option>
+            </select>
+
+            <select id="returns-limit" class="w-full px-3 py-2 border rounded-lg text-sm">
+              <option value="50" selected>50 results</option>
+              <option value="100">100 results</option>
+              <option value="200">200 results</option>
+              <option value="all">All</option>
+            </select>
+
+            <button id="returns-reset" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="bg-white rounded-xl p-4 shadow overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+              <tr>
+                <th class="text-left px-3 py-2">Ticker</th>
+                <th class="text-right px-3 py-2">Years</th>
+                <th class="text-right px-3 py-2">CAGR</th>
+                <th class="text-right px-3 py-2 hidden md:table-cell">Best Year</th>
+                <th class="text-right px-3 py-2 hidden md:table-cell">Worst Year</th>
+                <th class="text-right px-3 py-2">Volatility</th>
+                <th class="text-right px-3 py-2 hidden lg:table-cell">Div Yield</th>
+                <th class="text-center px-3 py-2 w-16">Action</th>
+              </tr>
+            </thead>
+            <tbody id="returns-body" class="divide-y"></tbody>
+          </table>
+          <p id="returns-empty" class="text-sm text-gray-500 mt-4 text-center hidden">No results to display.</p>
+        </div>
+      </section>
+
+      <!-- Tab 2: Stock Details -->
+      <section id="tab-details" class="hidden space-y-4 fade-in">
+        <!-- Stock Selector -->
+        <div class="bg-white rounded-xl p-4 shadow">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex-1 min-w-[200px]">
+              <label class="text-xs text-gray-500 mb-1 block">Select Stock</label>
+              <select id="details-stock" class="w-full px-3 py-2 border rounded-lg text-sm">
+                <option value="">-- Select a stock --</option>
+              </select>
+            </div>
+            <div class="flex gap-2 mt-5">
+              <button id="details-prev" class="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200" disabled>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button id="details-next" class="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200" disabled>
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail Cards -->
+        <div id="details-content" class="hidden">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div class="bg-white rounded-xl p-4 shadow">
+              <div class="text-xs text-gray-500 mb-1">Ticker</div>
+              <div id="detail-ticker" class="text-xl font-bold mono">-</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow">
+              <div class="text-xs text-gray-500 mb-1">Data Years</div>
+              <div id="detail-years" class="text-xl font-bold mono">-</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow">
+              <div class="text-xs text-gray-500 mb-1">20Y CAGR</div>
+              <div id="detail-cagr" class="text-xl font-bold mono">-</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow">
+              <div class="text-xs text-gray-500 mb-1">Volatility</div>
+              <div id="detail-vol" class="text-xl font-bold mono">-</div>
+            </div>
+          </div>
+
+          <!-- Current Metrics (from individual stock file) -->
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 shadow mb-4">
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm flex items-center gap-2">
+              <i class="fas fa-chart-bar text-blue-500"></i> Current Metrics
+              <span id="detail-loading" class="text-xs text-blue-400 hidden"><i class="fas fa-spinner fa-spin"></i> Loading...</span>
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+              <div>
+                <div class="text-xs text-gray-500">Price</div>
+                <div id="detail-price" class="font-bold mono text-lg">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">P/E (Trailing)</div>
+                <div id="detail-pe-ttm" class="font-semibold mono">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">P/E (Forward)</div>
+                <div id="detail-pe-fwd" class="font-semibold mono">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">EPS (TTM)</div>
+                <div id="detail-eps" class="font-semibold mono">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">Div Yield</div>
+                <div id="detail-div-current" class="font-semibold mono">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">Market Cap</div>
+                <div id="detail-mktcap" class="font-semibold mono">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Performance Summary -->
+          <div class="bg-white rounded-xl p-4 shadow mb-4">
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm">Performance Summary</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <div class="text-xs text-gray-500">Best Year</div>
+                <div id="detail-best" class="font-semibold mono positive">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">Worst Year</div>
+                <div id="detail-worst" class="font-semibold mono negative">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">Div Yield (Hist)</div>
+                <div id="detail-div-yield" class="font-semibold mono">-</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">Div Growth</div>
+                <div id="detail-div-growth" class="font-semibold mono">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Returns & Dividends Grid -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Returns History Table -->
+            <div class="bg-white rounded-xl p-4 shadow overflow-auto">
+              <h3 class="font-semibold text-gray-700 mb-3 text-sm">Annual Returns (Last 10 years)</h3>
+              <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600">
+                  <tr>
+                    <th class="text-left px-3 py-2">Year</th>
+                    <th class="text-right px-3 py-2">Return</th>
+                    <th class="text-left px-3 py-2 w-1/2">Bar</th>
+                  </tr>
+                </thead>
+                <tbody id="detail-returns-body" class="divide-y"></tbody>
+              </table>
+            </div>
+
+            <!-- Dividend History (from individual stock file) -->
+            <div class="bg-white rounded-xl p-4 shadow overflow-auto">
+              <h3 class="font-semibold text-green-700 mb-3 text-sm flex items-center gap-2">
+                <i class="fas fa-coins text-green-500"></i> Dividend History
+              </h3>
+              <div id="detail-dividends-container" class="max-h-64 overflow-auto">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-green-50 text-green-700 sticky top-0">
+                    <tr>
+                      <th class="text-left px-3 py-2">Year</th>
+                      <th class="text-right px-3 py-2">Amount</th>
+                      <th class="text-right px-3 py-2">YoY</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detail-dividends-body" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="details-empty" class="bg-white rounded-xl p-8 shadow text-center text-gray-400">
+          <i class="fas fa-search text-3xl mb-3"></i>
+          <p>Select a stock from the dropdown above</p>
+          <p class="text-xs mt-1">or click "Details" from the Returns tab</p>
+        </div>
+      </section>
+
+      <!-- Tab 3: Movers -->
+      <section id="tab-movers" class="hidden space-y-4 fade-in">
+        <div class="bg-white rounded-xl p-4 shadow">
+          <div class="flex items-center gap-4">
+            <h2 class="font-semibold text-gray-700">Daily Movers</h2>
+            <select id="movers-date" class="px-3 py-1.5 border rounded-lg text-sm">
+              <option value="latest">Latest</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- Gainers -->
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold text-green-600 mb-3 flex items-center gap-2">
+              <i class="fas fa-arrow-trend-up"></i> Top Gainers
+            </h3>
+            <div class="overflow-auto">
+              <table class="min-w-full text-sm">
+                <thead class="bg-green-50 text-green-700">
+                  <tr>
+                    <th class="text-left px-3 py-2">#</th>
+                    <th class="text-left px-3 py-2">Symbol</th>
+                    <th class="text-right px-3 py-2">Change</th>
+                  </tr>
+                </thead>
+                <tbody id="gainers-body" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Losers -->
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold text-red-600 mb-3 flex items-center gap-2">
+              <i class="fas fa-arrow-trend-down"></i> Top Losers
+            </h3>
+            <div class="overflow-auto">
+              <table class="min-w-full text-sm">
+                <thead class="bg-red-50 text-red-700">
+                  <tr>
+                    <th class="text-left px-3 py-2">#</th>
+                    <th class="text-left px-3 py-2">Symbol</th>
+                    <th class="text-right px-3 py-2">Change</th>
+                  </tr>
+                </thead>
+                <tbody id="losers-body" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: Dividends -->
+      <section id="tab-dividends" class="hidden space-y-4 fade-in">
+        <div class="bg-white rounded-xl p-4 shadow">
+          <div class="flex flex-wrap items-center gap-4">
+            <h2 class="font-semibold text-gray-700">Dividend Analysis</h2>
+            <select id="dividends-sort" class="px-3 py-1.5 border rounded-lg text-sm">
+              <option value="yield-desc">Yield High→Low</option>
+              <option value="growth-desc">Growth High→Low</option>
+              <option value="ticker-asc">Ticker A-Z</option>
+            </select>
+            <select id="dividends-limit" class="px-3 py-1.5 border rounded-lg text-sm">
+              <option value="50" selected>Top 50</option>
+              <option value="100">Top 100</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-amber-50 text-amber-700">
+              <tr>
+                <th class="text-left px-3 py-2">Ticker</th>
+                <th class="text-right px-3 py-2">Current Yield</th>
+                <th class="text-right px-3 py-2">5Y Div Growth</th>
+                <th class="text-right px-3 py-2 hidden md:table-cell">Latest Amount</th>
+                <th class="text-right px-3 py-2 hidden md:table-cell">Years of Data</th>
+              </tr>
+            </thead>
+            <tbody id="dividends-body" class="divide-y"></tbody>
+          </table>
+          <p id="dividends-empty" class="text-sm text-gray-500 mt-4 text-center hidden">No dividend data available.</p>
+        </div>
+      </section>
+
+      <!-- Tab 5: Indices -->
+      <section id="tab-indices" class="hidden space-y-4 fade-in">
+        <!-- Index sub-tabs -->
+        <div class="bg-white rounded-xl p-2 shadow flex gap-2 overflow-x-auto">
+          <button data-indextab="returns" class="px-3 py-1.5 text-sm rounded-lg bg-violet-100 text-violet-700 font-medium">Returns</button>
+          <button data-indextab="holdings" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">Holdings</button>
+          <button data-indextab="performance" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">YTD Performance</button>
+          <button data-indextab="mag7" class="px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">Magnificent 7</button>
+        </div>
+
+        <!-- Sub-tab: Returns (default) -->
+        <div id="indices-returns" class="space-y-4">
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold text-blue-600 mb-2 flex items-center gap-2">
+                <i class="fas fa-chart-simple"></i> S&P 500
+              </h3>
+              <div class="text-3xl font-bold mono" id="idx-sp500-cagr">-</div>
+              <div class="text-xs text-gray-500">20Y CAGR</div>
+              <div class="mt-3 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Years</span>
+                  <span class="mono" id="idx-sp500-years">-</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Best</span>
+                  <span class="mono positive" id="idx-sp500-best">-</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Worst</span>
+                  <span class="mono negative" id="idx-sp500-worst">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold text-teal-600 mb-2 flex items-center gap-2">
+                <i class="fas fa-chart-simple"></i> NASDAQ 100
+              </h3>
+              <div class="text-3xl font-bold mono" id="idx-nasdaq-cagr">-</div>
+              <div class="text-xs text-gray-500">20Y CAGR</div>
+              <div class="mt-3 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Years</span>
+                  <span class="mono" id="idx-nasdaq-years">-</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Best</span>
+                  <span class="mono positive" id="idx-nasdaq-best">-</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Worst</span>
+                  <span class="mono negative" id="idx-nasdaq-worst">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold text-indigo-600 mb-2 flex items-center gap-2">
+                <i class="fas fa-chart-simple"></i> Dow Jones
+              </h3>
+              <div class="text-3xl font-bold mono" id="idx-dow-cagr">-</div>
+              <div class="text-xs text-gray-500">20Y CAGR</div>
+              <div class="mt-3 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Years</span>
+                  <span class="mono" id="idx-dow-years">-</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Best</span>
+                  <span class="mono positive" id="idx-dow-best">-</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Worst</span>
+                  <span class="mono negative" id="idx-dow-worst">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Index Returns Table -->
+          <div class="bg-white rounded-xl p-4 shadow overflow-auto">
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm">Annual Returns Comparison (Last 10 Years)</h3>
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                  <th class="text-left px-3 py-2">Year</th>
+                  <th class="text-right px-3 py-2">S&P 500</th>
+                  <th class="text-right px-3 py-2">NASDAQ 100</th>
+                  <th class="text-right px-3 py-2">Dow Jones</th>
+                </tr>
+              </thead>
+              <tbody id="indices-body" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Sub-tab: Holdings -->
+        <div id="indices-holdings" class="hidden space-y-4">
+          <div class="grid md:grid-cols-3 gap-4">
+            <!-- S&P 500 Holdings -->
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold text-blue-600 mb-3 flex items-center gap-2">
+                <i class="fas fa-list-ol"></i> S&P 500 Top 20
+              </h3>
+              <div id="sp500-count" class="text-xs text-gray-500 mb-2">- constituents</div>
+              <div class="overflow-auto max-h-80">
+                <table class="min-w-full text-xs">
+                  <thead class="bg-blue-50 text-blue-700">
+                    <tr>
+                      <th class="text-left px-2 py-1">#</th>
+                      <th class="text-left px-2 py-1">Symbol</th>
+                      <th class="text-right px-2 py-1">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sp500-holdings" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- NASDAQ 100 Holdings -->
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold text-teal-600 mb-3 flex items-center gap-2">
+                <i class="fas fa-list-ol"></i> NASDAQ 100 Top 20
+              </h3>
+              <div id="nasdaq-count" class="text-xs text-gray-500 mb-2">- constituents</div>
+              <div class="overflow-auto max-h-80">
+                <table class="min-w-full text-xs">
+                  <thead class="bg-teal-50 text-teal-700">
+                    <tr>
+                      <th class="text-left px-2 py-1">#</th>
+                      <th class="text-left px-2 py-1">Symbol</th>
+                      <th class="text-right px-2 py-1">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody id="nasdaq-holdings" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Dow Jones Holdings -->
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold text-indigo-600 mb-3 flex items-center gap-2">
+                <i class="fas fa-list-ol"></i> Dow Jones 30
+              </h3>
+              <div id="dow-count" class="text-xs text-gray-500 mb-2">- constituents</div>
+              <div class="overflow-auto max-h-80">
+                <table class="min-w-full text-xs">
+                  <thead class="bg-indigo-50 text-indigo-700">
+                    <tr>
+                      <th class="text-left px-2 py-1">#</th>
+                      <th class="text-left px-2 py-1">Symbol</th>
+                      <th class="text-right px-2 py-1">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dow-holdings" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-tab: YTD Performance -->
+        <div id="indices-performance" class="hidden space-y-4">
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Top Performers -->
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold text-green-600 mb-3 flex items-center gap-2">
+                <i class="fas fa-arrow-trend-up"></i> S&P 500 YTD Best
+              </h3>
+              <div class="overflow-auto max-h-80">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-green-50 text-green-700">
+                    <tr>
+                      <th class="text-left px-2 py-1">#</th>
+                      <th class="text-left px-2 py-1">Symbol</th>
+                      <th class="text-right px-2 py-1">YTD</th>
+                    </tr>
+                  </thead>
+                  <tbody id="perf-best" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Worst Performers -->
+            <div class="bg-white rounded-xl p-4 shadow">
+              <h3 class="font-semibold text-red-600 mb-3 flex items-center gap-2">
+                <i class="fas fa-arrow-trend-down"></i> S&P 500 YTD Worst
+              </h3>
+              <div class="overflow-auto max-h-80">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-red-50 text-red-700">
+                    <tr>
+                      <th class="text-left px-2 py-1">#</th>
+                      <th class="text-left px-2 py-1">Symbol</th>
+                      <th class="text-right px-2 py-1">YTD</th>
+                    </tr>
+                  </thead>
+                  <tbody id="perf-worst" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-tab: Magnificent 7 -->
+        <div id="indices-mag7" class="hidden space-y-4">
+          <div class="bg-white rounded-xl p-4 shadow">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-purple-600 flex items-center gap-2">
+                <i class="fas fa-star"></i> Magnificent 7
+              </h3>
+              <span id="mag7-marketcap" class="text-sm text-gray-500">Total Market Cap: -</span>
+            </div>
+            <div class="overflow-auto">
+              <table class="min-w-full text-sm">
+                <thead class="bg-purple-50 text-purple-700">
+                  <tr>
+                    <th class="text-left px-3 py-2">#</th>
+                    <th class="text-left px-3 py-2">Company</th>
+                    <th class="text-left px-3 py-2">Symbol</th>
+                    <th class="text-right px-3 py-2">Weight</th>
+                    <th class="text-right px-3 py-2">Price</th>
+                    <th class="text-right px-3 py-2">Change</th>
+                  </tr>
+                </thead>
+                <tbody id="mag7-body" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 6: Economy -->
+      <section id="tab-economy" class="hidden space-y-4 fade-in">
+        <div class="bg-white rounded-xl p-4 shadow">
+          <h2 class="font-semibold text-gray-700">Economic Indicators</h2>
+          <p class="text-xs text-gray-500 mt-1">Treasury, mortgage rates, and crypto returns</p>
+        </div>
+
+        <!-- Treasury Yields -->
+        <div class="bg-white rounded-xl p-4 shadow">
+          <h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="fas fa-landmark text-blue-500"></i> Treasury Yields (Current)
+          </h3>
+          <div class="grid grid-cols-4 md:grid-cols-7 gap-2" id="treasury-grid">
+            <div class="text-center p-2 bg-blue-50 rounded">
+              <div class="text-xs text-gray-500">1M</div>
+              <div class="font-semibold mono" id="tsy-1m">-</div>
+            </div>
+            <div class="text-center p-2 bg-blue-50 rounded">
+              <div class="text-xs text-gray-500">3M</div>
+              <div class="font-semibold mono" id="tsy-3m">-</div>
+            </div>
+            <div class="text-center p-2 bg-blue-50 rounded">
+              <div class="text-xs text-gray-500">6M</div>
+              <div class="font-semibold mono" id="tsy-6m">-</div>
+            </div>
+            <div class="text-center p-2 bg-blue-50 rounded">
+              <div class="text-xs text-gray-500">1Y</div>
+              <div class="font-semibold mono" id="tsy-1y">-</div>
+            </div>
+            <div class="text-center p-2 bg-blue-50 rounded">
+              <div class="text-xs text-gray-500">2Y</div>
+              <div class="font-semibold mono" id="tsy-2y">-</div>
+            </div>
+            <div class="text-center p-2 bg-blue-100 rounded">
+              <div class="text-xs text-gray-500">10Y</div>
+              <div class="font-semibold mono" id="tsy-10y">-</div>
+            </div>
+            <div class="text-center p-2 bg-blue-100 rounded">
+              <div class="text-xs text-gray-500">30Y</div>
+              <div class="font-semibold mono" id="tsy-30y">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spread & Curve + Mortgage Rates -->
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm">Yield Spread</h3>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">10Y - 2Y Spread</span>
+                <span class="mono font-semibold" id="spread-10y2y">-</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">10Y - 3M Spread</span>
+                <span class="mono font-semibold" id="spread-10y3m">-</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm">Curve Status</h3>
+            <div id="curve-status" class="text-center py-4">
+              <div class="text-2xl font-bold">-</div>
+              <div class="text-xs text-gray-500">Based on 10Y-2Y spread</div>
+            </div>
+          </div>
+          <!-- Mortgage Rates -->
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold text-gray-700 mb-3 text-sm flex items-center gap-2">
+              <i class="fas fa-house text-green-500"></i> Mortgage Rates
+            </h3>
+            <div class="space-y-2" id="mortgage-rates">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">30Y Fixed</span>
+                <span class="mono font-semibold" id="mtg-30y">-</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">15Y Fixed</span>
+                <span class="mono font-semibold" id="mtg-15y">-</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">7/6 ARM</span>
+                <span class="mono font-semibold" id="mtg-arm">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Crypto Annual Returns -->
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- BTC Returns -->
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold text-orange-600 mb-3 flex items-center gap-2">
+              <i class="fab fa-bitcoin"></i> Bitcoin Annual Returns
+            </h3>
+            <div class="overflow-auto max-h-64">
+              <table class="min-w-full text-sm">
+                <thead class="bg-orange-50 text-orange-700">
+                  <tr>
+                    <th class="text-left px-3 py-1">Year</th>
+                    <th class="text-right px-3 py-1">Return</th>
+                  </tr>
+                </thead>
+                <tbody id="btc-returns-body" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ETH Returns -->
+          <div class="bg-white rounded-xl p-4 shadow">
+            <h3 class="font-semibold text-indigo-600 mb-3 flex items-center gap-2">
+              <i class="fab fa-ethereum"></i> Ethereum Annual Returns
+            </h3>
+            <div class="overflow-auto max-h-64">
+              <table class="min-w-full text-sm">
+                <thead class="bg-indigo-50 text-indigo-700">
+                  <tr>
+                    <th class="text-left px-3 py-1">Year</th>
+                    <th class="text-right px-3 py-1">Return</th>
+                  </tr>
+                </thead>
+                <tbody id="eth-returns-body" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Crypto Prices Section -->
+        <div class="bg-white rounded-xl p-4 shadow">
+          <h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="fas fa-coins text-yellow-500"></i> Top Cryptocurrencies (Current)
+          </h3>
+          <div class="overflow-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-yellow-50 text-yellow-700">
+                <tr>
+                  <th class="text-left px-3 py-2">#</th>
+                  <th class="text-left px-3 py-2">Symbol</th>
+                  <th class="text-left px-3 py-2">Name</th>
+                  <th class="text-right px-3 py-2">Price</th>
+                  <th class="text-right px-3 py-2">24h Change</th>
+                </tr>
+              </thead>
+              <tbody id="crypto-body" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Tabs -->
+  <nav class="mobile-tabs sm:hidden">
+    <button data-tab="returns" class="mobile-tab active">
+      <i class="fas fa-chart-line"></i>
+      <span>Returns</span>
+    </button>
+    <button data-tab="details" class="mobile-tab">
+      <i class="fas fa-info-circle"></i>
+      <span>Details</span>
+    </button>
+    <button data-tab="movers" class="mobile-tab">
+      <i class="fas fa-arrows-up-down"></i>
+      <span>Movers</span>
+    </button>
+    <button data-tab="dividends" class="mobile-tab">
+      <i class="fas fa-coins"></i>
+      <span>Dividends</span>
+    </button>
+    <button data-tab="indices" class="mobile-tab">
+      <i class="fas fa-layer-group"></i>
+      <span>Indices</span>
+    </button>
+    <button data-tab="economy" class="mobile-tab">
+      <i class="fas fa-landmark"></i>
+      <span>Economy</span>
+    </button>
+  </nav>
+
+  <!-- Scripts -->
+  <script src="../shared/slickcharts-config.js"></script>
+  <script>
+    /**
+     * SlickCharts Explorer v1.0
+     * 6-Tab Integrated Tool • 37 Root + 516 Stock Files = 553 Total
+     */
+
+    // ===== STATE =====
+    const state = {
+      activeTab: 'returns',
+      activeIndexTab: 'returns', // Index sub-tab
+      data: {
+        // Stocks data (7 files)
+        returns: null,
+        dividendsRecent: null,
+        dividendsHistorical: null,
+        // Daily movers (2 files)
+        gainers: null,
+        losers: null,
+        // Index holdings (4 files)
+        sp500: null,
+        nasdaq100: null,
+        dowjones: null,
+        magnificent7: null,
+        // Index returns (3 files)
+        sp500Returns: null,
+        nasdaq100Returns: null,
+        dowjonesReturns: null,
+        // Index performance (3 files)
+        sp500Performance: null,
+        nasdaq100Performance: null,
+        dowjonesPerformance: null,
+        // Economy (6 files)
+        treasury: null,
+        mortgage: null,
+        inflation: null,
+        currency: null,
+        btcReturns: null,
+        ethReturns: null
+      },
+      stockCache: {}, // Cache for individual stock details
+      computed: {
+        rows: [],
+        dividendRows: []
+      },
+      selectedStock: null,
+      stockList: []
+    };
+
+    // ===== ELEMENTS =====
+    const el = {
+      loadingOverlay: document.getElementById('loading-overlay'),
+      tabContent: document.getElementById('tab-content'),
+      desktopTabs: document.getElementById('desktop-tabs'),
+      exportBtn: document.getElementById('export-btn')
+    };
+
+    // ===== INIT =====
+    async function init() {
+      try {
+        // Load primary data first (Tab 1 & 2)
+        const [returnsRes, dividendsRes] = await Promise.all([
+          fetchSlickChartsData('STOCKS_RETURNS'),
+          fetchSlickChartsData('STOCKS_DIVIDENDS_RECENT')
+        ]);
+
+        state.data.returns = returnsRes;
+        state.data.dividendsRecent = dividendsRes;
+
+        // Build computed data
+        buildRows();
+        buildStockList();
+
+        // Hide loading, show content
+        el.loadingOverlay.classList.add('hidden');
+        el.tabContent.classList.remove('hidden');
+
+        // Setup tabs
+        setupTabs();
+        setupFilters();
+
+        // Render initial tab
+        renderReturnsTab();
+
+        // Check URL params
+        handleUrlParams();
+
+        // Lazy load other data
+        lazyLoadData();
+
+      } catch (err) {
+        el.loadingOverlay.innerHTML = `
+          <div class="text-red-600">
+            <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+            <p class="font-semibold">Error loading data</p>
+            <p class="text-sm mt-2">${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // ===== LAZY LOAD =====
+    async function lazyLoadData() {
+      // Load Tab 3-6 data in background (Phase 1: Essential)
+      try {
+        const [gainers, losers, sp500Ret, nasdaqRet, dowRet, treasury, currency] = await Promise.all([
+          fetchSlickChartsData('GAINERS').catch(() => null),
+          fetchSlickChartsData('LOSERS').catch(() => null),
+          fetchSlickChartsData('SP500_RETURNS').catch(() => null),
+          fetchSlickChartsData('NASDAQ100_RETURNS').catch(() => null),
+          fetchSlickChartsData('DOWJONES_RETURNS').catch(() => null),
+          fetchSlickChartsData('TREASURY').catch(() => null),
+          fetchSlickChartsData('CURRENCY').catch(() => null)
+        ]);
+
+        state.data.gainers = gainers;
+        state.data.losers = losers;
+        state.data.sp500Returns = sp500Ret;
+        state.data.nasdaq100Returns = nasdaqRet;
+        state.data.dowjonesReturns = dowRet;
+        state.data.treasury = treasury;
+        state.data.currency = currency;
+
+      } catch (err) {
+        console.warn('Lazy load phase 1 warning:', err);
+      }
+
+      // Phase 2: Additional data for expanded tabs
+      try {
+        const [
+          sp500, nasdaq, dow, mag7,
+          sp500Perf, nasdaqPerf, dowPerf,
+          mortgage, inflation, btcRet, ethRet
+        ] = await Promise.all([
+          fetchSlickChartsData('SP500').catch(() => null),
+          fetchSlickChartsData('NASDAQ100').catch(() => null),
+          fetchSlickChartsData('DOWJONES').catch(() => null),
+          fetchSlickChartsData('MAGNIFICENT7').catch(() => null),
+          fetchSlickChartsData('SP500_PERFORMANCE').catch(() => null),
+          fetchSlickChartsData('NASDAQ100_PERFORMANCE').catch(() => null),
+          fetchSlickChartsData('DOWJONES_PERFORMANCE').catch(() => null),
+          fetchSlickChartsData('MORTGAGE').catch(() => null),
+          fetchSlickChartsData('INFLATION').catch(() => null),
+          fetchSlickChartsData('BTC_RETURNS').catch(() => null),
+          fetchSlickChartsData('ETH_RETURNS').catch(() => null)
+        ]);
+
+        state.data.sp500 = sp500;
+        state.data.nasdaq100 = nasdaq;
+        state.data.dowjones = dow;
+        state.data.magnificent7 = mag7;
+        state.data.sp500Performance = sp500Perf;
+        state.data.nasdaq100Performance = nasdaqPerf;
+        state.data.dowjonesPerformance = dowPerf;
+        state.data.mortgage = mortgage;
+        state.data.inflation = inflation;
+        state.data.btcReturns = btcRet;
+        state.data.ethReturns = ethRet;
+
+      } catch (err) {
+        console.warn('Lazy load phase 2 warning:', err);
+      }
+    }
+
+    // ===== BUILD DATA =====
+    function buildRows() {
+      const stocks = state.data.returns?.stocks || [];
+      const divMap = buildDividendMap(state.data.dividendsRecent?.stocks || []);
+
+      state.computed.rows = stocks.map(stock => {
+        const returns = stock.returns || [];
+        const yearsCount = returns.length;
+        const yearValues = returns.map(r => r.return).filter(v => v !== null);
+
+        const cagr = calcCAGR(yearValues);
+        const volatility = calcVolatility(yearValues);
+        const { best, worst } = findBestWorstYears(returns);
+
+        const divData = divMap[stock.symbol] || {};
+        const dividends = divData.dividends || [];
+        const latestDivYield = dividends[0]?.yield || null;
+        const divGrowth = calcDividendGrowth(dividends.map(d => d.amount));
+
+        return {
+          ticker: stock.symbol,
+          yearsCount,
+          cagr,
+          bestYear: best?.year,
+          bestReturn: best?.return,
+          worstYear: worst?.year,
+          worstReturn: worst?.return,
+          volatility,
+          dividendYield: latestDivYield,
+          dividendGrowth: divGrowth,
+          hasDividend: dividends.length > 0,
+          returns
+        };
+      });
+
+      // Build dividend rows
+      state.computed.dividendRows = state.computed.rows
+        .filter(r => r.hasDividend && r.dividendYield)
+        .map(r => ({
+          ticker: r.ticker,
+          yield: r.dividendYield,
+          growth: r.dividendGrowth,
+          yearsCount: r.yearsCount
+        }));
+    }
+
+    function buildDividendMap(stocks) {
+      const map = {};
+      for (const s of stocks) {
+        map[s.symbol] = s;
+      }
+      return map;
+    }
+
+    function buildStockList() {
+      state.stockList = state.computed.rows.map(r => r.ticker).sort();
+      const select = document.getElementById('details-stock');
+      if (select) {
+        select.innerHTML = '<option value="">-- Select a stock --</option>' +
+          state.stockList.map(t => `<option value="${t}">${t}</option>`).join('');
+      }
+    }
+
+    // ===== TABS =====
+    function setupTabs() {
+      // Desktop tabs
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+    }
+
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+
+      // Update tab buttons
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        const isActive = btn.dataset.tab === tabName;
+        btn.classList.toggle('tab-active', isActive);
+        btn.classList.toggle('tab-inactive', !isActive);
+        btn.classList.toggle('active', isActive); // for mobile
+      });
+
+      // Hide all tab sections
+      document.querySelectorAll('[id^="tab-"]').forEach(sec => {
+        sec.classList.add('hidden');
+      });
+
+      // Show active tab
+      const activeSection = document.getElementById(`tab-${tabName}`);
+      if (activeSection) {
+        activeSection.classList.remove('hidden');
+      }
+
+      // Render tab content
+      renderTab(tabName);
+
+      // Update URL
+      updateUrl({ tab: tabName });
+    }
+
+    function renderTab(tabName) {
+      switch (tabName) {
+        case 'returns':
+          renderReturnsTab();
+          break;
+        case 'details':
+          renderDetailsTab();
+          break;
+        case 'movers':
+          renderMoversTab();
+          break;
+        case 'dividends':
+          renderDividendsTab();
+          break;
+        case 'indices':
+          renderIndicesTab();
+          break;
+        case 'economy':
+          renderEconomyTab();
+          break;
+      }
+    }
+
+    // ===== TAB 1: RETURNS =====
+    function setupFilters() {
+      const filters = ['returns-search', 'returns-period', 'returns-dividend', 'returns-sort', 'returns-limit'];
+      filters.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', renderReturnsTab);
+        if (el && el.tagName === 'INPUT') el.addEventListener('input', renderReturnsTab);
+      });
+
+      document.getElementById('returns-reset')?.addEventListener('click', () => {
+        document.getElementById('returns-search').value = '';
+        document.getElementById('returns-period').value = '20';
+        document.getElementById('returns-dividend').value = '';
+        document.getElementById('returns-sort').value = 'cagr-desc';
+        document.getElementById('returns-limit').value = '50';
+        renderReturnsTab();
+      });
+    }
+
+    function renderReturnsTab() {
+      let rows = [...state.computed.rows];
+
+      // Search filter
+      const search = document.getElementById('returns-search')?.value.toLowerCase().trim();
+      if (search) {
+        rows = rows.filter(r => r.ticker.toLowerCase().includes(search));
+      }
+
+      // Period filter - recalculate CAGR
+      const period = document.getElementById('returns-period')?.value;
+      if (period && period !== 'all') {
+        const years = parseInt(period, 10);
+        rows = rows.map(r => {
+          const yearValues = r.returns.slice(0, years).map(x => x.return).filter(v => v !== null);
+          return { ...r, cagr: yearValues.length >= 2 ? calcCAGR(yearValues) : null };
+        }).filter(r => r.yearsCount >= years);
+      }
+
+      // Dividend filter
+      const divFilter = document.getElementById('returns-dividend')?.value;
+      if (divFilter === 'has-div') {
+        rows = rows.filter(r => r.hasDividend);
+      } else if (divFilter === 'no-div') {
+        rows = rows.filter(r => !r.hasDividend);
+      }
+
+      // Sort
+      const sortVal = document.getElementById('returns-sort')?.value || 'cagr-desc';
+      rows.sort((a, b) => {
+        switch (sortVal) {
+          case 'cagr-desc': return (b.cagr ?? -999) - (a.cagr ?? -999);
+          case 'cagr-asc': return (a.cagr ?? 999) - (b.cagr ?? 999);
+          case 'vol-asc': return (a.volatility ?? 999) - (b.volatility ?? 999);
+          case 'ticker-asc': return a.ticker.localeCompare(b.ticker);
+          default: return 0;
+        }
+      });
+
+      // Limit
+      const limitVal = document.getElementById('returns-limit')?.value;
+      const displayRows = limitVal === 'all' ? rows : rows.slice(0, parseInt(limitVal, 10));
+
+      // Update meta
+      document.getElementById('returns-updated').textContent = state.data.returns?.updated || '-';
+      document.getElementById('returns-count').textContent = state.computed.rows.length;
+      document.getElementById('returns-filtered').textContent = displayRows.length;
+
+      // Render table
+      const tbody = document.getElementById('returns-body');
+      const empty = document.getElementById('returns-empty');
+
+      if (displayRows.length === 0) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+      } else {
+        empty.classList.add('hidden');
+        tbody.innerHTML = displayRows.map(r => `
+          <tr class="hover:bg-violet-50 transition-colors">
+            <td class="px-3 py-2 font-semibold mono">${r.ticker}</td>
+            <td class="text-right px-3 py-2 mono text-gray-500">${r.yearsCount}yr</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(r.cagr)}">${formatPct(r.cagr)}</td>
+            <td class="text-right px-3 py-2 mono positive hidden md:table-cell">${r.bestYear ? `${r.bestYear} (${formatPct(r.bestReturn)})` : '-'}</td>
+            <td class="text-right px-3 py-2 mono negative hidden md:table-cell">${r.worstYear ? `${r.worstYear} (${formatPct(r.worstReturn)})` : '-'}</td>
+            <td class="text-right px-3 py-2 mono text-gray-600">${formatPct(r.volatility, false)}</td>
+            <td class="text-right px-3 py-2 mono hidden lg:table-cell ${r.dividendYield ? 'positive' : ''}">${r.dividendYield ? formatPct(r.dividendYield / 100, false) : '-'}</td>
+            <td class="text-center px-3 py-2">
+              <button onclick="goToDetails('${r.ticker}')" class="text-violet-500 hover:text-violet-700">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // ===== TAB 2: DETAILS =====
+    function renderDetailsTab() {
+      const select = document.getElementById('details-stock');
+      const content = document.getElementById('details-content');
+      const empty = document.getElementById('details-empty');
+
+      if (state.selectedStock) {
+        select.value = state.selectedStock;
+        showStockDetails(state.selectedStock);
+      } else {
+        content.classList.add('hidden');
+        empty.classList.remove('hidden');
+      }
+
+      // Setup selector
+      select.onchange = () => {
+        if (select.value) {
+          state.selectedStock = select.value;
+          showStockDetails(select.value);
+          updateUrl({ tab: 'details', symbol: select.value });
+        }
+      };
+    }
+
+    async function showStockDetails(ticker) {
+      const row = state.computed.rows.find(r => r.ticker === ticker);
+      if (!row) return;
+
+      const content = document.getElementById('details-content');
+      const empty = document.getElementById('details-empty');
+      const loading = document.getElementById('detail-loading');
+      content.classList.remove('hidden');
+      empty.classList.add('hidden');
+
+      // Update basic cards (from aggregated data)
+      document.getElementById('detail-ticker').textContent = row.ticker;
+      document.getElementById('detail-years').textContent = `${row.yearsCount}yr`;
+      document.getElementById('detail-cagr').textContent = formatPct(row.cagr);
+      document.getElementById('detail-cagr').className = `text-xl font-bold mono ${getColorClass(row.cagr)}`;
+      document.getElementById('detail-vol').textContent = formatPct(row.volatility, false);
+
+      // Summary
+      document.getElementById('detail-best').textContent = row.bestYear ? `${row.bestYear}: ${formatPct(row.bestReturn)}` : '-';
+      document.getElementById('detail-worst').textContent = row.worstYear ? `${row.worstYear}: ${formatPct(row.worstReturn)}` : '-';
+      document.getElementById('detail-div-yield').textContent = row.dividendYield ? formatPct(row.dividendYield / 100, false) : 'N/A';
+      document.getElementById('detail-div-growth').textContent = row.dividendGrowth !== null ? formatPct(row.dividendGrowth) : 'N/A';
+
+      // Returns table (last 10 years)
+      const returns10 = row.returns.slice(0, 10);
+      const maxReturn = Math.max(...returns10.map(r => Math.abs(r.return || 0)));
+
+      document.getElementById('detail-returns-body').innerHTML = returns10.map(r => {
+        const pct = r.return || 0;
+        const width = maxReturn > 0 ? Math.abs(pct) / maxReturn * 100 : 0;
+        const isPositive = pct >= 0;
+        return `
+          <tr>
+            <td class="px-3 py-2 mono">${r.year}</td>
+            <td class="text-right px-3 py-2 mono ${isPositive ? 'positive' : 'negative'}">${formatPct(pct)}</td>
+            <td class="px-3 py-2">
+              <div class="h-4 flex items-center">
+                <div class="${isPositive ? 'bg-green-400' : 'bg-red-400'} h-3 rounded" style="width: ${width}%"></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Enable prev/next buttons
+      const idx = state.stockList.indexOf(ticker);
+      document.getElementById('details-prev').disabled = idx <= 0;
+      document.getElementById('details-next').disabled = idx >= state.stockList.length - 1;
+
+      document.getElementById('details-prev').onclick = () => {
+        if (idx > 0) goToDetails(state.stockList[idx - 1]);
+      };
+      document.getElementById('details-next').onclick = () => {
+        if (idx < state.stockList.length - 1) goToDetails(state.stockList[idx + 1]);
+      };
+
+      // Reset current metrics while loading
+      document.getElementById('detail-price').textContent = '-';
+      document.getElementById('detail-pe-ttm').textContent = '-';
+      document.getElementById('detail-pe-fwd').textContent = '-';
+      document.getElementById('detail-eps').textContent = '-';
+      document.getElementById('detail-div-current').textContent = '-';
+      document.getElementById('detail-mktcap').textContent = '-';
+      document.getElementById('detail-dividends-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+
+      // Load individual stock file for detailed data
+      loading.classList.remove('hidden');
+      try {
+        let stockData = state.stockCache[ticker];
+        if (!stockData) {
+          stockData = await fetchStockDetail(ticker);
+          state.stockCache[ticker] = stockData;
+        }
+
+        // Populate current metrics
+        const current = stockData.current || {};
+        document.getElementById('detail-price').textContent = current.price ? `$${current.price.toLocaleString()}` : '-';
+        document.getElementById('detail-pe-ttm').textContent = current.pe_trailing ? current.pe_trailing.toFixed(1) : '-';
+        document.getElementById('detail-pe-fwd').textContent = current.pe_forward ? current.pe_forward.toFixed(1) : '-';
+        document.getElementById('detail-eps').textContent = current.eps_trailing ? `$${current.eps_trailing.toFixed(2)}` : '-';
+        document.getElementById('detail-div-current').textContent = current.dividend_yield ? `${(current.dividend_yield * 100).toFixed(2)}%` : '-';
+        document.getElementById('detail-mktcap').textContent = current.market_cap_billions ? `$${current.market_cap_billions.toFixed(0)}B` : '-';
+
+        // Populate dividend history
+        const dividends = stockData.dividends || [];
+        if (dividends.length > 0) {
+          document.getElementById('detail-dividends-body').innerHTML = dividends.slice(0, 15).map((d, i, arr) => {
+            const prevDiv = arr[i + 1];
+            const yoy = prevDiv && prevDiv.amount > 0 ? (d.amount - prevDiv.amount) / prevDiv.amount : null;
+            return `
+              <tr class="hover:bg-green-50">
+                <td class="px-3 py-1.5 mono">${d.year}</td>
+                <td class="text-right px-3 py-1.5 mono">$${d.amount?.toFixed(2) || '-'}</td>
+                <td class="text-right px-3 py-1.5 mono ${yoy !== null ? getColorClass(yoy) : ''}">
+                  ${yoy !== null ? `${yoy >= 0 ? '+' : ''}${(yoy * 100).toFixed(1)}%` : '-'}
+                </td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          document.getElementById('detail-dividends-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">No dividend data</td></tr>';
+        }
+
+      } catch (err) {
+        console.warn(`Failed to load stock detail for ${ticker}:`, err);
+        document.getElementById('detail-dividends-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Failed to load</td></tr>';
+      } finally {
+        loading.classList.add('hidden');
+      }
+    }
+
+    function goToDetails(ticker) {
+      state.selectedStock = ticker;
+      switchTab('details');
+    }
+
+    // ===== TAB 3: MOVERS =====
+    function renderMoversTab() {
+      const gainers = state.data.gainers;
+      const losers = state.data.losers;
+
+      if (!gainers || !losers) {
+        document.getElementById('gainers-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        document.getElementById('losers-body').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        return;
+      }
+
+      // Get latest date
+      const latestGainers = gainers.data?.[0] || {};
+      const latestLosers = losers.data?.[0] || {};
+
+      // Populate date selector
+      const dateSelect = document.getElementById('movers-date');
+      if (gainers.data?.length && dateSelect.options.length === 1) {
+        gainers.data.slice(0, 30).forEach((d, i) => {
+          if (i > 0) dateSelect.options.add(new Option(d.date, d.date));
+        });
+      }
+
+      const renderMoversTable = (data, bodyId, isGainer) => {
+        const movers = data.movers || [];
+        document.getElementById(bodyId).innerHTML = movers.slice(0, 10).map((m, i) => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-3 py-2 text-gray-400">${i + 1}</td>
+            <td class="px-3 py-2 font-semibold mono">${m.symbol}</td>
+            <td class="text-right px-3 py-2 mono ${isGainer ? 'positive' : 'negative'}">${isGainer ? '+' : ''}${m.change?.toFixed(1)}%</td>
+          </tr>
+        `).join('');
+      };
+
+      renderMoversTable(latestGainers, 'gainers-body', true);
+      renderMoversTable(latestLosers, 'losers-body', false);
+    }
+
+    // ===== TAB 4: DIVIDENDS =====
+    function renderDividendsTab() {
+      let rows = [...state.computed.dividendRows];
+
+      const sort = document.getElementById('dividends-sort')?.value || 'yield-desc';
+      rows.sort((a, b) => {
+        switch (sort) {
+          case 'yield-desc': return (b.yield ?? 0) - (a.yield ?? 0);
+          case 'growth-desc': return (b.growth ?? -999) - (a.growth ?? -999);
+          case 'ticker-asc': return a.ticker.localeCompare(b.ticker);
+          default: return 0;
+        }
+      });
+
+      const limit = document.getElementById('dividends-limit')?.value || '50';
+      const displayRows = limit === 'all' ? rows : rows.slice(0, parseInt(limit, 10));
+
+      const tbody = document.getElementById('dividends-body');
+      const empty = document.getElementById('dividends-empty');
+
+      if (displayRows.length === 0) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+      } else {
+        empty.classList.add('hidden');
+        tbody.innerHTML = displayRows.map(r => `
+          <tr class="hover:bg-amber-50">
+            <td class="px-3 py-2 font-semibold mono">${r.ticker}</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(r.yield)}">${r.yield?.toFixed(2) || '-'}%</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(r.growth)}">${r.growth !== null ? formatPct(r.growth) : '-'}</td>
+            <td class="text-right px-3 py-2 mono hidden md:table-cell">-</td>
+            <td class="text-right px-3 py-2 mono text-gray-500 hidden md:table-cell">${r.yearsCount}yr</td>
+          </tr>
+        `).join('');
+      }
+
+      // Setup filter listeners
+      document.getElementById('dividends-sort').onchange = renderDividendsTab;
+      document.getElementById('dividends-limit').onchange = renderDividendsTab;
+    }
+
+    // ===== TAB 5: INDICES =====
+    function renderIndicesTab() {
+      // Setup sub-tab navigation
+      setupIndexSubTabs();
+
+      // Render based on active sub-tab
+      renderIndexSubTab(state.activeIndexTab);
+    }
+
+    function setupIndexSubTabs() {
+      document.querySelectorAll('[data-indextab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.indextab;
+          state.activeIndexTab = tab;
+
+          // Update button styles
+          document.querySelectorAll('[data-indextab]').forEach(b => {
+            b.classList.remove('bg-violet-100', 'text-violet-700', 'font-medium');
+            b.classList.add('text-gray-600');
+          });
+          btn.classList.add('bg-violet-100', 'text-violet-700', 'font-medium');
+          btn.classList.remove('text-gray-600');
+
+          // Hide all sub-tabs
+          ['returns', 'holdings', 'performance', 'mag7'].forEach(t => {
+            document.getElementById(`indices-${t}`)?.classList.add('hidden');
+          });
+
+          // Show active sub-tab
+          document.getElementById(`indices-${tab}`)?.classList.remove('hidden');
+
+          // Render sub-tab
+          renderIndexSubTab(tab);
+        });
+      });
+    }
+
+    function renderIndexSubTab(tab) {
+      switch (tab) {
+        case 'returns':
+          renderIndexReturns();
+          break;
+        case 'holdings':
+          renderIndexHoldings();
+          break;
+        case 'performance':
+          renderIndexPerformance();
+          break;
+        case 'mag7':
+          renderMagnificent7();
+          break;
+      }
+    }
+
+    function renderIndexReturns() {
+      const sp500 = state.data.sp500Returns;
+      const nasdaq = state.data.nasdaq100Returns;
+      const dow = state.data.dowjonesReturns;
+
+      const renderIndex = (data, prefix) => {
+        if (!data?.data) {
+          document.getElementById(`idx-${prefix}-cagr`).textContent = '-';
+          return;
+        }
+        const returns = data.data.slice(0, 20);
+        const cagr = calcCAGR(returns.map(r => r.return / 100));
+        const { best, worst } = findBestWorstYears(returns.map(r => ({ year: r.year, return: r.return / 100 })));
+
+        document.getElementById(`idx-${prefix}-cagr`).textContent = formatPct(cagr);
+        document.getElementById(`idx-${prefix}-cagr`).className = `text-3xl font-bold mono ${getColorClass(cagr)}`;
+        document.getElementById(`idx-${prefix}-years`).textContent = `${data.data.length}yr`;
+        document.getElementById(`idx-${prefix}-best`).textContent = best ? `${best.year}: ${formatPct(best.return)}` : '-';
+        document.getElementById(`idx-${prefix}-worst`).textContent = worst ? `${worst.year}: ${formatPct(worst.return)}` : '-';
+      };
+
+      renderIndex(sp500, 'sp500');
+      renderIndex(nasdaq, 'nasdaq');
+      renderIndex(dow, 'dow');
+
+      // Comparison table
+      const years = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015];
+      const findReturn = (data, year) => {
+        const r = data?.data?.find(d => d.year === year);
+        return r ? r.return : null;
+      };
+
+      document.getElementById('indices-body').innerHTML = years.map(year => {
+        const sp = findReturn(sp500, year);
+        const nq = findReturn(nasdaq, year);
+        const dj = findReturn(dow, year);
+        return `
+          <tr class="hover:bg-gray-50">
+            <td class="px-3 py-2 mono">${year}</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(sp ? sp/100 : null)}">${sp !== null ? `${sp >= 0 ? '+' : ''}${sp.toFixed(1)}%` : '-'}</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(nq ? nq/100 : null)}">${nq !== null ? `${nq >= 0 ? '+' : ''}${nq.toFixed(1)}%` : '-'}</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(dj ? dj/100 : null)}">${dj !== null ? `${dj >= 0 ? '+' : ''}${dj.toFixed(1)}%` : '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderIndexHoldings() {
+      const renderHoldings = (data, bodyId, countId, limit = 20) => {
+        const holdings = data?.holdings || [];
+        document.getElementById(countId).textContent = `${holdings.length} constituents`;
+
+        document.getElementById(bodyId).innerHTML = holdings.slice(0, limit).map((h, i) => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-2 py-1 text-gray-400">${h.rank || i + 1}</td>
+            <td class="px-2 py-1 font-semibold mono">${h.symbol}</td>
+            <td class="text-right px-2 py-1 mono">${h.weight?.toFixed(2) || '-'}%</td>
+          </tr>
+        `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+      };
+
+      renderHoldings(state.data.sp500, 'sp500-holdings', 'sp500-count');
+      renderHoldings(state.data.nasdaq100, 'nasdaq-holdings', 'nasdaq-count');
+      renderHoldings(state.data.dowjones, 'dow-holdings', 'dow-count', 30);
+    }
+
+    function renderIndexPerformance() {
+      const perf = state.data.sp500Performance?.performance || [];
+
+      // Best performers (first 20)
+      const best = perf.slice(0, 20);
+      document.getElementById('perf-best').innerHTML = best.map(p => `
+        <tr class="hover:bg-green-50">
+          <td class="px-2 py-1 text-gray-400">${p.rank}</td>
+          <td class="px-2 py-1 font-semibold mono">${p.symbol}</td>
+          <td class="text-right px-2 py-1 mono positive">+${p.ytdReturn?.toFixed(1)}%</td>
+        </tr>
+      `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+
+      // Worst performers (last 20)
+      const worst = [...perf].reverse().slice(0, 20);
+      document.getElementById('perf-worst').innerHTML = worst.map((p, i) => `
+        <tr class="hover:bg-red-50">
+          <td class="px-2 py-1 text-gray-400">${perf.length - i}</td>
+          <td class="px-2 py-1 font-semibold mono">${p.symbol}</td>
+          <td class="text-right px-2 py-1 mono negative">${p.ytdReturn?.toFixed(1)}%</td>
+        </tr>
+      `).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+    }
+
+    function renderMagnificent7() {
+      const mag7 = state.data.magnificent7;
+
+      if (!mag7?.holdings) {
+        document.getElementById('mag7-body').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+        return;
+      }
+
+      // Market cap in trillions
+      const marketCap = mag7.totalMarketCap;
+      document.getElementById('mag7-marketcap').textContent = `Total Market Cap: $${(marketCap / 1e12).toFixed(2)}T`;
+
+      document.getElementById('mag7-body').innerHTML = mag7.holdings.map(h => `
+        <tr class="hover:bg-purple-50">
+          <td class="px-3 py-2 text-gray-400">${h.rank}</td>
+          <td class="px-3 py-2 text-gray-700">${h.company}</td>
+          <td class="px-3 py-2 font-semibold mono">${h.symbol}</td>
+          <td class="text-right px-3 py-2 mono">${h.weight?.toFixed(1)}%</td>
+          <td class="text-right px-3 py-2 mono">$${h.price?.toFixed(2)}</td>
+          <td class="text-right px-3 py-2 mono ${h.changePercent >= 0 ? 'positive' : 'negative'}">
+            ${h.changePercent >= 0 ? '+' : ''}${h.changePercent?.toFixed(2)}%
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ===== TAB 6: ECONOMY =====
+    function renderEconomyTab() {
+      const treasury = state.data.treasury;
+      const currency = state.data.currency;
+
+      // Treasury yields
+      if (treasury?.rates) {
+        const rates = treasury.rates;
+        const tsyIds = { '1m': 'tsy-1m', '3m': 'tsy-3m', '6m': 'tsy-6m', '1y': 'tsy-1y', '2y': 'tsy-2y', '10y': 'tsy-10y', '30y': 'tsy-30y' };
+        Object.entries(tsyIds).forEach(([key, id]) => {
+          const val = rates[key] ?? rates[key.replace('y', 'Y')] ?? rates[key.replace('m', 'M')];
+          document.getElementById(id).textContent = val !== undefined ? `${val.toFixed(2)}%` : '-';
+        });
+
+        // Spreads
+        const y10 = rates['10y'] ?? rates['10Y'];
+        const y2 = rates['2y'] ?? rates['2Y'];
+        const m3 = rates['3m'] ?? rates['3M'];
+
+        if (y10 !== undefined && y2 !== undefined) {
+          const spread = y10 - y2;
+          document.getElementById('spread-10y2y').textContent = `${spread.toFixed(2)}%`;
+          document.getElementById('spread-10y2y').className = `mono font-semibold ${spread >= 0 ? 'positive' : 'negative'}`;
+
+          const curveStatus = document.getElementById('curve-status');
+          if (spread < 0) {
+            curveStatus.innerHTML = `<div class="text-2xl font-bold text-red-600">Inverted</div><div class="text-xs text-gray-500">Recession signal</div>`;
+          } else if (spread < 0.5) {
+            curveStatus.innerHTML = `<div class="text-2xl font-bold text-yellow-600">Flat</div><div class="text-xs text-gray-500">Caution zone</div>`;
+          } else {
+            curveStatus.innerHTML = `<div class="text-2xl font-bold text-green-600">Normal</div><div class="text-xs text-gray-500">Healthy curve</div>`;
+          }
+        }
+
+        if (y10 !== undefined && m3 !== undefined) {
+          const spread = y10 - m3;
+          document.getElementById('spread-10y3m').textContent = `${spread.toFixed(2)}%`;
+          document.getElementById('spread-10y3m').className = `mono font-semibold ${spread >= 0 ? 'positive' : 'negative'}`;
+        }
+      }
+
+      // Mortgage Rates
+      const mortgage = state.data.mortgage;
+      if (mortgage?.rates) {
+        const rates = mortgage.rates;
+        // Find rates by type
+        const r30y = rates.find(r => r.type?.includes('30') || r.type?.toLowerCase().includes('30-year'));
+        const r15y = rates.find(r => r.type?.includes('15') || r.type?.toLowerCase().includes('15-year'));
+        const rArm = rates.find(r => r.type?.toLowerCase().includes('arm') || r.type?.includes('7/6') || r.type?.includes('5/1'));
+
+        document.getElementById('mtg-30y').textContent = r30y ? `${r30y.rate?.toFixed(2)}%` : '-';
+        document.getElementById('mtg-15y').textContent = r15y ? `${r15y.rate?.toFixed(2)}%` : '-';
+        document.getElementById('mtg-arm').textContent = rArm ? `${rArm.rate?.toFixed(2)}%` : '-';
+      }
+
+      // BTC Annual Returns
+      const btcReturns = state.data.btcReturns;
+      if (btcReturns?.returns) {
+        document.getElementById('btc-returns-body').innerHTML = btcReturns.returns.slice(0, 15).map(r => `
+          <tr class="hover:bg-orange-50">
+            <td class="px-3 py-1.5 mono text-gray-700">${r.year}</td>
+            <td class="text-right px-3 py-1.5 mono font-semibold ${getColorClass(r.return)}">
+              ${r.return !== null ? `${r.return >= 0 ? '+' : ''}${(r.return * 100).toFixed(1)}%` : '-'}
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        document.getElementById('btc-returns-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+      }
+
+      // ETH Annual Returns
+      const ethReturns = state.data.ethReturns;
+      if (ethReturns?.returns) {
+        document.getElementById('eth-returns-body').innerHTML = ethReturns.returns.slice(0, 15).map(r => `
+          <tr class="hover:bg-indigo-50">
+            <td class="px-3 py-1.5 mono text-gray-700">${r.year}</td>
+            <td class="text-right px-3 py-1.5 mono font-semibold ${getColorClass(r.return)}">
+              ${r.return !== null ? `${r.return >= 0 ? '+' : ''}${(r.return * 100).toFixed(1)}%` : '-'}
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        document.getElementById('eth-returns-body').innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+      }
+
+      // Crypto Prices
+      if (currency?.data) {
+        const top10 = currency.data.slice(0, 10);
+        document.getElementById('crypto-body').innerHTML = top10.map((c, i) => `
+          <tr class="hover:bg-orange-50">
+            <td class="px-3 py-2 text-gray-400">${i + 1}</td>
+            <td class="px-3 py-2 font-semibold mono">${c.symbol}</td>
+            <td class="px-3 py-2 text-gray-600">${c.name || c.symbol}</td>
+            <td class="text-right px-3 py-2 mono">$${c.price ? c.price.toLocaleString() : '-'}</td>
+            <td class="text-right px-3 py-2 mono ${getColorClass(c.change ? c.change/100 : 0)}">${c.change ? `${c.change >= 0 ? '+' : ''}${c.change.toFixed(1)}%` : '-'}</td>
+          </tr>
+        `).join('');
+      } else {
+        document.getElementById('crypto-body').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+      }
+    }
+
+    // ===== UTILITIES =====
+    function getColorClass(value) {
+      if (value === null || value === undefined) return '';
+      return value >= 0 ? 'positive' : 'negative';
+    }
+
+    function handleUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      const symbol = params.get('symbol');
+
+      if (symbol) {
+        state.selectedStock = symbol;
+      }
+      if (tab && ['returns', 'details', 'movers', 'dividends', 'indices', 'economy'].includes(tab)) {
+        switchTab(tab);
+      }
+    }
+
+    function updateUrl(params) {
+      const url = new URL(window.location);
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          url.searchParams.set(key, value);
+        } else {
+          url.searchParams.delete(key);
+        }
+      });
+      history.replaceState({}, '', url);
+    }
+
+    // ===== EXPORT =====
+    el.exportBtn?.addEventListener('click', () => {
+      if (state.activeTab === 'returns') {
+        exportCSV(state.computed.rows, 'slickcharts-returns.csv');
+      } else if (state.activeTab === 'dividends') {
+        exportCSV(state.computed.dividendRows, 'slickcharts-dividends.csv');
+      }
+    });
+
+    function exportCSV(data, filename) {
+      if (!data.length) return;
+      const headers = Object.keys(data[0]).filter(k => k !== 'returns');
+      const csv = [headers.join(',')];
+      data.forEach(row => {
+        csv.push(headers.map(h => {
+          const val = row[h];
+          if (typeof val === 'number') return val.toFixed(4);
+          return val ?? '';
+        }).join(','));
+      });
+
+      const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    // ===== RUN =====
+    init();
+  </script>
+
+</body>
+</html>
