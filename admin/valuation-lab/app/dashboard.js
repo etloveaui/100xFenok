@@ -24,8 +24,8 @@ const ValuationLabUI = (function() {
       { name: 'Damodaran Explorer', link: 'expansion/damodaran-explorer.html', icon: 'fa-compass', desc: '산업 · 국가 · ERP 히스토리 · 분석' }
     ],
     slickcharts: [
-      { name: 'SlickCharts Explorer', link: 'expansion/slickcharts-explorer.html', icon: 'fa-chart-pie', desc: '6-Tab Integrated Tool (553 files)' },
-      { name: 'Historical Returns', link: 'expansion/slickcharts-historical.html', icon: 'fa-clock-rotate-left', desc: '47yr Returns + Dividends' }
+      { name: '슬릭차트 탐색기', link: 'expansion/slickcharts-explorer.html', icon: 'fa-chart-pie', desc: '6탭 통합 도구 (553 파일 100%)' },
+      { name: 'Historical Returns', link: 'expansion/slickcharts-historical.html', icon: 'fa-clock-rotate-left', desc: '47yr Returns + Dividends (Legacy)' }
     ],
     'sec-13f': [
       { name: 'Guru Tracker Premium', link: 'expansion/sec-13f-explorer.html', icon: 'fa-crown', desc: '17 Investors • 500+ Stocks • 8 Quarters • Sort & Filter • Shortcuts' }

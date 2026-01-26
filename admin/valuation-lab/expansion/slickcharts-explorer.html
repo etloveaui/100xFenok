@@ -58,7 +58,7 @@
           <button id="export-btn" class="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">
             <i class="fas fa-download"></i> 내보내기
           </button>
-          <a href="./" class="text-gray-500 hover:text-blue-600">
+          <a href="../" class="text-gray-500 hover:text-blue-600">
             <i class="fas fa-arrow-left mr-1"></i> <span class="hidden sm:inline">돌아가기</span>
           </a>
         </div>
@@ -171,13 +171,23 @@
           <table class="min-w-full text-sm">
             <thead class="bg-gray-50 text-gray-600">
               <tr>
-                <th class="text-left px-3 py-2">티커</th>
-                <th class="text-right px-3 py-2">기간</th>
-                <th class="text-right px-3 py-2">CAGR</th>
+                <th class="text-left px-3 py-2 cursor-pointer hover:bg-gray-100 select-none" data-sort="ticker">
+                  티커 <i class="fas fa-sort text-gray-300 ml-1 sort-icon"></i>
+                </th>
+                <th class="text-right px-3 py-2 cursor-pointer hover:bg-gray-100 select-none" data-sort="years">
+                  기간 <i class="fas fa-sort text-gray-300 ml-1 sort-icon"></i>
+                </th>
+                <th class="text-right px-3 py-2 cursor-pointer hover:bg-gray-100 select-none" data-sort="cagr">
+                  CAGR <i class="fas fa-sort-down text-violet-500 ml-1 sort-icon"></i>
+                </th>
                 <th class="text-right px-3 py-2 hidden md:table-cell">최고 연도</th>
                 <th class="text-right px-3 py-2 hidden md:table-cell">최저 연도</th>
-                <th class="text-right px-3 py-2">변동성</th>
-                <th class="text-right px-3 py-2 hidden lg:table-cell">배당률</th>
+                <th class="text-right px-3 py-2 cursor-pointer hover:bg-gray-100 select-none" data-sort="vol">
+                  변동성 <i class="fas fa-sort text-gray-300 ml-1 sort-icon"></i>
+                </th>
+                <th class="text-right px-3 py-2 hidden lg:table-cell cursor-pointer hover:bg-gray-100 select-none" data-sort="div">
+                  배당률 <i class="fas fa-sort text-gray-300 ml-1 sort-icon"></i>
+                </th>
                 <th class="text-center px-3 py-2 w-16">상세</th>
               </tr>
             </thead>
@@ -880,6 +890,8 @@
     const state = {
       activeTab: 'returns',
       activeIndexTab: 'returns', // Index sub-tab
+      sortColumn: 'cagr',
+      sortDirection: 'desc', // 'asc' or 'desc'
       data: {
         // Stocks data (7 files)
         returns: null,
@@ -1102,7 +1114,7 @@
       state.stockList = state.computed.rows.map(r => r.ticker).sort();
       const select = document.getElementById('details-stock');
       if (select) {
-        select.innerHTML = '<option value="">-- Select a stock --</option>' +
+        select.innerHTML = '<option value="">-- 종목을 선택하세요 --</option>' +
           state.stockList.map(t => `<option value="${t}">${t}</option>`).join('');
       }
     }
@@ -1126,9 +1138,10 @@
         btn.classList.toggle('active', isActive); // for mobile
       });
 
-      // Hide all tab sections
-      document.querySelectorAll('[id^="tab-"]').forEach(sec => {
-        sec.classList.add('hidden');
+      // Hide all tab sections (specific IDs only, not tab-content)
+      const tabSections = ['tab-returns', 'tab-details', 'tab-movers', 'tab-dividends', 'tab-indices', 'tab-economy'];
+      tabSections.forEach(id => {
+        document.getElementById(id)?.classList.add('hidden');
       });
 
       // Show active tab
@@ -1172,18 +1185,70 @@
       const filters = ['returns-search', 'returns-period', 'returns-dividend', 'returns-sort', 'returns-limit'];
       filters.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener('change', renderReturnsTab);
+        if (el) el.addEventListener('change', () => {
+          // Sync dropdown with state when changed manually
+          if (id === 'returns-sort') {
+            const val = el.value;
+            if (val === 'cagr-desc') { state.sortColumn = 'cagr'; state.sortDirection = 'desc'; }
+            else if (val === 'cagr-asc') { state.sortColumn = 'cagr'; state.sortDirection = 'asc'; }
+            else if (val === 'vol-asc') { state.sortColumn = 'vol'; state.sortDirection = 'asc'; }
+            else if (val === 'ticker-asc') { state.sortColumn = 'ticker'; state.sortDirection = 'asc'; }
+          }
+          renderReturnsTab();
+        });
         if (el && el.tagName === 'INPUT') el.addEventListener('input', renderReturnsTab);
+      });
+
+      // Header click sorting
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.sort;
+          if (state.sortColumn === col) {
+            state.sortDirection = state.sortDirection === 'desc' ? 'asc' : 'desc';
+          } else {
+            state.sortColumn = col;
+            state.sortDirection = (col === 'ticker' || col === 'vol') ? 'asc' : 'desc';
+          }
+          updateSortIcons();
+          syncSortDropdown();
+          renderReturnsTab();
+        });
       });
 
       document.getElementById('returns-reset')?.addEventListener('click', () => {
         document.getElementById('returns-search').value = '';
         document.getElementById('returns-period').value = '20';
         document.getElementById('returns-dividend').value = '';
-        document.getElementById('returns-sort').value = 'cagr-desc';
+        state.sortColumn = 'cagr';
+        state.sortDirection = 'desc';
+        syncSortDropdown();
+        updateSortIcons();
         document.getElementById('returns-limit').value = '50';
         renderReturnsTab();
       });
+    }
+
+    function updateSortIcons() {
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        const icon = th.querySelector('.sort-icon');
+        if (!icon) return;
+        const col = th.dataset.sort;
+        if (col === state.sortColumn) {
+          icon.className = `fas fa-sort-${state.sortDirection === 'desc' ? 'down' : 'up'} text-violet-500 ml-1 sort-icon`;
+        } else {
+          icon.className = 'fas fa-sort text-gray-300 ml-1 sort-icon';
+        }
+      });
+    }
+
+    function syncSortDropdown() {
+      const select = document.getElementById('returns-sort');
+      if (!select) return;
+      if (state.sortColumn === 'cagr' && state.sortDirection === 'desc') select.value = 'cagr-desc';
+      else if (state.sortColumn === 'cagr' && state.sortDirection === 'asc') select.value = 'cagr-asc';
+      else if (state.sortColumn === 'vol' && state.sortDirection === 'asc') select.value = 'vol-asc';
+      else if (state.sortColumn === 'ticker' && state.sortDirection === 'asc') select.value = 'ticker-asc';
+      // For columns not in dropdown, just leave as is
     }
 
     function renderReturnsTab() {
@@ -1213,15 +1278,23 @@
         rows = rows.filter(r => !r.hasDividend);
       }
 
-      // Sort
-      const sortVal = document.getElementById('returns-sort')?.value || 'cagr-desc';
+      // Sort (using state for flexibility - supports header click sorting)
+      const { sortColumn, sortDirection } = state;
+      const dir = sortDirection === 'desc' ? -1 : 1;
       rows.sort((a, b) => {
-        switch (sortVal) {
-          case 'cagr-desc': return (b.cagr ?? -999) - (a.cagr ?? -999);
-          case 'cagr-asc': return (a.cagr ?? 999) - (b.cagr ?? 999);
-          case 'vol-asc': return (a.volatility ?? 999) - (b.volatility ?? 999);
-          case 'ticker-asc': return a.ticker.localeCompare(b.ticker);
-          default: return 0;
+        switch (sortColumn) {
+          case 'cagr':
+            return dir * ((a.cagr ?? -999) - (b.cagr ?? -999));
+          case 'vol':
+            return dir * ((a.volatility ?? 999) - (b.volatility ?? 999));
+          case 'ticker':
+            return dir * a.ticker.localeCompare(b.ticker);
+          case 'years':
+            return dir * ((a.yearsCount ?? 0) - (b.yearsCount ?? 0));
+          case 'div':
+            return dir * ((a.dividendYield ?? -999) - (b.dividendYield ?? -999));
+          default:
+            return 0;
         }
       });
 
