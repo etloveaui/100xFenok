@@ -66,7 +66,6 @@ jobs:
             --batch ${{ matrix.batch }} \
             --output data/slickcharts/symbols-${{ matrix.batch }}.json \
             --pretty
-        continue-on-error: true
 
       - name: Upload batch artifact
         uses: actions/upload-artifact@v4

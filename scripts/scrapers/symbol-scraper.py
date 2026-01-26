@@ -57,7 +57,7 @@ from bs4 import BeautifulSoup
 
 # Constants
 BASE_URL = "https://www.slickcharts.com/symbol"
-SP500_JSON_PATH = Path(__file__).parent.parent.parent / "source/100xFenok/data/slickcharts/sp500.json"
+SP500_JSON_PATH = Path(__file__).parent.parent.parent / "data/slickcharts/sp500.json"
 
 # Batch definitions for matrix builds
 BATCHES = {
