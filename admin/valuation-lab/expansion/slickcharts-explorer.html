@@ -295,7 +295,7 @@
                 <div id="detail-worst" class="font-semibold mono negative">-</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500">배당수익률 (평균)</div>
+                <div class="text-xs text-gray-500">연간 배당금 (TTM)</div>
                 <div id="detail-div-yield" class="font-semibold mono">-</div>
               </div>
               <div>
@@ -409,7 +409,7 @@
           <div class="flex flex-wrap items-center gap-4">
             <h2 class="font-semibold text-gray-700">배당 분석</h2>
             <select id="dividends-sort" class="px-3 py-1.5 border rounded-lg text-sm">
-              <option value="yield-desc">수익률 높은순</option>
+              <option value="dividend-desc">배당금 높은순</option>
               <option value="growth-desc">성장률 높은순</option>
               <option value="ticker-asc">티커 A-Z</option>
             </select>
@@ -426,7 +426,7 @@
             <thead class="bg-amber-50 text-amber-700">
               <tr>
                 <th class="text-left px-3 py-2">티커</th>
-                <th class="text-right px-3 py-2">현재 수익률</th>
+                <th class="text-right px-3 py-2">연간 배당금 (TTM)</th>
                 <th class="text-right px-3 py-2">5년 배당성장률</th>
                 <th class="text-right px-3 py-2 hidden md:table-cell">최근 금액</th>
                 <th class="text-right px-3 py-2 hidden md:table-cell">데이터 기간</th>
@@ -1064,7 +1064,7 @@
       state.computed.rows = stocks.map(stock => {
         const returns = stock.returns || [];
         const yearsCount = returns.length;
-        const yearValues = returns.map(r => r.return).filter(v => v !== null);
+        const yearValues = returns.map(r => r.return / 100).filter(v => v !== null);
 
         const cagr = calcCAGR(yearValues);
         const volatility = calcVolatility(yearValues);
@@ -1072,7 +1072,9 @@
 
         const divData = divMap[stock.symbol] || {};
         const dividends = divData.dividends || [];
-        const latestDivYield = dividends[0]?.yield || null;
+        // JSON has no 'yield' field - calculate annual dividend (TTM = last 4 quarters)
+        const recentDivs = dividends.slice(0, 4);
+        const annualDividend = recentDivs.reduce((sum, d) => sum + (d.amount || 0), 0);
         const divGrowth = calcDividendGrowth(dividends.map(d => d.amount));
 
         return {
@@ -1080,23 +1082,23 @@
           yearsCount,
           cagr,
           bestYear: best?.year,
-          bestReturn: best?.return,
+          bestReturn: best?.return / 100,
           worstYear: worst?.year,
-          worstReturn: worst?.return,
+          worstReturn: worst?.return / 100,
           volatility,
-          dividendYield: latestDivYield,
+          annualDividend,
           dividendGrowth: divGrowth,
           hasDividend: dividends.length > 0,
           returns
         };
       });
 
-      // Build dividend rows
+      // Build dividend rows (filter by annualDividend > 0)
       state.computed.dividendRows = state.computed.rows
-        .filter(r => r.hasDividend && r.dividendYield)
+        .filter(r => r.hasDividend && r.annualDividend > 0)
         .map(r => ({
           ticker: r.ticker,
-          yield: r.dividendYield,
+          annualDividend: r.annualDividend,
           growth: r.dividendGrowth,
           yearsCount: r.yearsCount
         }));
@@ -1265,7 +1267,8 @@
       if (period && period !== 'all') {
         const years = parseInt(period, 10);
         rows = rows.map(r => {
-          const yearValues = r.returns.slice(0, years).map(x => x.return).filter(v => v !== null);
+          const targetYears = years || r.returns.length;
+          const yearValues = r.returns.slice(0, targetYears).map(x => x.return).filter(v => v !== null);
           return { ...r, cagr: yearValues.length >= 2 ? calcCAGR(yearValues) : null };
         }).filter(r => r.yearsCount >= years);
       }
@@ -1379,7 +1382,7 @@
       // Summary
       document.getElementById('detail-best').textContent = row.bestYear ? `${row.bestYear}: ${formatPct(row.bestReturn)}` : '-';
       document.getElementById('detail-worst').textContent = row.worstYear ? `${row.worstYear}: ${formatPct(row.worstReturn)}` : '-';
-      document.getElementById('detail-div-yield').textContent = row.dividendYield ? formatPct(row.dividendYield / 100, false) : 'N/A';
+      document.getElementById('detail-div-yield').textContent = row.annualDividend ? `$${row.annualDividend.toFixed(2)}` : 'N/A';
       document.getElementById('detail-div-growth').textContent = row.dividendGrowth !== null ? formatPct(row.dividendGrowth) : 'N/A';
 
       // Returns table (last 10 years)
@@ -1393,7 +1396,7 @@
         return `
           <tr>
             <td class="px-3 py-2 mono">${r.year}</td>
-            <td class="text-right px-3 py-2 mono ${isPositive ? 'positive' : 'negative'}">${formatPct(pct)}</td>
+            <td class="text-right px-3 py-2 mono ${isPositive ? 'positive' : 'negative'}">${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%</td>
             <td class="px-3 py-2">
               <div class="h-4 flex items-center">
                 <div class="${isPositive ? 'bg-green-400' : 'bg-red-400'} h-3 rounded" style="width: ${width}%"></div>
@@ -1442,7 +1445,7 @@
         document.getElementById('detail-pe-fwd').textContent = current.pe_forward ? current.pe_forward.toFixed(1) : '-';
         document.getElementById('detail-eps').textContent = current.eps_trailing ? `$${current.eps_trailing.toFixed(2)}` : '-';
         document.getElementById('detail-eps-fwd').textContent = current.eps_forward ? `$${current.eps_forward.toFixed(2)}` : '-';
-        document.getElementById('detail-div-current').textContent = current.dividend_yield ? `${(current.dividend_yield * 100).toFixed(2)}%` : '-';
+        document.getElementById('detail-div-current').textContent = current.dividend_yield ? `${current.dividend_yield.toFixed(2)}%` : '-';
         document.getElementById('detail-div-ttm').textContent = current.dividend_ttm ? `$${current.dividend_ttm.toFixed(2)}` : '-';
         document.getElementById('detail-mktcap').textContent = current.market_cap_billions ? `$${current.market_cap_billions.toFixed(0)}B` : '-';
 
@@ -1454,7 +1457,7 @@
             const yoy = prevDiv && prevDiv.amount > 0 ? (d.amount - prevDiv.amount) / prevDiv.amount : null;
             return `
               <tr class="hover:bg-green-50">
-                <td class="px-3 py-1.5 mono">${d.year}</td>
+                <td class="px-3 py-1.5 mono">${d.exDate?.split('-')[0] || '-'}</td>
                 <td class="text-right px-3 py-1.5 mono">$${d.amount?.toFixed(2) || '-'}</td>
                 <td class="text-right px-3 py-1.5 mono ${yoy !== null ? getColorClass(yoy) : ''}">
                   ${yoy !== null ? `${yoy >= 0 ? '+' : ''}${(yoy * 100).toFixed(1)}%` : '-'}
@@ -1490,20 +1493,21 @@
         return;
       }
 
-      // Get latest date
-      const latestGainers = gainers.data?.[0] || {};
-      const latestLosers = losers.data?.[0] || {};
+      // Get latest date (JSON uses 'history' key, not 'data')
+      const latestGainers = gainers.history?.[0] || {};
+      const latestLosers = losers.history?.[0] || {};
 
       // Populate date selector
       const dateSelect = document.getElementById('movers-date');
-      if (gainers.data?.length && dateSelect.options.length === 1) {
-        gainers.data.slice(0, 30).forEach((d, i) => {
+      if (gainers.history?.length && dateSelect.options.length === 1) {
+        gainers.history.slice(0, 30).forEach((d, i) => {
           if (i > 0) dateSelect.options.add(new Option(d.date, d.date));
         });
       }
 
       const renderMoversTable = (data, bodyId, isGainer) => {
-        const movers = data.movers || [];
+        // JSON uses 'gainers'/'losers' keys, not 'movers'
+        const movers = isGainer ? (data.gainers || []) : (data.losers || []);
         document.getElementById(bodyId).innerHTML = movers.slice(0, 10).map((m, i) => `
           <tr class="hover:bg-gray-50">
             <td class="px-3 py-2 text-gray-400">${i + 1}</td>
@@ -1521,10 +1525,10 @@
     function renderDividendsTab() {
       let rows = [...state.computed.dividendRows];
 
-      const sort = document.getElementById('dividends-sort')?.value || 'yield-desc';
+      const sort = document.getElementById('dividends-sort')?.value || 'dividend-desc';
       rows.sort((a, b) => {
         switch (sort) {
-          case 'yield-desc': return (b.yield ?? 0) - (a.yield ?? 0);
+          case 'dividend-desc': return (b.annualDividend ?? 0) - (a.annualDividend ?? 0);
           case 'growth-desc': return (b.growth ?? -999) - (a.growth ?? -999);
           case 'ticker-asc': return a.ticker.localeCompare(b.ticker);
           default: return 0;
@@ -1545,7 +1549,7 @@
         tbody.innerHTML = displayRows.map(r => `
           <tr class="hover:bg-amber-50">
             <td class="px-3 py-2 font-semibold mono">${r.ticker}</td>
-            <td class="text-right px-3 py-2 mono ${getColorClass(r.yield)}">${r.yield?.toFixed(2) || '-'}%</td>
+            <td class="text-right px-3 py-2 mono text-gray-700">$${r.annualDividend?.toFixed(2) || '-'}</td>
             <td class="text-right px-3 py-2 mono ${getColorClass(r.growth)}">${r.growth !== null ? formatPct(r.growth) : '-'}</td>
             <td class="text-right px-3 py-2 mono hidden md:table-cell">-</td>
             <td class="text-right px-3 py-2 mono text-gray-500 hidden md:table-cell">${r.yearsCount}yr</td>
@@ -1618,17 +1622,18 @@
       const dow = state.data.dowjonesReturns;
 
       const renderIndex = (data, prefix) => {
-        if (!data?.data) {
+        // JSON uses 'returns' key, not 'data'
+        if (!data?.returns) {
           document.getElementById(`idx-${prefix}-cagr`).textContent = '-';
           return;
         }
-        const returns = data.data.slice(0, 20);
+        const returns = data.returns.slice(0, 20);
         const cagr = calcCAGR(returns.map(r => r.return / 100));
         const { best, worst } = findBestWorstYears(returns.map(r => ({ year: r.year, return: r.return / 100 })));
 
         document.getElementById(`idx-${prefix}-cagr`).textContent = formatPct(cagr);
         document.getElementById(`idx-${prefix}-cagr`).className = `text-3xl font-bold mono ${getColorClass(cagr)}`;
-        document.getElementById(`idx-${prefix}-years`).textContent = `${data.data.length}yr`;
+        document.getElementById(`idx-${prefix}-years`).textContent = `${data.returns.length}yr`;
         document.getElementById(`idx-${prefix}-best`).textContent = best ? `${best.year}: ${formatPct(best.return)}` : '-';
         document.getElementById(`idx-${prefix}-worst`).textContent = worst ? `${worst.year}: ${formatPct(worst.return)}` : '-';
       };
@@ -1640,7 +1645,8 @@
       // Comparison table
       const years = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015];
       const findReturn = (data, year) => {
-        const r = data?.data?.find(d => d.year === year);
+        // JSON uses 'returns' key, not 'data'
+        const r = data?.returns?.find(d => d.year === year);
         return r ? r.return : null;
       };
 
@@ -1805,7 +1811,7 @@
           <tr class="hover:bg-orange-50">
             <td class="px-3 py-1.5 mono text-gray-700">${r.year}</td>
             <td class="text-right px-3 py-1.5 mono font-semibold ${getColorClass(r.return)}">
-              ${r.return !== null ? `${r.return >= 0 ? '+' : ''}${(r.return * 100).toFixed(1)}%` : '-'}
+              ${r.return !== null ? `${r.return >= 0 ? '+' : ''}${r.return.toFixed(1)}%` : '-'}
             </td>
           </tr>
         `).join('');
@@ -1820,7 +1826,7 @@
           <tr class="hover:bg-indigo-50">
             <td class="px-3 py-1.5 mono text-gray-700">${r.year}</td>
             <td class="text-right px-3 py-1.5 mono font-semibold ${getColorClass(r.return)}">
-              ${r.return !== null ? `${r.return >= 0 ? '+' : ''}${(r.return * 100).toFixed(1)}%` : '-'}
+              ${r.return !== null ? `${r.return >= 0 ? '+' : ''}${r.return.toFixed(1)}%` : '-'}
             </td>
           </tr>
         `).join('');
