@@ -2,7 +2,7 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,248
+> **Files**: 1,246
 > **Version**: v2.2.0
 
 ---
@@ -20,14 +20,14 @@ global-scouter/
 │   ├── metadata.json        # System metadata
 │   └── stocks_index.json    # Master stock index
 ├── stocks/
-│   └── detail/              # Individual stock profiles (1,243 files)
+│   └── detail/              # Individual stock profiles (1,241 files)
 │       ├── AAPL.json
 │       ├── MSFT.json
 │       └── ...
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (23 items)
 └── indicators/              # v2.1.0
-    └── economic.json        # Economic indicators (1,046 records)
+    └── economic.json        # Economic indicators (1,047 records)
 ```
 
 ## File Counts
@@ -35,10 +35,10 @@ global-scouter/
 | Folder | Files |
 |--------|-------|
 | core/ | 3 |
-| stocks/detail/ | 1,243 |
+| stocks/detail/ | 1,241 |
 | etfs/ | 1 |
 | indicators/ | 1 |
-| **Total** | 1,248 |
+| **Total** | 1,246 |
 
 ## Schema
 
@@ -93,9 +93,9 @@ global-scouter/
 
 | Field | Coverage | Description |
 |-------|----------|-------------|
-| `fiscal_month` | 100% (1,243) | Fiscal year end month (Jan, Dec, etc.) |
-| `eps_consensus` | 100% (1,243) | EPS estimates FY+1/+2/+3 (6-week average) |
-| `growth_consensus` | 100% (1,243) | Revenue/Earnings growth 7Y/3Y (%) |
+| `fiscal_month` | 100% (1,241) | Fiscal year end month (Jan, Dec, etc.) |
+| `eps_consensus` | 100% (1,241) | EPS estimates FY+1/+2/+3 (6-week average) |
+| `growth_consensus` | 100% (1,241) | Revenue/Earnings growth 7Y/3Y (%) |
 | `per_bands` | 95.7% (1,190) | PER min/avg/max over 8 years |
 
 ### etfs/index.json (v2.1.0)
@@ -168,4 +168,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-01-25*
+*Last Updated: 2026-01-30*
