@@ -28,8 +28,7 @@ const SheetsSync = (function() {
     SPREADSHEET_ID: '1shNx-xmzsJ7ninBly4HUjOjrMFqlvj-u3aBg6PmTGBE',
 
     DISCOVERY_DOCS: [
-      'https://sheets.googleapis.com/$discovery/rest?version=v4',
-      'https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest'
+      'https://sheets.googleapis.com/$discovery/rest?version=v4'
     ],
     // Sheets + UserInfo scope
     SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
@@ -173,11 +172,27 @@ const SheetsSync = (function() {
 
   /**
    * Fetch current user's email from Google
+   * Uses OAuth token directly (not API_KEY) to avoid 403
    */
   async function fetchUserEmail() {
     try {
-      const response = await gapi.client.oauth2.userinfo.get();
-      currentUserEmail = response.result.email;
+      const token = gapi.client.getToken();
+      if (!token || !token.access_token) {
+        throw new Error('No access token available');
+      }
+
+      const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${token.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      currentUserEmail = data.email;
       console.log('SheetsSync: Logged in as', currentUserEmail);
       return currentUserEmail;
     } catch (error) {
