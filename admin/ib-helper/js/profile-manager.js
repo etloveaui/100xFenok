@@ -334,7 +334,7 @@ const ProfileManager = (function() {
     const key = `${DAILY_KEY}_${profileId}_${symbol}`;
     const saved = {
       ...dailyData,
-      date: new Date().toISOString().split('T')[0],
+      date: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })(),
       timestamp: new Date().toISOString()
     };
     localStorage.setItem(key, JSON.stringify(saved));
