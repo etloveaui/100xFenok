@@ -37,11 +37,28 @@ const SheetsSync = (function() {
   // STATE
   // =====================================================
 
-  let spreadsheetId = localStorage.getItem('ib_sheets_id') || null;
+  let currentProfileId = null;  // Set by setCurrentProfile()
   let tokenClient = null;
   let gapiInited = false;
   let gisInited = false;
   let isSignedIn = false;
+
+  /**
+   * Get storage key for profile's spreadsheet ID
+   * @param {string} profileId
+   * @returns {string}
+   */
+  function getStorageKey(profileId) {
+    return `ib_sheets_id_${profileId || currentProfileId || 'default'}`;
+  }
+
+  /**
+   * Set current profile for Sheets operations
+   * @param {string} profileId
+   */
+  function setCurrentProfile(profileId) {
+    currentProfileId = profileId;
+  }
 
   // =====================================================
   // INITIALIZATION
@@ -184,20 +201,23 @@ const SheetsSync = (function() {
   // =====================================================
 
   /**
-   * Set spreadsheet ID
+   * Set spreadsheet ID for current profile
    * @param {string} id - Google Sheets ID
+   * @param {string} [profileId] - Optional profile ID (uses current if not provided)
    */
-  function setSpreadsheet(id) {
-    spreadsheetId = id;
-    localStorage.setItem('ib_sheets_id', id);
+  function setSpreadsheet(id, profileId) {
+    const key = getStorageKey(profileId);
+    localStorage.setItem(key, id);
   }
 
   /**
-   * Get current spreadsheet ID
+   * Get spreadsheet ID for current profile
+   * @param {string} [profileId] - Optional profile ID (uses current if not provided)
    * @returns {string|null}
    */
-  function getSpreadsheetId() {
-    return spreadsheetId;
+  function getSpreadsheetId(profileId) {
+    const key = getStorageKey(profileId);
+    return localStorage.getItem(key) || null;
   }
 
   /**
@@ -219,12 +239,13 @@ const SheetsSync = (function() {
    * @returns {Promise<Object>} Parsed profiles data
    */
   async function readAll() {
-    if (!spreadsheetId) {
-      throw new Error('Spreadsheet ID not set');
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set for this profile');
     }
 
     const response = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: spreadsheetId,
+      spreadsheetId: sheetId,
       range: CONFIG.RANGE,
     });
 
@@ -273,8 +294,9 @@ const SheetsSync = (function() {
    * @param {Object} profile - Profile object with stocks
    */
   async function writeProfile(profile) {
-    if (!spreadsheetId) {
-      throw new Error('Spreadsheet ID not set');
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set for this profile');
     }
 
     // First clear existing profile rows
@@ -295,7 +317,7 @@ const SheetsSync = (function() {
 
     // Append rows
     await gapi.client.sheets.spreadsheets.values.append({
-      spreadsheetId: spreadsheetId,
+      spreadsheetId: sheetId,
       range: `${CONFIG.SHEET_NAME}!A:G`,
       valueInputOption: 'USER_ENTERED',
       resource: { values: rows }
@@ -307,9 +329,12 @@ const SheetsSync = (function() {
    * @param {string} profileId - Profile ID to clear
    */
   async function clearProfileRows(profileId) {
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) return;
+
     // Read all data
     const response = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: spreadsheetId,
+      spreadsheetId: sheetId,
       range: CONFIG.RANGE,
     });
 
@@ -318,13 +343,13 @@ const SheetsSync = (function() {
 
     // Clear and rewrite
     await gapi.client.sheets.spreadsheets.values.clear({
-      spreadsheetId: spreadsheetId,
+      spreadsheetId: sheetId,
       range: CONFIG.RANGE,
     });
 
     if (rowsToKeep.length > 0) {
       await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId: spreadsheetId,
+        spreadsheetId: sheetId,
         range: `${CONFIG.SHEET_NAME}!A2`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: rowsToKeep }
@@ -337,8 +362,9 @@ const SheetsSync = (function() {
    * @param {Object} profilesData - All profiles from ProfileManager
    */
   async function writeAll(profilesData) {
-    if (!spreadsheetId) {
-      throw new Error('Spreadsheet ID not set');
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set for this profile');
     }
 
     const allRows = [];
@@ -359,13 +385,13 @@ const SheetsSync = (function() {
 
     // Clear all and write
     await gapi.client.sheets.spreadsheets.values.clear({
-      spreadsheetId: spreadsheetId,
+      spreadsheetId: sheetId,
       range: CONFIG.RANGE,
     });
 
     if (allRows.length > 0) {
       await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId: spreadsheetId,
+        spreadsheetId: sheetId,
         range: `${CONFIG.SHEET_NAME}!A2`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: allRows }
@@ -458,7 +484,8 @@ const SheetsSync = (function() {
       gapiLoaded: gapiInited,
       gisLoaded: gisInited,
       signedIn: isSignedIn,
-      spreadsheetId: spreadsheetId
+      spreadsheetId: getSpreadsheetId(),
+      currentProfileId: currentProfileId
     };
   }
 
@@ -477,7 +504,10 @@ const SheetsSync = (function() {
     signOut,
     isAuthenticated,
 
-    // Spreadsheet
+    // Profile (for multi-user support)
+    setCurrentProfile,
+
+    // Spreadsheet (per-profile)
     setSpreadsheet,
     getSpreadsheetId,
     extractIdFromUrl,

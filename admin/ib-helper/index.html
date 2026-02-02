@@ -181,10 +181,9 @@
     <!-- Ticker Selection -->
     <div class="bg-white rounded-xl p-4 shadow-sm">
       <label class="block text-sm font-medium text-gray-700 mb-2">종목 선택</label>
-      <div class="grid grid-cols-3 gap-2">
+      <div id="ticker-buttons" class="grid grid-cols-2 gap-2">
         <button onclick="selectTicker('TQQQ')" class="ticker-btn touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100" data-ticker="TQQQ">TQQQ</button>
         <button onclick="selectTicker('SOXL')" class="ticker-btn touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100" data-ticker="SOXL">SOXL</button>
-        <button onclick="selectTicker('BITU')" class="ticker-btn touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100" data-ticker="BITU">BITU</button>
       </div>
     </div>
 
@@ -206,7 +205,7 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs text-gray-500 mb-1">AFTER 매도% (TQQQ=10, SOXL/BITU=12)</label>
+          <label class="block text-xs text-gray-500 mb-1">AFTER 매도% (TQQQ=10, SOXL=12)</label>
           <input type="number" id="input-sellPercent" class="w-full px-3 py-2 border rounded-lg" value="12" step="0.5" inputmode="decimal">
         </div>
       </div>
@@ -405,6 +404,9 @@
               <i class="fas fa-upload mr-1"></i>가져오기
             </button>
           </div>
+          <button onclick="importDatFile()" class="w-full py-2 border border-purple-500 text-purple-600 rounded-lg text-sm">
+            <i class="fas fa-file-import mr-1"></i>Genie RPA 데이터 (.dat) 가져오기
+          </button>
           <button onclick="createNewProfile()" class="w-full py-2 border border-green-500 text-green-600 rounded-lg text-sm">
             <i class="fas fa-user-plus mr-1"></i>새 프로필 만들기
           </button>
@@ -437,8 +439,8 @@
 
   <!-- Footer -->
   <footer class="px-4 py-6 text-center text-xs text-gray-400">
-    <p>IB Helper v3.1.0 | V2.2 Algorithm</p>
-    <p class="mt-1">Multi-Profile + 예수금 관리 + Google Sheets 동기화</p>
+    <p>IB Helper v3.2.0 | V2.2 Algorithm</p>
+    <p class="mt-1">Multi-Profile + Genie RPA Import + Google Sheets</p>
   </footer>
 
   <!-- Scripts -->
@@ -461,6 +463,11 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Initialize ProfileManager
       currentProfile = ProfileManager.init();
+
+      // Set current profile for SheetsSync (per-profile Sheet storage)
+      if (currentProfile) {
+        SheetsSync.setCurrentProfile(currentProfile.id);
+      }
 
       // Show today's date
       const today = new Date();
@@ -510,16 +517,31 @@
       const profiles = ProfileManager.getAllProfiles();
       const activeId = ProfileManager.getActiveId();
 
-      selector.innerHTML = profiles.map(p => `
-        <option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>
-          👤 ${p.name}
-        </option>
-      `).join('');
+      if (profiles.length === 0) {
+        // No profiles - show prompt to create
+        selector.innerHTML = '<option value="">➕ 프로필을 추가하세요</option>';
+        // Auto-open profile modal for first-time users
+        setTimeout(() => {
+          if (confirm('프로필이 없습니다. 새 프로필을 만드시겠습니까?')) {
+            createNewProfile();
+          }
+        }, 500);
+      } else {
+        selector.innerHTML = profiles.map(p => `
+          <option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>
+            👤 ${p.name}
+          </option>
+        `).join('');
+      }
     }
 
     function switchProfile(profileId) {
       ProfileManager.setActive(profileId);
       currentProfile = ProfileManager.getActive();
+
+      // Update SheetsSync to use this profile's Sheet
+      SheetsSync.setCurrentProfile(profileId);
+
       loadProfileData();
       loadBalanceData();
       document.getElementById('results-section').classList.add('hidden');
@@ -546,13 +568,13 @@
     }
 
     function updateTickerButtons() {
-      const container = document.querySelector('.ticker-btn')?.parentElement;
+      const container = document.getElementById('ticker-buttons');
       if (!container) return;
 
-      // Get profile stocks or use defaults
+      // Get profile stocks or use defaults (TQQQ, SOXL only - no BITU)
       const stocks = currentProfile?.stocks?.length > 0
         ? currentProfile.stocks
-        : [{ symbol: 'TQQQ' }, { symbol: 'SOXL' }, { symbol: 'BITU' }];
+        : [{ symbol: 'TQQQ' }, { symbol: 'SOXL' }];
 
       container.innerHTML = stocks.map(s => `
         <button onclick="selectTicker('${s.symbol}')"
@@ -666,9 +688,14 @@
       const accountNumber = prompt('계좌번호 (선택):') || '';
       const newId = ProfileManager.create(name, accountNumber);
       ProfileManager.setActive(newId);
+      currentProfile = ProfileManager.getActive();
+
+      // Update SheetsSync to use new profile's Sheet
+      SheetsSync.setCurrentProfile(newId);
 
       updateProfileSelector();
       loadProfileData();
+      loadBalanceData();
       closeProfileModal();
     }
 
@@ -703,6 +730,112 @@
             alert('프로필을 가져왔습니다');
           } else {
             alert('프로필 가져오기 실패');
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    // =====================================================
+    // Genie RPA .dat File Import
+    // =====================================================
+
+    /**
+     * Parse Genie RPA .dat file format
+     * Format: 0|SYMBOL|PRINCIPAL|STAR%|T%|VERSION|DIVISIONS|QTY|?|?
+     * Example: 0|SOXL|16000|12%|6%|V2.2|40||0|0
+     */
+    function parseDatFile(content) {
+      const lines = content.split(/\r?\n/).filter(line => line.trim());
+      const stocks = [];
+
+      for (const line of lines) {
+        const parts = line.split('|');
+        if (parts.length < 7) continue;
+
+        const symbol = parts[1]?.trim();
+        if (!symbol) continue;
+
+        const principal = parseFloat(parts[2]) || 0;
+        const starPercent = parseFloat(parts[3]?.replace('%', '')) || 0;
+        const tPercent = parseFloat(parts[4]?.replace('%', '')) || 0;
+        const divisions = parseInt(parts[6]) || 40;
+
+        // Determine sellPercent based on symbol
+        const sellPercent = symbol === 'TQQQ' ? 10 : 12;
+
+        stocks.push({
+          symbol,
+          principal,
+          sellPercent,
+          starPercent,  // For reference
+          tPercent,     // For reference
+          divisions
+        });
+      }
+
+      return stocks;
+    }
+
+    function importDatFile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.dat,.txt';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const content = ev.target.result;
+            const stocks = parseDatFile(content);
+
+            if (stocks.length === 0) {
+              alert('파일에서 종목 데이터를 찾을 수 없습니다');
+              return;
+            }
+
+            // Ask user what to do
+            const action = confirm(
+              `${stocks.length}개 종목을 찾았습니다:\n` +
+              stocks.map(s => `  • ${s.symbol}: $${s.principal.toLocaleString()}`).join('\n') +
+              `\n\n현재 프로필에 추가하시겠습니까?\n` +
+              `[확인] = 현재 프로필에 추가\n` +
+              `[취소] = 새 프로필로 생성`
+            );
+
+            if (action && currentProfile) {
+              // Add to current profile
+              stocks.forEach(stock => {
+                ProfileManager.addStock(currentProfile.id, stock);
+              });
+              currentProfile = ProfileManager.getActive();
+              updateModalStocksList();
+              updateTickerButtons();
+              alert(`${stocks.length}개 종목이 추가되었습니다`);
+            } else {
+              // Create new profile
+              const name = prompt('새 프로필 이름:', file.name.replace('.dat', ''));
+              if (!name) return;
+
+              const newId = ProfileManager.create(name, '');
+              stocks.forEach(stock => {
+                ProfileManager.addStock(newId, stock);
+              });
+              ProfileManager.setActive(newId);
+              currentProfile = ProfileManager.getActive();
+              SheetsSync.setCurrentProfile(newId);
+
+              updateProfileSelector();
+              loadProfileData();
+              closeProfileModal();
+              alert(`새 프로필 "${name}"이(가) 생성되었습니다`);
+            }
+          } catch (error) {
+            console.error('DAT file parse error:', error);
+            alert('파일 파싱 오류: ' + error.message);
           }
         };
         reader.readAsText(file);
@@ -773,8 +906,10 @@
     }
 
     // =====================================================
-    // Current Price Fetch (Yahoo Finance)
+    // Current Price Fetch (100xFenok Ticker API)
     // =====================================================
+
+    const TICKER_API = 'https://ticker-api.etloveaui.workers.dev/api/ticker';
 
     async function fetchCurrentPrice() {
       const ticker = selectedTicker;
@@ -784,16 +919,12 @@
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
       try {
-        // Using Yahoo Finance chart API (free, no CORS issues with proxy)
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
-
-        // Note: This may fail due to CORS. In production, use a proxy or Cloudflare Worker
-        const response = await fetch(url);
+        // Using 100xFenok Ticker API (Cloudflare Worker - no CORS issues)
+        const response = await fetch(`${TICKER_API}/${ticker}`);
         const data = await response.json();
 
-        const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-        if (price) {
-          document.getElementById('input-currentPrice').value = price.toFixed(2);
+        if (data.price) {
+          document.getElementById('input-currentPrice').value = data.price.toFixed(2);
           if (hasRequiredInputs()) {
             calculateOrders();
           }
@@ -802,7 +933,7 @@
         }
       } catch (error) {
         console.error('Price fetch error:', error);
-        alert('현재가 조회 실패. 수동으로 입력해주세요.\n(CORS 제한으로 인해 직접 조회가 안 될 수 있습니다)');
+        alert('현재가 조회 실패. 수동으로 입력해주세요.');
       } finally {
         btn.innerHTML = '<i class="fas fa-search-dollar"></i>';
       }
