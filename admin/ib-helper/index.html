@@ -653,7 +653,7 @@
 
   <!-- Footer -->
   <footer class="px-4 py-6 text-center">
-    <p class="text-xs text-gray-500">100x IB Helper v4.14.0</p>
+    <p class="text-xs text-gray-500">100x IB Helper v4.17.0</p>
     <p class="mt-1 text-xs text-gray-400">Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
@@ -667,7 +667,9 @@
     // State
     // =====================================================
 
-    let selectedTicker = 'SOXL';
+    // 🔴 v4.15.0: null로 초기화 (Bug 7 수정)
+    // 'SOXL' 초기값 → 첫 로드 시 빈 데이터로 기존 데이터 덮어씌움 방지
+    let selectedTicker = null;
     let currentProfile = null;
 
     // =====================================================
@@ -722,6 +724,9 @@
       // Save ID to delete
       const profileToDelete = currentProfile.id;
 
+      // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+      selectedTicker = null;
+
       // First switch to another profile (ProfileManager.delete requires non-active profile)
       const remaining = profiles.filter(p => p.id !== profileToDelete);
       if (remaining.length > 0) {
@@ -772,26 +777,19 @@
       // Load balance data
       loadBalanceData();
 
-      // Auto-calculate on input change (debounced)
-      const inputs = document.querySelectorAll('input[type="number"]');
-      let debounceTimer;
-      inputs.forEach(input => {
-        input.addEventListener('input', () => {
-          clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(() => {
-            // Save daily data (except balance input)
-            if (input.id !== 'input-balance') {
-              saveDailyInputs();
-              if (hasRequiredInputs()) {
-                calculateOrders();
-              }
-            } else {
-              // Handle balance input
-              handleBalanceChange(input.value);
-            }
+      // 🔴 v4.17.0: 자동 계산 제거 (Bug 12 수정)
+      // - 입력만 했는데 계산 결과가 자동으로 표시되는 버그
+      // - 사용자가 "계산" 버튼을 명시적으로 눌러야 계산됨
+      // - 저장은 onchange 이벤트에서 처리됨 (saveCurrentInputs)
+      const balanceInput = document.getElementById('input-balance');
+      if (balanceInput) {
+        balanceInput.addEventListener('input', () => {
+          clearTimeout(window.balanceDebounce);
+          window.balanceDebounce = setTimeout(() => {
+            handleBalanceChange(balanceInput.value);
           }, 500);
         });
-      });
+      }
     });
 
     // =====================================================
@@ -825,8 +823,12 @@
     function switchProfile(profileId) {
       // 🔴 v4.14.0: 프로필 전환 전 현재 입력값 저장 (버그 수정)
       if (currentProfile && selectedTicker) {
-        saveCurrentInputs();
+        saveCurrentInputs(true);  // silent=true: 토스트 스팸 방지
       }
+
+      // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+      // 이전 종목 데이터가 새 프로필에 저장되는 것 방지
+      selectedTicker = null;
 
       ProfileManager.setActive(profileId);
       currentProfile = ProfileManager.getActive();
@@ -850,13 +852,12 @@
       // Update ticker buttons based on profile stocks
       updateTickerButtons();
 
-      // Select first stock or default
+      // Select first stock (🔴 v4.16.0: 프로필에 종목이 없으면 선택하지 않음 - Bug 11 수정)
       const firstStock = currentProfile.stocks[0];
       if (firstStock) {
         selectTicker(firstStock.symbol);
-      } else {
-        selectTicker('SOXL');
       }
+      // else: selectedTicker = null 유지 (기본 종목 자동 저장 방지)
     }
 
     function updateTickerButtons() {
@@ -1030,6 +1031,12 @@
 
         showToast(`${userEmail} 로그인 완료`, 'success');
 
+        // 🔴 v4.15.0: 현재 입력값 저장 후 selectedTicker 초기화 (Bug 6 수정)
+        if (currentProfile && selectedTicker) {
+          saveCurrentInputs(true);
+        }
+        selectedTicker = null;
+
         // 2. 프로필 생성 (이메일 기반)
         const profileName = userEmail.split('@')[0]; // 이메일 앞부분을 프로필명으로
         let profileId = profileName;
@@ -1081,6 +1088,9 @@
         // 폴백: 수동 프로필 생성
         const name = prompt('Google 연동 실패. 프로필 이름을 입력하세요:', '내 프로필');
         if (name) {
+          // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+          selectedTicker = null;
+
           const newId = ProfileManager.create(name, '');
           ProfileManager.setActive(newId);
           currentProfile = ProfileManager.getActive();
@@ -1098,6 +1108,12 @@
       const name = prompt('프로필 이름을 입력하세요:', '내 프로필');
       if (!name) return;
 
+      // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+      if (currentProfile && selectedTicker) {
+        saveCurrentInputs(true);
+      }
+      selectedTicker = null;
+
       const newId = ProfileManager.create(name, '');
       ProfileManager.setActive(newId);
       currentProfile = ProfileManager.getActive();
@@ -1111,6 +1127,12 @@
     function createNewProfile() {
       const name = prompt('새 프로필 이름:');
       if (!name) return;
+
+      // 🔴 v4.15.0: 현재 입력값 저장 후 selectedTicker 초기화 (Bug 6 수정)
+      if (currentProfile && selectedTicker) {
+        saveCurrentInputs(true);
+      }
+      selectedTicker = null;
 
       const newId = ProfileManager.create(name, '');
       ProfileManager.setActive(newId);
@@ -1252,6 +1274,12 @@
               const name = prompt('새 프로필 이름:', file.name.replace('.dat', ''));
               if (!name) return;
 
+              // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+              if (currentProfile && selectedTicker) {
+                saveCurrentInputs(true);
+              }
+              selectedTicker = null;
+
               const newId = ProfileManager.create(name, '');
               stocks.forEach(stock => {
                 ProfileManager.addStock(newId, stock);
@@ -1288,12 +1316,20 @@
     function saveCurrentInputs(silent = false) {
       if (!currentProfile || !selectedTicker) return;
 
-      // 1. Daily data 저장
-      saveDailyInputs();
-
       // 2. Stock settings 저장 (세팅원금, 매도%)
       const principal = parseFloat(document.getElementById('input-principal').value) || 0;
       const sellPercent = parseFloat(document.getElementById('input-sellPercent').value) || 12;
+
+      // 🔴 v4.16.0: 프로필에 없는 종목 + principal이 0이면 저장하지 않음 (Bug 11 수정)
+      // 기본 버튼 클릭만으로 빈 종목이 추가되는 것 방지
+      const existingStock = ProfileManager.getStock(selectedTicker);
+      if (!existingStock && principal <= 0) {
+        console.log(`saveCurrentInputs: SKIP ${selectedTicker} (not in profile, principal=0)`);
+        return;
+      }
+
+      // 1. Daily data 저장 (종목이 저장될 때만)
+      saveDailyInputs();
 
       ProfileManager.addStock(currentProfile.id, {
         symbol: selectedTicker,
@@ -1344,8 +1380,9 @@
 
     function selectTicker(ticker) {
       // 🔴 종목 전환 전에 현재 입력값 저장 (v4.11.0 버그 수정)
+      // 🔴 v4.15.0: silent=true 추가 (토스트 스팸 방지)
       if (selectedTicker && selectedTicker !== ticker) {
-        saveCurrentInputs();
+        saveCurrentInputs(true);
       }
 
       selectedTicker = ticker;
@@ -1365,15 +1402,32 @@
         document.getElementById('input-principal').value = stock.principal || 13000;
         document.getElementById('input-sellPercent').value = stock.sellPercent || IBCalculator.getSellPercent(ticker);
       } else {
-        // Default values
+        // 🔴 v4.16.0: 종목이 프로필에 없으면 input-principal도 초기화 (Bug 11 수정)
+        // 이전 프로필의 값이 새 프로필에 저장되는 것 방지
+        document.getElementById('input-principal').value = '';
         document.getElementById('input-sellPercent').value = IBCalculator.getSellPercent(ticker);
       }
 
       // Load saved daily inputs
       loadDailyInputs();
 
-      // Hide results when switching
+      // 🔴 v4.17.0: 종목 전환 시 모든 결과 영역 초기화 (Bug 12 수정)
       document.getElementById('results-section').classList.add('hidden');
+      // PC 결과 영역도 초기화
+      const resultsPC = document.getElementById('results-pc');
+      if (resultsPC) {
+        resultsPC.innerHTML = `
+          <div class="text-center text-gray-400 py-8">
+            <i class="fas fa-calculator text-4xl mb-2"></i>
+            <p>주문 계산 버튼을 눌러주세요</p>
+          </div>
+        `;
+      }
+      // 모바일 오버레이 닫기
+      document.getElementById('results-overlay')?.classList.add('hidden');
+      document.body.style.overflow = '';
+      // lastCalculation 초기화
+      lastCalculation = null;
     }
 
     // =====================================================
@@ -1645,6 +1699,7 @@
 
     /**
      * PC/Mobile 반응형 결과 표시
+     * 🔴 v4.17.0: 상호 배타적 처리 (Bug 12 - 계산 창 두 개 뜨는 문제)
      */
     function showResultsResponsive() {
       const resultsSection = document.getElementById('results-section');
@@ -1657,15 +1712,25 @@
       const isPC = window.innerWidth >= 1024;
 
       if (isPC) {
-        // PC: Show in right column
+        // PC: Show in right column, HIDE mobile overlay
         resultsPC.innerHTML = resultsSection.innerHTML;
         resultsColumn.classList.remove('hidden');
-        resultsPC.querySelector('.text-center.text-gray-400')?.remove(); // Remove placeholder
+        resultsPC.querySelector('.text-center.text-gray-400')?.remove();
+        // 🔴 Mobile 결과 숨기기
+        resultsOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
       } else {
-        // Mobile: Show in overlay
+        // Mobile: Show in overlay, HIDE PC column
         resultsMobile.innerHTML = resultsSection.innerHTML;
         resultsOverlay.classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // Prevent background scroll
+        document.body.style.overflow = 'hidden';
+        // 🔴 PC 결과 초기화
+        resultsPC.innerHTML = `
+          <div class="text-center text-gray-400 py-8">
+            <i class="fas fa-calculator text-4xl mb-2"></i>
+            <p>주문 계산 버튼을 눌러주세요</p>
+          </div>
+        `;
       }
     }
 
@@ -1921,6 +1986,10 @@
 
         // Pull data from sheet (내 구글ID + 내 프로필만)
         const pulled = await SheetsSync.pull();
+
+        // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+        // 시트 데이터로 덮어씌워지므로 종목 선택 초기화 필요
+        selectedTicker = null;
 
         // Refresh UI
         currentProfile = ProfileManager.getActive();
