@@ -104,6 +104,16 @@ const IBCalculator = (function() {
     // 별%가 계산
     const starPrice = avgPrice * (1 + starPercent / 100);
 
+    // 현재가가 없으면 별%가만 사용 (캡 없음)
+    if (!currentPrice || currentPrice <= 0) {
+      return {
+        starPrice: roundPrice(starPrice),
+        currentPriceCap: 0,
+        locPrice: roundPrice(starPrice),
+        reason: '별%가 사용 (현재가 없음)'
+      };
+    }
+
     // 현재가+15% 캡
     const currentPriceCap = currentPrice * DEFAULT_CONFIG.locCapMultiplier;
 
@@ -358,23 +368,23 @@ const IBCalculator = (function() {
     const locQuantity = Math.floor(holdings / 4);
     if (locQuantity > 0) {
       orders.push({
-        type: 'LOC 매도 (쿼터)',
-        description: '보유의 25%',
+        type: 'LOC 매도',
+        description: '보유의 25% (1/4)',
         price: sellLocPrice,
         quantity: locQuantity,
         orderType: 'LOC'
       });
     }
 
-    // 주문 2: AFTER 지정가 매도 (75%)
+    // 주문 2: 지정가 매도 (75%)
     const afterQuantity = holdings - locQuantity;
     if (afterQuantity > 0) {
       orders.push({
-        type: `AFTER 매도 (+${sellPercent}%)`,
-        description: '보유의 75%',
+        type: `지정가 매도 (+${sellPercent}%)`,
+        description: '보유의 75% (3/4)',
         price: afterSellPrice,
         quantity: afterQuantity,
-        orderType: 'LIMIT (AFTER)'
+        orderType: 'LIMIT'
       });
     }
 
