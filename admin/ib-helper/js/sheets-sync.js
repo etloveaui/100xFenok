@@ -375,7 +375,9 @@ const SheetsSync = (function() {
       throw new Error('프로필이 없습니다');
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    // 로컬 시간 기준 날짜 (한국 시간대 반영)
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
     // 1. 전체 데이터 읽기
     const allRows = await readAllRows();
