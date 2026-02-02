@@ -131,6 +131,132 @@
       background: #3b82f6;
       border-radius: 3px;
     }
+
+    /* Order Type Badge */
+    .order-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge-loc {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .badge-limit {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    /* Quick Add Buttons */
+    .quick-add-btn {
+      min-width: 42px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.15s;
+    }
+    .quick-add-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Copy Button Animation */
+    .copy-btn {
+      opacity: 0.6;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover {
+      opacity: 1;
+    }
+    .copy-btn.copied {
+      color: #10b981;
+    }
+
+    /* Order Card Enhanced */
+    .order-card-enhanced {
+      position: relative;
+      border-radius: 12px;
+      padding: 1rem;
+      border-left: 4px solid;
+      transition: all 0.15s;
+    }
+    .order-card-enhanced:active {
+      transform: scale(0.99);
+    }
+    .order-card-enhanced.buy {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-left-color: #10b981;
+    }
+    .order-card-enhanced.sell {
+      background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+      border-left-color: #ef4444;
+    }
+    .order-card-enhanced.decline {
+      background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+      border-left-color: #3b82f6;
+    }
+
+    /* Main Value Display */
+    .main-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .sub-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Toast Notification */
+    .toast {
+      background: #1f2937;
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      animation: toast-in 0.3s ease-out;
+      pointer-events: auto;
+    }
+    .toast.success { background: #059669; }
+    .toast.error { background: #dc2626; }
+    .toast.warning { background: #d97706; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-20px); }
+    }
+
+    /* Focus Ring for Accessibility */
+    input:focus, button:focus, select:focus {
+      outline: none;
+      ring: 2px;
+      ring-color: #3b82f6;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -158,7 +284,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span id="today-date" class="text-xs text-gray-500"></span>
-        <button onclick="refreshCurrentPrice()" class="touch-target px-3 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">
+        <button onclick="recalculate()" class="touch-target px-3 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" aria-label="재계산">
           <i class="fas fa-sync-alt"></i>
         </button>
       </div>
@@ -175,8 +301,30 @@
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="px-4 py-4 max-w-lg mx-auto space-y-4">
+  <!-- Empty State (프로필 없을 때) -->
+  <div id="empty-state" class="hidden px-4 py-12 max-w-lg mx-auto">
+    <div class="bg-white rounded-2xl p-8 shadow-sm text-center">
+      <div class="w-20 h-20 bg-gradient-to-br from-rose-100 to-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-calculator text-rose-500 text-3xl"></i>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">IB Helper</h2>
+      <p class="text-gray-500 text-sm mb-8">무한매수 V2.2 도우미</p>
+
+      <button onclick="quickStart()" class="w-full py-4 bg-gradient-to-r from-rose-500 to-amber-500 text-white rounded-xl font-semibold text-lg hover:opacity-90 transition-all shadow-md">
+        <i class="fas fa-play mr-2"></i>시작하기
+      </button>
+
+      <p class="mt-6 text-xs text-gray-400">
+        💡 Genie RPA 데이터는 설정에서 가져올 수 있습니다
+      </p>
+    </div>
+  </div>
+
+  <!-- Main Content: PC 2-column / Mobile single column -->
+  <main id="main-content" class="px-4 py-4 max-w-6xl mx-auto lg:flex lg:gap-6">
+
+    <!-- LEFT COLUMN: Input Sections -->
+    <div id="input-column" class="space-y-4 lg:w-96 lg:flex-shrink-0">
 
     <!-- Ticker Selection -->
     <div class="bg-white rounded-xl p-4 shadow-sm">
@@ -221,13 +369,8 @@
           <input type="number" id="input-avgPrice" class="w-full px-3 py-2 border rounded-lg text-lg" placeholder="0.00" step="0.01" inputmode="decimal">
         </div>
         <div>
-          <label class="block text-xs text-gray-500 mb-1">현재가 ($)</label>
-          <div class="relative">
-            <input type="number" id="input-currentPrice" class="w-full px-3 py-2 border rounded-lg text-lg pr-10" placeholder="0.00" step="0.01" inputmode="decimal">
-            <button onclick="fetchCurrentPrice()" class="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700">
-              <i class="fas fa-search-dollar"></i>
-            </button>
-          </div>
+          <label class="block text-xs text-gray-500 mb-1">현재가 ($) <span class="text-gray-300">선택</span></label>
+          <input type="number" id="input-currentPrice" class="w-full px-3 py-2 border rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="직접 입력" step="0.01" inputmode="decimal">
         </div>
       </div>
 
@@ -238,7 +381,23 @@
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">보유 수량</label>
-          <input type="number" id="input-holdings" class="w-full px-3 py-2 border rounded-lg" placeholder="0" inputmode="numeric">
+          <div class="flex gap-1">
+            <input type="number" id="input-holdings" class="flex-1 min-w-0 px-3 py-2 border rounded-lg" placeholder="0" inputmode="numeric">
+            <button onclick="adjustHoldings(1)" class="quick-add-btn bg-green-100 text-green-700 hover:bg-green-200">+1</button>
+            <button onclick="adjustHoldings(3)" class="quick-add-btn bg-green-100 text-green-700 hover:bg-green-200">+3</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오늘 매수량 추가 -->
+      <div id="today-buy-helper" class="hidden bg-blue-50 rounded-lg p-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-blue-700">
+            <i class="fas fa-lightbulb mr-1"></i>오늘 <span id="today-buy-qty">0</span>주 매수?
+          </span>
+          <button onclick="applyTodayBuy()" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600">
+            <i class="fas fa-plus mr-1"></i>수량 추가
+          </button>
         </div>
       </div>
 
@@ -248,7 +407,53 @@
       </button>
     </div>
 
-    <!-- Results Section -->
+    <!-- Cash Management (Phase 3) - moved into left column -->
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <h3 class="font-medium text-gray-700 mb-3">
+        <i class="fas fa-wallet mr-2 text-amber-500"></i>예수금 관리
+      </h3>
+      <div class="balance-input">
+        <div class="flex-1">
+          <label class="block text-xs text-gray-500 mb-1">주문가능금액 (USD)</label>
+          <input type="number" id="input-balance" class="w-full px-3 py-2 border rounded-lg" placeholder="0.00" step="0.01" inputmode="decimal">
+        </div>
+        <button onclick="recalculateBalance()" class="touch-target mt-5 px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+      <div id="order-status" class="status-box hidden"></div>
+      <div id="stock-breakdown" class="hidden"></div>
+    </div>
+
+    </div><!-- END LEFT COLUMN (input-column) -->
+
+    <!-- RIGHT COLUMN: Results (PC: inline, Mobile: overlay) -->
+    <div id="results-column" class="hidden lg:block lg:flex-1 lg:min-w-0">
+      <!-- PC Results Container -->
+      <div id="results-pc" class="hidden lg:block sticky top-4 space-y-4">
+        <div class="text-center text-gray-400 py-8">
+          <i class="fas fa-calculator text-4xl mb-2"></i>
+          <p>주문 계산 버튼을 눌러주세요</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Results Overlay -->
+    <div id="results-overlay" class="fixed inset-0 bg-black/50 z-50 hidden lg:hidden" onclick="closeResultsOverlay()">
+      <div class="absolute inset-x-0 bottom-0 top-16 bg-gray-100 rounded-t-2xl overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="sticky top-0 bg-white px-4 py-3 border-b flex items-center justify-between shadow-sm">
+          <h2 class="font-bold text-gray-800"><i class="fas fa-receipt mr-2"></i>주문 결과</h2>
+          <button onclick="closeResultsOverlay()" class="touch-target text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <div id="results-mobile" class="p-4 space-y-4">
+          <!-- Mobile results content -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Section (Original - now hidden, used as template) -->
     <div id="results-section" class="hidden space-y-4">
 
       <!-- Summary Card -->
@@ -286,20 +491,45 @@
 
       <!-- Buy Orders -->
       <div class="bg-white rounded-xl p-4 shadow-sm">
-        <h3 class="font-medium text-green-600 mb-3">
-          <i class="fas fa-arrow-down mr-2"></i>매수 주문
-        </h3>
-        <div id="buy-orders" class="space-y-2">
+        <div class="section-header">
+          <h3 class="font-medium text-green-600">
+            <i class="fas fa-arrow-down mr-2"></i>매수 주문 <span class="order-badge badge-loc ml-2">전체 LOC</span>
+          </h3>
+          <button onclick="copyAllOrders('buy')" class="copy-btn text-gray-400 hover:text-gray-600 touch-target">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <div id="buy-orders" class="space-y-3">
           <!-- Dynamic content -->
         </div>
       </div>
 
       <!-- Sell Orders -->
       <div class="bg-white rounded-xl p-4 shadow-sm">
-        <h3 class="font-medium text-red-600 mb-3">
-          <i class="fas fa-arrow-up mr-2"></i>매도 주문
-        </h3>
-        <div id="sell-orders" class="space-y-2">
+        <div class="section-header">
+          <h3 class="font-medium text-red-600">
+            <i class="fas fa-arrow-up mr-2"></i>매도 주문
+          </h3>
+          <button onclick="copyAllOrders('sell')" class="copy-btn text-gray-400 hover:text-gray-600 touch-target">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <div id="sell-orders" class="space-y-3">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- Decline Protection Orders (하락대비) -->
+      <div id="decline-orders-section" class="hidden bg-white rounded-xl p-4 shadow-sm">
+        <div class="section-header">
+          <h3 class="font-medium text-blue-600">
+            <i class="fas fa-shield-alt mr-2"></i>하락대비 <span class="order-badge badge-loc ml-2">전체 LOC</span>
+          </h3>
+          <button onclick="copyAllOrders('decline')" class="copy-btn text-gray-400 hover:text-gray-600 touch-target">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <div id="decline-orders" class="space-y-2">
           <!-- Dynamic content -->
         </div>
       </div>
@@ -316,56 +546,23 @@
 
     </div>
 
-    <!-- Cash Management (Phase 3) -->
-    <div class="bg-white rounded-xl p-4 shadow-sm">
-      <h3 class="font-medium text-gray-700 mb-3">
-        <i class="fas fa-wallet mr-2 text-amber-500"></i>예수금 관리
-      </h3>
-
-      <div class="balance-input">
-        <div class="flex-1">
-          <label class="block text-xs text-gray-500 mb-1">주문가능금액 (USD)</label>
-          <input type="number" id="input-balance" class="w-full px-3 py-2 border rounded-lg" placeholder="0.00" step="0.01" inputmode="decimal">
-        </div>
-        <button onclick="recalculateBalance()" class="touch-target mt-5 px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-          <i class="fas fa-sync-alt"></i>
-        </button>
-      </div>
-
-      <!-- Order Status -->
-      <div id="order-status" class="status-box hidden">
-        <!-- Dynamically populated -->
-      </div>
-
-      <!-- Stock Breakdown -->
-      <div id="stock-breakdown" class="hidden">
-        <!-- Dynamically populated -->
-      </div>
-    </div>
-
   </main>
 
   <!-- Profile Settings Modal -->
-  <div id="profile-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end sm:items-center justify-center">
-    <div class="bg-white w-full sm:w-96 sm:rounded-xl rounded-t-xl max-h-[80vh] overflow-y-auto">
+  <div id="profile-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end sm:items-center justify-center" onclick="handleModalBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="bg-white w-full sm:w-96 sm:rounded-xl rounded-t-xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
       <div class="sticky top-0 bg-white px-4 py-3 border-b flex items-center justify-between">
-        <h2 class="font-bold text-gray-800">프로필 설정</h2>
-        <button onclick="closeProfileModal()" class="touch-target text-gray-400 hover:text-gray-600">
+        <h2 id="modal-title" class="font-bold text-gray-800">프로필 설정</h2>
+        <button onclick="closeProfileModal()" class="touch-target text-gray-400 hover:text-gray-600" aria-label="닫기">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
       <div class="p-4 space-y-4">
         <!-- Profile Info -->
-        <div class="space-y-3">
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">프로필 이름</label>
-            <input type="text" id="modal-profile-name" class="w-full px-3 py-2 border rounded-lg" placeholder="이름">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">계좌번호</label>
-            <input type="text" id="modal-account-number" class="w-full px-3 py-2 border rounded-lg" placeholder="000000">
-          </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">프로필 이름</label>
+          <input type="text" id="modal-profile-name" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="이름">
         </div>
 
         <!-- Profile Stocks -->
@@ -374,7 +571,7 @@
           <div id="modal-stocks-list" class="space-y-2">
             <!-- Dynamic content -->
           </div>
-          <button onclick="showAddStockForm()" class="mt-2 w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 text-sm hover:border-blue-300 hover:text-blue-500">
+          <button onclick="showAddStockForm()" class="mt-2 w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 text-sm hover:border-blue-300 hover:text-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none">
             <i class="fas fa-plus mr-1"></i>종목 추가
           </button>
         </div>
@@ -382,8 +579,8 @@
         <!-- Add Stock Form (hidden by default) -->
         <div id="add-stock-form" class="hidden bg-gray-50 rounded-lg p-3 space-y-2">
           <div class="grid grid-cols-2 gap-2">
-            <input type="text" id="new-stock-symbol" class="px-3 py-2 border rounded-lg text-sm" placeholder="종목코드 (예: TQQQ)">
-            <input type="number" id="new-stock-principal" class="px-3 py-2 border rounded-lg text-sm" placeholder="세팅원금 ($)">
+            <input type="text" id="new-stock-symbol" class="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="종목코드 (예: TQQQ)">
+            <input type="number" id="new-stock-principal" class="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="세팅원금 ($)">
           </div>
           <div class="flex gap-2">
             <button onclick="addNewStock()" class="flex-1 py-2 bg-blue-500 text-white rounded-lg text-sm">추가</button>
@@ -391,56 +588,69 @@
           </div>
         </div>
 
-        <!-- Actions -->
+        <!-- Main Actions -->
         <div class="pt-4 border-t space-y-2">
-          <button onclick="saveProfileSettings()" class="w-full py-3 bg-blue-500 text-white rounded-lg font-medium">
+          <button onclick="saveProfileSettings()" class="w-full py-3 bg-blue-500 text-white rounded-lg font-medium focus:ring-2 focus:ring-blue-300 focus:outline-none">
             <i class="fas fa-save mr-2"></i>저장
           </button>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="exportCurrentProfile()" class="py-2 border rounded-lg text-sm text-gray-600">
-              <i class="fas fa-download mr-1"></i>내보내기
-            </button>
-            <button onclick="importProfile()" class="py-2 border rounded-lg text-sm text-gray-600">
-              <i class="fas fa-upload mr-1"></i>가져오기
-            </button>
-          </div>
-          <button onclick="importDatFile()" class="w-full py-2 border border-purple-500 text-purple-600 rounded-lg text-sm">
+          <button onclick="importDatFile()" class="w-full py-2 border border-purple-500 text-purple-600 rounded-lg text-sm hover:bg-purple-50">
             <i class="fas fa-file-import mr-1"></i>Genie RPA 데이터 (.dat) 가져오기
           </button>
-          <button onclick="createNewProfile()" class="w-full py-2 border border-green-500 text-green-600 rounded-lg text-sm">
+          <button onclick="createNewProfile()" class="w-full py-2 border border-green-500 text-green-600 rounded-lg text-sm hover:bg-green-50">
             <i class="fas fa-user-plus mr-1"></i>새 프로필 만들기
           </button>
         </div>
 
-        <!-- Google Sheets Sync (Phase 2B) -->
-        <div class="pt-4 border-t space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs text-gray-500 font-medium">☁️ Google Sheets 동기화</span>
-            <span id="sheets-status" class="text-xs text-gray-400">설정 필요</span>
-          </div>
-          <div id="sheets-not-configured" class="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
-            ⚠️ sheets-sync.js에 CLIENT_ID/API_KEY 설정 필요
-          </div>
-          <div id="sheets-controls" class="hidden space-y-2">
-            <div class="flex gap-2">
-              <button id="btn-sheets-signin" onclick="handleSheetsSignIn()" class="flex-1 py-2 border border-green-500 text-green-600 rounded-lg text-sm">
-                <i class="fab fa-google mr-1"></i>연결
+        <!-- Advanced Options (Collapsible) -->
+        <details class="pt-2">
+          <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600 py-2">
+            <i class="fas fa-cog mr-1"></i>고급 옵션
+          </summary>
+          <div class="pt-2 space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="exportCurrentProfile()" class="py-2 border rounded-lg text-xs text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-download mr-1"></i>내보내기
               </button>
-              <button id="btn-sheets-sync" onclick="handleSheetsSync()" disabled class="flex-1 py-2 bg-green-500 text-white rounded-lg text-sm disabled:opacity-50">
-                <i class="fas fa-sync-alt mr-1"></i>동기화
+              <button onclick="importProfile()" class="py-2 border rounded-lg text-xs text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-upload mr-1"></i>가져오기
               </button>
             </div>
-            <input type="text" id="sheets-url" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="Google Sheets URL 붙여넣기">
+            <button onclick="deleteCurrentProfile()" class="w-full py-2 border border-red-300 text-red-500 rounded-lg text-xs hover:bg-red-50">
+              <i class="fas fa-trash mr-1"></i>프로필 삭제
+            </button>
           </div>
+        </details>
+
+        <!-- Google Sheets Sync (DEC-150: Dual-Key) -->
+        <div class="pt-4 border-t space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500 font-medium">
+              <i class="fab fa-google mr-1"></i>Google Sheets 동기화
+            </span>
+            <span id="sheets-status" class="text-xs text-gray-400">미연결</span>
+          </div>
+          <div id="sheets-user" class="text-xs text-blue-600 truncate hidden"></div>
+          <div class="flex gap-2">
+            <button onclick="handleSheetsPull()" class="flex-1 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">
+              <i class="fas fa-cloud-download-alt mr-1"></i>불러오기
+            </button>
+            <button onclick="handleSheetsPush()" class="flex-1 py-2 border border-green-500 text-green-600 rounded-lg text-sm hover:bg-green-50">
+              <i class="fas fa-cloud-upload-alt mr-1"></i>저장하기
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 text-center">내 계정 + 프로필별 데이터 저장</p>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
   <!-- Footer -->
   <footer class="px-4 py-6 text-center text-xs text-gray-400">
-    <p>IB Helper v3.2.0 | V2.2 Algorithm</p>
-    <p class="mt-1">Multi-Profile + Genie RPA Import + Google Sheets</p>
+    <p>IB Helper v4.4.0 | V2.2 Algorithm</p>
+    <p class="mt-1">PC 2-Column + Mobile Overlay + Multi-User Sheets</p>
   </footer>
 
   <!-- Scripts -->
@@ -455,6 +665,78 @@
 
     let selectedTicker = 'SOXL';
     let currentProfile = null;
+
+    // =====================================================
+    // Toast Notification System
+    // =====================================================
+
+    function showToast(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      const icon = type === 'success' ? 'fa-check-circle' :
+                   type === 'error' ? 'fa-exclamation-circle' :
+                   type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+
+      toast.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'toast-out 0.3s ease-out forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    // =====================================================
+    // Modal Helpers
+    // =====================================================
+
+    function handleModalBackdrop(event) {
+      // Close modal when clicking backdrop
+      if (event.target.id === 'profile-modal') {
+        closeProfileModal();
+      }
+    }
+
+    // =====================================================
+    // Profile Delete
+    // =====================================================
+
+    function deleteCurrentProfile() {
+      if (!currentProfile) return;
+
+      const profiles = ProfileManager.getAllProfiles();
+      if (profiles.length <= 1) {
+        showToast('마지막 프로필은 삭제할 수 없습니다', 'warning');
+        return;
+      }
+
+      const confirmed = confirm(`"${currentProfile.name}" 프로필을 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`);
+      if (!confirmed) return;
+
+      // Save ID to delete
+      const profileToDelete = currentProfile.id;
+
+      // First switch to another profile (ProfileManager.delete requires non-active profile)
+      const remaining = profiles.filter(p => p.id !== profileToDelete);
+      if (remaining.length > 0) {
+        ProfileManager.setActive(remaining[0].id);
+        currentProfile = ProfileManager.getActive();
+        SheetsSync.setCurrentProfile(remaining[0].id);
+      }
+
+      // Now delete the profile
+      ProfileManager.delete(profileToDelete);
+
+      // Update UI
+      updateProfileSelector();
+      loadProfileData();
+      loadBalanceData();
+      closeProfileModal();
+
+      showToast('프로필이 삭제되었습니다', 'success');
+    }
 
     // =====================================================
     // Initialization
@@ -516,17 +798,18 @@
       const selector = document.getElementById('profile-selector');
       const profiles = ProfileManager.getAllProfiles();
       const activeId = ProfileManager.getActiveId();
+      const emptyState = document.getElementById('empty-state');
+      const mainContent = document.getElementById('main-content');
 
       if (profiles.length === 0) {
-        // No profiles - show prompt to create
+        // No profiles - show empty state
         selector.innerHTML = '<option value="">➕ 프로필을 추가하세요</option>';
-        // Auto-open profile modal for first-time users
-        setTimeout(() => {
-          if (confirm('프로필이 없습니다. 새 프로필을 만드시겠습니까?')) {
-            createNewProfile();
-          }
-        }, 500);
+        emptyState.classList.remove('hidden');
+        mainContent.classList.add('hidden');
       } else {
+        // Has profiles - show main content
+        emptyState.classList.add('hidden');
+        mainContent.classList.remove('hidden');
         selector.innerHTML = profiles.map(p => `
           <option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>
             👤 ${p.name}
@@ -596,7 +879,6 @@
       // Load current profile data
       currentProfile = ProfileManager.getActive();
       document.getElementById('modal-profile-name').value = currentProfile?.name || '';
-      document.getElementById('modal-account-number').value = currentProfile?.accountNumber || '';
 
       // Load stocks list
       updateModalStocksList();
@@ -644,7 +926,7 @@
       const principal = parseFloat(document.getElementById('new-stock-principal').value) || 0;
 
       if (!symbol) {
-        alert('종목코드를 입력하세요');
+        showToast('종목코드를 입력하세요', 'warning');
         return;
       }
 
@@ -666,27 +948,42 @@
 
     function saveProfileSettings() {
       const name = document.getElementById('modal-profile-name').value.trim();
-      const accountNumber = document.getElementById('modal-account-number').value.trim();
 
       if (!name) {
-        alert('프로필 이름을 입력하세요');
+        showToast('프로필 이름을 입력하세요', 'warning');
         return;
       }
 
-      ProfileManager.update(currentProfile.id, { name, accountNumber });
+      ProfileManager.update(currentProfile.id, { name });
       currentProfile = ProfileManager.getActive();
 
       updateProfileSelector();
       closeProfileModal();
-      alert('저장되었습니다');
+      showToast('저장되었습니다', 'success');
+    }
+
+    /**
+     * Quick Start - 빈 상태에서 바로 시작
+     */
+    function quickStart() {
+      const name = prompt('프로필 이름을 입력하세요:', '내 프로필');
+      if (!name) return;
+
+      const newId = ProfileManager.create(name, '');
+      ProfileManager.setActive(newId);
+      currentProfile = ProfileManager.getActive();
+      SheetsSync.setCurrentProfile(newId);
+
+      updateProfileSelector();
+      loadProfileData();
+      loadBalanceData();
     }
 
     function createNewProfile() {
       const name = prompt('새 프로필 이름:');
       if (!name) return;
 
-      const accountNumber = prompt('계좌번호 (선택):') || '';
-      const newId = ProfileManager.create(name, accountNumber);
+      const newId = ProfileManager.create(name, '');
       ProfileManager.setActive(newId);
       currentProfile = ProfileManager.getActive();
 
@@ -727,9 +1024,9 @@
             updateProfileSelector();
             loadProfileData();
             closeProfileModal();
-            alert('프로필을 가져왔습니다');
+            showToast('프로필을 가져왔습니다', 'success');
           } else {
-            alert('프로필 가져오기 실패');
+            showToast('프로필 가져오기 실패', 'error');
           }
         };
         reader.readAsText(file);
@@ -814,7 +1111,7 @@
               currentProfile = ProfileManager.getActive();
               updateModalStocksList();
               updateTickerButtons();
-              alert(`${stocks.length}개 종목이 추가되었습니다`);
+              showToast(`${stocks.length}개 종목이 추가되었습니다`, 'success');
             } else {
               // Create new profile
               const name = prompt('새 프로필 이름:', file.name.replace('.dat', ''));
@@ -909,38 +1206,129 @@
     // Current Price Fetch (100xFenok Ticker API)
     // =====================================================
 
-    const TICKER_API = 'https://ticker-api.etloveaui.workers.dev/api/ticker';
-
-    async function fetchCurrentPrice() {
-      const ticker = selectedTicker;
-      if (!ticker) return;
-
-      const btn = document.querySelector('[onclick="fetchCurrentPrice()"]');
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-      try {
-        // Using 100xFenok Ticker API (Cloudflare Worker - no CORS issues)
-        const response = await fetch(`${TICKER_API}/${ticker}`);
-        const data = await response.json();
-
-        if (data.price) {
-          document.getElementById('input-currentPrice').value = data.price.toFixed(2);
-          if (hasRequiredInputs()) {
-            calculateOrders();
-          }
-        } else {
-          alert('현재가를 가져올 수 없습니다. 수동으로 입력해주세요.');
-        }
-      } catch (error) {
-        console.error('Price fetch error:', error);
-        alert('현재가 조회 실패. 수동으로 입력해주세요.');
-      } finally {
-        btn.innerHTML = '<i class="fas fa-search-dollar"></i>';
+    /**
+     * 재계산 버튼
+     */
+    function recalculate() {
+      if (hasRequiredInputs()) {
+        calculateOrders();
+        showToast('계산 완료', 'success', 1500);
+      } else {
+        showToast('평단가와 세팅원금을 입력하세요', 'warning');
       }
     }
 
-    function refreshCurrentPrice() {
-      fetchCurrentPrice();
+    // =====================================================
+    // Holdings Quick Adjust (UX Enhancement)
+    // =====================================================
+
+    /**
+     * 보유 수량 빠른 조정 (+버튼)
+     */
+    function adjustHoldings(amount) {
+      const input = document.getElementById('input-holdings');
+      const current = parseInt(input.value) || 0;
+      input.value = current + amount;
+
+      // Trigger save and recalculate
+      saveDailyInputs();
+      if (hasRequiredInputs()) {
+        calculateOrders();
+      }
+
+      // Visual feedback
+      input.classList.add('ring-2', 'ring-green-400');
+      setTimeout(() => input.classList.remove('ring-2', 'ring-green-400'), 300);
+    }
+
+    /**
+     * 오늘 매수량 헬퍼 표시
+     */
+    function showTodayBuyHelper(quantity) {
+      const helper = document.getElementById('today-buy-helper');
+      const qtySpan = document.getElementById('today-buy-qty');
+
+      if (quantity > 0) {
+        helper.classList.remove('hidden');
+        qtySpan.textContent = quantity;
+      } else {
+        helper.classList.add('hidden');
+      }
+    }
+
+    /**
+     * 오늘 매수량을 수량에 추가
+     */
+    function applyTodayBuy() {
+      if (!lastCalculation) return;
+
+      const mainBuyOrders = lastCalculation.buyOrders.filter(o => !o.type.includes('하락대비'));
+      const totalBuyQty = mainBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
+
+      adjustHoldings(totalBuyQty);
+
+      // Also update totalInvested (approximate)
+      const totalAmount = mainBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
+      const investedInput = document.getElementById('input-totalInvested');
+      const currentInvested = parseFloat(investedInput.value) || 0;
+      investedInput.value = (currentInvested + totalAmount).toFixed(2);
+
+      // Hide helper
+      document.getElementById('today-buy-helper').classList.add('hidden');
+
+      // Show feedback
+      alert(`✅ 수량 +${totalBuyQty}주, 매입금 +$${totalAmount.toFixed(2)} 추가됨\n\n내일 다시 계산하세요!`);
+    }
+
+    // =====================================================
+    // Copy Functions (UX Enhancement)
+    // =====================================================
+
+    /**
+     * 개별 주문 복사
+     */
+    function copyOrder(btn, price, quantity) {
+      const text = `$${price} / ${quantity}주`;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = '<i class="fas fa-check mr-1"></i>복사됨';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fas fa-copy mr-1"></i>복사';
+          btn.classList.remove('copied');
+        }, 1500);
+      });
+    }
+
+    /**
+     * 전체 주문 복사 (섹션별)
+     */
+    function copyAllOrders(type) {
+      if (!lastCalculation) return;
+
+      let orders = [];
+      let title = '';
+
+      if (type === 'buy') {
+        orders = lastCalculation.buyOrders.filter(o => !o.type.includes('하락대비'));
+        title = '📉 매수 주문 (LOC)';
+      } else if (type === 'sell') {
+        orders = lastCalculation.sellOrders;
+        title = '📈 매도 주문';
+      } else if (type === 'decline') {
+        orders = lastCalculation.buyOrders.filter(o => o.type.includes('하락대비'));
+        title = '🛡️ 하락대비 (LOC)';
+      }
+
+      const lines = [
+        `${title}`,
+        `━━━━━━━━━━━━━━`,
+        ...orders.map(o => `${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`)
+      ];
+
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('클립보드에 복사되었습니다', 'success');
+      });
     }
 
     // =====================================================
@@ -949,9 +1337,9 @@
 
     function hasRequiredInputs() {
       const avgPrice = parseFloat(document.getElementById('input-avgPrice').value);
-      const currentPrice = parseFloat(document.getElementById('input-currentPrice').value);
       const principal = parseFloat(document.getElementById('input-principal').value);
-      return avgPrice > 0 && currentPrice > 0 && principal > 0;
+      // 현재가는 선택 - 없으면 별%가만 사용
+      return avgPrice > 0 && principal > 0;
     }
 
     function calculateOrders() {
@@ -966,8 +1354,13 @@
         currentPrice: parseFloat(document.getElementById('input-currentPrice').value) || 0
       };
 
-      // Validate
-      if (!input.avgPrice || !input.currentPrice || !input.principal) {
+      // Validate - 필수 입력값 체크 (현재가는 선택 - LOC 캡에만 사용)
+      const missing = [];
+      if (!input.principal) missing.push('세팅원금');
+      if (!input.avgPrice) missing.push('평단가');
+
+      if (missing.length > 0) {
+        alert(`필수 입력값이 없습니다:\n• ${missing.join('\n• ')}`);
         return;
       }
 
@@ -987,8 +1380,12 @@
     // Display Results
     // =====================================================
 
+    // Store last calculation for copy/helper features
+    let lastCalculation = null;
+
     function displayResults(result) {
       const { calculation, buyOrders, sellOrders, quarterStopLoss } = result;
+      lastCalculation = result;
 
       // Show results section
       document.getElementById('results-section').classList.remove('hidden');
@@ -1014,11 +1411,29 @@
 
       // LOC reason
       const locReason = document.getElementById('result-locReason');
-      locReason.textContent = `${calculation.locInfo.reason} (별%가 = ${IBCalculator.formatDollar(calculation.locInfo.starPrice)}, 현재가×1.15 = ${IBCalculator.formatDollar(calculation.locInfo.currentPriceCap)})`;
+      if (calculation.locInfo.currentPriceCap > 0) {
+        locReason.textContent = `${calculation.locInfo.reason} (별%가 = ${IBCalculator.formatDollar(calculation.locInfo.starPrice)}, 현재가×1.15 = ${IBCalculator.formatDollar(calculation.locInfo.currentPriceCap)})`;
+      } else {
+        locReason.textContent = `${calculation.locInfo.reason}`;
+      }
 
-      // Buy orders
+      // Separate main buy orders and decline orders
+      const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
+      const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+
+      // Buy orders (main)
       const buyOrdersEl = document.getElementById('buy-orders');
-      buyOrdersEl.innerHTML = buyOrders.map(order => renderOrderCard(order, 'buy')).join('');
+      buyOrdersEl.innerHTML = mainBuyOrders.map(order => renderOrderCard(order, 'buy')).join('');
+
+      // Decline orders (하락대비)
+      const declineSection = document.getElementById('decline-orders-section');
+      const declineOrdersEl = document.getElementById('decline-orders');
+      if (declineOrders.length > 0) {
+        declineSection.classList.remove('hidden');
+        declineOrdersEl.innerHTML = declineOrders.map(order => renderDeclineOrderCard(order)).join('');
+      } else {
+        declineSection.classList.add('hidden');
+      }
 
       // Sell orders
       const sellOrdersEl = document.getElementById('sell-orders');
@@ -1042,29 +1457,98 @@
         qslSection.classList.add('hidden');
       }
 
-      // Scroll to results
-      document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Show today buy helper
+      const totalBuyQty = mainBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
+      showTodayBuyHelper(totalBuyQty);
+
+      // Display results based on screen size (PC vs Mobile)
+      showResultsResponsive();
+    }
+
+    /**
+     * PC/Mobile 반응형 결과 표시
+     */
+    function showResultsResponsive() {
+      const resultsSection = document.getElementById('results-section');
+      const resultsPC = document.getElementById('results-pc');
+      const resultsMobile = document.getElementById('results-mobile');
+      const resultsOverlay = document.getElementById('results-overlay');
+      const resultsColumn = document.getElementById('results-column');
+
+      // Check if PC (lg breakpoint = 1024px)
+      const isPC = window.innerWidth >= 1024;
+
+      if (isPC) {
+        // PC: Show in right column
+        resultsPC.innerHTML = resultsSection.innerHTML;
+        resultsColumn.classList.remove('hidden');
+        resultsPC.querySelector('.text-center.text-gray-400')?.remove(); // Remove placeholder
+      } else {
+        // Mobile: Show in overlay
+        resultsMobile.innerHTML = resultsSection.innerHTML;
+        resultsOverlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
+      }
+    }
+
+    /**
+     * 모바일 결과 오버레이 닫기
+     */
+    function closeResultsOverlay() {
+      document.getElementById('results-overlay').classList.add('hidden');
+      document.body.style.overflow = ''; // Restore scroll
     }
 
     function renderOrderCard(order, type) {
-      const borderClass = type === 'buy' ? 'border-l-green-500' : 'border-l-red-500';
-      const bgClass = type === 'buy' ? 'bg-green-50' : 'bg-red-50';
+      const isLOC = order.orderType === 'LOC';
+      const badgeClass = isLOC ? 'badge-loc' : 'badge-limit';
+      const badgeText = isLOC ? 'LOC' : '지정가';
 
       return `
-        <div class="order-card ${type} ${bgClass} rounded-lg p-3 border-l-4 ${borderClass}">
+        <div class="order-card-enhanced ${type}" data-price="${order.price}" data-qty="${order.quantity}">
           <div class="flex justify-between items-start">
-            <div>
-              <div class="font-medium text-gray-800">${order.type}</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="order-badge ${badgeClass}">${badgeText}</span>
+                <span class="text-sm font-medium text-gray-700">${order.type}</span>
+              </div>
               <div class="text-xs text-gray-500">${order.description}</div>
             </div>
             <div class="text-right">
-              <div class="font-bold text-lg">${IBCalculator.formatDollar(order.price)}</div>
-              <div class="text-sm text-gray-600">${order.quantity}주</div>
+              <div class="main-value text-gray-800">${IBCalculator.formatDollar(order.price)}</div>
+              <div class="sub-value">${order.quantity}주</div>
             </div>
           </div>
-          <div class="mt-2 text-xs text-gray-400">
-            ${order.orderType}
-            ${order.amount ? ' | ' + IBCalculator.formatDollar(order.amount) : ''}
+          <div class="mt-3 flex items-center justify-between">
+            <div class="text-xs text-gray-400">
+              ${order.amount ? '예상 ' + IBCalculator.formatDollar(order.amount) : ''}
+            </div>
+            <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="copy-btn touch-target px-2 py-1 text-xs text-gray-500 hover:text-gray-700 rounded">
+              <i class="fas fa-copy mr-1"></i>복사
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 하락대비 전용 렌더링 (더 간결하게)
+    function renderDeclineOrderCard(order) {
+      return `
+        <div class="order-card-enhanced decline" data-price="${order.price}" data-qty="${order.quantity}">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="order-badge badge-loc mr-2">LOC</span>
+              <span class="text-sm text-gray-600">${order.description}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <span class="font-bold text-gray-800">${IBCalculator.formatDollar(order.price)}</span>
+                <span class="text-gray-500 text-sm ml-1">${order.quantity}주</span>
+              </div>
+              <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="copy-btn text-gray-400 hover:text-gray-600">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -1211,79 +1695,54 @@
     // Google Sheets Sync (Phase 2B)
     // =====================================================
 
-    function initSheetsUI() {
-      const notConfigured = document.getElementById('sheets-not-configured');
-      const controls = document.getElementById('sheets-controls');
-      const status = document.getElementById('sheets-status');
+    // =====================================================
+    // Google Sheets Sync (Simplified - Hardcoded Sheet)
+    // =====================================================
 
-      if (SheetsSync.isConfigured()) {
-        notConfigured.classList.add('hidden');
-        controls.classList.remove('hidden');
-        status.textContent = '대기 중';
-      } else {
-        notConfigured.classList.remove('hidden');
-        controls.classList.add('hidden');
-        status.textContent = '설정 필요';
+    let sheetsInitialized = false;
+
+    /**
+     * Google Sheets 초기화 및 로그인
+     * @returns {Promise<boolean>} 성공 여부
+     */
+    async function initSheets() {
+      if (sheetsInitialized && SheetsSync.getUserEmail()) {
+        return true;
       }
+
+      await SheetsSync.init();
+      await SheetsSync.signIn();
+      sheetsInitialized = true;
+
+      // 로그인한 이메일 표시
+      const userEmail = SheetsSync.getUserEmail();
+      const userEl = document.getElementById('sheets-user');
+      if (userEmail && userEl) {
+        userEl.textContent = userEmail;
+        userEl.classList.remove('hidden');
+      }
+
+      return true;
     }
 
-    async function handleSheetsSignIn() {
+    /**
+     * 시트에서 데이터 불러오기 (DEC-150: Dual-Key)
+     */
+    async function handleSheetsPull() {
       const status = document.getElementById('sheets-status');
-      const syncBtn = document.getElementById('btn-sheets-sync');
 
       try {
-        status.textContent = '연결 중...';
-        await SheetsSync.init();
-        await SheetsSync.signIn();
+        status.textContent = '불러오는 중...';
+        status.className = 'text-xs text-amber-600';
 
-        // Check for spreadsheet URL
-        const urlInput = document.getElementById('sheets-url');
-        if (urlInput.value) {
-          const sheetId = SheetsSync.extractIdFromUrl(urlInput.value);
-          if (sheetId) {
-            SheetsSync.setSpreadsheet(sheetId);
-          }
-        }
+        // Initialize and sign in
+        await initSheets();
 
-        status.textContent = '✅ 연결됨';
-        status.className = 'text-xs text-green-600';
-        syncBtn.disabled = false;
-      } catch (error) {
-        console.error('Sheets sign in error:', error);
-        status.textContent = '❌ 연결 실패';
-        status.className = 'text-xs text-red-600';
-      }
-    }
+        // Set current profile for filtering
+        SheetsSync.setCurrentProfile(currentProfile.id);
 
-    async function handleSheetsSync() {
-      const status = document.getElementById('sheets-status');
-      const syncBtn = document.getElementById('btn-sheets-sync');
-
-      // Check spreadsheet URL
-      const urlInput = document.getElementById('sheets-url');
-      if (urlInput.value && !SheetsSync.getSpreadsheetId()) {
-        const sheetId = SheetsSync.extractIdFromUrl(urlInput.value);
-        if (sheetId) {
-          SheetsSync.setSpreadsheet(sheetId);
-        } else {
-          alert('유효하지 않은 Google Sheets URL입니다');
-          return;
-        }
-      }
-
-      if (!SheetsSync.getSpreadsheetId()) {
-        alert('Google Sheets URL을 먼저 입력해주세요');
-        return;
-      }
-
-      try {
-        status.textContent = '🔄 동기화 중...';
-        syncBtn.disabled = true;
-
-        await SheetsSync.sync();
-
-        status.textContent = '✅ 동기화 완료';
-        status.className = 'text-xs text-green-600';
+        // Pull data from sheet (내 구글ID + 내 프로필만)
+        const pulled = await SheetsSync.pull();
 
         // Refresh UI
         currentProfile = ProfileManager.getActive();
@@ -1291,30 +1750,48 @@
         loadBalanceData();
         updateProfileSelector();
 
-        setTimeout(() => {
-          status.textContent = '✅ 연결됨';
-        }, 2000);
+        status.textContent = '연결됨';
+        status.className = 'text-xs text-green-600';
+        showToast(`${pulled.length}개 종목 불러옴`, 'success');
+
       } catch (error) {
-        console.error('Sheets sync error:', error);
-        status.textContent = '❌ 동기화 실패';
+        console.error('Sheets pull error:', error);
+        status.textContent = '오류';
         status.className = 'text-xs text-red-600';
-      } finally {
-        syncBtn.disabled = false;
+        showToast('불러오기 실패: ' + error.message, 'error');
       }
     }
 
-    // Initialize Sheets UI on modal open
-    const originalShowProfileSettings = showProfileSettings;
-    showProfileSettings = function() {
-      originalShowProfileSettings();
-      initSheetsUI();
+    /**
+     * 시트에 데이터 저장하기 (DEC-150: Dual-Key)
+     */
+    async function handleSheetsPush() {
+      const status = document.getElementById('sheets-status');
 
-      // Load saved spreadsheet URL
-      const sheetId = SheetsSync.getSpreadsheetId();
-      if (sheetId) {
-        document.getElementById('sheets-url').value = `https://docs.google.com/spreadsheets/d/${sheetId}`;
+      try {
+        status.textContent = '저장하는 중...';
+        status.className = 'text-xs text-amber-600';
+
+        // Initialize and sign in
+        await initSheets();
+
+        // Set current profile for filtering
+        SheetsSync.setCurrentProfile(currentProfile.id);
+
+        // Push data to sheet (내 구글ID + 내 프로필만 업데이트)
+        await SheetsSync.push();
+
+        status.textContent = '연결됨';
+        status.className = 'text-xs text-green-600';
+        showToast(`${currentProfile.id} 프로필 저장 완료`, 'success');
+
+      } catch (error) {
+        console.error('Sheets push error:', error);
+        status.textContent = '오류';
+        status.className = 'text-xs text-red-600';
+        showToast('저장 실패: ' + error.message, 'error');
       }
-    };
+    }
   </script>
 
 </body>

@@ -1,23 +1,22 @@
 /**
- * IB Helper Google Sheets Sync - Phase 2B
+ * IB Helper Google Sheets Sync - v2.0 (DEC-150)
  *
- * Google Sheets 연동 모듈 (선택적 기능)
+ * Multi-user Google Sheets 동기화 모듈
+ * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 1.0.0
+ * @version 2.0.0
  * @author 100xFenok Claude
- * @spec _tmp/PHASE2_SPEC.md (Asset Allocator)
+ * @decision DEC-150 (2026-02-03)
  *
- * ⚠️ SETUP REQUIRED:
- * 1. Google Cloud Console에서 프로젝트 생성
- * 2. Google Sheets API 활성화
- * 3. OAuth 2.0 Client ID 생성
- * 4. 아래 CLIENT_ID와 API_KEY 설정
+ * Sheet Structure:
+ * | 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | 날짜 |
+ * | A열    | B열      | C열  | D열    | E열  | F열      | G열      | H열  |
  */
 
 const SheetsSync = (function() {
 
   // =====================================================
-  // CONFIGURATION - ⚠️ 사용자 설정 필요!
+  // CONFIGURATION
   // =====================================================
 
   const CONFIG = {
@@ -25,40 +24,31 @@ const SheetsSync = (function() {
     CLIENT_ID: '1047143661358-3pd4f9o20tmp2u2dejskbdhrrs1tgmuo.apps.googleusercontent.com',
     API_KEY: 'AIzaSyCmaRwyiBnWWZf8mSp8g4Io8E0nqyWQnlI',
 
-    DISCOVERY_DOC: 'https://sheets.googleapis.com/$discovery/rest?version=v4',
-    SCOPES: 'https://www.googleapis.com/auth/spreadsheets',
+    // 🔴 하드코딩된 시트 ID (모든 사용자 공유)
+    SPREADSHEET_ID: '1shNx-xmzsJ7ninBly4HUjOjrMFqlvj-u3aBg6PmTGBE',
 
-    // Sheet 구조
-    SHEET_NAME: 'Data',
-    RANGE: 'Data!A2:G1000'  // Skip header row
+    DISCOVERY_DOCS: [
+      'https://sheets.googleapis.com/$discovery/rest?version=v4',
+      'https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest'
+    ],
+    // Sheets + UserInfo scope
+    SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
+
+    // Sheet 구조 (v2.0): 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | 날짜
+    SHEET_NAME: 'Sheet1',
+    RANGE: 'A2:H10000'  // Skip header row, 8 columns
   };
 
   // =====================================================
   // STATE
   // =====================================================
 
-  let currentProfileId = null;  // Set by setCurrentProfile()
+  let currentProfileId = null;
+  let currentUserEmail = null;  // Google 로그인 이메일
   let tokenClient = null;
   let gapiInited = false;
   let gisInited = false;
   let isSignedIn = false;
-
-  /**
-   * Get storage key for profile's spreadsheet ID
-   * @param {string} profileId
-   * @returns {string}
-   */
-  function getStorageKey(profileId) {
-    return `ib_sheets_id_${profileId || currentProfileId || 'default'}`;
-  }
-
-  /**
-   * Set current profile for Sheets operations
-   * @param {string} profileId
-   */
-  function setCurrentProfile(profileId) {
-    currentProfileId = profileId;
-  }
 
   // =====================================================
   // INITIALIZATION
@@ -89,7 +79,7 @@ const SheetsSync = (function() {
    */
   function loadGapiScript() {
     return new Promise((resolve, reject) => {
-      if (typeof gapi !== 'undefined') {
+      if (typeof gapi !== 'undefined' && gapiInited) {
         resolve();
         return;
       }
@@ -101,7 +91,7 @@ const SheetsSync = (function() {
           try {
             await gapi.client.init({
               apiKey: CONFIG.API_KEY,
-              discoveryDocs: [CONFIG.DISCOVERY_DOC],
+              discoveryDocs: CONFIG.DISCOVERY_DOCS,
             });
             gapiInited = true;
             resolve();
@@ -146,7 +136,7 @@ const SheetsSync = (function() {
   // =====================================================
 
   /**
-   * Sign in to Google
+   * Sign in to Google and get user email
    * @returns {Promise<Object>} Token response
    */
   function signIn() {
@@ -156,24 +146,44 @@ const SheetsSync = (function() {
         return;
       }
 
-      tokenClient.callback = (response) => {
+      tokenClient.callback = async (response) => {
         if (response.error) {
           isSignedIn = false;
+          currentUserEmail = null;
           reject(response);
         } else {
           isSignedIn = true;
+          // Get user email after sign in
+          try {
+            await fetchUserEmail();
+          } catch (e) {
+            console.warn('Could not fetch user email:', e);
+          }
           resolve(response);
         }
       };
 
       if (gapi.client.getToken() === null) {
-        // First time sign in
         tokenClient.requestAccessToken({ prompt: 'consent' });
       } else {
-        // Already have token, just refresh
         tokenClient.requestAccessToken({ prompt: '' });
       }
     });
+  }
+
+  /**
+   * Fetch current user's email from Google
+   */
+  async function fetchUserEmail() {
+    try {
+      const response = await gapi.client.oauth2.userinfo.get();
+      currentUserEmail = response.result.email;
+      console.log('SheetsSync: Logged in as', currentUserEmail);
+      return currentUserEmail;
+    } catch (error) {
+      console.error('Failed to get user email:', error);
+      throw error;
+    }
   }
 
   /**
@@ -186,6 +196,7 @@ const SheetsSync = (function() {
       gapi.client.setToken('');
     }
     isSignedIn = false;
+    currentUserEmail = null;
   }
 
   /**
@@ -196,38 +207,32 @@ const SheetsSync = (function() {
     return isSignedIn && gapi.client.getToken() !== null;
   }
 
+  /**
+   * Get current user's Google email
+   * @returns {string|null}
+   */
+  function getUserEmail() {
+    return currentUserEmail;
+  }
+
   // =====================================================
-  // SPREADSHEET MANAGEMENT
+  // PROFILE MANAGEMENT
   // =====================================================
 
   /**
-   * Set spreadsheet ID for current profile
-   * @param {string} id - Google Sheets ID
-   * @param {string} [profileId] - Optional profile ID (uses current if not provided)
+   * Set current profile for Sheets operations
+   * @param {string} profileId
    */
-  function setSpreadsheet(id, profileId) {
-    const key = getStorageKey(profileId);
-    localStorage.setItem(key, id);
+  function setCurrentProfile(profileId) {
+    currentProfileId = profileId;
   }
 
   /**
-   * Get spreadsheet ID for current profile
-   * @param {string} [profileId] - Optional profile ID (uses current if not provided)
-   * @returns {string|null}
+   * Get spreadsheet ID (hardcoded)
+   * @returns {string}
    */
-  function getSpreadsheetId(profileId) {
-    const key = getStorageKey(profileId);
-    return localStorage.getItem(key) || null;
-  }
-
-  /**
-   * Extract spreadsheet ID from URL
-   * @param {string} url - Google Sheets URL
-   * @returns {string|null}
-   */
-  function extractIdFromUrl(url) {
-    const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-    return match ? match[1] : null;
+  function getSpreadsheetId() {
+    return CONFIG.SPREADSHEET_ID;
   }
 
   // =====================================================
@@ -235,13 +240,13 @@ const SheetsSync = (function() {
   // =====================================================
 
   /**
-   * Read all data from sheet
-   * @returns {Promise<Object>} Parsed profiles data
+   * Read ALL data from sheet (모든 사용자)
+   * @returns {Promise<Array>} All rows
    */
-  async function readAll() {
+  async function readAllRows() {
     const sheetId = getSpreadsheetId();
     if (!sheetId) {
-      throw new Error('Spreadsheet ID not set for this profile');
+      throw new Error('Spreadsheet ID not set');
     }
 
     const response = await gapi.client.sheets.spreadsheets.values.get({
@@ -249,40 +254,56 @@ const SheetsSync = (function() {
       range: CONFIG.RANGE,
     });
 
-    return parseRows(response.result.values || []);
+    return response.result.values || [];
   }
 
   /**
-   * Parse sheet rows to profile format
+   * Read MY data from sheet (내 구글ID + 내 프로필ID만)
+   * @returns {Promise<Array>} Filtered stocks for current user & profile
+   */
+  async function readMyData() {
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+    if (!currentProfileId) {
+      throw new Error('프로필을 선택해주세요');
+    }
+
+    const allRows = await readAllRows();
+    const myRows = allRows.filter(row =>
+      row[0] === currentUserEmail && row[1] === currentProfileId
+    );
+
+    return parseRows(myRows);
+  }
+
+  /**
+   * Parse sheet rows to stock array
+   * 시트 컬럼: 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | 날짜
    * @param {Array} rows - Raw sheet rows
-   * @returns {Object} Profiles object
+   * @returns {Array} Stocks array
    */
   function parseRows(rows) {
-    const profiles = {};
+    const stocks = [];
 
     rows.forEach(row => {
-      const [profileId, symbol, principal, avgPrice, quantity, currentPrice, updated] = row;
+      const [googleId, profileId, symbol, avgPrice, holdings, totalInvested, principal, date] = row;
 
-      if (!profileId || !symbol) return;
+      if (!symbol) return;
 
-      if (!profiles[profileId]) {
-        profiles[profileId] = {
-          id: profileId,
-          stocks: []
-        };
-      }
-
-      profiles[profileId].stocks.push({
-        symbol: symbol,
-        principal: parseFloat(principal) || 0,
+      stocks.push({
+        googleId: googleId || '',
+        profileId: profileId || '',
+        symbol: symbol.trim().toUpperCase(),
         avgPrice: parseFloat(avgPrice) || 0,
-        quantity: parseInt(quantity) || 0,
-        currentPrice: parseFloat(currentPrice) || 0,
-        lastUpdated: updated
+        holdings: parseInt(holdings) || 0,
+        totalInvested: parseFloat(totalInvested) || 0,
+        principal: parseFloat(principal) || 0,
+        date: date || ''
       });
     });
 
-    return profiles;
+    return stocks;
   }
 
   // =====================================================
@@ -290,175 +311,122 @@ const SheetsSync = (function() {
   // =====================================================
 
   /**
-   * Write profile data to sheet
-   * @param {Object} profile - Profile object with stocks
+   * Write all rows to sheet (전체 덮어쓰기)
+   * @param {Array} rows - 2D array of row data
    */
-  async function writeProfile(profile) {
+  async function writeAllRows(rows) {
     const sheetId = getSpreadsheetId();
     if (!sheetId) {
-      throw new Error('Spreadsheet ID not set for this profile');
+      throw new Error('Spreadsheet ID not set');
     }
 
-    // First clear existing profile rows
-    await clearProfileRows(profile.id);
-
-    // Prepare rows
-    const rows = profile.stocks.map(stock => [
-      profile.id,
-      stock.symbol,
-      stock.principal || 0,
-      stock.avgPrice || 0,
-      stock.quantity || 0,
-      stock.currentPrice || 0,
-      new Date().toISOString().split('T')[0]
-    ]);
+    // Clear existing data (except header)
+    await gapi.client.sheets.spreadsheets.values.clear({
+      spreadsheetId: sheetId,
+      range: CONFIG.RANGE,
+    });
 
     if (rows.length === 0) return;
 
-    // Append rows
-    await gapi.client.sheets.spreadsheets.values.append({
+    // Write all data
+    await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: `${CONFIG.SHEET_NAME}!A:G`,
+      range: `${CONFIG.SHEET_NAME}!A2`,
       valueInputOption: 'USER_ENTERED',
       resource: { values: rows }
     });
   }
 
-  /**
-   * Clear rows for a specific profile
-   * @param {string} profileId - Profile ID to clear
-   */
-  async function clearProfileRows(profileId) {
-    const sheetId = getSpreadsheetId();
-    if (!sheetId) return;
-
-    // Read all data
-    const response = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: CONFIG.RANGE,
-    });
-
-    const rows = response.result.values || [];
-    const rowsToKeep = rows.filter(row => row[0] !== profileId);
-
-    // Clear and rewrite
-    await gapi.client.sheets.spreadsheets.values.clear({
-      spreadsheetId: sheetId,
-      range: CONFIG.RANGE,
-    });
-
-    if (rowsToKeep.length > 0) {
-      await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `${CONFIG.SHEET_NAME}!A2`,
-        valueInputOption: 'USER_ENTERED',
-        resource: { values: rowsToKeep }
-      });
-    }
-  }
-
-  /**
-   * Write all profiles to sheet
-   * @param {Object} profilesData - All profiles from ProfileManager
-   */
-  async function writeAll(profilesData) {
-    const sheetId = getSpreadsheetId();
-    if (!sheetId) {
-      throw new Error('Spreadsheet ID not set for this profile');
-    }
-
-    const allRows = [];
-
-    Object.values(profilesData.profiles).forEach(profile => {
-      profile.stocks.forEach(stock => {
-        allRows.push([
-          profile.id,
-          stock.symbol,
-          stock.principal || 0,
-          stock.avgPrice || 0,
-          stock.quantity || 0,
-          stock.currentPrice || 0,
-          new Date().toISOString().split('T')[0]
-        ]);
-      });
-    });
-
-    // Clear all and write
-    await gapi.client.sheets.spreadsheets.values.clear({
-      spreadsheetId: sheetId,
-      range: CONFIG.RANGE,
-    });
-
-    if (allRows.length > 0) {
-      await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `${CONFIG.SHEET_NAME}!A2`,
-        valueInputOption: 'USER_ENTERED',
-        resource: { values: allRows }
-      });
-    }
-  }
-
   // =====================================================
-  // SYNC OPERATIONS
+  // SYNC OPERATIONS (DEC-150: Dual-Key)
   // =====================================================
 
   /**
-   * Sync local and cloud data
-   * Strategy: Cloud stocks data wins, Local settings preserved
-   * @returns {Promise<Object>} Merged profiles data
-   */
-  async function sync() {
-    const local = ProfileManager.getAll();
-    const cloud = await readAll();
-
-    // Merge: Update local stocks with cloud data
-    Object.keys(cloud).forEach(profileId => {
-      if (local.profiles[profileId]) {
-        // Profile exists locally - update stocks from cloud
-        local.profiles[profileId].stocks = cloud[profileId].stocks;
-        local.profiles[profileId].updated = new Date().toISOString();
-      } else {
-        // New profile from cloud - create locally
-        local.profiles[profileId] = {
-          ...ProfileManager.createDefault(profileId, profileId, ''),
-          stocks: cloud[profileId].stocks
-        };
-      }
-    });
-
-    // Save merged data locally
-    ProfileManager.save(local);
-
-    // Push local-only profiles to cloud
-    await writeAll(local);
-
-    return local;
-  }
-
-  /**
-   * Push local data to cloud (overwrite)
+   * Push local data to cloud (현재 프로필만)
+   * - 내 구글ID + 내 프로필ID 행만 삭제
+   * - 새 데이터 추가
+   * - 다른 사용자 데이터 보존
    */
   async function push() {
-    const local = ProfileManager.getAll();
-    await writeAll(local);
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    const profile = ProfileManager.getActive();
+    if (!profile || !profile.stocks) {
+      throw new Error('프로필이 없습니다');
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    // 1. 전체 데이터 읽기
+    const allRows = await readAllRows();
+
+    // 2. 내 데이터 제외 (다른 사용자 데이터 보존)
+    const otherRows = allRows.filter(row =>
+      !(row[0] === currentUserEmail && row[1] === profile.id)
+    );
+
+    // 3. 내 새 데이터 생성
+    const myNewRows = profile.stocks.map(stock => {
+      const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
+      return [
+        currentUserEmail,           // A: 구글ID
+        profile.id,                 // B: 프로필ID
+        stock.symbol,               // C: 종목
+        dailyData.avgPrice || 0,    // D: 평단가
+        dailyData.holdings || 0,    // E: 수량
+        dailyData.totalInvested || 0, // F: 총매입금
+        stock.principal || 0,       // G: 세팅원금
+        today                       // H: 날짜
+      ];
+    });
+
+    // 4. 합쳐서 저장
+    const finalRows = [...otherRows, ...myNewRows];
+    await writeAllRows(finalRows);
+
+    console.log(`SheetsSync: Pushed ${myNewRows.length} rows for ${currentUserEmail}/${profile.id}`);
   }
 
   /**
-   * Pull cloud data to local (overwrite stocks)
+   * Pull cloud data to local (내 구글ID + 내 프로필ID만)
    */
   async function pull() {
-    const local = ProfileManager.getAll();
-    const cloud = await readAll();
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
 
-    Object.keys(cloud).forEach(profileId => {
-      if (local.profiles[profileId]) {
-        local.profiles[profileId].stocks = cloud[profileId].stocks;
+    const profile = ProfileManager.getActive();
+    if (!profile) {
+      throw new Error('프로필이 없습니다');
+    }
+
+    // 내 데이터만 필터링해서 가져오기
+    const myStocks = await readMyData();
+
+    // 각 종목의 일일 데이터 업데이트
+    myStocks.forEach(stock => {
+      ProfileManager.saveDailyData(profile.id, stock.symbol, {
+        avgPrice: stock.avgPrice,
+        holdings: stock.holdings,
+        totalInvested: stock.totalInvested,
+        currentPrice: 0  // 현재가는 수동 입력
+      });
+
+      // 종목이 프로필에 없으면 추가
+      const existingStock = profile.stocks?.find(s => s.symbol === stock.symbol);
+      if (!existingStock) {
+        ProfileManager.addStock(profile.id, {
+          symbol: stock.symbol,
+          principal: stock.principal,
+          sellPercent: stock.symbol === 'TQQQ' ? 10 : 12
+        });
       }
     });
 
-    ProfileManager.save(local);
-    return local;
+    console.log(`SheetsSync: Pulled ${myStocks.length} rows for ${currentUserEmail}/${profile.id}`);
+    return myStocks;
   }
 
   // =====================================================
@@ -484,6 +452,7 @@ const SheetsSync = (function() {
       gapiLoaded: gapiInited,
       gisLoaded: gisInited,
       signedIn: isSignedIn,
+      userEmail: currentUserEmail,
       spreadsheetId: getSpreadsheetId(),
       currentProfileId: currentProfileId
     };
@@ -503,26 +472,18 @@ const SheetsSync = (function() {
     signIn,
     signOut,
     isAuthenticated,
+    getUserEmail,
 
-    // Profile (for multi-user support)
+    // Profile
     setCurrentProfile,
-
-    // Spreadsheet (per-profile)
-    setSpreadsheet,
     getSpreadsheetId,
-    extractIdFromUrl,
 
-    // CRUD
-    readAll,
-    writeProfile,
-    writeAll,
-
-    // Sync
-    sync,
+    // Sync (DEC-150: Dual-Key)
     push,
     pull,
+    readMyData,
 
-    // Config (for setup)
+    // Config (for debugging)
     CONFIG
   };
 
