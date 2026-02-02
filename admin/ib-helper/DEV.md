@@ -535,11 +535,19 @@ admin/ib-helper/
 - 일일 데이터는 프로필×종목별 별도 저장
 - 스펙: `_tmp/PHASE2_SPEC.md` (Asset Allocator 제공)
 
-### Phase 2B: Google Sheets (Optional)
-- [ ] Google Cloud 프로젝트 설정
-- [ ] OAuth 인증
-- [ ] `js/sheets-sync.js`
-- [ ] 동기화 기능
+### Phase 2B: Google Sheets Sync - ✅ COMPLETE (02-02)
+- [x] `js/sheets-sync.js` - SheetsSync 모듈
+- [x] OAuth 2.0 인증 (Google Identity Services)
+- [x] 프로필 모달에 연결/동기화 UI 추가
+- [x] 동기화 기능 (push/pull/sync)
+- [x] ✅ Google Cloud 자격 증명 설정 완료
+
+**Implementation Notes (02-02)**:
+- Google Sheets API + OAuth 2.0 기반
+- CLIENT_ID/API_KEY 설정 완료 (xfenok-analytics 프로젝트)
+- Spreadsheet URL 붙여넣기 → 자동 ID 추출
+- Sync 전략: Cloud stocks 데이터 우선, Local settings 보존
+- 스펙: `_tmp/PHASE2_SPEC.md` (Asset Allocator 제공)
 
 ### Phase 3: Cash Management - ✅ COMPLETE (02-02)
 - [x] `js/balance-manager.js` - BalanceManager 모듈

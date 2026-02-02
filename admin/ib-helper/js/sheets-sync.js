@@ -21,9 +21,9 @@ const SheetsSync = (function() {
   // =====================================================
 
   const CONFIG = {
-    // TODO: Google Cloud Console에서 발급받은 값으로 교체
-    CLIENT_ID: '', // 'YOUR_CLIENT_ID.apps.googleusercontent.com'
-    API_KEY: '',   // 'YOUR_API_KEY'
+    // Google Cloud Console - xfenok-analytics project
+    CLIENT_ID: '1047143661358-3pd4f9o20tmp2u2dejskbdhrrs1tgmuo.apps.googleusercontent.com',
+    API_KEY: 'AIzaSyCmaRwyiBnWWZf8mSp8g4Io8E0nqyWQnlI',
 
     DISCOVERY_DOC: 'https://sheets.googleapis.com/$discovery/rest?version=v4',
     SCOPES: 'https://www.googleapis.com/auth/spreadsheets',
