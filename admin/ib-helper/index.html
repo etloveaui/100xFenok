@@ -1432,13 +1432,17 @@
       const mainBuyOrders = lastCalculation.buyOrders.filter(o => !o.type.includes('하락대비'));
       const totalBuyQty = mainBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
 
+      // 1. 수량 추가 (adjustHoldings 내부에서 saveDailyInputs 호출)
       adjustHoldings(totalBuyQty);
 
-      // Also update totalInvested (approximate)
+      // 2. 총매입금 업데이트
       const totalAmount = mainBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
       const investedInput = document.getElementById('input-totalInvested');
       const currentInvested = parseFloat(investedInput.value) || 0;
       investedInput.value = (currentInvested + totalAmount).toFixed(2);
+
+      // 🔴 v4.14.0: totalInvested 변경 후 저장 (버그 수정)
+      saveDailyInputs();
 
       // Hide helper
       document.getElementById('today-buy-helper').classList.add('hidden');
