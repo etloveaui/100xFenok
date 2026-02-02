@@ -965,7 +965,7 @@
       }
     }
 
-    function saveProfileSettings() {
+    async function saveProfileSettings() {
       const name = document.getElementById('modal-profile-name').value.trim();
 
       if (!name) {
@@ -973,12 +973,26 @@
         return;
       }
 
+      // 1. 로컬 저장
       ProfileManager.update(currentProfile.id, { name });
       currentProfile = ProfileManager.getActive();
 
+      // 2. Google 로그인 상태면 시트에도 저장 (DEC-152: Unified Save)
+      if (SheetsSync.isAuthenticated()) {
+        try {
+          showToast('시트 저장 중...', 'info', 1500);
+          await SheetsSync.push();
+          showToast('로컬 + 시트 저장 완료', 'success');
+        } catch (error) {
+          console.error('Sheet save error:', error);
+          showToast('로컬 저장됨 (시트 저장 실패)', 'warning');
+        }
+      } else {
+        showToast('저장되었습니다 (로컬)', 'success');
+      }
+
       updateProfileSelector();
       closeProfileModal();
-      showToast('저장되었습니다', 'success');
     }
 
     /**

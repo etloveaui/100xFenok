@@ -34,7 +34,7 @@ const SheetsSync = (function() {
     SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
 
     // Sheet 구조 (v2.0): 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | 날짜
-    SHEET_NAME: 'Sheet1',
+    // 시트 이름 없이 범위만 사용 → 첫 번째 시트에 자동 적용
     RANGE: 'A2:H10000'  // Skip header row, 8 columns
   };
 
@@ -346,7 +346,7 @@ const SheetsSync = (function() {
     // Write all data
     await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: `${CONFIG.SHEET_NAME}!A2`,
+      range: 'A2',  // 첫 번째 시트 자동 사용
       valueInputOption: 'USER_ENTERED',
       resource: { values: rows }
     });
