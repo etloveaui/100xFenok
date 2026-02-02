@@ -653,7 +653,7 @@
 
   <!-- Footer -->
   <footer class="px-4 py-6 text-center">
-    <p class="text-xs text-gray-500">100x IB Helper v4.17.0</p>
+    <p class="text-xs text-gray-500">100x IB Helper v4.18.0</p>
     <p class="mt-1 text-xs text-gray-400">Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
@@ -1828,8 +1828,10 @@
         BalanceManager.updateBalance(currentProfile.id, balanceValue);
       }
 
-      // Recalculate
-      const status = BalanceManager.calcOrderStatus(currentProfile);
+      // 🔴 v4.18.0: 최신 프로필 데이터로 계산 (Bug 13 - 메모리 캐시 문제 수정)
+      // currentProfile은 메모리에 캐시된 old 데이터이므로 localStorage에서 최신 데이터 가져옴
+      const freshProfile = ProfileManager.getAll().profiles[currentProfile.id];
+      const status = BalanceManager.calcOrderStatus(freshProfile);
       renderOrderStatus(status);
       checkAndShowAlert();
     }
