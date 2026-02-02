@@ -823,6 +823,11 @@
     }
 
     function switchProfile(profileId) {
+      // 🔴 v4.14.0: 프로필 전환 전 현재 입력값 저장 (버그 수정)
+      if (currentProfile && selectedTicker) {
+        saveCurrentInputs();
+      }
+
       ProfileManager.setActive(profileId);
       currentProfile = ProfileManager.getActive();
 
@@ -1275,12 +1280,12 @@
     // =====================================================
 
     /**
-     * 🔴 모든 현재 입력값 저장 (v4.12.0)
+     * 🔴 모든 현재 입력값 저장 (v4.14.0)
      * - dailyData (평단가, 총매입금, 수량)
      * - stock settings (세팅원금, 매도%)
-     * - 자동 저장 피드백 표시
+     * @param {boolean} silent - true면 토스트 안보여줌 (종목/프로필 전환 시)
      */
-    function saveCurrentInputs() {
+    function saveCurrentInputs(silent = false) {
       if (!currentProfile || !selectedTicker) return;
 
       // 1. Daily data 저장
@@ -1296,8 +1301,10 @@
         sellPercent: sellPercent
       });
 
-      // 3. 자동 저장 피드백 (짧은 토스트)
-      showToast('✓ 자동 저장됨', 'success', 800);
+      // 3. 자동 저장 피드백 (silent 모드에선 안보여줌)
+      if (!silent) {
+        showToast('✓ 자동 저장됨', 'success', 800);
+      }
 
       console.log(`saveCurrentInputs: ${selectedTicker} principal=${principal}, sellPercent=${sellPercent}`);
     }
