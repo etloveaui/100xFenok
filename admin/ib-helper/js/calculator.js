@@ -443,9 +443,10 @@ const IBCalculator = (function() {
     if (!principal || principal <= 0) {
       return { error: '세팅원금을 입력하세요' };
     }
-    if (!currentPrice || currentPrice <= 0) {
-      return { error: '현재가를 입력하세요' };
-    }
+    // 🔴 v4.14.0: currentPrice 검증 제거 (UI에서 제거됨, 별%가만 사용)
+    // if (!currentPrice || currentPrice <= 0) {
+    //   return { error: '현재가를 입력하세요' };
+    // }
 
     // 1회 매수금
     const oneTimeBuy = principal / divisions;

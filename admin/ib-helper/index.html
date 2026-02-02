@@ -653,7 +653,7 @@
 
   <!-- Footer -->
   <footer class="px-4 py-6 text-center">
-    <p class="text-xs text-gray-500">100x IB Helper v4.12.0</p>
+    <p class="text-xs text-gray-500">100x IB Helper v4.14.0</p>
     <p class="mt-1 text-xs text-gray-400">Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
@@ -1317,6 +1317,11 @@
 
     function loadDailyInputs() {
       if (!currentProfile) return;
+
+      // 🔴 v4.14.0: 먼저 필드 초기화 (종목 간 데이터 공유 버그 수정)
+      document.getElementById('input-avgPrice').value = '';
+      document.getElementById('input-totalInvested').value = '';
+      document.getElementById('input-holdings').value = '';
 
       const data = ProfileManager.loadDailyData(currentProfile.id, selectedTicker);
       if (data) {

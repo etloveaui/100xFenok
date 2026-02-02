@@ -427,6 +427,7 @@ const SheetsSync = (function() {
 
     // 각 종목의 일일 데이터 업데이트
     myStocks.forEach(stock => {
+      // 1. Daily data 저장 (평단가, 수량, 총매입금)
       ProfileManager.saveDailyData(profile.id, stock.symbol, {
         avgPrice: stock.avgPrice,
         holdings: stock.holdings,
@@ -434,15 +435,13 @@ const SheetsSync = (function() {
         currentPrice: 0  // 현재가는 수동 입력
       });
 
-      // 종목이 프로필에 없으면 추가
+      // 2. Stock settings 저장 (🔴 v4.13.0: 항상 업데이트 - 기존 종목도 principal 반영)
       const existingStock = profile.stocks?.find(s => s.symbol === stock.symbol);
-      if (!existingStock) {
-        ProfileManager.addStock(profile.id, {
-          symbol: stock.symbol,
-          principal: stock.principal,
-          sellPercent: stock.symbol === 'TQQQ' ? 10 : 12
-        });
-      }
+      ProfileManager.addStock(profile.id, {
+        symbol: stock.symbol,
+        principal: stock.principal,  // 시트에서 가져온 값으로 업데이트
+        sellPercent: existingStock?.sellPercent || (stock.symbol === 'TQQQ' ? 10 : 12)
+      });
     });
 
     console.log(`SheetsSync: Pulled ${myStocks.length} rows for ${currentUserEmail}/${profile.id}`);
