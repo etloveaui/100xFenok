@@ -368,6 +368,9 @@ const SheetsSync = (function() {
     }
 
     const profile = ProfileManager.getActive();
+    console.log('SheetsSync push - profile:', profile);
+    console.log('SheetsSync push - stocks:', profile?.stocks);
+
     if (!profile || !profile.stocks) {
       throw new Error('프로필이 없습니다');
     }
