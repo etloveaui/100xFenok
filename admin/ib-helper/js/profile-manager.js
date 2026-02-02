@@ -13,137 +13,28 @@ const ProfileManager = (function() {
   const STORAGE_KEY = 'ib_profiles';
 
   // =====================================================
-  // Default Profiles (5 Family Members)
+  // Default Profiles - Empty (Users add their own)
   // =====================================================
 
-  const DEFAULT_PROFILES = {
-    fenomeno: {
-      id: 'fenomeno',
-      name: 'FenomenoKim',
-      accountNumber: '069182',
-      settings: {
-        method: 'V2.2',
-        splits: 40,
-        sellRatio: 10,
-        partialSellRatio: 5,
-        additionalBuy: {
-          enabled: true,
-          maxDecline: 15,
-          quantity: 1
-        }
-      },
-      stocks: [
-        { symbol: 'SOXL', principal: 13000, sellPercent: 12 },
-        { symbol: 'TQQQ', principal: 10000, sellPercent: 10 },
-        { symbol: 'BITU', principal: 8000, sellPercent: 12 }
-      ]
-    },
-    kgs: {
-      id: 'kgs',
-      name: '엄마 (kgs)',
-      accountNumber: '069191',
-      settings: {
-        method: 'V2.2',
-        splits: 40,
-        sellRatio: 12,
-        partialSellRatio: 6,
-        additionalBuy: {
-          enabled: true,
-          maxDecline: 15,
-          quantity: 1
-        }
-      },
-      stocks: [
-        { symbol: 'SOXL', principal: 10000, sellPercent: 12 },
-        { symbol: 'TQQQ', principal: 10000, sellPercent: 10 }
-      ]
-    },
-    sis: {
-      id: 'sis',
-      name: '누나 (iezavel)',
-      accountNumber: '120323',
-      settings: {
-        method: 'V2.2',
-        splits: 40,
-        sellRatio: 12,
-        partialSellRatio: 6,
-        additionalBuy: {
-          enabled: true,
-          maxDecline: 15,
-          quantity: 1
-        }
-      },
-      stocks: [
-        { symbol: 'SOXL', principal: 8000, sellPercent: 12 },
-        { symbol: 'TQQQ', principal: 8000, sellPercent: 10 }
-      ]
-    },
-    kjp: {
-      id: 'kjp',
-      name: '아빠 (jpkim)',
-      accountNumber: '069191',
-      settings: {
-        method: 'V2.2',
-        splits: 40,
-        sellRatio: 12,
-        partialSellRatio: 6,
-        additionalBuy: {
-          enabled: true,
-          maxDecline: 15,
-          quantity: 1
-        }
-      },
-      stocks: [
-        { symbol: 'SOXL', principal: 8000, sellPercent: 12 },
-        { symbol: 'TQQQ', principal: 8000, sellPercent: 10 }
-      ]
-    },
-    mona: {
-      id: 'mona',
-      name: 'Mona',
-      accountNumber: '424548',
-      settings: {
-        method: 'V2.2',
-        splits: 40,
-        sellRatio: 12,
-        partialSellRatio: 6,
-        additionalBuy: {
-          enabled: true,
-          maxDecline: 15,
-          quantity: 1
-        }
-      },
-      stocks: []
-    }
-  };
+  const DEFAULT_PROFILES = {};  // Empty - users add their own profiles
 
   // =====================================================
   // Initialize
   // =====================================================
 
   /**
-   * Initialize profiles (create defaults if not exist)
-   * @returns {Object} Active profile
+   * Initialize profiles (start empty - users add their own)
+   * @returns {Object|null} Active profile or null if none
    */
   function init() {
     const existing = getAll();
     if (!existing) {
-      // First time - create default profiles
+      // First time - start with empty profiles
       const data = {
         version: '1.0',
-        activeProfileId: 'fenomeno',
+        activeProfileId: null,  // No active profile until user creates one
         profiles: {}
       };
-
-      // Add default profiles with timestamps
-      Object.keys(DEFAULT_PROFILES).forEach(id => {
-        data.profiles[id] = {
-          ...DEFAULT_PROFILES[id],
-          created: new Date().toISOString(),
-          updated: new Date().toISOString()
-        };
-      });
-
       save(data);
     }
     return getActive();

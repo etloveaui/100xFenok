@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 1.0.0
+> **Version**: 3.2.0
 > **Created**: 2026-02-02
-> **Status**: Development Ready
-> **Priority**: 🔴 URGENT - Genie RPA Service Terminated
+> **Status**: ✅ Phase 1-3 Complete (Core + Multi-Profile + Sheets + Migration)
+> **Priority**: 🟡 Phase 4 (Telegram) Pending
 
 ---
 
@@ -43,15 +43,13 @@
 5. **데이터 저장** - Google Sheets + 히스토리
 
 ### 1.3 Target Users
-| User | Code | Tickers |
-|------|------|---------|
-| ElFenomeno (본인) | fenomeno | SOXL, TQQQ, BITU |
-| Kgs (엄마) | kgs | SOXL, TQQQ |
-| Sis (누나) | sis | SOXL, TQQQ |
-| Kjp (아빠) | kjp | SOXL, TQQQ |
-| Mona | mona | TBD |
+| User | Example |
+|------|---------|
+| 사용자 1 | SOXL, TQQQ, BITU |
+| 사용자 2 | SOXL, TQQQ |
+| ... | ... |
 
-> ⚠️ 다른 사용자도 추가 가능해야 함 (프로필 등록 기능 필수)
+> ✅ 사용자가 직접 프로필 추가 (기본 프로필 없음)
 
 ---
 
@@ -366,7 +364,7 @@ if (remainingCash < tomorrowBuyAmount) {
 | Column | Description |
 |--------|-------------|
 | profile_id | Unique ID |
-| display_name | 별명 (예: "엄마") |
+| display_name | 별명 (예: "User1") |
 | real_name | 실제 사용자명 |
 | telegram_chat_id | 텔레그램 방 ID |
 | created_at | 생성일 |
@@ -548,6 +546,22 @@ admin/ib-helper/
 - Spreadsheet URL 붙여넣기 → 자동 ID 추출
 - Sync 전략: Cloud stocks 데이터 우선, Local settings 보존
 - 스펙: `_tmp/PHASE2_SPEC.md` (Asset Allocator 제공)
+
+### Phase 2C: Privacy + Migration + Polish - ✅ COMPLETE (02-02)
+- [x] 개인정보 제거 (DEFAULT_PROFILES 비움, 계좌번호 제거)
+- [x] BITU 제거 (sellPercent 기본값에서 제거, UI 버튼에서 제거)
+- [x] DEFAULT sellPercent 변경 (12 → 10)
+- [x] 다중 사용자 Google Sheets (프로필별 Sheet ID 저장)
+- [x] 현재가 API 수정 (Yahoo → 100xFenok Ticker API)
+- [x] **Genie RPA .dat 파일 Import 기능** 🆕
+
+**Implementation Notes (02-02)**:
+- ProfileManager: DEFAULT_PROFILES = {} (빈 상태 시작)
+- SheetsSync: `ib_sheets_id_{profileId}` 패턴으로 프로필별 Sheet 연결
+- Ticker API: `https://ticker-api.etloveaui.workers.dev/api/ticker/{symbol}`
+- dat 파일 포맷: `0|SYMBOL|PRINCIPAL|STAR%|T%|VERSION|DIVISIONS|QTY|?|?`
+- parseDatFile() 함수로 Genie RPA 데이터 자동 파싱
+- 현재 프로필에 추가 또는 새 프로필로 생성 선택 가능
 
 ### Phase 3: Cash Management - ✅ COMPLETE (02-02)
 - [x] `js/balance-manager.js` - BalanceManager 모듈

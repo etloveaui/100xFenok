@@ -20,8 +20,7 @@ const IBCalculator = (function() {
     sellPercent: {
       TQQQ: 10,              // TQQQ AFTER 매도%
       SOXL: 12,              // SOXL AFTER 매도%
-      BITU: 12,              // BITU AFTER 매도%
-      DEFAULT: 12            // 기타 종목 기본값
+      DEFAULT: 10            // 기타 종목 기본값
     },
     locCapMultiplier: 1.15,  // 현재가 캡 배수 (×1.15)
     locBuyOffset: 0.01,      // 매수 LOC 차감 금액
@@ -72,7 +71,7 @@ const IBCalculator = (function() {
    * 🔴 FORMULA: 별% = 10 - (T / 2)
    *
    * ⚠️ 기존 코드 오류: SOXL에 12 - (T * 0.6) 사용 → 틀림!
-   * ✅ 정답: TQQQ, SOXL, BITU 모두 10 - (T / 2) 사용
+   * ✅ 정답: 모든 종목 동일 공식 10 - (T / 2) 사용
    *
    * Examples:
    *   T=2  → 별% = 10 - 1 = 9%
