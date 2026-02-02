@@ -437,8 +437,8 @@
 
   <!-- Footer -->
   <footer class="px-4 py-6 text-center text-xs text-gray-400">
-    <p>IB Helper v3.0.0 | V2.2 Algorithm</p>
-    <p class="mt-1">Multi-Profile + 예수금 관리 + Genie RPA 로직 기반</p>
+    <p>IB Helper v3.1.0 | V2.2 Algorithm</p>
+    <p class="mt-1">Multi-Profile + 예수금 관리 + Google Sheets 동기화</p>
   </footer>
 
   <!-- Scripts -->
@@ -1075,6 +1075,115 @@
       document.getElementById('alert-banner').classList.add('hidden');
       document.body.style.paddingTop = '0';
     }
+
+    // =====================================================
+    // Google Sheets Sync (Phase 2B)
+    // =====================================================
+
+    function initSheetsUI() {
+      const notConfigured = document.getElementById('sheets-not-configured');
+      const controls = document.getElementById('sheets-controls');
+      const status = document.getElementById('sheets-status');
+
+      if (SheetsSync.isConfigured()) {
+        notConfigured.classList.add('hidden');
+        controls.classList.remove('hidden');
+        status.textContent = '대기 중';
+      } else {
+        notConfigured.classList.remove('hidden');
+        controls.classList.add('hidden');
+        status.textContent = '설정 필요';
+      }
+    }
+
+    async function handleSheetsSignIn() {
+      const status = document.getElementById('sheets-status');
+      const syncBtn = document.getElementById('btn-sheets-sync');
+
+      try {
+        status.textContent = '연결 중...';
+        await SheetsSync.init();
+        await SheetsSync.signIn();
+
+        // Check for spreadsheet URL
+        const urlInput = document.getElementById('sheets-url');
+        if (urlInput.value) {
+          const sheetId = SheetsSync.extractIdFromUrl(urlInput.value);
+          if (sheetId) {
+            SheetsSync.setSpreadsheet(sheetId);
+          }
+        }
+
+        status.textContent = '✅ 연결됨';
+        status.className = 'text-xs text-green-600';
+        syncBtn.disabled = false;
+      } catch (error) {
+        console.error('Sheets sign in error:', error);
+        status.textContent = '❌ 연결 실패';
+        status.className = 'text-xs text-red-600';
+      }
+    }
+
+    async function handleSheetsSync() {
+      const status = document.getElementById('sheets-status');
+      const syncBtn = document.getElementById('btn-sheets-sync');
+
+      // Check spreadsheet URL
+      const urlInput = document.getElementById('sheets-url');
+      if (urlInput.value && !SheetsSync.getSpreadsheetId()) {
+        const sheetId = SheetsSync.extractIdFromUrl(urlInput.value);
+        if (sheetId) {
+          SheetsSync.setSpreadsheet(sheetId);
+        } else {
+          alert('유효하지 않은 Google Sheets URL입니다');
+          return;
+        }
+      }
+
+      if (!SheetsSync.getSpreadsheetId()) {
+        alert('Google Sheets URL을 먼저 입력해주세요');
+        return;
+      }
+
+      try {
+        status.textContent = '🔄 동기화 중...';
+        syncBtn.disabled = true;
+
+        await SheetsSync.sync();
+
+        status.textContent = '✅ 동기화 완료';
+        status.className = 'text-xs text-green-600';
+
+        // Refresh UI
+        currentProfile = ProfileManager.getActive();
+        loadProfileData();
+        loadBalanceData();
+        updateProfileSelector();
+
+        setTimeout(() => {
+          status.textContent = '✅ 연결됨';
+        }, 2000);
+      } catch (error) {
+        console.error('Sheets sync error:', error);
+        status.textContent = '❌ 동기화 실패';
+        status.className = 'text-xs text-red-600';
+      } finally {
+        syncBtn.disabled = false;
+      }
+    }
+
+    // Initialize Sheets UI on modal open
+    const originalShowProfileSettings = showProfileSettings;
+    showProfileSettings = function() {
+      originalShowProfileSettings();
+      initSheetsUI();
+
+      // Load saved spreadsheet URL
+      const sheetId = SheetsSync.getSpreadsheetId();
+      if (sheetId) {
+        document.getElementById('sheets-url').value = `https://docs.google.com/spreadsheets/d/${sheetId}`;
+      }
+    };
   </script>
 
 </body>
