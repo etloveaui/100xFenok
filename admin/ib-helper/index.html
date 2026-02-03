@@ -484,7 +484,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-gray-500 mb-1">세팅원금 ($)</label>
-            <input type="number" id="input-principal" class="w-full px-3 py-2 border rounded-lg" value="13000" inputmode="numeric" onchange="saveCurrentInputs()">
+            <input type="number" id="input-principal" class="w-full px-3 py-2 border rounded-lg" placeholder="0" inputmode="numeric" onchange="saveCurrentInputs()">
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">분할 수</label>
@@ -869,7 +869,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.28.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.29.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -1041,13 +1041,10 @@
     // =====================================================
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Initialize ProfileManager
-      currentProfile = ProfileManager.init();
-
-      // Set current profile for SheetsSync (per-profile Sheet storage)
-      if (currentProfile) {
-        SheetsSync.setCurrentProfile(currentProfile.id);
-      }
+      // 🔴 v4.29.0: 로그인 기반 초기화 (논리적 흐름 개선)
+      // - 앱 시작 시 항상 빈 상태 (로그인 화면)
+      // - 로컬 데이터는 로그인 후에만 로드
+      // - 사용자 혼란 방지: "로그인 전에 데이터가 있는 이유?"
 
       // Show today's date
       const today = new Date();
@@ -1057,19 +1054,11 @@
         day: '2-digit'
       });
 
-      // Load profile selector
-      updateProfileSelector();
+      // 🔴 v4.29.0: 시작 시 항상 빈 상태 표시 (로그인/시작 버튼)
+      // 기존 로컬 데이터가 있어도 숨김 - 사용자가 명시적으로 시작해야 함
+      showStartScreen();
 
-      // Load profile's first ticker or default
-      loadProfileData();
-
-      // Load balance data
-      loadBalanceData();
-
-      // 🔴 v4.17.0: 자동 계산 제거 (Bug 12 수정)
-      // - 입력만 했는데 계산 결과가 자동으로 표시되는 버그
-      // - 사용자가 "계산" 버튼을 명시적으로 눌러야 계산됨
-      // - 저장은 onchange 이벤트에서 처리됨 (saveCurrentInputs)
+      // Balance input debounce setup
       const balanceInput = document.getElementById('input-balance');
       if (balanceInput) {
         balanceInput.addEventListener('input', () => {
@@ -1080,6 +1069,40 @@
         });
       }
     });
+
+    /**
+     * 🔴 v4.29.0: 시작 화면 표시 (로그인 전 상태)
+     * - 항상 빈 상태로 시작
+     * - Google 로그인 또는 오프라인 시작 선택
+     */
+    function showStartScreen() {
+      const emptyState = document.getElementById('empty-state');
+      const mainContent = document.getElementById('main-content');
+
+      // 메인 콘텐츠 숨김
+      emptyState.classList.remove('hidden');
+      mainContent.style.display = 'none';
+
+      // 프로필 초기화 (UI만 - 데이터는 로그인 후 로드)
+      ProfileManager.init();
+    }
+
+    /**
+     * 🔴 v4.29.0: 앱 초기화 (로그인 또는 오프라인 시작 후 호출)
+     */
+    function initializeApp() {
+      currentProfile = ProfileManager.getActive();
+
+      // Set current profile for SheetsSync
+      if (currentProfile) {
+        SheetsSync.setCurrentProfile(currentProfile.id);
+      }
+
+      // Load UI
+      updateProfileSelector();
+      loadProfileData();
+      loadBalanceData();
+    }
 
     // =====================================================
     // Profile Management
@@ -1162,8 +1185,12 @@
       enabledTickers.clear();
 
       container.innerHTML = stocks.map(s => {
-        // 필수값 체크 (평단가, 세팅원금)
-        const hasRequired = (s.avgPrice > 0 || s.principal > 0);
+        // 🔴 v4.28.1: 필수값 체크 - AND 조건으로 변경 (계산 로직과 일치)
+        // avgPrice는 dailyData에서, principal은 stock에서 가져옴
+        const dailyData = ProfileManager.loadDailyData(currentProfile?.id, s.symbol) || {};
+        const avgPrice = dailyData.avgPrice || 0;
+        const principal = s.principal || 0;
+        const hasRequired = (avgPrice > 0 && principal > 0);
         const isDisabled = !hasRequired;
 
         // 필수값 있으면 기본 체크
@@ -1256,6 +1283,12 @@
     }
 
     function addNewStock() {
+      // 🔴 v4.29.0: null guard 추가
+      if (!currentProfile) {
+        showToast('프로필을 먼저 선택하세요', 'warning');
+        return;
+      }
+
       const symbol = document.getElementById('new-stock-symbol').value.toUpperCase().trim();
       const principal = parseFloat(document.getElementById('new-stock-principal').value) || 0;
 
@@ -1274,6 +1307,12 @@
     }
 
     function removeStockFromProfile(symbol) {
+      // 🔴 v4.29.0: null guard 추가
+      if (!currentProfile) {
+        showToast('프로필을 먼저 선택하세요', 'warning');
+        return;
+      }
+
       if (confirm(`${symbol} 종목을 삭제하시겠습니까?`)) {
         ProfileManager.removeStock(currentProfile.id, symbol);
         currentProfile = ProfileManager.getActive();
@@ -1285,14 +1324,21 @@
      * 🔴 클라우드 동기화 (v4.12.0)
      * - 로컬 저장은 onchange에서 자동 처리됨
      * - 이 버튼은 클라우드(Google Sheets) 동기화만 담당
+     * 🔴 v4.29.0: null guard 추가
      */
     async function syncToCloud() {
+      // 🔴 v4.29.0: null guard
+      if (!currentProfile) {
+        showToast('프로필을 먼저 선택하세요', 'warning');
+        return;
+      }
+
       // 1. 현재 입력값 최종 저장 (혹시 모를 미저장 데이터)
       saveCurrentInputs();
 
       // 2. 프로필 이름 업데이트
       const name = document.getElementById('modal-profile-name').value.trim();
-      if (name && currentProfile) {
+      if (name) {
         ProfileManager.update(currentProfile.id, { name });
         currentProfile = ProfileManager.getActive();
       }
@@ -1342,6 +1388,11 @@
     /**
      * Quick Start - Google 로그인 → 시트에서 불러오기
      */
+    /**
+     * 🔴 v4.29.0: Google 로그인으로 시작
+     * - 시트에서 데이터 가져오기
+     * - 시트 = SSOT (Single Source of Truth)
+     */
     async function quickStart() {
       try {
         // 1. Google 로그인
@@ -1356,45 +1407,31 @@
 
         showToast(`${userEmail} 로그인 완료`, 'success');
 
-        // 🔴 v4.15.0: 현재 입력값 저장 후 selectedTicker 초기화 (Bug 6 수정)
-        if (currentProfile && selectedTicker) {
-          saveCurrentInputs(true);
-        }
+        // 🔴 v4.29.0: 기존 로컬 데이터 클리어 (다른 계정 데이터 충돌 방지)
+        ProfileManager.resetToDefaults();
         selectedTicker = null;
 
-        // 2. 프로필 생성 (이메일 기반)
-        const profileName = userEmail.split('@')[0]; // 이메일 앞부분을 프로필명으로
-        let profileId = profileName;
+        // 2. 시트에서 프로필 가져오기 (핵심 변경)
+        const sheetProfiles = await SheetsSync.getMyProfilesFromSheet();
 
-        // 이미 존재하면 사용, 없으면 생성
-        const existing = ProfileManager.getAll();
-        if (!existing.profiles[profileId]) {
-          profileId = ProfileManager.create(profileName, '');
+        if (sheetProfiles.length === 0) {
+          // 시트에 데이터 없음 → 새 프로필 생성
+          showToast('새 사용자 - 프로필을 생성합니다', 'info');
+          const profileName = userEmail.split('@')[0];
+          const profileId = ProfileManager.create(profileName, '');
+          ProfileManager.setActive(profileId);
+          currentProfile = ProfileManager.getActive();
+          SheetsSync.setCurrentProfile(profileId);
+        } else {
+          // 시트에서 프로필 로드
+          await pullAllProfiles(sheetProfiles);
+          showToast(`${sheetProfiles.length}개 프로필 불러옴`, 'success');
         }
 
-        ProfileManager.setActive(profileId);
-        currentProfile = ProfileManager.getActive();
-        SheetsSync.setCurrentProfile(profileId);
+        // 3. UI 업데이트 (initializeApp 호출)
+        initializeApp();
 
-        // 3. 시트에서 데이터 불러오기 시도
-        try {
-          const pulled = await SheetsSync.pull();
-          if (pulled.length > 0) {
-            showToast(`${pulled.length}개 종목 불러옴`, 'success');
-          } else {
-            showToast('시트에 데이터 없음 - 종목 추가하세요', 'info');
-          }
-        } catch (pullError) {
-          console.warn('Pull failed (may be first time):', pullError);
-          showToast('새 사용자 - 종목을 추가하세요', 'info');
-        }
-
-        // 4. UI 업데이트
-        updateProfileSelector();
-        loadProfileData();
-        loadBalanceData();
-
-        // 5. Sheets 상태 표시
+        // 4. Sheets 상태 표시
         const userEl = document.getElementById('sheets-user');
         const statusEl = document.getElementById('sheets-status');
         if (userEl) {
@@ -1410,43 +1447,32 @@
         console.error('Quick start error:', error);
         showToast('시작 실패: ' + error.message, 'error');
 
-        // 폴백: 수동 프로필 생성
-        const name = prompt('Google 연동 실패. 프로필 이름을 입력하세요:', '내 프로필');
-        if (name) {
-          // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
-          selectedTicker = null;
-
-          const newId = ProfileManager.create(name, '');
-          ProfileManager.setActive(newId);
-          currentProfile = ProfileManager.getActive();
-          updateProfileSelector();
-          loadProfileData();
-          loadBalanceData();
+        // 폴백: 오프라인 모드 제안
+        if (confirm('Google 연동 실패.\n오프라인 모드로 시작하시겠습니까?')) {
+          quickStartOffline();
         }
       }
     }
 
     /**
-     * 로그인 없이 시작 (로컬 전용)
+     * 🔴 v4.29.0: 오프라인 모드로 시작 (로컬 전용)
+     * - Google 동기화 없음
+     * - 로컬 스토리지에만 저장
      */
     function quickStartOffline() {
       const name = prompt('프로필 이름을 입력하세요:', '내 프로필');
       if (!name) return;
 
-      // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
-      if (currentProfile && selectedTicker) {
-        saveCurrentInputs(true);
-      }
+      // 🔴 v4.29.0: 기존 로컬 데이터 클리어 (깨끗한 시작)
+      ProfileManager.resetToDefaults();
       selectedTicker = null;
 
       const newId = ProfileManager.create(name, '');
       ProfileManager.setActive(newId);
       currentProfile = ProfileManager.getActive();
 
-      updateProfileSelector();
-      loadProfileData();
-      loadBalanceData();
-      showToast('로컬 프로필 생성 완료', 'success');
+      initializeApp();
+      showToast('⚠️ 오프라인 모드 - Google 동기화 없음', 'warning');
     }
 
     function createNewProfile() {
@@ -1873,6 +1899,9 @@
           btn.innerHTML = '<i class="fas fa-copy"></i>';
           btn.classList.remove('copied');
         }, 1500);
+      }).catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        showToast('복사 실패', 'error');
       });
     }
 
@@ -1905,6 +1934,9 @@
       const text = lines.join('\n');
       navigator.clipboard.writeText(text).then(() => {
         showToast('클립보드에 복사되었습니다', 'success');
+      }).catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        showToast('복사 실패', 'error');
       });
     }
 
@@ -1947,6 +1979,9 @@
       const text = lines.join('\n');
       navigator.clipboard.writeText(text).then(() => {
         showToast('전체 주문이 복사되었습니다', 'success');
+      }).catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        showToast('복사 실패', 'error');
       });
     }
 
@@ -1978,6 +2013,9 @@
 
       navigator.clipboard.writeText(text).then(() => {
         showToast('MOC 주문이 복사되었습니다', 'success');
+      }).catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        showToast('복사 실패', 'error');
       });
     }
 
@@ -1993,6 +2031,12 @@
     }
 
     async function calculateOrders() {
+      // 🔴 v4.29.0: selectedTicker null guard
+      if (!selectedTicker) {
+        showToast('종목을 먼저 선택하세요', 'warning');
+        return;
+      }
+
       // Gather inputs
       // 🔴 v4.21.2: sellPercent 전달 (Ralph Loop 발견)
       // Note: locSellPercent는 표시용 - LOC 가격은 별%가로 자동 계산
@@ -2008,7 +2052,9 @@
           }
         }
       } catch (e) {
+        // 🔴 v4.29.0: 사용자에게 피드백 추가
         console.warn('현재가 조회 실패, 별%가만 사용:', e.message);
+        showToast('⚠️ 현재가 조회 실패 - 별%가만 사용', 'warning', 2000);
       }
 
       const input = {
@@ -2040,6 +2086,9 @@
         return;
       }
 
+      // 🔴 v4.28.1: 다중 결과 UI 숨기기 (단일 계산 시)
+      document.getElementById('multi-results-section')?.classList.add('hidden');
+
       // Display results
       displayResults(result);
 
@@ -2068,14 +2117,17 @@
       calculationResults = {};
       const tickerList = [...enabledTickers];
 
-      // 현재가 일괄 조회 (Sheets에서)
+      // 🔴 v4.28.1: 현재가 일괄 조회 (Promise.all로 병렬 처리)
       let priceMap = {};
       try {
         if (SheetsSync.isAuthenticated()) {
-          for (const ticker of tickerList) {
-            const price = await SheetsSync.getCurrentPrice(ticker);
-            if (price > 0) priceMap[ticker] = price;
-          }
+          // fetchCurrentPrices() 한 번 호출로 모든 종목 가격 가져오기
+          const allPrices = await SheetsSync.fetchCurrentPrices();
+          tickerList.forEach(ticker => {
+            if (allPrices[ticker]?.current > 0) {
+              priceMap[ticker] = allPrices[ticker].current;
+            }
+          });
           console.log('📊 현재가 조회 완료:', priceMap);
         }
       } catch (e) {
@@ -2094,8 +2146,9 @@
           continue;
         }
 
-        // 필수값 체크
-        const avgPrice = stockData.avgPrice || 0;
+        // 🔴 v4.28.1: dailyData에서 평단가/수량/총매입금 가져오기
+        const dailyData = ProfileManager.loadDailyData(currentProfile.id, ticker) || {};
+        const avgPrice = dailyData.avgPrice || 0;
         const principal = stockData.principal || 0;
 
         if (!avgPrice || !principal) {
@@ -2110,8 +2163,8 @@
           principal: principal,
           divisions: stockData.divisions || 40,
           avgPrice: avgPrice,
-          totalInvested: stockData.totalInvested || 0,
-          holdings: stockData.holdings || 0,
+          totalInvested: dailyData.totalInvested || 0,
+          holdings: dailyData.holdings || 0,
           currentPrice: priceMap[ticker] || 0,
           sellPercent: stockData.sellPercent || defaultSellPercent
         };
@@ -2299,6 +2352,9 @@
       // 다중 결과: 아코디언 표시
       section.classList.remove('hidden');
 
+      // 🔴 v4.28.1: lastCalculation을 첫 번째 결과로 업데이트 (복사 기능 호환성)
+      lastCalculation = results[0];
+
       // 기존 단일 결과 섹션 숨기기
       document.getElementById('results-section').classList.add('hidden');
 
@@ -2468,6 +2524,9 @@
       const text = lines.join('\n');
       navigator.clipboard.writeText(text).then(() => {
         showToast('전체 종목 주문이 복사되었습니다', 'success');
+      }).catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        showToast('복사 실패 - 브라우저 권한 확인', 'error');
       });
     }
 
@@ -2512,6 +2571,9 @@
       const text = `[${ticker}] ${title}\n${lines.join('\n')}`;
       navigator.clipboard.writeText(text).then(() => {
         showToast(`${ticker} ${title} 주문 복사됨`, 'success');
+      }).catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        showToast('복사 실패', 'error');
       });
     }
 
@@ -2886,24 +2948,30 @@
 
     /**
      * 모든 시트 프로필 가져오기 (v4.22.0)
-     * - 기존 로컬 프로필 모두 삭제
+     * - 기존 로컬 프로필 모두 삭제 (quickStart에서 이미 처리됨 - 중복 방지용)
      * - 시트 프로필을 순차적으로 로컬에 생성
      * - 예수금 포함 (v3.2)
+     * 🔴 v4.28.2: 시트 원본 프로필 ID 유지 (ID mismatch 해결)
+     * 🔴 v4.29.0: 기존 데이터 삭제 확인 추가
      */
     async function pullAllProfiles(sheetProfiles) {
       const status = document.getElementById('sheets-status');
       status.textContent = '가져오는 중...';
       status.className = 'text-xs text-amber-600';
 
-      // 1. 기존 로컬 프로필 모두 삭제
+      // 1. 기존 로컬 프로필 확인 및 삭제
       const existingProfiles = ProfileManager.getAllProfiles();
-      existingProfiles.forEach(p => ProfileManager.delete(p.id));
+      if (existingProfiles.length > 0) {
+        // 🔴 v4.29.0: 기존 데이터가 있으면 로그만 남김 (quickStart에서 이미 클리어됨)
+        console.log(`pullAllProfiles: Clearing ${existingProfiles.length} existing profiles`);
+        existingProfiles.forEach(p => ProfileManager.delete(p.id));
+      }
 
       // 2. 시트 프로필을 순차적으로 생성
       let firstProfileId = null;
       for (const sp of sheetProfiles) {
-        // 프로필 생성 (시트 프로필 ID 그대로 사용)
-        const newId = ProfileManager.create(sp.profileName, '');
+        // 🔴 v4.28.2: 시트의 원본 프로필 ID를 그대로 사용 (createWithId)
+        const newId = ProfileManager.createWithId(sp.profileId, sp.profileName, '');
 
         // 🔴 v4.22.0: 예수금 저장
         if (sp.balance > 0) {
@@ -2989,6 +3057,12 @@
     async function handleSheetsPush() {
       const status = document.getElementById('sheets-status');
 
+      // 🔴 v4.29.0: null guard 추가
+      if (!currentProfile) {
+        showToast('프로필을 먼저 선택하세요', 'warning');
+        return;
+      }
+
       try {
         status.textContent = '저장하는 중...';
         status.className = 'text-xs text-amber-600';
@@ -3004,7 +3078,8 @@
 
         status.textContent = '연결됨';
         status.className = 'text-xs text-green-600';
-        showToast(`${currentProfile.id} 프로필 저장 완료`, 'success');
+        // 🔴 v4.29.0: ID 대신 name 표시
+        showToast(`✅ ${currentProfile.name || '프로필'} 저장 완료`, 'success');
 
       } catch (error) {
         console.error('Sheets push error:', error);

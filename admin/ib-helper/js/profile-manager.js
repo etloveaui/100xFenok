@@ -4,9 +4,10 @@
  * Manages multiple user profiles with localStorage persistence.
  * Supports 5 family members with individual stock settings.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @see PHASE2_SPEC.md
  *
+ * v1.2.0 (02-03): createWithId() for sheet sync ID preservation
  * v1.1.0 (02-03): Korean name ID fix, saveDailyData simplification
  */
 
@@ -126,6 +127,48 @@ const ProfileManager = (function() {
     // v1.1.0: 한글 이름도 지원 (encodeURIComponent로 안전한 ID 생성)
     const safeName = encodeURIComponent(name).replace(/%/g, '').substring(0, 20);
     const id = (safeName || 'profile') + '_' + Date.now();
+
+    data.profiles[id] = {
+      id,
+      name,
+      accountNumber,
+      created: new Date().toISOString(),
+      updated: new Date().toISOString(),
+      settings: {
+        method: 'V2.2',
+        splits: 40,
+        sellRatio: 12,
+        partialSellRatio: 6,
+        additionalBuy: {
+          enabled: true,
+          maxDecline: 15,
+          quantity: 1
+        }
+      },
+      stocks: []
+    };
+
+    save(data);
+    return id;
+  }
+
+  /**
+   * 🔴 v1.2.0: Create profile with specific ID (시트 동기화용)
+   * @param {string} id - 시트에서 가져온 원본 프로필 ID
+   * @param {string} name - 프로필 이름
+   * @param {string} accountNumber
+   * @returns {string} 동일한 profile ID
+   */
+  function createWithId(id, name, accountNumber = '') {
+    const data = getAll();
+
+    // 이미 존재하면 업데이트만
+    if (data.profiles[id]) {
+      data.profiles[id].name = name;
+      data.profiles[id].updated = new Date().toISOString();
+      save(data);
+      return id;
+    }
 
     data.profiles[id] = {
       id,
@@ -376,6 +419,7 @@ const ProfileManager = (function() {
     getById,
     getAllProfiles,
     create,
+    createWithId,  // v1.2.0: 시트 동기화용
     update,
     delete: deleteProfile,
 
