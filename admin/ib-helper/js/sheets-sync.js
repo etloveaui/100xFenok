@@ -1,5 +1,5 @@
 /**
- * IB Helper Google Sheets Sync - v3.6.2 (Email Auth Sync)
+ * IB Helper Google Sheets Sync - v3.6.0 (Session Persistence)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
@@ -362,19 +362,10 @@ const SheetsSync = (function() {
 
   /**
    * Check if user is signed in
-   * 🔴 v3.6.2: 이메일 인증도 포함 (Google OAuth OR Email Auth)
+   * 🔴 v3.5.1: gapi.client undefined 체크 추가 (C-11)
    * @returns {boolean}
    */
   function isAuthenticated() {
-    // 🔴 v3.6.3: 이메일 인증 체크 (우선)
-    const hasEmailAuth = !!(emailAuthToken && emailAuthEmail);
-    console.log('SheetsSync.isAuthenticated:', { hasEmailAuth, emailAuthToken: !!emailAuthToken, emailAuthEmail: !!emailAuthEmail });
-
-    if (hasEmailAuth) {
-      return true;
-    }
-
-    // Google OAuth 체크
     try {
       return isSignedIn &&
              typeof gapi !== 'undefined' &&
@@ -562,7 +553,6 @@ const SheetsSync = (function() {
    * - 다른 사용자 데이터 보존
    *
    * 🔴 v3.4.0: 중복 실행 방지 (isPushing flag)
-   * 🔴 v3.6.2: 이메일 인증 시 WebApp API 사용
    */
   async function push() {
     if (!currentUserEmail) {
@@ -581,13 +571,7 @@ const SheetsSync = (function() {
       throw new Error('프로필이 없습니다');
     }
 
-    // 🔴 v3.6.2: 이메일 인증 사용자는 WebApp API 사용
-    if (emailAuthToken && emailAuthEmail && webAppUrl) {
-      await pushViaWebApp(profile);
-      return;
-    }
-
-    // 🔴 v3.4.0: push 시작 (Google OAuth)
+    // 🔴 v3.4.0: push 시작
     isPushing = true;
 
     try {
@@ -650,60 +634,7 @@ const SheetsSync = (function() {
   }
 
   /**
-   * 🔴 v3.6.2: 이메일 인증 사용자를 위한 WebApp API push
-   * @param {Object} profile - 프로필 객체
-   */
-  async function pushViaWebApp(profile) {
-    isPushing = true;
-
-    try {
-      const balance = (typeof BalanceManager !== 'undefined')
-        ? BalanceManager.getBalance(profile.id)?.available || 0
-        : 0;
-
-      // 종목 데이터 변환
-      const stocks = profile.stocks.map(stock => {
-        const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
-        const sym = stock.symbol.toUpperCase();
-        return {
-          profileName: profile.name || '프로필',
-          ticker: stock.symbol,
-          avgPrice: dailyData.avgPrice || 0,
-          holdings: dailyData.holdings || 0,
-          totalInvested: dailyData.totalInvested || 0,
-          principal: stock.principal || 0,
-          sellPercent: stock.sellPercent || (sym === 'SOXL' ? 12 : 10),
-          locSellPercent: stock.locSellPercent || 5
-        };
-      });
-
-      const response = await fetch(webAppUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          action: 'saveData',
-          token: emailAuthToken,
-          profileId: profile.id,
-          stocks: stocks,
-          balance: balance
-        })
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || '동기화 실패');
-      }
-
-      console.log(`SheetsSync: Pushed via WebApp for ${emailAuthEmail}/${profile.id}`);
-    } finally {
-      isPushing = false;
-    }
-  }
-
-  /**
    * Pull cloud data to local (내 구글ID + 내 프로필ID만)
-   * 🔴 v3.6.2: 이메일 인증 시 WebApp API 사용
    */
   async function pull() {
     if (!currentUserEmail) {
@@ -715,13 +646,7 @@ const SheetsSync = (function() {
       throw new Error('프로필이 없습니다');
     }
 
-    // 🔴 v3.6.2: 이메일 인증 사용자는 WebApp API 사용
-    if (emailAuthToken && emailAuthEmail && webAppUrl) {
-      await pullViaWebApp(profile);
-      return;
-    }
-
-    // 내 데이터만 필터링해서 가져오기 (Google OAuth)
+    // 내 데이터만 필터링해서 가져오기
     const myStocks = await readMyData();
 
     // 🔴 v3.2: 예수금 저장 (첫 번째 row에서)
@@ -755,62 +680,6 @@ const SheetsSync = (function() {
     }
 
     console.log(`SheetsSync: Pulled ${myStocks.length} rows for ${currentUserEmail}/${profile.id}`);
-    return myStocks;
-  }
-
-  /**
-   * 🔴 v3.6.2: 이메일 인증 사용자를 위한 WebApp API pull
-   * @param {Object} profile - 프로필 객체
-   */
-  async function pullViaWebApp(profile) {
-    const response = await fetch(webAppUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'getData',
-        token: emailAuthToken,
-        profileId: profile.id
-      })
-    });
-
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.error || '데이터 조회 실패');
-    }
-
-    const myStocks = result.data || [];
-
-    // 예수금 저장 (첫 번째 row에서)
-    if (myStocks.length > 0 && myStocks[0].balance > 0) {
-      if (typeof BalanceManager !== 'undefined') {
-        BalanceManager.updateBalance(profile.id, myStocks[0].balance);
-      }
-    }
-
-    // 각 종목의 일일 데이터 업데이트
-    myStocks.forEach(stock => {
-      ProfileManager.saveDailyData(profile.id, stock.ticker, {
-        avgPrice: stock.avgPrice,
-        holdings: stock.holdings,
-        totalInvested: stock.totalInvested,
-        currentPrice: 0
-      });
-
-      ProfileManager.addStock(profile.id, {
-        symbol: stock.ticker,
-        principal: stock.principal,
-        sellPercent: stock.sellPercent,
-        locSellPercent: stock.locSellPercent
-      });
-    });
-
-    // 프로필 이름 업데이트
-    if (myStocks.length > 0 && myStocks[0].profileName) {
-      ProfileManager.update(profile.id, { name: myStocks[0].profileName });
-    }
-
-    console.log(`SheetsSync: Pulled via WebApp ${myStocks.length} rows for ${emailAuthEmail}/${profile.id}`);
     return myStocks;
   }
 
@@ -980,11 +849,9 @@ const SheetsSync = (function() {
    */
   async function fetchCurrentPrices() {
     const sheetId = getSpreadsheetId();
-
-    // 🔴 v3.6.3: 이메일 인증 사용자는 gapi가 없으므로 Ticker API 사용
-    if (!sheetId || typeof gapi === 'undefined' || !gapi.client) {
-      console.log('SheetsSync: gapi not available, using Ticker API fallback');
-      return {};  // Ticker API는 개별 조회만 지원하므로 빈 객체 반환, getCurrentPrice에서 fallback
+    if (!sheetId) {
+      console.warn('SheetsSync: Spreadsheet ID not set, cannot fetch prices');
+      return {};
     }
 
     try {
@@ -1035,34 +902,12 @@ const SheetsSync = (function() {
 
   /**
    * Get current price for a specific ticker
-   * 🔴 v3.6.3: Ticker API fallback for email auth users (no gapi)
    * @param {string} ticker - Stock symbol (e.g., 'TQQQ')
    * @returns {Promise<number>} Current price or 0 if not found
    */
   async function getCurrentPrice(ticker) {
-    const sym = ticker.toUpperCase();
-
-    // 1차: Prices 시트에서 조회 (Google OAuth 사용자)
     const prices = await fetchCurrentPrices();
-    if (prices[sym]?.current > 0) {
-      return prices[sym].current;
-    }
-
-    // 2차: Ticker API fallback (이메일 인증 사용자 또는 시트에 없는 종목)
-    try {
-      const response = await fetch(`https://ticker-api.etloveaui.workers.dev/api/ticker/${sym}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.price > 0) {
-          console.log(`SheetsSync: Got ${sym} price from Ticker API: $${data.price}`);
-          return data.price;
-        }
-      }
-    } catch (error) {
-      console.warn('SheetsSync: Ticker API fallback failed:', error);
-    }
-
-    return 0;
+    return prices[ticker.toUpperCase()]?.current || 0;
   }
 
   // =====================================================
@@ -1318,10 +1163,9 @@ const SheetsSync = (function() {
       throw new Error('Web App URL이 설정되지 않았습니다');
     }
 
-    // 🔴 v3.6.1: text/plain 사용 (CORS preflight 우회 - GAS는 OPTIONS 미지원)
     const response = await fetch(webAppUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'register',
         email: email,
@@ -1360,10 +1204,9 @@ const SheetsSync = (function() {
       throw new Error('Web App URL이 설정되지 않았습니다');
     }
 
-    // 🔴 v3.6.1: text/plain 사용 (CORS preflight 우회)
     const response = await fetch(webAppUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'login',
         email: email,
@@ -1408,11 +1251,10 @@ const SheetsSync = (function() {
     }
 
     // 서버에서 토큰 검증
-    // 🔴 v3.6.1: text/plain 사용 (CORS preflight 우회)
     try {
       const response = await fetch(webAppUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'verify',
           token: emailAuthToken

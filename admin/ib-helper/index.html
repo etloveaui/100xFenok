@@ -480,23 +480,21 @@
       <div id="email-login-section" class="space-y-3">
         <input type="email" id="login-email" placeholder="이메일"
           class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none" />
-        <input type="password" id="login-password" placeholder="비밀번호"
+        <input type="password" id="login-password" placeholder="비밀번호 (4자 이상)"
           class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none" />
 
-        <button id="btn-email-login" onclick="emailLogin()" class="w-full py-3 bg-gray-800 text-white rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          로그인
-        </button>
+        <div class="flex gap-2">
+          <button onclick="emailLogin()" class="flex-1 py-3 bg-gray-800 text-white rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors">
+            로그인
+          </button>
+          <button onclick="emailRegister()" class="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors">
+            가입하기
+          </button>
+        </div>
 
         <p class="text-xs text-gray-400 text-center">
           🔒 7일 세션 유지 · 경고 없음
         </p>
-
-        <div class="text-center">
-          <span class="text-xs text-gray-400">계정이 없으신가요?</span>
-          <button onclick="showRegisterModal()" class="text-xs text-rose-500 font-medium hover:underline ml-1">
-            회원가입
-          </button>
-        </div>
       </div>
 
       <!-- Web App URL Setting (for email auth) -->
@@ -516,46 +514,6 @@
       <!-- Powered by -->
       <div class="mt-8 pt-6 border-t border-gray-100">
         <p class="text-xs text-gray-400">Powered by <span class="font-bold text-rose-500">FENOK</span></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 🔴 v4.33.2: 회원가입 모달 -->
-  <div id="register-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
-      <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-gray-800">회원가입</h2>
-        <button onclick="hideRegisterModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
-      </div>
-
-      <!-- Form -->
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">이메일</label>
-          <input type="email" id="register-email" placeholder="example@email.com"
-            class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
-          <input type="password" id="register-password" placeholder="4자 이상"
-            class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">비밀번호 확인</label>
-          <input type="password" id="register-password-confirm" placeholder="비밀번호 다시 입력"
-            class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none" />
-        </div>
-
-        <button id="btn-register-submit" onclick="submitRegister()" class="w-full py-3 bg-gradient-to-r from-rose-500 to-amber-500 text-white rounded-lg font-semibold hover:from-rose-600 hover:to-amber-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-          가입하기
-        </button>
-
-        <p class="text-xs text-gray-400 text-center">
-          🔒 비밀번호는 암호화되어 저장됩니다
-        </p>
       </div>
     </div>
   </div>
@@ -637,7 +595,7 @@
                class="w-full px-3 py-2 border-2 border-blue-100 rounded-lg bg-blue-50 text-xl font-semibold text-blue-700 flex items-center justify-center min-h-[52px]"
                role="status"
                aria-live="polite">--</div>
-          <p class="text-[11px] text-gray-400 mt-1">로그인 후 Prices 시트에서 자동 조회</p>
+          <p class="text-[11px] text-gray-400 mt-1">Google 로그인 시 자동으로 불러옵니다</p>
         </div>
       </div>
 
@@ -1703,17 +1661,10 @@
         currentProfile = ProfileManager.getActive();
       }
 
-      // 3. 인증 확인 (Google OAuth 또는 Email Auth)
-      // 🔴 v4.33.3: 이메일 인증 사용자는 Google 로그인 불필요
+      // 3. Google Sheets 동기화
       if (!SheetsSync.isAuthenticated()) {
-        // 이메일 인증 여부 확인
-        if (SheetsSync.isEmailAuth()) {
-          // 이메일 인증인데 isAuthenticated가 false면 세션 문제
-          showToast('이메일 세션이 만료되었습니다. 다시 로그인해주세요.', 'warning');
-          return;
-        }
-        // Google OAuth 필요
         showToast('Google 로그인이 필요합니다', 'warning');
+        // 로그인 시도
         try {
           await initSheets();
           if (!SheetsSync.isAuthenticated()) {
@@ -1912,61 +1863,29 @@
         return;
       }
 
-      const btn = document.getElementById('btn-email-login');
-      const originalText = btn.textContent;
-
       try {
-        // 버튼 로딩 상태
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>로그인 중...';
-
+        showToast('로그인 중...', 'info');
         const result = await SheetsSync.loginEmail(email, password);
 
         if (result.success) {
-          btn.innerHTML = '<i class="fas fa-check mr-1"></i>완료!';
           showToast(`✅ ${result.email} 로그인 완료`, 'success');
           await emailQuickStart(result.email);
         } else {
-          btn.textContent = originalText;
-          btn.disabled = false;
           showToast('❌ ' + result.error, 'error');
         }
       } catch (error) {
         console.error('Email login error:', error);
-        btn.textContent = originalText;
-        btn.disabled = false;
         showToast('로그인 실패: ' + error.message, 'error');
       }
     }
 
     /**
-     * 🔴 v4.33.2: 회원가입 모달 표시
+     * Email register
      */
-    function showRegisterModal() {
-      document.getElementById('register-modal').classList.remove('hidden');
-      document.getElementById('register-email').focus();
-    }
+    async function emailRegister() {
+      const email = document.getElementById('login-email')?.value?.trim();
+      const password = document.getElementById('login-password')?.value;
 
-    /**
-     * 🔴 v4.33.2: 회원가입 모달 숨김
-     */
-    function hideRegisterModal() {
-      document.getElementById('register-modal').classList.add('hidden');
-      // 입력값 초기화
-      document.getElementById('register-email').value = '';
-      document.getElementById('register-password').value = '';
-      document.getElementById('register-password-confirm').value = '';
-    }
-
-    /**
-     * 🔴 v4.33.2: 회원가입 제출 (모달에서)
-     */
-    async function submitRegister() {
-      const email = document.getElementById('register-email')?.value?.trim();
-      const password = document.getElementById('register-password')?.value;
-      const passwordConfirm = document.getElementById('register-password-confirm')?.value;
-
-      // 유효성 검사
       if (!email || !password) {
         showToast('이메일과 비밀번호를 입력하세요', 'error');
         return;
@@ -1977,47 +1896,25 @@
         return;
       }
 
-      if (password !== passwordConfirm) {
-        showToast('비밀번호가 일치하지 않습니다', 'error');
-        return;
-      }
-
       // Check Web App URL
       if (!SheetsSync.getWebAppUrl()) {
-        hideRegisterModal();
         document.getElementById('webapp-url-section')?.classList.remove('hidden');
         showToast('⚠️ 먼저 Apps Script URL을 설정하세요', 'warning');
         return;
       }
 
-      const btn = document.getElementById('btn-register-submit');
-      const originalText = btn.textContent;
-
       try {
-        // 버튼 로딩 상태
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>가입 중...';
-
+        showToast('가입 중...', 'info');
         const result = await SheetsSync.registerEmail(email, password);
 
         if (result.success) {
-          btn.innerHTML = '<i class="fas fa-check mr-1"></i>완료!';
-          showToast(`🎉 ${result.email} 가입 완료!`, 'success');
-
-          // 모달 닫고 앱 시작
-          setTimeout(async () => {
-            hideRegisterModal();
-            await emailQuickStart(result.email);
-          }, 500);
+          showToast(`✅ ${result.email} 가입 완료!`, 'success');
+          await emailQuickStart(result.email);
         } else {
-          btn.textContent = originalText;
-          btn.disabled = false;
           showToast('❌ ' + result.error, 'error');
         }
       } catch (error) {
         console.error('Email register error:', error);
-        btn.textContent = originalText;
-        btn.disabled = false;
         showToast('가입 실패: ' + error.message, 'error');
       }
     }
