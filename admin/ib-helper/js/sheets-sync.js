@@ -37,9 +37,10 @@ const SheetsSync = (function() {
     // Sheets + UserInfo scope
     SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
 
-    // Sheet 구조 (v3.1): 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜
+    // Sheet 구조 (v3.2): 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금
     // 시트 이름 없이 범위만 사용 → 첫 번째 시트에 자동 적용
-    RANGE: 'A2:J10000'  // Skip header row, 10 columns
+    // 예수금은 프로필의 첫 번째 종목 row에만 저장
+    RANGE: 'A2:K10000'  // Skip header row, 11 columns
   };
 
   // =====================================================
@@ -298,7 +299,7 @@ const SheetsSync = (function() {
 
   /**
    * Parse sheet rows to stock array
-   * 시트 컬럼 (v3.1): 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜
+   * 시트 컬럼 (v3.2): 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금
    * @param {Array} rows - Raw sheet rows
    * @returns {Array} Stocks array
    */
@@ -306,7 +307,7 @@ const SheetsSync = (function() {
     const stocks = [];
 
     rows.forEach(row => {
-      const [googleId, profileId, symbol, avgPrice, holdings, totalInvested, principal, afterPercent, locPercent, date] = row;
+      const [googleId, profileId, symbol, avgPrice, holdings, totalInvested, principal, afterPercent, locPercent, date, balance] = row;
 
       if (!symbol) return;
 
@@ -321,7 +322,8 @@ const SheetsSync = (function() {
         principal: parseFloat(principal) || 0,
         sellPercent: parseFloat(afterPercent) || (sym === 'TQQQ' ? 10 : 12),  // AFTER% (지정가 매도)
         locSellPercent: parseFloat(locPercent) || (sym === 'TQQQ' ? 5 : 6),   // LOC% (분할매도)
-        date: date || ''
+        date: date || '',
+        balance: parseFloat(balance) || 0  // K: 예수금 (첫 번째 row만)
       });
     });
 
@@ -394,8 +396,13 @@ const SheetsSync = (function() {
       !(row[0] === currentUserEmail && row[1] === profile.id)
     );
 
-    // 3. 내 새 데이터 생성 (v3.1: 10 columns)
-    const myNewRows = profile.stocks.map(stock => {
+    // 3. 내 새 데이터 생성 (v3.2: 11 columns, 예수금 포함)
+    // 예수금은 BalanceManager에서 가져옴 (첫 번째 row에만 저장)
+    const balance = (typeof BalanceManager !== 'undefined')
+      ? BalanceManager.getBalance(profile.id)?.available || 0
+      : 0;
+
+    const myNewRows = profile.stocks.map((stock, index) => {
       const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
       const sym = stock.symbol.toUpperCase();
       return [
@@ -408,7 +415,8 @@ const SheetsSync = (function() {
         stock.principal || 0,       // G: 세팅원금
         stock.sellPercent || (sym === 'TQQQ' ? 10 : 12),      // H: AFTER% (지정가 매도)
         stock.locSellPercent || (sym === 'TQQQ' ? 5 : 6),     // I: LOC% (분할매도)
-        today                       // J: 날짜
+        today,                      // J: 날짜
+        index === 0 ? balance : ''  // K: 예수금 (첫 번째 row만)
       ];
     });
 
@@ -435,7 +443,14 @@ const SheetsSync = (function() {
     // 내 데이터만 필터링해서 가져오기
     const myStocks = await readMyData();
 
-    // 각 종목의 일일 데이터 업데이트 (v3.1: AFTER% + LOC% 포함)
+    // 🔴 v3.2: 예수금 저장 (첫 번째 row에서)
+    if (myStocks.length > 0 && myStocks[0].balance > 0) {
+      if (typeof BalanceManager !== 'undefined') {
+        BalanceManager.updateBalance(profile.id, myStocks[0].balance);
+      }
+    }
+
+    // 각 종목의 일일 데이터 업데이트 (v3.2: AFTER% + LOC% + 예수금 포함)
     myStocks.forEach(stock => {
       // 1. Daily data 저장 (평단가, 수량, 총매입금)
       ProfileManager.saveDailyData(profile.id, stock.symbol, {
@@ -445,7 +460,7 @@ const SheetsSync = (function() {
         currentPrice: 0  // 현재가는 수동 입력
       });
 
-      // 2. Stock settings 저장 (v3.1: sellPercent + locSellPercent 시트에서 가져온 값 적용)
+      // 2. Stock settings 저장 (v3.2: sellPercent + locSellPercent 시트에서 가져온 값 적용)
       ProfileManager.addStock(profile.id, {
         symbol: stock.symbol,
         principal: stock.principal,
@@ -494,7 +509,7 @@ const SheetsSync = (function() {
   /**
    * Get all profiles from sheet for current Google user
    * Used for profile selection UI when pulling data
-   * @returns {Promise<Array>} Array of { profileId, profileName, stocks: [...] }
+   * @returns {Promise<Array>} Array of { profileId, profileName, balance, stocks: [...] }
    */
   async function getMyProfilesFromSheet() {
     if (!currentUserEmail) {
@@ -506,7 +521,7 @@ const SheetsSync = (function() {
     // Filter by my Google ID
     const myRows = allRows.filter(row => row[0] === currentUserEmail);
 
-    // Group by profile ID
+    // Group by profile ID (v3.2: 예수금 포함)
     const profileMap = {};
     myRows.forEach(row => {
       const profileId = row[1];
@@ -514,10 +529,18 @@ const SheetsSync = (function() {
         profileMap[profileId] = {
           profileId: profileId,
           profileName: profileId.split('_')[0],  // Extract name part
+          balance: 0,  // 예수금 (첫 번째 row에서)
           stocks: []
         };
       }
       const sym = String(row[2]).trim().toUpperCase();
+
+      // 🔴 v3.2: 첫 번째 row에서 예수금 읽기
+      const rowBalance = parseFloat(row[10]) || 0;
+      if (rowBalance > 0 && profileMap[profileId].balance === 0) {
+        profileMap[profileId].balance = rowBalance;
+      }
+
       profileMap[profileId].stocks.push({
         symbol: sym,
         avgPrice: parseFloat(row[3]) || 0,

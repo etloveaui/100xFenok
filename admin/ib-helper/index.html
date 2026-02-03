@@ -255,6 +255,40 @@
       to { opacity: 0; transform: translateY(-20px); }
     }
 
+    /* Formula Details (v4.23.0) */
+    .formula-details {
+      background: rgba(255,255,255,0.95);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: #374151;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .formula-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .formula-row:last-child {
+      border-bottom: none;
+    }
+    .formula-label {
+      color: #9ca3af;
+    }
+    .formula-value {
+      font-family: 'Monaco', 'Courier New', monospace;
+      color: #e5e7eb;
+    }
+    .formula-toggle {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .formula-toggle:hover {
+      transform: scale(1.1);
+    }
+
     /* Focus Ring for Accessibility */
     input:focus, button:focus, select:focus {
       outline: none;
@@ -502,49 +536,87 @@
         <div id="result-locReason" class="mt-2 text-xs text-slate-400 text-center">
           별%가 선택 (현재가+15% = $57.68)
         </div>
+
+        <!-- v4.23.0: Formula Details Toggle -->
+        <div class="mt-3 text-center">
+          <button onclick="toggleFormulaDetails()" class="formula-toggle text-xs text-slate-400 hover:text-white">
+            <i id="formula-toggle-icon" class="fas fa-chevron-down mr-1"></i>
+            <span id="formula-toggle-text">공식 상세</span>
+          </button>
+        </div>
+
+        <!-- Formula Details Panel (hidden by default) -->
+        <div id="formula-details" class="hidden formula-details">
+          <div class="space-y-2 text-xs">
+            <div>
+              <div class="text-slate-400 mb-1">📐 T값 계산</div>
+              <div id="formula-T" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                T = ceil((총매입금 / 1회매수) × 10) / 10
+              </div>
+            </div>
+            <div>
+              <div class="text-slate-400 mb-1">⭐ 별% 계산</div>
+              <div id="formula-star" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                별% = 10 - (T / 2)
+              </div>
+            </div>
+            <div>
+              <div class="text-slate-400 mb-1">📊 LOC 매도가</div>
+              <div id="formula-locSell" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                LOC 매도가 = 별%가 + (평단가 × 0.5%)
+              </div>
+            </div>
+            <div>
+              <div class="text-slate-400 mb-1">💰 지정가 매도</div>
+              <div id="formula-limitSell" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                지정가 = 평단가 × (1 + AFTER%)
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Buy Orders -->
-      <div class="bg-white rounded-xl p-4 shadow-sm">
+      <!-- Buy Orders (v4.22.0: 축소된 카드) -->
+      <div class="bg-white rounded-xl p-3 shadow-sm">
         <div class="section-header">
-          <h3 class="font-medium text-green-600">
-            <i class="fas fa-arrow-down mr-2"></i>매수 주문 <span class="order-badge badge-loc ml-2">전체 LOC</span>
+          <h3 class="font-medium text-green-600 text-sm">
+            <i class="fas fa-arrow-down mr-1"></i>매수 <span class="order-badge badge-loc ml-1">LOC</span>
           </h3>
-          <button onclick="copyAllOrders('buy')" class="copy-btn text-gray-400 hover:text-gray-600 touch-target">
+          <button onclick="copyAllOrders('buy')" class="copy-btn text-gray-400 hover:text-gray-600">
             <i class="fas fa-copy"></i>
           </button>
         </div>
-        <div id="buy-orders" class="space-y-3">
+        <div id="buy-orders" class="space-y-2">
           <!-- Dynamic content -->
         </div>
       </div>
 
-      <!-- Sell Orders -->
-      <div class="bg-white rounded-xl p-4 shadow-sm">
+      <!-- Decline Protection Orders (v4.22.0: 매수 바로 뒤로 이동) -->
+      <div id="decline-orders-section" class="hidden bg-white rounded-xl p-3 shadow-sm">
         <div class="section-header">
-          <h3 class="font-medium text-red-600">
-            <i class="fas fa-arrow-up mr-2"></i>매도 주문
+          <h3 class="font-medium text-blue-600 text-sm">
+            <i class="fas fa-shield-alt mr-1"></i>하락대비 <span class="order-badge badge-loc ml-1">LOC</span>
           </h3>
-          <button onclick="copyAllOrders('sell')" class="copy-btn text-gray-400 hover:text-gray-600 touch-target">
+          <button onclick="copyAllOrders('decline')" class="copy-btn text-gray-400 hover:text-gray-600">
             <i class="fas fa-copy"></i>
           </button>
         </div>
-        <div id="sell-orders" class="space-y-3">
+        <div id="decline-orders" class="space-y-1">
           <!-- Dynamic content -->
         </div>
       </div>
 
-      <!-- Decline Protection Orders (하락대비) -->
-      <div id="decline-orders-section" class="hidden bg-white rounded-xl p-4 shadow-sm">
+      <!-- Sell Orders (v4.22.0: 축소된 카드) -->
+      <div class="bg-white rounded-xl p-3 shadow-sm">
         <div class="section-header">
-          <h3 class="font-medium text-blue-600">
-            <i class="fas fa-shield-alt mr-2"></i>하락대비 <span class="order-badge badge-loc ml-2">전체 LOC</span>
+          <h3 class="font-medium text-red-600 text-sm">
+            <i class="fas fa-arrow-up mr-1"></i>매도
           </h3>
-          <button onclick="copyAllOrders('decline')" class="copy-btn text-gray-400 hover:text-gray-600 touch-target">
+          <button onclick="copyAllOrders('sell')" class="copy-btn text-gray-400 hover:text-gray-600">
             <i class="fas fa-copy"></i>
           </button>
         </div>
-        <div id="decline-orders" class="space-y-2">
+        <div id="sell-orders" class="space-y-2">
           <!-- Dynamic content -->
         </div>
       </div>
@@ -574,10 +646,15 @@
       </div>
 
       <div class="p-4 space-y-4">
-        <!-- Profile Info -->
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">프로필 이름</label>
-          <input type="text" id="modal-profile-name" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="이름">
+        <!-- Profile Info + New Profile Button (v4.22.0: 한 줄 배치) -->
+        <div class="flex gap-2 items-end">
+          <div class="flex-1">
+            <label class="block text-xs text-gray-500 mb-1">프로필 이름</label>
+            <input type="text" id="modal-profile-name" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="이름">
+          </div>
+          <button onclick="createNewProfile()" class="px-3 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 whitespace-nowrap">
+            <i class="fas fa-plus mr-1"></i>새 프로필
+          </button>
         </div>
 
         <!-- Profile Stocks -->
@@ -617,16 +694,13 @@
           </button>
         </div>
 
-        <!-- Main Actions -->
+        <!-- Main Actions (v4.22.0: 새 프로필 버튼 상단 이동) -->
         <div class="pt-3 space-y-2">
           <button onclick="syncToCloud()" class="w-full py-3 bg-blue-500 text-white rounded-lg font-medium focus:ring-2 focus:ring-blue-300 focus:outline-none">
             <i class="fas fa-cloud-upload-alt mr-2"></i>클라우드 동기화
           </button>
           <button onclick="importDatFile()" class="w-full py-2 border border-purple-500 text-purple-600 rounded-lg text-sm hover:bg-purple-50">
             <i class="fas fa-file-import mr-1"></i>Genie RPA 데이터 (.dat) 가져오기
-          </button>
-          <button onclick="createNewProfile()" class="w-full py-2 border border-green-500 text-green-600 rounded-lg text-sm hover:bg-green-50">
-            <i class="fas fa-user-plus mr-1"></i>새 프로필 만들기
           </button>
         </div>
 
@@ -658,7 +732,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.21.1 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.22.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -1200,8 +1274,14 @@
     }
 
     function createNewProfile() {
-      const name = prompt('새 프로필 이름:');
-      if (!name) return;
+      // 🔴 v4.22.0: 자동 이름 생성 (사용자1, 사용자2...)
+      const allProfiles = ProfileManager.getAllProfiles();
+      let maxNum = 0;
+      allProfiles.forEach(p => {
+        const match = p.name.match(/^사용자(\d+)$/);
+        if (match) maxNum = Math.max(maxNum, parseInt(match[1]));
+      });
+      const name = `사용자${maxNum + 1}`;
 
       // 🔴 v4.15.0: 현재 입력값 저장 후 selectedTicker 초기화 (Bug 6 수정)
       if (currentProfile && selectedTicker) {
@@ -1219,7 +1299,9 @@
       updateProfileSelector();
       loadProfileData();
       loadBalanceData();
-      closeProfileModal();
+      // 🔴 v4.22.0: 모달 유지 (closeProfileModal 제거)
+      document.getElementById('modal-profile-name').value = name;
+      showToast(`✅ ${name} 생성됨`, 'success');
     }
 
     function exportCurrentProfile() {
@@ -1603,15 +1685,16 @@
     // =====================================================
 
     /**
-     * 개별 주문 복사
+     * 개별 주문 복사 (v4.22.0: 가격만, 달러표시 제거)
      */
     function copyOrder(btn, price, quantity) {
-      const text = `$${price} / ${quantity}주`;
+      // 가격만 복사 (달러 표시 없이)
+      const text = `${price}`;
       navigator.clipboard.writeText(text).then(() => {
-        btn.innerHTML = '<i class="fas fa-check mr-1"></i>복사됨';
+        btn.innerHTML = '<i class="fas fa-check"></i>';
         btn.classList.add('copied');
         setTimeout(() => {
-          btn.innerHTML = '<i class="fas fa-copy mr-1"></i>복사';
+          btn.innerHTML = '<i class="fas fa-copy"></i>';
           btn.classList.remove('copied');
         }, 1500);
       });
@@ -1740,8 +1823,9 @@
       const { calculation, buyOrders, sellOrders, quarterStopLoss } = result;
       lastCalculation = result;
 
-      // Show results section
-      document.getElementById('results-section').classList.remove('hidden');
+      // 🔴 v4.22.0: results-section은 항상 hidden (복사용 템플릿)
+      // 실제 표시는 PC→results-pc, Mobile→results-mobile에서
+      const resultsSection = document.getElementById('results-section');
 
       // Summary card
       document.getElementById('result-ticker').textContent = result.ticker;
@@ -1769,6 +1853,9 @@
       } else {
         locReason.textContent = `${calculation.locInfo.reason}`;
       }
+
+      // v4.23.0: Update formula details with actual values
+      updateFormulaDetails(result);
 
       // Separate main buy orders and decline orders
       const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
@@ -1819,8 +1906,75 @@
     }
 
     /**
+     * v4.23.0: 공식 상세 토글
+     */
+    function toggleFormulaDetails() {
+      const detailsEl = document.getElementById('formula-details');
+      const iconEl = document.getElementById('formula-toggle-icon');
+      const textEl = document.getElementById('formula-toggle-text');
+
+      if (detailsEl.classList.contains('hidden')) {
+        detailsEl.classList.remove('hidden');
+        iconEl.className = 'fas fa-chevron-up mr-1';
+        textEl.textContent = '접기';
+      } else {
+        detailsEl.classList.add('hidden');
+        iconEl.className = 'fas fa-chevron-down mr-1';
+        textEl.textContent = '공식 상세';
+      }
+    }
+
+    /**
+     * v4.23.0: 공식 상세 업데이트 (실제 계산값 표시)
+     * @param {Object} result - 계산 결과
+     */
+    function updateFormulaDetails(result) {
+      const { input, calculation } = result;
+      const { T, starPercent, oneTimeBuy, locInfo } = calculation;
+
+      // 실제 입력값으로 공식 표시
+      const totalInvested = input.totalInvested || 0;
+      const avgPrice = input.avgPrice;
+      const sellPercent = document.getElementById('input-sellPercent')?.value || 10;
+
+      // T값 공식
+      const tFormulaEl = document.getElementById('formula-T');
+      if (tFormulaEl) {
+        const rawT = totalInvested / oneTimeBuy;
+        tFormulaEl.innerHTML = `T = ceil((${totalInvested.toFixed(0)} / ${oneTimeBuy.toFixed(0)}) × 10) / 10<br>
+          <span class="text-green-400">= ceil(${(rawT * 10).toFixed(1)}) / 10 = ${T.toFixed(1)}</span>`;
+      }
+
+      // 별% 공식
+      const starFormulaEl = document.getElementById('formula-star');
+      if (starFormulaEl) {
+        starFormulaEl.innerHTML = `별% = 10 - (T / 2) = 10 - (${T.toFixed(1)} / 2)<br>
+          <span class="text-yellow-400">= ${starPercent.toFixed(1)}%</span>`;
+      }
+
+      // LOC 매도가 공식
+      const locSellEl = document.getElementById('formula-locSell');
+      if (locSellEl) {
+        const starPrice = locInfo.starPrice;
+        const locSellPrice = starPrice + (avgPrice * 0.005);
+        locSellEl.innerHTML = `LOC 매도 = 별%가 + (평단 × 0.5%)<br>
+          = $${starPrice.toFixed(2)} + ($${avgPrice.toFixed(2)} × 0.005)<br>
+          <span class="text-blue-400">= $${locSellPrice.toFixed(2)}</span>`;
+      }
+
+      // 지정가 매도 공식
+      const limitSellEl = document.getElementById('formula-limitSell');
+      if (limitSellEl) {
+        const limitPrice = avgPrice * (1 + parseFloat(sellPercent) / 100);
+        limitSellEl.innerHTML = `지정가 = 평단가 × (1 + AFTER%)<br>
+          = $${avgPrice.toFixed(2)} × (1 + ${sellPercent}%)<br>
+          <span class="text-red-400">= $${limitPrice.toFixed(2)}</span>`;
+      }
+    }
+
+    /**
      * PC/Mobile 반응형 결과 표시
-     * 🔴 v4.17.0: 상호 배타적 처리 (Bug 12 - 계산 창 두 개 뜨는 문제)
+     * 🔴 v4.22.0: results-section은 항상 hidden (복사용 템플릿)
      */
     function showResultsResponsive() {
       const resultsSection = document.getElementById('results-section');
@@ -1828,6 +1982,9 @@
       const resultsMobile = document.getElementById('results-mobile');
       const resultsOverlay = document.getElementById('results-overlay');
       const resultsColumn = document.getElementById('results-column');
+
+      // 🔴 v4.22.0: results-section은 항상 숨김 (복사용 템플릿)
+      resultsSection.classList.add('hidden');
 
       // Check if PC (lg breakpoint = 1024px)
       const isPC = window.innerWidth >= 1024;
@@ -1837,7 +1994,7 @@
         resultsPC.innerHTML = resultsSection.innerHTML;
         resultsColumn.classList.remove('hidden');
         resultsPC.querySelector('.text-center.text-gray-400')?.remove();
-        // 🔴 Mobile 결과 숨기기
+        // Mobile 결과 숨기기
         resultsOverlay.classList.add('hidden');
         document.body.style.overflow = '';
       } else {
@@ -1845,7 +2002,7 @@
         resultsMobile.innerHTML = resultsSection.innerHTML;
         resultsOverlay.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-        // 🔴 PC 결과 초기화
+        // PC 결과 초기화
         resultsPC.innerHTML = `
           <div class="text-center text-gray-400 py-8">
             <i class="fas fa-calculator text-4xl mb-2"></i>
@@ -1868,27 +2025,18 @@
       const badgeClass = isLOC ? 'badge-loc' : 'badge-limit';
       const badgeText = isLOC ? 'LOC' : '지정가';
 
+      // v4.22.0: 축소된 카드 (한 줄)
       return `
-        <div class="order-card-enhanced ${type}" data-price="${order.price}" data-qty="${order.quantity}">
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="order-badge ${badgeClass}">${badgeText}</span>
-                <span class="text-sm font-medium text-gray-700">${order.type}</span>
-              </div>
-              <div class="text-xs text-gray-500">${order.description}</div>
-            </div>
-            <div class="text-right">
-              <div class="main-value text-gray-800">${IBCalculator.formatDollar(order.price)}</div>
-              <div class="sub-value">${order.quantity}주</div>
-            </div>
+        <div class="order-card-compact flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg" data-price="${order.price}" data-qty="${order.quantity}">
+          <div class="flex items-center gap-2">
+            <span class="order-badge ${badgeClass} text-xs">${badgeText}</span>
+            <span class="text-xs text-gray-600">${order.description}</span>
           </div>
-          <div class="mt-3 flex items-center justify-between">
-            <div class="text-xs text-gray-400">
-              ${order.amount ? '예상 ' + IBCalculator.formatDollar(order.amount) : ''}
-            </div>
-            <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="copy-btn touch-target px-2 py-1 text-xs text-gray-500 hover:text-gray-700 rounded">
-              <i class="fas fa-copy mr-1"></i>복사
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-gray-800">$${order.price}</span>
+            <span class="text-gray-500 text-sm">${order.quantity}주</span>
+            <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="copy-btn text-gray-400 hover:text-gray-600">
+              <i class="fas fa-copy"></i>
             </button>
           </div>
         </div>
@@ -1896,23 +2044,17 @@
     }
 
     // 하락대비 전용 렌더링 (더 간결하게)
+    // v4.22.0: 하락대비 더 축소
     function renderDeclineOrderCard(order) {
       return `
-        <div class="order-card-enhanced decline" data-price="${order.price}" data-qty="${order.quantity}">
-          <div class="flex justify-between items-center">
-            <div>
-              <span class="order-badge badge-loc mr-2">LOC</span>
-              <span class="text-sm text-gray-600">${order.description}</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="text-right">
-                <span class="font-bold text-gray-800">${IBCalculator.formatDollar(order.price)}</span>
-                <span class="text-gray-500 text-sm ml-1">${order.quantity}주</span>
-              </div>
-              <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="copy-btn text-gray-400 hover:text-gray-600">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
+        <div class="flex items-center justify-between py-1 px-2 text-xs" data-price="${order.price}" data-qty="${order.quantity}">
+          <span class="text-gray-500">${order.description}</span>
+          <div class="flex items-center gap-2">
+            <span class="font-medium">$${order.price}</span>
+            <span class="text-gray-400">${order.quantity}주</span>
+            <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="text-gray-300 hover:text-gray-500">
+              <i class="fas fa-copy text-xs"></i>
+            </button>
           </div>
         </div>
       `;
@@ -1972,6 +2114,10 @@
       const statusClass = status.status === 'OK' ? 'status-ok' : 'status-warning';
       const statusIcon = status.status === 'OK' ? '✅' : '⚠️';
 
+      // 🔴 v4.22.0: 투자 가능 일수 계산
+      const daysRemaining = status.required > 0 ? Math.floor(status.available / status.required) : 0;
+      const daysText = daysRemaining > 0 ? `약 ${daysRemaining}일 투자 가능` : '';
+
       statusBox.innerHTML = `
         <div class="status-row">
           <span class="text-gray-600">일매수시도금액</span>
@@ -1986,6 +2132,7 @@
           <span>차액</span>
           <span>${status.diff >= 0 ? '+' : ''}$${status.diff.toFixed(2)} ${statusIcon} ${status.statusKo}</span>
         </div>
+        ${daysText ? `<div class="text-xs text-center text-blue-600 mt-2 font-medium">📅 ${daysText}</div>` : ''}
       `;
 
       // Stock breakdown
@@ -2092,10 +2239,9 @@
     }
 
     /**
-     * 시트에서 데이터 불러오기 (v4.19.0: 프로필 선택 UI 추가 - Bug 14 수정)
-     * - 시트에서 내 구글ID의 모든 프로필 목록 조회
-     * - 여러 프로필이 있으면 선택 UI 표시
-     * - 선택한 프로필 데이터를 현재 로컬 프로필에 불러오기
+     * 시트에서 데이터 불러오기 (v4.22.0: 전체 프로필 가져오기로 변경)
+     * - 시트의 모든 프로필을 로컬로 가져옴
+     * - 기존 로컬 데이터 덮어쓰기
      */
     async function handleSheetsPull() {
       const status = document.getElementById('sheets-status');
@@ -2117,16 +2263,8 @@
           return;
         }
 
-        // If only one profile, pull directly
-        if (sheetProfiles.length === 1) {
-          await pullFromSheetProfile(sheetProfiles[0].profileId);
-          return;
-        }
-
-        // Multiple profiles - show selection
-        showSheetProfileSelection(sheetProfiles);
-        status.textContent = '선택 대기';
-        status.className = 'text-xs text-blue-600';
+        // 🔴 v4.22.0: 모든 프로필 순차적으로 가져오기
+        await pullAllProfiles(sheetProfiles);
 
       } catch (error) {
         console.error('Sheets pull error:', error);
@@ -2137,29 +2275,68 @@
     }
 
     /**
-     * 시트 프로필 선택 UI (v4.19.0)
+     * 모든 시트 프로필 가져오기 (v4.22.0)
+     * - 기존 로컬 프로필 모두 삭제
+     * - 시트 프로필을 순차적으로 로컬에 생성
+     * - 예수금 포함 (v3.2)
      */
-    function showSheetProfileSelection(sheetProfiles) {
-      const options = sheetProfiles.map((p, i) =>
-        `${i + 1}. ${p.profileName} (${p.stocks.length}개 종목: ${p.stocks.map(s => s.symbol).join(', ')})`
-      ).join('\n');
+    async function pullAllProfiles(sheetProfiles) {
+      const status = document.getElementById('sheets-status');
+      status.textContent = '가져오는 중...';
+      status.className = 'text-xs text-amber-600';
 
-      const message = `📊 시트에서 ${sheetProfiles.length}개 프로필을 찾았습니다:\n\n${options}\n\n현재 프로필 "${currentProfile?.name || '?'}"에 불러올 번호를 선택하세요:`;
+      // 1. 기존 로컬 프로필 모두 삭제
+      const existingProfiles = ProfileManager.getAllProfiles();
+      existingProfiles.forEach(p => ProfileManager.delete(p.id));
 
-      const indexStr = prompt(message, '1');
-      if (!indexStr) {
-        document.getElementById('sheets-status').textContent = '취소됨';
-        document.getElementById('sheets-status').className = 'text-xs text-gray-600';
-        return;
+      // 2. 시트 프로필을 순차적으로 생성
+      let firstProfileId = null;
+      for (const sp of sheetProfiles) {
+        // 프로필 생성 (시트 프로필 ID 그대로 사용)
+        const newId = ProfileManager.create(sp.profileName, '');
+
+        // 🔴 v4.22.0: 예수금 저장
+        if (sp.balance > 0) {
+          BalanceManager.updateBalance(newId, sp.balance);
+        }
+
+        // 종목 데이터 추가
+        for (const stock of sp.stocks) {
+          ProfileManager.addStock(newId, {
+            symbol: stock.symbol,
+            principal: stock.principal,
+            sellPercent: stock.sellPercent,
+            locSellPercent: stock.locSellPercent
+          });
+
+          // Daily data 저장
+          ProfileManager.saveDailyData(newId, stock.symbol, {
+            avgPrice: stock.avgPrice,
+            holdings: stock.holdings,
+            totalInvested: stock.totalInvested,
+            currentPrice: 0
+          });
+        }
+
+        if (!firstProfileId) firstProfileId = newId;
       }
 
-      const index = parseInt(indexStr) - 1;
-      if (index < 0 || index >= sheetProfiles.length) {
-        showToast('잘못된 번호입니다', 'warning');
-        return;
+      // 3. 첫 번째 프로필을 활성화
+      if (firstProfileId) {
+        ProfileManager.setActive(firstProfileId);
+        currentProfile = ProfileManager.getActive();
+        SheetsSync.setCurrentProfile(firstProfileId);
       }
 
-      pullFromSheetProfile(sheetProfiles[index].profileId);
+      // 4. UI 갱신
+      selectedTicker = null;
+      loadProfileData();
+      loadBalanceData();
+      updateProfileSelector();
+
+      status.textContent = '연결됨';
+      status.className = 'text-xs text-green-600';
+      showToast(`✅ ${sheetProfiles.length}개 프로필 가져옴`, 'success');
     }
 
     /**

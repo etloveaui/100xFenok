@@ -1,6 +1,6 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.21.1
+> **Version**: 4.23.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
 > **Status**: ✅ Phase 1-3 Complete + Order Execution Tracking
@@ -579,6 +579,42 @@ admin/ib-helper/
 - 주문상태 = 예수금 - 일매수시도금액
 - UI: 실시간 계산 + 종목별 breakdown + 상단 알림 배너
 - 스펙: `_tmp/PHASE3_SPEC.md` (Asset Allocator 제공)
+
+### v4.23.0: Formula Details Display (02-03) - Ralph Loop
+- [x] **Feature**: 계산 공식 상세 표시
+  - 요약 카드 하단에 "공식 상세" 토글 버튼 추가
+  - 클릭 시 T값/별%/LOC 매도가/지정가 매도 공식 표시
+  - 실제 계산값으로 공식 렌더링 (사용자 검증 가능)
+- [x] **Functions Added**:
+  - `toggleFormulaDetails()` - 공식 패널 토글
+  - `updateFormulaDetails(result)` - 실제 값으로 공식 업데이트
+- [x] **CSS Added**:
+  - `.formula-details` - 공식 패널 스타일
+  - `.formula-toggle` - 토글 버튼 스타일
+
+### v4.22.0: UX Improvements + Balance Sync (02-03) - Ralph Loop
+- [x] **New Profile UX**:
+  - 팝업 없이 자동 생성 (사용자1, 사용자2...)
+  - 새 프로필 버튼 → 프로필 이름 우측으로 이동
+  - 생성 후 모달 유지
+- [x] **Profile Pull**:
+  - 모든 시트 프로필 순차적으로 가져오기
+  - 기존 로컬 데이터 덮어쓰기
+  - `pullAllProfiles()` 함수 추가
+- [x] **Balance Sync (v3.2)**:
+  - 예수금 시트 저장 (K열)
+  - 프로필의 첫 번째 종목 row에 예수금 저장
+  - `CONFIG.RANGE` → 'A2:K10000' (11컬럼)
+- [x] **Days Remaining**:
+  - 예수금 ÷ 일매수시도금액 = 투자 가능 일수 표시
+  - "📅 약 N일 투자 가능" 형식
+- [x] **UI Compact (추가 수정)**:
+  - 주문창 두 개 뜨는 버그 수정 (results-section 항상 hidden)
+  - 주문 카드 축소 (한 줄 형식)
+  - 하락대비 위치 → 매수 바로 뒤 (매도 전)
+  - 복사 버튼 → 가격만 (달러 표시 제거)
+- [x] **User Action Required**:
+  - Portfolio 시트에 K열 "예수금" 헤더 추가
 
 ### v4.21.2: Calculator sellPercent Bug Fix (02-03) - Ralph Loop
 - [x] **Bug Found by Ralph Loop**:
