@@ -13,9 +13,9 @@
  * @fix C-11 (2026-02-03): isAuthenticated() - gapi.client undefined 체크
  * @fix #29 (2026-02-03): 라오어 가이드 기준 기본값 (SOXL 12%/5%, 기타 10%/5%)
  *
- * Sheet1 "Portfolio" Structure (v3.1 - 10 columns):
- * | 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 |
- * | A열    | B열      | C열  | D열    | E열  | F열      | G열      | H열    | I열  | J열  |
+ * Sheet1 "Portfolio" Structure (v3.6 - 12 columns):
+ * | 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 |
+ * | A열    | B열      | C열        | D열  | E열    | F열  | G열      | H열      | I열    | J열  | K열  | L열  |
  *
  * Sheet3 "Orders" Structure (DEC-153):
  * | 날짜 | 구글ID | 프로필ID | 종목 | 주문타입 | 매수매도 | 가격 | 수량 | 총액 | 체결기준 | 체결 | 체결일 | 실제가격 |
@@ -42,10 +42,10 @@ const SheetsSync = (function() {
     // Sheets + UserInfo scope
     SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
 
-    // Sheet 구조 (v3.2): 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금
+    // Sheet 구조 (v3.6): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금
     // 시트 이름 없이 범위만 사용 → 첫 번째 시트에 자동 적용
     // 예수금은 프로필의 첫 번째 종목 row에만 저장
-    RANGE: 'A2:K10000'  // Skip header row, 11 columns
+    RANGE: 'A2:L10000'  // Skip header row, 12 columns
   };
 
   // =====================================================
@@ -373,7 +373,7 @@ const SheetsSync = (function() {
 
   /**
    * Parse sheet rows to stock array
-   * 시트 컬럼 (v3.2): 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금
+   * 시트 컬럼 (v3.6): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금
    * @param {Array} rows - Raw sheet rows
    * @returns {Array} Stocks array
    */
@@ -381,7 +381,7 @@ const SheetsSync = (function() {
     const stocks = [];
 
     rows.forEach(row => {
-      const [googleId, profileId, symbol, avgPrice, holdings, totalInvested, principal, afterPercent, locPercent, date, balance] = row;
+      const [googleId, profileId, profileName, symbol, avgPrice, holdings, totalInvested, principal, afterPercent, locPercent, date, balance] = row;
 
       if (!symbol) return;
 
@@ -390,6 +390,7 @@ const SheetsSync = (function() {
         googleId: googleId || '',
         profileId: profileId || '',
         symbol: sym,
+        profileName: profileName || '',
         avgPrice: parseFloat(avgPrice) || 0,
         holdings: parseInt(holdings) || 0,
         totalInvested: parseFloat(totalInvested) || 0,
@@ -484,11 +485,12 @@ const SheetsSync = (function() {
         !(row[0] === currentUserEmail && row[1] === profile.id)
       );
 
-      // 3. 내 새 데이터 생성 (v3.2: 11 columns, 예수금 포함)
+      // 3. 내 새 데이터 생성 (v3.6: 12 columns, 프로필 이름 + 예수금 포함)
       // 예수금은 BalanceManager에서 가져옴 (첫 번째 row에만 저장)
       const balance = (typeof BalanceManager !== 'undefined')
         ? BalanceManager.getBalance(profile.id)?.available || 0
         : 0;
+      const profileName = profile.name || '프로필';
 
       const myNewRows = profile.stocks.map((stock, index) => {
         const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
@@ -496,16 +498,17 @@ const SheetsSync = (function() {
         return [
           currentUserEmail,           // A: 구글ID
           profile.id,                 // B: 프로필ID
-          stock.symbol,               // C: 종목
-          dailyData.avgPrice || 0,    // D: 평단가
-          dailyData.holdings || 0,    // E: 수량
-          dailyData.totalInvested || 0, // F: 총매입금
-          stock.principal || 0,       // G: 세팅원금
+          profileName,                // C: 프로필 이름
+          stock.symbol,               // D: 종목
+          dailyData.avgPrice || 0,    // E: 평단가
+          dailyData.holdings || 0,    // F: 수량
+          dailyData.totalInvested || 0, // G: 총매입금
+          stock.principal || 0,       // H: 세팅원금
           // 🔴 v3.5.2: 라오어 가이드 기준 기본값 (#29)
-          stock.sellPercent || (sym === 'SOXL' ? 12 : 10),      // H: AFTER% (지정가 매도)
-          stock.locSellPercent || 5,     // I: LOC% (분할매도) - 모든 종목 5%
-          today,                      // J: 날짜
-          index === 0 ? (balance || 0) : 0  // K: 예수금 (첫 번째 row만, 🔴 v3.5.3: 빈값→0 통일 B5-08)
+          stock.sellPercent || (sym === 'SOXL' ? 12 : 10),      // I: AFTER% (지정가 매도)
+          stock.locSellPercent || 5,     // J: LOC% (분할매도) - 모든 종목 5%
+          today,                      // K: 날짜
+          index === 0 ? (balance || 0) : 0  // L: 예수금 (첫 번째 row만, 🔴 v3.5.3: 빈값→0 통일 B5-08)
         ];
       });
 
@@ -561,6 +564,10 @@ const SheetsSync = (function() {
         locSellPercent: stock.locSellPercent   // I: LOC% (시트에서 가져온 값)
       });
     });
+
+    if (myStocks.length > 0 && myStocks[0].profileName) {
+      ProfileManager.update(profile.id, { name: myStocks[0].profileName });
+    }
 
     console.log(`SheetsSync: Pulled ${myStocks.length} rows for ${currentUserEmail}/${profile.id}`);
     return myStocks;
@@ -618,31 +625,32 @@ const SheetsSync = (function() {
     const profileMap = {};
     myRows.forEach(row => {
       const profileId = row[1];
+      const profileName = row[2] ? String(row[2]).trim() : (profileId.split('_')[0] || 'Profile');
       if (!profileMap[profileId]) {
         profileMap[profileId] = {
           profileId: profileId,
-          profileName: profileId.split('_')[0],  // Extract name part
+          profileName: profileName,
           balance: 0,  // 예수금 (첫 번째 row에서)
           stocks: []
         };
       }
-      const sym = String(row[2]).trim().toUpperCase();
+      const sym = String(row[3]).trim().toUpperCase();
 
       // 🔴 v3.2: 첫 번째 row에서 예수금 읽기
-      const rowBalance = parseFloat(row[10]) || 0;
+      const rowBalance = parseFloat(row[11]) || 0;
       if (rowBalance > 0 && profileMap[profileId].balance === 0) {
         profileMap[profileId].balance = rowBalance;
       }
 
       profileMap[profileId].stocks.push({
         symbol: sym,
-        avgPrice: parseFloat(row[3]) || 0,
-        holdings: parseInt(row[4]) || 0,
-        totalInvested: parseFloat(row[5]) || 0,
-        principal: parseFloat(row[6]) || 0,
+        avgPrice: parseFloat(row[4]) || 0,
+        holdings: parseInt(row[5]) || 0,
+        totalInvested: parseFloat(row[6]) || 0,
+        principal: parseFloat(row[7]) || 0,
         // 🔴 v3.5.2: 라오어 가이드 기준 기본값 (#29)
-        sellPercent: parseFloat(row[7]) || (sym === 'SOXL' ? 12 : 10),    // H: AFTER%
-        locSellPercent: parseFloat(row[8]) || 5    // I: LOC% - 모든 종목 5%
+        sellPercent: parseFloat(row[8]) || (sym === 'SOXL' ? 12 : 10),    // H: AFTER%
+        locSellPercent: parseFloat(row[9]) || 5    // I: LOC% - 모든 종목 5%
       });
     });
 
@@ -692,6 +700,10 @@ const SheetsSync = (function() {
         locSellPercent: stock.locSellPercent   // I: LOC% (시트에서 가져온 값)
       });
     });
+
+    if (myStocks.length > 0 && myStocks[0].profileName) {
+      ProfileManager.update(profile.id, { name: myStocks[0].profileName });
+    }
 
     console.log(`SheetsSync: Pulled ${myStocks.length} rows from sheet profile "${sheetProfileId}" to local profile "${profile.id}"`);
     return myStocks;
