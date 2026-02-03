@@ -17,6 +17,11 @@ const ProfileManager = (function() {
 
   const STORAGE_KEY = 'ib_profiles';
 
+  function sanitizeProfileId(name = '') {
+    const cleaned = (name || '').trim().replace(/[^0-9A-Za-z가-힣_-]/g, '');
+    return cleaned || 'profile';
+  }
+
   // =====================================================
   // Default Profiles - Empty (Users add their own)
   // =====================================================
@@ -135,9 +140,8 @@ const ProfileManager = (function() {
    */
   function create(name, accountNumber = '') {
     const data = getAll();
-    // v1.1.0: 한글 이름도 지원 (encodeURIComponent로 안전한 ID 생성)
-    const safeName = encodeURIComponent(name).replace(/%/g, '').substring(0, 20);
-    const id = (safeName || 'profile') + '_' + Date.now();
+    const baseId = sanitizeProfileId(name).substring(0, 20);
+    const id = `${baseId}_${Date.now()}`;
 
     data.profiles[id] = {
       id,
