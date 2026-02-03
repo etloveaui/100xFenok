@@ -4,8 +4,11 @@
  * 🔴 CRITICAL: This implements the exact Genie RPA logic
  * Reference: DEV.md, Asset_Allocator/docs/references/genie-rpa-infinitebuy-guide.md
  *
- * @version 1.0.0
+ * @version 1.2.0
  * @author 100xFenok Claude
+ *
+ * v1.2.0 (02-03): 평단LOC 가격캡 추가 (V2.2 명세 준수)
+ * v1.1.0 (02-03): sellPercent 사용자 입력 지원
  */
 
 const IBCalculator = (function() {
@@ -167,7 +170,7 @@ const IBCalculator = (function() {
    * @returns {Object} { T, starPercent, locInfo, orders, summary }
    */
   function generateBuyOrders(params) {
-    const { principal, divisions, avgPrice, totalInvested, currentPrice, ticker } = params;
+    const { principal, divisions, avgPrice, totalInvested, currentPrice } = params;
 
     // 1회 매수금
     const oneTimeBuy = principal / divisions;
@@ -192,7 +195,11 @@ const IBCalculator = (function() {
       const halfAmount = oneTimeBuy / 2;
 
       // 주문 1: 평단LOC 매수 (0% 기준)
-      const avgPriceBuy = roundPrice(avgPrice);
+      // 🔴 v1.2.0: 평단가도 현재가×1.15 캡 적용 (V2.2 명세)
+      const priceCap = (currentPrice && currentPrice > 0)
+        ? currentPrice * DEFAULT_CONFIG.locCapMultiplier
+        : Infinity;
+      const avgPriceBuy = roundPrice(Math.min(avgPrice, priceCap));
       const qty1 = Math.floor(halfAmount / avgPriceBuy);
       if (qty1 > 0) {
         orders.push({

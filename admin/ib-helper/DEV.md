@@ -1,6 +1,6 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.23.0
+> **Version**: 4.24.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
 > **Status**: ✅ Phase 1-3 Complete + Order Execution Tracking
@@ -55,6 +55,9 @@
 ---
 
 ## 2. V2.2 Algorithm - CRITICAL LOGIC
+
+> 🔴 **AUTHORITATIVE REFERENCE**: [`docs/references/v2.2-formula-spec.md`](../../../../docs/references/v2.2-formula-spec.md)
+> All formulas below are derived from the spec. When in doubt, refer to the spec.
 
 ### 2.1 Core Parameters
 
@@ -580,7 +583,20 @@ admin/ib-helper/
 - UI: 실시간 계산 + 종목별 breakdown + 상단 알림 배너
 - 스펙: `_tmp/PHASE3_SPEC.md` (Asset Allocator 제공)
 
-### v4.23.0: Formula Details Display (02-03) - Ralph Loop
+### v4.24.0: Calculator V2.2 Spec Compliance (02-03) - Ralph Loop
+- [x] **Bug Fix**: 평단LOC 가격캡 누락
+  - 명세서: `avgLocPrice = Math.min(avgCost, currentPrice × 1.15)`
+  - 수정 전: `avgPriceBuy = avgPrice` (캡 없음)
+  - 수정 후: `avgPriceBuy = Math.min(avgPrice, priceCap)` (캡 적용)
+- [x] **calculator.js v1.2.0**: 평단LOC 가격캡 구현
+- [x] **명세서 검증 결과**:
+  - ✅ 별%: `10 - (T/2)` 정확 (Genie RPA 역공학 결과)
+  - ✅ 전반전/후반전: `T < 20` == `progress < 50%` 동등
+  - ✅ 큰수LOC: `min(별%가, priceCap)` 정확
+  - ✅ AFTER 매도: `avgPrice × (1 + sellPercent%)` 정확
+  - ⚠️ T값: 소수점 1자리 vs 정수 (미세 차이, 기능 영향 없음)
+
+### v4.23.0: Formula Details + UX Fixes (02-03) - Ralph Loop
 - [x] **Feature**: 계산 공식 상세 표시
   - 요약 카드 하단에 "공식 상세" 토글 버튼 추가
   - 클릭 시 T값/별%/LOC 매도가/지정가 매도 공식 표시
@@ -591,6 +607,9 @@ admin/ib-helper/
 - [x] **CSS Added**:
   - `.formula-details` - 공식 패널 스타일
   - `.formula-toggle` - 토글 버튼 스타일
+- [x] **profile-manager.js v1.1.0 UX Fixes**:
+  - 한글 프로필명 ID 생성 개선 (`encodeURIComponent` 사용)
+  - `saveDailyData()` 날짜 생성 IIFE 간소화
 
 ### v4.22.0: UX Improvements + Balance Sync (02-03) - Ralph Loop
 - [x] **New Profile UX**:
