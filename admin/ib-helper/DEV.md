@@ -1,6 +1,6 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.21.0
+> **Version**: 4.21.1
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
 > **Status**: ✅ Phase 1-3 Complete + Order Execution Tracking
@@ -579,6 +579,18 @@ admin/ib-helper/
 - 주문상태 = 예수금 - 일매수시도금액
 - UI: 실시간 계산 + 종목별 breakdown + 상단 알림 배너
 - 스펙: `_tmp/PHASE3_SPEC.md` (Asset Allocator 제공)
+
+### v4.21.1: Portfolio Sheet Structure Expansion (02-03)
+- [x] **Sheet Structure v3.1**: 8컬럼 → 10컬럼
+  - H열: **AFTER%** (지정가 매도 75%) - 기본 TQQQ=10, SOXL/BITU=12
+  - I열: **LOC%** (분할매도 25%) - 기본 TQQQ=5, SOXL/BITU=6
+  - J열: 날짜 (기존 H열에서 이동)
+- [x] **JS Changes**:
+  - `sheets-sync.js`: parseRows(), push(), pull(), pullFromSheetProfile() 업데이트
+  - `getMyProfilesFromSheet()`: 새 컬럼 반영
+- [x] **User Action Required**:
+  - Portfolio 시트에 H열 "AFTER%", I열 "LOC%" 헤더 추가
+  - 기존 H열 "날짜" → J열로 이동
 
 ### v4.21.0: Order Execution Tracking (02-03) - DEC-153
 - [x] **Feature**: 주문 히스토리 저장 + 체결 확인 기능
