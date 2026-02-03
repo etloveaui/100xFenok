@@ -273,24 +273,19 @@
     </button>
   </div>
 
-  <!-- Header -->
-  <header class="sticky-header px-4 py-3">
+  <!-- Header (v4.21.0: Mobile simplified) -->
+  <header class="sticky-header px-3 py-2 lg:px-4 lg:py-3">
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 lg:gap-3">
         <a href="../" class="text-gray-500 hover:text-gray-700 touch-target flex items-center justify-center" aria-label="뒤로가기">
           <i class="fas fa-arrow-left"></i>
         </a>
-        <div>
-          <h1 class="text-lg font-bold">
-            <span class="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">100x</span>
-            <span class="text-gray-800"> IB Helper</span>
-          </h1>
-          <p class="text-xs text-gray-500">무한매수 V2.2</p>
-        </div>
+        <h1 class="text-base lg:text-lg font-bold">
+          <span class="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">IB</span>
+          <span class="text-gray-800 hidden sm:inline"> Helper</span>
+        </h1>
       </div>
-      <div class="flex items-center gap-2">
-        <span id="today-date" class="text-xs text-gray-500"></span>
-      </div>
+      <span id="today-date" class="text-xs text-gray-500"></span>
     </div>
   </header>
 
@@ -655,10 +650,9 @@
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- Footer -->
-  <footer class="px-4 py-6 text-center">
-    <p class="text-xs text-gray-500">100x IB Helper v4.19.0</p>
-    <p class="mt-1 text-xs text-gray-400">Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+  <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
+  <footer class="hidden lg:block px-4 py-4 text-center">
+    <p class="text-xs text-gray-400">IB Helper v4.21.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -1683,6 +1677,36 @@
 
       // Display results
       displayResults(result);
+
+      // 🔴 v4.21.0: Auto-save orders to Google Sheets (DEC-153)
+      saveOrdersToSheet(result);
+    }
+
+    /**
+     * Save orders to Google Sheets (Orders sheet)
+     * Silently saves in background, non-blocking
+     * @param {Object} result - Calculation result
+     */
+    async function saveOrdersToSheet(result) {
+      // Only if logged in
+      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
+        console.log('saveOrdersToSheet: Skipped (not logged in)');
+        return;
+      }
+
+      try {
+        const count = await SheetsSync.saveOrders({
+          ticker: result.ticker,
+          buyOrders: result.buyOrders,
+          sellOrders: result.sellOrders
+        });
+        if (count > 0) {
+          showToast(`📊 ${count}건 주문 저장됨`, 'success', 1500);
+        }
+      } catch (error) {
+        console.error('saveOrdersToSheet error:', error);
+        // Silent failure - don't interrupt user
+      }
     }
 
     // =====================================================

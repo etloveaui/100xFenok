@@ -1,16 +1,20 @@
 /**
- * IB Helper Google Sheets Sync - v2.0 (DEC-150)
+ * IB Helper Google Sheets Sync - v3.0 (DEC-153)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 2.0.0
+ * @version 3.0.0
  * @author 100xFenok Claude
- * @decision DEC-150 (2026-02-03)
+ * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
  *
- * Sheet Structure:
+ * Sheet1 "Portfolio" Structure:
  * | 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | 날짜 |
  * | A열    | B열      | C열  | D열    | E열  | F열      | G열      | H열  |
+ *
+ * Sheet3 "Orders" Structure (DEC-153):
+ * | 날짜 | 구글ID | 프로필ID | 종목 | 주문타입 | 매수매도 | 가격 | 수량 | 총액 | 체결기준 | 체결 | 체결일 | 실제가격 |
+ * | A열  | B열    | C열      | D열  | E열      | F열      | G열  | H열  | I열  | J열      | K열  | L열    | M열      |
  */
 
 const SheetsSync = (function() {
@@ -568,6 +572,217 @@ const SheetsSync = (function() {
   }
 
   // =====================================================
+  // ORDERS MANAGEMENT (DEC-153: Order Execution Tracking)
+  // =====================================================
+
+  /**
+   * Get the "Orders" sheet name
+   * @returns {string}
+   */
+  function getOrdersSheetName() {
+    return 'Orders';
+  }
+
+  /**
+   * Save orders to Sheet3 "Orders"
+   * Called after calculateOrders() to record order history
+   *
+   * @param {Object} params - Order parameters
+   * @param {string} params.ticker - Stock symbol (e.g., TQQQ, SOXL)
+   * @param {Array} params.buyOrders - Array of buy order objects
+   * @param {Array} params.sellOrders - Array of sell order objects
+   * @returns {Promise<number>} Number of orders saved
+   */
+  async function saveOrders({ ticker, buyOrders, sellOrders }) {
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    const profile = ProfileManager.getActive();
+    if (!profile) {
+      throw new Error('프로필이 없습니다');
+    }
+
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set');
+    }
+
+    // Get today's date (local time)
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+    // Build order rows
+    const orderRows = [];
+
+    // Process buy orders
+    buyOrders.forEach(order => {
+      orderRows.push([
+        today,                              // A: 날짜
+        currentUserEmail,                   // B: 구글ID
+        profile.id,                         // C: 프로필ID
+        ticker,                             // D: 종목
+        order.type,                         // E: 주문타입 (평단LOC매수, 큰수LOC매수, 하락대비)
+        'BUY',                              // F: 매수매도
+        parseFloat(order.price) || 0,       // G: 가격
+        parseInt(order.quantity) || 0,      // H: 수량
+        (parseFloat(order.price) || 0) * (parseInt(order.quantity) || 0),  // I: 총액
+        'CLOSE',                            // J: 체결기준 (매수는 종가 기준)
+        '',                                 // K: 체결 (빈값 = 미체결)
+        '',                                 // L: 체결일
+        ''                                  // M: 실제가격
+      ]);
+    });
+
+    // Process sell orders
+    sellOrders.forEach(order => {
+      const isLoc = order.type.includes('LOC');
+      orderRows.push([
+        today,                              // A: 날짜
+        currentUserEmail,                   // B: 구글ID
+        profile.id,                         // C: 프로필ID
+        ticker,                             // D: 종목
+        order.type,                         // E: 주문타입 (LOC매도, 지정가매도)
+        'SELL',                             // F: 매수매도
+        parseFloat(order.price) || 0,       // G: 가격
+        parseInt(order.quantity) || 0,      // H: 수량
+        (parseFloat(order.price) || 0) * (parseInt(order.quantity) || 0),  // I: 총액
+        isLoc ? 'CLOSE' : 'HIGH',           // J: 체결기준 (LOC=종가, 지정가=고가)
+        '',                                 // K: 체결 (빈값 = 미체결)
+        '',                                 // L: 체결일
+        ''                                  // M: 실제가격
+      ]);
+    });
+
+    if (orderRows.length === 0) {
+      console.log('SheetsSync.saveOrders: No orders to save');
+      return 0;
+    }
+
+    // Append to Orders sheet
+    try {
+      await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: sheetId,
+        range: `${getOrdersSheetName()}!A:M`,
+        valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
+        resource: { values: orderRows }
+      });
+
+      console.log(`SheetsSync.saveOrders: Saved ${orderRows.length} orders for ${ticker}`);
+      return orderRows.length;
+    } catch (error) {
+      // If sheet doesn't exist, create it first
+      if (error.result?.error?.message?.includes('Unable to parse range')) {
+        console.log('SheetsSync.saveOrders: Orders sheet may not exist, trying to create...');
+        await createOrdersSheet();
+        // Retry append
+        await gapi.client.sheets.spreadsheets.values.append({
+          spreadsheetId: sheetId,
+          range: `${getOrdersSheetName()}!A:M`,
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
+          resource: { values: orderRows }
+        });
+        console.log(`SheetsSync.saveOrders: Created sheet and saved ${orderRows.length} orders`);
+        return orderRows.length;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Create Orders sheet with headers if it doesn't exist
+   */
+  async function createOrdersSheet() {
+    const sheetId = getSpreadsheetId();
+
+    // Add new sheet
+    try {
+      await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: sheetId,
+        resource: {
+          requests: [{
+            addSheet: {
+              properties: {
+                title: getOrdersSheetName(),
+                index: 2  // Third sheet (0-indexed)
+              }
+            }
+          }]
+        }
+      });
+    } catch (e) {
+      // Sheet might already exist
+      console.log('Sheet creation skipped (may already exist)');
+    }
+
+    // Add headers
+    const headers = [
+      ['날짜', '구글ID', '프로필ID', '종목', '주문타입', '매수매도', '가격', '수량', '총액', '체결기준', '체결', '체결일', '실제가격']
+    ];
+
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: sheetId,
+      range: `${getOrdersSheetName()}!A1:M1`,
+      valueInputOption: 'USER_ENTERED',
+      resource: { values: headers }
+    });
+
+    console.log('SheetsSync: Created Orders sheet with headers');
+  }
+
+  /**
+   * Read pending orders (체결 컬럼이 빈 값인 주문)
+   * @returns {Promise<Array>} Array of pending orders
+   */
+  async function readPendingOrders() {
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set');
+    }
+
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: `${getOrdersSheetName()}!A2:M10000`,
+      });
+
+      const rows = response.result.values || [];
+
+      // Filter: my orders only, pending (체결 컬럼 빈값)
+      const pending = rows.filter(row =>
+        row[1] === currentUserEmail &&  // B: 구글ID
+        (!row[10] || row[10] === '')    // K: 체결 (빈값 = 미체결)
+      );
+
+      return pending.map((row, index) => ({
+        rowIndex: index + 2,  // Excel row number (1-indexed, skip header)
+        date: row[0],
+        googleId: row[1],
+        profileId: row[2],
+        ticker: row[3],
+        orderType: row[4],
+        side: row[5],
+        price: parseFloat(row[6]) || 0,
+        quantity: parseInt(row[7]) || 0,
+        total: parseFloat(row[8]) || 0,
+        executionBasis: row[9],  // CLOSE or HIGH
+        execution: row[10],
+        executionDate: row[11],
+        actualPrice: row[12]
+      }));
+    } catch (error) {
+      console.error('SheetsSync.readPendingOrders error:', error);
+      return [];
+    }
+  }
+
+  // =====================================================
   // PUBLIC API
   // =====================================================
 
@@ -595,6 +810,10 @@ const SheetsSync = (function() {
     // Profile Discovery (Bug 14 Fix)
     getMyProfilesFromSheet,
     pullFromSheetProfile,
+
+    // Orders (DEC-153: Order Execution Tracking)
+    saveOrders,
+    readPendingOrders,
 
     // Config (for debugging)
     CONFIG

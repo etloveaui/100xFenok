@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.20.0
+> **Version**: 4.21.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
-> **Status**: ✅ Phase 1-3 Complete (Core + Multi-Profile + Sheets + Migration + Auto-Save)
+> **Status**: ✅ Phase 1-3 Complete + Order Execution Tracking
 > **Priority**: 🟡 Phase 4 (Telegram) Pending
 
 ---
@@ -579,6 +579,29 @@ admin/ib-helper/
 - 주문상태 = 예수금 - 일매수시도금액
 - UI: 실시간 계산 + 종목별 breakdown + 상단 알림 배너
 - 스펙: `_tmp/PHASE3_SPEC.md` (Asset Allocator 제공)
+
+### v4.21.0: Order Execution Tracking (02-03) - DEC-153
+- [x] **Feature**: 주문 히스토리 저장 + 체결 확인 기능
+- [x] **JS Changes**:
+  - `sheets-sync.js`: `saveOrders()` - Sheet3 "Orders"에 주문 저장
+  - `sheets-sync.js`: `readPendingOrders()` - 미체결 주문 조회
+  - `sheets-sync.js`: `createOrdersSheet()` - 자동 시트 생성
+  - `index.html`: `saveOrdersToSheet()` - 계산 후 자동 저장
+- [x] **Apps Script**: `Code.gs.template` - 체결 확인 스크립트
+  - `processOrderExecutions()` - 매일 09:00 자동 실행
+  - `checkExecutions()` - 체결 판정 로직
+  - `updatePortfolio()` - 포트폴리오 자동 업데이트
+- [x] **UI Changes** (Phase 0):
+  - Header simplified for mobile (IB only, "Helper" hidden on small screens)
+  - Footer hidden on mobile, visible on desktop only
+- [x] **Sheet3 "Orders" Structure**:
+  - A: 날짜, B: 구글ID, C: 프로필ID, D: 종목
+  - E: 주문타입, F: 매수매도, G: 가격, H: 수량, I: 총액
+  - J: 체결기준, K: 체결, L: 체결일, M: 실제가격
+- [x] **Execution Rules**:
+  - 매수 LOC: 종가 ≤ 주문가 → 체결
+  - 매도 LOC (25%): 종가 ≥ 주문가 → 체결
+  - 매도 지정가 (75%): 고가 ≥ 주문가 → 체결
 
 ### v4.19.0: Bug 14 Fix - Sheet Pull Profile Mismatch (02-03)
 - [x] **Problem**: "시트에서 불러오기" 실패 (0 rows) - 프로필 ID 불일치
