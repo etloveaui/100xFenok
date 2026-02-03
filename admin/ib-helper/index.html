@@ -557,7 +557,7 @@
                class="w-full px-3 py-2 border-2 border-blue-100 rounded-lg bg-blue-50 text-xl font-semibold text-blue-700 flex items-center justify-center min-h-[52px]"
                role="status"
                aria-live="polite">--</div>
-          <p class="text-[11px] text-gray-400 mt-1">Google 로그인 시 자동으로 불러옵니다</p>
+          <p class="text-[11px] text-gray-400 mt-1">최신 시세 API에서 자동으로 불러옵니다</p>
         </div>
       </div>
 
@@ -2031,21 +2031,18 @@
       const display = document.getElementById('current-price-display');
       if (!display) return;
 
-      display.textContent = '--';  // 초기화
-
-      // 로그인 상태에서만 조회
-      if (!SheetsSync.isAuthenticated()) {
-        display.textContent = '로그인 필요';
-        return;
-      }
+      display.textContent = '불러오는 중…';
 
       try {
         const price = await SheetsSync.getCurrentPrice(ticker);
         if (price > 0) {
           display.textContent = `$${price.toFixed(2)}`;
+        } else {
+          display.textContent = '데이터 없음';
         }
       } catch (e) {
         console.warn('현재가 조회 실패:', e.message);
+        display.textContent = '조회 실패';
       }
     }
 
