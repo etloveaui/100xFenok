@@ -980,9 +980,11 @@ const SheetsSync = (function() {
    */
   async function fetchCurrentPrices() {
     const sheetId = getSpreadsheetId();
-    if (!sheetId) {
-      console.warn('SheetsSync: Spreadsheet ID not set, cannot fetch prices');
-      return {};
+
+    // 🔴 v3.6.3: 이메일 인증 사용자는 gapi가 없으므로 Ticker API 사용
+    if (!sheetId || typeof gapi === 'undefined' || !gapi.client) {
+      console.log('SheetsSync: gapi not available, using Ticker API fallback');
+      return {};  // Ticker API는 개별 조회만 지원하므로 빈 객체 반환, getCurrentPrice에서 fallback
     }
 
     try {
@@ -1033,12 +1035,34 @@ const SheetsSync = (function() {
 
   /**
    * Get current price for a specific ticker
+   * 🔴 v3.6.3: Ticker API fallback for email auth users (no gapi)
    * @param {string} ticker - Stock symbol (e.g., 'TQQQ')
    * @returns {Promise<number>} Current price or 0 if not found
    */
   async function getCurrentPrice(ticker) {
+    const sym = ticker.toUpperCase();
+
+    // 1차: Prices 시트에서 조회 (Google OAuth 사용자)
     const prices = await fetchCurrentPrices();
-    return prices[ticker.toUpperCase()]?.current || 0;
+    if (prices[sym]?.current > 0) {
+      return prices[sym].current;
+    }
+
+    // 2차: Ticker API fallback (이메일 인증 사용자 또는 시트에 없는 종목)
+    try {
+      const response = await fetch(`https://ticker-api.etloveaui.workers.dev/api/ticker/${sym}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.price > 0) {
+          console.log(`SheetsSync: Got ${sym} price from Ticker API: $${data.price}`);
+          return data.price;
+        }
+      }
+    } catch (error) {
+      console.warn('SheetsSync: Ticker API fallback failed:', error);
+    }
+
+    return 0;
   }
 
   // =====================================================
