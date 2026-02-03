@@ -386,6 +386,20 @@
       background: #d1d5db;
       color: #1f2937;
     }
+    .order-copy-btn {
+      background: transparent;
+      color: #9ca3af;
+      border: none;
+      padding: 0.15rem 0.35rem;
+      border-radius: 0.375rem;
+      transition: color 0.15s;
+    }
+    .order-copy-btn:hover {
+      color: #2563eb;
+    }
+    .order-copy-btn.copied {
+      color: #10b981;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -410,16 +424,18 @@
           <span class="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">IB</span>
           <span class="text-gray-800 hidden sm:inline"> Helper</span>
         </h1>
-        <!-- 🔴 v4.31.0 (B5-10): 동기화 상태 표시 -->
-        <span id="header-sync-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 hidden">
-          <i class="fas fa-circle text-[6px] mr-1"></i><span>로컬</span>
-        </span>
+        <div class="flex items-center gap-1" id="header-sync-controls">
+          <!-- 🔴 v4.31.0 (B5-10): 동기화 상태 표시 -->
+          <span id="header-sync-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 hidden">
+            <i class="fas fa-circle text-[6px] mr-1"></i><span>로컬</span>
+          </span>
+          <!-- 🔴 v4.31.0 (B5-06): 메인 동기화 버튼 -->
+          <button id="header-sync-btn" onclick="quickSyncToCloud()" class="hidden text-gray-400 hover:text-blue-500 touch-target flex items-center justify-center" title="클라우드 동기화">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </button>
+        </div>
       </div>
       <div class="flex items-center gap-2">
-        <!-- 🔴 v4.31.0 (B5-06): 메인 동기화 버튼 -->
-        <button id="header-sync-btn" onclick="quickSyncToCloud()" class="hidden text-gray-400 hover:text-blue-500 touch-target flex items-center justify-center" title="클라우드 동기화">
-          <i class="fas fa-cloud-upload-alt"></i>
-        </button>
         <span id="today-date" class="text-xs text-gray-500"></span>
       </div>
     </div>
@@ -2009,7 +2025,10 @@
       display.textContent = '--';  // 초기화
 
       // 로그인 상태에서만 조회
-      if (!SheetsSync.isAuthenticated()) return;
+      if (!SheetsSync.isAuthenticated()) {
+        display.textContent = '로그인 필요';
+        return;
+      }
 
       try {
         const price = await SheetsSync.getCurrentPrice(ticker);
@@ -2227,6 +2246,25 @@
     }
 
     /**
+     * 다중 결과용 금액 단일 복사
+     */
+    async function copyPriceValue(btn, price) {
+      const numeric = parseFloat(price).toFixed(2).replace(/\.00$/, '');
+      const success = await copyToClipboard(numeric);
+      if (success && btn) {
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = numeric;
+        }, 1200);
+      }
+      if (!success) {
+        showToast('복사 실패', 'error');
+      }
+    }
+
+    /**
      * 전체 주문 복사 (섹션별)
      * 🔴 v4.29.4 (C-08): copyToClipboard 사용
      */
@@ -2234,13 +2272,17 @@
       if (!lastCalculation) return;
 
       let orders = [];
+      let sectionLabel = '';
 
       if (type === 'buy') {
         orders = lastCalculation.buyOrders.filter(o => !o.type.includes('하락대비'));
+        sectionLabel = '매수';
       } else if (type === 'sell') {
         orders = lastCalculation.sellOrders;
+        sectionLabel = '매도';
       } else if (type === 'decline') {
         orders = lastCalculation.buyOrders.filter(o => o.type.includes('하락대비'));
+        sectionLabel = '하락대비';
       }
 
       if (orders.length === 0) {
@@ -2254,7 +2296,12 @@
       });
       const text = priceLines.join('\n');
       const success = await copyToClipboard(text);
-      showToast(success ? '금액이 복사되었습니다' : '복사 실패', success ? 'success' : 'error');
+      if (success) {
+        const message = sectionLabel ? `${sectionLabel} 금액이 복사되었습니다` : '금액이 복사되었습니다';
+        showToast(message, 'success');
+      } else {
+        showToast('복사 실패', 'error');
+      }
     }
 
     /**
@@ -2677,21 +2724,29 @@
     function displayMultipleResults(results) {
       const section = document.getElementById('multi-results-section');
       const accordion = document.getElementById('results-accordion');
+      const resultsColumn = document.getElementById('results-column');
+      const resultsPC = document.getElementById('results-pc');
 
       if (!results || results.length === 0) {
         section.classList.add('hidden');
+        resultsColumn?.classList.add('hidden');
         return;
       }
 
       // 단일 결과일 때는 기존 UI 사용
       if (results.length === 1) {
         section.classList.add('hidden');
+        resultsColumn?.classList.remove('hidden');
         displayResults(results[0]);
         return;
       }
 
       // 다중 결과: 아코디언 표시
       section.classList.remove('hidden');
+      resultsColumn?.classList.add('hidden');
+      if (resultsPC) {
+        resultsPC.innerHTML = '';
+      }
 
       // 🔴 v4.28.1: lastCalculation을 첫 번째 결과로 업데이트 (복사 기능 호환성)
       lastCalculation = results[0];
@@ -2747,15 +2802,17 @@
               <div class="order-section">
                 <div class="order-section-header">
                   <span class="order-section-title"><i class="fas fa-arrow-down text-green-500 mr-1"></i>매수 (LOC)</span>
-                  <button onclick="copyTickerOrders('${ticker}', 'buy')" class="section-copy-btn">
-                    <i class="fas fa-copy mr-1"></i>복사
-                  </button>
                 </div>
                 <div class="space-y-1 text-sm">
                   ${mainBuyOrders.map(o => `
-                    <div class="flex justify-between bg-white rounded px-2 py-1">
+                    <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
                       <span class="text-gray-600">${o.type}</span>
-                      <span class="font-medium">$${o.price.toFixed(2)} × ${o.quantity}주</span>
+                      <div class="flex items-center gap-2">
+                        <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
+                          ${Number(o.price || 0).toFixed(2)}
+                        </button>
+                        <span class="text-gray-500 text-xs">× ${o.quantity}주</span>
+                      </div>
                     </div>
                   `).join('')}
                 </div>
@@ -2766,15 +2823,17 @@
               <div class="order-section">
                 <div class="order-section-header">
                   <span class="order-section-title"><i class="fas fa-shield-alt text-blue-500 mr-1"></i>하락대비 (LOC)</span>
-                  <button onclick="copyTickerOrders('${ticker}', 'decline')" class="section-copy-btn">
-                    <i class="fas fa-copy mr-1"></i>복사
-                  </button>
                 </div>
                 <div class="space-y-1 text-sm">
                   ${declineOrders.map(o => `
-                    <div class="flex justify-between bg-white rounded px-2 py-1">
+                    <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
                       <span class="text-gray-600">${o.type}</span>
-                      <span class="font-medium">$${o.price.toFixed(2)} × ${o.quantity}주</span>
+                      <div class="flex items-center gap-2">
+                        <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
+                          ${Number(o.price || 0).toFixed(2)}
+                        </button>
+                        <span class="text-gray-500 text-xs">× ${o.quantity}주</span>
+                      </div>
                     </div>
                   `).join('')}
                 </div>
@@ -2785,9 +2844,6 @@
               <div class="order-section">
                 <div class="order-section-header">
                   <span class="order-section-title"><i class="fas fa-arrow-up text-red-500 mr-1"></i>매도</span>
-                  <button onclick="copyTickerOrders('${ticker}', 'sell')" class="section-copy-btn">
-                    <i class="fas fa-copy mr-1"></i>복사
-                  </button>
                 </div>
                 ${quarterStopLoss.active ? `
                 <div class="bg-red-50 border border-red-200 rounded p-2 text-sm text-red-700">
@@ -2796,14 +2852,25 @@
                 ` : `
                 <div class="space-y-1 text-sm">
                   ${sellOrders.map(o => `
-                    <div class="flex justify-between bg-white rounded px-2 py-1">
+                    <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
                       <span class="text-gray-600">${o.type}</span>
-                      <span class="font-medium">$${o.price.toFixed(2)} × ${o.quantity}주</span>
+                      <div class="flex items-center gap-2">
+                        <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
+                          ${Number(o.price || 0).toFixed(2)}
+                        </button>
+                        <span class="text-gray-500 text-xs">× ${o.quantity}주</span>
+                      </div>
                     </div>
                   `).join('')}
                 </div>
                 `}
               </div>
+            </div>
+            <div class="flex justify-end mt-3">
+              <button class="px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"
+                      onclick="showTickerDetail('${ticker}')">
+                <i class="fas fa-microscope mr-1"></i>상세 보기
+              </button>
             </div>
           </div>
         `;
@@ -2818,6 +2885,18 @@
       if (item) {
         item.classList.toggle('open');
       }
+    }
+
+    /**
+     * 아코디언에서 상세 보기 → 단일 상세 패널 표시
+     */
+    function showTickerDetail(ticker) {
+      const result = calculationResults[ticker];
+      if (!result) {
+        showToast('계산 결과가 없습니다', 'warning');
+        return;
+      }
+      displayResults(result);
     }
 
     /**
@@ -2867,54 +2946,6 @@
       const success = await copyToClipboard(text);
       if (success) {
         showToast('전체 종목 주문이 복사되었습니다', 'success');
-      } else {
-        showToast('복사 실패', 'error');
-      }
-    }
-
-    /**
-     * 🔴 v4.28.0: 개별 종목 섹션별 복사 (#217)
-     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
-     * @param {string} ticker - 종목 심볼
-     * @param {string} type - 'buy' | 'decline' | 'sell'
-     */
-    async function copyTickerOrders(ticker, type) {
-      const result = calculationResults[ticker];
-      if (!result) {
-        showToast('계산 결과가 없습니다', 'warning');
-        return;
-      }
-
-      const { buyOrders, sellOrders, quarterStopLoss } = result;
-      const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
-      const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
-
-      let lines = [];
-      let title = '';
-
-      switch (type) {
-        case 'buy':
-          title = '매수';
-          lines = mainBuyOrders.map(o => `${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`);
-          break;
-        case 'decline':
-          title = '하락대비';
-          lines = declineOrders.map(o => `${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`);
-          break;
-        case 'sell':
-          title = '매도';
-          if (quarterStopLoss && quarterStopLoss.active) {
-            lines = [`MOC 매도: ${quarterStopLoss.mocQuantity}주`];
-          } else {
-            lines = sellOrders.map(o => `${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`);
-          }
-          break;
-      }
-
-      const text = `[${ticker}] ${title}\n${lines.join('\n')}`;
-      const success = await copyToClipboard(text);
-      if (success) {
-        showToast(`${ticker} ${title} 주문 복사됨`, 'success');
       } else {
         showToast('복사 실패', 'error');
       }

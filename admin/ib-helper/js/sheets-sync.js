@@ -381,25 +381,40 @@ const SheetsSync = (function() {
     const stocks = [];
 
     rows.forEach(row => {
-      const [googleId, profileId, profileName, symbol, avgPrice, holdings, totalInvested, principal, afterPercent, locPercent, date, balance] = row;
+      if (!row || row.length < 3) return;
+
+      const hasProfileName = row.length >= 12;
+      const googleId = row[0] || '';
+      const profileId = row[1] || '';
+      const profileName = hasProfileName ? row[2] : '';
+      const baseIndex = hasProfileName ? 3 : 2;
+      const symbol = row[baseIndex];
 
       if (!symbol) return;
 
-      const sym = symbol.trim().toUpperCase();
+      const avgPrice = row[baseIndex + 1];
+      const holdings = row[baseIndex + 2];
+      const totalInvested = row[baseIndex + 3];
+      const principal = row[baseIndex + 4];
+      const afterPercent = row[baseIndex + 5];
+      const locPercent = row[baseIndex + 6];
+      const date = row[baseIndex + 7];
+      const balance = row[baseIndex + 8];
+
+      const sym = String(symbol).trim().toUpperCase();
       stocks.push({
-        googleId: googleId || '',
-        profileId: profileId || '',
+        googleId,
+        profileId,
         symbol: sym,
         profileName: profileName || '',
         avgPrice: parseFloat(avgPrice) || 0,
         holdings: parseInt(holdings) || 0,
         totalInvested: parseFloat(totalInvested) || 0,
         principal: parseFloat(principal) || 0,
-        // 🔴 v3.5.2: 라오어 가이드 기준 기본값 (#29)
-        sellPercent: parseFloat(afterPercent) || (sym === 'SOXL' ? 12 : 10),  // AFTER% (지정가 매도)
-        locSellPercent: parseFloat(locPercent) || 5,   // LOC% (분할매도) - 모든 종목 5%
+        sellPercent: parseFloat(afterPercent) || (sym === 'SOXL' ? 12 : 10),
+        locSellPercent: parseFloat(locPercent) || 5,
         date: date || '',
-        balance: parseFloat(balance) || 0  // K: 예수금 (첫 번째 row만)
+        balance: parseFloat(balance) || 0
       });
     });
 
@@ -513,7 +528,15 @@ const SheetsSync = (function() {
       });
 
       // 4. 합쳐서 저장
-      const finalRows = [...otherRows, ...myNewRows];
+      const normalizedOtherRows = otherRows.map(row => {
+        if (!row) return [];
+        if (row.length >= 12) return row;
+        const legacyRow = [...row];
+        legacyRow.splice(2, 0, '');
+        return legacyRow;
+      });
+
+      const finalRows = [...normalizedOtherRows, ...myNewRows];
       await writeAllRows(finalRows);
 
       console.log(`SheetsSync: Pushed ${myNewRows.length} rows for ${currentUserEmail}/${profile.id}`);
@@ -624,33 +647,37 @@ const SheetsSync = (function() {
     // Group by profile ID (v3.2: 예수금 포함)
     const profileMap = {};
     myRows.forEach(row => {
+      if (!row || row.length < 3) return;
+      const hasProfileName = row.length >= 12;
       const profileId = row[1];
-      const profileName = row[2] ? String(row[2]).trim() : (profileId.split('_')[0] || 'Profile');
+      const profileName = hasProfileName
+        ? String(row[2] || '').trim()
+        : (profileId.split('_')[0] || 'Profile');
+      const baseIndex = hasProfileName ? 3 : 2;
+      const sym = String(row[baseIndex] || '').trim().toUpperCase();
+
       if (!profileMap[profileId]) {
         profileMap[profileId] = {
-          profileId: profileId,
-          profileName: profileName,
-          balance: 0,  // 예수금 (첫 번째 row에서)
+          profileId,
+          profileName: profileName || 'Profile',
+          balance: 0,
           stocks: []
         };
       }
-      const sym = String(row[3]).trim().toUpperCase();
 
-      // 🔴 v3.2: 첫 번째 row에서 예수금 읽기
-      const rowBalance = parseFloat(row[11]) || 0;
+      const rowBalance = parseFloat(row[baseIndex + 8]) || 0;
       if (rowBalance > 0 && profileMap[profileId].balance === 0) {
         profileMap[profileId].balance = rowBalance;
       }
 
       profileMap[profileId].stocks.push({
         symbol: sym,
-        avgPrice: parseFloat(row[4]) || 0,
-        holdings: parseInt(row[5]) || 0,
-        totalInvested: parseFloat(row[6]) || 0,
-        principal: parseFloat(row[7]) || 0,
-        // 🔴 v3.5.2: 라오어 가이드 기준 기본값 (#29)
-        sellPercent: parseFloat(row[8]) || (sym === 'SOXL' ? 12 : 10),    // H: AFTER%
-        locSellPercent: parseFloat(row[9]) || 5    // I: LOC% - 모든 종목 5%
+        avgPrice: parseFloat(row[baseIndex + 1]) || 0,
+        holdings: parseInt(row[baseIndex + 2]) || 0,
+        totalInvested: parseFloat(row[baseIndex + 3]) || 0,
+        principal: parseFloat(row[baseIndex + 4]) || 0,
+        sellPercent: parseFloat(row[baseIndex + 5]) || (sym === 'SOXL' ? 12 : 10),
+        locSellPercent: parseFloat(row[baseIndex + 6]) || 5
       });
     });
 
