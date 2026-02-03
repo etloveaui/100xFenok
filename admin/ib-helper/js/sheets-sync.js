@@ -213,7 +213,8 @@ const SheetsSync = (function() {
         }
       };
 
-      if (gapi.client.getToken() === null) {
+      const token = gapi.client.getToken();
+      if (!token || !token.access_token) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
       } else {
         tokenClient.requestAccessToken({ prompt: '' });
@@ -263,7 +264,7 @@ const SheetsSync = (function() {
         const token = gapi.client.getToken();
         if (token && typeof google !== 'undefined' && google.accounts?.oauth2) {
           google.accounts.oauth2.revoke(token.access_token);
-          gapi.client.setToken('');
+          gapi.client.setToken(null);
         }
       }
     } catch (error) {
