@@ -53,8 +53,9 @@
 
 | 파일 | 데이터 소스 | 대상 JSON |
 |------|------------|-----------|
+| **`yahoo-quotes.gs`** | **Yahoo→Stooq→GOOGLEFINANCE** | **범용 실시간 주가 조회 (IB Helper 등)** |
 | `indices.gs` | GOOGLEFINANCE | `data/indices/sp500.json`, `nasdaq.json` |
-| `vix.gs` | FRED API | `data/sentiment/vix.json` |
+| `vix.gs` | Yahoo Finance | `data/sentiment/vix.json` |
 | `move.gs` | Yahoo Proxy | `data/sentiment/move.json` |
 | `aaii.gs` | IMPORTHTML (AAII 웹사이트) | `data/sentiment/aaii.json` |
 | `cftc.gs` | CFTC API | `data/sentiment/cftc-sp500.json` |
