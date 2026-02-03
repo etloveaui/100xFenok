@@ -56,6 +56,9 @@ const SheetsSync = (function() {
   let gisInited = false;
   let isSignedIn = false;
 
+  // 🔴 v3.4.0: 중복 push 방지
+  let isPushing = false;
+
   // =====================================================
   // INITIALIZATION
   // =====================================================
@@ -372,61 +375,75 @@ const SheetsSync = (function() {
    * - 내 구글ID + 내 프로필ID 행만 삭제
    * - 새 데이터 추가
    * - 다른 사용자 데이터 보존
+   *
+   * 🔴 v3.4.0: 중복 실행 방지 (isPushing flag)
    */
   async function push() {
     if (!currentUserEmail) {
       throw new Error('로그인이 필요합니다');
     }
 
+    // 🔴 v3.4.0: 이미 push 중이면 스킵
+    if (isPushing) {
+      console.log('SheetsSync push: Already in progress, skipping');
+      return;
+    }
+
     const profile = ProfileManager.getActive();
-    console.log('SheetsSync push - profile:', profile);
-    console.log('SheetsSync push - stocks:', profile?.stocks);
 
     if (!profile || !profile.stocks) {
       throw new Error('프로필이 없습니다');
     }
 
-    // 로컬 시간 기준 날짜 (한국 시간대 반영)
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    // 🔴 v3.4.0: push 시작
+    isPushing = true;
 
-    // 1. 전체 데이터 읽기
-    const allRows = await readAllRows();
+    try {
+      // 로컬 시간 기준 날짜 (한국 시간대 반영)
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-    // 2. 내 데이터 제외 (다른 사용자 데이터 보존)
-    const otherRows = allRows.filter(row =>
-      !(row[0] === currentUserEmail && row[1] === profile.id)
-    );
+      // 1. 전체 데이터 읽기
+      const allRows = await readAllRows();
 
-    // 3. 내 새 데이터 생성 (v3.2: 11 columns, 예수금 포함)
-    // 예수금은 BalanceManager에서 가져옴 (첫 번째 row에만 저장)
-    const balance = (typeof BalanceManager !== 'undefined')
-      ? BalanceManager.getBalance(profile.id)?.available || 0
-      : 0;
+      // 2. 내 데이터 제외 (다른 사용자 데이터 보존)
+      const otherRows = allRows.filter(row =>
+        !(row[0] === currentUserEmail && row[1] === profile.id)
+      );
 
-    const myNewRows = profile.stocks.map((stock, index) => {
-      const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
-      const sym = stock.symbol.toUpperCase();
-      return [
-        currentUserEmail,           // A: 구글ID
-        profile.id,                 // B: 프로필ID
-        stock.symbol,               // C: 종목
-        dailyData.avgPrice || 0,    // D: 평단가
-        dailyData.holdings || 0,    // E: 수량
-        dailyData.totalInvested || 0, // F: 총매입금
-        stock.principal || 0,       // G: 세팅원금
-        stock.sellPercent || (sym === 'TQQQ' ? 10 : 12),      // H: AFTER% (지정가 매도)
-        stock.locSellPercent || (sym === 'TQQQ' ? 5 : 6),     // I: LOC% (분할매도)
-        today,                      // J: 날짜
-        index === 0 ? balance : ''  // K: 예수금 (첫 번째 row만)
-      ];
-    });
+      // 3. 내 새 데이터 생성 (v3.2: 11 columns, 예수금 포함)
+      // 예수금은 BalanceManager에서 가져옴 (첫 번째 row에만 저장)
+      const balance = (typeof BalanceManager !== 'undefined')
+        ? BalanceManager.getBalance(profile.id)?.available || 0
+        : 0;
 
-    // 4. 합쳐서 저장
-    const finalRows = [...otherRows, ...myNewRows];
-    await writeAllRows(finalRows);
+      const myNewRows = profile.stocks.map((stock, index) => {
+        const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
+        const sym = stock.symbol.toUpperCase();
+        return [
+          currentUserEmail,           // A: 구글ID
+          profile.id,                 // B: 프로필ID
+          stock.symbol,               // C: 종목
+          dailyData.avgPrice || 0,    // D: 평단가
+          dailyData.holdings || 0,    // E: 수량
+          dailyData.totalInvested || 0, // F: 총매입금
+          stock.principal || 0,       // G: 세팅원금
+          stock.sellPercent || (sym === 'TQQQ' ? 10 : 12),      // H: AFTER% (지정가 매도)
+          stock.locSellPercent || (sym === 'TQQQ' ? 5 : 6),     // I: LOC% (분할매도)
+          today,                      // J: 날짜
+          index === 0 ? balance : ''  // K: 예수금 (첫 번째 row만)
+        ];
+      });
 
-    console.log(`SheetsSync: Pushed ${myNewRows.length} rows for ${currentUserEmail}/${profile.id}`);
+      // 4. 합쳐서 저장
+      const finalRows = [...otherRows, ...myNewRows];
+      await writeAllRows(finalRows);
+
+      console.log(`SheetsSync: Pushed ${myNewRows.length} rows for ${currentUserEmail}/${profile.id}`);
+    } finally {
+      // 🔴 v3.4.0: push 완료 (에러 발생해도 플래그 해제)
+      isPushing = false;
+    }
   }
 
   /**
