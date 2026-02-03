@@ -408,8 +408,18 @@
           <span class="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">IB</span>
           <span class="text-gray-800 hidden sm:inline"> Helper</span>
         </h1>
+        <!-- 🔴 v4.31.0 (B5-10): 동기화 상태 표시 -->
+        <span id="header-sync-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 hidden">
+          <i class="fas fa-circle text-[6px] mr-1"></i><span>로컬</span>
+        </span>
       </div>
-      <span id="today-date" class="text-xs text-gray-500"></span>
+      <div class="flex items-center gap-2">
+        <!-- 🔴 v4.31.0 (B5-06): 메인 동기화 버튼 -->
+        <button id="header-sync-btn" onclick="quickSyncToCloud()" class="hidden text-gray-400 hover:text-blue-500 touch-target flex items-center justify-center" title="클라우드 동기화">
+          <i class="fas fa-cloud-upload-alt"></i>
+        </button>
+        <span id="today-date" class="text-xs text-gray-500"></span>
+      </div>
     </div>
   </header>
 
@@ -509,19 +519,22 @@
       <h3 class="font-medium text-gray-700"><i class="fas fa-edit mr-2 text-blue-500"></i>오늘 입력</h3>
 
       <div>
-        <label class="block text-xs text-gray-500 mb-1">평단가 ($)</label>
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-xs text-gray-500">평단가 ($)</label>
+          <span id="current-price-display" class="text-xs text-blue-600 font-medium"></span>
+        </div>
         <input type="number" id="input-avgPrice" class="w-full px-3 py-2 border rounded-lg text-lg" placeholder="0.00" step="0.01" inputmode="decimal" onchange="saveCurrentInputs()">
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs text-gray-500 mb-1">총 매입금 ($)</label>
-          <input type="number" id="input-totalInvested" class="w-full px-3 py-2 border rounded-lg" placeholder="0.00" step="0.01" inputmode="decimal" onchange="saveCurrentInputs()">
+          <input type="number" id="input-totalInvested" class="w-full px-3 py-2 border rounded-lg" placeholder="0.00" step="0.01" inputmode="decimal" onchange="autoCalcAvgPrice(); saveCurrentInputs()">
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">보유 수량</label>
           <div class="flex gap-1">
-            <input type="number" id="input-holdings" class="flex-1 min-w-0 px-3 py-2 border rounded-lg" placeholder="0" inputmode="numeric" onchange="saveCurrentInputs()">
+            <input type="number" id="input-holdings" class="flex-1 min-w-0 px-3 py-2 border rounded-lg" placeholder="0" inputmode="numeric" onchange="autoCalcAvgPrice(); saveCurrentInputs()">
             <button onclick="adjustHoldings(1)" class="quick-add-btn bg-green-100 text-green-700 hover:bg-green-200">+1</button>
             <button onclick="adjustHoldings(3)" class="quick-add-btn bg-green-100 text-green-700 hover:bg-green-200">+3</button>
           </div>
@@ -783,11 +796,19 @@
       </div>
 
       <div class="p-4 space-y-4">
+        <!-- 🔴 v4.31.0 (B5-02): 프로필 전환 드롭다운 -->
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">현재 프로필</label>
+          <select id="modal-profile-selector" onchange="switchProfileFromModal(this.value)" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm font-medium">
+            <!-- Dynamic options -->
+          </select>
+        </div>
+
         <!-- Profile Info + New Profile Button (v4.22.0: 한 줄 배치) -->
         <div class="flex gap-2 items-end">
           <div class="flex-1">
             <label class="block text-xs text-gray-500 mb-1">프로필 이름</label>
-            <input type="text" id="modal-profile-name" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="이름">
+            <input type="text" id="modal-profile-name" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="이름" onchange="saveProfileName()">
           </div>
           <button onclick="createNewProfile()" class="px-3 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 whitespace-nowrap">
             <i class="fas fa-plus mr-1"></i>새 프로필
@@ -874,7 +895,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.29.7 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.31.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -1194,6 +1215,16 @@
       // 이전 종목 데이터가 새 프로필에 저장되는 것 방지
       selectedTicker = null;
 
+      // 🔴 v4.30.0 (B5-04): 프로필 전환 시 입력 필드 명시적 초기화
+      document.getElementById('input-principal').value = '';
+      document.getElementById('input-avgPrice').value = '';
+      document.getElementById('input-totalInvested').value = '';
+      document.getElementById('input-holdings').value = '';
+      document.getElementById('input-sellPercent').value = '10';
+      document.getElementById('input-locSellPercent').value = '5';
+      // 🔴 v4.30.0 (B5-14): 예수금도 초기화 (프로필 간 누수 방지)
+      document.getElementById('input-balance').value = '';
+
       ProfileManager.setActive(profileId);
       currentProfile = ProfileManager.getActive();
 
@@ -1292,8 +1323,114 @@
       currentProfile = ProfileManager.getActive();
       document.getElementById('modal-profile-name').value = currentProfile?.name || '';
 
+      // 🔴 v4.31.0 (B5-02): 모달 프로필 드롭다운 업데이트
+      updateModalProfileSelector();
+
       // Load stocks list
       updateModalStocksList();
+    }
+
+    /**
+     * 🔴 v4.31.0 (B5-02): 모달 내 프로필 드롭다운 업데이트
+     */
+    function updateModalProfileSelector() {
+      const selector = document.getElementById('modal-profile-selector');
+      if (!selector) return;
+
+      const profiles = ProfileManager.getAllProfiles();
+      const activeId = ProfileManager.getActiveId();
+
+      selector.innerHTML = profiles.map(p => `
+        <option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>
+          ${p.name}${p.id === activeId ? ' ✓' : ''}
+        </option>
+      `).join('');
+    }
+
+    /**
+     * 🔴 v4.31.0 (B5-02): 모달 내에서 프로필 전환
+     */
+    function switchProfileFromModal(profileId) {
+      if (!profileId || profileId === currentProfile?.id) return;
+
+      switchProfile(profileId);
+
+      // Update modal content
+      document.getElementById('modal-profile-name').value = currentProfile?.name || '';
+      updateModalStocksList();
+      updateModalProfileSelector();
+
+      showToast(`프로필 '${currentProfile?.name}' 로 전환됨`, 'success', 1500);
+    }
+
+    /**
+     * 🔴 v4.31.0 (B5-06): 메인에서 빠른 동기화
+     */
+    async function quickSyncToCloud() {
+      if (!SheetsSync.isAuthenticated()) {
+        showToast('먼저 Google 로그인이 필요합니다', 'warning');
+        return;
+      }
+
+      // 동기화 버튼 비활성화 (중복 클릭 방지)
+      const btn = document.getElementById('header-sync-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      }
+
+      try {
+        await syncToCloud();
+        updateSyncStatus('synced');
+      } catch (e) {
+        console.error('quickSyncToCloud error:', e);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i>';
+        }
+      }
+    }
+
+    /**
+     * 🔴 v4.31.0 (B5-10): 동기화 상태 업데이트
+     * @param {'local'|'synced'|'pending'} status
+     */
+    function updateSyncStatus(status) {
+      const statusEl = document.getElementById('header-sync-status');
+      if (!statusEl) return;
+
+      statusEl.classList.remove('hidden');
+
+      const statusConfig = {
+        local: { icon: 'circle', color: 'bg-gray-200 text-gray-500', text: '로컬' },
+        synced: { icon: 'check-circle', color: 'bg-green-100 text-green-600', text: '동기화됨' },
+        pending: { icon: 'exclamation-circle', color: 'bg-yellow-100 text-yellow-600', text: '대기중' }
+      };
+
+      const cfg = statusConfig[status] || statusConfig.local;
+      statusEl.className = `text-xs px-2 py-0.5 rounded-full ${cfg.color}`;
+      statusEl.innerHTML = `<i class="fas fa-${cfg.icon} text-[6px] mr-1"></i><span>${cfg.text}</span>`;
+    }
+
+    /**
+     * 🔴 v4.30.0 (B5-01): 프로필 이름 변경 즉시 저장
+     */
+    function saveProfileName() {
+      if (!currentProfile) return;
+
+      const newName = document.getElementById('modal-profile-name').value.trim();
+      if (!newName) return;
+
+      ProfileManager.update(currentProfile.id, { name: newName });
+      currentProfile = ProfileManager.getActive();
+
+      // Update UI
+      updateProfileSelector();
+      showToast('프로필 이름이 저장되었습니다', 'success', 1000);
+
+      // Sync to cloud
+      triggerAutoSync();
     }
 
     function closeProfileModal() {
@@ -1412,6 +1549,13 @@
       // 1. 현재 입력값 최종 저장 (혹시 모를 미저장 데이터)
       saveCurrentInputs();
 
+      // 🔴 v4.30.0 (#3): 동기화 전 필수값 체크
+      const stocks = currentProfile?.stocks || [];
+      const hasValidStock = stocks.some(s => s.principal > 0);
+      if (!hasValidStock) {
+        showToast('⚠️ 세팅원금이 입력된 종목이 없어 동기화가 제한됩니다', 'warning', 3000);
+      }
+
       // 2. 프로필 이름 업데이트
       const name = document.getElementById('modal-profile-name').value.trim();
       if (name) {
@@ -1437,9 +1581,12 @@
         showToast('시트 동기화 중...', 'info', 2000);
         await SheetsSync.push();
         showToast('클라우드 동기화 완료!', 'success');
+        // 🔴 v4.31.0 (B5-10): 동기화 상태 업데이트
+        updateSyncStatus('synced');
       } catch (error) {
         console.error('Sync error:', error);
         showToast('동기화 실패: ' + error.message, 'error');
+        updateSyncStatus('pending'); // 실패 시 대기 상태
       }
 
       updateProfileSelector();
@@ -1521,6 +1668,11 @@
         // 🔴 v4.29.1: 로그아웃 버튼 표시
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) logoutBtn.classList.remove('hidden');
+
+        // 🔴 v4.31.0 (B5-06, B5-10): 헤더 동기화 버튼 + 상태 표시
+        const headerSyncBtn = document.getElementById('header-sync-btn');
+        if (headerSyncBtn) headerSyncBtn.classList.remove('hidden');
+        updateSyncStatus('synced');
 
       } catch (error) {
         console.error('Quick start error:', error);
@@ -1787,8 +1939,16 @@
 
       console.log(`saveCurrentInputs: ${selectedTicker} principal=${principal}, sellPercent=${sellPercent}, locSellPercent=${locSellPercent}`);
 
+      // 🔴 v4.31.0 (B5-10): 데이터 변경 시 동기화 상태 '대기중'으로 변경
+      if (SheetsSync.isAuthenticated()) {
+        updateSyncStatus('pending');
+      }
+
       // 🔴 v4.20.0: Auto-sync to Google Sheets (debounced)
       triggerAutoSync();
+
+      // 🔴 v4.30.0 (B5-05/B5-12): 체크박스 상태 갱신 (입력값 저장 후)
+      updateTickerButtons();
     }
 
     function saveDailyInputs() {
@@ -1802,6 +1962,43 @@
 
       ProfileManager.saveDailyData(currentProfile.id, selectedTicker, data);
       console.log(`saveDailyInputs: ${selectedTicker}`, data);
+    }
+
+    /**
+     * 🔴 v4.30.0 (#10): 현재가 표시 (평단가 옆)
+     */
+    async function updateCurrentPriceDisplay(ticker) {
+      const display = document.getElementById('current-price-display');
+      if (!display) return;
+
+      display.textContent = '';  // 초기화
+
+      // 로그인 상태에서만 조회
+      if (!SheetsSync.isAuthenticated()) return;
+
+      try {
+        const price = await SheetsSync.getCurrentPrice(ticker);
+        if (price > 0) {
+          display.textContent = `현재가 $${price.toFixed(2)}`;
+        }
+      } catch (e) {
+        console.warn('현재가 조회 실패:', e.message);
+      }
+    }
+
+    /**
+     * 🔴 v4.30.0 (B5-11): 평단가 자동 계산
+     * 총매입금 / 보유수량 = 평단가
+     */
+    function autoCalcAvgPrice() {
+      const totalInvested = parseFloat(document.getElementById('input-totalInvested').value) || 0;
+      const holdings = parseInt(document.getElementById('input-holdings').value) || 0;
+
+      if (totalInvested > 0 && holdings > 0) {
+        const avgPrice = (totalInvested / holdings).toFixed(4);
+        document.getElementById('input-avgPrice').value = avgPrice;
+        console.log(`autoCalcAvgPrice: ${totalInvested} / ${holdings} = ${avgPrice}`);
+      }
     }
 
     function loadDailyInputs() {
@@ -1862,6 +2059,9 @@
 
       // Load saved daily inputs
       loadDailyInputs();
+
+      // 🔴 v4.30.0 (#10): 현재가 표시 (평단가 옆)
+      updateCurrentPriceDisplay(ticker);
 
       // 🔴 v4.17.0: 종목 전환 시 모든 결과 영역 초기화 (Bug 12 수정)
       document.getElementById('results-section').classList.add('hidden');
@@ -2298,10 +2498,26 @@
      * Silently saves in background, non-blocking
      * @param {Object} result - Calculation result
      */
+    // 🔴 v4.31.0 (B5-15): 중복 저장 방지용 Set
+    const _savedOrderKeys = new Set();
+
     async function saveOrdersToSheet(result) {
       // Only if logged in
       if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
         console.log('saveOrdersToSheet: Skipped (not logged in)');
+        return;
+      }
+
+      // 🔴 v4.31.0 (B5-14): ticker 유효성 검사
+      if (!result.ticker || result.ticker === 'null' || result.ticker === 'undefined') {
+        console.warn('saveOrdersToSheet: Skipped (invalid ticker)', result.ticker);
+        return;
+      }
+
+      // 🔴 v4.31.0 (B5-15): 중복 저장 방지
+      const orderKey = `${result.ticker}_${new Date().toISOString().slice(0, 10)}`;
+      if (_savedOrderKeys.has(orderKey)) {
+        console.log('saveOrdersToSheet: Skipped (already saved today)', orderKey);
         return;
       }
 
@@ -2312,6 +2528,7 @@
           sellOrders: result.sellOrders
         });
         if (count > 0) {
+          _savedOrderKeys.add(orderKey); // 성공 시에만 기록
           showToast(`📊 ${count}건 주문 저장됨`, 'success', 1500);
         }
       } catch (error) {
@@ -2834,8 +3051,13 @@
 
       const balance = BalanceManager.getBalance(currentProfile.id);
       const balanceInput = document.getElementById('input-balance');
+
+      // 🔴 v4.30.0 (B5-14): 항상 값 설정 (이전 프로필 값 누수 방지)
+      // 기존: balance > 0일 때만 설정 → 이전 값 유지됨
+      balanceInput.value = balance.available > 0 ? balance.available : '';
+
+      // 예수금이 있을 때만 상태 표시
       if (balance.available > 0) {
-        balanceInput.value = balance.available;
         recalculateBalance();
       }
     }
@@ -2956,6 +3178,17 @@
 
     function checkAndShowAlert() {
       if (!currentProfile) return;
+
+      // 🔴 v4.30.0 (B5-07): 예수금 0이면 경고 숨김 (미입력 상태)
+      const balance = BalanceManager.getBalance(currentProfile.id);
+      if (!balance || balance <= 0) {
+        const banner = document.getElementById('alert-banner');
+        if (banner) {
+          banner.classList.add('hidden');
+          document.body.style.paddingTop = '0';
+        }
+        return;
+      }
 
       const alert = BalanceManager.checkAlert(currentProfile.id);
       const banner = document.getElementById('alert-banner');

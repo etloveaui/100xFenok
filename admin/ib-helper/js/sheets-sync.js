@@ -4,7 +4,7 @@
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.5.2
+ * @version 3.5.3
  * @author 100xFenok Claude
  * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
  * @feature #211 (2026-02-03): 현재가 연동 - Prices 시트에서 자동 조회
@@ -505,7 +505,7 @@ const SheetsSync = (function() {
           stock.sellPercent || (sym === 'SOXL' ? 12 : 10),      // H: AFTER% (지정가 매도)
           stock.locSellPercent || 5,     // I: LOC% (분할매도) - 모든 종목 5%
           today,                      // J: 날짜
-          index === 0 ? balance : ''  // K: 예수금 (첫 번째 row만)
+          index === 0 ? (balance || 0) : 0  // K: 예수금 (첫 번째 row만, 🔴 v3.5.3: 빈값→0 통일 B5-08)
         ];
       });
 
