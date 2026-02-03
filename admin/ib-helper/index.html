@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>IB Helper - 무한매수 도우미</title>
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+
   <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -653,7 +657,7 @@
 
   <!-- Footer -->
   <footer class="px-4 py-6 text-center">
-    <p class="text-xs text-gray-500">100x IB Helper v4.18.0</p>
+    <p class="text-xs text-gray-500">100x IB Helper v4.19.0</p>
     <p class="mt-1 text-xs text-gray-400">Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
@@ -671,6 +675,76 @@
     // 'SOXL' 초기값 → 첫 로드 시 빈 데이터로 기존 데이터 덮어씌움 방지
     let selectedTicker = null;
     let currentProfile = null;
+
+    // =====================================================
+    // Auto-Save to Sheets (v4.20.0)
+    // =====================================================
+
+    /**
+     * Debounce utility - prevents rapid-fire API calls
+     * @param {Function} fn - Function to debounce
+     * @param {number} delay - Delay in ms
+     */
+    function debounce(fn, delay) {
+      let timeoutId;
+      return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    /**
+     * Auto-sync to Google Sheets (5초 debounce)
+     * - 로그인 상태일 때만 실행
+     * - 연속 입력 시 마지막 입력 후 5초 뒤 동기화
+     */
+    const debouncedSheetSync = debounce(async function() {
+      // Check if SheetsSync is available and authenticated
+      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
+        console.log('Auto-sync: Skipped (not logged in)');
+        return;
+      }
+
+      if (!currentProfile) {
+        console.log('Auto-sync: Skipped (no profile)');
+        return;
+      }
+
+      try {
+        // Set current profile for sync
+        SheetsSync.setCurrentProfile(currentProfile.id);
+
+        // Push to sheets
+        await SheetsSync.push();
+
+        // Visual feedback (subtle)
+        const status = document.getElementById('sheets-status');
+        if (status) {
+          status.textContent = '✓ 동기화됨';
+          status.className = 'text-xs text-green-600';
+          setTimeout(() => {
+            if (status.textContent === '✓ 동기화됨') {
+              status.textContent = '연결됨';
+            }
+          }, 2000);
+        }
+
+        console.log('Auto-sync: Success');
+      } catch (error) {
+        console.error('Auto-sync: Failed', error);
+        // Silent failure - 사용자 작업 방해 안함
+      }
+    }, 5000); // 5초 debounce
+
+    /**
+     * Trigger auto-sync after local save
+     * Called from saveCurrentInputs()
+     */
+    function triggerAutoSync() {
+      if (currentProfile) {
+        debouncedSheetSync();
+      }
+    }
 
     // =====================================================
     // Toast Notification System
@@ -1343,6 +1417,9 @@
       }
 
       console.log(`saveCurrentInputs: ${selectedTicker} principal=${principal}, sellPercent=${sellPercent}`);
+
+      // 🔴 v4.20.0: Auto-sync to Google Sheets (debounced)
+      triggerAutoSync();
     }
 
     function saveDailyInputs() {
@@ -1971,26 +2048,90 @@
     }
 
     /**
-     * 시트에서 데이터 불러오기 (DEC-150: Dual-Key)
+     * 시트에서 데이터 불러오기 (v4.19.0: 프로필 선택 UI 추가 - Bug 14 수정)
+     * - 시트에서 내 구글ID의 모든 프로필 목록 조회
+     * - 여러 프로필이 있으면 선택 UI 표시
+     * - 선택한 프로필 데이터를 현재 로컬 프로필에 불러오기
      */
     async function handleSheetsPull() {
+      const status = document.getElementById('sheets-status');
+
+      try {
+        status.textContent = '확인 중...';
+        status.className = 'text-xs text-amber-600';
+
+        // Initialize and sign in
+        await initSheets();
+
+        // Get all my profiles from sheet
+        const sheetProfiles = await SheetsSync.getMyProfilesFromSheet();
+
+        if (sheetProfiles.length === 0) {
+          showToast('시트에 데이터가 없습니다', 'warning');
+          status.textContent = '데이터 없음';
+          status.className = 'text-xs text-gray-600';
+          return;
+        }
+
+        // If only one profile, pull directly
+        if (sheetProfiles.length === 1) {
+          await pullFromSheetProfile(sheetProfiles[0].profileId);
+          return;
+        }
+
+        // Multiple profiles - show selection
+        showSheetProfileSelection(sheetProfiles);
+        status.textContent = '선택 대기';
+        status.className = 'text-xs text-blue-600';
+
+      } catch (error) {
+        console.error('Sheets pull error:', error);
+        status.textContent = '오류';
+        status.className = 'text-xs text-red-600';
+        showToast('불러오기 실패: ' + error.message, 'error');
+      }
+    }
+
+    /**
+     * 시트 프로필 선택 UI (v4.19.0)
+     */
+    function showSheetProfileSelection(sheetProfiles) {
+      const options = sheetProfiles.map((p, i) =>
+        `${i + 1}. ${p.profileName} (${p.stocks.length}개 종목: ${p.stocks.map(s => s.symbol).join(', ')})`
+      ).join('\n');
+
+      const message = `📊 시트에서 ${sheetProfiles.length}개 프로필을 찾았습니다:\n\n${options}\n\n현재 프로필 "${currentProfile?.name || '?'}"에 불러올 번호를 선택하세요:`;
+
+      const indexStr = prompt(message, '1');
+      if (!indexStr) {
+        document.getElementById('sheets-status').textContent = '취소됨';
+        document.getElementById('sheets-status').className = 'text-xs text-gray-600';
+        return;
+      }
+
+      const index = parseInt(indexStr) - 1;
+      if (index < 0 || index >= sheetProfiles.length) {
+        showToast('잘못된 번호입니다', 'warning');
+        return;
+      }
+
+      pullFromSheetProfile(sheetProfiles[index].profileId);
+    }
+
+    /**
+     * 특정 시트 프로필에서 데이터 불러오기 (v4.19.0)
+     * @param {string} sheetProfileId - 시트에 저장된 프로필 ID
+     */
+    async function pullFromSheetProfile(sheetProfileId) {
       const status = document.getElementById('sheets-status');
 
       try {
         status.textContent = '불러오는 중...';
         status.className = 'text-xs text-amber-600';
 
-        // Initialize and sign in
-        await initSheets();
+        const pulled = await SheetsSync.pullFromSheetProfile(sheetProfileId);
 
-        // Set current profile for filtering
-        SheetsSync.setCurrentProfile(currentProfile.id);
-
-        // Pull data from sheet (내 구글ID + 내 프로필만)
-        const pulled = await SheetsSync.pull();
-
-        // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
-        // 시트 데이터로 덮어씌워지므로 종목 선택 초기화 필요
+        // 🔴 selectedTicker 초기화 (시트 데이터로 덮어씌워지므로)
         selectedTicker = null;
 
         // Refresh UI
@@ -2001,10 +2142,10 @@
 
         status.textContent = '연결됨';
         status.className = 'text-xs text-green-600';
-        showToast(`${pulled.length}개 종목 불러옴`, 'success');
+        showToast(`${pulled.length}개 종목 불러옴 (from: ${sheetProfileId.split('_')[0]})`, 'success');
 
       } catch (error) {
-        console.error('Sheets pull error:', error);
+        console.error('Pull from sheet profile error:', error);
         status.textContent = '오류';
         status.className = 'text-xs text-red-600';
         showToast('불러오기 실패: ' + error.message, 'error');
