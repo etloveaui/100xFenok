@@ -366,8 +366,11 @@ const SheetsSync = (function() {
    * @returns {boolean}
    */
   function isAuthenticated() {
-    // 이메일 인증 체크
-    if (emailAuthToken && emailAuthEmail) {
+    // 🔴 v3.6.3: 이메일 인증 체크 (우선)
+    const hasEmailAuth = !!(emailAuthToken && emailAuthEmail);
+    console.log('SheetsSync.isAuthenticated:', { hasEmailAuth, emailAuthToken: !!emailAuthToken, emailAuthEmail: !!emailAuthEmail });
+
+    if (hasEmailAuth) {
       return true;
     }
 

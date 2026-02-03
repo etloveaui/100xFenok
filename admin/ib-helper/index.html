@@ -1703,10 +1703,17 @@
         currentProfile = ProfileManager.getActive();
       }
 
-      // 3. Google Sheets 동기화
+      // 3. 인증 확인 (Google OAuth 또는 Email Auth)
+      // 🔴 v4.33.3: 이메일 인증 사용자는 Google 로그인 불필요
       if (!SheetsSync.isAuthenticated()) {
+        // 이메일 인증 여부 확인
+        if (SheetsSync.isEmailAuth()) {
+          // 이메일 인증인데 isAuthenticated가 false면 세션 문제
+          showToast('이메일 세션이 만료되었습니다. 다시 로그인해주세요.', 'warning');
+          return;
+        }
+        // Google OAuth 필요
         showToast('Google 로그인이 필요합니다', 'warning');
-        // 로그인 시도
         try {
           await initSheets();
           if (!SheetsSync.isAuthenticated()) {
