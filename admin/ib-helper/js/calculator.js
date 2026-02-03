@@ -507,7 +507,8 @@ const IBCalculator = (function() {
         avgPrice,
         totalInvested,
         holdings,
-        currentPrice
+        currentPrice,
+        sellPercent: inputSellPercent
       },
       calculation: {
         oneTimeBuy: roundPrice(oneTimeBuy),
