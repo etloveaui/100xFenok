@@ -588,6 +588,11 @@ admin/ib-helper/
 - [x] **JS Changes**:
   - `sheets-sync.js`: parseRows(), push(), pull(), pullFromSheetProfile() 업데이트
   - `getMyProfilesFromSheet()`: 새 컬럼 반영
+- [x] **HTML Changes**:
+  - 설정 섹션에 LOC% 입력 필드 추가 (`input-locSellPercent`)
+  - `saveCurrentInputs()`: locSellPercent 저장
+  - `selectTicker()`: locSellPercent 로드
+  - 종목 추가/dat import 시 locSellPercent 포함
 - [x] **User Action Required**:
   - Portfolio 시트에 H열 "AFTER%", I열 "LOC%" 헤더 추가
   - 기존 H열 "날짜" → J열로 이동
