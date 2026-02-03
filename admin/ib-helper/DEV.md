@@ -1,6 +1,6 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.33.3
+> **Version**: 4.33.4
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
 > **Status**: ✅ Phase 1-3 Complete + **Dual-Track Auth (#220)** + Ralph Loop 6 + 현재가 연동 (#211) + UX 개선 + 다중 종목 계산 (#217, #218)
@@ -676,6 +676,13 @@ admin/ib-helper/
   - `copyMocOrder()` - MOC 주문 복사
   - 사용자가 명시적으로 체크해야 MOC 안내 표시
 - [x] **#218 종목 제외 체크박스**: ⏸️ 다중 종목 계산(#217)과 함께 구현 예정
+
+### v4.33.4: Email Auth Current Price Fix (02-04) - User Feedback
+- [x] **Bug Fix**: 이메일 인증 사용자 현재가 조회 실패 (`gapi is not defined`)
+- [x] **sheets-sync.js v3.6.4**:
+  - `fetchCurrentPrices()`: gapi 없으면 빈 객체 반환 (에러 방지)
+  - `getCurrentPrice()`: Ticker API fallback 추가 (이메일 인증 사용자용)
+- [x] **User Impact**: 이메일 사용자도 현재가 자동 조회 가능 (Ticker API 사용)
 
 ### v4.33.3: Email Auth Cloud Sync (02-03) - User Feedback
 - [x] **Feature**: 이메일 인증 사용자를 위한 독립적인 클라우드 동기화
