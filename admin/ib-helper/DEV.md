@@ -677,6 +677,12 @@ admin/ib-helper/
   - 사용자가 명시적으로 체크해야 MOC 안내 표시
 - [x] **#218 종목 제외 체크박스**: ⏸️ 다중 종목 계산(#217)과 함께 구현 예정
 
+### v4.34.0: Google OAuth Reset (02-03)
+- [x] Removed email/password UI와 Apps Script WebApp 설정 UI
+- [x] `sheets-sync.js`: WebApp/토큰 관련 함수 제거 (Google OAuth만 유지)
+- [x] `Code.gs.template`: WebApp `doPost()/register/login` 및 Users 시트 로직 삭제
+- [x] 문서/로그 기준 Google 로그인 단일 플로우로 회귀
+
 ### ❌ v4.33.x: Email Auth (REVERTED 02-04)
 - **Reverted**: 이메일 인증 기능이 Google OAuth 현재가 조회를 망가뜨림
 - **Rollback**: sheets-sync.js v3.6.0, index.html 원복
