@@ -1,10 +1,11 @@
 /**
- * IB Helper Google Sheets Sync - v3.5.2 (#29 default values fix)
+ * IB Helper Google Sheets Sync - v3.6.0 (Session Persistence)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.5.3
+ * @version 3.6.0
+ * @feature Session Persistence: 토큰 localStorage 저장 → 재방문 시 자동 로그인
  * @author 100xFenok Claude
  * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
  * @feature #211 (2026-02-03): 현재가 연동 - Prices 시트에서 자동 조회
@@ -61,6 +62,10 @@ const SheetsSync = (function() {
 
   // 🔴 v3.4.0: 중복 push 방지
   let isPushing = false;
+
+  // 🔴 v3.6.0: 세션 유지용 스토리지 키
+  const TOKEN_STORAGE_KEY = 'ib_helper_google_token';
+  const EMAIL_STORAGE_KEY = 'ib_helper_google_email';
 
   // =====================================================
   // RETRY HELPER (C-10: Rate Limit Handling)
@@ -186,13 +191,85 @@ const SheetsSync = (function() {
   // =====================================================
 
   /**
+   * 🔴 v3.6.0: 저장된 세션 복원 시도
+   * @returns {Promise<boolean>} 복원 성공 여부
+   */
+  async function tryRestoreSession() {
+    try {
+      const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+      const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
+
+      if (!savedToken || !savedEmail) {
+        return false;
+      }
+
+      const tokenData = JSON.parse(savedToken);
+
+      // 토큰 만료 체크 (만료 시간이 있고, 현재 시간보다 이전이면 만료)
+      if (tokenData.expires_at && Date.now() > tokenData.expires_at) {
+        console.log('SheetsSync: Saved token expired, clearing...');
+        clearSavedSession();
+        return false;
+      }
+
+      // 토큰 복원
+      gapi.client.setToken(tokenData);
+      currentUserEmail = savedEmail;
+      isSignedIn = true;
+
+      console.log('SheetsSync: Session restored for', savedEmail);
+      return true;
+    } catch (error) {
+      console.warn('SheetsSync: Failed to restore session:', error);
+      clearSavedSession();
+      return false;
+    }
+  }
+
+  /**
+   * 🔴 v3.6.0: 세션 저장
+   */
+  function saveSession() {
+    try {
+      const token = gapi.client.getToken();
+      if (token && currentUserEmail) {
+        // 만료 시간 추가 (1시간 후)
+        const tokenWithExpiry = {
+          ...token,
+          expires_at: Date.now() + (60 * 60 * 1000)  // 1시간
+        };
+        localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokenWithExpiry));
+        localStorage.setItem(EMAIL_STORAGE_KEY, currentUserEmail);
+        console.log('SheetsSync: Session saved for', currentUserEmail);
+      }
+    } catch (error) {
+      console.warn('SheetsSync: Failed to save session:', error);
+    }
+  }
+
+  /**
+   * 🔴 v3.6.0: 저장된 세션 삭제
+   */
+  function clearSavedSession() {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(EMAIL_STORAGE_KEY);
+  }
+
+  /**
    * Sign in to Google and get user email
+   * 🔴 v3.6.0: 저장된 세션 먼저 확인, 없으면 새 로그인
    * @returns {Promise<Object>} Token response
    */
   function signIn() {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (!gisInited) {
         reject(new Error('Google Identity Services not initialized'));
+        return;
+      }
+
+      // 🔴 v3.6.0: 저장된 세션 복원 시도
+      if (await tryRestoreSession()) {
+        resolve({ restored: true });
         return;
       }
 
@@ -200,12 +277,15 @@ const SheetsSync = (function() {
         if (response.error) {
           isSignedIn = false;
           currentUserEmail = null;
+          clearSavedSession();
           reject(response);
         } else {
           isSignedIn = true;
           // Get user email after sign in
           try {
             await fetchUserEmail();
+            // 🔴 v3.6.0: 세션 저장
+            saveSession();
           } catch (e) {
             console.warn('Could not fetch user email:', e);
           }
@@ -213,10 +293,13 @@ const SheetsSync = (function() {
         }
       };
 
+      // 🔴 v3.6.0: prompt 변경 - 'select_account' 대신 '' 사용 (조용히 갱신 시도)
       const token = gapi.client.getToken();
       if (!token || !token.access_token) {
+        // 토큰 없음 - 계정 선택 필요
         tokenClient.requestAccessToken({ prompt: 'consent' });
       } else {
+        // 토큰 있음 - 조용히 갱신
         tokenClient.requestAccessToken({ prompt: '' });
       }
     });
@@ -256,6 +339,7 @@ const SheetsSync = (function() {
   /**
    * Sign out from Google
    * 🔴 v3.4.1: gapi/google 미정의 체크 추가 (C-04)
+   * 🔴 v3.6.0: 저장된 세션도 삭제
    */
   function signOut() {
     try {
@@ -272,6 +356,8 @@ const SheetsSync = (function() {
     }
     isSignedIn = false;
     currentUserEmail = null;
+    // 🔴 v3.6.0: 저장된 세션 삭제
+    clearSavedSession();
   }
 
   /**
@@ -1036,6 +1122,200 @@ const SheetsSync = (function() {
   }
 
   // =====================================================
+  // EMAIL AUTHENTICATION (Apps Script Web App)
+  // =====================================================
+
+  // 🔴 v3.6.0: Apps Script Web App URL
+  const DEFAULT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzKc-Z0dxg7GNdRm3HejvPYCke8AObXd--aZARPIBQUvemmz8tkFFC6GV6FOqp61mF6/exec';
+  let webAppUrl = localStorage.getItem('ib_helper_webapp_url') || DEFAULT_WEBAPP_URL;
+
+  // 이메일 인증 상태
+  let emailAuthToken = localStorage.getItem('ib_helper_email_token') || '';
+  let emailAuthEmail = localStorage.getItem('ib_helper_email_user') || '';
+  let emailAuthExpiry = localStorage.getItem('ib_helper_email_expiry') || '';
+
+  /**
+   * Set Web App URL
+   * @param {string} url - Apps Script Web App URL
+   */
+  function setWebAppUrl(url) {
+    webAppUrl = url;
+    localStorage.setItem('ib_helper_webapp_url', url);
+    console.log('SheetsSync: Web App URL set');
+  }
+
+  /**
+   * Get Web App URL
+   * @returns {string}
+   */
+  function getWebAppUrl() {
+    return webAppUrl;
+  }
+
+  /**
+   * Register new user (이메일 가입)
+   * @param {string} email - User email
+   * @param {string} password - User password
+   * @returns {Promise<Object>} { success, token?, error? }
+   */
+  async function registerEmail(email, password) {
+    if (!webAppUrl) {
+      throw new Error('Web App URL이 설정되지 않았습니다');
+    }
+
+    const response = await fetch(webAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'register',
+        email: email,
+        password: password
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // 세션 저장
+      emailAuthToken = result.token;
+      emailAuthEmail = result.email;
+      emailAuthExpiry = result.expiresAt;
+      currentUserEmail = result.email;
+      isSignedIn = true;
+
+      localStorage.setItem('ib_helper_email_token', result.token);
+      localStorage.setItem('ib_helper_email_user', result.email);
+      localStorage.setItem('ib_helper_email_expiry', result.expiresAt);
+
+      console.log('SheetsSync: Registered as', result.email);
+    }
+
+    return result;
+  }
+
+  /**
+   * Login with email (이메일 로그인)
+   * @param {string} email - User email
+   * @param {string} password - User password
+   * @returns {Promise<Object>} { success, token?, error? }
+   */
+  async function loginEmail(email, password) {
+    if (!webAppUrl) {
+      throw new Error('Web App URL이 설정되지 않았습니다');
+    }
+
+    const response = await fetch(webAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        email: email,
+        password: password
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // 세션 저장
+      emailAuthToken = result.token;
+      emailAuthEmail = result.email;
+      emailAuthExpiry = result.expiresAt;
+      currentUserEmail = result.email;
+      isSignedIn = true;
+
+      localStorage.setItem('ib_helper_email_token', result.token);
+      localStorage.setItem('ib_helper_email_user', result.email);
+      localStorage.setItem('ib_helper_email_expiry', result.expiresAt);
+
+      console.log('SheetsSync: Logged in as', result.email);
+    }
+
+    return result;
+  }
+
+  /**
+   * Try restore email session
+   * @returns {Promise<boolean>} 복원 성공 여부
+   */
+  async function tryRestoreEmailSession() {
+    if (!emailAuthToken || !emailAuthEmail || !webAppUrl) {
+      return false;
+    }
+
+    // 만료 체크
+    if (emailAuthExpiry && new Date() > new Date(emailAuthExpiry)) {
+      console.log('SheetsSync: Email token expired');
+      clearEmailSession();
+      return false;
+    }
+
+    // 서버에서 토큰 검증
+    try {
+      const response = await fetch(webAppUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          token: emailAuthToken
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        currentUserEmail = result.email;
+        isSignedIn = true;
+        console.log('SheetsSync: Email session restored for', result.email);
+        return true;
+      }
+    } catch (error) {
+      console.warn('SheetsSync: Email session restore failed:', error);
+    }
+
+    clearEmailSession();
+    return false;
+  }
+
+  /**
+   * Clear email session
+   */
+  function clearEmailSession() {
+    emailAuthToken = '';
+    emailAuthEmail = '';
+    emailAuthExpiry = '';
+    localStorage.removeItem('ib_helper_email_token');
+    localStorage.removeItem('ib_helper_email_user');
+    localStorage.removeItem('ib_helper_email_expiry');
+  }
+
+  /**
+   * Sign out from email auth
+   */
+  function signOutEmail() {
+    clearEmailSession();
+    isSignedIn = false;
+    currentUserEmail = null;
+    console.log('SheetsSync: Email signed out');
+  }
+
+  /**
+   * Check if using email auth
+   * @returns {boolean}
+   */
+  function isEmailAuth() {
+    return !!emailAuthToken && !!emailAuthEmail;
+  }
+
+  /**
+   * Get email auth token
+   * @returns {string}
+   */
+  function getEmailToken() {
+    return emailAuthToken;
+  }
+
+  // =====================================================
   // PUBLIC API
   // =====================================================
 
@@ -1045,11 +1325,21 @@ const SheetsSync = (function() {
     isConfigured,
     getStatus,
 
-    // Authentication
+    // Google OAuth Authentication
     signIn,
     signOut,
     isAuthenticated,
     getUserEmail,
+
+    // Email Authentication (Apps Script)
+    setWebAppUrl,
+    getWebAppUrl,
+    registerEmail,
+    loginEmail,
+    signOutEmail,
+    tryRestoreEmailSession,
+    isEmailAuth,
+    getEmailToken,
 
     // Profile
     setCurrentProfile,

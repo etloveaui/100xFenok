@@ -465,9 +465,47 @@
         Google로 시작하기
       </button>
 
-      <p class="mt-4 text-xs text-gray-400">
-        📊 Google Sheets 자동 동기화
+      <p class="mt-3 text-xs text-gray-400">
+        📊 Google Sheets 자동 동기화 (1시간 세션)
       </p>
+
+      <!-- Divider -->
+      <div class="flex items-center gap-3 my-5">
+        <div class="flex-1 h-px bg-gray-200"></div>
+        <span class="text-xs text-gray-400">또는</span>
+        <div class="flex-1 h-px bg-gray-200"></div>
+      </div>
+
+      <!-- Email Login Section -->
+      <div id="email-login-section" class="space-y-3">
+        <input type="email" id="login-email" placeholder="이메일"
+          class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none" />
+        <input type="password" id="login-password" placeholder="비밀번호 (4자 이상)"
+          class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none" />
+
+        <div class="flex gap-2">
+          <button onclick="emailLogin()" class="flex-1 py-3 bg-gray-800 text-white rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors">
+            로그인
+          </button>
+          <button onclick="emailRegister()" class="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors">
+            가입하기
+          </button>
+        </div>
+
+        <p class="text-xs text-gray-400 text-center">
+          🔒 7일 세션 유지 · 경고 없음
+        </p>
+      </div>
+
+      <!-- Web App URL Setting (for email auth) -->
+      <div id="webapp-url-section" class="hidden mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+        <p class="text-xs text-amber-700 mb-2">⚠️ Apps Script URL 설정 필요</p>
+        <input type="text" id="webapp-url-input" placeholder="https://script.google.com/..."
+          class="w-full px-3 py-2 border border-amber-200 rounded text-xs focus:ring-2 focus:ring-amber-200 outline-none" />
+        <button onclick="saveWebAppUrl()" class="mt-2 w-full py-2 bg-amber-500 text-white rounded text-xs font-medium hover:bg-amber-600">
+          저장
+        </button>
+      </div>
 
       <button onclick="quickStartOffline()" class="mt-4 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2">
         로그인 없이 시작
@@ -1161,9 +1199,17 @@
         day: '2-digit'
       });
 
-      // 🔴 v4.29.0: 시작 시 항상 빈 상태 표시 (로그인/시작 버튼)
-      // 기존 로컬 데이터가 있어도 숨김 - 사용자가 명시적으로 시작해야 함
-      showStartScreen();
+      // 🔴 v3.6.0: Web App URL 체크 (이메일 로그인용)
+      checkWebAppUrl();
+
+      // 🔴 v3.6.0: 이메일 자동 로그인 시도
+      tryEmailAutoLogin().then(restored => {
+        if (!restored) {
+          // 🔴 v4.29.0: 시작 시 항상 빈 상태 표시 (로그인/시작 버튼)
+          // 기존 로컬 데이터가 있어도 숨김 - 사용자가 명시적으로 시작해야 함
+          showStartScreen();
+        }
+      });
 
       // Balance input debounce setup
       // 🔴 v4.29.6 (#33): debounce 500ms → 200ms (UX 개선)
@@ -1756,6 +1802,179 @@
 
       initializeApp();
       showToast('⚠️ 오프라인 모드 - Google 동기화 없음', 'warning');
+    }
+
+    // =====================================================
+    // EMAIL AUTHENTICATION (v3.6.0)
+    // =====================================================
+
+    /**
+     * Check Web App URL on page load
+     */
+    function checkWebAppUrl() {
+      const url = SheetsSync.getWebAppUrl();
+      const urlSection = document.getElementById('webapp-url-section');
+
+      if (!url && urlSection) {
+        urlSection.classList.remove('hidden');
+      } else if (urlSection) {
+        urlSection.classList.add('hidden');
+      }
+    }
+
+    /**
+     * Save Web App URL
+     */
+    function saveWebAppUrl() {
+      const input = document.getElementById('webapp-url-input');
+      const url = input?.value?.trim();
+
+      if (!url) {
+        showToast('URL을 입력하세요', 'error');
+        return;
+      }
+
+      if (!url.startsWith('https://script.google.com/')) {
+        showToast('올바른 Apps Script URL이 아닙니다', 'error');
+        return;
+      }
+
+      SheetsSync.setWebAppUrl(url);
+      document.getElementById('webapp-url-section')?.classList.add('hidden');
+      showToast('✅ Web App URL 저장됨', 'success');
+    }
+
+    /**
+     * Email login
+     */
+    async function emailLogin() {
+      const email = document.getElementById('login-email')?.value?.trim();
+      const password = document.getElementById('login-password')?.value;
+
+      if (!email || !password) {
+        showToast('이메일과 비밀번호를 입력하세요', 'error');
+        return;
+      }
+
+      // Check Web App URL
+      if (!SheetsSync.getWebAppUrl()) {
+        document.getElementById('webapp-url-section')?.classList.remove('hidden');
+        showToast('⚠️ 먼저 Apps Script URL을 설정하세요', 'warning');
+        return;
+      }
+
+      try {
+        showToast('로그인 중...', 'info');
+        const result = await SheetsSync.loginEmail(email, password);
+
+        if (result.success) {
+          showToast(`✅ ${result.email} 로그인 완료`, 'success');
+          await emailQuickStart(result.email);
+        } else {
+          showToast('❌ ' + result.error, 'error');
+        }
+      } catch (error) {
+        console.error('Email login error:', error);
+        showToast('로그인 실패: ' + error.message, 'error');
+      }
+    }
+
+    /**
+     * Email register
+     */
+    async function emailRegister() {
+      const email = document.getElementById('login-email')?.value?.trim();
+      const password = document.getElementById('login-password')?.value;
+
+      if (!email || !password) {
+        showToast('이메일과 비밀번호를 입력하세요', 'error');
+        return;
+      }
+
+      if (password.length < 4) {
+        showToast('비밀번호는 4자 이상이어야 합니다', 'error');
+        return;
+      }
+
+      // Check Web App URL
+      if (!SheetsSync.getWebAppUrl()) {
+        document.getElementById('webapp-url-section')?.classList.remove('hidden');
+        showToast('⚠️ 먼저 Apps Script URL을 설정하세요', 'warning');
+        return;
+      }
+
+      try {
+        showToast('가입 중...', 'info');
+        const result = await SheetsSync.registerEmail(email, password);
+
+        if (result.success) {
+          showToast(`✅ ${result.email} 가입 완료!`, 'success');
+          await emailQuickStart(result.email);
+        } else {
+          showToast('❌ ' + result.error, 'error');
+        }
+      } catch (error) {
+        console.error('Email register error:', error);
+        showToast('가입 실패: ' + error.message, 'error');
+      }
+    }
+
+    /**
+     * Quick start after email auth
+     */
+    async function emailQuickStart(email) {
+      // Clear local data
+      ProfileManager.resetToDefaults();
+      selectedTicker = null;
+
+      // Create new profile
+      const profileName = email.split('@')[0];
+      const profileId = ProfileManager.create(profileName, '');
+      ProfileManager.setActive(profileId);
+      currentProfile = ProfileManager.getActive();
+      SheetsSync.setCurrentProfile(profileId);
+
+      // Initialize app
+      initializeApp();
+
+      // Update UI
+      const userEl = document.getElementById('sheets-user');
+      const statusEl = document.getElementById('sheets-status');
+      if (userEl) {
+        userEl.textContent = email;
+        userEl.classList.remove('hidden');
+      }
+      if (statusEl) {
+        statusEl.textContent = '연결됨 (이메일)';
+        statusEl.className = 'text-xs text-blue-600';
+      }
+
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) logoutBtn.classList.remove('hidden');
+
+      const headerSyncBtn = document.getElementById('header-sync-btn');
+      if (headerSyncBtn) headerSyncBtn.classList.remove('hidden');
+      updateSyncStatus('synced');
+    }
+
+    /**
+     * Try restore email session on page load
+     */
+    async function tryEmailAutoLogin() {
+      if (!SheetsSync.getWebAppUrl()) return false;
+
+      try {
+        const restored = await SheetsSync.tryRestoreEmailSession();
+        if (restored) {
+          const email = SheetsSync.getUserEmail();
+          showToast(`✅ ${email} 자동 로그인`, 'success');
+          await emailQuickStart(email);
+          return true;
+        }
+      } catch (error) {
+        console.warn('Email auto-login failed:', error);
+      }
+      return false;
     }
 
     function createNewProfile() {
@@ -3647,8 +3866,12 @@
       }
 
       try {
-        // 1. Google 로그아웃
-        SheetsSync.signOut();
+        // 1. 로그아웃 (Google 또는 이메일)
+        if (SheetsSync.isEmailAuth()) {
+          SheetsSync.signOutEmail();
+        } else {
+          SheetsSync.signOut();
+        }
         sheetsInitialized = false;
         sheetsInitPromise = null;
 
