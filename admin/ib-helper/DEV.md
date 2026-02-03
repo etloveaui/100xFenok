@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.29.7
+> **Version**: 4.30.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
-> **Status**: ✅ Phase 1-3 Complete + Order Execution + **현재가 연동 (#211)** + **UX 개선 (#216, #219)** + **다중 종목 계산 (#217, #218)** + **로그인 기반 + UX 플로우 개선 + 구문 오류 수정 (v4.29.7)**
+> **Status**: ✅ Phase 1-3 Complete + Order Execution + **현재가 연동 (#211)** + **UX 개선** + **다중 종목 계산 (#217, #218)** + **Critical Bug Fixes (v4.30.0)**: 프로필 전환 초기화, 체크박스 갱신, 예수금 경고, 평단가 자동계산
 > **Priority**: 🟡 Phase 4 (Telegram) Pending
 >
 > **📁 Testing Docs**: [Data Flow](../../../../docs/testing/ib-helper-data-flow.md) | [Scenarios](../../../../docs/testing/ib-helper-scenarios.md) | [State Machine](../../../../docs/testing/ib-helper-state-machine.md)
