@@ -580,6 +580,16 @@ admin/ib-helper/
 - UI: 실시간 계산 + 종목별 breakdown + 상단 알림 배너
 - 스펙: `_tmp/PHASE3_SPEC.md` (Asset Allocator 제공)
 
+### v4.21.2: Calculator sellPercent Bug Fix (02-03) - Ralph Loop
+- [x] **Bug Found by Ralph Loop**:
+  - `calculateOrders()`에서 사용자 입력 sellPercent가 calculator에 전달되지 않음
+  - `calculator.js`가 하드코딩된 DEFAULT_CONFIG만 사용
+- [x] **Fixes**:
+  - `index.html`: `calculateOrders()`에 sellPercent 파라미터 추가
+  - `calculator.js`: `calculate()`, `generateSellOrders()`에 inputSellPercent 지원
+  - `profile-manager.js`: JSDoc에 locSellPercent 추가
+- [x] **Note**: locSellPercent는 표시용 - LOC 가격은 별%가로 자동 계산됨
+
 ### v4.21.1: Portfolio Sheet Structure Expansion (02-03)
 - [x] **Sheet Structure v3.1**: 8컬럼 → 10컬럼
   - H열: **AFTER%** (지정가 매도 75%) - 기본 TQQQ=10, SOXL/BITU=12

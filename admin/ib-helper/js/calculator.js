@@ -331,7 +331,9 @@ const IBCalculator = (function() {
    * @returns {Object} { orders, quarterStopLoss, summary }
    */
   function generateSellOrders(params) {
-    const { holdings, avgPrice, currentPrice, ticker, T, starPercent } = params;
+    // 🔴 v1.1.0: sellPercent 사용자 입력값 지원
+    // Note: locSellPercent는 표시용 - LOC 가격은 별%가로 자동 계산됨
+    const { holdings, avgPrice, currentPrice, ticker, T, starPercent, sellPercent: inputSellPercent } = params;
 
     const orders = [];
 
@@ -360,8 +362,8 @@ const IBCalculator = (function() {
     const locInfo = calculateLOC(avgPrice, starPercent, currentPrice);
     const sellLocPrice = getSellLOCPrice(locInfo.locPrice, avgPrice);
 
-    // AFTER 매도% 결정
-    const sellPercent = getSellPercent(ticker);
+    // AFTER 매도% 결정 (🔴 v1.1.0: 사용자 입력값 우선)
+    const sellPercent = inputSellPercent || getSellPercent(ticker);
     const afterSellPrice = roundPrice(avgPrice * (1 + sellPercent / 100));
 
     // 주문 1: LOC 매도 (25% = 쿼터매도)
@@ -433,7 +435,8 @@ const IBCalculator = (function() {
       avgPrice,
       totalInvested,
       holdings,
-      currentPrice
+      currentPrice,
+      sellPercent: inputSellPercent  // 🔴 v1.1.0: 사용자 입력값 우선 (locSellPercent는 표시용)
     } = input;
 
     // Validation
@@ -471,13 +474,15 @@ const IBCalculator = (function() {
     });
 
     // 매도 주문 생성
+    // 🔴 v1.1.0: 사용자 입력 sellPercent 전달 (locSellPercent는 표시용)
     const sellResult = generateSellOrders({
       holdings: holdings || 0,
       avgPrice,
       currentPrice,
       ticker,
       T,
-      starPercent
+      starPercent,
+      sellPercent: inputSellPercent
     });
 
     return {

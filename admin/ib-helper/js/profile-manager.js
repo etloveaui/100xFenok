@@ -208,7 +208,7 @@ const ProfileManager = (function() {
   /**
    * Add stock to profile
    * @param {string} profileId
-   * @param {Object} stock - { symbol, principal, sellPercent }
+   * @param {Object} stock - { symbol, principal, sellPercent, locSellPercent }
    * @returns {boolean} Success
    */
   function addStock(profileId, stock) {
