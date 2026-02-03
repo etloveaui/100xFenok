@@ -1,10 +1,12 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.24.0
+> **Version**: 4.26.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
-> **Status**: ✅ Phase 1-3 Complete + Order Execution Tracking
+> **Status**: ✅ Phase 1-3 Complete + Order Execution + **현재가 연동 (#211)** + **프리마켓 우선 (#211-P3)**
 > **Priority**: 🟡 Phase 4 (Telegram) Pending
+>
+> **📁 Testing Docs**: [Data Flow](../../../../docs/testing/ib-helper-data-flow.md) | [Scenarios](../../../../docs/testing/ib-helper-scenarios.md) | [State Machine](../../../../docs/testing/ib-helper-state-machine.md)
 
 ---
 
@@ -661,6 +663,29 @@ admin/ib-helper/
 - [x] **User Action Required**:
   - Portfolio 시트에 H열 "AFTER%", I열 "LOC%" 헤더 추가
   - 기존 H열 "날짜" → J열로 이동
+
+### v4.26.0: Pre-market Price Priority (02-03) - #211-P3
+- [x] **Feature**: 프리마켓/애프터장 가격 우선 사용
+- [x] **yahoo-quotes.gs v1.2.0**:
+  - `getBestPrice(quote)` - MarketState 기반 최적 가격 선택
+    - PRE + preMarket 있음 → preMarket 가격
+    - POST + afterHours 있음 → afterHours 가격
+    - 그 외 → 정규장 가격
+  - `updatePricesSheet()` - Prices 시트 자동 업데이트
+  - `setupPricesUpdateTrigger()` - 5분 간격 자동 업데이트 트리거
+- [x] **sheets-sync.js v3.3.0**:
+  - `fetchCurrentPrices()` - MarketState 열 추가 (A2:G100)
+  - 반환값에 marketState, updatedAt 포함
+- [x] **Prices Sheet Structure v1.2**:
+  - A: Ticker, B: Current (= bestPrice), C: Close, D: High, E: Low
+  - F: MarketState (PRE/REGULAR/POST/CLOSED), G: UpdatedAt
+- [x] **Korean Time Reference**:
+  - 프리장: 18:00-23:30 KST (EST 04:00-09:30)
+  - 정규장: 23:30-06:00 KST (EST 09:30-16:00)
+  - 애프터: 06:00-09:00 KST (EST 16:00-20:00)
+- [x] **User Action**:
+  - Prices 시트에 F열 "MarketState", G열 "UpdatedAt" 헤더 추가
+  - Apps Script에서 `setupPricesUpdateTrigger()` 실행하여 자동 업데이트 설정
 
 ### v4.21.0: Order Execution Tracking (02-03) - DEC-153
 - [x] **Feature**: 주문 히스토리 저장 + 체결 확인 기능

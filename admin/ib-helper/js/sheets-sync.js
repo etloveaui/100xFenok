@@ -1,12 +1,14 @@
 /**
- * IB Helper Google Sheets Sync - v3.1 (DEC-153)
+ * IB Helper Google Sheets Sync - v3.3 (#211-P3)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.1.0
+ * @version 3.3.0
  * @author 100xFenok Claude
  * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
+ * @feature #211 (2026-02-03): 현재가 연동 - Prices 시트에서 자동 조회
+ * @feature #211-P3 (2026-02-03): 프리마켓 가격 우선 (MarketState 기반)
  *
  * Sheet1 "Portfolio" Structure (v3.1 - 10 columns):
  * | 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 |
@@ -604,6 +606,90 @@ const SheetsSync = (function() {
   }
 
   // =====================================================
+  // PRICES MANAGEMENT (#211: 현재가 연동)
+  // =====================================================
+
+  /**
+   * Get the "Prices" sheet name
+   * @returns {string}
+   */
+  function getPricesSheetName() {
+    return 'Prices';
+  }
+
+  /**
+   * Fetch current prices from Prices sheet
+   * Sheet structure (v1.2): | Ticker | Current | Close | High | Low | MarketState | UpdatedAt |
+   *
+   * 🔴 #211-P3: Current 열에는 이미 getBestPrice()로 계산된 값이 저장됨
+   *   - PRE 상태 + preMarket 있음 → preMarket 가격
+   *   - POST 상태 + afterHours 있음 → afterHours 가격
+   *   - 그 외 → 정규장 가격
+   *
+   * @returns {Promise<Object>} Map of ticker → price data
+   * Example: { TQQQ: { current: 55.1, close: 54, high: 55.7, low: 53.1, marketState: 'PRE' }, ... }
+   */
+  async function fetchCurrentPrices() {
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      console.warn('SheetsSync: Spreadsheet ID not set, cannot fetch prices');
+      return {};
+    }
+
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: `${getPricesSheetName()}!A2:G100`,  // Skip header, include MarketState & UpdatedAt
+      });
+
+      const rows = response.result.values || [];
+      const prices = {};
+
+      rows.forEach(row => {
+        const ticker = (row[0] || '').toUpperCase().trim();
+        if (!ticker) return;
+
+        const current = parseFloat(row[1]) || 0;
+        const close = parseFloat(row[2]) || 0;
+        const high = parseFloat(row[3]) || 0;
+        const low = parseFloat(row[4]) || 0;
+        const marketState = (row[5] || 'UNKNOWN').toUpperCase();  // 🔴 #211-P3
+        const updatedAt = row[6] || '';
+
+        // Validate price is reasonable
+        if (current > 0) {
+          prices[ticker] = {
+            current,       // 🔴 이미 getBestPrice()로 계산된 최적 가격
+            close,
+            high,
+            low,
+            marketState,   // 🔴 PRE/REGULAR/POST/CLOSED
+            updatedAt,
+            timestamp: new Date().toISOString()
+          };
+        }
+      });
+
+      console.log(`SheetsSync: Fetched prices for ${Object.keys(prices).length} tickers`);
+      return prices;
+
+    } catch (error) {
+      console.error('SheetsSync: fetchCurrentPrices error:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Get current price for a specific ticker
+   * @param {string} ticker - Stock symbol (e.g., 'TQQQ')
+   * @returns {Promise<number>} Current price or 0 if not found
+   */
+  async function getCurrentPrice(ticker) {
+    const prices = await fetchCurrentPrices();
+    return prices[ticker.toUpperCase()]?.current || 0;
+  }
+
+  // =====================================================
   // ORDERS MANAGEMENT (DEC-153: Order Execution Tracking)
   // =====================================================
 
@@ -846,6 +932,10 @@ const SheetsSync = (function() {
     // Orders (DEC-153: Order Execution Tracking)
     saveOrders,
     readPendingOrders,
+
+    // Prices (#211: 현재가 연동)
+    fetchCurrentPrices,
+    getCurrentPrice,
 
     // Config (for debugging)
     CONFIG

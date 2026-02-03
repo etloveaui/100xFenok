@@ -1743,11 +1743,24 @@
       return avgPrice > 0 && principal > 0;
     }
 
-    function calculateOrders() {
+    async function calculateOrders() {
       // Gather inputs
       // 🔴 v4.21.2: sellPercent 전달 (Ralph Loop 발견)
       // Note: locSellPercent는 표시용 - LOC 가격은 별%가로 자동 계산
       const defaultSellPercent = selectedTicker === 'TQQQ' ? 10 : 12;
+
+      // 🔴 #211: 현재가 자동 조회 (Prices 시트에서)
+      let currentPrice = 0;
+      try {
+        if (SheetsSync.isAuthenticated()) {
+          currentPrice = await SheetsSync.getCurrentPrice(selectedTicker);
+          if (currentPrice > 0) {
+            console.log(`📊 ${selectedTicker} 현재가: $${currentPrice} (가격캡 활성화)`);
+          }
+        }
+      } catch (e) {
+        console.warn('현재가 조회 실패, 별%가만 사용:', e.message);
+      }
 
       const input = {
         ticker: selectedTicker,
@@ -1756,7 +1769,7 @@
         avgPrice: parseFloat(document.getElementById('input-avgPrice').value) || 0,
         totalInvested: parseFloat(document.getElementById('input-totalInvested').value) || 0,
         holdings: parseInt(document.getElementById('input-holdings').value) || 0,
-        currentPrice: 0,  // UI에서 제거됨 - LOC 캡은 사용 안함
+        currentPrice: currentPrice,  // 🔴 #211: Prices 시트에서 자동 조회
         sellPercent: parseFloat(document.getElementById('input-sellPercent').value) || defaultSellPercent
       };
 
