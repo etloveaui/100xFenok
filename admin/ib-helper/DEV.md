@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.26.0
+> **Version**: 4.27.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
-> **Status**: ✅ Phase 1-3 Complete + Order Execution + **현재가 연동 (#211)** + **프리마켓 우선 (#211-P3)**
+> **Status**: ✅ Phase 1-3 Complete + Order Execution + **현재가 연동 (#211)** + **UX 개선 (#216, #219)**
 > **Priority**: 🟡 Phase 4 (Telegram) Pending
 >
 > **📁 Testing Docs**: [Data Flow](../../../../docs/testing/ib-helper-data-flow.md) | [Scenarios](../../../../docs/testing/ib-helper-scenarios.md) | [State Machine](../../../../docs/testing/ib-helper-state-machine.md)
@@ -663,6 +663,19 @@ admin/ib-helper/
 - [x] **User Action Required**:
   - Portfolio 시트에 H열 "AFTER%", I열 "LOC%" 헤더 추가
   - 기존 H열 "날짜" → J열로 이동
+
+### v4.27.0: UX Improvements (02-03) - #216 + #219
+- [x] **#219 전체 복사 버튼**:
+  - 결과 영역 상단에 "📋 전체 복사" 버튼 추가
+  - `copyAllOrdersTotal()` - 매수+하락대비+매도 전부 복사
+  - 기존 섹션별 복사 버튼 유지
+- [x] **#216 쿼터손절 체크박스**:
+  - T>40 시 체크박스 표시 (기본 체크 해제)
+  - 체크하면 MOC 주문 안내 표시
+  - `handleQuarterStopChange()` - 체크박스 핸들러
+  - `copyMocOrder()` - MOC 주문 복사
+  - 사용자가 명시적으로 체크해야 MOC 안내 표시
+- [x] **#218 종목 제외 체크박스**: ⏸️ 다중 종목 계산(#217)과 함께 구현 예정
 
 ### v4.26.0: Pre-market Price Priority (02-03) - #211-P3
 - [x] **Feature**: 프리마켓/애프터장 가격 우선 사용
