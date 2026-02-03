@@ -2912,7 +2912,13 @@
                 </div>
                 `}
               </div>
-              <div class="mt-3 bg-white rounded-lg border border-gray-100 p-2 text-[11px] text-gray-600 space-y-1">
+              <div class="flex justify-end mt-3">
+                <button class="px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"
+                        onclick="toggleMultiFormula('${ticker}', this)">
+                  <i class="fas fa-microscope mr-1"></i>상세 보기
+                </button>
+              </div>
+              <div id="formula-detail-${ticker}" class="hidden mt-2 bg-white rounded-lg border border-gray-100 p-2 text-[11px] text-gray-600 space-y-1">
                 <div class="font-semibold text-gray-500">공식 요약</div>
                 <div>T = ceil((총매입금 / 1회매수) × 10) / 10 = ceil((${IBCalculator.formatDollar(totalInvested)} / ${IBCalculator.formatDollar(oneTimeBuy)}) × 10) / 10 → ${T.toFixed(1)}</div>
                 <div>별% = 10 - (T / 2) = 10 - (${T.toFixed(1)} / 2) → ${starPercent.toFixed(1)}%</div>
@@ -2923,6 +2929,11 @@
           </div>
         `;
       }).join('');
+
+      // Mobile: 결과 섹션으로 자동 스크롤
+      if (window.innerWidth < 768) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     /**
@@ -2935,10 +2946,23 @@
       }
     }
 
+    function toggleMultiFormula(ticker, button) {
+      const detail = document.getElementById(`formula-detail-${ticker}`);
+      if (!detail) return;
+
+      const isHidden = detail.classList.contains('hidden');
+      detail.classList.toggle('hidden');
+      if (button) {
+        button.innerHTML = isHidden
+          ? '<i class="fas fa-chevron-up mr-1"></i>접기'
+          : '<i class="fas fa-microscope mr-1"></i>상세 보기';
+      }
+    }
+
     /**
      * 아코디언에서 상세 보기 → 단일 상세 패널 표시
      */
-    // 상세 보기 대신 다중 카드 내 공식 요약을 표시
+    // 다중 카드 내 공식 요약 토글
 
     /**
      * 🔴 v4.28.0: 전체 종목 주문 복사 (#217)
@@ -3183,6 +3207,42 @@
       recalculateBalance();
     }
 
+    function buildCalculatedOrderStatus(resultsMap, balanceValue) {
+      const details = [];
+      let required = 0;
+
+      Object.values(resultsMap).forEach(result => {
+        const mainBuyOrders = result.buyOrders.filter(o => !o.type.includes('하락대비'));
+        const declineOrders = result.buyOrders.filter(o => o.type.includes('하락대비'));
+        const mainAmount = mainBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
+        const declineAmount = declineOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
+        const total = mainAmount + declineAmount;
+        required += total;
+
+        details.push({
+          symbol: result.ticker,
+          oneTimeBuy: mainAmount,
+          additionalAmount: declineAmount,
+          total: total,
+          percentage: 0
+        });
+      });
+
+      details.forEach(d => {
+        d.percentage = required > 0 ? parseFloat((d.total / required * 100).toFixed(1)) : 0;
+      });
+
+      const diff = balanceValue - required;
+      return {
+        available: balanceValue,
+        required: required,
+        diff: diff,
+        status: diff >= 0 ? 'OK' : 'INSUFFICIENT',
+        statusKo: diff >= 0 ? '여유' : '부족',
+        details
+      };
+    }
+
     function recalculateBalance() {
       if (!currentProfile) return;
 
@@ -3194,10 +3254,15 @@
 
       // 🔴 v4.18.0: 최신 프로필 데이터로 계산 (Bug 13 - 메모리 캐시 문제 수정)
       // currentProfile은 메모리에 캐시된 old 데이터이므로 localStorage에서 최신 데이터 가져옴
-      const freshProfile = ProfileManager.getAll().profiles[currentProfile.id];
-      const status = BalanceManager.calcOrderStatus(freshProfile);
+      let status = null;
+      if (Object.keys(calculationResults).length > 0) {
+        status = buildCalculatedOrderStatus(calculationResults, balanceValue);
+      } else {
+        const freshProfile = ProfileManager.getAll().profiles[currentProfile.id];
+        status = BalanceManager.calcOrderStatus(freshProfile);
+      }
       renderOrderStatus(status);
-      checkAndShowAlert();
+      checkAndShowAlert(status);
     }
 
     function renderOrderStatus(status) {
@@ -3284,12 +3349,12 @@
       container.innerHTML = html;
     }
 
-    function checkAndShowAlert() {
+    function checkAndShowAlert(statusOverride = null) {
       if (!currentProfile) return;
 
       // 🔴 v4.30.0 (B5-07): 예수금 0이면 경고 숨김 (미입력 상태)
       const balanceInfo = BalanceManager.getBalance(currentProfile.id);
-      const balanceAvailable = balanceInfo?.available || 0;
+      const balanceAvailable = statusOverride?.available ?? (balanceInfo?.available || 0);
       if (balanceAvailable <= 0) {
         const banner = document.getElementById('alert-banner');
         if (banner) {
@@ -3299,7 +3364,12 @@
         return;
       }
 
-      const alert = BalanceManager.checkAlert(currentProfile.id);
+      const alert = statusOverride
+        ? {
+          show: statusOverride.status === 'INSUFFICIENT',
+          message: `내일 매수 부족! 부족금액: $${Math.abs(statusOverride.diff).toFixed(2)}`
+        }
+        : BalanceManager.checkAlert(currentProfile.id);
       const banner = document.getElementById('alert-banner');
 
       if (alert.show) {
