@@ -1,8 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 3.2.0
+> **Version**: 4.20.0
 > **Created**: 2026-02-02
-> **Status**: ✅ Phase 1-3 Complete (Core + Multi-Profile + Sheets + Migration)
+> **Updated**: 2026-02-03
+> **Status**: ✅ Phase 1-3 Complete (Core + Multi-Profile + Sheets + Migration + Auto-Save)
 > **Priority**: 🟡 Phase 4 (Telegram) Pending
 
 ---
@@ -578,6 +579,24 @@ admin/ib-helper/
 - 주문상태 = 예수금 - 일매수시도금액
 - UI: 실시간 계산 + 종목별 breakdown + 상단 알림 배너
 - 스펙: `_tmp/PHASE3_SPEC.md` (Asset Allocator 제공)
+
+### v4.19.0: Bug 14 Fix - Sheet Pull Profile Mismatch (02-03)
+- [x] **Problem**: "시트에서 불러오기" 실패 (0 rows) - 프로필 ID 불일치
+  - 로컬 프로필 ID: `name_1770054353112` (새로 생성)
+  - 시트 프로필 ID: `name_1770053026012` (기존 저장)
+  - 프로필 ID가 타임스탬프 기반이라 재생성 시 매칭 불가
+- [x] **Solution**: 프로필 선택 UI 추가
+  - `sheets-sync.js`: `getMyProfilesFromSheet()` - 내 구글ID의 모든 프로필 목록 조회
+  - `sheets-sync.js`: `pullFromSheetProfile(sheetProfileId)` - 특정 시트 프로필에서 불러오기
+  - `index.html`: `showSheetProfileSelection()` - 프로필 선택 다이얼로그
+  - `index.html`: `pullFromSheetProfile()` - 선택된 프로필 데이터 불러오기
+- [x] **Flow**:
+  1. "시트에서 불러오기" 클릭
+  2. 내 구글ID의 모든 프로필 조회
+  3. 프로필 1개 → 바로 불러오기
+  4. 프로필 여러 개 → 선택 UI 표시
+  5. 사용자가 선택 → 해당 프로필 데이터를 현재 로컬 프로필에 병합
+- [x] **Side Effects**: None (기존 `pull()` 함수 유지, 하위 호환성 보장)
 
 ### Phase 4: Telegram
 - [ ] 프로필별 알림 발송

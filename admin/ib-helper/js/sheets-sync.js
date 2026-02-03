@@ -478,6 +478,96 @@ const SheetsSync = (function() {
   }
 
   // =====================================================
+  // PROFILE DISCOVERY (Bug 14 Fix)
+  // =====================================================
+
+  /**
+   * Get all profiles from sheet for current Google user
+   * Used for profile selection UI when pulling data
+   * @returns {Promise<Array>} Array of { profileId, profileName, stocks: [...] }
+   */
+  async function getMyProfilesFromSheet() {
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    const allRows = await readAllRows();
+
+    // Filter by my Google ID
+    const myRows = allRows.filter(row => row[0] === currentUserEmail);
+
+    // Group by profile ID
+    const profileMap = {};
+    myRows.forEach(row => {
+      const profileId = row[1];
+      if (!profileMap[profileId]) {
+        profileMap[profileId] = {
+          profileId: profileId,
+          profileName: profileId.split('_')[0],  // Extract name part
+          stocks: []
+        };
+      }
+      profileMap[profileId].stocks.push({
+        symbol: row[2],
+        avgPrice: parseFloat(row[3]) || 0,
+        holdings: parseInt(row[4]) || 0,
+        totalInvested: parseFloat(row[5]) || 0,
+        principal: parseFloat(row[6]) || 0
+      });
+    });
+
+    return Object.values(profileMap);
+  }
+
+  /**
+   * Pull data from specific sheet profile ID (regardless of local profile ID)
+   * This allows pulling from a sheet profile even if local profile ID is different
+   * @param {string} sheetProfileId - Profile ID in the sheet to pull from
+   * @returns {Promise<Array>} Pulled stocks
+   */
+  async function pullFromSheetProfile(sheetProfileId) {
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    const profile = ProfileManager.getActive();
+    if (!profile) {
+      throw new Error('프로필이 없습니다');
+    }
+
+    const allRows = await readAllRows();
+
+    // Filter by my Google ID AND the specified sheet profile ID
+    const myRows = allRows.filter(row =>
+      row[0] === currentUserEmail && row[1] === sheetProfileId
+    );
+
+    const myStocks = parseRows(myRows);
+
+    // Update local profile with sheet data
+    myStocks.forEach(stock => {
+      // 1. Daily data 저장 (평단가, 수량, 총매입금)
+      ProfileManager.saveDailyData(profile.id, stock.symbol, {
+        avgPrice: stock.avgPrice,
+        holdings: stock.holdings,
+        totalInvested: stock.totalInvested,
+        currentPrice: 0  // 현재가는 수동 입력
+      });
+
+      // 2. Stock settings 저장
+      const existingStock = profile.stocks?.find(s => s.symbol === stock.symbol);
+      ProfileManager.addStock(profile.id, {
+        symbol: stock.symbol,
+        principal: stock.principal,
+        sellPercent: existingStock?.sellPercent || (stock.symbol === 'TQQQ' ? 10 : 12)
+      });
+    });
+
+    console.log(`SheetsSync: Pulled ${myStocks.length} rows from sheet profile "${sheetProfileId}" to local profile "${profile.id}"`);
+    return myStocks;
+  }
+
+  // =====================================================
   // PUBLIC API
   // =====================================================
 
@@ -501,6 +591,10 @@ const SheetsSync = (function() {
     push,
     pull,
     readMyData,
+
+    // Profile Discovery (Bug 14 Fix)
+    getMyProfilesFromSheet,
+    pullFromSheetProfile,
 
     // Config (for debugging)
     CONFIG
