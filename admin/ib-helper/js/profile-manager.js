@@ -4,8 +4,10 @@
  * Manages multiple user profiles with localStorage persistence.
  * Supports 5 family members with individual stock settings.
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @see PHASE2_SPEC.md
+ *
+ * v1.1.0 (02-03): Korean name ID fix, saveDailyData simplification
  */
 
 const ProfileManager = (function() {
@@ -121,7 +123,9 @@ const ProfileManager = (function() {
    */
   function create(name, accountNumber = '') {
     const data = getAll();
-    const id = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now();
+    // v1.1.0: 한글 이름도 지원 (encodeURIComponent로 안전한 ID 생성)
+    const safeName = encodeURIComponent(name).replace(/%/g, '').substring(0, 20);
+    const id = (safeName || 'profile') + '_' + Date.now();
 
     data.profiles[id] = {
       id,
@@ -332,10 +336,13 @@ const ProfileManager = (function() {
    */
   function saveDailyData(profileId, symbol, dailyData) {
     const key = `${DAILY_KEY}_${profileId}_${symbol}`;
+    // v1.1.0: 날짜 생성 간소화
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     const saved = {
       ...dailyData,
-      date: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })(),
-      timestamp: new Date().toISOString()
+      date,
+      timestamp: now.toISOString()
     };
     localStorage.setItem(key, JSON.stringify(saved));
   }
