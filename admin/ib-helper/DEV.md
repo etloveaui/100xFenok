@@ -1,6 +1,6 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.33.0
+> **Version**: 4.33.1
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
 > **Status**: ✅ Phase 1-3 Complete + **Dual-Track Auth (#220)** + Ralph Loop 6 + 현재가 연동 (#211) + UX 개선 + 다중 종목 계산 (#217, #218)

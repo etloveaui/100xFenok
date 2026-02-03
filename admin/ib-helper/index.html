@@ -484,10 +484,10 @@
           class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none" />
 
         <div class="flex gap-2">
-          <button onclick="emailLogin()" class="flex-1 py-3 bg-gray-800 text-white rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors">
+          <button id="btn-email-login" onclick="emailLogin()" class="flex-1 py-3 bg-gray-800 text-white rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             로그인
           </button>
-          <button onclick="emailRegister()" class="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors">
+          <button id="btn-email-register" onclick="emailRegister()" class="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             가입하기
           </button>
         </div>
@@ -1863,18 +1863,29 @@
         return;
       }
 
+      const btn = document.getElementById('btn-email-login');
+      const originalText = btn.textContent;
+
       try {
-        showToast('로그인 중...', 'info');
+        // 버튼 로딩 상태
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>로그인 중...';
+
         const result = await SheetsSync.loginEmail(email, password);
 
         if (result.success) {
+          btn.innerHTML = '<i class="fas fa-check mr-1"></i>완료!';
           showToast(`✅ ${result.email} 로그인 완료`, 'success');
           await emailQuickStart(result.email);
         } else {
+          btn.textContent = originalText;
+          btn.disabled = false;
           showToast('❌ ' + result.error, 'error');
         }
       } catch (error) {
         console.error('Email login error:', error);
+        btn.textContent = originalText;
+        btn.disabled = false;
         showToast('로그인 실패: ' + error.message, 'error');
       }
     }
@@ -1903,18 +1914,29 @@
         return;
       }
 
+      const btn = document.getElementById('btn-email-register');
+      const originalText = btn.textContent;
+
       try {
-        showToast('가입 중...', 'info');
+        // 버튼 로딩 상태
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>가입 중...';
+
         const result = await SheetsSync.registerEmail(email, password);
 
         if (result.success) {
+          btn.innerHTML = '<i class="fas fa-check mr-1"></i>완료!';
           showToast(`✅ ${result.email} 가입 완료!`, 'success');
           await emailQuickStart(result.email);
         } else {
+          btn.textContent = originalText;
+          btn.disabled = false;
           showToast('❌ ' + result.error, 'error');
         }
       } catch (error) {
         console.error('Email register error:', error);
+        btn.textContent = originalText;
+        btn.disabled = false;
         showToast('가입 실패: ' + error.message, 'error');
       }
     }
