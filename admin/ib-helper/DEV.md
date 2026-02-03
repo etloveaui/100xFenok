@@ -677,6 +677,29 @@ admin/ib-helper/
   - 사용자가 명시적으로 체크해야 MOC 안내 표시
 - [x] **#218 종목 제외 체크박스**: ⏸️ 다중 종목 계산(#217)과 함께 구현 예정
 
+### v4.33.0: Dual-Track Authentication (02-03) - DEC-154 #220
+- [x] **Feature**: Google OAuth + Email/Password 병행 인증
+  - Google OAuth: 기존 (1시간 세션, 경고 있음)
+  - Email Auth: 신규 (7일 세션, 경고 없음)
+- [x] **Backend (`Code.gs.template` v2.0.0)**:
+  - `doPost()`: register, login, verify, getData, saveData actions
+  - `registerUser()`: 이메일 중복 체크, SHA-256 비밀번호 해시, 7일 토큰
+  - `loginUser()`: 비밀번호 검증, 토큰 재생성
+  - `verifyToken()`: 토큰 유효성 + 만료 체크
+  - `createUsersSheet()`: Users 시트 자동 생성
+- [x] **Frontend (`sheets-sync.js` v3.6.0)**:
+  - `registerEmail()`, `loginEmail()`, `signOutEmail()`
+  - `tryRestoreEmailSession()`: 7일 세션 자동 복원
+  - `isEmailAuth()`, `getEmailToken()`: 인증 상태 헬퍼
+  - WebApp URL 하드코딩 (public endpoint)
+- [x] **UI (`index.html`)**:
+  - "또는" 구분선 (Google ↔ Email 사이)
+  - 이메일/비밀번호 입력 필드
+  - 로그인/가입하기 버튼
+  - "🔒 7일 세션 유지 · 경고 없음" 안내
+- [x] **Sheet4 "Users" Structure**:
+  - A: 이메일, B: 비밀번호해시, C: 토큰, D: 토큰만료, E: 가입일
+
 ### v4.26.0: Pre-market Price Priority (02-03) - #211-P3
 - [x] **Feature**: 프리마켓/애프터장 가격 우선 사용
 - [x] **yahoo-quotes.gs v1.2.0**:
