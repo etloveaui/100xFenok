@@ -902,12 +902,25 @@ const SheetsSync = (function() {
 
   /**
    * Get current price for a specific ticker
+   * 🔴 v3.6.0: Ticker API 직접 호출 (Prices 시트 불필요)
    * @param {string} ticker - Stock symbol (e.g., 'TQQQ')
    * @returns {Promise<number>} Current price or 0 if not found
    */
   async function getCurrentPrice(ticker) {
-    const prices = await fetchCurrentPrices();
-    return prices[ticker.toUpperCase()]?.current || 0;
+    const sym = ticker.toUpperCase();
+    try {
+      const response = await fetch(`https://ticker-api.etloveaui.workers.dev/api/ticker/${sym}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.price > 0) {
+          console.log(`SheetsSync: ${sym} price from Ticker API: $${data.price}`);
+          return data.price;
+        }
+      }
+    } catch (error) {
+      console.warn('SheetsSync: Ticker API error:', error);
+    }
+    return 0;
   }
 
   // =====================================================
