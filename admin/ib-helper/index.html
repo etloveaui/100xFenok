@@ -817,14 +817,19 @@
           </div>
         </div>
 
-        <!-- Google Sync Status (상단 배치) -->
+        <!-- Google Sync Status (상단 배치) 🔴 v4.29.1: 로그아웃 버튼 추가 -->
         <div id="google-sync-section" class="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-3 border border-blue-100">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
               <i class="fab fa-google text-blue-500"></i>
               <span id="sheets-user" class="text-sm font-medium text-gray-700 truncate">미연결</span>
             </div>
-            <span id="sheets-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">오프라인</span>
+            <div class="flex items-center gap-2">
+              <span id="sheets-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">오프라인</span>
+              <button id="logout-btn" onclick="handleSignOut()" class="hidden text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200" title="로그아웃">
+                <i class="fas fa-sign-out-alt"></i>
+              </button>
+            </div>
           </div>
           <button onclick="handleSheetsPull()" class="w-full py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
             <i class="fas fa-cloud-download-alt mr-1"></i>시트에서 불러오기
@@ -869,7 +874,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.29.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.29.7 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -984,6 +989,52 @@
     }
 
     // =====================================================
+    // Clipboard Helper (C-08: HTTPS fallback)
+    // =====================================================
+
+    /**
+     * 🔴 v4.29.4 (C-08): 클립보드 복사 헬퍼 (HTTPS fallback)
+     * navigator.clipboard API는 HTTPS 또는 localhost에서만 작동
+     * HTTP 환경에서는 execCommand fallback 사용
+     * @param {string} text - 복사할 텍스트
+     * @returns {Promise<boolean>} 성공 여부
+     */
+    async function copyToClipboard(text) {
+      // 1. 먼저 Clipboard API 시도 (HTTPS/localhost)
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (err) {
+          console.warn('Clipboard API failed, trying fallback:', err);
+        }
+      }
+
+      // 2. Fallback: execCommand (HTTP 환경)
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        const success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        if (!success) {
+          throw new Error('execCommand copy failed');
+        }
+        return true;
+      } catch (err) {
+        console.error('Clipboard fallback failed:', err);
+        return false;
+      }
+    }
+
+    // =====================================================
     // Modal Helpers
     // =====================================================
 
@@ -1059,13 +1110,14 @@
       showStartScreen();
 
       // Balance input debounce setup
+      // 🔴 v4.29.6 (#33): debounce 500ms → 200ms (UX 개선)
       const balanceInput = document.getElementById('input-balance');
       if (balanceInput) {
         balanceInput.addEventListener('input', () => {
           clearTimeout(window.balanceDebounce);
           window.balanceDebounce = setTimeout(() => {
             handleBalanceChange(balanceInput.value);
-          }, 500);
+          }, 200);
         });
       }
     });
@@ -1151,10 +1203,9 @@
       loadProfileData();
       loadBalanceData();
       document.getElementById('results-section').classList.add('hidden');
-      // Clear balance display on switch
-      document.getElementById('order-status').classList.add('hidden');
-      document.getElementById('stock-breakdown').classList.add('hidden');
-      dismissAlert();
+      // 🔴 v4.29.6 (#32): 프로필 전환 시 예수금 상태 표시 (balance > 0이면)
+      // 기존: 항상 숨김 → 개선: balance가 있으면 상태 표시
+      recalculateBalance();
     }
 
     function loadProfileData() {
@@ -1297,13 +1348,22 @@
         return;
       }
 
-      const sellPercent = symbol === 'TQQQ' ? 10 : 12;
-      const locSellPercent = symbol === 'TQQQ' ? 5 : 6;
+      // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+      // - TQQQ: 10%, 5%  / SOXL: 12%, 5%  / 기타: 10%, 5%
+      const sellPercent = symbol === 'SOXL' ? 12 : 10;
+      const locSellPercent = 5;
       ProfileManager.addStock(currentProfile.id, { symbol, principal, sellPercent, locSellPercent });
       currentProfile = ProfileManager.getActive();
 
       hideAddStockForm();
       updateModalStocksList();
+
+      // 🔴 v4.29.5: 메인 화면 티커 버튼 업데이트
+      updateTickerButtons();
+      showToast(`${symbol} 종목 추가됨`, 'success');
+
+      // 🔴 v4.29.5: 시트 동기화 트리거
+      triggerAutoSync();
     }
 
     function removeStockFromProfile(symbol) {
@@ -1317,6 +1377,22 @@
         ProfileManager.removeStock(currentProfile.id, symbol);
         currentProfile = ProfileManager.getActive();
         updateModalStocksList();
+
+        // 🔴 v4.29.5: 메인 화면 티커 버튼 업데이트
+        updateTickerButtons();
+
+        // 삭제된 종목이 현재 선택된 종목이면 첫 번째 종목 선택
+        if (selectedTicker === symbol) {
+          const firstStock = currentProfile.stocks[0];
+          if (firstStock) {
+            selectTicker(firstStock.symbol);
+          } else {
+            selectedTicker = null;
+          }
+        }
+
+        showToast(`${symbol} 종목 삭제됨`, 'success');
+        triggerAutoSync();
       }
     }
 
@@ -1442,6 +1518,9 @@
           statusEl.textContent = '연결됨';
           statusEl.className = 'text-xs text-green-600';
         }
+        // 🔴 v4.29.1: 로그아웃 버튼 표시
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
 
       } catch (error) {
         console.error('Quick start error:', error);
@@ -1569,9 +1648,9 @@
         const tPercent = parseFloat(parts[4]?.replace('%', '')) || 0;
         const divisions = parseInt(parts[6]) || 40;
 
-        // Determine sellPercent and locSellPercent based on symbol
-        const sellPercent = symbol === 'TQQQ' ? 10 : 12;
-        const locSellPercent = symbol === 'TQQQ' ? 5 : 6;
+        // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+        const sellPercent = symbol === 'SOXL' ? 12 : 10;
+        const locSellPercent = 5;
 
         stocks.push({
           symbol,
@@ -1678,9 +1757,10 @@
       if (!currentProfile || !selectedTicker) return;
 
       // 2. Stock settings 저장 (세팅원금, AFTER%, LOC%)
+      // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
       const principal = parseFloat(document.getElementById('input-principal').value) || 0;
-      const sellPercent = parseFloat(document.getElementById('input-sellPercent').value) || (selectedTicker === 'TQQQ' ? 10 : 12);
-      const locSellPercent = parseFloat(document.getElementById('input-locSellPercent').value) || (selectedTicker === 'TQQQ' ? 5 : 6);
+      const sellPercent = parseFloat(document.getElementById('input-sellPercent').value) || (selectedTicker === 'SOXL' ? 12 : 10);
+      const locSellPercent = parseFloat(document.getElementById('input-locSellPercent').value) || 5;
 
       // 🔴 v4.16.0: 프로필에 없는 종목 + principal이 0이면 저장하지 않음 (Bug 11 수정)
       // 기본 버튼 클릭만으로 빈 종목이 추가되는 것 방지
@@ -1763,11 +1843,13 @@
       });
 
       // Load stock settings from profile (v4.21.1: AFTER% + LOC%)
+      // 🔴 v4.29.5: principal 기본값 13000 버그 수정 - 없으면 빈값
+      // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
       const stock = ProfileManager.getStock(ticker);
-      const defaultSellPercent = ticker === 'TQQQ' ? 10 : 12;
-      const defaultLocPercent = ticker === 'TQQQ' ? 5 : 6;
+      const defaultSellPercent = ticker === 'SOXL' ? 12 : 10;
+      const defaultLocPercent = 5;
       if (stock) {
-        document.getElementById('input-principal').value = stock.principal || 13000;
+        document.getElementById('input-principal').value = stock.principal || '';
         document.getElementById('input-sellPercent').value = stock.sellPercent || defaultSellPercent;
         document.getElementById('input-locSellPercent').value = stock.locSellPercent || defaultLocPercent;
       } else {
@@ -1889,26 +1971,28 @@
     /**
      * 개별 주문 복사 (v4.22.0: 가격만, 달러표시 제거)
      */
-    function copyOrder(btn, price, quantity) {
-      // 가격만 복사 (달러 표시 없이)
+    async function copyOrder(btn, price, quantity) {
+      // 🔴 v4.29.4 (C-08): copyToClipboard 사용
       const text = `${price}`;
-      navigator.clipboard.writeText(text).then(() => {
+      const success = await copyToClipboard(text);
+      if (success) {
         btn.innerHTML = '<i class="fas fa-check"></i>';
         btn.classList.add('copied');
         setTimeout(() => {
           btn.innerHTML = '<i class="fas fa-copy"></i>';
           btn.classList.remove('copied');
         }, 1500);
-      }).catch(err => {
-        console.error('클립보드 복사 실패:', err);
+      } else {
+        console.error('클립보드 복사 실패');
         showToast('복사 실패', 'error');
-      });
+      }
     }
 
     /**
      * 전체 주문 복사 (섹션별)
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
      */
-    function copyAllOrders(type) {
+    async function copyAllOrders(type) {
       if (!lastCalculation) return;
 
       let orders = [];
@@ -1932,18 +2016,19 @@
       ];
 
       const text = lines.join('\n');
-      navigator.clipboard.writeText(text).then(() => {
+      const success = await copyToClipboard(text);
+      if (success) {
         showToast('클립보드에 복사되었습니다', 'success');
-      }).catch(err => {
-        console.error('클립보드 복사 실패:', err);
+      } else {
         showToast('복사 실패', 'error');
-      });
+      }
     }
 
     /**
      * #219: 전체 주문 복사 (매수+하락대비+매도 전체)
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
      */
-    function copyAllOrdersTotal() {
+    async function copyAllOrdersTotal() {
       if (!lastCalculation) {
         showToast('먼저 계산을 실행하세요', 'warning');
         return;
@@ -1977,12 +2062,12 @@
       lines.push('', `━━━━━━━━━━━━━━━━━━━━`);
 
       const text = lines.join('\n');
-      navigator.clipboard.writeText(text).then(() => {
+      const success = await copyToClipboard(text);
+      if (success) {
         showToast('전체 주문이 복사되었습니다', 'success');
-      }).catch(err => {
-        console.error('클립보드 복사 실패:', err);
+      } else {
         showToast('복사 실패', 'error');
-      });
+      }
     }
 
     /**
@@ -2004,19 +2089,20 @@
 
     /**
      * #216: MOC 주문 복사
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
      */
-    function copyMocOrder() {
+    async function copyMocOrder() {
       if (!lastCalculation || !lastCalculation.quarterStopLoss) return;
 
       const { quarterStopLoss } = lastCalculation;
       const text = `🔴 ${selectedTicker} MOC 매도: ${quarterStopLoss.mocQuantity}주\n(쿼터손절 - 종가 주문)`;
 
-      navigator.clipboard.writeText(text).then(() => {
+      const success = await copyToClipboard(text);
+      if (success) {
         showToast('MOC 주문이 복사되었습니다', 'success');
-      }).catch(err => {
-        console.error('클립보드 복사 실패:', err);
+      } else {
         showToast('복사 실패', 'error');
-      });
+      }
     }
 
     // =====================================================
@@ -2040,7 +2126,8 @@
       // Gather inputs
       // 🔴 v4.21.2: sellPercent 전달 (Ralph Loop 발견)
       // Note: locSellPercent는 표시용 - LOC 가격은 별%가로 자동 계산
-      const defaultSellPercent = selectedTicker === 'TQQQ' ? 10 : 12;
+      // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+      const defaultSellPercent = selectedTicker === 'SOXL' ? 12 : 10;
 
       // 🔴 #211: 현재가 자동 조회 (Prices 시트에서)
       let currentPrice = 0;
@@ -2157,7 +2244,8 @@
         }
 
         // 입력값 구성
-        const defaultSellPercent = ticker === 'TQQQ' ? 10 : 12;
+        // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+        const defaultSellPercent = ticker === 'SOXL' ? 12 : 10;
         const input = {
           ticker: ticker,
           principal: principal,
@@ -2198,6 +2286,9 @@
 
       // 다중 결과 표시 (아코디언)
       displayMultipleResults(successResults);
+
+      // 🔴 v4.29.6 (#31): 복수 종목 계산 후 예수금 상태 갱신
+      recalculateBalance();
 
       showToast(`${successResults.length}개 종목 계산 완료`, 'success');
     }
@@ -2481,8 +2572,9 @@
 
     /**
      * 🔴 v4.28.0: 전체 종목 주문 복사 (#217)
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
      */
-    function copyAllTickersOrders() {
+    async function copyAllTickersOrders() {
       if (Object.keys(calculationResults).length === 0) {
         showToast('먼저 전체 계산을 실행하세요', 'warning');
         return;
@@ -2522,20 +2614,21 @@
       lines.push(`━━━━━━━━━━━━━━━━━━━━`);
 
       const text = lines.join('\n');
-      navigator.clipboard.writeText(text).then(() => {
+      const success = await copyToClipboard(text);
+      if (success) {
         showToast('전체 종목 주문이 복사되었습니다', 'success');
-      }).catch(err => {
-        console.error('클립보드 복사 실패:', err);
-        showToast('복사 실패 - 브라우저 권한 확인', 'error');
-      });
+      } else {
+        showToast('복사 실패', 'error');
+      }
     }
 
     /**
      * 🔴 v4.28.0: 개별 종목 섹션별 복사 (#217)
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
      * @param {string} ticker - 종목 심볼
      * @param {string} type - 'buy' | 'decline' | 'sell'
      */
-    function copyTickerOrders(ticker, type) {
+    async function copyTickerOrders(ticker, type) {
       const result = calculationResults[ticker];
       if (!result) {
         showToast('계산 결과가 없습니다', 'warning');
@@ -2569,12 +2662,12 @@
       }
 
       const text = `[${ticker}] ${title}\n${lines.join('\n')}`;
-      navigator.clipboard.writeText(text).then(() => {
+      const success = await copyToClipboard(text);
+      if (success) {
         showToast(`${ticker} ${title} 주문 복사됨`, 'success');
-      }).catch(err => {
-        console.error('클립보드 복사 실패:', err);
+      } else {
         showToast('복사 실패', 'error');
-      });
+      }
     }
 
     /**
@@ -2750,7 +2843,13 @@
     function handleBalanceChange(value) {
       if (!currentProfile) return;
 
-      BalanceManager.updateBalance(currentProfile.id, value);
+      // 🔴 v4.29.6 (#30): 입력값 범위 검증
+      let numValue = parseFloat(value) || 0;
+      if (!Number.isFinite(numValue)) numValue = 0;
+      if (numValue < 0) numValue = 0;
+      if (numValue > 10000000) numValue = 10000000;  // 최대 $10M
+
+      BalanceManager.updateBalance(currentProfile.id, numValue);
       recalculateBalance();
     }
 
@@ -2885,29 +2984,51 @@
     // =====================================================
 
     let sheetsInitialized = false;
+    let sheetsInitPromise = null;  // 🔴 v4.29.3: Race condition 방지 (C-02)
 
     /**
      * Google Sheets 초기화 및 로그인
+     * 🔴 v4.29.1: try/catch 추가 (C-01)
+     * 🔴 v4.29.3: Race condition 방지 - 동시 호출 시 동일 Promise 반환 (C-02)
      * @returns {Promise<boolean>} 성공 여부
      */
     async function initSheets() {
+      // 이미 초기화 완료
       if (sheetsInitialized && SheetsSync.getUserEmail()) {
         return true;
       }
 
-      await SheetsSync.init();
-      await SheetsSync.signIn();
-      sheetsInitialized = true;
-
-      // 로그인한 이메일 표시
-      const userEmail = SheetsSync.getUserEmail();
-      const userEl = document.getElementById('sheets-user');
-      if (userEmail && userEl) {
-        userEl.textContent = userEmail;
-        userEl.classList.remove('hidden');
+      // 🔴 v4.29.3: 초기화 진행 중이면 기존 Promise 반환 (중복 호출 방지)
+      if (sheetsInitPromise) {
+        return sheetsInitPromise;
       }
 
-      return true;
+      sheetsInitPromise = (async () => {
+        try {
+          await SheetsSync.init();
+          await SheetsSync.signIn();
+          sheetsInitialized = true;
+
+          // 로그인한 이메일 표시
+          const userEmail = SheetsSync.getUserEmail();
+          const userEl = document.getElementById('sheets-user');
+          if (userEmail && userEl) {
+            userEl.textContent = userEmail;
+            userEl.classList.remove('hidden');
+          }
+
+          return true;
+        } catch (error) {
+          console.error('initSheets error:', error);
+          sheetsInitialized = false;
+          showToast('Google 연결 실패: ' + (error.message || '알 수 없는 오류'), 'error');
+          throw error;
+        } finally {
+          sheetsInitPromise = null;  // 완료 후 초기화
+        }
+      })();
+
+      return sheetsInitPromise;
     }
 
     /**
@@ -2931,6 +3052,18 @@
         if (sheetProfiles.length === 0) {
           showToast('시트에 데이터가 없습니다', 'warning');
           status.textContent = '데이터 없음';
+          status.className = 'text-xs text-gray-600';
+          return;
+        }
+
+        // 🔴 v4.29.4 (#22): 확인 다이얼로그 추가
+        const existingCount = ProfileManager.getAllProfiles().length;
+        const confirmMsg = existingCount > 0
+          ? `시트에서 ${sheetProfiles.length}개 프로필을 불러옵니다.\n\n⚠️ 현재 로컬에 ${existingCount}개 프로필이 있습니다.\n시트 데이터로 덮어쓰시겠습니까?`
+          : `시트에서 ${sheetProfiles.length}개 프로필을 불러옵니다.\n계속하시겠습니까?`;
+
+        if (!confirm(confirmMsg)) {
+          status.textContent = '취소됨';
           status.className = 'text-xs text-gray-600';
           return;
         }
@@ -3086,6 +3219,53 @@
         status.textContent = '오류';
         status.className = 'text-xs text-red-600';
         showToast('저장 실패: ' + error.message, 'error');
+      }
+    }
+
+    /**
+     * 🔴 v4.29.1: 로그아웃 기능 추가 (#20)
+     * - Google 로그아웃
+     * - UI 초기화
+     * - 시작 화면으로 돌아가기
+     */
+    function handleSignOut() {
+      // 🔴 v4.29.2: Sheet = SSOT → 로그아웃 시 로컬 데이터도 삭제
+      if (!confirm('로그아웃 하시겠습니까?\n(로컬 데이터가 삭제됩니다. 다음 로그인 시 시트에서 다시 불러옵니다)')) {
+        return;
+      }
+
+      try {
+        // 1. Google 로그아웃
+        SheetsSync.signOut();
+        sheetsInitialized = false;
+
+        // 2. 🔴 v4.29.2: 로컬 데이터 클리어 (SSOT 원칙)
+        ProfileManager.resetToDefaults();
+        currentProfile = null;
+        selectedTicker = null;
+        enabledTickers.clear();
+        calculationResults = {};
+        lastCalculation = null;
+
+        // 3. UI 초기화
+        const userEl = document.getElementById('sheets-user');
+        const statusEl = document.getElementById('sheets-status');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        if (userEl) userEl.textContent = '미연결';
+        if (statusEl) {
+          statusEl.textContent = '오프라인';
+          statusEl.className = 'text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600';
+        }
+        if (logoutBtn) logoutBtn.classList.add('hidden');
+
+        // 4. 시작 화면으로 돌아가기
+        showStartScreen();
+        showToast('로그아웃 완료', 'success');
+
+      } catch (error) {
+        console.error('Sign out error:', error);
+        showToast('로그아웃 실패', 'error');
       }
     }
   </script>

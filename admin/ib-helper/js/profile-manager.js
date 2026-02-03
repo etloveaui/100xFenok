@@ -4,9 +4,11 @@
  * Manages multiple user profiles with localStorage persistence.
  * Supports 5 family members with individual stock settings.
  *
- * @version 1.2.0
+ * @version 1.2.2
  * @see PHASE2_SPEC.md
  *
+ * v1.2.2 (02-03): resetToDefaults() - daily data 삭제 추가 (SSOT 원칙)
+ * v1.2.1 (02-03): getAll() - JSON.parse 예외 처리 추가 (C-06)
  * v1.2.0 (02-03): createWithId() for sheet sync ID preservation
  * v1.1.0 (02-03): Korean name ID fix, saveDailyData simplification
  */
@@ -49,11 +51,20 @@ const ProfileManager = (function() {
 
   /**
    * Get all profile data
+   * 🔴 v1.2.1: JSON.parse 예외 처리 추가 (C-06)
    * @returns {Object|null}
    */
   function getAll() {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : null;
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) return null;
+      return JSON.parse(data);
+    } catch (error) {
+      console.error('ProfileManager.getAll: localStorage 파싱 오류', error);
+      // 손상된 데이터 삭제하고 null 반환
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
   }
 
   /**
@@ -357,10 +368,25 @@ const ProfileManager = (function() {
 
   /**
    * Reset to default profiles
+   * 🔴 v1.2.2: daily data도 삭제 (SSOT 원칙 - 완전한 초기화)
    * @returns {boolean} Success
    */
   function resetToDefaults() {
+    // 1. 프로필 데이터 삭제
     localStorage.removeItem(STORAGE_KEY);
+
+    // 2. 🔴 v1.2.2: daily data 삭제 (ib_daily_data_* 키들)
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(DAILY_KEY)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    console.log(`ProfileManager.resetToDefaults: Cleared ${keysToRemove.length} daily data keys`);
+
     init();
     return true;
   }
