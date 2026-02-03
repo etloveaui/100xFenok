@@ -1,14 +1,17 @@
 /**
- * IB Helper Google Sheets Sync - v3.3 (#211-P3)
+ * IB Helper Google Sheets Sync - v3.5.2 (#29 default values fix)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.3.0
+ * @version 3.5.2
  * @author 100xFenok Claude
  * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
  * @feature #211 (2026-02-03): 현재가 연동 - Prices 시트에서 자동 조회
  * @feature #211-P3 (2026-02-03): 프리마켓 가격 우선 (MarketState 기반)
+ * @fix C-10 (2026-02-03): withRetry() - API rate limit 대응
+ * @fix C-11 (2026-02-03): isAuthenticated() - gapi.client undefined 체크
+ * @fix #29 (2026-02-03): 라오어 가이드 기준 기본값 (SOXL 12%/5%, 기타 10%/5%)
  *
  * Sheet1 "Portfolio" Structure (v3.1 - 10 columns):
  * | 구글ID | 프로필ID | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 |
@@ -58,6 +61,44 @@ const SheetsSync = (function() {
 
   // 🔴 v3.4.0: 중복 push 방지
   let isPushing = false;
+
+  // =====================================================
+  // RETRY HELPER (C-10: Rate Limit Handling)
+  // =====================================================
+
+  /**
+   * 🔴 v3.5.0 (C-10): Rate limit 및 네트워크 오류 대응 retry 함수
+   * @param {Function} fn - 실행할 async 함수
+   * @param {number} maxRetries - 최대 재시도 횟수 (기본 3)
+   * @param {number} baseDelay - 기본 딜레이 ms (기본 1000)
+   * @returns {Promise<any>} 함수 실행 결과
+   */
+  async function withRetry(fn, maxRetries = 3, baseDelay = 1000) {
+    let lastError;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+
+        // Rate limit (429) 또는 서버 오류 (5xx)인 경우만 재시도
+        const status = error?.status || error?.result?.error?.code;
+        const isRetryable = status === 429 || (status >= 500 && status < 600);
+
+        if (!isRetryable || attempt >= maxRetries) {
+          throw error;
+        }
+
+        // Exponential backoff: 1s, 2s, 4s...
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.warn(`SheetsSync: Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    throw lastError;
+  }
 
   // =====================================================
   // INITIALIZATION
@@ -213,12 +254,20 @@ const SheetsSync = (function() {
 
   /**
    * Sign out from Google
+   * 🔴 v3.4.1: gapi/google 미정의 체크 추가 (C-04)
    */
   function signOut() {
-    const token = gapi.client.getToken();
-    if (token) {
-      google.accounts.oauth2.revoke(token.access_token);
-      gapi.client.setToken('');
+    try {
+      // gapi가 로드되지 않았으면 스킵
+      if (typeof gapi !== 'undefined' && gapi.client) {
+        const token = gapi.client.getToken();
+        if (token && typeof google !== 'undefined' && google.accounts?.oauth2) {
+          google.accounts.oauth2.revoke(token.access_token);
+          gapi.client.setToken('');
+        }
+      }
+    } catch (error) {
+      console.warn('signOut error (ignored):', error);
     }
     isSignedIn = false;
     currentUserEmail = null;
@@ -226,10 +275,18 @@ const SheetsSync = (function() {
 
   /**
    * Check if user is signed in
+   * 🔴 v3.5.1: gapi.client undefined 체크 추가 (C-11)
    * @returns {boolean}
    */
   function isAuthenticated() {
-    return isSignedIn && gapi.client.getToken() !== null;
+    try {
+      return isSignedIn &&
+             typeof gapi !== 'undefined' &&
+             gapi.client &&
+             gapi.client.getToken() !== null;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -268,18 +325,30 @@ const SheetsSync = (function() {
    * Read ALL data from sheet (모든 사용자)
    * @returns {Promise<Array>} All rows
    */
+  /**
+   * 🔴 v3.4.1: response 구조 검증 추가 (C-09)
+   * 🔴 v3.5.0: withRetry 적용 (C-10)
+   */
   async function readAllRows() {
     const sheetId = getSpreadsheetId();
     if (!sheetId) {
       throw new Error('Spreadsheet ID not set');
     }
 
-    const response = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: CONFIG.RANGE,
-    });
+    return withRetry(async () => {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: CONFIG.RANGE,
+      });
 
-    return response.result.values || [];
+      // 🔴 v3.4.1: response 구조 검증
+      if (!response || !response.result) {
+        console.warn('readAllRows: Unexpected response structure', response);
+        return [];
+      }
+
+      return response.result.values || [];
+    });
   }
 
   /**
@@ -325,8 +394,9 @@ const SheetsSync = (function() {
         holdings: parseInt(holdings) || 0,
         totalInvested: parseFloat(totalInvested) || 0,
         principal: parseFloat(principal) || 0,
-        sellPercent: parseFloat(afterPercent) || (sym === 'TQQQ' ? 10 : 12),  // AFTER% (지정가 매도)
-        locSellPercent: parseFloat(locPercent) || (sym === 'TQQQ' ? 5 : 6),   // LOC% (분할매도)
+        // 🔴 v3.5.2: 라오어 가이드 기준 기본값 (#29)
+        sellPercent: parseFloat(afterPercent) || (sym === 'SOXL' ? 12 : 10),  // AFTER% (지정가 매도)
+        locSellPercent: parseFloat(locPercent) || 5,   // LOC% (분할매도) - 모든 종목 5%
         date: date || '',
         balance: parseFloat(balance) || 0  // K: 예수금 (첫 번째 row만)
       });
@@ -341,6 +411,7 @@ const SheetsSync = (function() {
 
   /**
    * Write all rows to sheet (전체 덮어쓰기)
+   * 🔴 v3.5.0: withRetry 적용 (C-10)
    * @param {Array} rows - 2D array of row data
    */
   async function writeAllRows(rows) {
@@ -349,20 +420,22 @@ const SheetsSync = (function() {
       throw new Error('Spreadsheet ID not set');
     }
 
-    // Clear existing data (except header)
-    await gapi.client.sheets.spreadsheets.values.clear({
-      spreadsheetId: sheetId,
-      range: CONFIG.RANGE,
-    });
+    return withRetry(async () => {
+      // Clear existing data (except header)
+      await gapi.client.sheets.spreadsheets.values.clear({
+        spreadsheetId: sheetId,
+        range: CONFIG.RANGE,
+      });
 
-    if (rows.length === 0) return;
+      if (rows.length === 0) return;
 
-    // Write all data
-    await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId: sheetId,
-      range: 'A2',  // 첫 번째 시트 자동 사용
-      valueInputOption: 'USER_ENTERED',
-      resource: { values: rows }
+      // Write all data
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: 'A2',  // 첫 번째 시트 자동 사용
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: rows }
+      });
     });
   }
 
@@ -428,8 +501,9 @@ const SheetsSync = (function() {
           dailyData.holdings || 0,    // E: 수량
           dailyData.totalInvested || 0, // F: 총매입금
           stock.principal || 0,       // G: 세팅원금
-          stock.sellPercent || (sym === 'TQQQ' ? 10 : 12),      // H: AFTER% (지정가 매도)
-          stock.locSellPercent || (sym === 'TQQQ' ? 5 : 6),     // I: LOC% (분할매도)
+          // 🔴 v3.5.2: 라오어 가이드 기준 기본값 (#29)
+          stock.sellPercent || (sym === 'SOXL' ? 12 : 10),      // H: AFTER% (지정가 매도)
+          stock.locSellPercent || 5,     // I: LOC% (분할매도) - 모든 종목 5%
           today,                      // J: 날짜
           index === 0 ? balance : ''  // K: 예수금 (첫 번째 row만)
         ];
@@ -566,8 +640,9 @@ const SheetsSync = (function() {
         holdings: parseInt(row[4]) || 0,
         totalInvested: parseFloat(row[5]) || 0,
         principal: parseFloat(row[6]) || 0,
-        sellPercent: parseFloat(row[7]) || (sym === 'TQQQ' ? 10 : 12),    // H: AFTER%
-        locSellPercent: parseFloat(row[8]) || (sym === 'TQQQ' ? 5 : 6)    // I: LOC%
+        // 🔴 v3.5.2: 라오어 가이드 기준 기본값 (#29)
+        sellPercent: parseFloat(row[7]) || (sym === 'SOXL' ? 12 : 10),    // H: AFTER%
+        locSellPercent: parseFloat(row[8]) || 5    // I: LOC% - 모든 종목 5%
       });
     });
 
@@ -654,10 +729,13 @@ const SheetsSync = (function() {
     }
 
     try {
-      const response = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: sheetId,
-        range: `${getPricesSheetName()}!A2:G100`,  // Skip header, include MarketState & UpdatedAt
-      });
+      // 🔴 v3.5.0: withRetry 적용 (C-10)
+      const response = await withRetry(() =>
+        gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId: sheetId,
+          range: `${getPricesSheetName()}!A2:G100`,  // Skip header, include MarketState & UpdatedAt
+        })
+      );
 
       const rows = response.result.values || [];
       const prices = {};

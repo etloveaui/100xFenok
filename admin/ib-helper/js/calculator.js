@@ -4,9 +4,10 @@
  * 🔴 CRITICAL: This implements the exact Genie RPA logic
  * Reference: DEV.md, Asset_Allocator/docs/references/genie-rpa-infinitebuy-guide.md
  *
- * @version 1.2.0
+ * @version 1.3.0
  * @author 100xFenok Claude
  *
+ * v1.3.0 (02-03): divisions 검증 + Infinity/NaN 방지 (C-07)
  * v1.2.0 (02-03): 평단LOC 가격캡 추가 (V2.2 명세 준수)
  * v1.1.0 (02-03): sellPercent 사용자 입력 지원
  */
@@ -453,13 +454,18 @@ const IBCalculator = (function() {
     if (!principal || principal <= 0) {
       return { error: '세팅원금을 입력하세요' };
     }
-    // 🔴 v4.14.0: currentPrice 검증 제거 (UI에서 제거됨, 별%가만 사용)
-    // if (!currentPrice || currentPrice <= 0) {
-    //   return { error: '현재가를 입력하세요' };
-    // }
+    // 🔴 v1.3.0 (C-07): divisions 검증 추가 - Infinity/NaN 방지
+    if (!divisions || divisions <= 0) {
+      return { error: '분할 수는 1 이상이어야 합니다' };
+    }
 
     // 1회 매수금
     const oneTimeBuy = principal / divisions;
+
+    // 🔴 v1.3.0 (C-07): 계산 결과 검증 - Infinity/NaN 방지
+    if (!Number.isFinite(oneTimeBuy)) {
+      return { error: '1회 매수금 계산 오류' };
+    }
 
     // T값 계산
     const T = calculateT(totalInvested, oneTimeBuy);
