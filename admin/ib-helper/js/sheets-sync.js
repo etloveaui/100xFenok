@@ -1,5 +1,5 @@
 /**
- * IB Helper Google Sheets Sync - v3.6.0 (Session Persistence)
+ * IB Helper Google Sheets Sync - v3.6.1 (CORS Fix)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
@@ -1163,9 +1163,10 @@ const SheetsSync = (function() {
       throw new Error('Web App URL이 설정되지 않았습니다');
     }
 
+    // 🔴 v3.6.1: text/plain 사용 (CORS preflight 우회 - GAS는 OPTIONS 미지원)
     const response = await fetch(webAppUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
         action: 'register',
         email: email,
@@ -1204,9 +1205,10 @@ const SheetsSync = (function() {
       throw new Error('Web App URL이 설정되지 않았습니다');
     }
 
+    // 🔴 v3.6.1: text/plain 사용 (CORS preflight 우회)
     const response = await fetch(webAppUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
         action: 'login',
         email: email,
@@ -1251,10 +1253,11 @@ const SheetsSync = (function() {
     }
 
     // 서버에서 토큰 검증
+    // 🔴 v3.6.1: text/plain 사용 (CORS preflight 우회)
     try {
       const response = await fetch(webAppUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           action: 'verify',
           token: emailAuthToken
