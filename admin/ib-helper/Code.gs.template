@@ -1,0 +1,435 @@
+/**
+ * IB Helper - Order Execution Check (체결 확인)
+ * Google Apps Script for Google Sheets
+ *
+ * @version 1.0.0
+ * @author 100xFenok Claude
+ * @decision DEC-153 (2026-02-03)
+ *
+ * HOW TO USE:
+ * 1. Open your Google Sheet
+ * 2. Extensions > Apps Script
+ * 3. Paste this code
+ * 4. Save (Ctrl+S)
+ * 5. Run setupTrigger() once to enable daily auto-run
+ *
+ * SHEET STRUCTURE REQUIRED:
+ * - Sheet1 "Portfolio": 포트폴리오 (A:H)
+ * - Sheet2 "Prices": GOOGLEFINANCE 가격 (수동 설정)
+ * - Sheet3 "Orders": 주문 히스토리 (A:M - auto-created by IB Helper)
+ */
+
+// =====================================================
+// CONFIGURATION
+// =====================================================
+
+const CONFIG = {
+  PORTFOLIO_SHEET: 'Portfolio',
+  PRICES_SHEET: 'Prices',
+  ORDERS_SHEET: 'Orders',
+  BALANCE_SHEET: 'Balance',  // Optional
+  TIMEZONE: 'Asia/Seoul'
+};
+
+// =====================================================
+// MAIN ENTRY POINTS
+// =====================================================
+
+/**
+ * Process order executions
+ * Main function - run daily at 09:00 KST (after US market close)
+ */
+function processOrderExecutions() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
+  const pricesSheet = ss.getSheetByName(CONFIG.PRICES_SHEET);
+
+  if (!ordersSheet) {
+    Logger.log('Orders sheet not found');
+    return;
+  }
+
+  if (!pricesSheet) {
+    Logger.log('Prices sheet not found - please create it with GOOGLEFINANCE formulas');
+    return;
+  }
+
+  // 1. Load yesterday's prices
+  const prices = loadYesterdayPrices(pricesSheet);
+  Logger.log('Loaded prices: ' + JSON.stringify(prices));
+
+  // 2. Load pending orders (체결 컬럼 = 빈값)
+  const pendingOrders = loadPendingOrders(ordersSheet);
+  Logger.log('Pending orders: ' + pendingOrders.length);
+
+  // 3. Check executions
+  const executedOrders = checkExecutions(pendingOrders, prices);
+  Logger.log('Executed orders: ' + executedOrders.length);
+
+  // 4. Update Orders sheet
+  if (executedOrders.length > 0) {
+    updateOrdersSheet(ordersSheet, executedOrders);
+
+    // 5. Update Portfolio
+    updatePortfolio(ss, executedOrders);
+  }
+
+  Logger.log('Process complete: ' + executedOrders.length + ' orders executed');
+}
+
+// =====================================================
+// PRICE LOADING
+// =====================================================
+
+/**
+ * Load yesterday's prices from Prices sheet
+ * Expected structure:
+ * | A: Ticker | B: Current | C: Close | D: High | E: Low |
+ *
+ * @param {Sheet} sheet - Prices sheet
+ * @returns {Object} { TICKER: { close: number, high: number } }
+ */
+function loadYesterdayPrices(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const prices = {};
+
+  // Skip header row
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const ticker = String(row[0]).trim().toUpperCase();
+    if (!ticker) continue;
+
+    prices[ticker] = {
+      close: parseFloat(row[2]) || 0,  // C: Close
+      high: parseFloat(row[3]) || 0    // D: High
+    };
+  }
+
+  return prices;
+}
+
+// =====================================================
+// ORDER LOADING
+// =====================================================
+
+/**
+ * Load pending orders from Orders sheet
+ * Pending = 체결 컬럼 (K) is empty
+ *
+ * @param {Sheet} sheet - Orders sheet
+ * @returns {Array} Array of order objects
+ */
+function loadPendingOrders(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const orders = [];
+
+  // Skip header row
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const execution = String(row[10]).trim();  // K: 체결
+
+    // Only pending orders
+    if (execution !== '' && execution !== 'N') continue;
+
+    orders.push({
+      rowIndex: i + 1,  // 1-indexed for Sheet
+      date: row[0],          // A: 날짜
+      googleId: row[1],      // B: 구글ID
+      profileId: row[2],     // C: 프로필ID
+      ticker: String(row[3]).trim().toUpperCase(),  // D: 종목
+      orderType: row[4],     // E: 주문타입
+      side: row[5],          // F: 매수매도 (BUY/SELL)
+      price: parseFloat(row[6]) || 0,    // G: 가격
+      quantity: parseInt(row[7]) || 0,   // H: 수량
+      total: parseFloat(row[8]) || 0,    // I: 총액
+      executionBasis: row[9], // J: 체결기준 (CLOSE/HIGH)
+      execution: row[10],    // K: 체결
+      executionDate: row[11],// L: 체결일
+      actualPrice: row[12]   // M: 실제가격
+    });
+  }
+
+  return orders;
+}
+
+// =====================================================
+// EXECUTION CHECK
+// =====================================================
+
+/**
+ * Check which orders were executed based on price
+ *
+ * Execution Rules:
+ * - BUY + CLOSE: 종가 ≤ 주문가 → 체결
+ * - SELL + CLOSE (LOC 25%): 종가 ≥ 주문가 → 체결
+ * - SELL + HIGH (지정가 75%): 고가 ≥ 주문가 → 체결
+ *
+ * @param {Array} orders - Pending orders
+ * @param {Object} prices - Price data { TICKER: { close, high } }
+ * @returns {Array} Orders that were executed
+ */
+function checkExecutions(orders, prices) {
+  const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
+  const executedOrders = [];
+
+  orders.forEach(order => {
+    const priceData = prices[order.ticker];
+    if (!priceData) {
+      Logger.log('No price data for: ' + order.ticker);
+      return;
+    }
+
+    let executed = false;
+    let actualPrice = 0;
+
+    if (order.side === 'BUY') {
+      // 매수: 종가 ≤ 주문가
+      if (order.executionBasis === 'CLOSE' && priceData.close <= order.price) {
+        executed = true;
+        actualPrice = priceData.close;
+      }
+    } else if (order.side === 'SELL') {
+      if (order.executionBasis === 'CLOSE') {
+        // LOC 매도: 종가 ≥ 주문가
+        if (priceData.close >= order.price) {
+          executed = true;
+          actualPrice = priceData.close;
+        }
+      } else if (order.executionBasis === 'HIGH') {
+        // 지정가 매도: 고가 ≥ 주문가
+        if (priceData.high >= order.price) {
+          executed = true;
+          actualPrice = order.price;  // 지정가 체결
+        }
+      }
+    }
+
+    if (executed) {
+      order.execution = 'Y';
+      order.executionDate = today;
+      order.actualPrice = actualPrice;
+      executedOrders.push(order);
+    }
+  });
+
+  return executedOrders;
+}
+
+// =====================================================
+// SHEET UPDATES
+// =====================================================
+
+/**
+ * Update Orders sheet with execution results
+ *
+ * @param {Sheet} sheet - Orders sheet
+ * @param {Array} executedOrders - Orders that were executed
+ */
+function updateOrdersSheet(sheet, executedOrders) {
+  executedOrders.forEach(order => {
+    const row = order.rowIndex;
+
+    // K: 체결 = 'Y'
+    sheet.getRange(row, 11).setValue('Y');
+
+    // L: 체결일
+    sheet.getRange(row, 12).setValue(order.executionDate);
+
+    // M: 실제가격
+    sheet.getRange(row, 13).setValue(order.actualPrice);
+  });
+}
+
+/**
+ * Update Portfolio sheet based on executed orders
+ *
+ * Portfolio columns:
+ * | A: 구글ID | B: 프로필ID | C: 종목 | D: 평단가 | E: 수량 | F: 총매입금 | G: 세팅원금 | H: 날짜 |
+ *
+ * @param {Spreadsheet} ss - Spreadsheet
+ * @param {Array} executedOrders - Orders that were executed
+ */
+function updatePortfolio(ss, executedOrders) {
+  const portfolioSheet = ss.getSheetByName(CONFIG.PORTFOLIO_SHEET);
+  if (!portfolioSheet) {
+    Logger.log('Portfolio sheet not found');
+    return;
+  }
+
+  const data = portfolioSheet.getDataRange().getValues();
+  const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
+
+  // Group executed orders by googleId + profileId + ticker
+  const ordersByKey = {};
+  executedOrders.forEach(order => {
+    const key = `${order.googleId}|${order.profileId}|${order.ticker}`;
+    if (!ordersByKey[key]) {
+      ordersByKey[key] = { buys: [], sells: [] };
+    }
+    if (order.side === 'BUY') {
+      ordersByKey[key].buys.push(order);
+    } else {
+      ordersByKey[key].sells.push(order);
+    }
+  });
+
+  // Update each portfolio row
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const key = `${row[0]}|${row[1]}|${row[2]}`;  // A|B|C
+    const orders = ordersByKey[key];
+
+    if (!orders) continue;
+
+    let avgPrice = parseFloat(row[3]) || 0;
+    let holdings = parseInt(row[4]) || 0;
+    let totalInvested = parseFloat(row[5]) || 0;
+
+    // Process buys: increase holdings, recalculate avgPrice
+    orders.buys.forEach(order => {
+      const newCost = order.actualPrice * order.quantity;
+      totalInvested += newCost;
+      holdings += order.quantity;
+    });
+
+    // Process sells: decrease holdings, reduce totalInvested
+    orders.sells.forEach(order => {
+      // Reduce holdings
+      holdings -= order.quantity;
+      // Reduce totalInvested proportionally
+      if (holdings > 0 && avgPrice > 0) {
+        totalInvested = avgPrice * holdings;
+      } else if (holdings <= 0) {
+        totalInvested = 0;
+        holdings = 0;
+      }
+    });
+
+    // Recalculate avgPrice
+    if (holdings > 0 && totalInvested > 0) {
+      avgPrice = totalInvested / holdings;
+    } else {
+      avgPrice = 0;
+    }
+
+    // Update row (1-indexed, add 1 for header)
+    const rowNum = i + 1;
+    portfolioSheet.getRange(rowNum, 4).setValue(avgPrice);      // D: 평단가
+    portfolioSheet.getRange(rowNum, 5).setValue(holdings);      // E: 수량
+    portfolioSheet.getRange(rowNum, 6).setValue(totalInvested); // F: 총매입금
+    portfolioSheet.getRange(rowNum, 8).setValue(today);         // H: 날짜
+
+    Logger.log('Updated portfolio: ' + key + ' → holdings=' + holdings + ', avgPrice=' + avgPrice);
+  }
+}
+
+// =====================================================
+// TRIGGER SETUP
+// =====================================================
+
+/**
+ * Setup daily trigger - run once to enable auto-execution
+ * Runs at 09:00 KST (after US market close)
+ */
+function setupTrigger() {
+  // Remove existing triggers
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'processOrderExecutions') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  // Create new daily trigger
+  ScriptApp.newTrigger('processOrderExecutions')
+    .timeBased()
+    .atHour(9)
+    .everyDays(1)
+    .inTimezone(CONFIG.TIMEZONE)
+    .create();
+
+  Logger.log('Daily trigger set for 09:00 KST');
+}
+
+/**
+ * Remove daily trigger
+ */
+function removeTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'processOrderExecutions') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  Logger.log('Trigger removed');
+}
+
+// =====================================================
+// MENU (for manual execution)
+// =====================================================
+
+/**
+ * Add custom menu when spreadsheet opens
+ */
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('📊 IB Helper')
+    .addItem('체결 확인 실행', 'processOrderExecutions')
+    .addSeparator()
+    .addItem('매일 자동 실행 설정', 'setupTrigger')
+    .addItem('자동 실행 해제', 'removeTrigger')
+    .addToUi();
+}
+
+// =====================================================
+// UTILITIES
+// =====================================================
+
+/**
+ * Manual test function
+ */
+function testPriceLoading() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const pricesSheet = ss.getSheetByName(CONFIG.PRICES_SHEET);
+
+  if (!pricesSheet) {
+    Logger.log('Prices sheet not found');
+    return;
+  }
+
+  const prices = loadYesterdayPrices(pricesSheet);
+  Logger.log('Prices: ' + JSON.stringify(prices, null, 2));
+}
+
+/**
+ * Create Prices sheet template
+ * Run this once to set up the Prices sheet structure
+ */
+function createPricesSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CONFIG.PRICES_SHEET);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.PRICES_SHEET);
+  }
+
+  // Headers
+  sheet.getRange('A1:E1').setValues([['Ticker', 'Current', 'Close', 'High', 'Low']]);
+
+  // Example formulas for common tickers
+  const tickers = ['TQQQ', 'SOXL'];
+  tickers.forEach((ticker, i) => {
+    const row = i + 2;
+    sheet.getRange(row, 1).setValue(ticker);
+    sheet.getRange(row, 2).setFormula(`=GOOGLEFINANCE("${ticker}", "price")`);
+    sheet.getRange(row, 3).setFormula(`=GOOGLEFINANCE("${ticker}", "closeyest")`);
+    sheet.getRange(row, 4).setFormula(`=GOOGLEFINANCE("${ticker}", "high")`);
+    sheet.getRange(row, 5).setFormula(`=GOOGLEFINANCE("${ticker}", "low")`);
+  });
+
+  // Formatting
+  sheet.getRange('A1:E1').setFontWeight('bold').setBackground('#f3f4f6');
+  sheet.setFrozenRows(1);
+
+  Logger.log('Prices sheet created with GOOGLEFINANCE formulas');
+}
