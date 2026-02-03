@@ -1,6 +1,6 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.33.2
+> **Version**: 4.33.3
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-03
 > **Status**: ✅ Phase 1-3 Complete + **Dual-Track Auth (#220)** + Ralph Loop 6 + 현재가 연동 (#211) + UX 개선 + 다중 종목 계산 (#217, #218)
@@ -676,6 +676,15 @@ admin/ib-helper/
   - `copyMocOrder()` - MOC 주문 복사
   - 사용자가 명시적으로 체크해야 MOC 안내 표시
 - [x] **#218 종목 제외 체크박스**: ⏸️ 다중 종목 계산(#217)과 함께 구현 예정
+
+### v4.33.3: Email Auth Cloud Sync (02-03) - User Feedback
+- [x] **Feature**: 이메일 인증 사용자를 위한 독립적인 클라우드 동기화
+- [x] **sheets-sync.js v3.6.2**:
+  - `isAuthenticated()`: 이메일 인증 체크 추가
+  - `pushViaWebApp()`: WebApp API를 통한 데이터 업로드
+  - `pullViaWebApp()`: WebApp API를 통한 데이터 다운로드
+  - `push()`, `pull()`: 이메일 인증 시 WebApp API로 라우팅
+- [x] **User Impact**: 이메일 사용자 클라우드 동기화 시 구글 로그인 팝업 없음
 
 ### v4.33.0: Dual-Track Authentication (02-03) - DEC-154 #220
 - [x] **Feature**: Google OAuth + Email/Password 병행 인증
