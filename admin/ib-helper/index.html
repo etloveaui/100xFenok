@@ -294,6 +294,96 @@
       outline: none;
       box-shadow: 0 0 0 2px #3b82f6;
     }
+
+    /* v4.28.0: Ticker Checkbox + Multi-Results Accordion */
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .ticker-checkbox:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Accordion Styles */
+    .accordion-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+    }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: white;
+      cursor: pointer;
+      user-select: none;
+    }
+    .accordion-header:hover {
+      background: linear-gradient(135deg, #334155, #1e293b);
+    }
+    .accordion-chevron {
+      transition: transform 0.2s;
+    }
+    .accordion-item.open .accordion-chevron {
+      transform: rotate(180deg);
+    }
+    .accordion-content {
+      display: none;
+      padding: 1rem;
+      background: #f8fafc;
+    }
+    .accordion-item.open .accordion-content {
+      display: block;
+    }
+    .accordion-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+    .accordion-badge-first { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .accordion-badge-second { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .accordion-badge-stop { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+    /* Order Section in Accordion */
+    .order-section {
+      margin-bottom: 1rem;
+    }
+    .order-section:last-child {
+      margin-bottom: 0;
+    }
+    .order-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 0.5rem;
+    }
+    .order-section-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #374151;
+    }
+    .section-copy-btn {
+      padding: 0.25rem 0.5rem;
+      background: #e5e7eb;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      color: #4b5563;
+      transition: all 0.15s;
+    }
+    .section-copy-btn:hover {
+      background: #d1d5db;
+      color: #1f2937;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -450,10 +540,17 @@
         </div>
       </div>
 
-      <!-- Calculate Button -->
-      <button onclick="calculateOrders()" class="w-full touch-target py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md">
-        <i class="fas fa-calculator mr-2"></i>주문 계산
-      </button>
+      <!-- Calculate Buttons (v4.28.0: 다중 계산 #217) -->
+      <div class="space-y-2">
+        <!-- 전체 계산 (체크된 종목 모두) -->
+        <button onclick="calculateAllOrders()" class="w-full touch-target py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md">
+          <i class="fas fa-calculator mr-2"></i>전체 계산
+        </button>
+        <!-- 선택 종목만 (기존 동작 유지) -->
+        <button onclick="calculateOrders()" class="w-full touch-target py-2 bg-gray-100 text-gray-600 rounded-lg font-medium text-sm hover:bg-gray-200 transition-all">
+          <i class="fas fa-check-circle mr-1"></i>선택 종목만 계산
+        </button>
+      </div>
     </div>
 
     <!-- Cash Management (Phase 3) - moved into left column -->
@@ -660,6 +757,19 @@
 
     </div>
 
+    <!-- v4.28.0: 다중 종목 결과 섹션 (#217) -->
+    <div id="multi-results-section" class="hidden space-y-3 mt-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-gray-800"><i class="fas fa-list-check mr-2 text-blue-500"></i>전체 종목 결과</h2>
+        <button onclick="copyAllTickersOrders()" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600">
+          <i class="fas fa-copy mr-1"></i>전체 복사
+        </button>
+      </div>
+      <div id="results-accordion" class="space-y-2">
+        <!-- 아코디언 아이템들이 여기에 동적 생성 -->
+      </div>
+    </div>
+
   </main>
 
   <!-- Profile Settings Modal -->
@@ -759,7 +869,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.22.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.28.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -776,6 +886,10 @@
     // 'SOXL' 초기값 → 첫 로드 시 빈 데이터로 기존 데이터 덮어씌움 방지
     let selectedTicker = null;
     let currentProfile = null;
+
+    // 🔴 v4.28.0: 다중 종목 계산 (#217, #218)
+    let enabledTickers = new Set();     // 계산 대상 종목 (체크된 종목)
+    let calculationResults = {};        // Map<ticker, result> - 다중 계산 결과
 
     // =====================================================
     // Auto-Save to Sheets (v4.20.0)
@@ -1044,13 +1158,48 @@
         ? currentProfile.stocks
         : [{ symbol: 'TQQQ' }, { symbol: 'SOXL' }];
 
-      container.innerHTML = stocks.map(s => `
-        <button onclick="selectTicker('${s.symbol}')"
-                class="ticker-btn touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100"
-                data-ticker="${s.symbol}">
-          ${s.symbol}
-        </button>
-      `).join('');
+      // 🔴 v4.28.0: 프로필 변경 시 enabledTickers 리셋
+      enabledTickers.clear();
+
+      container.innerHTML = stocks.map(s => {
+        // 필수값 체크 (평단가, 세팅원금)
+        const hasRequired = (s.avgPrice > 0 || s.principal > 0);
+        const isDisabled = !hasRequired;
+
+        // 필수값 있으면 기본 체크
+        if (hasRequired) {
+          enabledTickers.add(s.symbol);
+        }
+
+        return `
+          <div class="ticker-item flex items-center gap-2">
+            <input type="checkbox"
+                   id="ticker-check-${s.symbol}"
+                   class="ticker-checkbox w-5 h-5 accent-blue-500"
+                   ${hasRequired ? 'checked' : ''}
+                   ${isDisabled ? 'disabled' : ''}
+                   onchange="toggleTicker('${s.symbol}', this.checked)"
+                   title="${isDisabled ? '평단가 또는 세팅원금 입력 필요' : '계산 대상'}">
+            <button onclick="selectTicker('${s.symbol}')"
+                    class="ticker-btn flex-1 touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100 ${isDisabled ? 'opacity-50' : ''}"
+                    data-ticker="${s.symbol}">
+              ${s.symbol}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /**
+     * 🔴 v4.28.0: 종목 체크박스 토글 (#218)
+     */
+    function toggleTicker(symbol, checked) {
+      if (checked) {
+        enabledTickers.add(symbol);
+      } else {
+        enabledTickers.delete(symbol);
+      }
+      console.log('enabledTickers:', [...enabledTickers]);
     }
 
     // =====================================================
@@ -1899,6 +2048,108 @@
     }
 
     /**
+     * 🔴 v4.28.0: 다중 종목 전체 계산 (#217)
+     * enabledTickers에 있는 모든 종목을 순회하며 계산
+     */
+    async function calculateAllOrders() {
+      // 계산할 종목 체크
+      if (enabledTickers.size === 0) {
+        showToast('계산할 종목을 선택하세요', 'warning');
+        return;
+      }
+
+      // 프로필 필수 체크
+      if (!currentProfile || !currentProfile.stocks?.length) {
+        showToast('프로필에 종목이 없습니다', 'warning');
+        return;
+      }
+
+      // 결과 초기화
+      calculationResults = {};
+      const tickerList = [...enabledTickers];
+
+      // 현재가 일괄 조회 (Sheets에서)
+      let priceMap = {};
+      try {
+        if (SheetsSync.isAuthenticated()) {
+          for (const ticker of tickerList) {
+            const price = await SheetsSync.getCurrentPrice(ticker);
+            if (price > 0) priceMap[ticker] = price;
+          }
+          console.log('📊 현재가 조회 완료:', priceMap);
+        }
+      } catch (e) {
+        console.warn('현재가 조회 실패:', e.message);
+      }
+
+      // 각 종목별 계산
+      const successResults = [];
+      const failedTickers = [];
+
+      for (const ticker of tickerList) {
+        // 프로필에서 종목 데이터 가져오기
+        const stockData = currentProfile.stocks.find(s => s.symbol === ticker);
+        if (!stockData) {
+          failedTickers.push({ ticker, reason: '종목 데이터 없음' });
+          continue;
+        }
+
+        // 필수값 체크
+        const avgPrice = stockData.avgPrice || 0;
+        const principal = stockData.principal || 0;
+
+        if (!avgPrice || !principal) {
+          failedTickers.push({ ticker, reason: '평단가/세팅원금 없음' });
+          continue;
+        }
+
+        // 입력값 구성
+        const defaultSellPercent = ticker === 'TQQQ' ? 10 : 12;
+        const input = {
+          ticker: ticker,
+          principal: principal,
+          divisions: stockData.divisions || 40,
+          avgPrice: avgPrice,
+          totalInvested: stockData.totalInvested || 0,
+          holdings: stockData.holdings || 0,
+          currentPrice: priceMap[ticker] || 0,
+          sellPercent: stockData.sellPercent || defaultSellPercent
+        };
+
+        // 계산
+        const result = IBCalculator.calculate(input);
+
+        if (result.error) {
+          failedTickers.push({ ticker, reason: result.error });
+          continue;
+        }
+
+        calculationResults[ticker] = result;
+        successResults.push(result);
+
+        // 시트에 저장 (비동기)
+        saveOrdersToSheet(result);
+      }
+
+      // 결과 표시
+      if (successResults.length === 0) {
+        showToast('계산된 종목이 없습니다', 'warning');
+        return;
+      }
+
+      // 실패 종목 경고
+      if (failedTickers.length > 0) {
+        console.warn('계산 실패 종목:', failedTickers);
+        showToast(`${failedTickers.length}개 종목 계산 실패`, 'warning');
+      }
+
+      // 다중 결과 표시 (아코디언)
+      displayMultipleResults(successResults);
+
+      showToast(`${successResults.length}개 종목 계산 완료`, 'success');
+    }
+
+    /**
      * Save orders to Google Sheets (Orders sheet)
      * Silently saves in background, non-blocking
      * @param {Object} result - Calculation result
@@ -2023,6 +2274,245 @@
 
       // Display results based on screen size (PC vs Mobile)
       showResultsResponsive();
+    }
+
+    /**
+     * 🔴 v4.28.0: 다중 종목 결과 표시 (#217)
+     * @param {Array} results - 계산 결과 배열
+     */
+    function displayMultipleResults(results) {
+      const section = document.getElementById('multi-results-section');
+      const accordion = document.getElementById('results-accordion');
+
+      if (!results || results.length === 0) {
+        section.classList.add('hidden');
+        return;
+      }
+
+      // 단일 결과일 때는 기존 UI 사용
+      if (results.length === 1) {
+        section.classList.add('hidden');
+        displayResults(results[0]);
+        return;
+      }
+
+      // 다중 결과: 아코디언 표시
+      section.classList.remove('hidden');
+
+      // 기존 단일 결과 섹션 숨기기
+      document.getElementById('results-section').classList.add('hidden');
+
+      // 아코디언 아이템 생성
+      accordion.innerHTML = results.map((result, index) => {
+        const { ticker, calculation, buyOrders, sellOrders, quarterStopLoss } = result;
+        const { T, phase, starPercent, locInfo } = calculation;
+
+        // Phase badge 클래스
+        let phaseBadgeClass = 'accordion-badge-first';
+        if (phase === '후반전') phaseBadgeClass = 'accordion-badge-second';
+        else if (phase === '손절') phaseBadgeClass = 'accordion-badge-stop';
+
+        // 주문 분리
+        const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
+        const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+
+        // 아코디언 아이템 HTML
+        return `
+          <div class="accordion-item ${index === 0 ? 'open' : ''}" data-ticker="${ticker}">
+            <div class="accordion-header" onclick="toggleAccordion('${ticker}')">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-lg">${ticker}</span>
+                <span class="accordion-badge ${phaseBadgeClass}">${phase}</span>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-sm text-slate-300">T=${T.toFixed(1)}</span>
+                <i class="fas fa-chevron-down accordion-chevron"></i>
+              </div>
+            </div>
+            <div class="accordion-content">
+              <!-- Summary -->
+              <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                <div class="bg-white rounded-lg p-2 shadow-sm">
+                  <div class="text-xs text-gray-500">별%</div>
+                  <div class="font-semibold">${starPercent.toFixed(1)}%</div>
+                </div>
+                <div class="bg-white rounded-lg p-2 shadow-sm">
+                  <div class="text-xs text-gray-500">1회매수</div>
+                  <div class="font-semibold">${IBCalculator.formatDollar(calculation.oneTimeBuy)}</div>
+                </div>
+                <div class="bg-white rounded-lg p-2 shadow-sm">
+                  <div class="text-xs text-gray-500">LOC가</div>
+                  <div class="font-semibold">${IBCalculator.formatDollar(locInfo.locPrice)}</div>
+                </div>
+              </div>
+
+              <!-- Buy Orders -->
+              <div class="order-section">
+                <div class="order-section-header">
+                  <span class="order-section-title"><i class="fas fa-arrow-down text-green-500 mr-1"></i>매수 (LOC)</span>
+                  <button onclick="copyTickerOrders('${ticker}', 'buy')" class="section-copy-btn">
+                    <i class="fas fa-copy mr-1"></i>복사
+                  </button>
+                </div>
+                <div class="space-y-1 text-sm">
+                  ${mainBuyOrders.map(o => `
+                    <div class="flex justify-between bg-white rounded px-2 py-1">
+                      <span class="text-gray-600">${o.type}</span>
+                      <span class="font-medium">$${o.price.toFixed(2)} × ${o.quantity}주</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              ${declineOrders.length > 0 ? `
+              <!-- Decline Orders -->
+              <div class="order-section">
+                <div class="order-section-header">
+                  <span class="order-section-title"><i class="fas fa-shield-alt text-blue-500 mr-1"></i>하락대비 (LOC)</span>
+                  <button onclick="copyTickerOrders('${ticker}', 'decline')" class="section-copy-btn">
+                    <i class="fas fa-copy mr-1"></i>복사
+                  </button>
+                </div>
+                <div class="space-y-1 text-sm">
+                  ${declineOrders.map(o => `
+                    <div class="flex justify-between bg-white rounded px-2 py-1">
+                      <span class="text-gray-600">${o.type}</span>
+                      <span class="font-medium">$${o.price.toFixed(2)} × ${o.quantity}주</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              ` : ''}
+
+              <!-- Sell Orders -->
+              <div class="order-section">
+                <div class="order-section-header">
+                  <span class="order-section-title"><i class="fas fa-arrow-up text-red-500 mr-1"></i>매도</span>
+                  <button onclick="copyTickerOrders('${ticker}', 'sell')" class="section-copy-btn">
+                    <i class="fas fa-copy mr-1"></i>복사
+                  </button>
+                </div>
+                ${quarterStopLoss.active ? `
+                <div class="bg-red-50 border border-red-200 rounded p-2 text-sm text-red-700">
+                  <i class="fas fa-exclamation-triangle mr-1"></i>쿼터손절: MOC ${quarterStopLoss.mocQuantity}주 매도
+                </div>
+                ` : `
+                <div class="space-y-1 text-sm">
+                  ${sellOrders.map(o => `
+                    <div class="flex justify-between bg-white rounded px-2 py-1">
+                      <span class="text-gray-600">${o.type}</span>
+                      <span class="font-medium">$${o.price.toFixed(2)} × ${o.quantity}주</span>
+                    </div>
+                  `).join('')}
+                </div>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /**
+     * 🔴 v4.28.0: 아코디언 토글 (#217)
+     */
+    function toggleAccordion(ticker) {
+      const item = document.querySelector(`.accordion-item[data-ticker="${ticker}"]`);
+      if (item) {
+        item.classList.toggle('open');
+      }
+    }
+
+    /**
+     * 🔴 v4.28.0: 전체 종목 주문 복사 (#217)
+     */
+    function copyAllTickersOrders() {
+      if (Object.keys(calculationResults).length === 0) {
+        showToast('먼저 전체 계산을 실행하세요', 'warning');
+        return;
+      }
+
+      const lines = [
+        `📊 전체 종목 오늘의 주문`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        ''
+      ];
+
+      for (const [ticker, result] of Object.entries(calculationResults)) {
+        const { buyOrders, sellOrders, quarterStopLoss } = result;
+        const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
+        const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+
+        lines.push(`【${ticker}】`);
+        lines.push('📉 매수 (LOC)');
+        lines.push(...mainBuyOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`));
+
+        if (declineOrders.length > 0) {
+          lines.push('🛡️ 하락대비 (LOC)');
+          lines.push(...declineOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`));
+        }
+
+        if (quarterStopLoss && quarterStopLoss.active) {
+          lines.push('🔴 쿼터손절 (MOC)');
+          lines.push(`  MOC 매도: ${quarterStopLoss.mocQuantity}주`);
+        } else {
+          lines.push('📈 매도');
+          lines.push(...sellOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`));
+        }
+
+        lines.push('');
+      }
+
+      lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('전체 종목 주문이 복사되었습니다', 'success');
+      });
+    }
+
+    /**
+     * 🔴 v4.28.0: 개별 종목 섹션별 복사 (#217)
+     * @param {string} ticker - 종목 심볼
+     * @param {string} type - 'buy' | 'decline' | 'sell'
+     */
+    function copyTickerOrders(ticker, type) {
+      const result = calculationResults[ticker];
+      if (!result) {
+        showToast('계산 결과가 없습니다', 'warning');
+        return;
+      }
+
+      const { buyOrders, sellOrders, quarterStopLoss } = result;
+      const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
+      const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+
+      let lines = [];
+      let title = '';
+
+      switch (type) {
+        case 'buy':
+          title = '매수';
+          lines = mainBuyOrders.map(o => `${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`);
+          break;
+        case 'decline':
+          title = '하락대비';
+          lines = declineOrders.map(o => `${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`);
+          break;
+        case 'sell':
+          title = '매도';
+          if (quarterStopLoss && quarterStopLoss.active) {
+            lines = [`MOC 매도: ${quarterStopLoss.mocQuantity}주`];
+          } else {
+            lines = sellOrders.map(o => `${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`);
+          }
+          break;
+      }
+
+      const text = `[${ticker}] ${title}\n${lines.join('\n')}`;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`${ticker} ${title} 주문 복사됨`, 'success');
+      });
     }
 
     /**
