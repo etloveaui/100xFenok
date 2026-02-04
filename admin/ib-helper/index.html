@@ -2616,21 +2616,47 @@
         return;
       }
 
-      // 🔴 v4.31.0 (B5-15): 중복 저장 방지
-      const orderKey = `${result.ticker}_${new Date().toISOString().slice(0, 10)}`;
-      if (_savedOrderKeys.has(orderKey)) {
-        console.log('saveOrdersToSheet: Skipped (already saved today)', orderKey);
+      // 🔴 v4.35.x: 중복 저장 방지 키 강화 (date+profile+ticker+type+price+qty)
+      const today = new Date().toISOString().slice(0, 10);
+      const profileId = currentProfile?.id || 'unknown';
+      const buildOrderKey = (order) => {
+        const orderType = order?.type || 'UNKNOWN';
+        const price = parseFloat(order?.price) || 0;
+        const qty = parseInt(order?.quantity) || 0;
+        return `${today}|${profileId}|${result.ticker}|${orderType}|${price.toFixed(4)}|${qty}`;
+      };
+
+      const newBuyOrders = [];
+      const newSellOrders = [];
+      const newKeys = [];
+
+      (result.buyOrders || []).forEach((order) => {
+        const key = buildOrderKey(order);
+        if (_savedOrderKeys.has(key)) return;
+        newBuyOrders.push(order);
+        newKeys.push(key);
+      });
+
+      (result.sellOrders || []).forEach((order) => {
+        const key = buildOrderKey(order);
+        if (_savedOrderKeys.has(key)) return;
+        newSellOrders.push(order);
+        newKeys.push(key);
+      });
+
+      if (newBuyOrders.length === 0 && newSellOrders.length === 0) {
+        console.log('saveOrdersToSheet: Skipped (all orders already saved)', result.ticker);
         return;
       }
 
       try {
         const count = await SheetsSync.saveOrders({
           ticker: result.ticker,
-          buyOrders: result.buyOrders,
-          sellOrders: result.sellOrders
+          buyOrders: newBuyOrders,
+          sellOrders: newSellOrders
         });
         if (count > 0) {
-          _savedOrderKeys.add(orderKey); // 성공 시에만 기록
+          newKeys.forEach(key => _savedOrderKeys.add(key)); // 성공 시에만 기록
           showToast(`📊 ${count}건 주문 저장됨`, 'success', 1500);
         }
       } catch (error) {
