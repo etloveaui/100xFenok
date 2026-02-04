@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.3.0
+ * @version 2.3.1
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v2.3.1 (2026-02-04): Dedupe key simplified (drop price/qty)
  * - v2.3.0 (2026-02-04): Balance migration + commission per profile
  * - v2.2.0 (2026-02-04): Auto balance update on execution + commission config
  * - v2.1.0 (2026-02-04): Added dedupeOrders() for duplicate prevention
@@ -178,7 +179,7 @@ function loadPendingOrders(sheet) {
 
 /**
  * Remove duplicate orders from Orders sheet
- * Duplicate key: date + googleId + profileId + ticker + orderType + price + qty
+ * Duplicate key: date + googleId + profileId + ticker + orderType + side + executionBasis
  *
  * @param {Sheet} sheet - Orders sheet (optional)
  */
@@ -207,16 +208,16 @@ function dedupeOrders(sheet, daysLimit = 30) {
     const date = row[0];
     const googleId = row[1];
     const profileId = row[2];
-    const ticker = row[3];
-    const orderType = row[4];
-    const price = parseFloat(row[6]) || 0;
-    const qty = parseInt(row[7]) || 0;
+    const ticker = String(row[3] || '').trim().toUpperCase();
+    const orderType = String(row[4] || '').trim();
+    const side = String(row[5] || '').trim().toUpperCase();
+    const executionBasis = String(row[9] || '').trim().toUpperCase();
 
-    if (!date || !googleId || !profileId || !ticker || !orderType) {
+    if (!date || !googleId || !profileId || !ticker || !orderType || !side || !executionBasis) {
       return null;
     }
 
-    return `${date}|${googleId}|${profileId}|${ticker}|${orderType}|${price.toFixed(4)}|${qty}`;
+    return `${date}|${googleId}|${profileId}|${ticker}|${orderType}|${side}|${executionBasis}`;
   };
 
   const parseOrderDate = (value) => {
