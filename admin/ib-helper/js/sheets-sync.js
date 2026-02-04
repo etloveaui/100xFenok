@@ -1,14 +1,15 @@
 /**
- * IB Helper Google Sheets Sync - v3.7.3 (WebApp Price API + Codex Review Round 3)
+ * IB Helper Google Sheets Sync - v3.7.4 (WebApp Price API + JSONP Bug Fix)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.7.3
+ * @version 3.7.4
  * @feature #221: Apps Script WebApp으로 현재가 공개 API 구현 (로그인 불필요)
  * @fix Codex Review R1: CORS (Accept 헤더 제거), CONFIG 통합, ticker 검증, 1분 캐시
  * @fix Codex Review R2: 티커별 캐시 TTL 분리 (전역 타임스탬프 → 티커별 타임스탬프)
  * @fix Codex Review R3: JSONP 클라이언트 구현 (CORS 완전 우회 - script 삽입 방식)
+ * @fix v3.7.4: fetchJSONP 변수 hoisting 버그 + 중복 resolve 방지
  * @feature Session Persistence: 토큰 localStorage 저장 → 재방문 시 자동 로그인
  * @author 100xFenok Claude
  * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
@@ -924,34 +925,46 @@ const SheetsSync = (function() {
   function fetchJSONP(url, timeout = 10000) {
     return new Promise((resolve, reject) => {
       const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-
-      // Timeout handler
-      const timeoutId = setTimeout(() => {
-        cleanup();
-        reject(new Error('JSONP request timeout'));
-      }, timeout);
+      let script = null;  // 🔴 v3.7.4: 변수 선언 위치 수정 (hoisting 버그 방지)
+      let resolved = false;  // 중복 resolve/reject 방지
 
       // Cleanup function
       function cleanup() {
-        clearTimeout(timeoutId);
-        delete window[callbackName];
         if (script && script.parentNode) {
           script.parentNode.removeChild(script);
         }
+        delete window[callbackName];
       }
+
+      // Timeout handler
+      const timeoutId = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          reject(new Error('JSONP request timeout'));
+        }
+      }, timeout);
 
       // Global callback function
       window[callbackName] = function(data) {
-        cleanup();
-        resolve(data);
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeoutId);
+          cleanup();
+          resolve(data);
+        }
       };
 
       // Create script element
-      const script = document.createElement('script');
+      script = document.createElement('script');
       script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
       script.onerror = function() {
-        cleanup();
-        reject(new Error('JSONP script load error'));
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeoutId);
+          cleanup();
+          reject(new Error('JSONP script load error'));
+        }
       };
 
       document.body.appendChild(script);
