@@ -2617,7 +2617,8 @@
       }
 
       // 🔴 v4.35.x: 중복 저장 방지 키 강화 (date+profile+ticker+type+price+qty)
-      const today = new Date().toISOString().slice(0, 10);
+      // KST 기준 날짜 (UTC+9) - 중복키 날짜 일치
+      const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
       const profileId = currentProfile?.id || 'unknown';
       const buildOrderKey = (order) => {
         const orderType = order?.type || 'UNKNOWN';
