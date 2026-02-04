@@ -197,12 +197,16 @@ function dedupeOrders(sheet, daysLimit = 30) {
 
   const header = data[0];
   const colCount = header.length;
-  const kept = [];
   const executedKeys = {};
-  const candidatesByKey = {};
+  const dedupeCandidates = {};
+  const keepFlags = new Array(data.length).fill(false);
+  keepFlags[0] = true; // header placeholder
 
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - daysLimit);
+  const hasDaysLimit = typeof daysLimit === 'number' && daysLimit > 0;
+  const cutoffDate = hasDaysLimit ? new Date() : null;
+  if (hasDaysLimit && cutoffDate) {
+    cutoffDate.setDate(cutoffDate.getDate() - daysLimit);
+  }
 
   const buildKey = (row) => {
     const date = row[0];
@@ -238,6 +242,19 @@ function dedupeOrders(sheet, daysLimit = 30) {
     return isNaN(parsed.getTime()) ? null : parsed;
   };
 
+  const withinWindow = (orderDate) => {
+    if (!hasDaysLimit) return true;
+    if (!orderDate || !cutoffDate) return false;
+    return orderDate >= cutoffDate;
+  };
+
+  const byPriority = (a, b) => {
+    const execScore = (meta) => (meta.execution === 'Y' ? 2 : 1);
+    const execDiff = execScore(b) - execScore(a);
+    if (execDiff !== 0) return execDiff;
+    return b.idx - a.idx; // 최신 우선
+  };
+
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row || row.length === 0) continue;
@@ -245,50 +262,48 @@ function dedupeOrders(sheet, daysLimit = 30) {
     const isEmpty = row.every(cell => cell === '' || cell === null);
     if (isEmpty) continue;
 
-    const execution = String(row[10] || '').trim();
+    const execution = String(row[10] || '').trim().toUpperCase();
     const idx = i;
     const key = buildKey(row);
+    const orderDate = parseOrderDate(row[0]);
 
-    // 체결된 주문은 날짜 관계없이 절대 삭제 안 함
     if (execution === 'Y') {
-      kept.push({ row, idx });
+      keepFlags[idx] = true;
       if (key) executedKeys[key] = true;
       continue;
     }
 
-    const orderDate = parseOrderDate(row[0]);
-    if (!orderDate || orderDate < cutoffDate || !key) {
-      // 오래된 주문/키 없는 주문은 그대로 유지
-      kept.push({ row, idx });
+    if (!key || !withinWindow(orderDate)) {
+      keepFlags[idx] = true;
       continue;
     }
 
-    // 최근 주문만 dedupe 대상 (execution='Y'가 있으면 제거 대상)
-    if (!candidatesByKey[key]) candidatesByKey[key] = [];
-    candidatesByKey[key].push({ row, idx, execution });
+    if (!dedupeCandidates[key]) dedupeCandidates[key] = [];
+    dedupeCandidates[key].push({ row, idx, execution });
   }
 
-  const dedupedRecent = [];
-  Object.keys(candidatesByKey).forEach((key) => {
+  Object.keys(dedupeCandidates).forEach((key) => {
     if (executedKeys[key]) {
       return; // 체결된 주문이 있으면 non-Y는 제거
     }
-    const group = candidatesByKey[key];
-    group.sort((a, b) => b.idx - a.idx); // 최신 우선
-    dedupedRecent.push(group[0]);
+    const group = dedupeCandidates[key];
+    group.sort(byPriority);
+    const winner = group[0];
+    keepFlags[winner.idx] = true;
   });
 
-  const sortedRows = [...kept, ...dedupedRecent]
-    .sort((a, b) => a.idx - b.idx)
-    .map(item => item.row);
-  const uniqueRows = [header, ...sortedRows];
+  const uniqueRows = [header];
+  for (let i = 1; i < data.length; i++) {
+    if (keepFlags[i]) {
+      uniqueRows.push(data[i]);
+    }
+  }
 
   if (uniqueRows.length === data.length) {
     Logger.log('dedupeOrders: No duplicates found');
     return;
   }
 
-  // Normalize rows to header length
   const normalizedRows = uniqueRows.map(row => {
     const newRow = row.slice(0, colCount);
     while (newRow.length < colCount) newRow.push('');
@@ -329,9 +344,9 @@ function checkExecutions(orders, prices) {
     }
 
     if (order.executionBasis === 'HIGH' &&
-        (!priceData.high || priceData.high === 0) &&
+        priceData.high === 0 &&
         !highWarned[order.ticker]) {
-      Logger.log(`⚠️ ${order.ticker}: High price missing, limit sell may not execute`);
+      Logger.log(`⚠️ HIGH ${order.ticker}: priceData.high=0 → limit sell may not execute`);
       highWarned[order.ticker] = true;
     }
 

@@ -670,7 +670,7 @@
         <div class="grid grid-cols-3 gap-3 text-center">
           <div class="bg-white/10 rounded-lg p-2">
             <div class="text-xs text-slate-400">별%</div>
-            <div id="result-starPercent" class="text-lg font-semibold">2.3%</div>
+            <div id="result-starPercent" class="text-lg font-semibold">2.8%</div>
           </div>
           <div class="bg-white/10 rounded-lg p-2">
             <div class="text-xs text-slate-400">1회매수</div>
@@ -706,7 +706,7 @@
             <div>
               <div class="text-slate-400 mb-1">⭐ 별% 계산</div>
               <div id="formula-star" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
-                별% = 10 - (T / 2)
+                별% = sellPercent × (1 - T / 20)
               </div>
             </div>
             <div>
@@ -743,21 +743,6 @@
           </button>
         </div>
         <div id="buy-orders" class="space-y-2">
-          <!-- Dynamic content -->
-        </div>
-      </div>
-
-      <!-- Decline Protection Orders (v4.22.0: 매수 바로 뒤로 이동) -->
-      <div id="decline-orders-section" class="hidden bg-white rounded-xl p-3 shadow-sm">
-        <div class="section-header">
-          <h3 class="font-medium text-blue-600 text-sm">
-            <i class="fas fa-shield-alt mr-1"></i>하락대비 <span class="order-badge badge-loc ml-1">LOC</span>
-          </h3>
-          <button onclick="copyAllOrders('decline')" class="copy-btn text-gray-400 hover:text-gray-600">
-            <i class="fas fa-copy"></i>
-          </button>
-        </div>
-        <div id="decline-orders" class="space-y-1">
           <!-- Dynamic content -->
         </div>
       </div>
@@ -2220,14 +2205,14 @@
     function applyTodayBuy() {
       if (!lastCalculation) return;
 
-      const mainBuyOrders = lastCalculation.buyOrders.filter(o => !o.type.includes('하락대비'));
-      const totalBuyQty = mainBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
+      const allBuyOrders = lastCalculation.buyOrders || [];
+      const totalBuyQty = allBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
 
       // 1. 수량 추가 (adjustHoldings 내부에서 saveDailyInputs 호출)
       adjustHoldings(totalBuyQty);
 
       // 2. 총매입금 업데이트
-      const totalAmount = mainBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
+      const totalAmount = allBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
       const investedInput = document.getElementById('input-totalInvested');
       const currentInvested = parseFloat(investedInput.value) || 0;
       investedInput.value = (currentInvested + totalAmount).toFixed(2);
@@ -2293,7 +2278,7 @@
         btn.innerHTML = '<i class="fas fa-check"></i>';
         setTimeout(() => {
           btn.classList.remove('copied');
-          btn.innerHTML = `× ${numeric}주`;
+          btn.innerHTML = `${numeric}주`;
         }, 1200);
       }
       if (!success) {
@@ -2312,7 +2297,7 @@
       let sectionLabel = '';
 
       if (type === 'buy') {
-        orders = lastCalculation.buyOrders.filter(o => !o.type.includes('하락대비'));
+        orders = lastCalculation.buyOrders;
         sectionLabel = '매수';
       } else if (type === 'sell') {
         orders = lastCalculation.sellOrders;
@@ -2342,38 +2327,45 @@
     }
 
     /**
-     * #219: 전체 주문 복사 (매수+하락대비+매도 전체)
+     * #219: 전체 주문 복사 (매수(하락대비 포함)+매도 전체)
      * 🔴 v4.29.4 (C-08): copyToClipboard 사용
      */
+    function formatDollarShort(value) {
+      const numeric = Number(value || 0);
+      if (!Number.isFinite(numeric)) return '$0';
+      const formatted = IBCalculator.formatDollar(numeric, 2);
+      return formatted.replace(/\\.00$/, '');
+    }
+
+    function formatOrderLine(order) {
+      const label = formatOrderLabel(order);
+      return `  ${label}: ${order.quantity}주 x $${formatOrderPrice(order.price)}`;
+    }
+
     async function copyAllOrdersTotal() {
       if (!lastCalculation) {
         showToast('먼저 계산을 실행하세요', 'warning');
         return;
       }
 
-      const { buyOrders, sellOrders, quarterStopLoss } = lastCalculation;
-      const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
-      const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+      const { buyOrders, sellOrders, quarterStopLoss, calculation, input } = lastCalculation;
+      const headerLine = `【${lastCalculation.ticker}】 T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
 
       const lines = [
-        `📊 ${selectedTicker} 오늘의 주문`,
+        `📊 ${lastCalculation.ticker} 오늘의 주문`,
         `━━━━━━━━━━━━━━━━━━━━`,
+        headerLine,
         '',
         '📉 매수 (LOC)',
-        ...mainBuyOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`),
+        ...buyOrders.map(o => formatOrderLine(o)),
       ];
-
-      if (declineOrders.length > 0) {
-        lines.push('', '🛡️ 하락대비 (LOC)');
-        lines.push(...declineOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`));
-      }
 
       if (quarterStopLoss && quarterStopLoss.active) {
         lines.push('', '🔴 쿼터손절 (MOC)');
         lines.push(`  MOC 매도: ${quarterStopLoss.mocQuantity}주`);
       } else {
         lines.push('', '📈 매도');
-        lines.push(...sellOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`));
+        lines.push(...sellOrders.map(o => formatOrderLine(o)));
       }
 
       lines.push('', `━━━━━━━━━━━━━━━━━━━━`);
@@ -2731,23 +2723,14 @@
       // v4.23.0: Update formula details with actual values
       updateFormulaDetails(result);
 
-      // Separate main buy orders and decline orders
+      // Separate main buy orders and decline orders (merged for display)
       const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
       const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+      const mergedBuyOrders = [...mainBuyOrders, ...declineOrders];
 
-      // Buy orders (main)
+      // Buy orders (main + decline merged)
       const buyOrdersEl = document.getElementById('buy-orders');
-      buyOrdersEl.innerHTML = mainBuyOrders.map(order => renderOrderCard(order, 'buy')).join('');
-
-      // Decline orders (하락대비)
-      const declineSection = document.getElementById('decline-orders-section');
-      const declineOrdersEl = document.getElementById('decline-orders');
-      if (declineOrders.length > 0) {
-        declineSection.classList.remove('hidden');
-        declineOrdersEl.innerHTML = declineOrders.map(order => renderDeclineOrderCard(order)).join('');
-      } else {
-        declineSection.classList.add('hidden');
-      }
+      buyOrdersEl.innerHTML = mergedBuyOrders.map(order => renderOrderCard(order, 'buy')).join('');
 
       // Sell orders
       const sellOrdersEl = document.getElementById('sell-orders');
@@ -2779,7 +2762,7 @@
       }
 
       // Show today buy helper
-      const totalBuyQty = mainBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
+      const totalBuyQty = mergedBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
       showTodayBuyHelper(totalBuyQty);
 
       // Display results based on screen size (PC vs Mobile)
@@ -2840,10 +2823,13 @@
         const avgPrice = input?.avgPrice || 0;
         const totalInvested = input?.totalInvested || 0;
         const oneTimeBuy = calculation.oneTimeBuy || 0;
-        const sellPercent = input?.sellPercent || IBCalculator.getSellPercent(ticker);
+        const parsedSellPercent = parseFloat(input?.sellPercent);
+        const effectiveSellPercent = Number.isFinite(parsedSellPercent)
+          ? parsedSellPercent
+          : IBCalculator.getSellPercent(ticker);
         const starPrice = locInfo.starPrice || 0;
         const locSellPrice = IBCalculator.getSellLOCPrice(locInfo.locPrice || 0, avgPrice);
-        const limitPrice = avgPrice * (1 + sellPercent / 100);
+        const limitPrice = avgPrice * (1 + effectiveSellPercent / 100);
 
         // Phase badge 클래스
         let phaseBadgeClass = 'accordion-badge-first';
@@ -2853,6 +2839,7 @@
         // 주문 분리
         const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
         const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+        const mergedBuyOrders = [...mainBuyOrders, ...declineOrders];
 
         // 아코디언 아이템 HTML
         return `
@@ -2890,45 +2877,22 @@
                   <span class="order-section-title"><i class="fas fa-arrow-down text-green-500 mr-1"></i>매수 (LOC)</span>
                 </div>
                 <div class="space-y-1 text-sm">
-                  ${mainBuyOrders.map(o => `
+                  ${mergedBuyOrders.map(o => `
                     <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
-                      <span class="text-gray-600">${o.type}</span>
+                      <span class="text-gray-600">${formatOrderLabel(o)}</span>
                       <div class="flex items-center gap-2">
+                        <button class="order-copy-btn qty-copy-btn" onclick="copyQuantityValue(this, ${o.quantity})">
+                          ${o.quantity}주
+                        </button>
+                        <span class="text-gray-400 text-xs">x</span>
                         <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
                           ${Number(o.price || 0).toFixed(2)}
-                        </button>
-                        <button class="order-copy-btn qty-copy-btn" onclick="copyQuantityValue(this, ${o.quantity})">
-                          × ${o.quantity}주
                         </button>
                       </div>
                     </div>
                   `).join('')}
                 </div>
               </div>
-
-              ${declineOrders.length > 0 ? `
-              <!-- Decline Orders -->
-              <div class="order-section">
-                <div class="order-section-header">
-                  <span class="order-section-title"><i class="fas fa-shield-alt text-blue-500 mr-1"></i>하락대비 (LOC)</span>
-                </div>
-                <div class="space-y-1 text-sm">
-                  ${declineOrders.map(o => `
-                    <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
-                      <span class="text-gray-600">${o.type}</span>
-                      <div class="flex items-center gap-2">
-                        <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
-                          ${Number(o.price || 0).toFixed(2)}
-                        </button>
-                        <button class="order-copy-btn qty-copy-btn" onclick="copyQuantityValue(this, ${o.quantity})">
-                          × ${o.quantity}주
-                        </button>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-              ` : ''}
 
               <!-- Sell Orders -->
               <div class="order-section">
@@ -2943,13 +2907,14 @@
                 <div class="space-y-1 text-sm">
                   ${sellOrders.map(o => `
                     <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
-                      <span class="text-gray-600">${o.type}</span>
+                      <span class="text-gray-600">${formatOrderLabel(o)}</span>
                       <div class="flex items-center gap-2">
+                        <button class="order-copy-btn qty-copy-btn" onclick="copyQuantityValue(this, ${o.quantity})">
+                          ${o.quantity}주
+                        </button>
+                        <span class="text-gray-400 text-xs">x</span>
                         <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
                           ${Number(o.price || 0).toFixed(2)}
-                        </button>
-                        <button class="order-copy-btn qty-copy-btn" onclick="copyQuantityValue(this, ${o.quantity})">
-                          × ${o.quantity}주
                         </button>
                       </div>
                     </div>
@@ -2966,9 +2931,9 @@
               <div id="formula-detail-${ticker}" class="hidden mt-2 bg-white rounded-lg border border-gray-100 p-2 text-[11px] text-gray-600 space-y-1">
                 <div class="font-semibold text-gray-500">공식 요약</div>
                 <div>T = ceil((총매입금 / 1회매수) × 10) / 10 = ceil((${IBCalculator.formatDollar(totalInvested)} / ${IBCalculator.formatDollar(oneTimeBuy)}) × 10) / 10 → ${T.toFixed(1)}</div>
-                <div>별% = 10 - (T / 2) = 10 - (${T.toFixed(1)} / 2) → ${starPercent.toFixed(1)}%</div>
+                <div>별% = ${effectiveSellPercent}% × (1 - T / 20) = ${effectiveSellPercent}% × (1 - ${T.toFixed(1)} / 20) → ${starPercent.toFixed(1)}%</div>
                 <div>LOC 매도가 = 별%가 + (평단가 × 0.5%) = ${IBCalculator.formatDollar(starPrice)} + (${IBCalculator.formatDollar(avgPrice)} × 0.005) → ${IBCalculator.formatDollar(locSellPrice)}</div>
-                <div>지정가 = 평단가 × (1 + AFTER%) = ${IBCalculator.formatDollar(avgPrice)} × (1 + ${sellPercent}%) → ${IBCalculator.formatDollar(limitPrice)}</div>
+                <div>지정가 = 평단가 × (1 + AFTER%) = ${IBCalculator.formatDollar(avgPrice)} × (1 + ${effectiveSellPercent}%) → ${IBCalculator.formatDollar(limitPrice)}</div>
               </div>
             </div>
           </div>
@@ -3034,7 +2999,7 @@
       Object.values(calculationResults).forEach(result => {
         const buyOrders = result?.buyOrders || [];
         buyOrders.forEach(order => {
-          if (!order || !order.type || order.type.includes('하락대비')) return;
+          if (!order || !order.type) return;
           const price = parseFloat(order.price) || 0;
           const qty = parseFloat(order.quantity) || 0;
           dailyBuyTotal += price * qty;
@@ -3053,25 +3018,19 @@
       lines.push('');
 
       for (const [ticker, result] of Object.entries(calculationResults)) {
-        const { buyOrders, sellOrders, quarterStopLoss } = result;
-        const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
-        const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+        const { buyOrders, sellOrders, quarterStopLoss, calculation, input } = result;
+        const headerLine = `【${ticker}】 T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
 
-        lines.push(`【${ticker}】`);
+        lines.push(headerLine);
         lines.push('📉 매수 (LOC)');
-        lines.push(...mainBuyOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`));
-
-        if (declineOrders.length > 0) {
-          lines.push('🛡️ 하락대비 (LOC)');
-          lines.push(...declineOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`));
-        }
+        lines.push(...buyOrders.map(o => formatOrderLine(o)));
 
         if (quarterStopLoss && quarterStopLoss.active) {
           lines.push('🔴 쿼터손절 (MOC)');
           lines.push(`  MOC 매도: ${quarterStopLoss.mocQuantity}주`);
         } else {
           lines.push('📈 매도');
-          lines.push(...sellOrders.map(o => `  ${o.type}: $${o.price.toFixed(2)} × ${o.quantity}주`));
+          lines.push(...sellOrders.map(o => formatOrderLine(o)));
         }
 
         lines.push('');
@@ -3118,7 +3077,8 @@
       // 실제 입력값으로 공식 표시
       const totalInvested = input.totalInvested || 0;
       const avgPrice = input.avgPrice;
-      const sellPercent = document.getElementById('input-sellPercent')?.value || 10;
+      const parsedSellPercent = parseFloat(document.getElementById('input-sellPercent')?.value);
+      const effectiveSellPercent = Number.isFinite(parsedSellPercent) ? parsedSellPercent : 10;
 
       // T값 공식
       const tFormulaEl = document.getElementById('formula-T');
@@ -3131,7 +3091,7 @@
       // 별% 공식
       const starFormulaEl = document.getElementById('formula-star');
       if (starFormulaEl) {
-        starFormulaEl.innerHTML = `별% = 10 - (T / 2) = 10 - (${T.toFixed(1)} / 2)<br>
+        starFormulaEl.innerHTML = `별% = ${effectiveSellPercent}% × (1 - T / 20) = ${effectiveSellPercent}% × (1 - ${T.toFixed(1)} / 20)<br>
           <span class="text-yellow-400">= ${starPercent.toFixed(1)}%</span>`;
       }
 
@@ -3148,9 +3108,9 @@
       // 지정가 매도 공식
       const limitSellEl = document.getElementById('formula-limitSell');
       if (limitSellEl) {
-        const limitPrice = avgPrice * (1 + parseFloat(sellPercent) / 100);
+        const limitPrice = avgPrice * (1 + effectiveSellPercent / 100);
         limitSellEl.innerHTML = `지정가 = 평단가 × (1 + AFTER%)<br>
-          = $${avgPrice.toFixed(2)} × (1 + ${sellPercent}%)<br>
+          = $${avgPrice.toFixed(2)} × (1 + ${effectiveSellPercent}%)<br>
           <span class="text-red-400">= $${limitPrice.toFixed(2)}</span>`;
       }
     }
@@ -3206,40 +3166,42 @@
       document.body.style.overflow = ''; // Restore scroll
     }
 
+    function formatOrderLabel(order) {
+      const rawType = String(order?.type || '').trim();
+      if (rawType.includes('하락대비')) {
+        return '하락LOC 매수';
+      }
+      if (rawType.startsWith('지정가 매도')) {
+        return '지정가 매도';
+      }
+      return rawType || order?.description || '';
+    }
+
+    function formatOrderPrice(price) {
+      return Number(price || 0).toFixed(2);
+    }
+
     function renderOrderCard(order, type) {
       const isLOC = order.orderType === 'LOC';
       const badgeClass = isLOC ? 'badge-loc' : 'badge-limit';
       const badgeText = isLOC ? 'LOC' : '지정가';
+      const label = formatOrderLabel(order);
+      const qtyText = `${order.quantity}주`;
+      const priceText = `$${formatOrderPrice(order.price)}`;
 
       // v4.22.0: 축소된 카드 (한 줄)
       return `
         <div class="order-card-compact flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg" data-price="${order.price}" data-qty="${order.quantity}">
           <div class="flex items-center gap-2">
             <span class="order-badge ${badgeClass} text-xs">${badgeText}</span>
-            <span class="text-xs text-gray-600">${order.description}</span>
+            <span class="text-xs text-gray-600">${label}</span>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="font-bold text-gray-800">$${order.price}</span>
-            <span class="text-gray-500 text-sm">${order.quantity}주</span>
+          <div class="flex items-center gap-2">
+            <span class="text-gray-500 text-sm">${qtyText}</span>
+            <span class="text-gray-400 text-xs">x</span>
+            <span class="font-bold text-gray-800">${priceText}</span>
             <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="copy-btn text-gray-400 hover:text-gray-600">
               <i class="fas fa-copy"></i>
-            </button>
-          </div>
-        </div>
-      `;
-    }
-
-    // 하락대비 전용 렌더링 (더 간결하게)
-    // v4.22.0: 하락대비 더 축소
-    function renderDeclineOrderCard(order) {
-      return `
-        <div class="flex items-center justify-between py-1 px-2 text-xs" data-price="${order.price}" data-qty="${order.quantity}">
-          <span class="text-gray-500">${order.description}</span>
-          <div class="flex items-center gap-2">
-            <span class="font-medium">$${order.price}</span>
-            <span class="text-gray-400">${order.quantity}주</span>
-            <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="text-gray-300 hover:text-gray-500">
-              <i class="fas fa-copy text-xs"></i>
             </button>
           </div>
         </div>
