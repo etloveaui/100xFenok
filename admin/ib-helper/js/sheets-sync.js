@@ -19,6 +19,7 @@
  * @fix C-10 (2026-02-03): withRetry() - API rate limit 대응
  * @fix C-11 (2026-02-03): isAuthenticated() - gapi.client undefined 체크
  * @fix #29 (2026-02-03): 라오어 가이드 기준 기본값 (SOXL 12%/5%, 기타 10%/5%)
+ * @feature #222-P4 (2026-02-04): CashReserve 시트 연동 (SGOV/BIL/BILS)
  *
  * Sheet1 "Portfolio" Structure (v3.7 - 13 columns):
  * | 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%) |
@@ -57,6 +58,11 @@ const SheetsSync = (function() {
     // 시트 이름 없이 범위만 사용 → 첫 번째 시트에 자동 적용
     // 예수금은 프로필의 첫 번째 종목 row에만 저장
     RANGE: 'A2:M10000'  // Skip header row, 13 columns
+  };
+
+  const CASH_RESERVE_CONFIG = {
+    SHEET_NAME: 'CashReserve',
+    RANGE: 'A2:F10000'
   };
 
   // =====================================================
@@ -1082,6 +1088,167 @@ const SheetsSync = (function() {
     return 'Orders';
   }
 
+  // =====================================================
+  // CASH RESERVE MANAGEMENT (#222: P4 SGOV/BIL/BILS)
+  // =====================================================
+
+  function getCashReserveSheetName() {
+    return CASH_RESERVE_CONFIG.SHEET_NAME;
+  }
+
+  async function createCashReserveSheet() {
+    const sheetId = getSpreadsheetId();
+
+    try {
+      await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: sheetId,
+        resource: {
+          requests: [{
+            addSheet: {
+              properties: {
+                title: getCashReserveSheetName(),
+                index: 3
+              }
+            }
+          }]
+        }
+      });
+    } catch (e) {
+      console.log('CashReserve sheet creation skipped (may already exist)');
+    }
+
+    const headers = [[
+      'googleId', 'profileId', 'symbol', 'holdings', 'avgCost', 'updatedAt'
+    ]];
+
+    await withRetry(() =>
+      gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `${getCashReserveSheetName()}!A1:F1`,
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: headers }
+      })
+    );
+  }
+
+  async function readCashReserveRows() {
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set');
+    }
+
+    try {
+      const response = await withRetry(() =>
+        gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId: sheetId,
+          range: `${getCashReserveSheetName()}!${CASH_RESERVE_CONFIG.RANGE}`,
+        })
+      );
+      return response?.result?.values || [];
+    } catch (error) {
+      if (error?.result?.error?.message?.includes('Unable to parse range')) {
+        await createCashReserveSheet();
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  function parseCashReserveRows(rows) {
+    const reserves = [];
+    rows.forEach(row => {
+      if (!row || row.length < 3) return;
+      const googleId = String(row[0] || '').trim();
+      const profileId = String(row[1] || '').trim();
+      const symbol = String(row[2] || '').trim().toUpperCase();
+      if (!symbol) return;
+      reserves.push({
+        googleId,
+        profileId,
+        symbol,
+        holdings: parseFloat(row[3]) || 0,
+        avgCost: parseFloat(row[4]) || 0,
+        updatedAt: row[5] || ''
+      });
+    });
+    return reserves;
+  }
+
+  async function writeCashReserveRows(rows) {
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set');
+    }
+
+    await withRetry(() =>
+      gapi.client.sheets.spreadsheets.values.clear({
+        spreadsheetId: sheetId,
+        range: `${getCashReserveSheetName()}!${CASH_RESERVE_CONFIG.RANGE}`,
+      })
+    );
+
+    if (!rows || rows.length === 0) return;
+
+    await withRetry(() =>
+      gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `${getCashReserveSheetName()}!A2`,
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: rows }
+      })
+    );
+  }
+
+  async function loadCashReserve(profileId) {
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+    if (!profileId) {
+      throw new Error('프로필이 없습니다');
+    }
+
+    const allRows = await readCashReserveRows();
+    const reserves = parseCashReserveRows(allRows);
+    return reserves.filter(row => row.googleId === currentUserEmail && row.profileId === profileId);
+  }
+
+  async function saveCashReserve(entries) {
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    const profile = ProfileManager.getActive();
+    if (!profile) {
+      throw new Error('프로필이 없습니다');
+    }
+
+    const allRows = await readCashReserveRows();
+    const otherRows = allRows.filter(row =>
+      !(row[0] === currentUserEmail && row[1] === profile.id)
+    );
+
+    const now = new Date().toISOString();
+    const normalized = (entries || [])
+      .map(entry => ({
+        symbol: String(entry.symbol || '').trim().toUpperCase(),
+        holdings: parseFloat(entry.holdings) || 0,
+        avgCost: parseFloat(entry.avgCost) || 0
+      }))
+      .filter(entry => entry.symbol && (entry.holdings > 0 || entry.avgCost > 0));
+
+    const newRows = normalized.map(entry => ([
+      currentUserEmail,
+      profile.id,
+      entry.symbol,
+      entry.holdings,
+      entry.avgCost,
+      now
+    ]));
+
+    await writeCashReserveRows(otherRows.concat(newRows));
+    return newRows.length;
+  }
+
   /**
    * Save orders to Sheet3 "Orders"
    * Called after calculateOrders() to record order history
@@ -1313,6 +1480,10 @@ const SheetsSync = (function() {
     // Orders (DEC-153: Order Execution Tracking)
     saveOrders,
     readPendingOrders,
+
+    // CashReserve (#222-P4)
+    loadCashReserve,
+    saveCashReserve,
 
     // Prices (#211: 현재가 연동)
     fetchCurrentPrices,

@@ -43,6 +43,10 @@ const YAHOO_QUOTES_CONFIG = {
   CACHE_TTL_SECONDS: 300
 };
 
+// IB Helper tickers
+const CASH_ETFS = ['SGOV', 'BIL', 'BILS'];
+const IB_HELPER_TICKERS = ['TQQQ', 'SOXL', 'BITU'].concat(CASH_ETFS);
+
 // =============================================================================
 // Main API Functions
 // =============================================================================
@@ -168,10 +172,10 @@ function getQuotes(symbols) {
  * Get quotes for IB Helper tickers
  * Convenience function for common use case
  *
- * @returns {Object} { TQQQ: {...}, SOXL: {...}, BITU: {...} }
+ * @returns {Object} { TQQQ: {...}, SOXL: {...}, BITU: {...}, SGOV: {...}, BIL: {...}, BILS: {...} }
  */
 function getIBHelperQuotes() {
-  return getQuotes(['TQQQ', 'SOXL', 'BITU']);
+  return getQuotes(IB_HELPER_TICKERS);
 }
 
 // =============================================================================
@@ -559,7 +563,7 @@ function testMarketState() {
 // v2.0.0: Direct getQuotes() call (Yahoo → Stooq → GOOGLEFINANCE)
 //
 // Endpoint: https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
-// Response: { TQQQ: { current, close, ... }, SOXL: { ... }, ... }
+// Response: { TQQQ: { current, close, ... }, SOXL: { ... }, SGOV: { ... }, ... }
 //
 // @version 2.1.0
 // @created 2026-02-04
@@ -572,7 +576,7 @@ function testMarketState() {
  * Query parameters:
  * - ?ticker=TQQQ : Get single ticker (optional)
  * - ?callback=jsonp_cb_xxx : JSONP response (optional, for CORS bypass)
- * - No params : Get all IB Helper tickers (TQQQ, SOXL, BITU)
+ * - No params : Get all IB Helper tickers (TQQQ, SOXL, BITU, SGOV, BIL, BILS)
  *
  * @param {Object} e - Event object from Apps Script
  * @returns {TextOutput} JSON or JSONP response
@@ -606,7 +610,7 @@ function doGet(e) {
       }, e);
     }
 
-    // All tickers (IB Helper default: TQQQ, SOXL, BITU)
+    // All tickers (IB Helper default: TQQQ, SOXL, BITU, SGOV, BIL, BILS)
     const quotes = getIBHelperQuotes();
     const prices = {};
 

@@ -623,6 +623,38 @@
       <div id="stock-breakdown" class="hidden"></div>
     </div>
 
+    <!-- Cash Reserve (P4: SGOV/BIL/BILS) -->
+    <div id="cash-reserve-section" class="bg-white rounded-xl p-4 shadow-sm hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-medium text-gray-700">
+          <i class="fas fa-coins mr-2 text-emerald-500"></i>현금성 자산
+        </h3>
+        <button onclick="saveCashReserveData()" class="px-3 py-1 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-full hover:bg-emerald-100">
+          <i class="fas fa-save mr-1"></i>저장
+        </button>
+      </div>
+      <p class="text-[11px] text-gray-400 mb-2">SGOV/BIL/BILS 보유량·평단 수동 입력</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-[11px]">
+          <thead class="text-gray-400">
+            <tr>
+              <th class="text-left py-1">종목</th>
+              <th class="text-right py-1">수량</th>
+              <th class="text-right py-1">평단</th>
+              <th class="text-right py-1">현재가</th>
+              <th class="text-right py-1">평가금</th>
+            </tr>
+          </thead>
+          <tbody id="cash-reserve-rows" class="text-gray-700"></tbody>
+        </table>
+      </div>
+      <div class="mt-2 flex items-center justify-between text-xs text-gray-600">
+        <span>총 현금성 자산</span>
+        <span id="cash-reserve-total">$0</span>
+      </div>
+      <div id="cash-reserve-reco" class="mt-2 text-xs font-semibold text-emerald-600 hidden"></div>
+    </div>
+
     </div><!-- END LEFT COLUMN (input-column) -->
 
     <!-- RIGHT COLUMN: Results (PC: inline, Mobile: overlay) -->
@@ -940,6 +972,12 @@
     // 🔴 v4.28.0: 다중 종목 계산 (#217, #218)
     let enabledTickers = new Set();     // 계산 대상 종목 (체크된 종목)
     let calculationResults = {};        // Map<ticker, result> - 다중 계산 결과
+
+    // P4: CashReserve (SGOV/BIL/BILS)
+    const CASH_ETFS = ['SGOV', 'BIL', 'BILS'];
+    let cashReserveEntries = [];
+    let cashReservePrices = {};
+    let cashReserveAction = null;
 
     // =====================================================
     // Auto-Save to Sheets (v4.20.0)
@@ -1303,6 +1341,9 @@
         selectTicker(firstStock.symbol);
       }
       // else: selectedTicker = null 유지 (기본 종목 자동 저장 방지)
+
+      // P4: CashReserve 로드 (있으면 표시)
+      loadCashReserveData();
     }
 
     function updateTickerButtons() {
@@ -2348,17 +2389,25 @@
         return;
       }
 
+      await ensureCashReservePrices();
+
       const { buyOrders, sellOrders, quarterStopLoss, calculation, input } = lastCalculation;
       const headerLine = `【${lastCalculation.ticker}】 T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
 
       const lines = [
         `📊 ${lastCalculation.ticker} 오늘의 주문`,
         `━━━━━━━━━━━━━━━━━━━━`,
-        headerLine,
-        '',
-        '📉 매수 (LOC)',
-        ...buyOrders.map(o => formatOrderLine(o)),
+        headerLine
       ];
+
+      const cashAction = buildCashReserveAction();
+      if (cashAction) {
+        const verb = cashAction.side === 'BUY' ? '매수' : '매도';
+        lines.push('', '💵 현금성 자산');
+        lines.push(`  ${cashAction.symbol} ${verb} (MOC): ${cashAction.quantity}주`);
+      }
+
+      lines.push('', '📉 매수 (LOC)', ...buyOrders.map(o => formatOrderLine(o)));
 
       if (quarterStopLoss && quarterStopLoss.active) {
         lines.push('', '🔴 쿼터손절 (MOC)');
@@ -2487,6 +2536,7 @@
 
       // Display results
       displayResults(result);
+      updateCashReserveRecommendation();
 
       // 🔴 v4.21.0: Auto-save orders to Google Sheets (DEC-153)
       saveOrdersToSheet(result);
@@ -2984,6 +3034,8 @@
         return;
       }
 
+      await ensureCashReservePrices();
+
       const profileName = currentProfile?.name || '프로필';
       const lines = [
         `📊 ${profileName} 오늘의 주문`,
@@ -3013,6 +3065,13 @@
           const days = Math.floor(balanceValue / dailyBuyTotal);
           lines.push(`💰 예수금: $${balanceValue.toFixed(2)} | 약 ${days}일 가능`);
         }
+      }
+
+      const cashAction = buildCashReserveAction({ balanceValue, dailyBuyTotal });
+      if (cashAction) {
+        const verb = cashAction.side === 'BUY' ? '매수' : '매도';
+        lines.push('', '💵 현금성 자산');
+        lines.push(`  ${cashAction.symbol} ${verb} (MOC): ${cashAction.quantity}주`);
       }
 
       lines.push('');
@@ -3326,6 +3385,7 @@
         status = BalanceManager.calcOrderStatus(freshProfile);
       }
       renderOrderStatus(status);
+      updateCashReserveRecommendation(status);
       checkAndShowAlert(status);
     }
 
@@ -3372,6 +3432,335 @@
       } else {
         breakdownBox.classList.add('hidden');
       }
+    }
+
+    // =====================================================
+    // Cash Reserve (P4: SGOV/BIL/BILS)
+    // =====================================================
+
+    function buildCashReserveEntryMap(entries = cashReserveEntries) {
+      const map = {};
+      (entries || []).forEach(entry => {
+        const symbol = String(entry?.symbol || '').trim().toUpperCase();
+        if (!symbol) return;
+        map[symbol] = {
+          symbol,
+          holdings: parseFloat(entry.holdings) || 0,
+          avgCost: parseFloat(entry.avgCost) || 0,
+          updatedAt: entry.updatedAt || ''
+        };
+      });
+      return map;
+    }
+
+    function getCashReserveInputs(includeEmpty = false, baseSymbols = []) {
+      const baseSet = new Set(baseSymbols || []);
+      return CASH_ETFS.map(symbol => {
+        const holdingsEl = document.getElementById(`cash-holdings-${symbol}`);
+        const avgEl = document.getElementById(`cash-avg-${symbol}`);
+        return {
+          symbol,
+          holdings: parseFloat(holdingsEl?.value) || 0,
+          avgCost: parseFloat(avgEl?.value) || 0
+        };
+      }).filter(entry =>
+        entry.holdings > 0 ||
+        entry.avgCost > 0 ||
+        (includeEmpty && baseSet.has(entry.symbol))
+      );
+    }
+
+    function renderCashReserveTable(entries) {
+      const tbody = document.getElementById('cash-reserve-rows');
+      if (!tbody) return;
+
+      const entryMap = buildCashReserveEntryMap(entries);
+      tbody.innerHTML = CASH_ETFS.map(symbol => {
+        const entry = entryMap[symbol] || {};
+        const holdingsValue = entry.holdings > 0 ? entry.holdings : '';
+        const avgValue = entry.avgCost > 0 ? entry.avgCost : '';
+        return `
+          <tr>
+            <td class="py-1 font-semibold">${symbol}</td>
+            <td class="py-1 text-right">
+              <input type="number" id="cash-holdings-${symbol}" class="w-16 text-right border rounded px-1 py-0.5 text-[11px]" placeholder="0" inputmode="numeric" value="${holdingsValue}">
+            </td>
+            <td class="py-1 text-right">
+              <input type="number" id="cash-avg-${symbol}" class="w-20 text-right border rounded px-1 py-0.5 text-[11px]" placeholder="0.00" step="0.01" inputmode="decimal" value="${avgValue}">
+            </td>
+            <td class="py-1 text-right" id="cash-price-${symbol}">-</td>
+            <td class="py-1 text-right" id="cash-total-${symbol}">-</td>
+          </tr>
+        `;
+      }).join('');
+
+      CASH_ETFS.forEach(symbol => {
+        const holdingsEl = document.getElementById(`cash-holdings-${symbol}`);
+        const avgEl = document.getElementById(`cash-avg-${symbol}`);
+        [holdingsEl, avgEl].forEach(el => {
+          if (!el) return;
+          el.addEventListener('input', () => {
+            updateCashReserveTotals();
+            updateCashReserveRecommendation();
+          });
+        });
+      });
+
+      updateCashReserveTotals();
+    }
+
+    function updateCashReserveTotals() {
+      let totalValue = 0;
+
+      CASH_ETFS.forEach(symbol => {
+        const holdingsEl = document.getElementById(`cash-holdings-${symbol}`);
+        const priceEl = document.getElementById(`cash-price-${symbol}`);
+        const totalEl = document.getElementById(`cash-total-${symbol}`);
+
+        const holdings = parseFloat(holdingsEl?.value) || 0;
+        const price = parseFloat(cashReservePrices[symbol]) || 0;
+        const value = price > 0 ? price * holdings : 0;
+
+        if (priceEl) {
+          priceEl.textContent = price > 0 ? `$${price.toFixed(2)}` : '-';
+        }
+        if (totalEl) {
+          totalEl.textContent = value > 0 ? formatDollarShort(value) : '-';
+        }
+
+        totalValue += value;
+      });
+
+      const totalEl = document.getElementById('cash-reserve-total');
+      if (totalEl) {
+        totalEl.textContent = totalValue > 0 ? formatDollarShort(totalValue) : '$0';
+      }
+    }
+
+    async function loadCashReservePrices(entries) {
+      if (!entries || entries.length === 0) return;
+
+      const symbols = [...new Set(entries.map(entry => String(entry.symbol || '').toUpperCase()))]
+        .filter(symbol => CASH_ETFS.includes(symbol));
+
+      if (symbols.length === 0) return;
+
+      const priceUpdates = {};
+      await Promise.all(symbols.map(async symbol => {
+        try {
+          const price = await SheetsSync.getCurrentPrice(symbol);
+          if (price > 0) {
+            priceUpdates[symbol] = price;
+          }
+        } catch (e) {
+          console.warn(`CashReserve price fetch failed: ${symbol}`, e.message);
+        }
+      }));
+
+      cashReservePrices = { ...cashReservePrices, ...priceUpdates };
+      updateCashReserveTotals();
+    }
+
+    async function ensureCashReservePrices() {
+      if (!cashReserveEntries || cashReserveEntries.length === 0) return;
+      const baseSymbols = cashReserveEntries.map(entry => entry.symbol);
+      const inputEntries = getCashReserveInputs(true, baseSymbols);
+      const entryMap = buildCashReserveEntryMap(inputEntries.length > 0 ? inputEntries : cashReserveEntries);
+      const missing = CASH_ETFS.filter(symbol => entryMap[symbol] && !(cashReservePrices[symbol] > 0));
+      if (missing.length === 0) return;
+
+      const priceUpdates = {};
+      await Promise.all(missing.map(async symbol => {
+        try {
+          const price = await SheetsSync.getCurrentPrice(symbol);
+          if (price > 0) {
+            priceUpdates[symbol] = price;
+          }
+        } catch (e) {
+          console.warn(`CashReserve price fetch failed: ${symbol}`, e.message);
+        }
+      }));
+
+      cashReservePrices = { ...cashReservePrices, ...priceUpdates };
+      updateCashReserveTotals();
+    }
+
+    async function loadCashReserveData() {
+      const section = document.getElementById('cash-reserve-section');
+      if (!section) return;
+
+      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated() || !currentProfile) {
+        section.classList.add('hidden');
+        cashReserveEntries = [];
+        cashReservePrices = {};
+        cashReserveAction = null;
+        return;
+      }
+
+      try {
+        const entries = await SheetsSync.loadCashReserve(currentProfile.id);
+        if (!entries || entries.length === 0) {
+          section.classList.add('hidden');
+          cashReserveEntries = [];
+          cashReserveAction = null;
+          return;
+        }
+
+        cashReserveEntries = entries;
+        section.classList.remove('hidden');
+        renderCashReserveTable(entries);
+        await loadCashReservePrices(entries);
+        updateCashReserveRecommendation();
+      } catch (error) {
+        console.warn('CashReserve load error:', error);
+        section.classList.add('hidden');
+        cashReserveEntries = [];
+        cashReserveAction = null;
+      }
+    }
+
+    async function saveCashReserveData() {
+      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
+        showToast('Google 로그인이 필요합니다', 'warning');
+        return;
+      }
+
+      try {
+        const entries = getCashReserveInputs();
+        await SheetsSync.saveCashReserve(entries);
+        showToast('현금성 자산 저장됨', 'success', 1500);
+        await loadCashReserveData();
+      } catch (error) {
+        console.error('CashReserve save error:', error);
+        showToast('현금성 자산 저장 실패', 'error');
+      }
+    }
+
+    function getDailyBuyTotalFromResults(resultsMap) {
+      let total = 0;
+      Object.values(resultsMap || {}).forEach(result => {
+        const buyOrders = result?.buyOrders || [];
+        buyOrders.forEach(order => {
+          if (!order || !order.type) return;
+          const price = parseFloat(order.price) || 0;
+          const qty = parseFloat(order.quantity) || 0;
+          total += price * qty;
+        });
+      });
+      return total;
+    }
+
+    function getDailyBuyTotal() {
+      if (Object.keys(calculationResults).length > 0) {
+        return getDailyBuyTotalFromResults(calculationResults);
+      }
+      if (lastCalculation) {
+        return getDailyBuyTotalFromResults({ [lastCalculation.ticker]: lastCalculation });
+      }
+      if (typeof BalanceManager !== 'undefined' && currentProfile) {
+        const freshProfile = ProfileManager.getAll().profiles[currentProfile.id];
+        return BalanceManager.calcDailyBuyAttempt(freshProfile).total || 0;
+      }
+      return 0;
+    }
+
+    function getCurrentBalanceValue() {
+      const balanceInput = document.getElementById('input-balance');
+      const inputValue = parseFloat(balanceInput?.value);
+      if (Number.isFinite(inputValue) && inputValue > 0) return inputValue;
+      const balanceInfo = (typeof BalanceManager !== 'undefined' && currentProfile)
+        ? BalanceManager.getBalance(currentProfile.id)
+        : { available: 0 };
+      return parseFloat(balanceInfo?.available) || 0;
+    }
+
+    function pickCashReserveSymbol(entryMap, forSell) {
+      const available = CASH_ETFS.filter(symbol => entryMap[symbol]);
+      if (available.length === 0) return null;
+
+      if (forSell) {
+        const withHoldings = available.find(symbol => (entryMap[symbol]?.holdings || 0) > 0);
+        return withHoldings || available[0];
+      }
+
+      return available[0];
+    }
+
+    function buildCashReserveAction({ balanceValue, dailyBuyTotal } = {}) {
+      if (!cashReserveEntries || cashReserveEntries.length === 0 || !currentProfile) return null;
+
+      const baseSymbols = cashReserveEntries.map(entry => entry.symbol);
+      const inputEntries = getCashReserveInputs(true, baseSymbols);
+      const entryMap = buildCashReserveEntryMap(inputEntries.length > 0 ? inputEntries : cashReserveEntries);
+      const balance = Number.isFinite(balanceValue) ? balanceValue : getCurrentBalanceValue();
+      const daily = Number.isFinite(dailyBuyTotal) ? dailyBuyTotal : getDailyBuyTotal();
+
+      if (balance <= 0 || daily <= 0) return null;
+
+      const buyThreshold = daily * 6;
+
+      if (balance > buyThreshold) {
+        const symbol = pickCashReserveSymbol(entryMap, false);
+        if (!symbol) return null;
+        const price = parseFloat(cashReservePrices[symbol]) || 0;
+        if (price <= 0) return null;
+        const excess = balance - buyThreshold;
+        const quantity = Math.floor(excess / price);
+        if (quantity <= 0) return null;
+        return {
+          side: 'BUY',
+          symbol,
+          quantity,
+          price,
+          excess
+        };
+      }
+
+      if (balance < daily) {
+        const symbol = pickCashReserveSymbol(entryMap, true);
+        if (!symbol) return null;
+        const price = parseFloat(cashReservePrices[symbol]) || 0;
+        if (price <= 0) return null;
+        const shortage = daily - balance;
+        let quantity = Math.ceil(shortage / price);
+        if (quantity > 0) quantity += 1; // 여유분 1주
+        const holdings = entryMap[symbol]?.holdings || 0;
+        if (holdings > 0) {
+          quantity = Math.min(quantity, Math.floor(holdings));
+        }
+        if (quantity <= 0) return null;
+        return {
+          side: 'SELL',
+          symbol,
+          quantity,
+          price,
+          shortage
+        };
+      }
+
+      return null;
+    }
+
+    function updateCashReserveRecommendation(statusOverride) {
+      const section = document.getElementById('cash-reserve-section');
+      const recoEl = document.getElementById('cash-reserve-reco');
+      if (!section || section.classList.contains('hidden')) return;
+
+      const balanceValue = statusOverride?.available;
+      const dailyBuyTotal = statusOverride?.required;
+      const action = buildCashReserveAction({ balanceValue, dailyBuyTotal });
+      cashReserveAction = action;
+
+      if (!recoEl) return;
+      if (!action) {
+        recoEl.classList.add('hidden');
+        recoEl.textContent = '';
+        return;
+      }
+
+      const verb = action.side === 'BUY' ? '매수' : '매도';
+      recoEl.textContent = `${action.symbol} ${verb} (MOC): ${action.quantity}주`;
+      recoEl.classList.remove('hidden');
     }
 
     function renderStockBreakdown(details, total) {
