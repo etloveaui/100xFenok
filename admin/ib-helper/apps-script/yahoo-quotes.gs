@@ -61,12 +61,38 @@ function getQuote(symbol) {
 
   symbol = symbol.toUpperCase().trim();
 
+  // Cache (60s) to reduce UrlFetch and rate limit risk
+  const cache = CacheService.getScriptCache();
+  const cacheKey = 'quote_' + symbol;
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.price > 0) {
+        return parsed;
+      }
+    } catch (e) {
+      // ignore cache parse errors
+    }
+  }
+
+  const cacheResult = (result) => {
+    if (result && result.price > 0) {
+      try {
+        cache.put(cacheKey, JSON.stringify(result), 60);
+      } catch (e) {
+        // ignore cache write errors
+      }
+    }
+    return result;
+  };
+
   // Try Yahoo Finance first (supports pre/after hours)
   try {
     const yahooResult = fetchFromYahoo(symbol);
     if (yahooResult && yahooResult.price > 0) {
       Logger.log(`✅ ${symbol}: Yahoo Finance (${yahooResult.price})`);
-      return yahooResult;
+      return cacheResult(yahooResult);
     }
   } catch (e) {
     Logger.log(`⚠️ ${symbol}: Yahoo failed - ${e.message}`);
@@ -77,7 +103,7 @@ function getQuote(symbol) {
     const stooqResult = fetchFromStooq(symbol);
     if (stooqResult && stooqResult.price > 0) {
       Logger.log(`✅ ${symbol}: Stooq fallback (${stooqResult.price})`);
-      return stooqResult;
+      return cacheResult(stooqResult);
     }
   } catch (e) {
     Logger.log(`⚠️ ${symbol}: Stooq failed - ${e.message}`);
@@ -88,7 +114,7 @@ function getQuote(symbol) {
     const googleResult = fetchFromGoogleFinance(symbol);
     if (googleResult && googleResult.price > 0) {
       Logger.log(`✅ ${symbol}: GOOGLEFINANCE fallback (${googleResult.price})`);
-      return googleResult;
+      return cacheResult(googleResult);
     }
   } catch (e) {
     Logger.log(`❌ ${symbol}: All sources failed - ${e.message}`);
