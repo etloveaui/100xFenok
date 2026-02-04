@@ -194,6 +194,29 @@ const BalanceManager = (function() {
   }
 
   /**
+   * Update commission rate for a profile
+   *
+   * @param {string} profileId - Profile ID
+   * @param {number} rate - Commission rate (percent value, e.g. 0.07)
+   */
+  function updateCommissionRate(profileId, rate) {
+    const data = ProfileManager.getAll();
+    const profile = data.profiles[profileId];
+
+    if (!profile) return;
+
+    if (!profile.settings.balance) {
+      profile.settings.balance = { currency: 'USD' };
+    }
+
+    const numRate = parseFloat(rate);
+    profile.settings.balance.commissionRate = Number.isFinite(numRate) ? numRate : 0;
+    profile.settings.balance.lastUpdated = new Date().toISOString();
+
+    ProfileManager.save(data);
+  }
+
+  /**
    * Get balance for a profile
    *
    * @param {string} profileId - Profile ID
@@ -202,6 +225,18 @@ const BalanceManager = (function() {
   function getBalance(profileId) {
     const profile = ProfileManager.getAll().profiles[profileId];
     return profile?.settings?.balance || { available: 0, currency: 'USD' };
+  }
+
+  /**
+   * Get commission rate for a profile
+   *
+   * @param {string} profileId - Profile ID
+   * @returns {number} Commission rate (percent value)
+   */
+  function getCommissionRate(profileId) {
+    const profile = ProfileManager.getAll().profiles[profileId];
+    const rate = profile?.settings?.balance?.commissionRate;
+    return Number.isFinite(rate) ? rate : null;
   }
 
   /**
@@ -284,6 +319,8 @@ const BalanceManager = (function() {
     // Balance management
     updateBalance,
     getBalance,
+    updateCommissionRate,
+    getCommissionRate,
     recalculate,
 
     // Alert system

@@ -1,15 +1,16 @@
 /**
- * IB Helper Google Sheets Sync - v3.7.4 (WebApp Price API + JSONP Bug Fix)
+ * IB Helper Google Sheets Sync - v3.7.5 (Commission Rate Sync)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.7.4
+ * @version 3.7.5
  * @feature #221: Apps Script WebApp으로 현재가 공개 API 구현 (로그인 불필요)
  * @fix Codex Review R1: CORS (Accept 헤더 제거), CONFIG 통합, ticker 검증, 1분 캐시
  * @fix Codex Review R2: 티커별 캐시 TTL 분리 (전역 타임스탬프 → 티커별 타임스탬프)
  * @fix Codex Review R3: JSONP 클라이언트 구현 (CORS 완전 우회 - script 삽입 방식)
  * @fix v3.7.4: fetchJSONP 변수 hoisting 버그 + 중복 resolve 방지
+ * @feature #221-P3 (2026-02-04): commissionRate 동기화 (Portfolio M열)
  * @feature Session Persistence: 토큰 localStorage 저장 → 재방문 시 자동 로그인
  * @author 100xFenok Claude
  * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
@@ -19,9 +20,9 @@
  * @fix C-11 (2026-02-03): isAuthenticated() - gapi.client undefined 체크
  * @fix #29 (2026-02-03): 라오어 가이드 기준 기본값 (SOXL 12%/5%, 기타 10%/5%)
  *
- * Sheet1 "Portfolio" Structure (v3.6 - 12 columns):
- * | 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 |
- * | A열    | B열      | C열        | D열  | E열    | F열  | G열      | H열      | I열    | J열  | K열  | L열  |
+ * Sheet1 "Portfolio" Structure (v3.7 - 13 columns):
+ * | 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%) |
+ * | A열    | B열      | C열        | D열  | E열    | F열  | G열      | H열      | I열    | J열  | K열  | L열  | M열       |
  *
  * Sheet3 "Orders" Structure (DEC-153):
  * | 날짜 | 구글ID | 프로필ID | 종목 | 주문타입 | 매수매도 | 가격 | 수량 | 총액 | 체결기준 | 체결 | 체결일 | 실제가격 |
@@ -44,7 +45,7 @@ const SheetsSync = (function() {
 
     // 🔴 v3.7.0 (#221): Apps Script WebApp URL (현재가 공개 API)
     // 배포 후 URL 입력: https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
-    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxKQXl8gmeMKjFhIkQp0LJtQNc8-G-8B5iDTe6yq8_V5HUM-2GtZqttQNiI62vvIFY/exec',
+    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbz0F85YIiH7_pZoSb0YP2iJhiQ4hjghJmy02uv5nV09X_9Dy7vp_0343UNQkvGuSuIj/exec',
 
     DISCOVERY_DOCS: [
       'https://sheets.googleapis.com/$discovery/rest?version=v4'
@@ -52,10 +53,10 @@ const SheetsSync = (function() {
     // Sheets + UserInfo scope
     SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
 
-    // Sheet 구조 (v3.6): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금
+    // Sheet 구조 (v3.7): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%)
     // 시트 이름 없이 범위만 사용 → 첫 번째 시트에 자동 적용
     // 예수금은 프로필의 첫 번째 종목 row에만 저장
-    RANGE: 'A2:L10000'  // Skip header row, 12 columns
+    RANGE: 'A2:M10000'  // Skip header row, 13 columns
   };
 
   // =====================================================
@@ -469,7 +470,7 @@ const SheetsSync = (function() {
 
   /**
    * Parse sheet rows to stock array
-   * 시트 컬럼 (v3.6): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금
+   * 시트 컬럼 (v3.7): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%)
    * @param {Array} rows - Raw sheet rows
    * @returns {Array} Stocks array
    */
@@ -496,6 +497,7 @@ const SheetsSync = (function() {
       const locPercent = row[baseIndex + 6];
       const date = row[baseIndex + 7];
       const balance = row[baseIndex + 8];
+      const commissionRate = row.length > (baseIndex + 9) ? row[baseIndex + 9] : null;
 
       const sym = String(symbol).trim().toUpperCase();
       stocks.push({
@@ -510,7 +512,10 @@ const SheetsSync = (function() {
         sellPercent: parseFloat(afterPercent) || (sym === 'SOXL' ? 12 : 10),
         locSellPercent: parseFloat(locPercent) || 5,
         date: date || '',
-        balance: parseFloat(balance) || 0
+        balance: parseFloat(balance) || 0,
+        commissionRate: commissionRate !== null && commissionRate !== undefined
+          ? (parseFloat(commissionRate) || 0)
+          : null
       });
     });
 
@@ -596,11 +601,17 @@ const SheetsSync = (function() {
         !(row[0] === currentUserEmail && row[1] === profile.id)
       );
 
-      // 3. 내 새 데이터 생성 (v3.6: 12 columns, 프로필 이름 + 예수금 포함)
-      // 예수금은 BalanceManager에서 가져옴 (첫 번째 row에만 저장)
+      // 3. 내 새 데이터 생성 (v3.7: 13 columns, 프로필 이름 + 예수금 + 수수료 포함)
+      // 예수금/수수료는 BalanceManager에서 가져옴 (첫 번째 row에만 저장)
       const balance = (typeof BalanceManager !== 'undefined')
         ? BalanceManager.getBalance(profile.id)?.available || 0
         : 0;
+      const commissionRate = (typeof BalanceManager !== 'undefined')
+        ? BalanceManager.getCommissionRate(profile.id)
+        : null;
+      const effectiveCommissionRate = (commissionRate !== null && commissionRate !== undefined)
+        ? commissionRate
+        : 0.07;
       const profileName = profile.name || '프로필';
 
       const myNewRows = profile.stocks.map((stock, index) => {
@@ -619,16 +630,18 @@ const SheetsSync = (function() {
           stock.sellPercent || (sym === 'SOXL' ? 12 : 10),      // I: AFTER% (지정가 매도)
           stock.locSellPercent || 5,     // J: LOC% (분할매도) - 모든 종목 5%
           today,                      // K: 날짜
-          index === 0 ? (balance || 0) : 0  // L: 예수금 (첫 번째 row만, 🔴 v3.5.3: 빈값→0 통일 B5-08)
+          index === 0 ? (balance || 0) : 0,  // L: 예수금 (첫 번째 row만, 🔴 v3.5.3: 빈값→0 통일 B5-08)
+          index === 0 ? (effectiveCommissionRate || 0) : 0  // M: 수수료율(%) (첫 번째 row만)
         ];
       });
 
       // 4. 합쳐서 저장
       const normalizedOtherRows = otherRows.map(row => {
         if (!row) return [];
-        if (row.length >= 12) return row;
+        if (row.length >= 13) return row;
         const legacyRow = [...row];
         legacyRow.splice(2, 0, '');
+        while (legacyRow.length < 13) legacyRow.push('');
         return legacyRow;
       });
 
@@ -665,6 +678,12 @@ const SheetsSync = (function() {
       }
     }
 
+    if (myStocks.length > 0 && myStocks[0].commissionRate !== null && myStocks[0].commissionRate !== undefined) {
+      if (typeof BalanceManager !== 'undefined') {
+        BalanceManager.updateCommissionRate(profile.id, myStocks[0].commissionRate);
+      }
+    }
+
     // 각 종목의 일일 데이터 업데이트 (v3.2: AFTER% + LOC% + 예수금 포함)
     myStocks.forEach(stock => {
       // 1. Daily data 저장 (평단가, 수량, 총매입금)
@@ -686,6 +705,12 @@ const SheetsSync = (function() {
 
     if (myStocks.length > 0 && myStocks[0].profileName) {
       ProfileManager.update(profile.id, { name: myStocks[0].profileName });
+    }
+
+    if (myStocks.length > 0 && myStocks[0].commissionRate !== null && myStocks[0].commissionRate !== undefined) {
+      if (typeof BalanceManager !== 'undefined') {
+        BalanceManager.updateCommissionRate(profile.id, myStocks[0].commissionRate);
+      }
     }
 
     console.log(`SheetsSync: Pulled ${myStocks.length} rows for ${currentUserEmail}/${profile.id}`);
@@ -757,6 +782,7 @@ const SheetsSync = (function() {
           profileId,
           profileName: profileName || 'Profile',
           balance: 0,
+          commissionRate: 0,
           stocks: []
         };
       }
@@ -764,6 +790,13 @@ const SheetsSync = (function() {
       const rowBalance = parseFloat(row[baseIndex + 8]) || 0;
       if (rowBalance > 0 && profileMap[profileId].balance === 0) {
         profileMap[profileId].balance = rowBalance;
+      }
+
+      if (row.length > (baseIndex + 9)) {
+        const rowCommission = row[baseIndex + 9];
+        if (rowCommission !== undefined && profileMap[profileId].commissionRate === 0) {
+          profileMap[profileId].commissionRate = parseFloat(rowCommission) || 0;
+        }
       }
 
       profileMap[profileId].stocks.push({

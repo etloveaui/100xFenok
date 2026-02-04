@@ -611,6 +611,10 @@
           <label class="block text-xs text-gray-500 mb-1">주문가능금액 (USD)</label>
           <input type="number" id="input-balance" class="w-full px-3 py-2 border rounded-lg" placeholder="0.00" step="0.01" inputmode="decimal">
         </div>
+        <div class="w-24">
+          <label class="block text-xs text-gray-500 mb-1">수수료(%)</label>
+          <input type="number" id="input-commission" class="w-full px-3 py-2 border rounded-lg" placeholder="0.07" step="0.01" inputmode="decimal">
+        </div>
         <button onclick="recalculateBalance()" class="touch-target mt-5 px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
           <i class="fas fa-sync-alt"></i>
         </button>
@@ -1176,6 +1180,16 @@
           }, 200);
         });
       }
+
+      const commissionInput = document.getElementById('input-commission');
+      if (commissionInput) {
+        commissionInput.addEventListener('input', () => {
+          clearTimeout(window.commissionDebounce);
+          window.commissionDebounce = setTimeout(() => {
+            handleCommissionChange(commissionInput.value);
+          }, 200);
+        });
+      }
     });
 
     /**
@@ -1264,6 +1278,7 @@
       document.getElementById('input-locSellPercent').value = '5';
       // 🔴 v4.30.0 (B5-14): 예수금도 초기화 (프로필 간 누수 방지)
       document.getElementById('input-balance').value = '';
+      document.getElementById('input-commission').value = '';
 
       ProfileManager.setActive(profileId);
       currentProfile = ProfileManager.getActive();
@@ -3208,10 +3223,22 @@
 
       const balance = BalanceManager.getBalance(currentProfile.id);
       const balanceInput = document.getElementById('input-balance');
+      const commissionInput = document.getElementById('input-commission');
+      const commissionRate = BalanceManager.getCommissionRate(currentProfile.id);
 
       // 🔴 v4.30.0 (B5-14): 항상 값 설정 (이전 프로필 값 누수 방지)
       // 기존: balance > 0일 때만 설정 → 이전 값 유지됨
       balanceInput.value = balance.available > 0 ? balance.available : '';
+
+      if (commissionInput) {
+        const effectiveRate = (commissionRate !== null && commissionRate !== undefined)
+          ? commissionRate
+          : 0.07;
+        commissionInput.value = effectiveRate;
+        if (commissionRate === null || commissionRate === undefined) {
+          BalanceManager.updateCommissionRate(currentProfile.id, effectiveRate);
+        }
+      }
 
       // 예수금이 있을 때만 상태 표시
       if (balance.available > 0) {
@@ -3230,6 +3257,16 @@
 
       BalanceManager.updateBalance(currentProfile.id, numValue);
       recalculateBalance();
+    }
+
+    function handleCommissionChange(value) {
+      if (!currentProfile) return;
+
+      let numValue = parseFloat(value);
+      if (!Number.isFinite(numValue)) numValue = 0;
+      if (numValue < 0) numValue = 0;
+
+      BalanceManager.updateCommissionRate(currentProfile.id, numValue);
     }
 
     function buildCalculatedOrderStatus(resultsMap, balanceValue) {
@@ -3275,6 +3312,14 @@
       const balanceValue = parseFloat(document.getElementById('input-balance').value) || 0;
       if (balanceValue > 0) {
         BalanceManager.updateBalance(currentProfile.id, balanceValue);
+      }
+
+      const commissionInput = document.getElementById('input-commission');
+      if (commissionInput) {
+        const commissionValue = parseFloat(commissionInput.value);
+        if (Number.isFinite(commissionValue)) {
+          BalanceManager.updateCommissionRate(currentProfile.id, commissionValue);
+        }
       }
 
       // 🔴 v4.18.0: 최신 프로필 데이터로 계산 (Bug 13 - 메모리 캐시 문제 수정)
@@ -3546,6 +3591,10 @@
         // 🔴 v4.22.0: 예수금 저장
         if (sp.balance > 0) {
           BalanceManager.updateBalance(newId, sp.balance);
+        }
+
+        if (sp.commissionRate !== null && sp.commissionRate !== undefined) {
+          BalanceManager.updateCommissionRate(newId, sp.commissionRate);
         }
 
         // 종목 데이터 추가
