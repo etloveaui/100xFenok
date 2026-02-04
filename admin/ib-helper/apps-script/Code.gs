@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.1.0
+ * @version 2.2.0
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04)
  *
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v2.2.0 (2026-02-04): Auto balance update on execution + commission config
  * - v2.1.0 (2026-02-04): Added dedupeOrders() for duplicate prevention
  * - v2.0.0 (2026-02-03): Initial release
  */
@@ -32,12 +33,19 @@ const CONFIG = {
   PRICES_SHEET: 'Prices',
   ORDERS_SHEET: 'Orders',
   BALANCE_SHEET: 'Balance',  // Optional
-  TIMEZONE: 'Asia/Seoul'
+  TIMEZONE: 'Asia/Seoul',
+  COMMISSION_RATE: 0.0007  // 0.07%
 };
 
 // =====================================================
 // MAIN ENTRY POINTS
 // =====================================================
+
+function normalizeCommissionRate(input) {
+  const rate = parseFloat(input);
+  if (isNaN(rate)) return 0;
+  return rate > 0.01 ? rate / 100 : rate;
+}
 
 /**
  * Process order executions
@@ -173,7 +181,7 @@ function loadPendingOrders(sheet) {
  *
  * @param {Sheet} sheet - Orders sheet (optional)
  */
-function dedupeOrders(sheet) {
+function dedupeOrders(sheet, daysLimit = 30) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const ordersSheet = sheet || ss.getSheetByName(CONFIG.ORDERS_SHEET);
 
@@ -187,16 +195,14 @@ function dedupeOrders(sheet) {
 
   const header = data[0];
   const colCount = header.length;
-  const seen = {};
-  const uniqueRows = [header];
+  const kept = [];
+  const executedKeys = {};
+  const candidatesByKey = {};
 
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    if (!row || row.length === 0) continue;
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysLimit);
 
-    const isEmpty = row.every(cell => cell === '' || cell === null);
-    if (isEmpty) continue;
-
+  const buildKey = (row) => {
     const date = row[0];
     const googleId = row[1];
     const profileId = row[2];
@@ -205,19 +211,75 @@ function dedupeOrders(sheet) {
     const price = parseFloat(row[6]) || 0;
     const qty = parseInt(row[7]) || 0;
 
-    // Keep rows with missing key fields as-is
     if (!date || !googleId || !profileId || !ticker || !orderType) {
-      uniqueRows.push(row);
+      return null;
+    }
+
+    return `${date}|${googleId}|${profileId}|${ticker}|${orderType}|${price.toFixed(4)}|${qty}`;
+  };
+
+  const parseOrderDate = (value) => {
+    if (!value) return null;
+    if (Object.prototype.toString.call(value) === '[object Date]') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      try {
+        const parsedKst = Utilities.parseDate(trimmed, CONFIG.TIMEZONE, 'yyyy-MM-dd');
+        if (!isNaN(parsedKst.getTime())) return parsedKst;
+      } catch (error) {
+        // Fallback to native Date parsing below.
+      }
+    }
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length === 0) continue;
+
+    const isEmpty = row.every(cell => cell === '' || cell === null);
+    if (isEmpty) continue;
+
+    const execution = String(row[10] || '').trim();
+    const idx = i;
+    const key = buildKey(row);
+
+    // 체결된 주문은 날짜 관계없이 절대 삭제 안 함
+    if (execution === 'Y') {
+      kept.push({ row, idx });
+      if (key) executedKeys[key] = true;
       continue;
     }
 
-    const key = `${date}|${googleId}|${profileId}|${ticker}|${orderType}|${price.toFixed(4)}|${qty}`;
-    if (seen[key]) {
+    const orderDate = parseOrderDate(row[0]);
+    if (!orderDate || orderDate < cutoffDate || !key) {
+      // 오래된 주문/키 없는 주문은 그대로 유지
+      kept.push({ row, idx });
       continue;
     }
-    seen[key] = true;
-    uniqueRows.push(row);
+
+    // 최근 주문만 dedupe 대상 (execution='Y'가 있으면 제거 대상)
+    if (!candidatesByKey[key]) candidatesByKey[key] = [];
+    candidatesByKey[key].push({ row, idx, execution });
   }
+
+  const dedupedRecent = [];
+  Object.keys(candidatesByKey).forEach((key) => {
+    if (executedKeys[key]) {
+      return; // 체결된 주문이 있으면 non-Y는 제거
+    }
+    const group = candidatesByKey[key];
+    group.sort((a, b) => b.idx - a.idx); // 최신 우선
+    dedupedRecent.push(group[0]);
+  });
+
+  const sortedRows = [...kept, ...dedupedRecent]
+    .sort((a, b) => a.idx - b.idx)
+    .map(item => item.row);
+  const uniqueRows = [header, ...sortedRows];
 
   if (uniqueRows.length === data.length) {
     Logger.log('dedupeOrders: No duplicates found');
@@ -255,12 +317,20 @@ function dedupeOrders(sheet) {
 function checkExecutions(orders, prices) {
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
   const executedOrders = [];
+  const highWarned = {};
 
   orders.forEach(order => {
     const priceData = prices[order.ticker];
     if (!priceData) {
       Logger.log('No price data for: ' + order.ticker);
       return;
+    }
+
+    if (order.executionBasis === 'HIGH' &&
+        (!priceData.high || priceData.high === 0) &&
+        !highWarned[order.ticker]) {
+      Logger.log(`⚠️ ${order.ticker}: High price missing, limit sell may not execute`);
+      highWarned[order.ticker] = true;
     }
 
     let executed = false;
@@ -342,6 +412,7 @@ function updatePortfolio(ss, executedOrders) {
 
   const data = portfolioSheet.getDataRange().getValues();
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
+  const commissionRate = normalizeCommissionRate(CONFIG.COMMISSION_RATE);
 
   // Group executed orders by googleId + profileId + ticker
   const ordersByKey = {};
@@ -357,54 +428,102 @@ function updatePortfolio(ss, executedOrders) {
     }
   });
 
+  // Balance update per profile (first row only)
+  const balanceRowByProfile = {};
+  const balanceByProfile = {};
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length === 0) continue;
+    const profileKey = `${row[0]}|${row[1]}`;
+    if (!balanceRowByProfile[profileKey]) {
+      balanceRowByProfile[profileKey] = i;
+      balanceByProfile[profileKey] = parseFloat(row[11]) || 0;  // L: balance
+    }
+  }
+
+  const ordersByProfile = {};
+  executedOrders.forEach(order => {
+    const profileKey = `${order.googleId}|${order.profileId}`;
+    if (!ordersByProfile[profileKey]) ordersByProfile[profileKey] = [];
+    ordersByProfile[profileKey].push(order);
+  });
+
+  Object.keys(ordersByProfile).forEach(profileKey => {
+    if (balanceByProfile[profileKey] === undefined) {
+      Logger.log('Balance row not found for profile: ' + profileKey);
+      return;
+    }
+
+    let balance = balanceByProfile[profileKey];
+    ordersByProfile[profileKey].forEach(order => {
+      const basePrice = parseFloat(order.actualPrice) || parseFloat(order.price) || 0;
+      const qty = parseFloat(order.quantity) || 0;
+      const multiplier = order.side === 'BUY' ? (1 + commissionRate) : (1 - commissionRate);
+      const amount = basePrice * qty * multiplier;
+      if (order.side === 'BUY') {
+        balance -= amount;
+      } else {
+        balance += amount;
+      }
+      Logger.log(`💰 ${order.ticker}: Balance ${order.side} ${amount} → new balance: ${balance}`);
+    });
+    balanceByProfile[profileKey] = balance;
+  });
+
   // Update each portfolio row
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     // Portfolio v3.6: A=googleId, B=profileId, C=profileName, D=ticker
+    const profileKey = `${row[0]}|${row[1]}`;
     const key = `${row[0]}|${row[1]}|${row[3]}`;  // A|B|D (skip C=profileName)
     const orders = ordersByKey[key];
 
-    if (!orders) continue;
+    const rowNum = i + 1;
 
-    let avgPrice = parseFloat(row[4]) || 0;    // E: avgPrice
-    let holdings = parseInt(row[5]) || 0;       // F: holdings
-    let totalInvested = parseFloat(row[6]) || 0; // G: totalInvested
+    if (orders) {
+      let avgPrice = parseFloat(row[4]) || 0;    // E: avgPrice
+      let holdings = parseInt(row[5]) || 0;       // F: holdings
+      let totalInvested = parseFloat(row[6]) || 0; // G: totalInvested
 
-    // Process buys: increase holdings, recalculate avgPrice
-    orders.buys.forEach(order => {
-      const newCost = order.actualPrice * order.quantity;
-      totalInvested += newCost;
-      holdings += order.quantity;
-    });
+      // Process buys: increase holdings, recalculate avgPrice
+      orders.buys.forEach(order => {
+        const newCost = order.actualPrice * order.quantity;
+        totalInvested += newCost;
+        holdings += order.quantity;
+      });
 
-    // Process sells: decrease holdings, reduce totalInvested
-    orders.sells.forEach(order => {
-      // Reduce holdings
-      holdings -= order.quantity;
-      // Reduce totalInvested proportionally
-      if (holdings > 0 && avgPrice > 0) {
-        totalInvested = avgPrice * holdings;
-      } else if (holdings <= 0) {
-        totalInvested = 0;
-        holdings = 0;
+      // Process sells: decrease holdings, reduce totalInvested
+      orders.sells.forEach(order => {
+        // Reduce holdings
+        holdings -= order.quantity;
+        // Reduce totalInvested proportionally
+        if (holdings > 0 && avgPrice > 0) {
+          totalInvested = avgPrice * holdings;
+        } else if (holdings <= 0) {
+          totalInvested = 0;
+          holdings = 0;
+        }
+      });
+
+      // Recalculate avgPrice
+      if (holdings > 0 && totalInvested > 0) {
+        avgPrice = totalInvested / holdings;
+      } else {
+        avgPrice = 0;
       }
-    });
 
-    // Recalculate avgPrice
-    if (holdings > 0 && totalInvested > 0) {
-      avgPrice = totalInvested / holdings;
-    } else {
-      avgPrice = 0;
+      portfolioSheet.getRange(rowNum, 5).setValue(avgPrice);      // E: avgPrice
+      portfolioSheet.getRange(rowNum, 6).setValue(holdings);      // F: holdings
+      portfolioSheet.getRange(rowNum, 7).setValue(totalInvested); // G: totalInvested
+      portfolioSheet.getRange(rowNum, 11).setValue(today);        // K: date
+
+      Logger.log('Updated portfolio: ' + key + ' → holdings=' + holdings + ', avgPrice=' + avgPrice);
     }
 
-    // Update row (1-indexed, add 1 for header)
-    const rowNum = i + 1;
-    portfolioSheet.getRange(rowNum, 5).setValue(avgPrice);      // E: avgPrice
-    portfolioSheet.getRange(rowNum, 6).setValue(holdings);      // F: holdings
-    portfolioSheet.getRange(rowNum, 7).setValue(totalInvested); // G: totalInvested
-    portfolioSheet.getRange(rowNum, 11).setValue(today);        // K: date
-
-    Logger.log('Updated portfolio: ' + key + ' → holdings=' + holdings + ', avgPrice=' + avgPrice);
+    if (balanceByProfile[profileKey] !== undefined &&
+        balanceRowByProfile[profileKey] === i) {
+      portfolioSheet.getRange(rowNum, 12).setValue(balanceByProfile[profileKey]); // L: balance
+    }
   }
 }
 
