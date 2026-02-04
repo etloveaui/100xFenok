@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.32.0
+> **Version**: 4.35.2
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-03
-> **Status**: ✅ Phase 1-3 Complete + **Dual-Track Auth (#220)** + Ralph Loop 6 + 현재가 연동 (#211) + UX 개선 + 다중 종목 계산 (#217, #218)
+> **Updated**: 2026-02-04
+> **Status**: ✅ Phase 1-3 Complete + Ralph Loop 6 + 현재가 연동 (#211) + **WebApp Price API (#221)** | ❌ #220 Email Auth REVERTED
 > **Priority**: 🟡 Phase 4 (Telegram) Pending
 >
 > **📁 Testing Docs**: [Data Flow](../../../../docs/testing/ib-helper-data-flow.md) | [Scenarios](../../../../docs/testing/ib-helper-scenarios.md) | [State Machine](../../../../docs/testing/ib-helper-state-machine.md)
@@ -677,7 +677,26 @@ admin/ib-helper/
   - 사용자가 명시적으로 체크해야 MOC 안내 표시
 - [x] **#218 종목 제외 체크박스**: ⏸️ 다중 종목 계산(#217)과 함께 구현 예정
 
-### v4.34.0: Google OAuth Reset (02-03)
+### v4.35.2: WebApp Price API + Codex Review Round 3 (#221) (02-04)
+- [x] **Problem**: `getCurrentPrice()` → Cloudflare Worker `/api/ticker/:symbol` 호출 → 404/0 + CORS 차단
+- [x] **Solution**: Apps Script WebApp + JSONP 양방향 지원 (서버 + 클라이언트)
+- [x] **yahoo-quotes.gs**: `doGet()` 함수 추가
+  - Prices 시트 A2:G100 읽어서 JSON 반환
+  - `?ticker=TQQQ` 파라미터로 단일 종목 조회 가능
+  - **JSONP 지원**: `?callback=fn` → `fn({data})` 형식 반환
+- [x] **sheets-sync.js v3.7.3**: `getCurrentPrice()` 수정 + **Codex Review R1+R2+R3 반영**
+  - 1차: 1분 TTL in-memory 캐시 확인
+  - 🆕 2차: **JSONP로 WebApp 호출** (script 삽입 - CORS 완전 우회)
+  - 3차: `fetchCurrentPrices()` fallback (로그인 시)
+  - **R1**: `CONFIG.WEBAPP_URL`로 통합, ticker null/undefined 검증 추가
+  - **R2**: 티커별 캐시 TTL 분리 (전역 `_priceCacheTime` → `{ TQQQ: { price, time } }`)
+  - 🆕 **R3**: `fetchJSONP()` 헬퍼 함수 추가 (CORS 완전 우회)
+- [x] **User Action Required**:
+  1. `yahoo-quotes.gs`에 `doGet()` 코드 추가 (`_tmp/doGet_for_yahoo-quotes.gs` 참조)
+  2. "새 배포" → "웹 앱" → "모든 사용자" 접근 허용
+  3. 배포 URL을 `sheets-sync.js` CONFIG.WEBAPP_URL에 입력
+
+### v4.34.0: Google OAuth Reset (02-04)
 - [x] Removed email/password UI와 Apps Script WebApp 설정 UI
 - [x] `sheets-sync.js`: WebApp/토큰 관련 함수 제거 (Google OAuth만 유지)
 - [x] `Code.gs.template`: WebApp `doPost()/register/login` 및 Users 시트 로직 삭제
@@ -842,5 +861,5 @@ AFTER 매도% (10%, 12%)만 사용자 설정대로 적용.
 
 ---
 
-*Last Updated: 2026-02-02*
+*Last Updated: 2026-02-04*
 *Author: Asset Allocator Claude (Supervisor/Coach Role)*

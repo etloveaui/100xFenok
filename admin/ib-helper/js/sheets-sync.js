@@ -1,10 +1,14 @@
 /**
- * IB Helper Google Sheets Sync - v3.6.0 (Session Persistence)
+ * IB Helper Google Sheets Sync - v3.7.3 (WebApp Price API + Codex Review Round 3)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.6.0
+ * @version 3.7.3
+ * @feature #221: Apps Script WebApp으로 현재가 공개 API 구현 (로그인 불필요)
+ * @fix Codex Review R1: CORS (Accept 헤더 제거), CONFIG 통합, ticker 검증, 1분 캐시
+ * @fix Codex Review R2: 티커별 캐시 TTL 분리 (전역 타임스탬프 → 티커별 타임스탬프)
+ * @fix Codex Review R3: JSONP 클라이언트 구현 (CORS 완전 우회 - script 삽입 방식)
  * @feature Session Persistence: 토큰 localStorage 저장 → 재방문 시 자동 로그인
  * @author 100xFenok Claude
  * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
@@ -36,6 +40,10 @@ const SheetsSync = (function() {
 
     // 🔴 하드코딩된 시트 ID (모든 사용자 공유)
     SPREADSHEET_ID: '1shNx-xmzsJ7ninBly4HUjOjrMFqlvj-u3aBg6PmTGBE',
+
+    // 🔴 v3.7.0 (#221): Apps Script WebApp URL (현재가 공개 API)
+    // 배포 후 URL 입력: https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
+    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxzN_EWT754mbox30uyDZ8O5M35geeoUUlT07JLZx0N8JMRajXjtH1072SjYAfvs3eh/exec',
 
     DISCOVERY_DOCS: [
       'https://sheets.googleapis.com/$discovery/rest?version=v4'
@@ -900,26 +908,119 @@ const SheetsSync = (function() {
     }
   }
 
+  // 🔴 v3.7.3: 가격 캐시 (1분 TTL) - Codex Review Round 2+3 반영
+  // 티커별 타임스탬프 저장: { TQQQ: { price: 55, time: 1234567890 }, ... }
+  let _priceCache = {};
+  const PRICE_CACHE_TTL = 60 * 1000;  // 1분
+
+  /**
+   * 🔴 v3.7.3: JSONP fetch helper (CORS 우회용)
+   * Apps Script ContentService는 setHeader()를 지원하지 않으므로 JSONP 방식 사용
+   *
+   * @param {string} url - WebApp URL with ?callback=fn parameter
+   * @param {number} timeout - Timeout in ms (default 10000)
+   * @returns {Promise<Object>} JSON data
+   */
+  function fetchJSONP(url, timeout = 10000) {
+    return new Promise((resolve, reject) => {
+      const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+
+      // Timeout handler
+      const timeoutId = setTimeout(() => {
+        cleanup();
+        reject(new Error('JSONP request timeout'));
+      }, timeout);
+
+      // Cleanup function
+      function cleanup() {
+        clearTimeout(timeoutId);
+        delete window[callbackName];
+        if (script && script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+      }
+
+      // Global callback function
+      window[callbackName] = function(data) {
+        cleanup();
+        resolve(data);
+      };
+
+      // Create script element
+      const script = document.createElement('script');
+      script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+      script.onerror = function() {
+        cleanup();
+        reject(new Error('JSONP script load error'));
+      };
+
+      document.body.appendChild(script);
+    });
+  }
+
   /**
    * Get current price for a specific ticker
-   * 🔴 v3.6.0: Ticker API 직접 호출 (Prices 시트 불필요)
+   * 🔴 v3.7.0 (#221): Apps Script WebApp 호출 (Prices 시트 공개 API)
+   * 🔴 v3.7.1: Codex Review R1 - 입력 검증, 캐시, Accept 헤더 제거
+   * 🔴 v3.7.2: Codex Review R2 - 티커별 캐시 TTL 분리
+   * 🔴 v3.7.3: Codex Review R3 - JSONP 클라이언트 구현 (CORS 완전 우회)
+   *
+   * Priority:
+   * 1. In-memory cache (1분 TTL)
+   * 2. WebApp API via JSONP (public, no auth, CORS-free)
+   * 3. Cached fetchCurrentPrices result (if logged in)
+   * 4. Return 0
+   *
    * @param {string} ticker - Stock symbol (e.g., 'TQQQ')
    * @returns {Promise<number>} Current price or 0 if not found
    */
   async function getCurrentPrice(ticker) {
-    const sym = ticker.toUpperCase();
+    // 🔴 Codex Review R1: ticker 인자 검증
+    if (!ticker || typeof ticker !== 'string') {
+      console.warn('SheetsSync.getCurrentPrice: Invalid ticker:', ticker);
+      return 0;
+    }
+
+    const sym = ticker.toUpperCase().trim();
+    if (!sym) return 0;
+
+    // 🔴 Codex Review R2: 티커별 캐시 확인 (1분 TTL)
+    const now = Date.now();
+    const cached = _priceCache[sym];
+    if (cached && (now - cached.time) < PRICE_CACHE_TTL) {
+      console.log(`SheetsSync: ${sym} price from cache: $${cached.price}`);
+      return cached.price;
+    }
+
+    // 🔴 v3.7.3: 1차 - JSONP로 WebApp 호출 (CORS 완전 우회)
     try {
-      const response = await fetch(`https://ticker-api.etloveaui.workers.dev/api/ticker/${sym}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.price > 0) {
-          console.log(`SheetsSync: ${sym} price from Ticker API: $${data.price}`);
-          return data.price;
-        }
+      const data = await fetchJSONP(`${CONFIG.WEBAPP_URL}?ticker=${sym}`);
+      const price = data.current || data.price || 0;
+      if (price > 0) {
+        // 🔴 Codex Review R2: 티커별 캐시 저장
+        _priceCache[sym] = { price: price, time: now };
+        console.log(`SheetsSync: ${sym} price from WebApp (JSONP): $${price}`);
+        return price;
       }
     } catch (error) {
-      console.warn('SheetsSync: Ticker API error:', error);
+      console.warn('SheetsSync: WebApp JSONP error:', error.message);
     }
+
+    // 🔴 2차: fetchCurrentPrices fallback (로그인 시)
+    if (isAuthenticated()) {
+      try {
+        const prices = await fetchCurrentPrices();
+        if (prices[sym] && prices[sym].current > 0) {
+          // 티커별 캐시 저장
+          _priceCache[sym] = { price: prices[sym].current, time: now };
+          console.log(`SheetsSync: ${sym} price from Sheets fallback: $${prices[sym].current}`);
+          return prices[sym].current;
+        }
+      } catch (error) {
+        console.warn('SheetsSync: Sheets fallback error:', error.message);
+      }
+    }
+
     return 0;
   }
 
