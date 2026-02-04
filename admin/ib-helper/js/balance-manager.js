@@ -94,14 +94,21 @@ const BalanceManager = (function() {
       const oneTimeBuy = stock.principal / (settings.splits || 40);
       const totalInvested = (stock.avgPrice || 0) * (stock.quantity || 0);
       const T = IBCalculator.calculateT(totalInvested, oneTimeBuy);
-      const starPct = IBCalculator.calculateStarPercent(T);
+      const parsedSellPercent = parseFloat(stock.sellPercent);
+      const effectiveSellPercent = Number.isFinite(parsedSellPercent)
+        ? parsedSellPercent
+        : IBCalculator.getSellPercent(stock.symbol);
+      const starPct = IBCalculator.calculateStarPercent(T, effectiveSellPercent);
       const locInfo = IBCalculator.calculateLOC(stock.avgPrice, starPct, stock.currentPrice);
       return locInfo.locPrice;
     }
 
     // Fallback: simple calculation
     const T = Math.ceil(((stock.avgPrice * stock.quantity) / (stock.principal / 40)) * 10) / 10;
-    const starPct = (10 - T / 2) / 100;
+    const fallbackSellPercent = Number.isFinite(parseFloat(stock.sellPercent))
+      ? parseFloat(stock.sellPercent)
+      : (stock.symbol === 'SOXL' ? 12 : 10);
+    const starPct = (fallbackSellPercent * (1 - T / 20)) / 100;
     const starPrice = stock.avgPrice * (1 + starPct);
     const locCap = stock.currentPrice * 1.15;
     return Math.min(starPrice, locCap);

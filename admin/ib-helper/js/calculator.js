@@ -20,7 +20,6 @@ const IBCalculator = (function() {
 
   const DEFAULT_CONFIG = {
     divisions: 40,           // 기본 분할 수
-    basePercent: 10,         // 기준% (별% 계산 기준)
     sellPercent: {
       TQQQ: 10,              // TQQQ AFTER 매도%
       SOXL: 12,              // SOXL AFTER 매도%
@@ -69,22 +68,26 @@ const IBCalculator = (function() {
    * 별% 계산
    *
    * @param {number} T - T값
+   * @param {number} sellPercent - 매도비율 (AFTER %)
    * @returns {number} 별% (percentage as number, e.g., 9.5 for 9.5%)
    *
-   * 🔴 CRITICAL: 모든 종목 동일 공식!
-   * 🔴 FORMULA: 별% = 10 - (T / 2)
+   * 🔴 CRITICAL: 별%는 sellPercent와 연동
+   * 🔴 FORMULA: 별% = sellPercent * (1 - T / 20)
    *
-   * ⚠️ 기존 코드 오류: SOXL에 12 - (T * 0.6) 사용 → 틀림!
-   * ✅ 정답: 모든 종목 동일 공식 10 - (T / 2) 사용
+   * ✅ sellPercent가 높을수록 별% 시작점이 높아짐
+   * ✅ T가 커질수록 별%는 0을 지나 음수로 내려감 (원본 설계)
    *
    * Examples:
-   *   T=2  → 별% = 10 - 1 = 9%
-   *   T=20 → 별% = 10 - 10 = 0%  (전후반전 기준, 진행률 50%)
-   *   T=20 → 별% = 10 - 10 = 0%
-   *   T=40 → 별% = 10 - 20 = -10%
+   *   TQQQ (10%): T=2  → 10 × (1 - 0.1) = 9%
+   *   SOXL (12%): T=2  → 12 × (1 - 0.1) = 10.8%
+   *   T=20 → 별% = 0% (전후반전 기준, 진행률 50%)
+   *   T=40 → TQQQ -10%, SOXL -12%
    */
-  function calculateStarPercent(T) {
-    return 10 - (T / 2);
+  function calculateStarPercent(T, sellPercent) {
+    const basePercent = Number.isFinite(parseFloat(sellPercent))
+      ? parseFloat(sellPercent)
+      : DEFAULT_CONFIG.sellPercent.DEFAULT;
+    return basePercent * (1 - T / 20);
   }
 
   // =====================================================
@@ -171,7 +174,15 @@ const IBCalculator = (function() {
    * @returns {Object} { T, starPercent, locInfo, orders, summary }
    */
   function generateBuyOrders(params) {
-    const { principal, divisions, avgPrice, totalInvested, currentPrice } = params;
+    const {
+      principal,
+      divisions,
+      avgPrice,
+      totalInvested,
+      currentPrice,
+      ticker,
+      sellPercent: inputSellPercent
+    } = params;
 
     // 1회 매수금
     const oneTimeBuy = principal / divisions;
@@ -179,8 +190,9 @@ const IBCalculator = (function() {
     // T값 계산
     const T = calculateT(totalInvested, oneTimeBuy);
 
-    // 별% 계산
-    const starPercent = calculateStarPercent(T);
+    // 별% 계산 (sellPercent 연동)
+    const effectiveSellPercent = resolveSellPercent(ticker, inputSellPercent);
+    const starPercent = calculateStarPercent(T, effectiveSellPercent);
 
     // LOC 계산
     const locInfo = calculateLOC(avgPrice, starPercent, currentPrice);
@@ -371,7 +383,7 @@ const IBCalculator = (function() {
     const sellLocPrice = getSellLOCPrice(locInfo.locPrice, avgPrice);
 
     // AFTER 매도% 결정 (🔴 v1.1.0: 사용자 입력값 우선)
-    const sellPercent = inputSellPercent || getSellPercent(ticker);
+    const sellPercent = resolveSellPercent(ticker, inputSellPercent);
     const afterSellPrice = roundPrice(avgPrice * (1 + sellPercent / 100));
 
     // 주문 1: LOC 매도 (25% = 쿼터매도)
@@ -416,6 +428,18 @@ const IBCalculator = (function() {
   function getSellPercent(ticker) {
     const upperTicker = (ticker || '').toUpperCase();
     return DEFAULT_CONFIG.sellPercent[upperTicker] || DEFAULT_CONFIG.sellPercent.DEFAULT;
+  }
+
+  /**
+   * 사용자 입력이 있으면 우선 사용, 없으면 종목 기본값 사용
+   * @param {string} ticker
+   * @param {number} inputSellPercent
+   * @returns {number}
+   */
+  function resolveSellPercent(ticker, inputSellPercent) {
+    const parsed = parseFloat(inputSellPercent);
+    if (Number.isFinite(parsed)) return parsed;
+    return getSellPercent(ticker);
   }
 
   // =====================================================
@@ -470,8 +494,10 @@ const IBCalculator = (function() {
     // T값 계산
     const T = calculateT(totalInvested, oneTimeBuy);
 
+    const effectiveSellPercent = resolveSellPercent(ticker, inputSellPercent);
+
     // 별% 계산
-    const starPercent = calculateStarPercent(T);
+    const starPercent = calculateStarPercent(T, effectiveSellPercent);
 
     // LOC 정보
     const locInfo = calculateLOC(avgPrice, starPercent, currentPrice);
@@ -483,7 +509,8 @@ const IBCalculator = (function() {
       avgPrice,
       totalInvested,
       currentPrice,
-      ticker
+      ticker,
+      sellPercent: effectiveSellPercent
     });
 
     // 매도 주문 생성
@@ -495,7 +522,7 @@ const IBCalculator = (function() {
       ticker,
       T,
       starPercent,
-      sellPercent: inputSellPercent
+      sellPercent: effectiveSellPercent
     });
 
     return {
