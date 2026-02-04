@@ -2,9 +2,9 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.2.0
+ * @version 2.3.0
  * @author 100xFenok Claude
- * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04)
+ * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
  * HOW TO USE:
  * 1. Open your Google Sheet
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v2.3.0 (2026-02-04): Balance migration + commission per profile
  * - v2.2.0 (2026-02-04): Auto balance update on execution + commission config
  * - v2.1.0 (2026-02-04): Added dedupeOrders() for duplicate prevention
  * - v2.0.0 (2026-02-03): Initial release
@@ -397,8 +398,8 @@ function updateOrdersSheet(sheet, executedOrders) {
 /**
  * Update Portfolio sheet based on executed orders
  *
- * Portfolio columns (v3.6 - 12 columns):
- * | A: googleId | B: profileId | C: profileName | D: ticker | E: avgPrice | F: holdings | G: totalInvested | H: principal | I: AFTER% | J: LOC% | K: date | L: balance |
+ * Portfolio columns (v3.7 - 13 columns):
+ * | A: googleId | B: profileId | C: profileName | D: ticker | E: avgPrice | F: holdings | G: totalInvested | H: principal | I: AFTER% | J: LOC% | K: date | L: balance | M: commissionRate |
  *
  * @param {Spreadsheet} ss - Spreadsheet
  * @param {Array} executedOrders - Orders that were executed
@@ -412,7 +413,7 @@ function updatePortfolio(ss, executedOrders) {
 
   const data = portfolioSheet.getDataRange().getValues();
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
-  const commissionRate = normalizeCommissionRate(CONFIG.COMMISSION_RATE);
+  const defaultCommissionRate = normalizeCommissionRate(CONFIG.COMMISSION_RATE);
 
   // Group executed orders by googleId + profileId + ticker
   const ordersByKey = {};
@@ -431,6 +432,7 @@ function updatePortfolio(ss, executedOrders) {
   // Balance update per profile (first row only)
   const balanceRowByProfile = {};
   const balanceByProfile = {};
+  const commissionByProfile = {};
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row || row.length === 0) continue;
@@ -438,6 +440,10 @@ function updatePortfolio(ss, executedOrders) {
     if (!balanceRowByProfile[profileKey]) {
       balanceRowByProfile[profileKey] = i;
       balanceByProfile[profileKey] = parseFloat(row[11]) || 0;  // L: balance
+      const hasCommission = row.length > 12 && row[12] !== '' && row[12] !== null && row[12] !== undefined;
+      commissionByProfile[profileKey] = hasCommission
+        ? normalizeCommissionRate(row[12])
+        : defaultCommissionRate;
     }
   }
 
@@ -455,6 +461,7 @@ function updatePortfolio(ss, executedOrders) {
     }
 
     let balance = balanceByProfile[profileKey];
+    const commissionRate = commissionByProfile[profileKey] ?? defaultCommissionRate;
     ordersByProfile[profileKey].forEach(order => {
       const basePrice = parseFloat(order.actualPrice) || parseFloat(order.price) || 0;
       const qty = parseFloat(order.quantity) || 0;
@@ -527,6 +534,122 @@ function updatePortfolio(ss, executedOrders) {
   }
 }
 
+/**
+ * Migrate balance for already executed orders (idempotent)
+ * Orders sheet requires N column: balanceApplied
+ */
+function migrateExecutedOrdersBalance() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
+  const portfolioSheet = ss.getSheetByName(CONFIG.PORTFOLIO_SHEET);
+
+  if (!ordersSheet || !portfolioSheet) {
+    Logger.log('migrateExecutedOrdersBalance: required sheets not found');
+    return;
+  }
+
+  const ordersData = ordersSheet.getDataRange().getValues();
+  if (!ordersData || ordersData.length <= 1) {
+    Logger.log('migrateExecutedOrdersBalance: no orders data');
+    return;
+  }
+
+  const header = ordersData[0];
+  const balanceAppliedCol = 14; // N
+  if (header.length < balanceAppliedCol || header[balanceAppliedCol - 1] !== 'balanceApplied') {
+    ordersSheet.getRange(1, balanceAppliedCol).setValue('balanceApplied');
+  }
+
+  const portfolioData = portfolioSheet.getDataRange().getValues();
+  if (!portfolioData || portfolioData.length <= 1) {
+    Logger.log('migrateExecutedOrdersBalance: no portfolio data');
+    return;
+  }
+
+  const balanceRowByProfile = {};
+  const balanceByProfile = {};
+  const commissionByProfile = {};
+  const defaultCommissionRate = normalizeCommissionRate(CONFIG.COMMISSION_RATE);
+
+  for (let i = 1; i < portfolioData.length; i++) {
+    const row = portfolioData[i];
+    if (!row || row.length === 0) continue;
+    const profileKey = `${row[0]}|${row[1]}`;
+    if (!balanceRowByProfile[profileKey]) {
+      balanceRowByProfile[profileKey] = i;
+      balanceByProfile[profileKey] = parseFloat(row[11]) || 0;
+      const hasCommission = row.length > 12 && row[12] !== '' && row[12] !== null && row[12] !== undefined;
+      commissionByProfile[profileKey] = hasCommission
+        ? normalizeCommissionRate(row[12])
+        : defaultCommissionRate;
+    }
+  }
+
+  const appliedValues = [];
+  let processed = 0;
+
+  for (let i = 1; i < ordersData.length; i++) {
+    const row = ordersData[i];
+    if (!row || row.length === 0) {
+      appliedValues.push(['']);
+      continue;
+    }
+
+    const execution = String(row[10] || '').trim();
+    let balanceApplied = String(row[13] || '').trim();
+
+    if (execution !== 'Y' || balanceApplied === 'Y') {
+      appliedValues.push([balanceApplied]);
+      continue;
+    }
+
+    const googleId = row[1];
+    const profileId = row[2];
+    const profileKey = `${googleId}|${profileId}`;
+    if (balanceByProfile[profileKey] === undefined) {
+      Logger.log('Balance row not found for profile: ' + profileKey);
+      appliedValues.push([balanceApplied]);
+      continue;
+    }
+
+    const side = String(row[5] || '').trim().toUpperCase();
+    const qty = parseFloat(row[7]) || 0;
+    const basePrice = parseFloat(row[12]) || parseFloat(row[6]) || 0;
+
+    if (!qty || !basePrice || (side !== 'BUY' && side !== 'SELL')) {
+      appliedValues.push([balanceApplied]);
+      continue;
+    }
+
+    const commissionRate = commissionByProfile[profileKey] ?? defaultCommissionRate;
+    const multiplier = side === 'BUY' ? (1 + commissionRate) : (1 - commissionRate);
+    const amount = basePrice * qty * multiplier;
+
+    if (side === 'BUY') {
+      balanceByProfile[profileKey] -= amount;
+    } else {
+      balanceByProfile[profileKey] += amount;
+    }
+
+    Logger.log(`💰 ${row[3]}: Balance ${side} ${amount} → new balance: ${balanceByProfile[profileKey]}`);
+    balanceApplied = 'Y';
+    processed += 1;
+    appliedValues.push([balanceApplied]);
+  }
+
+  if (appliedValues.length > 0) {
+    ordersSheet.getRange(2, balanceAppliedCol, appliedValues.length, 1).setValues(appliedValues);
+  }
+
+  Object.keys(balanceByProfile).forEach(profileKey => {
+    const rowIndex = balanceRowByProfile[profileKey];
+    if (rowIndex === undefined) return;
+    portfolioSheet.getRange(rowIndex + 1, 12).setValue(balanceByProfile[profileKey]); // L: balance
+  });
+
+  Logger.log(`migrateExecutedOrdersBalance: processed ${processed} rows`);
+}
+
 // =====================================================
 // TRIGGER SETUP
 // =====================================================
@@ -580,6 +703,7 @@ function onOpen() {
   ui.createMenu('📊 IB Helper')
     .addItem('체결 확인 실행', 'processOrderExecutions')
     .addItem('중복 주문 정리', 'dedupeOrders')
+    .addItem('체결 예수금 마이그레이션', 'migrateExecutedOrdersBalance')
     .addSeparator()
     .addItem('매일 자동 실행 설정', 'setupTrigger')
     .addItem('자동 실행 해제', 'removeTrigger')
