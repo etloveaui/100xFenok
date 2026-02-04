@@ -613,7 +613,7 @@
         </div>
         <div class="w-24">
           <label class="block text-xs text-gray-500 mb-1">수수료(%)</label>
-          <input type="number" id="input-commission" class="w-full px-3 py-2 border rounded-lg" placeholder="0.07" step="0.01" inputmode="decimal">
+          <input type="number" id="input-commission" class="w-full px-3 py-2 border rounded-lg" value="0.07" step="0.01" inputmode="decimal">
         </div>
         <button onclick="recalculateBalance()" class="touch-target mt-5 px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
           <i class="fas fa-sync-alt"></i>
@@ -2631,15 +2631,20 @@
         return;
       }
 
-      // 🔴 v4.35.x: 중복 저장 방지 키 강화 (date+profile+ticker+type+price+qty)
+      // 🔴 v4.36.x: 중복 저장 방지 키 단순화 (date+googleId+profile+ticker+type+side+executionBasis)
       // KST 기준 날짜 (UTC+9) - 중복키 날짜 일치
       const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
       const profileId = currentProfile?.id || 'unknown';
-      const buildOrderKey = (order) => {
+      const googleId = (typeof SheetsSync !== 'undefined' && SheetsSync.getUserEmail)
+        ? (SheetsSync.getUserEmail() || 'unknown')
+        : 'unknown';
+      const buildOrderKey = (order, side) => {
         const orderType = order?.type || 'UNKNOWN';
-        const price = parseFloat(order?.price) || 0;
-        const qty = parseInt(order?.quantity) || 0;
-        return `${today}|${profileId}|${result.ticker}|${orderType}|${price.toFixed(4)}|${qty}`;
+        const executionBasis = side === 'BUY'
+          ? 'CLOSE'
+          : (String(orderType).includes('LOC') ? 'CLOSE' : 'HIGH');
+        const ticker = String(result.ticker || '').trim().toUpperCase();
+        return `${today}|${googleId}|${profileId}|${ticker}|${orderType}|${side}|${executionBasis}`;
       };
 
       const newBuyOrders = [];
@@ -2647,14 +2652,14 @@
       const newKeys = [];
 
       (result.buyOrders || []).forEach((order) => {
-        const key = buildOrderKey(order);
+        const key = buildOrderKey(order, 'BUY');
         if (_savedOrderKeys.has(key)) return;
         newBuyOrders.push(order);
         newKeys.push(key);
       });
 
       (result.sellOrders || []).forEach((order) => {
-        const key = buildOrderKey(order);
+        const key = buildOrderKey(order, 'SELL');
         if (_savedOrderKeys.has(key)) return;
         newSellOrders.push(order);
         newKeys.push(key);
@@ -3014,11 +3019,38 @@
         return;
       }
 
+      const profileName = currentProfile?.name || '프로필';
       const lines = [
-        `📊 전체 종목 오늘의 주문`,
-        `━━━━━━━━━━━━━━━━━━━━`,
-        ''
+        `📊 ${profileName} 오늘의 주문`,
+        `━━━━━━━━━━━━━━━━━━━━`
       ];
+
+      const balanceInfo = (typeof BalanceManager !== 'undefined' && currentProfile)
+        ? BalanceManager.getBalance(currentProfile.id)
+        : { available: 0 };
+      const balanceValue = parseFloat(balanceInfo?.available) || 0;
+
+      let dailyBuyTotal = 0;
+      Object.values(calculationResults).forEach(result => {
+        const buyOrders = result?.buyOrders || [];
+        buyOrders.forEach(order => {
+          if (!order || !order.type || order.type.includes('하락대비')) return;
+          const price = parseFloat(order.price) || 0;
+          const qty = parseFloat(order.quantity) || 0;
+          dailyBuyTotal += price * qty;
+        });
+      });
+
+      if (balanceValue > 0 && dailyBuyTotal > 0) {
+        if (balanceValue < dailyBuyTotal) {
+          lines.push(`⚠️ 예수금 부족! 필요 $${dailyBuyTotal.toFixed(2)}, 현재 $${balanceValue.toFixed(2)}`);
+        } else {
+          const days = Math.floor(balanceValue / dailyBuyTotal);
+          lines.push(`💰 예수금: $${balanceValue.toFixed(2)} | 약 ${days}일 가능`);
+        }
+      }
+
+      lines.push('');
 
       for (const [ticker, result] of Object.entries(calculationResults)) {
         const { buyOrders, sellOrders, quarterStopLoss } = result;
