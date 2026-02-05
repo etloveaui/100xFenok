@@ -1,11 +1,11 @@
 /**
  * Yahoo Quotes - Universal Stock Price Fetcher
  *
- * Fallback Chain: Yahoo Finance → Stooq → GOOGLEFINANCE
+ * Fallback Chain: CNBC → Yahoo Finance → Stooq → GOOGLEFINANCE
  *
  * Features:
- * - Real-time quotes (Yahoo/Stooq)
- * - Pre-market & After-hours support (Yahoo only)
+ * - Real-time quotes (CNBC/Yahoo/Stooq)
+ * - Pre-market & After-hours support (CNBC)
  * - Multi-symbol batch fetch
  * - Automatic fallback on failure
  * - WebApp API with JSONP support
@@ -14,12 +14,13 @@
  *   const quote = getQuote('TQQQ');
  *   const quotes = getQuotes(['TQQQ', 'SOXL', 'BITU']);
  *
- * @version 2.1.0
+ * @version 3.0.0
  * @created 2026-02-03
- * @updated 2026-02-04
+ * @updated 2026-02-05
  * @see vix.gs (original pattern)
  *
  * CHANGELOG:
+ * - v3.0.0 (2026-02-05): CNBC API added as primary source (pre/post market support)
  * - v2.1.0 (2026-02-04): Added JSONP callback security filter (XSS prevention)
  * - v2.0.0 (2026-02-04): WebApp API with JSONP support
  * - v1.0.0 (2026-02-03): Initial release
@@ -30,6 +31,9 @@
 // =============================================================================
 
 const YAHOO_QUOTES_CONFIG = {
+  // CNBC API (Primary - supports pre/post market)
+  CNBC_BASE_URL: 'https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol',
+
   // Stooq Proxy (Cloudflare Worker)
   STOOQ_PROXY: 'https://stooq-proxy.etloveaui.workers.dev',
 
@@ -53,10 +57,10 @@ const IB_HELPER_TICKERS = ['TQQQ', 'SOXL', 'BITU'].concat(CASH_ETFS);
 
 /**
  * Get quote for a single symbol
- * Fallback: Yahoo → Stooq → GOOGLEFINANCE
+ * Fallback: CNBC → Yahoo → Stooq → GOOGLEFINANCE
  *
  * @param {string} symbol - Stock symbol (e.g., 'TQQQ', 'SOXL')
- * @returns {Object} { symbol, price, previousClose, high, low, preMarket, afterHours, source, timestamp }
+ * @returns {Object} { symbol, price, previousClose, high, low, preMarket, afterHours, marketState, source, timestamp }
  */
 function getQuote(symbol) {
   if (!symbol) {
@@ -91,18 +95,29 @@ function getQuote(symbol) {
     return result;
   };
 
-  // Try Yahoo Finance first (supports pre/after hours)
+  // 1. Try CNBC first (supports pre/post market) - PRIMARY
+  try {
+    const cnbcResult = fetchFromCNBC(symbol);
+    if (cnbcResult && cnbcResult.price > 0) {
+      Logger.log(`✅ ${symbol}: CNBC (${cnbcResult.price}) [${cnbcResult.marketState}]`);
+      return cacheResult(cnbcResult);
+    }
+  } catch (e) {
+    Logger.log(`⚠️ ${symbol}: CNBC failed - ${e.message}`);
+  }
+
+  // 2. Fallback to Yahoo Finance
   try {
     const yahooResult = fetchFromYahoo(symbol);
     if (yahooResult && yahooResult.price > 0) {
-      Logger.log(`✅ ${symbol}: Yahoo Finance (${yahooResult.price})`);
+      Logger.log(`✅ ${symbol}: Yahoo Finance fallback (${yahooResult.price})`);
       return cacheResult(yahooResult);
     }
   } catch (e) {
     Logger.log(`⚠️ ${symbol}: Yahoo failed - ${e.message}`);
   }
 
-  // Fallback to Stooq (real-time, no pre/after)
+  // 3. Fallback to Stooq (real-time, no pre/after)
   try {
     const stooqResult = fetchFromStooq(symbol);
     if (stooqResult && stooqResult.price > 0) {
@@ -113,7 +128,7 @@ function getQuote(symbol) {
     Logger.log(`⚠️ ${symbol}: Stooq failed - ${e.message}`);
   }
 
-  // Last resort: GOOGLEFINANCE (15min delay)
+  // 4. Last resort: GOOGLEFINANCE (15min delay)
   try {
     const googleResult = fetchFromGoogleFinance(symbol);
     if (googleResult && googleResult.price > 0) {
@@ -128,11 +143,13 @@ function getQuote(symbol) {
   return {
     symbol: symbol,
     price: 0,
+    priceSource: 'NONE',
     previousClose: 0,
     high: 0,
     low: 0,
     preMarket: null,
     afterHours: null,
+    marketState: 'UNKNOWN',
     source: 'NONE',
     error: 'All data sources failed',
     timestamp: new Date().toISOString()
@@ -179,7 +196,136 @@ function getIBHelperQuotes() {
 }
 
 // =============================================================================
-// Data Source: Yahoo Finance
+// Data Source: CNBC (PRIMARY - supports Pre/Post Market)
+// =============================================================================
+
+/**
+ * Fetch quote from CNBC API
+ * Supports pre-market and after-hours data via ExtendedMktQuote
+ *
+ * @param {string} symbol
+ * @returns {Object|null}
+ */
+function fetchFromCNBC(symbol) {
+  const url = YAHOO_QUOTES_CONFIG.CNBC_BASE_URL +
+    '?symbols=' + encodeURIComponent(symbol) +
+    '&requestMethod=itv&noForm=1&partnerId=2&fund=1&exthrs=1&output=json';
+
+  const response = UrlFetchApp.fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+    muteHttpExceptions: true,
+    timeout: YAHOO_QUOTES_CONFIG.TIMEOUT_MS
+  });
+
+  if (response.getResponseCode() !== 200) {
+    throw new Error('CNBC API error: ' + response.getResponseCode());
+  }
+
+  const json = JSON.parse(response.getContentText());
+  const quotes = json.FormattedQuoteResult && json.FormattedQuoteResult.FormattedQuote;
+
+  if (!quotes || quotes.length === 0) {
+    throw new Error('No data returned from CNBC');
+  }
+
+  const q = quotes[0];
+
+  // Parse market state
+  const marketState = (q.curmktstatus || 'REGULAR').toUpperCase();
+
+  // Parse regular market data
+  const regularPrice = parseFloat(q.last) || 0;
+  const previousClose = parseFloat(q.previous_day_closing) || regularPrice;
+  const high = parseFloat(q.high) || 0;
+  const low = parseFloat(q.low) || 0;
+  const open = parseFloat(q.open) || 0;
+  const volume = parseVolume(q.volume);
+
+  // Parse extended hours data
+  let preMarket = null;
+  let afterHours = null;
+  let extendedPrice = null;
+  let extendedType = null;
+
+  if (q.ExtendedMktQuote) {
+    const ext = q.ExtendedMktQuote;
+    const extType = (ext.type || '').toUpperCase();
+    const extPrice = parseFloat(ext.last) || 0;
+
+    if (extType === 'PRE_MKT' || extType === 'PRE-MKT' || extType === 'PREMARKET') {
+      preMarket = extPrice;
+      extendedPrice = extPrice;
+      extendedType = 'PRE';
+    } else if (extType === 'POST_MKT' || extType === 'POST-MKT' || extType === 'POSTMARKET' || extType === 'AFTER_MKT') {
+      afterHours = extPrice;
+      extendedPrice = extPrice;
+      extendedType = 'POST';
+    }
+  }
+
+  // Determine best price based on market state
+  let bestPrice = regularPrice;
+  let priceSource = 'REGULAR';
+
+  if (marketState === 'PRE_MKT' || marketState === 'PRE-MKT' || marketState === 'PREMARKET') {
+    if (preMarket && preMarket > 0) {
+      bestPrice = preMarket;
+      priceSource = 'PRE';
+    }
+  } else if (marketState === 'POST_MKT' || marketState === 'POST-MKT' || marketState === 'POSTMARKET' || marketState === 'AFTER_MKT') {
+    if (afterHours && afterHours > 0) {
+      bestPrice = afterHours;
+      priceSource = 'POST';
+    }
+  }
+
+  return {
+    symbol: symbol,
+    price: roundPrice(bestPrice),
+    priceSource: priceSource,
+    previousClose: roundPrice(previousClose),
+    high: roundPrice(high),
+    low: roundPrice(low),
+    open: roundPrice(open),
+    volume: volume,
+
+    // Extended hours
+    preMarket: preMarket ? roundPrice(preMarket) : null,
+    afterHours: afterHours ? roundPrice(afterHours) : null,
+
+    // Market state from CNBC
+    marketState: normalizeMarketState(marketState),
+
+    source: 'CNBC',
+    timestamp: new Date().toISOString()
+  };
+}
+
+/**
+ * Parse volume string (e.g., "133,472,148" → 133472148)
+ */
+function parseVolume(volStr) {
+  if (!volStr) return 0;
+  return parseInt(String(volStr).replace(/,/g, '')) || 0;
+}
+
+/**
+ * Normalize market state to standard format
+ */
+function normalizeMarketState(state) {
+  if (!state) return 'UNKNOWN';
+  state = state.toUpperCase().replace(/[-_]/g, '');
+
+  if (state.includes('PRE')) return 'PRE';
+  if (state.includes('POST') || state.includes('AFTER')) return 'POST';
+  if (state.includes('REG') || state === 'OPEN') return 'REGULAR';
+  if (state.includes('CLOSE')) return 'CLOSED';
+
+  return state;
+}
+
+// =============================================================================
+// Data Source: Yahoo Finance (Fallback)
 // =============================================================================
 
 /**
@@ -307,6 +453,7 @@ function fetchFromStooq(symbol) {
   return {
     symbol: symbol,
     price: roundPrice(data.close),
+    priceSource: 'REGULAR',
     previousClose: roundPrice(data.previousClose || 0),
     high: roundPrice(data.high),
     low: roundPrice(data.low),
@@ -468,6 +615,7 @@ function fetchFromGoogleFinance(symbol) {
     const result = {
       symbol: symbol,
       price: roundPrice(price),
+      priceSource: 'REGULAR',
       previousClose: roundPrice(values[1]),
       high: roundPrice(values[2]),
       low: roundPrice(values[3]),
@@ -515,7 +663,7 @@ function roundPrice(value) {
 }
 
 /**
- * Get current market state
+ * Get current market state (time-based calculation)
  * @returns {string} PRE | REGULAR | POST | CLOSED
  */
 function getMarketState() {
@@ -569,6 +717,15 @@ function testIBHelperQuotes() {
 }
 
 /**
+ * Test CNBC directly
+ */
+function testCNBC() {
+  const result = fetchFromCNBC('TQQQ');
+  Logger.log('CNBC result:');
+  Logger.log(JSON.stringify(result, null, 2));
+}
+
+/**
  * Test Yahoo directly
  */
 function testYahoo() {
@@ -581,24 +738,25 @@ function testYahoo() {
  * Test market state detection
  */
 function testMarketState() {
-  Logger.log('Current market state: ' + getMarketState());
+  Logger.log('Current market state (time-based): ' + getMarketState());
 }
 
 // =============================================================================
-// WebApp API (Public Price Endpoint) - v2.1.0
+// WebApp API (Public Price Endpoint) - v3.0.0
 // =============================================================================
 //
 // Deploy: "New deployment" → "Web app" → "Anyone" access
 //
+// v3.0.0: CNBC as primary source (pre/post market support)
 // v2.1.0: Added JSONP callback security filter (XSS prevention)
 // v2.0.0: Direct getQuotes() call (Yahoo → Stooq → GOOGLEFINANCE)
 //
 // Endpoint: https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
 // Response: { TQQQ: { current, close, ... }, SOXL: { ... }, SGOV: { ... }, ... }
 //
-// @version 2.1.0
+// @version 3.0.0
 // @created 2026-02-04
-// @feature #221 Public Price API
+// @feature #221 Public Price API, #232 CNBC Pre/Post Market
 // =============================================================================
 
 /**

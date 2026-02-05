@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.42.0
+> **Version**: 4.44.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-05
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration + **#231/#229/#230 (Codex)** | ❌ #220 REVERTED
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration + **#234 V2.2 LOC CAP Fix + LOC% 연동** | ❌ #220 REVERTED
 > **Priority**: 🟡 #225 P4 테스트 → #207 Telegram
 >
 > **📋 Price Data Flow** (DEC-172):
@@ -111,17 +111,30 @@ const starPercent = sellPercent * (1 - T / 20);
 
 ### 2.4 LOC Price Calculation - 🔴 MOST CRITICAL
 
+> **v1.4.0 (#234)**: V2.2 원본 CAP 적용 범위 수정 + LOC% 연동
+
 ```javascript
-// 🔴 CRITICAL: Genie RPA는 현재가+15% 캡을 적용!
+// 🔴 V2.2 원본 (Genie RPA Page 5-6):
+//   - LOC 매수: CAP 적용 (min(별%가, 현재가×1.15))
+//   - LOC 매도: CAP 없음! (별%가 그대로)
+
 const starPrice = avgPrice * (1 + starPercent / 100);
+
+// 매수용 LOC (CAP 적용 + 0.01 차감)
 const currentPriceCap = currentPrice * 1.15;
-const locPrice = Math.min(starPrice, currentPriceCap);
+const buyLocPrice = Math.min(starPrice, currentPriceCap) - 0.01;
 
-// 매수용 LOC (0.01 차감)
-const buyLocPrice = locPrice - 0.01;
+// 매도용 LOC (CAP 없음 + 0.005 가산)
+const sellLocPrice = starPrice + (avgPrice * 0.005);  // ← CAP 없음!
+```
 
-// 매도용 LOC (0.005 가산 - 체결 우선)
-const sellLocPrice = locPrice + (avgPrice * 0.005);
+**LOC% 연동 (v1.4.0)**:
+```javascript
+// 별% = V2.2공식 + (LOC% - 5%)
+// LOC% = 5% (기본) → V2.2 그대로
+// LOC% = 45% → 별% + 40% 상향
+const locOffset = locPercent - 5;
+const adjustedStarPercent = v22StarPercent + locOffset;
 ```
 
 **실제 검증 사례 (2026-01-06)**:

@@ -104,6 +104,7 @@ const BalanceManager = (function() {
     }
 
     // Fallback: simple calculation
+    // 🔴 Note: 이 함수는 매수용 (additionalBuy) → CAP 적용 유지
     const T = Math.ceil(((stock.avgPrice * stock.quantity) / (stock.principal / 40)) * 10) / 10;
     const fallbackSellPercent = Number.isFinite(parseFloat(stock.sellPercent))
       ? parseFloat(stock.sellPercent)
@@ -111,7 +112,7 @@ const BalanceManager = (function() {
     const starPct = (fallbackSellPercent * (1 - T / 20)) / 100;
     const starPrice = stock.avgPrice * (1 + starPct);
     const locCap = stock.currentPrice * 1.15;
-    return Math.min(starPrice, locCap);
+    return Math.min(starPrice, locCap);  // 매수용이므로 CAP 적용
   }
 
   /**
