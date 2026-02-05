@@ -323,6 +323,36 @@ const ProfileManager = (function() {
     return profile.stocks.find(s => s.symbol === symbol) || null;
   }
 
+  /**
+   * Get stock enabled state (default: true)
+   * @param {string} symbol
+   * @returns {boolean}
+   */
+  function isStockEnabled(symbol) {
+    const stock = getStock(symbol);
+    return stock?.enabled ?? true;
+  }
+
+  /**
+   * Set stock enabled state for active profile
+   * @param {string} symbol
+   * @param {boolean} enabled
+   * @returns {boolean} Success
+   */
+  function setStockEnabled(symbol, enabled) {
+    const data = getAll();
+    if (!data) return false;
+    const profileId = data.activeProfileId;
+    const profile = data.profiles[profileId];
+    if (!profile) return false;
+    const index = profile.stocks.findIndex(s => s.symbol === symbol);
+    if (index < 0) return false;
+    profile.stocks[index] = { ...profile.stocks[index], enabled: Boolean(enabled) };
+    profile.updated = new Date().toISOString();
+    save(data);
+    return true;
+  }
+
   // =====================================================
   // Export / Import
   // =====================================================
@@ -457,6 +487,8 @@ const ProfileManager = (function() {
     addStock,
     removeStock,
     getStock,
+    isStockEnabled,
+    setStockEnabled,
 
     // Export/Import
     exportProfile,
