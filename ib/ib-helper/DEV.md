@@ -1,14 +1,16 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.41.0
+> **Version**: 4.42.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-05
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration | ❌ #220 REVERTED
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration + **#231/#229/#230 (Codex)** | ❌ #220 REVERTED
 > **Priority**: 🟡 #225 P4 테스트 → #207 Telegram
 >
-> **📋 Deployment Checklist** (DEC-171):
-> 1. Prices 시트 E~G 헤더 추가됨 (Low, MarketState, UpdatedAt) ✅
-> 2. Apps Script에서 `setupPricesUpdateTrigger()` 1회 실행 → 데이터 자동 갱신
+> **📋 Price Data Flow** (DEC-172):
+> - 실시간 가격: WebApp API → Yahoo Finance (직접 조회)
+> - Prices 시트: 체결 확인 전용 (GOOGLEFINANCE A~D)
+> - ❌ setupPricesUpdateTrigger: 미구현 & 불필요
+> - ❌ Prices E~G 컬럼: 불필요
 >
 > **📁 Testing Docs**: [Data Flow](../../../../docs/testing/ib-helper-data-flow.md) | [Scenarios](../../../../docs/testing/ib-helper-scenarios.md) | [State Machine](../../../../docs/testing/ib-helper-state-machine.md)
 

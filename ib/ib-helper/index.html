@@ -429,8 +429,8 @@
         </h1>
         <div class="flex items-center gap-1" id="header-sync-controls">
           <!-- 🔴 v4.31.0 (B5-10): 동기화 상태 표시 -->
-          <span id="header-sync-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 hidden">
-            <i class="fas fa-circle text-[6px] mr-1"></i><span>로컬</span>
+          <span id="header-sync-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500">
+            <i class="fas fa-check-circle text-[8px] mr-1"></i><span>로컬 저장됨</span>
           </span>
           <!-- 🔴 v4.31.0 (B5-06): 메인 동기화 버튼 -->
           <button id="header-sync-btn" onclick="quickSyncToCloud()" class="hidden text-gray-400 hover:text-blue-500 touch-target flex items-center justify-center" title="클라우드 동기화">
@@ -1009,6 +1009,7 @@
       // Check if SheetsSync is available and authenticated
       if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
         console.log('Auto-sync: Skipped (not logged in)');
+        updateSyncStatus('local');
         return;
       }
 
@@ -1018,6 +1019,8 @@
       }
 
       try {
+        updateSyncStatus('syncing');
+
         // Set current profile for sync
         SheetsSync.setCurrentProfile(currentProfile.id);
 
@@ -1036,9 +1039,11 @@
           }, 2000);
         }
 
+        updateSyncStatus('synced');
         console.log('Auto-sync: Success');
       } catch (error) {
         console.error('Auto-sync: Failed', error);
+        updateSyncStatus('failed');
         // Silent failure - 사용자 작업 방해 안함
       }
     }, 5000); // 5초 debounce
@@ -1048,8 +1053,12 @@
      * Called from saveCurrentInputs()
      */
     function triggerAutoSync() {
-      if (currentProfile) {
+      if (!currentProfile) return;
+      if (typeof SheetsSync !== 'undefined' && SheetsSync.isAuthenticated()) {
+        updateSyncStatus('pending');
         debouncedSheetSync();
+      } else {
+        updateSyncStatus('local');
       }
     }
 
@@ -1370,9 +1379,10 @@
         const principal = s.principal || 0;
         const hasRequired = (avgPrice > 0 && principal > 0);
         const isDisabled = !hasRequired;
+        const isEnabled = ProfileManager.isStockEnabled(s.symbol);
+        const isChecked = isEnabled && !isDisabled;
 
-        // 필수값 있으면 기본 체크
-        if (hasRequired) {
+        if (isChecked) {
           enabledTickers.add(s.symbol);
         }
 
@@ -1381,7 +1391,7 @@
             <input type="checkbox"
                    id="ticker-check-${s.symbol}"
                    class="ticker-checkbox w-5 h-5 accent-blue-500"
-                   ${hasRequired ? 'checked' : ''}
+                   ${isChecked ? 'checked' : ''}
                    ${isDisabled ? 'disabled' : ''}
                    onchange="toggleTicker('${s.symbol}', this.checked)"
                    title="${isDisabled ? '평단가 또는 세팅원금 입력 필요' : '계산 대상'}">
@@ -1399,6 +1409,8 @@
      * 🔴 v4.28.0: 종목 체크박스 토글 (#218)
      */
     function toggleTicker(symbol, checked) {
+      ProfileManager.setStockEnabled(symbol, checked);
+      currentProfile = ProfileManager.getActive();
       if (checked) {
         enabledTickers.add(symbol);
       } else {
@@ -1489,7 +1501,7 @@
 
     /**
      * 🔴 v4.31.0 (B5-10): 동기화 상태 업데이트
-     * @param {'local'|'synced'|'pending'} status
+     * @param {'saving'|'local'|'pending'|'syncing'|'synced'|'failed'} status
      */
     function updateSyncStatus(status) {
       const statusEl = document.getElementById('header-sync-status');
@@ -1498,14 +1510,17 @@
       statusEl.classList.remove('hidden');
 
       const statusConfig = {
-        local: { icon: 'circle', color: 'bg-gray-200 text-gray-500', text: '로컬' },
-        synced: { icon: 'check-circle', color: 'bg-green-100 text-green-600', text: '동기화됨' },
-        pending: { icon: 'exclamation-circle', color: 'bg-yellow-100 text-yellow-600', text: '대기중' }
+        saving: { icon: 'spinner', color: 'bg-gray-100 text-gray-500', text: '저장 중...' },
+        local: { icon: 'check-circle', color: 'bg-gray-200 text-gray-600', text: '로컬 저장됨' },
+        pending: { icon: 'clock', color: 'bg-yellow-100 text-yellow-700', text: '클라우드 동기화 대기' },
+        syncing: { icon: 'sync-alt', color: 'bg-blue-100 text-blue-700', text: '클라우드 동기화 중...' },
+        synced: { icon: 'check-circle', color: 'bg-green-100 text-green-600', text: '클라우드 동기화 완료' },
+        failed: { icon: 'exclamation-circle', color: 'bg-red-100 text-red-600', text: '동기화 실패' }
       };
 
       const cfg = statusConfig[status] || statusConfig.local;
       statusEl.className = `text-xs px-2 py-0.5 rounded-full ${cfg.color}`;
-      statusEl.innerHTML = `<i class="fas fa-${cfg.icon} text-[6px] mr-1"></i><span>${cfg.text}</span>`;
+      statusEl.innerHTML = `<i class="fas fa-${cfg.icon} text-[8px] mr-1"></i><span>${cfg.text}</span>`;
     }
 
     /**
@@ -1676,6 +1691,7 @@
 
       try {
         showToast('시트 동기화 중...', 'info', 2000);
+        updateSyncStatus('syncing');
         await SheetsSync.push();
         showToast('클라우드 동기화 완료!', 'success');
         // 🔴 v4.31.0 (B5-10): 동기화 상태 업데이트
@@ -1683,7 +1699,7 @@
       } catch (error) {
         console.error('Sync error:', error);
         showToast('동기화 실패: ' + error.message, 'error');
-        updateSyncStatus('pending'); // 실패 시 대기 상태
+        updateSyncStatus('failed');
       }
 
       updateProfileSelector();
@@ -2037,11 +2053,6 @@
 
       console.log(`saveCurrentInputs: ${selectedTicker} principal=${principal}, sellPercent=${sellPercent}, locSellPercent=${locSellPercent}`);
 
-      // 🔴 v4.31.0 (B5-10): 데이터 변경 시 동기화 상태 '대기중'으로 변경
-      if (SheetsSync.isAuthenticated()) {
-        updateSyncStatus('pending');
-      }
-
       // 🔴 v4.20.0: Auto-sync to Google Sheets (debounced)
       triggerAutoSync();
 
@@ -2086,7 +2097,7 @@
         const priceData = await SheetsSync.getCurrentPriceWithSource(ticker);
 
         if (priceData && priceData.price > 0) {
-          priceValue.textContent = `$${priceData.price.toFixed(2)}`;
+          priceValue.textContent = `$${formatPrice(priceData.price)}`;
 
           if (priceBadge && priceData.source) {
             if (priceData.source === 'PRE') {
@@ -2120,7 +2131,7 @@
       const avgInput = document.getElementById('input-avgPrice');
 
       if (totalInvested > 0 && holdings > 0) {
-        const avgPrice = (totalInvested / holdings).toFixed(4);
+        const avgPrice = formatPrice(totalInvested / holdings);
         avgInput.value = avgPrice;
         console.log(`autoCalcAvgPrice: ${totalInvested} / ${holdings} = ${avgPrice}`);
       } else {
@@ -2335,7 +2346,7 @@
      */
     async function copyOrder(btn, price, quantity) {
       // 🔴 v4.29.4 (C-08): copyToClipboard 사용
-      const text = `${price}`;
+      const text = formatPrice(price);
       const success = await copyToClipboard(text);
       if (success) {
         btn.innerHTML = '<i class="fas fa-check"></i>';
@@ -2354,7 +2365,7 @@
      * 다중 결과용 금액 단일 복사
      */
     async function copyPriceValue(btn, price) {
-      const numeric = parseFloat(price).toFixed(2).replace(/\.00$/, '');
+      const numeric = formatPrice(price);
       const success = await copyToClipboard(numeric);
       if (success && btn) {
         btn.classList.add('copied');
@@ -2411,10 +2422,7 @@
         return;
       }
 
-      const priceLines = orders.map(o => {
-        const formatted = parseFloat(o.price).toFixed(2);
-        return formatted.endsWith('.00') ? formatted.replace('.00', '') : formatted;
-      });
+      const priceLines = orders.map(o => formatPrice(o.price));
       const text = priceLines.join('\n');
       const success = await copyToClipboard(text);
       if (success) {
@@ -2993,8 +3001,8 @@
                           ${o.quantity}주
                         </button>
                         <span class="text-gray-400 text-xs">x</span>
-                        <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
-                          ${Number(o.price || 0).toFixed(2)}
+                        <button class="order-copy-btn" onclick="copyPriceValue(this, ${Number(o.price || 0)})">
+                          ${formatPrice(o.price)}
                         </button>
                       </div>
                     </div>
@@ -3021,8 +3029,8 @@
                           ${o.quantity}주
                         </button>
                         <span class="text-gray-400 text-xs">x</span>
-                        <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
-                          ${Number(o.price || 0).toFixed(2)}
+                        <button class="order-copy-btn" onclick="copyPriceValue(this, ${Number(o.price || 0)})">
+                          ${formatPrice(o.price)}
                         </button>
                       </div>
                     </div>
@@ -3095,8 +3103,15 @@
       await ensureCashReservePrices();
 
       const profileName = currentProfile?.name || '프로필';
+      // 🔴 v4.41.1: 한국시간 날짜 추가
+      const kstDate = new Date().toLocaleDateString('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\. /g, '-').replace('.', '');  // "2026. 02. 05." → "2026-02-05"
       const lines = [
-        `📊 ${profileName} 오늘의 주문`,
+        `📊 ${profileName} 오늘의 주문 (${kstDate})`,
         `━━━━━━━━━━━━━━━━━━━━`
       ];
 
@@ -3218,8 +3233,8 @@
         const starPrice = locInfo.starPrice;
         const locSellPrice = starPrice + (avgPrice * 0.005);
         locSellEl.innerHTML = `LOC 매도 = 별%가 + (평단 × 0.5%)<br>
-          = $${starPrice.toFixed(2)} + ($${avgPrice.toFixed(2)} × 0.005)<br>
-          <span class="text-blue-400">= $${locSellPrice.toFixed(2)}</span>`;
+          = $${formatPrice(starPrice)} + ($${formatPrice(avgPrice)} × 0.005)<br>
+          <span class="text-blue-400">= $${formatPrice(locSellPrice)}</span>`;
       }
 
       // 지정가 매도 공식
@@ -3227,8 +3242,8 @@
       if (limitSellEl) {
         const limitPrice = avgPrice * (1 + effectiveSellPercent / 100);
         limitSellEl.innerHTML = `지정가 = 평단가 × (1 + AFTER%)<br>
-          = $${avgPrice.toFixed(2)} × (1 + ${effectiveSellPercent}%)<br>
-          <span class="text-red-400">= $${limitPrice.toFixed(2)}</span>`;
+          = $${formatPrice(avgPrice)} × (1 + ${effectiveSellPercent}%)<br>
+          <span class="text-red-400">= $${formatPrice(limitPrice)}</span>`;
       }
     }
 
@@ -3283,6 +3298,12 @@
       document.body.style.overflow = ''; // Restore scroll
     }
 
+    function formatPrice(value, digits = 4) {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return (0).toFixed(digits);
+      return numeric.toFixed(digits);
+    }
+
     function formatOrderLabel(order) {
       const rawType = String(order?.type || '').trim();
       if (rawType.includes('하락대비')) {
@@ -3295,7 +3316,7 @@
     }
 
     function formatOrderPrice(price) {
-      return Number(price || 0).toFixed(2);
+      return formatPrice(price);
     }
 
     function renderOrderCard(order, type) {
@@ -3580,7 +3601,7 @@
         const value = price > 0 ? price * holdings : 0;
 
         if (priceEl) {
-          priceEl.textContent = price > 0 ? `$${price.toFixed(2)}` : '-';
+          priceEl.textContent = price > 0 ? `$${formatPrice(price)}` : '-';
         }
         if (totalEl) {
           totalEl.textContent = value > 0 ? formatDollarShort(value) : '-';
