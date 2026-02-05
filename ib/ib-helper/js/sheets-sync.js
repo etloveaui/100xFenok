@@ -46,7 +46,7 @@ const SheetsSync = (function() {
 
     // 🔴 v3.7.0 (#221): Apps Script WebApp URL (현재가 공개 API)
     // 배포 후 URL 입력: https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
-    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzS12ILcKtNzijlBgZ5KCa_4VtPe76NP6tF8lPuQcseTtXY7mv_3CUu9wKg4Pp0vGXd/exec',
+    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxuXjRJsZrlLjAs7clcScOzz8__EzPKV9woeQg9_6wXka6_4D2sqpX8wSAh7sN340uW/exec',
 
     DISCOVERY_DOCS: [
       'https://sheets.googleapis.com/$discovery/rest?version=v4'
@@ -1048,9 +1048,10 @@ const SheetsSync = (function() {
     try {
       const data = await fetchJSONP(`${CONFIG.WEBAPP_URL}?ticker=${sym}`);
       const price = data.current || data.price || 0;
+      const source = data.priceSource || 'REGULAR';
       if (price > 0) {
         // 🔴 Codex Review R2: 티커별 캐시 저장
-        _priceCache[sym] = { price: price, time: now };
+        _priceCache[sym] = { price: price, source: source, time: now };
         console.log(`SheetsSync: ${sym} price from WebApp (JSONP): $${price}`);
         return price;
       }
@@ -1063,8 +1064,9 @@ const SheetsSync = (function() {
       try {
         const prices = await fetchCurrentPrices();
         if (prices[sym] && prices[sym].current > 0) {
+          const source = prices[sym].priceSource || 'REGULAR';
           // 티커별 캐시 저장
-          _priceCache[sym] = { price: prices[sym].current, time: now };
+          _priceCache[sym] = { price: prices[sym].current, source: source, time: now };
           console.log(`SheetsSync: ${sym} price from Sheets fallback: $${prices[sym].current}`);
           return prices[sym].current;
         }
@@ -1074,6 +1076,55 @@ const SheetsSync = (function() {
     }
 
     return 0;
+  }
+
+  /**
+   * Get current price with source indicator
+   * @param {string} ticker - Stock symbol
+   * @returns {Promise<{price: number, source: string}|null>}
+   */
+  async function getCurrentPriceWithSource(ticker) {
+    if (!ticker || typeof ticker !== 'string') {
+      console.warn('SheetsSync.getCurrentPriceWithSource: Invalid ticker:', ticker);
+      return null;
+    }
+
+    const sym = ticker.toUpperCase().trim();
+    if (!sym) return null;
+
+    const now = Date.now();
+    const cached = _priceCache[sym];
+    if (cached && (now - cached.time) < PRICE_CACHE_TTL) {
+      console.log(`SheetsSync: ${sym} from cache: $${cached.price} (${cached.source || 'REGULAR'})`);
+      return { price: cached.price, source: cached.source || 'REGULAR' };
+    }
+
+    try {
+      const data = await fetchJSONP(`${CONFIG.WEBAPP_URL}?ticker=${sym}`);
+      const price = data.current || data.price || 0;
+      const source = data.priceSource || 'REGULAR';
+      if (price > 0) {
+        _priceCache[sym] = { price, source, time: now };
+        return { price, source };
+      }
+    } catch (error) {
+      console.warn('SheetsSync: WebApp JSONP error:', error.message);
+    }
+
+    if (isAuthenticated()) {
+      try {
+        const prices = await fetchCurrentPrices();
+        if (prices[sym] && prices[sym].current > 0) {
+          const source = prices[sym].priceSource || 'REGULAR';
+          _priceCache[sym] = { price: prices[sym].current, source, time: now };
+          return { price: prices[sym].current, source };
+        }
+      } catch (error) {
+        console.warn('SheetsSync: Sheets fallback error:', error.message);
+      }
+    }
+
+    return null;
   }
 
   // =====================================================
@@ -1448,6 +1499,62 @@ const SheetsSync = (function() {
     }
   }
 
+  /**
+   * Get yesterday's total BUY quantity for a ticker (per profile)
+   * @param {string} profileId - Profile ID
+   * @param {string} ticker - Stock symbol
+   * @returns {Promise<number>} Total BUY quantity for yesterday
+   */
+  async function getYesterdayBuyQuantity(profileId, ticker) {
+    if (!currentUserEmail) {
+      throw new Error('로그인이 필요합니다');
+    }
+    if (!profileId || !ticker) {
+      return 0;
+    }
+
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set');
+    }
+
+    const now = new Date();
+    now.setDate(now.getDate() - 1);
+    const yesterday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const sym = String(ticker || '').toUpperCase().trim();
+    if (!sym) return 0;
+
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: `${getOrdersSheetName()}!A2:M10000`,
+      });
+
+      const rows = response.result.values || [];
+      let total = 0;
+
+      rows.forEach(row => {
+        if (
+          row[0] === yesterday &&     // A: 날짜
+          row[1] === currentUserEmail && // B: 구글ID
+          row[2] === profileId &&        // C: 프로필ID
+          row[3] === sym &&              // D: 종목
+          row[5] === 'BUY'               // F: 매수매도
+        ) {
+          total += parseInt(row[7]) || 0; // H: 수량
+        }
+      });
+
+      return total;
+    } catch (error) {
+      if (error.result?.error?.message?.includes('Unable to parse range')) {
+        return 0;
+      }
+      console.error('SheetsSync.getYesterdayBuyQuantity error:', error);
+      return 0;
+    }
+  }
+
   // =====================================================
   // PUBLIC API
   // =====================================================
@@ -1480,6 +1587,7 @@ const SheetsSync = (function() {
     // Orders (DEC-153: Order Execution Tracking)
     saveOrders,
     readPendingOrders,
+    getYesterdayBuyQuantity,
 
     // CashReserve (#222-P4)
     loadCashReserve,
@@ -1488,6 +1596,7 @@ const SheetsSync = (function() {
     // Prices (#211: 현재가 연동)
     fetchCurrentPrices,
     getCurrentPrice,
+    getCurrentPriceWithSource,
 
     // Config (for debugging)
     CONFIG

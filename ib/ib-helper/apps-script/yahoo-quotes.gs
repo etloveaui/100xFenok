@@ -183,6 +183,34 @@ function getIBHelperQuotes() {
 // =============================================================================
 
 /**
+ * Select best price based on market state
+ * @param {Object} meta - Yahoo API meta object
+ * @param {number} lastClose - Fallback price from chart data
+ * @returns {Object} { price: number, source: string }
+ */
+function getBestPrice(meta, lastClose) {
+  const marketState = (meta.marketState || 'UNKNOWN').toUpperCase();
+
+  // Pre-market: prefer preMarketPrice
+  if (marketState === 'PRE' || marketState === 'PREPRE') {
+    if (meta.preMarketPrice && meta.preMarketPrice > 0) {
+      return { price: meta.preMarketPrice, source: 'PRE' };
+    }
+  }
+
+  // Post-market: prefer postMarketPrice
+  if (marketState === 'POST' || marketState === 'POSTPOST') {
+    if (meta.postMarketPrice && meta.postMarketPrice > 0) {
+      return { price: meta.postMarketPrice, source: 'POST' };
+    }
+  }
+
+  // Regular market or fallback
+  const regularPrice = meta.regularMarketPrice || lastClose;
+  return { price: regularPrice, source: 'REGULAR' };
+}
+
+/**
  * Fetch quote from Yahoo Finance
  * Supports pre-market and after-hours data
  *
@@ -216,10 +244,13 @@ function fetchFromYahoo(symbol) {
 
   // Get the most recent values
   const lastIndex = quote.close.length - 1;
+  const lastClose = quote.close[lastIndex] || 0;
+  const bestPrice = getBestPrice(meta, lastClose);
 
   return {
     symbol: symbol,
-    price: roundPrice(meta.regularMarketPrice || quote.close[lastIndex]),
+    price: roundPrice(bestPrice.price),
+    priceSource: bestPrice.source,
     previousClose: roundPrice(meta.previousClose || meta.chartPreviousClose),
     high: roundPrice(quote.high[lastIndex]),
     low: roundPrice(quote.low[lastIndex]),
@@ -601,9 +632,12 @@ function doGet(e) {
       return createResponse({
         ticker: requestedTicker,
         current: quote.price,
+        priceSource: quote.priceSource || 'REGULAR',
         close: quote.previousClose,
         high: quote.high,
         low: quote.low,
+        preMarket: quote.preMarket || null,
+        afterHours: quote.afterHours || null,
         marketState: quote.marketState || 'UNKNOWN',
         source: quote.source,
         updatedAt: quote.timestamp
@@ -619,9 +653,12 @@ function doGet(e) {
       if (q && q.price > 0) {
         prices[ticker] = {
           current: q.price,
+          priceSource: q.priceSource || 'REGULAR',
           close: q.previousClose,
           high: q.high,
           low: q.low,
+          preMarket: q.preMarket || null,
+          afterHours: q.afterHours || null,
           marketState: q.marketState || 'UNKNOWN',
           source: q.source,
           updatedAt: q.timestamp

@@ -1,10 +1,14 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.35.2
+> **Version**: 4.41.0
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-04
-> **Status**: ✅ Phase 1-3 Complete + Ralph Loop 6 + 현재가 연동 (#211) + **WebApp Price API (#221)** | ❌ #220 Email Auth REVERTED
-> **Priority**: 🟡 Phase 4 (Telegram) Pending
+> **Updated**: 2026-02-05
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration | ❌ #220 REVERTED
+> **Priority**: 🟡 #225 P4 테스트 → #207 Telegram
+>
+> **📋 Deployment Checklist** (DEC-171):
+> 1. Prices 시트 E~G 헤더 추가됨 (Low, MarketState, UpdatedAt) ✅
+> 2. Apps Script에서 `setupPricesUpdateTrigger()` 1회 실행 → 데이터 자동 갱신
 >
 > **📁 Testing Docs**: [Data Flow](../../../../docs/testing/ib-helper-data-flow.md) | [Scenarios](../../../../docs/testing/ib-helper-scenarios.md) | [State Machine](../../../../docs/testing/ib-helper-state-machine.md)
 

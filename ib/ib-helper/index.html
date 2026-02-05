@@ -1,0 +1,4224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IB Helper - 무한매수 도우미</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+
+  <!-- TailwindCSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom Styles for Mobile -->
+  <style>
+    /* Mobile-first: Large touch targets */
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Large number display */
+    .number-display {
+      font-size: 1.5rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Input number styling */
+    input[type="number"] {
+      font-size: 1.125rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Order card styling */
+    .order-card {
+      border-left: 4px solid;
+    }
+    .order-card.buy {
+      border-left-color: #10b981;
+    }
+    .order-card.sell {
+      border-left-color: #ef4444;
+    }
+
+    /* Phase indicator */
+    .phase-first { background: linear-gradient(135deg, #10b981, #059669); }
+    .phase-second { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .phase-stop { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+    /* Sticky header */
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Balance Section (Phase 3) */
+    .balance-input {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .balance-input input {
+      flex: 1;
+      font-size: 1.125rem;
+    }
+    .status-box {
+      background: #f8fafc;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25rem 0;
+      font-size: 0.875rem;
+    }
+    .status-ok { color: #10b981; font-weight: 600; }
+    .status-warning { color: #ef4444; font-weight: 600; }
+
+    /* Alert Banner */
+    .alert-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #fef2f2;
+      border-bottom: 2px solid #ef4444;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 1000;
+    }
+    .alert-banner.hidden { display: none; }
+    .alert-icon { font-size: 1.25rem; }
+
+    /* Breakdown Table */
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      margin-top: 0.75rem;
+    }
+    .breakdown-table th,
+    .breakdown-table td {
+      padding: 0.375rem 0.5rem;
+      text-align: right;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .breakdown-table th:first-child,
+    .breakdown-table td:first-child {
+      text-align: left;
+    }
+    .breakdown-table th {
+      background: #f8fafc;
+      font-weight: 500;
+      color: #64748b;
+    }
+    .bar-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .bar {
+      height: 6px;
+      background: #3b82f6;
+      border-radius: 3px;
+    }
+
+    /* Order Type Badge */
+    .order-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge-loc {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .badge-limit {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    /* Quick Add Buttons */
+    .quick-add-btn {
+      min-width: 42px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.15s;
+    }
+    .quick-add-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Copy Button Animation */
+    .copy-btn {
+      opacity: 0.6;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover {
+      opacity: 1;
+    }
+    .copy-btn.copied {
+      color: #10b981;
+    }
+
+    /* Order Card Enhanced */
+    .order-card-enhanced {
+      position: relative;
+      border-radius: 12px;
+      padding: 1rem;
+      border-left: 4px solid;
+      transition: all 0.15s;
+    }
+    .order-card-enhanced:active {
+      transform: scale(0.99);
+    }
+    .order-card-enhanced.buy {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-left-color: #10b981;
+    }
+    .order-card-enhanced.sell {
+      background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+      border-left-color: #ef4444;
+    }
+    .order-card-enhanced.decline {
+      background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+      border-left-color: #3b82f6;
+    }
+
+    /* Main Value Display */
+    .main-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .sub-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Toast Notification */
+    .toast {
+      background: #1f2937;
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      animation: toast-in 0.3s ease-out;
+      pointer-events: auto;
+    }
+    .toast.success { background: #059669; }
+    .toast.error { background: #dc2626; }
+    .toast.warning { background: #d97706; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-20px); }
+    }
+
+    /* Formula Details (v4.23.0) */
+    .formula-details {
+      background: rgba(255,255,255,0.95);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: #374151;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .formula-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .formula-row:last-child {
+      border-bottom: none;
+    }
+    .formula-label {
+      color: #9ca3af;
+    }
+    .formula-value {
+      font-family: 'Monaco', 'Courier New', monospace;
+      color: #e5e7eb;
+    }
+    .formula-toggle {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .formula-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    /* Focus Ring for Accessibility */
+    input:focus, button:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #3b82f6;
+    }
+
+    /* v4.28.0: Ticker Checkbox + Multi-Results Accordion */
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .ticker-checkbox:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Accordion Styles */
+    .accordion-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: white;
+      cursor: pointer;
+      user-select: none;
+    }
+    .accordion-header:hover {
+      background: linear-gradient(135deg, #334155, #1e293b);
+    }
+    .accordion-chevron {
+      transition: transform 0.2s;
+    }
+    .accordion-item.open .accordion-chevron {
+      transform: rotate(180deg);
+    }
+    .accordion-content {
+      display: none;
+      padding: 1rem;
+      background: #f8fafc;
+    }
+    .accordion-item.open .accordion-content {
+      display: block;
+    }
+    .accordion-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+    .accordion-badge-first { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .accordion-badge-second { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .accordion-badge-stop { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+    /* Order Section in Accordion */
+    .order-section {
+      margin-bottom: 1rem;
+    }
+    .order-section:last-child {
+      margin-bottom: 0;
+    }
+    .order-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 0.5rem;
+    }
+    .order-section-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #374151;
+    }
+    .section-copy-btn {
+      padding: 0.25rem 0.5rem;
+      background: #e5e7eb;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      color: #4b5563;
+      transition: all 0.15s;
+    }
+    .section-copy-btn:hover {
+      background: #d1d5db;
+      color: #1f2937;
+    }
+    .order-copy-btn {
+      background: transparent;
+      color: #9ca3af;
+      border: none;
+      padding: 0.15rem 0.35rem;
+      border-radius: 0.375rem;
+      transition: color 0.15s;
+    }
+    .order-copy-btn:hover {
+      color: #2563eb;
+    }
+    .order-copy-btn.copied {
+      color: #10b981;
+    }
+    .qty-copy-btn {
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Alert Banner (Phase 3) -->
+  <div id="alert-banner" class="alert-banner hidden" role="alert" aria-live="assertive">
+    <span class="alert-icon">🚨</span>
+    <span id="alert-message" class="flex-1 text-sm text-red-700 font-medium"></span>
+    <button onclick="dismissAlert()" class="touch-target text-red-400 hover:text-red-600">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Header (v4.21.0: Mobile simplified) -->
+  <header class="sticky-header px-3 py-2 lg:px-4 lg:py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2 lg:gap-3">
+        <a href="../" class="text-gray-500 hover:text-gray-700 touch-target flex items-center justify-center" aria-label="뒤로가기">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="text-base lg:text-lg font-bold">
+          <span class="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">IB</span>
+          <span class="text-gray-800 hidden sm:inline"> Helper</span>
+        </h1>
+        <div class="flex items-center gap-1" id="header-sync-controls">
+          <!-- 🔴 v4.31.0 (B5-10): 동기화 상태 표시 -->
+          <span id="header-sync-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 hidden">
+            <i class="fas fa-circle text-[6px] mr-1"></i><span>로컬</span>
+          </span>
+          <!-- 🔴 v4.31.0 (B5-06): 메인 동기화 버튼 -->
+          <button id="header-sync-btn" onclick="quickSyncToCloud()" class="hidden text-gray-400 hover:text-blue-500 touch-target flex items-center justify-center" title="클라우드 동기화">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </button>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="today-date" class="text-xs text-gray-500"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Empty State (프로필 없을 때) - Light Theme -->
+  <div id="empty-state" class="hidden px-4 py-12 max-w-lg mx-auto">
+    <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 text-center">
+      <!-- Logo -->
+      <div class="w-24 h-24 bg-gradient-to-br from-rose-500 to-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+        <span class="text-white text-3xl font-black">100x</span>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-2xl font-black mb-1">
+        <span class="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">100x</span>
+        <span class="text-gray-800"> IB Helper</span>
+      </h1>
+      <p class="text-gray-500 text-sm mb-8">무한매수 V2.2 알고리즘</p>
+
+      <!-- Google Login Button -->
+      <button onclick="quickStart()" class="w-full py-4 bg-gradient-to-r from-rose-500 to-amber-500 text-white rounded-xl font-semibold text-lg hover:from-rose-600 hover:to-amber-600 transition-all shadow-md flex items-center justify-center gap-3">
+        <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Google로 시작하기
+      </button>
+
+      <p class="mt-3 text-xs text-gray-400">
+        📊 Google Sheets 자동 동기화 (1시간 세션)
+      </p>
+
+      <button onclick="quickStartOffline()" class="mt-4 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2">
+        로그인 없이 시작
+      </button>
+
+      <!-- Powered by -->
+      <div class="mt-8 pt-6 border-t border-gray-100">
+        <p class="text-xs text-gray-400">Powered by <span class="font-bold text-rose-500">FENOK</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content: PC 2-column / Mobile single column (hidden until profile exists) -->
+  <main id="main-content" style="display: none;" class="px-4 py-4 max-w-6xl mx-auto md:flex md:gap-6">
+
+    <!-- LEFT COLUMN: Input Sections -->
+    <div id="input-column" class="space-y-4 md:w-96 md:flex-shrink-0">
+
+    <!-- Profile Selector (moved from header) -->
+    <div class="bg-white rounded-xl p-3 shadow-sm flex items-center gap-2">
+      <select id="profile-selector" onchange="switchProfile(this.value)" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium bg-white">
+        <!-- Dynamic options -->
+      </select>
+      <button onclick="showProfileSettings()" class="touch-target px-3 py-2 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200" aria-label="프로필 설정">
+        <i class="fas fa-user-cog"></i>
+      </button>
+    </div>
+
+    <!-- Ticker Selection -->
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <label class="block text-sm font-medium text-gray-700 mb-2">종목 선택</label>
+      <div id="ticker-buttons" class="grid grid-cols-2 gap-2">
+        <button onclick="selectTicker('TQQQ')" class="ticker-btn touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100" data-ticker="TQQQ">TQQQ</button>
+        <button onclick="selectTicker('SOXL')" class="ticker-btn touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100" data-ticker="SOXL">SOXL</button>
+      </div>
+    </div>
+
+    <!-- Settings (Collapsible) -->
+    <details class="bg-white rounded-xl shadow-sm">
+      <summary class="px-4 py-3 cursor-pointer font-medium text-gray-700 flex items-center justify-between">
+        <span><i class="fas fa-cog mr-2 text-gray-400"></i>설정</span>
+        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+      </summary>
+      <div class="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">세팅원금 ($)</label>
+            <input type="number" id="input-principal" class="w-full px-3 py-2 border rounded-lg" placeholder="0" inputmode="numeric" onchange="saveCurrentInputs()">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">분할 수</label>
+            <input type="number" id="input-divisions" class="w-full px-3 py-2 border rounded-lg" value="40" inputmode="numeric">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">AFTER% (TQQQ=10)</label>
+            <input type="number" id="input-sellPercent" class="w-full px-3 py-2 border rounded-lg" value="12" step="0.5" inputmode="decimal" onchange="saveCurrentInputs()">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">LOC% (TQQQ=5)</label>
+            <input type="number" id="input-locSellPercent" class="w-full px-3 py-2 border rounded-lg" value="6" step="0.5" inputmode="decimal" onchange="saveCurrentInputs()">
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Daily Input -->
+    <div class="bg-white rounded-xl p-4 shadow-sm space-y-3">
+      <h3 class="font-medium text-gray-700"><i class="fas fa-edit mr-2 text-blue-500"></i>오늘 입력</h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">평단가 ($)</label>
+          <input type="number"
+                 id="input-avgPrice"
+                 class="w-full px-3 py-2 border rounded-lg text-lg bg-gray-50 cursor-not-allowed"
+                 placeholder="0.00"
+                 step="0.01"
+                 inputmode="decimal"
+                 readonly>
+          <p class="text-sm text-gray-400 mt-1">총 매입금 · 보유 수량을 입력하면 자동 계산됩니다</p>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">현재가</label>
+          <div id="current-price-display"
+               class="w-full px-3 py-2 border-2 border-blue-100 rounded-lg bg-blue-50 text-xl font-semibold text-blue-700 flex items-center justify-center gap-2 min-h-[52px]"
+               role="status"
+               aria-live="polite">
+            <span id="price-value">--</span>
+            <span id="price-source-badge" class="hidden text-xs font-medium px-1.5 py-0.5 rounded"></span>
+          </div>
+          <p class="text-sm text-gray-400 mt-1">최신 시세 API에서 자동으로 불러옵니다</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">총 매입금 ($)</label>
+          <input type="number" id="input-totalInvested" class="w-full px-3 py-2 border rounded-lg" placeholder="0.00" step="0.01" inputmode="decimal" onchange="autoCalcAvgPrice(); saveCurrentInputs()">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">보유 수량</label>
+          <div class="flex gap-1">
+            <input type="number" id="input-holdings" class="flex-1 min-w-0 px-3 py-2 border rounded-lg" placeholder="0" inputmode="numeric" onchange="autoCalcAvgPrice(); saveCurrentInputs()">
+            <button onclick="adjustHoldings(1)" class="quick-add-btn bg-green-100 text-green-700 hover:bg-green-200">+1</button>
+            <button onclick="adjustHoldings(3)" class="quick-add-btn bg-green-100 text-green-700 hover:bg-green-200">+3</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오늘 매수량 추가 -->
+      <div id="today-buy-helper" class="hidden bg-blue-50 rounded-lg p-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-blue-700">
+            <i class="fas fa-lightbulb mr-1"></i>오늘 <span id="today-buy-qty">0</span>주 매수?
+          </span>
+          <button onclick="applyTodayBuy()" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600">
+            <i class="fas fa-plus mr-1"></i>수량 추가
+          </button>
+        </div>
+        <div id="yesterday-buy-compare" class="hidden text-sm text-gray-500 mt-1"></div>
+      </div>
+
+      <!-- Calculate Buttons (v4.28.0: 다중 계산 #217) -->
+      <div class="space-y-2">
+        <!-- 전체 계산 (체크된 종목 모두) -->
+        <button onclick="calculateAllOrders()" class="w-full touch-target py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md">
+          <i class="fas fa-calculator mr-2"></i>전체 계산
+        </button>
+        <!-- 선택 종목만 (기존 동작 유지) -->
+        <button onclick="calculateOrders()" class="w-full touch-target py-2 bg-gray-100 text-gray-600 rounded-lg font-medium text-sm hover:bg-gray-200 transition-all">
+          <i class="fas fa-check-circle mr-1"></i>선택 종목만 계산
+        </button>
+      </div>
+    </div>
+
+    <!-- Cash Management (Phase 3) - moved into left column -->
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <h3 class="font-medium text-gray-700 mb-3">
+        <i class="fas fa-wallet mr-2 text-amber-500"></i>예수금 관리
+      </h3>
+      <div class="balance-input">
+        <div class="flex-1">
+          <label class="block text-xs text-gray-500 mb-1">주문가능금액 (USD)</label>
+          <input type="number" id="input-balance" class="w-full px-3 py-2 border rounded-lg" placeholder="0.00" step="0.01" inputmode="decimal">
+        </div>
+        <div class="w-24">
+          <label class="block text-xs text-gray-500 mb-1">수수료(%)</label>
+          <input type="number" id="input-commission" class="w-full px-3 py-2 border rounded-lg" value="0.07" step="0.01" inputmode="decimal">
+        </div>
+        <button onclick="recalculateBalance()" class="touch-target mt-5 px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+      <div id="order-status" class="status-box hidden"></div>
+      <div id="stock-breakdown" class="hidden"></div>
+    </div>
+
+    <!-- Cash Reserve (P4: SGOV/BIL/BILS) -->
+    <div id="cash-reserve-section" class="bg-white rounded-xl p-4 shadow-sm hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-medium text-gray-700">
+          <i class="fas fa-coins mr-2 text-emerald-500"></i>현금성 자산
+        </h3>
+        <button onclick="saveCashReserveData()" class="px-3 py-1 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-full hover:bg-emerald-100">
+          <i class="fas fa-save mr-1"></i>저장
+        </button>
+      </div>
+      <p class="text-sm text-gray-400 mb-2">SGOV/BIL/BILS 보유량·평단 수동 입력</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-gray-400">
+            <tr>
+              <th class="text-left py-1">종목</th>
+              <th class="text-right py-1">수량</th>
+              <th class="text-right py-1">평단</th>
+              <th class="text-right py-1">현재가</th>
+              <th class="text-right py-1">평가금</th>
+            </tr>
+          </thead>
+          <tbody id="cash-reserve-rows" class="text-gray-700"></tbody>
+        </table>
+      </div>
+      <div class="mt-2 flex items-center justify-between text-xs text-gray-600">
+        <span>총 현금성 자산</span>
+        <span id="cash-reserve-total">$0</span>
+      </div>
+      <div id="cash-reserve-reco" class="mt-2 text-xs font-semibold text-emerald-600 hidden"></div>
+    </div>
+
+    </div><!-- END LEFT COLUMN (input-column) -->
+
+    <!-- RIGHT COLUMN: Results (PC: inline, Mobile: overlay) -->
+    <div id="results-column" class="hidden md:block md:flex-1 md:min-w-0">
+      <!-- PC Results Container -->
+      <div id="results-pc" class="hidden md:block sticky top-4 space-y-4">
+        <div class="text-center text-gray-400 py-8">
+          <i class="fas fa-calculator text-4xl mb-2"></i>
+          <p>주문 계산 버튼을 눌러주세요</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Results Overlay -->
+    <div id="results-overlay" class="fixed inset-0 bg-black/50 z-50 hidden md:hidden" onclick="closeResultsOverlay()">
+      <div class="absolute inset-x-0 bottom-0 top-16 bg-gray-100 rounded-t-2xl overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="sticky top-0 bg-white px-4 py-3 border-b flex items-center justify-between shadow-sm">
+          <h2 class="font-bold text-gray-800"><i class="fas fa-receipt mr-2"></i>주문 결과</h2>
+          <button onclick="closeResultsOverlay()" class="touch-target text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <div id="results-mobile" class="p-4 space-y-4">
+          <!-- Mobile results content -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Section (Original - now hidden, used as template) -->
+    <div id="results-section" class="hidden space-y-4">
+
+      <!-- Summary Card -->
+      <div id="summary-card" class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 text-white">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <span id="result-ticker" class="text-2xl font-bold">SOXL</span>
+            <span id="result-phase" class="ml-2 px-2 py-0.5 text-xs rounded bg-green-500/30 text-green-300">전반전</span>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-slate-400">T값</div>
+            <div id="result-T" class="text-2xl font-bold">15.4</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div class="bg-white/10 rounded-lg p-2">
+            <div class="text-xs text-slate-400">별%</div>
+            <div id="result-starPercent" class="text-lg font-semibold">2.8%</div>
+          </div>
+          <div class="bg-white/10 rounded-lg p-2">
+            <div class="text-xs text-slate-400">1회매수</div>
+            <div id="result-oneTimeBuy" class="text-lg font-semibold">$325</div>
+          </div>
+          <div class="bg-white/10 rounded-lg p-2">
+            <div class="text-xs text-slate-400">LOC가</div>
+            <div id="result-locPrice" class="text-lg font-semibold">$54.52</div>
+          </div>
+        </div>
+
+        <div id="result-locReason" class="mt-2 text-xs text-slate-400 text-center">
+          별%가 선택 (현재가+15% = $57.68)
+        </div>
+
+        <!-- v4.23.0: Formula Details Toggle -->
+        <div class="mt-3 text-center">
+          <button onclick="toggleFormulaDetails()" class="formula-toggle text-xs text-slate-400 hover:text-white">
+            <i id="formula-toggle-icon" class="fas fa-chevron-down mr-1"></i>
+            <span id="formula-toggle-text">공식 상세</span>
+          </button>
+        </div>
+
+        <!-- Formula Details Panel (hidden by default) -->
+        <div id="formula-details" class="hidden formula-details">
+          <div class="space-y-2 text-xs">
+            <div>
+              <div class="text-slate-400 mb-1">📐 T값 계산</div>
+              <div id="formula-T" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                T = ceil((총매입금 / 1회매수) × 10) / 10
+              </div>
+            </div>
+            <div>
+              <div class="text-slate-400 mb-1">⭐ 별% 계산</div>
+              <div id="formula-star" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                별% = sellPercent × (1 - T / 20)
+              </div>
+            </div>
+            <div>
+              <div class="text-slate-400 mb-1">📊 LOC 매도가</div>
+              <div id="formula-locSell" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                LOC 매도가 = 별%가 + (평단가 × 0.5%)
+              </div>
+            </div>
+            <div>
+              <div class="text-slate-400 mb-1">💰 지정가 매도</div>
+              <div id="formula-limitSell" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                지정가 = 평단가 × (1 + AFTER%)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- #219: 전체 복사 버튼 -->
+      <div class="flex justify-end mb-2">
+        <button onclick="copyAllOrdersTotal()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg text-sm hover:bg-slate-800 transition-colors">
+          <i class="fas fa-clipboard-list mr-1"></i>전체 복사
+        </button>
+      </div>
+
+      <!-- Buy Orders (v4.22.0: 축소된 카드) -->
+      <div class="bg-white rounded-xl p-3 shadow-sm">
+        <div class="section-header">
+          <h3 class="font-medium text-green-600 text-sm">
+            <i class="fas fa-arrow-down mr-1"></i>매수 <span class="order-badge badge-loc ml-1">LOC</span>
+          </h3>
+          <button onclick="copyAllOrders('buy')" class="copy-btn text-gray-400 hover:text-gray-600">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <div id="buy-orders" class="space-y-2">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- Sell Orders (v4.22.0: 축소된 카드) -->
+      <div class="bg-white rounded-xl p-3 shadow-sm">
+        <div class="section-header">
+          <h3 class="font-medium text-red-600 text-sm">
+            <i class="fas fa-arrow-up mr-1"></i>매도
+          </h3>
+          <button onclick="copyAllOrders('sell')" class="copy-btn text-gray-400 hover:text-gray-600">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <div id="sell-orders" class="space-y-2">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- Quarter Stop Loss Warning (#216: 체크박스 추가) -->
+      <div id="quarter-stop-loss" class="hidden bg-red-50 border border-red-200 rounded-xl p-4">
+        <div class="flex items-start gap-3 mb-3">
+          <input type="checkbox" id="quarter-stop-checkbox" class="mt-1 w-5 h-5 text-red-600 rounded focus:ring-red-500" onchange="handleQuarterStopChange()">
+          <label for="quarter-stop-checkbox" class="flex-1">
+            <h3 class="font-bold text-red-700">
+              <i class="fas fa-exclamation-triangle mr-2"></i>쿼터손절 실행하기
+            </h3>
+            <p class="text-xs text-red-500 mt-1">T>40 도달 - 체크하면 MOC 주문 안내가 표시됩니다</p>
+          </label>
+        </div>
+        <div id="quarter-stop-loss-content" class="text-sm text-red-600 space-y-1 hidden">
+          <!-- Dynamic content -->
+        </div>
+        <div id="quarter-stop-moc-order" class="hidden mt-3 p-3 bg-red-100 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-bold text-red-800">MOC 매도</span>
+              <span id="quarter-moc-qty" class="ml-2 text-lg font-bold text-red-700">0주</span>
+            </div>
+            <button onclick="copyMocOrder()" class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">
+              <i class="fas fa-copy mr-1"></i>복사
+            </button>
+          </div>
+          <p class="text-xs text-red-600 mt-2">
+            <i class="fas fa-info-circle mr-1"></i>장 마감 전 MOC(Market on Close) 주문으로 1/4 매도
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- v4.28.0: 다중 종목 결과 섹션 (#217) -->
+    <div id="multi-results-section" class="hidden space-y-3 mt-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-gray-800"><i class="fas fa-list-check mr-2 text-blue-500"></i>전체 종목 결과</h2>
+        <button onclick="copyAllTickersOrders()" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600">
+          <i class="fas fa-copy mr-1"></i>전체 복사
+        </button>
+      </div>
+      <div id="results-accordion" class="grid gap-3 md:grid-cols-2">
+        <!-- 아코디언 아이템들이 여기에 동적 생성 -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Profile Settings Modal -->
+  <div id="profile-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end sm:items-center justify-center" onclick="handleModalBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="bg-white w-full sm:w-96 sm:rounded-xl rounded-t-xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white px-4 py-3 border-b flex items-center justify-between">
+        <h2 id="modal-title" class="font-bold text-gray-800">프로필 설정</h2>
+        <button onclick="closeProfileModal()" class="touch-target text-gray-400 hover:text-gray-600" aria-label="닫기">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4">
+        <!-- 🔴 v4.31.0 (B5-02): 프로필 전환 드롭다운 -->
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">현재 프로필</label>
+          <select id="modal-profile-selector" onchange="switchProfileFromModal(this.value)" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm font-medium">
+            <!-- Dynamic options -->
+          </select>
+        </div>
+
+        <!-- Profile Info + New Profile Button (v4.22.0: 한 줄 배치) -->
+        <div class="flex gap-2 items-end">
+          <div class="flex-1">
+            <label class="block text-xs text-gray-500 mb-1">프로필 이름</label>
+            <input type="text" id="modal-profile-name" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="이름" onchange="saveProfileName()">
+          </div>
+          <button onclick="createNewProfile()" class="px-3 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 whitespace-nowrap">
+            <i class="fas fa-plus mr-1"></i>새 프로필
+          </button>
+        </div>
+
+        <!-- Profile Stocks -->
+        <div>
+          <label class="block text-xs text-gray-500 mb-2">등록 종목</label>
+          <div id="modal-stocks-list" class="space-y-2">
+            <!-- Dynamic content -->
+          </div>
+          <button onclick="showAddStockForm()" class="mt-2 w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 text-sm hover:border-blue-300 hover:text-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <i class="fas fa-plus mr-1"></i>종목 추가
+          </button>
+        </div>
+
+        <!-- Add Stock Form (hidden by default) -->
+        <div id="add-stock-form" class="hidden bg-gray-50 rounded-lg p-3 space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="new-stock-symbol" class="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="종목코드 (예: TQQQ)">
+            <input type="number" id="new-stock-principal" class="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="세팅원금 ($)">
+          </div>
+          <div class="flex gap-2">
+            <button onclick="addNewStock()" class="flex-1 py-2 bg-blue-500 text-white rounded-lg text-sm">추가</button>
+            <button onclick="hideAddStockForm()" class="px-4 py-2 bg-gray-200 rounded-lg text-sm">취소</button>
+          </div>
+        </div>
+
+        <!-- Google Sync Status (상단 배치) 🔴 v4.29.1: 로그아웃 버튼 추가 -->
+        <div id="google-sync-section" class="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-3 border border-blue-100">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <i class="fab fa-google text-blue-500"></i>
+              <span id="sheets-user" class="text-sm font-medium text-gray-700 truncate">미연결</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="sheets-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">오프라인</span>
+              <button id="logout-btn" onclick="handleSignOut()" class="hidden text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200" title="로그아웃">
+                <i class="fas fa-sign-out-alt"></i>
+              </button>
+            </div>
+          </div>
+          <button onclick="handleSheetsPull()" class="w-full py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+            <i class="fas fa-cloud-download-alt mr-1"></i>시트에서 불러오기
+          </button>
+        </div>
+
+        <!-- Main Actions (v4.22.0: 새 프로필 버튼 상단 이동) -->
+        <div class="pt-3 space-y-2">
+          <button onclick="syncToCloud()" class="w-full py-3 bg-blue-500 text-white rounded-lg font-medium focus:ring-2 focus:ring-blue-300 focus:outline-none">
+            <i class="fas fa-cloud-upload-alt mr-2"></i>클라우드 동기화
+          </button>
+          <button onclick="importDatFile()" class="w-full py-2 border border-purple-500 text-purple-600 rounded-lg text-sm hover:bg-purple-50">
+            <i class="fas fa-file-import mr-1"></i>Genie RPA 데이터 (.dat) 가져오기
+          </button>
+        </div>
+
+        <!-- Advanced Options (Collapsible) -->
+        <details class="pt-2">
+          <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600 py-2">
+            <i class="fas fa-cog mr-1"></i>고급 옵션
+          </summary>
+          <div class="pt-2 space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="exportCurrentProfile()" class="py-2 border rounded-lg text-xs text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-download mr-1"></i>내보내기
+              </button>
+              <button onclick="importProfile()" class="py-2 border rounded-lg text-xs text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-upload mr-1"></i>가져오기
+              </button>
+            </div>
+            <button onclick="deleteCurrentProfile()" class="w-full py-2 border border-red-300 text-red-500 rounded-lg text-xs hover:bg-red-50">
+              <i class="fas fa-trash mr-1"></i>프로필 삭제
+            </button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
+  <footer class="hidden lg:block px-4 py-4 text-center">
+    <p class="text-xs text-gray-400">IB Helper v4.31.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/calculator.js"></script>
+  <script src="js/profile-manager.js"></script>
+  <script src="js/balance-manager.js"></script>
+  <script src="js/sheets-sync.js"></script>
+  <script>
+    // =====================================================
+    // State
+    // =====================================================
+
+    // 🔴 v4.15.0: null로 초기화 (Bug 7 수정)
+    // 'SOXL' 초기값 → 첫 로드 시 빈 데이터로 기존 데이터 덮어씌움 방지
+    let selectedTicker = null;
+    let currentProfile = null;
+
+    // 🔴 v4.28.0: 다중 종목 계산 (#217, #218)
+    let enabledTickers = new Set();     // 계산 대상 종목 (체크된 종목)
+    let calculationResults = {};        // Map<ticker, result> - 다중 계산 결과
+
+    // P4: CashReserve (SGOV/BIL/BILS)
+    const CASH_ETFS = ['SGOV', 'BIL', 'BILS'];
+    let cashReserveEntries = [];
+    let cashReservePrices = {};
+    let cashReserveAction = null;
+
+    // =====================================================
+    // Auto-Save to Sheets (v4.20.0)
+    // =====================================================
+
+    /**
+     * Debounce utility - prevents rapid-fire API calls
+     * @param {Function} fn - Function to debounce
+     * @param {number} delay - Delay in ms
+     */
+    function debounce(fn, delay) {
+      let timeoutId;
+      return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    /**
+     * Auto-sync to Google Sheets (5초 debounce)
+     * - 로그인 상태일 때만 실행
+     * - 연속 입력 시 마지막 입력 후 5초 뒤 동기화
+     */
+    const debouncedSheetSync = debounce(async function() {
+      // Check if SheetsSync is available and authenticated
+      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
+        console.log('Auto-sync: Skipped (not logged in)');
+        return;
+      }
+
+      if (!currentProfile) {
+        console.log('Auto-sync: Skipped (no profile)');
+        return;
+      }
+
+      try {
+        // Set current profile for sync
+        SheetsSync.setCurrentProfile(currentProfile.id);
+
+        // Push to sheets
+        await SheetsSync.push();
+
+        // Visual feedback (subtle)
+        const status = document.getElementById('sheets-status');
+        if (status) {
+          status.textContent = '✓ 동기화됨';
+          status.className = 'text-xs text-green-600';
+          setTimeout(() => {
+            if (status.textContent === '✓ 동기화됨') {
+              status.textContent = '연결됨';
+            }
+          }, 2000);
+        }
+
+        console.log('Auto-sync: Success');
+      } catch (error) {
+        console.error('Auto-sync: Failed', error);
+        // Silent failure - 사용자 작업 방해 안함
+      }
+    }, 5000); // 5초 debounce
+
+    /**
+     * Trigger auto-sync after local save
+     * Called from saveCurrentInputs()
+     */
+    function triggerAutoSync() {
+      if (currentProfile) {
+        debouncedSheetSync();
+      }
+    }
+
+    // =====================================================
+    // Toast Notification System
+    // =====================================================
+
+    function showToast(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      const icon = type === 'success' ? 'fa-check-circle' :
+                   type === 'error' ? 'fa-exclamation-circle' :
+                   type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+
+      toast.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'toast-out 0.3s ease-out forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    // =====================================================
+    // Clipboard Helper (C-08: HTTPS fallback)
+    // =====================================================
+
+    /**
+     * 🔴 v4.29.4 (C-08): 클립보드 복사 헬퍼 (HTTPS fallback)
+     * navigator.clipboard API는 HTTPS 또는 localhost에서만 작동
+     * HTTP 환경에서는 execCommand fallback 사용
+     * @param {string} text - 복사할 텍스트
+     * @returns {Promise<boolean>} 성공 여부
+     */
+    async function copyToClipboard(text) {
+      // 1. 먼저 Clipboard API 시도 (HTTPS/localhost)
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (err) {
+          console.warn('Clipboard API failed, trying fallback:', err);
+        }
+      }
+
+      // 2. Fallback: execCommand (HTTP 환경)
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        const success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        if (!success) {
+          throw new Error('execCommand copy failed');
+        }
+        return true;
+      } catch (err) {
+        console.error('Clipboard fallback failed:', err);
+        return false;
+      }
+    }
+
+    // =====================================================
+    // Modal Helpers
+    // =====================================================
+
+    function handleModalBackdrop(event) {
+      // Close modal when clicking backdrop
+      if (event.target.id === 'profile-modal') {
+        closeProfileModal();
+      }
+    }
+
+    // =====================================================
+    // Profile Delete
+    // =====================================================
+
+    function deleteCurrentProfile() {
+      if (!currentProfile) return;
+
+      const profiles = ProfileManager.getAllProfiles();
+      if (profiles.length <= 1) {
+        showToast('마지막 프로필은 삭제할 수 없습니다', 'warning');
+        return;
+      }
+
+      const confirmed = confirm(`"${currentProfile.name}" 프로필을 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`);
+      if (!confirmed) return;
+
+      // Save ID to delete
+      const profileToDelete = currentProfile.id;
+
+      // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+      selectedTicker = null;
+
+      // First switch to another profile (ProfileManager.delete requires non-active profile)
+      const remaining = profiles.filter(p => p.id !== profileToDelete);
+      if (remaining.length > 0) {
+        ProfileManager.setActive(remaining[0].id);
+        currentProfile = ProfileManager.getActive();
+        SheetsSync.setCurrentProfile(remaining[0].id);
+      }
+
+      // Now delete the profile
+      ProfileManager.delete(profileToDelete);
+
+      // Update UI
+      updateProfileSelector();
+      loadProfileData();
+      loadBalanceData();
+      closeProfileModal();
+
+      showToast('프로필이 삭제되었습니다', 'success');
+    }
+
+    // =====================================================
+    // Initialization
+    // =====================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 🔴 v4.29.0: 로그인 기반 초기화 (논리적 흐름 개선)
+      // - 앱 시작 시 항상 빈 상태 (로그인 화면)
+      // - 로컬 데이터는 로그인 후에만 로드
+      // - 사용자 혼란 방지: "로그인 전에 데이터가 있는 이유?"
+
+      // Show today's date
+      const today = new Date();
+      document.getElementById('today-date').textContent = today.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+
+      // 🔴 v4.29.0: 시작 시 항상 빈 상태 표시 (로그인/시작 버튼)
+      // 기존 로컬 데이터가 있어도 숨김 - 사용자가 명시적으로 시작해야 함
+      showStartScreen();
+
+      // Balance input debounce setup
+      // 🔴 v4.29.6 (#33): debounce 500ms → 200ms (UX 개선)
+      const balanceInput = document.getElementById('input-balance');
+      if (balanceInput) {
+        balanceInput.addEventListener('input', () => {
+          clearTimeout(window.balanceDebounce);
+          window.balanceDebounce = setTimeout(() => {
+            handleBalanceChange(balanceInput.value);
+          }, 200);
+        });
+      }
+
+      const commissionInput = document.getElementById('input-commission');
+      if (commissionInput) {
+        commissionInput.addEventListener('input', () => {
+          clearTimeout(window.commissionDebounce);
+          window.commissionDebounce = setTimeout(() => {
+            handleCommissionChange(commissionInput.value);
+          }, 200);
+        });
+      }
+    });
+
+    /**
+     * 🔴 v4.29.0: 시작 화면 표시 (로그인 전 상태)
+     * - 항상 빈 상태로 시작
+     * - Google 로그인 또는 오프라인 시작 선택
+     */
+    function showStartScreen() {
+      const emptyState = document.getElementById('empty-state');
+      const mainContent = document.getElementById('main-content');
+
+      // 메인 콘텐츠 숨김
+      emptyState.classList.remove('hidden');
+      mainContent.style.display = 'none';
+
+      // 프로필 초기화 (UI만 - 데이터는 로그인 후 로드)
+      ProfileManager.init();
+
+      // 모달/오버레이 정리
+      document.getElementById('profile-modal')?.classList.add('hidden');
+      document.getElementById('add-stock-form')?.classList.add('hidden');
+      closeResultsOverlay();
+    }
+
+    /**
+     * 🔴 v4.29.0: 앱 초기화 (로그인 또는 오프라인 시작 후 호출)
+     */
+    function initializeApp() {
+      currentProfile = ProfileManager.getActive();
+
+      // Set current profile for SheetsSync
+      if (currentProfile) {
+        SheetsSync.setCurrentProfile(currentProfile.id);
+      }
+
+      // Load UI
+      updateProfileSelector();
+      loadProfileData();
+      loadBalanceData();
+    }
+
+    // =====================================================
+    // Profile Management
+    // =====================================================
+
+    function updateProfileSelector() {
+      const selector = document.getElementById('profile-selector');
+      const profiles = ProfileManager.getAllProfiles();
+      const activeId = ProfileManager.getActiveId();
+      const emptyState = document.getElementById('empty-state');
+      const mainContent = document.getElementById('main-content');
+
+      if (profiles.length === 0) {
+        // No profiles - show empty state
+        selector.innerHTML = '<option value="">➕ 프로필을 추가하세요</option>';
+        emptyState.classList.remove('hidden');
+        mainContent.style.display = 'none';  // inline style override
+      } else {
+        // Has profiles - show main content
+        emptyState.classList.add('hidden');
+        mainContent.style.display = '';  // restore default (lg:flex takes over)
+        selector.innerHTML = profiles.map(p => `
+          <option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>
+            👤 ${p.name}
+          </option>
+        `).join('');
+      }
+    }
+
+    function switchProfile(profileId) {
+      // 🔴 v4.14.0: 프로필 전환 전 현재 입력값 저장 (버그 수정)
+      if (currentProfile && selectedTicker) {
+        saveCurrentInputs(true);  // silent=true: 토스트 스팸 방지
+      }
+
+      // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+      // 이전 종목 데이터가 새 프로필에 저장되는 것 방지
+      selectedTicker = null;
+
+      // 🔴 v4.30.0 (B5-04): 프로필 전환 시 입력 필드 명시적 초기화
+      document.getElementById('input-principal').value = '';
+      document.getElementById('input-avgPrice').value = '';
+      document.getElementById('input-totalInvested').value = '';
+      document.getElementById('input-holdings').value = '';
+      document.getElementById('input-sellPercent').value = '10';
+      document.getElementById('input-locSellPercent').value = '5';
+      // 🔴 v4.30.0 (B5-14): 예수금도 초기화 (프로필 간 누수 방지)
+      document.getElementById('input-balance').value = '';
+      document.getElementById('input-commission').value = '';
+
+      ProfileManager.setActive(profileId);
+      currentProfile = ProfileManager.getActive();
+
+      // Update SheetsSync to use this profile's Sheet
+      SheetsSync.setCurrentProfile(profileId);
+
+      loadProfileData();
+      loadBalanceData();
+      document.getElementById('results-section').classList.add('hidden');
+      // 프로필 변경 시 이전 계산 상태/결과 제거
+      calculationResults = {};
+      lastCalculation = null;
+      const multiResults = document.getElementById('multi-results-section');
+      const accordion = document.getElementById('results-accordion');
+      if (multiResults) multiResults.classList.add('hidden');
+      if (accordion) accordion.innerHTML = '';
+      if (typeof closeResultsOverlay === 'function') {
+        closeResultsOverlay();
+      }
+
+      // 🔴 v4.29.6 (#32): 프로필 전환 시 예수금 상태 표시 (balance > 0이면)
+      // 기존: 항상 숨김 → 개선: balance가 있으면 상태 표시
+      recalculateBalance();
+    }
+
+    function loadProfileData() {
+      currentProfile = ProfileManager.getActive();
+      if (!currentProfile) return;
+
+      // Update ticker buttons based on profile stocks
+      updateTickerButtons();
+
+      // Select first stock (🔴 v4.16.0: 프로필에 종목이 없으면 선택하지 않음 - Bug 11 수정)
+      const firstStock = currentProfile.stocks[0];
+      if (firstStock) {
+        selectTicker(firstStock.symbol);
+      }
+      // else: selectedTicker = null 유지 (기본 종목 자동 저장 방지)
+
+      // P4: CashReserve 로드 (있으면 표시)
+      loadCashReserveData();
+    }
+
+    function updateTickerButtons() {
+      const container = document.getElementById('ticker-buttons');
+      if (!container) return;
+
+      // Get profile stocks or use defaults (TQQQ, SOXL only - no BITU)
+      const stocks = currentProfile?.stocks?.length > 0
+        ? currentProfile.stocks
+        : [{ symbol: 'TQQQ' }, { symbol: 'SOXL' }];
+
+      // 🔴 v4.28.0: 프로필 변경 시 enabledTickers 리셋
+      enabledTickers.clear();
+
+      container.innerHTML = stocks.map(s => {
+        // 🔴 v4.28.1: 필수값 체크 - AND 조건으로 변경 (계산 로직과 일치)
+        // avgPrice는 dailyData에서, principal은 stock에서 가져옴
+        const dailyData = ProfileManager.loadDailyData(currentProfile?.id, s.symbol) || {};
+        const avgPrice = dailyData.avgPrice || 0;
+        const principal = s.principal || 0;
+        const hasRequired = (avgPrice > 0 && principal > 0);
+        const isDisabled = !hasRequired;
+
+        // 필수값 있으면 기본 체크
+        if (hasRequired) {
+          enabledTickers.add(s.symbol);
+        }
+
+        return `
+          <div class="ticker-item flex items-center gap-2">
+            <input type="checkbox"
+                   id="ticker-check-${s.symbol}"
+                   class="ticker-checkbox w-5 h-5 accent-blue-500"
+                   ${hasRequired ? 'checked' : ''}
+                   ${isDisabled ? 'disabled' : ''}
+                   onchange="toggleTicker('${s.symbol}', this.checked)"
+                   title="${isDisabled ? '평단가 또는 세팅원금 입력 필요' : '계산 대상'}">
+            <button onclick="selectTicker('${s.symbol}')"
+                    class="ticker-btn flex-1 touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100 ${isDisabled ? 'opacity-50' : ''}"
+                    data-ticker="${s.symbol}">
+              ${s.symbol}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /**
+     * 🔴 v4.28.0: 종목 체크박스 토글 (#218)
+     */
+    function toggleTicker(symbol, checked) {
+      if (checked) {
+        enabledTickers.add(symbol);
+      } else {
+        enabledTickers.delete(symbol);
+      }
+      console.log('enabledTickers:', [...enabledTickers]);
+    }
+
+    // =====================================================
+    // Profile Modal
+    // =====================================================
+
+    function showProfileSettings() {
+      const modal = document.getElementById('profile-modal');
+      modal.classList.remove('hidden');
+
+      // Load current profile data
+      currentProfile = ProfileManager.getActive();
+      document.getElementById('modal-profile-name').value = currentProfile?.name || '';
+
+      // 🔴 v4.31.0 (B5-02): 모달 프로필 드롭다운 업데이트
+      updateModalProfileSelector();
+
+      // Load stocks list
+      updateModalStocksList();
+    }
+
+    /**
+     * 🔴 v4.31.0 (B5-02): 모달 내 프로필 드롭다운 업데이트
+     */
+    function updateModalProfileSelector() {
+      const selector = document.getElementById('modal-profile-selector');
+      if (!selector) return;
+
+      const profiles = ProfileManager.getAllProfiles();
+      const activeId = ProfileManager.getActiveId();
+
+      selector.innerHTML = profiles.map(p => `
+        <option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>
+          ${p.name}${p.id === activeId ? ' ✓' : ''}
+        </option>
+      `).join('');
+    }
+
+    /**
+     * 🔴 v4.31.0 (B5-02): 모달 내에서 프로필 전환
+     */
+    function switchProfileFromModal(profileId) {
+      if (!profileId || profileId === currentProfile?.id) return;
+
+      switchProfile(profileId);
+
+      // Update modal content
+      document.getElementById('modal-profile-name').value = currentProfile?.name || '';
+      updateModalStocksList();
+      updateModalProfileSelector();
+
+      showToast(`프로필 '${currentProfile?.name}' 로 전환됨`, 'success', 1500);
+    }
+
+    /**
+     * 🔴 v4.31.0 (B5-06): 메인에서 빠른 동기화
+     */
+    async function quickSyncToCloud() {
+      if (!SheetsSync.isAuthenticated()) {
+        showToast('먼저 Google 로그인이 필요합니다', 'warning');
+        return;
+      }
+
+      // 동기화 버튼 비활성화 (중복 클릭 방지)
+      const btn = document.getElementById('header-sync-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      }
+
+      try {
+        await syncToCloud();
+      } catch (e) {
+        console.error('quickSyncToCloud error:', e);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i>';
+        }
+      }
+    }
+
+    /**
+     * 🔴 v4.31.0 (B5-10): 동기화 상태 업데이트
+     * @param {'local'|'synced'|'pending'} status
+     */
+    function updateSyncStatus(status) {
+      const statusEl = document.getElementById('header-sync-status');
+      if (!statusEl) return;
+
+      statusEl.classList.remove('hidden');
+
+      const statusConfig = {
+        local: { icon: 'circle', color: 'bg-gray-200 text-gray-500', text: '로컬' },
+        synced: { icon: 'check-circle', color: 'bg-green-100 text-green-600', text: '동기화됨' },
+        pending: { icon: 'exclamation-circle', color: 'bg-yellow-100 text-yellow-600', text: '대기중' }
+      };
+
+      const cfg = statusConfig[status] || statusConfig.local;
+      statusEl.className = `text-xs px-2 py-0.5 rounded-full ${cfg.color}`;
+      statusEl.innerHTML = `<i class="fas fa-${cfg.icon} text-[6px] mr-1"></i><span>${cfg.text}</span>`;
+    }
+
+    /**
+     * 🔴 v4.30.0 (B5-01): 프로필 이름 변경 즉시 저장
+     */
+    function saveProfileName() {
+      if (!currentProfile) return;
+
+      const newName = document.getElementById('modal-profile-name').value.trim();
+      if (!newName) return;
+
+      ProfileManager.update(currentProfile.id, { name: newName });
+      currentProfile = ProfileManager.getActive();
+
+      // Update UI
+      updateProfileSelector();
+      showToast('프로필 이름이 저장되었습니다', 'success', 1000);
+
+      // Sync to cloud
+      triggerAutoSync();
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal').classList.add('hidden');
+      document.getElementById('add-stock-form').classList.add('hidden');
+    }
+
+    function updateModalStocksList() {
+      const container = document.getElementById('modal-stocks-list');
+      const stocks = currentProfile?.stocks || [];
+
+      if (stocks.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">등록된 종목이 없습니다</p>';
+        return;
+      }
+
+      container.innerHTML = stocks.map(s => `
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+          <div>
+            <span class="font-medium">${s.symbol}</span>
+            <span class="text-xs text-gray-500 ml-2">$${(s.principal || 0).toLocaleString()}</span>
+          </div>
+          <button onclick="removeStockFromProfile('${s.symbol}')" class="text-red-400 hover:text-red-600">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function showAddStockForm() {
+      document.getElementById('add-stock-form').classList.remove('hidden');
+    }
+
+    function hideAddStockForm() {
+      document.getElementById('add-stock-form').classList.add('hidden');
+      document.getElementById('new-stock-symbol').value = '';
+      document.getElementById('new-stock-principal').value = '';
+    }
+
+    function addNewStock() {
+      // 🔴 v4.29.0: null guard 추가
+      if (!currentProfile) {
+        showToast('프로필을 먼저 선택하세요', 'warning');
+        return;
+      }
+
+      const symbol = document.getElementById('new-stock-symbol').value.toUpperCase().trim();
+      const principal = parseFloat(document.getElementById('new-stock-principal').value) || 0;
+
+      if (!symbol) {
+        showToast('종목코드를 입력하세요', 'warning');
+        return;
+      }
+
+      // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+      // - TQQQ: 10%, 5%  / SOXL: 12%, 5%  / 기타: 10%, 5%
+      const sellPercent = symbol === 'SOXL' ? 12 : 10;
+      const locSellPercent = 5;
+      ProfileManager.addStock(currentProfile.id, { symbol, principal, sellPercent, locSellPercent });
+      currentProfile = ProfileManager.getActive();
+
+      hideAddStockForm();
+      updateModalStocksList();
+
+      // 🔴 v4.29.5: 메인 화면 티커 버튼 업데이트
+      updateTickerButtons();
+      showToast(`${symbol} 종목 추가됨`, 'success');
+
+      // 🔴 v4.29.5: 시트 동기화 트리거
+      triggerAutoSync();
+    }
+
+    function removeStockFromProfile(symbol) {
+      // 🔴 v4.29.0: null guard 추가
+      if (!currentProfile) {
+        showToast('프로필을 먼저 선택하세요', 'warning');
+        return;
+      }
+
+      if (confirm(`${symbol} 종목을 삭제하시겠습니까?`)) {
+        ProfileManager.removeStock(currentProfile.id, symbol);
+        currentProfile = ProfileManager.getActive();
+        updateModalStocksList();
+
+        // 🔴 v4.29.5: 메인 화면 티커 버튼 업데이트
+        updateTickerButtons();
+
+        // 삭제된 종목이 현재 선택된 종목이면 첫 번째 종목 선택
+        if (selectedTicker === symbol) {
+          const firstStock = currentProfile.stocks[0];
+          if (firstStock) {
+            selectTicker(firstStock.symbol);
+          } else {
+            selectedTicker = null;
+          }
+        }
+
+        showToast(`${symbol} 종목 삭제됨`, 'success');
+        triggerAutoSync();
+      }
+    }
+
+    /**
+     * 🔴 클라우드 동기화 (v4.12.0)
+     * - 로컬 저장은 onchange에서 자동 처리됨
+     * - 이 버튼은 클라우드(Google Sheets) 동기화만 담당
+     * 🔴 v4.29.0: null guard 추가
+     */
+    async function syncToCloud() {
+      // 🔴 v4.29.0: null guard
+      if (!currentProfile) {
+        showToast('프로필을 먼저 선택하세요', 'warning');
+        return;
+      }
+
+      // 1. 현재 입력값 최종 저장 (혹시 모를 미저장 데이터)
+      saveCurrentInputs();
+
+      // 🔴 v4.30.0 (#3): 동기화 전 필수값 체크
+      const stocks = currentProfile?.stocks || [];
+      const hasValidStock = stocks.some(s => s.principal > 0);
+      if (!hasValidStock) {
+        showToast('⚠️ 세팅원금이 입력된 종목이 없어 동기화를 중단합니다', 'warning', 3000);
+        updateSyncStatus('pending');
+        return;
+      }
+
+      // 2. 프로필 이름 업데이트
+      const name = document.getElementById('modal-profile-name').value.trim();
+      if (name) {
+        ProfileManager.update(currentProfile.id, { name });
+        currentProfile = ProfileManager.getActive();
+      }
+
+      // 3. Google Sheets 동기화
+      if (!SheetsSync.isAuthenticated()) {
+        showToast('Google 로그인이 필요합니다', 'warning');
+        // 로그인 시도
+        try {
+          await initSheets();
+          if (!SheetsSync.isAuthenticated()) {
+            return;
+          }
+        } catch (e) {
+          return;
+        }
+      }
+
+      try {
+        showToast('시트 동기화 중...', 'info', 2000);
+        await SheetsSync.push();
+        showToast('클라우드 동기화 완료!', 'success');
+        // 🔴 v4.31.0 (B5-10): 동기화 상태 업데이트
+        updateSyncStatus('synced');
+      } catch (error) {
+        console.error('Sync error:', error);
+        showToast('동기화 실패: ' + error.message, 'error');
+        updateSyncStatus('pending'); // 실패 시 대기 상태
+      }
+
+      updateProfileSelector();
+      closeProfileModal();
+    }
+
+    /**
+     * 프로필 설정 저장 (이름만 - 레거시 호환)
+     */
+    async function saveProfileSettings() {
+      const name = document.getElementById('modal-profile-name').value.trim();
+      if (!name) {
+        showToast('프로필 이름을 입력하세요', 'warning');
+        return;
+      }
+      ProfileManager.update(currentProfile.id, { name });
+      currentProfile = ProfileManager.getActive();
+      showToast('프로필 이름 저장됨', 'success');
+      updateProfileSelector();
+    }
+
+    /**
+     * Quick Start - Google 로그인 → 시트에서 불러오기
+     */
+    /**
+     * 🔴 v4.29.0: Google 로그인으로 시작
+     * - 시트에서 데이터 가져오기
+     * - 시트 = SSOT (Single Source of Truth)
+     */
+    async function quickStart() {
+      try {
+        // 1. Google 로그인
+        showToast('Google 로그인 중...', 'info');
+        await initSheets();
+
+        const userEmail = SheetsSync.getUserEmail();
+        if (!userEmail) {
+          showToast('로그인 실패', 'error');
+          return;
+        }
+
+        showToast(`${userEmail} 로그인 완료`, 'success');
+
+        // 🔴 v4.29.0: 기존 로컬 데이터 클리어 (다른 계정 데이터 충돌 방지)
+        ProfileManager.resetToDefaults();
+        selectedTicker = null;
+
+        // 2. 시트에서 프로필 가져오기 (핵심 변경)
+        const sheetProfiles = await SheetsSync.getMyProfilesFromSheet();
+
+        if (sheetProfiles.length === 0) {
+          // 시트에 데이터 없음 → 새 프로필 생성
+          showToast('새 사용자 - 프로필을 생성합니다', 'info');
+          const profileName = userEmail.split('@')[0];
+          const profileId = ProfileManager.create(profileName, '');
+          ProfileManager.setActive(profileId);
+          currentProfile = ProfileManager.getActive();
+          SheetsSync.setCurrentProfile(profileId);
+        } else {
+          // 시트에서 프로필 로드
+          await pullAllProfiles(sheetProfiles);
+          showToast(`${sheetProfiles.length}개 프로필 불러옴`, 'success');
+        }
+
+        // 3. UI 업데이트 (initializeApp 호출)
+        initializeApp();
+
+        // 4. Sheets 상태 표시
+        const userEl = document.getElementById('sheets-user');
+        const statusEl = document.getElementById('sheets-status');
+        if (userEl) {
+          userEl.textContent = userEmail;
+          userEl.classList.remove('hidden');
+        }
+        if (statusEl) {
+          statusEl.textContent = '연결됨';
+          statusEl.className = 'text-xs text-green-600';
+        }
+        // 🔴 v4.29.1: 로그아웃 버튼 표시
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
+
+        // 🔴 v4.31.0 (B5-06, B5-10): 헤더 동기화 버튼 + 상태 표시
+        const headerSyncBtn = document.getElementById('header-sync-btn');
+        if (headerSyncBtn) headerSyncBtn.classList.remove('hidden');
+        updateSyncStatus('synced');
+
+      } catch (error) {
+        console.error('Quick start error:', error);
+        showToast('시작 실패: ' + error.message, 'error');
+
+        // 폴백: 오프라인 모드 제안
+        if (confirm('Google 연동 실패.\n오프라인 모드로 시작하시겠습니까?')) {
+          quickStartOffline();
+        }
+      }
+    }
+
+    /**
+     * 🔴 v4.29.0: 오프라인 모드로 시작 (로컬 전용)
+     * - Google 동기화 없음
+     * - 로컬 스토리지에만 저장
+     */
+    function quickStartOffline() {
+      const name = prompt('프로필 이름을 입력하세요:', '내 프로필');
+      if (!name) return;
+
+      // 🔴 v4.29.0: 기존 로컬 데이터 클리어 (깨끗한 시작)
+      ProfileManager.resetToDefaults();
+      selectedTicker = null;
+
+      const newId = ProfileManager.create(name, '');
+      ProfileManager.setActive(newId);
+      currentProfile = ProfileManager.getActive();
+
+      initializeApp();
+      showToast('⚠️ 오프라인 모드 - Google 동기화 없음', 'warning');
+    }
+
+
+    function createNewProfile() {
+      // 🔴 v4.22.0: 자동 이름 생성 (사용자1, 사용자2...)
+      const allProfiles = ProfileManager.getAllProfiles();
+      let maxNum = 0;
+      allProfiles.forEach(p => {
+        const match = p.name.match(/^사용자(\d+)$/);
+        if (match) maxNum = Math.max(maxNum, parseInt(match[1]));
+      });
+      const name = `사용자${maxNum + 1}`;
+
+      // 🔴 v4.15.0: 현재 입력값 저장 후 selectedTicker 초기화 (Bug 6 수정)
+      if (currentProfile && selectedTicker) {
+        saveCurrentInputs(true);
+      }
+      selectedTicker = null;
+
+      const newId = ProfileManager.create(name, '');
+      ProfileManager.setActive(newId);
+      currentProfile = ProfileManager.getActive();
+
+      // Update SheetsSync to use new profile's Sheet
+      SheetsSync.setCurrentProfile(newId);
+
+      updateProfileSelector();
+      loadProfileData();
+      loadBalanceData();
+      // 🔴 v4.22.0: 모달 유지 (closeProfileModal 제거)
+      document.getElementById('modal-profile-name').value = name;
+      showToast(`✅ ${name} 생성됨`, 'success');
+    }
+
+    function exportCurrentProfile() {
+      const json = ProfileManager.exportProfile(currentProfile.id);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ib-profile-${currentProfile.id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importProfile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const newId = ProfileManager.importProfile(ev.target.result);
+          if (newId) {
+            ProfileManager.setActive(newId);
+            updateProfileSelector();
+            loadProfileData();
+            closeProfileModal();
+            showToast('프로필을 가져왔습니다', 'success');
+          } else {
+            showToast('프로필 가져오기 실패', 'error');
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    // =====================================================
+    // Genie RPA .dat File Import
+    // =====================================================
+
+    /**
+     * Parse Genie RPA .dat file format
+     * Format: 0|SYMBOL|PRINCIPAL|STAR%|T%|VERSION|DIVISIONS|QTY|?|?
+     * Example: 0|SOXL|16000|12%|6%|V2.2|40||0|0
+     */
+    function parseDatFile(content) {
+      const lines = content.split(/\r?\n/).filter(line => line.trim());
+      const stocks = [];
+
+      for (const line of lines) {
+        const parts = line.split('|');
+        if (parts.length < 7) continue;
+
+        const symbol = parts[1]?.trim();
+        if (!symbol) continue;
+
+        const principal = parseFloat(parts[2]) || 0;
+        const starPercent = parseFloat(parts[3]?.replace('%', '')) || 0;
+        const tPercent = parseFloat(parts[4]?.replace('%', '')) || 0;
+        const divisions = parseInt(parts[6]) || 40;
+
+        // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+        const sellPercent = symbol === 'SOXL' ? 12 : 10;
+        const locSellPercent = 5;
+
+        stocks.push({
+          symbol,
+          principal,
+          sellPercent,
+          locSellPercent,
+          starPercent,  // For reference
+          tPercent,     // For reference
+          divisions
+        });
+      }
+
+      return stocks;
+    }
+
+    function importDatFile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.dat,.txt';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const content = ev.target.result;
+            const stocks = parseDatFile(content);
+
+            if (stocks.length === 0) {
+              alert('파일에서 종목 데이터를 찾을 수 없습니다');
+              return;
+            }
+
+            // Ask user what to do
+            const action = confirm(
+              `${stocks.length}개 종목을 찾았습니다:\n` +
+              stocks.map(s => `  • ${s.symbol}: $${s.principal.toLocaleString()}`).join('\n') +
+              `\n\n현재 프로필에 추가하시겠습니까?\n` +
+              `[확인] = 현재 프로필에 추가\n` +
+              `[취소] = 새 프로필로 생성`
+            );
+
+            if (action && currentProfile) {
+              // Replace current profile stocks (기존 종목 삭제 후 새 종목으로 교체)
+              // 1. 기존 종목 모두 삭제
+              const existingStocks = [...(currentProfile.stocks || [])];
+              existingStocks.forEach(s => {
+                ProfileManager.removeStock(currentProfile.id, s.symbol);
+              });
+              // 2. 새 종목 추가
+              stocks.forEach(stock => {
+                ProfileManager.addStock(currentProfile.id, stock);
+              });
+              currentProfile = ProfileManager.getActive();
+              updateModalStocksList();
+              updateTickerButtons();
+              showToast(`${stocks.length}개 종목으로 교체되었습니다`, 'success');
+            } else {
+              // Create new profile
+              const name = prompt('새 프로필 이름:', file.name.replace('.dat', ''));
+              if (!name) return;
+
+              // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
+              if (currentProfile && selectedTicker) {
+                saveCurrentInputs(true);
+              }
+              selectedTicker = null;
+
+              const newId = ProfileManager.create(name, '');
+              stocks.forEach(stock => {
+                ProfileManager.addStock(newId, stock);
+              });
+              ProfileManager.setActive(newId);
+              currentProfile = ProfileManager.getActive();
+              SheetsSync.setCurrentProfile(newId);
+
+              updateProfileSelector();
+              loadProfileData();
+              closeProfileModal();
+              alert(`새 프로필 "${name}"이(가) 생성되었습니다`);
+            }
+          } catch (error) {
+            console.error('DAT file parse error:', error);
+            alert('파일 파싱 오류: ' + error.message);
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    // =====================================================
+    // Daily Data Persistence
+    // =====================================================
+
+    /**
+     * 🔴 모든 현재 입력값 저장 (v4.14.0)
+     * - dailyData (평단가, 총매입금, 수량)
+     * - stock settings (세팅원금, 매도%)
+     * @param {boolean} silent - true면 토스트 안보여줌 (종목/프로필 전환 시)
+     */
+    function saveCurrentInputs(silent = false) {
+      if (!currentProfile || !selectedTicker) return;
+
+      // 2. Stock settings 저장 (세팅원금, AFTER%, LOC%)
+      // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+      const principal = parseFloat(document.getElementById('input-principal').value) || 0;
+      const sellPercent = parseFloat(document.getElementById('input-sellPercent').value) || (selectedTicker === 'SOXL' ? 12 : 10);
+      const locSellPercent = parseFloat(document.getElementById('input-locSellPercent').value) || 5;
+
+      // 🔴 v4.16.0: 프로필에 없는 종목 + principal이 0이면 저장하지 않음 (Bug 11 수정)
+      // 기본 버튼 클릭만으로 빈 종목이 추가되는 것 방지
+      const existingStock = ProfileManager.getStock(selectedTicker);
+      if (!existingStock && principal <= 0) {
+        console.log(`saveCurrentInputs: SKIP ${selectedTicker} (not in profile, principal=0)`);
+        return;
+      }
+
+      // 1. Daily data 저장 (종목이 저장될 때만)
+      saveDailyInputs();
+
+      ProfileManager.addStock(currentProfile.id, {
+        symbol: selectedTicker,
+        principal: principal,
+        sellPercent: sellPercent,
+        locSellPercent: locSellPercent
+      });
+
+      // 3. 자동 저장 피드백 (silent 모드에선 안보여줌)
+      if (!silent) {
+        showToast('✓ 자동 저장됨', 'success', 800);
+      }
+
+      console.log(`saveCurrentInputs: ${selectedTicker} principal=${principal}, sellPercent=${sellPercent}, locSellPercent=${locSellPercent}`);
+
+      // 🔴 v4.31.0 (B5-10): 데이터 변경 시 동기화 상태 '대기중'으로 변경
+      if (SheetsSync.isAuthenticated()) {
+        updateSyncStatus('pending');
+      }
+
+      // 🔴 v4.20.0: Auto-sync to Google Sheets (debounced)
+      triggerAutoSync();
+
+      // 🔴 v4.30.0 (B5-05/B5-12): 체크박스 상태 갱신 (입력값 저장 후)
+      // 최신 Profile 데이터를 다시 불러온 뒤 버튼을 갱신해야 방금 입력값이 반영됨
+      currentProfile = ProfileManager.getActive();
+      updateTickerButtons();
+
+      // 버튼 DOM이 재생성되므로 기존 선택 종목의 상태를 복원
+      if (selectedTicker) {
+        selectTicker(selectedTicker);
+      }
+    }
+
+    function saveDailyInputs() {
+      if (!currentProfile || !selectedTicker) return;
+
+      const data = {
+        avgPrice: parseFloat(document.getElementById('input-avgPrice').value) || 0,
+        totalInvested: parseFloat(document.getElementById('input-totalInvested').value) || 0,
+        holdings: parseInt(document.getElementById('input-holdings').value) || 0
+      };
+
+      ProfileManager.saveDailyData(currentProfile.id, selectedTicker, data);
+      console.log(`saveDailyInputs: ${selectedTicker}`, data);
+    }
+
+    /**
+     * 🔴 v4.30.0 (#10): 현재가 표시 (평단가 옆)
+     */
+    async function updateCurrentPriceDisplay(ticker) {
+      const priceValue = document.getElementById('price-value');
+      const priceBadge = document.getElementById('price-source-badge');
+      if (!priceValue) return;
+
+      priceValue.textContent = '불러오는 중…';
+      if (priceBadge) {
+        priceBadge.classList.add('hidden');
+      }
+
+      try {
+        const priceData = await SheetsSync.getCurrentPriceWithSource(ticker);
+
+        if (priceData && priceData.price > 0) {
+          priceValue.textContent = `$${priceData.price.toFixed(2)}`;
+
+          if (priceBadge && priceData.source) {
+            if (priceData.source === 'PRE') {
+              priceBadge.textContent = '(Pre)';
+              priceBadge.className = 'text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700';
+              priceBadge.classList.remove('hidden');
+            } else if (priceData.source === 'POST') {
+              priceBadge.textContent = '(After)';
+              priceBadge.className = 'text-xs font-medium px-1.5 py-0.5 rounded bg-purple-100 text-purple-700';
+              priceBadge.classList.remove('hidden');
+            } else {
+              priceBadge.classList.add('hidden');
+            }
+          }
+        } else {
+          priceValue.textContent = '데이터 없음';
+        }
+      } catch (e) {
+        console.warn('현재가 조회 실패:', e.message);
+        priceValue.textContent = '조회 실패';
+      }
+    }
+
+    /**
+     * 🔴 v4.30.0 (B5-11): 평단가 자동 계산
+     * 총매입금 / 보유수량 = 평단가
+     */
+    function autoCalcAvgPrice() {
+      const totalInvested = parseFloat(document.getElementById('input-totalInvested').value) || 0;
+      const holdings = parseInt(document.getElementById('input-holdings').value) || 0;
+      const avgInput = document.getElementById('input-avgPrice');
+
+      if (totalInvested > 0 && holdings > 0) {
+        const avgPrice = (totalInvested / holdings).toFixed(4);
+        avgInput.value = avgPrice;
+        console.log(`autoCalcAvgPrice: ${totalInvested} / ${holdings} = ${avgPrice}`);
+      } else {
+        avgInput.value = '';
+      }
+    }
+
+    function loadDailyInputs() {
+      if (!currentProfile) return;
+
+      // 🔴 v4.14.0: 먼저 필드 초기화 (종목 간 데이터 공유 버그 수정)
+      document.getElementById('input-avgPrice').value = '';
+      document.getElementById('input-totalInvested').value = '';
+      document.getElementById('input-holdings').value = '';
+
+      const data = ProfileManager.loadDailyData(currentProfile.id, selectedTicker);
+      if (data) {
+        if (data.avgPrice) document.getElementById('input-avgPrice').value = data.avgPrice;
+        if (data.totalInvested) document.getElementById('input-totalInvested').value = data.totalInvested;
+        if (data.holdings) document.getElementById('input-holdings').value = data.holdings;
+      }
+    }
+
+    // =====================================================
+    // Ticker Selection
+    // =====================================================
+
+    function selectTicker(ticker) {
+      // 🔴 종목 전환 전에 현재 입력값 저장 (v4.11.0 버그 수정)
+      // 🔴 v4.15.0: silent=true 추가 (토스트 스팸 방지)
+      if (selectedTicker && selectedTicker !== ticker) {
+        saveCurrentInputs(true);
+      }
+
+      selectedTicker = ticker;
+
+      // Update UI
+      document.querySelectorAll('.ticker-btn').forEach(btn => {
+        const isSelected = btn.dataset.ticker === ticker;
+        btn.classList.toggle('bg-blue-500', isSelected);
+        btn.classList.toggle('text-white', isSelected);
+        btn.classList.toggle('bg-gray-100', !isSelected);
+        btn.classList.toggle('text-gray-600', !isSelected);
+      });
+
+      // Load stock settings from profile (v4.21.1: AFTER% + LOC%)
+      // 🔴 v4.29.5: principal 기본값 13000 버그 수정 - 없으면 빈값
+      // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+      const stock = ProfileManager.getStock(ticker);
+      const defaultSellPercent = ticker === 'SOXL' ? 12 : 10;
+      const defaultLocPercent = 5;
+      if (stock) {
+        document.getElementById('input-principal').value = stock.principal || '';
+        document.getElementById('input-sellPercent').value = stock.sellPercent || defaultSellPercent;
+        document.getElementById('input-locSellPercent').value = stock.locSellPercent || defaultLocPercent;
+      } else {
+        // 🔴 v4.16.0: 종목이 프로필에 없으면 input-principal도 초기화 (Bug 11 수정)
+        // 이전 프로필의 값이 새 프로필에 저장되는 것 방지
+        document.getElementById('input-principal').value = '';
+        document.getElementById('input-sellPercent').value = defaultSellPercent;
+        document.getElementById('input-locSellPercent').value = defaultLocPercent;
+      }
+
+      // Load saved daily inputs
+      loadDailyInputs();
+
+      // 🔴 v4.30.0 (#10): 현재가 표시 (평단가 옆)
+      updateCurrentPriceDisplay(ticker);
+
+      // 🔴 v4.17.0: 종목 전환 시 모든 결과 영역 초기화 (Bug 12 수정)
+      document.getElementById('results-section').classList.add('hidden');
+      // PC 결과 영역도 초기화
+      const resultsPC = document.getElementById('results-pc');
+      if (resultsPC) {
+        resultsPC.innerHTML = `
+          <div class="text-center text-gray-400 py-8">
+            <i class="fas fa-calculator text-4xl mb-2"></i>
+            <p>주문 계산 버튼을 눌러주세요</p>
+          </div>
+        `;
+      }
+      // 모바일 오버레이 닫기
+      document.getElementById('results-overlay')?.classList.add('hidden');
+      document.body.style.overflow = '';
+      // lastCalculation 초기화
+      lastCalculation = null;
+    }
+
+    // =====================================================
+    // Current Price Fetch (100xFenok Ticker API)
+    // =====================================================
+
+    /**
+     * 재계산 버튼
+     */
+    function recalculate() {
+      if (hasRequiredInputs()) {
+        calculateOrders();
+        showToast('계산 완료', 'success', 1500);
+      } else {
+        showToast('평단가와 세팅원금을 입력하세요', 'warning');
+      }
+    }
+
+    // =====================================================
+    // Holdings Quick Adjust (UX Enhancement)
+    // =====================================================
+
+    /**
+     * 보유 수량 빠른 조정 (+버튼)
+     */
+    function adjustHoldings(amount) {
+      const input = document.getElementById('input-holdings');
+      const current = parseInt(input.value) || 0;
+      input.value = current + amount;
+
+      // Trigger save and recalculate
+      saveDailyInputs();
+      if (hasRequiredInputs()) {
+        calculateOrders();
+      }
+
+      // Visual feedback
+      input.classList.add('ring-2', 'ring-green-400');
+      setTimeout(() => input.classList.remove('ring-2', 'ring-green-400'), 300);
+    }
+
+    /**
+     * 오늘 매수량 헬퍼 표시
+     */
+    function showTodayBuyHelper(quantity, ticker) {
+      const helper = document.getElementById('today-buy-helper');
+      const qtySpan = document.getElementById('today-buy-qty');
+      const compareEl = document.getElementById('yesterday-buy-compare');
+
+      if (quantity > 0) {
+        helper.classList.remove('hidden');
+        qtySpan.textContent = quantity;
+        if (compareEl) {
+          compareEl.classList.add('hidden');
+          compareEl.textContent = '';
+        }
+        updateYesterdayBuyCompare(ticker);
+      } else {
+        helper.classList.add('hidden');
+        if (compareEl) {
+          compareEl.classList.add('hidden');
+          compareEl.textContent = '';
+        }
+      }
+    }
+
+    async function updateYesterdayBuyCompare(ticker) {
+      const compareEl = document.getElementById('yesterday-buy-compare');
+      if (!compareEl) return;
+      if (!ticker || typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated() || !currentProfile) {
+        compareEl.classList.add('hidden');
+        compareEl.textContent = '';
+        return;
+      }
+
+      try {
+        const qty = await SheetsSync.getYesterdayBuyQuantity(currentProfile.id, ticker);
+        if (qty > 0) {
+          compareEl.textContent = `(어제: ${qty}주 매수함)`;
+          compareEl.classList.remove('hidden');
+        } else {
+          compareEl.classList.add('hidden');
+          compareEl.textContent = '';
+        }
+      } catch (error) {
+        console.warn('Yesterday buy compare error:', error);
+        compareEl.classList.add('hidden');
+        compareEl.textContent = '';
+      }
+    }
+
+    /**
+     * 오늘 매수량을 수량에 추가
+     */
+    function applyTodayBuy() {
+      if (!lastCalculation) return;
+
+      const allBuyOrders = lastCalculation.buyOrders || [];
+      const totalBuyQty = allBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
+
+      // 1. 수량 추가 (adjustHoldings 내부에서 saveDailyInputs 호출)
+      adjustHoldings(totalBuyQty);
+
+      // 2. 총매입금 업데이트
+      const totalAmount = allBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
+      const investedInput = document.getElementById('input-totalInvested');
+      const currentInvested = parseFloat(investedInput.value) || 0;
+      investedInput.value = (currentInvested + totalAmount).toFixed(2);
+
+      // 🔴 v4.14.0: totalInvested 변경 후 저장 (버그 수정)
+      saveDailyInputs();
+
+      // Hide helper
+      document.getElementById('today-buy-helper').classList.add('hidden');
+
+      // Show feedback
+      alert(`✅ 수량 +${totalBuyQty}주, 매입금 +$${totalAmount.toFixed(2)} 추가됨\n\n내일 다시 계산하세요!`);
+    }
+
+    // =====================================================
+    // Copy Functions (UX Enhancement)
+    // =====================================================
+
+    /**
+     * 개별 주문 복사 (v4.22.0: 가격만, 달러표시 제거)
+     */
+    async function copyOrder(btn, price, quantity) {
+      // 🔴 v4.29.4 (C-08): copyToClipboard 사용
+      const text = `${price}`;
+      const success = await copyToClipboard(text);
+      if (success) {
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fas fa-copy"></i>';
+          btn.classList.remove('copied');
+        }, 1500);
+      } else {
+        console.error('클립보드 복사 실패');
+        showToast('복사 실패', 'error');
+      }
+    }
+
+    /**
+     * 다중 결과용 금액 단일 복사
+     */
+    async function copyPriceValue(btn, price) {
+      const numeric = parseFloat(price).toFixed(2).replace(/\.00$/, '');
+      const success = await copyToClipboard(numeric);
+      if (success && btn) {
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = numeric;
+        }, 1200);
+      }
+      if (!success) {
+        showToast('복사 실패', 'error');
+      }
+    }
+
+    async function copyQuantityValue(btn, quantity) {
+      const numeric = `${parseInt(quantity, 10) || 0}`;
+      const success = await copyToClipboard(numeric);
+      if (success && btn) {
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `${numeric}주`;
+        }, 1200);
+      }
+      if (!success) {
+        showToast('복사 실패', 'error');
+      }
+    }
+
+    /**
+     * 전체 주문 복사 (섹션별)
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
+     */
+    async function copyAllOrders(type) {
+      if (!lastCalculation) return;
+
+      let orders = [];
+      let sectionLabel = '';
+
+      if (type === 'buy') {
+        orders = lastCalculation.buyOrders;
+        sectionLabel = '매수';
+      } else if (type === 'sell') {
+        orders = lastCalculation.sellOrders;
+        sectionLabel = '매도';
+      } else if (type === 'decline') {
+        orders = lastCalculation.buyOrders.filter(o => o.type.includes('하락대비'));
+        sectionLabel = '하락대비';
+      }
+
+      if (orders.length === 0) {
+        showToast('복사할 주문이 없습니다', 'warning');
+        return;
+      }
+
+      const priceLines = orders.map(o => {
+        const formatted = parseFloat(o.price).toFixed(2);
+        return formatted.endsWith('.00') ? formatted.replace('.00', '') : formatted;
+      });
+      const text = priceLines.join('\n');
+      const success = await copyToClipboard(text);
+      if (success) {
+        const message = sectionLabel ? `${sectionLabel} 금액이 복사되었습니다` : '금액이 복사되었습니다';
+        showToast(message, 'success');
+      } else {
+        showToast('복사 실패', 'error');
+      }
+    }
+
+    /**
+     * #219: 전체 주문 복사 (매수(하락대비 포함)+매도 전체)
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
+     */
+    function formatDollarShort(value) {
+      const numeric = Number(value || 0);
+      if (!Number.isFinite(numeric)) return '$0';
+      const formatted = IBCalculator.formatDollar(numeric, 2);
+      return formatted.replace(/\\.00$/, '');
+    }
+
+    function formatOrderLine(order) {
+      const label = formatOrderLabel(order);
+      return `  ${label}: ${order.quantity}주 x $${formatOrderPrice(order.price)}`;
+    }
+
+    async function copyAllOrdersTotal() {
+      if (!lastCalculation) {
+        showToast('먼저 계산을 실행하세요', 'warning');
+        return;
+      }
+
+      await ensureCashReservePrices();
+
+      const { buyOrders, sellOrders, quarterStopLoss, calculation, input } = lastCalculation;
+      const headerLine = `【${lastCalculation.ticker}】 T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
+
+      const lines = [
+        `📊 ${lastCalculation.ticker} 오늘의 주문`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        headerLine
+      ];
+
+      const cashAction = buildCashReserveAction();
+      if (cashAction) {
+        const verb = cashAction.side === 'BUY' ? '매수' : '매도';
+        lines.push('', '💵 현금성 자산');
+        lines.push(`  ${cashAction.symbol} ${verb} (MOC): ${cashAction.quantity}주`);
+      }
+
+      lines.push('', '📉 매수 (LOC)', ...buyOrders.map(o => formatOrderLine(o)));
+
+      if (quarterStopLoss && quarterStopLoss.active) {
+        lines.push('', '🔴 쿼터손절 (MOC)');
+        lines.push(`  MOC 매도: ${quarterStopLoss.mocQuantity}주`);
+      } else {
+        lines.push('', '📈 매도');
+        lines.push(...sellOrders.map(o => formatOrderLine(o)));
+      }
+
+      lines.push('', `━━━━━━━━━━━━━━━━━━━━`);
+
+      const text = lines.join('\n');
+      const success = await copyToClipboard(text);
+      if (success) {
+        showToast('전체 주문이 복사되었습니다', 'success');
+      } else {
+        showToast('복사 실패', 'error');
+      }
+    }
+
+    /**
+     * #216: 쿼터손절 체크박스 핸들러
+     */
+    function handleQuarterStopChange() {
+      const checkbox = document.getElementById('quarter-stop-checkbox');
+      const contentEl = document.getElementById('quarter-stop-loss-content');
+      const mocOrderEl = document.getElementById('quarter-stop-moc-order');
+
+      if (checkbox.checked) {
+        contentEl.classList.remove('hidden');
+        mocOrderEl.classList.remove('hidden');
+      } else {
+        contentEl.classList.add('hidden');
+        mocOrderEl.classList.add('hidden');
+      }
+    }
+
+    /**
+     * #216: MOC 주문 복사
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
+     */
+    async function copyMocOrder() {
+      if (!lastCalculation || !lastCalculation.quarterStopLoss) return;
+
+      const { quarterStopLoss } = lastCalculation;
+      const text = `🔴 ${selectedTicker} MOC 매도: ${quarterStopLoss.mocQuantity}주\n(쿼터손절 - 종가 주문)`;
+
+      const success = await copyToClipboard(text);
+      if (success) {
+        showToast('MOC 주문이 복사되었습니다', 'success');
+      } else {
+        showToast('복사 실패', 'error');
+      }
+    }
+
+    // =====================================================
+    // Calculate Orders
+    // =====================================================
+
+    function hasRequiredInputs() {
+      const avgPrice = parseFloat(document.getElementById('input-avgPrice').value);
+      const principal = parseFloat(document.getElementById('input-principal').value);
+      // 현재가는 선택 - 없으면 별%가만 사용
+      return avgPrice > 0 && principal > 0;
+    }
+
+    async function calculateOrders() {
+      // 🔴 v4.29.0: selectedTicker null guard
+      if (!selectedTicker) {
+        showToast('종목을 먼저 선택하세요', 'warning');
+        return;
+      }
+
+      // Gather inputs
+      // 🔴 v4.21.2: sellPercent 전달 (Ralph Loop 발견)
+      // Note: locSellPercent는 표시용 - LOC 가격은 별%가로 자동 계산
+      // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+      const defaultSellPercent = selectedTicker === 'SOXL' ? 12 : 10;
+
+      // 🔴 #211: 현재가 자동 조회 (Prices 시트에서)
+      let currentPrice = 0;
+      try {
+        if (SheetsSync.isAuthenticated()) {
+          currentPrice = await SheetsSync.getCurrentPrice(selectedTicker);
+          if (currentPrice > 0) {
+            console.log(`📊 ${selectedTicker} 현재가: $${currentPrice} (가격캡 활성화)`);
+          }
+        }
+      } catch (e) {
+        // 🔴 v4.29.0: 사용자에게 피드백 추가
+        console.warn('현재가 조회 실패, 별%가만 사용:', e.message);
+        showToast('⚠️ 현재가 조회 실패 - 별%가만 사용', 'warning', 2000);
+      }
+
+      const input = {
+        ticker: selectedTicker,
+        principal: parseFloat(document.getElementById('input-principal').value) || 0,
+        divisions: parseInt(document.getElementById('input-divisions').value) || 40,
+        avgPrice: parseFloat(document.getElementById('input-avgPrice').value) || 0,
+        totalInvested: parseFloat(document.getElementById('input-totalInvested').value) || 0,
+        holdings: parseInt(document.getElementById('input-holdings').value) || 0,
+        currentPrice: currentPrice,  // 🔴 #211: Prices 시트에서 자동 조회
+        sellPercent: parseFloat(document.getElementById('input-sellPercent').value) || defaultSellPercent
+      };
+
+      // Validate - 필수 입력값 체크 (현재가는 선택 - LOC 캡에만 사용)
+      const missing = [];
+      if (!input.principal) missing.push('세팅원금');
+      if (!input.avgPrice) missing.push('평단가');
+
+      if (missing.length > 0) {
+        alert(`필수 입력값이 없습니다:\n• ${missing.join('\n• ')}`);
+        return;
+      }
+
+      // Calculate
+      const result = IBCalculator.calculate(input);
+
+      if (result.error) {
+        alert(result.error);
+        return;
+      }
+
+      // 🔴 v4.28.1: 다중 결과 UI 숨기기 (단일 계산 시)
+      document.getElementById('multi-results-section')?.classList.add('hidden');
+
+      // Display results
+      displayResults(result);
+      updateCashReserveRecommendation();
+
+      // 🔴 v4.21.0: Auto-save orders to Google Sheets (DEC-153)
+      saveOrdersToSheet(result);
+    }
+
+    /**
+     * 🔴 v4.28.0: 다중 종목 전체 계산 (#217)
+     * enabledTickers에 있는 모든 종목을 순회하며 계산
+     */
+    async function calculateAllOrders() {
+      // 계산할 종목 체크
+      if (enabledTickers.size === 0) {
+        showToast('계산할 종목을 선택하세요', 'warning');
+        return;
+      }
+
+      // 프로필 필수 체크
+      if (!currentProfile || !currentProfile.stocks?.length) {
+        showToast('프로필에 종목이 없습니다', 'warning');
+        return;
+      }
+
+      // 결과 초기화
+      calculationResults = {};
+      const tickerList = [...enabledTickers];
+
+      // 🔴 v4.28.1: 현재가 일괄 조회 (Promise.all로 병렬 처리)
+      let priceMap = {};
+      try {
+        if (SheetsSync.isAuthenticated()) {
+          // fetchCurrentPrices() 한 번 호출로 모든 종목 가격 가져오기
+          const allPrices = await SheetsSync.fetchCurrentPrices();
+          tickerList.forEach(ticker => {
+            if (allPrices[ticker]?.current > 0) {
+              priceMap[ticker] = allPrices[ticker].current;
+            }
+          });
+          console.log('📊 현재가 조회 완료:', priceMap);
+        }
+      } catch (e) {
+        console.warn('현재가 조회 실패:', e.message);
+      }
+
+      // 각 종목별 계산
+      const successResults = [];
+      const failedTickers = [];
+
+      for (const ticker of tickerList) {
+        // 프로필에서 종목 데이터 가져오기
+        const stockData = currentProfile.stocks.find(s => s.symbol === ticker);
+        if (!stockData) {
+          failedTickers.push({ ticker, reason: '종목 데이터 없음' });
+          continue;
+        }
+
+        // 🔴 v4.28.1: dailyData에서 평단가/수량/총매입금 가져오기
+        const dailyData = ProfileManager.loadDailyData(currentProfile.id, ticker) || {};
+        const avgPrice = dailyData.avgPrice || 0;
+        const principal = stockData.principal || 0;
+
+        if (!avgPrice || !principal) {
+          failedTickers.push({ ticker, reason: '평단가/세팅원금 없음' });
+          continue;
+        }
+
+        // 입력값 구성
+        // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
+        const defaultSellPercent = ticker === 'SOXL' ? 12 : 10;
+        const input = {
+          ticker: ticker,
+          principal: principal,
+          divisions: stockData.divisions || 40,
+          avgPrice: avgPrice,
+          totalInvested: dailyData.totalInvested || 0,
+          holdings: dailyData.holdings || 0,
+          currentPrice: priceMap[ticker] || 0,
+          sellPercent: stockData.sellPercent || defaultSellPercent
+        };
+
+        // 계산
+        const result = IBCalculator.calculate(input);
+
+        if (result.error) {
+          failedTickers.push({ ticker, reason: result.error });
+          continue;
+        }
+
+        calculationResults[ticker] = result;
+        successResults.push(result);
+
+        // 시트에 저장 (비동기)
+        saveOrdersToSheet(result);
+      }
+
+      // 결과 표시
+      if (successResults.length === 0) {
+        showToast('계산된 종목이 없습니다', 'warning');
+        return;
+      }
+
+      // 실패 종목 경고
+      if (failedTickers.length > 0) {
+        console.warn('계산 실패 종목:', failedTickers);
+        showToast(`${failedTickers.length}개 종목 계산 실패`, 'warning');
+      }
+
+      // 다중 결과 표시 (아코디언)
+      displayMultipleResults(successResults);
+
+      // 🔴 v4.29.6 (#31): 복수 종목 계산 후 예수금 상태 갱신
+      recalculateBalance();
+
+      showToast(`${successResults.length}개 종목 계산 완료`, 'success');
+    }
+
+    /**
+     * Save orders to Google Sheets (Orders sheet)
+     * Silently saves in background, non-blocking
+     * @param {Object} result - Calculation result
+     */
+    // 🔴 v4.31.0 (B5-15): 중복 저장 방지용 Set
+    const _savedOrderKeys = new Set();
+
+    async function saveOrdersToSheet(result) {
+      // Only if logged in
+      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
+        console.log('saveOrdersToSheet: Skipped (not logged in)');
+        return;
+      }
+
+      // 🔴 v4.31.0 (B5-14): ticker 유효성 검사
+      if (!result.ticker || result.ticker === 'null' || result.ticker === 'undefined') {
+        console.warn('saveOrdersToSheet: Skipped (invalid ticker)', result.ticker);
+        return;
+      }
+
+      // 🔴 v4.36.x: 중복 저장 방지 키 단순화 (date+googleId+profile+ticker+type+side+executionBasis)
+      // KST 기준 날짜 (UTC+9) - 중복키 날짜 일치
+      const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const profileId = currentProfile?.id || 'unknown';
+      const googleId = (typeof SheetsSync !== 'undefined' && SheetsSync.getUserEmail)
+        ? (SheetsSync.getUserEmail() || 'unknown')
+        : 'unknown';
+      const buildOrderKey = (order, side) => {
+        const orderType = order?.type || 'UNKNOWN';
+        const executionBasis = side === 'BUY'
+          ? 'CLOSE'
+          : (String(orderType).includes('LOC') ? 'CLOSE' : 'HIGH');
+        const ticker = String(result.ticker || '').trim().toUpperCase();
+        return `${today}|${googleId}|${profileId}|${ticker}|${orderType}|${side}|${executionBasis}`;
+      };
+
+      const newBuyOrders = [];
+      const newSellOrders = [];
+      const newKeys = [];
+
+      (result.buyOrders || []).forEach((order) => {
+        const key = buildOrderKey(order, 'BUY');
+        if (_savedOrderKeys.has(key)) return;
+        newBuyOrders.push(order);
+        newKeys.push(key);
+      });
+
+      (result.sellOrders || []).forEach((order) => {
+        const key = buildOrderKey(order, 'SELL');
+        if (_savedOrderKeys.has(key)) return;
+        newSellOrders.push(order);
+        newKeys.push(key);
+      });
+
+      if (newBuyOrders.length === 0 && newSellOrders.length === 0) {
+        console.log('saveOrdersToSheet: Skipped (all orders already saved)', result.ticker);
+        return;
+      }
+
+      try {
+        const count = await SheetsSync.saveOrders({
+          ticker: result.ticker,
+          buyOrders: newBuyOrders,
+          sellOrders: newSellOrders
+        });
+        if (count > 0) {
+          newKeys.forEach(key => _savedOrderKeys.add(key)); // 성공 시에만 기록
+          showToast(`📊 ${count}건 주문 저장됨`, 'success', 1500);
+        }
+      } catch (error) {
+        console.error('saveOrdersToSheet error:', error);
+        // Silent failure - don't interrupt user
+      }
+    }
+
+    // =====================================================
+    // Display Results
+    // =====================================================
+
+    // Store last calculation for copy/helper features
+    let lastCalculation = null;
+
+    function displayResults(result) {
+      const { calculation, buyOrders, sellOrders, quarterStopLoss } = result;
+      lastCalculation = result;
+
+      // 🔴 v4.22.0: results-section은 항상 hidden (복사용 템플릿)
+      // 실제 표시는 PC→results-pc, Mobile→results-mobile에서
+      const resultsSection = document.getElementById('results-section');
+
+      // Summary card
+      document.getElementById('result-ticker').textContent = result.ticker;
+      document.getElementById('result-T').textContent = calculation.T.toFixed(1);
+      document.getElementById('result-starPercent').textContent = calculation.starPercent.toFixed(1) + '%';
+      document.getElementById('result-oneTimeBuy').textContent = IBCalculator.formatDollar(calculation.oneTimeBuy);
+      document.getElementById('result-locPrice').textContent = IBCalculator.formatDollar(calculation.locInfo.locPrice);
+
+      // Phase badge
+      const phaseBadge = document.getElementById('result-phase');
+      phaseBadge.textContent = calculation.phase;
+      phaseBadge.className = 'ml-2 px-2 py-0.5 text-xs rounded';
+      if (calculation.phase === '전반전') {
+        phaseBadge.classList.add('bg-green-500/30', 'text-green-300');
+      } else if (calculation.phase === '후반전') {
+        phaseBadge.classList.add('bg-yellow-500/30', 'text-yellow-300');
+      } else {
+        phaseBadge.classList.add('bg-red-500/30', 'text-red-300');
+      }
+
+      // LOC reason
+      const locReason = document.getElementById('result-locReason');
+      if (calculation.locInfo.currentPriceCap > 0) {
+        locReason.textContent = `${calculation.locInfo.reason} (별%가 = ${IBCalculator.formatDollar(calculation.locInfo.starPrice)}, 현재가×1.15 = ${IBCalculator.formatDollar(calculation.locInfo.currentPriceCap)})`;
+      } else {
+        locReason.textContent = `${calculation.locInfo.reason}`;
+      }
+
+      // v4.23.0: Update formula details with actual values
+      updateFormulaDetails(result);
+
+      // Separate main buy orders and decline orders (merged for display)
+      const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
+      const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+      const mergedBuyOrders = [...mainBuyOrders, ...declineOrders];
+
+      // Buy orders (main + decline merged)
+      const buyOrdersEl = document.getElementById('buy-orders');
+      buyOrdersEl.innerHTML = mergedBuyOrders.map(order => renderOrderCard(order, 'buy')).join('');
+
+      // Sell orders
+      const sellOrdersEl = document.getElementById('sell-orders');
+      if (quarterStopLoss.active) {
+        sellOrdersEl.innerHTML = '<p class="text-gray-500 text-sm">쿼터손절 모드 - 아래 안내 참조</p>';
+      } else {
+        sellOrdersEl.innerHTML = sellOrders.map(order => renderOrderCard(order, 'sell')).join('');
+      }
+
+      // Quarter stop loss warning (#216: 체크박스 연동)
+      const qslSection = document.getElementById('quarter-stop-loss');
+      const qslCheckbox = document.getElementById('quarter-stop-checkbox');
+      const qslMocQty = document.getElementById('quarter-moc-qty');
+
+      if (quarterStopLoss.active) {
+        qslSection.classList.remove('hidden');
+        qslCheckbox.checked = false;  // 기본값: 체크 해제 (사용자가 직접 체크해야 MOC 안내 표시)
+        qslMocQty.textContent = `${quarterStopLoss.mocQuantity}주`;
+        document.getElementById('quarter-stop-loss-content').innerHTML = `
+          <p><strong>MOC 매도 수량:</strong> ${quarterStopLoss.mocQuantity}주</p>
+          <ul class="list-disc pl-5 mt-2">
+            ${quarterStopLoss.instructions.map(i => `<li>${i}</li>`).join('')}
+          </ul>
+        `;
+        // 체크박스 상태에 따라 내용 숨김/표시
+        handleQuarterStopChange();
+      } else {
+        qslSection.classList.add('hidden');
+      }
+
+      // Show today buy helper
+      const totalBuyQty = mergedBuyOrders.reduce((sum, o) => sum + o.quantity, 0);
+      showTodayBuyHelper(totalBuyQty, result.ticker);
+
+      // Display results based on screen size (PC vs Mobile)
+      showResultsResponsive();
+    }
+
+    /**
+     * 🔴 v4.28.0: 다중 종목 결과 표시 (#217)
+     * @param {Array} results - 계산 결과 배열
+     */
+    function displayMultipleResults(results) {
+      const section = document.getElementById('multi-results-section');
+      const accordion = document.getElementById('results-accordion');
+      const resultsColumn = document.getElementById('results-column');
+      const resultsPC = document.getElementById('results-pc');
+      closeResultsOverlay();
+
+      if (!results || results.length === 0) {
+        section.classList.add('hidden');
+        if (resultsColumn) {
+          resultsColumn.classList.add('hidden');
+          resultsColumn.style.display = 'none';
+        }
+        return;
+      }
+
+      // 단일 결과일 때는 기존 UI 사용
+      if (results.length === 1) {
+        section.classList.add('hidden');
+        if (resultsColumn) {
+          resultsColumn.classList.remove('hidden');
+          resultsColumn.style.display = '';
+        }
+        displayResults(results[0]);
+        return;
+      }
+
+      // 다중 결과: 아코디언 표시
+      section.classList.remove('hidden');
+      if (resultsColumn) {
+        resultsColumn.classList.add('hidden');
+        resultsColumn.style.display = 'none';
+      }
+      if (resultsPC) {
+        resultsPC.innerHTML = '';
+      }
+
+      // 🔴 v4.28.1: lastCalculation을 첫 번째 결과로 업데이트 (복사 기능 호환성)
+      lastCalculation = results[0];
+
+      // 기존 단일 결과 섹션 숨기기
+      document.getElementById('results-section').classList.add('hidden');
+
+      // 아코디언 아이템 생성
+      accordion.innerHTML = results.map((result) => {
+        const { ticker, calculation, buyOrders, sellOrders, quarterStopLoss, input } = result;
+        const { T, phase, starPercent, locInfo } = calculation;
+        const avgPrice = input?.avgPrice || 0;
+        const totalInvested = input?.totalInvested || 0;
+        const oneTimeBuy = calculation.oneTimeBuy || 0;
+        const parsedSellPercent = parseFloat(input?.sellPercent);
+        const effectiveSellPercent = Number.isFinite(parsedSellPercent)
+          ? parsedSellPercent
+          : IBCalculator.getSellPercent(ticker);
+        const starPrice = locInfo.starPrice || 0;
+        const locSellPrice = IBCalculator.getSellLOCPrice(locInfo.locPrice || 0, avgPrice);
+        const limitPrice = avgPrice * (1 + effectiveSellPercent / 100);
+
+        // Phase badge 클래스
+        let phaseBadgeClass = 'accordion-badge-first';
+        if (phase === '후반전') phaseBadgeClass = 'accordion-badge-second';
+        else if (phase === '손절') phaseBadgeClass = 'accordion-badge-stop';
+
+        // 주문 분리
+        const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
+        const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
+        const mergedBuyOrders = [...mainBuyOrders, ...declineOrders];
+
+        // 아코디언 아이템 HTML
+        return `
+          <div class="accordion-item open" data-ticker="${ticker}">
+            <div class="accordion-header" onclick="toggleAccordion('${ticker}')">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-lg">${ticker}</span>
+                <span class="accordion-badge ${phaseBadgeClass}">${phase}</span>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-sm text-slate-300">T=${T.toFixed(1)}</span>
+                <i class="fas fa-chevron-down accordion-chevron"></i>
+              </div>
+            </div>
+            <div class="accordion-content">
+              <!-- Summary -->
+              <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                <div class="bg-white rounded-lg p-2 shadow-sm">
+                  <div class="text-xs text-gray-500">별%</div>
+                  <div class="font-semibold">${starPercent.toFixed(1)}%</div>
+                </div>
+                <div class="bg-white rounded-lg p-2 shadow-sm">
+                  <div class="text-xs text-gray-500">1회매수</div>
+                  <div class="font-semibold">${IBCalculator.formatDollar(calculation.oneTimeBuy)}</div>
+                </div>
+                <div class="bg-white rounded-lg p-2 shadow-sm">
+                  <div class="text-xs text-gray-500">LOC가</div>
+                  <div class="font-semibold">${IBCalculator.formatDollar(locInfo.locPrice)}</div>
+                </div>
+              </div>
+
+              <!-- Buy Orders -->
+              <div class="order-section">
+                <div class="order-section-header">
+                  <span class="order-section-title"><i class="fas fa-arrow-down text-green-500 mr-1"></i>매수 (LOC)</span>
+                </div>
+                <div class="space-y-1 text-sm">
+                  ${mergedBuyOrders.map(o => `
+                    <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
+                      <span class="text-gray-600">${formatOrderLabel(o)}</span>
+                      <div class="flex items-center gap-2">
+                        <button class="order-copy-btn qty-copy-btn" onclick="copyQuantityValue(this, ${o.quantity})">
+                          ${o.quantity}주
+                        </button>
+                        <span class="text-gray-400 text-xs">x</span>
+                        <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
+                          ${Number(o.price || 0).toFixed(2)}
+                        </button>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- Sell Orders -->
+              <div class="order-section">
+                <div class="order-section-header">
+                  <span class="order-section-title"><i class="fas fa-arrow-up text-red-500 mr-1"></i>매도</span>
+                </div>
+                ${quarterStopLoss.active ? `
+                <div class="bg-red-50 border border-red-200 rounded p-2 text-sm text-red-700">
+                  <i class="fas fa-exclamation-triangle mr-1"></i>쿼터손절: MOC ${quarterStopLoss.mocQuantity}주 매도
+                </div>
+                ` : `
+                <div class="space-y-1 text-sm">
+                  ${sellOrders.map(o => `
+                    <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
+                      <span class="text-gray-600">${formatOrderLabel(o)}</span>
+                      <div class="flex items-center gap-2">
+                        <button class="order-copy-btn qty-copy-btn" onclick="copyQuantityValue(this, ${o.quantity})">
+                          ${o.quantity}주
+                        </button>
+                        <span class="text-gray-400 text-xs">x</span>
+                        <button class="order-copy-btn" onclick="copyPriceValue(this, '${o.price.toFixed(4)}')">
+                          ${Number(o.price || 0).toFixed(2)}
+                        </button>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                `}
+              </div>
+              <div class="flex justify-end mt-3">
+                <button class="px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"
+                        onclick="toggleMultiFormula('${ticker}', this)">
+                  <i class="fas fa-microscope mr-1"></i>상세 보기
+                </button>
+              </div>
+              <div id="formula-detail-${ticker}" class="hidden mt-2 bg-white rounded-lg border border-gray-100 p-2 text-sm text-gray-600 space-y-1">
+                <div class="font-semibold text-gray-500">공식 요약</div>
+                <div>T = ceil((총매입금 / 1회매수) × 10) / 10 = ceil((${IBCalculator.formatDollar(totalInvested)} / ${IBCalculator.formatDollar(oneTimeBuy)}) × 10) / 10 → ${T.toFixed(1)}</div>
+                <div>별% = ${effectiveSellPercent}% × (1 - T / 20) = ${effectiveSellPercent}% × (1 - ${T.toFixed(1)} / 20) → ${starPercent.toFixed(1)}%</div>
+                <div>LOC 매도가 = 별%가 + (평단가 × 0.5%) = ${IBCalculator.formatDollar(starPrice)} + (${IBCalculator.formatDollar(avgPrice)} × 0.005) → ${IBCalculator.formatDollar(locSellPrice)}</div>
+                <div>지정가 = 평단가 × (1 + AFTER%) = ${IBCalculator.formatDollar(avgPrice)} × (1 + ${effectiveSellPercent}%) → ${IBCalculator.formatDollar(limitPrice)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Mobile: 결과 섹션으로 자동 스크롤
+      if (window.innerWidth < 768) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    /**
+     * 🔴 v4.28.0: 아코디언 토글 (#217)
+     */
+    function toggleAccordion(ticker) {
+      const item = document.querySelector(`.accordion-item[data-ticker="${ticker}"]`);
+      if (item) {
+        item.classList.toggle('open');
+      }
+    }
+
+    function toggleMultiFormula(ticker, button) {
+      const detail = document.getElementById(`formula-detail-${ticker}`);
+      if (!detail) return;
+
+      const isHidden = detail.classList.contains('hidden');
+      detail.classList.toggle('hidden');
+      if (button) {
+        button.innerHTML = isHidden
+          ? '<i class="fas fa-chevron-up mr-1"></i>접기'
+          : '<i class="fas fa-microscope mr-1"></i>상세 보기';
+      }
+    }
+
+    /**
+     * 아코디언에서 상세 보기 → 단일 상세 패널 표시
+     */
+    // 다중 카드 내 공식 요약 토글
+
+    /**
+     * 🔴 v4.28.0: 전체 종목 주문 복사 (#217)
+     * 🔴 v4.29.4 (C-08): copyToClipboard 사용
+     */
+    async function copyAllTickersOrders() {
+      if (Object.keys(calculationResults).length === 0) {
+        showToast('먼저 전체 계산을 실행하세요', 'warning');
+        return;
+      }
+
+      await ensureCashReservePrices();
+
+      const profileName = currentProfile?.name || '프로필';
+      const lines = [
+        `📊 ${profileName} 오늘의 주문`,
+        `━━━━━━━━━━━━━━━━━━━━`
+      ];
+
+      const balanceInfo = (typeof BalanceManager !== 'undefined' && currentProfile)
+        ? BalanceManager.getBalance(currentProfile.id)
+        : { available: 0 };
+      const balanceValue = parseFloat(balanceInfo?.available) || 0;
+
+      let dailyBuyTotal = 0;
+      Object.values(calculationResults).forEach(result => {
+        const buyOrders = result?.buyOrders || [];
+        buyOrders.forEach(order => {
+          if (!order || !order.type) return;
+          const price = parseFloat(order.price) || 0;
+          const qty = parseFloat(order.quantity) || 0;
+          dailyBuyTotal += price * qty;
+        });
+      });
+
+      if (balanceValue > 0 && dailyBuyTotal > 0) {
+        if (balanceValue < dailyBuyTotal) {
+          lines.push(`⚠️ 예수금 부족! 필요 $${dailyBuyTotal.toFixed(2)}, 현재 $${balanceValue.toFixed(2)}`);
+        } else {
+          const days = Math.floor(balanceValue / dailyBuyTotal);
+          lines.push(`💰 예수금: $${balanceValue.toFixed(2)} | 약 ${days}일 가능`);
+        }
+      }
+
+      const cashAction = buildCashReserveAction({ balanceValue, dailyBuyTotal });
+      if (cashAction) {
+        const verb = cashAction.side === 'BUY' ? '매수' : '매도';
+        lines.push('', '💵 현금성 자산');
+        lines.push(`  ${cashAction.symbol} ${verb} (MOC): ${cashAction.quantity}주`);
+      }
+
+      lines.push('');
+
+      for (const [ticker, result] of Object.entries(calculationResults)) {
+        const { buyOrders, sellOrders, quarterStopLoss, calculation, input } = result;
+        const headerLine = `【${ticker}】 T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
+
+        lines.push(headerLine);
+        lines.push('📉 매수 (LOC)');
+        lines.push(...buyOrders.map(o => formatOrderLine(o)));
+
+        if (quarterStopLoss && quarterStopLoss.active) {
+          lines.push('🔴 쿼터손절 (MOC)');
+          lines.push(`  MOC 매도: ${quarterStopLoss.mocQuantity}주`);
+        } else {
+          lines.push('📈 매도');
+          lines.push(...sellOrders.map(o => formatOrderLine(o)));
+        }
+
+        lines.push('');
+      }
+
+      lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+
+      const text = lines.join('\n');
+      const success = await copyToClipboard(text);
+      if (success) {
+        showToast('전체 종목 주문이 복사되었습니다', 'success');
+      } else {
+        showToast('복사 실패', 'error');
+      }
+    }
+
+    /**
+     * v4.23.0: 공식 상세 토글
+     */
+    function toggleFormulaDetails() {
+      const detailsEl = document.getElementById('formula-details');
+      const iconEl = document.getElementById('formula-toggle-icon');
+      const textEl = document.getElementById('formula-toggle-text');
+
+      if (detailsEl.classList.contains('hidden')) {
+        detailsEl.classList.remove('hidden');
+        iconEl.className = 'fas fa-chevron-up mr-1';
+        textEl.textContent = '접기';
+      } else {
+        detailsEl.classList.add('hidden');
+        iconEl.className = 'fas fa-chevron-down mr-1';
+        textEl.textContent = '공식 상세';
+      }
+    }
+
+    /**
+     * v4.23.0: 공식 상세 업데이트 (실제 계산값 표시)
+     * @param {Object} result - 계산 결과
+     */
+    function updateFormulaDetails(result) {
+      const { input, calculation } = result;
+      const { T, starPercent, oneTimeBuy, locInfo } = calculation;
+
+      // 실제 입력값으로 공식 표시
+      const totalInvested = input.totalInvested || 0;
+      const avgPrice = input.avgPrice;
+      const parsedSellPercent = parseFloat(document.getElementById('input-sellPercent')?.value);
+      const effectiveSellPercent = Number.isFinite(parsedSellPercent) ? parsedSellPercent : 10;
+
+      // T값 공식
+      const tFormulaEl = document.getElementById('formula-T');
+      if (tFormulaEl) {
+        const rawT = totalInvested / oneTimeBuy;
+        tFormulaEl.innerHTML = `T = ceil((${totalInvested.toFixed(0)} / ${oneTimeBuy.toFixed(0)}) × 10) / 10<br>
+          <span class="text-green-400">= ceil(${(rawT * 10).toFixed(1)}) / 10 = ${T.toFixed(1)}</span>`;
+      }
+
+      // 별% 공식
+      const starFormulaEl = document.getElementById('formula-star');
+      if (starFormulaEl) {
+        starFormulaEl.innerHTML = `별% = ${effectiveSellPercent}% × (1 - T / 20) = ${effectiveSellPercent}% × (1 - ${T.toFixed(1)} / 20)<br>
+          <span class="text-yellow-400">= ${starPercent.toFixed(1)}%</span>`;
+      }
+
+      // LOC 매도가 공식
+      const locSellEl = document.getElementById('formula-locSell');
+      if (locSellEl) {
+        const starPrice = locInfo.starPrice;
+        const locSellPrice = starPrice + (avgPrice * 0.005);
+        locSellEl.innerHTML = `LOC 매도 = 별%가 + (평단 × 0.5%)<br>
+          = $${starPrice.toFixed(2)} + ($${avgPrice.toFixed(2)} × 0.005)<br>
+          <span class="text-blue-400">= $${locSellPrice.toFixed(2)}</span>`;
+      }
+
+      // 지정가 매도 공식
+      const limitSellEl = document.getElementById('formula-limitSell');
+      if (limitSellEl) {
+        const limitPrice = avgPrice * (1 + effectiveSellPercent / 100);
+        limitSellEl.innerHTML = `지정가 = 평단가 × (1 + AFTER%)<br>
+          = $${avgPrice.toFixed(2)} × (1 + ${effectiveSellPercent}%)<br>
+          <span class="text-red-400">= $${limitPrice.toFixed(2)}</span>`;
+      }
+    }
+
+    /**
+     * PC/Mobile 반응형 결과 표시
+     * 🔴 v4.22.0: results-section은 항상 hidden (복사용 템플릿)
+     */
+    function showResultsResponsive() {
+      const resultsSection = document.getElementById('results-section');
+      const resultsPC = document.getElementById('results-pc');
+      const resultsMobile = document.getElementById('results-mobile');
+      const resultsOverlay = document.getElementById('results-overlay');
+      const resultsColumn = document.getElementById('results-column');
+
+      // 🔴 v4.22.0: results-section은 항상 숨김 (복사용 템플릿)
+      resultsSection.classList.add('hidden');
+
+      // Check if PC (md breakpoint = 768px)
+      const isPC = window.innerWidth >= 768;
+
+      if (isPC) {
+        // PC: Show in right column, HIDE mobile overlay
+        resultsPC.innerHTML = resultsSection.innerHTML;
+        resultsColumn.classList.remove('hidden');
+        resultsColumn.style.display = '';
+        resultsPC.querySelector('.text-center.text-gray-400')?.remove();
+        // Mobile 결과 숨기기
+        resultsOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
+      } else {
+        // Mobile: Show in overlay, HIDE PC column
+        resultsMobile.innerHTML = resultsSection.innerHTML;
+        resultsOverlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        // PC 결과 초기화
+        resultsPC.innerHTML = `
+          <div class="text-center text-gray-400 py-8">
+            <i class="fas fa-calculator text-4xl mb-2"></i>
+            <p>주문 계산 버튼을 눌러주세요</p>
+          </div>
+        `;
+        resultsColumn.classList.add('hidden');
+        resultsColumn.style.display = 'none';
+      }
+    }
+
+    /**
+     * 모바일 결과 오버레이 닫기
+     */
+    function closeResultsOverlay() {
+      document.getElementById('results-overlay').classList.add('hidden');
+      document.body.style.overflow = ''; // Restore scroll
+    }
+
+    function formatOrderLabel(order) {
+      const rawType = String(order?.type || '').trim();
+      if (rawType.includes('하락대비')) {
+        return '하락LOC 매수';
+      }
+      if (rawType.startsWith('지정가 매도')) {
+        return '지정가 매도';
+      }
+      return rawType || order?.description || '';
+    }
+
+    function formatOrderPrice(price) {
+      return Number(price || 0).toFixed(2);
+    }
+
+    function renderOrderCard(order, type) {
+      const isLOC = order.orderType === 'LOC';
+      const badgeClass = isLOC ? 'badge-loc' : 'badge-limit';
+      const badgeText = isLOC ? 'LOC' : '지정가';
+      const label = formatOrderLabel(order);
+      const qtyText = `${order.quantity}주`;
+      const priceText = `$${formatOrderPrice(order.price)}`;
+
+      // v4.22.0: 축소된 카드 (한 줄)
+      return `
+        <div class="order-card-compact flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg" data-price="${order.price}" data-qty="${order.quantity}">
+          <div class="flex items-center gap-2">
+            <span class="order-badge ${badgeClass} text-xs">${badgeText}</span>
+            <span class="text-xs text-gray-600">${label}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-gray-500 text-sm">${qtyText}</span>
+            <span class="text-gray-400 text-xs">x</span>
+            <span class="font-bold text-gray-800">${priceText}</span>
+            <button onclick="copyOrder(this, '${order.price}', ${order.quantity})" class="copy-btn text-gray-400 hover:text-gray-600">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // =====================================================
+    // Balance Management (Phase 3)
+    // =====================================================
+
+    function loadBalanceData() {
+      if (!currentProfile) return;
+
+      const balance = BalanceManager.getBalance(currentProfile.id);
+      const balanceInput = document.getElementById('input-balance');
+      const commissionInput = document.getElementById('input-commission');
+      const commissionRate = BalanceManager.getCommissionRate(currentProfile.id);
+
+      // 🔴 v4.30.0 (B5-14): 항상 값 설정 (이전 프로필 값 누수 방지)
+      // 기존: balance > 0일 때만 설정 → 이전 값 유지됨
+      balanceInput.value = balance.available > 0 ? balance.available : '';
+
+      if (commissionInput) {
+        const effectiveRate = (commissionRate !== null && commissionRate !== undefined)
+          ? commissionRate
+          : 0.07;
+        commissionInput.value = effectiveRate;
+        if (commissionRate === null || commissionRate === undefined) {
+          BalanceManager.updateCommissionRate(currentProfile.id, effectiveRate);
+        }
+      }
+
+      // 예수금이 있을 때만 상태 표시
+      if (balance.available > 0) {
+        recalculateBalance();
+      }
+    }
+
+    function handleBalanceChange(value) {
+      if (!currentProfile) return;
+
+      // 🔴 v4.29.6 (#30): 입력값 범위 검증
+      let numValue = parseFloat(value) || 0;
+      if (!Number.isFinite(numValue)) numValue = 0;
+      if (numValue < 0) numValue = 0;
+      if (numValue > 10000000) numValue = 10000000;  // 최대 $10M
+
+      BalanceManager.updateBalance(currentProfile.id, numValue);
+      recalculateBalance();
+    }
+
+    function handleCommissionChange(value) {
+      if (!currentProfile) return;
+
+      let numValue = parseFloat(value);
+      if (!Number.isFinite(numValue)) numValue = 0;
+      if (numValue < 0) numValue = 0;
+
+      BalanceManager.updateCommissionRate(currentProfile.id, numValue);
+    }
+
+    function buildCalculatedOrderStatus(resultsMap, balanceValue) {
+      const details = [];
+      let required = 0;
+
+      Object.values(resultsMap).forEach(result => {
+        const mainBuyOrders = result.buyOrders.filter(o => !o.type.includes('하락대비'));
+        const declineOrders = result.buyOrders.filter(o => o.type.includes('하락대비'));
+        const mainAmount = mainBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
+        const declineAmount = declineOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
+        const total = mainAmount + declineAmount;
+        required += total;
+
+        details.push({
+          symbol: result.ticker,
+          oneTimeBuy: mainAmount,
+          additionalAmount: declineAmount,
+          total: total,
+          percentage: 0
+        });
+      });
+
+      details.forEach(d => {
+        d.percentage = required > 0 ? parseFloat((d.total / required * 100).toFixed(1)) : 0;
+      });
+
+      const diff = balanceValue - required;
+      return {
+        available: balanceValue,
+        required: required,
+        diff: diff,
+        status: diff >= 0 ? 'OK' : 'INSUFFICIENT',
+        statusKo: diff >= 0 ? '여유' : '부족',
+        details
+      };
+    }
+
+    function recalculateBalance() {
+      if (!currentProfile) return;
+
+      // Save current balance value
+      const balanceValue = parseFloat(document.getElementById('input-balance').value) || 0;
+      if (balanceValue > 0) {
+        BalanceManager.updateBalance(currentProfile.id, balanceValue);
+      }
+
+      const commissionInput = document.getElementById('input-commission');
+      if (commissionInput) {
+        const commissionValue = parseFloat(commissionInput.value);
+        if (Number.isFinite(commissionValue)) {
+          BalanceManager.updateCommissionRate(currentProfile.id, commissionValue);
+        }
+      }
+
+      // 🔴 v4.18.0: 최신 프로필 데이터로 계산 (Bug 13 - 메모리 캐시 문제 수정)
+      // currentProfile은 메모리에 캐시된 old 데이터이므로 localStorage에서 최신 데이터 가져옴
+      let status = null;
+      if (Object.keys(calculationResults).length > 0) {
+        status = buildCalculatedOrderStatus(calculationResults, balanceValue);
+      } else {
+        const freshProfile = ProfileManager.getAll().profiles[currentProfile.id];
+        status = BalanceManager.calcOrderStatus(freshProfile);
+      }
+      renderOrderStatus(status);
+      updateCashReserveRecommendation(status);
+      checkAndShowAlert(status);
+    }
+
+    function renderOrderStatus(status) {
+      const statusBox = document.getElementById('order-status');
+      const breakdownBox = document.getElementById('stock-breakdown');
+
+      // Only show if balance is set
+      if (status.available <= 0 && status.required <= 0) {
+        statusBox.classList.add('hidden');
+        breakdownBox.classList.add('hidden');
+        return;
+      }
+
+      statusBox.classList.remove('hidden');
+      const statusClass = status.status === 'OK' ? 'status-ok' : 'status-warning';
+      const statusIcon = status.status === 'OK' ? '✅' : '⚠️';
+
+      // 🔴 v4.22.0: 투자 가능 일수 계산
+      const daysRemaining = status.required > 0 ? Math.floor(status.available / status.required) : 0;
+      const daysText = daysRemaining > 0 ? `약 ${daysRemaining}일 투자 가능` : '';
+
+      statusBox.innerHTML = `
+        <div class="status-row">
+          <span class="text-gray-600">일매수시도금액</span>
+          <span class="font-medium">$${status.required.toFixed(2)}</span>
+        </div>
+        <div class="status-row">
+          <span class="text-gray-600">주문가능금액</span>
+          <span class="font-medium">$${status.available.toFixed(2)}</span>
+        </div>
+        <hr class="my-1 border-gray-200">
+        <div class="status-row ${statusClass}">
+          <span>차액</span>
+          <span>${status.diff >= 0 ? '+' : ''}$${status.diff.toFixed(2)} ${statusIcon} ${status.statusKo}</span>
+        </div>
+        ${daysText ? `<div class="text-xs text-center text-blue-600 mt-2 font-medium">📅 ${daysText}</div>` : ''}
+      `;
+
+      // Stock breakdown
+      if (status.details && status.details.length > 0) {
+        breakdownBox.classList.remove('hidden');
+        renderStockBreakdown(status.details, status.required);
+      } else {
+        breakdownBox.classList.add('hidden');
+      }
+    }
+
+    // =====================================================
+    // Cash Reserve (P4: SGOV/BIL/BILS)
+    // =====================================================
+
+    function buildCashReserveEntryMap(entries = cashReserveEntries) {
+      const map = {};
+      (entries || []).forEach(entry => {
+        const symbol = String(entry?.symbol || '').trim().toUpperCase();
+        if (!symbol) return;
+        map[symbol] = {
+          symbol,
+          holdings: parseFloat(entry.holdings) || 0,
+          avgCost: parseFloat(entry.avgCost) || 0,
+          updatedAt: entry.updatedAt || ''
+        };
+      });
+      return map;
+    }
+
+    function getCashReserveInputs(includeEmpty = false, baseSymbols = []) {
+      const baseSet = new Set(baseSymbols || []);
+      return CASH_ETFS.map(symbol => {
+        const holdingsEl = document.getElementById(`cash-holdings-${symbol}`);
+        const avgEl = document.getElementById(`cash-avg-${symbol}`);
+        return {
+          symbol,
+          holdings: parseFloat(holdingsEl?.value) || 0,
+          avgCost: parseFloat(avgEl?.value) || 0
+        };
+      }).filter(entry =>
+        entry.holdings > 0 ||
+        entry.avgCost > 0 ||
+        (includeEmpty && baseSet.has(entry.symbol))
+      );
+    }
+
+    function renderCashReserveTable(entries) {
+      const tbody = document.getElementById('cash-reserve-rows');
+      if (!tbody) return;
+
+      const entryMap = buildCashReserveEntryMap(entries);
+      tbody.innerHTML = CASH_ETFS.map(symbol => {
+        const entry = entryMap[symbol] || {};
+        const holdingsValue = entry.holdings > 0 ? entry.holdings : '';
+        const avgValue = entry.avgCost > 0 ? entry.avgCost : '';
+        return `
+          <tr>
+            <td class="py-1 font-semibold">${symbol}</td>
+            <td class="py-1 text-right">
+              <input type="number" id="cash-holdings-${symbol}" class="w-16 text-right border rounded px-1 py-0.5 text-sm" placeholder="0" inputmode="numeric" value="${holdingsValue}">
+            </td>
+            <td class="py-1 text-right">
+              <input type="number" id="cash-avg-${symbol}" class="w-20 text-right border rounded px-1 py-0.5 text-sm" placeholder="0.00" step="0.01" inputmode="decimal" value="${avgValue}">
+            </td>
+            <td class="py-1 text-right" id="cash-price-${symbol}">-</td>
+            <td class="py-1 text-right" id="cash-total-${symbol}">-</td>
+          </tr>
+        `;
+      }).join('');
+
+      CASH_ETFS.forEach(symbol => {
+        const holdingsEl = document.getElementById(`cash-holdings-${symbol}`);
+        const avgEl = document.getElementById(`cash-avg-${symbol}`);
+        [holdingsEl, avgEl].forEach(el => {
+          if (!el) return;
+          el.addEventListener('input', () => {
+            updateCashReserveTotals();
+            updateCashReserveRecommendation();
+          });
+        });
+      });
+
+      updateCashReserveTotals();
+    }
+
+    function updateCashReserveTotals() {
+      let totalValue = 0;
+
+      CASH_ETFS.forEach(symbol => {
+        const holdingsEl = document.getElementById(`cash-holdings-${symbol}`);
+        const priceEl = document.getElementById(`cash-price-${symbol}`);
+        const totalEl = document.getElementById(`cash-total-${symbol}`);
+
+        const holdings = parseFloat(holdingsEl?.value) || 0;
+        const price = parseFloat(cashReservePrices[symbol]) || 0;
+        const value = price > 0 ? price * holdings : 0;
+
+        if (priceEl) {
+          priceEl.textContent = price > 0 ? `$${price.toFixed(2)}` : '-';
+        }
+        if (totalEl) {
+          totalEl.textContent = value > 0 ? formatDollarShort(value) : '-';
+        }
+
+        totalValue += value;
+      });
+
+      const totalEl = document.getElementById('cash-reserve-total');
+      if (totalEl) {
+        totalEl.textContent = totalValue > 0 ? formatDollarShort(totalValue) : '$0';
+      }
+    }
+
+    async function loadCashReservePrices(entries) {
+      // #227: 60초 캐시(로컬) - 최근 조회면 스킵
+      const cacheKey = 'cashReserve_lastPriceFetch';
+      const now = Date.now();
+      const lastFetch = parseInt(localStorage.getItem(cacheKey) || '0', 10);
+      const hasCachedPrices = CASH_ETFS.some(symbol => (cashReservePrices?.[symbol] || 0) > 0);
+      if (lastFetch && (now - lastFetch) < 60000 && hasCachedPrices) {
+        console.log('CashReserve prices: using cached (< 60s)');
+        updateCashReserveTotals();
+        return;
+      }
+
+      // DEC-165 Fix: entries가 없어도 CASH_ETFS 전체 가격 로딩
+      const symbols = (entries && entries.length > 0)
+        ? [...new Set(entries.map(entry => String(entry.symbol || '').toUpperCase()))]
+            .filter(symbol => CASH_ETFS.includes(symbol))
+        : CASH_ETFS;
+
+      if (symbols.length === 0) return;
+
+      const priceUpdates = {};
+      await Promise.all(symbols.map(async symbol => {
+        try {
+          const price = await SheetsSync.getCurrentPrice(symbol);
+          if (price > 0) {
+            priceUpdates[symbol] = price;
+          }
+        } catch (e) {
+          console.warn(`CashReserve price fetch failed: ${symbol}`, e.message);
+        }
+      }));
+
+      cashReservePrices = { ...cashReservePrices, ...priceUpdates };
+      if (Object.keys(priceUpdates).length > 0) {
+        localStorage.setItem(cacheKey, now.toString());
+      }
+      updateCashReserveTotals();
+    }
+
+    async function ensureCashReservePrices() {
+      if (!cashReserveEntries || cashReserveEntries.length === 0) return;
+      const baseSymbols = cashReserveEntries.map(entry => entry.symbol);
+      const inputEntries = getCashReserveInputs(true, baseSymbols);
+      const entryMap = buildCashReserveEntryMap(inputEntries.length > 0 ? inputEntries : cashReserveEntries);
+      const missing = CASH_ETFS.filter(symbol => entryMap[symbol] && !(cashReservePrices[symbol] > 0));
+      if (missing.length === 0) return;
+
+      const priceUpdates = {};
+      await Promise.all(missing.map(async symbol => {
+        try {
+          const price = await SheetsSync.getCurrentPrice(symbol);
+          if (price > 0) {
+            priceUpdates[symbol] = price;
+          }
+        } catch (e) {
+          console.warn(`CashReserve price fetch failed: ${symbol}`, e.message);
+        }
+      }));
+
+      cashReservePrices = { ...cashReservePrices, ...priceUpdates };
+      updateCashReserveTotals();
+    }
+
+    async function loadCashReserveData() {
+      const section = document.getElementById('cash-reserve-section');
+      if (!section) return;
+
+      // DEC-165: 인증 안 됐으면 섹션 숨김 (로그인 필요)
+      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated() || !currentProfile) {
+        section.classList.add('hidden');
+        cashReserveEntries = [];
+        cashReservePrices = {};
+        cashReserveAction = null;
+        return;
+      }
+
+      // DEC-165 Fix: 인증 완료 후 항상 섹션 표시 (Catch-22 해결)
+      section.classList.remove('hidden');
+
+      try {
+        const entries = await SheetsSync.loadCashReserve(currentProfile.id);
+        if (!entries || entries.length === 0) {
+          // DEC-165 Fix: 데이터 없어도 빈 테이블 렌더링 (SGOV/BIL/BILS)
+          cashReserveEntries = [];
+          cashReserveAction = null;
+          renderCashReserveTable([]);
+          await loadCashReservePrices([]);
+          return;
+        }
+
+        cashReserveEntries = entries;
+        renderCashReserveTable(entries);
+        await loadCashReservePrices(entries);
+        updateCashReserveRecommendation();
+      } catch (error) {
+        console.warn('CashReserve load error:', error);
+        // DEC-165 Fix: 에러 발생 시에도 빈 테이블 표시 (섹션 유지)
+        cashReserveEntries = [];
+        cashReserveAction = null;
+        renderCashReserveTable([]);
+        await loadCashReservePrices([]);
+      }
+    }
+
+    async function saveCashReserveData() {
+      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
+        showToast('Google 로그인이 필요합니다', 'warning');
+        return;
+      }
+
+      try {
+        const entries = getCashReserveInputs();
+        await SheetsSync.saveCashReserve(entries);
+        showToast('현금성 자산 저장됨', 'success', 1500);
+        await loadCashReserveData();
+      } catch (error) {
+        console.error('CashReserve save error:', error);
+        showToast('현금성 자산 저장 실패', 'error');
+      }
+    }
+
+    function getDailyBuyTotalFromResults(resultsMap) {
+      let total = 0;
+      Object.values(resultsMap || {}).forEach(result => {
+        const buyOrders = result?.buyOrders || [];
+        buyOrders.forEach(order => {
+          if (!order || !order.type) return;
+          const price = parseFloat(order.price) || 0;
+          const qty = parseFloat(order.quantity) || 0;
+          total += price * qty;
+        });
+      });
+      return total;
+    }
+
+    function getDailyBuyTotal() {
+      if (Object.keys(calculationResults).length > 0) {
+        return getDailyBuyTotalFromResults(calculationResults);
+      }
+      if (lastCalculation) {
+        return getDailyBuyTotalFromResults({ [lastCalculation.ticker]: lastCalculation });
+      }
+      if (typeof BalanceManager !== 'undefined' && currentProfile) {
+        const freshProfile = ProfileManager.getAll().profiles[currentProfile.id];
+        return BalanceManager.calcDailyBuyAttempt(freshProfile).total || 0;
+      }
+      return 0;
+    }
+
+    function getCurrentBalanceValue() {
+      const balanceInput = document.getElementById('input-balance');
+      const inputValue = parseFloat(balanceInput?.value);
+      if (Number.isFinite(inputValue) && inputValue > 0) return inputValue;
+      const balanceInfo = (typeof BalanceManager !== 'undefined' && currentProfile)
+        ? BalanceManager.getBalance(currentProfile.id)
+        : { available: 0 };
+      return parseFloat(balanceInfo?.available) || 0;
+    }
+
+    function pickCashReserveSymbol(entryMap, forSell) {
+      const available = CASH_ETFS.filter(symbol => entryMap[symbol]);
+      if (available.length === 0) return null;
+
+      if (forSell) {
+        const withHoldings = available.find(symbol => (entryMap[symbol]?.holdings || 0) > 0);
+        return withHoldings || available[0];
+      }
+
+      return available[0];
+    }
+
+    function buildCashReserveAction({ balanceValue, dailyBuyTotal } = {}) {
+      if (!cashReserveEntries || cashReserveEntries.length === 0 || !currentProfile) return null;
+
+      const baseSymbols = cashReserveEntries.map(entry => entry.symbol);
+      const inputEntries = getCashReserveInputs(true, baseSymbols);
+      const entryMap = buildCashReserveEntryMap(inputEntries.length > 0 ? inputEntries : cashReserveEntries);
+      const balance = Number.isFinite(balanceValue) ? balanceValue : getCurrentBalanceValue();
+      const daily = Number.isFinite(dailyBuyTotal) ? dailyBuyTotal : getDailyBuyTotal();
+
+      if (balance <= 0 || daily <= 0) return null;
+
+      const buyThreshold = daily * 6;
+
+      if (balance > buyThreshold) {
+        const symbol = pickCashReserveSymbol(entryMap, false);
+        if (!symbol) return null;
+        const price = parseFloat(cashReservePrices[symbol]) || 0;
+        if (price <= 0) return null;
+        const excess = balance - buyThreshold;
+        const quantity = Math.floor(excess / price);
+        if (quantity <= 0) return null;
+        return {
+          side: 'BUY',
+          symbol,
+          quantity,
+          price,
+          excess
+        };
+      }
+
+      if (balance < daily) {
+        const symbol = pickCashReserveSymbol(entryMap, true);
+        if (!symbol) return null;
+        const price = parseFloat(cashReservePrices[symbol]) || 0;
+        if (price <= 0) return null;
+        const shortage = daily - balance;
+        let quantity = Math.ceil(shortage / price);
+        if (quantity > 0) quantity += 1; // 여유분 1주
+        const holdings = entryMap[symbol]?.holdings || 0;
+        if (holdings > 0) {
+          quantity = Math.min(quantity, Math.floor(holdings));
+        }
+        if (quantity <= 0) return null;
+        return {
+          side: 'SELL',
+          symbol,
+          quantity,
+          price,
+          shortage
+        };
+      }
+
+      return null;
+    }
+
+    function updateCashReserveRecommendation(statusOverride) {
+      const section = document.getElementById('cash-reserve-section');
+      const recoEl = document.getElementById('cash-reserve-reco');
+      if (!section || section.classList.contains('hidden')) return;
+
+      const balanceValue = statusOverride?.available;
+      const dailyBuyTotal = statusOverride?.required;
+      const action = buildCashReserveAction({ balanceValue, dailyBuyTotal });
+      cashReserveAction = action;
+
+      if (!recoEl) return;
+      if (!action) {
+        recoEl.classList.add('hidden');
+        recoEl.textContent = '';
+        return;
+      }
+
+      const verb = action.side === 'BUY' ? '매수' : '매도';
+      recoEl.textContent = `${action.symbol} ${verb} (MOC): ${action.quantity}주`;
+      recoEl.classList.remove('hidden');
+    }
+
+    function renderStockBreakdown(details, total) {
+      const container = document.getElementById('stock-breakdown');
+
+      let html = '<table class="breakdown-table">';
+      html += '<thead><tr><th>종목</th><th>1회매수</th><th>하락대비</th><th>합계</th><th>비율</th></tr></thead>';
+      html += '<tbody>';
+
+      details.forEach(d => {
+        const barWidth = Math.min(d.percentage, 100);
+        html += `
+          <tr>
+            <td class="font-medium">${d.symbol}</td>
+            <td>$${d.oneTimeBuy.toFixed(0)}</td>
+            <td>$${d.additionalAmount.toFixed(0)}</td>
+            <td class="font-medium">$${d.total.toFixed(0)}</td>
+            <td>
+              <div class="bar-cell">
+                <div class="bar" style="width: ${barWidth}px;"></div>
+                <span class="text-gray-500">${d.percentage}%</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+        <tr class="font-medium bg-gray-50">
+          <td>합계</td>
+          <td></td>
+          <td></td>
+          <td>$${total.toFixed(0)}</td>
+          <td>100%</td>
+        </tr>
+      `;
+      html += '</tbody></table>';
+
+      container.innerHTML = html;
+    }
+
+    function checkAndShowAlert(statusOverride = null) {
+      if (!currentProfile) return;
+
+      // 🔴 v4.30.0 (B5-07): 예수금 0이면 경고 숨김 (미입력 상태)
+      const balanceInfo = BalanceManager.getBalance(currentProfile.id);
+      const balanceAvailable = statusOverride?.available ?? (balanceInfo?.available || 0);
+      if (balanceAvailable <= 0) {
+        const banner = document.getElementById('alert-banner');
+        if (banner) {
+          banner.classList.add('hidden');
+          document.body.style.paddingTop = '0';
+        }
+        return;
+      }
+
+      const alert = statusOverride
+        ? {
+          show: statusOverride.status === 'INSUFFICIENT',
+          message: `내일 매수 부족! 부족금액: $${Math.abs(statusOverride.diff).toFixed(2)}`
+        }
+        : BalanceManager.checkAlert(currentProfile.id);
+      const banner = document.getElementById('alert-banner');
+
+      if (alert.show) {
+        document.getElementById('alert-message').textContent = alert.message;
+        banner.classList.remove('hidden');
+        document.body.style.paddingTop = '52px'; // Offset for fixed banner
+      } else {
+        banner.classList.add('hidden');
+        document.body.style.paddingTop = '0';
+      }
+    }
+
+    function dismissAlert() {
+      document.getElementById('alert-banner').classList.add('hidden');
+      document.body.style.paddingTop = '0';
+    }
+
+    // =====================================================
+    // Google Sheets Sync (Phase 2B)
+    // =====================================================
+
+    // =====================================================
+    // Google Sheets Sync (Simplified - Hardcoded Sheet)
+    // =====================================================
+
+    let sheetsInitialized = false;
+    let sheetsInitPromise = null;  // 🔴 v4.29.3: Race condition 방지 (C-02)
+
+    /**
+     * Google Sheets 초기화 및 로그인
+     * 🔴 v4.29.1: try/catch 추가 (C-01)
+     * 🔴 v4.29.3: Race condition 방지 - 동시 호출 시 동일 Promise 반환 (C-02)
+     * @returns {Promise<boolean>} 성공 여부
+     */
+    async function initSheets() {
+      // 이미 초기화 완료
+      if (sheetsInitialized && SheetsSync.getUserEmail()) {
+        return true;
+      }
+
+      // 🔴 v4.29.3: 초기화 진행 중이면 기존 Promise 반환 (중복 호출 방지)
+      if (sheetsInitPromise) {
+        return sheetsInitPromise;
+      }
+
+      sheetsInitPromise = (async () => {
+        try {
+          await SheetsSync.init();
+          await SheetsSync.signIn();
+          sheetsInitialized = true;
+
+          // 로그인한 이메일 표시
+          const userEmail = SheetsSync.getUserEmail();
+          const userEl = document.getElementById('sheets-user');
+          if (userEmail && userEl) {
+            userEl.textContent = userEmail;
+            userEl.classList.remove('hidden');
+          }
+
+          return true;
+        } catch (error) {
+          console.error('initSheets error:', error);
+          sheetsInitialized = false;
+          showToast('Google 연결 실패: ' + (error.message || '알 수 없는 오류'), 'error');
+          throw error;
+        } finally {
+          sheetsInitPromise = null;  // 완료 후 초기화
+        }
+      })();
+
+      return sheetsInitPromise;
+    }
+
+    /**
+     * 시트에서 데이터 불러오기 (v4.22.0: 전체 프로필 가져오기로 변경)
+     * - 시트의 모든 프로필을 로컬로 가져옴
+     * - 기존 로컬 데이터 덮어쓰기
+     */
+    async function handleSheetsPull() {
+      const status = document.getElementById('sheets-status');
+
+      try {
+        status.textContent = '확인 중...';
+        status.className = 'text-xs text-amber-600';
+
+        // Initialize and sign in
+        await initSheets();
+
+        // Get all my profiles from sheet
+        const sheetProfiles = await SheetsSync.getMyProfilesFromSheet();
+
+        if (sheetProfiles.length === 0) {
+          showToast('시트에 데이터가 없습니다', 'warning');
+          status.textContent = '데이터 없음';
+          status.className = 'text-xs text-gray-600';
+          return;
+        }
+
+        // 🔴 v4.29.4 (#22): 확인 다이얼로그 추가
+        const existingCount = ProfileManager.getAllProfiles().length;
+        const confirmMsg = existingCount > 0
+          ? `시트에서 ${sheetProfiles.length}개 프로필을 불러옵니다.\n\n⚠️ 현재 로컬에 ${existingCount}개 프로필이 있습니다.\n시트 데이터로 덮어쓰시겠습니까?`
+          : `시트에서 ${sheetProfiles.length}개 프로필을 불러옵니다.\n계속하시겠습니까?`;
+
+        if (!confirm(confirmMsg)) {
+          status.textContent = '취소됨';
+          status.className = 'text-xs text-gray-600';
+          return;
+        }
+
+        // 🔴 v4.22.0: 모든 프로필 순차적으로 가져오기
+        await pullAllProfiles(sheetProfiles);
+
+      } catch (error) {
+        console.error('Sheets pull error:', error);
+        status.textContent = '오류';
+        status.className = 'text-xs text-red-600';
+        showToast('불러오기 실패: ' + error.message, 'error');
+      }
+    }
+
+    /**
+     * 모든 시트 프로필 가져오기 (v4.22.0)
+     * - 기존 로컬 프로필 모두 삭제 (quickStart에서 이미 처리됨 - 중복 방지용)
+     * - 시트 프로필을 순차적으로 로컬에 생성
+     * - 예수금 포함 (v3.2)
+     * 🔴 v4.28.2: 시트 원본 프로필 ID 유지 (ID mismatch 해결)
+     * 🔴 v4.29.0: 기존 데이터 삭제 확인 추가
+     */
+    async function pullAllProfiles(sheetProfiles) {
+      const status = document.getElementById('sheets-status');
+      status.textContent = '가져오는 중...';
+      status.className = 'text-xs text-amber-600';
+
+      // 1. 기존 로컬 프로필 확인 및 삭제
+      const existingProfiles = ProfileManager.getAllProfiles();
+      if (existingProfiles.length > 0) {
+        // 🔴 v4.29.0: 기존 데이터가 있으면 로그만 남김 (quickStart에서 이미 클리어됨)
+        console.log(`pullAllProfiles: Clearing ${existingProfiles.length} existing profiles`);
+        existingProfiles.forEach(p => ProfileManager.delete(p.id));
+      }
+
+      // 2. 시트 프로필을 순차적으로 생성
+      let firstProfileId = null;
+      for (const sp of sheetProfiles) {
+        // 🔴 v4.28.2: 시트의 원본 프로필 ID를 그대로 사용 (createWithId)
+        const newId = ProfileManager.createWithId(sp.profileId, sp.profileName, '');
+
+        // 🔴 v4.22.0: 예수금 저장
+        if (sp.balance > 0) {
+          BalanceManager.updateBalance(newId, sp.balance);
+        }
+
+        if (sp.commissionRate !== null && sp.commissionRate !== undefined) {
+          BalanceManager.updateCommissionRate(newId, sp.commissionRate);
+        }
+
+        // 종목 데이터 추가
+        for (const stock of sp.stocks) {
+          ProfileManager.addStock(newId, {
+            symbol: stock.symbol,
+            principal: stock.principal,
+            sellPercent: stock.sellPercent,
+            locSellPercent: stock.locSellPercent
+          });
+
+          // Daily data 저장
+          ProfileManager.saveDailyData(newId, stock.symbol, {
+            avgPrice: stock.avgPrice,
+            holdings: stock.holdings,
+            totalInvested: stock.totalInvested,
+            currentPrice: 0
+          });
+        }
+
+        if (!firstProfileId) firstProfileId = newId;
+      }
+
+      // 3. 첫 번째 프로필을 활성화
+      if (firstProfileId) {
+        ProfileManager.setActive(firstProfileId);
+        currentProfile = ProfileManager.getActive();
+        SheetsSync.setCurrentProfile(firstProfileId);
+      }
+
+      // 4. UI 갱신
+      selectedTicker = null;
+      loadProfileData();
+      loadBalanceData();
+      updateProfileSelector();
+
+      status.textContent = '연결됨';
+      status.className = 'text-xs text-green-600';
+      showToast(`✅ ${sheetProfiles.length}개 프로필 가져옴`, 'success');
+    }
+
+    /**
+     * 특정 시트 프로필에서 데이터 불러오기 (v4.19.0)
+     * @param {string} sheetProfileId - 시트에 저장된 프로필 ID
+     */
+    async function pullFromSheetProfile(sheetProfileId) {
+      const status = document.getElementById('sheets-status');
+
+      try {
+        status.textContent = '불러오는 중...';
+        status.className = 'text-xs text-amber-600';
+
+        const pulled = await SheetsSync.pullFromSheetProfile(sheetProfileId);
+
+        // 🔴 selectedTicker 초기화 (시트 데이터로 덮어씌워지므로)
+        selectedTicker = null;
+
+        // Refresh UI
+        currentProfile = ProfileManager.getActive();
+        loadProfileData();
+        loadBalanceData();
+        updateProfileSelector();
+
+        status.textContent = '연결됨';
+        status.className = 'text-xs text-green-600';
+        showToast(`${pulled.length}개 종목 불러옴 (from: ${sheetProfileId.split('_')[0]})`, 'success');
+
+      } catch (error) {
+        console.error('Pull from sheet profile error:', error);
+        status.textContent = '오류';
+        status.className = 'text-xs text-red-600';
+        showToast('불러오기 실패: ' + error.message, 'error');
+      }
+    }
+
+    /**
+     * 시트에 데이터 저장하기 (DEC-150: Dual-Key)
+     */
+    async function handleSheetsPush() {
+      const status = document.getElementById('sheets-status');
+
+      // 🔴 v4.29.0: null guard 추가
+      if (!currentProfile) {
+        showToast('프로필을 먼저 선택하세요', 'warning');
+        return;
+      }
+
+      try {
+        status.textContent = '저장하는 중...';
+        status.className = 'text-xs text-amber-600';
+
+        // Initialize and sign in
+        await initSheets();
+
+        // Set current profile for filtering
+        SheetsSync.setCurrentProfile(currentProfile.id);
+
+        // Push data to sheet (내 구글ID + 내 프로필만 업데이트)
+        await SheetsSync.push();
+
+        status.textContent = '연결됨';
+        status.className = 'text-xs text-green-600';
+        // 🔴 v4.29.0: ID 대신 name 표시
+        showToast(`✅ ${currentProfile.name || '프로필'} 저장 완료`, 'success');
+
+      } catch (error) {
+        console.error('Sheets push error:', error);
+        status.textContent = '오류';
+        status.className = 'text-xs text-red-600';
+        showToast('저장 실패: ' + error.message, 'error');
+      }
+    }
+
+    /**
+     * 🔴 v4.29.1: 로그아웃 기능 추가 (#20)
+     * - Google 로그아웃
+     * - UI 초기화
+     * - 시작 화면으로 돌아가기
+     */
+    function handleSignOut() {
+      // 🔴 v4.29.2: Sheet = SSOT → 로그아웃 시 로컬 데이터도 삭제
+      if (!confirm('로그아웃 하시겠습니까?\n(로컬 데이터가 삭제됩니다. 다음 로그인 시 시트에서 다시 불러옵니다)')) {
+        return;
+      }
+
+      try {
+        // 1. Google 로그아웃
+        SheetsSync.signOut();
+        sheetsInitialized = false;
+        sheetsInitPromise = null;
+
+        // 2. 🔴 v4.29.2: 로컬 데이터 클리어 (SSOT 원칙)
+        ProfileManager.resetToDefaults();
+        currentProfile = null;
+        selectedTicker = null;
+        enabledTickers.clear();
+        calculationResults = {};
+        lastCalculation = null;
+
+        // 3. UI 초기화
+        const userEl = document.getElementById('sheets-user');
+        const statusEl = document.getElementById('sheets-status');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        if (userEl) userEl.textContent = '미연결';
+        if (statusEl) {
+          statusEl.textContent = '오프라인';
+          statusEl.className = 'text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600';
+        }
+        if (logoutBtn) logoutBtn.classList.add('hidden');
+
+        // 4. 시작 화면으로 돌아가기
+        showStartScreen();
+        showToast('로그아웃 완료', 'success');
+
+      } catch (error) {
+        console.error('Sign out error:', error);
+        showToast('로그아웃 실패', 'error');
+      }
+    }
+  </script>
+
+</body>
+</html>
