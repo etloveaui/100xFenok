@@ -4,9 +4,12 @@
  * 🔴 CRITICAL: This implements the exact Genie RPA logic
  * Reference: DEV.md, Asset_Allocator/docs/references/genie-rpa-infinitebuy-guide.md
  *
- * @version 1.3.0
+ * @version 1.4.0
  * @author 100xFenok Claude
  *
+ * v1.4.0 (02-05): V2.2 CAP 수정 + LOC% 연동 (#234)
+ *   - LOC 매도: CAP 제거 (V2.2 원본)
+ *   - LOC%: 5% 기준점으로 별% 조정 가능
  * v1.3.0 (02-03): divisions 검증 + Infinity/NaN 방지 (C-07)
  * v1.2.0 (02-03): 평단LOC 가격캡 추가 (V2.2 명세 준수)
  * v1.1.0 (02-03): sellPercent 사용자 입력 지원
@@ -65,17 +68,24 @@ const IBCalculator = (function() {
   // =====================================================
 
   /**
-   * 별% 계산
+   * 별% 계산 (LOC% 연동 지원)
    *
    * @param {number} T - T값
    * @param {number} sellPercent - 매도비율 (AFTER %)
+   * @param {number} locPercent - LOC% (사용자 입력, 기본 5%)
    * @returns {number} 별% (percentage as number, e.g., 9.5 for 9.5%)
    *
    * 🔴 CRITICAL: 별%는 sellPercent와 연동
-   * 🔴 FORMULA: 별% = sellPercent * (1 - T / 20)
+   * 🔴 FORMULA: 별% = sellPercent * (1 - T / 20) + (locPercent - 5)
+   *
+   * 🔴 v1.4.0: LOC% 연동 추가 (#234)
+   *   - LOC% = 5% (기본) → V2.2 공식 그대로
+   *   - LOC% 올리면 → 별%도 그만큼 올라감
+   *   - 예: LOC% = 45%, T=10 → 별% = 5% + 40% = 45%
    *
    * ✅ sellPercent가 높을수록 별% 시작점이 높아짐
    * ✅ T가 커질수록 별%는 0을 지나 음수로 내려감 (원본 설계)
+   * ✅ locPercent로 별% 추가 조정 가능 (5%가 기준점)
    *
    * Examples:
    *   TQQQ (10%): T=2  → 10 × (1 - 0.1) = 9%
@@ -83,11 +93,19 @@ const IBCalculator = (function() {
    *   T=20 → 별% = 0% (전후반전 기준, 진행률 50%)
    *   T=40 → TQQQ -10%, SOXL -12%
    */
-  function calculateStarPercent(T, sellPercent) {
+  function calculateStarPercent(T, sellPercent, locPercent = 5) {
     const basePercent = Number.isFinite(parseFloat(sellPercent))
       ? parseFloat(sellPercent)
       : DEFAULT_CONFIG.sellPercent.DEFAULT;
-    return basePercent * (1 - T / 20);
+
+    // V2.2 원본 공식
+    const v22StarPercent = basePercent * (1 - T / 20);
+
+    // 🔴 v1.4.0: LOC% 연동 (5%를 기준점으로)
+    const parsedLocPercent = Number.isFinite(parseFloat(locPercent)) ? parseFloat(locPercent) : 5;
+    const locOffset = parsedLocPercent - 5;
+
+    return v22StarPercent + locOffset;
   }
 
   // =====================================================
@@ -100,27 +118,35 @@ const IBCalculator = (function() {
    * @param {number} avgPrice - 평단가
    * @param {number} starPercent - 별%
    * @param {number} currentPrice - 현재가
+   * @param {boolean} isSell - true: 매도(CAP 없음), false: 매수(CAP 있음)
    * @returns {Object} { starPrice, currentPriceCap, locPrice, reason }
    *
-   * 🔴 CRITICAL: Genie RPA는 현재가+15% 캡을 적용!
-   * 🔴 FORMULA: LOC = min(별%가, 현재가×1.15)
+   * 🔴 v1.4.0: V2.2 원본 CAP 적용 범위 수정 (#234)
+   *   - LOC 매수: CAP 적용 (min(별%가, 현재가×1.15))
+   *   - LOC 매도: CAP 없음! (별%가 그대로)
    *
-   * 패턴: T값이 높을수록 별%가 낮아지고, 현재가+15%가 LOC가로 선택될 확률 ↑
+   * 🔴 CRITICAL: Genie RPA 원본 (Page 5-6)
+   *   - 평단LOC 매수: [평단] vs [현재가+15%] 작은값 ← CAP 적용
+   *   - 큰수LOC 매수: [평단별%] vs [현재가+15%] 작은값 ← CAP 적용
+   *   - 분할매도2(LOC 매도): [평단대비 ⭐%] ← CAP 없음!
+   *
+   * 패턴: T값이 높을수록 별%가 낮아지고, 현재가+15%가 LOC가로 선택될 확률 ↑ (매수만)
    */
-  function calculateLOC(avgPrice, starPercent, currentPrice) {
+  function calculateLOC(avgPrice, starPercent, currentPrice, isSell = false) {
     // 별%가 계산
     const starPrice = avgPrice * (1 + starPercent / 100);
 
-    // 현재가가 없으면 별%가만 사용 (캡 없음)
-    if (!currentPrice || currentPrice <= 0) {
+    // 현재가가 없거나 매도인 경우 → 별%가만 사용 (CAP 없음)
+    if (!currentPrice || currentPrice <= 0 || isSell) {
       return {
         starPrice: roundPrice(starPrice),
         currentPriceCap: 0,
         locPrice: roundPrice(starPrice),
-        reason: '별%가 사용 (현재가 없음)'
+        reason: isSell ? '별%가 사용 (V2.2 LOC 매도)' : '별%가 사용 (현재가 없음)'
       };
     }
 
+    // 🔴 LOC 매수만 CAP 적용
     // 현재가+15% 캡
     const currentPriceCap = currentPrice * DEFAULT_CONFIG.locCapMultiplier;
 
@@ -378,8 +404,8 @@ const IBCalculator = (function() {
       };
     }
 
-    // LOC 매도가 계산
-    const locInfo = calculateLOC(avgPrice, starPercent, currentPrice);
+    // LOC 매도가 계산 (🔴 v1.4.0: isSell=true → CAP 없음)
+    const locInfo = calculateLOC(avgPrice, starPercent, currentPrice, true);
     const sellLocPrice = getSellLOCPrice(locInfo.locPrice, avgPrice);
 
     // AFTER 매도% 결정 (🔴 v1.1.0: 사용자 입력값 우선)
@@ -468,7 +494,8 @@ const IBCalculator = (function() {
       totalInvested,
       holdings,
       currentPrice,
-      sellPercent: inputSellPercent  // 🔴 v1.1.0: 사용자 입력값 우선 (locSellPercent는 표시용)
+      sellPercent: inputSellPercent,  // 🔴 v1.1.0: 사용자 입력값 우선
+      locSellPercent = 5  // 🔴 v1.4.0: LOC% 연동 (#234)
     } = input;
 
     // Validation
@@ -496,8 +523,8 @@ const IBCalculator = (function() {
 
     const effectiveSellPercent = resolveSellPercent(ticker, inputSellPercent);
 
-    // 별% 계산
-    const starPercent = calculateStarPercent(T, effectiveSellPercent);
+    // 별% 계산 (🔴 v1.4.0: LOC% 연동)
+    const starPercent = calculateStarPercent(T, effectiveSellPercent, locSellPercent);
 
     // LOC 정보
     const locInfo = calculateLOC(avgPrice, starPercent, currentPrice);
