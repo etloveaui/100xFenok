@@ -1,17 +1,17 @@
 /**
- * IB Helper Google Sheets Sync - v3.7.6 (avgPrice Derived Value - DEC-175)
+ * IB Helper Google Sheets Sync - v3.8.0 (Row Upsert + Security Hardening)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.7.6
+ * @version 3.8.0
  * @feature #221: Apps Script WebApp으로 현재가 공개 API 구현 (로그인 불필요)
  * @fix Codex Review R1: CORS (Accept 헤더 제거), CONFIG 통합, ticker 검증, 1분 캐시
  * @fix Codex Review R2: 티커별 캐시 TTL 분리 (전역 타임스탬프 → 티커별 타임스탬프)
  * @fix Codex Review R3: JSONP 클라이언트 구현 (CORS 완전 우회 - script 삽입 방식)
  * @fix v3.7.4: fetchJSONP 변수 hoisting 버그 + 중복 resolve 방지
  * @feature #221-P3 (2026-02-04): commissionRate 동기화 (Portfolio M열)
- * @feature Session Persistence: 토큰 localStorage 저장 → 재방문 시 자동 로그인
+ * @feature Session Persistence: 토큰 sessionStorage 저장 (탭 종료 시 자동 삭제)
  * @author 100xFenok Claude
  * @decision DEC-150 (2026-02-03), DEC-153 (2026-02-03)
  * @feature #211 (2026-02-03): 현재가 연동 - Prices 시트에서 자동 조회
@@ -21,9 +21,9 @@
  * @fix #29 (2026-02-03): 라오어 가이드 기준 기본값 (SOXL 12%/5%, 기타 10%/5%)
  * @feature #222-P4 (2026-02-04): CashReserve 시트 연동 (SGOV/BIL/BILS)
  *
- * Sheet1 "Portfolio" Structure (v3.7 - 13 columns):
- * | 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%) |
- * | A열    | B열      | C열        | D열  | E열    | F열  | G열      | H열      | I열    | J열  | K열  | L열  | M열       |
+ * Sheet1 "Portfolio" Structure (v3.8 - 15 columns):
+ * | 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%) | 분할수 | revision |
+ * | A열    | B열      | C열        | D열  | E열    | F열  | G열      | H열      | I열    | J열  | K열  | L열  | M열       | N열   | O열      |
  *
  * Sheet3 "Orders" Structure (DEC-153):
  * | 날짜 | 구글ID | 프로필ID | 종목 | 주문타입 | 매수매도 | 가격 | 수량 | 총액 | 체결기준 | 체결 | 체결일 | 실제가격 |
@@ -54,10 +54,10 @@ const SheetsSync = (function() {
     // Sheets + UserInfo scope
     SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
 
-    // Sheet 구조 (v3.7): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%)
+    // Sheet 구조 (v3.8): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%) | 분할수 | revision
     // 시트 이름 없이 범위만 사용 → 첫 번째 시트에 자동 적용
     // 예수금은 프로필의 첫 번째 종목 row에만 저장
-    RANGE: 'A2:M10000'  // Skip header row, 13 columns
+    RANGE: 'A2:O10000'  // Skip header row, 15 columns
   };
 
   const CASH_RESERVE_CONFIG = {
@@ -80,6 +80,53 @@ const SheetsSync = (function() {
     return 0;
   }
 
+  const PORTFOLIO_COLS = 15; // A~O
+  const LEGACY_PORTFOLIO_COLS = 13; // A~M
+
+  function _sanitizeSymbol(symbol) {
+    const raw = String(symbol || '').toUpperCase().trim();
+    const clean = raw.replace(/[^A-Z0-9._-]/g, '');
+    return clean.slice(0, 16);
+  }
+
+  function _normalizePortfolioRow(row) {
+    if (!Array.isArray(row)) {
+      return Array(PORTFOLIO_COLS).fill('');
+    }
+
+    const normalized = [...row];
+
+    // Legacy rows without profile name column (<=12) need C column insertion.
+    if (normalized.length <= 12) {
+      normalized.splice(2, 0, '');
+    }
+
+    while (normalized.length < PORTFOLIO_COLS) normalized.push('');
+    if (normalized.length > PORTFOLIO_COLS) normalized.length = PORTFOLIO_COLS;
+    return normalized;
+  }
+
+  function _getRowSymbol(row) {
+    const normalized = _normalizePortfolioRow(row);
+    return _sanitizeSymbol(normalized[3]);
+  }
+
+  function _getProfileRevision(rows, googleId, profileId) {
+    let latest = '';
+    rows.forEach((row) => {
+      const normalized = _normalizePortfolioRow(row);
+      if (normalized[0] === googleId && normalized[1] === profileId) {
+        const rev = String(normalized[14] || '');
+        if (rev && rev > latest) latest = rev;
+      }
+    });
+    return latest;
+  }
+
+  function _getRevisionStorageKey(profileId) {
+    return `ib_helper_sheet_rev_${currentUserEmail || 'unknown'}_${profileId || 'none'}`;
+  }
+
   // =====================================================
   // STATE
   // =====================================================
@@ -94,9 +141,11 @@ const SheetsSync = (function() {
   // 🔴 v3.4.0: 중복 push 방지
   let isPushing = false;
 
-  // 🔴 v3.6.0: 세션 유지용 스토리지 키
+  // 🔴 v3.8.0: 세션 스토리지 키 (보안 강화)
   const TOKEN_STORAGE_KEY = 'ib_helper_google_token';
   const EMAIL_STORAGE_KEY = 'ib_helper_google_email';
+  const LEGACY_TOKEN_STORAGE_KEY = 'ib_helper_google_token_legacy';
+  const LEGACY_EMAIL_STORAGE_KEY = 'ib_helper_google_email_legacy';
 
   // =====================================================
   // RETRY HELPER (C-10: Rate Limit Handling)
@@ -227,8 +276,11 @@ const SheetsSync = (function() {
    */
   async function tryRestoreSession() {
     try {
-      const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-      const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
+      // v3.8.0: sessionStorage only (non-persistent). Clear legacy localStorage values.
+      const savedToken = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+      const savedEmail = sessionStorage.getItem(EMAIL_STORAGE_KEY);
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      localStorage.removeItem(EMAIL_STORAGE_KEY);
 
       if (!savedToken || !savedEmail) {
         return false;
@@ -269,8 +321,11 @@ const SheetsSync = (function() {
           ...token,
           expires_at: Date.now() + (60 * 60 * 1000)  // 1시간
         };
-        localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokenWithExpiry));
-        localStorage.setItem(EMAIL_STORAGE_KEY, currentUserEmail);
+        sessionStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokenWithExpiry));
+        sessionStorage.setItem(EMAIL_STORAGE_KEY, currentUserEmail);
+        // v3.8.0: remove any persistent legacy session residue.
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        localStorage.removeItem(EMAIL_STORAGE_KEY);
         console.log('SheetsSync: Session saved for', currentUserEmail);
       }
     } catch (error) {
@@ -282,8 +337,12 @@ const SheetsSync = (function() {
    * 🔴 v3.6.0: 저장된 세션 삭제
    */
   function clearSavedSession() {
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(EMAIL_STORAGE_KEY);
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     localStorage.removeItem(EMAIL_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_EMAIL_STORAGE_KEY);
   }
 
   /**
@@ -491,7 +550,7 @@ const SheetsSync = (function() {
 
   /**
    * Parse sheet rows to stock array
-   * 시트 컬럼 (v3.7): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%)
+   * 시트 컬럼 (v3.8): 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%) | 분할수 | revision
    * @param {Array} rows - Raw sheet rows
    * @returns {Array} Stocks array
    */
@@ -501,25 +560,29 @@ const SheetsSync = (function() {
     rows.forEach(row => {
       if (!row || row.length < 3) return;
 
-      const hasProfileName = row.length >= 12;
-      const googleId = row[0] || '';
-      const profileId = row[1] || '';
-      const profileName = hasProfileName ? row[2] : '';
+      const normalized = _normalizePortfolioRow(row);
+      const hasProfileName = normalized.length >= LEGACY_PORTFOLIO_COLS;
+      const googleId = normalized[0] || '';
+      const profileId = normalized[1] || '';
+      const profileName = hasProfileName ? normalized[2] : '';
       const baseIndex = hasProfileName ? 3 : 2;
-      const symbol = row[baseIndex];
+      const symbol = normalized[baseIndex];
 
       if (!symbol) return;
 
-      const holdings = parseInt(row[baseIndex + 2]) || 0;
-      const totalInvested = parseFloat(row[baseIndex + 3]) || 0;
-      const principal = row[baseIndex + 4];
-      const afterPercent = row[baseIndex + 5];
-      const locPercent = row[baseIndex + 6];
-      const date = row[baseIndex + 7];
-      const balance = row[baseIndex + 8];
-      const commissionRate = row.length > (baseIndex + 9) ? row[baseIndex + 9] : null;
+      const holdings = parseInt(normalized[baseIndex + 2]) || 0;
+      const totalInvested = parseFloat(normalized[baseIndex + 3]) || 0;
+      const principal = normalized[baseIndex + 4];
+      const afterPercent = normalized[baseIndex + 5];
+      const locPercent = normalized[baseIndex + 6];
+      const date = normalized[baseIndex + 7];
+      const balance = normalized[baseIndex + 8];
+      const commissionRate = normalized[baseIndex + 9];
+      const divisions = parseInt(normalized[baseIndex + 10]) || 40;
+      const revision = String(normalized[baseIndex + 11] || '');
 
-      const sym = String(symbol).trim().toUpperCase();
+      const sym = _sanitizeSymbol(symbol);
+      if (!sym) return;
       stocks.push({
         googleId,
         profileId,
@@ -529,13 +592,15 @@ const SheetsSync = (function() {
         holdings,
         totalInvested,
         principal: parseFloat(principal) || 0,
+        divisions,
         sellPercent: parseFloat(afterPercent) || (sym === 'SOXL' ? 12 : 10),
         locSellPercent: parseFloat(locPercent) || 5,
         date: date || '',
         balance: parseFloat(balance) || 0,
         commissionRate: commissionRate !== null && commissionRate !== undefined
           ? (parseFloat(commissionRate) || 0)
-          : null
+          : null,
+        revision
       });
     });
 
@@ -547,9 +612,8 @@ const SheetsSync = (function() {
   // =====================================================
 
   /**
-   * Write all rows to sheet (전체 덮어쓰기)
-   * 🔴 v3.5.0: withRetry 적용 (C-10)
-   * @param {Array} rows - 2D array of row data
+   * Write all rows to sheet (전체 재작성 - deprecated)
+   * v3.8.0: clear() 제거. 유지보수 호환용으로만 유지.
    */
   async function writeAllRows(rows) {
     const sheetId = getSpreadsheetId();
@@ -558,19 +622,61 @@ const SheetsSync = (function() {
     }
 
     return withRetry(async () => {
-      // Clear existing data (except header)
-      await gapi.client.sheets.spreadsheets.values.clear({
-        spreadsheetId: sheetId,
-        range: CONFIG.RANGE,
-      });
-
-      if (rows.length === 0) return;
-
-      // Write all data
+      if (!rows || rows.length === 0) return;
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: 'A2',  // 첫 번째 시트 자동 사용
         valueInputOption: 'USER_ENTERED',
+        resource: { values: rows }
+      });
+    });
+  }
+
+  async function batchUpdatePortfolioRows(rowUpdates) {
+    if (!rowUpdates || rowUpdates.length === 0) return;
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) throw new Error('Spreadsheet ID not set');
+
+    return withRetry(async () => {
+      await gapi.client.sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId: sheetId,
+        resource: {
+          valueInputOption: 'USER_ENTERED',
+          data: rowUpdates.map((u) => ({
+            range: `A${u.rowIndex}:O${u.rowIndex}`,
+            values: [u.values]
+          }))
+        }
+      });
+    });
+  }
+
+  async function batchClearPortfolioRows(rowIndices) {
+    if (!rowIndices || rowIndices.length === 0) return;
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) throw new Error('Spreadsheet ID not set');
+
+    return withRetry(async () => {
+      await gapi.client.sheets.spreadsheets.values.batchClear({
+        spreadsheetId: sheetId,
+        resource: {
+          ranges: rowIndices.map((rowIndex) => `A${rowIndex}:O${rowIndex}`)
+        }
+      });
+    });
+  }
+
+  async function appendPortfolioRows(rows) {
+    if (!rows || rows.length === 0) return;
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) throw new Error('Spreadsheet ID not set');
+
+    return withRetry(async () => {
+      await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: sheetId,
+        range: 'A2:O2',
+        valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
         resource: { values: rows }
       });
     });
@@ -612,16 +718,8 @@ const SheetsSync = (function() {
       // 로컬 시간 기준 날짜 (한국 시간대 반영)
       const now = new Date();
       const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const revision = `${Date.now()}`;
 
-      // 1. 전체 데이터 읽기
-      const allRows = await readAllRows();
-
-      // 2. 내 데이터 제외 (다른 사용자 데이터 보존)
-      const otherRows = allRows.filter(row =>
-        !(row[0] === currentUserEmail && row[1] === profile.id)
-      );
-
-      // 3. 내 새 데이터 생성 (v3.7: 13 columns, 프로필 이름 + 예수금 + 수수료 포함)
       // 예수금/수수료는 BalanceManager에서 가져옴 (첫 번째 row에만 저장)
       const balance = (typeof BalanceManager !== 'undefined')
         ? BalanceManager.getBalance(profile.id)?.available || 0
@@ -634,42 +732,97 @@ const SheetsSync = (function() {
         : 0.07;
       const profileName = profile.name || '프로필';
 
-      const myNewRows = profile.stocks.map((stock, index) => {
-        const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
-        const sym = stock.symbol.toUpperCase();
-        return [
-          currentUserEmail,           // A: 구글ID
-          profile.id,                 // B: 프로필ID
-          profileName,                // C: 프로필 이름
-          stock.symbol,               // D: 종목
-          // 🔴 #236 (DEC-175): avgPrice를 파생값으로 계산
-          _computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0),  // E: 평단가
-          dailyData.holdings || 0,    // F: 수량
+      // 1) Snapshot read
+      const allRows = await readAllRows();
+      const myRows = [];
+      allRows.forEach((row, idx) => {
+        const normalized = _normalizePortfolioRow(row);
+        if (normalized[0] === currentUserEmail && normalized[1] === profile.id) {
+          myRows.push({ rowIndex: idx + 2, row: normalized });
+        }
+      });
+
+      const sheetRevision = _getProfileRevision(allRows, currentUserEmail, profile.id);
+      const revisionKey = _getRevisionStorageKey(profile.id);
+      const localRevision = localStorage.getItem(revisionKey);
+      if (localRevision && sheetRevision && localRevision !== sheetRevision) {
+        throw new Error('시트 데이터가 다른 세션에서 변경되었습니다. 먼저 시트에서 불러오기를 실행하세요.');
+      }
+
+      // 2) Just-before-write recheck to shrink TOCTOU window.
+      const latestRows = await readAllRows();
+      const latestRevision = _getProfileRevision(latestRows, currentUserEmail, profile.id);
+      if (sheetRevision && latestRevision && sheetRevision !== latestRevision) {
+        throw new Error('동시 저장 충돌이 감지되었습니다. 다시 불러온 후 저장하세요.');
+      }
+
+      const existingBySymbol = new Map();
+      const duplicateRowIndices = [];
+      myRows.forEach((entry) => {
+        const sym = _getRowSymbol(entry.row);
+        if (!sym) return;
+        if (existingBySymbol.has(sym)) {
+          duplicateRowIndices.push(entry.rowIndex);
+          return;
+        }
+        existingBySymbol.set(sym, entry.rowIndex);
+      });
+
+      const targetSymbols = new Set();
+      const rowUpdates = [];
+      const appendRows = [];
+
+      let writtenCount = 0;
+      profile.stocks.forEach((stock) => {
+        const sym = _sanitizeSymbol(stock.symbol);
+        if (!sym || targetSymbols.has(sym)) return;
+        targetSymbols.add(sym);
+        const isFirstWrittenRow = writtenCount === 0;
+        writtenCount += 1;
+
+        const dailyData = ProfileManager.loadDailyData(profile.id, sym) || {};
+        const rowValues = [
+          currentUserEmail,             // A: 구글ID
+          profile.id,                   // B: 프로필ID
+          profileName,                  // C: 프로필 이름
+          sym,                          // D: 종목
+          _computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0), // E
+          dailyData.holdings || 0,      // F: 수량
           dailyData.totalInvested || 0, // G: 총매입금
-          stock.principal || 0,       // H: 세팅원금
-          // 🔴 v3.5.2: 라오어 가이드 기준 기본값 (#29)
-          stock.sellPercent || (sym === 'SOXL' ? 12 : 10),      // I: AFTER% (지정가 매도)
-          stock.locSellPercent || 5,     // J: LOC% (분할매도) - 모든 종목 5%
-          today,                      // K: 날짜
-          index === 0 ? (balance || 0) : 0,  // L: 예수금 (첫 번째 row만, 🔴 v3.5.3: 빈값→0 통일 B5-08)
-          index === 0 ? (effectiveCommissionRate || 0) : 0  // M: 수수료율(%) (첫 번째 row만)
+          stock.principal || 0,         // H: 세팅원금
+          stock.sellPercent || (sym === 'SOXL' ? 12 : 10), // I: AFTER%
+          stock.locSellPercent || 5,    // J: LOC%
+          today,                        // K: 날짜
+          isFirstWrittenRow ? (balance || 0) : 0, // L: 예수금
+          isFirstWrittenRow ? (effectiveCommissionRate || 0) : 0, // M: 수수료(%)
+          stock.divisions || 40,        // N: 분할수
+          revision                       // O: revision
         ];
+
+        const existingRowIndex = existingBySymbol.get(sym);
+        if (existingRowIndex) {
+          rowUpdates.push({ rowIndex: existingRowIndex, values: rowValues });
+        } else {
+          appendRows.push(rowValues);
+        }
       });
 
-      // 4. 합쳐서 저장
-      const normalizedOtherRows = otherRows.map(row => {
-        if (!row) return [];
-        if (row.length >= 13) return row;
-        const legacyRow = [...row];
-        legacyRow.splice(2, 0, '');
-        while (legacyRow.length < 13) legacyRow.push('');
-        return legacyRow;
+      const staleRowIndices = [];
+      myRows.forEach((entry) => {
+        const sym = _getRowSymbol(entry.row);
+        if (!sym) return;
+        if (!targetSymbols.has(sym)) staleRowIndices.push(entry.rowIndex);
       });
 
-      const finalRows = [...normalizedOtherRows, ...myNewRows];
-      await writeAllRows(finalRows);
+      const rowsToClear = [...new Set([...staleRowIndices, ...duplicateRowIndices])];
+      await batchClearPortfolioRows(rowsToClear);
+      await batchUpdatePortfolioRows(rowUpdates);
+      await appendPortfolioRows(appendRows);
 
-      console.log(`SheetsSync: Pushed ${myNewRows.length} rows for ${currentUserEmail}/${profile.id}`);
+      localStorage.setItem(revisionKey, revision);
+      console.log(
+        `SheetsSync: Pushed ${targetSymbols.size} rows (updated=${rowUpdates.length}, appended=${appendRows.length}, cleared=${rowsToClear.length}) for ${currentUserEmail}/${profile.id}`
+      );
     } finally {
       // 🔴 v3.4.0: push 완료 (에러 발생해도 플래그 해제)
       isPushing = false;
@@ -719,6 +872,7 @@ const SheetsSync = (function() {
       ProfileManager.addStock(profile.id, {
         symbol: stock.symbol,
         principal: stock.principal,
+        divisions: stock.divisions || 40,
         sellPercent: stock.sellPercent,        // H: AFTER% (시트에서 가져온 값)
         locSellPercent: stock.locSellPercent   // I: LOC% (시트에서 가져온 값)
       });
@@ -732,6 +886,15 @@ const SheetsSync = (function() {
       if (typeof BalanceManager !== 'undefined') {
         BalanceManager.updateCommissionRate(profile.id, myStocks[0].commissionRate);
       }
+    }
+
+    // v3.8.0: sync revision checkpoint for optimistic conflict detection.
+    const latestRevision = myStocks.reduce((latest, stock) => {
+      const rev = String(stock.revision || '');
+      return rev > latest ? rev : latest;
+    }, '');
+    if (latestRevision) {
+      localStorage.setItem(_getRevisionStorageKey(profile.id), latestRevision);
     }
 
     console.log(`SheetsSync: Pulled ${myStocks.length} rows for ${currentUserEmail}/${profile.id}`);
@@ -767,6 +930,11 @@ const SheetsSync = (function() {
     };
   }
 
+  function setRevisionCheckpoint(profileId, revision) {
+    if (!profileId || !revision) return;
+    localStorage.setItem(_getRevisionStorageKey(profileId), String(revision));
+  }
+
   // =====================================================
   // PROFILE DISCOVERY (Bug 14 Fix)
   // =====================================================
@@ -786,17 +954,19 @@ const SheetsSync = (function() {
     // Filter by my Google ID
     const myRows = allRows.filter(row => row[0] === currentUserEmail);
 
-    // Group by profile ID (v3.2: 예수금 포함)
+    // Group by profile ID (v3.8: 예수금 + 수수료 + 분할수 포함)
     const profileMap = {};
     myRows.forEach(row => {
       if (!row || row.length < 3) return;
-      const hasProfileName = row.length >= 12;
-      const profileId = row[1];
+      const normalized = _normalizePortfolioRow(row);
+      const hasProfileName = normalized.length >= LEGACY_PORTFOLIO_COLS;
+      const profileId = normalized[1];
       const profileName = hasProfileName
-        ? String(row[2] || '').trim()
+        ? String(normalized[2] || '').trim()
         : (profileId.split('_')[0] || 'Profile');
       const baseIndex = hasProfileName ? 3 : 2;
-      const sym = String(row[baseIndex] || '').trim().toUpperCase();
+      const sym = _sanitizeSymbol(normalized[baseIndex]);
+      if (!sym) return;
 
       if (!profileMap[profileId]) {
         profileMap[profileId] = {
@@ -808,29 +978,33 @@ const SheetsSync = (function() {
         };
       }
 
-      const rowBalance = parseFloat(row[baseIndex + 8]) || 0;
+      const rowBalance = parseFloat(normalized[baseIndex + 8]) || 0;
       if (rowBalance > 0 && profileMap[profileId].balance === 0) {
         profileMap[profileId].balance = rowBalance;
       }
 
-      if (row.length > (baseIndex + 9)) {
-        const rowCommission = row[baseIndex + 9];
+      if (normalized.length > (baseIndex + 9)) {
+        const rowCommission = normalized[baseIndex + 9];
         if (rowCommission !== undefined && profileMap[profileId].commissionRate === 0) {
           profileMap[profileId].commissionRate = parseFloat(rowCommission) || 0;
         }
       }
 
-      const holdings = parseInt(row[baseIndex + 2]) || 0;
-      const totalInvested = parseFloat(row[baseIndex + 3]) || 0;
+      const holdings = parseInt(normalized[baseIndex + 2]) || 0;
+      const totalInvested = parseFloat(normalized[baseIndex + 3]) || 0;
+      const divisions = parseInt(normalized[baseIndex + 10]) || 40;
+      const revision = String(normalized[baseIndex + 11] || '');
 
       profileMap[profileId].stocks.push({
         symbol: sym,
         avgPrice: _computeAvgPrice(totalInvested, holdings),
         holdings,
         totalInvested,
-        principal: parseFloat(row[baseIndex + 4]) || 0,
-        sellPercent: parseFloat(row[baseIndex + 5]) || (sym === 'SOXL' ? 12 : 10),
-        locSellPercent: parseFloat(row[baseIndex + 6]) || 5
+        principal: parseFloat(normalized[baseIndex + 4]) || 0,
+        divisions,
+        sellPercent: parseFloat(normalized[baseIndex + 5]) || (sym === 'SOXL' ? 12 : 10),
+        locSellPercent: parseFloat(normalized[baseIndex + 6]) || 5,
+        revision
       });
     });
 
@@ -876,6 +1050,7 @@ const SheetsSync = (function() {
       ProfileManager.addStock(profile.id, {
         symbol: stock.symbol,
         principal: stock.principal,
+        divisions: stock.divisions || 40,
         sellPercent: stock.sellPercent,        // H: AFTER% (시트에서 가져온 값)
         locSellPercent: stock.locSellPercent   // I: LOC% (시트에서 가져온 값)
       });
@@ -883,6 +1058,14 @@ const SheetsSync = (function() {
 
     if (myStocks.length > 0 && myStocks[0].profileName) {
       ProfileManager.update(profile.id, { name: myStocks[0].profileName });
+    }
+
+    const latestRevision = myStocks.reduce((latest, stock) => {
+      const rev = String(stock.revision || '');
+      return rev > latest ? rev : latest;
+    }, '');
+    if (latestRevision) {
+      localStorage.setItem(_getRevisionStorageKey(profile.id), latestRevision);
     }
 
     console.log(`SheetsSync: Pulled ${myStocks.length} rows from sheet profile "${sheetProfileId}" to local profile "${profile.id}"`);
@@ -1064,7 +1247,7 @@ const SheetsSync = (function() {
 
     // 🔴 v3.7.3: 1차 - JSONP로 WebApp 호출 (CORS 완전 우회)
     try {
-      const data = await fetchJSONP(`${CONFIG.WEBAPP_URL}?ticker=${sym}`);
+      const data = await fetchJSONP(`${CONFIG.WEBAPP_URL}?ticker=${encodeURIComponent(sym)}`);
       const price = data.current || data.price || 0;
       const source = data.priceSource || 'REGULAR';
       if (price > 0) {
@@ -1118,7 +1301,7 @@ const SheetsSync = (function() {
     }
 
     try {
-      const data = await fetchJSONP(`${CONFIG.WEBAPP_URL}?ticker=${sym}`);
+      const data = await fetchJSONP(`${CONFIG.WEBAPP_URL}?ticker=${encodeURIComponent(sym)}`);
       const price = data.current || data.price || 0;
       const source = data.priceSource || 'REGULAR';
       if (price > 0) {
@@ -1601,6 +1784,7 @@ const SheetsSync = (function() {
     // Profile Discovery (Bug 14 Fix)
     getMyProfilesFromSheet,
     pullFromSheetProfile,
+    setRevisionCheckpoint,
 
     // Orders (DEC-153: Order Execution Tracking)
     saveOrders,

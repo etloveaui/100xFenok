@@ -532,8 +532,8 @@
             <input type="number" id="input-locSellPercent" class="w-full px-3 py-2 border rounded-lg" value="6" step="0.5" inputmode="decimal" onchange="saveCurrentInputs()">
           </div>
         </div>
-        <!-- 🔴 v4.45.1: 버전 표시 -->
-        <div class="text-right text-[10px] text-gray-300 mt-2">v4.45.1 (02-06)</div>
+        <!-- 🔴 v4.46.0: 버전 표시 -->
+        <div class="text-right text-[10px] text-gray-300 mt-2">v4.46.0 (02-06)</div>
       </div>
     </details>
 
@@ -952,12 +952,28 @@
     </div>
   </div>
 
+  <!-- App Dialog (confirm/prompt replacement) -->
+  <div id="app-dialog" class="fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="app-dialog-title">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-xl p-4" onclick="event.stopPropagation()">
+      <h3 id="app-dialog-title" class="text-base font-semibold text-gray-800"></h3>
+      <p id="app-dialog-message" class="mt-2 text-sm text-gray-600 whitespace-pre-line"></p>
+      <div id="app-dialog-input-wrap" class="mt-3 hidden">
+        <input id="app-dialog-input" type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+      </div>
+      <div id="app-dialog-extra" class="mt-3 text-xs text-gray-500 space-y-1"></div>
+      <div class="mt-4 flex justify-end gap-2">
+        <button id="app-dialog-cancel" type="button" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">취소</button>
+        <button id="app-dialog-confirm" type="button" class="px-3 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600">확인</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.45.1 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.46.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -1068,6 +1084,23 @@
     // Toast Notification System
     // =====================================================
 
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeProfileName(name) {
+      return String(name ?? '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, 40);
+    }
+
+    function sanitizeTickerSymbol(symbol) {
+      return String(symbol ?? '').toUpperCase().trim().replace(/[^A-Z0-9._-]/g, '').slice(0, 16);
+    }
+
     function showToast(message, type = 'info', duration = 3000) {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
@@ -1076,14 +1109,90 @@
       const icon = type === 'success' ? 'fa-check-circle' :
                    type === 'error' ? 'fa-exclamation-circle' :
                    type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
-
-      toast.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
+      const iconEl = document.createElement('i');
+      iconEl.className = `fas ${icon}`;
+      const textEl = document.createElement('span');
+      textEl.textContent = String(message ?? '');
+      toast.appendChild(iconEl);
+      toast.appendChild(textEl);
       container.appendChild(toast);
 
       setTimeout(() => {
         toast.style.animation = 'toast-out 0.3s ease-out forwards';
         setTimeout(() => toast.remove(), 300);
       }, duration);
+    }
+
+    function showAppDialog({
+      title = '확인',
+      message = '',
+      confirmText = '확인',
+      cancelText = '취소',
+      showCancel = true,
+      input = null,
+      extraLines = []
+    } = {}) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('app-dialog');
+        const titleEl = document.getElementById('app-dialog-title');
+        const msgEl = document.getElementById('app-dialog-message');
+        const inputWrap = document.getElementById('app-dialog-input-wrap');
+        const inputEl = document.getElementById('app-dialog-input');
+        const extraEl = document.getElementById('app-dialog-extra');
+        const cancelBtn = document.getElementById('app-dialog-cancel');
+        const confirmBtn = document.getElementById('app-dialog-confirm');
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        confirmBtn.textContent = confirmText;
+        cancelBtn.textContent = cancelText;
+        cancelBtn.classList.toggle('hidden', !showCancel);
+
+        extraEl.textContent = '';
+        (extraLines || []).forEach((line) => {
+          const p = document.createElement('p');
+          p.textContent = String(line ?? '');
+          extraEl.appendChild(p);
+        });
+
+        if (input) {
+          inputWrap.classList.remove('hidden');
+          inputEl.value = input.value || '';
+          inputEl.placeholder = input.placeholder || '';
+        } else {
+          inputWrap.classList.add('hidden');
+          inputEl.value = '';
+          inputEl.placeholder = '';
+        }
+
+        function close(result) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          modal.onclick = null;
+          cancelBtn.onclick = null;
+          confirmBtn.onclick = null;
+          resolve(result);
+        }
+
+        modal.onclick = (e) => {
+          if (e.target.id === 'app-dialog') {
+            close({ confirmed: false, value: null });
+          }
+        };
+        cancelBtn.onclick = () => close({ confirmed: false, value: null });
+        confirmBtn.onclick = () => {
+          const value = input ? inputEl.value : null;
+          close({ confirmed: true, value });
+        };
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (input) {
+          setTimeout(() => inputEl.focus(), 0);
+        } else {
+          setTimeout(() => confirmBtn.focus(), 0);
+        }
+      });
     }
 
     // =====================================================
@@ -1147,7 +1256,7 @@
     // Profile Delete
     // =====================================================
 
-    function deleteCurrentProfile() {
+    async function deleteCurrentProfile() {
       if (!currentProfile) return;
 
       const profiles = ProfileManager.getAllProfiles();
@@ -1156,7 +1265,13 @@
         return;
       }
 
-      const confirmed = confirm(`"${currentProfile.name}" 프로필을 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`);
+      const { confirmed } = await showAppDialog({
+        title: '프로필 삭제',
+        message: `"${currentProfile.name}" 프로필을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+        confirmText: '삭제',
+        cancelText: '취소',
+        showCancel: true
+      });
       if (!confirmed) return;
 
       // Save ID to delete
@@ -1282,18 +1397,25 @@
 
       if (profiles.length === 0) {
         // No profiles - show empty state
-        selector.innerHTML = '<option value="">➕ 프로필을 추가하세요</option>';
+        selector.innerHTML = '';
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = '➕ 프로필을 추가하세요';
+        selector.appendChild(option);
         emptyState.classList.remove('hidden');
         mainContent.style.display = 'none';  // inline style override
       } else {
         // Has profiles - show main content
         emptyState.classList.add('hidden');
         mainContent.style.display = '';  // restore default (lg:flex takes over)
-        selector.innerHTML = profiles.map(p => `
-          <option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>
-            👤 ${p.name}
-          </option>
-        `).join('');
+        selector.innerHTML = '';
+        profiles.forEach((p) => {
+          const option = document.createElement('option');
+          option.value = p.id;
+          option.selected = p.id === activeId;
+          option.textContent = `👤 ${p.name}`;
+          selector.appendChild(option);
+        });
       }
     }
 
@@ -1374,33 +1496,35 @@
       enabledTickers.clear();
 
       container.innerHTML = stocks.map(s => {
+        const symbol = sanitizeTickerSymbol(s.symbol);
+        if (!symbol) return '';
         // 🔴 v4.28.1: 필수값 체크 - AND 조건으로 변경 (계산 로직과 일치)
         // 🔴 #236 (DEC-175): avgPrice를 파생값으로 계산
-        const dailyData = ProfileManager.loadDailyData(currentProfile?.id, s.symbol) || {};
+        const dailyData = ProfileManager.loadDailyData(currentProfile?.id, symbol) || {};
         const avgPrice = computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0);
         const principal = s.principal || 0;
         const hasRequired = (avgPrice > 0 && principal > 0);
         const isDisabled = !hasRequired;
-        const isEnabled = ProfileManager.isStockEnabled(s.symbol);
+        const isEnabled = ProfileManager.isStockEnabled(symbol);
         const isChecked = isEnabled && !isDisabled;
 
         if (isChecked) {
-          enabledTickers.add(s.symbol);
+          enabledTickers.add(symbol);
         }
 
         return `
           <div class="ticker-item flex items-center gap-2">
             <input type="checkbox"
-                   id="ticker-check-${s.symbol}"
+                   id="ticker-check-${symbol}"
                    class="ticker-checkbox w-5 h-5 accent-blue-500"
                    ${isChecked ? 'checked' : ''}
                    ${isDisabled ? 'disabled' : ''}
-                   onchange="toggleTicker('${s.symbol}', this.checked)"
+                   onchange="toggleTicker('${symbol}', this.checked)"
                    title="${isDisabled ? '평단가 또는 세팅원금 입력 필요' : '계산 대상'}">
-            <button onclick="selectTicker('${s.symbol}')"
+            <button onclick="selectTicker('${symbol}')"
                     class="ticker-btn flex-1 touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100 ${isDisabled ? 'opacity-50' : ''}"
-                    data-ticker="${s.symbol}">
-              ${s.symbol}
+                    data-ticker="${symbol}">
+              ${escapeHtml(symbol)}
             </button>
           </div>
         `;
@@ -1450,11 +1574,14 @@
       const profiles = ProfileManager.getAllProfiles();
       const activeId = ProfileManager.getActiveId();
 
-      selector.innerHTML = profiles.map(p => `
-        <option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>
-          ${p.name}${p.id === activeId ? ' ✓' : ''}
-        </option>
-      `).join('');
+      selector.innerHTML = '';
+      profiles.forEach((p) => {
+        const option = document.createElement('option');
+        option.value = p.id;
+        option.selected = p.id === activeId;
+        option.textContent = `${p.name}${p.id === activeId ? ' ✓' : ''}`;
+        selector.appendChild(option);
+      });
     }
 
     /**
@@ -1531,7 +1658,7 @@
     function saveProfileName() {
       if (!currentProfile) return;
 
-      const newName = document.getElementById('modal-profile-name').value.trim();
+      const newName = sanitizeProfileName(document.getElementById('modal-profile-name').value);
       if (!newName) return;
 
       ProfileManager.update(currentProfile.id, { name: newName });
@@ -1562,10 +1689,10 @@
       container.innerHTML = stocks.map(s => `
         <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
           <div>
-            <span class="font-medium">${s.symbol}</span>
+            <span class="font-medium">${escapeHtml(sanitizeTickerSymbol(s.symbol))}</span>
             <span class="text-xs text-gray-500 ml-2">$${(s.principal || 0).toLocaleString()}</span>
           </div>
-          <button onclick="removeStockFromProfile('${s.symbol}')" class="text-red-400 hover:text-red-600">
+          <button onclick="removeStockFromProfile('${sanitizeTickerSymbol(s.symbol)}')" class="text-red-400 hover:text-red-600">
             <i class="fas fa-trash-alt"></i>
           </button>
         </div>
@@ -1589,11 +1716,11 @@
         return;
       }
 
-      const symbol = document.getElementById('new-stock-symbol').value.toUpperCase().trim();
+      const symbol = sanitizeTickerSymbol(document.getElementById('new-stock-symbol').value);
       const principal = parseFloat(document.getElementById('new-stock-principal').value) || 0;
 
       if (!symbol) {
-        showToast('종목코드를 입력하세요', 'warning');
+        showToast('종목코드를 올바르게 입력하세요 (A-Z,0-9,.,_,-)', 'warning');
         return;
       }
 
@@ -1615,15 +1742,24 @@
       triggerAutoSync();
     }
 
-    function removeStockFromProfile(symbol) {
+    async function removeStockFromProfile(symbol) {
       // 🔴 v4.29.0: null guard 추가
       if (!currentProfile) {
         showToast('프로필을 먼저 선택하세요', 'warning');
         return;
       }
 
-      if (confirm(`${symbol} 종목을 삭제하시겠습니까?`)) {
-        ProfileManager.removeStock(currentProfile.id, symbol);
+      const safeSymbol = sanitizeTickerSymbol(symbol);
+      const { confirmed } = await showAppDialog({
+        title: '종목 삭제',
+        message: `${safeSymbol} 종목을 삭제하시겠습니까?`,
+        confirmText: '삭제',
+        cancelText: '취소',
+        showCancel: true
+      });
+
+      if (confirmed) {
+        ProfileManager.removeStock(currentProfile.id, safeSymbol);
         currentProfile = ProfileManager.getActive();
         updateModalStocksList();
 
@@ -1631,7 +1767,7 @@
         updateTickerButtons();
 
         // 삭제된 종목이 현재 선택된 종목이면 첫 번째 종목 선택
-        if (selectedTicker === symbol) {
+        if (selectedTicker === safeSymbol) {
           const firstStock = currentProfile.stocks[0];
           if (firstStock) {
             selectTicker(firstStock.symbol);
@@ -1640,7 +1776,7 @@
           }
         }
 
-        showToast(`${symbol} 종목 삭제됨`, 'success');
+        showToast(`${safeSymbol} 종목 삭제됨`, 'success');
         triggerAutoSync();
       }
     }
@@ -1794,8 +1930,15 @@
         showToast('시작 실패: ' + error.message, 'error');
 
         // 폴백: 오프라인 모드 제안
-        if (confirm('Google 연동 실패.\n오프라인 모드로 시작하시겠습니까?')) {
-          quickStartOffline();
+        const { confirmed } = await showAppDialog({
+          title: '오프라인 모드 전환',
+          message: 'Google 연동에 실패했습니다.\n오프라인 모드로 시작하시겠습니까?',
+          confirmText: '오프라인 시작',
+          cancelText: '취소',
+          showCancel: true
+        });
+        if (confirmed) {
+          await quickStartOffline();
         }
       }
     }
@@ -1805,9 +1948,24 @@
      * - Google 동기화 없음
      * - 로컬 스토리지에만 저장
      */
-    function quickStartOffline() {
-      const name = prompt('프로필 이름을 입력하세요:', '내 프로필');
-      if (!name) return;
+    async function quickStartOffline() {
+      const { confirmed, value } = await showAppDialog({
+        title: '오프라인 프로필 생성',
+        message: 'Google 동기화 없이 사용할 프로필 이름을 입력하세요.',
+        confirmText: '생성',
+        cancelText: '취소',
+        showCancel: true,
+        input: {
+          value: '내 프로필',
+          placeholder: '프로필 이름'
+        }
+      });
+      if (!confirmed) return;
+      const name = sanitizeProfileName(value);
+      if (!name) {
+        showToast('프로필 이름을 입력하세요', 'warning');
+        return;
+      }
 
       // 🔴 v4.29.0: 기존 로컬 데이터 클리어 (깨끗한 시작)
       ProfileManager.resetToDefaults();
@@ -1908,7 +2066,7 @@
         const parts = line.split('|');
         if (parts.length < 7) continue;
 
-        const symbol = parts[1]?.trim();
+        const symbol = sanitizeTickerSymbol(parts[1]?.trim());
         if (!symbol) continue;
 
         const principal = parseFloat(parts[2]) || 0;
@@ -1943,26 +2101,28 @@
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onload = async (ev) => {
           try {
             const content = ev.target.result;
             const stocks = parseDatFile(content);
 
             if (stocks.length === 0) {
-              alert('파일에서 종목 데이터를 찾을 수 없습니다');
+              showToast('파일에서 종목 데이터를 찾을 수 없습니다', 'warning');
               return;
             }
 
             // Ask user what to do
-            const action = confirm(
-              `${stocks.length}개 종목을 찾았습니다:\n` +
-              stocks.map(s => `  • ${s.symbol}: $${s.principal.toLocaleString()}`).join('\n') +
-              `\n\n현재 프로필에 추가하시겠습니까?\n` +
-              `[확인] = 현재 프로필에 추가\n` +
-              `[취소] = 새 프로필로 생성`
-            );
+            const stockSummary = stocks.map(s => `• ${s.symbol}: $${s.principal.toLocaleString()}`);
+            const { confirmed: replaceCurrent } = await showAppDialog({
+              title: 'DAT 가져오기',
+              message: `${stocks.length}개 종목을 찾았습니다.`,
+              confirmText: '현재 프로필 교체',
+              cancelText: '새 프로필 생성',
+              showCancel: true,
+              extraLines: stockSummary
+            });
 
-            if (action && currentProfile) {
+            if (replaceCurrent && currentProfile) {
               // Replace current profile stocks (기존 종목 삭제 후 새 종목으로 교체)
               // 1. 기존 종목 모두 삭제
               const existingStocks = [...(currentProfile.stocks || [])];
@@ -1979,8 +2139,23 @@
               showToast(`${stocks.length}개 종목으로 교체되었습니다`, 'success');
             } else {
               // Create new profile
-              const name = prompt('새 프로필 이름:', file.name.replace('.dat', ''));
-              if (!name) return;
+              const { confirmed, value } = await showAppDialog({
+                title: '새 프로필 생성',
+                message: '가져온 종목을 저장할 새 프로필 이름을 입력하세요.',
+                confirmText: '생성',
+                cancelText: '취소',
+                showCancel: true,
+                input: {
+                  value: file.name.replace('.dat', ''),
+                  placeholder: '프로필 이름'
+                }
+              });
+              if (!confirmed) return;
+              const name = sanitizeProfileName(value);
+              if (!name) {
+                showToast('프로필 이름을 입력하세요', 'warning');
+                return;
+              }
 
               // 🔴 v4.15.0: selectedTicker 초기화 (Bug 6 수정)
               if (currentProfile && selectedTicker) {
@@ -1999,11 +2174,11 @@
               updateProfileSelector();
               loadProfileData();
               closeProfileModal();
-              alert(`새 프로필 "${name}"이(가) 생성되었습니다`);
+              showToast(`새 프로필 "${name}" 생성 완료`, 'success');
             }
           } catch (error) {
             console.error('DAT file parse error:', error);
-            alert('파일 파싱 오류: ' + error.message);
+            showToast('파일 파싱 오류: ' + error.message, 'error');
           }
         };
         reader.readAsText(file);
@@ -2357,7 +2532,7 @@
       document.getElementById('today-buy-helper').classList.add('hidden');
 
       // Show feedback
-      alert(`✅ 수량 +${totalBuyQty}주, 매입금 +$${totalAmount.toFixed(2)} 추가됨\n\n내일 다시 계산하세요!`);
+      showToast(`수량 +${totalBuyQty}주, 매입금 +$${totalAmount.toFixed(2)} 반영됨`, 'success', 2500);
     }
 
     // =====================================================
@@ -2617,7 +2792,7 @@
       if (!input.avgPrice) missing.push('평단가');
 
       if (missing.length > 0) {
-        alert(`필수 입력값이 없습니다:\n• ${missing.join('\n• ')}`);
+        showToast(`필수 입력값: ${missing.join(', ')}`, 'warning');
         return;
       }
 
@@ -2625,7 +2800,7 @@
       const result = IBCalculator.calculate(input);
 
       if (result.error) {
-        alert(result.error);
+        showToast(result.error, 'error');
         return;
       }
 
@@ -4088,7 +4263,15 @@
           ? `시트에서 ${sheetProfiles.length}개 프로필을 불러옵니다.\n\n⚠️ 현재 로컬에 ${existingCount}개 프로필이 있습니다.\n시트 데이터로 덮어쓰시겠습니까?`
           : `시트에서 ${sheetProfiles.length}개 프로필을 불러옵니다.\n계속하시겠습니까?`;
 
-        if (!confirm(confirmMsg)) {
+        const { confirmed } = await showAppDialog({
+          title: '시트 데이터 불러오기',
+          message: confirmMsg,
+          confirmText: '불러오기',
+          cancelText: '취소',
+          showCancel: true
+        });
+
+        if (!confirmed) {
           status.textContent = '취소됨';
           status.className = 'text-xs text-gray-600';
           return;
@@ -4146,6 +4329,7 @@
           ProfileManager.addStock(newId, {
             symbol: stock.symbol,
             principal: stock.principal,
+            divisions: stock.divisions || 40,
             sellPercent: stock.sellPercent,
             locSellPercent: stock.locSellPercent
           });
@@ -4157,6 +4341,14 @@
             totalInvested: stock.totalInvested,
             currentPrice: 0
           });
+        }
+
+        const latestRevision = (sp.stocks || []).reduce((latest, stock) => {
+          const rev = String(stock.revision || '');
+          return rev > latest ? rev : latest;
+        }, '');
+        if (latestRevision && typeof SheetsSync.setRevisionCheckpoint === 'function') {
+          SheetsSync.setRevisionCheckpoint(newId, latestRevision);
         }
 
         if (!firstProfileId) firstProfileId = newId;
@@ -4258,9 +4450,16 @@
      * - UI 초기화
      * - 시작 화면으로 돌아가기
      */
-    function handleSignOut() {
+    async function handleSignOut() {
       // 🔴 v4.29.2: Sheet = SSOT → 로그아웃 시 로컬 데이터도 삭제
-      if (!confirm('로그아웃 하시겠습니까?\n(로컬 데이터가 삭제됩니다. 다음 로그인 시 시트에서 다시 불러옵니다)')) {
+      const { confirmed } = await showAppDialog({
+        title: '로그아웃',
+        message: '로그아웃 하시겠습니까?\n로컬 데이터가 삭제되며, 다음 로그인 시 시트에서 다시 불러옵니다.',
+        confirmText: '로그아웃',
+        cancelText: '취소',
+        showCancel: true
+      });
+      if (!confirmed) {
         return;
       }
 
