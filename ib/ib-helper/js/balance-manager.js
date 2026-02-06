@@ -17,6 +17,16 @@ const BalanceManager = (function() {
   const STEP_RATE = 0.02;       // 2% compound decline
   const MAX_DECLINE_PCT = 0.15; // Max -15%
 
+  /**
+   * 🔴 #236 (DEC-175): avgPrice 파생값 계산 (IIFE 내부용)
+   */
+  function _computeAvgPrice(totalInvested, holdings) {
+    if (totalInvested > 0 && holdings > 0) {
+      return parseFloat((totalInvested / holdings).toFixed(4));
+    }
+    return 0;
+  }
+
   // =====================================================
   // Core Calculations
   // =====================================================
@@ -133,9 +143,10 @@ const BalanceManager = (function() {
       // Get daily data for this stock
       const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
 
+      // 🔴 #236 (DEC-175): avgPrice를 파생값으로 계산
       const stockWithData = {
         ...stock,
-        avgPrice: dailyData.avgPrice || 0,
+        avgPrice: _computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0),
         currentPrice: dailyData.currentPrice || 0,
         quantity: dailyData.holdings || 0
       };
