@@ -46,7 +46,7 @@ const SheetsSync = (function() {
 
     // 🔴 v3.7.0 (#221): Apps Script WebApp URL (현재가 공개 API)
     // 배포 후 URL 입력: https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
-    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbylbZauwxMIyQDldIGceY1j3uAPJQ98FQ-dtzAg4Oh9jFJjNFB-mxrdok5iTPVb8QMF/exec',
+    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbw1-bVK3zTDxBtJTt4-RAwA8oM-RjWaxAqhn0lkyfJZBHL8_iuFIOmQ5Oq2gAIwQiWS/exec',
 
     DISCOVERY_DOCS: [
       'https://sheets.googleapis.com/$discovery/rest?version=v4'
