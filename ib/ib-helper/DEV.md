@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.46.0
+> **Version**: 4.47.1
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-06
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration + #234 V2.2 LOC + **#236 avgPrice Derived Value (DEC-175)** + #237 통합 재검토 R1 + **#238/#239/#240 안정화 배치** | ❌ #220 REVERTED
+> **Updated**: 2026-02-07
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration + #234 V2.2 LOC + **#236 avgPrice Derived Value (DEC-175)** + #237 통합 재검토 R1 + **#238/#239/#240 안정화 배치** + **#241 Copy Message + #242 BITU Bug Fix** | ❌ #220 REVERTED
 > **Priority**: 🟡 #225 P4 테스트 → #207 Telegram (보안/동기화 핫픽스 반영 완료)
 >
 > **📋 Price Data Flow** (DEC-172):
