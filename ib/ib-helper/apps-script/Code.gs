@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.3.1
+ * @version 2.3.2
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -14,11 +14,12 @@
  * 5. Run `setupTrigger()` once for daily auto execution (09:00 KST)
  *
  * SHEET STRUCTURE REQUIRED:
- * - Sheet1 "Portfolio": Portfolio (A:L)
+ * - Sheet1 "Portfolio": Portfolio (A:O)
  * - Sheet2 "Prices": GOOGLEFINANCE prices (manual setup)
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v2.3.2 (2026-02-06): Portfolio revision(O열) 갱신 + 문서 주석 A:O 반영
  * - v2.3.1 (2026-02-04): Dedupe key simplified (drop price/qty)
  * - v2.3.0 (2026-02-04): Balance migration + commission per profile
  * - v2.2.0 (2026-02-04): Auto balance update on execution + commission config
@@ -414,8 +415,8 @@ function updateOrdersSheet(sheet, executedOrders) {
 /**
  * Update Portfolio sheet based on executed orders
  *
- * Portfolio columns (v3.7 - 13 columns):
- * | A: googleId | B: profileId | C: profileName | D: ticker | E: avgPrice | F: holdings | G: totalInvested | H: principal | I: AFTER% | J: LOC% | K: date | L: balance | M: commissionRate |
+ * Portfolio columns (v3.8 - 15 columns):
+ * | A: googleId | B: profileId | C: profileName | D: ticker | E: avgPrice | F: holdings | G: totalInvested | H: principal | I: AFTER% | J: LOC% | K: date | L: balance | M: commissionRate | N: divisions | O: revision |
  *
  * @param {Spreadsheet} ss - Spreadsheet
  * @param {Array} executedOrders - Orders that were executed
@@ -503,6 +504,8 @@ function updatePortfolio(ss, executedOrders) {
 
     const rowNum = i + 1;
 
+    let touched = false;
+
     if (orders) {
       let avgPrice = parseFloat(row[4]) || 0;    // E: avgPrice
       let holdings = parseInt(row[5]) || 0;       // F: holdings
@@ -539,6 +542,7 @@ function updatePortfolio(ss, executedOrders) {
       portfolioSheet.getRange(rowNum, 6).setValue(holdings);      // F: holdings
       portfolioSheet.getRange(rowNum, 7).setValue(totalInvested); // G: totalInvested
       portfolioSheet.getRange(rowNum, 11).setValue(today);        // K: date
+      touched = true;
 
       Logger.log('Updated portfolio: ' + key + ' → holdings=' + holdings + ', avgPrice=' + avgPrice);
     }
@@ -546,6 +550,11 @@ function updatePortfolio(ss, executedOrders) {
     if (balanceByProfile[profileKey] !== undefined &&
         balanceRowByProfile[profileKey] === i) {
       portfolioSheet.getRange(rowNum, 12).setValue(balanceByProfile[profileKey]); // L: balance
+      touched = true;
+    }
+
+    if (touched) {
+      portfolioSheet.getRange(rowNum, 15).setValue(Date.now()); // O: revision
     }
   }
 }
