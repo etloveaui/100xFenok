@@ -1881,6 +1881,9 @@
 
         showToast(`${userEmail} 로그인 완료`, 'success');
 
+        // 🔴 #242: 체크박스 enabled 상태 보존 (resetToDefaults로 프로필 삭제 전)
+        const savedEnabledStates = _collectEnabledStates();
+
         // 🔴 v4.29.0: 기존 로컬 데이터 클리어 (다른 계정 데이터 충돌 방지)
         ProfileManager.resetToDefaults();
         selectedTicker = null;
@@ -1898,7 +1901,7 @@
           SheetsSync.setCurrentProfile(profileId);
         } else {
           // 시트에서 프로필 로드
-          await pullAllProfiles(sheetProfiles);
+          await pullAllProfiles(sheetProfiles, savedEnabledStates);
           showToast(`${sheetProfiles.length}개 프로필 불러옴`, 'success');
         }
 
@@ -2656,7 +2659,8 @@
       await ensureCashReservePrices();
 
       const { buyOrders, sellOrders, quarterStopLoss, calculation, input } = lastCalculation;
-      const headerLine = `【${lastCalculation.ticker}】 T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
+      const avgPrice = computeAvgPrice(input?.totalInvested || 0, input?.holdings || 0);
+      const headerLine = `【${lastCalculation.ticker}】 평단 $${formatOrderPrice(avgPrice)} | T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
 
       const lines = [
         `📊 ${lastCalculation.ticker} 오늘의 주문`,
@@ -2672,14 +2676,23 @@
         lines.push(`  ${cashAction.symbol} ${verb} (${orderType}): ${cashAction.quantity}주`);
       }
 
-      lines.push('', '📉 매수 (LOC)', ...buyOrders.map(o => formatOrderLine(o)));
+      // B: 매수 가격 내림차순
+      const sortedBuy = [...buyOrders].sort((a, b) => b.price - a.price);
+      lines.push('', '🟢 BUY (LOC)', ...sortedBuy.map(o => formatOrderLine(o)));
 
       if (quarterStopLoss && quarterStopLoss.active) {
         lines.push('', '🔴 쿼터손절 (MOC)');
         lines.push(`  MOC 매도: ${quarterStopLoss.mocQuantity}주`);
       } else {
-        lines.push('', '📈 매도');
-        lines.push(...sellOrders.map(o => formatOrderLine(o)));
+        // C: 매도 지정가 먼저, 그룹 내 가격 내림차순
+        const sortedSell = [...sellOrders].sort((a, b) => {
+          const aIsLimit = (a.type || '').includes('지정가');
+          const bIsLimit = (b.type || '').includes('지정가');
+          if (aIsLimit !== bIsLimit) return aIsLimit ? -1 : 1;
+          return b.price - a.price;
+        });
+        lines.push('', '🔴 SELL');
+        lines.push(...sortedSell.map(o => formatOrderLine(o)));
       }
 
       lines.push('', `━━━━━━━━━━━━━━━━━━━━`);
@@ -3361,20 +3374,40 @@
 
       lines.push('');
 
-      for (const [ticker, result] of Object.entries(calculationResults)) {
+      // D: 종목 순서 — TQQQ(1) → SOXL(2) → 나머지 알파벳
+      const sortedTickers = Object.entries(calculationResults).sort(([a], [b]) => {
+        const priority = { 'TQQQ': 0, 'SOXL': 1 };
+        const aP = priority[a] ?? 2;
+        const bP = priority[b] ?? 2;
+        if (aP !== bP) return aP - bP;
+        return a.localeCompare(b);
+      });
+
+      for (const [ticker, result] of sortedTickers) {
         const { buyOrders, sellOrders, quarterStopLoss, calculation, input } = result;
-        const headerLine = `【${ticker}】 T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
+        // A: 평단 추가
+        const avgPrice = computeAvgPrice(input?.totalInvested || 0, input?.holdings || 0);
+        const headerLine = `【${ticker}】 평단 $${formatOrderPrice(avgPrice)} | T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
 
         lines.push(headerLine);
-        lines.push('📉 매수 (LOC)');
-        lines.push(...buyOrders.map(o => formatOrderLine(o)));
+        // B: 매수 가격 내림차순
+        const sortedBuy = [...buyOrders].sort((a, b) => b.price - a.price);
+        lines.push('🟢 BUY (LOC)');
+        lines.push(...sortedBuy.map(o => formatOrderLine(o)));
 
         if (quarterStopLoss && quarterStopLoss.active) {
           lines.push('🔴 쿼터손절 (MOC)');
           lines.push(`  MOC 매도: ${quarterStopLoss.mocQuantity}주`);
         } else {
-          lines.push('📈 매도');
-          lines.push(...sellOrders.map(o => formatOrderLine(o)));
+          // C: 매도 지정가 먼저, 그룹 내 가격 내림차순
+          const sortedSell = [...sellOrders].sort((a, b) => {
+            const aIsLimit = (a.type || '').includes('지정가');
+            const bIsLimit = (b.type || '').includes('지정가');
+            if (aIsLimit !== bIsLimit) return aIsLimit ? -1 : 1;
+            return b.price - a.price;
+          });
+          lines.push('🔴 SELL');
+          lines.push(...sortedSell.map(o => formatOrderLine(o)));
         }
 
         lines.push('');
@@ -4289,24 +4322,49 @@
     }
 
     /**
+     * 🔴 #242: 체크박스 enabled 상태 수집 (프로필 삭제 전 호출)
+     * @returns {Object} { profileId: { symbol: false } } - disabled 종목만 기록
+     */
+    function _collectEnabledStates() {
+      const states = {};
+      ProfileManager.getAllProfiles().forEach(p => {
+        (p.stocks || []).forEach(s => {
+          if (s.enabled === false) {
+            if (!states[p.id]) states[p.id] = {};
+            states[p.id][s.symbol] = false;
+          }
+        });
+      });
+      return states;
+    }
+
+    /**
      * 모든 시트 프로필 가져오기 (v4.22.0)
      * - 기존 로컬 프로필 모두 삭제 (quickStart에서 이미 처리됨 - 중복 방지용)
      * - 시트 프로필을 순차적으로 로컬에 생성
      * - 예수금 포함 (v3.2)
      * 🔴 v4.28.2: 시트 원본 프로필 ID 유지 (ID mismatch 해결)
      * 🔴 v4.29.0: 기존 데이터 삭제 확인 추가
+     * 🔴 #242: savedEnabledStates 파라미터로 체크박스 상태 복원
      */
-    async function pullAllProfiles(sheetProfiles) {
+    async function pullAllProfiles(sheetProfiles, savedEnabledStates) {
       const status = document.getElementById('sheets-status');
       status.textContent = '가져오는 중...';
       status.className = 'text-xs text-amber-600';
 
       // 1. 기존 로컬 프로필 확인 및 삭제
       const existingProfiles = ProfileManager.getAllProfiles();
+
+      // 🔴 #242: 체크박스 상태 수집 (quickStart에서 미리 전달받지 못한 경우)
+      if (!savedEnabledStates) {
+        savedEnabledStates = _collectEnabledStates();
+      }
+
       if (existingProfiles.length > 0) {
-        // 🔴 v4.29.0: 기존 데이터가 있으면 로그만 남김 (quickStart에서 이미 클리어됨)
-        console.log(`pullAllProfiles: Clearing ${existingProfiles.length} existing profiles`);
-        existingProfiles.forEach(p => ProfileManager.delete(p.id));
+        // #242 follow-up: deleteProfile 제약(active/last profile)으로 잔존 가능성이 있어
+        // 수동 pull에서도 resetToDefaults()로 완전 초기화 후 시트 기준으로 재생성한다.
+        console.log(`pullAllProfiles: Resetting ${existingProfiles.length} existing profiles`);
+        ProfileManager.resetToDefaults();
       }
 
       // 2. 시트 프로필을 순차적으로 생성
@@ -4325,13 +4383,17 @@
         }
 
         // 종목 데이터 추가
+        // 🔴 #242: 이전 체크박스 상태 복원을 위해 savedEnabledStates 참조
+        const profileStates = savedEnabledStates[sp.profileId] || {};
         for (const stock of sp.stocks) {
+          const enabled = profileStates[stock.symbol] ?? true;
           ProfileManager.addStock(newId, {
             symbol: stock.symbol,
             principal: stock.principal,
             divisions: stock.divisions || 40,
             sellPercent: stock.sellPercent,
-            locSellPercent: stock.locSellPercent
+            locSellPercent: stock.locSellPercent,
+            enabled  // 🔴 #242: disabled 종목 상태 복원
           });
 
           // Daily data 저장
