@@ -432,10 +432,10 @@ const ProfileManager = (function() {
   const DAILY_KEY = 'ib_daily_data';
 
   /**
-   * Save daily input data (평단가, 총매입금, 보유량, 현재가)
+   * Save daily input data (총매입금, 보유량, 현재가)
    * @param {string} profileId
    * @param {string} symbol
-   * @param {Object} data - { avgPrice, totalInvested, holdings, currentPrice }
+   * @param {Object} data - { totalInvested, holdings, currentPrice }
    */
   function saveDailyData(profileId, symbol, dailyData) {
     const key = `${DAILY_KEY}_${profileId}_${symbol}`;

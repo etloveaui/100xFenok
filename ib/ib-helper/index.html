@@ -1375,9 +1375,9 @@
 
       container.innerHTML = stocks.map(s => {
         // 🔴 v4.28.1: 필수값 체크 - AND 조건으로 변경 (계산 로직과 일치)
-        // avgPrice는 dailyData에서, principal은 stock에서 가져옴
+        // 🔴 #236 (DEC-175): avgPrice를 파생값으로 계산
         const dailyData = ProfileManager.loadDailyData(currentProfile?.id, s.symbol) || {};
-        const avgPrice = dailyData.avgPrice || 0;
+        const avgPrice = computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0);
         const principal = s.principal || 0;
         const hasRequired = (avgPrice > 0 && principal > 0);
         const isDisabled = !hasRequired;
@@ -2072,8 +2072,8 @@
     function saveDailyInputs() {
       if (!currentProfile || !selectedTicker) return;
 
+      // 🔴 #236 (DEC-175): avgPrice 저장 제거 - 파생값으로 전환
       const data = {
-        avgPrice: parseFloat(document.getElementById('input-avgPrice').value) || 0,
         totalInvested: parseFloat(document.getElementById('input-totalInvested').value) || 0,
         holdings: parseInt(document.getElementById('input-holdings').value) || 0
       };
@@ -2124,16 +2124,28 @@
     }
 
     /**
-     * 🔴 v4.30.0 (B5-11): 평단가 자동 계산
-     * 총매입금 / 보유수량 = 평단가
+     * 🔴 #236 (DEC-175): avgPrice 파생값 계산 유틸리티
+     * avgPrice = totalInvested / holdings (4자리 고정)
+     * 저장하지 않고 항상 계산해서 사용
+     */
+    function computeAvgPrice(totalInvested, holdings) {
+      if (totalInvested > 0 && holdings > 0) {
+        return parseFloat(formatPrice(totalInvested / holdings));
+      }
+      return 0;
+    }
+
+    /**
+     * 🔴 v4.30.0 (B5-11): 평단가 자동 계산 → UI 필드 업데이트
+     * 🔴 #236 (DEC-175): computeAvgPrice() 사용
      */
     function autoCalcAvgPrice() {
       const totalInvested = parseFloat(document.getElementById('input-totalInvested').value) || 0;
       const holdings = parseInt(document.getElementById('input-holdings').value) || 0;
       const avgInput = document.getElementById('input-avgPrice');
+      const avgPrice = computeAvgPrice(totalInvested, holdings);
 
-      if (totalInvested > 0 && holdings > 0) {
-        const avgPrice = formatPrice(totalInvested / holdings);
+      if (avgPrice > 0) {
         avgInput.value = avgPrice;
         console.log(`autoCalcAvgPrice: ${totalInvested} / ${holdings} = ${avgPrice}`);
       } else {
@@ -2151,10 +2163,12 @@
 
       const data = ProfileManager.loadDailyData(currentProfile.id, selectedTicker);
       if (data) {
-        if (data.avgPrice) document.getElementById('input-avgPrice').value = data.avgPrice;
+        // 🔴 #236 (DEC-175): avgPrice 로드 제거 - totalInvested/holdings만 로드
         if (data.totalInvested) document.getElementById('input-totalInvested').value = data.totalInvested;
         if (data.holdings) document.getElementById('input-holdings').value = data.holdings;
       }
+      // 🔴 #236 (DEC-175): avgPrice는 항상 파생값으로 계산
+      autoCalcAvgPrice();
     }
 
     // =====================================================
@@ -2250,7 +2264,8 @@
       const current = parseInt(input.value) || 0;
       input.value = current + amount;
 
-      // Trigger save and recalculate
+      // 🔴 #236 (DEC-175): holdings 변경 시 avgPrice 재계산
+      autoCalcAvgPrice();
       saveDailyInputs();
       if (hasRequiredInputs()) {
         calculateOrders();
@@ -2329,7 +2344,8 @@
       const currentInvested = parseFloat(investedInput.value) || 0;
       investedInput.value = (currentInvested + totalAmount).toFixed(2);
 
-      // 🔴 v4.14.0: totalInvested 변경 후 저장 (버그 수정)
+      // 🔴 #236 (DEC-175): totalInvested+holdings 모두 변경 후 avgPrice 재계산
+      autoCalcAvgPrice();
       saveDailyInputs();
 
       // Hide helper
@@ -2537,7 +2553,10 @@
     // =====================================================
 
     function hasRequiredInputs() {
-      const avgPrice = parseFloat(document.getElementById('input-avgPrice').value);
+      // 🔴 #236 (DEC-175): avgPrice를 input 필드가 아닌 파생값으로 검증
+      const totalInvested = parseFloat(document.getElementById('input-totalInvested').value) || 0;
+      const holdings = parseInt(document.getElementById('input-holdings').value) || 0;
+      const avgPrice = computeAvgPrice(totalInvested, holdings);
       const principal = parseFloat(document.getElementById('input-principal').value);
       // 현재가는 선택 - 없으면 별%가만 사용
       return avgPrice > 0 && principal > 0;
@@ -2571,13 +2590,17 @@
         showToast('⚠️ 현재가 조회 실패 - 별%가만 사용', 'warning', 2000);
       }
 
+      // 🔴 #236 (DEC-175): avgPrice를 파생값으로 계산
+      const totalInvested = parseFloat(document.getElementById('input-totalInvested').value) || 0;
+      const holdings = parseInt(document.getElementById('input-holdings').value) || 0;
+
       const input = {
         ticker: selectedTicker,
         principal: parseFloat(document.getElementById('input-principal').value) || 0,
         divisions: parseInt(document.getElementById('input-divisions').value) || 40,
-        avgPrice: parseFloat(document.getElementById('input-avgPrice').value) || 0,
-        totalInvested: parseFloat(document.getElementById('input-totalInvested').value) || 0,
-        holdings: parseInt(document.getElementById('input-holdings').value) || 0,
+        avgPrice: computeAvgPrice(totalInvested, holdings),
+        totalInvested: totalInvested,
+        holdings: holdings,
         currentPrice: currentPrice,  // 🔴 #211: Prices 시트에서 자동 조회
         sellPercent: parseFloat(document.getElementById('input-sellPercent').value) || defaultSellPercent,
         locSellPercent: parseFloat(document.getElementById('input-locSellPercent').value) || 5  // 🔴 #234: LOC% 연동
@@ -2662,9 +2685,12 @@
           continue;
         }
 
-        // 🔴 v4.28.1: dailyData에서 평단가/수량/총매입금 가져오기
+        // 🔴 v4.28.1: dailyData에서 수량/총매입금 가져오기
+        // 🔴 #236 (DEC-175): avgPrice를 파생값으로 계산
         const dailyData = ProfileManager.loadDailyData(currentProfile.id, ticker) || {};
-        const avgPrice = dailyData.avgPrice || 0;
+        const totalInvested = dailyData.totalInvested || 0;
+        const holdings = dailyData.holdings || 0;
+        const avgPrice = computeAvgPrice(totalInvested, holdings);
         const principal = stockData.principal || 0;
 
         if (!avgPrice || !principal) {
@@ -2680,8 +2706,8 @@
           principal: principal,
           divisions: stockData.divisions || 40,
           avgPrice: avgPrice,
-          totalInvested: dailyData.totalInvested || 0,
-          holdings: dailyData.holdings || 0,
+          totalInvested: totalInvested,
+          holdings: holdings,
           currentPrice: priceMap[ticker] || 0,
           sellPercent: stockData.sellPercent || defaultSellPercent,
           locSellPercent: stockData.locSellPercent || 5  // 🔴 #234: LOC% 연동
@@ -4120,8 +4146,8 @@
           });
 
           // Daily data 저장
+          // 🔴 #236 (DEC-175): avgPrice 저장 제거 - 파생값으로 전환
           ProfileManager.saveDailyData(newId, stock.symbol, {
-            avgPrice: stock.avgPrice,
             holdings: stock.holdings,
             totalInvested: stock.totalInvested,
             currentPrice: 0

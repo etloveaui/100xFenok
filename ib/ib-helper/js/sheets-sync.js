@@ -1,10 +1,10 @@
 /**
- * IB Helper Google Sheets Sync - v3.7.5 (Commission Rate Sync)
+ * IB Helper Google Sheets Sync - v3.7.6 (avgPrice Derived Value - DEC-175)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.7.5
+ * @version 3.7.6
  * @feature #221: Apps Script WebApp으로 현재가 공개 API 구현 (로그인 불필요)
  * @fix Codex Review R1: CORS (Accept 헤더 제거), CONFIG 통합, ticker 검증, 1분 캐시
  * @fix Codex Review R2: 티커별 캐시 TTL 분리 (전역 타임스탬프 → 티커별 타임스탬프)
@@ -64,6 +64,21 @@ const SheetsSync = (function() {
     SHEET_NAME: 'CashReserve',
     RANGE: 'A2:F10000'
   };
+
+  // =====================================================
+  // UTILITIES
+  // =====================================================
+
+  /**
+   * 🔴 #236 (DEC-175): avgPrice 파생값 계산 (IIFE 내부용)
+   * index.html의 computeAvgPrice()와 동일한 4자리 고정 로직
+   */
+  function _computeAvgPrice(totalInvested, holdings) {
+    if (totalInvested > 0 && holdings > 0) {
+      return parseFloat((totalInvested / holdings).toFixed(4));
+    }
+    return 0;
+  }
 
   // =====================================================
   // STATE
@@ -495,9 +510,8 @@ const SheetsSync = (function() {
 
       if (!symbol) return;
 
-      const avgPrice = row[baseIndex + 1];
-      const holdings = row[baseIndex + 2];
-      const totalInvested = row[baseIndex + 3];
+      const holdings = parseInt(row[baseIndex + 2]) || 0;
+      const totalInvested = parseFloat(row[baseIndex + 3]) || 0;
       const principal = row[baseIndex + 4];
       const afterPercent = row[baseIndex + 5];
       const locPercent = row[baseIndex + 6];
@@ -511,9 +525,9 @@ const SheetsSync = (function() {
         profileId,
         symbol: sym,
         profileName: profileName || '',
-        avgPrice: parseFloat(avgPrice) || 0,
-        holdings: parseInt(holdings) || 0,
-        totalInvested: parseFloat(totalInvested) || 0,
+        avgPrice: _computeAvgPrice(totalInvested, holdings),
+        holdings,
+        totalInvested,
         principal: parseFloat(principal) || 0,
         sellPercent: parseFloat(afterPercent) || (sym === 'SOXL' ? 12 : 10),
         locSellPercent: parseFloat(locPercent) || 5,
@@ -628,7 +642,8 @@ const SheetsSync = (function() {
           profile.id,                 // B: 프로필ID
           profileName,                // C: 프로필 이름
           stock.symbol,               // D: 종목
-          dailyData.avgPrice || 0,    // E: 평단가
+          // 🔴 #236 (DEC-175): avgPrice를 파생값으로 계산
+          _computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0),  // E: 평단가
           dailyData.holdings || 0,    // F: 수량
           dailyData.totalInvested || 0, // G: 총매입금
           stock.principal || 0,       // H: 세팅원금
@@ -692,9 +707,9 @@ const SheetsSync = (function() {
 
     // 각 종목의 일일 데이터 업데이트 (v3.2: AFTER% + LOC% + 예수금 포함)
     myStocks.forEach(stock => {
-      // 1. Daily data 저장 (평단가, 수량, 총매입금)
+      // 1. Daily data 저장 (수량, 총매입금)
+      // 🔴 #236 (DEC-175): avgPrice 저장 제거 - 파생값으로 전환
       ProfileManager.saveDailyData(profile.id, stock.symbol, {
-        avgPrice: stock.avgPrice,
         holdings: stock.holdings,
         totalInvested: stock.totalInvested,
         currentPrice: 0  // 현재가는 수동 입력
@@ -805,11 +820,14 @@ const SheetsSync = (function() {
         }
       }
 
+      const holdings = parseInt(row[baseIndex + 2]) || 0;
+      const totalInvested = parseFloat(row[baseIndex + 3]) || 0;
+
       profileMap[profileId].stocks.push({
         symbol: sym,
-        avgPrice: parseFloat(row[baseIndex + 1]) || 0,
-        holdings: parseInt(row[baseIndex + 2]) || 0,
-        totalInvested: parseFloat(row[baseIndex + 3]) || 0,
+        avgPrice: _computeAvgPrice(totalInvested, holdings),
+        holdings,
+        totalInvested,
         principal: parseFloat(row[baseIndex + 4]) || 0,
         sellPercent: parseFloat(row[baseIndex + 5]) || (sym === 'SOXL' ? 12 : 10),
         locSellPercent: parseFloat(row[baseIndex + 6]) || 5
@@ -846,9 +864,9 @@ const SheetsSync = (function() {
 
     // Update local profile with sheet data (v3.1: AFTER% + LOC% 포함)
     myStocks.forEach(stock => {
-      // 1. Daily data 저장 (평단가, 수량, 총매입금)
+      // 1. Daily data 저장 (수량, 총매입금)
+      // 🔴 #236 (DEC-175): avgPrice 저장 제거 - 파생값으로 전환
       ProfileManager.saveDailyData(profile.id, stock.symbol, {
-        avgPrice: stock.avgPrice,
         holdings: stock.holdings,
         totalInvested: stock.totalInvested,
         currentPrice: 0  // 현재가는 수동 입력
