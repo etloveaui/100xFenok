@@ -105,10 +105,12 @@ const BalanceManager = (function() {
       const totalInvested = (stock.avgPrice || 0) * (stock.quantity || 0);
       const T = IBCalculator.calculateT(totalInvested, oneTimeBuy);
       const parsedSellPercent = parseFloat(stock.sellPercent);
+      const parsedLocPercent = parseFloat(stock.locSellPercent);
       const effectiveSellPercent = Number.isFinite(parsedSellPercent)
         ? parsedSellPercent
         : IBCalculator.getSellPercent(stock.symbol);
-      const starPct = IBCalculator.calculateStarPercent(T, effectiveSellPercent);
+      const effectiveLocPercent = Number.isFinite(parsedLocPercent) ? parsedLocPercent : 5;
+      const starPct = IBCalculator.calculateStarPercent(T, effectiveSellPercent, effectiveLocPercent);
       const locInfo = IBCalculator.calculateLOC(stock.avgPrice, starPct, stock.currentPrice);
       return locInfo.locPrice;
     }
@@ -119,7 +121,10 @@ const BalanceManager = (function() {
     const fallbackSellPercent = Number.isFinite(parseFloat(stock.sellPercent))
       ? parseFloat(stock.sellPercent)
       : (stock.symbol === 'SOXL' ? 12 : 10);
-    const starPct = (fallbackSellPercent * (1 - T / 20)) / 100;
+    const fallbackLocPercent = Number.isFinite(parseFloat(stock.locSellPercent))
+      ? parseFloat(stock.locSellPercent)
+      : 5;
+    const starPct = (fallbackSellPercent * (1 - T / 20) + (fallbackLocPercent - 5)) / 100;
     const starPrice = stock.avgPrice * (1 + starPct);
     const locCap = stock.currentPrice * 1.15;
     return Math.min(starPrice, locCap);  // 매수용이므로 CAP 적용

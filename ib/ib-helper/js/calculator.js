@@ -207,7 +207,8 @@ const IBCalculator = (function() {
       totalInvested,
       currentPrice,
       ticker,
-      sellPercent: inputSellPercent
+      sellPercent: inputSellPercent,
+      locSellPercent = 5
     } = params;
 
     // 1회 매수금
@@ -216,9 +217,9 @@ const IBCalculator = (function() {
     // T값 계산
     const T = calculateT(totalInvested, oneTimeBuy);
 
-    // 별% 계산 (sellPercent 연동)
+    // 별% 계산 (sellPercent + LOC% 연동)
     const effectiveSellPercent = resolveSellPercent(ticker, inputSellPercent);
-    const starPercent = calculateStarPercent(T, effectiveSellPercent);
+    const starPercent = calculateStarPercent(T, effectiveSellPercent, locSellPercent);
 
     // LOC 계산
     const locInfo = calculateLOC(avgPrice, starPercent, currentPrice);
@@ -537,7 +538,8 @@ const IBCalculator = (function() {
       totalInvested,
       currentPrice,
       ticker,
-      sellPercent: effectiveSellPercent
+      sellPercent: effectiveSellPercent,
+      locSellPercent
     });
 
     // 매도 주문 생성
@@ -562,7 +564,8 @@ const IBCalculator = (function() {
         totalInvested,
         holdings,
         currentPrice,
-        sellPercent: inputSellPercent
+        sellPercent: inputSellPercent,
+        locSellPercent
       },
       calculation: {
         oneTimeBuy: roundPrice(oneTimeBuy),
