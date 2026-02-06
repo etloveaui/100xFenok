@@ -519,7 +519,7 @@
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">분할 수</label>
-            <input type="number" id="input-divisions" class="w-full px-3 py-2 border rounded-lg" value="40" inputmode="numeric">
+            <input type="number" id="input-divisions" class="w-full px-3 py-2 border rounded-lg" value="40" inputmode="numeric" onchange="saveCurrentInputs()">
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
@@ -532,8 +532,8 @@
             <input type="number" id="input-locSellPercent" class="w-full px-3 py-2 border rounded-lg" value="6" step="0.5" inputmode="decimal" onchange="saveCurrentInputs()">
           </div>
         </div>
-        <!-- 🔴 v4.44.0: 버전 표시 -->
-        <div class="text-right text-[10px] text-gray-300 mt-2">v4.44.0 (02-05)</div>
+        <!-- 🔴 v4.45.1: 버전 표시 -->
+        <div class="text-right text-[10px] text-gray-300 mt-2">v4.45.1 (02-06)</div>
       </div>
     </details>
 
@@ -957,7 +957,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.31.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.45.1 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -2024,9 +2024,10 @@
     function saveCurrentInputs(silent = false) {
       if (!currentProfile || !selectedTicker) return;
 
-      // 2. Stock settings 저장 (세팅원금, AFTER%, LOC%)
+      // 2. Stock settings 저장 (세팅원금, 분할 수, AFTER%, LOC%)
       // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
       const principal = parseFloat(document.getElementById('input-principal').value) || 0;
+      const divisions = parseInt(document.getElementById('input-divisions').value) || 40;
       const sellPercent = parseFloat(document.getElementById('input-sellPercent').value) || (selectedTicker === 'SOXL' ? 12 : 10);
       const locSellPercent = parseFloat(document.getElementById('input-locSellPercent').value) || 5;
 
@@ -2044,6 +2045,7 @@
       ProfileManager.addStock(currentProfile.id, {
         symbol: selectedTicker,
         principal: principal,
+        divisions: divisions,
         sellPercent: sellPercent,
         locSellPercent: locSellPercent
       });
@@ -2053,7 +2055,7 @@
         showToast('✓ 자동 저장됨', 'success', 800);
       }
 
-      console.log(`saveCurrentInputs: ${selectedTicker} principal=${principal}, sellPercent=${sellPercent}, locSellPercent=${locSellPercent}`);
+      console.log(`saveCurrentInputs: ${selectedTicker} principal=${principal}, divisions=${divisions}, sellPercent=${sellPercent}, locSellPercent=${locSellPercent}`);
 
       // 🔴 v4.20.0: Auto-sync to Google Sheets (debounced)
       triggerAutoSync();
@@ -2197,16 +2199,19 @@
       // 🔴 v4.29.5: principal 기본값 13000 버그 수정 - 없으면 빈값
       // 🔴 v4.29.6: 라오어 가이드 기준 기본값 (#29)
       const stock = ProfileManager.getStock(ticker);
+      const defaultDivisions = 40;
       const defaultSellPercent = ticker === 'SOXL' ? 12 : 10;
       const defaultLocPercent = 5;
       if (stock) {
         document.getElementById('input-principal').value = stock.principal || '';
+        document.getElementById('input-divisions').value = stock.divisions || defaultDivisions;
         document.getElementById('input-sellPercent').value = stock.sellPercent || defaultSellPercent;
         document.getElementById('input-locSellPercent').value = stock.locSellPercent || defaultLocPercent;
       } else {
         // 🔴 v4.16.0: 종목이 프로필에 없으면 input-principal도 초기화 (Bug 11 수정)
         // 이전 프로필의 값이 새 프로필에 저장되는 것 방지
         document.getElementById('input-principal').value = '';
+        document.getElementById('input-divisions').value = defaultDivisions;
         document.getElementById('input-sellPercent').value = defaultSellPercent;
         document.getElementById('input-locSellPercent').value = defaultLocPercent;
       }
