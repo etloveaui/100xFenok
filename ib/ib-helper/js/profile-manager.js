@@ -22,6 +22,15 @@ const ProfileManager = (function() {
     return cleaned || 'profile';
   }
 
+  function sanitizeProfileName(name = '') {
+    return String(name || '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, 40);
+  }
+
+  function sanitizeStockSymbol(symbol = '') {
+    const clean = String(symbol || '').toUpperCase().trim().replace(/[^A-Z0-9._-]/g, '');
+    return clean.slice(0, 16);
+  }
+
   // =====================================================
   // Default Profiles - Empty (Users add their own)
   // =====================================================
@@ -140,12 +149,13 @@ const ProfileManager = (function() {
    */
   function create(name, accountNumber = '') {
     const data = getAll();
-    const baseId = sanitizeProfileId(name).substring(0, 20);
+    const safeName = sanitizeProfileName(name) || '프로필';
+    const baseId = sanitizeProfileId(safeName).substring(0, 20);
     const id = `${baseId}_${Date.now()}`;
 
     data.profiles[id] = {
       id,
-      name,
+      name: safeName,
       accountNumber,
       created: new Date().toISOString(),
       updated: new Date().toISOString(),
@@ -176,10 +186,11 @@ const ProfileManager = (function() {
    */
   function createWithId(id, name, accountNumber = '') {
     const data = getAll();
+    const safeName = sanitizeProfileName(name) || '프로필';
 
     // 이미 존재하면 업데이트만
     if (data.profiles[id]) {
-      data.profiles[id].name = name;
+      data.profiles[id].name = safeName;
       data.profiles[id].updated = new Date().toISOString();
       save(data);
       return id;
@@ -187,7 +198,7 @@ const ProfileManager = (function() {
 
     data.profiles[id] = {
       id,
-      name,
+      name: safeName,
       accountNumber,
       created: new Date().toISOString(),
       updated: new Date().toISOString(),
@@ -220,15 +231,20 @@ const ProfileManager = (function() {
     if (data.profiles[profileId]) {
       // Deep merge for nested objects
       const profile = data.profiles[profileId];
+      const nextUpdates = { ...updates };
 
-      if (updates.settings) {
-        profile.settings = { ...profile.settings, ...updates.settings };
-        delete updates.settings;
+      if (typeof nextUpdates.name === 'string') {
+        nextUpdates.name = sanitizeProfileName(nextUpdates.name) || profile.name;
+      }
+
+      if (nextUpdates.settings) {
+        profile.settings = { ...profile.settings, ...nextUpdates.settings };
+        delete nextUpdates.settings;
       }
 
       data.profiles[profileId] = {
         ...profile,
-        ...updates,
+        ...nextUpdates,
         updated: new Date().toISOString()
       };
 
@@ -279,14 +295,23 @@ const ProfileManager = (function() {
 
     if (!profile) return false;
 
+    const safeSymbol = sanitizeStockSymbol(stock?.symbol);
+    if (!safeSymbol) return false;
+
+    const normalizedStock = {
+      ...stock,
+      symbol: safeSymbol,
+      divisions: parseInt(stock?.divisions) || 40
+    };
+
     // Check if stock already exists
-    const existingIndex = profile.stocks.findIndex(s => s.symbol === stock.symbol);
+    const existingIndex = profile.stocks.findIndex(s => s.symbol === safeSymbol);
     if (existingIndex >= 0) {
       // Update existing
-      profile.stocks[existingIndex] = { ...profile.stocks[existingIndex], ...stock };
+      profile.stocks[existingIndex] = { ...profile.stocks[existingIndex], ...normalizedStock };
     } else {
       // Add new
-      profile.stocks.push(stock);
+      profile.stocks.push(normalizedStock);
     }
 
     profile.updated = new Date().toISOString();
@@ -385,9 +410,21 @@ const ProfileManager = (function() {
     try {
       const profile = JSON.parse(jsonString);
       const data = getAll();
+      const safeName = sanitizeProfileName(profile?.name) || 'imported_profile';
+      const safeStocks = Array.isArray(profile?.stocks)
+        ? profile.stocks
+            .map((stock) => ({
+              ...stock,
+              symbol: sanitizeStockSymbol(stock?.symbol),
+              divisions: parseInt(stock?.divisions) || 40
+            }))
+            .filter((stock) => Boolean(stock.symbol))
+        : [];
 
       // Generate new ID to avoid conflicts
-      profile.id = profile.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
+      profile.id = safeName.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
+      profile.name = safeName;
+      profile.stocks = safeStocks;
       profile.created = new Date().toISOString();
       profile.updated = new Date().toISOString();
 
