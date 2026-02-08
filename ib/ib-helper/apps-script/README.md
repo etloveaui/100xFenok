@@ -6,8 +6,8 @@ Google Apps Script code for IB Helper automation.
 
 | File | Version | Purpose |
 |------|---------|---------|
-| `Code.gs` | v2.1.0 | Order execution, dedupe, triggers |
-| `yahoo-quotes.gs` | v2.1.0 | Price fetching (Yahoo/Stooq/GOOGLEFINANCE) + WebApp API |
+| `Code.gs` | v2.5.0 | Order execution, dedupe, triggers, weekend/holiday guard |
+| `yahoo-quotes.gs` | v3.0.0 | Price fetching (CNBC/Yahoo/Stooq/GOOGLEFINANCE) + WebApp API |
 
 ## Deployment Guide
 
@@ -38,7 +38,7 @@ Press **Ctrl+S** or click **Save** icon
 1. Click **Deploy** → **New deployment**
 2. Select type: **Web app**
 3. Settings:
-   - Description: "IB Helper Price API v2.1.0"
+   - Description: "IB Helper Price API v2.5.0"
    - Execute as: **Me**
    - Who has access: **Anyone**
 4. Click **Deploy**
@@ -83,7 +83,7 @@ Press **Ctrl+S** or click **Save** icon
 
 ### Portfolio (Sheet1)
 ```
-| A: googleId | B: profileId | C: profileName | D: ticker | E: avgPrice | F: holdings | G: totalInvested | H: principal | I: AFTER% | J: LOC% | K: date | L: balance |
+| A: googleId | B: profileId | C: profileName | D: ticker | E: avgPrice | F: holdings | G: totalInvested | H: principal | I: AFTER% | J: LOC% | K: date | L: balance | M: commissionRate | N: divisions | O: revision |
 ```
 
 ### Prices (Sheet2)
@@ -103,6 +103,8 @@ Formulas:
 
 ## Version History
 
+- **v2.5.0** (2026-02-08): NYSE holiday detection (rule-based), weekend guard, totalInvested commission fix
+- **v3.0.0** yahoo-quotes (2026-02-05): CNBC primary source, pre/post market support
 - **v2.1.0** (2026-02-04): Added dedupeOrders(), JSONP security filter
 - **v2.0.0** (2026-02-04): WebApp API with JSONP support
 - **v1.0.0** (2026-02-03): Initial release
