@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.3.2
+ * @version 2.5.0
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,6 +19,9 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v2.5.0 (2026-02-08): NYSE holiday detection (Rule-based, no API)
+ * - v2.4.0 (2026-02-08): shouldProcessToday() weekend guard + defensive trim/toUpperCase
+ * - v2.3.3 (2026-02-08): totalInvested commission fix (balance consistency)
  * - v2.3.2 (2026-02-06): Portfolio revision(O열) 갱신 + 문서 주석 A:O 반영
  * - v2.3.1 (2026-02-04): Dedupe key simplified (drop price/qty)
  * - v2.3.0 (2026-02-04): Balance migration + commission per profile
@@ -51,10 +54,159 @@ function normalizeCommissionRate(input) {
 }
 
 /**
+ * Weekend + NYSE holiday guard
+ * Checks if US market was open yesterday (KST today = US yesterday)
+ * @returns {boolean} true if today should be processed
+ */
+function shouldProcessToday() {
+  const now = new Date();
+  const kstDay = parseInt(Utilities.formatDate(now, CONFIG.TIMEZONE, 'u')); // ISO: 1=Mon..7=Sun
+
+  // KST Sunday(7) = US Saturday, KST Monday(1) = US Sunday
+  if (kstDay === 7 || kstDay === 1) {
+    Logger.log('shouldProcessToday: SKIP (KST day=' + kstDay + ', US market closed - weekend)');
+    return false;
+  }
+
+  // Check NYSE holiday (US yesterday = KST today - 1 day adjusted)
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  if (isNyseHoliday(yesterday)) {
+    const dateStr = Utilities.formatDate(yesterday, CONFIG.TIMEZONE, 'yyyy-MM-dd');
+    Logger.log('shouldProcessToday: SKIP (US date=' + dateStr + ', NYSE holiday)');
+    return false;
+  }
+
+  return true;
+}
+
+// =====================================================
+// NYSE HOLIDAY DETECTION (Rule-based, no API)
+// Reference: github.com/tsekityam/nyse-holidays (MIT License)
+// =====================================================
+
+/**
+ * Easter Sunday calculation using Anonymous Gregorian Algorithm (Gauss)
+ * @param {number} year - Full year (e.g., 2026)
+ * @returns {Date} Easter Sunday date
+ */
+function getEasterSunday(year) {
+  const f = Math.floor;
+  const G = year % 19;
+  const C = f(year / 100);
+  const H = (C - f(C / 4) - f((8 * C + 13) / 25) + 19 * G + 15) % 30;
+  const I = H - f(H / 28) * (1 - f(29 / (H + 1)) * f((21 - G) / 11));
+  const J = (year + f(year / 4) + I + 2 - C + f(C / 4)) % 7;
+  const L = I - J;
+  const month = 3 + f((L + 40) / 44); // 3=Mar, 4=Apr
+  const day = L + 28 - 31 * f(month / 4);
+  return new Date(year, month - 1, day); // month is 0-indexed
+}
+
+/**
+ * Get N-th occurrence of a weekday in a month
+ * @param {number} year - Full year
+ * @param {number} month - Month (1-12)
+ * @param {number} dayOfWeek - Day of week (0=Sun, 1=Mon, ..., 6=Sat)
+ * @param {number} n - Occurrence (1=first, 2=second, 3=third, 4=fourth)
+ * @returns {Date} Target date
+ */
+function getNthDayOfMonth(year, month, dayOfWeek, n) {
+  const firstDay = new Date(year, month - 1, 1);
+  const firstDayOfWeek = firstDay.getDay();
+  let offset = dayOfWeek - firstDayOfWeek;
+  if (offset < 0) offset += 7;
+  const day = 1 + offset + (n - 1) * 7;
+  return new Date(year, month - 1, day);
+}
+
+/**
+ * Get last occurrence of a weekday in a month
+ * @param {number} year - Full year
+ * @param {number} month - Month (1-12)
+ * @param {number} dayOfWeek - Day of week (0=Sun, 1=Mon, ..., 6=Sat)
+ * @returns {Date} Target date
+ */
+function getLastDayOfMonth(year, month, dayOfWeek) {
+  const lastDay = new Date(year, month, 0); // Last day of month
+  const lastDayOfWeek = lastDay.getDay();
+  let offset = lastDayOfWeek - dayOfWeek;
+  if (offset < 0) offset += 7;
+  return new Date(year, month - 1, lastDay.getDate() - offset);
+}
+
+/**
+ * Adjust date for weekend observance
+ * NYSE Rule: Saturday → Friday, Sunday → Monday
+ * @param {Date} date - Original holiday date
+ * @returns {Date} Observed holiday date
+ */
+function adjustForWeekend(date) {
+  const dow = date.getDay();
+  if (dow === 6) { // Saturday → Friday
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+  }
+  if (dow === 0) { // Sunday → Monday
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+  }
+  return date;
+}
+
+/**
+ * Check if given date is NYSE holiday
+ * 10 Fixed NYSE Holidays (2022+, after Juneteenth addition)
+ * @param {Date} date - Date to check
+ * @returns {boolean} true if NYSE is closed
+ */
+function isNyseHoliday(date) {
+  const year = date.getFullYear();
+  const dateStr = Utilities.formatDate(date, CONFIG.TIMEZONE, 'yyyy-MM-dd');
+
+  // Helper to format Date as yyyy-MM-dd string
+  const fmt = (d) => Utilities.formatDate(d, CONFIG.TIMEZONE, 'yyyy-MM-dd');
+
+  // 1. New Year's Day (Jan 1)
+  if (dateStr === fmt(adjustForWeekend(new Date(year, 0, 1)))) return true;
+
+  // 2. MLK Day (3rd Monday of January, since 1998)
+  if (year >= 1998 && dateStr === fmt(getNthDayOfMonth(year, 1, 1, 3))) return true;
+
+  // 3. Presidents' Day (3rd Monday of February)
+  if (dateStr === fmt(getNthDayOfMonth(year, 2, 1, 3))) return true;
+
+  // 4. Good Friday (2 days before Easter Sunday)
+  const easter = getEasterSunday(year);
+  const goodFriday = new Date(easter.getTime() - 2 * 24 * 60 * 60 * 1000);
+  if (dateStr === fmt(goodFriday)) return true;
+
+  // 5. Memorial Day (Last Monday of May)
+  if (dateStr === fmt(getLastDayOfMonth(year, 5, 1))) return true;
+
+  // 6. Juneteenth (June 19, since 2022)
+  if (year >= 2022 && dateStr === fmt(adjustForWeekend(new Date(year, 5, 19)))) return true;
+
+  // 7. Independence Day (July 4)
+  if (dateStr === fmt(adjustForWeekend(new Date(year, 6, 4)))) return true;
+
+  // 8. Labor Day (1st Monday of September)
+  if (dateStr === fmt(getNthDayOfMonth(year, 9, 1, 1))) return true;
+
+  // 9. Thanksgiving (4th Thursday of November)
+  if (dateStr === fmt(getNthDayOfMonth(year, 11, 4, 4))) return true;
+
+  // 10. Christmas (Dec 25)
+  if (dateStr === fmt(adjustForWeekend(new Date(year, 11, 25)))) return true;
+
+  return false;
+}
+
+/**
  * Process order executions
  * Main function - run daily at 09:00 KST (after US market close)
  */
 function processOrderExecutions() {
+  if (!shouldProcessToday()) {
+    return;
+  }
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
   const pricesSheet = ss.getSheetByName(CONFIG.PRICES_SHEET);
@@ -453,7 +605,7 @@ function updatePortfolio(ss, executedOrders) {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row || row.length === 0) continue;
-    const profileKey = `${row[0]}|${row[1]}`;
+    const profileKey = `${String(row[0]).trim()}|${String(row[1]).trim()}`;
     if (!balanceRowByProfile[profileKey]) {
       balanceRowByProfile[profileKey] = i;
       balanceByProfile[profileKey] = parseFloat(row[11]) || 0;  // L: balance
@@ -498,8 +650,8 @@ function updatePortfolio(ss, executedOrders) {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     // Portfolio v3.6: A=googleId, B=profileId, C=profileName, D=ticker
-    const profileKey = `${row[0]}|${row[1]}`;
-    const key = `${row[0]}|${row[1]}|${row[3]}`;  // A|B|D (skip C=profileName)
+    const profileKey = `${String(row[0]).trim()}|${String(row[1]).trim()}`;
+    const key = `${String(row[0]).trim()}|${String(row[1]).trim()}|${String(row[3]).trim().toUpperCase()}`;  // A|B|D (skip C=profileName)
     const orders = ordersByKey[key];
 
     const rowNum = i + 1;
@@ -599,7 +751,7 @@ function migrateExecutedOrdersBalance() {
   for (let i = 1; i < portfolioData.length; i++) {
     const row = portfolioData[i];
     if (!row || row.length === 0) continue;
-    const profileKey = `${row[0]}|${row[1]}`;
+    const profileKey = `${String(row[0]).trim()}|${String(row[1]).trim()}`;
     if (!balanceRowByProfile[profileKey]) {
       balanceRowByProfile[profileKey] = i;
       balanceByProfile[profileKey] = parseFloat(row[11]) || 0;

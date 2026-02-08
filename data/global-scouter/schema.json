@@ -1,14 +1,14 @@
 {
   "folder": "global-scouter",
   "version": "2.2.0",
-  "updated": "2026-01-30",
+  "updated": "2026-02-09",
   "source": "Custom aggregation (FinancialModelingPrep, Yahoo Finance)",
   "update_frequency": "on-demand",
   "maintainer": "Manual conversion scripts",
 
   "structure": {
     "core/": "Dashboard config, metadata, master stock index",
-    "stocks/detail/": "1,241 individual stock profiles",
+    "stocks/detail/": "1,240 individual stock profiles",
     "etfs/": "ETF and index benchmarks",
     "indicators/": "Economic indicators"
   },
@@ -32,7 +32,7 @@
     "core/stocks_index.json": {
       "description": "Master stock index (ticker -> basic info)",
       "size_kb": 333,
-      "stock_count": 1241,
+      "stock_count": 1240,
       "schema": {
         "stocks.{TICKER}": {
           "n": "string (name)",
@@ -49,7 +49,7 @@
       }
     },
     "stocks/detail/{TICKER}.json": {
-      "description": "Individual stock profile (1,241 files)",
+      "description": "Individual stock profile (1,240 files)",
       "schema": {
         "years": "string[] (FY-4 to FY0)",
         "scale": {
@@ -90,14 +90,14 @@
           "fy_plus_1": "number",
           "fy_plus_2": "number",
           "fy_plus_3": "number",
-          "_coverage": "100% (1,241 stocks) - v2.2.0"
+          "_coverage": "100% (1,240 stocks) - v2.2.0"
         },
         "growth_consensus": {
           "revenue_7y": "number (%)",
           "revenue_3y": "number (%)",
           "earnings_7y": "number (%)",
           "earnings_3y": "number (%)",
-          "_coverage": "100% (1,241 stocks) - v2.2.0"
+          "_coverage": "100% (1,240 stocks) - v2.2.0"
         },
         "per_bands": {
           "current": "number",
@@ -105,7 +105,7 @@
           "avg_8y": "number",
           "max_8y": "number",
           "source": "string (S_Valuation|calculated)",
-          "_coverage": "95.7% (1,188 stocks) - v2.2.0"
+          "_coverage": "95.8% (1,188 stocks) - v2.2.0"
         }
       }
     },
@@ -137,7 +137,7 @@
     "indicators/economic.json": {
       "added_in": "2.1.0",
       "description": "Treasury rates, spreads, HY yields, TIPS",
-      "record_count": 1047,
+      "record_count": 1048,
       "schema": {
         "records[]": {
           "date": "YYYY-MM-DD",

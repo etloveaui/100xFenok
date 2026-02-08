@@ -2521,8 +2521,12 @@
       // 1. 수량 추가 (adjustHoldings 내부에서 saveDailyInputs 호출)
       adjustHoldings(totalBuyQty);
 
-      // 2. 총매입금 업데이트
-      const totalAmount = allBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
+      // 2. 총매입금 업데이트 (🔴 v4.47.2: 수수료 포함 - balance consistency fix)
+      const commPercent = (typeof BalanceManager !== 'undefined')
+        ? BalanceManager.getCommissionRate(currentProfile.id)
+        : 0.07;
+      const commRate = (Number.isFinite(commPercent) ? commPercent : 0.07) / 100;
+      const totalAmount = allBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity * (1 + commRate)), 0);
       const investedInput = document.getElementById('input-totalInvested');
       const currentInvested = parseFloat(investedInput.value) || 0;
       investedInput.value = (currentInvested + totalAmount).toFixed(2);
@@ -3284,6 +3288,13 @@
       if (window.innerWidth < 768) {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+
+      // 🔴 Bug 2 수정: 다중 종목 계산 시 오늘 매수 헬퍼 표시
+      // 전체 종목의 총 매수량 합산
+      const totalBuyQty = results.reduce((sum, r) =>
+        sum + (r.buyOrders || []).reduce((s, o) => s + o.quantity, 0), 0);
+      // 첫 번째 종목 ticker로 어제 매수 비교 표시
+      showTodayBuyHelper(totalBuyQty, results[0]?.ticker);
     }
 
     /**
