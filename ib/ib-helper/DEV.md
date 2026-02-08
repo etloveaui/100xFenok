@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.47.1
+> **Version**: 4.49.0
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-07
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration + #234 V2.2 LOC + **#236 avgPrice Derived Value (DEC-175)** + #237 통합 재검토 R1 + **#238/#239/#240 안정화 배치** + **#241 Copy Message + #242 BITU Bug Fix** | ❌ #220 REVERTED
+> **Updated**: 2026-02-08
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration + #234 V2.2 LOC + **#236 avgPrice Derived Value (DEC-175)** + #237 통합 재검토 R1 + **#238/#239/#240 안정화 배치** + **#241 Copy Message + #242 BITU Bug Fix** + **#245 totalInvested Commission Fix** + **#244 Weekend Guard + Defensive Fixes (v2.4.0)** + **#246 NYSE Holiday Detection (v2.5.0)** | ❌ #220 REVERTED
 > **Priority**: 🟡 #225 P4 테스트 → #207 Telegram (보안/동기화 핫픽스 반영 완료)
 >
 > **📋 Price Data Flow** (DEC-172):
@@ -813,6 +813,15 @@ admin/ib-helper/
   4. 프로필 여러 개 → 선택 UI 표시
   5. 사용자가 선택 → 해당 프로필 데이터를 현재 로컬 프로필에 병합
 - [x] **Side Effects**: None (기존 `pull()` 함수 유지, 하위 호환성 보장)
+
+### v4.47.2 / Code.gs v2.3.3: totalInvested Commission Fix (#245) (02-08)
+- [x] **Bug**: `totalInvested` calculated WITHOUT commission, while `balance` includes commission
+  - Code.gs L516: `actualPrice * qty` → `actualPrice * qty * (1 + commRate)`
+  - index.html L2525: `o.price * o.quantity` → `o.price * o.quantity * (1 + commRate)`
+- [x] **Impact**: avgPrice consistently lower than actual, balance drift ~$0.37/trade (~$15/day cumulative)
+- [x] **Verification**: 3/3 agents independently CONFIRMED (model-x, model-y, model-3)
+- [x] **Code.gs v2.3.3**: `commissionByProfile[profileKey] ?? defaultCommissionRate` applied to totalInvested
+- [x] **Frontend v4.47.2**: `BalanceManager.getCommissionRate()` / fallback 0.07% applied in `applyTodayBuy()`
 
 ### Phase 4: Telegram
 - [ ] 프로필별 알림 발송
