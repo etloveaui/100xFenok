@@ -143,7 +143,35 @@ const BalanceManager = (function() {
   }
 
   function calcDeclineBasePrice(stock, settings) {
+    // 🔴 FIX: calculator.js와 동일하게 평단LOC 기준으로 수정
+    // 전반전(T < 20): 평단LOC vs 큰수LOC 중 더 낮은 가격
+    // 후반전(T >= 20): 큰수LOC 가격
+    const splits = resolveSplits(settings, stock);
+    const oneTimeBuy = stock.principal / splits;
+    const totalInvested = (stock.avgPrice || 0) * (stock.quantity || 0);
+    const T = (typeof IBCalculator !== 'undefined')
+      ? IBCalculator.calculateT(totalInvested, oneTimeBuy)
+      : 0;
+    
+    // 큰수LOC 가격 계산
     const locPrice = calcLocPrice(stock, settings);
+    
+    // 전반전일 때는 평단LOC도 계산해서 비교
+    if (T < 20 && stock.avgPrice > 0) {
+      const priceCap = (stock.currentPrice && stock.currentPrice > 0)
+        ? stock.currentPrice * 1.15
+        : Infinity;
+      const avgPriceBuy = Math.min(stock.avgPrice, priceCap);
+      const avgLocPrice = (typeof IBCalculator !== 'undefined' &&
+          typeof IBCalculator.getBuyLOCPrice === 'function')
+        ? IBCalculator.getBuyLOCPrice(avgPriceBuy)
+        : roundPrice(avgPriceBuy - 0.01);
+      // 더 낮은 가격 선택 (평단LOC 기준)
+      const declineBasePrice = Math.min(avgLocPrice, locPrice);
+      return declineBasePrice > 0 ? declineBasePrice : locPrice;
+    }
+    
+    // 후반전 또는 fallback: 큰수LOC 기준
     if (!Number.isFinite(locPrice) || locPrice <= 0) return 0;
     if (typeof IBCalculator !== 'undefined' &&
         typeof IBCalculator.getBuyLOCPrice === 'function') {

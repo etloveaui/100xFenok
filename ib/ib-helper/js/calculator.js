@@ -295,7 +295,10 @@ const IBCalculator = (function() {
     // ========================================
     // 하락대비 추가매수 (전략 기반: 지정 개수)
     // ========================================
-    const declineBasePrice = orders.length > 0 ? orders[orders.length - 1].price : buyLocPrice;
+    // 🔴 FIX: 하락대비 기준가 = 가장 낮은 매수가(평단LOC 기준)
+    const declineBasePrice = orders.length > 0 
+      ? Math.min(...orders.map(o => o.price)) 
+      : buyLocPrice;
     if (additionalBuyEnabled) {
       const config = resolveAdditionalBuyConfig({
         additionalBuyMode,
