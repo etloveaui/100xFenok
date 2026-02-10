@@ -17,6 +17,11 @@ const BalanceManager = (function() {
   const STEP_RATE = 0.02;       // 2% compound decline
   const MAX_DECLINE_PCT = 0.15; // Max -15%
   const ADDITIONAL_BUY_CACHE_TTL = 5 * 60 * 1000;
+  const MAX_ADDITIONAL_STEPS = 8;
+  const ADDITIONAL_BUY_MODES = {
+    BUDGET_RATIO: 'budget_ratio',
+    FIXED: 'fixed'
+  };
 
   const additionalBuyCache = new Map();
 
@@ -42,14 +47,34 @@ const BalanceManager = (function() {
     return 40;
   }
 
-  function resolveAdditionalBuyOrderCount(settings, currentPrice) {
-    const explicitCount = parseInt(settings?.additionalBuy?.orderCount, 10);
-    if (Number.isFinite(explicitCount)) {
-      return Math.max(0, Math.min(8, explicitCount));
-    }
-    const fallbackDecline = parseFloat(settings?.additionalBuy?.maxDecline);
-    const maxDeclinePct = Number.isFinite(fallbackDecline) ? fallbackDecline : 15;
-    return Math.min(calcAdditionalBuySteps(currentPrice, maxDeclinePct), 8);
+  function resolveAdditionalBuyConfig(settings = {}, oneTimeBuy, basePrice) {
+    const additional = settings?.additionalBuy || {};
+    const mode = additional.mode === ADDITIONAL_BUY_MODES.FIXED
+      ? ADDITIONAL_BUY_MODES.FIXED
+      : ADDITIONAL_BUY_MODES.BUDGET_RATIO;
+    const parsedQuantity = parseInt(additional.quantity, 10);
+    const quantity = Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1;
+    const parsedRatio = parseFloat(additional.budgetRatio);
+    const budgetRatio = Number.isFinite(parsedRatio) ? Math.max(0, Math.min(100, parsedRatio)) : 25;
+    const parsedDecline = parseFloat(additional.maxDecline);
+    const maxDecline = Number.isFinite(parsedDecline) ? parsedDecline : 15;
+    const explicitOrderCount = parseInt(additional.orderCount, 10);
+    const orderCount = mode === ADDITIONAL_BUY_MODES.FIXED
+      ? _resolveFixedOrderCount(explicitOrderCount, basePrice, maxDecline)
+      : 0;
+    const targetBudget = mode === ADDITIONAL_BUY_MODES.BUDGET_RATIO
+      ? roundPrice(Math.max((oneTimeBuy || 0) * (budgetRatio / 100), 0))
+      : 0;
+    return {
+      mode,
+      quantity,
+      budgetRatio,
+      allowOneOver: additional.allowOneOver !== false,
+      maxDecline,
+      orderCount,
+      targetBudget,
+      maxSteps: MAX_ADDITIONAL_STEPS
+    };
   }
 
   // =====================================================
@@ -72,14 +97,11 @@ const BalanceManager = (function() {
     let additionalAmount = 0;
 
     // 하락대비 추가매수 (if enabled)
-    if (settings?.additionalBuy?.enabled && stock.currentPrice > 0) {
-      const steps = resolveAdditionalBuyOrderCount(settings, stock.currentPrice);
-
-      if (steps > 0) {
-        const locPrice = calcLocPrice(stock, settings);
-        additionalAmount = calcAdditionalBuyAmount(stock, settings, steps, locPrice);
-        total += additionalAmount;
-      }
+    if (settings?.additionalBuy?.enabled) {
+      const declineBasePrice = calcDeclineBasePrice(stock, settings);
+      const additionalConfig = resolveAdditionalBuyConfig(settings, oneTimeBuy, declineBasePrice);
+      additionalAmount = calcAdditionalBuyAmount(stock, declineBasePrice, additionalConfig);
+      total += additionalAmount;
     }
 
     return {
@@ -111,6 +133,23 @@ const BalanceManager = (function() {
     }
 
     return count; // Usually 8-9 steps for 15%
+  }
+
+  function _resolveFixedOrderCount(explicitOrderCount, basePrice, maxDecline) {
+    if (Number.isFinite(explicitOrderCount)) {
+      return Math.max(0, Math.min(MAX_ADDITIONAL_STEPS, explicitOrderCount));
+    }
+    return Math.min(calcAdditionalBuySteps(basePrice, maxDecline), MAX_ADDITIONAL_STEPS);
+  }
+
+  function calcDeclineBasePrice(stock, settings) {
+    const locPrice = calcLocPrice(stock, settings);
+    if (!Number.isFinite(locPrice) || locPrice <= 0) return 0;
+    if (typeof IBCalculator !== 'undefined' &&
+        typeof IBCalculator.getBuyLOCPrice === 'function') {
+      return IBCalculator.getBuyLOCPrice(locPrice);
+    }
+    return roundPrice(locPrice - 0.01);
   }
 
   /**
@@ -361,56 +400,127 @@ const BalanceManager = (function() {
     return Math.round(price * 100) / 100;
   }
 
-  function calcAdditionalBuyAmount(stock, settings, steps, basePrice) {
-    const qty = Math.max(settings?.additionalBuy?.quantity || 1, 0);
-    if (steps <= 0 || basePrice <= 0 || qty <= 0) {
+  function calcAdditionalBuyAmount(stock, basePrice, options) {
+    const qty = Math.max(options?.quantity || 1, 0);
+    if (!Number.isFinite(basePrice) || basePrice <= 0 || qty <= 0) {
+      return 0;
+    }
+    if (options?.mode === ADDITIONAL_BUY_MODES.FIXED && (!Number.isFinite(options.orderCount) || options.orderCount <= 0)) {
+      return 0;
+    }
+    if (options?.mode === ADDITIONAL_BUY_MODES.BUDGET_RATIO && (!Number.isFinite(options.targetBudget) || options.targetBudget <= 0)) {
       return 0;
     }
 
-    const cacheKey = `${stock.symbol || 'UNKNOWN'}|${basePrice}|${qty}|${steps}`;
+    const cacheKey = [
+      stock.symbol || 'UNKNOWN',
+      basePrice,
+      options.mode,
+      qty,
+      options.orderCount || 0,
+      options.targetBudget || 0,
+      options.allowOneOver ? 1 : 0,
+      options.maxDecline || 15
+    ].join('|');
     const cached = _getCachedAdditionalAmount(cacheKey);
     if (cached !== null) {
       return cached;
     }
 
-    let total = 0;
-    let processedSteps = 0;
-    let lastPrice = basePrice;
-
+    let generated = [];
     if (typeof IBCalculator !== 'undefined' &&
         typeof IBCalculator.generateAdditionalBuyOrders === 'function') {
-      const generated = IBCalculator.generateAdditionalBuyOrders(basePrice, {
-        orderCount: steps,
-        quantity: 1
+      generated = IBCalculator.generateAdditionalBuyOrders(basePrice, {
+        mode: options.mode,
+        orderCount: options.orderCount,
+        quantity: qty,
+        maxDeclinePct: options.mode === ADDITIONAL_BUY_MODES.FIXED ? options.maxDecline : undefined,
+        targetBudget: options.targetBudget,
+        allowOneOver: options.allowOneOver,
+        maxSteps: options.maxSteps
       }) || [];
-      for (let i = 0; i < steps; i++) {
-        const order = generated[i];
-        if (!order || !Number.isFinite(order.price)) break;
-        total += order.price * qty;
-        lastPrice = order.price;
-        processedSteps++;
-      }
+    } else {
+      generated = _generateAdditionalBuyOrdersFallback(basePrice, options);
     }
 
-    if (processedSteps < steps) {
-      const fallbackStart = processedSteps > 0 ? lastPrice : basePrice;
-      total += _fallbackAdditionalAmount(fallbackStart, qty, steps - processedSteps);
-    }
-
+    const total = generated.reduce((sum, order) => {
+      const orderPrice = parseFloat(order?.price);
+      const orderQty = parseFloat(order?.quantity);
+      if (!Number.isFinite(orderPrice) || !Number.isFinite(orderQty)) return sum;
+      return sum + (orderPrice * orderQty);
+    }, 0);
     const roundedTotal = roundPrice(total);
     _setCachedAdditionalAmount(cacheKey, roundedTotal);
     return roundedTotal;
   }
 
-  function _fallbackAdditionalAmount(startPrice, qty, steps) {
-    let price = startPrice;
-    let total = 0;
-    for (let i = 0; i < steps; i++) {
-      price = roundPrice(price * (1 - STEP_RATE));
-      if (price <= 0) break;
-      total += price * qty;
+  function _generateAdditionalBuyOrdersFallback(basePrice, options) {
+    const orders = [];
+    const mode = options.mode === ADDITIONAL_BUY_MODES.FIXED
+      ? ADDITIONAL_BUY_MODES.FIXED
+      : ADDITIONAL_BUY_MODES.BUDGET_RATIO;
+    const qty = Math.max(parseInt(options.quantity, 10) || 0, 1);
+    const maxSteps = Math.max(0, Math.min(MAX_ADDITIONAL_STEPS, parseInt(options.maxSteps, 10) || MAX_ADDITIONAL_STEPS));
+    let price = basePrice;
+
+    if (mode === ADDITIONAL_BUY_MODES.BUDGET_RATIO) {
+      const targetBudget = Number.isFinite(options.targetBudget) ? Math.max(options.targetBudget, 0) : 0;
+      const allowOneOver = options.allowOneOver !== false;
+      if (targetBudget <= 0 || maxSteps <= 0) return orders;
+      let accumulated = 0;
+      for (let step = 1; step <= maxSteps; step++) {
+        price = roundPrice(price * (1 - STEP_RATE));
+        if (!Number.isFinite(price) || price <= 0) break;
+        const amount = roundPrice(price * qty);
+        const next = accumulated + amount;
+        const declineFromBase = ((basePrice - price) / basePrice * 100).toFixed(1);
+        if (next <= targetBudget + 0.0001) {
+          orders.push({
+            type: `하락대비 추가매수 ${step}`,
+            description: `-${declineFromBase}% 하락 시`,
+            price,
+            amount,
+            quantity: qty,
+            orderType: 'LOC'
+          });
+          accumulated = next;
+          continue;
+        }
+        if (allowOneOver) {
+          orders.push({
+            type: `하락대비 추가매수 ${step}`,
+            description: `-${declineFromBase}% 하락 시`,
+            price,
+            amount,
+            quantity: qty,
+            orderType: 'LOC'
+          });
+        }
+        break;
+      }
+      return orders;
     }
-    return total;
+
+    const orderCount = Math.max(0, Math.min(MAX_ADDITIONAL_STEPS, parseInt(options.orderCount, 10) || 0));
+    if (orderCount <= 0) return orders;
+    const parsedDecline = parseFloat(options.maxDecline);
+    const useDeclineGuard = Number.isFinite(parsedDecline) && parsedDecline > 0;
+    const minPrice = useDeclineGuard ? basePrice * (1 - parsedDecline / 100) : 0;
+    for (let step = 1; step <= orderCount; step++) {
+      price = roundPrice(price * (1 - STEP_RATE));
+      if (!Number.isFinite(price) || price <= 0) break;
+      if (useDeclineGuard && price < minPrice) break;
+      const declineFromBase = ((basePrice - price) / basePrice * 100).toFixed(1);
+      orders.push({
+        type: `하락대비 추가매수 ${step}`,
+        description: `-${declineFromBase}% 하락 시`,
+        price,
+        amount: roundPrice(price * qty),
+        quantity: qty,
+        orderType: 'LOC'
+      });
+    }
+    return orders;
   }
 
   function _getCachedAdditionalAmount(key) {
