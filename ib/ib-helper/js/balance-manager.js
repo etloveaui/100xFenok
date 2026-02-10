@@ -16,6 +16,9 @@ const BalanceManager = (function() {
 
   const STEP_RATE = 0.02;       // 2% compound decline
   const MAX_DECLINE_PCT = 0.15; // Max -15%
+  const ADDITIONAL_BUY_CACHE_TTL = 5 * 60 * 1000;
+
+  const additionalBuyCache = new Map();
 
   /**
    * 🔴 #236 (DEC-175): avgPrice 파생값 계산 (IIFE 내부용)
@@ -25,6 +28,28 @@ const BalanceManager = (function() {
       return parseFloat((totalInvested / holdings).toFixed(4));
     }
     return 0;
+  }
+
+  function resolveSplits(settings, stock) {
+    const fromSettings = parseInt(settings?.splits, 10);
+    if (Number.isFinite(fromSettings) && fromSettings > 0) {
+      return fromSettings;
+    }
+    const fromStock = parseInt(stock?.divisions, 10);
+    if (Number.isFinite(fromStock) && fromStock > 0) {
+      return fromStock;
+    }
+    return 40;
+  }
+
+  function resolveAdditionalBuyOrderCount(settings, currentPrice) {
+    const explicitCount = parseInt(settings?.additionalBuy?.orderCount, 10);
+    if (Number.isFinite(explicitCount)) {
+      return Math.max(0, Math.min(8, explicitCount));
+    }
+    const fallbackDecline = parseFloat(settings?.additionalBuy?.maxDecline);
+    const maxDeclinePct = Number.isFinite(fallbackDecline) ? fallbackDecline : 15;
+    return Math.min(calcAdditionalBuySteps(currentPrice, maxDeclinePct), 8);
   }
 
   // =====================================================
@@ -39,25 +64,22 @@ const BalanceManager = (function() {
    * @returns {Object} { oneTimeBuy, additionalAmount, total }
    */
   function calcStockDailyAttempt(stock, settings) {
-    const oneTimeBuy = stock.principal / (settings.splits || 40);
+    const splits = resolveSplits(settings, stock);
+    const oneTimeBuy = stock.principal / splits;
 
     // Base amount (1회 매수금)
     let total = oneTimeBuy;
     let additionalAmount = 0;
 
     // 하락대비 추가매수 (if enabled)
-    if (settings.additionalBuy?.enabled && stock.currentPrice > 0) {
-      const steps = calcAdditionalBuySteps(
-        stock.currentPrice,
-        settings.additionalBuy.maxDecline || 15
-      );
+    if (settings?.additionalBuy?.enabled && stock.currentPrice > 0) {
+      const steps = resolveAdditionalBuyOrderCount(settings, stock.currentPrice);
 
-      // LOC price calculation
-      const locPrice = calcLocPrice(stock, settings);
-      const qty = settings.additionalBuy.quantity || 1;
-
-      additionalAmount = steps * locPrice * qty;
-      total += additionalAmount;
+      if (steps > 0) {
+        const locPrice = calcLocPrice(stock, settings);
+        additionalAmount = calcAdditionalBuyAmount(stock, settings, steps, locPrice);
+        total += additionalAmount;
+      }
     }
 
     return {
@@ -83,7 +105,8 @@ const BalanceManager = (function() {
     let price = currentPrice;
 
     while (price > minPrice) {
-      price = price * (1 - STEP_RATE);
+      // Match calculator precision to reduce boundary mismatch.
+      price = Math.round(price * (1 - STEP_RATE) * 10000) / 10000;
       if (price >= minPrice) count++;
     }
 
@@ -101,7 +124,8 @@ const BalanceManager = (function() {
   function calcLocPrice(stock, settings) {
     // Use IBCalculator if available
     if (typeof IBCalculator !== 'undefined') {
-      const oneTimeBuy = stock.principal / (settings.splits || 40);
+      const splits = resolveSplits(settings, stock);
+      const oneTimeBuy = stock.principal / splits;
       const totalInvested = (stock.avgPrice || 0) * (stock.quantity || 0);
       const T = IBCalculator.calculateT(totalInvested, oneTimeBuy);
       const parsedSellPercent = parseFloat(stock.sellPercent);
@@ -117,7 +141,11 @@ const BalanceManager = (function() {
 
     // Fallback: simple calculation
     // 🔴 Note: 이 함수는 매수용 (additionalBuy) → CAP 적용 유지
-    const T = Math.ceil(((stock.avgPrice * stock.quantity) / (stock.principal / 40)) * 10) / 10;
+    const splits = resolveSplits(settings, stock);
+    const principalPerSplit = stock.principal / splits;
+    const T = principalPerSplit > 0
+      ? Math.ceil(((stock.avgPrice * stock.quantity) / principalPerSplit) * 10) / 10
+      : 0;
     const fallbackSellPercent = Number.isFinite(parseFloat(stock.sellPercent))
       ? parseFloat(stock.sellPercent)
       : (stock.symbol === 'SOXL' ? 12 : 10);
@@ -141,10 +169,15 @@ const BalanceManager = (function() {
       return { total: 0, details: [] };
     }
 
+    const activeStocks = profile.stocks.filter(stock => stock?.enabled !== false);
+    if (activeStocks.length === 0) {
+      return { total: 0, details: [] };
+    }
+
     const details = [];
     let total = 0;
 
-    profile.stocks.forEach(stock => {
+    activeStocks.forEach(stock => {
       // Get daily data for this stock
       const dailyData = ProfileManager.loadDailyData(profile.id, stock.symbol) || {};
 
@@ -326,6 +359,75 @@ const BalanceManager = (function() {
 
   function roundPrice(price) {
     return Math.round(price * 100) / 100;
+  }
+
+  function calcAdditionalBuyAmount(stock, settings, steps, basePrice) {
+    const qty = Math.max(settings?.additionalBuy?.quantity || 1, 0);
+    if (steps <= 0 || basePrice <= 0 || qty <= 0) {
+      return 0;
+    }
+
+    const cacheKey = `${stock.symbol || 'UNKNOWN'}|${basePrice}|${qty}|${steps}`;
+    const cached = _getCachedAdditionalAmount(cacheKey);
+    if (cached !== null) {
+      return cached;
+    }
+
+    let total = 0;
+    let processedSteps = 0;
+    let lastPrice = basePrice;
+
+    if (typeof IBCalculator !== 'undefined' &&
+        typeof IBCalculator.generateAdditionalBuyOrders === 'function') {
+      const generated = IBCalculator.generateAdditionalBuyOrders(basePrice, {
+        orderCount: steps,
+        quantity: 1
+      }) || [];
+      for (let i = 0; i < steps; i++) {
+        const order = generated[i];
+        if (!order || !Number.isFinite(order.price)) break;
+        total += order.price * qty;
+        lastPrice = order.price;
+        processedSteps++;
+      }
+    }
+
+    if (processedSteps < steps) {
+      const fallbackStart = processedSteps > 0 ? lastPrice : basePrice;
+      total += _fallbackAdditionalAmount(fallbackStart, qty, steps - processedSteps);
+    }
+
+    const roundedTotal = roundPrice(total);
+    _setCachedAdditionalAmount(cacheKey, roundedTotal);
+    return roundedTotal;
+  }
+
+  function _fallbackAdditionalAmount(startPrice, qty, steps) {
+    let price = startPrice;
+    let total = 0;
+    for (let i = 0; i < steps; i++) {
+      price = roundPrice(price * (1 - STEP_RATE));
+      if (price <= 0) break;
+      total += price * qty;
+    }
+    return total;
+  }
+
+  function _getCachedAdditionalAmount(key) {
+    const cached = additionalBuyCache.get(key);
+    if (!cached) return null;
+    if (cached.expires > Date.now()) {
+      return cached.value;
+    }
+    additionalBuyCache.delete(key);
+    return null;
+  }
+
+  function _setCachedAdditionalAmount(key, value) {
+    additionalBuyCache.set(key, {
+      value,
+      expires: Date.now() + ADDITIONAL_BUY_CACHE_TTL
+    });
   }
 
   // =====================================================

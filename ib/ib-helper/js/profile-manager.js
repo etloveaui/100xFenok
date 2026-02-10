@@ -31,6 +31,43 @@ const ProfileManager = (function() {
     return clean.slice(0, 16);
   }
 
+  function normalizeAdditionalBuyConfig(raw = {}) {
+    const parsedOrderCount = parseInt(raw?.orderCount, 10);
+    const parsedMaxDecline = parseFloat(raw?.maxDecline);
+    const parsedQuantity = parseInt(raw?.quantity, 10);
+    return {
+      enabled: raw?.enabled !== false,
+      maxDecline: Number.isFinite(parsedMaxDecline) ? parsedMaxDecline : 15,
+      quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1,
+      orderCount: Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 8
+    };
+  }
+
+  function normalizeProfiles(data) {
+    if (!data || typeof data !== 'object' || !data.profiles) return false;
+    let changed = false;
+    Object.keys(data.profiles).forEach((profileId) => {
+      const profile = data.profiles[profileId] || {};
+      if (!profile.settings || typeof profile.settings !== 'object') {
+        profile.settings = {};
+        changed = true;
+      }
+      const normalizedAdditionalBuy = normalizeAdditionalBuyConfig(profile.settings.additionalBuy);
+      const prevAdditionalBuy = profile.settings.additionalBuy || {};
+      if (
+        prevAdditionalBuy.enabled !== normalizedAdditionalBuy.enabled ||
+        prevAdditionalBuy.maxDecline !== normalizedAdditionalBuy.maxDecline ||
+        prevAdditionalBuy.quantity !== normalizedAdditionalBuy.quantity ||
+        prevAdditionalBuy.orderCount !== normalizedAdditionalBuy.orderCount
+      ) {
+        profile.settings.additionalBuy = normalizedAdditionalBuy;
+        changed = true;
+      }
+      data.profiles[profileId] = profile;
+    });
+    return changed;
+  }
+
   // =====================================================
   // Default Profiles - Empty (Users add their own)
   // =====================================================
@@ -72,7 +109,11 @@ const ProfileManager = (function() {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
       if (!data) return null;
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      if (normalizeProfiles(parsed)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      }
+      return parsed;
     } catch (error) {
       console.error('ProfileManager.getAll: localStorage 파싱 오류', error);
       // 손상된 데이터 삭제하고 null 반환
@@ -167,7 +208,8 @@ const ProfileManager = (function() {
         additionalBuy: {
           enabled: true,
           maxDecline: 15,
-          quantity: 1
+          quantity: 1,
+          orderCount: 8
         }
       },
       stocks: []
@@ -210,7 +252,8 @@ const ProfileManager = (function() {
         additionalBuy: {
           enabled: true,
           maxDecline: 15,
-          quantity: 1
+          quantity: 1,
+          orderCount: 8
         }
       },
       stocks: []

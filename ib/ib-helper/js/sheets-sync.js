@@ -46,7 +46,7 @@ const SheetsSync = (function() {
 
     // 🔴 v3.7.0 (#221): Apps Script WebApp URL (현재가 공개 API)
     // 배포 후 URL 입력: https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
-    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbw82ZmY2XcjgwDLEcTdlIR9dWYlqdqdLa-WyjYvkz8FObC8FYNO9ni34GZxn2L2T-Wq/exec',
+    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxqAfKrbwk3aQilg8jdr8M9dhDGbcKLqoAb4bNcjtBtK7SM-ehz2_HDYlb8j1zhBcmi/exec',
 
     DISCOVERY_DOCS: [
       'https://sheets.googleapis.com/$discovery/rest?version=v4'
@@ -580,6 +580,8 @@ const SheetsSync = (function() {
       const commissionRate = normalized[baseIndex + 9];
       const divisions = parseInt(normalized[baseIndex + 10]) || 40;
       const revision = String(normalized[baseIndex + 11] || '');
+      const parsedBalance = parseFloat(balance);
+      const parsedCommission = parseFloat(commissionRate);
 
       const sym = _sanitizeSymbol(symbol);
       if (!sym) return;
@@ -596,10 +598,8 @@ const SheetsSync = (function() {
         sellPercent: parseFloat(afterPercent) || (sym === 'SOXL' ? 12 : 10),
         locSellPercent: parseFloat(locPercent) || 5,
         date: date || '',
-        balance: parseFloat(balance) || 0,
-        commissionRate: commissionRate !== null && commissionRate !== undefined
-          ? (parseFloat(commissionRate) || 0)
-          : null,
+        balance: Number.isFinite(parsedBalance) ? parsedBalance : null,
+        commissionRate: Number.isFinite(parsedCommission) ? parsedCommission : null,
         revision
       });
     });
@@ -845,16 +845,14 @@ const SheetsSync = (function() {
     // 내 데이터만 필터링해서 가져오기
     const myStocks = await readMyData();
 
-    // 🔴 v3.2: 예수금 저장 (첫 번째 row에서)
-    if (myStocks.length > 0 && myStocks[0].balance > 0) {
-      if (typeof BalanceManager !== 'undefined') {
-        BalanceManager.updateBalance(profile.id, myStocks[0].balance);
+    if (myStocks.length > 0 && typeof BalanceManager !== 'undefined') {
+      const balanceSource = myStocks.find((stock) => Number.isFinite(stock.balance));
+      if (balanceSource) {
+        BalanceManager.updateBalance(profile.id, balanceSource.balance);
       }
-    }
-
-    if (myStocks.length > 0 && myStocks[0].commissionRate !== null && myStocks[0].commissionRate !== undefined) {
-      if (typeof BalanceManager !== 'undefined') {
-        BalanceManager.updateCommissionRate(profile.id, myStocks[0].commissionRate);
+      const commissionSource = myStocks.find((stock) => Number.isFinite(stock.commissionRate));
+      if (commissionSource) {
+        BalanceManager.updateCommissionRate(profile.id, commissionSource.commissionRate);
       }
     }
 
@@ -880,12 +878,6 @@ const SheetsSync = (function() {
 
     if (myStocks.length > 0 && myStocks[0].profileName) {
       ProfileManager.update(profile.id, { name: myStocks[0].profileName });
-    }
-
-    if (myStocks.length > 0 && myStocks[0].commissionRate !== null && myStocks[0].commissionRate !== undefined) {
-      if (typeof BalanceManager !== 'undefined') {
-        BalanceManager.updateCommissionRate(profile.id, myStocks[0].commissionRate);
-      }
     }
 
     // v3.8.0: sync revision checkpoint for optimistic conflict detection.
@@ -974,19 +966,23 @@ const SheetsSync = (function() {
           profileName: profileName || 'Profile',
           balance: 0,
           commissionRate: 0,
+          hasBalance: false,
+          hasCommissionRate: false,
           stocks: []
         };
       }
 
-      const rowBalance = parseFloat(normalized[baseIndex + 8]) || 0;
-      if (rowBalance > 0 && profileMap[profileId].balance === 0) {
+      const rowBalance = parseFloat(normalized[baseIndex + 8]);
+      if (Number.isFinite(rowBalance) && !profileMap[profileId].hasBalance) {
         profileMap[profileId].balance = rowBalance;
+        profileMap[profileId].hasBalance = true;
       }
 
       if (normalized.length > (baseIndex + 9)) {
-        const rowCommission = normalized[baseIndex + 9];
-        if (rowCommission !== undefined && profileMap[profileId].commissionRate === 0) {
-          profileMap[profileId].commissionRate = parseFloat(rowCommission) || 0;
+        const rowCommission = parseFloat(normalized[baseIndex + 9]);
+        if (Number.isFinite(rowCommission) && !profileMap[profileId].hasCommissionRate) {
+          profileMap[profileId].commissionRate = rowCommission;
+          profileMap[profileId].hasCommissionRate = true;
         }
       }
 
@@ -1008,7 +1004,10 @@ const SheetsSync = (function() {
       });
     });
 
-    return Object.values(profileMap);
+    return Object.values(profileMap).map((profile) => {
+      const { hasBalance, hasCommissionRate, ...rest } = profile;
+      return rest;
+    });
   }
 
   /**
@@ -1035,6 +1034,17 @@ const SheetsSync = (function() {
     );
 
     const myStocks = parseRows(myRows);
+
+    if (myStocks.length > 0 && typeof BalanceManager !== 'undefined') {
+      const balanceSource = myStocks.find((stock) => Number.isFinite(stock.balance));
+      if (balanceSource) {
+        BalanceManager.updateBalance(profile.id, balanceSource.balance);
+      }
+      const commissionSource = myStocks.find((stock) => Number.isFinite(stock.commissionRate));
+      if (commissionSource) {
+        BalanceManager.updateCommissionRate(profile.id, commissionSource.commissionRate);
+      }
+    }
 
     // Update local profile with sheet data (v3.1: AFTER% + LOC% 포함)
     myStocks.forEach(stock => {
