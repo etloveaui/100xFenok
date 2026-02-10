@@ -204,51 +204,61 @@ function isNyseHoliday(date) {
  * Main function - run daily at 09:00 KST (after US market close)
  */
 function processOrderExecutions() {
-  if (!shouldProcessToday()) {
-    return;
-  }
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
-  const pricesSheet = ss.getSheetByName(CONFIG.PRICES_SHEET);
-
-  if (!ordersSheet) {
-    Logger.log('Orders sheet not found');
+  const lock = LockService.getDocumentLock();
+  if (!lock.tryLock(30000)) {
+    Logger.log('processOrderExecutions: skipped (could not acquire lock)');
     return;
   }
 
-  // 🔴 v2.1.0: Orders dedupe before processing (date+googleId+profileId+ticker+orderType+price+qty)
   try {
-    dedupeOrders(ordersSheet);
-  } catch (error) {
-    Logger.log('dedupeOrders error (ignored): ' + error.message);
+    if (!shouldProcessToday()) {
+      return;
+    }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
+    const pricesSheet = ss.getSheetByName(CONFIG.PRICES_SHEET);
+
+    if (!ordersSheet) {
+      Logger.log('Orders sheet not found');
+      return;
+    }
+
+    // 🔴 v2.1.0: Orders dedupe before processing (date+googleId+profileId+ticker+orderType+price+qty)
+    try {
+      dedupeOrders(ordersSheet);
+    } catch (error) {
+      Logger.log('dedupeOrders error (ignored): ' + error.message);
+    }
+
+    if (!pricesSheet) {
+      Logger.log('Prices sheet not found - please create it with GOOGLEFINANCE formulas');
+      return;
+    }
+
+    // 1. Load yesterday's prices
+    const prices = loadYesterdayPrices(pricesSheet);
+    Logger.log('Loaded prices: ' + JSON.stringify(prices));
+
+    // 2. Load pending orders (execution column = empty)
+    const pendingOrders = loadPendingOrders(ordersSheet);
+    Logger.log('Pending orders: ' + pendingOrders.length);
+
+    // 3. Check executions
+    const executedOrders = checkExecutions(pendingOrders, prices);
+    Logger.log('Executed orders: ' + executedOrders.length);
+
+    // 4. Update Orders sheet
+    if (executedOrders.length > 0) {
+      updateOrdersSheet(ordersSheet, executedOrders);
+
+      // 5. Update Portfolio
+      updatePortfolio(ss, executedOrders);
+    }
+
+    Logger.log('Process complete: ' + executedOrders.length + ' orders executed');
+  } finally {
+    lock.releaseLock();
   }
-
-  if (!pricesSheet) {
-    Logger.log('Prices sheet not found - please create it with GOOGLEFINANCE formulas');
-    return;
-  }
-
-  // 1. Load yesterday's prices
-  const prices = loadYesterdayPrices(pricesSheet);
-  Logger.log('Loaded prices: ' + JSON.stringify(prices));
-
-  // 2. Load pending orders (execution column = empty)
-  const pendingOrders = loadPendingOrders(ordersSheet);
-  Logger.log('Pending orders: ' + pendingOrders.length);
-
-  // 3. Check executions
-  const executedOrders = checkExecutions(pendingOrders, prices);
-  Logger.log('Executed orders: ' + executedOrders.length);
-
-  // 4. Update Orders sheet
-  if (executedOrders.length > 0) {
-    updateOrdersSheet(ordersSheet, executedOrders);
-
-    // 5. Update Portfolio
-    updatePortfolio(ss, executedOrders);
-  }
-
-  Logger.log('Process complete: ' + executedOrders.length + ' orders executed');
 }
 
 // =====================================================
@@ -488,6 +498,7 @@ function checkExecutions(orders, prices) {
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
   const executedOrders = [];
   const highWarned = {};
+  const closeWarned = {};
 
   orders.forEach(order => {
     const priceData = prices[order.ticker];
@@ -496,11 +507,21 @@ function checkExecutions(orders, prices) {
       return;
     }
 
+    const closePrice = parseFloat(priceData.close) || 0;
+    const highPrice = parseFloat(priceData.high) || 0;
+
     if (order.executionBasis === 'HIGH' &&
-        priceData.high === 0 &&
+        highPrice <= 0 &&
         !highWarned[order.ticker]) {
       Logger.log(`⚠️ HIGH ${order.ticker}: priceData.high=0 → limit sell may not execute`);
       highWarned[order.ticker] = true;
+    }
+
+    if (order.executionBasis === 'CLOSE' &&
+        closePrice <= 0 &&
+        !closeWarned[order.ticker]) {
+      Logger.log(`⚠️ CLOSE ${order.ticker}: priceData.close<=0 → execution skipped for safety`);
+      closeWarned[order.ticker] = true;
     }
 
     let executed = false;
@@ -508,20 +529,23 @@ function checkExecutions(orders, prices) {
 
     if (order.side === 'BUY') {
       // BUY: close <= orderPrice
-      if (order.executionBasis === 'CLOSE' && priceData.close <= order.price) {
+      if (order.executionBasis === 'CLOSE' &&
+          closePrice > 0 &&
+          order.price > 0 &&
+          closePrice <= order.price) {
         executed = true;
-        actualPrice = priceData.close;
+        actualPrice = closePrice;
       }
     } else if (order.side === 'SELL') {
       if (order.executionBasis === 'CLOSE') {
         // LOC SELL: close >= orderPrice
-        if (priceData.close >= order.price) {
+        if (closePrice > 0 && order.price > 0 && closePrice >= order.price) {
           executed = true;
-          actualPrice = priceData.close;
+          actualPrice = closePrice;
         }
       } else if (order.executionBasis === 'HIGH') {
         // Limit SELL: high >= orderPrice
-        if (priceData.high >= order.price) {
+        if (highPrice > 0 && order.price > 0 && highPrice >= order.price) {
           executed = true;
           actualPrice = order.price;  // Execute at limit price
         }
@@ -665,30 +689,35 @@ function updatePortfolio(ss, executedOrders) {
 
       // Process buys: increase holdings, recalculate avgPrice
       orders.buys.forEach(order => {
-        const newCost = order.actualPrice * order.quantity;
+        const buyQty = Math.max(parseFloat(order.quantity) || 0, 0);
+        const executionPrice = parseFloat(order.actualPrice) || parseFloat(order.price) || 0;
+        if (buyQty <= 0 || executionPrice <= 0) {
+          return;
+        }
+        const newCost = executionPrice * buyQty;
         totalInvested += newCost;
-        holdings += order.quantity;
+        holdings += buyQty;
       });
 
-      // Process sells: decrease holdings, reduce totalInvested
+      avgPrice = holdings > 0 && totalInvested > 0 ? totalInvested / holdings : 0;
+
+      // Process sells: decrease holdings, reduce totalInvested 비례 차감
       orders.sells.forEach(order => {
-        // Reduce holdings
-        holdings -= order.quantity;
-        // Reduce totalInvested proportionally
-        if (holdings > 0 && avgPrice > 0) {
-          totalInvested = avgPrice * holdings;
-        } else if (holdings <= 0) {
-          totalInvested = 0;
+        const sellQtyRaw = Math.max(parseFloat(order.quantity) || 0, 0);
+        if (sellQtyRaw <= 0 || holdings <= 0 || avgPrice <= 0) {
+          return;
+        }
+        const sellQty = Math.min(sellQtyRaw, holdings);
+        totalInvested -= avgPrice * sellQty;
+        holdings -= sellQty;
+        if (holdings <= 0 || totalInvested <= 0) {
           holdings = 0;
+          totalInvested = 0;
+          avgPrice = 0;
+        } else {
+          avgPrice = totalInvested / holdings;
         }
       });
-
-      // Recalculate avgPrice
-      if (holdings > 0 && totalInvested > 0) {
-        avgPrice = totalInvested / holdings;
-      } else {
-        avgPrice = 0;
-      }
 
       portfolioSheet.getRange(rowNum, 5).setValue(avgPrice);      // E: avgPrice
       portfolioSheet.getRange(rowNum, 6).setValue(holdings);      // F: holdings

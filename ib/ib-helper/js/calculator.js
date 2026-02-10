@@ -208,7 +208,10 @@ const IBCalculator = (function() {
       currentPrice,
       ticker,
       sellPercent: inputSellPercent,
-      locSellPercent = 5
+      locSellPercent = 5,
+      additionalBuyOrderCount,
+      additionalBuyMaxDecline = 15,
+      additionalBuyQuantity = 1
     } = params;
 
     // 1회 매수금
@@ -226,8 +229,6 @@ const IBCalculator = (function() {
     const buyLocPrice = getBuyLOCPrice(locInfo.locPrice);
 
     const orders = [];
-    let usedAmount = 0;
-
     // ========================================
     // 전반전 (T < 20): 1회 매수금을 2개로 나눔 (진행률 50% 미만)
     // ========================================
@@ -250,7 +251,6 @@ const IBCalculator = (function() {
           quantity: qty1,
           orderType: 'LOC'
         });
-        usedAmount += avgPriceBuy * qty1;
       }
 
       // 주문 2: 큰수LOC 매수 (별% 기준)
@@ -264,7 +264,6 @@ const IBCalculator = (function() {
           quantity: qty2,
           orderType: 'LOC'
         });
-        usedAmount += buyLocPrice * qty2;
       }
     }
     // ========================================
@@ -281,16 +280,25 @@ const IBCalculator = (function() {
           quantity: qty,
           orderType: 'LOC'
         });
-        usedAmount += buyLocPrice * qty;
       }
     }
 
     // ========================================
-    // 하락대비 추가매수 (남은 금액으로)
+    // 하락대비 추가매수 (전략 기반: 지정 개수)
     // ========================================
+    const declineBasePrice = orders.length > 0 ? orders[orders.length - 1].price : buyLocPrice;
+    const hasExplicitOrderCount = Number.isFinite(parseInt(additionalBuyOrderCount, 10));
+    const declineOrderCount = resolveAdditionalBuyOrderCount({
+      additionalBuyOrderCount,
+      additionalBuyMaxDecline
+    }, declineBasePrice);
     const additionalOrders = generateAdditionalBuyOrders(
-      oneTimeBuy - usedAmount,
-      orders.length > 0 ? orders[orders.length - 1].price : buyLocPrice
+      declineBasePrice,
+      {
+        orderCount: declineOrderCount,
+        quantity: additionalBuyQuantity,
+        maxDeclinePct: hasExplicitOrderCount ? undefined : additionalBuyMaxDecline
+      }
     );
 
     orders.push(...additionalOrders);
@@ -310,6 +318,27 @@ const IBCalculator = (function() {
     };
   }
 
+  function resolveAdditionalBuyOrderCount(params, basePrice) {
+    const parsedOrderCount = parseInt(params?.additionalBuyOrderCount, 10);
+    if (Number.isFinite(parsedOrderCount)) {
+      return Math.max(0, Math.min(8, parsedOrderCount));
+    }
+
+    const parsedDeclinePct = parseFloat(params?.additionalBuyMaxDecline);
+    const maxDeclinePct = Number.isFinite(parsedDeclinePct) ? parsedDeclinePct : 15;
+    if (!Number.isFinite(basePrice) || basePrice <= 0) return 0;
+
+    const minPrice = basePrice * (1 - maxDeclinePct / 100);
+    let price = basePrice;
+    let count = 0;
+    while (count < 8) {
+      price = roundPrice(price * 0.98);
+      if (price < minPrice) break;
+      count++;
+    }
+    return count;
+  }
+
   /**
    * 하락대비 추가매수 주문 생성
    *
@@ -317,45 +346,45 @@ const IBCalculator = (function() {
    * - 스텝 사이즈: 2% (복리)
    * - 공식: price[i] = 현재가 × 0.98^i
    * - 최대 하락폭: -15% (현재가 × 0.85까지)
-   * - 종료: price < minPrice 또는 남은 금액 부족
+   * - 종료: price < minPrice (maxDecline fallback 사용 시)
    *
-   * @param {number} remainingAmount - 남은 금액
    * @param {number} basePrice - 기준 가격 (현재가 또는 마지막 매수가)
+   * @param {Object} options
    * @returns {Array} 추가매수 주문 배열
    */
-  function generateAdditionalBuyOrders(remainingAmount, basePrice) {
+  function generateAdditionalBuyOrders(basePrice, options = {}) {
     const orders = [];
     const stepPct = 0.02;  // 2% 복리 하락
-    const maxDeclinePct = 0.15;  // 최대 -15%
-    const minPrice = basePrice * (1 - maxDeclinePct);  // 하한선
+    const parsedOrderCount = parseInt(options.orderCount, 10);
+    const orderCount = Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 0;
+    const parsedQuantity = parseInt(options.quantity, 10);
+    const quantity = Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1;
 
-    let remaining = remainingAmount;
+    if (!Number.isFinite(basePrice) || basePrice <= 0 || orderCount <= 0) {
+      return orders;
+    }
+
+    const parsedDeclinePct = parseFloat(options.maxDeclinePct);
+    const useDeclineGuard = Number.isFinite(parsedDeclinePct) && parsedDeclinePct > 0;
+    const minPrice = useDeclineGuard ? basePrice * (1 - parsedDeclinePct / 100) : 0;
     let price = basePrice;
-    let step = 0;
 
-    while (remaining > 0) {
+    for (let step = 1; step <= orderCount; step++) {
       // 2% 복리 하락 적용
       price = roundPrice(price * (1 - stepPct));
+      if (!Number.isFinite(price) || price <= 0) break;
 
-      // 최대 하락폭 체크
-      if (price < minPrice) break;
-
-      // 남은 금액으로 1주 구매 가능한지 체크
-      if (remaining < price) break;
-
-      step++;
+      if (useDeclineGuard && price < minPrice) break;
       const declineFromBase = ((basePrice - price) / basePrice * 100).toFixed(1);
 
       orders.push({
         type: `하락대비 추가매수 ${step}`,
         description: `-${declineFromBase}% 하락 시`,
         price: price,
-        amount: roundPrice(price),
-        quantity: 1,
+        amount: roundPrice(price * quantity),
+        quantity,
         orderType: 'LOC'
       });
-
-      remaining -= price;
     }
 
     return orders;
@@ -496,7 +525,10 @@ const IBCalculator = (function() {
       holdings,
       currentPrice,
       sellPercent: inputSellPercent,  // 🔴 v1.1.0: 사용자 입력값 우선
-      locSellPercent = 5  // 🔴 v1.4.0: LOC% 연동 (#234)
+      locSellPercent = 5,  // 🔴 v1.4.0: LOC% 연동 (#234)
+      additionalBuyOrderCount,
+      additionalBuyMaxDecline,
+      additionalBuyQuantity
     } = input;
 
     // Validation
@@ -539,7 +571,10 @@ const IBCalculator = (function() {
       currentPrice,
       ticker,
       sellPercent: effectiveSellPercent,
-      locSellPercent
+      locSellPercent,
+      additionalBuyOrderCount,
+      additionalBuyMaxDecline,
+      additionalBuyQuantity
     });
 
     // 매도 주문 생성
@@ -565,7 +600,10 @@ const IBCalculator = (function() {
         holdings,
         currentPrice,
         sellPercent: inputSellPercent,
-        locSellPercent
+        locSellPercent,
+        additionalBuyOrderCount,
+        additionalBuyMaxDecline,
+        additionalBuyQuantity
       },
       calculation: {
         oneTimeBuy: roundPrice(oneTimeBuy),
@@ -646,6 +684,7 @@ const IBCalculator = (function() {
     // Order generation
     generateBuyOrders,
     generateSellOrders,
+    generateAdditionalBuyOrders,
 
     // Utilities
     getSellPercent,

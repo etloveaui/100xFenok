@@ -900,6 +900,25 @@
           </div>
         </div>
 
+        <!-- Additional Buy Strategy (#246 확장) -->
+        <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 space-y-3">
+          <div class="flex items-center justify-between">
+            <label for="modal-additional-enabled" class="text-sm font-medium text-gray-700">하락대비 사용</label>
+            <input id="modal-additional-enabled" type="checkbox" class="w-4 h-4 accent-amber-500" onchange="saveAdditionalBuySettings()">
+          </div>
+          <div>
+            <label for="modal-additional-order-count" class="block text-xs text-gray-500 mb-1">하락대비 주문 개수 (0~8)</label>
+            <input id="modal-additional-order-count"
+                   type="number"
+                   min="0"
+                   max="8"
+                   step="1"
+                   class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                   onchange="saveAdditionalBuySettings()">
+            <p class="mt-1 text-[11px] text-gray-500">전략 개수만큼 주문을 생성하며, 예수금 부족은 경고만 표시됩니다.</p>
+          </div>
+        </div>
+
         <!-- Google Sync Status (상단 배치) 🔴 v4.29.1: 로그아웃 버튼 추가 -->
         <div id="google-sync-section" class="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-3 border border-blue-100">
           <div class="flex items-center justify-between mb-2">
@@ -1549,6 +1568,63 @@
     // Profile Modal
     // =====================================================
 
+    function getNormalizedAdditionalBuySettings(profile) {
+      const additionalBuy = profile?.settings?.additionalBuy || {};
+      const parsedOrderCount = parseInt(additionalBuy.orderCount, 10);
+      const parsedMaxDecline = parseFloat(additionalBuy.maxDecline);
+      const parsedQuantity = parseInt(additionalBuy.quantity, 10);
+      return {
+        enabled: additionalBuy.enabled !== false,
+        orderCount: Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 8,
+        maxDecline: Number.isFinite(parsedMaxDecline) ? parsedMaxDecline : 15,
+        quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1
+      };
+    }
+
+    function applyAdditionalBuySettingsToModal(settings) {
+      const enabledInput = document.getElementById('modal-additional-enabled');
+      const orderCountInput = document.getElementById('modal-additional-order-count');
+      if (!enabledInput || !orderCountInput) return;
+      enabledInput.checked = settings.enabled;
+      orderCountInput.value = settings.orderCount;
+      orderCountInput.disabled = !settings.enabled;
+      orderCountInput.classList.toggle('opacity-50', !settings.enabled);
+    }
+
+    function loadAdditionalBuySettings() {
+      const profile = ProfileManager.getActive();
+      const settings = getNormalizedAdditionalBuySettings(profile);
+      applyAdditionalBuySettingsToModal(settings);
+    }
+
+    function saveAdditionalBuySettings() {
+      if (!currentProfile) return;
+      const enabledInput = document.getElementById('modal-additional-enabled');
+      const orderCountInput = document.getElementById('modal-additional-order-count');
+      if (!enabledInput || !orderCountInput) return;
+
+      const parsedOrderCount = parseInt(orderCountInput.value, 10);
+      const orderCount = Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 8;
+      orderCountInput.value = orderCount;
+
+      const currentSettings = getNormalizedAdditionalBuySettings(currentProfile);
+      const nextAdditionalBuy = {
+        ...currentSettings,
+        enabled: enabledInput.checked,
+        orderCount
+      };
+
+      ProfileManager.update(currentProfile.id, {
+        settings: {
+          additionalBuy: nextAdditionalBuy
+        }
+      });
+      currentProfile = ProfileManager.getActive();
+      applyAdditionalBuySettingsToModal(nextAdditionalBuy);
+      showToast('하락대비 설정 저장됨', 'success', 1000);
+      triggerAutoSync();
+    }
+
     function showProfileSettings() {
       const modal = document.getElementById('profile-modal');
       modal.classList.remove('hidden');
@@ -1562,6 +1638,7 @@
 
       // Load stocks list
       updateModalStocksList();
+      loadAdditionalBuySettings();
     }
 
     /**
@@ -1596,6 +1673,7 @@
       document.getElementById('modal-profile-name').value = currentProfile?.name || '';
       updateModalStocksList();
       updateModalProfileSelector();
+      loadAdditionalBuySettings();
 
       showToast(`프로필 '${currentProfile?.name}' 로 전환됨`, 'success', 1500);
     }
@@ -2759,6 +2837,16 @@
       return avgPrice > 0 && principal > 0;
     }
 
+    function getAdditionalBuyInputForCalculation() {
+      const latestProfile = ProfileManager.getById(currentProfile?.id) || currentProfile;
+      const normalized = getNormalizedAdditionalBuySettings(latestProfile);
+      return {
+        additionalBuyOrderCount: normalized.enabled ? normalized.orderCount : 0,
+        additionalBuyMaxDecline: normalized.maxDecline,
+        additionalBuyQuantity: normalized.quantity
+      };
+    }
+
     async function calculateOrders() {
       // 🔴 v4.29.0: selectedTicker null guard
       if (!selectedTicker) {
@@ -2800,7 +2888,8 @@
         holdings: holdings,
         currentPrice: currentPrice,  // 🔴 #211: Prices 시트에서 자동 조회
         sellPercent: parseFloat(document.getElementById('input-sellPercent').value) || defaultSellPercent,
-        locSellPercent: parseFloat(document.getElementById('input-locSellPercent').value) || 5  // 🔴 #234: LOC% 연동
+        locSellPercent: parseFloat(document.getElementById('input-locSellPercent').value) || 5,  // 🔴 #234: LOC% 연동
+        ...getAdditionalBuyInputForCalculation()
       };
 
       // Validate - 필수 입력값 체크 (현재가는 선택 - LOC 캡에만 사용)
@@ -2852,6 +2941,7 @@
       // 결과 초기화
       calculationResults = {};
       const tickerList = [...enabledTickers];
+      const additionalBuyInput = getAdditionalBuyInputForCalculation();
 
       // 🔴 v4.28.1: 현재가 일괄 조회 (Promise.all로 병렬 처리)
       let priceMap = {};
@@ -2907,7 +2997,8 @@
           holdings: holdings,
           currentPrice: priceMap[ticker] || 0,
           sellPercent: stockData.sellPercent || defaultSellPercent,
-          locSellPercent: stockData.locSellPercent || 5  // 🔴 #234: LOC% 연동
+          locSellPercent: stockData.locSellPercent || 5,  // 🔴 #234: LOC% 연동
+          ...additionalBuyInput
         };
 
         // 계산
@@ -3616,7 +3707,7 @@
 
       // 🔴 v4.30.0 (B5-14): 항상 값 설정 (이전 프로필 값 누수 방지)
       // 기존: balance > 0일 때만 설정 → 이전 값 유지됨
-      balanceInput.value = balance.available > 0 ? balance.available : '';
+      balanceInput.value = Number.isFinite(balance.available) ? balance.available : '';
 
       if (commissionInput) {
         const effectiveRate = (commissionRate !== null && commissionRate !== undefined)
@@ -3628,8 +3719,8 @@
         }
       }
 
-      // 예수금이 있을 때만 상태 표시
-      if (balance.available > 0) {
+      // 0/음수도 동기화 대상이므로 숫자면 상태를 재계산한다.
+      if (Number.isFinite(balance.available)) {
         recalculateBalance();
       }
     }
@@ -3640,7 +3731,7 @@
       // 🔴 v4.29.6 (#30): 입력값 범위 검증
       let numValue = parseFloat(value) || 0;
       if (!Number.isFinite(numValue)) numValue = 0;
-      if (numValue < 0) numValue = 0;
+      if (numValue < -10000000) numValue = -10000000;
       if (numValue > 10000000) numValue = 10000000;  // 최대 $10M
 
       BalanceManager.updateBalance(currentProfile.id, numValue);
@@ -3697,10 +3788,9 @@
       if (!currentProfile) return;
 
       // Save current balance value
-      const balanceValue = parseFloat(document.getElementById('input-balance').value) || 0;
-      if (balanceValue > 0) {
-        BalanceManager.updateBalance(currentProfile.id, balanceValue);
-      }
+      const rawBalanceValue = parseFloat(document.getElementById('input-balance').value);
+      const balanceValue = Number.isFinite(rawBalanceValue) ? rawBalanceValue : 0;
+      BalanceManager.updateBalance(currentProfile.id, balanceValue);
 
       const commissionInput = document.getElementById('input-commission');
       if (commissionInput) {
@@ -3729,7 +3819,7 @@
       const breakdownBox = document.getElementById('stock-breakdown');
 
       // Only show if balance is set
-      if (status.available <= 0 && status.required <= 0) {
+      if (status.available === 0 && status.required <= 0) {
         statusBox.classList.add('hidden');
         breakdownBox.classList.add('hidden');
         return;
@@ -4385,7 +4475,7 @@
         const newId = ProfileManager.createWithId(sp.profileId, sp.profileName, '');
 
         // 🔴 v4.22.0: 예수금 저장
-        if (sp.balance > 0) {
+        if (Number.isFinite(sp.balance)) {
           BalanceManager.updateBalance(newId, sp.balance);
         }
 
