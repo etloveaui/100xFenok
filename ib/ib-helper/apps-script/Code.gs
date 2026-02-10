@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.5.0
+ * @version 2.7.0
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v2.7.0 (2026-02-10): ExecutionLog + Orders Archive (14-day rolling)
  * - v2.5.0 (2026-02-08): NYSE holiday detection (Rule-based, no API)
  * - v2.4.0 (2026-02-08): shouldProcessToday() weekend guard + defensive trim/toUpperCase
  * - v2.3.3 (2026-02-08): totalInvested commission fix (balance consistency)
@@ -40,8 +41,41 @@ const CONFIG = {
   ORDERS_SHEET: 'Orders',
   BALANCE_SHEET: 'Balance',  // Optional
   TIMEZONE: 'Asia/Seoul',
-  COMMISSION_RATE: 0.0007  // 0.07%
+  COMMISSION_RATE: 0.0007,  // 0.07%
+  EXECUTION_LOG_SHEET: 'ExecutionLog',
+  ORDERS_ARCHIVE_SHEET: 'Orders_Archive',
+  ARCHIVE_DAYS: 14  // Days to keep executed orders before archiving
 };
+
+// =====================================================
+// UTILITY: Date Parsing
+// =====================================================
+
+/**
+ * Parse order date from various formats
+ * Supports: Date object, 'yyyy-MM-dd' (ISO), 'yyyy. M. d' (Korean locale)
+ */
+function parseOrderDate(value) {
+  if (!value) return null;
+  if (Object.prototype.toString.call(value) === '[object Date]') return value;
+  if (typeof value === 'string') {
+    var trimmed = value.trim();
+    // 1) yyyy-MM-dd (ISO format from Code.gs trigger)
+    try {
+      var parsed = Utilities.parseDate(trimmed, CONFIG.TIMEZONE, 'yyyy-MM-dd');
+      if (!isNaN(parsed.getTime())) return parsed;
+    } catch (e) {}
+    // 2) "2026. 2. 4" (Korean locale from manual/browser execution)
+    var m = trimmed.match(/^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})$/);
+    if (m) {
+      var d = new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
+  // 3) Fallback: native JS Date parsing
+  var fallback = new Date(value);
+  return isNaN(fallback.getTime()) ? null : fallback;
+}
 
 // =====================================================
 // MAIN ENTRY POINTS
@@ -243,8 +277,9 @@ function processOrderExecutions() {
     const pendingOrders = loadPendingOrders(ordersSheet);
     Logger.log('Pending orders: ' + pendingOrders.length);
 
-    // 3. Check executions
-    const executedOrders = checkExecutions(pendingOrders, prices);
+    // 3. Check executions (+ collect log entries)
+    const logEntries = [];
+    const executedOrders = checkExecutions(pendingOrders, prices, logEntries);
     Logger.log('Executed orders: ' + executedOrders.length);
 
     // 4. Update Orders sheet
@@ -253,6 +288,20 @@ function processOrderExecutions() {
 
       // 5. Update Portfolio
       updatePortfolio(ss, executedOrders);
+    }
+
+    // 6. Write execution log (failure won't break main pipeline)
+    try {
+      writeExecutionLog(ss, logEntries);
+    } catch (logError) {
+      Logger.log('writeExecutionLog error (ignored): ' + logError.message);
+    }
+
+    // 7. Archive old executed orders (failure won't break main pipeline)
+    try {
+      archiveOldOrders(ss, ordersSheet);
+    } catch (archiveError) {
+      Logger.log('archiveOldOrders error (ignored): ' + archiveError.message);
     }
 
     Logger.log('Process complete: ' + executedOrders.length + ' orders executed');
@@ -387,24 +436,6 @@ function dedupeOrders(sheet, daysLimit = 30) {
     return `${date}|${googleId}|${profileId}|${ticker}|${orderType}|${side}|${executionBasis}`;
   };
 
-  const parseOrderDate = (value) => {
-    if (!value) return null;
-    if (Object.prototype.toString.call(value) === '[object Date]') {
-      return value;
-    }
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-      try {
-        const parsedKst = Utilities.parseDate(trimmed, CONFIG.TIMEZONE, 'yyyy-MM-dd');
-        if (!isNaN(parsedKst.getTime())) return parsedKst;
-      } catch (error) {
-        // Fallback to native Date parsing below.
-      }
-    }
-    const parsed = new Date(value);
-    return isNaN(parsed.getTime()) ? null : parsed;
-  };
-
   const withinWindow = (orderDate) => {
     if (!hasDaysLimit) return true;
     if (!orderDate || !cutoffDate) return false;
@@ -494,8 +525,9 @@ function dedupeOrders(sheet, daysLimit = 30) {
  * @param {Object} prices - Price data { TICKER: { close, high } }
  * @returns {Array} Orders that were executed
  */
-function checkExecutions(orders, prices) {
+function checkExecutions(orders, prices, logEntries) {
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
+  const user = Session.getEffectiveUser().getEmail() || 'trigger';
   const executedOrders = [];
   const highWarned = {};
   const closeWarned = {};
@@ -504,6 +536,13 @@ function checkExecutions(orders, prices) {
     const priceData = prices[order.ticker];
     if (!priceData) {
       Logger.log('No price data for: ' + order.ticker);
+      if (logEntries) {
+        logEntries.push({
+          timestamp: new Date(), user: user, ticker: order.ticker,
+          orderPrice: order.price, closePrice: null, highPrice: null,
+          result: 'SKIPPED', reason: 'no price data for ' + order.ticker
+        });
+      }
       return;
     }
 
@@ -558,9 +597,143 @@ function checkExecutions(orders, prices) {
       order.actualPrice = actualPrice;
       executedOrders.push(order);
     }
+
+    // Collect execution log entry
+    if (logEntries) {
+      var basis = order.executionBasis;
+      var checkPrice = (basis === 'HIGH') ? highPrice : closePrice;
+      var op = order.side === 'BUY' ? '<=' : '>=';
+      logEntries.push({
+        timestamp: new Date(), user: user, ticker: order.ticker,
+        orderPrice: order.price, closePrice: closePrice, highPrice: highPrice,
+        result: executed ? 'EXECUTED' : 'PENDING',
+        reason: executed
+          ? basis.toLowerCase() + '(' + checkPrice + ') ' + op + ' order(' + order.price + ')'
+          : basis.toLowerCase() + '(' + checkPrice + ') not ' + op + ' order(' + order.price + ')'
+      });
+    }
   });
 
   return executedOrders;
+}
+
+// =====================================================
+// EXECUTION LOG
+// =====================================================
+
+/**
+ * Write execution check results to ExecutionLog sheet
+ * Batch write for performance. Failure doesn't affect main pipeline.
+ */
+function writeExecutionLog(ss, logEntries) {
+  if (!logEntries || logEntries.length === 0) return;
+
+  var HEADERS = [
+    'timestamp', 'user', 'action', 'ticker', 'orderPrice',
+    'closePrice', 'highPrice', 'result', 'reason'
+  ];
+
+  var sheet = ss.getSheetByName(CONFIG.EXECUTION_LOG_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.EXECUTION_LOG_SHEET);
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  }
+
+  var rows = logEntries.map(function(e) {
+    return [
+      e.timestamp, e.user, 'execution_check', e.ticker,
+      e.orderPrice, e.closePrice, e.highPrice, e.result, e.reason
+    ];
+  });
+
+  var lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow + 1, 1, rows.length, HEADERS.length).setValues(rows);
+  Logger.log('writeExecutionLog: ' + rows.length + ' entries written');
+}
+
+// =====================================================
+// ORDERS ARCHIVE
+// =====================================================
+
+/**
+ * Archive executed orders older than ARCHIVE_DAYS to Orders_Archive sheet
+ * Uses executionDate (L column), NOT orderDate (A column) for cutoff comparison.
+ * ONLY archives rows where K column = 'Y' (executed).
+ * Pending orders (K='' or 'N') are NEVER archived regardless of age.
+ * Safety: On rewrite failure, attempts to restore original data.
+ */
+function archiveOldOrders(ss, ordersSheet) {
+  var data = ordersSheet.getDataRange().getValues();
+  if (!data || data.length <= 1) return;
+
+  var header = data[0];
+  var colCount = header.length;
+  var cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - CONFIG.ARCHIVE_DAYS);
+
+  var keepRows = [header];
+  var archiveRows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var execution = String(row[10] || '').trim().toUpperCase();  // K: execution
+    var executionDate = parseOrderDate(row[11]);  // L: executionDate
+
+    // ONLY archive executed orders older than cutoff
+    if (execution === 'Y' && executionDate && executionDate < cutoff) {
+      archiveRows.push(row);
+    } else {
+      keepRows.push(row);
+    }
+  }
+
+  if (archiveRows.length === 0) return;  // Fast path: nothing to archive
+
+  // Write to archive sheet
+  var archiveSheet = ss.getSheetByName(CONFIG.ORDERS_ARCHIVE_SHEET);
+  if (!archiveSheet) {
+    archiveSheet = ss.insertSheet(CONFIG.ORDERS_ARCHIVE_SHEET);
+    archiveSheet.getRange(1, 1, 1, colCount).setValues([header]);
+  }
+
+  var normalizedArchive = archiveRows.map(function(r) {
+    var nr = r.slice(0, colCount);
+    while (nr.length < colCount) nr.push('');
+    return nr;
+  });
+  var archiveLastRow = archiveSheet.getLastRow();
+  archiveSheet.getRange(archiveLastRow + 1, 1, normalizedArchive.length, colCount)
+    .setValues(normalizedArchive);
+
+  // Rewrite Orders sheet with recovery safety
+  var normalizedKeep = keepRows.map(function(r) {
+    var nr = r.slice(0, colCount);
+    while (nr.length < colCount) nr.push('');
+    return nr;
+  });
+
+  // Normalize original data for potential recovery
+  var normalizedOriginal = data.map(function(r) {
+    var nr = r.slice(0, colCount);
+    while (nr.length < colCount) nr.push('');
+    return nr;
+  });
+
+  ordersSheet.clearContents();
+  try {
+    ordersSheet.getRange(1, 1, normalizedKeep.length, colCount).setValues(normalizedKeep);
+  } catch (rewriteError) {
+    // CRITICAL: clearContents succeeded but setValues failed -> restore original data
+    Logger.log('CRITICAL: Orders rewrite failed, restoring original data: ' + rewriteError.message);
+    try {
+      ordersSheet.getRange(1, 1, normalizedOriginal.length, colCount).setValues(normalizedOriginal);
+    } catch (restoreError) {
+      Logger.log('FATAL: Restore also failed: ' + restoreError.message);
+    }
+    throw rewriteError;  // Re-throw to be caught by outer try/catch in processOrderExecutions
+  }
+
+  Logger.log('archiveOldOrders: Moved ' + archiveRows.length + ' executed rows to ' + CONFIG.ORDERS_ARCHIVE_SHEET);
 }
 
 // =====================================================
@@ -910,10 +1083,37 @@ function onOpen() {
     .addItem('체결 확인 실행', 'processOrderExecutions')
     .addItem('중복 주문 정리', 'dedupeOrders')
     .addItem('체결 예수금 마이그레이션', 'migrateExecutedOrdersBalance')
+    .addItem('📦 Archive Old Orders', 'manualArchiveOldOrders')
     .addSeparator()
     .addItem('매일 자동 실행 설정', 'setupTrigger')
     .addItem('자동 실행 해제', 'removeTrigger')
     .addToUi();
+}
+
+/**
+ * Manual archive execution with LockService protection
+ */
+function manualArchiveOldOrders() {
+  var lock = LockService.getDocumentLock();
+  if (!lock.tryLock(30000)) {
+    SpreadsheetApp.getUi().alert('Another process is running. Please try again later.');
+    return;
+  }
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
+    if (!ordersSheet) {
+      SpreadsheetApp.getUi().alert('Orders sheet not found');
+      return;
+    }
+    archiveOldOrders(ss, ordersSheet);
+    SpreadsheetApp.getUi().alert('Archive complete. Check Orders_Archive sheet.');
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Archive failed: ' + e.message);
+    Logger.log('manualArchiveOldOrders error: ' + e.message);
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // =====================================================

@@ -16,8 +16,9 @@
  * 🔐 보안: GITHUB_TOKEN은 스크립트 속성에 저장
  *    - 파일 → 프로젝트 설정 → 스크립트 속성 → GITHUB_TOKEN
  *
- * @version 1.0.0
- * @lastUpdated 2025-01-01
+ * @version 1.1.0
+ * @lastUpdated 2026-02-10
+ * @changelog Added date normalization for "Mon DD" format → "YYYY-MM-DD"
  */
 
 // ========================================
@@ -55,8 +56,27 @@ function updateAAII() {
     return num < 1 ? Math.round(num * 1000) / 10 : num;
   };
 
+  // ========================================
+  // 🔧 날짜 정규화 함수 (2026-02-10 추가)
+  // "Feb 4" → "2026-02-04", "Jan 28" → "2025-01-28"
+  // ========================================
+  const normalizeDate = (dateStr) => {
+    const currentYear = new Date().getFullYear();
+    const parsed = new Date(dateStr + ' ' + currentYear);
+
+    // 1월 데이터인데 현재가 2월 이상이면 작년으로 처리
+    const currentMonth = new Date().getMonth() + 1;
+    const dataMonth = parsed.getMonth() + 1;
+
+    const year = (dataMonth === 1 && currentMonth >= 2) ? currentYear - 1 : currentYear;
+
+    return year + '-' +
+           String(dataMonth).padStart(2, '0') + '-' +
+           String(parsed.getDate()).padStart(2, '0');
+  };
+
   const newRecord = {
-    date: latest[0],
+    date: normalizeDate(latest[0]), // 🔧 Modified: adds year prefix
     bullish: toPercent(latest[1]),
     neutral: toPercent(latest[2]),
     bearish: toPercent(latest[3])

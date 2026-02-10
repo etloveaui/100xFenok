@@ -2458,7 +2458,7 @@
       const avgPrice = computeAvgPrice(totalInvested, holdings);
 
       if (avgPrice > 0) {
-        avgInput.value = avgPrice;
+        avgInput.value = avgPrice.toFixed(4);  // 🔴 FIX: 평단가 4자리 제한
         console.log(`autoCalcAvgPrice: ${totalInvested} / ${holdings} = ${avgPrice}`);
       } else {
         avgInput.value = '';
@@ -2476,8 +2476,9 @@
       const data = ProfileManager.loadDailyData(currentProfile.id, selectedTicker);
       if (data) {
         // 🔴 #236 (DEC-175): avgPrice 로드 제거 - totalInvested/holdings만 로드
-        if (data.totalInvested) document.getElementById('input-totalInvested').value = data.totalInvested;
-        if (data.holdings) document.getElementById('input-holdings').value = data.holdings;
+        // 🔴 FIX: 소수점 제한 - 총매입금 2자리, 보유수량 정수
+        if (data.totalInvested) document.getElementById('input-totalInvested').value = parseFloat(data.totalInvested).toFixed(2);
+        if (data.holdings) document.getElementById('input-holdings').value = parseInt(data.holdings) || 0;
       }
       // 🔴 #236 (DEC-175): avgPrice는 항상 파생값으로 계산
       autoCalcAvgPrice();
@@ -3250,9 +3251,10 @@
       // Separate main buy orders and decline orders (merged for display)
       const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
       const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
-      const mergedBuyOrders = [...mainBuyOrders, ...declineOrders];
+      // 🔴 FIX: 매수 주문 가격 내림차순 정렬 (높은 가격 → 낮은 가격)
+      const mergedBuyOrders = [...mainBuyOrders, ...declineOrders].sort((a, b) => b.price - a.price);
 
-      // Buy orders (main + decline merged)
+      // Buy orders (main + decline merged, sorted by price desc)
       const buyOrdersEl = document.getElementById('buy-orders');
       buyOrdersEl.innerHTML = mergedBuyOrders.map(order => renderOrderCard(order, 'buy')).join('');
 
@@ -3261,7 +3263,9 @@
       if (quarterStopLoss.active) {
         sellOrdersEl.innerHTML = '<p class="text-gray-500 text-sm">쿼터손절 모드 - 아래 안내 참조</p>';
       } else {
-        sellOrdersEl.innerHTML = sellOrders.map(order => renderOrderCard(order, 'sell')).join('');
+        // 🔴 FIX: 매도 주문 가격 내림차순 정렬 (지정가 매도 → LOC 매도)
+        const sortedSellOrders = [...sellOrders].sort((a, b) => b.price - a.price);
+        sellOrdersEl.innerHTML = sortedSellOrders.map(order => renderOrderCard(order, 'sell')).join('');
       }
 
       // Quarter stop loss warning (#216: 체크박스 연동)
@@ -3335,13 +3339,23 @@
       }
 
       // 🔴 v4.28.1: lastCalculation을 첫 번째 결과로 업데이트 (복사 기능 호환성)
-      lastCalculation = results[0];
+      // 🔴 FIX: 정렬된 첫 번째 결과 사용
+      lastCalculation = sortedResults[0];
 
       // 기존 단일 결과 섹션 숨기기
       document.getElementById('results-section').classList.add('hidden');
 
+      // 🔴 FIX: 종목 정렬 — TQQQ(1) → SOXL(2) → 나머지 알파벳
+      const sortedResults = [...results].sort((a, b) => {
+        const priority = { 'TQQQ': 0, 'SOXL': 1 };
+        const aP = priority[a.ticker] ?? 2;
+        const bP = priority[b.ticker] ?? 2;
+        if (aP !== bP) return aP - bP;
+        return a.ticker.localeCompare(b.ticker);
+      });
+
       // 아코디언 아이템 생성
-      accordion.innerHTML = results.map((result) => {
+      accordion.innerHTML = sortedResults.map((result) => {
         const { ticker, calculation, buyOrders, sellOrders, quarterStopLoss, input } = result;
         const { T, phase, starPercent, locInfo } = calculation;
         const avgPrice = input?.avgPrice || 0;
@@ -3360,10 +3374,11 @@
         if (phase === '후반전') phaseBadgeClass = 'accordion-badge-second';
         else if (phase === '손절') phaseBadgeClass = 'accordion-badge-stop';
 
-        // 주문 분리
+        // 주문 분리 및 정렬 (높은 가격 → 낮은 가격)
         const mainBuyOrders = buyOrders.filter(o => !o.type.includes('하락대비'));
         const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
-        const mergedBuyOrders = [...mainBuyOrders, ...declineOrders];
+        // 🔴 FIX: 매수 주문 가격 내림차순 정렬
+        const mergedBuyOrders = [...mainBuyOrders, ...declineOrders].sort((a, b) => b.price - a.price);
 
         // 아코디언 아이템 HTML
         return `
@@ -3429,7 +3444,7 @@
                 </div>
                 ` : `
                 <div class="space-y-1 text-sm">
-                  ${sellOrders.map(o => `
+                  ${/* 🔴 FIX: 매도 주문 가격 내림차순 정렬 (지정가 매도 → LOC 매도) */ [...sellOrders].sort((a, b) => b.price - a.price).map(o => `
                     <div class="flex justify-between bg-white rounded px-2 py-1 items-center">
                       <span class="text-gray-600">${formatOrderLabel(o)}</span>
                       <div class="flex items-center gap-2">
@@ -3471,10 +3486,10 @@
 
       // 🔴 Bug 2 수정: 다중 종목 계산 시 오늘 매수 헬퍼 표시
       // 전체 종목의 총 매수량 합산
-      const totalBuyQty = results.reduce((sum, r) =>
+      const totalBuyQty = sortedResults.reduce((sum, r) =>
         sum + (r.buyOrders || []).reduce((s, o) => s + o.quantity, 0), 0);
-      // 첫 번째 종목 ticker로 어제 매수 비교 표시
-      showTodayBuyHelper(totalBuyQty, results[0]?.ticker);
+      // 첫 번째 종목 ticker로 어제 매수 비교 표시 (정렬된 첫 번째 = TQQQ 또는 우선순위 1위)
+      showTodayBuyHelper(totalBuyQty, sortedResults[0]?.ticker);
     }
 
     /**
@@ -3548,10 +3563,10 @@
 
       if (dailyBuyTotal > 0) {
         if (balanceValue < dailyBuyTotal) {
-          lines.push(`⚠️ 예수금 부족! 필요 $${dailyBuyTotal.toFixed(2)}, 현재 $${balanceValue.toFixed(2)}`);
+          lines.push(`⚠️ 예수금 부족! 필요 $${dailyBuyTotal.toFixed(3)}, 현재 $${balanceValue.toFixed(3)}`);
         } else {
           const days = Math.floor(balanceValue / dailyBuyTotal);
-          lines.push(`💰 예수금: $${balanceValue.toFixed(2)} | 약 ${days}일 가능`);
+          lines.push(`💰 예수금: $${balanceValue.toFixed(3)} | 약 ${days}일 가능`);
         }
       }
 
@@ -3804,13 +3819,14 @@
 
       // 🔴 v4.30.0 (B5-14): 항상 값 설정 (이전 프로필 값 누수 방지)
       // 기존: balance > 0일 때만 설정 → 이전 값 유지됨
-      balanceInput.value = Number.isFinite(balance.available) ? balance.available : '';
+      // 🔴 FIX: 예수금 3자리, 수수료 2자리 제한
+      balanceInput.value = Number.isFinite(balance.available) ? parseFloat(balance.available).toFixed(3) : '';
 
       if (commissionInput) {
         const effectiveRate = (commissionRate !== null && commissionRate !== undefined)
           ? commissionRate
           : 0.07;
-        commissionInput.value = effectiveRate;
+        commissionInput.value = effectiveRate.toFixed(2);  // 🔴 FIX: 수수료 2자리
         if (commissionRate === null || commissionRate === undefined) {
           BalanceManager.updateCommissionRate(currentProfile.id, effectiveRate);
         }
@@ -3937,12 +3953,12 @@
         </div>
         <div class="status-row">
           <span class="text-gray-600">주문가능금액</span>
-          <span class="font-medium">$${status.available.toFixed(2)}</span>
+          <span class="font-medium">$${status.available.toFixed(3)}</span>
         </div>
         <hr class="my-1 border-gray-200">
         <div class="status-row ${statusClass}">
           <span>차액</span>
-          <span>${status.diff >= 0 ? '+' : ''}$${status.diff.toFixed(2)} ${statusIcon} ${status.statusKo}</span>
+          <span>${status.diff >= 0 ? '+' : ''}$${status.diff.toFixed(3)} ${statusIcon} ${status.statusKo}</span>
         </div>
         ${daysText ? `<div class="text-xs text-center text-blue-600 mt-2 font-medium">📅 ${daysText}</div>` : ''}
       `;
