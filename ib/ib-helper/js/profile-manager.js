@@ -32,11 +32,16 @@ const ProfileManager = (function() {
   }
 
   function normalizeAdditionalBuyConfig(raw = {}) {
+    const mode = raw?.mode === 'fixed' ? 'fixed' : 'budget_ratio';
     const parsedOrderCount = parseInt(raw?.orderCount, 10);
+    const parsedBudgetRatio = parseFloat(raw?.budgetRatio);
     const parsedMaxDecline = parseFloat(raw?.maxDecline);
     const parsedQuantity = parseInt(raw?.quantity, 10);
     return {
       enabled: raw?.enabled !== false,
+      mode,
+      budgetRatio: Number.isFinite(parsedBudgetRatio) ? Math.max(0, Math.min(100, parsedBudgetRatio)) : 25,
+      allowOneOver: raw?.allowOneOver !== false,
       maxDecline: Number.isFinite(parsedMaxDecline) ? parsedMaxDecline : 15,
       quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1,
       orderCount: Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 8
@@ -56,6 +61,9 @@ const ProfileManager = (function() {
       const prevAdditionalBuy = profile.settings.additionalBuy || {};
       if (
         prevAdditionalBuy.enabled !== normalizedAdditionalBuy.enabled ||
+        prevAdditionalBuy.mode !== normalizedAdditionalBuy.mode ||
+        prevAdditionalBuy.budgetRatio !== normalizedAdditionalBuy.budgetRatio ||
+        prevAdditionalBuy.allowOneOver !== normalizedAdditionalBuy.allowOneOver ||
         prevAdditionalBuy.maxDecline !== normalizedAdditionalBuy.maxDecline ||
         prevAdditionalBuy.quantity !== normalizedAdditionalBuy.quantity ||
         prevAdditionalBuy.orderCount !== normalizedAdditionalBuy.orderCount
@@ -207,6 +215,9 @@ const ProfileManager = (function() {
         partialSellRatio: 6,
         additionalBuy: {
           enabled: true,
+          mode: 'budget_ratio',
+          budgetRatio: 25,
+          allowOneOver: true,
           maxDecline: 15,
           quantity: 1,
           orderCount: 8
@@ -251,6 +262,9 @@ const ProfileManager = (function() {
         partialSellRatio: 6,
         additionalBuy: {
           enabled: true,
+          mode: 'budget_ratio',
+          budgetRatio: 25,
+          allowOneOver: true,
           maxDecline: 15,
           quantity: 1,
           orderCount: 8

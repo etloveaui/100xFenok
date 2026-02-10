@@ -907,6 +907,29 @@
             <input id="modal-additional-enabled" type="checkbox" class="w-4 h-4 accent-amber-500" onchange="saveAdditionalBuySettings()">
           </div>
           <div>
+            <label for="modal-additional-mode" class="block text-xs text-gray-500 mb-1">하락대비 모드</label>
+            <select id="modal-additional-mode"
+                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none bg-white"
+                    onchange="saveAdditionalBuySettings()">
+              <option value="budget_ratio">예산비율 (기본)</option>
+              <option value="fixed">고정 개수</option>
+            </select>
+          </div>
+          <div>
+            <label for="modal-additional-budget-ratio" class="block text-xs text-gray-500 mb-1">예산비율 (%)</label>
+            <input id="modal-additional-budget-ratio"
+                   type="number"
+                   min="0"
+                   max="100"
+                   step="1"
+                   class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                   onchange="saveAdditionalBuySettings()">
+          </div>
+          <div class="flex items-center justify-between">
+            <label for="modal-additional-allow-over" class="text-xs text-gray-600">목표 초과 1개 허용</label>
+            <input id="modal-additional-allow-over" type="checkbox" class="w-4 h-4 accent-amber-500" onchange="saveAdditionalBuySettings()">
+          </div>
+          <div>
             <label for="modal-additional-order-count" class="block text-xs text-gray-500 mb-1">하락대비 주문 개수 (0~8)</label>
             <input id="modal-additional-order-count"
                    type="number"
@@ -915,7 +938,7 @@
                    step="1"
                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none"
                    onchange="saveAdditionalBuySettings()">
-            <p class="mt-1 text-[11px] text-gray-500">전략 개수만큼 주문을 생성하며, 예수금 부족은 경고만 표시됩니다.</p>
+            <p class="mt-1 text-[11px] text-gray-500">기본: 예산비율 25% + 목표 초과 1개 허용. 고정 개수 모드로도 전환 가능합니다.</p>
           </div>
         </div>
 
@@ -1570,11 +1593,16 @@
 
     function getNormalizedAdditionalBuySettings(profile) {
       const additionalBuy = profile?.settings?.additionalBuy || {};
+      const mode = additionalBuy.mode === 'fixed' ? 'fixed' : 'budget_ratio';
       const parsedOrderCount = parseInt(additionalBuy.orderCount, 10);
+      const parsedBudgetRatio = parseFloat(additionalBuy.budgetRatio);
       const parsedMaxDecline = parseFloat(additionalBuy.maxDecline);
       const parsedQuantity = parseInt(additionalBuy.quantity, 10);
       return {
         enabled: additionalBuy.enabled !== false,
+        mode: mode,
+        budgetRatio: Number.isFinite(parsedBudgetRatio) ? Math.max(0, Math.min(100, parsedBudgetRatio)) : 25,
+        allowOneOver: additionalBuy.allowOneOver !== false,
         orderCount: Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 8,
         maxDecline: Number.isFinite(parsedMaxDecline) ? parsedMaxDecline : 15,
         quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1
@@ -1583,12 +1611,28 @@
 
     function applyAdditionalBuySettingsToModal(settings) {
       const enabledInput = document.getElementById('modal-additional-enabled');
+      const modeInput = document.getElementById('modal-additional-mode');
+      const budgetRatioInput = document.getElementById('modal-additional-budget-ratio');
+      const allowOverInput = document.getElementById('modal-additional-allow-over');
       const orderCountInput = document.getElementById('modal-additional-order-count');
-      if (!enabledInput || !orderCountInput) return;
+      if (!enabledInput || !modeInput || !budgetRatioInput || !allowOverInput || !orderCountInput) return;
       enabledInput.checked = settings.enabled;
+      modeInput.value = settings.mode;
+      budgetRatioInput.value = settings.budgetRatio;
+      allowOverInput.checked = settings.allowOneOver;
       orderCountInput.value = settings.orderCount;
-      orderCountInput.disabled = !settings.enabled;
-      orderCountInput.classList.toggle('opacity-50', !settings.enabled);
+
+      const disabledAll = !settings.enabled;
+      modeInput.disabled = disabledAll;
+      modeInput.classList.toggle('opacity-50', disabledAll);
+
+      const useBudgetMode = settings.mode === 'budget_ratio';
+      budgetRatioInput.disabled = disabledAll || !useBudgetMode;
+      budgetRatioInput.classList.toggle('opacity-50', disabledAll || !useBudgetMode);
+      allowOverInput.disabled = disabledAll || !useBudgetMode;
+
+      orderCountInput.disabled = disabledAll || useBudgetMode;
+      orderCountInput.classList.toggle('opacity-50', disabledAll || useBudgetMode);
     }
 
     function loadAdditionalBuySettings() {
@@ -1600,9 +1644,16 @@
     function saveAdditionalBuySettings() {
       if (!currentProfile) return;
       const enabledInput = document.getElementById('modal-additional-enabled');
+      const modeInput = document.getElementById('modal-additional-mode');
+      const budgetRatioInput = document.getElementById('modal-additional-budget-ratio');
+      const allowOverInput = document.getElementById('modal-additional-allow-over');
       const orderCountInput = document.getElementById('modal-additional-order-count');
-      if (!enabledInput || !orderCountInput) return;
+      if (!enabledInput || !modeInput || !budgetRatioInput || !allowOverInput || !orderCountInput) return;
 
+      const mode = modeInput.value === 'fixed' ? 'fixed' : 'budget_ratio';
+      const parsedBudgetRatio = parseFloat(budgetRatioInput.value);
+      const budgetRatio = Number.isFinite(parsedBudgetRatio) ? Math.max(0, Math.min(100, parsedBudgetRatio)) : 25;
+      budgetRatioInput.value = budgetRatio;
       const parsedOrderCount = parseInt(orderCountInput.value, 10);
       const orderCount = Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 8;
       orderCountInput.value = orderCount;
@@ -1611,6 +1662,9 @@
       const nextAdditionalBuy = {
         ...currentSettings,
         enabled: enabledInput.checked,
+        mode: mode,
+        budgetRatio: budgetRatio,
+        allowOneOver: allowOverInput.checked,
         orderCount
       };
 
@@ -2720,6 +2774,8 @@
      * #219: 전체 주문 복사 (매수(하락대비 포함)+매도 전체)
      * 🔴 v4.29.4 (C-08): copyToClipboard 사용
      */
+    const ORDER_COPY_DIVIDER = '━━━━━━━━━━━━━━━';
+
     function formatDollarShort(value) {
       const numeric = Number(value || 0);
       if (!Number.isFinite(numeric)) return '$0';
@@ -2730,6 +2786,23 @@
     function formatOrderLine(order) {
       const label = formatOrderLabel(order);
       return `  ${label}: ${order.quantity}주 x $${formatOrderPrice(order.price)}`;
+    }
+
+    function formatAdditionalBuyPolicy(input, oneTimeBuy) {
+      if (!input || input.additionalBuyEnabled === false) {
+        return '하락대비: OFF';
+      }
+      const mode = input.additionalBuyMode === 'fixed' ? 'fixed' : 'budget_ratio';
+      if (mode === 'fixed') {
+        const count = Math.max(0, Math.min(8, parseInt(input.additionalBuyOrderCount, 10) || 0));
+        return `하락대비: 고정 ${count}개`;
+      }
+      const ratio = Number.isFinite(parseFloat(input.additionalBuyBudgetRatio))
+        ? Math.max(0, Math.min(100, parseFloat(input.additionalBuyBudgetRatio)))
+        : 25;
+      const budget = (Number.isFinite(oneTimeBuy) ? oneTimeBuy : 0) * (ratio / 100);
+      const allowOneOver = input.additionalBuyAllowOneOver !== false;
+      return `하락대비: 예산 ${ratio}% (${IBCalculator.formatDollar(budget, 2)}) + ${allowOneOver ? '초과 1개' : '엄격 예산'}`;
     }
 
     async function copyAllOrdersTotal() {
@@ -2746,8 +2819,9 @@
 
       const lines = [
         `📊 ${lastCalculation.ticker} 오늘의 주문`,
-        `━━━━━━━━━━━━━━━━━━━━`,
-        headerLine
+        ORDER_COPY_DIVIDER,
+        headerLine,
+        formatAdditionalBuyPolicy(input, calculation.oneTimeBuy)
       ];
 
       const cashAction = buildCashReserveAction();
@@ -2777,7 +2851,7 @@
         lines.push(...sortedSell.map(o => formatOrderLine(o)));
       }
 
-      lines.push('', `━━━━━━━━━━━━━━━━━━━━`);
+      lines.push('', ORDER_COPY_DIVIDER);
 
       const text = lines.join('\n');
       const success = await copyToClipboard(text);
@@ -2840,8 +2914,23 @@
     function getAdditionalBuyInputForCalculation() {
       const latestProfile = ProfileManager.getById(currentProfile?.id) || currentProfile;
       const normalized = getNormalizedAdditionalBuySettings(latestProfile);
+      if (!normalized.enabled) {
+        return {
+          additionalBuyEnabled: false,
+          additionalBuyMode: normalized.mode,
+          additionalBuyOrderCount: 0,
+          additionalBuyBudgetRatio: 0,
+          additionalBuyAllowOneOver: normalized.allowOneOver,
+          additionalBuyMaxDecline: normalized.maxDecline,
+          additionalBuyQuantity: normalized.quantity
+        };
+      }
       return {
-        additionalBuyOrderCount: normalized.enabled ? normalized.orderCount : 0,
+        additionalBuyEnabled: true,
+        additionalBuyMode: normalized.mode,
+        additionalBuyOrderCount: normalized.orderCount,
+        additionalBuyBudgetRatio: normalized.budgetRatio,
+        additionalBuyAllowOneOver: normalized.allowOneOver,
         additionalBuyMaxDecline: normalized.maxDecline,
         additionalBuyQuantity: normalized.quantity
       };
@@ -3438,7 +3527,7 @@
       }).replace(/\. /g, '-').replace('.', '');  // "2026. 02. 05." → "2026-02-05"
       const lines = [
         `📊 ${profileName} 오늘의 주문 (${kstDate})`,
-        `━━━━━━━━━━━━━━━━━━━━`
+        ORDER_COPY_DIVIDER
       ];
 
       const balanceInfo = (typeof BalanceManager !== 'undefined' && currentProfile)
@@ -3457,7 +3546,7 @@
         });
       });
 
-      if (balanceValue > 0 && dailyBuyTotal > 0) {
+      if (dailyBuyTotal > 0) {
         if (balanceValue < dailyBuyTotal) {
           lines.push(`⚠️ 예수금 부족! 필요 $${dailyBuyTotal.toFixed(2)}, 현재 $${balanceValue.toFixed(2)}`);
         } else {
@@ -3492,6 +3581,7 @@
         const headerLine = `【${ticker}】 평단 $${formatOrderPrice(avgPrice)} | T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
 
         lines.push(headerLine);
+        lines.push(`  ${formatAdditionalBuyPolicy(input, calculation.oneTimeBuy)}`);
         // B: 매수 가격 내림차순
         const sortedBuy = [...buyOrders].sort((a, b) => b.price - a.price);
         lines.push('🟢 BUY (LOC)');
@@ -3515,7 +3605,7 @@
         lines.push('');
       }
 
-      lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+      lines.push(ORDER_COPY_DIVIDER);
 
       const text = lines.join('\n');
       const success = await copyToClipboard(text);
@@ -3653,8 +3743,15 @@
 
     function formatOrderLabel(order) {
       const rawType = String(order?.type || '').trim();
-      if (rawType.includes('하락대비')) {
-        return '하락LOC 매수';
+      if (rawType.startsWith('하락대비 추가매수')) {
+        const match = rawType.match(/(\d+)$/);
+        return match ? `추가-하락LOC #${match[1]}` : '추가-하락LOC';
+      }
+      if (rawType === '평단LOC 매수') {
+        return '기본-평단LOC';
+      }
+      if (rawType === '큰수LOC 매수') {
+        return '기본-큰수LOC';
       }
       if (rawType.startsWith('지정가 매도')) {
         return '지정가 매도';

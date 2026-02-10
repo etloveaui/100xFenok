@@ -32,6 +32,11 @@ const IBCalculator = (function() {
     locBuyOffset: 0.01,      // 매수 LOC 차감 금액
     locSellOffsetRate: 0.005 // 매도 LOC 가산 비율 (평단가의 0.5%)
   };
+  const ADDITIONAL_BUY_MODES = {
+    BUDGET_RATIO: 'budget_ratio',
+    FIXED: 'fixed'
+  };
+  const MAX_ADDITIONAL_STEPS = 8;
 
   // =====================================================
   // T값 Calculation - 핵심!
@@ -209,7 +214,11 @@ const IBCalculator = (function() {
       ticker,
       sellPercent: inputSellPercent,
       locSellPercent = 5,
+      additionalBuyEnabled = true,
+      additionalBuyMode = ADDITIONAL_BUY_MODES.BUDGET_RATIO,
       additionalBuyOrderCount,
+      additionalBuyBudgetRatio = 25,
+      additionalBuyAllowOneOver = true,
       additionalBuyMaxDecline = 15,
       additionalBuyQuantity = 1
     } = params;
@@ -287,21 +296,18 @@ const IBCalculator = (function() {
     // 하락대비 추가매수 (전략 기반: 지정 개수)
     // ========================================
     const declineBasePrice = orders.length > 0 ? orders[orders.length - 1].price : buyLocPrice;
-    const hasExplicitOrderCount = Number.isFinite(parseInt(additionalBuyOrderCount, 10));
-    const declineOrderCount = resolveAdditionalBuyOrderCount({
-      additionalBuyOrderCount,
-      additionalBuyMaxDecline
-    }, declineBasePrice);
-    const additionalOrders = generateAdditionalBuyOrders(
-      declineBasePrice,
-      {
-        orderCount: declineOrderCount,
-        quantity: additionalBuyQuantity,
-        maxDeclinePct: hasExplicitOrderCount ? undefined : additionalBuyMaxDecline
-      }
-    );
-
-    orders.push(...additionalOrders);
+    if (additionalBuyEnabled) {
+      const config = resolveAdditionalBuyConfig({
+        additionalBuyMode,
+        additionalBuyOrderCount,
+        additionalBuyBudgetRatio,
+        additionalBuyAllowOneOver,
+        additionalBuyMaxDecline,
+        additionalBuyQuantity
+      }, declineBasePrice, oneTimeBuy);
+      const additionalOrders = generateAdditionalBuyOrders(declineBasePrice, config);
+      orders.push(...additionalOrders);
+    }
 
     return {
       T,
@@ -321,7 +327,7 @@ const IBCalculator = (function() {
   function resolveAdditionalBuyOrderCount(params, basePrice) {
     const parsedOrderCount = parseInt(params?.additionalBuyOrderCount, 10);
     if (Number.isFinite(parsedOrderCount)) {
-      return Math.max(0, Math.min(8, parsedOrderCount));
+      return Math.max(0, Math.min(MAX_ADDITIONAL_STEPS, parsedOrderCount));
     }
 
     const parsedDeclinePct = parseFloat(params?.additionalBuyMaxDecline);
@@ -331,7 +337,7 @@ const IBCalculator = (function() {
     const minPrice = basePrice * (1 - maxDeclinePct / 100);
     let price = basePrice;
     let count = 0;
-    while (count < 8) {
+    while (count < MAX_ADDITIONAL_STEPS) {
       price = roundPrice(price * 0.98);
       if (price < minPrice) break;
       count++;
@@ -339,14 +345,42 @@ const IBCalculator = (function() {
     return count;
   }
 
+  function resolveAdditionalBuyConfig(params = {}, basePrice, oneTimeBuy) {
+    const mode = params?.additionalBuyMode === ADDITIONAL_BUY_MODES.FIXED
+      ? ADDITIONAL_BUY_MODES.FIXED
+      : ADDITIONAL_BUY_MODES.BUDGET_RATIO;
+    const parsedQuantity = parseInt(params?.additionalBuyQuantity, 10);
+    const quantity = Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1;
+    const parsedDecline = parseFloat(params?.additionalBuyMaxDecline);
+    const maxDeclinePct = Number.isFinite(parsedDecline) ? parsedDecline : 15;
+    const parsedOrderCount = parseInt(params?.additionalBuyOrderCount, 10);
+    const explicitOrderCount = Number.isFinite(parsedOrderCount)
+      ? Math.max(0, Math.min(MAX_ADDITIONAL_STEPS, parsedOrderCount))
+      : null;
+    const parsedRatio = parseFloat(params?.additionalBuyBudgetRatio);
+    const budgetRatio = Number.isFinite(parsedRatio) ? Math.max(0, Math.min(100, parsedRatio)) : 25;
+    const allowOneOver = params?.additionalBuyAllowOneOver !== false;
+
+    const targetBudget = mode === ADDITIONAL_BUY_MODES.BUDGET_RATIO
+      ? roundPrice(Math.max((oneTimeBuy || 0) * (budgetRatio / 100), 0))
+      : 0;
+    const resolvedOrderCount = mode === ADDITIONAL_BUY_MODES.FIXED
+      ? (explicitOrderCount ?? resolveAdditionalBuyOrderCount({ additionalBuyMaxDecline: maxDeclinePct }, basePrice))
+      : 0;
+
+    return {
+      mode,
+      quantity,
+      maxDeclinePct,
+      orderCount: resolvedOrderCount,
+      targetBudget,
+      allowOneOver,
+      maxSteps: MAX_ADDITIONAL_STEPS
+    };
+  }
+
   /**
    * 하락대비 추가매수 주문 생성
-   *
-   * 🔴 Genie RPA 역공학 결과 (Asset Allocator 검증):
-   * - 스텝 사이즈: 2% (복리)
-   * - 공식: price[i] = 현재가 × 0.98^i
-   * - 최대 하락폭: -15% (현재가 × 0.85까지)
-   * - 종료: price < minPrice (maxDecline fallback 사용 시)
    *
    * @param {number} basePrice - 기준 가격 (현재가 또는 마지막 매수가)
    * @param {Object} options
@@ -355,15 +389,66 @@ const IBCalculator = (function() {
   function generateAdditionalBuyOrders(basePrice, options = {}) {
     const orders = [];
     const stepPct = 0.02;  // 2% 복리 하락
+    const mode = options.mode === ADDITIONAL_BUY_MODES.FIXED
+      ? ADDITIONAL_BUY_MODES.FIXED
+      : ADDITIONAL_BUY_MODES.BUDGET_RATIO;
     const parsedOrderCount = parseInt(options.orderCount, 10);
-    const orderCount = Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 0;
+    const orderCount = Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(MAX_ADDITIONAL_STEPS, parsedOrderCount)) : 0;
     const parsedQuantity = parseInt(options.quantity, 10);
     const quantity = Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1;
+    const parsedMaxSteps = parseInt(options.maxSteps, 10);
+    const maxSteps = Number.isFinite(parsedMaxSteps) ? Math.max(0, Math.min(MAX_ADDITIONAL_STEPS, parsedMaxSteps)) : MAX_ADDITIONAL_STEPS;
 
-    if (!Number.isFinite(basePrice) || basePrice <= 0 || orderCount <= 0) {
+    if (!Number.isFinite(basePrice) || basePrice <= 0) {
       return orders;
     }
 
+    if (mode === ADDITIONAL_BUY_MODES.BUDGET_RATIO) {
+      const parsedTargetBudget = parseFloat(options.targetBudget);
+      const targetBudget = Number.isFinite(parsedTargetBudget) ? Math.max(parsedTargetBudget, 0) : 0;
+      const allowOneOver = options.allowOneOver !== false;
+      if (targetBudget <= 0 || maxSteps <= 0) return orders;
+
+      let price = basePrice;
+      let accumulated = 0;
+      for (let step = 1; step <= maxSteps; step++) {
+        price = roundPrice(price * (1 - stepPct));
+        if (!Number.isFinite(price) || price <= 0) break;
+
+        const orderAmount = roundPrice(price * quantity);
+        const nextTotal = accumulated + orderAmount;
+        const declineFromBase = ((basePrice - price) / basePrice * 100).toFixed(1);
+
+        if (nextTotal <= targetBudget + 0.0001) {
+          orders.push({
+            type: `하락대비 추가매수 ${step}`,
+            description: `-${declineFromBase}% 하락 시`,
+            price,
+            amount: orderAmount,
+            quantity,
+            orderType: 'LOC'
+          });
+          accumulated = nextTotal;
+          continue;
+        }
+
+        if (allowOneOver) {
+          orders.push({
+            type: `하락대비 추가매수 ${step}`,
+            description: `-${declineFromBase}% 하락 시`,
+            price,
+            amount: orderAmount,
+            quantity,
+            orderType: 'LOC'
+          });
+        }
+        break;
+      }
+
+      return orders;
+    }
+
+    if (orderCount <= 0) return orders;
     const parsedDeclinePct = parseFloat(options.maxDeclinePct);
     const useDeclineGuard = Number.isFinite(parsedDeclinePct) && parsedDeclinePct > 0;
     const minPrice = useDeclineGuard ? basePrice * (1 - parsedDeclinePct / 100) : 0;
@@ -526,7 +611,11 @@ const IBCalculator = (function() {
       currentPrice,
       sellPercent: inputSellPercent,  // 🔴 v1.1.0: 사용자 입력값 우선
       locSellPercent = 5,  // 🔴 v1.4.0: LOC% 연동 (#234)
+      additionalBuyEnabled = true,
+      additionalBuyMode,
       additionalBuyOrderCount,
+      additionalBuyBudgetRatio,
+      additionalBuyAllowOneOver,
       additionalBuyMaxDecline,
       additionalBuyQuantity
     } = input;
@@ -572,7 +661,11 @@ const IBCalculator = (function() {
       ticker,
       sellPercent: effectiveSellPercent,
       locSellPercent,
+      additionalBuyEnabled,
+      additionalBuyMode,
       additionalBuyOrderCount,
+      additionalBuyBudgetRatio,
+      additionalBuyAllowOneOver,
       additionalBuyMaxDecline,
       additionalBuyQuantity
     });
@@ -601,7 +694,11 @@ const IBCalculator = (function() {
         currentPrice,
         sellPercent: inputSellPercent,
         locSellPercent,
+        additionalBuyEnabled,
+        additionalBuyMode,
         additionalBuyOrderCount,
+        additionalBuyBudgetRatio,
+        additionalBuyAllowOneOver,
         additionalBuyMaxDecline,
         additionalBuyQuantity
       },
