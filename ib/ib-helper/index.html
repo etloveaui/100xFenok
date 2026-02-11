@@ -840,6 +840,9 @@
           <i class="fas fa-copy mr-1"></i>전체 복사
         </button>
       </div>
+      <!-- v4.49.3: 내일 매수 부족 경고 (결과 패널 내) -->
+      <div id="results-tomorrow-alert" class="hidden bg-orange-50 border border-orange-300 rounded-lg px-3 py-2 text-sm text-orange-700 font-medium">
+      </div>
       <div id="results-accordion" class="grid gap-3 md:grid-cols-2">
         <!-- 아코디언 아이템들이 여기에 동적 생성 -->
       </div>
@@ -2791,6 +2794,7 @@
       return `  ${label}: ${order.quantity}주 x $${formatOrderPrice(order.price)}`;
     }
 
+    // v4.49.3: Full detail version (for UI display)
     function formatAdditionalBuyPolicy(input, oneTimeBuy) {
       if (!input || input.additionalBuyEnabled === false) {
         return '하락대비: OFF';
@@ -2806,6 +2810,22 @@
       const budget = (Number.isFinite(oneTimeBuy) ? oneTimeBuy : 0) * (ratio / 100);
       const allowOneOver = input.additionalBuyAllowOneOver !== false;
       return `하락대비: 예산 ${ratio}% (${IBCalculator.formatDollar(budget, 2)}) + ${allowOneOver ? '초과 1개' : '엄격 예산'}`;
+    }
+
+    // v4.49.3: Short version (for copy message)
+    function formatAdditionalBuyPolicyCopy(input) {
+      if (!input || input.additionalBuyEnabled === false) {
+        return '하락대비: OFF';
+      }
+      const mode = input.additionalBuyMode === 'fixed' ? 'fixed' : 'budget_ratio';
+      if (mode === 'fixed') {
+        const count = Math.max(0, Math.min(8, parseInt(input.additionalBuyOrderCount, 10) || 0));
+        return `하락대비: 고정 ${count}개`;
+      }
+      const ratio = Number.isFinite(parseFloat(input.additionalBuyBudgetRatio))
+        ? Math.max(0, Math.min(100, parseFloat(input.additionalBuyBudgetRatio)))
+        : 20;
+      return `하락대비: 예산 ${ratio}% 적용`;
     }
 
     async function copyAllOrdersTotal() {
@@ -2824,15 +2844,16 @@
         `📊 ${lastCalculation.ticker} 오늘의 주문`,
         ORDER_COPY_DIVIDER,
         headerLine,
-        formatAdditionalBuyPolicy(input, calculation.oneTimeBuy)
+        formatAdditionalBuyPolicyCopy(input)
       ];
 
       const cashAction = buildCashReserveAction();
       if (cashAction) {
         const verb = cashAction.side === 'BUY' ? '매수' : '매도';
         const orderType = cashAction.side === 'BUY' ? '즉시' : 'MOC';
+        const reasonTag = cashAction.sellReason === 'tomorrow' ? ' (내일 대비)' : '';
         lines.push('', '💵 현금성 자산');
-        lines.push(`  ${cashAction.symbol} ${verb} (${orderType}): ${cashAction.quantity}주`);
+        lines.push(`  ${cashAction.symbol} ${verb} (${orderType}): ${cashAction.quantity}주${reasonTag}`);
       }
 
       // B: 매수 가격 내림차순
@@ -3417,6 +3438,11 @@
                 </div>
               </div>
 
+              <!-- v4.49.3: 하락대비 정책 (UI detail) -->
+              <div class="text-xs text-gray-500 text-center mb-2 bg-gray-50 rounded px-2 py-1">
+                ${formatAdditionalBuyPolicy(input, oneTimeBuy)}
+              </div>
+
               <!-- Buy Orders -->
               <div class="order-section">
                 <div class="order-section-header">
@@ -3587,8 +3613,9 @@
       if (cashAction) {
         const verb = cashAction.side === 'BUY' ? '매수' : '매도';
         const orderType = cashAction.side === 'BUY' ? '즉시' : 'MOC';
+        const reasonTag = cashAction.sellReason === 'tomorrow' ? ' (내일 대비)' : '';
         lines.push('', '💵 현금성 자산');
-        lines.push(`  ${cashAction.symbol} ${verb} (${orderType}): ${cashAction.quantity}주`);
+        lines.push(`  ${cashAction.symbol} ${verb} (${orderType}): ${cashAction.quantity}주${reasonTag}`);
       }
 
       lines.push('');
@@ -3609,7 +3636,7 @@
         const headerLine = `【${ticker}】 평단 $${formatOrderPrice(avgPrice)} | T=${calculation.T.toFixed(1)} | 투자금 ${formatDollarShort(input?.principal)}`;
 
         lines.push(headerLine);
-        lines.push(`  ${formatAdditionalBuyPolicy(input, calculation.oneTimeBuy)}`);
+        lines.push(`  ${formatAdditionalBuyPolicyCopy(input)}`);
         // B: 매수 가격 내림차순
         const sortedBuy = [...buyOrders].sort((a, b) => b.price - a.price);
         lines.push('🟢 BUY (LOC)');
@@ -4324,13 +4351,23 @@
         };
       }
 
-      // 매도: 예수금 < 1일치 → SGOV 매도해서 현금 확보
+      // v4.49.3: 매도 — 오늘 부족 OR 내일 부족 → SGOV 매도
+      const remainingAfterToday = balance - daily;
+      let shortage = 0;
+      let sellReason = '';
       if (balance < daily) {
+        shortage = daily - balance;
+        sellReason = 'today';
+      } else if (remainingAfterToday < daily) {
+        shortage = daily - remainingAfterToday;
+        sellReason = 'tomorrow';
+      }
+
+      if (shortage > 0) {
         const symbol = pickCashReserveSymbol(entryMap, true);
         if (!symbol) return null;
         const price = parseFloat(cashReservePrices[symbol]) || 0;
         if (price <= 0) return null;
-        const shortage = daily - balance;
         // 🔴 v4.43.0: 수수료 차감 후 실수령액으로 수량 계산
         const netPriceAfterCommission = price * (1 - commissionRate);
         let quantity = Math.ceil(shortage / netPriceAfterCommission);
@@ -4347,7 +4384,8 @@
           price,
           netPriceAfterCommission,
           commissionRate,
-          shortage
+          shortage,
+          sellReason
         };
       }
 
@@ -4373,7 +4411,8 @@
 
       const verb = action.side === 'BUY' ? '매수' : '매도';
       const orderType = action.side === 'BUY' ? '즉시' : 'MOC';
-      recoEl.textContent = `${action.symbol} ${verb} (${orderType}): ${action.quantity}주`;
+      const reasonTag = action.sellReason === 'tomorrow' ? ' (내일 대비)' : '';
+      recoEl.textContent = `${action.symbol} ${verb} (${orderType}): ${action.quantity}주${reasonTag}`;
       recoEl.classList.remove('hidden');
     }
 
@@ -4458,6 +4497,17 @@
       } else {
         banner.classList.add('hidden');
         document.body.style.paddingTop = '0';
+      }
+
+      // v4.49.3: 결과 패널 내 내일 부족 경고
+      const resultsTomorrowAlert = document.getElementById('results-tomorrow-alert');
+      if (resultsTomorrowAlert) {
+        if (alert.show) {
+          resultsTomorrowAlert.textContent = `⚠️ ${alert.message}`;
+          resultsTomorrowAlert.classList.remove('hidden');
+        } else {
+          resultsTomorrowAlert.classList.add('hidden');
+        }
       }
     }
 
