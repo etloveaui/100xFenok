@@ -2802,7 +2802,7 @@
       }
       const ratio = Number.isFinite(parseFloat(input.additionalBuyBudgetRatio))
         ? Math.max(0, Math.min(100, parseFloat(input.additionalBuyBudgetRatio)))
-        : 25;
+        : 20;
       const budget = (Number.isFinite(oneTimeBuy) ? oneTimeBuy : 0) * (ratio / 100);
       const allowOneOver = input.additionalBuyAllowOneOver !== false;
       return `하락대비: 예산 ${ratio}% (${IBCalculator.formatDollar(budget, 2)}) + ${allowOneOver ? '초과 1개' : '엄격 예산'}`;
@@ -3570,10 +3570,16 @@
 
       if (dailyBuyTotal > 0) {
         if (balanceValue < dailyBuyTotal) {
-          lines.push(`⚠️ 예수금 부족! 필요 $${dailyBuyTotal.toFixed(3)}, 현재 $${balanceValue.toFixed(3)}`);
+          lines.push(`⚠️ 오늘 매수 부족! 필요 $${dailyBuyTotal.toFixed(3)}, 현재 $${balanceValue.toFixed(3)}`);
         } else {
           const days = Math.floor(balanceValue / dailyBuyTotal);
           lines.push(`💰 예수금: $${balanceValue.toFixed(3)} | 약 ${days}일 가능`);
+          // v4.49.3: Tomorrow shortage check
+          const remainingAfterToday = balanceValue - dailyBuyTotal;
+          if (remainingAfterToday < dailyBuyTotal) {
+            const tomorrowShortfall = dailyBuyTotal - remainingAfterToday;
+            lines.push(`⚠️ 내일 매수 부족! 부족금액: $${tomorrowShortfall.toFixed(3)}`);
+          }
         }
       }
 
@@ -3900,12 +3906,21 @@
       });
 
       const diff = balanceValue - required;
+
+      // v4.49.3: Tomorrow check — after today's buy, can tomorrow be covered?
+      const remainingAfterToday = Math.max(0, balanceValue - required);
+      const tomorrowDiff = remainingAfterToday - required;
+
       return {
         available: balanceValue,
         required: required,
         diff: diff,
         status: diff >= 0 ? 'OK' : 'INSUFFICIENT',
         statusKo: diff >= 0 ? '여유' : '부족',
+        remainingAfterToday: remainingAfterToday,
+        tomorrowDiff: tomorrowDiff,
+        tomorrowStatus: tomorrowDiff >= 0 ? 'OK' : 'INSUFFICIENT',
+        tomorrowShortfall: tomorrowDiff < 0 ? Math.abs(tomorrowDiff) : 0,
         details
       };
     }
@@ -3974,6 +3989,9 @@
           <span>${status.diff >= 0 ? '+' : ''}$${status.diff.toFixed(3)} ${statusIcon} ${status.statusKo}</span>
         </div>
         ${daysText ? `<div class="text-xs text-center text-blue-600 mt-2 font-medium">📅 ${daysText}</div>` : ''}
+        ${status.tomorrowStatus === 'INSUFFICIENT' && status.status === 'OK'
+          ? `<div class="text-xs text-center text-orange-600 mt-1 font-medium">⚠️ 내일 매수 부족 $${status.tomorrowShortfall.toFixed(2)}</div>`
+          : ''}
       `;
 
       // Stock breakdown
@@ -4413,11 +4431,23 @@
         return;
       }
 
+      // v4.49.3: Today insufficient = urgent, tomorrow insufficient = warning
       const alert = statusOverride
-        ? {
-          show: statusOverride.status === 'INSUFFICIENT',
-          message: `내일 매수 부족! 부족금액: $${Math.abs(statusOverride.diff).toFixed(2)}`
-        }
+        ? (() => {
+          if (statusOverride.status === 'INSUFFICIENT') {
+            return {
+              show: true,
+              message: `오늘 매수 부족! 부족금액: $${Math.abs(statusOverride.diff).toFixed(2)}`
+            };
+          }
+          if (statusOverride.tomorrowStatus === 'INSUFFICIENT') {
+            return {
+              show: true,
+              message: `내일 매수 부족! 부족금액: $${statusOverride.tomorrowShortfall.toFixed(2)}`
+            };
+          }
+          return { show: false };
+        })()
         : BalanceManager.checkAlert(currentProfile.id);
       const banner = document.getElementById('alert-banner');
 

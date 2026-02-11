@@ -280,6 +280,10 @@ const BalanceManager = (function() {
     const { total: dailyAttempt, details } = calcDailyBuyAttempt(profile);
     const diff = balance - dailyAttempt;
 
+    // v4.49.3: Tomorrow check — after today's buy, can tomorrow be covered?
+    const remainingAfterToday = Math.max(0, balance - dailyAttempt);
+    const tomorrowDiff = remainingAfterToday - dailyAttempt;
+
     return {
       available: balance,
       required: dailyAttempt,
@@ -287,6 +291,10 @@ const BalanceManager = (function() {
       status: diff >= 0 ? 'OK' : 'INSUFFICIENT',
       statusKo: diff >= 0 ? '여유' : '부족',
       shortfall: diff < 0 ? roundPrice(Math.abs(diff)) : 0,
+      remainingAfterToday: roundPrice(remainingAfterToday),
+      tomorrowDiff: roundPrice(tomorrowDiff),
+      tomorrowStatus: tomorrowDiff >= 0 ? 'OK' : 'INSUFFICIENT',
+      tomorrowShortfall: tomorrowDiff < 0 ? roundPrice(Math.abs(tomorrowDiff)) : 0,
       details
     };
   }
@@ -404,14 +412,25 @@ const BalanceManager = (function() {
 
     if (!profile) return { show: false };
 
-    // Get current status
     const status = calcOrderStatus(profile);
 
+    // v4.49.3: Today insufficient = urgent (can't even cover today's buy)
     if (status.status === 'INSUFFICIENT') {
       return {
         show: true,
-        message: `내일 매수 부족! 부족금액: $${status.shortfall.toFixed(2)}`,
+        message: `오늘 매수 부족! 부족금액: $${status.shortfall.toFixed(2)}`,
         shortfall: status.shortfall,
+        required: status.required,
+        available: status.available
+      };
+    }
+
+    // v4.49.3: Tomorrow check — today OK but tomorrow short
+    if (status.tomorrowStatus === 'INSUFFICIENT') {
+      return {
+        show: true,
+        message: `내일 매수 부족! 부족금액: $${status.tomorrowShortfall.toFixed(2)}`,
+        shortfall: status.tomorrowShortfall,
         required: status.required,
         available: status.available
       };
