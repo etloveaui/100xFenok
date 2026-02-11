@@ -126,6 +126,117 @@
         height: 360px;
       }
     }
+
+    /* ===== Hero Zone (Phase 1) ===== */
+    .hero-zone {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.5fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 1024px) { .hero-zone { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 768px) { .hero-zone { grid-template-columns: 1fr; } }
+
+    .bento-card {
+      background: white;
+      border-radius: 1.25rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      padding: 1.25rem;
+      transition: all 0.3s;
+    }
+    .bento-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .regime-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: white;
+    }
+    .regime-growth { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+    .regime-neutral { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+    .regime-defensive { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+    .regime-risk-off { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .regime-unknown { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); }
+
+    .market-state-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+    }
+    .state-regular { background: #dcfce7; color: #166534; }
+    .state-pre { background: #fef9c3; color: #854d0e; }
+    .state-post { background: #e0e7ff; color: #3730a3; }
+    .state-closed { background: #f1f5f9; color: #64748b; }
+
+    .index-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+    }
+    .index-row + .index-row { border-top: 1px solid #f1f5f9; }
+
+    .change-up { color: #16a34a; }
+    .change-down { color: #dc2626; }
+    .change-flat { color: #64748b; }
+
+    @keyframes shimmer {
+      0% { background-position: -200px 0; }
+      100% { background-position: calc(200px + 100%) 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+      background-size: 200px 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 0.5rem;
+    }
+    .skeleton-text { height: 1rem; margin-bottom: 0.5rem; }
+    .skeleton-badge { height: 2rem; width: 8rem; border-radius: 9999px; }
+    .skeleton-number { height: 1.5rem; width: 6rem; }
+
+    .sector-snapshot {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 0.75rem 1rem;
+      background: white;
+      border-radius: 1rem;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+    }
+    .sector-chip {
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .sector-up { background: #dcfce7; color: #166534; }
+    .sector-down { background: #fee2e2; color: #991b1b; }
+    .sector-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .sector-divider {
+      width: 1px;
+      height: 1.25rem;
+      background: #e2e8f0;
+    }
   </style>
 </head>
 
@@ -165,6 +276,50 @@
       </div>
 
     </header>
+
+    <!-- Hero Zone: Live Market Data (Phase 1) -->
+    <section id="hero-zone" class="hero-zone">
+      <!-- Card 1: Market Regime -->
+      <div class="bento-card" id="card-regime">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Market Regime</div>
+        <div id="regime-badge" class="regime-badge regime-unknown">
+          <div class="skeleton skeleton-badge"></div>
+        </div>
+        <div class="mt-3 text-xs text-slate-400" id="regime-description">Loading...</div>
+      </div>
+
+      <!-- Card 2: VIX -->
+      <div class="bento-card" id="card-vix">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">VIX</div>
+          <div id="market-state-badge" class="market-state-badge state-closed">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-current"></span>
+            <span>--</span>
+          </div>
+        </div>
+        <div id="vix-price" class="text-2xl font-bold orbitron text-slate-800">
+          <div class="skeleton skeleton-number"></div>
+        </div>
+        <div id="vix-change" class="text-sm font-semibold mt-1 change-flat">--</div>
+      </div>
+
+      <!-- Card 3: Major Indices -->
+      <div class="bento-card" id="card-indices">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Major Indices</div>
+        <div id="indices-list">
+          <div class="index-row"><div class="skeleton skeleton-text" style="width:100%"></div></div>
+          <div class="index-row"><div class="skeleton skeleton-text" style="width:100%"></div></div>
+          <div class="index-row"><div class="skeleton skeleton-text" style="width:100%"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sector Snapshot -->
+    <div id="sector-snapshot" class="sector-snapshot" style="display:none;">
+      <span class="sector-label">Sectors</span>
+      <span class="sector-divider"></span>
+      <span id="sector-chips"></span>
+    </div>
 
     <!-- Macro Monitor Carousel Banner -->
     <section class="flex flex-col items-center mb-8">
@@ -290,6 +445,146 @@
 
     </section>
   </main>
+
+  <script>
+    // ===== Hero Zone DataService (Phase 1) =====
+    const MARKET_DATA_URL = 'https://script.google.com/macros/s/AKfycbwu2wdFAGAKnZlsb7w7BHsZzVS7wxHHRoYsKNTBg3Jc4kLOLv8TVuTeOSOC_gUo_BRS/exec';
+
+    const DataService = {
+      fetchAll() {
+        return new Promise((resolve, reject) => {
+          const cbName = '_mktCb_' + Date.now();
+          const timeout = setTimeout(() => {
+            delete window[cbName];
+            if (s.parentNode) s.parentNode.removeChild(s);
+            reject(new Error('Timeout'));
+          }, 10000);
+
+          window[cbName] = (data) => {
+            clearTimeout(timeout);
+            delete window[cbName];
+            if (s.parentNode) s.parentNode.removeChild(s);
+            resolve(data);
+          };
+
+          const s = document.createElement('script');
+          s.src = `${MARKET_DATA_URL}?callback=${cbName}`;
+          s.onerror = () => {
+            clearTimeout(timeout);
+            delete window[cbName];
+            reject(new Error('Network error'));
+          };
+          document.head.appendChild(s);
+        });
+      },
+
+      renderIndices(indices) {
+        const el = document.getElementById('indices-list');
+        if (!indices) return;
+        const order = ['^GSPC', '^IXIC', '^DJI'];
+        el.innerHTML = order.map(sym => {
+          const d = indices[sym];
+          if (!d) return '';
+          const cls = d.changePercent > 0 ? 'change-up' : d.changePercent < 0 ? 'change-down' : 'change-flat';
+          const arr = d.changePercent > 0 ? '▲' : d.changePercent < 0 ? '▼' : '–';
+          return `<div class="index-row">
+            <div class="text-sm font-bold text-slate-800">${d.name}</div>
+            <div class="text-right">
+              <div class="text-sm font-bold orbitron text-slate-800">${d.price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+              <div class="text-xs font-semibold ${cls}">${arr} ${Math.abs(d.changePercent).toFixed(2)}%</div>
+            </div>
+          </div>`;
+        }).join('');
+      },
+
+      renderVIX(vix) {
+        if (!vix) return;
+        const cls = vix.changePercent > 0 ? 'change-up' : vix.changePercent < 0 ? 'change-down' : 'change-flat';
+        const arr = vix.changePercent > 0 ? '▲' : vix.changePercent < 0 ? '▼' : '–';
+        document.getElementById('vix-price').textContent = vix.price.toFixed(2);
+        const changeEl = document.getElementById('vix-change');
+        changeEl.className = `text-sm font-semibold mt-1 ${cls}`;
+        changeEl.textContent = `${arr} ${vix.change > 0 ? '+' : ''}${vix.change.toFixed(2)} (${Math.abs(vix.changePercent).toFixed(2)}%)`;
+      },
+
+      renderRegime(vix) {
+        if (!vix || !vix.regime) return;
+        const badge = document.getElementById('regime-badge');
+        const desc = document.getElementById('regime-description');
+        const r = vix.regime;
+        const cMap = { green: 'growth', blue: 'neutral', orange: 'defensive', red: 'risk-off', gray: 'unknown' };
+        const dMap = {
+          Growth: 'VIX < 20 — Risk-on environment',
+          Neutral: 'VIX 20-25 — Balanced conditions',
+          Defensive: 'VIX 25-30 — Elevated caution',
+          'Risk-Off': 'VIX > 30 — High volatility alert'
+        };
+        badge.className = `regime-badge regime-${cMap[r.color] || 'unknown'}`;
+        badge.innerHTML = `<i class="fas fa-signal"></i> ${r.label}`;
+        desc.textContent = dMap[r.label] || `VIX: ${vix.price}`;
+      },
+
+      renderMarketState(state) {
+        const badge = document.getElementById('market-state-badge');
+        if (!badge) return;
+        const map = {
+          REGULAR: { cls: 'state-regular', lbl: 'LIVE' },
+          PRE:     { cls: 'state-pre',     lbl: 'PRE-MKT' },
+          POST:    { cls: 'state-post',    lbl: 'AFTER-HRS' },
+          CLOSED:  { cls: 'state-closed',  lbl: 'CLOSED' }
+        };
+        const s = map[state] || map.CLOSED;
+        badge.className = `market-state-badge ${s.cls}`;
+        badge.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-current"></span><span>${s.lbl}</span>`;
+      },
+
+      renderSectors(sectors) {
+        if (!sectors) return;
+        const el = document.getElementById('sector-snapshot');
+        const chips = document.getElementById('sector-chips');
+        const sorted = Object.entries(sectors)
+          .map(([sym, d]) => ({ sym, ...d }))
+          .sort((a, b) => b.changePercent - a.changePercent);
+        const top3 = sorted.slice(0, 3);
+        const bot3 = sorted.slice(-3).reverse();
+        chips.innerHTML = [
+          ...top3.map(s => `<span class="sector-chip sector-up">${s.sym} +${s.changePercent.toFixed(2)}%</span>`),
+          '<span class="sector-divider"></span>',
+          ...bot3.map(s => `<span class="sector-chip sector-down">${s.sym} ${s.changePercent.toFixed(2)}%</span>`)
+        ].join('');
+        el.style.display = 'flex';
+      },
+
+      showError() {
+        document.getElementById('regime-badge').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Unavailable';
+        document.getElementById('regime-badge').className = 'regime-badge regime-unknown';
+        document.getElementById('regime-description').textContent = 'Could not load market data';
+        document.getElementById('vix-price').textContent = '--';
+        document.getElementById('vix-change').textContent = 'Data unavailable';
+        document.getElementById('indices-list').innerHTML = '<div class="text-sm text-slate-400 py-4 text-center">Market data unavailable</div>';
+      },
+
+      async init() {
+        try {
+          const data = await this.fetchAll();
+          this.renderIndices(data.indices);
+          this.renderVIX(data.vix);
+          this.renderRegime(data.vix);
+          this.renderMarketState(data.marketState);
+          this.renderSectors(data.sectors);
+        } catch (err) {
+          console.error('[HeroZone] Fetch error:', err);
+          this.showError();
+        }
+      }
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => DataService.init());
+    } else {
+      DataService.init();
+    }
+  </script>
 
   <script>
     // SPA 네비게이션
