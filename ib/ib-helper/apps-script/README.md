@@ -6,7 +6,7 @@ Google Apps Script code for IB Helper automation.
 
 | File | Version | Purpose |
 |------|---------|---------|
-| `Code.gs` | v2.5.0 | Order execution, dedupe, triggers, weekend/holiday guard |
+| `Code.gs` | v2.7.0 | Order execution, dedupe, triggers, weekend/holiday guard, ExecutionLog, Orders Archive |
 | `yahoo-quotes.gs` | v3.0.0 | Price fetching (CNBC/Yahoo/Stooq/GOOGLEFINANCE) + WebApp API |
 
 ## Deployment Guide
@@ -38,7 +38,7 @@ Press **Ctrl+S** or click **Save** icon
 1. Click **Deploy** → **New deployment**
 2. Select type: **Web app**
 3. Settings:
-   - Description: "IB Helper Price API v2.5.0"
+   - Description: "IB Helper Price API v2.7.0"
    - Execute as: **Me**
    - Who has access: **Anyone**
 4. Click **Deploy**
@@ -69,6 +69,8 @@ Press **Ctrl+S** or click **Save** icon
 | `setupTrigger()` | Enable daily auto-run | Once |
 | `removeTrigger()` | Disable auto-run | As needed |
 | `createPricesSheet()` | Create Prices sheet template | Once |
+| `writeExecutionLog()` | Write execution results to ExecutionLog sheet | Auto (internal) |
+| `archiveOldOrders()` | Archive orders older than 14 days | Auto / Manual menu |
 
 ### yahoo-quotes.gs
 
@@ -103,6 +105,8 @@ Formulas:
 
 ## Version History
 
+- **v2.7.0** (2026-02-10): ExecutionLog sheet (auto-log execution results), Orders Archive (14-day rolling), parseOrderDate Korean locale support, archiveOldOrders with data recovery
+- **v2.6.0** (2026-02-10): P0 safety guard (close/high/price>0 checks), LockService for processOrderExecutions, BUY→SELL order fix
 - **v2.5.0** (2026-02-08): NYSE holiday detection (rule-based), weekend guard, totalInvested commission fix
 - **v3.0.0** yahoo-quotes (2026-02-05): CNBC primary source, pre/post market support
 - **v2.1.0** (2026-02-04): Added dedupeOrders(), JSONP security filter
