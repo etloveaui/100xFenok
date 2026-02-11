@@ -1,10 +1,10 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.49.0
+> **Version**: 4.49.3
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-08
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV (#222) + #224 Fix + #228 getBestPrice + #223 Path Migration + #234 V2.2 LOC + **#236 avgPrice Derived Value (DEC-175)** + #237 통합 재검토 R1 + **#238/#239/#240 안정화 배치** + **#241 Copy Message + #242 BITU Bug Fix** + **#245 totalInvested Commission Fix** + **#244 Weekend Guard + Defensive Fixes (v2.4.0)** + **#246 NYSE Holiday Detection (v2.5.0)** | ❌ #220 REVERTED
-> **Priority**: 🟡 #225 P4 테스트 → #207 Telegram (보안/동기화 핫픽스 반영 완료)
+> **Updated**: 2026-02-11
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#246 v4.49.3 TDZ fix + budgetRatio 20%(DEC-184) + Tomorrow Alert + SGOV Tomorrow Sell** + **Code.gs v2.7.0** (ExecutionLog + Orders Archive) | ❌ #220 REVERTED
+> **Priority**: 🟡 E2E 실사용 모니터링 → #207 Telegram
 >
 > **📋 Price Data Flow** (DEC-172):
 > - 실시간 가격: WebApp API → Yahoo Finance (직접 조회)
@@ -201,27 +201,25 @@ if (T >= 10) {
 
 ### 3.3 Additional Buy for Decline (하락대비 추가매수)
 
+> **v4.49.1+**: budget_ratio mode (DEC-180~184)
+> Default: `budget_ratio` 20% + `allowOneOver=true` | Fallback: `fixed` mode (orderCount 0~8)
+
 ```javascript
-// 1회 매수금에서 남은 금액으로 하락 대비 추가매수
-// 최대 -15% 하락까지 고려, 1주씩 추가
-const maxDecline = 0.15;  // 15%
-const maxAdditionalOrders = 5;
-
-let remainingAmount = oneTimeBuy - usedAmount;
-let lastPrice = lastBuyPrice;
-
-for (let i = 0; i < maxAdditionalOrders && remainingAmount > 0; i++) {
-  const declinePrice = lastPrice * (1 - (i + 1) * 0.015);  // 1.5%씩 하락
-
-  if (remainingAmount >= declinePrice && declinePrice > 0) {
-    additionalOrders.push({
-      type: `하락대비 추가매수 ${i + 1}`,
-      price: declinePrice.toFixed(4),
-      quantity: 1
-    });
-    remainingAmount -= declinePrice;
-  }
+// Mode: budget_ratio (default, DEC-184)
+// - 1회 매수금의 budgetRatio%(20%)를 하락대비 예산으로 할당
+// - allowOneOver=true: 예산 경계에서 1개 추가 허용
+// - 2% 복리 하락: price × 0.98^i (매수LOC - 0.01 기준)
+const budget = oneTimeBuy * (budgetRatio / 100);  // e.g. $500 × 20% = $100
+let spent = 0;
+for (let i = 0; spent < budget || (allowOneOver && i === overIndex); i++) {
+  const declinePrice = basePrice * Math.pow(0.98, i + 1);
+  additionalOrders.push({ price: declinePrice, quantity: 1 });
+  spent += declinePrice;
 }
+
+// Mode: fixed (legacy fallback)
+// - explicit orderCount (0~8) from profile
+const maxAdditionalOrders = orderCount;  // 0~8
 ```
 
 ---
@@ -285,22 +283,24 @@ const todayBuyAmount = calculateTodayBuyAmount(orders);
 const remainingCash = currentCash - todayBuyAmount;
 ```
 
-### 5.2 Tomorrow's Buy Check - 🔴 MOST IMPORTANT
+### 5.2 Tomorrow's Buy Check - 🔴 MOST IMPORTANT (v4.49.3)
 
 ```javascript
-// 내일 매수 가능 여부 확인
-const tomorrowBuyAmount = oneTimeBuy;  // 내일도 1회 매수금 필요
+// v4.49.3: Today + Tomorrow dual check
+const remainingAfterToday = Math.max(0, currentCash - todayBuyAmount);
+const tomorrowDiff = remainingAfterToday - dailyBuyAttempt;
 
-if (remainingCash < tomorrowBuyAmount) {
-  const shortage = tomorrowBuyAmount - remainingCash;
-
-  // 🔴 WARNING: 내일 매수 부족!
-  alert({
-    type: 'WARNING',
-    message: `내일 매수 $${shortage.toFixed(2)} 부족!`,
-    action: '현금 입금 필요'
-  });
+// Today check
+if (currentCash < todayBuyAmount) {
+  alert({ message: `오늘 매수 부족! $${(todayBuyAmount - currentCash).toFixed(2)}` });
 }
+// Tomorrow check (only when today is OK)
+else if (tomorrowDiff < 0) {
+  alert({ message: `내일 매수 부족! $${Math.abs(tomorrowDiff).toFixed(2)}` });
+}
+
+// Displayed in: banner, results panel, status panel, copy message (4 locations)
+// SGOV sell also triggers for tomorrow shortage (sellReason: 'tomorrow')
 ```
 
 ### 5.3 Display Format
@@ -890,5 +890,5 @@ AFTER 매도% (10%, 12%)만 사용자 설정대로 적용.
 
 ---
 
-*Last Updated: 2026-02-04*
+*Last Updated: 2026-02-11*
 *Author: Asset Allocator Claude (Supervisor/Coach Role)*
