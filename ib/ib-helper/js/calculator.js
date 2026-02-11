@@ -217,7 +217,7 @@ const IBCalculator = (function() {
       additionalBuyEnabled = true,
       additionalBuyMode = ADDITIONAL_BUY_MODES.BUDGET_RATIO,
       additionalBuyOrderCount,
-      additionalBuyBudgetRatio = 25,
+      additionalBuyBudgetRatio = 20,
       additionalBuyAllowOneOver = true,
       additionalBuyMaxDecline = 15,
       additionalBuyQuantity = 1
@@ -361,7 +361,7 @@ const IBCalculator = (function() {
       ? Math.max(0, Math.min(MAX_ADDITIONAL_STEPS, parsedOrderCount))
       : null;
     const parsedRatio = parseFloat(params?.additionalBuyBudgetRatio);
-    const budgetRatio = Number.isFinite(parsedRatio) ? Math.max(0, Math.min(100, parsedRatio)) : 25;
+    const budgetRatio = Number.isFinite(parsedRatio) ? Math.max(0, Math.min(100, parsedRatio)) : 20;
     const allowOneOver = params?.additionalBuyAllowOneOver !== false;
 
     const targetBudget = mode === ADDITIONAL_BUY_MODES.BUDGET_RATIO
