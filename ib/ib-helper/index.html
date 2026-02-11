@@ -86,6 +86,13 @@
     .status-ok { color: #10b981; font-weight: 600; }
     .status-warning { color: #ef4444; font-weight: 600; }
 
+    /* Shortage Info Block (v4.50.0) */
+    .shortage-info-block { background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.5rem; font-size: 0.8125rem; }
+    .shortage-info-block.warning { background: #fff7ed; border-color: #fed7aa; }
+    .shortage-info-block .shortage-row { display: flex; justify-content: space-between; padding: 0.125rem 0; }
+    .shortage-info-block .shortage-total { border-top: 1px solid #fecaca; margin-top: 0.25rem; padding-top: 0.25rem; font-weight: 600; display: flex; justify-content: space-between; }
+    .shortage-info-block .sgov-reco { margin-top: 0.375rem; padding-top: 0.375rem; border-top: 1px dashed #d1d5db; color: #047857; font-weight: 600; }
+
     /* Alert Banner */
     .alert-banner {
       position: fixed;
@@ -2847,11 +2854,25 @@
         formatAdditionalBuyPolicyCopy(input)
       ];
 
+      // v4.50.0: Unified balance/shortage info
+      const balanceInfo = (typeof BalanceManager !== 'undefined' && currentProfile)
+        ? BalanceManager.getBalance(currentProfile.id)
+        : { available: 0 };
+      const balanceValue = parseFloat(balanceInfo?.available) || 0;
+      if (balanceValue > 0) {
+        const allResults = Object.keys(calculationResults).length > 0 ? calculationResults : { [lastCalculation.ticker]: lastCalculation };
+        const dailyBuyTotal = getDailyBuyTotal();
+        const status = buildCalculatedOrderStatus(allResults, balanceValue);
+        const cashAction = buildCashReserveAction({ balanceValue, dailyBuyTotal });
+        const info = formatShortageInfo(status, cashAction);
+        if (info) lines.push(...info.copyLines);
+      }
+
       const cashAction = buildCashReserveAction();
       if (cashAction) {
         const verb = cashAction.side === 'BUY' ? '매수' : '매도';
         const orderType = cashAction.side === 'BUY' ? '즉시' : 'MOC';
-        const reasonTag = cashAction.sellReason === 'tomorrow' ? ' (내일 대비)' : '';
+        const reasonTag = cashAction.sellReason === 'both' ? ' (오늘+내일)' : (cashAction.sellReason === 'tomorrow' ? ' (내일 대비)' : '');
         lines.push('', '💵 현금성 자산');
         lines.push(`  ${cashAction.symbol} ${verb} (${orderType}): ${cashAction.quantity}주${reasonTag}`);
       }
@@ -3594,26 +3615,19 @@
         });
       });
 
+      // v4.50.0: Unified shortage + SGOV via formatShortageInfo
       if (dailyBuyTotal > 0) {
-        if (balanceValue < dailyBuyTotal) {
-          lines.push(`⚠️ 오늘 매수 부족! 필요 $${dailyBuyTotal.toFixed(3)}, 현재 $${balanceValue.toFixed(3)}`);
-        } else {
-          const days = Math.floor(balanceValue / dailyBuyTotal);
-          lines.push(`💰 예수금: $${balanceValue.toFixed(3)} | 약 ${days}일 가능`);
-          // v4.49.3: Tomorrow shortage check
-          const remainingAfterToday = balanceValue - dailyBuyTotal;
-          if (remainingAfterToday < dailyBuyTotal) {
-            const tomorrowShortfall = dailyBuyTotal - remainingAfterToday;
-            lines.push(`⚠️ 내일 매수 부족! 부족금액: $${tomorrowShortfall.toFixed(3)}`);
-          }
-        }
+        const status = buildCalculatedOrderStatus(calculationResults, balanceValue);
+        const cashAction = buildCashReserveAction({ balanceValue, dailyBuyTotal });
+        const info = formatShortageInfo(status, cashAction);
+        if (info) lines.push(...info.copyLines);
       }
 
       const cashAction = buildCashReserveAction({ balanceValue, dailyBuyTotal });
       if (cashAction) {
         const verb = cashAction.side === 'BUY' ? '매수' : '매도';
         const orderType = cashAction.side === 'BUY' ? '즉시' : 'MOC';
-        const reasonTag = cashAction.sellReason === 'tomorrow' ? ' (내일 대비)' : '';
+        const reasonTag = cashAction.sellReason === 'both' ? ' (오늘+내일)' : (cashAction.sellReason === 'tomorrow' ? ' (내일 대비)' : '');
         lines.push('', '💵 현금성 자산');
         lines.push(`  ${cashAction.symbol} ${verb} (${orderType}): ${cashAction.quantity}주${reasonTag}`);
       }
@@ -3938,16 +3952,21 @@
       const remainingAfterToday = Math.max(0, balanceValue - required);
       const tomorrowDiff = remainingAfterToday - required;
 
+      const todayShortfall = diff < 0 ? Math.abs(diff) : 0;
+      const tmrShortfall = tomorrowDiff < 0 ? Math.abs(tomorrowDiff) : 0;
+
       return {
         available: balanceValue,
         required: required,
         diff: diff,
         status: diff >= 0 ? 'OK' : 'INSUFFICIENT',
         statusKo: diff >= 0 ? '여유' : '부족',
+        shortfall: todayShortfall,
+        totalShortfall: todayShortfall + tmrShortfall,
         remainingAfterToday: remainingAfterToday,
         tomorrowDiff: tomorrowDiff,
         tomorrowStatus: tomorrowDiff >= 0 ? 'OK' : 'INSUFFICIENT',
-        tomorrowShortfall: tomorrowDiff < 0 ? Math.abs(tomorrowDiff) : 0,
+        tomorrowShortfall: tmrShortfall,
         details
       };
     }
@@ -3982,6 +4001,75 @@
       checkAndShowAlert(status);
     }
 
+    /**
+     * v4.50.0: Unified shortage display helper
+     * One function, 7 consumers. Returns { case, html, alertHtml, copyLines }
+     */
+    function formatShortageInfo(status, cashAction) {
+      if (!status || status.available <= 0 || status.required <= 0) return null;
+
+      const todayShort = status.shortfall || 0;
+      const tmrShort = status.tomorrowShortfall || 0;
+      const totalShort = todayShort + tmrShort;
+      const daysRemaining = status.required > 0 ? Math.floor(status.available / status.required) : 0;
+
+      // SGOV recommendation
+      let sgovLine = '';
+      let sgovCopy = '';
+      if (cashAction && cashAction.side === 'SELL') {
+        sgovLine = `<div class="sgov-reco">💵 ${cashAction.symbol} ${cashAction.quantity}주 MOC 매도 추천</div>`;
+        sgovCopy = `💵 ${cashAction.symbol} ${cashAction.quantity}주 MOC 매도`;
+      }
+
+      // Case: sufficient
+      if (todayShort <= 0 && tmrShort <= 0) {
+        return {
+          case: 'sufficient',
+          html: '',
+          alertHtml: '',
+          copyLines: [`💰 예수금 $${status.available.toFixed(3)} | 약 ${daysRemaining}일 가능`]
+        };
+      }
+
+      // Case: tomorrow_only
+      if (todayShort <= 0 && tmrShort > 0) {
+        const html = `<div class="shortage-info-block warning">
+          <div class="shortage-row"><span>오늘</span><span class="status-ok">충분 ✅</span></div>
+          <div class="shortage-row"><span>내일</span><span class="status-warning">부족 $${tmrShort.toFixed(2)}</span></div>
+          ${sgovLine}
+        </div>`;
+        const copyLines = [
+          `💰 예수금 $${status.available.toFixed(3)} | 약 ${daysRemaining}일 가능`,
+          `⚠️ 내일 부족 $${tmrShort.toFixed(2)}`
+        ];
+        if (sgovCopy) copyLines.push(sgovCopy);
+        return {
+          case: 'tomorrow_only',
+          html,
+          alertHtml: `⚠️ 내일 매수 부족 $${tmrShort.toFixed(2)}`,
+          copyLines
+        };
+      }
+
+      // Case: both (today + tomorrow)
+      const html = `<div class="shortage-info-block">
+        <div class="shortage-row"><span>오늘</span><span class="status-warning">부족 $${todayShort.toFixed(2)}</span></div>
+        <div class="shortage-row"><span>내일</span><span class="status-warning">부족 $${tmrShort.toFixed(2)}</span></div>
+        <div class="shortage-total"><span>총 부족</span><span class="status-warning">$${totalShort.toFixed(2)}</span></div>
+        ${sgovLine}
+      </div>`;
+      const copyLines = [
+        `⚠️ 오늘 부족 $${todayShort.toFixed(2)} / 내일 부족 $${tmrShort.toFixed(2)} (총 $${totalShort.toFixed(2)})`
+      ];
+      if (sgovCopy) copyLines.push(sgovCopy);
+      return {
+        case: 'both',
+        html,
+        alertHtml: `🚨 오늘 부족 $${todayShort.toFixed(2)} / 내일 부족 $${tmrShort.toFixed(2)}`,
+        copyLines
+      };
+    }
+
     function renderOrderStatus(status) {
       const statusBox = document.getElementById('order-status');
       const breakdownBox = document.getElementById('stock-breakdown');
@@ -4001,6 +4089,13 @@
       const daysRemaining = status.required > 0 ? Math.floor(status.available / status.required) : 0;
       const daysText = daysRemaining > 0 ? `약 ${daysRemaining}일 투자 가능` : '';
 
+      // v4.50.0: Use formatShortageInfo for unified shortage display
+      const cashAction = buildCashReserveAction({
+        balanceValue: status.available,
+        dailyBuyTotal: status.required
+      });
+      const shortageInfo = formatShortageInfo(status, cashAction);
+
       statusBox.innerHTML = `
         <div class="status-row">
           <span class="text-gray-600">일매수시도금액</span>
@@ -4016,9 +4111,7 @@
           <span>${status.diff >= 0 ? '+' : ''}$${status.diff.toFixed(3)} ${statusIcon} ${status.statusKo}</span>
         </div>
         ${daysText ? `<div class="text-xs text-center text-blue-600 mt-2 font-medium">📅 ${daysText}</div>` : ''}
-        ${status.tomorrowStatus === 'INSUFFICIENT' && status.status === 'OK'
-          ? `<div class="text-xs text-center text-orange-600 mt-1 font-medium">⚠️ 내일 매수 부족 $${status.tomorrowShortfall.toFixed(2)}</div>`
-          : ''}
+        ${shortageInfo ? shortageInfo.html : ''}
       `;
 
       // Stock breakdown
@@ -4351,17 +4444,12 @@
         };
       }
 
-      // v4.49.3: 매도 — 오늘 부족 OR 내일 부족 → SGOV 매도
-      const remainingAfterToday = balance - daily;
-      let shortage = 0;
-      let sellReason = '';
-      if (balance < daily) {
-        shortage = daily - balance;
-        sellReason = 'today';
-      } else if (remainingAfterToday < daily) {
-        shortage = daily - remainingAfterToday;
-        sellReason = 'tomorrow';
-      }
+      // v4.50.0: 매도 — 오늘+내일 부족 통합 → SGOV 매도
+      const todayShortage = balance < daily ? (daily - balance) : 0;
+      const tomorrowRemaining = Math.max(0, balance - daily);
+      const tomorrowShortage = tomorrowRemaining < daily ? (daily - tomorrowRemaining) : 0;
+      let shortage = todayShortage + tomorrowShortage;
+      let sellReason = todayShortage > 0 ? 'both' : (tomorrowShortage > 0 ? 'tomorrow' : '');
 
       if (shortage > 0) {
         const symbol = pickCashReserveSymbol(entryMap, true);
@@ -4385,7 +4473,9 @@
           netPriceAfterCommission,
           commissionRate,
           shortage,
-          sellReason
+          sellReason,
+          todayShortage,
+          tomorrowShortage
         };
       }
 
@@ -4411,7 +4501,7 @@
 
       const verb = action.side === 'BUY' ? '매수' : '매도';
       const orderType = action.side === 'BUY' ? '즉시' : 'MOC';
-      const reasonTag = action.sellReason === 'tomorrow' ? ' (내일 대비)' : '';
+      const reasonTag = action.sellReason === 'both' ? ' (오늘+내일)' : (action.sellReason === 'tomorrow' ? ' (내일 대비)' : '');
       recoEl.textContent = `${action.symbol} ${verb} (${orderType}): ${action.quantity}주${reasonTag}`;
       recoEl.classList.remove('hidden');
     }
@@ -4458,52 +4548,28 @@
     function checkAndShowAlert(statusOverride = null) {
       if (!currentProfile) return;
 
-      // 🔴 v4.30.0 (B5-07): 예수금 0이면 경고 숨김 (미입력 상태)
-      const balanceInfo = BalanceManager.getBalance(currentProfile.id);
-      const balanceAvailable = statusOverride?.available ?? (balanceInfo?.available || 0);
-      if (balanceAvailable <= 0) {
-        const banner = document.getElementById('alert-banner');
-        if (banner) {
-          banner.classList.add('hidden');
-          document.body.style.paddingTop = '0';
-        }
-        return;
-      }
-
-      // v4.49.3: Today insufficient = urgent, tomorrow insufficient = warning
-      const alert = statusOverride
-        ? (() => {
-          if (statusOverride.status === 'INSUFFICIENT') {
-            return {
-              show: true,
-              message: `오늘 매수 부족! 부족금액: $${Math.abs(statusOverride.diff).toFixed(2)}`
-            };
-          }
-          if (statusOverride.tomorrowStatus === 'INSUFFICIENT') {
-            return {
-              show: true,
-              message: `내일 매수 부족! 부족금액: $${statusOverride.tomorrowShortfall.toFixed(2)}`
-            };
-          }
-          return { show: false };
-        })()
-        : BalanceManager.checkAlert(currentProfile.id);
+      // v4.50.0: Always hide banner (no more fixed top banner)
       const banner = document.getElementById('alert-banner');
-
-      if (alert.show) {
-        document.getElementById('alert-message').textContent = alert.message;
-        banner.classList.remove('hidden');
-        document.body.style.paddingTop = '52px'; // Offset for fixed banner
-      } else {
+      if (banner) {
         banner.classList.add('hidden');
         document.body.style.paddingTop = '0';
       }
 
-      // v4.49.3: 결과 패널 내 내일 부족 경고
+      // Balance 0 = no alert
+      const balanceInfo = BalanceManager.getBalance(currentProfile.id);
+      const balanceAvailable = statusOverride?.available ?? (balanceInfo?.available || 0);
+      if (balanceAvailable <= 0) return;
+
+      // v4.50.0: Use formatShortageInfo for results-tomorrow-alert
       const resultsTomorrowAlert = document.getElementById('results-tomorrow-alert');
       if (resultsTomorrowAlert) {
-        if (alert.show) {
-          resultsTomorrowAlert.textContent = `⚠️ ${alert.message}`;
+        const cashAction = buildCashReserveAction({
+          balanceValue: statusOverride?.available,
+          dailyBuyTotal: statusOverride?.required
+        });
+        const info = formatShortageInfo(statusOverride, cashAction);
+        if (info && info.alertHtml) {
+          resultsTomorrowAlert.innerHTML = info.alertHtml;
           resultsTomorrowAlert.classList.remove('hidden');
         } else {
           resultsTomorrowAlert.classList.add('hidden');
