@@ -35,12 +35,14 @@ const ProfileManager = (function() {
     const mode = raw?.mode === 'fixed' ? 'fixed' : 'budget_ratio';
     const parsedOrderCount = parseInt(raw?.orderCount, 10);
     const parsedBudgetRatio = parseFloat(raw?.budgetRatio);
+    // v4.49.2: 기존 25% → 20% 마이그레이션 (DEC-184)
+    const migratedRatio = (parsedBudgetRatio === 25) ? 20 : parsedBudgetRatio;
     const parsedMaxDecline = parseFloat(raw?.maxDecline);
     const parsedQuantity = parseInt(raw?.quantity, 10);
     return {
       enabled: raw?.enabled !== false,
       mode,
-      budgetRatio: Number.isFinite(parsedBudgetRatio) ? Math.max(0, Math.min(100, parsedBudgetRatio)) : 25,
+      budgetRatio: Number.isFinite(migratedRatio) ? Math.max(0, Math.min(100, migratedRatio)) : 20,
       allowOneOver: raw?.allowOneOver !== false,
       maxDecline: Number.isFinite(parsedMaxDecline) ? parsedMaxDecline : 15,
       quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1,
@@ -216,7 +218,7 @@ const ProfileManager = (function() {
         additionalBuy: {
           enabled: true,
           mode: 'budget_ratio',
-          budgetRatio: 25,
+          budgetRatio: 20,
           allowOneOver: true,
           maxDecline: 15,
           quantity: 1,
@@ -263,7 +265,7 @@ const ProfileManager = (function() {
         additionalBuy: {
           enabled: true,
           mode: 'budget_ratio',
-          budgetRatio: 25,
+          budgetRatio: 20,
           allowOneOver: true,
           maxDecline: 15,
           quantity: 1,
