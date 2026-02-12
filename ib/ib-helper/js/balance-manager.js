@@ -92,9 +92,9 @@ const BalanceManager = (function() {
     const splits = resolveSplits(settings, stock);
     const oneTimeBuy = stock.principal / splits;
 
-    // 🔴 v4.49.4: avgPrice=0 (포지션 없음) → 예수금 계산에서 제외
-    // calculateAllOrders()와 일관성 유지 (주문 미생성 종목은 예수금 미차감)
-    if (!stock.avgPrice || stock.avgPrice <= 0) {
+    // 🔴 v4.50.0: T=0 support — avgPrice=0 && currentPrice>0 → currentPrice fallback
+    const effectiveAvgPrice = (stock.avgPrice > 0) ? stock.avgPrice : (stock.currentPrice > 0 ? stock.currentPrice : 0);
+    if (effectiveAvgPrice <= 0) {
       return {
         symbol: stock.symbol,
         oneTimeBuy: 0,
@@ -103,6 +103,8 @@ const BalanceManager = (function() {
         percentage: 0
       };
     }
+    // Working copy with effectiveAvgPrice for downstream calculations
+    const workingStock = (stock.avgPrice > 0) ? stock : { ...stock, avgPrice: effectiveAvgPrice };
 
     // Base amount (1회 매수금)
     let total = oneTimeBuy;
@@ -110,9 +112,9 @@ const BalanceManager = (function() {
 
     // 하락대비 추가매수 (if enabled)
     if (settings?.additionalBuy?.enabled) {
-      const declineBasePrice = calcDeclineBasePrice(stock, settings);
+      const declineBasePrice = calcDeclineBasePrice(workingStock, settings);
       const additionalConfig = resolveAdditionalBuyConfig(settings, oneTimeBuy, declineBasePrice);
-      additionalAmount = calcAdditionalBuyAmount(stock, declineBasePrice, additionalConfig);
+      additionalAmount = calcAdditionalBuyAmount(workingStock, declineBasePrice, additionalConfig);
       total += additionalAmount;
     }
 

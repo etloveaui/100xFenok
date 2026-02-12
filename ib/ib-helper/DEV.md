@@ -1,10 +1,10 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.49.4
+> **Version**: 4.50.0
 > **Created**: 2026-02-02
 > **Updated**: 2026-02-12
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.49.4 Checkbox holdings=0 fix** + **Code.gs v2.7.0** (ExecutionLog + Orders Archive) | ❌ #220 REVERTED
-> **Priority**: 🟡 E2E 실사용 모니터링 → #207 Telegram
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.50.0 T=0 Calculation Support** + **Code.gs v2.7.0** (ExecutionLog + Orders Archive) | ❌ #220 REVERTED
+> **Priority**: 🟡 E2E 실사용 모니터링 (T=0 포함) → #207 Telegram
 >
 > **📋 Price Data Flow** (DEC-172):
 > - 실시간 가격: WebApp API → Yahoo Finance (직접 조회)

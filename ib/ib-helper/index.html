@@ -540,7 +540,7 @@
           </div>
         </div>
         <!-- 🔴 v4.46.0: 버전 표시 -->
-        <div class="text-right text-[10px] text-gray-300 mt-2">v4.49.4 (02-12)</div>
+        <div class="text-right text-[10px] text-gray-300 mt-2">v4.50.0 (02-12)</div>
       </div>
     </details>
 
@@ -1025,7 +1025,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.49.4 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.50.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -2577,7 +2577,7 @@
         calculateOrders();
         showToast('계산 완료', 'success', 1500);
       } else {
-        showToast('평단가와 세팅원금을 입력하세요', 'warning');
+        showToast('세팅원금을 입력하세요', 'warning');
       }
     }
 
@@ -2949,12 +2949,9 @@
 
     function hasRequiredInputs() {
       // 🔴 #236 (DEC-175): avgPrice를 input 필드가 아닌 파생값으로 검증
-      const totalInvested = parseFloat(document.getElementById('input-totalInvested').value) || 0;
-      const holdings = parseInt(document.getElementById('input-holdings').value) || 0;
-      const avgPrice = computeAvgPrice(totalInvested, holdings);
+      // 🔴 v4.50.0: T=0 support — avgPrice=0 허용 (calculator가 currentPrice fallback 처리)
       const principal = parseFloat(document.getElementById('input-principal').value);
-      // 현재가는 선택 - 없으면 별%가만 사용
-      return avgPrice > 0 && principal > 0;
+      return principal > 0;
     }
 
     function getAdditionalBuyInputForCalculation() {
@@ -3027,10 +3024,11 @@
         ...getAdditionalBuyInputForCalculation()
       };
 
-      // Validate - 필수 입력값 체크 (현재가는 선택 - LOC 캡에만 사용)
+      // Validate - 필수 입력값 체크
+      // 🔴 v4.50.0: T=0 support — avgPrice=0 허용 (currentPrice가 있으면 계산 가능)
       const missing = [];
       if (!input.principal) missing.push('세팅원금');
-      if (!input.avgPrice) missing.push('평단가');
+      if (!input.avgPrice && !input.currentPrice) missing.push('평단가 또는 현재가');
 
       if (missing.length > 0) {
         showToast(`필수 입력값: ${missing.join(', ')}`, 'warning');
@@ -3114,9 +3112,11 @@
         const holdings = dailyData.holdings || 0;
         const avgPrice = computeAvgPrice(totalInvested, holdings);
         const principal = stockData.principal || 0;
+        const currentPrice = priceMap[ticker] || 0;
 
-        if (!avgPrice || !principal) {
-          failedTickers.push({ ticker, reason: '평단가/세팅원금 없음' });
+        // 🔴 v4.50.0: T=0 support — avgPrice=0 허용 (currentPrice fallback)
+        if ((!avgPrice && !currentPrice) || !principal) {
+          failedTickers.push({ ticker, reason: !principal ? '세팅원금 없음' : '평단가/현재가 없음' });
           continue;
         }
 
@@ -3130,7 +3130,7 @@
           avgPrice: avgPrice,
           totalInvested: totalInvested,
           holdings: holdings,
-          currentPrice: priceMap[ticker] || 0,
+          currentPrice: currentPrice,
           sellPercent: stockData.sellPercent || defaultSellPercent,
           locSellPercent: stockData.locSellPercent || 5,  // 🔴 #234: LOC% 연동
           ...additionalBuyInput
@@ -3313,6 +3313,9 @@
       const sellOrdersEl = document.getElementById('sell-orders');
       if (quarterStopLoss.active) {
         sellOrdersEl.innerHTML = '<p class="text-gray-500 text-sm">쿼터손절 모드 - 아래 안내 참조</p>';
+      } else if (sellOrders.length === 0) {
+        // 🔴 v4.50.0: T=0 — holdings=0일 때 매도 주문 없음 안내
+        sellOrdersEl.innerHTML = '<p class="text-gray-400 text-sm">보유 없음 — 매도 주문 없음</p>';
       } else {
         // 🔴 FIX: 매도 주문 가격 내림차순 정렬 (지정가 매도 → LOC 매도)
         const sortedSellOrders = [...sellOrders].sort((a, b) => b.price - a.price);
@@ -3715,7 +3718,8 @@
 
       // 실제 입력값으로 공식 표시
       const totalInvested = input.totalInvested || 0;
-      const avgPrice = input.avgPrice;
+      // 🔴 v4.50.0: T=0에서는 effectiveAvgPrice 사용 (currentPrice fallback)
+      const avgPrice = input.effectiveAvgPrice || input.avgPrice;
       const parsedSellPercent = parseFloat(document.getElementById('input-sellPercent')?.value);
       const effectiveSellPercent = Number.isFinite(parsedSellPercent) ? parsedSellPercent : 10;
 
