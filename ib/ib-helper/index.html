@@ -1550,12 +1550,13 @@
       container.innerHTML = stocks.map(s => {
         const symbol = sanitizeTickerSymbol(s.symbol);
         if (!symbol) return '';
-        // 🔴 v4.28.1: 필수값 체크 - AND 조건으로 변경 (계산 로직과 일치)
+        // 🔴 v4.49.4: 체크박스 활성 조건 = principal만 (avgPrice=0 허용)
+        // 전량 매도 후 재시작 시 체크박스 클릭 가능해야 함
         // 🔴 #236 (DEC-175): avgPrice를 파생값으로 계산
         const dailyData = ProfileManager.loadDailyData(currentProfile?.id, symbol) || {};
         const avgPrice = computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0);
         const principal = s.principal || 0;
-        const hasRequired = (avgPrice > 0 && principal > 0);
+        const hasRequired = (principal > 0);
         const isDisabled = !hasRequired;
         const isEnabled = ProfileManager.isStockEnabled(symbol);
         const isChecked = isEnabled && !isDisabled;
@@ -1572,7 +1573,7 @@
                    ${isChecked ? 'checked' : ''}
                    ${isDisabled ? 'disabled' : ''}
                    onchange="toggleTicker('${symbol}', this.checked)"
-                   title="${isDisabled ? '평단가 또는 세팅원금 입력 필요' : '계산 대상'}">
+                   title="${isDisabled ? '세팅원금 입력 필요' : '계산 대상'}">
             <button onclick="selectTicker('${symbol}')"
                     class="ticker-btn flex-1 touch-target py-3 rounded-lg text-center font-semibold transition-all bg-gray-100 text-gray-600 hover:bg-blue-100 ${isDisabled ? 'opacity-50' : ''}"
                     data-ticker="${symbol}">

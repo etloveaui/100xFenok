@@ -92,6 +92,18 @@ const BalanceManager = (function() {
     const splits = resolveSplits(settings, stock);
     const oneTimeBuy = stock.principal / splits;
 
+    // 🔴 v4.49.4: avgPrice=0 (포지션 없음) → 예수금 계산에서 제외
+    // calculateAllOrders()와 일관성 유지 (주문 미생성 종목은 예수금 미차감)
+    if (!stock.avgPrice || stock.avgPrice <= 0) {
+      return {
+        symbol: stock.symbol,
+        oneTimeBuy: 0,
+        additionalAmount: 0,
+        total: 0,
+        percentage: 0
+      };
+    }
+
     // Base amount (1회 매수금)
     let total = oneTimeBuy;
     let additionalAmount = 0;
