@@ -624,8 +624,10 @@ const IBCalculator = (function() {
     } = input;
 
     // Validation
-    if (!avgPrice || avgPrice <= 0) {
-      return { error: '평단가를 입력하세요' };
+    // 🔴 v4.50.0: T=0 support — avgPrice=0 && currentPrice>0 → use currentPrice as effectiveAvgPrice
+    const effectiveAvgPrice = (avgPrice > 0) ? avgPrice : (currentPrice > 0 ? currentPrice : 0);
+    if (effectiveAvgPrice <= 0) {
+      return { error: '평단가 또는 현재가를 입력하세요' };
     }
     if (!principal || principal <= 0) {
       return { error: '세팅원금을 입력하세요' };
@@ -652,13 +654,15 @@ const IBCalculator = (function() {
     const starPercent = calculateStarPercent(T, effectiveSellPercent, locSellPercent);
 
     // LOC 정보
-    const locInfo = calculateLOC(avgPrice, starPercent, currentPrice);
+    // 🔴 v4.50.0: effectiveAvgPrice 사용 (T=0일 때 currentPrice 대체)
+    const locInfo = calculateLOC(effectiveAvgPrice, starPercent, currentPrice);
 
     // 매수 주문 생성
+    // 🔴 v4.50.0: avgPrice → effectiveAvgPrice (T=0 currentPrice fallback)
     const buyResult = generateBuyOrders({
       principal,
       divisions,
-      avgPrice,
+      avgPrice: effectiveAvgPrice,
       totalInvested,
       currentPrice,
       ticker,
@@ -675,9 +679,10 @@ const IBCalculator = (function() {
 
     // 매도 주문 생성
     // 🔴 v1.1.0: 사용자 입력 sellPercent 전달 (locSellPercent는 표시용)
+    // 🔴 v4.50.0: effectiveAvgPrice (T=0: holdings=0 → sell orders empty anyway)
     const sellResult = generateSellOrders({
       holdings: holdings || 0,
-      avgPrice,
+      avgPrice: effectiveAvgPrice,
       currentPrice,
       ticker,
       T,
@@ -692,6 +697,7 @@ const IBCalculator = (function() {
         principal,
         divisions,
         avgPrice,
+        effectiveAvgPrice, // 🔴 v4.50.0: T=0 fallback (avgPrice or currentPrice)
         totalInvested,
         holdings,
         currentPrice,
