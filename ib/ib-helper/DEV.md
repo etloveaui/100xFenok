@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.49.3
+> **Version**: 4.49.4
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-11
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#246 v4.49.3 TDZ fix + budgetRatio 20%(DEC-184) + Tomorrow Alert + SGOV Tomorrow Sell** + **Code.gs v2.7.0** (ExecutionLog + Orders Archive) | ❌ #220 REVERTED
+> **Updated**: 2026-02-12
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.49.4 Checkbox holdings=0 fix** + **Code.gs v2.7.0** (ExecutionLog + Orders Archive) | ❌ #220 REVERTED
 > **Priority**: 🟡 E2E 실사용 모니터링 → #207 Telegram
 >
 > **📋 Price Data Flow** (DEC-172):
