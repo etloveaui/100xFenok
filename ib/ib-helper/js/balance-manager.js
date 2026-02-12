@@ -110,8 +110,10 @@ const BalanceManager = (function() {
     let total = oneTimeBuy;
     let additionalAmount = 0;
 
-    // 하락대비 추가매수 (if enabled)
-    if (settings?.additionalBuy?.enabled) {
+    // 🔴 v4.51.0: T=0 (첫 매수)이면 하락대비 비활성 — 포지션 없으므로 하락 기준 없음
+    const T = (oneTimeBuy > 0) ? (workingStock.totalInvested || 0) / oneTimeBuy : 0;
+    // 하락대비 추가매수 (if enabled AND T > 0)
+    if (settings?.additionalBuy?.enabled && T > 0) {
       const declineBasePrice = calcDeclineBasePrice(workingStock, settings);
       const additionalConfig = resolveAdditionalBuyConfig(settings, oneTimeBuy, declineBasePrice);
       additionalAmount = calcAdditionalBuyAmount(workingStock, declineBasePrice, additionalConfig);

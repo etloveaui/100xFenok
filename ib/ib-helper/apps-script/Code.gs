@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.8.0
+ * @version 2.9.0
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,7 +19,9 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
- * - v2.8.0 (2026-02-12): removeStaleSellOrders() - stale SELL cleanup before execution
+ * - v2.9.0 (2026-02-12): CRITICAL fix — removeStaleOrders moved AFTER checkExecutions (was deleting before checking)
+ * - v2.8.1 (2026-02-12): removeStaleOrders Phase1 fix — date<today = all stale (not per-group)
+ * - v2.8.0 (2026-02-12): removeStaleOrders() - stale BUY+SELL cleanup before execution
  * - v2.7.0 (2026-02-10): ExecutionLog + Orders Archive (14-day rolling)
  * - v2.5.0 (2026-02-08): NYSE holiday detection (Rule-based, no API)
  * - v2.4.0 (2026-02-08): shouldProcessToday() weekend guard + defensive trim/toUpperCase
@@ -258,18 +260,11 @@ function processOrderExecutions() {
       return;
     }
 
-    // 🔴 v2.1.0: Orders dedupe before processing (date+googleId+profileId+ticker+orderType+price+qty)
+    // 🔴 v2.1.0: Orders dedupe before processing
     try {
       dedupeOrders(ordersSheet);
     } catch (error) {
       Logger.log('dedupeOrders error (ignored): ' + error.message);
-    }
-
-    // 🔴 v2.8.0: Remove stale SELL orders to prevent balance inflation
-    try {
-      removeStaleSellOrders(ordersSheet, ss.getSheetByName(CONFIG.PORTFOLIO_SHEET));
-    } catch (error) {
-      Logger.log('removeStaleSellOrders error (ignored): ' + error.message);
     }
 
     if (!pricesSheet) {
@@ -281,16 +276,18 @@ function processOrderExecutions() {
     const prices = loadYesterdayPrices(pricesSheet);
     Logger.log('Loaded prices: ' + JSON.stringify(prices));
 
-    // 2. Load pending orders (execution column = empty)
+    // 2. Load pending orders (execution column = empty) — includes old-date orders
     const pendingOrders = loadPendingOrders(ordersSheet);
     Logger.log('Pending orders: ' + pendingOrders.length);
 
-    // 3. Check executions (+ collect log entries)
+    // 3. Check executions FIRST (marks Y for executed orders)
+    //    🔴 v2.9.0: Must run BEFORE removeStaleOrders so yesterday's orders
+    //    get checked against yesterday's prices before cleanup
     const logEntries = [];
     const executedOrders = checkExecutions(pendingOrders, prices, logEntries);
     Logger.log('Executed orders: ' + executedOrders.length);
 
-    // 4. Update Orders sheet
+    // 4. Update Orders sheet (write Y back to sheet)
     if (executedOrders.length > 0) {
       updateOrdersSheet(ordersSheet, executedOrders);
 
@@ -298,14 +295,23 @@ function processOrderExecutions() {
       updatePortfolio(ss, executedOrders);
     }
 
-    // 6. Write execution log (failure won't break main pipeline)
+    // 6. 🔴 v2.9.0: Remove stale orders AFTER checkExecutions
+    //    Now executed orders have Y → removeStaleOrders skips them
+    //    Only non-executed old-date orders get deleted
+    try {
+      removeStaleSellOrders(ordersSheet, ss.getSheetByName(CONFIG.PORTFOLIO_SHEET));
+    } catch (error) {
+      Logger.log('removeStaleOrders error (ignored): ' + error.message);
+    }
+
+    // 7. Write execution log (failure won't break main pipeline)
     try {
       writeExecutionLog(ss, logEntries);
     } catch (logError) {
       Logger.log('writeExecutionLog error (ignored): ' + logError.message);
     }
 
-    // 7. Archive old executed orders (failure won't break main pipeline)
+    // 8. Archive old executed orders (failure won't break main pipeline)
     try {
       archiveOldOrders(ss, ordersSheet);
     } catch (archiveError) {
@@ -560,9 +566,16 @@ function removeStaleOrders(ordersSheet, portfolioSheet) {
     }
   }
 
-  // Group pending orders by googleId|profileId|ticker|side
-  var orderGroups = {};
+  // Phase 1: Remove ALL pending orders older than today
+  // Rationale: each day's push creates fresh orders with updated prices.
+  // If an order didn't execute on its day, it's stale — next push replaces it.
+  var today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
   var keepFlags = new Array(data.length).fill(true);
+  var removedPhase1 = 0;
+  var removedPhase2 = 0;
+
+  // Phase 2 prep: collect pending SELL info for zero-holdings check
+  var pendingSells = [];  // { idx, posKey }
 
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
@@ -580,51 +593,30 @@ function removeStaleOrders(ordersSheet, portfolioSheet) {
 
     if (!googleId || !profileId || !ticker) continue;
 
-    var groupKey = googleId + '|' + profileId + '|' + ticker + '|' + side;
     var orderDate = parseOrderDate(row[0]);
     var dateStr = orderDate
       ? Utilities.formatDate(orderDate, CONFIG.TIMEZONE, 'yyyy-MM-dd')
       : String(row[0]);
 
-    if (!orderGroups[groupKey]) {
-      orderGroups[groupKey] = { side: side, posKey: googleId + '|' + profileId + '|' + ticker, dates: {} };
+    // Phase 1: any pending order from before today = stale
+    if (dateStr < today) {
+      keepFlags[i] = false;
+      removedPhase1++;
+      continue;
     }
-    if (!orderGroups[groupKey].dates[dateStr]) {
-      orderGroups[groupKey].dates[dateStr] = [];
+
+    // Phase 2 candidate: today's pending SELL with zero holdings
+    if (side === 'SELL') {
+      pendingSells.push({ idx: i, posKey: googleId + '|' + profileId + '|' + ticker });
     }
-    orderGroups[groupKey].dates[dateStr].push(i);
   }
 
-  var removedPhase1 = 0;
-  var removedPhase2 = 0;
-
-  Object.keys(orderGroups).forEach(function(groupKey) {
-    var group = orderGroups[groupKey];
-    var dateKeys = Object.keys(group.dates).sort();  // ascending
-
-    // Phase 2 (SELL only): If holdings=0, remove ALL pending SELLs
-    if (group.side === 'SELL' && holdingsMap[group.posKey] !== undefined && holdingsMap[group.posKey] <= 0) {
-      dateKeys.forEach(function(dk) {
-        group.dates[dk].forEach(function(idx) {
-          keepFlags[idx] = false;
-          removedPhase2++;
-        });
-      });
-      return;
+  // Phase 2 (SELL only): Remove today's pending SELLs for holdings=0 positions
+  pendingSells.forEach(function(item) {
+    if (holdingsMap[item.posKey] !== undefined && holdingsMap[item.posKey] <= 0) {
+      keepFlags[item.idx] = false;
+      removedPhase2++;
     }
-
-    // Phase 1 (BUY + SELL): Keep only latest date, remove older dates
-    if (dateKeys.length <= 1) return;
-
-    var latestDate = dateKeys[dateKeys.length - 1];
-    dateKeys.forEach(function(dk) {
-      if (dk !== latestDate) {
-        group.dates[dk].forEach(function(idx) {
-          keepFlags[idx] = false;
-          removedPhase1++;
-        });
-      }
-    });
   });
 
   var totalRemoved = removedPhase1 + removedPhase2;
@@ -670,7 +662,7 @@ function removeStaleOrders(ordersSheet, portfolioSheet) {
   }
 
   Logger.log('removeStaleOrders: Removed ' + totalRemoved +
-    ' stale orders (Phase1=' + removedPhase1 + ' stale-date, Phase2=' + removedPhase2 + ' zero-holdings-sell)');
+    ' stale orders (Phase1=' + removedPhase1 + ' older-than-' + today + ', Phase2=' + removedPhase2 + ' zero-holdings-sell)');
 }
 
 // Backward compat alias

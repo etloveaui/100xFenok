@@ -239,9 +239,27 @@ const IBCalculator = (function() {
 
     const orders = [];
     // ========================================
-    // 전반전 (T < 20): 1회 매수금을 2개로 나눔 (진행률 50% 미만)
+    // 🔴 v4.51.0: T=0 (첫 매수) — 큰수LOC 1건만, 하락대비 없음
+    // V2.2 스펙에 avgPrice 전제 → T=0은 별도 분기
     // ========================================
-    if (T < 20) {
+    if (T === 0) {
+      const qty = Math.floor(oneTimeBuy / buyLocPrice);
+      if (qty > 0) {
+        orders.push({
+          type: '큰수LOC 매수',
+          description: `T=0 첫 매수 (별% ${starPercent.toFixed(1)}%)`,
+          price: buyLocPrice,
+          amount: roundPrice(oneTimeBuy),
+          quantity: qty,
+          orderType: 'LOC'
+        });
+      }
+      // T=0: no 평단LOC (no avgPrice), no 하락대비 (no position)
+    }
+    // ========================================
+    // 전반전 (0 < T < 20): 1회 매수금을 2개로 나눔
+    // ========================================
+    else if (T < 20) {
       const halfAmount = oneTimeBuy / 2;
 
       // 주문 1: 평단LOC 매수 (0% 기준)
@@ -276,7 +294,7 @@ const IBCalculator = (function() {
       }
     }
     // ========================================
-    // 후반전 (T >= 20): 전체를 큰수LOC로만 (진행률 50% 이상)
+    // 후반전 (T >= 20): 전체를 큰수LOC로만
     // ========================================
     else {
       const qty = Math.floor(oneTimeBuy / buyLocPrice);
@@ -293,13 +311,13 @@ const IBCalculator = (function() {
     }
 
     // ========================================
-    // 하락대비 추가매수 (전략 기반: 지정 개수)
+    // 하락대비 추가매수 (T > 0일 때만)
+    // 🔴 v4.51.0: T=0은 포지션 없으므로 하락대비 불가
     // ========================================
-    // 🔴 FIX: 하락대비 기준가 = 가장 낮은 매수가(평단LOC 기준)
-    const declineBasePrice = orders.length > 0 
-      ? Math.min(...orders.map(o => o.price)) 
+    const declineBasePrice = orders.length > 0
+      ? Math.min(...orders.map(o => o.price))
       : buyLocPrice;
-    if (additionalBuyEnabled) {
+    if (additionalBuyEnabled && T > 0) {
       const config = resolveAdditionalBuyConfig({
         additionalBuyMode,
         additionalBuyOrderCount,
