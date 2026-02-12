@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.7.0
+ * @version 2.8.0
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v2.8.0 (2026-02-12): removeStaleSellOrders() - stale SELL cleanup before execution
  * - v2.7.0 (2026-02-10): ExecutionLog + Orders Archive (14-day rolling)
  * - v2.5.0 (2026-02-08): NYSE holiday detection (Rule-based, no API)
  * - v2.4.0 (2026-02-08): shouldProcessToday() weekend guard + defensive trim/toUpperCase
@@ -264,6 +265,13 @@ function processOrderExecutions() {
       Logger.log('dedupeOrders error (ignored): ' + error.message);
     }
 
+    // 🔴 v2.8.0: Remove stale SELL orders to prevent balance inflation
+    try {
+      removeStaleSellOrders(ordersSheet, ss.getSheetByName(CONFIG.PORTFOLIO_SHEET));
+    } catch (error) {
+      Logger.log('removeStaleSellOrders error (ignored): ' + error.message);
+    }
+
     if (!pricesSheet) {
       Logger.log('Prices sheet not found - please create it with GOOGLEFINANCE formulas');
       return;
@@ -507,6 +515,164 @@ function dedupeOrders(sheet, daysLimit = 30) {
   ordersSheet.clearContents();
   ordersSheet.getRange(1, 1, normalizedRows.length, colCount).setValues(normalizedRows);
   Logger.log(`dedupeOrders: Removed ${data.length - uniqueRows.length} duplicate rows`);
+}
+
+// =====================================================
+// STALE SELL ORDER CLEANUP (v2.8.0)
+// =====================================================
+
+/**
+ * Remove stale SELL orders to prevent balance inflation
+ *
+ * ROOT CAUSE: Each daily push creates SELL orders for ALL current holdings.
+ * Old pending SELLs accumulate across push dates. When price triggers,
+ * ALL sets execute simultaneously — balance adds proceeds from ALL sets
+ * (e.g., 287 shares) while portfolio correctly caps to actual holdings (~80).
+ *
+ * Phase 1: For each googleId|profileId|ticker group with multiple push dates,
+ *          keep only the latest date's SELL orders, delete the rest.
+ * Phase 2: For positions with holdings=0 in Portfolio, delete ALL pending SELLs.
+ *
+ * @param {Sheet} ordersSheet - Orders sheet
+ * @param {Sheet} portfolioSheet - Portfolio sheet (for holdings check)
+ */
+function removeStaleSellOrders(ordersSheet, portfolioSheet) {
+  if (!ordersSheet) {
+    Logger.log('removeStaleSellOrders: Orders sheet not found');
+    return;
+  }
+
+  var data = ordersSheet.getDataRange().getValues();
+  if (!data || data.length <= 1) return;
+
+  var header = data[0];
+  var colCount = header.length;
+
+  // Build holdings map from Portfolio sheet (Phase 2)
+  var holdingsMap = {};
+  if (portfolioSheet) {
+    var portfolioData = portfolioSheet.getDataRange().getValues();
+    for (var p = 1; p < portfolioData.length; p++) {
+      var pRow = portfolioData[p];
+      if (!pRow || pRow.length === 0) continue;
+      var pKey = String(pRow[0]).trim() + '|' + String(pRow[1]).trim() + '|' + String(pRow[3]).trim().toUpperCase();
+      var h = parseInt(pRow[5]) || 0;
+      // Sum holdings across rows for same position (shouldn't happen, but defensive)
+      holdingsMap[pKey] = (holdingsMap[pKey] || 0) + h;
+    }
+  }
+
+  // Group pending SELL orders by googleId|profileId|ticker
+  var sellGroups = {};  // key -> { dates: { dateStr: [rowIndices] } }
+  var keepFlags = new Array(data.length).fill(true);
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row || row.length === 0) continue;
+
+    var execution = String(row[10] || '').trim().toUpperCase();
+    if (execution === 'Y') continue;  // Already executed, skip
+
+    var side = String(row[5] || '').trim().toUpperCase();
+    if (side !== 'SELL') continue;  // Only process SELLs
+
+    var googleId = String(row[1] || '').trim();
+    var profileId = String(row[2] || '').trim();
+    var ticker = String(row[3] || '').trim().toUpperCase();
+
+    if (!googleId || !profileId || !ticker) continue;
+
+    var groupKey = googleId + '|' + profileId + '|' + ticker;
+    var orderDate = parseOrderDate(row[0]);
+    var dateStr = orderDate
+      ? Utilities.formatDate(orderDate, CONFIG.TIMEZONE, 'yyyy-MM-dd')
+      : String(row[0]);
+
+    if (!sellGroups[groupKey]) {
+      sellGroups[groupKey] = { dates: {} };
+    }
+    if (!sellGroups[groupKey].dates[dateStr]) {
+      sellGroups[groupKey].dates[dateStr] = [];
+    }
+    sellGroups[groupKey].dates[dateStr].push(i);
+  }
+
+  var removedPhase1 = 0;
+  var removedPhase2 = 0;
+
+  Object.keys(sellGroups).forEach(function(groupKey) {
+    var group = sellGroups[groupKey];
+    var dateKeys = Object.keys(group.dates).sort();  // ascending
+
+    // Phase 2: If holdings=0 for this position, remove ALL pending SELLs
+    if (holdingsMap[groupKey] !== undefined && holdingsMap[groupKey] <= 0) {
+      dateKeys.forEach(function(dk) {
+        group.dates[dk].forEach(function(idx) {
+          keepFlags[idx] = false;
+          removedPhase2++;
+        });
+      });
+      return;  // All removed, skip Phase 1
+    }
+
+    // Phase 1: Keep only latest date's SELLs, remove older dates
+    if (dateKeys.length <= 1) return;  // Only one date, nothing to clean
+
+    var latestDate = dateKeys[dateKeys.length - 1];
+    dateKeys.forEach(function(dk) {
+      if (dk !== latestDate) {
+        group.dates[dk].forEach(function(idx) {
+          keepFlags[idx] = false;
+          removedPhase1++;
+        });
+      }
+    });
+  });
+
+  var totalRemoved = removedPhase1 + removedPhase2;
+  if (totalRemoved === 0) {
+    Logger.log('removeStaleSellOrders: No stale SELLs found');
+    return;
+  }
+
+  // Build kept rows
+  var keepRows = [header];
+  for (var j = 1; j < data.length; j++) {
+    if (keepFlags[j]) {
+      keepRows.push(data[j]);
+    }
+  }
+
+  // Normalize rows for consistent column count
+  var normalizedKeep = keepRows.map(function(r) {
+    var nr = r.slice(0, colCount);
+    while (nr.length < colCount) nr.push('');
+    return nr;
+  });
+
+  // Save original for recovery
+  var normalizedOriginal = data.map(function(r) {
+    var nr = r.slice(0, colCount);
+    while (nr.length < colCount) nr.push('');
+    return nr;
+  });
+
+  // Rewrite Orders sheet with recovery safety
+  ordersSheet.clearContents();
+  try {
+    ordersSheet.getRange(1, 1, normalizedKeep.length, colCount).setValues(normalizedKeep);
+  } catch (rewriteError) {
+    Logger.log('CRITICAL: removeStaleSellOrders rewrite failed, restoring: ' + rewriteError.message);
+    try {
+      ordersSheet.getRange(1, 1, normalizedOriginal.length, colCount).setValues(normalizedOriginal);
+    } catch (restoreError) {
+      Logger.log('FATAL: Restore also failed: ' + restoreError.message);
+    }
+    throw rewriteError;
+  }
+
+  Logger.log('removeStaleSellOrders: Removed ' + totalRemoved +
+    ' stale SELLs (Phase1=' + removedPhase1 + ' stale-date, Phase2=' + removedPhase2 + ' zero-holdings)');
 }
 
 // =====================================================
@@ -1082,6 +1248,7 @@ function onOpen() {
   ui.createMenu('📊 IB Helper')
     .addItem('체결 확인 실행', 'processOrderExecutions')
     .addItem('중복 주문 정리', 'dedupeOrders')
+    .addItem('🧹 Stale SELL 정리', 'manualRemoveStaleSellOrders')
     .addItem('체결 예수금 마이그레이션', 'migrateExecutedOrdersBalance')
     .addItem('📦 Archive Old Orders', 'manualArchiveOldOrders')
     .addSeparator()
@@ -1111,6 +1278,33 @@ function manualArchiveOldOrders() {
   } catch (e) {
     SpreadsheetApp.getUi().alert('Archive failed: ' + e.message);
     Logger.log('manualArchiveOldOrders error: ' + e.message);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Manual stale SELL cleanup with LockService protection
+ */
+function manualRemoveStaleSellOrders() {
+  var lock = LockService.getDocumentLock();
+  if (!lock.tryLock(30000)) {
+    SpreadsheetApp.getUi().alert('Another process is running. Please try again later.');
+    return;
+  }
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
+    var portfolioSheet = ss.getSheetByName(CONFIG.PORTFOLIO_SHEET);
+    if (!ordersSheet) {
+      SpreadsheetApp.getUi().alert('Orders sheet not found');
+      return;
+    }
+    removeStaleSellOrders(ordersSheet, portfolioSheet);
+    SpreadsheetApp.getUi().alert('Stale SELL cleanup complete. Check Logs for details.');
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Stale SELL cleanup failed: ' + e.message);
+    Logger.log('manualRemoveStaleSellOrders error: ' + e.message);
   } finally {
     lock.releaseLock();
   }
