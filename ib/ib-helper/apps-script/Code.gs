@@ -518,27 +518,26 @@ function dedupeOrders(sheet, daysLimit = 30) {
 }
 
 // =====================================================
-// STALE SELL ORDER CLEANUP (v2.8.0)
+// STALE ORDER CLEANUP (v2.8.0)
 // =====================================================
 
 /**
- * Remove stale SELL orders to prevent balance inflation
+ * Remove stale orders (BUY + SELL) to prevent balance miscalculation
  *
- * ROOT CAUSE: Each daily push creates SELL orders for ALL current holdings.
- * Old pending SELLs accumulate across push dates. When price triggers,
- * ALL sets execute simultaneously — balance adds proceeds from ALL sets
- * (e.g., 287 shares) while portfolio correctly caps to actual holdings (~80).
+ * ROOT CAUSE: Each daily push creates orders for ALL positions.
+ * Old pending orders accumulate across push dates. When price triggers,
+ * ALL sets execute simultaneously — causing over-buy or balance inflation.
  *
- * Phase 1: For each googleId|profileId|ticker group with multiple push dates,
- *          keep only the latest date's SELL orders, delete the rest.
- * Phase 2: For positions with holdings=0 in Portfolio, delete ALL pending SELLs.
+ * Phase 1: For each googleId|profileId|ticker|side group with multiple push dates,
+ *          keep only the latest date's orders, delete the rest.
+ * Phase 2: For SELL only — positions with holdings=0 in Portfolio, delete ALL pending SELLs.
  *
  * @param {Sheet} ordersSheet - Orders sheet
  * @param {Sheet} portfolioSheet - Portfolio sheet (for holdings check)
  */
-function removeStaleSellOrders(ordersSheet, portfolioSheet) {
+function removeStaleOrders(ordersSheet, portfolioSheet) {
   if (!ordersSheet) {
-    Logger.log('removeStaleSellOrders: Orders sheet not found');
+    Logger.log('removeStaleOrders: Orders sheet not found');
     return;
   }
 
@@ -548,7 +547,7 @@ function removeStaleSellOrders(ordersSheet, portfolioSheet) {
   var header = data[0];
   var colCount = header.length;
 
-  // Build holdings map from Portfolio sheet (Phase 2)
+  // Build holdings map from Portfolio sheet (Phase 2 - SELL only)
   var holdingsMap = {};
   if (portfolioSheet) {
     var portfolioData = portfolioSheet.getDataRange().getValues();
@@ -557,13 +556,12 @@ function removeStaleSellOrders(ordersSheet, portfolioSheet) {
       if (!pRow || pRow.length === 0) continue;
       var pKey = String(pRow[0]).trim() + '|' + String(pRow[1]).trim() + '|' + String(pRow[3]).trim().toUpperCase();
       var h = parseInt(pRow[5]) || 0;
-      // Sum holdings across rows for same position (shouldn't happen, but defensive)
       holdingsMap[pKey] = (holdingsMap[pKey] || 0) + h;
     }
   }
 
-  // Group pending SELL orders by googleId|profileId|ticker
-  var sellGroups = {};  // key -> { dates: { dateStr: [rowIndices] } }
+  // Group pending orders by googleId|profileId|ticker|side
+  var orderGroups = {};
   var keepFlags = new Array(data.length).fill(true);
 
   for (var i = 1; i < data.length; i++) {
@@ -574,7 +572,7 @@ function removeStaleSellOrders(ordersSheet, portfolioSheet) {
     if (execution === 'Y') continue;  // Already executed, skip
 
     var side = String(row[5] || '').trim().toUpperCase();
-    if (side !== 'SELL') continue;  // Only process SELLs
+    if (side !== 'BUY' && side !== 'SELL') continue;
 
     var googleId = String(row[1] || '').trim();
     var profileId = String(row[2] || '').trim();
@@ -582,41 +580,41 @@ function removeStaleSellOrders(ordersSheet, portfolioSheet) {
 
     if (!googleId || !profileId || !ticker) continue;
 
-    var groupKey = googleId + '|' + profileId + '|' + ticker;
+    var groupKey = googleId + '|' + profileId + '|' + ticker + '|' + side;
     var orderDate = parseOrderDate(row[0]);
     var dateStr = orderDate
       ? Utilities.formatDate(orderDate, CONFIG.TIMEZONE, 'yyyy-MM-dd')
       : String(row[0]);
 
-    if (!sellGroups[groupKey]) {
-      sellGroups[groupKey] = { dates: {} };
+    if (!orderGroups[groupKey]) {
+      orderGroups[groupKey] = { side: side, posKey: googleId + '|' + profileId + '|' + ticker, dates: {} };
     }
-    if (!sellGroups[groupKey].dates[dateStr]) {
-      sellGroups[groupKey].dates[dateStr] = [];
+    if (!orderGroups[groupKey].dates[dateStr]) {
+      orderGroups[groupKey].dates[dateStr] = [];
     }
-    sellGroups[groupKey].dates[dateStr].push(i);
+    orderGroups[groupKey].dates[dateStr].push(i);
   }
 
   var removedPhase1 = 0;
   var removedPhase2 = 0;
 
-  Object.keys(sellGroups).forEach(function(groupKey) {
-    var group = sellGroups[groupKey];
+  Object.keys(orderGroups).forEach(function(groupKey) {
+    var group = orderGroups[groupKey];
     var dateKeys = Object.keys(group.dates).sort();  // ascending
 
-    // Phase 2: If holdings=0 for this position, remove ALL pending SELLs
-    if (holdingsMap[groupKey] !== undefined && holdingsMap[groupKey] <= 0) {
+    // Phase 2 (SELL only): If holdings=0, remove ALL pending SELLs
+    if (group.side === 'SELL' && holdingsMap[group.posKey] !== undefined && holdingsMap[group.posKey] <= 0) {
       dateKeys.forEach(function(dk) {
         group.dates[dk].forEach(function(idx) {
           keepFlags[idx] = false;
           removedPhase2++;
         });
       });
-      return;  // All removed, skip Phase 1
+      return;
     }
 
-    // Phase 1: Keep only latest date's SELLs, remove older dates
-    if (dateKeys.length <= 1) return;  // Only one date, nothing to clean
+    // Phase 1 (BUY + SELL): Keep only latest date, remove older dates
+    if (dateKeys.length <= 1) return;
 
     var latestDate = dateKeys[dateKeys.length - 1];
     dateKeys.forEach(function(dk) {
@@ -631,7 +629,7 @@ function removeStaleSellOrders(ordersSheet, portfolioSheet) {
 
   var totalRemoved = removedPhase1 + removedPhase2;
   if (totalRemoved === 0) {
-    Logger.log('removeStaleSellOrders: No stale SELLs found');
+    Logger.log('removeStaleOrders: No stale orders found');
     return;
   }
 
@@ -662,7 +660,7 @@ function removeStaleSellOrders(ordersSheet, portfolioSheet) {
   try {
     ordersSheet.getRange(1, 1, normalizedKeep.length, colCount).setValues(normalizedKeep);
   } catch (rewriteError) {
-    Logger.log('CRITICAL: removeStaleSellOrders rewrite failed, restoring: ' + rewriteError.message);
+    Logger.log('CRITICAL: removeStaleOrders rewrite failed, restoring: ' + rewriteError.message);
     try {
       ordersSheet.getRange(1, 1, normalizedOriginal.length, colCount).setValues(normalizedOriginal);
     } catch (restoreError) {
@@ -671,8 +669,13 @@ function removeStaleSellOrders(ordersSheet, portfolioSheet) {
     throw rewriteError;
   }
 
-  Logger.log('removeStaleSellOrders: Removed ' + totalRemoved +
-    ' stale SELLs (Phase1=' + removedPhase1 + ' stale-date, Phase2=' + removedPhase2 + ' zero-holdings)');
+  Logger.log('removeStaleOrders: Removed ' + totalRemoved +
+    ' stale orders (Phase1=' + removedPhase1 + ' stale-date, Phase2=' + removedPhase2 + ' zero-holdings-sell)');
+}
+
+// Backward compat alias
+function removeStaleSellOrders(ordersSheet, portfolioSheet) {
+  return removeStaleOrders(ordersSheet, portfolioSheet);
 }
 
 // =====================================================
@@ -1248,7 +1251,7 @@ function onOpen() {
   ui.createMenu('📊 IB Helper')
     .addItem('체결 확인 실행', 'processOrderExecutions')
     .addItem('중복 주문 정리', 'dedupeOrders')
-    .addItem('🧹 Stale SELL 정리', 'manualRemoveStaleSellOrders')
+    .addItem('🧹 Stale 주문 정리', 'manualRemoveStaleOrders')
     .addItem('체결 예수금 마이그레이션', 'migrateExecutedOrdersBalance')
     .addItem('📦 Archive Old Orders', 'manualArchiveOldOrders')
     .addSeparator()
@@ -1284,9 +1287,9 @@ function manualArchiveOldOrders() {
 }
 
 /**
- * Manual stale SELL cleanup with LockService protection
+ * Manual stale order cleanup with LockService protection
  */
-function manualRemoveStaleSellOrders() {
+function manualRemoveStaleOrders() {
   var lock = LockService.getDocumentLock();
   if (!lock.tryLock(30000)) {
     SpreadsheetApp.getUi().alert('Another process is running. Please try again later.');
@@ -1300,11 +1303,11 @@ function manualRemoveStaleSellOrders() {
       SpreadsheetApp.getUi().alert('Orders sheet not found');
       return;
     }
-    removeStaleSellOrders(ordersSheet, portfolioSheet);
-    SpreadsheetApp.getUi().alert('Stale SELL cleanup complete. Check Logs for details.');
+    removeStaleOrders(ordersSheet, portfolioSheet);
+    SpreadsheetApp.getUi().alert('Stale order cleanup complete. Check Logs for details.');
   } catch (e) {
-    SpreadsheetApp.getUi().alert('Stale SELL cleanup failed: ' + e.message);
-    Logger.log('manualRemoveStaleSellOrders error: ' + e.message);
+    SpreadsheetApp.getUi().alert('Stale order cleanup failed: ' + e.message);
+    Logger.log('manualRemoveStaleOrders error: ' + e.message);
   } finally {
     lock.releaseLock();
   }
