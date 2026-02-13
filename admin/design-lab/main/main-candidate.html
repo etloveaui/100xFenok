@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>FenoK · Investment Knowledge</title>
   <meta name="description" content="Investment knowledge and market tools.">
   <meta property="og:title" content="FenoK · Investment Knowledge">
@@ -16,757 +16,419 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              navy: '#010079',
-              gold: '#D5AD36',
-              interactive: '#1B73D3',
-              bg: '#f8fafc'
-            }
+            brand: { navy: '#010079', gold: '#D5AD36', interactive: '#1B73D3', bg: '#f8fafc' }
           }
         }
       }
     }
   </script>
   <style>
-    :root {
-      --touch-target: 44px;
-    }
-    body { background: #f8fafc; font-family: 'Noto Sans KR', sans-serif; }
+    :root { --touch: 48px; }
+    body { background: #f8fafc; font-family: 'Noto Sans KR', sans-serif; -webkit-tap-highlight-color: transparent; }
     .orbitron { font-family: 'Orbitron', sans-serif; }
-
-    /* Focus Visible */
     *:focus-visible { outline: 2px solid #1B73D3; outline-offset: 2px; }
+    html { scroll-behavior: smooth; }
 
-    /* Command Bar */
-    .command-bar {
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.625rem 1.5rem;
-      background: rgba(255,255,255,0.97);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .tab-pills {
-      display: flex;
-      gap: 0.25rem;
-      background: #f1f5f9;
-      padding: 0.25rem;
-      border-radius: 9999px;
-    }
-    .tab-pill {
-      padding: 0.5rem 1rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #64748b;
-      border-radius: 9999px;
-      transition: all 0.2s;
-      cursor: pointer;
-      min-height: var(--touch-target);
-      display: flex;
-      align-items: center;
-      border: none;
-      background: none;
-    }
-    .tab-pill.active { background: #010079; color: white; }
-    .tab-pill:hover:not(.active) { color: #1e293b; background: #e2e8f0; }
-    .period-pills {
-      display: flex;
-      gap: 0.125rem;
-      background: #f1f5f9;
-      padding: 0.25rem;
-      border-radius: 0.75rem;
-    }
-    .period-pill {
-      padding: 0.375rem 0.625rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #64748b;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      min-height: var(--touch-target);
-      display: flex;
-      align-items: center;
-      border: none;
-      background: none;
-    }
-    .period-pill.active { background: #D5AD36; color: #010079; }
-    .period-pill:hover:not(.active) { background: #e2e8f0; }
-
-    /* Hero Zone */
-    .hero-zone {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.5fr;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
-    }
-    @media (max-width: 1024px) { .hero-zone { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 640px) { .hero-zone { grid-template-columns: 1fr; } }
-
-    /* Bento Card */
-    .bento-card {
-      background: white;
-      border-radius: 1.25rem;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-      padding: 1.25rem;
-      transition: all 0.3s cubic-bezier(.4,0,.2,1);
-    }
-    .bento-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-    }
-
-    /* Regime Badge */
-    .regime-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-      padding: 0.5rem 1rem;
-      border-radius: 9999px;
-      font-weight: 700;
-      font-size: 0.875rem;
-      color: white;
-    }
-    .regime-growth { background: linear-gradient(135deg, #22c55e, #16a34a); }
-    .regime-neutral { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-    .regime-defensive { background: linear-gradient(135deg, #f97316, #ea580c); }
-    .regime-risk-off { background: linear-gradient(135deg, #ef4444, #dc2626); }
-    .regime-unknown { background: linear-gradient(135deg, #94a3b8, #64748b); }
-
-    /* Market State */
     .market-state-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.25rem 0.625rem;
-      border-radius: 9999px;
-      font-size: 0.6875rem;
-      font-weight: 600;
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      padding: 0.2rem 0.5rem; border-radius: 9999px;
+      font-size: 0.625rem; font-weight: 700;
     }
     .state-regular { background: #dcfce7; color: #166534; }
     .state-pre { background: #fef9c3; color: #854d0e; }
     .state-post { background: #e0e7ff; color: #3730a3; }
-    .state-closed { background: #f1f5f9; color: #64748b; }
+    .state-closed { background: #f1f5f9; color: #94a3b8; }
 
-    /* Index Rows */
-    .index-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.5rem 0;
+    /* Market Pulse */
+    .market-pulse {
+      border-radius: 1.25rem; padding: 1.5rem; color: white;
+      transition: background 0.6s ease; margin-bottom: 0.75rem;
     }
-    .index-row + .index-row { border-top: 1px solid #f1f5f9; }
-    .change-up { color: #16a34a; }
-    .change-down { color: #dc2626; }
-    .change-flat { color: #64748b; }
-
-    /* Sector Snapshot Bar */
-    .sector-bar {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      flex-wrap: wrap;
-      padding: 0.75rem 1rem;
-      background: white;
-      border-radius: 1rem;
-      border: 1px solid #e2e8f0;
+    .pulse-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
       margin-bottom: 1.25rem;
     }
-    .sector-chip {
-      padding: 0.25rem 0.625rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
+    .pulse-indices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .index-item {
+      padding: 0.875rem; background: rgba(255,255,255,0.08);
+      border-radius: 0.875rem; backdrop-filter: blur(4px);
     }
-    .sector-up { background: #dcfce7; color: #166534; }
-    .sector-down { background: #fee2e2; color: #991b1b; }
-    .sector-label {
-      font-size: 0.6875rem;
-      font-weight: 700;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .sector-divider { width: 1px; height: 1.25rem; background: #e2e8f0; }
+    .index-name { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; }
+    .index-price { font-size: 1.125rem; font-weight: 800; margin-top: 0.375rem; }
+    .index-change { font-size: 0.75rem; font-weight: 600; margin-top: 0.25rem; }
+    .idx-up { color: #bbf7d0; }
+    .idx-down { color: #fecaca; }
+    .idx-flat { color: rgba(255,255,255,0.6); }
 
-    /* CTA Section */
-    .cta-zone {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
+    @media (max-width: 639px) {
+      .market-pulse { padding: 1.25rem; border-radius: 1rem; }
+      .pulse-top { margin-bottom: 1rem; }
+      .pulse-indices { grid-template-columns: 1fr; gap: 0; }
+      .index-item {
+        display: flex; align-items: center;
+        padding: 0.625rem 0; background: transparent;
+        border-radius: 0; backdrop-filter: none;
+      }
+      .index-item + .index-item { border-top: 1px solid rgba(255,255,255,0.1); }
+      .index-name { flex: 1; font-size: 0.75rem; }
+      .index-price { font-size: 0.9375rem; margin: 0 0.75rem 0 0; }
+      .index-change { margin: 0; min-width: 4.5rem; text-align: right; }
     }
-    @media (max-width: 640px) { .cta-zone { grid-template-columns: 1fr; } }
-    .cta-card {
-      position: relative;
-      border-radius: 1.25rem;
-      padding: 1.5rem;
-      color: white;
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(.4,0,.2,1);
-      cursor: pointer;
-      text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      min-height: 120px;
+
+    /* Dark skeleton for pulse card */
+    .market-pulse .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 100%);
+      background-size: 200px 100%; animation: shimmer 1.5s infinite; border-radius: 0.5rem;
     }
-    .cta-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 40px -12px rgba(0,0,0,0.3);
+
+    /* Bento Card */
+    .bento-card {
+      background: white; border-radius: 1.25rem;
+      border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      padding: 1.25rem; transition: box-shadow 0.3s;
     }
-    .cta-card::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .cta-radar { background: linear-gradient(135deg, #010079 0%, #1B73D3 100%); }
-    .cta-ib { background: linear-gradient(135deg, #7c3aed 0%, #D5AD36 100%); }
+    .bento-card:hover { box-shadow: 0 8px 16px -4px rgba(0,0,0,0.08); }
+    .card-title { font-size: 0.6875rem; font-weight: 700; color: #94a3b8; letter-spacing: 0.1em; text-transform: uppercase; }
 
     /* Heatmap */
-    .heatmap-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 4px;
-      min-height: 260px;
-    }
+    .heatmap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; min-height: 200px; }
     @media (min-width: 768px) {
-      .heatmap-grid {
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(3, 1fr);
-        height: 280px;
-      }
+      .heatmap-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); height: 260px; }
       .heatmap-cell.xlk { grid-column: span 2; grid-row: span 2; }
       .heatmap-cell.xlf { grid-row: span 2; }
     }
     .heatmap-cell {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      min-height: var(--touch-target);
-      padding: 0.5rem;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;
+      min-height: var(--touch); padding: 0.5rem;
     }
     .heatmap-cell:hover { transform: scale(1.03); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
 
-    /* Tab Content */
-    .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
-    .tab-content.active { display: block; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* Placeholder rows */
+    .placeholder-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0;
+    }
+    .placeholder-row + .placeholder-row { border-top: 1px solid #f1f5f9; }
+    .ph-tag {
+      font-size: 0.625rem; font-weight: 600; color: #cbd5e1;
+      background: #f8fafc; padding: 0.125rem 0.5rem; border-radius: 9999px;
     }
 
-    /* Skeleton Loading */
+    /* Skeleton */
     @keyframes shimmer {
       0% { background-position: -200px 0; }
       100% { background-position: calc(200px + 100%) 0; }
     }
     .skeleton {
       background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
-      background-size: 200px 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 0.5rem;
+      background-size: 200px 100%; animation: shimmer 1.5s infinite; border-radius: 0.5rem;
     }
-    .skeleton-text { height: 1rem; margin-bottom: 0.5rem; }
-    .skeleton-badge { height: 2rem; width: 8rem; border-radius: 9999px; }
-    .skeleton-number { height: 1.5rem; width: 6rem; }
 
-    /* Mobile Command Bar */
-    @media (max-width: 640px) {
-      .command-bar {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.75rem 1rem;
-      }
-      .tab-pills { width: 100%; justify-content: center; }
-      .period-pills { width: 100%; justify-content: center; }
-    }
+    main { padding-bottom: 1rem; }
   </style>
 </head>
 <body class="min-h-screen">
 
-  <!-- Header -->
-  <header class="bg-white border-b border-slate-200 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-brand-navy flex items-center justify-center shadow-md">
-          <span class="text-brand-gold font-black orbitron text-lg">F</span>
-        </div>
+  <!-- Content -->
+  <main class="max-w-5xl mx-auto px-3 py-3 sm:px-4 sm:py-4">
+
+    <!-- Market Pulse: Regime + VIX + Indices -->
+    <section class="market-pulse" id="market-pulse" style="background: linear-gradient(135deg, #64748b, #94a3b8);">
+      <div class="pulse-top">
         <div>
-          <h1 class="font-[900] orbitron text-slate-800 text-lg tracking-tight">
-            100x <span class="text-brand-gold">FENOK</span>
-          </h1>
-          <p class="text-[9px] text-slate-400 tracking-[0.2em] uppercase">Investment Knowledge</p>
-        </div>
-      </div>
-      <div id="market-state-badge" class="market-state-badge state-closed">
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-current"></span>
-        <span>--</span>
-      </div>
-    </div>
-  </header>
-
-  <!-- Command Bar -->
-  <div class="command-bar" role="toolbar" aria-label="Content controls">
-    <div class="tab-pills" role="tablist" aria-label="View tabs">
-      <button class="tab-pill active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
-      <button class="tab-pill" data-tab="sectors" role="tab" aria-selected="false">Sectors</button>
-    </div>
-    <div class="period-pills" role="radiogroup" aria-label="Time period">
-      <button class="period-pill" data-period="1D" role="radio" aria-checked="false">1D</button>
-      <button class="period-pill active" data-period="1W" role="radio" aria-checked="true">1W</button>
-      <button class="period-pill" data-period="1M" role="radio" aria-checked="false">1M</button>
-      <button class="period-pill" data-period="YTD" role="radio" aria-checked="false">YTD</button>
-      <button class="period-pill" data-period="1Y" role="radio" aria-checked="false">1Y</button>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-5">
-
-    <!-- Tab: Overview -->
-    <div id="tab-overview" class="tab-content active" role="tabpanel">
-
-      <!-- Hero Zone -->
-      <section class="hero-zone" id="hero-zone">
-        <!-- Card 1: Market Regime -->
-        <div class="bento-card" id="card-regime">
-          <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 orbitron">Market Regime</div>
-          <div id="regime-badge" class="regime-badge regime-unknown">
-            <div class="skeleton skeleton-badge"></div>
-          </div>
-          <div class="mt-3 text-xs text-slate-400" id="regime-description">Loading...</div>
-        </div>
-
-        <!-- Card 2: VIX -->
-        <div class="bento-card" id="card-vix">
-          <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 orbitron">VIX</div>
-          <div id="vix-price" class="text-3xl font-bold orbitron text-slate-800 mt-1">
-            <div class="skeleton skeleton-number"></div>
-          </div>
-          <div id="vix-change" class="text-sm font-semibold mt-2 change-flat">--</div>
-        </div>
-
-        <!-- Card 3: Major Indices -->
-        <div class="bento-card" id="card-indices">
-          <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 orbitron">Major Indices</div>
-          <div id="indices-list">
-            <div class="index-row"><div class="skeleton skeleton-text" style="width:100%"></div></div>
-            <div class="index-row"><div class="skeleton skeleton-text" style="width:100%"></div></div>
-            <div class="index-row"><div class="skeleton skeleton-text" style="width:100%"></div></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Sector Snapshot Bar -->
-      <div id="sector-snapshot" class="sector-bar" style="display:none;">
-        <span class="sector-label">Sectors</span>
-        <span class="sector-divider"></span>
-        <span id="sector-chips"></span>
-      </div>
-
-      <!-- CTA Zone -->
-      <section class="cta-zone">
-        <a class="cta-card cta-radar" data-spa-link="tools/macro-monitor/index.html" href="index.html?path=tools/macro-monitor/index.html">
-          <div class="flex items-center gap-2 mb-2">
-            <i class="fas fa-satellite-dish text-lg opacity-80"></i>
-            <span class="text-xs font-bold uppercase tracking-widest opacity-70">Live Dashboard</span>
-          </div>
-          <div class="text-xl font-black orbitron">100x Market Radar</div>
-          <p class="text-sm opacity-80 mt-1">Real-time macro indicators & sector analysis</p>
-          <div class="mt-auto pt-3 flex items-center gap-2 text-sm font-bold">
-            <span>Open Radar</span>
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </a>
-        <a class="cta-card cta-ib" data-direct-link="admin/ib-helper/index.html" href="admin/ib-helper/index.html">
-          <div class="flex items-center gap-2 mb-2">
-            <i class="fas fa-calculator text-lg opacity-80"></i>
-            <span class="text-xs font-bold uppercase tracking-widest opacity-70">Auto Trading</span>
-          </div>
-          <div class="text-xl font-black orbitron">100x IB Helper</div>
-          <p class="text-sm opacity-80 mt-1">Infinite buying automation & position management</p>
-          <div class="mt-auto pt-3 flex items-center gap-2 text-sm font-bold">
-            <span>Launch Helper</span>
-            <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">Beta</span>
-          </div>
-        </a>
-      </section>
-
-      <!-- Bento Grid: Sector + Liquidity + Sentiment -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        <!-- Sector Snapshot Card -->
-        <div class="bento-card">
-          <div class="flex justify-between items-center mb-3">
-            <h3 class="text-xs font-bold text-slate-400 tracking-widest orbitron">SECTOR SNAPSHOT</h3>
-            <button class="text-xs text-brand-interactive font-bold min-h-[var(--touch-target)] flex items-center" onclick="switchTab('sectors')">View All</button>
-          </div>
-          <div id="sector-summary" class="space-y-2">
-            <div class="flex gap-2 items-center">
-              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span class="font-bold text-green-600 text-sm" id="sector-up-count">-- Up</span>
-              <span class="w-2 h-2 bg-red-500 rounded-full ml-2"></span>
-              <span class="font-bold text-red-600 text-sm" id="sector-down-count">-- Down</span>
+          <div class="flex items-center gap-2 mb-1">
+            <div id="market-state-badge" class="market-state-badge state-closed">
+              <span class="inline-block w-1.5 h-1.5 rounded-full bg-current"></span>
+              <span>--</span>
             </div>
-            <div id="sector-top3" class="flex gap-1 flex-wrap"></div>
           </div>
+          <div id="regime-label" class="text-2xl font-black orbitron">
+            <div class="skeleton" style="height:2rem;width:6rem;"></div>
+          </div>
+          <div id="regime-desc" class="text-xs opacity-60 mt-1">불러오는 중...</div>
         </div>
-
-        <!-- Liquidity Card -->
-        <div class="bento-card">
-          <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">LIQUIDITY FLOW</h3>
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-2xl font-bold text-brand-navy orbitron">--</span>
-            <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-xs font-bold">WoW</span>
+        <div class="text-right">
+          <div class="flex items-center gap-1.5 justify-end">
+            <span class="text-[10px] font-bold opacity-50 orbitron">VIX</span>
+            <span id="vix-price" class="text-xl font-black orbitron">--</span>
           </div>
-          <div class="h-10 bg-gradient-to-r from-slate-50 to-slate-100 rounded flex items-end px-1 gap-0.5">
-            <div class="w-3 bg-slate-300 rounded-t" style="height:40%"></div>
-            <div class="w-3 bg-slate-300 rounded-t" style="height:55%"></div>
-            <div class="w-3 bg-slate-300 rounded-t" style="height:65%"></div>
-            <div class="w-3 bg-slate-300 rounded-t" style="height:50%"></div>
-            <div class="w-3 bg-slate-300 rounded-t" style="height:70%"></div>
-            <div class="w-3 bg-slate-400 rounded-t" style="height:85%"></div>
-          </div>
-          <p class="text-xs text-slate-400 mt-2">Phase 2 integration pending</p>
-        </div>
-
-        <!-- Sentiment Card -->
-        <div class="bento-card">
-          <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">SENTIMENT</h3>
-          <div class="space-y-2" id="sentiment-data">
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-500">VIX</span>
-              <span class="font-bold text-slate-600 text-sm" id="sentiment-vix">--</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-500">Put/Call</span>
-              <span class="font-bold text-slate-500 text-sm">--</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-500">Market Regime</span>
-              <span class="font-bold text-slate-500 text-sm" id="sentiment-regime">--</span>
-            </div>
+          <div class="flex items-center gap-2 justify-end mt-1">
+            <span id="vix-level" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15">--</span>
+            <span id="vix-change" class="text-[10px] opacity-50">--</span>
           </div>
         </div>
       </div>
 
-      <!-- Banking + Stress Row -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bento-card">
-          <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">BANKING HEALTH</h3>
-          <div class="flex items-center gap-3">
-            <div class="w-3 h-3 bg-slate-300 rounded-full" id="banking-dot"></div>
-            <span class="text-lg font-bold text-slate-500" id="banking-status">--</span>
-          </div>
-          <p class="text-xs text-slate-400 mt-1">Phase 2 integration pending</p>
-        </div>
-        <div class="bento-card">
-          <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">STRESS INDEX</h3>
-          <div class="flex items-center justify-between">
-            <span class="text-2xl font-bold text-slate-500 orbitron">--</span>
-            <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-xs font-bold">N/A</span>
-          </div>
-          <p class="text-xs text-slate-400 mt-1">Phase 2 integration pending</p>
-        </div>
+      <div class="pulse-indices" id="indices-grid">
+        <div class="index-item"><div class="skeleton" style="height:3rem;"></div></div>
+        <div class="index-item"><div class="skeleton" style="height:3rem;"></div></div>
+        <div class="index-item"><div class="skeleton" style="height:3rem;"></div></div>
+      </div>
+    </section>
+
+    <!-- Sector Heatmap -->
+    <div class="bento-card mb-3">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="card-title orbitron">섹터 히트맵</h3>
+        <span class="text-xs text-slate-400" id="sector-count"></span>
+      </div>
+      <div id="heatmap-grid" class="heatmap-grid">
+        <div class="skeleton" style="height:50px"></div>
+        <div class="skeleton" style="height:50px"></div>
+        <div class="skeleton" style="height:50px"></div>
+        <div class="skeleton" style="height:50px"></div>
       </div>
     </div>
 
-    <!-- Tab: Sectors (Heatmap) -->
-    <div id="tab-sectors" class="tab-content" role="tabpanel">
-      <div class="bento-card p-6">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xs font-bold text-slate-400 tracking-widest orbitron">SECTOR HEATMAP</h3>
-          <span class="text-xs text-slate-400">Weighted by Market Cap</span>
+    <!-- Info Grid 2x2 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+      <!-- 투자 심리 -->
+      <div class="bento-card">
+        <h3 class="card-title orbitron mb-3">투자 심리</h3>
+        <div>
+          <div class="placeholder-row">
+            <span class="text-xs text-slate-500">AAII 강세/약세</span>
+            <span class="ph-tag">준비 중</span>
+          </div>
+          <div class="placeholder-row">
+            <span class="text-xs text-slate-500">Put/Call 비율</span>
+            <span class="ph-tag">준비 중</span>
+          </div>
+          <div class="placeholder-row">
+            <span class="text-xs text-slate-500">공포 & 탐욕</span>
+            <span class="ph-tag">준비 중</span>
+          </div>
         </div>
-        <div id="heatmap-grid" class="heatmap-grid">
-          <div class="skeleton" style="height:60px"></div>
-          <div class="skeleton" style="height:60px"></div>
-          <div class="skeleton" style="height:60px"></div>
-          <div class="skeleton" style="height:60px"></div>
+      </div>
+
+      <!-- 유동성 -->
+      <div class="bento-card">
+        <h3 class="card-title orbitron mb-3">유동성</h3>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xl font-bold text-brand-navy orbitron">--</span>
+          <span class="ph-tag">WoW</span>
         </div>
+        <div class="h-8 bg-gradient-to-r from-slate-50 to-slate-100 rounded flex items-end px-1 gap-0.5">
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:40%"></div>
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:55%"></div>
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:65%"></div>
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:50%"></div>
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:70%"></div>
+          <div class="w-2.5 bg-slate-300 rounded-t" style="height:85%"></div>
+        </div>
+        <p class="text-[10px] text-slate-300 mt-2">Phase 2 연결 예정</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <!-- 금융 건전성 -->
+      <div class="bento-card">
+        <h3 class="card-title orbitron mb-3">금융 건전성</h3>
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 bg-slate-200 rounded-full"></div>
+          <span class="text-sm font-bold text-slate-400">--</span>
+        </div>
+        <p class="text-[10px] text-slate-300 mt-2">Phase 2 연결 예정</p>
+      </div>
+
+      <!-- 스트레스 지수 -->
+      <div class="bento-card">
+        <h3 class="card-title orbitron mb-3">스트레스 지수</h3>
+        <div class="flex items-center justify-between">
+          <span class="text-xl font-bold text-slate-400 orbitron">--</span>
+          <span class="ph-tag">N/A</span>
+        </div>
+        <p class="text-[10px] text-slate-300 mt-2">Phase 2 연결 예정</p>
       </div>
     </div>
 
   </main>
 
   <script>
-    // ===== DataService: GAS JSONP =====
     const MARKET_DATA_URL = 'https://script.google.com/macros/s/AKfycbwu2wdFAGAKnZlsb7w7BHsZzVS7wxHHRoYsKNTBg3Jc4kLOLv8TVuTeOSOC_gUo_BRS/exec';
 
-    const SECTOR_WEIGHTS = {
-      XLK: 4, XLF: 3, XLV: 2, XLE: 2, XLI: 2,
-      XLC: 2, XLY: 1, XLP: 1, XLRE: 1, XLB: 1, XLU: 1
+    const SECTOR_WEIGHTS = { XLK:4, XLF:3, XLV:2, XLE:2, XLI:2, XLC:2, XLY:1, XLP:1, XLRE:1, XLB:1, XLU:1 };
+    const SECTOR_NAMES = {
+      XLK:'Tech', XLF:'Financials', XLV:'Healthcare', XLE:'Energy',
+      XLI:'Industrials', XLC:'Comm Svc', XLY:'Consumer Disc',
+      XLP:'Consumer Stpl', XLRE:'Real Estate', XLB:'Materials', XLU:'Utilities'
     };
 
-    const SECTOR_NAMES = {
-      XLK: 'Tech', XLF: 'Financials', XLV: 'Healthcare', XLE: 'Energy',
-      XLI: 'Industrials', XLC: 'Comm Svc', XLY: 'Consumer Disc',
-      XLP: 'Consumer Stpl', XLRE: 'Real Estate', XLB: 'Materials', XLU: 'Utilities'
+    const REGIME_KO = { 'Growth':'성장', 'Neutral':'중립', 'Defensive':'방어', 'Risk-Off':'위험회피' };
+    const REGIME_DESC_KO = {
+      'Growth':'VIX < 20 — 위험 선호 환경',
+      'Neutral':'VIX 20-25 — 균형 상태',
+      'Defensive':'VIX 25-30 — 경계 구간',
+      'Risk-Off':'VIX > 30 — 고변동성 경보'
+    };
+    const VIX_LEVEL_KO = { low:'안정', mid:'보통', high:'경계', extreme:'극단' };
+
+    const GRADIENTS = {
+      green:  'linear-gradient(135deg, #065f46, #059669)',
+      blue:   'linear-gradient(135deg, #1e40af, #3b82f6)',
+      orange: 'linear-gradient(135deg, #9a3412, #ea580c)',
+      red:    'linear-gradient(135deg, #991b1b, #dc2626)',
+      gray:   'linear-gradient(135deg, #64748b, #94a3b8)'
     };
 
     const DataService = {
       fetchAll() {
         return new Promise((resolve, reject) => {
-          const cbName = '_mktCb_' + Date.now();
-          const timeout = setTimeout(() => {
-            delete window[cbName];
-            if (s.parentNode) s.parentNode.removeChild(s);
-            reject(new Error('Timeout'));
-          }, 10000);
-
-          window[cbName] = (data) => {
-            clearTimeout(timeout);
-            delete window[cbName];
-            if (s.parentNode) s.parentNode.removeChild(s);
-            resolve(data);
-          };
-
+          const cb = '_mkt_' + Date.now();
+          const timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 10000);
           const s = document.createElement('script');
-          s.src = `${MARKET_DATA_URL}?callback=${cbName}`;
-          s.onerror = () => {
-            clearTimeout(timeout);
-            delete window[cbName];
-            reject(new Error('Network error'));
-          };
+
+          function cleanup() { clearTimeout(timer); delete window[cb]; if (s.parentNode) s.remove(); }
+
+          window[cb] = data => { cleanup(); resolve(data); };
+          s.src = `${MARKET_DATA_URL}?callback=${cb}`;
+          s.onerror = () => { cleanup(); reject(new Error('Network error')); };
           document.head.appendChild(s);
         });
       },
 
-      renderIndices(indices) {
-        const el = document.getElementById('indices-list');
-        if (!indices) return;
-        const order = ['^GSPC', '^IXIC', '^DJI'];
-        el.innerHTML = order.map(sym => {
-          const d = indices[sym];
-          if (!d) return '';
-          const cls = d.changePercent > 0 ? 'change-up' : d.changePercent < 0 ? 'change-down' : 'change-flat';
-          const arr = d.changePercent > 0 ? '\u25B2' : d.changePercent < 0 ? '\u25BC' : '\u2013';
-          return `<div class="index-row">
-            <div class="text-sm font-bold text-slate-800">${d.name}</div>
-            <div class="text-right">
-              <div class="text-sm font-bold orbitron text-slate-800">${d.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-              <div class="text-xs font-semibold ${cls}">${arr} ${Math.abs(d.changePercent).toFixed(2)}%</div>
-            </div>
-          </div>`;
-        }).join('');
-      },
+      renderPulse(indices, vix) {
+        const card = document.getElementById('market-pulse');
 
-      renderVIX(vix) {
-        if (!vix) return;
-        const cls = vix.changePercent > 0 ? 'change-up' : vix.changePercent < 0 ? 'change-down' : 'change-flat';
-        const arr = vix.changePercent > 0 ? '\u25B2' : vix.changePercent < 0 ? '\u25BC' : '\u2013';
-        document.getElementById('vix-price').textContent = vix.price.toFixed(2);
-        const changeEl = document.getElementById('vix-change');
-        changeEl.className = `text-sm font-semibold mt-2 ${cls}`;
-        changeEl.textContent = `${arr} ${vix.change > 0 ? '+' : ''}${vix.change.toFixed(2)} (${Math.abs(vix.changePercent).toFixed(2)}%)`;
+        // Regime
+        if (vix && vix.regime) {
+          const r = vix.regime;
+          card.style.background = GRADIENTS[r.color] || GRADIENTS.gray;
+          document.getElementById('regime-label').textContent = REGIME_KO[r.label] || r.label;
+          document.getElementById('regime-desc').textContent = REGIME_DESC_KO[r.label] || '';
+        }
 
-        // Sentiment card VIX
-        const svix = document.getElementById('sentiment-vix');
-        const level = vix.price < 20 ? 'Low' : vix.price < 25 ? 'Mid' : vix.price < 30 ? 'High' : 'Extreme';
-        const vColor = vix.price < 20 ? 'text-green-600' : vix.price < 25 ? 'text-slate-700' : vix.price < 30 ? 'text-amber-600' : 'text-red-600';
-        svix.className = `font-bold text-sm ${vColor}`;
-        svix.textContent = `${vix.price.toFixed(2)} ${level}`;
-      },
+        // VIX
+        if (vix) {
+          const p = vix.price;
+          document.getElementById('vix-price').textContent = p.toFixed(2);
+          const lk = p < 20 ? 'low' : p < 25 ? 'mid' : p < 30 ? 'high' : 'extreme';
+          document.getElementById('vix-level').textContent = VIX_LEVEL_KO[lk];
+          const arr = vix.changePercent > 0 ? '\u25B2' : vix.changePercent < 0 ? '\u25BC' : '\u2013';
+          document.getElementById('vix-change').textContent =
+            `${arr} ${vix.change > 0 ? '+' : ''}${vix.change.toFixed(2)} (${Math.abs(vix.changePercent).toFixed(2)}%)`;
+        }
 
-      renderRegime(vix) {
-        if (!vix || !vix.regime) return;
-        const badge = document.getElementById('regime-badge');
-        const desc = document.getElementById('regime-description');
-        const r = vix.regime;
-        const cMap = { green: 'growth', blue: 'neutral', orange: 'defensive', red: 'risk-off', gray: 'unknown' };
-        const dMap = {
-          Growth: 'VIX < 20 \u2014 Risk-on environment',
-          Neutral: 'VIX 20-25 \u2014 Balanced conditions',
-          Defensive: 'VIX 25-30 \u2014 Elevated caution',
-          'Risk-Off': 'VIX > 30 \u2014 High volatility alert'
-        };
-        badge.className = `regime-badge regime-${cMap[r.color] || 'unknown'}`;
-        badge.innerHTML = `<i class="fas fa-signal"></i> ${r.label}`;
-        desc.textContent = dMap[r.label] || `VIX: ${vix.price}`;
-
-        // Sentiment card regime
-        document.getElementById('sentiment-regime').textContent = r.label;
+        // Indices
+        if (indices) {
+          const order = ['^GSPC', '^IXIC', '^DJI'];
+          document.getElementById('indices-grid').innerHTML = order.map(sym => {
+            const d = indices[sym];
+            if (!d) return '';
+            const cls = d.changePercent > 0 ? 'idx-up' : d.changePercent < 0 ? 'idx-down' : 'idx-flat';
+            const arr = d.changePercent > 0 ? '\u25B2' : d.changePercent < 0 ? '\u25BC' : '\u2013';
+            return `<div class="index-item">
+              <div class="index-name">${d.name}</div>
+              <div class="index-price orbitron">${d.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+              <div class="index-change ${cls}">${arr} ${Math.abs(d.changePercent).toFixed(2)}%</div>
+            </div>`;
+          }).join('');
+        }
       },
 
       renderMarketState(state) {
         const badge = document.getElementById('market-state-badge');
         if (!badge) return;
-        const map = {
-          REGULAR: { cls: 'state-regular', lbl: 'LIVE' },
-          PRE:     { cls: 'state-pre',     lbl: 'PRE-MKT' },
-          POST:    { cls: 'state-post',    lbl: 'AFTER-HRS' },
-          CLOSED:  { cls: 'state-closed',  lbl: 'CLOSED' }
-        };
-        const s = map[state] || map.CLOSED;
-        badge.className = `market-state-badge ${s.cls}`;
-        badge.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-current"></span><span>${s.lbl}</span>`;
+        const m = { REGULAR:{c:'state-regular',l:'장중'}, PRE:{c:'state-pre',l:'프리마켓'}, POST:{c:'state-post',l:'애프터'}, CLOSED:{c:'state-closed',l:'장마감'} };
+        const s = m[state] || m.CLOSED;
+        badge.className = `market-state-badge ${s.c}`;
+        badge.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-current"></span><span>${s.l}</span>`;
       },
 
       renderSectors(sectors) {
         if (!sectors) return;
-        const sorted = Object.entries(sectors)
-          .map(([sym, d]) => ({ sym, ...d }))
-          .sort((a, b) => b.changePercent - a.changePercent);
+        const sorted = Object.entries(sectors).map(([sym, d]) => ({ sym, ...d })).sort((a, b) => b.changePercent - a.changePercent);
 
-        // Sector snapshot bar (top 3 / bottom 3)
-        const top3 = sorted.slice(0, 3);
-        const bot3 = sorted.slice(-3).reverse();
-        const el = document.getElementById('sector-snapshot');
-        const chips = document.getElementById('sector-chips');
-        chips.innerHTML = [
-          ...top3.map(s => `<span class="sector-chip sector-up">${s.sym} +${s.changePercent.toFixed(2)}%</span>`),
-          '<span class="sector-divider"></span>',
-          ...bot3.map(s => `<span class="sector-chip sector-down">${s.sym} ${s.changePercent.toFixed(2)}%</span>`)
-        ].join('');
-        el.style.display = 'flex';
+        const up = sorted.filter(s => s.changePercent > 0).length;
+        const dn = sorted.length - up;
+        document.getElementById('sector-count').textContent = `${up} 상승 · ${dn} 하락`;
 
-        // Sector summary card
-        const upCount = sorted.filter(s => s.changePercent > 0).length;
-        const downCount = sorted.filter(s => s.changePercent <= 0).length;
-        document.getElementById('sector-up-count').textContent = `${upCount} Up`;
-        document.getElementById('sector-down-count').textContent = `${downCount} Down`;
-        document.getElementById('sector-top3').innerHTML = top3.map(s =>
-          `<span class="sector-chip sector-up">${s.sym} +${s.changePercent.toFixed(2)}%</span>`
-        ).join('');
-
-        // Heatmap
         this.renderHeatmap(sorted);
       },
 
       renderHeatmap(sorted) {
         const grid = document.getElementById('heatmap-grid');
-        const heatOrder = ['XLK','XLF','XLV','XLE','XLI','XLC','XLY','XLP','XLRE','XLB','XLU'];
-        const dataMap = {};
-        sorted.forEach(s => { dataMap[s.sym] = s; });
+        const order = ['XLK','XLF','XLV','XLE','XLI','XLC','XLY','XLP','XLRE','XLB','XLU'];
+        const map = {}; sorted.forEach(s => { map[s.sym] = s; });
 
-        grid.innerHTML = heatOrder.map(sym => {
-          const d = dataMap[sym];
+        grid.innerHTML = order.map(sym => {
+          const d = map[sym];
           if (!d) return '';
           const pct = d.changePercent;
           const w = SECTOR_WEIGHTS[sym] || 1;
           const cls = w >= 3 ? sym.toLowerCase() : '';
 
           let bg, fg;
-          if (pct > 2) { bg = 'bg-green-600'; fg = 'text-white'; }
-          else if (pct > 1) { bg = 'bg-green-500'; fg = 'text-white'; }
-          else if (pct > 0.5) { bg = 'bg-green-400'; fg = 'text-white'; }
-          else if (pct > 0) { bg = 'bg-green-200'; fg = 'text-green-800'; }
-          else if (pct > -0.5) { bg = 'bg-red-200'; fg = 'text-red-700'; }
-          else if (pct > -1) { bg = 'bg-red-400'; fg = 'text-white'; }
-          else { bg = 'bg-red-600'; fg = 'text-white'; }
+          if (pct > 2) { bg='bg-green-600'; fg='text-white'; }
+          else if (pct > 1) { bg='bg-green-500'; fg='text-white'; }
+          else if (pct > 0.5) { bg='bg-green-400'; fg='text-white'; }
+          else if (pct > 0) { bg='bg-green-200'; fg='text-green-800'; }
+          else if (pct > -0.5) { bg='bg-red-200'; fg='text-red-700'; }
+          else if (pct > -1) { bg='bg-red-400'; fg='text-white'; }
+          else { bg='bg-red-600'; fg='text-white'; }
 
           const sign = pct > 0 ? '+' : '';
-          const fontSize = w >= 3 ? 'text-lg' : 'text-sm';
+          const fs = w >= 3 ? 'text-lg' : 'text-sm';
           return `<div class="heatmap-cell ${cls} ${bg} ${fg}" role="button" tabindex="0"
-            aria-label="${SECTOR_NAMES[sym]} ${sym} ${sign}${pct.toFixed(2)}%">
-            <span class="font-bold ${fontSize}">${sym}</span>
-            <span class="text-xs">${SECTOR_NAMES[sym]}</span>
-            <span class="font-bold text-sm">${sign}${pct.toFixed(2)}%</span>
+            aria-label="${SECTOR_NAMES[sym]} ${sign}${pct.toFixed(2)}%">
+            <span class="font-bold ${fs}">${sym}</span>
+            <span class="text-[10px]">${SECTOR_NAMES[sym]}</span>
+            <span class="font-bold text-xs">${sign}${pct.toFixed(2)}%</span>
           </div>`;
         }).join('');
       },
 
       showError() {
-        document.getElementById('regime-badge').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Unavailable';
-        document.getElementById('regime-badge').className = 'regime-badge regime-unknown';
-        document.getElementById('regime-description').textContent = 'Could not load market data';
+        const card = document.getElementById('market-pulse');
+        card.style.background = GRADIENTS.gray;
+        document.getElementById('regime-label').textContent = '연결 실패';
+        document.getElementById('regime-desc').textContent = '데이터를 불러올 수 없습니다';
         document.getElementById('vix-price').textContent = '--';
-        document.getElementById('vix-change').textContent = 'Data unavailable';
-        document.getElementById('indices-list').innerHTML = '<div class="text-sm text-slate-400 py-4 text-center">Market data unavailable</div>';
+        document.getElementById('vix-change').textContent = '';
+        document.getElementById('vix-level').textContent = '';
+        document.getElementById('indices-grid').innerHTML =
+          '<div class="text-sm opacity-50 py-4 text-center col-span-full">데이터를 불러올 수 없습니다</div>';
       },
 
       async init() {
         try {
           const data = await this.fetchAll();
-          this.renderIndices(data.indices);
-          this.renderVIX(data.vix);
-          this.renderRegime(data.vix);
+          this.renderPulse(data.indices, data.vix);
           this.renderMarketState(data.marketState);
           this.renderSectors(data.sectors);
         } catch (err) {
-          console.error('[HeroZone] Fetch error:', err);
+          console.error('[MarketPulse]', err);
           this.showError();
         }
       }
     };
 
-    // ===== Tab Switching =====
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-pill').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-      const activeTab = document.querySelector(`[data-tab="${tabId}"]`);
-      if (activeTab) {
-        activeTab.classList.add('active');
-        activeTab.setAttribute('aria-selected', 'true');
-      }
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      const panel = document.getElementById('tab-' + tabId);
-      if (panel) panel.classList.add('active');
-    }
-
-    document.querySelectorAll('.tab-pill').forEach(btn => {
-      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-    });
-
-    document.querySelectorAll('.period-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.period-pill').forEach(b => {
-          b.classList.remove('active');
-          b.setAttribute('aria-checked', 'false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-checked', 'true');
-      });
-    });
-
-    // ===== SPA Navigation =====
-    document.body.addEventListener('click', event => {
-      // SPA links (via parent iframe)
-      const spaLink = event.target.closest('[data-spa-link]');
-      if (spaLink) {
-        event.preventDefault();
-        const path = spaLink.getAttribute('data-spa-link');
-        if (window.parent && window.parent.loadPage) {
-          window.parent.loadPage(path);
-        } else {
-          window.location.href = 'index.html?path=' + path;
-        }
+    // SPA Navigation
+    document.body.addEventListener('click', e => {
+      const spa = e.target.closest('[data-spa-link]');
+      if (spa) {
+        e.preventDefault();
+        const p = spa.getAttribute('data-spa-link');
+        if (window.parent && window.parent.loadPage) window.parent.loadPage(p);
+        else window.location.href = 'index.html?path=' + p;
         return;
       }
-      // Direct links (new page, not SPA)
-      const directLink = event.target.closest('[data-direct-link]');
-      if (directLink) {
-        event.preventDefault();
-        const path = directLink.getAttribute('data-direct-link');
-        window.open(path, '_blank');
+      const direct = e.target.closest('[data-direct-link]');
+      if (direct) {
+        e.preventDefault();
+        window.open(direct.getAttribute('data-direct-link'), '_blank');
         return;
       }
-      // Legacy ?path= links
-      const legacyLink = event.target.closest('a[href*="?path="]');
-      if (legacyLink) {
-        event.preventDefault();
-        const path = new URL(legacyLink.href, window.location.href).searchParams.get('path');
-        if (window.parent && window.parent.loadPage) {
-          window.parent.loadPage(path);
-        }
+      const legacy = e.target.closest('a[href*="?path="]');
+      if (legacy) {
+        e.preventDefault();
+        const p = new URL(legacy.href, location.href).searchParams.get('path');
+        if (window.parent && window.parent.loadPage) window.parent.loadPage(p);
       }
     });
 
-    // ===== Init =====
+    // Init
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => DataService.init());
     } else {
