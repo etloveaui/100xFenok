@@ -1682,28 +1682,30 @@ const SheetsSync = (function() {
 
       const rows = response.result.values || [];
 
-      // Filter: my orders only, pending (체결 컬럼 빈값)
-      const pending = rows.filter(row =>
-        row[1] === currentUserEmail &&  // B: 구글ID
-        (!row[10] || row[10] === '')    // K: 체결 (빈값 = 미체결)
-      );
+      // Keep original sheet index when filtering so rowIndex always points to real sheet row.
+      return rows.reduce((pending, row, index) => {
+        const isMyOrder = row[1] === currentUserEmail;       // B: 구글ID
+        const isPending = !row[10] || row[10] === '';        // K: 체결 (빈값 = 미체결)
+        if (!isMyOrder || !isPending) return pending;
 
-      return pending.map((row, index) => ({
-        rowIndex: index + 2,  // Excel row number (1-indexed, skip header)
-        date: row[0],
-        googleId: row[1],
-        profileId: row[2],
-        ticker: row[3],
-        orderType: row[4],
-        side: row[5],
-        price: parseFloat(row[6]) || 0,
-        quantity: parseInt(row[7]) || 0,
-        total: parseFloat(row[8]) || 0,
-        executionBasis: row[9],  // CLOSE or HIGH
-        execution: row[10],
-        executionDate: row[11],
-        actualPrice: row[12]
-      }));
+        pending.push({
+          rowIndex: index + 2,  // Excel row number (1-indexed, skip header)
+          date: row[0],
+          googleId: row[1],
+          profileId: row[2],
+          ticker: row[3],
+          orderType: row[4],
+          side: row[5],
+          price: parseFloat(row[6]) || 0,
+          quantity: parseInt(row[7]) || 0,
+          total: parseFloat(row[8]) || 0,
+          executionBasis: row[9],  // CLOSE or HIGH
+          execution: row[10],
+          executionDate: row[11],
+          actualPrice: row[12]
+        });
+        return pending;
+      }, []);
     } catch (error) {
       console.error('SheetsSync.readPendingOrders error:', error);
       return [];
