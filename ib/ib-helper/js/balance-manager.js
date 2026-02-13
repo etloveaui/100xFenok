@@ -62,8 +62,9 @@ const BalanceManager = (function() {
     const orderCount = mode === ADDITIONAL_BUY_MODES.FIXED
       ? _resolveFixedOrderCount(explicitOrderCount, basePrice, maxDecline)
       : 0;
+    const normalizedOneTimeBuy = Number.isFinite(oneTimeBuy) ? oneTimeBuy : 0;
     const targetBudget = mode === ADDITIONAL_BUY_MODES.BUDGET_RATIO
-      ? roundPrice(Math.max((oneTimeBuy || 0) * (budgetRatio / 100), 0))
+      ? roundCalcPrice(Math.max(normalizedOneTimeBuy * (budgetRatio / 100), 0))
       : 0;
     return {
       mode,
@@ -75,6 +76,16 @@ const BalanceManager = (function() {
       targetBudget,
       maxSteps: MAX_ADDITIONAL_STEPS
     };
+  }
+
+  function resolveTotalInvested(stock) {
+    const parsedTotalInvested = parseFloat(stock?.totalInvested);
+    if (Number.isFinite(parsedTotalInvested) && parsedTotalInvested >= 0) {
+      return parsedTotalInvested;
+    }
+    const avg = parseFloat(stock?.avgPrice) || 0;
+    const qty = parseFloat(stock?.quantity) || 0;
+    return avg * qty;
   }
 
   // =====================================================
@@ -159,41 +170,45 @@ const BalanceManager = (function() {
   }
 
   function calcDeclineBasePrice(stock, settings) {
-    // 🔴 FIX: calculator.js와 동일하게 평단LOC 기준으로 수정
-    // 전반전(T < 20): 평단LOC vs 큰수LOC 중 더 낮은 가격
-    // 후반전(T >= 20): 큰수LOC 가격
+    // B-001: calculator.generateBuyOrders()와 동일한 기준가를 사용한다.
+    // 전반전은 실제 생성 가능한 정규매수 주문의 최저가, 주문이 0건이면 큰수LOC를 기준으로 한다.
     const splits = resolveSplits(settings, stock);
     const oneTimeBuy = stock.principal / splits;
-    const totalInvested = (stock.avgPrice || 0) * (stock.quantity || 0);
+    const totalInvested = resolveTotalInvested(stock);
     const T = (typeof IBCalculator !== 'undefined')
       ? IBCalculator.calculateT(totalInvested, oneTimeBuy)
       : 0;
-    
-    // 큰수LOC 가격 계산
+
+    // 큰수LOC 기준 가격 (calculateLOC 결과에 buy offset 적용)
     const locPrice = calcLocPrice(stock, settings);
-    
-    // 전반전일 때는 평단LOC도 계산해서 비교
-    if (T < 20 && stock.avgPrice > 0) {
-      const priceCap = (stock.currentPrice && stock.currentPrice > 0)
-        ? stock.currentPrice * 1.15
-        : Infinity;
-      const avgPriceBuy = Math.min(stock.avgPrice, priceCap);
-      const avgLocPrice = (typeof IBCalculator !== 'undefined' &&
-          typeof IBCalculator.getBuyLOCPrice === 'function')
-        ? IBCalculator.getBuyLOCPrice(avgPriceBuy)
-        : roundPrice(avgPriceBuy - 0.01);
-      // 더 낮은 가격 선택 (평단LOC 기준)
-      const declineBasePrice = Math.min(avgLocPrice, locPrice);
-      return declineBasePrice > 0 ? declineBasePrice : locPrice;
+    const buyLocPrice = (typeof IBCalculator !== 'undefined' &&
+      typeof IBCalculator.getBuyLOCPrice === 'function')
+      ? IBCalculator.getBuyLOCPrice(locPrice)
+      : roundPrice(locPrice - 0.01);
+
+    if (!Number.isFinite(buyLocPrice) || buyLocPrice <= 0) return 0;
+
+    // T=0/후반전은 정규매수가 큰수LOC 단일 경로다.
+    if (T === 0 || T >= 20) return buyLocPrice;
+
+    // 전반전(T < 20): calculator.js와 동일하게 실제 생성 가능한 주문가만 후보로 사용
+    const halfAmount = oneTimeBuy / 2;
+    const currentPrice = parseFloat(stock.currentPrice) || 0;
+    const avgPrice = parseFloat(stock.avgPrice) || 0;
+    const priceCap = currentPrice > 0 ? currentPrice * 1.15 : Infinity;
+    const avgPriceBuy = Math.min(avgPrice, priceCap);
+
+    const regularPrices = [];
+    if (Number.isFinite(avgPriceBuy) && avgPriceBuy > 0 && Math.floor(halfAmount / avgPriceBuy) > 0) {
+      regularPrices.push(avgPriceBuy);
     }
-    
-    // 후반전 또는 fallback: 큰수LOC 기준
-    if (!Number.isFinite(locPrice) || locPrice <= 0) return 0;
-    if (typeof IBCalculator !== 'undefined' &&
-        typeof IBCalculator.getBuyLOCPrice === 'function') {
-      return IBCalculator.getBuyLOCPrice(locPrice);
+    if (Math.floor(halfAmount / buyLocPrice) > 0) {
+      regularPrices.push(buyLocPrice);
     }
-    return roundPrice(locPrice - 0.01);
+
+    return regularPrices.length > 0
+      ? Math.min(...regularPrices)
+      : buyLocPrice;
   }
 
   /**
@@ -209,7 +224,7 @@ const BalanceManager = (function() {
     if (typeof IBCalculator !== 'undefined') {
       const splits = resolveSplits(settings, stock);
       const oneTimeBuy = stock.principal / splits;
-      const totalInvested = (stock.avgPrice || 0) * (stock.quantity || 0);
+      const totalInvested = resolveTotalInvested(stock);
       const T = IBCalculator.calculateT(totalInvested, oneTimeBuy);
       const parsedSellPercent = parseFloat(stock.sellPercent);
       const parsedLocPercent = parseFloat(stock.locSellPercent);
@@ -226,8 +241,9 @@ const BalanceManager = (function() {
     // 🔴 Note: 이 함수는 매수용 (additionalBuy) → CAP 적용 유지
     const splits = resolveSplits(settings, stock);
     const principalPerSplit = stock.principal / splits;
+    const totalInvested = resolveTotalInvested(stock);
     const T = principalPerSplit > 0
-      ? Math.ceil(((stock.avgPrice * stock.quantity) / principalPerSplit) * 10) / 10
+      ? Math.ceil((totalInvested / principalPerSplit) * 10) / 10
       : 0;
     const fallbackSellPercent = Number.isFinite(parseFloat(stock.sellPercent))
       ? parseFloat(stock.sellPercent)
@@ -268,6 +284,7 @@ const BalanceManager = (function() {
       const stockWithData = {
         ...stock,
         avgPrice: _computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0),
+        totalInvested: dailyData.totalInvested || 0,
         currentPrice: dailyData.currentPrice || 0,
         quantity: dailyData.holdings || 0
       };
@@ -468,6 +485,14 @@ const BalanceManager = (function() {
 
   function roundPrice(price) {
     return Math.round(price * 100) / 100;
+  }
+
+  function roundCalcPrice(price) {
+    if (typeof IBCalculator !== 'undefined' &&
+        typeof IBCalculator.roundPrice === 'function') {
+      return IBCalculator.roundPrice(price);
+    }
+    return Math.round((Number(price) || 0) * 10000) / 10000;
   }
 
   function calcAdditionalBuyAmount(stock, basePrice, options) {

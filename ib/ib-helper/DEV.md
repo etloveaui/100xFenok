@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.50.0
+> **Version**: 4.51.0
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-12
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.50.0 T=0 Calculation Support** + **Code.gs v2.7.0** (ExecutionLog + Orders Archive) | ❌ #220 REVERTED
+> **Updated**: 2026-02-13
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.51.0 T=0 + 예수금 경로 안정화** + **Code.gs v2.9.0** (Execution order + stale cleanup) | ❌ #220 REVERTED
 > **Priority**: 🟡 E2E 실사용 모니터링 (T=0 포함) → #207 Telegram
 >
 > **📋 Price Data Flow** (DEC-172):
@@ -12,7 +12,7 @@
 > - ❌ setupPricesUpdateTrigger: 미구현 & 불필요
 > - ❌ Prices E~G 컬럼: 불필요
 >
-> **📁 Testing Docs**: [Data Flow](../../../../docs/testing/ib-helper-data-flow.md) | [Scenarios](../../../../docs/testing/ib-helper-scenarios.md) | [State Machine](../../../../docs/testing/ib-helper-state-machine.md)
+> **📁 Testing Docs (Archive)**: [Data Flow](../../../../docs/archive/2026-02/ib-helper-completed/ib-helper-data-flow.md) | [Scenarios](../../../../docs/archive/2026-02/ib-helper-completed/ib-helper-scenarios.md) | [State Machine](../../../../docs/archive/2026-02/ib-helper-completed/ib-helper-state-machine.md)
 
 ---
 
@@ -506,16 +506,16 @@ const telegramChannels = {
 ## 11. File Structure
 
 ```
-admin/ib-helper/
-├── index.html          ← 메인 UI
-├── DEV.md              ← 이 문서
+ib/ib-helper/
+├── index.html               ← 메인 UI + 오케스트레이션
+├── DEV.md                   ← 이 문서
 ├── js/
-│   ├── calculator.js   ← V2.2 계산 로직
-│   ├── storage.js      ← Google Sheets 연동
-│   ├── telegram.js     ← 텔레그램 알림
-│   └── ui.js           ← UI 컴포넌트
-└── styles/
-    └── mobile.css      ← 모바일 최적화 스타일
+│   ├── calculator.js        ← V2.2 계산 로직
+│   ├── balance-manager.js   ← 예수금/하락대비 상태 계산
+│   ├── profile-manager.js   ← 로컬 프로필 저장/정규화
+│   └── sheets-sync.js       ← Google Sheets 동기화
+└── apps-script/
+    └── Code.gs / yahoo-quotes.gs  ← 체결 자동화 + 시세 WebApp API
 ```
 
 ---
