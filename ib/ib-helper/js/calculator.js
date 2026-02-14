@@ -30,7 +30,8 @@ const IBCalculator = (function() {
     },
     locCapMultiplier: 1.15,  // 현재가 캡 배수 (×1.15)
     locBuyOffset: 0.01,      // 매수 LOC 차감 금액
-    locSellOffsetRate: 0.005 // 매도 LOC 가산 비율 (평단가의 0.5%)
+    locSellOffsetRate: 0.005, // 매도 LOC 가산 비율 (평단가의 0.5%)
+    deadZoneGuardEnabled: true // DEC-187: dead-zone 가드 (B3 + C1)
   };
   const ADDITIONAL_BUY_MODES = {
     BUDGET_RATIO: 'budget_ratio',
@@ -220,7 +221,8 @@ const IBCalculator = (function() {
       additionalBuyBudgetRatio = 20,
       additionalBuyAllowOneOver = true,
       additionalBuyMaxDecline = 15,
-      additionalBuyQuantity = 1
+      additionalBuyQuantity = 1,
+      deadZoneGuardEnabled = DEFAULT_CONFIG.deadZoneGuardEnabled !== false
     } = params;
 
     // 1회 매수금
@@ -238,6 +240,13 @@ const IBCalculator = (function() {
     const buyLocPrice = getBuyLOCPrice(locInfo.locPrice);
 
     const orders = [];
+    let deadZoneInfo = null;
+    let seedInfo = null;
+    let deadZoneMergeAttempted = false;
+    let frontHalfAvgPriceBuy = null;
+    let frontHalfHalfAmount = null;
+    let frontHalfMergedPrice = null;
+
     // ========================================
     // 🔴 v4.51.0: T=0 (첫 매수) — 큰수LOC 1건만, 하락대비 없음
     // V2.2 스펙에 avgPrice 전제 → T=0은 별도 분기
@@ -253,6 +262,14 @@ const IBCalculator = (function() {
           quantity: qty,
           orderType: 'LOC'
         });
+      } else if (deadZoneGuardEnabled) {
+        seedInfo = {
+          insufficient: true,
+          reason: `T=0 시드 부족: 1회매수 ${formatDollar(oneTimeBuy)} < LOC ${formatDollar(buyLocPrice)}`,
+          minPrincipal: roundPrice(divisions * buyLocPrice),
+          oneTimeBuy: roundPrice(oneTimeBuy),
+          price: buyLocPrice
+        };
       }
       // T=0: no 평단LOC (no avgPrice), no 하락대비 (no position)
     }
@@ -261,6 +278,7 @@ const IBCalculator = (function() {
     // ========================================
     else if (T < 20) {
       const halfAmount = oneTimeBuy / 2;
+      frontHalfHalfAmount = halfAmount;
 
       // 주문 1: 평단LOC 매수 (0% 기준)
       // 🔴 v1.2.0: 평단가도 현재가×1.15 캡 적용 (V2.2 명세)
@@ -268,6 +286,7 @@ const IBCalculator = (function() {
         ? currentPrice * DEFAULT_CONFIG.locCapMultiplier
         : Infinity;
       const avgPriceBuy = roundPrice(Math.min(avgPrice, priceCap));
+      frontHalfAvgPriceBuy = avgPriceBuy;
       const qty1 = Math.floor(halfAmount / avgPriceBuy);
       if (qty1 > 0) {
         orders.push({
@@ -292,6 +311,32 @@ const IBCalculator = (function() {
           orderType: 'LOC'
         });
       }
+
+      // DEC-187(B3): 전반전 정규매수 0건이면 예산을 통합해 최소 1주 확보를 시도한다.
+      if (deadZoneGuardEnabled && qty1 === 0 && qty2 === 0) {
+        deadZoneMergeAttempted = true;
+        const mergedPrice = roundPrice(Math.min(avgPriceBuy, buyLocPrice));
+        frontHalfMergedPrice = mergedPrice;
+        const mergedQty = Math.floor(oneTimeBuy / mergedPrice);
+
+        if (mergedQty > 0) {
+          orders.push({
+            type: '통합LOC 매수',
+            description: `데드존 가드(예산 통합, 별% ${starPercent.toFixed(1)}%)`,
+            price: mergedPrice,
+            amount: roundPrice(oneTimeBuy),
+            quantity: mergedQty,
+            orderType: 'LOC'
+          });
+          deadZoneInfo = {
+            active: true,
+            merged: true,
+            phase: 'front_half',
+            reason: `전반전: halfAmount ${formatDollar(halfAmount)}에서 0주 → oneTimeBuy ${formatDollar(oneTimeBuy)} 통합`,
+            minPrincipal: roundPrice(2 * divisions * Math.min(avgPriceBuy, buyLocPrice))
+          };
+        }
+      }
     }
     // ========================================
     // 후반전 (T >= 20): 전체를 큰수LOC로만
@@ -310,14 +355,41 @@ const IBCalculator = (function() {
       }
     }
 
+    const regularOrders = orders.filter(o => !String(o?.type || '').includes('하락대비'));
+    const isDeadZone = deadZoneGuardEnabled && T > 0 && regularOrders.length === 0;
+    if (isDeadZone) {
+      const frontHalfRefPrice = (frontHalfAvgPriceBuy && frontHalfAvgPriceBuy > 0)
+        ? Math.min(frontHalfAvgPriceBuy, buyLocPrice)
+        : buyLocPrice;
+      const halfAmount = Number.isFinite(frontHalfHalfAmount) ? frontHalfHalfAmount : (oneTimeBuy / 2);
+      const minPrincipal = T < 20
+        ? roundPrice(2 * divisions * frontHalfRefPrice)
+        : roundPrice(divisions * buyLocPrice);
+      let reason = '';
+      if (T < 20) {
+        reason = deadZoneMergeAttempted
+          ? `전반전: 병합 시도 실패 (oneTimeBuy ${formatDollar(oneTimeBuy)}, 병합가 ${formatDollar(frontHalfMergedPrice || frontHalfRefPrice)})`
+          : `전반전: halfAmount ${formatDollar(halfAmount)} < 기준가 ${formatDollar(frontHalfRefPrice)}`;
+      } else {
+        reason = `후반전: oneTimeBuy ${formatDollar(oneTimeBuy)} < 큰수LOC ${formatDollar(buyLocPrice)}`;
+      }
+      deadZoneInfo = {
+        active: true,
+        merged: false,
+        phase: T < 20 ? 'front_half' : 'back_half',
+        reason,
+        minPrincipal
+      };
+    }
+
     // ========================================
     // 하락대비 추가매수 (T > 0일 때만)
     // 🔴 v4.51.0: T=0은 포지션 없으므로 하락대비 불가
     // ========================================
-    const declineBasePrice = orders.length > 0
-      ? Math.min(...orders.map(o => o.price))
+    const declineBasePrice = regularOrders.length > 0
+      ? Math.min(...regularOrders.map(o => o.price))
       : buyLocPrice;
-    if (additionalBuyEnabled && T > 0) {
+    if (additionalBuyEnabled && T > 0 && !isDeadZone) {
       const config = resolveAdditionalBuyConfig({
         additionalBuyMode,
         additionalBuyOrderCount,
@@ -337,6 +409,8 @@ const IBCalculator = (function() {
       oneTimeBuy: roundPrice(oneTimeBuy),
       phase: T < 20 ? '전반전' : '후반전',
       orders,
+      deadZone: deadZoneInfo,
+      seedInfo,
       summary: {
         totalOrders: orders.length,
         totalQuantity: orders.reduce((sum, o) => sum + o.quantity, 0),
@@ -638,7 +712,8 @@ const IBCalculator = (function() {
       additionalBuyBudgetRatio,
       additionalBuyAllowOneOver,
       additionalBuyMaxDecline,
-      additionalBuyQuantity
+      additionalBuyQuantity,
+      deadZoneGuardEnabled = DEFAULT_CONFIG.deadZoneGuardEnabled !== false
     } = input;
 
     // Validation
@@ -692,7 +767,8 @@ const IBCalculator = (function() {
       additionalBuyBudgetRatio,
       additionalBuyAllowOneOver,
       additionalBuyMaxDecline,
-      additionalBuyQuantity
+      additionalBuyQuantity,
+      deadZoneGuardEnabled
     });
 
     // 매도 주문 생성
@@ -727,7 +803,8 @@ const IBCalculator = (function() {
         additionalBuyBudgetRatio,
         additionalBuyAllowOneOver,
         additionalBuyMaxDecline,
-        additionalBuyQuantity
+        additionalBuyQuantity,
+        deadZoneGuardEnabled
       },
       calculation: {
         oneTimeBuy: roundPrice(oneTimeBuy),
@@ -737,6 +814,8 @@ const IBCalculator = (function() {
         locInfo
       },
       buyOrders: buyResult.orders,
+      deadZone: buyResult.deadZone || null,
+      seedInfo: buyResult.seedInfo || null,
       sellOrders: sellResult.orders,
       quarterStopLoss: sellResult.quarterStopLoss,
       summary: {
