@@ -224,6 +224,7 @@
 </div>
 
 <script>
+  const WIDGET_ID = 'sentiment-signal';
   const DETAIL_PATH = 'tools/macro-monitor/details/sentiment-signal/index.html';
 
   // 상세 페이지 열기
@@ -250,6 +251,7 @@
   ];
 
   let CURRENT_VALUES = { vix: null, move: null, cnn_fg: null, aaii_bearish: null, aaii_spread: null, cftc_net: null, crypto_fg: null, putcall_ratio: null };
+  let readySent = false;
 
   const DATA_SOURCES = {
     vix: '../../../data/sentiment/vix.json',
@@ -334,9 +336,22 @@
     });
     await Promise.allSettled(fetches);
     render();
+    notifyReady();
   }
 
-  document.addEventListener('DOMContentLoaded', loadData);
+  function notifyReady() {
+    if (readySent) return;
+    readySent = true;
+    try {
+      window.parent.postMessage({ type: 'WIDGET_READY', widgetId: WIDGET_ID }, '*');
+    } catch (e) {}
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    render(); // 스켈레톤 렌더 후 비동기 데이터 반영
+    setTimeout(notifyReady, 700); // 데이터가 지연돼도 carousel 전환을 막지 않음
+    loadData();
+  });
 </script>
 </body>
 </html>
