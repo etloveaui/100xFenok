@@ -44,6 +44,7 @@ const ProfileManager = (function() {
       mode,
       budgetRatio: Number.isFinite(migratedRatio) ? Math.max(0, Math.min(100, migratedRatio)) : 20,
       allowOneOver: raw?.allowOneOver !== false,
+      deadZoneGuardEnabled: raw?.deadZoneGuardEnabled !== false,
       maxDecline: Number.isFinite(parsedMaxDecline) ? parsedMaxDecline : 15,
       quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1,
       orderCount: Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 8
@@ -66,6 +67,7 @@ const ProfileManager = (function() {
         prevAdditionalBuy.mode !== normalizedAdditionalBuy.mode ||
         prevAdditionalBuy.budgetRatio !== normalizedAdditionalBuy.budgetRatio ||
         prevAdditionalBuy.allowOneOver !== normalizedAdditionalBuy.allowOneOver ||
+        prevAdditionalBuy.deadZoneGuardEnabled !== normalizedAdditionalBuy.deadZoneGuardEnabled ||
         prevAdditionalBuy.maxDecline !== normalizedAdditionalBuy.maxDecline ||
         prevAdditionalBuy.quantity !== normalizedAdditionalBuy.quantity ||
         prevAdditionalBuy.orderCount !== normalizedAdditionalBuy.orderCount
@@ -220,6 +222,7 @@ const ProfileManager = (function() {
           mode: 'budget_ratio',
           budgetRatio: 20,
           allowOneOver: true,
+          deadZoneGuardEnabled: true,
           maxDecline: 15,
           quantity: 1,
           orderCount: 8
@@ -267,6 +270,7 @@ const ProfileManager = (function() {
           mode: 'budget_ratio',
           budgetRatio: 20,
           allowOneOver: true,
+          deadZoneGuardEnabled: true,
           maxDecline: 15,
           quantity: 1,
           orderCount: 8

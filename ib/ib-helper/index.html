@@ -746,6 +746,7 @@
         <div id="result-locReason" class="mt-2 text-xs text-slate-400 text-center">
           별%가 선택 (현재가+15% = $57.68)
         </div>
+        <div id="result-guard-warning" class="hidden mt-3 rounded-lg border px-3 py-2 text-xs"></div>
 
         <!-- v4.23.0: Formula Details Toggle -->
         <div class="mt-3 text-center">
@@ -1654,6 +1655,7 @@
         mode: mode,
         budgetRatio: Number.isFinite(migratedRatio) ? Math.max(0, Math.min(100, migratedRatio)) : 20,
         allowOneOver: additionalBuy.allowOneOver !== false,
+        deadZoneGuardEnabled: additionalBuy.deadZoneGuardEnabled !== false,
         orderCount: Number.isFinite(parsedOrderCount) ? Math.max(0, Math.min(8, parsedOrderCount)) : 8,
         maxDecline: Number.isFinite(parsedMaxDecline) ? parsedMaxDecline : 15,
         quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1
@@ -2874,6 +2876,99 @@
       return `하락대비: 예산 ${ratio}% 적용`;
     }
 
+    function getGuardBannerModel(result) {
+      const deadZone = result?.deadZone || null;
+      const seedInfo = result?.seedInfo || null;
+      const minPrincipal = Number.isFinite(Number(deadZone?.minPrincipal))
+        ? Number(deadZone.minPrincipal)
+        : (Number.isFinite(Number(seedInfo?.minPrincipal)) ? Number(seedInfo.minPrincipal) : null);
+
+      if (seedInfo?.insufficient) {
+        return {
+          type: 'seed',
+          title: '💰 시드 부족: 1주 미만',
+          detail: seedInfo.reason || 'T=0 구간에서 1회매수금으로 최소 1주를 만들 수 없습니다.',
+          minPrincipal
+        };
+      }
+
+      if (deadZone?.active && deadZone?.merged === true) {
+        return {
+          type: 'soft',
+          title: '⚠️ 데드존: 예산 통합 전환 (하락대비 정상)',
+          detail: deadZone.reason || '정규매수 0건 조건에서 oneTimeBuy 통합으로 1주를 확보했습니다.',
+          minPrincipal
+        };
+      }
+
+      if (deadZone?.active) {
+        return {
+          type: 'hard',
+          title: '🔴 데드존: 매수 불가 + 하락대비 차단',
+          detail: deadZone.reason || '정규매수 0건으로 dead-zone이 유지되어 하락대비 주문을 차단합니다.',
+          minPrincipal
+        };
+      }
+
+      return { type: 'none' };
+    }
+
+    function renderGuardWarning(targetEl, result) {
+      if (!targetEl) return;
+      const model = getGuardBannerModel(result);
+      if (!model || model.type === 'none') {
+        targetEl.className = 'hidden mt-3 rounded-lg border px-3 py-2 text-xs';
+        targetEl.innerHTML = '';
+        return;
+      }
+
+      let classes = 'mt-3 rounded-lg border px-3 py-2 text-xs';
+      if (model.type === 'hard') {
+        classes += ' bg-red-50 border-red-200 text-red-700';
+      } else if (model.type === 'soft') {
+        classes += ' bg-amber-50 border-amber-200 text-amber-700';
+      } else {
+        classes += ' bg-sky-50 border-sky-200 text-sky-700';
+      }
+
+      const minPrincipalText = Number.isFinite(model.minPrincipal)
+        ? `<div class="mt-1 opacity-80">최소 원금 추정: ${IBCalculator.formatDollar(model.minPrincipal, 2)}</div>`
+        : '';
+
+      targetEl.className = classes;
+      targetEl.innerHTML = `<div class="font-semibold">${model.title}</div><div class="mt-1">${escapeHtml(model.detail || '')}</div>${minPrincipalText}`;
+    }
+
+    function renderGuardBannerHtml(result, compact = false) {
+      const model = getGuardBannerModel(result);
+      if (!model || model.type === 'none') return '';
+
+      let wrapperClass = compact
+        ? 'mt-2 rounded-lg border px-2 py-1.5 text-[11px]'
+        : 'mt-2 rounded-lg border px-3 py-2 text-xs';
+      if (model.type === 'hard') {
+        wrapperClass += ' bg-red-50 border-red-200 text-red-700';
+      } else if (model.type === 'soft') {
+        wrapperClass += ' bg-amber-50 border-amber-200 text-amber-700';
+      } else {
+        wrapperClass += ' bg-sky-50 border-sky-200 text-sky-700';
+      }
+
+      const minPrincipalText = Number.isFinite(model.minPrincipal)
+        ? ` · 최소원금 ${IBCalculator.formatDollar(model.minPrincipal, 2)}`
+        : '';
+      return `<div class="${wrapperClass}"><span class="font-semibold">${model.title}</span><span class="opacity-80">${minPrincipalText}</span></div>`;
+    }
+
+    function formatGuardStatusCopy(result) {
+      const model = getGuardBannerModel(result);
+      if (!model || model.type === 'none') return null;
+      const minPrincipalText = Number.isFinite(model.minPrincipal)
+        ? ` | 최소원금 ${formatDollarShort(model.minPrincipal)}`
+        : '';
+      return `${model.title}${minPrincipalText}`;
+    }
+
     async function copyAllOrdersTotal() {
       if (!lastCalculation) {
         showToast('먼저 계산을 실행하세요', 'warning');
@@ -2892,6 +2987,10 @@
         headerLine,
         formatAdditionalBuyPolicyCopy(input)
       ];
+      const guardLine = formatGuardStatusCopy(lastCalculation);
+      if (guardLine) {
+        lines.push(guardLine);
+      }
 
       // v4.50.0: Unified balance/shortage info
       const balanceInfo = (typeof BalanceManager !== 'undefined' && currentProfile)
@@ -3002,6 +3101,7 @@
           additionalBuyOrderCount: 0,
           additionalBuyBudgetRatio: 0,
           additionalBuyAllowOneOver: normalized.allowOneOver,
+          deadZoneGuardEnabled: normalized.deadZoneGuardEnabled,
           additionalBuyMaxDecline: normalized.maxDecline,
           additionalBuyQuantity: normalized.quantity
         };
@@ -3012,6 +3112,7 @@
         additionalBuyOrderCount: normalized.orderCount,
         additionalBuyBudgetRatio: normalized.budgetRatio,
         additionalBuyAllowOneOver: normalized.allowOneOver,
+        deadZoneGuardEnabled: normalized.deadZoneGuardEnabled,
         additionalBuyMaxDecline: normalized.maxDecline,
         additionalBuyQuantity: normalized.quantity
       };
@@ -3333,6 +3434,7 @@
       } else {
         locReason.textContent = `${calculation.locInfo.reason}`;
       }
+      renderGuardWarning(document.getElementById('result-guard-warning'), result);
 
       // v4.23.0: Update formula details with actual values
       updateFormulaDetails(result);
@@ -3487,6 +3589,15 @@
         const declineStep1Price = declineOrders.length > 0
           ? (Number(declineOrders[0].price) || 0)
           : IBCalculator.roundPrice((declineBasePrice || 0) * 0.98);
+        const deadZone = result?.deadZone || null;
+        const seedInfo = result?.seedInfo || null;
+        const isSoftDeadZone = deadZone?.active && deadZone?.merged === true;
+        const isHardDeadZone = deadZone?.active && deadZone?.merged === false;
+        const mergedOrder = mainBuyOrders.find(o => o.type === '통합LOC 매수');
+        const mergedPrice = Number(mergedOrder?.price) || Math.min(avgLocPrice || Infinity, buyLocPrice || Infinity);
+        const mergedQty = Number(mergedOrder?.quantity) || 0;
+        const declineEnabled = (input?.additionalBuyEnabled !== false && T > 0 && !isHardDeadZone);
+        const guardBannerHtml = renderGuardBannerHtml(result, true);
 
         // 아코디언 아이템 HTML
         return `
@@ -3522,6 +3633,7 @@
               <div class="text-xs text-gray-500 text-center mb-2 bg-gray-50 rounded px-2 py-1">
                 ${formatAdditionalBuyPolicy(input, oneTimeBuy)}
               </div>
+              ${guardBannerHtml}
 
               <!-- Buy Orders -->
               <div class="order-section">
@@ -3610,7 +3722,18 @@
                       <td class="py-1.5 text-gray-400 font-mono">${effectiveSellPercent}% × (1 − ${T.toFixed(1)} / 20) + (${effectiveLocSellPercent.toFixed(1)}% − 5.0%)</td>
                       <td class="px-3 py-1.5 text-right font-bold text-amber-700 whitespace-nowrap">${starPercent.toFixed(1)}%</td>
                     </tr>
-                    ${T > 0 && T < 20 ? `
+                    ${seedInfo?.insufficient ? `
+                    <tr>
+                      <td class="px-3 py-1.5 text-sky-600 font-semibold whitespace-nowrap">평단LOC매수</td>
+                      <td colspan="2" class="px-3 py-1.5 text-sky-700 italic">시드 부족: T=0에서 정규매수 생성 불가</td>
+                    </tr>
+                    ` : (isSoftDeadZone ? `
+                    <tr>
+                      <td class="px-3 py-1.5 text-amber-700 font-semibold whitespace-nowrap">평단LOC매수</td>
+                      <td class="py-1.5 text-gray-400 font-mono">데드존 가드: oneTimeBuy 통합</td>
+                      <td class="px-3 py-1.5 text-right font-bold text-amber-700 whitespace-nowrap">${mergedQty}주 @ ${IBCalculator.formatDollar(mergedPrice)}</td>
+                    </tr>
+                    ` : (T > 0 && T < 20 ? `
                     <tr>
                       <td class="px-3 py-1.5 text-green-700 font-semibold whitespace-nowrap">평단LOC매수</td>
                       <td class="py-1.5 text-gray-400 font-mono">min(${IBCalculator.formatDollar(avgPrice)}, ${IBCalculator.formatDollar(currentPrice)} × 1.15)</td>
@@ -3619,15 +3742,15 @@
                     ` : `
                     <tr>
                       <td class="px-3 py-1.5 text-gray-400 font-semibold whitespace-nowrap">평단LOC매수</td>
-                      <td colspan="2" class="px-3 py-1.5 text-gray-400 italic">${T <= 0 ? 'T=0 첫 매수 구간: 평단LOC 없음' : '후반전: 평단LOC 없음'}</td>
+                      <td colspan="2" class="px-3 py-1.5 text-gray-400 italic">${isHardDeadZone ? '데드존: 정규매수 0건 유지' : (T <= 0 ? 'T=0 첫 매수 구간: 평단LOC 없음' : '후반전: 평단LOC 없음')}</td>
                     </tr>
-                    `}
+                    `))}
                     <tr>
-                      <td class="px-3 py-1.5 text-green-700 font-semibold whitespace-nowrap">큰수LOC매수</td>
-                      <td class="py-1.5 text-gray-400 font-mono">${T < 20 ? `(${IBCalculator.formatDollar(oneTimeBuy)} ÷ 2) / ${IBCalculator.formatDollar(buyLocPrice)}` : `${IBCalculator.formatDollar(oneTimeBuy)} / ${IBCalculator.formatDollar(buyLocPrice)}`}</td>
-                      <td class="px-3 py-1.5 text-right font-bold text-green-700 whitespace-nowrap">${starLocQty}주 @ ${IBCalculator.formatDollar(buyLocPrice)}</td>
+                      <td class="px-3 py-1.5 ${isHardDeadZone ? 'text-gray-400' : (isSoftDeadZone ? 'text-amber-700' : 'text-green-700')} font-semibold whitespace-nowrap">${isSoftDeadZone ? '통합LOC매수' : '큰수LOC매수'}</td>
+                      <td class="py-1.5 text-gray-400 font-mono">${isSoftDeadZone ? `${IBCalculator.formatDollar(oneTimeBuy)} / ${IBCalculator.formatDollar(mergedPrice)}` : (T < 20 ? `(${IBCalculator.formatDollar(oneTimeBuy)} ÷ 2) / ${IBCalculator.formatDollar(buyLocPrice)}` : `${IBCalculator.formatDollar(oneTimeBuy)} / ${IBCalculator.formatDollar(buyLocPrice)}`)}</td>
+                      <td class="px-3 py-1.5 text-right font-bold ${isHardDeadZone ? 'text-gray-400' : (isSoftDeadZone ? 'text-amber-700' : 'text-green-700')} whitespace-nowrap">${isSoftDeadZone ? `${mergedQty}주 @ ${IBCalculator.formatDollar(mergedPrice)}` : `${starLocQty}주 @ ${IBCalculator.formatDollar(buyLocPrice)}`}</td>
                     </tr>
-                    ${(input?.additionalBuyEnabled !== false && T > 0) ? `
+                    ${declineEnabled ? `
                     <tr>
                       <td class="px-3 py-1.5 text-green-700 font-semibold whitespace-nowrap">하락대비#1</td>
                       <td class="py-1.5 text-gray-400 font-mono">${IBCalculator.formatDollar(declineBasePrice)} × 0.98</td>
@@ -3636,7 +3759,7 @@
                     ` : `
                     <tr>
                       <td class="px-3 py-1.5 text-gray-400 font-semibold whitespace-nowrap">하락대비#1</td>
-                      <td colspan="2" class="px-3 py-1.5 text-gray-400 italic">하락대비 비활성 (T=0 또는 설정 OFF)</td>
+                      <td colspan="2" class="px-3 py-1.5 text-gray-400 italic">${isHardDeadZone ? '데드존 가드: 정규매수 0건으로 하락대비 차단' : '하락대비 비활성 (T=0 또는 설정 OFF)'}</td>
                     </tr>
                     `}
                     ${avgPrice > 0 ? `
@@ -3782,6 +3905,10 @@
 
         lines.push(headerLine);
         lines.push(`  ${formatAdditionalBuyPolicyCopy(input)}`);
+        const guardLine = formatGuardStatusCopy(result);
+        if (guardLine) {
+          lines.push(`  ${guardLine}`);
+        }
         // B: 매수 가격 내림차순
         const sortedBuy = [...buyOrders].sort((a, b) => b.price - a.price);
         lines.push('🟢 BUY (LOC)');
@@ -3871,6 +3998,13 @@
       const buyOrders = Array.isArray(result.buyOrders) ? result.buyOrders : [];
       const regularBuyOrders = buyOrders.filter(o => o && o.type && !o.type.includes('하락대비'));
       const declineBuyOrders = buyOrders.filter(o => o && o.type && o.type.includes('하락대비'));
+      const deadZone = result.deadZone || null;
+      const seedInfo = result.seedInfo || null;
+      const isSoftDeadZone = deadZone?.active && deadZone?.merged === true;
+      const isHardDeadZone = deadZone?.active && deadZone?.merged === false;
+      const mergedOrder = regularBuyOrders.find(o => o.type === '통합LOC 매수');
+      const mergedPrice = Number(mergedOrder?.price) || Math.min(avgLocPrice || Infinity, buyLocPrice || Infinity);
+      const mergedQty = Number(mergedOrder?.quantity) || 0;
       const regularBuyPrices = regularBuyOrders
         .map(o => Number(o.price))
         .filter(v => Number.isFinite(v) && v > 0);
@@ -3899,12 +4033,21 @@
       // 평단LOC 매수 공식
       const buyAvgEl = document.getElementById('formula-buyAvg');
       if (buyAvgEl) {
-        if (T <= 0) {
+        if (seedInfo?.insufficient) {
+          buyAvgEl.innerHTML = `시드 부족: ${escapeHtml(seedInfo.reason || 'T=0 구간에서 1주 미만')}`;
+        } else if (isSoftDeadZone && deadZone?.phase === 'front_half') {
+          buyAvgEl.innerHTML = `⚠️ 데드존: 예산 통합 전환 (전반전)<br>
+            평단LOC/큰수LOC 각각 0주 → oneTimeBuy 통합<br>
+            <span class="text-amber-400">통합가 = $${formatPrice(mergedPrice)}, 수량 = ${mergedQty}주</span>`;
+        } else if (T <= 0) {
           buyAvgEl.innerHTML = `T=0 첫 매수 구간에서는 평단LOC 주문이 생성되지 않음`;
         } else if (T < 20) {
           buyAvgEl.innerHTML = `평단LOC = min(평단가, 현재가×1.15)<br>
             = min($${formatPrice(avgPrice)}, $${formatPrice(currentPrice)} × 1.15) = $${formatPrice(avgLocPrice)}<br>
             <span class="text-green-400">수량 = floor(($${formatPrice(oneTimeBuy)} / 2) / $${formatPrice(avgLocPrice)}) = ${avgLocQty}주</span>`;
+        } else if (isHardDeadZone) {
+          buyAvgEl.innerHTML = `🔴 데드존: 정규매수 0건 (phase=${deadZone?.phase || 'unknown'})<br>
+            <span class="text-red-300">${escapeHtml(deadZone?.reason || '조건 미충족')}</span>`;
         } else {
           buyAvgEl.innerHTML = `후반전(T≥20)에서는 평단LOC 주문이 생성되지 않음`;
         }
@@ -3913,9 +4056,19 @@
       // 큰수LOC 매수 공식
       const buyStarEl = document.getElementById('formula-buyStar');
       if (buyStarEl) {
-        if (T <= 0) {
+        if (seedInfo?.insufficient) {
+          buyStarEl.innerHTML = `T=0 시드 부족으로 큰수LOC도 0주<br>
+            <span class="text-sky-300">${escapeHtml(seedInfo.reason || '')}</span>`;
+        } else if (isSoftDeadZone && deadZone?.phase === 'front_half') {
+          buyStarEl.innerHTML = `통합LOC = min(평단LOC, 큰수LOC)<br>
+            = min($${formatPrice(avgLocPrice)}, $${formatPrice(buyLocPrice)}) = $${formatPrice(mergedPrice)}<br>
+            <span class="text-amber-400">수량 = floor($${formatPrice(oneTimeBuy)} / $${formatPrice(mergedPrice)}) = ${mergedQty}주</span>`;
+        } else if (T <= 0) {
           buyStarEl.innerHTML = `T=0: 큰수LOC만 생성<br>
             <span class="text-green-400">수량 = floor($${formatPrice(oneTimeBuy)} / $${formatPrice(buyLocPrice)}) = ${starLocQty}주</span>`;
+        } else if (isHardDeadZone) {
+          buyStarEl.innerHTML = `🔴 데드존: 정규매수 0건 유지<br>
+            <span class="text-red-300">${escapeHtml(deadZone?.reason || '')}</span>`;
         } else {
           buyStarEl.innerHTML = `큰수LOC = 별% LOC - $0.01 = $${formatPrice(buyLocPrice)}<br>
             예산 = ${T < 20 ? `1회매수/2 = $${formatPrice(starBuyBudget)}` : `1회매수 전액 = $${formatPrice(starBuyBudget)}`}<br>
@@ -3926,7 +4079,9 @@
       // 하락대비 #1 공식
       const buyDeclineEl = document.getElementById('formula-buyDecline');
       if (buyDeclineEl) {
-        if (!declineEnabled) {
+        if (isHardDeadZone) {
+          buyDeclineEl.innerHTML = `데드존 가드: 정규매수 0건으로 하락대비 주문 차단`;
+        } else if (!declineEnabled) {
           buyDeclineEl.innerHTML = `하락대비 비활성 (T=0 또는 설정 OFF)`;
         } else if (!(declineBasePrice > 0)) {
           buyDeclineEl.innerHTML = `하락대비 기준가를 계산할 수 없음`;
@@ -4031,6 +4186,9 @@
       }
       if (rawType === '큰수LOC 매수') {
         return '기본-큰수LOC';
+      }
+      if (rawType === '통합LOC 매수') {
+        return '통합-매수LOC';
       }
       if (rawType.startsWith('지정가 매도')) {
         return '지정가 매도';
