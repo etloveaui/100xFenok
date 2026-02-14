@@ -37,7 +37,7 @@ class MacroDataFetcher {
 
   /**
    * Widget 데이터 가져오기 (캐시 우선 + API 폴백)
-   * @param {string} widgetId - 위젯 ID (banking-health, liquidity-flow, liquidity-stress)
+   * @param {string} widgetId - 위젯 ID (banking-health, liquidity-flow, liquidity-stress, sentiment-signal)
    * @param {boolean} forceRefresh - 강제 새로고침
    * @returns {Promise<object>} - { data, isStale, isFresh, ageMs }
    */
@@ -109,6 +109,7 @@ class MacroDataFetcher {
       case 'liquidity-stress':
         return await this.fetchLiquidityStress();
       case 'sentiment':
+      case 'sentiment-signal':
         return await this.fetchSentiment();
       default:
         console.warn(`[DataFetcher] Unknown widget: ${widgetId}`);
@@ -274,24 +275,28 @@ class MacroDataFetcher {
 
       // 최신값 (단위 변환: WALCL, TGA는 Millions → Billions)
       // M2SL, RRP는 이미 Billions
-      const latestM2 = this.getLatestValue(m2);  // Billions
-      const walclB = this.getLatestValue(fedBs) / 1000;  // Millions → Billions
-      const tgaB = this.getLatestValue(tga) / 1000;      // Millions → Billions
-      const rrpB = this.getLatestValue(rrp);             // 이미 Billions ★ 수정됨
+      const latestM2 = this.toFiniteNumber(this.getLatestValue(m2));  // Billions
+      const walclB = this.toFiniteNumber(this.getLatestValue(fedBs)) / 1000;  // Millions → Billions
+      const tgaB = this.toFiniteNumber(this.getLatestValue(tga)) / 1000;      // Millions → Billions
+      const rrpB = this.toFiniteNumber(this.getLatestValue(rrp));             // 이미 Billions ★ 수정됨
+
+      if (!Array.isArray(rrp) || rrp.length === 0) {
+        console.warn('[DataFetcher] RRP series empty, fallback value 0 applied');
+      }
 
       // Net Liquidity 계산 (정식 공식): Fed BS - TGA - RRP (Billions)
       const netLiquidity = walclB - tgaB - rrpB;
 
       // M2 YoY 계산
-      const m2YoY = this.calculateYoY(m2) || 0;
+      const m2YoY = this.toFiniteNumber(this.calculateYoY(m2));
 
       // Stablecoin / M2 비율 (%)
-      const stablecoinMcap = (stablecoin?.current || 0) / 1e9;  // Billions
+      const stablecoinMcap = this.toFiniteNumber(stablecoin?.current) / 1e9;  // Billions
       const scM2Ratio = latestM2 > 0 ? (stablecoinMcap / (latestM2 * 1000)) * 100 : 0;  // M2는 Trillions 단위
 
       // Delta 값들 (최근 2주 데이터로 계산)
       // ★ weeklyNetFlow: 최근 1주일간 변화량 (Hero Value용)
-      const weeklyNetFlow = this.calculateWeeklyDelta(fedBs, tga, rrp);
+      const weeklyNetFlow = this.toFiniteNumber(this.calculateWeeklyDelta(fedBs, tga, rrp));
 
       // ★ Detail과 동일한 형식으로 반환
       return {
@@ -853,6 +858,17 @@ class MacroDataFetcher {
   getLatestValue(series) {
     if (!Array.isArray(series) || series.length === 0) return null;
     return series[series.length - 1]?.val ?? null;
+  }
+
+  /**
+   * 숫자 정규화 (NaN/null/undefined 방어)
+   * @param {*} value
+   * @param {number} fallback
+   * @returns {number}
+   */
+  toFiniteNumber(value, fallback = 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
   }
 
   /**

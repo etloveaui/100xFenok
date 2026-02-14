@@ -591,30 +591,37 @@
   // ===== 위젯 데이터 전달 (postMessage) - 기본 핸들러 =====
   // DataFetcher module에서 비동기 핸들러가 오버라이드함
   // 하위 호환을 위해 기본 핸들러 유지
-  window._widgetDataHandler = function(event) {
-    if (event.data && event.data.type === 'REQUEST_WIDGET_DATA') {
-      const widgetId = event.data.widgetId;
-      console.log(`[Index] ${widgetId} 데이터 요청 수신 (기본 핸들러)`);
+  if (window._widgetDataHandler) {
+    window.removeEventListener('message', window._widgetDataHandler);
+  }
+  if (window._widgetDataFetcherHandler) {
+    delete window._widgetDataHandler; // DataFetcher 핸들러가 있으면 legacy 재등록 금지
+  } else {
+    window._widgetDataHandler = function(event) {
+      if (event.data && event.data.type === 'REQUEST_WIDGET_DATA' && event.source) {
+        const widgetId = event.data.widgetId;
+        console.log(`[Index] ${widgetId} 데이터 요청 수신 (기본 핸들러)`);
 
-      try {
-        const rawData = localStorage.getItem(`macro_${widgetId}`);
-        if (rawData) {
-          const parsed = JSON.parse(rawData);
-          event.source.postMessage({
-            type: 'WIDGET_DATA_RESPONSE',
-            widgetId: widgetId,
-            payload: parsed.data
-          }, '*');
-          console.log(`[Index] ${widgetId} 데이터 응답 전송`);
-        } else {
-          console.log(`[Index] ${widgetId} localStorage 데이터 없음`);
+        try {
+          const rawData = localStorage.getItem(`macro_${widgetId}`);
+          if (rawData) {
+            const parsed = JSON.parse(rawData);
+            event.source.postMessage({
+              type: 'WIDGET_DATA_RESPONSE',
+              widgetId: widgetId,
+              payload: parsed.data
+            }, '*');
+            console.log(`[Index] ${widgetId} 데이터 응답 전송`);
+          } else {
+            console.log(`[Index] ${widgetId} localStorage 데이터 없음`);
+          }
+        } catch (e) {
+          console.warn(`[Index] ${widgetId} 데이터 처리 실패:`, e);
         }
-      } catch (e) {
-        console.warn(`[Index] ${widgetId} 데이터 처리 실패:`, e);
       }
-    }
-  };
-  window.addEventListener('message', window._widgetDataHandler);
+    };
+    window.addEventListener('message', window._widgetDataHandler);
+  }
 
 </script>
 
@@ -627,10 +634,13 @@
     window.removeEventListener('message', window._widgetDataHandler);
     delete window._widgetDataHandler;
   }
+  if (window._widgetDataFetcherHandler) {
+    window.removeEventListener('message', window._widgetDataFetcherHandler);
+  }
 
   // DataFetcher를 사용한 비동기 핸들러
-  window.addEventListener('message', async (event) => {
-    if (event.data && event.data.type === 'REQUEST_WIDGET_DATA') {
+  window._widgetDataFetcherHandler = async function(event) {
+    if (event.data && event.data.type === 'REQUEST_WIDGET_DATA' && event.source) {
       const widgetId = event.data.widgetId;
       console.log(`[Index] ${widgetId} 데이터 요청 수신 (DataFetcher)`);
 
@@ -666,7 +676,9 @@
         } catch (e2) {}
       }
     }
-  });
+  };
+  window.addEventListener('message', window._widgetDataFetcherHandler);
+  window._widgetDataFetcherReady = true;
 
   console.log('[Index] DataFetcher 기반 위젯 데이터 핸들러 활성화');
 </script>

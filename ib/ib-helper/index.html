@@ -771,6 +771,24 @@
               </div>
             </div>
             <div>
+              <div class="text-slate-400 mb-1">🟢 평단LOC 매수</div>
+              <div id="formula-buyAvg" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                전반전(T&lt;20): 평단LOC = min(평단가, 현재가×1.15), 예산 = 1회매수/2
+              </div>
+            </div>
+            <div>
+              <div class="text-slate-400 mb-1">🟢 큰수LOC 매수</div>
+              <div id="formula-buyStar" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                전반전: 1회매수/2, 후반전: 1회매수 전액
+              </div>
+            </div>
+            <div>
+              <div class="text-slate-400 mb-1">🟢 하락대비 #1</div>
+              <div id="formula-buyDecline" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
+                하락대비 #1 = 기준가 × 0.98
+              </div>
+            </div>
+            <div>
               <div class="text-slate-400 mb-1">📊 LOC 매도가</div>
               <div id="formula-locSell" class="font-mono text-slate-200 bg-slate-800/50 px-2 py-1 rounded">
                 LOC 매도가 = 별%가 + (평단가 × 0.5%)
@@ -3441,6 +3459,11 @@
         const starPrice = locInfo.starPrice || 0;
         const locSellPrice = IBCalculator.getSellLOCPrice(locInfo.locPrice || 0, avgPrice);
         const limitPrice = avgPrice * (1 + effectiveSellPercent / 100);
+        const currentPrice = input?.currentPrice || 0;
+        const priceCap = currentPrice > 0 ? currentPrice * 1.15 : Infinity;
+        const avgLocPrice = avgPrice > 0 ? Math.min(avgPrice, priceCap) : 0;
+        const buyLocPrice = IBCalculator.getBuyLOCPrice(locInfo.locPrice || 0);
+        const halfAmount = oneTimeBuy / 2;
 
         // Phase badge 클래스
         let phaseBadgeClass = 'accordion-badge-first';
@@ -3454,6 +3477,16 @@
         const declineOrders = buyOrders.filter(o => o.type.includes('하락대비'));
         // 🔴 FIX: 매수 주문 가격 내림차순 정렬
         const mergedBuyOrders = [...mainBuyOrders, ...declineOrders].sort((a, b) => b.price - a.price);
+        const avgLocQty = (T > 0 && T < 20 && avgLocPrice > 0) ? Math.floor(halfAmount / avgLocPrice) : 0;
+        const starBuyBudget = T <= 0 ? oneTimeBuy : (T < 20 ? halfAmount : oneTimeBuy);
+        const starLocQty = buyLocPrice > 0 ? Math.floor(starBuyBudget / buyLocPrice) : 0;
+        const regularBuyPrices = mainBuyOrders
+          .map(o => Number(o.price))
+          .filter(v => Number.isFinite(v) && v > 0);
+        const declineBasePrice = regularBuyPrices.length > 0 ? Math.min(...regularBuyPrices) : buyLocPrice;
+        const declineStep1Price = declineOrders.length > 0
+          ? (Number(declineOrders[0].price) || 0)
+          : IBCalculator.roundPrice((declineBasePrice || 0) * 0.98);
 
         // 아코디언 아이템 HTML
         return `
@@ -3577,6 +3610,35 @@
                       <td class="py-1.5 text-gray-400 font-mono">${effectiveSellPercent}% × (1 − ${T.toFixed(1)} / 20) + (${effectiveLocSellPercent.toFixed(1)}% − 5.0%)</td>
                       <td class="px-3 py-1.5 text-right font-bold text-amber-700 whitespace-nowrap">${starPercent.toFixed(1)}%</td>
                     </tr>
+                    ${T > 0 && T < 20 ? `
+                    <tr>
+                      <td class="px-3 py-1.5 text-green-700 font-semibold whitespace-nowrap">평단LOC매수</td>
+                      <td class="py-1.5 text-gray-400 font-mono">min(${IBCalculator.formatDollar(avgPrice)}, ${IBCalculator.formatDollar(currentPrice)} × 1.15)</td>
+                      <td class="px-3 py-1.5 text-right font-bold text-green-700 whitespace-nowrap">${avgLocQty}주 @ ${IBCalculator.formatDollar(avgLocPrice)}</td>
+                    </tr>
+                    ` : `
+                    <tr>
+                      <td class="px-3 py-1.5 text-gray-400 font-semibold whitespace-nowrap">평단LOC매수</td>
+                      <td colspan="2" class="px-3 py-1.5 text-gray-400 italic">${T <= 0 ? 'T=0 첫 매수 구간: 평단LOC 없음' : '후반전: 평단LOC 없음'}</td>
+                    </tr>
+                    `}
+                    <tr>
+                      <td class="px-3 py-1.5 text-green-700 font-semibold whitespace-nowrap">큰수LOC매수</td>
+                      <td class="py-1.5 text-gray-400 font-mono">${T < 20 ? `(${IBCalculator.formatDollar(oneTimeBuy)} ÷ 2) / ${IBCalculator.formatDollar(buyLocPrice)}` : `${IBCalculator.formatDollar(oneTimeBuy)} / ${IBCalculator.formatDollar(buyLocPrice)}`}</td>
+                      <td class="px-3 py-1.5 text-right font-bold text-green-700 whitespace-nowrap">${starLocQty}주 @ ${IBCalculator.formatDollar(buyLocPrice)}</td>
+                    </tr>
+                    ${(input?.additionalBuyEnabled !== false && T > 0) ? `
+                    <tr>
+                      <td class="px-3 py-1.5 text-green-700 font-semibold whitespace-nowrap">하락대비#1</td>
+                      <td class="py-1.5 text-gray-400 font-mono">${IBCalculator.formatDollar(declineBasePrice)} × 0.98</td>
+                      <td class="px-3 py-1.5 text-right font-bold text-green-700 whitespace-nowrap">${IBCalculator.formatDollar(declineStep1Price)}</td>
+                    </tr>
+                    ` : `
+                    <tr>
+                      <td class="px-3 py-1.5 text-gray-400 font-semibold whitespace-nowrap">하락대비#1</td>
+                      <td colspan="2" class="px-3 py-1.5 text-gray-400 italic">하락대비 비활성 (T=0 또는 설정 OFF)</td>
+                    </tr>
+                    `}
                     ${avgPrice > 0 ? `
                     <tr>
                       <td class="px-3 py-1.5 text-blue-600 font-semibold whitespace-nowrap">LOC매도</td>
@@ -3797,6 +3859,26 @@
         : (Number.isFinite(fallbackLocSellPercent) ? fallbackLocSellPercent : 5);
       const locOffset = effectiveLocSellPercent - 5;
       const baseStarPercent = effectiveSellPercent * (1 - T / 20);
+      const currentPrice = Number(input.currentPrice) || 0;
+      const halfAmount = oneTimeBuy / 2;
+      const priceCap = currentPrice > 0 ? currentPrice * 1.15 : Infinity;
+      const avgLocPrice = avgPrice > 0 ? Math.min(avgPrice, priceCap) : 0;
+      const buyLocPrice = IBCalculator.getBuyLOCPrice(locInfo.locPrice || 0);
+      const avgLocQty = (T > 0 && T < 20 && avgLocPrice > 0) ? Math.floor(halfAmount / avgLocPrice) : 0;
+      const starBuyBudget = T < 20 ? halfAmount : oneTimeBuy;
+      const starQtyBudget = T <= 0 ? oneTimeBuy : starBuyBudget;
+      const starLocQty = buyLocPrice > 0 ? Math.floor(starQtyBudget / buyLocPrice) : 0;
+      const buyOrders = Array.isArray(result.buyOrders) ? result.buyOrders : [];
+      const regularBuyOrders = buyOrders.filter(o => o && o.type && !o.type.includes('하락대비'));
+      const declineBuyOrders = buyOrders.filter(o => o && o.type && o.type.includes('하락대비'));
+      const regularBuyPrices = regularBuyOrders
+        .map(o => Number(o.price))
+        .filter(v => Number.isFinite(v) && v > 0);
+      const declineBasePrice = regularBuyPrices.length > 0 ? Math.min(...regularBuyPrices) : buyLocPrice;
+      const declineStep1Price = declineBuyOrders.length > 0
+        ? (Number(declineBuyOrders[0].price) || 0)
+        : IBCalculator.roundPrice((declineBasePrice || 0) * 0.98);
+      const declineEnabled = input.additionalBuyEnabled !== false && T > 0;
 
       // T값 공식
       const tFormulaEl = document.getElementById('formula-T');
@@ -3812,6 +3894,47 @@
         starFormulaEl.innerHTML = `별% = sellPercent × (1 - T / 20) + (LOC% - 5%)<br>
           = ${effectiveSellPercent}% × (1 - ${T.toFixed(1)} / 20) + (${effectiveLocSellPercent.toFixed(1)}% - 5.0%)<br>
           <span class="text-yellow-400">= ${baseStarPercent.toFixed(1)}% + ${locOffset.toFixed(1)}% = ${starPercent.toFixed(1)}%</span>`;
+      }
+
+      // 평단LOC 매수 공식
+      const buyAvgEl = document.getElementById('formula-buyAvg');
+      if (buyAvgEl) {
+        if (T <= 0) {
+          buyAvgEl.innerHTML = `T=0 첫 매수 구간에서는 평단LOC 주문이 생성되지 않음`;
+        } else if (T < 20) {
+          buyAvgEl.innerHTML = `평단LOC = min(평단가, 현재가×1.15)<br>
+            = min($${formatPrice(avgPrice)}, $${formatPrice(currentPrice)} × 1.15) = $${formatPrice(avgLocPrice)}<br>
+            <span class="text-green-400">수량 = floor(($${formatPrice(oneTimeBuy)} / 2) / $${formatPrice(avgLocPrice)}) = ${avgLocQty}주</span>`;
+        } else {
+          buyAvgEl.innerHTML = `후반전(T≥20)에서는 평단LOC 주문이 생성되지 않음`;
+        }
+      }
+
+      // 큰수LOC 매수 공식
+      const buyStarEl = document.getElementById('formula-buyStar');
+      if (buyStarEl) {
+        if (T <= 0) {
+          buyStarEl.innerHTML = `T=0: 큰수LOC만 생성<br>
+            <span class="text-green-400">수량 = floor($${formatPrice(oneTimeBuy)} / $${formatPrice(buyLocPrice)}) = ${starLocQty}주</span>`;
+        } else {
+          buyStarEl.innerHTML = `큰수LOC = 별% LOC - $0.01 = $${formatPrice(buyLocPrice)}<br>
+            예산 = ${T < 20 ? `1회매수/2 = $${formatPrice(starBuyBudget)}` : `1회매수 전액 = $${formatPrice(starBuyBudget)}`}<br>
+            <span class="text-green-400">수량 = floor($${formatPrice(starBuyBudget)} / $${formatPrice(buyLocPrice)}) = ${starLocQty}주</span>`;
+        }
+      }
+
+      // 하락대비 #1 공식
+      const buyDeclineEl = document.getElementById('formula-buyDecline');
+      if (buyDeclineEl) {
+        if (!declineEnabled) {
+          buyDeclineEl.innerHTML = `하락대비 비활성 (T=0 또는 설정 OFF)`;
+        } else if (!(declineBasePrice > 0)) {
+          buyDeclineEl.innerHTML = `하락대비 기준가를 계산할 수 없음`;
+        } else {
+          buyDeclineEl.innerHTML = `기준가 = ${regularBuyPrices.length > 0 ? '정규매수 최저가' : '큰수LOC'} = $${formatPrice(declineBasePrice)}<br>
+            하락대비 #1 = 기준가 × 0.98 = $${formatPrice(declineBasePrice)} × 0.98<br>
+            <span class="text-green-400">= $${formatPrice(declineStep1Price)}</span>`;
+        }
       }
 
       // LOC 매도가 공식
