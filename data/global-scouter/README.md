@@ -2,7 +2,7 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,245
+> **Files**: 1,244
 > **Version**: v2.2.0
 
 ---
@@ -20,7 +20,7 @@ global-scouter/
 │   ├── metadata.json        # System metadata
 │   └── stocks_index.json    # Master stock index
 ├── stocks/
-│   └── detail/              # Individual stock profiles (1,240 files)
+│   └── detail/              # Individual stock profiles (1,239 files)
 │       ├── AAPL.json
 │       ├── MSFT.json
 │       └── ...
@@ -35,10 +35,10 @@ global-scouter/
 | Folder | Files |
 |--------|-------|
 | core/ | 3 |
-| stocks/detail/ | 1,240 |
+| stocks/detail/ | 1,239 |
 | etfs/ | 1 |
 | indicators/ | 1 |
-| **Total** | 1,245 |
+| **Total** | 1,244 |
 
 ## Schema
 
@@ -161,6 +161,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.0 | 2026-02-16 | Data refresh: 1,239 stocks (2026-02-13 source), 1,048 indicators, per_bands 95.8% |
 | 2.2.0 | 2026-02-06 | Data refresh: 1,240 stocks, 1,048 indicators, per_bands 95.8% |
 | 2.2.0 | 2026-01-25 | Extended fields: fiscal_month, eps_consensus, growth_consensus, per_bands |
 | 2.1.0 | 2026-01-10 | Added etfs/index.json, indicators/economic.json |
@@ -169,4 +170,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-02-09*
+*Last Updated: 2026-02-16*
