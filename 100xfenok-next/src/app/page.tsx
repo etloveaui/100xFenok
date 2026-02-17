@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
 
@@ -9,26 +9,108 @@ const periods = ['1D', '1W', '1M', 'YTD', '1Y'];
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [activePeriod, setActivePeriod] = useState('1W');
+  const [isPeriodMenuOpen, setIsPeriodMenuOpen] = useState(false);
+  const periodMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isPeriodMenuOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!periodMenuRef.current) return;
+      if (!periodMenuRef.current.contains(event.target as Node)) {
+        setIsPeriodMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsPeriodMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isPeriodMenuOpen]);
 
   return (
     <>
       <div className="command-bar">
-        <div className="tab-pills" role="tablist" aria-label="View tabs">
-          <button className={`tab-pill ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>Overview</button>
-          <button className={`tab-pill ${activeTab === 'sectors' ? 'active' : ''}`} onClick={() => setActiveTab('sectors')}>Sectors</button>
-          <button className={`tab-pill ${activeTab === 'liquidity' ? 'active' : ''}`} onClick={() => setActiveTab('liquidity')}>Liquidity</button>
-          <button className={`tab-pill ${activeTab === 'sentiment' ? 'active' : ''}`} onClick={() => setActiveTab('sentiment')}>Sentiment</button>
-        </div>
-        <div className="period-pills" role="radiogroup" aria-label="Time period">
-          {periods.map((period) => (
+        <div className="command-main">
+          <div className="tab-pills tab-pills-compact" role="tablist" aria-label="View tabs">
             <button
-              key={period}
-              className={`period-pill ${activePeriod === period ? 'active' : ''}`}
-              onClick={() => setActivePeriod(period)}
+              role="tab"
+              aria-selected={activeTab === 'overview'}
+              className={`tab-pill ${activeTab === 'overview' ? 'active' : ''}`}
+              onClick={() => setActiveTab('overview')}
             >
-              {period}
+              Overview
             </button>
-          ))}
+            <button
+              role="tab"
+              aria-selected={activeTab === 'sectors'}
+              className={`tab-pill ${activeTab === 'sectors' ? 'active' : ''}`}
+              onClick={() => setActiveTab('sectors')}
+            >
+              Sectors
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'liquidity'}
+              className={`tab-pill ${activeTab === 'liquidity' ? 'active' : ''}`}
+              onClick={() => setActiveTab('liquidity')}
+            >
+              Liquidity
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'sentiment'}
+              className={`tab-pill ${activeTab === 'sentiment' ? 'active' : ''}`}
+              onClick={() => setActiveTab('sentiment')}
+            >
+              Sentiment
+            </button>
+          </div>
+
+          <div className="period-menu-wrap" ref={periodMenuRef}>
+            <button
+              type="button"
+              className="period-trigger"
+              aria-haspopup="menu"
+              aria-expanded={isPeriodMenuOpen}
+              onClick={() => setIsPeriodMenuOpen((prev) => !prev)}
+            >
+              <i className="fas fa-calendar-days" aria-hidden="true" />
+              <span>{activePeriod}</span>
+              <i
+                className={`fas fa-chevron-down text-[10px] transition-transform ${isPeriodMenuOpen ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {isPeriodMenuOpen && (
+              <div className="period-menu" role="menu" aria-label="Time period">
+                {periods.map((period) => (
+                  <button
+                    key={period}
+                    role="menuitemradio"
+                    aria-checked={activePeriod === period}
+                    className={`period-option ${activePeriod === period ? 'active' : ''}`}
+                    onClick={() => {
+                      setActivePeriod(period);
+                      setIsPeriodMenuOpen(false);
+                    }}
+                  >
+                    {period}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
