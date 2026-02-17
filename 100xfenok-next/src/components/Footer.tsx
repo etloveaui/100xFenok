@@ -1,37 +1,52 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FooterMarketStatus } from '@/types';
 
-const marketStatusConfig: Record<FooterMarketStatus, { label: string; gradient: string }> = {
-  regular: { label: 'MARKET OPEN', gradient: 'from-emerald-500 to-emerald-600' },
-  pre: { label: 'PRE-MARKET', gradient: 'from-amber-500 to-amber-600' },
-  after: { label: 'AFTER HOURS', gradient: 'from-orange-500 to-orange-600' },
-  overnight: { label: 'OVERNIGHT', gradient: 'from-blue-500 to-blue-600' },
-  closed: { label: 'MARKET CLOSED', gradient: 'from-gray-500 to-gray-600' },
+type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
+
+const marketStatusConfig: Record<FooterMarketStatus, { label: string; className: string }> = {
+  regular: { label: 'MARKET OPEN', className: 'market-regular' },
+  pre: { label: 'MARKET PRE', className: 'market-pre' },
+  after: { label: 'MARKET AFTER', className: 'market-after' },
+  overnight: { label: 'MARKET NIGHT', className: 'market-overnight' },
+  closed: { label: 'MARKET CLOSED', className: 'market-closed' },
 };
 
 export default function Footer() {
   const [marketStatus, setMarketStatus] = useState<FooterMarketStatus>('regular');
-  const [tickerData, setTickerData] = useState('Loading market data...');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
+  function isDST(date: Date) {
+    const year = date.getFullYear();
+    const marchFirst = new Date(year, 2, 1);
+    const dstStart = new Date(year, 2, 8 + (7 - marchFirst.getDay()) % 7);
+    const novFirst = new Date(year, 10, 1);
+    const dstEnd = new Date(year, 10, 1 + (7 - novFirst.getDay()) % 7);
+    return date >= dstStart && date < dstEnd;
+  }
+
+  function getETTime(date = new Date()) {
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+    const offset = isDST(date) ? -4 : -5;
+    return new Date(utc + 3600000 * offset);
+  }
+
+  function getMarketStatus(date = new Date()): FooterMarketStatus {
+    const et = getETTime(date);
+    const day = et.getDay();
+    const time = et.getHours() * 100 + et.getMinutes();
+
+    if (day === 0 || day === 6) return 'closed';
+    if (time >= 400 && time < 930) return 'pre';
+    if (time >= 930 && time < 1600) return 'regular';
+    if (time >= 1600 && time < 2000) return 'after';
+    return 'overnight';
+  }
+
   useEffect(() => {
-    // Simulate market status updates
     const updateMarketStatus = () => {
-      const hour = new Date().getUTCHours();
-      let status: FooterMarketStatus = 'closed';
-      
-      if (hour >= 13 && hour < 20) {
-        status = 'regular';
-      } else if (hour >= 11 && hour < 13) {
-        status = 'pre';
-      } else if (hour >= 20 && hour < 22) {
-        status = 'after';
-      }
-      
-      setMarketStatus(status);
+      setMarketStatus(getMarketStatus());
     };
 
     updateMarketStatus();
@@ -41,28 +56,36 @@ export default function Footer() {
 
   const handleShareClick = () => {
     navigator.clipboard.writeText(window.location.href);
-    setToastMessage('URL copied!');
+    setToastMessage('URL 복사 완료!');
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+    setTimeout(() => setShowToast(false), 2500);
   };
 
   const handleMarketStatusClick = () => {
     const status = marketStatusConfig[marketStatus];
-    setToastMessage(`${status.label} - ET Time`);
+    const now = new Date();
+    const et = getETTime(now);
+    const dst = isDST(now) ? 'DST' : 'EST';
+    const etTime = et.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+    setToastMessage(`${status.label} | ET ${etTime} (${dst})`);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+    setTimeout(() => setShowToast(false), 2500);
   };
 
   const handleNotificationClick = () => {
-    setToastMessage('No new notifications');
+    setToastMessage('알림 없음');
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+    setTimeout(() => setShowToast(false), 2500);
   };
 
   const handleHelpClick = () => {
-    setToastMessage('Help & Support');
+    setToastMessage('도움말: 100xFenok 시장 모니터링 도구');
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+    setTimeout(() => setShowToast(false), 2500);
   };
 
   const status = marketStatusConfig[marketStatus];
@@ -71,10 +94,7 @@ export default function Footer() {
     <>
       <footer className="fixed bottom-0 left-0 right-0 z-40">
         {/* Upper Ticker Bar - Desktop Only */}
-        <div 
-          className="hidden md:block overflow-hidden"
-          style={{ background: 'linear-gradient(to right, #010079, #1B73D3, #010079)' }}
-        >
+        <div className="hidden md:block bg-gradient-to-r from-brand-navy via-brand-interactive to-brand-navy glow-bar overflow-hidden">
           <div className="h-6 flex items-center px-4">
             {/* LIVE Badge */}
             <div className="flex items-center gap-1.5 flex-shrink-0 mr-3">
@@ -84,21 +104,31 @@ export default function Footer() {
 
             {/* Ticker */}
             <div className="flex-1 overflow-hidden">
-              <div className="ticker-scroll whitespace-nowrap cursor-pointer text-[11px] font-medium text-white/90" title="15-minute delayed data"
-              >
-                <span className="text-white/50">{tickerData}</span>
+              <div className="ticker-scroll">
+                <div className="flex items-center gap-3 text-[10px] font-medium text-white/90 whitespace-nowrap">
+                  <span className="text-green-300 font-semibold">SPY +1.24%</span>
+                  <span className="text-white/40">•</span>
+                  <span className="text-brand-gold font-semibold">BTC $98,432</span>
+                  <span className="text-white/40">•</span>
+                  <span>VIX <span className="text-cyan-300">14.2</span></span>
+                  <span className="text-white/40">•</span>
+                  <span>FEAR <span className="text-orange-300">72</span></span>
+                  <span className="text-white/30 mx-3">───</span>
+                  <span className="text-green-300 font-semibold">SPY +1.24%</span>
+                  <span className="text-white/40">•</span>
+                  <span className="text-brand-gold font-semibold">BTC $98,432</span>
+                  <span className="text-white/40">•</span>
+                  <span>VIX <span className="text-cyan-300">14.2</span></span>
+                  <span className="text-white/40">•</span>
+                  <span>FEAR <span className="text-orange-300">72</span></span>
+                </div>
               </div>
-            </div>
-
-            {/* 15m Delayed Badge */}
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/30 ml-2 flex-shrink-0">
-              <span className="text-[9px] font-bold text-amber-300 uppercase">15m</span>
             </div>
 
             {/* Market Status */}
             <button
               onClick={handleMarketStatusClick}
-              className={`px-2.5 py-1 rounded text-white text-[10px] font-bold tracking-wide shadow-sm transition-all duration-200 hover:scale-105 hover:brightness-110 ml-3 flex-shrink-0 bg-gradient-to-r ${status.gradient}`}
+              className={`px-2.5 py-1 rounded text-white text-[10px] font-bold tracking-wide shadow-sm transition-all duration-200 hover:scale-105 hover:brightness-110 ml-3 flex-shrink-0 ${status.className}`}
               aria-label="Market Status"
             >
               {status.label}
@@ -116,7 +146,7 @@ export default function Footer() {
                 className="flex items-center gap-2 group cursor-pointer min-w-0"
                 aria-label="Copy URL"
               >
-                <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-brand-navy/10 to-brand-interactive/10 flex items-center justify-center text-brand-navy group-hover:from-brand-navy group-hover:to-brand-interactive group-hover:text-white transition-all duration-300 flex-shrink-0"
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-navy/10 to-brand-interactive/10 flex items-center justify-center text-brand-navy group-hover:from-brand-navy group-hover:to-brand-interactive group-hover:text-white transition-all duration-300 flex-shrink-0"
                 >
                   <i className="fas fa-chart-line" />
                 </div>
@@ -124,7 +154,7 @@ export default function Footer() {
                   <span className="font-[800] orbitron text-slate-800 text-sm group-hover:text-brand-interactive transition-colors leading-none">
                     100x <span className="text-brand-gold">FENOK</span>
                   </span>
-                  <span className="text-[10px] text-slate-400">© 2026 All rights reserved</span>
+                  <span className="text-[8px] text-slate-400">© 2025 All rights reserved</span>
                 </div>
               </button>
 
@@ -136,7 +166,7 @@ export default function Footer() {
                 {/* Mobile Market Status */}
                 <button
                   onClick={handleMarketStatusClick}
-                  className={`md:hidden px-3 py-1.5 rounded text-white text-[10px] font-bold tracking-wide shadow-sm bg-gradient-to-r ${status.gradient}`}
+                  className={`md:hidden px-3 py-1.5 rounded text-white text-[10px] font-bold tracking-wide shadow-sm ${status.className}`}
                   aria-label="Market Status"
                 >
                   {status.label}
@@ -147,20 +177,20 @@ export default function Footer() {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={handleNotificationClick}
-                  className="w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                  className="w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
                   aria-label="Notifications"
                 >
                   <i className="fas fa-bell text-sm" />
                 </button>
                 <button
-                  className="hidden sm:flex w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                  className="hidden sm:flex w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
                   aria-label="Admin"
                 >
                   <i className="fas fa-cog text-sm" />
                 </button>
                 <button
                   onClick={handleHelpClick}
-                  className="hidden sm:flex w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                  className="hidden sm:flex w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
                   aria-label="Help"
                 >
                   <i className="fas fa-question text-sm" />
@@ -173,7 +203,7 @@ export default function Footer() {
 
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg animate-fade-in">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-brand-navy text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg toast-animate">
           {toastMessage}
         </div>
       )}
