@@ -38,8 +38,8 @@ export default function Home() {
   }, [isPeriodMenuOpen]);
 
   return (
-    <>
-      <div className="command-bar">
+    <main className="container mx-auto px-4 py-4">
+      <section className="command-toolbar" role="toolbar" aria-label="Dashboard controls">
         <div className="command-main">
           <div className="tab-pills tab-pills-compact" role="tablist" aria-label="View tabs">
             <button
@@ -112,9 +112,8 @@ export default function Home() {
             )}
           </div>
         </div>
-      </div>
+      </section>
 
-      <main className="container mx-auto px-4 py-4">
         {activeTab === 'overview' && (
           <>
             <div className="hero-zone">
@@ -299,7 +298,6 @@ export default function Home() {
             </div>
           </div>
         )}
-      </main>
-    </>
+    </main>
   );
 }
