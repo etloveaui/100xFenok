@@ -19,6 +19,13 @@ export interface NavDropdownItem {
   color?: 'gold' | 'interactive' | 'rose' | 'green';
 }
 
+export interface MobileNavItem {
+  label: string;
+  href?: string;
+  icon: string;
+  items?: { label: string; href: string }[];
+}
+
 // Market Data Types
 export interface IndexData {
   name: string;

@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { NavDropdown, NavDropdownItem } from '@/types';
+import { NavDropdown, NavDropdownItem, MobileNavItem } from '@/types';
 
 const marketDropdown: NavDropdown = {
   label: 'MARKET',
   items: [
-    { label: 'Market Wrap', href: '/100x', description: 'Daily Updates', color: 'gold' },
-    { label: 'Alpha Scout', href: '/alpha-scout', description: 'Weekly Deep Dive', color: 'interactive' },
+    { label: 'Market Wrap', href: '/posts', description: 'Daily Updates', color: 'gold' },
+    { label: 'Insights', href: '/posts', description: 'Weekly Deep Dive', color: 'interactive' },
   ],
 };
 
 const analyticsDropdown: NavDropdown = {
   label: 'ANALYTICS',
   items: [
-    { label: 'Multichart', href: '/tools/multichart', icon: 'fa-chart-line', color: 'interactive' },
-    { label: 'Radar', href: '/tools/radar', icon: 'fa-satellite-dish', color: 'gold' },
     { label: 'Insights', href: '/posts', icon: 'fa-lightbulb', color: 'gold' },
+    { label: 'IB Helper', href: '/ib', icon: 'fa-calculator', color: 'interactive' },
+    { label: 'V/R', href: '/vr', icon: 'fa-balance-scale', color: 'gold' },
   ],
 };
 
@@ -25,35 +25,33 @@ const strategiesDropdown: NavDropdown = {
   label: 'STRATEGIES',
   items: [
     { label: 'IB Helper (무한매수)', href: '/ib', description: 'V2.2 실사용 계산기', color: 'rose' },
-    { label: 'Infinite Buying', href: '/ib/guide', description: 'DCA strategy for volatile markets', color: 'green' },
     { label: 'Value Rebalancing', href: '/vr', description: 'Asset allocation optimization', color: 'gold' },
   ],
 };
 
 const iconNavItems = [
   { href: '/', icon: 'fa-home', title: 'Dashboard' },
-  { href: '/100x', icon: 'fa-chart-bar', title: 'Market' },
-  { href: '/tools/multichart', icon: 'fa-chart-line', title: 'Analytics' },
-  { href: '/ib/guide', icon: 'fa-lightbulb', title: 'Strategies' },
+  { href: '/posts', icon: 'fa-chart-bar', title: 'Market' },
+  { href: '/posts', icon: 'fa-chart-line', title: 'Analytics' },
+  { href: '/ib', icon: 'fa-lightbulb', title: 'Strategies' },
 ];
 
-const mobileNavItems = [
+const mobileNavItems: MobileNavItem[] = [
   { label: 'DASHBOARD', href: '/', icon: 'fa-home' },
   {
     label: 'MARKET',
     icon: 'fa-chart-bar',
     items: [
-      { label: 'Market Wrap', href: '/100x' },
-      { label: 'Alpha Scout', href: '/alpha-scout' },
+      { label: 'Market Wrap', href: '/posts' },
+      { label: 'Insights', href: '/posts' },
     ],
   },
   {
     label: 'ANALYTICS',
     icon: 'fa-chart-line',
     items: [
-      { label: 'Multichart', href: '/tools/multichart' },
-      { label: 'Radar', href: '/tools/radar' },
       { label: 'Insights', href: '/posts' },
+      { label: 'IB Helper', href: '/ib' },
     ],
   },
   {
@@ -61,7 +59,6 @@ const mobileNavItems = [
     icon: 'fa-lightbulb',
     items: [
       { label: 'IB Helper (무한매수)', href: '/ib' },
-      { label: 'Infinite Buying', href: '/ib/guide' },
       { label: 'Value Rebalancing', href: '/vr' },
     ],
   },
@@ -277,7 +274,7 @@ export default function Navbar() {
                 <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
-                {'items' in section && section.items?.map((item: { label: string; href: string }) => (
+                {section.items?.map((item) => (
                   <Link
                     key={item.label}
                     href={item.href}
