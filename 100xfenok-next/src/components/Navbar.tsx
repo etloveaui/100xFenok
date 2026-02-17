@@ -20,7 +20,7 @@ export default function Navbar() {
             {/* Brand */}
               <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
                 <div className="brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform border border-slate-100">
-                  <img src="/favicon.ico" alt="Icon" className="h-6 w-6 sm:h-8 sm:w-8" />
+                  <img src="/favicon.svg" alt="Icon" className="h-6 w-6 sm:h-8 sm:w-8" />
                 </div>
                 <span className="brand-text font-[900] orbitron text-slate-800 text-lg sm:text-xl leading-none tracking-tight">
                   100x <span className="text-brand-gold">FENOK</span>
