@@ -656,6 +656,89 @@ const IBCalculator = (function() {
     };
   }
 
+  function applyCrossGuard(buyOrders, sellOrders) {
+    const safeBuyOrders = Array.isArray(buyOrders) ? buyOrders : [];
+    const safeSellOrders = Array.isArray(sellOrders) ? sellOrders : [];
+
+    const buyPrices = safeBuyOrders
+      .map(o => Number(o?.price))
+      .filter(p => Number.isFinite(p) && p > 0);
+    const sellPrices = safeSellOrders
+      .map(o => Number(o?.price))
+      .filter(p => Number.isFinite(p) && p > 0);
+
+    if (buyPrices.length === 0 || sellPrices.length === 0) {
+      return {
+        buyOrders: safeBuyOrders,
+        crossGuard: { active: false }
+      };
+    }
+
+    const maxBuyPrice = Math.max(...buyPrices);
+    const minSellPrice = Math.min(...sellPrices);
+    if (maxBuyPrice < minSellPrice) {
+      return {
+        buyOrders: safeBuyOrders,
+        crossGuard: { active: false }
+      };
+    }
+
+    const capPrice = roundPrice(minSellPrice - 0.01);
+    if (!Number.isFinite(capPrice) || capPrice <= 0) {
+      return {
+        buyOrders: safeBuyOrders,
+        crossGuard: {
+          active: true,
+          resolved: false,
+          adjustedCount: 0,
+          beforeMaxBuyPrice: roundPrice(maxBuyPrice),
+          afterMaxBuyPrice: roundPrice(maxBuyPrice),
+          minSellPrice: roundPrice(minSellPrice),
+          capPrice: null,
+          reason: 'invalid_cap_price'
+        }
+      };
+    }
+
+    let adjustedCount = 0;
+    const adjustedBuyOrders = safeBuyOrders.map(order => {
+      const price = Number(order?.price);
+      if (!Number.isFinite(price) || price <= 0 || price < minSellPrice) {
+        return order;
+      }
+
+      adjustedCount += 1;
+      const nextOrder = { ...order, price: capPrice };
+
+      const quantity = Number(order?.quantity);
+      if (Number.isFinite(quantity) && quantity > 0 && Number.isFinite(Number(order?.amount))) {
+        nextOrder.amount = roundPrice(capPrice * quantity);
+      }
+
+      return nextOrder;
+    });
+
+    const afterBuyPrices = adjustedBuyOrders
+      .map(o => Number(o?.price))
+      .filter(p => Number.isFinite(p) && p > 0);
+    const afterMaxBuyPrice = afterBuyPrices.length > 0 ? Math.max(...afterBuyPrices) : 0;
+    const resolved = afterBuyPrices.length === 0 || afterMaxBuyPrice < minSellPrice;
+
+    return {
+      buyOrders: adjustedBuyOrders,
+      crossGuard: {
+        active: adjustedCount > 0,
+        resolved,
+        adjustedCount,
+        beforeMaxBuyPrice: roundPrice(maxBuyPrice),
+        afterMaxBuyPrice: roundPrice(afterMaxBuyPrice),
+        minSellPrice: roundPrice(minSellPrice),
+        capPrice,
+        reason: resolved ? 'buy_price_capped' : 'cap_not_resolved'
+      }
+    };
+  }
+
   /**
    * 종목별 AFTER 매도% 반환
    * @param {string} ticker
@@ -784,6 +867,13 @@ const IBCalculator = (function() {
       sellPercent: effectiveSellPercent
     });
 
+    const guarded = applyCrossGuard(buyResult.orders, sellResult.orders);
+    const guardedBuyOrders = guarded.buyOrders;
+    const guardedBuySummary = {
+      totalOrders: guardedBuyOrders.length,
+      totalQuantity: guardedBuyOrders.reduce((sum, o) => sum + (parseInt(o?.quantity, 10) || 0), 0)
+    };
+
     return {
       ticker: ticker?.toUpperCase() || 'UNKNOWN',
       timestamp: new Date().toISOString(),
@@ -813,13 +903,14 @@ const IBCalculator = (function() {
         phase: T < 20 ? '전반전' : (T <= 40 ? '후반전' : '쿼터손절'),
         locInfo
       },
-      buyOrders: buyResult.orders,
+      buyOrders: guardedBuyOrders,
       deadZone: buyResult.deadZone || null,
       seedInfo: buyResult.seedInfo || null,
+      crossGuard: guarded.crossGuard?.active ? guarded.crossGuard : null,
       sellOrders: sellResult.orders,
       quarterStopLoss: sellResult.quarterStopLoss,
       summary: {
-        buy: buyResult.summary,
+        buy: guardedBuySummary,
         sell: sellResult.summary
       }
     };
