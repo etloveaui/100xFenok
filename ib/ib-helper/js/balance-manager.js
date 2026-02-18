@@ -101,11 +101,12 @@ const BalanceManager = (function() {
    */
   function calcStockDailyAttempt(stock, settings) {
     const splits = resolveSplits(settings, stock);
-    const oneTimeBuy = stock.principal / splits;
-
-    // 🔴 v4.50.0: T=0 support — avgPrice=0 && currentPrice>0 → currentPrice fallback
-    const effectiveAvgPrice = (stock.avgPrice > 0) ? stock.avgPrice : (stock.currentPrice > 0 ? stock.currentPrice : 0);
-    if (effectiveAvgPrice <= 0) {
+    const principal = parseFloat(stock?.principal) || 0;
+    const oneTimeBuy = principal / splits;
+    const avgPrice = parseFloat(stock?.avgPrice) || 0;
+    const currentPrice = parseFloat(stock?.currentPrice) || 0;
+    const effectiveAvgPrice = avgPrice > 0 ? avgPrice : (currentPrice > 0 ? currentPrice : 0);
+    if (effectiveAvgPrice <= 0 || !Number.isFinite(oneTimeBuy) || oneTimeBuy <= 0) {
       return {
         symbol: stock.symbol,
         oneTimeBuy: 0,
@@ -114,8 +115,60 @@ const BalanceManager = (function() {
         percentage: 0
       };
     }
-    // Working copy with effectiveAvgPrice for downstream calculations
-    const workingStock = (stock.avgPrice > 0) ? stock : { ...stock, avgPrice: effectiveAvgPrice };
+
+    const workingStock = avgPrice > 0
+      ? { ...stock, avgPrice, currentPrice }
+      : { ...stock, avgPrice: effectiveAvgPrice, currentPrice };
+
+    if (typeof IBCalculator !== 'undefined' && typeof IBCalculator.calculate === 'function') {
+      const additional = settings?.additionalBuy || {};
+      const holdings = Number.isFinite(parseFloat(workingStock?.quantity))
+        ? parseFloat(workingStock.quantity)
+        : (Number.isFinite(parseFloat(workingStock?.holdings)) ? parseFloat(workingStock.holdings) : 0);
+      const sellPercent = parseFloat(workingStock?.sellPercent);
+      const locSellPercent = parseFloat(workingStock?.locSellPercent);
+      const calcResult = IBCalculator.calculate({
+        ticker: String(workingStock?.symbol || '').toUpperCase(),
+        principal,
+        divisions: splits,
+        avgPrice: effectiveAvgPrice,
+        totalInvested: resolveTotalInvested(workingStock),
+        holdings,
+        currentPrice,
+        sellPercent,
+        locSellPercent: Number.isFinite(locSellPercent) ? locSellPercent : 5,
+        additionalBuyEnabled: additional.enabled !== false,
+        additionalBuyMode: additional.mode,
+        additionalBuyOrderCount: additional.orderCount,
+        additionalBuyBudgetRatio: additional.budgetRatio,
+        additionalBuyAllowOneOver: additional.allowOneOver !== false,
+        additionalBuyMaxDecline: additional.maxDecline,
+        additionalBuyQuantity: additional.quantity,
+        deadZoneGuardEnabled: additional.deadZoneGuardEnabled !== false
+      });
+
+      if (!calcResult?.error && Array.isArray(calcResult.buyOrders)) {
+        const validOrders = calcResult.buyOrders.filter(order => {
+          const orderPrice = Number(order?.price);
+          const orderQty = Number(order?.quantity);
+          return Number.isFinite(orderPrice) && orderPrice > 0 && Number.isFinite(orderQty) && orderQty > 0;
+        });
+        const oneTimeAmount = validOrders
+          .filter(order => !String(order?.type || '').includes('하락대비'))
+          .reduce((sum, order) => sum + (Number(order.price) * Number(order.quantity)), 0);
+        const additionalAmount = validOrders
+          .filter(order => String(order?.type || '').includes('하락대비'))
+          .reduce((sum, order) => sum + (Number(order.price) * Number(order.quantity)), 0);
+        const total = oneTimeAmount + additionalAmount;
+        return {
+          symbol: stock.symbol,
+          oneTimeBuy: roundPrice(oneTimeAmount),
+          additionalAmount: roundPrice(additionalAmount),
+          total: roundPrice(total),
+          percentage: 0
+        };
+      }
+    }
 
     // Base amount (1회 매수금)
     let total = oneTimeBuy;
