@@ -44,6 +44,7 @@ export default function Home() {
         <div className="command-main">
           <div className="tab-pills tab-pills-compact" role="tablist" aria-label="View tabs">
             <button
+              type="button"
               role="tab"
               aria-selected={activeTab === 'overview'}
               className={`tab-pill ${activeTab === 'overview' ? 'active' : ''}`}
@@ -52,6 +53,7 @@ export default function Home() {
               Overview
             </button>
             <button
+              type="button"
               role="tab"
               aria-selected={activeTab === 'sectors'}
               className={`tab-pill ${activeTab === 'sectors' ? 'active' : ''}`}
@@ -60,6 +62,7 @@ export default function Home() {
               Sectors
             </button>
             <button
+              type="button"
               role="tab"
               aria-selected={activeTab === 'liquidity'}
               className={`tab-pill ${activeTab === 'liquidity' ? 'active' : ''}`}
@@ -68,6 +71,7 @@ export default function Home() {
               Liquidity
             </button>
             <button
+              type="button"
               role="tab"
               aria-selected={activeTab === 'sentiment'}
               className={`tab-pill ${activeTab === 'sentiment' ? 'active' : ''}`}
@@ -97,6 +101,7 @@ export default function Home() {
               <div className="period-menu" role="menu" aria-label="Time period">
                 {periods.map((period) => (
                   <button
+                    type="button"
                     key={period}
                     role="menuitemradio"
                     aria-checked={activePeriod === period}
@@ -271,7 +276,7 @@ export default function Home() {
         )}
 
         {activeTab === 'liquidity' && (
-          <div className="h-[calc(100vh-12rem)] w-full bg-white rounded-xl overflow-hidden">
+          <div className="h-[calc(100dvh-12rem)] min-h-[20rem] w-full bg-white rounded-xl overflow-hidden">
             <iframe
               src="/tools/macro-monitor/widgets/liquidity-flow.html"
               title="Liquidity Flow"
@@ -281,7 +286,7 @@ export default function Home() {
         )}
 
         {activeTab === 'sentiment' && (
-          <div className="h-[calc(100vh-12rem)] w-full bg-white rounded-xl overflow-hidden">
+          <div className="h-[calc(100dvh-12rem)] min-h-[20rem] w-full bg-white rounded-xl overflow-hidden">
             <iframe
               src="/tools/macro-monitor/widgets/sentiment-signal.html"
               title="Sentiment Signal"
