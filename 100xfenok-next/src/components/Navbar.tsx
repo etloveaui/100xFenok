@@ -9,6 +9,9 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const isDashboard = pathname === '/';
+  const isMarket = pathname === '/market' || pathname === '/alpha-scout';
+  const isAnalytics = pathname === '/multichart' || pathname === '/radar' || pathname === '/posts';
+  const isStrategies = pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr';
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
@@ -47,7 +50,11 @@ export default function Navbar() {
               {/* MARKET Dropdown */}
               <div className="relative dropdown-wrapper h-full flex items-center group">
                 <button
-                  className="nav-pill px-4 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm"
+                  className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+                    isMarket
+                      ? 'text-brand-navy bg-blue-50/50'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
@@ -56,14 +63,14 @@ export default function Navbar() {
                 </button>
                 <div className="dropdown-menu absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-xl p-2 min-w-[220px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
                   <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-1">Briefing</div>
-                  <Link href="/posts" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
+                  <Link href="/market" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
                     <span className="w-1 h-4 bg-brand-gold rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
                     <div>
                       <span className="block font-bold text-slate-700">Market Wrap</span>
                       <span className="text-[10px] text-slate-400">Daily Updates</span>
                     </div>
                   </Link>
-                  <Link href="/posts" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
+                  <Link href="/alpha-scout" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
                     <span className="w-1 h-4 bg-brand-interactive rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
                     <div>
                       <span className="block font-bold text-slate-700">Alpha Scout</span>
@@ -75,7 +82,11 @@ export default function Navbar() {
 
               {/* ANALYTICS Dropdown */}
               <div className="relative dropdown-wrapper h-full flex items-center group">
-                <button className="nav-pill px-4 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm"
+                <button className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+                    isAnalytics
+                      ? 'text-brand-navy bg-blue-50/50'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
@@ -85,17 +96,17 @@ export default function Navbar() {
                 <div className="dropdown-menu absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-xl p-4 min-w-[360px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-2">Tools & Charts</div>
                   <div className="grid grid-cols-3 gap-2">
+                    <Link href="/multichart" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-chart-line text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">Multichart</span>
+                    </Link>
+                    <Link href="/radar" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-satellite-dish text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">Radar</span>
+                    </Link>
                     <Link href="/posts" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-lightbulb text-xl text-amber-500 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Insights</span>
-                    </Link>
-                    <Link href="/ib" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-calculator text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">IB Helper</span>
-                    </Link>
-                    <Link href="/vr" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-balance-scale text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">V/R</span>
                     </Link>
                   </div>
                 </div>
@@ -103,7 +114,11 @@ export default function Navbar() {
 
               {/* STRATEGIES Dropdown */}
               <div className="relative dropdown-wrapper h-full flex items-center group">
-                <button className="px-4 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm"
+                <button className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+                    isStrategies
+                      ? 'text-brand-navy bg-blue-50/50'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
@@ -119,6 +134,15 @@ export default function Navbar() {
                     <div>
                       <span className="block text-sm font-bold text-slate-700 group-hover/strat:text-brand-navy">IB Helper (무한매수)</span>
                       <span className="block text-[10px] text-slate-500 leading-tight mt-0.5">V2.2 실사용 계산기</span>
+                    </div>
+                  </Link>
+                  <Link href="/infinite-buying" className="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors mb-1 group/strat">
+                    <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center text-green-600 mr-3 mt-0.5 group-hover/strat:bg-green-200 transition-colors">
+                      <i className="fas fa-infinity text-xs" />
+                    </div>
+                    <div>
+                      <span className="block text-sm font-bold text-slate-700 group-hover/strat:text-brand-navy">Infinite Buying</span>
+                      <span className="block text-[10px] text-slate-500 leading-tight mt-0.5">DCA strategy for volatile markets</span>
                     </div>
                   </Link>
                   <Link href="/vr" className="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors group/strat">
@@ -139,13 +163,13 @@ export default function Navbar() {
               <Link href="/" className={`nav-icon ${isDashboard ? 'active' : ''}`} title="Dashboard">
                 <i className="fas fa-home" />
               </Link>
-              <Link href="/posts" className="nav-icon" title="Market">
+              <Link href="/market" className={`nav-icon ${isMarket ? 'active' : ''}`} title="Market">
                 <i className="fas fa-chart-bar" />
               </Link>
-              <Link href="/posts" className="nav-icon" title="Analytics">
+              <Link href="/multichart" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="Analytics">
                 <i className="fas fa-chart-line" />
               </Link>
-              <Link href="/ib" className="nav-icon" title="Strategies">
+              <Link href="/ib" className={`nav-icon ${isStrategies ? 'active' : ''}`} title="Strategies">
                 <i className="fas fa-lightbulb" />
               </Link>
             </nav>
@@ -179,41 +203,52 @@ export default function Navbar() {
           <Link
             href="/"
             onClick={closeMobileMenu}
-            className="block px-4 py-3 rounded-lg bg-blue-50 border-l-4 border-brand-navy font-bold text-sm text-brand-navy"
+            className={`block px-4 py-3 rounded-lg font-bold text-sm ${
+              isDashboard
+                ? 'bg-blue-50 border-l-4 border-brand-navy text-brand-navy'
+                : 'text-slate-700 hover:bg-slate-50'
+            }`}
           >
             <i className="fas fa-home mr-2" /> DASHBOARD
           </Link>
 
           <details className="group">
-            <summary className="px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm text-slate-700 list-none flex items-center justify-between">
+            <summary className={`px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
+                isMarket ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
+              }`}>
               <span><i className="fas fa-chart-bar mr-2" /> MARKET</span>
               <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
             </summary>
             <div className="ml-4 mt-1 space-y-1">
-              <Link href="/posts" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Market Wrap</Link>
-              <Link href="/posts" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Alpha Scout</Link>
+              <Link href="/market" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Market Wrap</Link>
+              <Link href="/alpha-scout" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Alpha Scout</Link>
             </div>
           </details>
 
           <details className="group">
-            <summary className="px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm text-slate-700 list-none flex items-center justify-between">
+            <summary className={`px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
+                isAnalytics ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
+              }`}>
               <span><i className="fas fa-chart-line mr-2" /> ANALYTICS</span>
               <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
             </summary>
             <div className="ml-4 mt-1 space-y-1">
+              <Link href="/multichart" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Multichart</Link>
+              <Link href="/radar" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
               <Link href="/posts" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
-              <Link href="/ib" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">IB Helper</Link>
-              <Link href="/vr" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">V/R</Link>
             </div>
           </details>
 
           <details className="group">
-            <summary className="px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm text-slate-700 list-none flex items-center justify-between">
+            <summary className={`px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
+                isStrategies ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
+              }`}>
               <span><i className="fas fa-lightbulb mr-2" /> STRATEGIES</span>
               <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
             </summary>
             <div className="ml-4 mt-1 space-y-1">
               <Link href="/ib" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">IB Helper (무한매수)</Link>
+              <Link href="/infinite-buying" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Infinite Buying</Link>
               <Link href="/vr" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Value Rebalancing</Link>
             </div>
           </details>

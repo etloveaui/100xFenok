@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
@@ -183,7 +184,7 @@ export default function Home() {
               <div className="bento-card p-4">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-xs font-bold text-slate-400 tracking-widest orbitron">SECTOR SNAPSHOT</h3>
-                  <button className="text-xs text-brand-interactive font-bold min-h-[44px] flex items-center" onClick={() => setActiveTab('sectors')}>View All →</button>
+                  <Link href="/sectors" className="text-xs text-brand-interactive font-bold min-h-[44px] flex items-center">View All →</Link>
                 </div>
                 <div className="sector-snapshot">
                   <div className="flex gap-2 items-center">
@@ -270,32 +271,22 @@ export default function Home() {
         )}
 
         {activeTab === 'liquidity' && (
-          <div className="bento-card p-6">
-            <div className="tab-placeholder">
-              <i className="fas fa-water tab-placeholder-icon text-blue-400" />
-              <h3 className="text-xl font-bold text-slate-700 mb-4">Liquidity Analysis</h3>
-              <div className="w-full max-w-md space-y-3">
-                <div className="skeleton-bar w-full" />
-                <div className="skeleton-bar w-4/5" />
-                <div className="skeleton-bar w-3/5" />
-              </div>
-              <p className="text-sm text-slate-400 mt-4">Loading liquidity data...</p>
-            </div>
+          <div className="h-[calc(100vh-12rem)] w-full bg-white rounded-xl overflow-hidden">
+            <iframe
+              src="/tools/macro-monitor/widgets/liquidity-flow.html"
+              title="Liquidity Flow"
+              className="h-full w-full border-0"
+            />
           </div>
         )}
 
         {activeTab === 'sentiment' && (
-          <div className="bento-card p-6">
-            <div className="tab-placeholder">
-              <i className="fas fa-heart-pulse tab-placeholder-icon text-red-400" />
-              <h3 className="text-xl font-bold text-slate-700 mb-4">Sentiment Indicators</h3>
-              <div className="w-full max-w-md space-y-3">
-                <div className="skeleton-bar w-full" />
-                <div className="skeleton-bar w-4/5" />
-                <div className="skeleton-bar w-3/5" />
-              </div>
-              <p className="text-sm text-slate-400 mt-4">Loading sentiment data...</p>
-            </div>
+          <div className="h-[calc(100vh-12rem)] w-full bg-white rounded-xl overflow-hidden">
+            <iframe
+              src="/tools/macro-monitor/widgets/sentiment-signal.html"
+              title="Sentiment Signal"
+              className="h-full w-full border-0"
+            />
           </div>
         )}
     </main>
