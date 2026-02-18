@@ -106,21 +106,7 @@ export default function Footer() {
             <div className="flex-1 overflow-hidden">
               <div className="ticker-scroll">
                 <div className="flex items-center gap-3 text-[10px] font-medium text-white/90 whitespace-nowrap" aria-hidden="true">
-                  <span className="text-green-300 font-semibold">SPY +1.24%</span>
-                  <span className="text-white/40">•</span>
-                  <span className="text-brand-gold font-semibold">BTC $98,432</span>
-                  <span className="text-white/40">•</span>
-                  <span>VIX <span className="text-cyan-300">14.2</span></span>
-                  <span className="text-white/40">•</span>
-                  <span>FEAR <span className="text-orange-300">72</span></span>
-                  <span className="text-white/30 mx-3">───</span>
-                  <span className="text-green-300 font-semibold">SPY +1.24%</span>
-                  <span className="text-white/40">•</span>
-                  <span className="text-brand-gold font-semibold">BTC $98,432</span>
-                  <span className="text-white/40">•</span>
-                  <span>VIX <span className="text-cyan-300">14.2</span></span>
-                  <span className="text-white/40">•</span>
-                  <span>FEAR <span className="text-orange-300">72</span></span>
+                  <span className="text-white/50">Loading market data...</span>
                 </div>
               </div>
             </div>

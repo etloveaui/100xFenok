@@ -11,7 +11,10 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "dist/**",
     "next-env.d.ts",
+    // Ignore copied static files from original source
+    "public/**",
   ]),
 ]);
 

@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "sync-static": "cp -r ../100x ../alpha-scout ../tools ../ib ../posts public/ 2>/dev/null || true",
+    "predev": "npm run sync-static",
     "dev": "next dev",
+    "prebuild": "npm run sync-static",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
