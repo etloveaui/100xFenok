@@ -1,0 +1,834 @@
+<!-- 100x Market Radar Widget - Liquidity Flow v2 (Clean Stream) -->
+<!-- 컨셉: 투명한 유리관 속 흐르는 디지털 자금 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+
+<!-- Constants & DataManager & DataFetcher ES Module import -->
+<script type="module">
+  import { DataManager, MacroDataManager } from '../shared/data-manager.js';
+  import { DataFetcher } from '../shared/data-fetcher.js';
+  import { THRESHOLDS, ICONS, COLORS } from '../shared/constants.js';
+  window.DataManager = DataManager;
+  window.MacroDataManager = MacroDataManager;
+  window.DataFetcher = DataFetcher;
+  window.THRESHOLDS = THRESHOLDS;
+  window.ICONS = ICONS;
+  window.COLORS = COLORS;
+
+  // Module 로드 완료 후 init 호출
+  if (typeof window.init === 'function') {
+    window.init();
+  }
+</script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: transparent; }
+
+  /* === 카드 기본 (밝은 톤 통일) === */
+  /* V3: min-height 제거 → iframe 높이를 그대로 따름 */
+  .card-widget {
+    height: 100%;
+    max-height: 100%;  /* V3: 부모(iframe) 높이 초과 방지 */
+    /* min-height 제거됨 - iframe이 높이 결정 */
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    padding: 12px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 4px 12px rgba(0,0,0,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-widget:hover {
+    transform: translateY(-4px);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 12px 28px rgba(0,0,0,0.1);
+  }
+
+  /* === Header === */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .title-icon { font-size: 14px; }
+
+  /* 종합 상태 배지 */
+  .overall-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border: 1px solid;
+  }
+
+  .badge-positive { background: #dcfce7; color: #166534; border-color: #86efac; }
+  .badge-neutral { background: #fef9c3; color: #a16207; border-color: #fde047; }
+  .badge-negative { background: #fecaca; color: #991b1b; border-color: #fca5a5; }
+
+  .trend-arrow {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* === Wave 배경 (은은한 흐름) - V2: 오버플로우 방지 === */
+  .wave-background {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200%;
+    height: 150%;  /* V2: 200% → 150% (배경 튀어나감 방지) */
+    opacity: 0.03;  /* V2: 0.04 → 0.03 */
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .wave-background svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* === Hero Section (Main Stream) === */
+  .hero-section {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0 6px;  /* V2: 16px 0 12px → 8px 0 6px */
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .hero-value-container {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .hero-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 36px;  /* V2: 42px → 36px */
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+
+  /* 그라데이션 텍스트 (상승/하락) */
+  .hero-value.rising {
+    background: linear-gradient(135deg, #0d9488 0%, #06b6d4 50%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-value.falling {
+    background: linear-gradient(135deg, #ea580c 0%, #dc2626 50%, #f87171 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-value.neutral {
+    background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-unit {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+
+  .hero-trend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .hero-trend.rising { color: #0d9488; }
+  .hero-trend.falling { color: #dc2626; }
+  .hero-trend.neutral { color: #64748b; }
+
+  .hero-trend-arrow {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* === Flow Divider (흐름 구분선) === */
+  .flow-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0;  /* V2: 8px 0 → 4px 0 */
+    position: relative;
+    z-index: 2;
+  }
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #cbd5e1 20%, #cbd5e1 80%, transparent 100%);
+  }
+
+  .divider-icon {
+    padding: 0 12px;
+    color: #94a3b8;
+    font-size: 10px;
+  }
+
+  /* === Tributaries (3단 지류) === */
+  .tributaries {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .tributary {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;  /* V2: 8px 12px → 6px 10px */
+    text-align: center;
+  }
+
+  /* Vertical Divider */
+  .tributary:not(:last-child) {
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .tributary-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .tributary-name {
+    font-size: 9px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .tributary-trend {
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .tributary-trend.up { color: #0d9488; }
+  .tributary-trend.down { color: #dc2626; }
+  .tributary-trend.flat { color: #64748b; }
+
+  .tributary-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;  /* V2: 18px → 16px */
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+  }
+
+  .tributary-unit {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    margin-left: 2px;
+  }
+
+  .tributary-sub {
+    font-size: 9px;  /* V2: 10px → 9px */
+    color: #94a3b8;
+    margin-top: 1px;  /* V2: 2px → 1px */
+    line-height: 1.0;  /* V2: 추가 */
+  }
+
+  /* === Loading === */
+  .loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    z-index: 10;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #0d9488;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-text {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* === No Cache === */
+  .no-cache {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    position: relative;
+    z-index: 2;
+  }
+
+  .no-cache-icon { font-size: 32px; margin-bottom: 8px; }
+  .no-cache-text { font-size: 12px; }
+  .no-cache-hint { font-size: 10px; margin-top: 4px; color: #cbd5e1; }
+
+  /* === Stale Warning === */
+  .stale-warning {
+    background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #92400e;
+    position: relative;
+    z-index: 2;
+  }
+
+  .stale-warning-icon { font-size: 11px; }
+  .stale-warning-text { font-weight: 500; }
+  .stale-warning-age { color: #b45309; font-weight: 600; }
+
+  /* === Responsive V2: 더 과감한 축소 === */
+
+  /* 태블릿 (768-1023px) - V2: 기본값 이미 축소됨, 추가 축소 */
+  @media (max-width: 1023px) and (min-width: 768px) {
+    .card-widget { padding: 10px; }
+    .hero-section { padding: 6px 0 4px; }
+    .hero-value { font-size: 32px; }  /* V2: 36px → 32px */
+    .flow-divider { padding: 3px 0; }
+    .tributary { padding: 5px 8px; }
+    .tributary-value { font-size: 14px; }
+  }
+
+  /* 플래그십 모바일 (360-431px) - V3: min-height 제거, 극단적 축소 */
+  @media (max-width: 431px) {
+    .card-widget {
+      /* min-height 제거됨 - iframe이 높이 결정 (320px) */
+      padding: 8px;
+    }
+    .hero-section { padding: 4px 0; }  /* V2: 8px 0 6px → 4px 0 */
+    .hero-value { font-size: 24px; }  /* V2: 28px → 24px */
+    .hero-unit { font-size: 10px; }  /* V2: 12px → 10px */
+    .hero-trend { font-size: 9px; margin-top: 2px; }  /* V2: 10px,4px → 9px,2px */
+    .flow-divider { padding: 2px 0; }  /* V2: 4px → 2px */
+
+    .tributaries {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .tributary {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 4px;  /* V2: 8px 4px → 6px 4px */
+    }
+
+    .tributary:not(:last-child) {
+      border-right: none;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .tributary-header { margin-bottom: 0; }
+    .tributary-name { font-size: 8px; }  /* V2: 9px → 8px */
+    .tributary-value { font-size: 13px; }  /* V2: 14px → 13px */
+    .tributary-unit { font-size: 7px; }  /* V2: 8px → 7px */
+    .tributary-sub {
+      display: inline-block;
+      font-size: 8px;  /* V2: 9px → 8px */
+      margin-left: 3px;
+      margin-top: 0;
+      opacity: 0.7;
+    }
+  }
+
+  /* 소형 모바일 (<360px) - V3: min-height 제거, 최소 크기 */
+  @media (max-width: 359px) {
+    .card-widget { padding: 6px; }  /* min-height 제거됨 - iframe이 높이 결정 (350px) */
+    .hero-section { padding: 2px 0; }
+    .hero-value { font-size: 20px; }  /* V2: 24px → 20px */
+    .hero-unit { font-size: 9px; }  /* V2: 10px → 9px */
+    .tributary { padding: 4px 2px; }  /* V2: 6px 4px → 4px 2px */
+    .tributary-value { font-size: 11px; }  /* V2: 12px → 11px */
+    .tributary-name { font-size: 7px; }  /* V2: 8px → 7px */
+  }
+</style>
+</head>
+<body>
+
+<div class="card-widget" onclick="openDetail()">
+  <!-- Wave 배경 -->
+  <div class="wave-background">
+    <svg viewBox="0 0 1200 600" preserveAspectRatio="none">
+      <path d="M0,300 Q150,250 300,300 T600,300 T900,300 T1200,300 L1200,600 L0,600 Z" fill="#0d9488"/>
+      <path d="M0,350 Q150,300 300,350 T600,350 T900,350 T1200,350 L1200,600 L0,600 Z" fill="#06b6d4"/>
+      <path d="M0,400 Q150,350 300,400 T600,400 T900,400 T1200,400 L1200,600 L0,600 Z" fill="#22d3ee"/>
+    </svg>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loader">
+    <div class="spinner"></div>
+    <div class="loading-text">데이터 로딩 중...</div>
+  </div>
+
+  <!-- Header -->
+  <div class="card-header">
+    <div class="card-title">
+      <span class="title-icon">💧</span>
+      <span>Liquidity Flow</span>
+    </div>
+    <div class="overall-badge badge-positive" id="overallBadge">
+      <span class="trend-arrow" id="overallArrow">↑</span>
+      <span id="overallLabel">RISING</span>
+    </div>
+  </div>
+
+  <!-- Stale Warning -->
+  <div class="stale-warning" id="staleWarning" style="display: none;">
+    <span class="stale-warning-icon">⚠️</span>
+    <span class="stale-warning-text">오래된 데이터</span>
+    <span class="stale-warning-age" id="staleAge">6시간 전</span>
+  </div>
+
+  <!-- Main Content -->
+  <div id="mainContent" style="display: none; flex: 1; display: flex; flex-direction: column;">
+    <!-- Hero Section (Main Stream) -->
+    <div class="hero-section">
+      <div class="hero-label">Net Liquidity Flow</div>
+      <div class="hero-value-container">
+        <span class="hero-value rising" id="heroValue">+234</span>
+        <span class="hero-unit">$B</span>
+      </div>
+      <div class="hero-trend rising" id="heroTrend">
+        <span class="hero-trend-arrow">↑</span>
+        <span id="heroTrendText">상승 중</span>
+      </div>
+    </div>
+
+    <!-- Flow Divider -->
+    <div class="flow-divider">
+      <div class="divider-line"></div>
+      <div class="divider-icon">▼</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- Tributaries (3단 지류) -->
+    <div class="tributaries">
+      <!-- M2 -->
+      <div class="tributary">
+        <div class="tributary-header">
+          <span class="tributary-name">M2 YoY</span>
+          <span class="tributary-trend up" id="m2Arrow">↑</span>
+        </div>
+        <div>
+          <span class="tributary-value" id="m2Value">+5.9</span>
+          <span class="tributary-unit">%</span>
+        </div>
+        <div class="tributary-sub" id="m2Sub">$22.3T</div>
+      </div>
+
+      <!-- Net Liq -->
+      <div class="tributary">
+        <div class="tributary-header">
+          <span class="tributary-name">Net Liq</span>
+          <span class="tributary-trend up" id="nlArrow">↑</span>
+        </div>
+        <div>
+          <span class="tributary-value" id="nlValue">+39</span>
+          <span class="tributary-unit">$B</span>
+        </div>
+        <div class="tributary-sub" id="nlSub">$5.8T</div>
+      </div>
+
+      <!-- Stablecoin -->
+      <div class="tributary">
+        <div class="tributary-header">
+          <span class="tributary-name">SC/M2</span>
+          <span class="tributary-trend flat" id="scArrow">→</span>
+        </div>
+        <div>
+          <span class="tributary-value" id="scValue">1.02</span>
+          <span class="tributary-unit">%</span>
+        </div>
+        <div class="tributary-sub" id="scSub">$226B</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Cache -->
+  <div class="no-cache" id="noCache" style="display: none;">
+    <div class="no-cache-icon">💧</div>
+    <div class="no-cache-text">데이터 없음</div>
+    <div class="no-cache-hint">클릭하여 상세 페이지에서 로드</div>
+  </div>
+
+</div>
+
+<script>
+  const WIDGET_ID = 'liquidity-flow';
+  const DETAIL_PATH = 'tools/macro-monitor/details/liquidity-flow.html';
+
+  // 임계값 헬퍼 - constants.js THRESHOLDS 사용 (fallback 포함)
+  const getThreshold = (category, level) => {
+    if (typeof THRESHOLDS !== 'undefined' && THRESHOLDS[category]) {
+      return THRESHOLDS[category][level];
+    }
+    const fallback = {
+      NET_LIQUIDITY: { POSITIVE: 50, NEGATIVE: -50 },
+      M2_YOY: { POSITIVE: 6, NEUTRAL: 2 },
+      STABLECOIN: { POSITIVE: 1.5, NEUTRAL: 1.0 },
+      OVERALL: { EXPANDING: { netLiq: 50, m2YoY: 4 }, CONTRACTING: { netLiq: -50, m2YoY: 2 } }
+    };
+    return fallback[category]?.[level];
+  };
+
+  // 상태 판단 함수들
+  function getNetFlowStatus(netFlow) {
+    const pos = getThreshold('NET_LIQUIDITY', 'POSITIVE');
+    const neg = getThreshold('NET_LIQUIDITY', 'NEGATIVE');
+    if (netFlow > pos) return 'rising';
+    if (netFlow < neg) return 'falling';
+    return 'neutral';
+  }
+
+  function getM2Status(m2Growth) {
+    const pos = getThreshold('M2_YOY', 'POSITIVE');
+    const neutral = getThreshold('M2_YOY', 'NEUTRAL');
+    if (m2Growth >= pos) return 'up';
+    if (m2Growth < neutral) return 'down';
+    return 'flat';
+  }
+
+  function getScStatus(scM2Ratio) {
+    const pos = getThreshold('STABLECOIN', 'POSITIVE');
+    const neutral = getThreshold('STABLECOIN', 'NEUTRAL');
+    if (scM2Ratio >= pos) return 'up';
+    if (scM2Ratio >= neutral) return 'flat';
+    return 'down';
+  }
+
+  // 화살표 반환
+  function getArrow(status) {
+    const arrows = { up: '↑', rising: '↑', down: '↓', falling: '↓', flat: '→', neutral: '→' };
+    return arrows[status] || '→';
+  }
+
+  // 화살표 클래스 반환
+  function getArrowClass(status) {
+    if (status === 'up' || status === 'rising') return 'up';
+    if (status === 'down' || status === 'falling') return 'down';
+    return 'flat';
+  }
+
+  function renderWidget(data) {
+    const mainContent = document.getElementById('mainContent');
+    const noCache = document.getElementById('noCache');
+
+    if (!data) {
+      mainContent.style.display = 'none';
+      noCache.style.display = 'flex';
+      return;
+    }
+
+    mainContent.style.display = 'flex';
+    noCache.style.display = 'none';
+
+    // 데이터 파싱
+    const netFlow = data.netLiquidityDelta || data.netFlow || 0;
+    const m2YoY = data.m2YoY || 0;
+
+    let m2Raw = data.m2Total || 22298;
+    const m2TotalT = m2Raw > 100 ? m2Raw / 1000 : m2Raw;
+    const m2TotalB = m2Raw > 100 ? m2Raw : m2Raw * 1000;
+
+    let nlRaw = data.netLiquidity || 5649;
+    const nlTotalT = nlRaw > 100 ? nlRaw / 1000 : nlRaw;
+
+    const sc = data.stablecoinMcap || 0;
+    const scM2Ratio = m2TotalB > 0 ? (sc / m2TotalB * 100) : 0;
+
+    // 1. Hero Section
+    const heroStatus = getNetFlowStatus(netFlow);
+    const heroValue = document.getElementById('heroValue');
+    heroValue.textContent = (netFlow >= 0 ? '+' : '') + Math.round(netFlow);
+    heroValue.className = 'hero-value ' + heroStatus;
+
+    const heroTrend = document.getElementById('heroTrend');
+    heroTrend.className = 'hero-trend ' + heroStatus;
+    heroTrend.querySelector('.hero-trend-arrow').textContent = getArrow(heroStatus);
+
+    const trendTexts = { rising: '상승 중', falling: '하락 중', neutral: '횡보 중' };
+    document.getElementById('heroTrendText').textContent = trendTexts[heroStatus];
+
+    // 2. M2 Tributary
+    const m2Status = getM2Status(m2YoY);
+    document.getElementById('m2Arrow').textContent = getArrow(m2Status);
+    document.getElementById('m2Arrow').className = 'tributary-trend ' + getArrowClass(m2Status);
+    document.getElementById('m2Value').textContent = (m2YoY >= 0 ? '+' : '') + m2YoY.toFixed(1);
+    document.getElementById('m2Sub').textContent = '$' + m2TotalT.toFixed(1) + 'T';
+
+    // 3. Net Liq Tributary
+    const nlStatus = getNetFlowStatus(netFlow);
+    document.getElementById('nlArrow').textContent = getArrow(nlStatus);
+    document.getElementById('nlArrow').className = 'tributary-trend ' + getArrowClass(nlStatus);
+    document.getElementById('nlValue').textContent = (netFlow >= 0 ? '+' : '') + Math.round(netFlow);
+    document.getElementById('nlSub').textContent = '$' + nlTotalT.toFixed(2) + 'T';
+
+    // 4. Stablecoin Tributary
+    const scStatus = getScStatus(scM2Ratio);
+    document.getElementById('scArrow').textContent = getArrow(scStatus);
+    document.getElementById('scArrow').className = 'tributary-trend ' + getArrowClass(scStatus);
+    document.getElementById('scValue').textContent = scM2Ratio.toFixed(2);
+    document.getElementById('scSub').textContent = '$' + Math.round(sc) + 'B';
+
+    // 5. Overall Badge
+    const expandingCfg = getThreshold('OVERALL', 'EXPANDING');
+    const contractingCfg = getThreshold('OVERALL', 'CONTRACTING');
+
+    let overallStatus = 'neutral';
+    let overallText = 'STABLE';
+
+    if (netFlow > expandingCfg.netLiq && m2YoY >= expandingCfg.m2YoY) {
+      overallStatus = 'rising';
+      overallText = 'RISING';
+    } else if (netFlow < contractingCfg.netLiq || m2YoY < contractingCfg.m2YoY) {
+      overallStatus = 'falling';
+      overallText = 'FALLING';
+    }
+
+    const badge = document.getElementById('overallBadge');
+    const badgeClasses = { rising: 'positive', falling: 'negative', neutral: 'neutral' };
+    badge.className = 'overall-badge badge-' + badgeClasses[overallStatus];
+    document.getElementById('overallArrow').textContent = getArrow(overallStatus);
+    document.getElementById('overallLabel').textContent = overallText;
+
+    // 렌더링 완료 신호 (Carousel용)
+    try {
+      window.parent.postMessage({ type: 'WIDGET_READY', widgetId: 'liquidity-flow' }, '*');
+    } catch (e) {}
+  }
+
+  // postMessage 수신 리스너
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'WIDGET_DATA_UPDATE') {
+      console.log('[Widget] 부모로부터 데이터 수신');
+      renderWidget(event.data.payload);
+
+      const loader = document.getElementById('loader');
+      if (loader) loader.style.display = 'none';
+
+      const staleWarning = document.getElementById('staleWarning');
+      if (staleWarning) staleWarning.style.display = 'none';
+    }
+  });
+
+  // Age formatter
+  function formatAgeSimple(ageMs) {
+    const minutes = Math.floor(ageMs / 60000);
+    if (minutes < 60) return `${minutes}분 전`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    return `${Math.floor(hours / 24)}일 전`;
+  }
+
+  async function init() {
+    const loader = document.getElementById('loader');
+    const staleWarning = document.getElementById('staleWarning');
+
+    let result = { data: null, isStale: true, isFresh: false, ageMs: 0 };
+
+    try {
+      // 1. DataFetcher로 데이터 가져오기 (캐시 우선 + API 폴백)
+      if (typeof DataFetcher !== 'undefined') {
+        result = await DataFetcher.fetch(WIDGET_ID);
+        console.log('[Widget] DataFetcher 결과:', result.data ? 'OK' : 'NULL', result.isStale ? '(stale)' : '(fresh)');
+      } else {
+        // Fallback: localStorage 직접 읽기
+        try {
+          const rawData = localStorage.getItem(`macro_${WIDGET_ID}`);
+          if (rawData) {
+            const parsed = JSON.parse(rawData);
+            result.data = parsed.data;
+            result.isStale = parsed.isStale || false;
+            result.ageMs = parsed.timestamp ? Date.now() - parsed.timestamp : 0;
+          }
+        } catch (storageError) {
+          console.warn('[Widget] 스토리지 접근 불가');
+        }
+      }
+
+      // 2. 데이터 렌더링
+      if (result.data) {
+        const widgetData = convertToWidgetFormat(result.data);
+        renderWidget(widgetData);
+
+        if (result.isStale && result.ageMs > 0) {
+          const ageText = typeof MacroDataManager !== 'undefined'
+            ? MacroDataManager.formatAge(result.ageMs)
+            : formatAgeSimple(result.ageMs);
+          document.getElementById('staleAge').textContent = ageText;
+          staleWarning.style.display = 'flex';
+        } else {
+          staleWarning.style.display = 'none';
+        }
+        loader.style.display = 'none';
+      } else {
+        // 데이터 없음 - postMessage 대기 (3초 후에도 없으면 '데이터 없음' 표시)
+        setTimeout(() => {
+          const noCache = document.getElementById('noCache');
+          if (noCache && noCache.style.display !== 'none') return;
+          const mainContent = document.getElementById('mainContent');
+          if (mainContent && mainContent.style.display === 'none') {
+            renderWidget(null);
+            loader.style.display = 'none';
+          }
+        }, 3000);
+      }
+    } catch (e) {
+      console.error('[Widget] Init error:', e);
+      renderWidget(null);
+      staleWarning.style.display = 'none';
+      loader.style.display = 'none';
+    }
+  }
+
+  // DataFetcher 반환 형식 → Widget 형식 변환
+  // 단위: DataFetcher(netLiquidity=Billions) → Widget(Billions) ★ 단위 통일됨
+  function convertToWidgetFormat(data) {
+    // 이미 Widget 형식이면 그대로 반환
+    if (data.netLiquidityDelta !== undefined || data.netFlow !== undefined) {
+      // weeklyNetFlow가 없으면 netLiquidityDelta(일간)를 사용해야 함 (fallback)
+      // 원본 객체 보호를 위해 복사본 사용
+      const widgetData = { ...data };
+      if (widgetData.weeklyNetFlow === undefined && widgetData.netLiquidityDelta !== undefined) {
+          widgetData.weeklyNetFlow = widgetData.netLiquidityDelta;
+      }
+      // Hero Value용 netFlow 필드 명시적 할당
+      widgetData.netFlow = widgetData.weeklyNetFlow;
+      return widgetData;
+    }
+
+    // DataFetcher 형식 변환 (metrics 객체 사용 시)
+    if (data.metrics) {
+      // netLiquidity: 이미 Billions (수정됨)
+      const nlBillions = data.metrics.netLiquidity || 0;
+
+      // stablecoin: DefiLlama는 $ 단위, Billions로 변환
+      const scRaw = data.metrics.stablecoin || 0;
+      const scBillions = scRaw > 1e9 ? scRaw / 1e9 : scRaw;
+
+      // Hero Value: 주간 흐름 (weeklyNetFlow) 우선
+      const weeklyFlow = data.metrics.weeklyNetFlow ?? 0;
+
+      return {
+        netFlow: weeklyFlow, // Hero Value
+        netLiquidityDelta: data.metrics.netLiquidityDelta ?? weeklyFlow, // 일간 변화량 (또는 근사치)
+        weeklyNetFlow: weeklyFlow, // 명시적 필드
+        m2YoY: data.metrics.m2YoY ?? 0,
+        m2Total: data.metrics.m2 ?? 22298,
+        netLiquidity: nlBillions,
+        stablecoinMcap: scBillions
+      };
+    }
+
+    // DataFetcher(fetchLiquidityFlow) 직접 반환 형식일 경우
+    if (data.netLiquidity !== undefined) {
+        return {
+            ...data,
+            netFlow: data.weeklyNetFlow ?? data.netLiquidityDelta ?? 0,
+            // netLiquidityDelta는 원본 값 유지 (DataFetcher가 이미 계산해서 줌)
+        };
+    }
+
+    return data;
+  }
+
+  // 상세 페이지 열기
+  function openDetail() {
+    try {
+      if (window.top?.loadPage) { window.top.loadPage(DETAIL_PATH); return; }
+      if (window.parent?.loadPage) { window.parent.loadPage(DETAIL_PATH); return; }
+    } catch(e) {}
+    const base = window.top?.baseHref || '/';
+    (window.top||window).location.assign(`${base}index.html?path=${DETAIL_PATH}`);
+  }
+
+  // window.init 노출 (module에서 호출)
+  window.init = init;
+</script>
+</body>
+</html>

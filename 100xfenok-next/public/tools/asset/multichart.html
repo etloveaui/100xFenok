@@ -1,0 +1,490 @@
+<!DOCTYPE html><html lang="ko"><head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- <script type="module">
+    const cfg = document.createElement('script');
+    cfg.defer = true;
+    cfg.type = 'module';
+    cfg.src = `config.js?v=${siteVersion}`;
+    document.head.appendChild(cfg);
+  </script> -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>100x multichart pro</title>
+  <meta name="description" content="여러 자산을 동시에 분석하는 100x 멀티차트 도구입니다.">
+  <link rel="canonical" href="./multichart.html">
+  <meta property="og:title" content="100x 멀티차트 (최종 안정판)">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="favicon-96x96.png">
+  <meta name="theme-color" content="#0ea5e9">
+
+  <!-- 스타일 & 라이브러리 (기존과 동일) -->
+  <style>
+    body { font-family: 'Noto Sans KR', 'Roboto', sans-serif; }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+
+  <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script defer="" src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script defer="" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script defer="" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-100">
+<script type="module" src="../../initBaseHref.js"></script>
+  <div id="root"></div>
+
+  <script defer="" type="text/babel">
+    /* ------------------------------------------------------------------
+     * 100x 멀티차트 앱 (v10 Stable)
+     * ------------------------------------------------------------------
+     * 1. API 키: 7개 순환, demo key 제거.
+     * 2. 레이트리밋: Alpha Vantage 5 req/min/key ⇒ 동적 지연 계산.
+     * 3. UI·기능(디자인, SMA, Benchmark 등) 완전 동일.
+     * ------------------------------------------------------------------
+     */
+    const { useState, useRef, useEffect, useCallback } = React;
+    
+    /* ===== 1. API Key 관리 ===== */
+    const API_KEYS = [
+      'QQHTQMTRUSFFD4UB',
+      'ZHWYM2BSS73UH9YI',
+      'SE3NG2WW0BDJY42J',
+      'QXJT87SAUPW50BM8',
+      'T6D38694XL3V6CGA',
+      '1GJ75NRCELNNYBPU',
+      '5Y3HTLFEA4WMKBNI'
+    ]; // demo 제거 → 실제 7개만 사용
+
+    // Key 순환 클로저 (thread‑safe 단일 호출 환경 가정)
+    const rotateKey = (() => {
+      let idx = -1;
+      return () => {
+        idx = (idx + 1) % API_KEYS.length;
+        return API_KEYS[idx];
+      };
+    })();
+
+    // Alpha Vantage 정식 제한: 5 req/min/키
+    const API_LIMIT_PER_MIN = 5;
+    const DELAY_MS = Math.ceil(60000 / (API_LIMIT_PER_MIN * API_KEYS.length)); // 5*7 ⇒ 1715ms
+
+    /* ===== 2. 스타일 팔레트 ===== */
+    const PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+    const getColor = i => PALETTE[i % PALETTE.length];
+
+    /* ===== 3. 데이터 호출 ===== */
+    
+    
+/* ===== [Stooq via AllOrigins – 단일 구현] ===== */
+const STOOQ_PROXY = 'https://stooq-proxy.etloveaui.workers.dev';
+
+
+function toStooqSymbol(symbol) {
+  if (symbol.startsWith('^')) return symbol.toLowerCase();          // ^GSPC
+  if (/^[0-9]{6}\.KS$/i.test(symbol)) return symbol.slice(0,6).toLowerCase()+'.kr'; // 005930.KS
+  return symbol.toLowerCase() + '.us';                              // default US
+}
+
+async function fetchStooq(symbol) {
+  const stoSym = toStooqSymbol(symbol);
+  const cacheKey = `stooq_cache_${stoSym}`;
+  const c = JSON.parse(localStorage.getItem(cacheKey)||'{}');
+  if (c.ts && Date.now() - c.ts < 86400000) return c.data;          // 24h cache
+
+  const upstream = `https://stooq.com/q/d/l/?s=${stoSym}&i=d`;
+  const url = STOOQ_PROXY + encodeURIComponent(upstream);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Stooq proxy ' + res.status);
+
+  const txt = await res.text();
+  if (!txt.startsWith('Date')) throw new Error('CSV format');
+
+  const data = txt.trim().split('\n').slice(1).map(l => {
+    const f = l.split(',');
+    return { date: f[0], price: +f[4] };
+  }).sort((a,b)=>a.date.localeCompare(b.date));
+
+  localStorage.setItem(cacheKey, JSON.stringify({ts:Date.now(), data}));
+  return data;
+}
+
+async function fetchPriceData(symbol) {
+  try {
+    return await fetchStooq(symbol);
+  } catch (e) {
+    console.warn('[Alpha Fallback]', e.message);
+    return await fetchPriceDataAlpha(symbol);
+  }
+}
+
+
+async function fetchPriceDataAlpha(symbol) {
+      let lastError = null;
+      for (let i = 0; i < API_KEYS.length; i++) {
+        const apiKey = rotateKey();
+        const cacheKey = `100x_v10_price_${symbol}`;
+        const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+        if (cache.ts && Date.now() - cache.ts < 43200000) return cache.data; // 12h 캐시
+
+        await new Promise(r => setTimeout(r, DELAY_MS)); // 동적 대기
+        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=full&apikey=${apiKey}`;
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const j = await res.json();
+          if (j.Note || j['Error Message']) throw new Error(j.Note || j['Error Message']);
+          const ts = j['Time Series (Daily)'];
+          if (!ts) throw new Error(`'${symbol}' 가격 데이터 없음`);
+          const arr = Object.entries(ts).map(([d, o]) => ({ date: d, price: +o['4. close'] })).sort((a, b) => a.date.localeCompare(b.date));
+          localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: arr }));
+          return arr;
+        } catch (e) {
+          lastError = e; // 다음 key로 재시도
+        }
+      }
+      throw lastError;
+    }
+
+    /* ===== 4. 계산 유틸 ===== */
+    const calculateMDD = prices => {
+      let peak = -Infinity, maxDD = 0;
+      prices.forEach(p => {
+        if (p > peak) peak = p;
+        const dd = (p - peak) / peak;
+        if (dd < maxDD) maxDD = dd;
+      });
+      return maxDD * -100; // 양수 표현 (낙폭)
+    };
+
+    const calculateVolatility = prices => {
+      if (prices.length < 2) return 0;
+      const rets = [];
+      for (let i = 1; i < prices.length; i++) rets.push(Math.log(prices[i] / prices[i - 1]));
+      const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+      const variance = rets.reduce((a, v) => a + (v - mean) ** 2, 0) / (rets.length - 1);
+      return Math.sqrt(variance) * Math.sqrt(252) * 100;
+    };
+
+    const calculateSMA = (data, win) => {
+      if (!data || data.length < win) return [];
+      const out = [];
+      for (let i = win - 1; i < data.length; i++) {
+        const slice = data.slice(i - win + 1, i + 1);
+        const sum = slice.reduce((acc, v) => acc + v.price, 0);
+        out.push({ date: data[i].date, price: sum / win });
+      }
+      return out;
+    };
+
+    /* ===== 5. UI 컴포넌트 (기존동일) ===== */
+    // ControlPanel 그대로 (생략 없이 유지)
+    /* ------ 이하 ControlPanel, App 컴포넌트는 원본과 동일이므로 그대로 두어 UI 변동 없음 ------ */
+
+    const ControlPanel = ({ rows, setRows, period, setPeriod, startDate, setStartDate, endDate, setEndDate, chartMode, setChartMode, options, setOptions, onUpdate, isLoading }) => {
+      const placeholders = ['NVDA', 'AAPL', 'MSFT', 'AMZN', 'GOOGL'];
+      const addRow = () => rows.length < 4 && setRows([...rows, { id: Date.now(), v: '', ph: placeholders[(rows.length - 2 + placeholders.length) % placeholders.length] || 'TSLA' }]);
+      const upd = (id, val) => setRows(rows.map(r => r.id === id ? { ...r, v: val.toUpperCase() } : r));
+      const del = id => rows.length > 1 && setRows(rows.filter(r => r.id !== id));
+
+      const preset = tag => {
+        setPeriod(tag);
+        const endDt = new Date();
+        const startDt = new Date();
+        const m = { '1M': -1, '6M': -6, '1Y': -12, '2Y': -24, '3Y': -36, '5Y': -60 }[tag];
+        if (m) startDt.setMonth(endDt.getMonth() + m);
+        else if (tag === 'YTD') startDt.setMonth(0, 1);
+        setStartDate(startDt.toISOString().slice(0, 10));
+        setEndDate(endDt.toISOString().slice(0, 10));
+      };
+
+      return (
+        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-6 gap-y-4 items-start">
+            {/* ① 자산 */}
+            <div className="lg:col-span-3">
+              <h3 className="text-sm font-bold text-gray-700 mb-2">① 자산 선택</h3>
+              <div className="space-y-2 h-28 overflow-y-auto pr-2 custom-scrollbar">
+                {rows.map(r => (
+                  <div key={r.id} className="flex items-center space-x-2">
+                    <input value={r.v} onChange={e => upd(r.id, e.target.value)} placeholder={r.ph} maxLength="7" className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-1 focus:ring-blue-500" />
+                    <button onClick={() => del(r.id)} disabled={rows.length <= 1} className="p-1.5 bg-gray-100 rounded-md hover:bg-red-100 disabled:opacity-40"><i className="fas fa-times text-gray-500 text-xs"></i></button>
+                  </div>
+                ))}
+              </div>
+              <button onClick={addRow} disabled={rows.length >= 4} className="mt-2 w-full py-1.5 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed">+ 티커 추가</button>
+            </div>
+            {/* ② 기간 & 방식 */}
+            <div className="lg:col-span-5">
+              <h3 className="text-sm font-bold text-gray-700 mb-2">② 기간 및 방식 선택</h3>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {['1M', '6M', '1Y', '2Y', '3Y', 'YTD', '5Y'].map(t => (
+                  <button key={t} onClick={() => preset(t)} className={`px-3 py-1 rounded-full text-xs transition-colors ${period === t ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>{t}</button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mb-3">
+                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-2 py-1.5 border rounded-md text-sm" />
+                <span>~</span>
+                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-2 py-1.5 border rounded-md text-sm" />
+              </div>
+              <div className="grid grid-cols-3 gap-1 bg-gray-200 p-1 rounded-lg">
+                {[{ v: 'normalized', t: '수익률 비교' }, { v: 'price', t: '실제 가격' }, { v: 'benchmark', t: '벤치마크 대비' }].map(m => (
+                  <button key={m.v} onClick={() => setChartMode(m.v)} className={`px-2 py-1.5 text-xs font-semibold rounded-md transition-colors ${chartMode === m.v ? 'bg-white text-blue-600 shadow' : 'text-gray-600 hover:bg-gray-300'}`}>{m.t}</button>
+                ))}
+              </div>
+            </div>
+            {/* ③ 옵션 */}
+            <div className="lg:col-span-4">
+              <h3 className="text-sm font-bold text-gray-700 mb-2">③ 옵션 및 실행</h3>
+              <div className="space-y-2 mb-3">
+                <div className={`p-2 rounded-md transition-all ${chartMode === 'price' ? 'bg-gray-50' : 'bg-gray-200 opacity-50'}`}>
+                  <label className="flex items-center text-xs gap-1 cursor-pointer w-max"><input type="checkbox" disabled={chartMode !== 'price'} checked={options.showMA50} onChange={e => setOptions(o => ({ ...o, showMA50: e.target.checked }))} className="h-3.5 w-3.5" />50일 이동평균선(SMA)</label>
+                </div>
+                <div className={`p-2 rounded-md transition-all ${chartMode === 'benchmark' ? 'bg-gray-50' : 'bg-gray-200 opacity-50'}`}>
+                  <p className="text-xs text-gray-700 mb-2">기준 자산</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['SPY', 'QQQ'].map(b => (
+                      <button key={b} onClick={() => setOptions(o => ({ ...o, benchmarkTicker: b }))} disabled={chartMode !== 'benchmark'} className={`py-1.5 text-xs rounded-md ${options.benchmarkTicker === b ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border'}`}>{b}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <button onClick={onUpdate} disabled={isLoading} className="w-full py-3 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-wait flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
+                {isLoading ? <i className='fas fa-spinner fa-spin mr-2'></i> : <i className="fas fa-chart-line mr-2"></i>}
+                {isLoading ? '분석 중...' : '분석 실행'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    /* ===== 6. 메인 App (비주얼 동일) ===== */
+    function App() {
+      const [rows, setRows] = useState([{ id: 1, v: 'SPY', ph: 'SPY' }, { id: 2, v: 'QQQ', ph: 'QQQ' }]);
+      const [period, setPeriod] = useState('1Y');
+      const [startDate, setStartDate] = useState(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d.toISOString().slice(0, 10); });
+      const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
+      const [chartMode, setChartMode] = useState('normalized');
+      const [options, setOptions] = useState({ showMA50: false, benchmarkTicker: 'SPY' });
+      const [message, setMessage] = useState("분석할 자산을 선택하고 '분석 실행' 버튼을 클릭하세요.");
+      const [summaryTable, setSummaryTable] = useState([]);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const canvasRef = useRef(null);
+      const chartRef = useRef(null);
+
+      const drawChart = useCallback(async () => {
+        setIsLoading(true);
+        const tickers = [...new Set(rows.map(r => r.v.trim()).filter(Boolean))];
+        if (!tickers.length) { setMessage('티커를 입력하세요.'); setIsLoading(false); return; }
+        if (chartMode === 'benchmark' && !tickers.includes(options.benchmarkTicker)) tickers.push(options.benchmarkTicker);
+
+        if (chartRef.current) chartRef.current.destroy();
+        if (!canvasRef.current) { setMessage('차트 캔버스 로드 실패.'); setIsLoading(false); return; }
+
+        const dataMap = {};
+        for (const t of tickers) {
+          try {
+            dataMap[t] = await fetchPriceData(t);
+          } catch (e) {
+            showToast(`${t}: ${e.message}`, 'warn');
+          }
+        }
+        const okTickers = tickers.filter(t => Array.isArray(dataMap[t]) && dataMap[t].length);
+        if (!okTickers.length) { setMessage('데이터를 가져오지 못했습니다.'); setIsLoading(false); return; }
+
+        const allDates = [...new Set(Object.values(dataMap).flat().map(p => p.date))].filter(d => d >= startDate && d <= endDate).sort();
+        const datasets = [], summary = [];
+
+        okTickers.forEach((t, i) => {
+          const full = dataMap[t];
+          const periodData = full.filter(d => d.date >= startDate && d.date <= endDate);
+          if (!periodData.length) return;
+          const color = getColor(i);
+          const prices = periodData.map(d => d.price).filter(v => !isNaN(v));
+          const first = prices[0], last = prices[prices.length - 1];
+          let dataArr = allDates.map(d => {
+            const p = periodData.find(x => x.date === d);
+            const val = p ? p.price : null;
+            return (val == null || isNaN(val)) ? null : val;
+          });
+          if (chartMode === 'normalized') dataArr = dataArr.map(v => (v == null || isNaN(v)) ? null : (v / first - 1) * 100);
+          else if (chartMode === 'benchmark') {
+            const bench = dataMap[options.benchmarkTicker].filter(d => d.date >= startDate && d.date <= endDate);
+            if (bench.length) {
+              const bFirst = bench[0].price;
+              dataArr = allDates.map(d => {
+                const pT = periodData.find(x => x.date === d);
+                const pB = bench.find(x => x.date === d);
+                const val = pT && pB ? ((pT.price / first) / (pB.price / bFirst) - 1) * 100 : null;
+                return (val == null || isNaN(val)) ? null : val;
+              });
+            }
+          }
+          datasets.push({ label: t, data: dataArr, borderColor: color, borderWidth: 1.5, pointRadius: 0, tension: 0.1 });
+          if (chartMode === 'price' && options.showMA50) {
+            const sma = calculateSMA(full, 50);
+            const map = new Map(sma.map(p => [p.date, p.price]));
+            datasets.push({ label: `${t} 50SMA`, data: allDates.map(d => {
+              const v = map.get(d);
+              return (v == null || isNaN(v)) ? null : v;
+            }), borderColor: color, borderWidth: 1, borderDash: [5, 5], pointRadius: 0 });
+          }
+          const perf = ((last / first) - 1) * 100;
+          const mdd = calculateMDD(prices);
+          const vol = calculateVolatility(prices);
+          summary.push({
+            sym: t,
+            perf: isNaN(perf) ? null : perf.toFixed(2),
+            mdd: isNaN(mdd) ? null : mdd.toFixed(2),
+            volatility: isNaN(vol) ? null : vol.toFixed(2),
+            color
+          });
+        });
+
+        setSummaryTable(summary.sort((a, b) => b.perf - a.perf));
+        const diff = (new Date(endDate) - new Date(startDate)) / 86400000;
+        const unit = diff <= 90 ? 'week' : diff <= 730 ? 'month' : diff <= 1825 ? 'quarter' : 'year';
+        const yCb = v => {
+          const fmt = v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+          return chartMode === 'price' ? '$' + fmt : fmt + '%';
+        };
+
+        chartRef.current = new Chart(canvasRef.current, {
+          type: 'line',
+          data: { labels: allDates, datasets },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: { x: { type: 'time', time: { unit } }, y: { ticks: { callback: yCb } } },
+            plugins: { legend: { labels: { filter: i => !i.text.includes('SMA') } }, tooltip: { mode: 'index', intersect: false } }
+          }
+        });
+        setIsLoading(false);
+      }, [rows, chartMode, options, startDate, endDate]);
+
+      useEffect(() => () => { if (chartRef.current) chartRef.current.destroy(); }, []);
+
+      return (
+        <div className="px-4 sm:px-6 md:px-8 py-4 md:py-6 max-w-screen-xl mx-auto flex flex-col min-h-screen">
+          <main className="flex-grow">
+            <h1 className="text-3xl font-bold mb-4 text-gray-800"><i className="fas fa-chart-line text-blue-600 mr-3"></i>100x&nbsp;Multichart&nbsp;Pro</h1>
+            <ControlPanel {...{ rows, setRows, period, setPeriod, startDate, setStartDate, endDate, setEndDate, chartMode, setChartMode, options, setOptions, onUpdate: drawChart, isLoading }} />
+            {message && <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 border border-yellow-200 text-sm rounded-md whitespace-pre-wrap">{message}</div>}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+              <div className="md:col-span-2 bg-white p-4 sm:p-5 md:p-6 rounded-lg shadow-md">
+                <div className="relative h-[300px] sm:h-[450px]"><canvas ref={canvasRef}></canvas></div>
+                <div id="insights-panel" className="mt-4 p-3 text-center bg-gray-50 rounded-md text-sm text-gray-500">Insights coming soon...</div>
+              </div>
+              <div className="md:col-span-1 bg-white p-4 sm:p-5 md:p-6 rounded-lg shadow-md">
+                <h3 className="font-semibold mb-3">성과 요약</h3>
+                <div className="overflow-y-auto max-h-[450px] custom-scrollbar">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 text-xs sticky top-0"><tr>
+                      <th className="px-2 py-2 text-left">티커</th>
+                      <th className="px-2 py-2 text-right">수익률</th>
+                      <th className="px-2 py-2 text-right">최대낙폭</th>
+                      <th className="px-2 py-2 text-right">변동성</th>
+                    </tr></thead>
+                    <tbody>
+                      {summaryTable.length ? summaryTable.map(r => (
+                        <tr key={r.sym} className="border-b last:border-b-0">
+                          <td className="px-2 py-2 font-medium flex items-center"><span className="inline-block w-2.5 h-2.5 mr-2 rounded-full" style={{ background: r.color }}></span>{r.sym}</td>
+                          <td className="px-2 py-2 text-right font-semibold">
+                            {r.perf != null ? (
+                              <span className="flex items-center justify-end">
+                                {parseFloat(r.perf) >= 0 ? <span className="text-green-600">▲</span> : <span className="text-red-500">▼</span>}
+                                <span className={`ml-1 ${parseFloat(r.perf) >= 0 ? 'text-green-600' : 'text-red-500'}`}>{Math.abs(parseFloat(r.perf)).toFixed(2)}%</span>
+                              </span>
+                            ) : '-'}
+                          </td>
+                          <td className="px-2 py-2 text-right text-red-500">{r.mdd != null ? r.mdd + '%' : '-'}</td>
+                          <td className="px-2 py-2 text-right text-gray-600">{r.volatility != null ? r.volatility + '%' : '-'}</td>
+                        </tr>
+                      )) : <tr><td colSpan="4" className="text-center py-10 text-gray-500">분석을 실행해주세요.</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </main>
+          
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+	window.fetchPriceDataAlpha = fetchPriceData;
+  </script>
+
+<!-- === Stooq + Polygon override (v10) === -->
+<script defer="" type="text/babel">
+
+  function showToast(msg, type='info'){
+    const color = {info:'bg-blue-600',warn:'bg-amber-600',error:'bg-red-600'}[type]||'bg-gray-800';
+    const el = Object.assign(document.createElement('div'), {textContent: msg});
+    el.className = `${color} fixed top-5 left-1/2 -translate-x-1/2 text-white px-4 py-2 rounded-xl shadow-lg z-50`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 3000);
+  }
+
+  async function fetchStooq(symbol){
+    const stoSym = toStooqSymbol(symbol);
+    const url = `${STOOQ_PROXY}/?s=${stoSym}&i=d`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('http');
+    const txt = await res.text();
+    if(txt.startsWith('<!DOCTYPE')) throw new Error('ticker');
+    if(txt.startsWith('Date') && txt.trim().split('\n').length===1) throw new Error('empty');
+    return txt.trim().split('\n').slice(1).map(l=>{const f=l.split(',');return {date:f[0],price:+f[4]};});
+  }
+
+  async function fetchPolygon(symbol){
+    const url = `https://api.polygon.io/v2/aggs/ticker/${symbol.toUpperCase()}/range/1/day/2000-01-01/2999-12-31?adjusted=true&apiKey=${POLYGON_KEY}`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('polygon-http');
+    const j = await r.json();
+    if(!j.results || !j.results.length) throw new Error('polygon-empty');
+    return j.results.map(o=>({date:new Date(o.t).toISOString().slice(0,10),price:o.c}));
+  }
+
+  const fetchPriceDataAlphaOriginal = window.fetchPriceDataAlpha;
+
+  async function fetchPriceData(symbol){
+    try{
+      return await fetchStooq(symbol);
+    }catch(e1){
+      if(e1.message==='ticker'){
+          showToast(`${symbol}: 티커 형식 오류(Stooq)`, 'warn');
+      }
+      try{
+        return await fetchPolygon(symbol);
+      }catch(e2){
+        if(e2.message.startsWith('polygon')){
+          showToast(`${symbol}: Polygon 데이터 없음`, 'warn');
+        }
+        if(e1.message==='empty'){
+          showToast(`${symbol}: Stooq 데이터 없음`, 'warn');
+        }
+        if(USE_ALPHA){
+          showToast(`${symbol}: Alpha Vantage 사용`, 'info');
+          return await fetchPriceDataAlphaOriginal(symbol);
+        }
+        return [];
+      }
+    }
+  }
+
+  window.fetchPriceDataAlpha = fetchPriceData;
+
+</script>
+<!-- === override end === -->
+
+
+</body></html>

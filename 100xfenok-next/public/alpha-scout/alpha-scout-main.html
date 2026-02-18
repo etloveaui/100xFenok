@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100x Alpha Scout - 주간 투자 분석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; color: #1f2937; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card-hover { transition: all 0.3s ease-in-out; }
+        .card-hover:hover { transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .alpha-card { background: white; border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; height: 100%; }
+        .alpha-card-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; }
+        .alpha-card-ticker { font-size: 2rem; font-weight: 700; font-family: 'Orbitron', monospace; color: #1e293b; }
+        .alpha-card-name { font-size: 0.875rem; color: #64748b; margin-bottom: 1rem; }
+        .alpha-card-desc { font-size: 0.9rem; color: #475569; flex-grow: 1; }
+        .alpha-card-metric { font-size: 0.8rem; text-align: right; }
+        .alpha-card-metric strong { color: #1e293b; }
+        .loader {
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #4f46e5; /* Indigo */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+<script type="module" src="../initBaseHref.js"></script>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="container mx-auto p-6 md:p-12">
+        
+        <!-- 페이지 헤더 -->
+        <header class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-black mb-4 orbitron bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">100x Alpha Scout</h1>
+            <p class="text-lg text-slate-500 max-w-3xl mx-auto">가치와 모멘텀을 꿰뚫는 주간 프리미엄 투자 분석. 시장의 소음 속에서 진짜 신호를 찾아냅니다.</p>
+        </header>
+
+        <!-- 최신 리포트 하이라이트 섹션 -->
+        <section id="featured-report" class="mb-20">
+            <div id="featured-report-header" class="text-center mb-8" style="display: none;">
+                <span class="bg-indigo-600 text-white text-sm font-bold px-4 py-2 rounded-full uppercase">금주의 핵심 알파</span>
+                <p id="featured-report-date" class="text-slate-500 mt-3"></p>
+            </div>
+            <div id="featured-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[250px]">
+                <div class="loader-container col-span-full flex justify-center items-center"><div class="loader"></div></div>
+            </div>
+            <div id="featured-report-link-container" class="text-center mt-12" style="display: none;">
+                <a id="featured-report-link" href="#" class="bg-slate-800 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center text-lg">
+                    전체 리포트 상세 분석 보기 <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- 리포트 아카이브 섹션 -->
+        <section id="report-archive">
+            <h2 class="text-3xl font-bold text-center mb-12 text-slate-900">과거 리포트 아카이브</h2>
+            <div id="archive-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[300px]">
+                <div class="loader-container col-span-full flex justify-center items-center"><div class="loader"></div></div>
+            </div>
+            <nav id="pagination-container" aria-label="Page navigation" class="flex justify-center mt-12"></nav>
+        </section>
+        
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- 설정 ---
+            const BASE_HREF = window.baseHref || './';
+            const DATA_FOLDER_PATH = `${BASE_HREF}alpha-scout/data/`;
+            const METADATA_PATH = `${DATA_FOLDER_PATH}metadata/`;
+            const INDEX_PATH = `${DATA_FOLDER_PATH}reports-index.json`;
+            const ITEMS_PER_PAGE = 9;
+
+            // --- DOM 요소 ---
+            const featuredGrid = document.getElementById('featured-grid');
+            const archiveGrid = document.getElementById('archive-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+            const featuredReportHeader = document.getElementById('featured-report-header');
+            const featuredReportDate = document.getElementById('featured-report-date');
+            const featuredReportLinkContainer = document.getElementById('featured-report-link-container');
+            const featuredReportLink = document.getElementById('featured-report-link');
+
+            // --- 상태 변수 ---
+            let reportIndex = [];
+            let featuredFilename = null;
+            let archiveFilenames = [];
+            let totalPages = 0;
+            let currentPage = 1;
+
+            // --- 초기화 함수 ---
+            async function initialize() {
+                try {
+                    const response = await fetch(INDEX_PATH);
+                    if (!response.ok) throw new Error(`인덱스 파일(${INDEX_PATH}) 로딩 실패`);
+                    
+                    reportIndex = await response.json();
+                    
+                    if (reportIndex.length > 0) {
+                        featuredFilename = reportIndex[0];
+                        archiveFilenames = reportIndex.slice(1); // 아카이브는 최신 리포트를 제외한 나머지 목록을 사용
+                        totalPages = Math.ceil(archiveFilenames.length / ITEMS_PER_PAGE);
+
+                        await renderFeatured(featuredFilename);
+                        await showArchivePage(1);
+                    } else {
+                         throw new Error('리포트 인덱스가 비어있습니다.');
+                    }
+
+                } catch (error) {
+                    console.error("초기화 실패:", error);
+                    if(featuredGrid) featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">리포트 목록을 불러오는 데 실패했습니다.</p>`;
+                    if(archiveGrid) archiveGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">아카이브를 불러오는 데 실패했습니다.</p>`;
+                }
+            }
+
+            // --- 추천 리포트 렌더링 ---
+            async function renderFeatured(filename) {
+                if (!featuredGrid || !filename) {
+                    if(featuredGrid) featuredGrid.innerHTML = '<p class="text-slate-500 col-span-full text-center">추천 리포트가 없습니다.</p>';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`${METADATA_PATH}${filename}`);
+                    const report = await res.json();
+
+                    featuredReportDate.textContent = `${report.displayDate} 리포트`;
+                    featuredReportHeader.style.display = 'block';
+
+                    let featuredHTML = '';
+                    const picks = report.featuredPicks;
+                    
+                    const card_types = [
+                        { key: 'value', title: '금주의 가치주', color: 'indigo', icon: 'fa-gem' },
+                        { key: 'momentum', title: '금주의 모멘텀 주도주', color: 'green', icon: 'fa-rocket' },
+                        { key: 'institution', title: '금주의 기관 추천주', color: 'amber', icon: 'fa-university' }
+                    ];
+
+                    card_types.forEach(type => {
+                        const pick = picks[type.key];
+                        if (pick) {
+                            featuredHTML += `
+                                <div class="alpha-card card-shadow card-hover">
+                                    <h3 class="alpha-card-title text-${type.color}-600"><i class="fas ${type.icon} fa-fw mr-2"></i>${type.title}</h3>
+                                    <div class="text-center my-4">
+                                        <p class="alpha-card-ticker">${pick.ticker}</p>
+                                        <p class="alpha-card-name">${pick.name}</p>
+                                    </div>
+                                    <p class="alpha-card-desc">${pick.description}</p>
+                                    <div class="mt-4 pt-4 border-t border-slate-100 alpha-card-metric">
+                                        ${pick.metric.label}: <strong class="text-${type.color}-600">${pick.metric.value}</strong>
+                                    </div>
+                                </div>`;
+                        }
+                    });
+
+                    featuredGrid.innerHTML = featuredHTML;
+                    
+                    featuredReportLink.href = `index.html?path=${report.filePath}`;
+                    featuredReportLink.setAttribute('data-path', report.filePath);
+                    featuredReportLinkContainer.style.display = 'block';
+
+                } catch (error) {
+                    console.error("추천 리포트 렌더링 실패:", error);
+                    featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">추천 리포트를 불러오는 데 실패했습니다.</p>`;
+                }
+            }
+
+            // --- 아카이브 페이지 렌더링 ---
+            async function showArchivePage(page) {
+                currentPage = page;
+                const startIndex = (page - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const pageFilenames = archiveFilenames.slice(startIndex, endIndex);
+
+                archiveGrid.innerHTML = `<div class="loader-container col-span-full flex justify-center items-center"><div class="loader"></div></div>`;
+
+                if (pageFilenames.length === 0) {
+                    archiveGrid.innerHTML = `<p class="w-full text-center text-slate-500">아카이브된 리포트가 없습니다.</p>`;
+                    renderPaginationControls();
+                    return;
+                }
+
+                try {
+                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+
+                    let archiveHTML = '';
+                    reports.forEach(report => {
+                        const p = report.archivePicks;
+                        archiveHTML += `
+                            <a href="index.html?path=${report.filePath}" data-path="${report.filePath}" class="block bg-white rounded-xl p-6 card-shadow card-hover">
+                                <p class="text-sm text-slate-500 mb-2">${report.displayDate}</p>
+                                <h3 class="font-bold text-lg text-slate-800 mb-4">${report.archiveTitle}</h3>
+                                <div class="pt-4 border-t border-slate-100 space-y-3 text-sm">
+                                    <p class="flex justify-between items-center text-slate-600">
+                                        <span class="font-semibold flex items-center"><i class="fas fa-gem fa-fw mr-2 text-indigo-400"></i>가치주 Pick</span>
+                                        <span class="font-mono bg-slate-100 px-2 py-0.5 rounded">${p.value}</span>
+                                    </p>
+                                    <p class="flex justify-between items-center text-slate-600">
+                                        <span class="font-semibold flex items-center"><i class="fas fa-rocket fa-fw mr-2 text-green-400"></i>모멘텀 Pick</span>
+                                        <span class="font-mono bg-slate-100 px-2 py-0.5 rounded">${p.momentum}</span>
+                                    </p>
+                                    <p class="flex justify-between items-center text-slate-600">
+                                        <span class="font-semibold flex items-center"><i class="fas fa-university fa-fw mr-2 text-amber-400"></i>기관 Pick</span>
+                                        <span class="font-mono bg-slate-100 px-2 py-0.5 rounded">${p.institution}</span>
+                                    </p>
+                                </div>
+                            </a>`;
+                    });
+                    archiveGrid.innerHTML = archiveHTML;
+
+                } catch (error) {
+                    console.error(`아카이브 페이지 ${page} 렌더링 실패:`, error);
+                    archiveGrid.innerHTML = `<p class="w-full text-center text-red-500">아카이브를 불러오는 데 실패했습니다.</p>`;
+                }
+                
+                renderPaginationControls();
+                setupDynamicLinks();
+            }
+
+            // --- 페이지네이션 컨트롤 렌더링 ---
+            function renderPaginationControls() {
+                if (totalPages <= 1) {
+                    paginationContainer.innerHTML = '';
+                    return;
+                }
+                let paginationHTML = '<ul class="inline-flex items-center -space-x-px">';
+                paginationHTML += `<li><a href="#" data-page="${currentPage - 1}" class="px-3 py-2 ml-0 leading-tight text-slate-500 bg-white border border-slate-300 rounded-l-lg hover:bg-slate-100 hover:text-slate-700 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}">이전</a></li>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    paginationHTML += `<li><a href="#" data-page="${i}" class="${isActive ? 'z-10 px-3 py-2 leading-tight text-indigo-600 border border-indigo-300 bg-indigo-50' : 'px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300'} hover:bg-slate-100 hover:text-slate-700">${i}</a></li>`;
+                }
+                paginationHTML += `<li><a href="#" data-page="${currentPage + 1}" class="px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 rounded-r-lg hover:bg-slate-100 hover:text-slate-700 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}">다음</a></li>`;
+                paginationHTML += '</ul>';
+                paginationContainer.innerHTML = paginationHTML;
+            }
+
+            // --- 이벤트 리스너 ---
+            paginationContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('a');
+                if (!target || target.classList.contains('cursor-not-allowed')) return;
+                const page = parseInt(target.dataset.page, 10);
+                if (isNaN(page) || page < 1 || page > totalPages || currentPage === page) return;
+                showArchivePage(page);
+                document.getElementById('report-archive').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            function setupDynamicLinks() {
+                document.querySelectorAll('a[data-path]').forEach(a => {
+                    if (a.dataset.bound) return;
+                    a.dataset.bound = 'true';
+                    a.addEventListener('click', e => {
+                        e.preventDefault();
+                        const path = a.dataset.path;
+                        if (window.parent && typeof window.parent.loadPage === 'function') {
+                            window.parent.loadPage(path);
+                        } else {
+                            console.warn('loadPage function not found in parent window.');
+                        }
+                    });
+                });
+            }
+
+            // --- 실행 ---
+            initialize();
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미국의 새로운 플레이북: 국가 자본주의와 스테이블코인 전략</title>
+    <meta name="description" content="미국의 스테이블코인 전략을 분석한 리포트.">
+    <link rel="canonical" href="./2025-06-22_playbook.html">
+    <meta property="og:title" content="미국의 새로운 플레이북: 국가 자본주의와 스테이블코인 전략">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="${window.baseHref}favicon-96x96.png">
+    <meta name="theme-color" content="#0ea5e9">
+    <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!--
+    Narrative Plan (Final Static Version):
+    1. Introduction (Hook): State the core thesis upfront: "There is no recession in the US, because a recession means losing hegemony." Frame this as a bipartisan, structural shift.
+    2. Section 1 (The Why): Explain the geopolitical and domestic pressures.
+    3. Section 2 (The How): Combined the 2-step process. Added visual card comparing creditor motivations.
+    4. Section 3 (The Legal & Policy Framework): Detail the "Genius Act" and the "Dual-Track" policy.
+    5. Section 4 (The Key Players): Detail Big Tech's role.
+    6. Section 5 (The Consequences): Explore macroeconomic impacts, including "New Federalism".
+    7. Section (America's Unshakeable Hegemony): Visual section on US strengths.
+    8. Section (Winners & Losers): Updated with political context.
+    9. REVAMPED Section (The Dollar Vortex): The interactive buttons are removed and the analysis is integrated into the text.
+    10. Section (Future Scenarios): Revamped with Base/Bull/Bear scenarios.
+    11. Conclusion (Dashboard): The final dashboard of key indicators.
+    12. All interactive Gemini API features have been removed and their content integrated statically.
+
+    Visualization Choices:
+    - US Economic Paradox (Goal: Inform): Big Number display.
+    - Historical Growth Cycles (Goal: Change): Timeline list.
+    - Flow Charts (Goal: Organize): RRP->TGA & Stablecoin mechanisms.
+    - Creditor Motivation Card (Goal: Compare): Visual card based on source image.
+    - Genius Act & Dual-Track Policy (Goal: Organize): Styled card explaining the policy mix.
+    - Big Tech Scenarios (Goal: Organize): Grid of cards.
+    - US Strengths Dashboard (Goal: Inform): Visual grid with icons.
+    - Financial Repression & Debt Burden Charts (Goal: Compare/Relationships): Line and Bar charts.
+    - Scenarios (Goal: Compare/Organize): Base/Bull/Bear layout.
+    - Indicators Dashboard (Goal: Organize): Grid of descriptive cards.
+
+    Color Palette Selection: Energetic & Playful.
+    Mermaid JS Confirmation: Mermaid JS was NOT used in this document.
+    SVG Confirmation: SVG graphics were NOT used in this document.
+    -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            line-height: 1;
+            color: #FF6B6B;
+        }
+
+        .flow-box {
+            border: 2px solid #4ECDC4;
+            background-color: #F7FFF7;
+        }
+
+        .flow-box-alt {
+            border: 2px solid #FF6B6B;
+            background-color: #FFF5F5;
+        }
+
+        .indicator-card {
+            background-color: white;
+            border-left: 5px solid #FFC300;
+        }
+
+        .scenario-card {
+            background-color: #ffffff;
+            border-top: 5px solid;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .scenario-bull {
+            border-color: #4ECDC4;
+        }
+
+        /* Green for Bull */
+        .scenario-base {
+            border-color: #4A90E2;
+        }
+
+        /* Blue for Base */
+        .scenario-bear {
+            border-color: #FF6B6B;
+        }
+
+        /* Red for Bear */
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+    <script type="module" src="../initBaseHref.js"></script>
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-[#1A535C] mb-4">미국의 새로운 플레이북</h1>
+            <p class="text-lg md:text-xl text-[#4ECDC4] font-semibold">국가 자본주의, 스테이블코인, 그리고 글로벌 유동성 전쟁</p>
+        </header>
+
+        <section id="intro" class="mb-16">
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-l-8 border-[#1A535C]">
+                <h2 class="text-2xl font-bold text-[#1A535C] mb-4">"미국에 경기 침체는 없다. 침체는 곧 패권의 상실이기 때문이다."</h2>
+                <p class="text-gray-600 mb-6">수많은 경제학자들이 경기 침체를 우려하지만, 이는 미국의 핵심 전략을 간과한 분석입니다. 미국은 패권 유지를 위해 경기 침체를 용납할
+                    수 없으며, 이를 위해 경제의 구조적 전환을 단행하고 있습니다. 옐런의 유동성 실험에서 시작된 이 흐름은 트럼프 2기에서 'AI 생산성 혁명'과 맞물려 더욱 가속화될 것입니다. 이
+                    인포그래픽은 특정 인물이 아닌, 미국의 생존을 위한 '구조 전환' 그 자체를 분석합니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
+                    <div class="bg-blue-50 p-6 rounded-xl">
+                        <div class="text-5xl font-black text-[#1A535C]">4.75%</div>
+                        <div class="text-lg font-semibold text-gray-700 mt-2">연준 기준금리 (2025년 중반 전망)</div>
+                        <p class="text-sm text-gray-500">(긴축 완화, 여전히 높은 수준)</p>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-xl">
+                        <div class="text-5xl font-black text-[#4ECDC4]">+2.1%</div>
+                        <div class="text-lg font-semibold text-gray-700 mt-2">실질 GDP 성장률 (2025년 전망)</div>
+                        <p class="text-sm text-gray-500">(연착륙 기대 속 안정적 성장)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="why" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제1부: 왜 변화는 필연적인가?</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-bold text-xl mb-4 text-[#1A535C]">40년 성장 사이클의 종말</h3>
+                        <p class="text-gray-600 mb-6">1980년대 신자유주의와 반도체 혁명으로 시작된 저물가-고성장 시대는 막을 내렸습니다. 미국은 역사적으로
+                            40~50년마다 위기를 새로운 성장 동력으로 돌파해왔으며, 지금이 바로 그 변곡점입니다.</p>
+                        <ul class="space-y-4">
+                            <li class="flex items-start"><span class="text-[#4ECDC4] font-bold text-2xl mr-4">→</span>
+                                <div><strong class="text-gray-900">1950년대:</strong> 대량생산 &amp; 고속도로 시스템</div>
+                            </li>
+                            <li class="flex items-start"><span class="text-[#4ECDC4] font-bold text-2xl mr-4">→</span>
+                                <div><strong class="text-gray-900">1980년대:</strong> 반도체 &amp; 신자유주의</div>
+                            </li>
+                            <li class="flex items-start"><span class="text-[#FF6B6B] font-bold text-2xl mr-4">→</span>
+                                <div><strong class="text-gray-900">2020년대:</strong> AI &amp; 국가 자본주의 &amp; <span
+                                        class="font-black text-[#FF6B6B]">디지털 달러</span></div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-xl mb-4 text-[#1A535C]">패권과 재정의 이중 위기</h3>
+                        <p class="text-gray-600 mb-6">중국과의 기술 경쟁 속에서 경기 침체는 곧 패권의 상실을 의미합니다. 동시에, 급증하는 국가 부채를 감당할 전통적인
+                            자금 조달 창구(해외 중앙은행)는 막히고 있습니다. 미국은 막대한 재정 지출을 감당할 새롭고 거대한 수요처가 절실합니다.</p>
+                        <div class="chart-container h-64 md:h-72">
+                            <canvas id="debtChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제2부: 어떻게 자금을 조달하는가?</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-12">
+                <div>
+                    <h3 class="font-bold text-xl mb-2 text-[#1A535C]">1단계 (2023-2024): 임시 해법 - 옐런의 묘수</h3>
+                    <p class="text-gray-600 mb-6">재무부는 연준의 역레포(RRP, 중앙은행이 시중 자금을 흡수하는 창구)에 묶여있던 자금을 단기 국채(T-bill) 시장으로
+                        유인하여 일시적으로 유동성을 창출했습니다. 이 전략은 성공적이었지만, RRP 잔고가 고갈되면서 지속 불가능한 임시방편임이 드러났습니다.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="chart-container h-72">
+                            <canvas id="rrpChart"></canvas>
+                        </div>
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="flow-box p-3 rounded-lg w-full text-center">
+                                <p>① 연준 RRP의 MMF 자금</p>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-box p-3 rounded-lg w-full text-center">
+                                <p>② 높은 금리의 단기 국채 매입</p>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-box p-3 rounded-lg w-full text-center">
+                                <p>③ 재무부 계정(TGA)으로 유입</p>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-box p-3 rounded-lg w-full text-center">
+                                <p>④ 전략 산업 투자로 유동성 공급</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-xl mb-2 text-[#1A535C]">2단계 (2025~): 영구적 해법 - 스테이블코인 엔진</h3>
+                    <p class="text-gray-600 mb-6">미국의 최종 목표는 전 세계 스테이블코인 시장을 미국 단기 국채의 '영구적인' 수요처로 만드는 것입니다. 이 새로운 채권자들은
+                        금리에 둔감하여 훨씬 안정적인 자금원이 됩니다.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="flow-box-alt p-3 rounded-lg w-full text-center">
+                                <p>① 글로벌 사용자 (개인/기업)</p>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-box-alt p-3 rounded-lg w-full text-center">
+                                <p>② 스테이블코인 발행 (빅테크 등)</p>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-box-alt p-3 rounded-lg w-full text-center">
+                                <p>③ 단기 국채 의무 매입 (담보)</p>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-box-alt p-3 rounded-lg w-full text-center">
+                                <p>④ 미국 재정 확보 및 유동성 공급</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 rounded-lg bg-gray-100 border-l-4 border-gray-400">
+                                <h4 class="font-bold text-gray-700">전통 채권자: MMF</h4>
+                                <p class="text-gray-600">"금리 주면 가고, 금리 내리면 <span
+                                        class="text-red-500 font-bold">빤스런</span>"</p>
+                                <p class="text-sm text-gray-500 mt-1">오직 이자 수익을 위해 움직이는, 변덕스러운 자금</p>
+                            </div>
+                            <div class="p-4 rounded-lg bg-blue-50 border-l-4 border-blue-400">
+                                <h4 class="font-bold text-blue-800">새로운 채권자: 스테이블코인 사용자</h4>
+                                <p class="text-blue-700">"암호화폐 투자, 해외송금, 가치저장"</p>
+                                <p class="text-sm text-blue-600 mt-1">금리가 아닌 효용성을 위해 움직이는, 충성도 높은 자금</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="legal-framework" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제3부: 정책의 이중 나선 (Dual-Track Strategy)</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <p class="text-center text-gray-600 mb-6">미국의 전략은 '자금 조달'과 '투자 유도'라는 두 개의 트랙으로 동시에 진행됩니다. '지니어스 법안'이 자금
+                    조달의 파이프라인을 구축한다면, IRA나 감세 정책은 그 자금이 흘러 들어갈 투자처를 만듭니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-blue-50 p-6 rounded-xl">
+                        <h4 class="font-bold text-lg mb-2 text-[#1A535C]">Track 1: 자금 조달 (지니어스 법안)</h4>
+                        <ul class="list-disc list-inside space-y-2 text-sm">
+                            <li><strong class="font-semibold">100% 준비금 의무:</strong> 스테이블코인 = 단기 국채 수요 공식화.</li>
+                            <li><strong class="font-semibold">빅테크 진입 허용:</strong> 글로벌 달러 수요를 폭발적으로 증가시킬 촉매제.</li>
+                            <li><strong class="font-semibold">규제 명확성:</strong> 기관 투자자들이 안심하고 시장에 참여할 수 있는 기반 마련.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-xl">
+                        <h4 class="font-bold text-lg mb-2 text-green-800">Track 2: 투자 유도 (IRA/감세)</h4>
+                        <ul class="list-disc list-inside space-y-2 text-sm">
+                            <li><strong class="font-semibold">기업 투자 유도:</strong> 보조금과 감세 혜택으로 AI, 반도체 등 전략 산업에 대한 민간 투자를
+                                촉진.</li>
+                            <li><strong class="font-semibold">생산성 혁명 지원:</strong> AI 혁명을 가속화하여 '인플레이션을 동반한 성장'을 뒷받침.
+                            </li>
+                            <li><strong class="font-semibold">자본의 선순환:</strong> 조달된 자금이 전략 산업으로 흘러 들어가 부가가치를 창출하는 구조 완성.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="big-tech" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제4부: 새로운 금융 영토의 개척자, 빅테크</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <p class="text-center text-gray-600 mb-8">미국 정부는 수십억 사용자를 보유한 빅테크 기업들을 '대리인'으로 활용하여 디지털 달러의 글로벌 채택 문제를
+                    단번에 해결하고자 합니다. 이들의 플랫폼에 스테이블코인이 통합되면, 전 세계 사용자는 일상 속에서 자연스럽게 디지털 달러를 사용하게 됩니다.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-gray-100 p-5 rounded-lg text-center shadow">
+                        <img src="https://placehold.co/64x64/000000/FFFFFF?text=AAPL" alt="Apple 로고"
+                            class="mx-auto mb-3 rounded-full">
+                        <h4 class="font-bold text-lg">Apple Coin</h4>
+                        <p class="text-sm text-gray-600">App Store, iCloud 등 서비스 결제 및 기기 간 송금에 활용</p>
+                    </div>
+                    <div class="bg-gray-100 p-5 rounded-lg text-center shadow">
+                        <img src="https://placehold.co/64x64/4285F4/FFFFFF?text=GOOG" alt="Google 로고"
+                            class="mx-auto mb-3 rounded-full">
+                        <h4 class="font-bold text-lg">Google Coin</h4>
+                        <p class="text-sm text-gray-600">광고비 결제, YouTube 크리에이터 보상, 클라우드 서비스 비용 지불</p>
+                    </div>
+                    <div class="bg-gray-100 p-5 rounded-lg text-center shadow">
+                        <img src="https://placehold.co/64x64/FF9900/FFFFFF?text=AMZN" alt="Amazon 로고"
+                            class="mx-auto mb-3 rounded-full">
+                        <h4 class="font-bold text-lg">Amazon Coin</h4>
+                        <p class="text-sm text-gray-600">글로벌 이커머스 결제, 프라임 멤버십, AWS 서비스 비용에 사용</p>
+                    </div>
+                    <div class="bg-gray-100 p-5 rounded-lg text-center shadow">
+                        <img src="https://placehold.co/64x64/E82127/FFFFFF?text=TSLA" alt="Tesla 로고"
+                            class="mx-auto mb-3 rounded-full">
+                        <h4 class="font-bold text-lg">Tesla Coin</h4>
+                        <p class="text-sm text-gray-600">전기차 구매, 충전소 비용 결제, 자율주행 서비스 구독료 지불</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="consequences" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제5부: 새로운 시대의 경제적 귀결</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="font-bold text-xl mb-4 text-[#1A535C]">인플레이션을 동반한 성장</h3>
+                    <p class="text-gray-600 mb-6">저물가 시대는 끝났습니다. 정부 주도 투자와 탈세계화는 구조적 인플레이션을 유발합니다. 대신 AI가 이끄는 생산성 향상과
+                        결합되어 높은 명목 성장률을 유지하게 됩니다.</p>
+                    <div class="chart-container h-64 md:h-72">
+                        <canvas id="financialRepressionChart"></canvas>
+                    </div>
+                    <p class="text-center text-gray-600 mt-4">명목 금리를 명목 성장률보다 낮게 유지(<strong class="text-red-500">금융
+                            억압</strong>: 저축의 실질가치를 하락시켜 정부 부채 부담을 경감시키는 정책)하여 부채의 실질 가치를 감소시킵니다.</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="font-bold text-xl mb-4 text-[#1A535C]">신연방주의 2.0: 부채의 전가</h3>
+                    <p class="text-gray-600 mb-6">연방정부는 재정 부담을 주정부로 이전하여 전략 산업에 투자할 재원을 확보합니다. 이는 연방 부채는 관리되는 것처럼 보이게 하는
+                        효과가 있습니다.</p>
+                    <div class="chart-container h-64 md:h-72">
+                        <canvas id="debtBurdenChart"></canvas>
+                    </div>
+                    <p class="text-center text-gray-600 mt-4">연방정부 부채 증가세는 유지되는 반면, 주/지방정부의 부채 부담은 상대적으로 낮게 유지됩니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="us-strength" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제6부: 미국의 흔들리지 않는 패권 - 숨겨진 저력</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <p class="text-center text-gray-600 mb-8">미국이 이처럼 과감한 전략을 추진할 수 있는 배경에는 경쟁국이 넘볼 수 없는 압도적인 기초 체력이 있습니다.
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 text-center">
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-4xl">🛢️</p>
+                        <p class="font-bold mt-2">에너지 자립</p>
+                        <p class="text-xs">세계 최대 산유국</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-4xl">🌽</p>
+                        <p class="font-bold mt-2">식량 자립</p>
+                        <p class="text-xs">세계 최대 농산물 수출국</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-4xl">🤖</p>
+                        <p class="font-bold mt-2">기술 패권</p>
+                        <p class="text-xs">AI, 반도체 원천 기술</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-4xl">👶</p>
+                        <p class="font-bold mt-2">인구 구조</p>
+                        <p class="text-xs">선진국 중 가장 양호</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-4xl">✈️</p>
+                        <p class="font-bold mt-2">군사력</p>
+                        <p class="text-xs">압도적 세계 1위</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="winners-losers" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제7부: 승자와 패자</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <p class="text-gray-600 mb-6 text-center">정부의 돈이 어디로 흐르는지가 투자의 핵심이 됩니다. 특히 트럼프 행정부는 복지 예산을 주정부로 이전하고, 그
+                    재원을 전략 산업에 더욱 집중할 가능성이 높습니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="font-semibold text-lg text-green-600 mb-2">▲ 승자 (Winners)</h4>
+                        <ul class="list-disc list-inside text-gray-700 mt-2 space-y-1">
+                            <li><strong class="font-semibold">미국 전략 산업:</strong> AI, 빅테크, 친환경, 방산 등 정부 지원을 받는 기업.</li>
+                            <li><strong class="font-semibold">디지털 금융 인프라:</strong> 스테이블코인 발행사, 관련 결제/보안 솔루션 기업.</li>
+                            <li><strong class="font-semibold">인플레이션 헤지 자산:</strong> 원자재, 금, 비트코인 등 달러 약세와 물가 상승의 수혜 자산.
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg text-red-600 mb-2">▼ 패자 (Losers)</h4>
+                        <ul class="list-disc list-inside text-gray-700 mt-2 space-y-1">
+                            <li><strong class="font-semibold">전통 산업:</strong> 정부 우선순위에서 밀려난 내수 및 비전략 제조업.</li>
+                            <li><strong class="font-semibold">장기 국채 보유자:</strong> 금융 억압 정책으로 실질 수익률이 잠식되는 투자자.</li>
+                            <li><strong class="font-semibold">경쟁국 통화:</strong> 달러로 자본이 쏠리며 통화가치 하락 압력을 받는 국가.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="country-impact" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제8부: 글로벌 자본 청소기 - 달러 보텍스(Vortex)</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <p class="text-center text-gray-600">미국의 스테이블코인 전략은 '전쟁'이 아닌, 전 세계 유동성을 미국으로 빨아들이는 일방적인 '진공청소기'에 가깝습니다.
+                    각국은 자국 통화 기반의 스테이블코인(예: 원화 스테이블코인)이나 CBDC 발행을 서두르며 방어에 나서겠지만, 근본적으로 '달러'를 원하는 수요를 막기는 어렵습니다. 결국 자본은
+                    더 안전하고 효용성 높은 디지털 달러 생태계로 흡수될 가능성이 높습니다.</p>
+            </div>
+        </section>
+
+        <section id="future-scenarios" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">제9부: 2025년 하반기 시나리오별 대응 전략</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <p class="text-center text-gray-600 mb-8">2025년 하반기는 <strong class="text-red-500">부채 한도 협상</strong> 타결
+                    이후 단기 국채 대량 발행으로 인한 일시적 유동성 경색 등 다양한 변수가 존재합니다. 주요 시나리오별 특징과 대응 전략을 숙지해야 합니다.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Scenario 1: Base Case -->
+                    <div class="scenario-card scenario-base p-6 rounded-lg shadow-lg">
+                        <h3 class="font-bold text-xl text-[#1A535C] mb-3">BASE: 점진적 성공</h3>
+                        <p class="text-sm font-medium text-gray-500 mb-4">'지니어스 법안'이 통과되고 스테이블코인 시장이 점진적으로 성장하며, 미국 경제가
+                            연착륙하는 가장 가능성 높은 시나리오.</p>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">가정:</strong><span>법안 통과, 완만한 성장,
+                                    점진적 금리 인하</span></li>
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">특징:</strong><span>전략 산업 중심의 차별화
+                                    장세, 안정적 국채 금리</span></li>
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">전략:</strong><span>성장주/가치주 균형, '승자'
+                                    산업 선별 투자</span></li>
+                        </ul>
+                    </div>
+                    <!-- Scenario 2: Bull Case -->
+                    <div class="scenario-card scenario-bull p-6 rounded-lg shadow-lg">
+                        <h3 class="font-bold text-xl text-[#1A535C] mb-3">BULL: 유동성 호황</h3>
+                        <p class="text-sm font-medium text-gray-500 mb-4">빅테크의 적극적인 시장 진입과 연준의 빠른 금리 인하가 맞물려 유동성이 폭발적으로
+                            증가하는 시나리오.</p>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">가정:</strong><span>빅테크 참여, 빠른 금리
+                                    인하, 강력한 성장</span></li>
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">특징:</strong><span>자산시장 전반의 랠리(불장),
+                                    달러 약세</span></li>
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">전략:</strong><span>위험자산 비중 극대화,
+                                    인플레이션 헤지</span></li>
+                        </ul>
+                    </div>
+                    <!-- Scenario 3: Bear Case -->
+                    <div class="scenario-card scenario-bear p-6 rounded-lg shadow-lg">
+                        <h3 class="font-bold text-xl text-[#1A535C] mb-3">BEAR: 스태그플레이션 리스크</h3>
+                        <p class="text-sm font-medium text-gray-500 mb-4">고금리가 예상보다 길어지고 성장이 둔화되는 가운데, 부채 한도 협상 충격이 겹치는
+                            최악의 시나리오.</p>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">가정:</strong><span>고금리 장기화, 성장 둔화,
+                                    정책 실패</span></li>
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">특징:</strong><span>고물가 속 경기 침체, 높은
+                                    시장 변동성</span></li>
+                            <li class="flex"><strong
+                                    class="w-16 shrink-0 font-semibold text-gray-800">전략:</strong><span>현금/안전자산 비중 확대,
+                                    필수소비재/원자재</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusion" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-[#1A535C]">결론: 새로운 경제 지형을 위한 대시보드</h2>
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <p class="text-gray-600 mb-8 text-center">미국은 지금 자국의 패권을 유지하기 위해 과거와는 전혀 다른 새로운 플레이북을 펼쳐 보이고 있습니다. 이 거대한
+                    전환의 성공 여부를 가늠하기 위해 아래 핵심 지표들을 지속적으로 주시해야 합니다.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="indicator-card p-5 rounded-lg shadow-lg">
+                        <h3 class="font-bold text-lg text-[#1A535C] mb-2">📊 스테이블코인 시가총액</h3>
+                        <p class="text-sm text-gray-600"><strong class="text-gray-800">Why:</strong> 이 전략의 성공을 가장 직접적으로
+                            보여주는 척도입니다. 시총 증가는 곧 미국 단기 국채에 대한 수요 증가를 의미합니다.</p>
+                        <p class="text-sm text-gray-600 mt-2"><strong class="text-gray-800">How:</strong> 시총의 꾸준한 우상향
+                            여부와 신규 자금 유입 속도를 확인하세요.</p>
+                    </div>
+                    <div class="indicator-card p-5 rounded-lg shadow-lg">
+                        <h3 class="font-bold text-lg text-[#1A535C] mb-2">⚖️ 관련 법안 통과 여부</h3>
+                        <p class="text-sm text-gray-600"><strong class="text-gray-800">Why:</strong> 법적 기반 없이는 전략의 확장이
+                            불가능합니다. 특히 빅테크의 시장 진입 허용 여부가 중요합니다.</p>
+                        <p class="text-sm text-gray-600 mt-2"><strong class="text-gray-800">How:</strong> '지니어스 법안' 등 관련
+                            법안의 의회 논의 과정을 추적하세요.</p>
+                    </div>
+                    <div class="indicator-card p-5 rounded-lg shadow-lg">
+                        <h3 class="font-bold text-lg text-[#1A535C] mb-2">📱 빅테크의 코인 발행</h3>
+                        <p class="text-sm text-gray-600"><strong class="text-gray-800">Why:</strong> 수십억 사용자를 보유한 빅테크의
+                            진입은 디지털 달러의 글로벌 채택을 가속화할 '게임 체인저'입니다.</p>
+                        <p class="text-sm text-gray-600 mt-2"><strong class="text-gray-800">How:</strong> 애플, 구글 등의 관련
+                            발표나 파트너십 뉴스에 주목하세요.</p>
+                    </div>
+                    <div class="indicator-card p-5 rounded-lg shadow-lg">
+                        <h3 class="font-bold text-lg text-[#1A535C] mb-2">📉 장기금리-성장률 스프레드</h3>
+                        <p class="text-sm text-gray-600"><strong class="text-gray-800">Why:</strong> '금융 억압'의 강도를 나타내는
+                            지표입니다. 마이너스 스프레드는 정부 부채 부담이 줄고 있음을 의미합니다.</p>
+                        <p class="text-sm text-gray-600 mt-2"><strong class="text-gray-800">How:</strong> 명목 GDP 성장률과
+                            10년물 국채 금리를 비교하여 그 차이를 관찰하세요.</p>
+                    </div>
+                    <div class="indicator-card p-5 rounded-lg shadow-lg">
+                        <h3 class="font-bold text-lg text-[#1A535C] mb-2">🏛️ 연방-주정부 예산 배분</h3>
+                        <p class="text-sm text-gray-600"><strong class="text-gray-800">Why:</strong> 연방정부가 재정 부담을 주정부로
+                            이전하는 '신연방주의'의 진행 상황을 보여줍니다.</p>
+                        <p class="text-sm text-gray-600 mt-2"><strong class="text-gray-800">How:</strong> 메디케어 등 주요 예산
+                            항목의 연방-주정부 부담 비율 변화를 확인하세요.</p>
+                    </div>
+                    <div class="indicator-card p-5 rounded-lg shadow-lg md:col-span-2 lg:col-span-1">
+                        <h3 class="font-bold text-lg text-[#1A535C] mb-2">🌐 글로벌 자본 흐름</h3>
+                        <p class="text-sm text-gray-600"><strong class="text-gray-800">Why:</strong> 이 전략이 미국으로 자본을
+                            끌어들이는지, 아니면 타국의 방어로 막히는지 보여줍니다.</p>
+                        <p class="text-sm text-gray-600 mt-2"><strong class="text-gray-800">How:</strong> 신흥국에서 미국으로의 자본
+                            이동 데이터와 각국의 CBDC 개발 속도를 주시하세요.</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 bg-gray-50 p-6 rounded-xl">
+                    <h4 class="font-semibold text-xl text-center mb-4 text-[#1A535C]">스테이블코인 성장에 따른 유동성 창출 효과</h4>
+                    <p class="text-center text-gray-600 mb-4">스테이블코인 시장의 성장은 미국 단기 국채에 대한 직접적인 수요로 이어져, 정부의 재정 지출을 뒷받침하고
+                        시장 전체의 유동성을 공급하는 효과를 낳습니다.</p>
+                    <div class="chart-container h-80 md:h-96">
+                        <canvas id="liquidityImpactChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const vibrantPalette = {
+                blue: '#4ECDC4',
+                red: '#FF6B6B',
+                dark: '#1A535C',
+                yellow: '#FFE66D',
+                light: '#F7FFF7',
+                gray: '#555B6E'
+            };
+
+            const mandatoryTooltipOptions = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function (tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) {
+                                    return label.join(' ');
+                                } else {
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const commonChartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                ...mandatoryTooltipOptions,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+            };
+
+            new Chart(document.getElementById('debtChart'), {
+                type: 'line',
+                data: {
+                    labels: ['2015', '2017', '2019', '2021', '2023', '2025 (E)'],
+                    datasets: [{
+                        label: '미국 연방 정부 부채 (조 달러)',
+                        data: [18.1, 20.2, 22.7, 28.4, 33.1, 37.5],
+                        borderColor: vibrantPalette.red,
+                        backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { ...commonChartOptions }
+            });
+
+            new Chart(document.getElementById('rrpChart'), {
+                type: 'line',
+                data: {
+                    labels: ['2023-Q1', '2023-Q2', '2023-Q3', '2023-Q4', '2024-Q1', '2024-Q2'],
+                    datasets: [{
+                        label: '연준 RRP 잔고 (조 달러)',
+                        data: [2.3, 2.1, 1.5, 0.9, 0.5, 0.1],
+                        borderColor: vibrantPalette.dark,
+                        backgroundColor: 'rgba(26, 83, 92, 0.2)',
+                        fill: 'start',
+                        tension: 0.1
+                    }]
+                },
+                options: { ...commonChartOptions }
+            });
+
+            new Chart(document.getElementById('financialRepressionChart'), {
+                type: 'line',
+                data: {
+                    labels: ['2022', '2023', '2024', '2025(E)', '2026(E)'],
+                    datasets: [{
+                        label: '명목 GDP 성장률 (%)',
+                        data: [9.1, 6.3, 5.2, 4.8, 4.5],
+                        borderColor: vibrantPalette.blue,
+                        backgroundColor: 'transparent',
+                        borderWidth: 3,
+                        pointBackgroundColor: vibrantPalette.blue,
+                        pointRadius: 5,
+                    }, {
+                        label: '정책 금리 (%)',
+                        data: [2.5, 5.2, 5.5, 4.75, 4.0],
+                        borderColor: vibrantPalette.red,
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        borderWidth: 3,
+                        pointBackgroundColor: vibrantPalette.red,
+                        pointRadius: 5,
+                    }]
+                },
+                options: {
+                    ...commonChartOptions,
+                    plugins: {
+                        ...commonChartOptions.plugins,
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('debtBurdenChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['2010', '2015', '2020', '2025 (E)'],
+                    datasets: [
+                        {
+                            label: '연방정부 부채 (GDP 대비 %)',
+                            data: [62, 73, 100, 106],
+                            backgroundColor: vibrantPalette.red,
+                        },
+                        {
+                            label: '주/지방정부 부채 (GDP 대비 %)',
+                            data: [20, 18, 16, 15],
+                            backgroundColor: vibrantPalette.gray,
+                        }
+                    ]
+                },
+                options: {
+                    ...commonChartOptions,
+                    scales: {
+                        x: { stacked: false },
+                        y: { stacked: false, title: { display: true, text: 'GDP 대비 부채 비율 (%)' } }
+                    },
+                    plugins: {
+                        ...commonChartOptions.plugins,
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            const stablecoinLabels = ['2024', '2025 (E)', '2026 (E)', '2027 (E)'];
+            const tBillDemand = [128, 240, 440, 800];
+            const liquidityIndex = [100, 120, 150, 200];
+
+            new Chart(document.getElementById('liquidityImpactChart'), {
+                type: 'bar',
+                data: {
+                    labels: stablecoinLabels,
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: '단기 국채 신규 수요 (10억 달러)',
+                            data: tBillDemand,
+                            backgroundColor: 'rgba(78, 205, 196, 0.7)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'line',
+                            label: '유동성 공급 효과 (지수)',
+                            data: liquidityIndex,
+                            borderColor: vibrantPalette.red,
+                            backgroundColor: 'transparent',
+                            borderWidth: 4,
+                            pointRadius: 6,
+                            pointBackgroundColor: vibrantPalette.red,
+                            yAxisID: 'y1',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    ...commonChartOptions,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '국채 수요 (10억 달러)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '유동성 효과 (지수)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    },
+                    plugins: {
+                        ...commonChartOptions.plugins,
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>
