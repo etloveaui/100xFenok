@@ -1,0 +1,466 @@
+<!DOCTYPE html><html lang="ko"><head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>밸류 리밸런싱 토탈 가이드 &amp; 계산기</title>
+    <meta name="description" content="VR 전략 계산기와 통합 가이드를 제공하는 페이지.">
+    <link rel="canonical" href="./vr-total-guide-calculator.html">
+    <meta property="og:title" content="밸류 리밸런싱 토탈 가이드 &amp; 계산기">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="${window.baseHref}favicon-96x96.png">
+    <meta name="theme-color" content="#0ea5e9">
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMVIARBEKsPDc1Cwo9zMBRIms/NOTBkfLe2i9cwWdLLH4OztO" crossorigin="anonymous">
+    <script defer="" src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlVwcjNcsNQDbBFqdOWhMfTYJFlPLdBIFUPuyOkwI4rEDIZODqcQ0PdzzlN" crossorigin="anonymous"></script>
+    <script defer="" src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .infographic-title {
+            background: linear-gradient(135deg, #4F46E5, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card-gradient {
+            background: linear-gradient(145deg, #ffffff, #f7f8fc);
+        }
+        .calculator {
+             background: linear-gradient(135deg, #373a43, #26282e);
+        }
+        .btn-gradient {
+            background-image: linear-gradient(to right, #6366F1 0%, #A855F7 51%, #EC4899 100%);
+            transition: 0.5s;
+            background-size: 200% auto;
+        }
+        .btn-gradient:hover {
+            background-position: right center;
+        }
+        .btn-example {
+            background-color: #4b5563;
+            border-color: #6b7280;
+        }
+        .btn-example:hover {
+            background-color: #5a6472;
+        }
+        .btn-auto-calc {
+            background-color: #16a34a;
+        }
+        .btn-auto-calc:hover {
+            background-color: #15803d;
+        }
+        .table-header {
+            background-color: #374151;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+<script type="module" src="../initBaseHref.js"></script>
+
+    <div class="container mx-auto p-4 sm:p-8">
+
+        <!-- VR 설명 -->
+        <header class="text-center mb-16">
+
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold infographic-title mb-3">밸류 리밸런싱 토탈 가이드</h1>
+            <p class="text-lg text-gray-600">TQQQ를 활용한 장기 투자 전략 by Fenok</p>
+        </header>
+
+        <!-- VR 소개 -->
+        <section class="mb-20">
+            <div class="text-center max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">밸류 리밸런싱이란?</h2>
+                <p class="text-lg leading-relaxed text-gray-700">
+                    마이클 에들슨의 '밸류 에버리징'을 기반으로, TQQQ와 현금(Pool)의 비율을 조절하여 위험도는 낮추고 수익률은 극대화하는 장기 투자 전략입니다. 주가의 상승과 하락에 '대응'하며, 예측 불가능한 시장 상황 속에서 계획적으로 자산을 운용하는 것을 목표로 합니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- VR 3가지 방식 상세 -->
+        <section class="mb-20">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">3가지 투자 방식 상세 가이드</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- 적립식 VR -->
+                <div class="card-gradient rounded-xl shadow-lg p-6 text-center border-t-4 border-indigo-500 transform hover:scale-105 transition-transform duration-300">
+                    <h3 class="text-2xl font-bold mb-3">적립식 VR</h3>
+                    <p class="text-gray-600 mb-4">투자 초기에 꾸준히 자산을 불려나가는 단계입니다.</p>
+                    <ul class="text-left text-gray-700 space-y-2">
+                        <li><span class="font-bold text-indigo-600">목표:</span> 투자금 증식, 하락장 방어</li>
+                        <li><span class="font-bold text-indigo-600">초기 Pool:</span> 0% ~ 10%</li>
+                        <li><span class="font-bold text-indigo-600">권장 G값:</span> 10부터 시작 (점진적 상향)</li>
+                        <li><span class="font-bold text-indigo-600">Pool 사용한도:</span> 75%</li>
+                    </ul>
+                </div>
+                <!-- 거치식 VR -->
+                <div class="card-gradient rounded-xl shadow-lg p-6 text-center border-t-4 border-purple-500 transform hover:scale-105 transition-transform duration-300">
+                     <h3 class="text-2xl font-bold mb-3">거치식 VR</h3>
+                    <p class="text-gray-600 mb-4">목돈을 안정적으로 운용하며 복리 효과를 누리는 단계입니다.</p>
+                     <ul class="text-left text-gray-700 space-y-2">
+                        <li><span class="font-bold text-purple-600">목표:</span> 안정적 자산 운용</li>
+                        <li><span class="font-bold text-purple-600">초기 Pool:</span> 10% ~ 20%</li>
+                        <li><span class="font-bold text-purple-600">권장 G값:</span> 10 ~ 20</li>
+                        <li><span class="font-bold text-purple-600">Pool 사용한도:</span> 50%</li>
+                    </ul>
+                </div>
+                <!-- 인출식 VR -->
+                <div class="card-gradient rounded-xl shadow-lg p-6 text-center border-t-4 border-pink-500 transform hover:scale-105 transition-transform duration-300">
+                    <h3 class="text-2xl font-bold mb-3">인출식 VR</h3>
+                    <p class="text-gray-600 mb-4">경제적 자유를 위해 자산을 인출하며 사용하는 최종 단계입니다.</p>
+                     <ul class="text-left text-gray-700 space-y-2">
+                        <li><span class="font-bold text-pink-600">목표:</span> 현금 흐름 창출</li>
+                        <li><span class="font-bold text-pink-600">초기 Pool:</span> 20% ~ 30%</li>
+                        <li><span class="font-bold text-pink-600">권장 G값:</span> 20 이상</li>
+                        <li><span class="font-bold text-pink-600">Pool 사용한도:</span> 25%</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 투자 경로 -->
+        <section class="mb-20">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">일반적인 투자 경로</h2>
+            <div class="relative max-w-2xl mx-auto">
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-300 -translate-y-1/2"></div>
+                <div class="relative flex justify-between items-center">
+                    <div class="text-center z-10">
+                        <div class="bg-indigo-100 text-indigo-800 rounded-full w-28 h-28 flex items-center justify-center font-bold text-lg shadow-md border-4 border-white">적립식</div>
+                        <p class="mt-2 font-medium">자산 형성기</p>
+                    </div>
+                    <div class="text-center z-10">
+                        <div class="bg-purple-100 text-purple-800 rounded-full w-28 h-28 flex items-center justify-center font-bold text-lg shadow-md border-4 border-white">거치식</div>
+                         <p class="mt-2 font-medium">자산 유지/성장기</p>
+                    </div>
+                    <div class="text-center z-10">
+                        <div class="bg-pink-100 text-pink-800 rounded-full w-28 h-28 flex items-center justify-center font-bold text-lg shadow-md border-4 border-white">인출식</div>
+                         <p class="mt-2 font-medium">자산 활용기</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VR 핵심 공식 -->
+        <section class="mb-20 bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">핵심 공식: 기본 vs 실력</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div class="bg-indigo-50 p-6 rounded-lg border-l-4 border-indigo-400">
+                    <h4 class="font-bold text-xl text-indigo-800 mb-3">기본공식</h4>
+                    <p class="text-gray-700 mb-4">계산이 간단하며 V값은 하락하지 않아 직관적입니다. 안정적인 시장에서 효과적입니다.</p>
+                    <div class="text-center bg-white rounded-lg p-4 font-mono text-lg text-indigo-600">$V_2 = V_1 + \frac{P}{G} \pm \text{적립/인출금}$</div>
+                </div>
+                 <div class="bg-green-50 p-6 rounded-lg border-l-4 border-green-400">
+                    <h4 class="font-bold text-xl text-green-800 mb-3">실력공식</h4>
+                    <p class="text-gray-700 mb-4">평가금(E)을 반영하여 하락장에서 V값이 하락할 수 있어 현실적 대응이 가능합니다. </p>
+                     <div class="text-center bg-white rounded-lg p-4 font-mono text-lg text-green-700">$V_2 = V_1 + \frac{P}{G} + \frac{E-V_1}{2\sqrt{G}} \pm \text{적립/인출금}$</div>
+                </div>
+             </div>
+        </section>
+
+        <!-- VR 계산기 -->
+        <section id="calculator-section" class="mb-16">
+             <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">VR 사이클 계산 및 주문표 생성기</h2>
+             <div class="calculator max-w-4xl mx-auto p-6 sm:p-8 rounded-2xl shadow-2xl text-white">
+                
+                <div class="mb-6 border-b border-gray-600 pb-6">
+                    <h3 class="text-xl font-semibold text-center mb-4">예시 데이터로 채우기</h3>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button class="btn-example text-white font-bold py-2 px-4 rounded" onclick="fillExampleData('deposit')">적립식 예시</button>
+                        <button class="btn-example text-white font-bold py-2 px-4 rounded" onclick="fillExampleData('lump-sum')">거치식 예시</button>
+                        <button class="btn-example text-white font-bold py-2 px-4 rounded" onclick="fillExampleData('withdrawal')">인출식 예시</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="vr-type" class="block mb-2 font-semibold">투자 방식</label>
+                        <select id="vr-type" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-semibold">공식 종류</label>
+                        <div class="flex bg-gray-600 rounded-lg p-1">
+                            <button id="basic-formula-btn" class="w-1/2 p-2 rounded-md text-center">기본공식</button>
+                            <button id="advanced-formula-btn" class="w-1/2 p-2 rounded-md text-center bg-indigo-500 font-bold">실력공식</button>
+                        </div>
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    <div>
+                        <label for="v1" class="block mb-2 font-semibold">이전 V값 ($V_1$)</label>
+                        <input type="number" id="v1" placeholder="이전 V값" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="pool" class="block mb-2 font-semibold">현재 Pool ($P$)</label>
+                        <input type="number" id="pool" placeholder="현재 Pool" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                    </div>
+                     <div>
+                        <label for="g-value" class="block mb-2 font-semibold">기울기 ($G$)</label>
+                        <input type="number" id="g-value" placeholder="기울기" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                             <label for="tqqq-price" class="font-semibold">TQQQ 현재가</label>
+                             <button id="fetch-price-btn" class="text-xs btn-auto-calc text-white font-bold py-1 px-2 rounded">자동입력</button>
+                        </div>
+                        <input type="number" id="tqqq-price" step="0.01" placeholder="현재 TQQQ 가격" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                        <p id="fetched-price-info" class="text-xs text-gray-400 mt-1 h-4"></p>
+                    </div>
+                    <div>
+                        <label for="current-shares" class="block mb-2 font-semibold">현재 TQQQ 수량</label>
+                        <input type="number" id="current-shares" placeholder="보유 수량" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                    </div>
+                     <div id="pool-limit-field">
+                        <label for="pool-limit" class="block mb-2 font-semibold">Pool 사용한도 (%)</label>
+                        <input type="number" id="pool-limit" placeholder="Pool 사용률" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="order-quantity" class="block mb-2 font-semibold">주문 수량 (Qty)</label>
+                        <input type="number" id="order-quantity" value="1" min="1" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                    </div>
+                    <div id="eval-amount-field" class="hidden">
+                         <div class="flex justify-between items-center mb-2">
+                             <label for="eval-amount" class="font-semibold">최종 평가금 ($E$)</label>
+                             <button id="calc-eval-btn" class="text-xs btn-auto-calc text-white font-bold py-1 px-2 rounded">자동계산</button>
+                        </div>
+                        <input type="number" id="eval-amount" placeholder="자동계산 또는 직접입력" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                    </div>
+                    <div id="deposit-withdrawal-field" class="hidden">
+                        <label for="deposit-withdrawal" class="block mb-2 font-semibold">적립/인출액</label>
+                        <input type="number" id="deposit-withdrawal" placeholder="적립/인출액" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                    </div>
+                </div>
+                 <button id="calculate-btn" class="w-full btn-gradient text-white font-bold py-3 px-4 rounded-lg text-lg shadow-lg">계산 및 주문표 생성</button>
+                <div id="result-area" class="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700 hidden">
+                    <h3 class="text-xl font-bold mb-4 text-center">다음 사이클 V값 및 밴드</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-8">
+                        <div><p class="text-sm text-gray-400">새로운 V값 ($V_2$)</p><p id="new-v" class="text-2xl font-bold text-green-400"></p></div>
+                        <div><p class="text-sm text-gray-400">최소 밴드 (하단)</p><p id="min-band" class="text-2xl font-bold text-red-400"></p></div>
+                        <div><p class="text-sm text-gray-400">최대 밴드 (상단)</p><p id="max-band" class="text-2xl font-bold text-blue-400"></p></div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4 text-center">2주 예약매매 주문표</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-center text-green-400 mb-2">매수 주문표 (지정가)</h4>
+                            <div class="overflow-auto rounded-lg h-64"><table class="w-full text-sm text-left">
+                                <thead class="table-header text-gray-300 uppercase sticky top-0"><tr>
+                                    <th class="p-3">주문</th><th class="p-3">가격</th><th class="p-3">누적사용Pool</th>
+                                </tr></thead>
+                                <tbody id="buy-order-table-body" class="bg-gray-700"></tbody>
+                            </table></div>
+                        </div>
+                        <div>
+                             <h4 class="font-bold text-center text-red-400 mb-2">매도 주문표 (지정가)</h4>
+                             <div class="overflow-auto rounded-lg h-64"><table class="w-full text-sm text-left">
+                                <thead class="table-header text-gray-300 uppercase sticky top-0"><tr>
+                                    <th class="p-3">주문</th><th class="p-3">가격</th><th class="p-3">예상Pool잔고</th>
+                                </tr></thead>
+                                <tbody id="sell-order-table-body" class="bg-gray-700"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+                </div>
+             </div>
+        </section>
+
+    </div>
+
+    <script defer="">
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, { delimiters: [ {left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false} ]});
+        
+            // UI Elements
+            const vrTypeSelect = document.getElementById('vr-type');
+            const basicBtn = document.getElementById('basic-formula-btn');
+            const advancedBtn = document.getElementById('advanced-formula-btn');
+            const v1Input = document.getElementById('v1');
+            const poolInput = document.getElementById('pool');
+            const gValueInput = document.getElementById('g-value');
+            const tqqqPriceInput = document.getElementById('tqqq-price');
+            const fetchPriceBtn = document.getElementById('fetch-price-btn');
+            const fetchedPriceInfo = document.getElementById('fetched-price-info');
+            const sharesInput = document.getElementById('current-shares');
+            const poolLimitInput = document.getElementById('pool-limit');
+            const orderQuantityInput = document.getElementById('order-quantity');
+            const evalAmountField = document.getElementById('eval-amount-field');
+            const evalAmountInput = document.getElementById('eval-amount');
+            const calcEvalBtn = document.getElementById('calc-eval-btn');
+            const depositWithdrawalField = document.getElementById('deposit-withdrawal-field');
+            const depositWithdrawalInput = document.getElementById('deposit-withdrawal');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resultArea = document.getElementById('result-area');
+            const newVOutput = document.getElementById('new-v');
+            const minBandOutput = document.getElementById('min-band');
+            const maxBandOutput = document.getElementById('max-band');
+            const buyTableBody = document.getElementById('buy-order-table-body');
+            const sellTableBody = document.getElementById('sell-order-table-body');
+
+            let isAdvancedFormula = true; // Default to advanced formula
+
+            const vrTypes = {
+                'deposit': { name: '적립식', g: 10, poolLimit: 75 },
+                'lump-sum': { name: '거치식', g: 10, poolLimit: 50 },
+                'withdrawal': { name: '인출식', g: 20, poolLimit: 25 },
+            };
+            
+            for (const key in vrTypes) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = vrTypes[key].name;
+                vrTypeSelect.appendChild(option);
+            }
+            vrTypeSelect.value = 'lump-sum';
+
+            window.fillExampleData = function(type) {
+                vrTypeSelect.value = type;
+                if (type === 'deposit') {
+                    v1Input.value = 16000; poolInput.value = 500; gValueInput.value = 12;
+                    tqqqPriceInput.value = 72.45; sharesInput.value = 229; poolLimitInput.value = 70;
+                    orderQuantityInput.value = 3; depositWithdrawalInput.value = 250;
+                } else if (type === 'lump-sum') {
+                    v1Input.value = 18300; poolInput.value = 2000; gValueInput.value = 10;
+                    tqqqPriceInput.value = 62.00; sharesInput.value = 300; poolLimitInput.value = 50;
+                    orderQuantityInput.value = 1;
+                } else if (type === 'withdrawal') {
+                    v1Input.value = 39500; poolInput.value = 10000; gValueInput.value = 20;
+                    tqqqPriceInput.value = 79.00; sharesInput.value = 500; poolLimitInput.value = 25;
+                    orderQuantityInput.value = 5; depositWithdrawalInput.value = 250;
+                }
+                updateVrTypeUI();
+                updateFormulaUI();
+            }
+
+            function updateFormulaUI() {
+                if(isAdvancedFormula) {
+                    advancedBtn.classList.add('bg-indigo-500', 'font-bold');
+                    basicBtn.classList.remove('bg-indigo-500', 'font-bold');
+                    evalAmountField.classList.remove('hidden');
+                } else {
+                    basicBtn.classList.add('bg-indigo-500', 'font-bold');
+                    advancedBtn.classList.remove('bg-indigo-500', 'font-bold');
+                    evalAmountField.classList.add('hidden');
+                }
+            }
+            
+            function updateVrTypeUI() {
+                const type = vrTypeSelect.value;
+                const config = vrTypes[type];
+                depositWithdrawalField.classList.toggle('hidden', type === 'lump-sum');
+                if (type !== 'lump-sum') {
+                    depositWithdrawalField.querySelector('label').textContent = type === 'deposit' ? '적립액' : '인출액';
+                }
+                if (!gValueInput.value) gValueInput.value = config.g;
+                if (!poolLimitInput.value) poolLimitInput.value = config.poolLimit;
+            }
+
+            fetchPriceBtn.addEventListener('click', () => {
+                const fetchedPrice = 72.45; // Fetched from search
+                tqqqPriceInput.value = fetchedPrice;
+                const date = new Date('2025-06-20T16:00:00-04:00');
+                fetchedPriceInfo.textContent = `조회가: $${fetchedPrice} (미국시간 기준 ${date.toLocaleDateString()})`;
+            });
+            
+            calcEvalBtn.addEventListener('click', () => {
+                const price = parseFloat(tqqqPriceInput.value);
+                const shares = parseInt(sharesInput.value);
+                if(!isNaN(price) && !isNaN(shares) && shares > 0) {
+                    evalAmountInput.value = (price * shares).toFixed(2);
+                } else {
+                    alert('최종 평가금 계산을 위해 TQQQ 현재가와 수량을 올바르게 입력해주세요.');
+                }
+            });
+
+            basicBtn.addEventListener('click', () => { isAdvancedFormula = false; updateFormulaUI(); });
+            advancedBtn.addEventListener('click', () => { isAdvancedFormula = true; updateFormulaUI(); });
+            vrTypeSelect.addEventListener('change', updateVrTypeUI);
+
+            calculateBtn.addEventListener('click', () => {
+                const v1 = parseFloat(v1Input.value);
+                const pool = parseFloat(poolInput.value);
+                const g = parseFloat(gValueInput.value);
+                const shares = parseInt(sharesInput.value);
+                const poolLimit = parseFloat(poolLimitInput.value);
+                const orderQty = parseInt(orderQuantityInput.value);
+                const dw = parseFloat(depositWithdrawalInput.value) || 0;
+                let evalAmount = parseFloat(evalAmountInput.value);
+                
+                let missingFields = [];
+                if (isNaN(v1)) missingFields.push("이전 V값");
+                if (isNaN(pool)) missingFields.push("현재 Pool");
+                if (isNaN(g)) missingFields.push("기울기(G)");
+                if (isNaN(shares)) missingFields.push("현재 TQQQ 수량");
+                if (isNaN(poolLimit)) missingFields.push("Pool 사용한도");
+                if (isNaN(orderQty)) missingFields.push("주문 수량");
+
+                if (isAdvancedFormula && isNaN(evalAmount)) {
+                   const price = parseFloat(tqqqPriceInput.value);
+                   if (!isNaN(price) && !isNaN(shares)) {
+                       evalAmount = price * shares;
+                       evalAmountInput.value = evalAmount.toFixed(2);
+                   } else {
+                       missingFields.push("최종 평가금 (또는 현재가/수량)");
+                   }
+                }
+
+                if (missingFields.length > 0) {
+                    alert(`다음 필수 입력값을 모두 채워주세요: ${missingFields.join(', ')}`);
+                    return;
+                }
+
+                if (g <= 0 || shares <= 0 || poolLimit < 0 || orderQty < 1) {
+                    alert('G, TQQQ수량, 주문수량은 0보다 커야하며, Pool 사용한도는 0 이상이어야 합니다.'); return;
+                }
+
+                const type = vrTypeSelect.value;
+                const depositWithdrawalAmount = (type === 'deposit') ? dw : (type === 'withdrawal') ? -dw : 0;
+                const newV = isAdvancedFormula ? (v1 + (pool / g) + ((evalAmount - v1) / (2 * Math.sqrt(g))) + depositWithdrawalAmount) : (v1 + (pool / g) + depositWithdrawalAmount);
+                const minBand = newV * 0.85;
+                const maxBand = newV * 1.15;
+
+                newVOutput.textContent = '$' + newV.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                minBandOutput.textContent = '$' + minBand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                maxBandOutput.textContent = '$' + maxBand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                
+                generateOrderTables(minBand, maxBand, shares, pool, poolLimit, orderQty);
+                resultArea.classList.remove('hidden');
+            });
+            
+            function generateOrderTables(minBand, maxBand, initialShares, currentPool, poolLimit, orderQty) {
+                buyTableBody.innerHTML = '';
+                sellTableBody.innerHTML = '';
+                const maxPoolToUse = currentPool * (poolLimit / 100);
+
+                let cumulativePoolUsed = 0;
+                for (let i = 1; i <= 30; i++) {
+                    const sharesAfterBuy = initialShares + (i * orderQty);
+                    const buyPrice = minBand / sharesAfterBuy;
+                    const costOfThisChunk = buyPrice * orderQty;
+                    
+                    if (cumulativePoolUsed + costOfThisChunk > maxPoolToUse) break;
+                    cumulativePoolUsed += costOfThisChunk;
+                    
+                    const row = buyTableBody.insertRow();
+                    row.className = 'border-b border-gray-600';
+                    row.innerHTML = `<td class="p-3">${i} (${orderQty}주)</td><td class="p-3">$${buyPrice.toFixed(2)}</td><td class="p-3">$${cumulativePoolUsed.toFixed(2)}</td>`;
+                }
+
+                let cumulativePoolGained = 0;
+                for (let i = 1; i <= 30; i++) {
+                    const sharesBeforeSell = initialShares - ((i - 1) * orderQty);
+                    if (sharesBeforeSell <= 0) break;
+                    const sellPrice = maxBand / sharesBeforeSell;
+                    cumulativePoolGained += sellPrice * orderQty;
+                    
+                    const row = sellTableBody.insertRow();
+                    row.className = 'border-b border-gray-600';
+                    row.innerHTML = `<td class="p-3">${i} (${orderQty}주)</td><td class="p-3">$${sellPrice.toFixed(2)}</td><td class="p-3">$${(currentPool + cumulativePoolGained).toFixed(2)}</td>`;
+                }
+            }
+            
+            updateVrTypeUI();
+            updateFormulaUI();
+        });
+    </script>
+
+
+</body></html>

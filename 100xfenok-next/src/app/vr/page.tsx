@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-  title: 'VR 시스템 아카이브 - El Fenomeno',
+  title: 'VR 시스템',
   description: 'VR 시스템 개발 자료를 모아 둔 아카이브입니다.',
   alternates: {
     canonical: '/vr',
@@ -13,42 +13,45 @@ export const metadata: Metadata = {
     type: 'website',
     images: ['/favicon-96x96.png'],
   },
+};
+
+export const viewport: Viewport = {
   themeColor: '#0ea5e9',
 };
 
 export default function VRPage() {
   return (
-    <div className="vr-page-bg vr-mathematical-bg min-h-screen"
+    <div className="vr-page-bg vr-mathematical-bg min-h-screen pb-2"
       style={{
         fontFamily: "'Noto Sans KR', sans-serif"
       }}
     >
-      <div className="container mx-auto p-4 md:p-8">
-        <header className="text-center mb-16">
-          <div className="vr-floating-formula text-8xl mb-6">⚖️</div>
-          <h1 className="text-4xl md:text-6xl font-black text-slate-800 mb-4">VR 시스템 아카이브</h1>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+      <div className="container mx-auto p-3 sm:p-4 md:p-8">
+        <header className="text-center mb-10 md:mb-16">
+          <div className="vr-floating-formula text-6xl sm:text-7xl md:text-8xl mb-4 md:mb-6">⚖️</div>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-800 mb-4 leading-tight">VR 시스템 아카이브</h1>
+          <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
             밸류 리밸런싱(Value Rebalancing) 관련 문서와 계산기 모음<br/>
             <span className="text-indigo-600 font-semibold">수학적 원칙에 기반한 체계적 투자 시스템</span>
           </p>
         </header>
 
-        <div className="vr-card p-6 mb-12 text-center max-w-4xl mx-auto border-2 border-indigo-200">
+        <div className="vr-card p-4 sm:p-6 mb-10 md:mb-12 text-center max-w-4xl mx-auto border-2 border-indigo-200">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
             <span className="text-slate-800 font-semibold">Core Formula</span>
             <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
           </div>
-          <div className="font-mono text-lg text-indigo-700 bg-indigo-50 p-4 rounded-lg">
-            V₂ = V₁ + (Pool ÷ G) + (E - V₁) ÷ (2√G)
+          <div className="font-mono text-base sm:text-lg text-indigo-700 bg-indigo-50 p-3 sm:p-4 rounded-lg overflow-x-auto">
+            <span className="whitespace-nowrap">V₂ = V₁ + (Pool ÷ G) + (E - V₁) ÷ (2√G)</span>
           </div>
           <p className="text-slate-600 text-sm mt-2">
             V₁: 이전 목표값 | Pool: 현금풀 | G: G-Value | E: 평가금
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-16">
-          <Link href="/vr/vr-complete-system" className="vr-card p-8 block">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 max-w-6xl mx-auto mb-12 md:mb-16">
+          <Link href="/vr/vr-complete-system.html" className="vr-card p-5 sm:p-8 block">
             <div className="flex justify-between items-start mb-6">
               <span className="vr-system-badge text-white text-sm font-bold px-4 py-2 rounded-full">
                 🔬 시스템 가이드
@@ -82,7 +85,7 @@ export default function VRPage() {
             </div>
           </Link>
 
-          <Link href="/vr/vr-total-guide-calculator" className="vr-card p-8 block">
+          <Link href="/vr/vr-total-guide-calculator.html" className="vr-card p-5 sm:p-8 block">
             <div className="flex justify-between items-start mb-6">
               <span className="vr-calculator-badge text-white text-sm font-bold px-4 py-2 rounded-full">
                 🧮 계산기
@@ -117,7 +120,7 @@ export default function VRPage() {
           </Link>
         </div>
 
-        <div className="vr-card p-8 max-w-4xl mx-auto mb-16">
+        <div className="vr-card p-6 sm:p-8 max-w-4xl mx-auto mb-12 md:mb-16">
           <h3 className="text-2xl font-bold text-slate-800 text-center mb-6">⚖️ VR 시스템의 핵심 특징</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div>
@@ -138,7 +141,7 @@ export default function VRPage() {
           </div>
         </div>
 
-        <div className="vr-card p-8 text-center max-w-2xl mx-auto border-2 border-green-200">
+        <div className="vr-card p-6 sm:p-8 text-center max-w-2xl mx-auto border-2 border-green-200">
           <div className="text-5xl mb-4">📈</div>
           <h3 className="text-2xl font-bold text-slate-800 mb-4">VR 시스템 성과 지표</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
