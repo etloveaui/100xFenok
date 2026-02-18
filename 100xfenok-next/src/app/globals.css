@@ -303,6 +303,22 @@
   animation: toast-in 0.3s ease-out;
 }
 
+/* Toast fade in down animation */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.3s ease-out;
+}
+
 .market-regular { background: linear-gradient(135deg, #10b981, #059669); }
 .market-pre { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .market-after { background: linear-gradient(135deg, #f97316, #ea580c); }
@@ -315,14 +331,18 @@
 }
 
 .nav-icon {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #64748b;
   transition: all 0.2s ease;
+}
+
+.nav-icon i {
+  font-size: 0.95rem;
 }
 
 .nav-icon:hover {
@@ -343,6 +363,10 @@
   .nav-icon-only,
   .nav-text-only {
     display: none;
+  }
+
+  .brand-text {
+    font-size: 0.95rem;
   }
 }
 
@@ -404,7 +428,7 @@
 .tab-pill,
 .period-trigger,
 .period-option {
-  min-height: 34px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -571,12 +595,12 @@
     gap: 0.375rem;
   }
   .tab-pill {
-    min-height: 32px;
+    min-height: 40px;
     padding: 0.32rem 0.6rem;
     font-size: 0.68rem;
   }
   .period-trigger {
-    min-height: 32px;
+    min-height: 40px;
     padding: 0.32rem 0.52rem;
     font-size: 0.7rem;
   }
@@ -605,6 +629,12 @@
   transform: translateY(0);
 }
 
+.group:focus-within .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 /* Mobile Menu */
 .mobile-menu {
   transform: translateX(100%);
@@ -626,6 +656,36 @@
   visibility: visible;
 }
 
+.route-embed-shell {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  min-height: calc(100vh - 7rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+  height: calc(100vh - 7rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - 7rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+  height: calc(100dvh - 7rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  .route-embed-shell {
+    min-height: calc(100vh - 8rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+    height: calc(100vh - 8rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+    min-height: calc(100dvh - 8rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+    height: calc(100dvh - 8rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 768px) {
+  .route-embed-shell {
+    border-radius: 1rem;
+    min-height: calc(100vh - 8rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+    height: calc(100vh - 8rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+    min-height: calc(100dvh - 8rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+    height: calc(100dvh - 8rem - 72px - 0.75rem - env(safe-area-inset-bottom));
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -635,6 +695,7 @@ body {
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 main {
@@ -670,6 +731,13 @@ main {
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
+@media (hover: none) {
+  .posts-card:hover {
+    transform: none;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+}
+
 .posts-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -702,6 +770,7 @@ main {
 .vr-page-bg {
   background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .vr-mathematical-bg {
@@ -732,14 +801,16 @@ main {
   transition: left 0.5s ease-in-out;
 }
 
-.vr-card:hover::before {
-  left: 100%;
-}
+@media (hover: hover) {
+  .vr-card:hover::before {
+    left: 100%;
+  }
 
-.vr-card:hover {
-  transform: translateY(-10px) scale(1.02);
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+  .vr-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .vr-system-badge {

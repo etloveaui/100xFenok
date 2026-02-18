@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const pathname = usePathname();
 
   const isDashboard = pathname === '/';
@@ -15,17 +16,47 @@ export default function Navbar() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  const handleBrandClick = async (e: React.MouseEvent) => {
+    // Allow normal navigation on middle-click or ctrl/cmd+click
+    if (e.button === 1 || e.ctrlKey || e.metaKey) return;
+    
+    e.preventDefault();
+    
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (err) {
+      // Fallback: navigate to home
+      window.location.href = '/';
+    }
+  };
+
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <>
       <nav className="relative w-full z-50" id="mainNav">
         <div className="nav-wrapper w-full bg-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border-b border-gray-100 sticky top-0">
           <div className="container mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-            {/* Brand */}
-              <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
-                <div className="brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform border border-slate-100">
-                  <img src="/favicon.svg" alt="Icon" className="h-6 w-6 sm:h-8 sm:w-8" />
+            {/* Brand - Click to copy URL */}
+              <Link
+                href="/"
+                onClick={handleBrandClick}
+                className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0 cursor-pointer"
+                aria-label="Copy current URL to clipboard"
+                title="Click to copy URL"
+              >
+                <div className="brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300 border border-slate-100 active:scale-95">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/favicon.svg" alt="" className="h-6 w-6 sm:h-8 sm:w-8" />
                 </div>
-                <span className="brand-text font-[900] orbitron text-slate-800 text-lg sm:text-xl leading-none tracking-tight">
+                <span className="brand-text font-[900] orbitron text-slate-800 text-base min-[390px]:text-lg sm:text-xl leading-none tracking-tight whitespace-nowrap">
                   100x <span className="text-brand-gold">FENOK</span>
                 </span>
               </Link>
@@ -50,6 +81,7 @@ export default function Navbar() {
               {/* MARKET Dropdown */}
               <div className="relative dropdown-wrapper h-full flex items-center group">
                 <button
+                  type="button"
                   className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
                     isMarket
                       ? 'text-brand-navy bg-blue-50/50'
@@ -82,7 +114,7 @@ export default function Navbar() {
 
               {/* ANALYTICS Dropdown */}
               <div className="relative dropdown-wrapper h-full flex items-center group">
-                <button className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+                <button type="button" className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
                     isAnalytics
                       ? 'text-brand-navy bg-blue-50/50'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
@@ -114,7 +146,7 @@ export default function Navbar() {
 
               {/* STRATEGIES Dropdown */}
               <div className="relative dropdown-wrapper h-full flex items-center group">
-                <button className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+                <button type="button" className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
                     isStrategies
                       ? 'text-brand-navy bg-blue-50/50'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
@@ -159,23 +191,24 @@ export default function Navbar() {
             </nav>
 
             {/* Tablet Icon Navigation */}
-            <nav className="nav-icon-only hidden sm:flex md:hidden items-center gap-1 ml-4">
-              <Link href="/" className={`nav-icon ${isDashboard ? 'active' : ''}`} title="Dashboard">
+            <nav className="nav-icon-only hidden sm:flex md:hidden items-center gap-1.5 ml-4" aria-label="Tablet navigation">
+              <Link href="/" className={`nav-icon ${isDashboard ? 'active' : ''}`} title="Dashboard" aria-label="Dashboard">
                 <i className="fas fa-home" />
               </Link>
-              <Link href="/market" className={`nav-icon ${isMarket ? 'active' : ''}`} title="Market">
+              <Link href="/market" className={`nav-icon ${isMarket ? 'active' : ''}`} title="Market" aria-label="Market">
                 <i className="fas fa-chart-bar" />
               </Link>
-              <Link href="/multichart" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="Analytics">
+              <Link href="/multichart" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="Analytics" aria-label="Analytics">
                 <i className="fas fa-chart-line" />
               </Link>
-              <Link href="/ib" className={`nav-icon ${isStrategies ? 'active' : ''}`} title="Strategies">
+              <Link href="/ib" className={`nav-icon ${isStrategies ? 'active' : ''}`} title="Strategies" aria-label="Strategies">
                 <i className="fas fa-lightbulb" />
               </Link>
             </nav>
 
             {/* Mobile Hamburger */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(true)}
               className="md:hidden w-11 h-11 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 shadow-sm flex items-center justify-center"
               aria-label="Open menu"
@@ -187,79 +220,102 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Menu */}
-      <div className={`mobile-menu fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-white shadow-2xl z-50 ${mobileMenuOpen ? 'open' : ''}`}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <span className="font-bold orbitron text-slate-800">MENU</span>
-          <button 
-            onClick={closeMobileMenu}
-            className="w-11 h-11 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center"
-          >
-            <i className="fas fa-times text-slate-600" />
-          </button>
+      {mobileMenuOpen && (
+        <div className="mobile-menu open fixed inset-y-0 right-0 w-[min(22rem,100vw)] bg-white shadow-2xl z-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <span className="font-bold orbitron text-slate-800">MENU</span>
+            <button 
+              type="button"
+              onClick={closeMobileMenu}
+              className="w-11 h-11 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center"
+              aria-label="Close menu"
+            >
+              <i className="fas fa-times text-slate-600" />
+            </button>
+          </div>
+
+          <div className="px-4 pt-6 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-2 overflow-y-auto h-[calc(100dvh-4.5rem)]">
+            {/* Dashboard */}
+            <Link
+              href="/"
+              onClick={closeMobileMenu}
+              className={`block min-h-12 px-4 py-3 rounded-lg font-bold text-sm ${
+                isDashboard
+                  ? 'bg-blue-50 border-l-4 border-brand-navy text-brand-navy'
+                  : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <i className="fas fa-home mr-2" /> DASHBOARD
+            </Link>
+
+            <details className="group">
+              <summary className={`min-h-12 px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
+                  isMarket ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
+                }`}>
+                <span><i className="fas fa-chart-bar mr-2" /> MARKET</span>
+                <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="ml-4 mt-1 space-y-1">
+                <Link href="/market" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Market Wrap</Link>
+                <Link href="/alpha-scout" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Alpha Scout</Link>
+              </div>
+            </details>
+
+            <details className="group">
+              <summary className={`min-h-12 px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
+                  isAnalytics ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
+                }`}>
+                <span><i className="fas fa-chart-line mr-2" /> ANALYTICS</span>
+                <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="ml-4 mt-1 space-y-1">
+                <Link href="/multichart" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Multichart</Link>
+                <Link href="/radar" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
+                <Link href="/posts" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
+              </div>
+            </details>
+
+            <details className="group">
+              <summary className={`min-h-12 px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
+                  isStrategies ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
+                }`}>
+                <span><i className="fas fa-lightbulb mr-2" /> STRATEGIES</span>
+                <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="ml-4 mt-1 space-y-1">
+                <Link href="/ib" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">IB Helper (무한매수)</Link>
+                <Link href="/infinite-buying" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Infinite Buying</Link>
+                <Link href="/vr" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Value Rebalancing</Link>
+              </div>
+            </details>
+          </div>
         </div>
+      )}
 
-        <div className="p-4 pt-12 space-y-2 overflow-y-auto h-[calc(100vh-5rem)]">
-          {/* Dashboard */}
-          <Link
-            href="/"
-            onClick={closeMobileMenu}
-            className={`block px-4 py-3 rounded-lg font-bold text-sm ${
-              isDashboard
-                ? 'bg-blue-50 border-l-4 border-brand-navy text-brand-navy'
-                : 'text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            <i className="fas fa-home mr-2" /> DASHBOARD
-          </Link>
-
-          <details className="group">
-            <summary className={`px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
-                isMarket ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
-              }`}>
-              <span><i className="fas fa-chart-bar mr-2" /> MARKET</span>
-              <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
-            </summary>
-            <div className="ml-4 mt-1 space-y-1">
-              <Link href="/market" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Market Wrap</Link>
-              <Link href="/alpha-scout" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Alpha Scout</Link>
-            </div>
-          </details>
-
-          <details className="group">
-            <summary className={`px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
-                isAnalytics ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
-              }`}>
-              <span><i className="fas fa-chart-line mr-2" /> ANALYTICS</span>
-              <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
-            </summary>
-            <div className="ml-4 mt-1 space-y-1">
-              <Link href="/multichart" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Multichart</Link>
-              <Link href="/radar" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
-              <Link href="/posts" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
-            </div>
-          </details>
-
-          <details className="group">
-            <summary className={`px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
-                isStrategies ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
-              }`}>
-              <span><i className="fas fa-lightbulb mr-2" /> STRATEGIES</span>
-              <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
-            </summary>
-            <div className="ml-4 mt-1 space-y-1">
-              <Link href="/ib" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">IB Helper (무한매수)</Link>
-              <Link href="/infinite-buying" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Infinite Buying</Link>
-              <Link href="/vr" onClick={closeMobileMenu} className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Value Rebalancing</Link>
-            </div>
-          </details>
+      {/* URL Copy Toast */}
+      {showToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-brand-navy text-white px-4 py-2.5 rounded-lg shadow-lg animate-fade-in-down">
+          <div className="flex items-center gap-2">
+            <i className="fas fa-check-circle text-green-400" />
+            <span className="text-sm font-medium">URL 복사 완료!</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile Overlay */}
-      <div 
-        className={`mobile-overlay fixed inset-0 bg-black/50 z-40 ${mobileMenuOpen ? 'visible' : ''}`}
-        onClick={closeMobileMenu}
-      />
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          className="mobile-overlay visible fixed inset-0 bg-black/50 z-40"
+          onClick={closeMobileMenu}
+          aria-label="Close mobile menu overlay"
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              closeMobileMenu();
+            }
+          }}
+        />
+      )}
     </>
   );
 }
