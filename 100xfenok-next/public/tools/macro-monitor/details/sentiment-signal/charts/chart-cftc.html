@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CFTC S&P500 Position Chart | Market Radar</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+    body { background: #f8fafc; }
+
+    /* Period Dropdown */
+    .period-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .period-btn-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .period-btn-main:hover { border-color: #0ea5e9; }
+    .period-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      padding: 16px;
+      min-width: 320px;
+      z-index: 100;
+    }
+    .period-panel.open { display: block; }
+    .period-panel.flip-left { right: auto; left: 0; }
+    .period-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      margin-top: 12px;
+    }
+    .period-section-title:first-child { margin-top: 0; }
+    .period-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .period-chip {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid transparent;
+    }
+    .period-chip:hover { background: #e0f2fe; color: #0284c7; }
+    .period-chip.active {
+      background: #0ea5e9;
+      color: white;
+      border-color: #0ea5e9;
+    }
+
+    /* Custom Date Range */
+    .custom-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .custom-range input[type="date"] {
+      padding: 8px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: inherit;
+      color: #334155;
+      flex: 1;
+      min-width: 110px;
+    }
+    .custom-range input[type="date"]:focus {
+      outline: none;
+      border-color: #0ea5e9;
+    }
+    .custom-range .apply-btn {
+      padding: 8px 14px;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .custom-range .apply-btn:hover { background: #0284c7; }
+
+    /* Mobile Dropdown */
+    @media (max-width: 640px) {
+      .period-panel {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        top: auto;
+        bottom: 16px;
+        border-radius: 20px;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      .period-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* Backdrop */
+    .period-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 99;
+    }
+    .period-backdrop.open { display: block; }
+
+    /* Overlay Chip */
+    .overlay-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid #e2e8f0;
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+    .overlay-chip:hover { border-color: #0ea5e9; color: #0ea5e9; }
+    .overlay-chip.active {
+      background: #0ea5e9;
+      color: white;
+      border-color: #0ea5e9;
+    }
+    .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .overlay-chip.active .chip-dot { background: rgba(255,255,255,0.8); }
+    .overlay-chip:not(.active) .chip-dot { background: #0ea5e9; }
+
+    /* Stats Card */
+    .stats-card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .stat-value.positive { color: #0ea5e9; }
+    .stat-value.negative { color: #f97316; }
+
+    /* Dynamic Legend */
+    .legend-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 12px;
+      margin-top: 16px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .legend-bar {
+      width: 16px;
+      height: 10px;
+      border-radius: 2px;
+    }
+    .legend-line {
+      width: 20px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    .legend-line.dashed {
+      background: none;
+      border-top: 2px dashed currentColor;
+      height: 0;
+    }
+    .legend-box {
+      width: 16px;
+      height: 12px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+
+  <div>
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          CFTC S&P 500 Net Position
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">Non-Commercial Net Position (2010~)</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- S&P 500 Overlay Toggle -->
+        <div class="overlay-chip" id="sp500Overlay">
+          <span class="chip-dot"></span>
+          S&P 500
+        </div>
+
+        <!-- Period Dropdown -->
+        <div class="period-dropdown">
+          <button class="period-btn-main" id="periodBtn">
+            <span id="periodLabel">1Y</span>
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 4l4 4 4-4"/>
+            </svg>
+          </button>
+          <div class="period-panel" id="periodPanel">
+            <!-- Recent -->
+            <div class="period-section-title">⚡ Recent</div>
+            <div class="period-grid">
+              <div class="period-chip" data-period="90" data-label="3M">3M</div>
+              <div class="period-chip" data-period="180" data-label="6M">6M</div>
+              <div class="period-chip active" data-period="365" data-label="1Y">1Y</div>
+              <div class="period-chip" data-period="730" data-label="2Y">2Y</div>
+            </div>
+            <!-- Extended -->
+            <div class="period-section-title">📊 Extended</div>
+            <div class="period-grid">
+              <div class="period-chip" data-period="1825" data-label="5Y">5Y</div>
+              <div class="period-chip" data-period="3650" data-label="10Y">10Y</div>
+              <div class="period-chip" data-period="9999" data-label="MAX">MAX</div>
+            </div>
+            <!-- Historical -->
+            <div class="period-section-title">🏛️ Historical</div>
+            <div class="period-grid">
+              <div class="period-chip" data-period="since_2020" data-label="2020~">2020~</div>
+              <div class="period-chip" data-period="since_2015" data-label="2015~">2015~</div>
+              <div class="period-chip" data-period="since_2010" data-label="2010~">2010~</div>
+              <div class="period-chip" data-period="ytd" data-label="YTD">YTD</div>
+            </div>
+            <!-- Custom Range -->
+            <div class="period-section-title">🎯 Custom</div>
+            <div class="custom-range">
+              <input type="date" id="startDate" value="2020-01-01">
+              <span class="text-slate-400 text-sm">~</span>
+              <input type="date" id="endDate">
+              <button class="apply-btn" id="applyCustom">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backdrop for mobile -->
+    <div class="period-backdrop" id="periodBackdrop"></div>
+
+    <!-- Chart (moved up) -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 mb-6">
+      <canvas id="cftcChart" height="350"></canvas>
+    </div>
+
+    <!-- Stats Cards (moved below chart) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <div class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">Net Position</span>
+          <span id="netValue" class="stat-value">--</span>
+        </div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">Status</span>
+          <span id="statusValue" class="stat-value text-base">--</span>
+        </div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">Change</span>
+          <span id="changeValue" class="stat-value">--</span>
+        </div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">Date</span>
+          <span id="dateValue" class="stat-value text-base text-gray-600">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dynamic Legend -->
+    <div class="legend-container" id="legendContainer">
+      <!-- Populated by JS -->
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { getRecessionAnnotations } from '../../../shared/chart-annotations.js';
+
+    // Data & State
+    let allData = [];
+    let sp500Data = [];
+    let chart = null;
+    let currentPeriod = 365;
+    let showSP500 = false;
+
+    // Thresholds (롱/숏 양쪽)
+    const THRESHOLDS = {
+      EXTREME_LONG: 100000,   // Extreme Long (드물지만 강세 극단)
+      HEAVY_LONG: 50000,      // Heavy Long
+      HEAVY_SHORT: -100000,   // Heavy Short
+      EXTREME_SHORT: -150000  // Extreme Short (반등 시그널)
+    };
+
+    // Fetch data
+    async function fetchData() {
+      try {
+        const [cftcRes, sp500Res] = await Promise.all([
+          fetch('../../../../../data/sentiment/cftc-sp500.json'),
+          fetch('../../../../../data/indices/sp500.json')
+        ]);
+        allData = await cftcRes.json();
+        sp500Data = await sp500Res.json();
+
+        allData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        sp500Data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        return allData;
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        return [];
+      }
+    }
+
+    // Filter by period (확장: 년도 기준, YTD, Custom)
+    function filterByPeriod(data, period) {
+      // MAX
+      if (period >= 9999 || period === 'max') return data;
+
+      // 년도 기준 (since_2020, since_2015, since_2010)
+      if (typeof period === 'string' && period.startsWith('since_')) {
+        const year = parseInt(period.replace('since_', ''));
+        return data.filter(d => new Date(d.date).getFullYear() >= year);
+      }
+
+      // YTD (Year to Date)
+      if (period === 'ytd') {
+        const now = new Date();
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        return data.filter(d => new Date(d.date) >= yearStart);
+      }
+
+      // Custom range (startDate, endDate)
+      if (typeof period === 'object' && period.start && period.end) {
+        const start = new Date(period.start);
+        const end = new Date(period.end);
+        return data.filter(d => {
+          const date = new Date(d.date);
+          return date >= start && date <= end;
+        });
+      }
+
+      // 일수 기준 (기본)
+      const days = parseInt(period);
+      if (!isNaN(days)) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        return data.filter(d => new Date(d.date) >= cutoff);
+      }
+
+      return data;
+    }
+
+    // Format number
+    function formatNumber(num) {
+      if (Math.abs(num) >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+      } else if (Math.abs(num) >= 1000) {
+        return (num / 1000).toFixed(0) + 'K';
+      }
+      return num.toString();
+    }
+
+    // Merge S&P 500 with CFTC (weekly matching)
+    function mergeSP500WithCFTC(cftcData, sp500Data) {
+      const sp500Map = new Map();
+      sp500Data.forEach(d => sp500Map.set(d.date, d.value));
+
+      return cftcData.map(d => {
+        const targetDate = new Date(d.date);
+        let closestValue = null;
+
+        // Try exact match first, then ±3 days
+        for (let offset = 0; offset <= 3; offset++) {
+          for (const dir of [0, -1, 1]) {
+            const checkDate = new Date(targetDate);
+            checkDate.setDate(checkDate.getDate() + (offset * dir));
+            const dateStr = checkDate.toISOString().split('T')[0];
+            if (sp500Map.has(dateStr)) {
+              closestValue = sp500Map.get(dateStr);
+              break;
+            }
+          }
+          if (closestValue !== null) break;
+        }
+
+        return { ...d, sp500: closestValue };
+      });
+    }
+
+    // Update display
+    function updateCurrentDisplay(data) {
+      if (!data.length) return;
+
+      const latest = data[data.length - 1];
+      const prev = data.length > 1 ? data[data.length - 2] : null;
+      const value = latest.net;
+      const change = prev ? value - prev.net : 0;
+
+      // Net Value
+      const netEl = document.getElementById('netValue');
+      netEl.textContent = formatNumber(value);
+      netEl.className = `stat-value ${value >= 0 ? 'positive' : 'negative'}`;
+
+      // Status (양쪽 임계값 반영)
+      const statusEl = document.getElementById('statusValue');
+      if (value >= THRESHOLDS.EXTREME_LONG) {
+        statusEl.textContent = 'EXTREME LONG';
+        statusEl.className = 'stat-value text-base text-sky-700';
+      } else if (value >= THRESHOLDS.HEAVY_LONG) {
+        statusEl.textContent = 'HEAVY LONG';
+        statusEl.className = 'stat-value text-base text-sky-600';
+      } else if (value <= THRESHOLDS.EXTREME_SHORT) {
+        statusEl.textContent = 'EXTREME SHORT';
+        statusEl.className = 'stat-value text-base text-orange-600';
+      } else if (value <= THRESHOLDS.HEAVY_SHORT) {
+        statusEl.textContent = 'HEAVY SHORT';
+        statusEl.className = 'stat-value text-base text-orange-500';
+      } else if (value > 0) {
+        statusEl.textContent = 'NET LONG';
+        statusEl.className = 'stat-value text-base text-sky-500';
+      } else {
+        statusEl.textContent = 'NET SHORT';
+        statusEl.className = 'stat-value text-base text-orange-400';
+      }
+
+      // Change
+      const changeEl = document.getElementById('changeValue');
+      const changePrefix = change >= 0 ? '+' : '';
+      changeEl.textContent = changePrefix + formatNumber(change);
+      changeEl.className = `stat-value ${change >= 0 ? 'positive' : 'negative'}`;
+
+      // Date
+      document.getElementById('dateValue').textContent = latest.date;
+    }
+
+    // Update legend (양쪽 임계값 반영)
+    function updateLegend() {
+      const container = document.getElementById('legendContainer');
+      let html = `
+        <div class="legend-item">
+          <span class="legend-bar" style="background: #0ea5e9;"></span>
+          Net Long (Bullish)
+        </div>
+        <div class="legend-item">
+          <span class="legend-bar" style="background: #f97316;"></span>
+          Net Short (Bearish)
+        </div>
+      `;
+
+      if (showSP500) {
+        html += `
+          <div class="legend-item">
+            <span class="legend-line dashed" style="color: #6366f1;"></span>
+            S&P 500 (%)
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="legend-item">
+          <span class="legend-box" style="background: rgba(14, 165, 233, 0.15);"></span>
+          Extreme Long Zone
+        </div>
+        <div class="legend-item">
+          <span class="legend-box" style="background: rgba(249, 115, 22, 0.15);"></span>
+          Extreme Short Zone
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // Render chart
+    function renderChart(mergedData) {
+      const ctx = document.getElementById('cftcChart').getContext('2d');
+
+      const dates = mergedData.map(d => d.date);
+      const values = mergedData.map(d => d.net);
+
+      // Bar colors: Sky for positive, Orange for negative
+      const barColors = values.map(v => v >= 0 ? 'rgba(14, 165, 233, 0.7)' : 'rgba(249, 115, 22, 0.7)');
+      const borderColors = values.map(v => v >= 0 ? '#0ea5e9' : '#f97316');
+
+      // Recession annotations
+      const recessionAnnotations = dates.length > 0
+        ? getRecessionAnnotations(dates[0], dates[dates.length - 1])
+        : {};
+
+      // Y-axis range (양쪽 임계값 반영)
+      const minVal = Math.min(...values);
+      const maxVal = Math.max(...values);
+      const yMin = Math.min(minVal * 1.1, THRESHOLDS.EXTREME_SHORT * 1.2);
+      const yMax = Math.max(maxVal * 1.1, THRESHOLDS.EXTREME_LONG * 1.2);
+
+      // Threshold annotations (양쪽)
+      const thresholdAnnotations = {
+        // 숏 쪽 음영
+        box_extreme_short: {
+          type: 'box',
+          yMin: yMin,
+          yMax: THRESHOLDS.EXTREME_SHORT,
+          backgroundColor: 'rgba(249, 115, 22, 0.08)',
+          borderWidth: 0
+        },
+        // 롱 쪽 음영
+        box_extreme_long: {
+          type: 'box',
+          yMin: THRESHOLDS.EXTREME_LONG,
+          yMax: yMax,
+          backgroundColor: 'rgba(14, 165, 233, 0.08)',
+          borderWidth: 0
+        },
+        // Zero 라인
+        line_zero: {
+          type: 'line',
+          yMin: 0,
+          yMax: 0,
+          borderColor: '#94a3b8',
+          borderWidth: 2,
+          label: {
+            display: true,
+            content: 'Zero',
+            position: 'start',
+            backgroundColor: 'transparent',
+            color: '#94a3b8',
+            font: { size: 10, weight: 'bold' }
+          }
+        },
+        // 롱 임계값
+        line_heavy_long: {
+          type: 'line',
+          yMin: THRESHOLDS.HEAVY_LONG,
+          yMax: THRESHOLDS.HEAVY_LONG,
+          borderColor: '#38bdf8',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          label: {
+            display: true,
+            content: 'Heavy Long (+50K)',
+            position: 'start',
+            backgroundColor: 'rgba(56, 189, 248, 0.9)',
+            color: '#fff',
+            font: { size: 10, weight: 'bold' },
+            padding: 4,
+            borderRadius: 4
+          }
+        },
+        line_extreme_long: {
+          type: 'line',
+          yMin: THRESHOLDS.EXTREME_LONG,
+          yMax: THRESHOLDS.EXTREME_LONG,
+          borderColor: '#0284c7',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          label: {
+            display: true,
+            content: 'Extreme Long (+100K)',
+            position: 'start',
+            backgroundColor: 'rgba(2, 132, 199, 0.9)',
+            color: '#fff',
+            font: { size: 10, weight: 'bold' },
+            padding: 4,
+            borderRadius: 4
+          }
+        },
+        // 숏 임계값
+        line_heavy_short: {
+          type: 'line',
+          yMin: THRESHOLDS.HEAVY_SHORT,
+          yMax: THRESHOLDS.HEAVY_SHORT,
+          borderColor: '#fb923c',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          label: {
+            display: true,
+            content: 'Heavy Short (-100K)',
+            position: 'end',
+            backgroundColor: 'rgba(251, 146, 60, 0.9)',
+            color: '#fff',
+            font: { size: 10, weight: 'bold' },
+            padding: 4,
+            borderRadius: 4
+          }
+        },
+        line_extreme_short: {
+          type: 'line',
+          yMin: THRESHOLDS.EXTREME_SHORT,
+          yMax: THRESHOLDS.EXTREME_SHORT,
+          borderColor: '#ea580c',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          label: {
+            display: true,
+            content: 'Extreme Short (-150K)',
+            position: 'end',
+            backgroundColor: 'rgba(234, 88, 12, 0.9)',
+            color: '#fff',
+            font: { size: 10, weight: 'bold' },
+            padding: 4,
+            borderRadius: 4
+          }
+        }
+      };
+
+      // Datasets
+      const datasets = [{
+        type: 'bar',
+        label: 'Net Position',
+        data: values,
+        backgroundColor: barColors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 3,
+        yAxisID: 'y'
+      }];
+
+      const scales = {
+        x: {
+          type: 'time',
+          offset: true,  // Bar chart 좌우 막대 잘림 방지
+          time: {
+            unit: currentPeriod <= 365 ? 'month' : 'year',
+            displayFormats: { month: 'MMM yyyy', year: 'yyyy' }
+          },
+          grid: { display: false },
+          ticks: { maxTicksLimit: 8, color: '#94a3b8', font: { size: 11 } }
+        },
+        y: {
+          position: 'left',
+          min: yMin,
+          max: yMax,
+          grid: { color: 'rgba(156, 163, 175, 0.15)' },
+          ticks: {
+            color: '#64748b',
+            font: { weight: '500', size: 11 },
+            callback: (v) => formatNumber(v)
+          },
+          title: {
+            display: true,
+            text: 'Net Position',
+            color: '#64748b',
+            font: { weight: 'bold', size: 12 }
+          }
+        }
+      };
+
+      // S&P 500 overlay
+      if (showSP500) {
+        const sp500Values = mergedData.map(d => d.sp500);
+        const firstValidIndex = sp500Values.findIndex(v => v !== null);
+        if (firstValidIndex !== -1) {
+          const baseValue = sp500Values[firstValidIndex];
+          const normalizedSP500 = sp500Values.map(v =>
+            v !== null ? ((v - baseValue) / baseValue) * 100 : null
+          );
+
+          datasets.push({
+            type: 'line',
+            label: 'S&P 500 (%)',
+            data: normalizedSP500,
+            borderColor: '#64748b',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: '#64748b',
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2,
+            borderWidth: 2,
+            yAxisID: 'y2',
+            spanGaps: true
+          });
+
+          scales.y2 = {
+            position: 'right',
+            title: {
+              display: true,
+              text: 'S&P 500 (%)',
+              color: '#64748b',
+              font: { weight: 'bold', size: 12 }
+            },
+            grid: { drawOnChartArea: false },
+            ticks: {
+              color: '#64748b',
+              font: { weight: '600', size: 11 },
+              callback: (v) => (v > 0 ? '+' : '') + v.toFixed(0) + '%'
+            },
+            border: { display: false }
+          };
+        }
+      }
+
+      const config = {
+        data: { labels: dates, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#fff',
+              bodyColor: '#e2e8f0',
+              cornerRadius: 10,
+              padding: 12,
+              titleFont: { weight: '600' },
+              callbacks: {
+                title: (items) => items[0].label,
+                label: (context) => {
+                  const v = context.parsed.y;
+                  if (context.dataset.label === 'S&P 500 (%)') {
+                    return ` S&P 500: ${v > 0 ? '+' : ''}${v?.toFixed(1) || '--'}%`;
+                  }
+                  return ` Net: ${formatNumber(v)}`;
+                }
+              }
+            },
+            annotation: {
+              annotations: { ...recessionAnnotations, ...thresholdAnnotations }
+            }
+          }
+        }
+      };
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, config);
+
+      updateCurrentDisplay(mergedData);
+      updateLegend();
+    }
+
+    // Setup dropdown (확장: data-label, Custom Range)
+    function setupDropdown() {
+      const btn = document.getElementById('periodBtn');
+      const panel = document.getElementById('periodPanel');
+      const backdrop = document.getElementById('periodBackdrop');
+      const labelEl = document.getElementById('periodLabel');
+
+      function togglePanel() {
+        const isOpening = !panel.classList.contains('open');
+        panel.classList.toggle('open');
+        backdrop.classList.toggle('open');
+
+        // Viewport overflow detection
+        if (isOpening) {
+          requestAnimationFrame(() => {
+            const rect = panel.getBoundingClientRect();
+            if (rect.right > window.innerWidth - 16) {
+              panel.classList.add('flip-left');
+            } else {
+              panel.classList.remove('flip-left');
+            }
+          });
+        }
+      }
+
+      function closePanel() {
+        panel.classList.remove('open');
+        backdrop.classList.remove('open');
+      }
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePanel();
+      });
+
+      backdrop.addEventListener('click', closePanel);
+
+      // Period chips (숫자, 문자열 모두 처리)
+      document.querySelectorAll('.period-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('.period-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+
+          const periodValue = chip.dataset.period;
+          // 숫자면 parseInt, 아니면 문자열 그대로
+          currentPeriod = isNaN(periodValue) ? periodValue : parseInt(periodValue);
+          labelEl.textContent = chip.dataset.label || chip.textContent;
+
+          const filtered = filterByPeriod(allData, currentPeriod);
+          const merged = mergeSP500WithCFTC(filtered, sp500Data);
+          renderChart(merged);
+
+          closePanel();
+        });
+      });
+
+      // Custom Range
+      const startInput = document.getElementById('startDate');
+      const endInput = document.getElementById('endDate');
+      const applyBtn = document.getElementById('applyCustom');
+
+      // 기본값 설정
+      const today = new Date();
+      endInput.value = today.toISOString().split('T')[0];
+
+      applyBtn.addEventListener('click', () => {
+        if (startInput.value && endInput.value) {
+          document.querySelectorAll('.period-chip').forEach(c => c.classList.remove('active'));
+          currentPeriod = { start: startInput.value, end: endInput.value };
+          labelEl.textContent = 'Custom';
+
+          const filtered = filterByPeriod(allData, currentPeriod);
+          const merged = mergeSP500WithCFTC(filtered, sp500Data);
+          renderChart(merged);
+
+          closePanel();
+        }
+      });
+    }
+
+    // Initialize
+    async function init() {
+      await fetchData();
+      setupDropdown();
+
+      const filtered = filterByPeriod(allData, currentPeriod);
+      const merged = mergeSP500WithCFTC(filtered, sp500Data);
+      renderChart(merged);
+
+      // S&P 500 overlay toggle
+      document.getElementById('sp500Overlay').addEventListener('click', () => {
+        showSP500 = !showSP500;
+        document.getElementById('sp500Overlay').classList.toggle('active', showSP500);
+
+        const filtered = filterByPeriod(allData, currentPeriod);
+        const merged = mergeSP500WithCFTC(filtered, sp500Data);
+        renderChart(merged);
+      });
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

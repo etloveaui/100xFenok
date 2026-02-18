@@ -1,0 +1,742 @@
+<!-- 100x Market Radar Widget - Liquidity Stress v2 (Dual Precision Arc) -->
+<!-- 컨셉: 신전(Banking Health) 옆의 정밀 센서 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- Constants & DataManager & DataFetcher ES Module import -->
+<script type="module">
+  import { DataManager, MacroDataManager } from '../shared/data-manager.js';
+  import { DataFetcher } from '../shared/data-fetcher.js';
+  import { ICONS, COLORS, LABELS } from '../shared/constants.js';
+  window.DataManager = DataManager;
+  window.MacroDataManager = MacroDataManager;
+  window.DataFetcher = DataFetcher;
+  window.ICONS = ICONS;
+  window.COLORS = COLORS;
+  window.LABELS = LABELS;
+
+  // Module 로드 완료 후 init 호출
+  if (typeof window.init === 'function') {
+    window.init();
+  }
+</script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: transparent; }
+
+  /* === 카드 기본 === */
+  .card-widget {
+    height: 100%;
+    min-height: 280px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    padding: 16px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .card-widget:hover {
+    transform: translateY(-4px);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 12px 28px rgba(0,0,0,0.1);
+  }
+
+  /* === Header === */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .title-icon { font-size: 12px; }
+
+  /* 종합 상태 배지 */
+  .overall-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border: 1px solid;
+  }
+
+  .badge-normal { background: #dcfce7; color: #166534; border-color: #86efac; }
+  .badge-caution { background: #fef9c3; color: #a16207; border-color: #fde047; }
+  .badge-warning { background: #fed7aa; color: #9a3412; border-color: #fdba74; }
+  .badge-danger { background: #fecaca; color: #991b1b; border-color: #fca5a5; }
+
+  /* === 듀얼 아크 컨테이너 === */
+  .dual-arc-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  /* 중앙 구분선 */
+  .arc-divider {
+    width: 1px;
+    height: 80%;
+    background: linear-gradient(180deg, transparent 0%, #cbd5e1 20%, #cbd5e1 80%, transparent 100%);
+  }
+
+  /* === 개별 게이지 === */
+  .gauge-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 170px;
+  }
+
+  .gauge {
+    position: relative;
+    width: 150px;
+    height: 150px;
+  }
+
+  /* 270° 아크 (conic-gradient) */
+  .gauge-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 135deg,
+      #e2e8f0 0deg,
+      #e2e8f0 270deg,
+      transparent 270deg
+    );
+    mask: radial-gradient(transparent 55%, black 56%);
+    -webkit-mask: radial-gradient(transparent 55%, black 56%);
+  }
+
+  .gauge-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    mask: radial-gradient(transparent 55%, black 56%);
+    -webkit-mask: radial-gradient(transparent 55%, black 56%);
+    transition: all 0.6s ease-out;
+    /* 기본: 0% */
+    background: conic-gradient(
+      from 135deg,
+      var(--gauge-color, #22c55e) 0deg,
+      var(--gauge-color, #22c55e) calc(var(--gauge-percent, 0) * 2.7deg),
+      transparent calc(var(--gauge-percent, 0) * 2.7deg)
+    );
+  }
+
+  /* Glow 효과 */
+  .gauge-fill::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 135deg,
+      transparent 0deg,
+      var(--gauge-color, #22c55e) calc(var(--gauge-percent, 0) * 2.7deg - 10deg),
+      transparent calc(var(--gauge-percent, 0) * 2.7deg)
+    );
+    filter: blur(8px);
+    opacity: 0.4;
+    mask: radial-gradient(transparent 50%, black 60%);
+    -webkit-mask: radial-gradient(transparent 50%, black 60%);
+    transition: opacity 0.3s ease;
+  }
+
+  .gauge-wrapper:hover .gauge-fill::after {
+    opacity: 0.7;
+  }
+
+  /* 임계값 마커 (Tick Mark) */
+  .gauge-threshold {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .threshold-tick {
+    position: absolute;
+    width: 2px;
+    height: 10px;
+    background: #94a3b8;
+    border-radius: 1px;
+    top: 6px;
+    left: 50%;
+    transform-origin: center 69px;
+  }
+
+  /* 중앙 정보 */
+  .gauge-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 8px;
+  }
+
+  .gauge-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+  }
+
+  .gauge-unit {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 3px;
+  }
+
+  .gauge-label {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 5px;
+  }
+
+  /* 상태 텍스트 (hover 시 표시) */
+  .gauge-status {
+    font-size: 9px;
+    font-weight: 600;
+    margin-top: 8px;
+    padding: 3px 8px;
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.3s ease;
+  }
+
+  .gauge-wrapper:hover .gauge-status {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .status-normal { background: #dcfce7; color: #166534; }
+  .status-caution { background: #fef9c3; color: #a16207; }
+  .status-warning { background: #fed7aa; color: #9a3412; }
+  .status-danger { background: #fecaca; color: #991b1b; }
+
+  /* === Loading === */
+  .loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(248, 250, 252, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    z-index: 10;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-text {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* === 캐시 없음 상태 === */
+  .no-cache {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+  }
+
+  .no-cache-icon { font-size: 36px; margin-bottom: 8px; }
+  .no-cache-text { font-size: 12px; text-align: center; font-weight: 500; }
+  .no-cache-hint { font-size: 10px; margin-top: 4px; color: #94a3b8; }
+
+  /* === Stale Data 경고 배너 === */
+  .stale-warning {
+    background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 5px 8px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    color: #92400e;
+  }
+
+  .stale-warning-icon { font-size: 11px; }
+  .stale-warning-text { font-weight: 500; }
+  .stale-warning-age { color: #b45309; font-weight: 600; }
+
+  /* === Responsive === */
+  @media (max-width: 767px) {
+    .gauge {
+      width: 130px;
+      height: 130px;
+    }
+    .gauge-value { font-size: 24px; }
+    .threshold-tick {
+      transform-origin: center 59px;
+    }
+  }
+
+  /* 플래그십 모바일 (iPhone Pro Max, Galaxy S) */
+  @media (max-width: 431px) {
+    .card-widget {
+      min-height: 320px;
+      padding: 10px;
+    }
+    .card-title { font-size: 10px; }
+
+    .dual-arc-container {
+      flex-direction: row;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .arc-divider {
+      display: none;
+    }
+
+    .gauge-wrapper {
+      max-width: none;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .gauge {
+      width: 115px;
+      height: 115px;
+    }
+
+    .gauge-value { font-size: 20px; }
+    .gauge-unit { font-size: 10px; }
+    .gauge-status { margin-top: 2px; font-size: 8px; }
+
+    .threshold-tick {
+      transform-origin: center 52px;
+    }
+  }
+
+  /* 소형 모바일 */
+  @media (max-width: 359px) {
+    .card-widget {
+      min-height: 350px;
+    }
+  }
+
+  /* Mobile Landscape */
+  @media (max-width: 667px) and (orientation: landscape) {
+    .gauge {
+      width: 130px;
+      height: 130px;
+    }
+    .gauge-value { font-size: 22px; }
+    .gauge-unit { font-size: 11px; }
+    .threshold-tick {
+      transform-origin: center 59px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="card-widget" onclick="openDetail()" style="position: relative;">
+  <div class="loading" id="loader">
+    <div class="spinner"></div>
+    <div class="loading-text">데이터 로딩 중...</div>
+  </div>
+
+  <!-- Header -->
+  <div class="card-header">
+    <div class="card-title"><span class="title-icon">⚡</span> LIQUIDITY STRESS</div>
+    <div class="overall-badge badge-normal" id="overallBadge">
+      <span id="overallLabel">NORMAL</span>
+    </div>
+  </div>
+
+  <!-- Stale Data 경고 배너 -->
+  <div class="stale-warning" id="staleWarning" style="display: none;">
+    <span class="stale-warning-icon">⚠️</span>
+    <span class="stale-warning-text">오래된 데이터</span>
+    <span class="stale-warning-age" id="staleAge">6시간 전</span>
+  </div>
+
+  <!-- 메인 컨텐츠: Dual Precision Arc -->
+  <div id="mainContent" class="dual-arc-container" style="display: none;">
+    <!-- 좌측: Spread (Tier 1) -->
+    <div class="gauge-wrapper" id="spreadGauge">
+      <div class="gauge">
+        <div class="gauge-track"></div>
+        <div class="gauge-fill" id="spreadFill" style="--gauge-percent: 0; --gauge-color: #22c55e;"></div>
+        <div class="gauge-threshold">
+          <!-- 20bp 임계값 마커 (270° 중 약 74° 위치 = 20/73*100 ≈ 27%) -->
+          <div class="threshold-tick" id="spreadThreshold" style="transform: rotate(calc(135deg + 73deg));"></div>
+        </div>
+        <div class="gauge-center">
+          <span class="gauge-value" id="spreadValue">--</span>
+          <span class="gauge-unit">bp</span>
+          <span class="gauge-label">Spread</span>
+        </div>
+      </div>
+      <div class="gauge-status status-normal" id="spreadStatus">정상</div>
+    </div>
+
+    <!-- 구분선 -->
+    <div class="arc-divider"></div>
+
+    <!-- 우측: RB/GDP (Tier 2) -->
+    <div class="gauge-wrapper" id="rbgdpGauge">
+      <div class="gauge">
+        <div class="gauge-track"></div>
+        <div class="gauge-fill" id="rbgdpFill" style="--gauge-percent: 0; --gauge-color: #22c55e;"></div>
+        <div class="gauge-threshold">
+          <!-- 8% 임계값 마커 -->
+          <div class="threshold-tick" id="rbgdpThreshold" style="transform: rotate(calc(135deg + 135deg));"></div>
+        </div>
+        <div class="gauge-center">
+          <span class="gauge-value" id="rbgdpValue">--</span>
+          <span class="gauge-unit">%</span>
+          <span class="gauge-label">RB/GDP</span>
+        </div>
+      </div>
+      <div class="gauge-status status-normal" id="rbgdpStatus">정상</div>
+    </div>
+  </div>
+
+
+  <!-- 캐시 없음 상태 -->
+  <div class="no-cache" id="noCache" style="display: none;">
+    <div class="no-cache-icon">📊</div>
+    <div class="no-cache-text">데이터 없음</div>
+    <div class="no-cache-hint">클릭하여 상세 페이지에서 로드</div>
+  </div>
+</div>
+
+<script>
+  const WIDGET_ID = 'liquidity-stress';
+  const DETAIL_PATH = 'tools/macro-monitor/details/liquidity-stress.html';
+
+  // 상태별 색상
+  const STATUS_COLORS = {
+    normal: '#22c55e',
+    caution: '#eab308',
+    warning: '#f97316',
+    danger: '#ef4444',
+    high_stress: '#f97316',
+    critical: '#ef4444'
+  };
+
+  // 상태별 배지 클래스
+  const BADGE_CLASSES = {
+    normal: 'badge-normal',
+    caution: 'badge-caution',
+    warning: 'badge-warning',
+    danger: 'badge-danger',
+    high_stress: 'badge-warning',
+    critical: 'badge-danger'
+  };
+
+  // 상태별 라벨
+  const STATUS_LABELS = {
+    normal: 'NORMAL',
+    caution: 'CAUTION',
+    warning: 'WARNING',
+    danger: 'DANGER',
+    high_stress: 'HIGH STRESS',
+    critical: 'CRITICAL'
+  };
+
+  const STATUS_LABELS_KR = {
+    normal: '정상',
+    caution: '주의',
+    warning: '경고',
+    danger: '위험',
+    high_stress: '고스트레스',
+    critical: '심각'
+  };
+
+  // postMessage 수신 리스너
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'WIDGET_DATA_UPDATE') {
+      console.log('[Widget] 부모로부터 데이터 수신');
+      renderWidget(event.data.payload);
+
+      const loader = document.getElementById('loader');
+      if (loader) loader.style.display = 'none';
+
+      const staleWarning = document.getElementById('staleWarning');
+      if (staleWarning) staleWarning.style.display = 'none';
+    }
+  });
+
+  /**
+   * Spread → 스트레스 퍼센트 (높을수록 위험)
+   * 범위: -10bp ~ 60bp+ → 0% ~ 100%
+   */
+  function spreadToPercent(value) {
+    const min = -10;  // 안전 최저
+    const max = 60;   // 위험 최고
+    const percent = ((value - min) / (max - min)) * 100;
+    return Math.max(0, Math.min(100, percent));
+  }
+
+  /**
+   * RB/GDP → 스트레스 퍼센트 (낮을수록 위험, 역방향)
+   * 범위: 15% ~ 5% → 0% ~ 100% (역방향)
+   */
+  function rbgdpToPercent(value) {
+    const safe = 15;   // 안전 최고
+    const danger = 5;  // 위험 최저
+    const percent = ((safe - value) / (safe - danger)) * 100;
+    return Math.max(0, Math.min(100, percent));
+  }
+
+  function renderWidget(data) {
+    const mainContent = document.getElementById('mainContent');
+    const noCache = document.getElementById('noCache');
+
+    if (!data) {
+      mainContent.style.display = 'none';
+      noCache.style.display = 'flex';
+      return;
+    }
+
+    mainContent.style.display = 'flex';
+    noCache.style.display = 'none';
+
+    // Overall Badge
+    const badge = document.getElementById('overallBadge');
+    const overallStatus = data.overallStatus || 'normal';
+    badge.className = 'overall-badge ' + (BADGE_CLASSES[overallStatus] || 'badge-normal');
+    document.getElementById('overallLabel').textContent = STATUS_LABELS[overallStatus] || 'NORMAL';
+
+    // Tier 1: Spread
+    if (data.tier1) {
+      const spreadValue = data.tier1.value;
+      const spreadStatus = data.tier1.status || 'normal';
+      const spreadPercent = spreadToPercent(spreadValue);
+      const spreadColor = STATUS_COLORS[spreadStatus] || STATUS_COLORS.normal;
+
+      document.getElementById('spreadValue').textContent = (spreadValue >= 0 ? '+' : '') + spreadValue;
+      document.getElementById('spreadFill').style.setProperty('--gauge-percent', spreadPercent);
+      document.getElementById('spreadFill').style.setProperty('--gauge-color', spreadColor);
+
+      const spreadStatusEl = document.getElementById('spreadStatus');
+      spreadStatusEl.textContent = STATUS_LABELS_KR[spreadStatus] || '정상';
+      spreadStatusEl.className = 'gauge-status status-' + spreadStatus;
+    }
+
+    // Tier 2: RB/GDP
+    if (data.tier2) {
+      const rbgdpValue = data.tier2.value;
+      const rbgdpStatus = data.tier2.status || 'normal';
+      const rbgdpPercent = rbgdpToPercent(rbgdpValue);
+      const rbgdpColor = STATUS_COLORS[rbgdpStatus] || STATUS_COLORS.normal;
+
+      document.getElementById('rbgdpValue').textContent = rbgdpValue.toFixed(1);
+      document.getElementById('rbgdpFill').style.setProperty('--gauge-percent', rbgdpPercent);
+      document.getElementById('rbgdpFill').style.setProperty('--gauge-color', rbgdpColor);
+
+      const rbgdpStatusEl = document.getElementById('rbgdpStatus');
+      rbgdpStatusEl.textContent = STATUS_LABELS_KR[rbgdpStatus] || '정상';
+      rbgdpStatusEl.className = 'gauge-status status-' + rbgdpStatus;
+    }
+
+    // 렌더링 완료 신호 (Carousel용)
+    try {
+      window.parent.postMessage({ type: 'WIDGET_READY', widgetId: 'liquidity-stress' }, '*');
+    } catch (e) {}
+  }
+
+  /**
+   * DataFetcher → Widget 데이터 형식 변환
+   */
+  function convertToWidgetFormat(data) {
+    // 이미 widget 형식이면 그대로 반환
+    if (data.tier1 && data.tier2) {
+      return data;
+    }
+
+    // DataFetcher 형식 → Widget 형식 변환
+    // 키 매핑: DataFetcher(spread, reservesGdpRatio) ↔ Legacy(tedSpread, rbGdpRatio)
+    if (data.metrics) {
+      const spreadValue = data.metrics.spread ?? data.metrics.tedSpread ?? 0;
+      const ratioValue = data.metrics.reservesGdpRatio ?? data.metrics.rbGdpRatio ?? 0;
+
+      // TED Spread 상태 판정 (bp 단위)
+      // < 20bp: normal, 20-40bp: caution, 40-60bp: warning, > 60bp: danger
+      let spreadStatus = 'normal';
+      // DataFetcher는 이미 bp 단위 반환, Legacy는 % 단위일 수 있음
+      const spreadBp = data.metrics.spread !== undefined ? spreadValue : spreadValue * 100;
+      if (spreadBp > 60) spreadStatus = 'danger';
+      else if (spreadBp > 40) spreadStatus = 'warning';
+      else if (spreadBp > 20) spreadStatus = 'caution';
+
+      // RB/GDP 상태 판정 (%, 역방향 - 낮을수록 위험)
+      // > 12%: normal, 8-12%: caution, 5-8%: warning, < 5%: danger
+      let rbgdpStatus = 'normal';
+      if (ratioValue < 5) rbgdpStatus = 'danger';
+      else if (ratioValue < 8) rbgdpStatus = 'warning';
+      else if (ratioValue < 12) rbgdpStatus = 'caution';
+
+      // 전체 상태: 더 나쁜 쪽 기준
+      const statusOrder = ['normal', 'caution', 'warning', 'danger'];
+      const spreadIdx = statusOrder.indexOf(spreadStatus);
+      const rbgdpIdx = statusOrder.indexOf(rbgdpStatus);
+      const overallStatus = statusOrder[Math.max(spreadIdx, rbgdpIdx)];
+
+      return {
+        overallStatus: overallStatus,
+        tier1: { value: spreadBp, status: spreadStatus },
+        tier2: { value: ratioValue, status: rbgdpStatus }
+      };
+    }
+
+    return data;
+  }
+
+  async function init() {
+    const loader = document.getElementById('loader');
+    const staleWarning = document.getElementById('staleWarning');
+
+    try {
+      let result = { data: null, isStale: true, ageMs: 0 };
+
+      // DataFetcher 사용 (캐시 우선, 없으면 API 호출)
+      if (typeof DataFetcher !== 'undefined') {
+        try {
+          result = await DataFetcher.fetch(WIDGET_ID);
+          console.log('[Widget] DataFetcher 결과:', result);
+        } catch (fetchError) {
+          console.warn('[Widget] DataFetcher 실패, 캐시 폴백:', fetchError);
+          // DataFetcher 실패 시 기존 캐시 방식으로 폴백
+          if (typeof DataManager !== 'undefined' && DataManager.getWidgetDataWithStale) {
+            result = DataManager.getWidgetDataWithStale(WIDGET_ID);
+          }
+        }
+      } else {
+        // DataFetcher 없으면 기존 캐시 방식
+        console.log('[Widget] DataFetcher 없음, 캐시 사용');
+        if (typeof DataManager !== 'undefined' && DataManager.getWidgetDataWithStale) {
+          result = DataManager.getWidgetDataWithStale(WIDGET_ID);
+        } else if (typeof DataManager !== 'undefined') {
+          result.data = DataManager.getWidgetData(WIDGET_ID);
+          result.isStale = false;
+        }
+      }
+
+      if (result.data) {
+        // DataFetcher → Widget 형식 변환
+        const widgetData = convertToWidgetFormat(result.data);
+        renderWidget(widgetData);
+
+        // Stale 경고 표시 (6시간 초과)
+        if (result.isStale && result.ageMs > 0) {
+          const ageText = typeof MacroDataManager !== 'undefined'
+            ? MacroDataManager.formatAge(result.ageMs)
+            : formatAgeSimple(result.ageMs);
+          document.getElementById('staleAge').textContent = ageText;
+          staleWarning.style.display = 'flex';
+        } else {
+          staleWarning.style.display = 'none';
+        }
+        loader.style.display = 'none';
+      } else {
+        // 데이터 없음 - postMessage 대기 (3초 후에도 없으면 '데이터 없음' 표시)
+        setTimeout(() => {
+          const noCache = document.getElementById('noCache');
+          if (noCache && noCache.style.display !== 'none') return;
+          const mainContent = document.getElementById('mainContent');
+          if (mainContent && mainContent.style.display === 'none') {
+            renderWidget(null);
+            loader.style.display = 'none';
+          }
+        }, 3000);
+      }
+    } catch (e) {
+      console.error('[Widget] Init error:', e);
+      renderWidget(null);
+      staleWarning.style.display = 'none';
+      loader.style.display = 'none';
+    }
+  }
+
+  // Fallback age formatter
+  function formatAgeSimple(ageMs) {
+    const minutes = Math.floor(ageMs / 60000);
+    if (minutes < 60) return `${minutes}분 전`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    return `${Math.floor(hours / 24)}일 전`;
+  }
+
+  // 캐시 업데이트 이벤트 리스닝
+  window.addEventListener('macro-data-updated', (e) => {
+    if (e.detail.widgetId === WIDGET_ID) {
+      renderWidget(e.detail.data);
+    }
+  });
+
+  // 상세 페이지 열기
+  function openDetail() {
+    try {
+      if (window.top?.loadPage) { window.top.loadPage(DETAIL_PATH); return; }
+      if (window.parent?.loadPage) { window.parent.loadPage(DETAIL_PATH); return; }
+    } catch(e) {}
+    const base = window.top?.baseHref || '/';
+    (window.top||window).location.assign(`${base}index.html?path=${DETAIL_PATH}`);
+  }
+
+  // window.init 노출 (module에서 호출)
+  window.init = init;
+</script>
+</body>
+</html>

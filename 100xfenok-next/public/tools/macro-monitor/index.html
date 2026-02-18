@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- Google tag (gtag.js) - 호스트별 자동 선택 -->
+  <script>
+    (function() {
+      const GA_IDS = {
+        'etloveaui.github.io': 'G-X7MZFQZRBW',
+        '100xfenok.pages.dev': 'G-BWHGXQPH2D'
+      };
+      const id = GA_IDS[location.hostname] || 'G-X7MZFQZRBW';
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', id);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>100x Market Radar | 100xFenok</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== 기본 스타일 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    /* ===== 헤더 (타이틀 + 탭) ===== */
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    /* 타이틀 텍스트만 그라데이션 적용 (이모지 제외) */
+    .page-title {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* 이모지 아이콘은 원래 색상 유지 */
+    .title-icon {
+      -webkit-background-clip: initial !important;
+      -webkit-text-fill-color: initial !important;
+      background: none !important;
+      color: inherit;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* ===== 카테고리 탭 ===== */
+    .category-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: none;
+      background: #ffffff;
+      padding: 10px 24px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      border: 2px solid #e2e8f0;
+    }
+
+    .tab-btn:hover {
+      background: #f8fafc;
+      color: #1e293b;
+      border-color: #cbd5e1;
+    }
+
+    .tab-btn.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    /* ===== Bento Box Grid (반응형) ===== */
+    .card-grid {
+      display: grid;
+      gap: 20px;
+      margin-top: 32px;
+    }
+
+    /* PC: 3열 */
+    @media (min-width: 1200px) {
+      .card-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* 태블릿: 2열 */
+    @media (min-width: 768px) and (max-width: 1199px) {
+      .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* 모바일: 1열 */
+    @media (max-width: 767px) {
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ===== 카드 공통 스타일 ===== */
+    .indicator-card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .indicator-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .indicator-card.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .indicator-card.disabled:hover {
+      transform: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    /* ===== 라이브 위젯 카드 (iframe) ===== */
+    .live-widget {
+      padding: 0;
+    }
+
+    .live-widget iframe {
+      width: 100%;
+      height: 280px;
+      border: none;
+      display: block;
+    }
+
+    /* ===== 모바일 반응형 높이 ===== */
+    @media (max-width: 431px) and (min-width: 360px) {
+      .live-widget iframe {
+        height: 320px;
+      }
+      .indicator-card.live-widget {
+        min-height: 320px;
+      }
+    }
+
+    @media (max-width: 359px) {
+      .live-widget iframe {
+        height: 350px;
+      }
+      .indicator-card.live-widget {
+        min-height: 350px;
+      }
+    }
+
+    /* ===== Coming Soon 카드 ===== */
+    .coming-soon {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .cs-icon {
+      width: 64px;
+      height: 64px;
+      background: rgba(37, 99, 235, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+      color: #2563eb;
+    }
+
+    .cs-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .cs-category {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .cs-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .cs-description {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    /* ===== 카테고리별 색상 테마 ===== */
+    /* Liquidity */
+    .category-liquidity .cs-icon {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+
+    /* Rates */
+    .category-rates .cs-icon {
+      background: rgba(99, 102, 241, 0.1);
+      color: #6366f1;
+    }
+
+    /* Sentiment */
+    .category-sentiment .cs-icon {
+      background: rgba(251, 146, 60, 0.1);
+      color: #fb923c;
+    }
+
+    /* ===== 반응형 조정 ===== */
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px 16px;
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+
+      .page-subtitle {
+        font-size: 13px;
+      }
+
+      .tab-btn {
+        padding: 8px 16px;
+        font-size: 12px;
+      }
+
+      .cs-title {
+        font-size: 16px;
+      }
+
+      .cs-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+      }
+    }
+
+    /* 폴더블: 280-400px */
+    @media (max-width: 400px) {
+      .page-title {
+        font-size: 20px;
+      }
+
+      .cs-title {
+        font-size: 15px;
+      }
+    }
+
+    /* ===== 필터링 애니메이션 ===== */
+    .indicator-card.hidden {
+      display: none;
+    }
+
+    .indicator-card.fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 헤더 -->
+  <header class="page-header">
+    <h1 class="page-title"><span class="title-icon">📡</span> 100x Market Radar</h1>
+    <p class="page-subtitle">거시경제 지표 통합 대시보드 - 실시간 위험 신호 모니터링</p>
+
+    <!-- 카테고리 탭 -->
+    <div class="category-tabs">
+      <button class="tab-btn active" data-category="all" onclick="filterCategory('all', this)">All</button>
+      <button class="tab-btn" data-category="liquidity" onclick="filterCategory('liquidity', this)">Liquidity</button>
+      <button class="tab-btn" data-category="rates" onclick="filterCategory('rates', this)">Rates</button>
+      <button class="tab-btn" data-category="sentiment" onclick="filterCategory('sentiment', this)">Sentiment</button>
+    </div>
+  </header>
+
+  <!-- 카드 그리드 -->
+  <div class="card-grid" id="cardGrid">
+
+    <!-- 1. Liquidity Flow (Layer 2 - 라이브 위젯) -->
+    <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/liquidity-flow.html')">
+      <iframe
+        src="widgets/liquidity-flow.html"
+        scrolling="no"
+        loading="lazy"
+        title="Liquidity Flow Monitor">
+      </iframe>
+    </div>
+
+    <!-- 2. Liquidity Stress (라이브 위젯 - Layer 1) -->
+    <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/liquidity-stress.html')">
+      <iframe
+        src="widgets/liquidity-stress.html"
+        scrolling="no"
+        loading="lazy"
+        title="Liquidity Stress Monitor">
+      </iframe>
+    </div>
+
+    <!-- 3. Banking Health (4-A) - 라이브 위젯 -->
+    <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/banking-health.html')">
+      <iframe
+        src="widgets/banking-health.html"
+        scrolling="no"
+        loading="lazy"
+        title="Banking Health Monitor">
+      </iframe>
+    </div>
+
+    <!-- 4. Sentiment Signal (4-D) - 라이브 위젯 -->
+    <div class="indicator-card live-widget fade-in" data-category="sentiment" onclick="openDetail('details/sentiment-signal/index.html')">
+      <iframe
+        src="widgets/sentiment-signal.html"
+        scrolling="no"
+        loading="lazy"
+        title="Sentiment Signal Monitor">
+      </iframe>
+    </div>
+
+    <!-- 5. Corporate Health (4-B) - 리서치 완료 -->
+    <div class="indicator-card coming-soon category-rates fade-in" data-category="rates">
+      <div class="cs-icon">🏢</div>
+      <h3 class="cs-title">Corporate Health</h3>
+      <p class="cs-category">Foundation</p>
+      <span class="cs-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        Coming Soon
+      </span>
+      <p class="cs-description">기업 수익성 (기업이익/GDP, Forward P/E)</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ===== 카테고리 필터링 =====
+  function filterCategory(category, btn) {
+    // 탭 활성화 상태 업데이트
+    document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
+    btn.classList.add('active');
+
+    // 카드 필터링
+    const cards = document.querySelectorAll('.indicator-card');
+    cards.forEach(card => {
+      const cardCategory = card.getAttribute('data-category');
+
+      if (category === 'all' || cardCategory === category) {
+        card.classList.remove('hidden');
+        card.classList.add('fade-in');
+      } else {
+        card.classList.add('hidden');
+        card.classList.remove('fade-in');
+      }
+    });
+  }
+
+  // ===== 디테일 페이지 열기 =====
+  function openDetail(path) {
+    // iframe 내부라면 부모 창에서 페이지 로드
+    try {
+      if (window.top?.loadPage) {
+        window.top.loadPage('tools/macro-monitor/' + path);
+        return;
+      }
+      if (window.parent?.loadPage) {
+        window.parent.loadPage('tools/macro-monitor/' + path);
+        return;
+      }
+    } catch(e) {
+      console.error('Parent navigation failed:', e);
+    }
+
+    // 직접 접근 시 상대 경로로 이동
+    window.location.href = path;
+  }
+
+  // ===== Coming Soon 카드 클릭 시 알림 =====
+  document.querySelectorAll('.coming-soon').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const title = card.querySelector('.cs-title').textContent;
+      alert(`"${title}" 지표는 곧 제공될 예정입니다!\n\n개발 진행 중입니다.`);
+    });
+  });
+
+  // ===== 초기 애니메이션 =====
+  window.addEventListener('load', () => {
+    const cards = document.querySelectorAll('.indicator-card');
+    cards.forEach((card, index) => {
+      setTimeout(() => {
+        card.classList.add('fade-in');
+      }, index * 50);
+    });
+  });
+
+  // ===== 위젯 데이터 전달 (postMessage) =====
+  // iframe sandbox에서 localStorage 접근 불가 → 부모에서 데이터 전달
+  (function() {
+    const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health', 'sentiment-signal'];
+
+    function sendDataToWidgets() {
+      WIDGET_IDS.forEach(widgetId => {
+        const iframe = document.querySelector(`iframe[src*="${widgetId}.html"]`);
+        if (!iframe || !iframe.contentWindow) return;
+
+        try {
+          const rawData = localStorage.getItem('macro_' + widgetId);
+          if (rawData) {
+            const parsed = JSON.parse(rawData);
+            iframe.contentWindow.postMessage({
+              type: 'WIDGET_DATA_UPDATE',
+              payload: parsed.data
+            }, '*');
+            console.log(`[Index] ${widgetId} 위젯으로 데이터 전송`);
+          }
+        } catch (e) {
+          console.warn(`[Index] ${widgetId} 데이터 전송 실패:`, e);
+        }
+      });
+    }
+
+    // 페이지 로드 시 + iframe 로드 완료 시
+    window.addEventListener('load', () => {
+      // iframe 로드 대기 후 전송
+      setTimeout(sendDataToWidgets, 500);
+      setTimeout(sendDataToWidgets, 1500);
+    });
+
+    // 각 iframe onload 이벤트
+    document.querySelectorAll('.live-widget iframe').forEach(iframe => {
+      iframe.addEventListener('load', () => {
+        setTimeout(() => {
+          const widgetId = WIDGET_IDS.find(id => iframe.src.includes(id));
+          if (!widgetId) return;
+
+          try {
+            const rawData = localStorage.getItem('macro_' + widgetId);
+            if (rawData) {
+              const parsed = JSON.parse(rawData);
+              iframe.contentWindow.postMessage({
+                type: 'WIDGET_DATA_UPDATE',
+                payload: parsed.data
+              }, '*');
+              console.log(`[Index] ${widgetId} iframe 로드 후 데이터 전송`);
+            }
+          } catch (e) {}
+        }, 300);
+      });
+    });
+  })();
+</script>
+
+<!-- ===== 적극적 데이터 갱신 (2026-01-08 추가) ===== -->
+<!-- DataFetcher를 통한 캐시 확인 + 필요시 API 호출 -->
+<script type="module">
+  import { DataFetcher } from './shared/data-fetcher.js';
+
+  const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health', 'sentiment-signal'];
+
+  /**
+   * 위젯 데이터 갱신 (캐시 상태 확인 → stale이면 API 호출)
+   * 1시간 TTL: data-manager.js v1.1.0에서 설정
+   */
+  async function refreshWidgetData() {
+    console.log('[Index] 위젯 데이터 갱신 시작...');
+
+    for (const widgetId of WIDGET_IDS) {
+      try {
+        // DataFetcher가 캐시 상태 확인 → stale이면 API 호출
+        const result = await DataFetcher.fetch(widgetId);
+
+        if (result.data) {
+          // iframe에 데이터 전송
+          const iframe = document.querySelector(`iframe[src*="${widgetId}.html"]`);
+          if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: 'WIDGET_DATA_UPDATE',
+              payload: result.data
+            }, '*');
+            console.log(`[Index] ${widgetId}: ${result.isFresh ? 'fresh' : 'stale'} 데이터 전송`);
+          }
+        }
+      } catch (e) {
+        console.warn(`[Index] ${widgetId} 갱신 실패:`, e);
+      }
+    }
+
+    console.log('[Index] 위젯 데이터 갱신 완료');
+  }
+
+  // 페이지 로드 시 실행 (iframe 로드 대기)
+  window.addEventListener('load', () => {
+    setTimeout(refreshWidgetData, 1000);
+  });
+</script>
+
+</body>
+</html>

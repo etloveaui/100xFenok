@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIX & MOVE Dual Chart | Market Radar</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body {
+      background: #f8fafc;
+    }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    /* Period Dropdown */
+    .period-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .period-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .period-trigger:hover {
+      border-color: #6366f1;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+    }
+    .period-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 320px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      padding: 16px;
+      z-index: 100;
+      display: none;
+    }
+    .period-panel.open { display: block; }
+    .period-panel.flip-left { right: auto; left: 0; }
+    .period-section {
+      margin-bottom: 16px;
+    }
+    .period-section:last-child { margin-bottom: 0; }
+    .period-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .period-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .period-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #64748b;
+      cursor: pointer;
+      text-align: center;
+    }
+    .period-btn:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+      background: #f5f3ff;
+    }
+    .period-btn.active {
+      background: #6366f1;
+      color: white;
+      border-color: #6366f1;
+    }
+
+    /* Overlay Toggle Chip */
+    .overlay-toggle {
+      display: flex;
+      gap: 8px;
+      margin-left: 16px;
+    }
+    .overlay-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .overlay-chip.off {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+    }
+    .overlay-chip.off:hover {
+      border-color: #94a3b8;
+    }
+    .overlay-chip.on {
+      background: #0ea5e9;
+      color: white;
+      border-color: #0ea5e9;
+    }
+    .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .stress-alert {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <span class="text-2xl">⚡📈</span>
+        VIX & MOVE Volatility
+      </h1>
+      <p class="text-sm text-gray-500 mt-1">Stock (VIX 1990~) + Bond (MOVE 2020~) Volatility Dual Axis</p>
+    </div>
+
+    <!-- Overlay Toggle + Period Selector -->
+    <div class="flex items-center gap-4 flex-wrap">
+      <!-- Overlay Toggle (SP 버튼 먼저 - 다른 차트와 통일) -->
+      <div class="overlay-toggle">
+        <span class="overlay-chip off" id="sp500Overlay" title="S&P 500 % Change Overlay">
+          <span class="chip-dot" style="background: #0ea5e9;"></span>
+          S&P 500
+        </span>
+      </div>
+
+      <!-- Period Dropdown -->
+      <div class="period-dropdown">
+        <div class="period-trigger" id="periodTrigger">
+          <span id="periodLabel">1Y</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="period-panel" id="periodPanel">
+          <!-- Quick -->
+          <div class="period-section">
+            <div class="period-section-title">⚡ Quick</div>
+            <div class="period-grid">
+              <button class="period-btn" data-period="30" data-label="1M">1M</button>
+              <button class="period-btn" data-period="90" data-label="3M">3M</button>
+              <button class="period-btn" data-period="180" data-label="6M">6M</button>
+              <button class="period-btn" data-period="ytd" data-label="YTD">YTD</button>
+            </div>
+          </div>
+          <!-- Standard -->
+          <div class="period-section">
+            <div class="period-section-title">📈 Standard</div>
+            <div class="period-grid">
+              <button class="period-btn active" data-period="365" data-label="1Y">1Y</button>
+              <button class="period-btn" data-period="730" data-label="2Y">2Y</button>
+              <button class="period-btn" data-period="1095" data-label="3Y">3Y</button>
+              <button class="period-btn" data-period="1825" data-label="5Y">5Y</button>
+            </div>
+          </div>
+          <!-- Long-term -->
+          <div class="period-section">
+            <div class="period-section-title">📊 Long-term</div>
+            <div class="period-grid">
+              <button class="period-btn" data-period="3650" data-label="10Y">10Y</button>
+              <button class="period-btn" data-period="7300" data-label="20Y">20Y</button>
+              <button class="period-btn" data-period="9999" data-label="MAX">MAX</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart (moved up) -->
+  <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+    <canvas id="dualChart" height="360"></canvas>
+  </div>
+
+  <!-- Current Values Display (moved below chart) -->
+  <div class="flex flex-wrap items-center gap-6 mb-4 p-4 bg-gray-50 rounded-xl">
+    <!-- VIX -->
+    <div class="flex items-center gap-3">
+      <div class="w-4 h-4 rounded-full" style="background: #2563eb;"></div>
+      <div>
+        <div class="text-xs text-gray-500 mb-1 font-medium">VIX (Stock)</div>
+        <div id="vixValue" class="text-2xl font-bold" style="color: #2563eb;">--</div>
+      </div>
+    </div>
+    <!-- MOVE -->
+    <div class="flex items-center gap-3">
+      <div class="w-4 h-4 rounded-full" style="background: #ea580c;"></div>
+      <div>
+        <div class="text-xs text-gray-500 mb-1 font-medium">MOVE (Bond)</div>
+        <div id="moveValue" class="text-2xl font-bold" style="color: #ea580c;">--</div>
+      </div>
+    </div>
+    <!-- Date -->
+    <div>
+      <div class="text-xs text-gray-500 mb-1">Date</div>
+      <div id="currentDate" class="text-lg font-medium text-gray-600">--</div>
+    </div>
+    <!-- Status Badge -->
+    <div id="statusBadge" class="ml-auto px-4 py-2 rounded-lg text-sm font-bold">
+      --
+    </div>
+  </div>
+
+  <!-- Stress Alert (hidden by default) -->
+  <div id="stressAlert" class="hidden mb-4 p-4 bg-red-50 border-2 border-red-400 rounded-xl stress-alert">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🚨</span>
+      <div>
+        <div class="font-bold text-red-800">DUAL STRESS ALERT</div>
+        <div class="text-sm text-red-600">VIX ≥30 AND MOVE ≥120: Both stock and bond markets showing elevated volatility</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend (simplified - thresholds shown as dashed lines on chart) -->
+  <div class="mt-4 flex flex-wrap gap-6 text-sm text-gray-700">
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-1 rounded" style="background: #2563eb;"></div>
+      <span class="font-semibold">VIX (Stock Vol)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-1 rounded" style="background: #ea580c;"></div>
+      <span class="font-semibold">MOVE (Bond Vol)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-0.5 rounded" style="background: #22c55e; border: 1px dashed #22c55e;"></div>
+      <span class="font-semibold">S&P 500 (% Change)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-4 bg-gray-400 opacity-20 rounded"></div>
+      <span class="font-semibold">Recession</span>
+    </div>
+  </div>
+
+
+  <script type="module">
+    import { getRecessionAnnotations } from '../../../shared/chart-annotations.js';
+
+    // Data & Chart State
+    let vixData = [];
+    let moveData = [];
+    let sp500Data = [];
+    let mergedData = [];
+    let chart = null;
+    let currentPeriod = 365;
+    let currentLabel = '1Y';
+    let overlayEnabled = false;
+
+    // ============================================
+    // Utility Functions (TDD Tested)
+    // ============================================
+
+    /**
+     * % 변화율 정규화
+     */
+    function normalizeToPercent(data, baseIndex = 0) {
+      if (!data || data.length === 0) return [];
+      const baseValue = data[baseIndex].value;
+      if (baseValue === 0) return data.map(d => ({ date: d.date, value: 0 }));
+      return data.map(d => ({
+        date: d.date,
+        value: ((d.value - baseValue) / baseValue) * 100
+      }));
+    }
+
+    /**
+     * 기간 변화율 계산
+     */
+    function calculatePeriodChange(data) {
+      if (!data || data.length < 2) return 0;
+      const first = data[0].value;
+      const last = data[data.length - 1].value;
+      if (first === 0) return 0;
+      return ((last - first) / first) * 100;
+    }
+
+    /**
+     * YTD 일수 계산
+     */
+    function getYTDDays() {
+      const now = new Date();
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      return Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24));
+    }
+
+    // Thresholds
+    const THRESHOLDS = {
+      VIX_FEAR: 30,
+      VIX_EXTREME: 40,
+      MOVE_STRESS: 120,
+      MOVE_EXTREME: 150
+    };
+
+    // Fetch all datasets (VIX, MOVE, S&P 500)
+    async function fetchData() {
+      try {
+        const [vixRes, moveRes, sp500Res] = await Promise.all([
+          fetch('../../../../../data/sentiment/vix.json'),
+          fetch('../../../../../data/sentiment/move.json'),
+          fetch('../../../../../data/indices/sp500.json')
+        ]);
+
+        vixData = await vixRes.json();
+        moveData = await moveRes.json();
+        sp500Data = await sp500Res.json();
+
+        // Sort by date
+        vixData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        moveData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        sp500Data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // Merge data - use VIX date range as base (longer history)
+        const moveMap = new Map(moveData.map(d => [d.date, d.value]));
+        const sp500Map = new Map(sp500Data.map(d => [d.date, d.value]));
+
+        mergedData = vixData.map(d => ({
+          date: d.date,
+          vix: d.value,
+          move: moveMap.get(d.date) || null,
+          sp500: sp500Map.get(d.date) || null
+        }));
+
+        return mergedData;
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        return [];
+      }
+    }
+
+    // Filter data by period
+    function filterByPeriod(data, days) {
+      if (days >= 9999) return data;
+
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      return data.filter(d => new Date(d.date) >= cutoff);
+    }
+
+    // Update current value display
+    function updateCurrentDisplay(data) {
+      if (!data.length) return;
+
+      // VIX: 최신 데이터 (항상 존재)
+      const latestVix = data[data.length - 1];
+
+      // MOVE: 최신 유효 데이터 찾기 (뒤에서부터 null 아닌 첫 번째)
+      const latestMove = data.slice().reverse().find(d => d.move !== null);
+
+      document.getElementById('vixValue').textContent = latestVix.vix.toFixed(2);
+      document.getElementById('moveValue').textContent = latestMove ? latestMove.move.toFixed(2) : 'N/A';
+
+      // 날짜가 다르면 둘 다 표시
+      if (latestMove && latestMove.date !== latestVix.date) {
+        document.getElementById('currentDate').textContent = `VIX: ${latestVix.date} | MOVE: ${latestMove.date}`;
+      } else {
+        document.getElementById('currentDate').textContent = latestVix.date;
+      }
+
+      // Check for dual stress (only if MOVE data exists)
+      const hasMoveData = latestMove !== null;
+      const moveValue = hasMoveData ? latestMove.move : null;
+      const isDualStress = hasMoveData && latestVix.vix >= THRESHOLDS.VIX_FEAR && moveValue >= THRESHOLDS.MOVE_STRESS;
+      const stressAlert = document.getElementById('stressAlert');
+
+      if (isDualStress) {
+        stressAlert.classList.remove('hidden');
+      } else {
+        stressAlert.classList.add('hidden');
+      }
+
+      // Determine overall status
+      const badge = document.getElementById('statusBadge');
+
+      if (hasMoveData && latestVix.vix >= THRESHOLDS.VIX_EXTREME && moveValue >= THRESHOLDS.MOVE_EXTREME) {
+        badge.textContent = 'EXTREME STRESS';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-800 text-white';
+      } else if (isDualStress) {
+        badge.textContent = 'DUAL STRESS';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-red-100 text-red-800';
+      } else if (latestVix.vix >= THRESHOLDS.VIX_FEAR || (hasMoveData && moveValue >= THRESHOLDS.MOVE_STRESS)) {
+        badge.textContent = 'ELEVATED';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-orange-100 text-orange-800';
+      } else if (latestVix.vix < 15 && (!hasMoveData || moveValue < 80)) {
+        badge.textContent = 'CALM';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-green-100 text-green-800';
+      } else {
+        badge.textContent = 'NORMAL';
+        badge.className = 'ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-gray-100 text-gray-700';
+      }
+    }
+
+    // Create/Update Chart
+    function renderChart(data) {
+      const ctx = document.getElementById('dualChart').getContext('2d');
+
+      const dates = data.map(d => d.date);
+      const vixValues = data.map(d => d.vix);
+      const moveValues = data.map(d => d.move);
+
+      // S&P 500 오버레이 (정규화된 % 변화)
+      let sp500OverlayValues = null;
+      if (overlayEnabled) {
+        const sp500ForPeriod = data.filter(d => d.sp500 !== null).map(d => ({ date: d.date, value: d.sp500 }));
+        if (sp500ForPeriod.length > 0) {
+          const normalized = normalizeToPercent(sp500ForPeriod);
+          const normalizedMap = new Map(normalized.map(d => [d.date, d.value]));
+          sp500OverlayValues = data.map(d => normalizedMap.get(d.date) || null);
+        }
+      }
+
+      // Get recession annotations
+      const recessionAnnotations = dates.length > 0
+        ? getRecessionAnnotations(dates[0], dates[dates.length - 1])
+        : {};
+
+      // ========================================
+      // PRO STYLE: Threshold annotations (Bloomberg/TradingView style)
+      // ========================================
+
+      // VIX/MOVE 최대값 계산 (음영 영역 상단용)
+      const vixMax = Math.max(80, Math.max(...vixValues) * 1.1);
+      const moveMax = Math.max(200, Math.max(...moveValues.filter(v => v !== null)) * 1.1);
+
+      const zoneAnnotations = {
+        // VIX 30+ 음영 영역 (위기 레벨)
+        zone_vix_fear: {
+          type: 'box',
+          yScaleID: 'y',
+          yMin: THRESHOLDS.VIX_FEAR,
+          yMax: vixMax,
+          backgroundColor: 'rgba(239, 68, 68, 0.08)',  // Red-500 @ 8%
+          borderWidth: 0
+        },
+        // VIX 30 임계선
+        line_vix_fear: {
+          type: 'line',
+          yScaleID: 'y',
+          yMin: THRESHOLDS.VIX_FEAR,
+          yMax: THRESHOLDS.VIX_FEAR,
+          borderColor: '#ef4444',  // Red-500 (선명하게)
+          borderWidth: 2,
+          borderDash: [8, 4],
+          label: {
+            display: true,
+            content: '⚠️ VIX 30 (Fear)',
+            position: 'start',
+            backgroundColor: 'rgba(239, 68, 68, 0.9)',
+            color: '#ffffff',
+            font: { size: 11, weight: 'bold' },
+            padding: { x: 8, y: 4 },
+            borderRadius: 4
+          }
+        },
+        // MOVE 120+ 음영 영역 (스트레스 레벨)
+        zone_move_stress: {
+          type: 'box',
+          yScaleID: 'y1',
+          yMin: THRESHOLDS.MOVE_STRESS,
+          yMax: moveMax,
+          backgroundColor: 'rgba(245, 158, 11, 0.08)',  // Amber-500 @ 8%
+          borderWidth: 0
+        },
+        // MOVE 120 임계선
+        line_move_stress: {
+          type: 'line',
+          yScaleID: 'y1',
+          yMin: THRESHOLDS.MOVE_STRESS,
+          yMax: THRESHOLDS.MOVE_STRESS,
+          borderColor: '#f59e0b',  // Amber-500 (선명하게)
+          borderWidth: 2,
+          borderDash: [8, 4],
+          label: {
+            display: true,
+            content: '⚠️ MOVE 120 (Stress)',
+            position: 'end',
+            backgroundColor: 'rgba(245, 158, 11, 0.9)',
+            color: '#ffffff',
+            font: { size: 11, weight: 'bold' },
+            padding: { x: 8, y: 4 },
+            borderRadius: 4
+          }
+        }
+      };
+
+      // ========================================
+      // PRO STYLE: Dataset configuration (Bloomberg/TradingView style)
+      // ========================================
+      const datasets = [
+        {
+          label: 'VIX',
+          data: vixValues,
+          borderColor: '#2563eb',       // Blue-600 (VIX = 주식 변동성)
+          backgroundColor: 'rgba(37, 99, 235, 0.05)',
+          fill: false,
+          tension: 0.4,                 // 더 부드러운 곡선
+          pointRadius: 0,               // 기본: 점 숨김
+          pointHoverRadius: 6,          // 호버: 점 표시
+          pointHoverBackgroundColor: '#2563eb',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 2,
+          borderWidth: 3,               // 두꺼운 라인 (프로 스타일)
+          yAxisID: 'y'
+        },
+        {
+          label: 'MOVE',
+          data: moveValues,
+          borderColor: '#ea580c',       // Orange-600 (MOVE = 채권 변동성)
+          backgroundColor: 'rgba(234, 88, 12, 0.05)',
+          fill: false,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#ea580c',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 2,
+          borderWidth: 3,
+          yAxisID: 'y1',
+          spanGaps: true
+        }
+      ];
+
+      // S&P 500 % 변화율 범위 계산 (축 범위용)
+      let sp500Min = 0, sp500Max = 0;
+
+      // Add S&P 500 overlay if enabled
+      if (overlayEnabled && sp500OverlayValues) {
+        const validValues = sp500OverlayValues.filter(v => v !== null);
+        sp500Min = Math.min(...validValues);
+        sp500Max = Math.max(...validValues);
+
+        datasets.push({
+          label: 'S&P 500 (%)',
+          data: sp500OverlayValues,
+          borderColor: '#64748b',       // Slate-500 (S&P 통일)
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#64748b',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 2,
+          borderWidth: 2,
+          yAxisID: 'y2',
+          spanGaps: true
+        });
+      }
+
+      const config = {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: currentPeriod <= 365 ? 'month' : 'year',
+                displayFormats: {
+                  month: 'MMM yyyy',
+                  year: 'yyyy'
+                }
+              },
+              grid: {
+                display: true,
+                color: 'rgba(156, 163, 175, 0.15)',  // 매우 연한 그리드
+                lineWidth: 1
+              },
+              ticks: {
+                maxTicksLimit: 8,
+                color: '#6b7280',
+                font: { size: 11 }
+              }
+            },
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              min: 0,
+              suggestedMax: vixMax,
+              title: {
+                display: true,
+                text: 'VIX',
+                color: '#2563eb',
+                font: { weight: 'bold', size: 12 }
+              },
+              grid: {
+                color: 'rgba(156, 163, 175, 0.15)',
+                lineWidth: 1
+              },
+              ticks: {
+                color: '#2563eb',
+                font: { weight: '600', size: 11 }
+              }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              min: 0,
+              suggestedMax: moveMax,
+              title: {
+                display: true,
+                text: 'MOVE',
+                color: '#ea580c',
+                font: { weight: 'bold', size: 12 }
+              },
+              grid: { drawOnChartArea: false },  // 오른쪽 축 그리드 숨김
+              ticks: {
+                color: '#ea580c',
+                font: { weight: '600', size: 11 }
+              }
+            },
+            // S&P 500 % 변화율 축 (오버레이 시에만 표시)
+            y2: {
+              type: 'linear',
+              display: overlayEnabled,
+              position: 'right',
+              offset: true,
+              suggestedMin: overlayEnabled ? Math.floor(sp500Min / 10) * 10 : 0,
+              suggestedMax: overlayEnabled ? Math.ceil(sp500Max / 10) * 10 : 100,
+              grid: { drawOnChartArea: false },
+              title: {
+                display: overlayEnabled,
+                text: 'S&P 500 %',
+                color: '#22c55e',
+                font: { weight: 'bold', size: 12 }
+              },
+              ticks: {
+                color: '#22c55e',
+                font: { weight: '600', size: 11 },
+                callback: (value) => value.toFixed(0) + '%'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              cornerRadius: 8,
+              callbacks: {
+                title: (items) => items[0].label,
+                label: (context) => {
+                  const label = context.dataset.label;
+                  const value = context.parsed.y.toFixed(2);
+                  return `${label}: ${value}`;
+                }
+              }
+            },
+            annotation: {
+              annotations: { ...recessionAnnotations, ...zoneAnnotations }
+            }
+          }
+        }
+      };
+
+      if (chart) {
+        chart.destroy();
+      }
+      chart = new Chart(ctx, config);
+    }
+
+    // Dropdown toggle
+    function setupDropdown() {
+      const trigger = document.getElementById('periodTrigger');
+      const panel = document.getElementById('periodPanel');
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpening = !panel.classList.contains('open');
+        panel.classList.toggle('open');
+
+        // Viewport overflow detection
+        if (isOpening) {
+          requestAnimationFrame(() => {
+            const rect = panel.getBoundingClientRect();
+            if (rect.right > window.innerWidth - 16) {
+              panel.classList.add('flip-left');
+            } else {
+              panel.classList.remove('flip-left');
+            }
+          });
+        }
+      });
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!panel.contains(e.target) && !trigger.contains(e.target)) {
+          panel.classList.remove('open');
+        }
+      });
+    }
+
+    // Period button handlers
+    function setupPeriodButtons() {
+      const panel = document.getElementById('periodPanel');
+      const label = document.getElementById('periodLabel');
+
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          // Handle YTD
+          const periodValue = btn.dataset.period;
+          if (periodValue === 'ytd') {
+            currentPeriod = getYTDDays();
+          } else {
+            currentPeriod = parseInt(periodValue);
+          }
+
+          currentLabel = btn.dataset.label;
+          label.textContent = currentLabel;
+
+          const filtered = filterByPeriod(mergedData, currentPeriod);
+          updateCurrentDisplay(filtered);
+          renderChart(filtered);
+
+          // Close panel
+          panel.classList.remove('open');
+        });
+      });
+    }
+
+    // Overlay toggle handler
+    function setupOverlayToggle() {
+      const chip = document.getElementById('sp500Overlay');
+
+      chip.addEventListener('click', () => {
+        overlayEnabled = !overlayEnabled;
+
+        if (overlayEnabled) {
+          chip.classList.remove('off');
+          chip.classList.add('on');
+        } else {
+          chip.classList.remove('on');
+          chip.classList.add('off');
+        }
+
+        // Re-render chart with current period
+        const filtered = filterByPeriod(mergedData, currentPeriod);
+        renderChart(filtered);
+      });
+    }
+
+    // Initialize
+    async function init() {
+      await fetchData();
+      const filtered = filterByPeriod(mergedData, currentPeriod);
+      updateCurrentDisplay(filtered);
+      renderChart(filtered);
+      setupDropdown();
+      setupPeriodButtons();
+      setupOverlayToggle();
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

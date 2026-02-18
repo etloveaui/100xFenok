@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- Google tag (gtag.js) - 호스트별 자동 선택 -->
+  <script>
+    (function() {
+      const GA_IDS = {
+        'etloveaui.github.io': 'G-X7MZFQZRBW',
+        '100xfenok.pages.dev': 'G-BWHGXQPH2D'
+      };
+      const id = GA_IDS[location.hostname] || 'G-X7MZFQZRBW';
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', id);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquidity Flow Monitor | 100xFenok</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+  <!-- Constants & DataManager ES Module import -->
+  <script type="module">
+    import { DataManager } from '../shared/data-manager.js';
+    import { THRESHOLDS, COLORS } from '../shared/constants.js';
+    import { getRecessionAnnotations } from '../shared/chart-annotations.js';
+    window.DataManager = DataManager;
+    window.THRESHOLDS = THRESHOLDS;
+    window.COLORS = COLORS;
+    window.getRecessionAnnotations = getRecessionAnnotations;
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex; justify-content: center;
+    }
+    .container { width: 100%; max-width: 1000px; padding: 32px 20px; }
+
+    /* ===== Header ===== */
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; color: #64748b; cursor: pointer; transition: all 0.2s ease; }
+    .back-btn:hover { background: #f1f5f9; color: #0f172a; transform: translateY(-1px); }
+    .title-group h1 { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .title-group p { font-size: 13px; color: #64748b; font-weight: 500; }
+
+    .header-right { text-align: right; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .status-dot { width: 8px; height: 8px; background: #166534; border-radius: 50%; animation: pulse 2s infinite; }
+    .update-time { display: block; margin-top: 6px; font-family: 'Orbitron', sans-serif; font-size: 11px; color: #94a3b8; }
+
+    /* ===== Signal Matrix (3개 지표) ===== */
+    .signal-matrix {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .signal-card {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .signal-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .signal-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .signal-icon.green { background: #dcfce7; color: #16a34a; }
+    .signal-icon.yellow { background: #fef9c3; color: #ca8a04; }
+    .signal-icon.red { background: #fee2e2; color: #dc2626; }
+    .signal-icon.gray { background: #f1f5f9; color: #94a3b8; }
+
+    .signal-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .signal-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .signal-unit {
+      font-size: 12px;
+      color: #64748b;
+      margin-left: 2px;
+    }
+    .signal-status {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+    .signal-status.normal { background: #dcfce7; color: #166534; }
+    .signal-status.caution { background: #fef9c3; color: #854d0e; }
+    .signal-status.danger { background: #fee2e2; color: #991b1b; }
+
+    /* Signal Card 확장 (값+화살표+서브텍스트+스파크라인) */
+    .signal-value-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 2px;
+    }
+    .signal-subtext {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* ===== Liquidity Pulse Hero ===== */
+    .net-flow-hero {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .net-flow-label {
+      font-size: 13px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .net-flow-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .net-flow-value.positive { color: #4ade80; }
+    .net-flow-value.negative { color: #f87171; }
+    .net-flow-trend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .net-flow-trend i {
+      font-size: 16px;
+    }
+    .net-flow-trend.up i { color: #4ade80; }
+    .net-flow-trend.down i { color: #f87171; }
+
+    /* ===== Chart Section ===== */
+    .dashboard-card {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    /* 탭 네비게이션 */
+    .chart-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+    }
+    .chart-tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .chart-tab:hover { color: #1e293b; }
+    .chart-tab.active {
+      background: #ffffff;
+      color: #2563eb;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .chart-title { font-size: 14px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 8px; }
+    .period-selector { display: flex; gap: 4px; background: #f8fafc; padding: 4px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .p-btn { border: none; background: none; padding: 6px 12px; font-size: 11px; font-weight: 600; color: #64748b; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+    .p-btn:hover { background: #fff; color: #0f172a; }
+    .p-btn.active { background: #ffffff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .chart-wrapper { position: relative; height: 340px; width: 100%; }
+
+    .custom-legend { display: flex; justify-content: center; gap: 24px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; font-weight: 500; }
+    .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+
+    /* ===== Info Cards ===== */
+    .info-cards-section {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .info-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      border-left: 4px solid #10b981;
+      transition: all 0.2s ease;
+    }
+    .info-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .info-card.inflow { border-left-color: #10b981; }
+    .info-card.neutral { border-left-color: #f59e0b; }
+    .info-card.outflow { border-left-color: #ef4444; }
+
+    .info-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .info-card-icon { font-size: 18px; }
+    .info-card-title { flex: 1; font-size: 13px; font-weight: 700; color: #334155; }
+    .info-expand-btn {
+      width: 28px; height: 28px;
+      border: none; background: #f1f5f9;
+      border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #64748b; transition: all 0.2s;
+    }
+    .info-expand-btn:hover { background: #e2e8f0; color: #334155; }
+    .info-expand-btn i { transition: transform 0.3s ease; }
+    .info-card.expanded .info-expand-btn i { transform: rotate(180deg); }
+
+    .info-card-summary { font-size: 13px; color: #475569; line-height: 1.5; }
+    .info-value { font-family: 'Orbitron', sans-serif; font-weight: 600; color: #2563eb; }
+
+    .info-card-detail {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease, margin-top 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .info-card.expanded .info-card-detail { max-height: 500px; margin-top: 16px; opacity: 1; }
+
+    .info-detail-section { padding: 12px 0; border-top: 1px solid #f1f5f9; }
+    .info-detail-section:first-child { padding-top: 0; border-top: none; }
+    .info-detail-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .info-detail-list { list-style: none; padding: 0; margin: 0; }
+    .info-detail-list li { font-size: 12px; color: #475569; padding: 4px 0; line-height: 1.4; }
+    .info-detail-text { font-size: 12px; color: #475569; line-height: 1.6; margin: 0; }
+
+    .info-links { display: flex; gap: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; margin-top: 12px; }
+    .info-links a { font-size: 11px; color: #2563eb; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .info-links a:hover { text-decoration: underline; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 899px) {
+      .matrix-grid { grid-template-columns: repeat(3, 1fr); }
+      .info-cards-section { grid-template-columns: 1fr; }
+      .net-flow-hero { flex-direction: column; text-align: center; gap: 12px; }
+    }
+    @media (max-width: 599px) {
+      .matrix-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 599px) {
+      .container { padding: 16px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .header-right { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+      .chart-tabs { flex-wrap: wrap; }
+      .chart-tab { font-size: 11px; padding: 10px 12px; }
+      .period-selector { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
+      .p-btn { padding: 5px 8px; font-size: 10px; }
+      .chart-wrapper { height: 280px; }
+    }
+    @media (min-width: 900px) {
+      .info-card-detail { max-height: 500px; opacity: 1; margin-top: 16px; }
+      .info-expand-btn { display: none; }
+      .info-card-title { font-size: 15px; }
+      .info-card-summary { font-size: 15px; }
+      .info-detail-list li { font-size: 14px; }
+    }
+
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="back-btn" onclick="goBackToRadar()"><i class="fas fa-arrow-left"></i></button>
+      <div class="title-group">
+        <h1>Liquidity Flow Monitor</h1>
+        <p>Fed Net Liquidity = WALCL - TGA - RRP</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-badge" id="statusBadge"><span class="status-dot"></span> <span id="statusText">Analyzing...</span></div>
+      <span class="update-time" id="updateTime">Last Update: --:--</span>
+    </div>
+  </header>
+
+  <!-- ===== Signal Matrix (3개 지표) ===== -->
+  <section class="signal-matrix">
+    <div class="matrix-grid">
+      <!-- M2 YoY (% 변화율이 메인) -->
+	  <div class="signal-card" id="m2Card">
+        <div class="signal-icon gray" id="m2Icon"><i class="fas fa-coins"></i></div>
+        <div class="signal-label">M2 YoY</div>
+        <div class="signal-value-row">
+          <span class="signal-value" id="m2Value">--</span>
+          <span class="signal-unit">%</span>
+        </div>
+        <div class="signal-subtext" id="m2Sub">$--T</div>
+        <div class="signal-status" id="m2Status">Loading</div>
+      </div>
+      <!-- Net Liquidity (주간 변화가 메인) -->
+      <div class="signal-card" id="netLiqCard">
+        <div class="signal-icon gray" id="netLiqIcon"><i class="fas fa-water"></i></div>
+        <div class="signal-label">Net Liquidity</div>
+        <div class="signal-value-row">
+          <span class="signal-value" id="netLiqValue">--</span>
+          <span class="signal-unit">$B</span>
+        </div>
+        <div class="signal-subtext" id="netLiqSub">$--T</div>
+        <div class="signal-status" id="netLiqStatus">Loading</div>
+      </div>
+      <!-- SC/M2 Ratio (비율이 메인) -->
+      <div class="signal-card" id="scCard">
+        <div class="signal-icon gray" id="scIcon"><i class="fab fa-bitcoin"></i></div>
+        <div class="signal-label">SC/M2</div>
+        <div class="signal-value-row">
+          <span class="signal-value" id="scValue">--</span>
+          <span class="signal-unit">%</span>
+        </div>
+        <div class="signal-subtext" id="scSub">$--B</div>
+        <div class="signal-status" id="scStatus">Loading</div>
+      </div>
+    </div>
+
+    <!-- Liquidity Pulse Hero -->
+    <div class="net-flow-hero">
+      <div>
+        <div class="net-flow-label">Weekly Net Liquidity Flow</div>
+        <div class="net-flow-value" id="netFlowValue">$--B</div>
+      </div>
+      <div class="net-flow-trend" id="netFlowTrend">
+        <i class="fas fa-arrow-right"></i>
+        <span id="netFlowDesc">Calculating...</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Chart Section ===== -->
+  <section class="dashboard-card">
+    <!-- 탭 네비게이션 (3개: Liquidity Pulse, Credit Flow, Crypto Bridge) -->
+    <div class="chart-tabs" id="chartTabs">
+      <button class="chart-tab active" data-tab="pulse" onclick="switchTab('pulse', this)">
+        <i class="fas fa-bolt"></i> Liquidity Pulse
+      </button>
+      <button class="chart-tab" data-tab="credit" onclick="switchTab('credit', this)">
+        <i class="fas fa-coins"></i> Credit Flow
+      </button>
+      <button class="chart-tab" data-tab="crypto" onclick="switchTab('crypto', this)">
+        <i class="fab fa-bitcoin"></i> Crypto Bridge
+      </button>
+    </div>
+
+    <div class="chart-controls">
+      <div class="chart-title"><i class="fas fa-chart-bar"></i> <span id="chartTitleText">Net Liquidity Flow</span></div>
+      <div class="period-selector">
+        <button class="p-btn" onclick="updatePeriod(30, this)">1M</button>
+        <button class="p-btn" onclick="updatePeriod(90, this)">3M</button>
+        <button class="p-btn active" onclick="updatePeriod(180, this)">6M</button>
+        <button class="p-btn" onclick="updatePeriod(365, this)">1Y</button>
+        <button class="p-btn" onclick="updatePeriod(1095, this)">3Y</button>
+        <button class="p-btn" onclick="updatePeriod(1825, this)">5Y</button>
+        <button class="p-btn" onclick="updatePeriod(2925, this)">MAX</button>
+      </div>
+    </div>
+
+    <div class="chart-wrapper" id="chartWrapper">
+      <canvas id="mainChart"></canvas>
+    </div>
+
+    <div class="custom-legend" id="chartLegend">
+      <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Inflow (+)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>Outflow (-)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #94a3b8; height: 2px;"></div><span>4-Week MA</span></div>
+    </div>
+  </section>
+
+  <!-- ===== Info Cards ===== -->
+  <div class="info-cards-section">
+    <!-- 카드 1: 현재 상태 -->
+    <div class="info-card inflow" id="statusCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">📊</div>
+        <div class="info-card-title">현재 유동성 상태</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('statusCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary" id="statusSummary">
+        데이터 로딩 중...
+      </div>
+      <div class="info-card-detail">
+        <div class="info-detail-section">
+          <div class="info-detail-title">주간 변화</div>
+          <ul class="info-detail-list" id="weeklyChanges">
+            <li>M2: --</li>
+            <li>TGA: --</li>
+            <li>RRP: --</li>
+          </ul>
+        </div>
+        <div class="info-links">
+          <a href="https://fred.stlouisfed.org/series/M2SL" target="_blank"><i class="fas fa-external-link-alt"></i> M2 (FRED)</a>
+          <a href="https://fred.stlouisfed.org/series/WTREGEN" target="_blank"><i class="fas fa-external-link-alt"></i> TGA (FRED)</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카드 2: 이 지표가 뭔가요? -->
+    <div class="info-card neutral" id="whatCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">💡</div>
+        <div class="info-card-title">Fed Net Liquidity가 뭔가요?</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('whatCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary">
+        Fed가 시장에 실제로 공급하는 유동성 규모
+      </div>
+      <div class="info-card-detail">
+        <div class="info-detail-section">
+          <ul class="info-detail-list">
+            <li><strong>WALCL</strong>: Fed Balance Sheet (총자산)</li>
+            <li><strong>TGA</strong>: 재무부 계좌 (정부 예금)</li>
+            <li><strong>RRP</strong>: 역레포 (유동성 흡수)</li>
+          </ul>
+        </div>
+        <div class="info-detail-section">
+          <p class="info-detail-text">
+            <strong>Net Liquidity</strong> = Fed BS - TGA - RRP<br>
+            Fed의 총자산에서 TGA와 RRP를 빼면 실제 시장에 풀린 유동성입니다.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카드 3: 왜 중요한가요? -->
+    <div class="info-card neutral" id="whyCard">
+      <div class="info-card-header">
+        <div class="info-card-icon">🎯</div>
+        <div class="info-card-title">왜 중요한가요?</div>
+        <button class="info-expand-btn" onclick="toggleInfoCard('whyCard')">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="info-card-summary">
+        유동성은 모든 자산 가격의 연료입니다
+      </div>
+      <div class="info-card-detail">
+        <div class="info-detail-section">
+          <div class="info-detail-title">핵심 메커니즘</div>
+          <ul class="info-detail-list">
+            <li>유동성 증가 → 위험자산 상승</li>
+            <li>유동성 감소 → 위험자산 하락</li>
+            <li>RRP 소진 → QT 종료 압력</li>
+          </ul>
+        </div>
+        <div class="info-detail-section">
+          <div class="info-detail-title">Crypto Rotation</div>
+          <p class="info-detail-text">
+            M2 증가분 대비 스테이블코인 증가분의 비율.<br>
+            10% 이상이면 크립토 시장으로 자금이 적극 유입 중.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 뒤로가기 - Market Radar 메인으로 이동
+  function goBackToRadar() {
+    const RADAR_PATH = 'tools/macro-monitor/index.html';
+    try {
+      if (window.top?.loadPage) { window.top.loadPage(RADAR_PATH); return; }
+      if (window.parent?.loadPage) { window.parent.loadPage(RADAR_PATH); return; }
+    } catch(e) {}
+    const base = window.top?.baseHref || '/';
+    (window.top||window).location.assign(`${base}index.html?path=${RADAR_PATH}`);
+  }
+
+  // ===== 날짜 유틸리티 (전역) =====
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  const toLocalYMD = (dt) => {
+    const y = dt.getFullYear();
+    const m = pad2(dt.getMonth() + 1);
+    const d = pad2(dt.getDate());
+    return `${y}-${m}-${d}`;
+  };
+
+  const toUTCYMD = (dt) => {
+    const y = dt.getUTCFullYear();
+    const m = pad2(dt.getUTCMonth() + 1);
+    const d = pad2(dt.getUTCDate());
+    return `${y}-${m}-${d}`;
+  };
+
+  const parseYMDLocal = (s) => {
+    // Strict YYYY-MM-DD
+    if (!s || typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+
+    const [y, m, d] = s.split('-').map(Number);
+    if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+
+    // DST 안전: 정오 고정
+    const dt = new Date(y, m - 1, d, 12, 0, 0, 0);
+
+    // Rollover 방지(유령 날짜 차단)
+    if (dt.getFullYear() !== y || (dt.getMonth() + 1) !== m || dt.getDate() !== d) return null;
+
+    return dt;
+  };
+
+  // ===== Weekly Timeline 헬퍼 (WoW 계산용) =====
+  // Date 객체 → weekKey (월요일 시작)
+  const getWeekKeyFromDate = (dt) => {
+    const x = new Date(dt);
+    x.setHours(12, 0, 0, 0);              // DST/경계 방어
+    const day = x.getDay();               // 0=Sun..6=Sat
+    const diff = (day + 6) % 7;           // Monday=0 기준으로 보정
+    x.setDate(x.getDate() - diff);        // 해당 주의 월요일
+    return toLocalYMD(x);                 // "YYYY-MM-DD"
+  };
+
+  // YYYY-MM-DD 문자열 → weekKey
+  const getWeekKeyFromYMD = (ymd) => {
+    const d = parseYMDLocal(ymd);
+    if (!d) return null;
+    return getWeekKeyFromDate(d);
+  };
+
+  // 기존 호환 alias (deprecated - getWeekKeyFromYMD 사용 권장)
+  const getWeekKey = getWeekKeyFromYMD;
+
+  // 일간 타임라인 → 주간 스냅샷 배열
+  const buildWeeklyTimeline = (dailyTimeline) => {
+    const weeklyMap = new Map(); // weekKey → item
+
+    dailyTimeline.forEach(item => {
+      const weekKey = getWeekKey(item.date);
+      if (!weekKey) return;
+
+      // 같은 주에서 가장 마지막(최신) 날짜의 데이터로 덮어쓰기
+      if (!weeklyMap.has(weekKey) || item.date > weeklyMap.get(weekKey).date) {
+        weeklyMap.set(weekKey, { ...item, weekKey, isWeekly: true });
+      }
+    });
+
+    // weekKey 오름차순 정렬
+    const weeklyTimeline = Array.from(weeklyMap.values())
+      .sort((a, b) => a.weekKey.localeCompare(b.weekKey));
+
+    // WoW delta 계산 (Net Liquidity + 구성요소)
+    for (let i = 0; i < weeklyTimeline.length; i++) {
+      if (i === 0) {
+        weeklyTimeline[i].netLiquidityDeltaWoW = 0;
+        weeklyTimeline[i].walclDeltaWoW = 0;
+        weeklyTimeline[i].tgaDeltaWoW = 0;
+        weeklyTimeline[i].rrpDeltaWoW = 0;
+      } else {
+        const cur = weeklyTimeline[i];
+        const prev = weeklyTimeline[i-1];
+        cur.netLiquidityDeltaWoW = cur.netLiquidity - prev.netLiquidity;
+        cur.walclDeltaWoW = (cur.walcl ?? 0) - (prev.walcl ?? 0);
+        cur.tgaDeltaWoW = (cur.tga ?? 0) - (prev.tga ?? 0);
+        cur.rrpDeltaWoW = (cur.rrp ?? 0) - (prev.rrp ?? 0);
+      }
+    }
+
+    console.log(`[Weekly] Built ${weeklyTimeline.length} weekly snapshots from ${dailyTimeline.length} daily`);
+    return weeklyTimeline;
+  };
+
+  // 완결된 주 선택 (상단/위젯 전용)
+  const pickLastCompleteWeeks = (weeklyTimeline) => {
+    if (!weeklyTimeline || weeklyTimeline.length < 2) {
+      console.warn('[KPI Weekly] insufficient weekly points -> fallback needed');
+      return { lastComplete: null, prevComplete: null };
+    }
+
+    // 오늘 기준 weekKey
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const todayStr = toLocalYMD(today);
+    const weekKeyToday = getWeekKey(todayStr);
+
+    const last = weeklyTimeline[weeklyTimeline.length - 1];
+    const secondLast = weeklyTimeline[weeklyTimeline.length - 2];
+    const thirdLast = weeklyTimeline.length >= 3
+      ? weeklyTimeline[weeklyTimeline.length - 3] : null;
+
+    let lastComplete, prevComplete;
+
+    // 최신 주가 오늘 주와 같으면 아직 완결 안 됨 → 그 전 주 사용
+    if (last.weekKey === weekKeyToday) {
+      lastComplete = secondLast;
+      prevComplete = thirdLast ?? secondLast;
+    } else {
+      lastComplete = last;
+      prevComplete = secondLast;
+    }
+
+    console.log(`[KPI Weekly] weekKey=${lastComplete.weekKey} lastDate=${lastComplete.date} prevWeekKey=${prevComplete.weekKey} delta=${lastComplete.netLiquidityDeltaWoW}`);
+
+    return { lastComplete, prevComplete };
+  };
+
+  // ===== 임계값 헬퍼 - constants.js THRESHOLDS 사용 (fallback 포함) =====
+  const getThreshold = (category, level) => {
+    if (typeof THRESHOLDS !== 'undefined' && THRESHOLDS[category]) {
+      return THRESHOLDS[category][level];
+    }
+    // Fallback values
+    const fallback = {
+      M2_YOY: { POSITIVE: 6, NEUTRAL: 2, NEGATIVE: 2 },
+      NET_LIQUIDITY: { POSITIVE: 50, NEUTRAL: 50, NEGATIVE: -50 },
+      STABLECOIN: { POSITIVE: 350, NEUTRAL: 250, NEGATIVE: 250 },
+      OVERALL: { EXPANDING: { netLiq: 50, m2YoY: 4 }, CONTRACTING: { netLiq: -50, m2YoY: 2 } }
+    };
+    return fallback[category]?.[level];
+  };
+
+  // 색상 헬퍼 - constants.js COLORS 사용 (fallback 포함)
+  const getColor = (category, key) => {
+    if (typeof COLORS !== 'undefined' && COLORS[category]) {
+      return COLORS[category][key];
+    }
+    // Fallback
+    const fallback = {
+      CHART: { M2: '#3b82f6', NET_LIQ: '#10b981', TGA: '#f59e0b', RRP: '#ef4444' }
+    };
+    return fallback[category]?.[key];
+  };
+
+  // ===== CONFIG =====
+  const CONFIG = {
+    fredApiKey: '6dda7dc3956a2c1d6ac939133de115f1',
+    proxy: 'https://fed-proxy.etloveaui.workers.dev/',
+    defiLlamaUrl: 'https://stablecoins.llama.fi/stablecoins?includePrices=false',
+    colors: {
+      inflow: getColor('CHART', 'NET_LIQ') || '#10b981',
+      outflow: '#ef4444',
+      ma: '#94a3b8',
+      m2: getColor('CHART', 'M2') || '#3b82f6',
+      tga: getColor('CHART', 'TGA') || '#8b5cf6',
+      rrp: getColor('CHART', 'RRP') || '#f59e0b',
+      stablecoin: '#06b6d4'
+    }
+  };
+
+  // ===== DATA FETCH =====
+  async function fetchData(url) {
+    // 이미 프록시 URL인지 확인
+    const isProxyUrl = url.includes('fed-proxy.etloveaui.workers.dev');
+
+    // 프록시 URL이면 그대로 사용, 아니면 fallback 후보 생성
+    const candidates = isProxyUrl
+      ? [url]  // 프록시 URL은 재시도 없이 1회만
+      : [
+          url,
+          CONFIG.proxy + url.replace(/^https?:\/\//, ''),
+          'https://cors.isomorphic-git.org/' + url
+        ];
+
+    for (const u of candidates) {
+      try {
+        const res = await fetch(u);
+        if (res.ok) return await res.json();
+        console.log('[Fetch] HTTP', res.status, u);
+      } catch (e) { console.log('[Fetch] Network error:', u); }
+    }
+    return null;
+  }
+
+  async function getFredSeries(seriesId, days) {
+    // DST-safe 날짜 계산 (정오 고정)
+    const endDate = new Date();
+    endDate.setHours(12, 0, 0, 0);
+    const end = toLocalYMD(endDate);
+
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+    const start = toLocalYMD(startDate);
+
+    const url = `https://fed-proxy.etloveaui.workers.dev/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.fredApiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+
+    const json = await fetchData(url);
+    if (!json?.observations) return [];
+    return json.observations
+      .filter(o => o.value !== '.')
+      .map(o => ({ date: o.date, val: parseFloat(o.value) }));
+  }
+
+  // ★ Treasury FiscalData API - TGA 일간 데이터 (DEC-048, DEC-049 수정)
+  // account_type 변경 이력:
+  //   2005 ~ 2021-09-30: Federal Reserve Account
+  //   2021-10-01 ~ 2022-04-15: Treasury General Account (TGA)
+  //   2022-04-18 ~ 현재: Treasury General Account (TGA) Opening Balance
+  // 필드: open_today_bal
+  async function getTreasuryTGA(days) {
+    // DST-safe 날짜 계산 (정오 고정)
+    const endDate = new Date();
+    endDate.setHours(12, 0, 0, 0);
+    
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+    const start = toLocalYMD(startDate);
+
+    const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
+
+    try {
+      // 3개 account_type 모두 fetch (시기별 다른 이름 사용)
+      const urls = [
+        // 1. Federal Reserve Account (2005 ~ 2021-09-30)
+        `${baseUrl}?filter=account_type:eq:Federal Reserve Account,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
+        // 2. Treasury General Account (TGA) (2021-10-01 ~ 2022-04-15)
+        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA),record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
+        // 3. Treasury General Account (TGA) Opening Balance (2022-04-18 ~ 현재) ★ 추가!
+        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA) Opening Balance,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`
+      ];
+
+      const responses = await Promise.all(urls.map(url => fetchData(url)));
+
+      // 데이터 병합
+      const allData = [];
+      responses.forEach((json, idx) => {
+        if (json?.data) {
+          const typeName = ['FRA', 'TGA', 'TGA-Opening'][idx];
+          json.data.forEach(d => {
+            if (d.open_today_bal && d.open_today_bal !== 'null') {
+              allData.push({ date: d.record_date, val: parseFloat(d.open_today_bal) });
+            }
+          });
+          console.log(`[TGA] ${typeName}: ${json.data.length}개`);
+        }
+      });
+
+      if (allData.length === 0) {
+        console.warn('[TGA] Treasury API 데이터 없음, FRED 폴백');
+        return getFredSeries('WTREGEN', days);
+      }
+
+      // 날짜 정렬 (오름차순)
+      allData.sort((a, b) => a.date.localeCompare(b.date));
+
+      // 중복 제거 (같은 날짜면 나중 데이터 = Opening Balance 우선)
+      const uniqueMap = new Map();
+      allData.forEach(d => uniqueMap.set(d.date, d.val));
+
+      const result = Array.from(uniqueMap.entries()).map(([date, val]) => ({ date, val }));
+      console.log(`[TGA] Treasury API 로드 완료: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
+
+      return result;
+
+    } catch (e) {
+      console.error('[TGA] Treasury API 실패, FRED 폴백:', e);
+      return getFredSeries('WTREGEN', days);
+    }
+  }
+
+  async function getStablecoinData() {
+    // ★ 시계열 API 사용 (일간 데이터, 2017년~현재)
+    const chartUrl = 'https://stablecoins.llama.fi/stablecoincharts/all';
+    const json = await fetchData(chartUrl);
+
+    if (!json || !Array.isArray(json) || json.length === 0) {
+      console.warn('[SC] 시계열 API 실패, 현재값 API로 fallback');
+      // Fallback: 현재값만 가져오기
+      const fallbackJson = await fetchData(CONFIG.defiLlamaUrl);
+      if (!fallbackJson?.peggedAssets) return null;
+      const total = fallbackJson.peggedAssets.reduce((sum, asset) => {
+        return sum + (asset.circulating?.peggedUSD || 0);
+      }, 0);
+      return { totalMarketCap: total / 1e9, historical: null };
+    }
+
+    // 시계열 데이터를 Map으로 변환 (날짜 → 시총)
+    const historicalMap = new Map();
+    json.forEach(item => {
+      const timestamp = parseInt(item.date);
+      // toUTCYMD 사용하여 UTC 날짜 문자열 생성 (P0)
+      const dateStr = toUTCYMD(new Date(timestamp * 1000));
+      const mcap = (item.totalCirculatingUSD?.peggedUSD || 0) / 1e9; // billions
+      historicalMap.set(dateStr, mcap);
+    });
+
+    // 최신 값
+    const lastItem = json[json.length - 1];
+    const latestMcap = (lastItem.totalCirculatingUSD?.peggedUSD || 0) / 1e9;
+
+    console.log(`[SC] 시계열 로드 완료: ${historicalMap.size}일, 최신: $${latestMcap.toFixed(1)}B`);
+
+    return {
+      totalMarketCap: latestMcap,
+      historical: historicalMap  // 날짜별 시총
+    };
+  }
+
+  // ===== DATA PROCESSING =====
+  // Net Liquidity 정식 공식: Fed Balance Sheet (WALCL) - TGA - RRP
+  function processData(m2, tga, rrp, walcl, stablecoin) {
+    // M2: Monthly → Daily (forward fill)
+    // TGA: Daily (Treasury API) - millions ★ DEC-048
+    // RRP: Daily (RRPONTSYD) - billions (원천 데이터가 이미 Billions)
+    // WALCL: Weekly (Fed Balance Sheet) - millions (forward fill)
+
+    // 공통 날짜 기준: TGA (일간 데이터) - DEC-048
+    const tgaMap = new Map(tga.map(d => [d.date, d.val]));
+    const m2Map = new Map(m2.map(d => [d.date, d.val]));
+    const rrpMap = new Map(rrp.map(d => [d.date, d.val]));
+    const walclMap = new Map(walcl.map(d => [d.date, d.val]));
+
+    let lastM2 = m2.length > 0 ? m2[0].val : 21000; // billions default
+    let lastRrp = rrp.length > 0 ? rrp[0].val : 0;
+    let lastWalcl = walcl.length > 0 ? walcl[0].val : 7000000; // millions default (~$7T)
+
+    const timeline = tga.map(t => {
+      const d = t.date;
+
+      // M2: forward fill (월간 → 주간)
+      if (m2Map.has(d)) lastM2 = m2Map.get(d);
+
+      // RRP: forward fill (일간 → 주간)
+      if (rrpMap.has(d)) lastRrp = rrpMap.get(d);
+
+      // WALCL: forward fill (주간 → 주간, 날짜 불일치 대비)
+      if (walclMap.has(d)) lastWalcl = walclMap.get(d);
+
+      const tgaB = t.val / 1000;        // millions → billions
+      const rrpB = lastRrp;             // RRPONTSYD는 원천 데이터가 이미 Billions 단위이므로 /1000 하지 않음
+      const walclB = lastWalcl / 1000;  // millions → billions
+
+      // ★ Net Liquidity 정식 공식: Fed BS - TGA - RRP
+      const netLiquidity = walclB - tgaB - rrpB;
+
+      return {
+        date: d,
+        m2: lastM2,           // billions
+        tga: tgaB,            // billions
+        rrp: rrpB,            // billions
+        walcl: walclB,        // billions (Fed Balance Sheet)
+        netLiquidity          // billions (정식 공식)
+      };
+    });
+
+    // 날짜별 인덱스 매핑 (1W 델타 계산용)
+    const dateToIndex = new Map();
+    timeline.forEach((item, index) => dateToIndex.set(item.date, index));
+
+    // 주간 변화량 계산
+    const weeklyData = [];
+    for (let i = 0; i < timeline.length; i++) {
+      const curr = timeline[i];
+      // 1D Delta용 이전 데이터 (없으면 현재 데이터)
+      const prev = i > 0 ? timeline[i - 1] : curr;
+
+      // 1W Delta용 7일 전 데이터 찾기
+      let prev1W = null;
+      if (i > 0) {
+        // 현재 날짜 파싱
+        const currDateObj = parseYMDLocal(curr.date);
+        if (currDateObj) {
+            // 7일 전 날짜 계산
+            const targetDateObj = new Date(currDateObj);
+            targetDateObj.setDate(currDateObj.getDate() - 7);
+            const targetDateStr = toLocalYMD(targetDateObj);
+
+            // 정확히 7일 전 데이터가 있는지 확인
+            if (dateToIndex.has(targetDateStr)) {
+                prev1W = timeline[dateToIndex.get(targetDateStr)];
+            } else {
+                // 없으면 7일 전보다 과거이면서 가장 가까운 데이터 찾기 (fallback)
+                // 단순히 i-5 (영업일 기준 1주일 근사치) 사용하거나, 날짜 비교 루프
+                // 성능을 위해 간단히 5~10일 전 범위 검색
+                for (let gap = 1; gap <= 5; gap++) {
+                    const fallbackDateObj = new Date(targetDateObj);
+                    fallbackDateObj.setDate(targetDateObj.getDate() - gap);
+                    const fallbackDateStr = toLocalYMD(fallbackDateObj);
+                    if (dateToIndex.has(fallbackDateStr)) {
+                        prev1W = timeline[dateToIndex.get(fallbackDateStr)];
+                        break;
+                    }
+                }
+                // 그래도 없으면 인덱스 기반 fallback (약 1주일 전)
+                if (!prev1W && i >= 5) {
+                    prev1W = timeline[i - 5];
+                }
+            }
+        }
+      }
+      // 1W 데이터가 없으면 1D 데이터 사용 (초기값 등)
+      if (!prev1W) prev1W = prev;
+
+
+      const m2Delta = curr.m2 - prev.m2;
+      const tgaDelta = -(curr.tga - prev.tga);  // TGA 감소 = 시장 유입
+      const rrpDelta = -(curr.rrp - prev.rrp);  // RRP 감소 = 시장 유입
+      const walclDelta = curr.walcl - prev.walcl;  // Fed BS 증가 = 시장 유입
+
+      // ★ Net Liquidity 정식 델타 (1D): 현재 - 어제
+      const netLiquidityDelta = curr.netLiquidity - prev.netLiquidity;
+      
+      // ★ Net Liquidity 1W 델타: 현재 - 1주일 전 (상단 KPI용)
+      const netLiquidityDelta1W = curr.netLiquidity - prev1W.netLiquidity;
+
+      // 기존 호환용 netFlow (M2+TGA방출+RRP방출) - 근사치
+      const netFlow = m2Delta + tgaDelta + rrpDelta;
+
+      weeklyData.push({
+        date: curr.date,
+        m2: curr.m2,
+        tga: curr.tga,
+        rrp: curr.rrp,
+        walcl: curr.walcl,
+        netLiquidity: curr.netLiquidity,
+        m2Delta,
+        tgaDelta,
+        rrpDelta,
+        walclDelta,
+        netLiquidityDelta,    // 1D 변화량 (기존 유지)
+        netLiquidityDelta1W,  // 1W 변화량 (신규 추가)
+        netFlow               // 기존 호환용 (근사치)
+      });
+    }
+
+    // ★ 4주(20영업일) 이동평균 (Net Liquidity 기준)
+    // DEC-048 이후: TGA 일간 전환으로 인해 4포인트 → 20포인트로 변경
+    for (let i = 0; i < weeklyData.length; i++) {
+      const start = Math.max(0, i - 19);
+      const slice = weeklyData.slice(start, i + 1);
+      weeklyData[i].ma4 = slice.reduce((s, d) => s + d.netLiquidityDelta, 0) / slice.length;
+    }
+
+    // M2 YoY% 계산 (252영업일 전 대비) + SC/M2 비율 (시계열)
+    const scMcap = stablecoin?.totalMarketCap || 0;
+    const scHistorical = stablecoin?.historical;  // Map: 날짜 → 시총 (billions)
+
+    // SC 날짜 매핑 헬퍼 (가장 가까운 날짜 찾기)
+    const findClosestScDate = (targetDate) => {
+      if (!scHistorical) return null;
+      if (scHistorical.has(targetDate)) return scHistorical.get(targetDate);
+
+      // 가장 가까운 날짜 찾기 (±7일 이내)
+      const target = new Date(targetDate).getTime();
+      let closest = null;
+      let minDiff = 7 * 86400000; // 7일
+
+      for (const [dateStr, mcap] of scHistorical) {
+        const diff = Math.abs(new Date(dateStr).getTime() - target);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = mcap;
+        }
+      }
+      return closest;
+    };
+
+    for (let i = 0; i < weeklyData.length; i++) {
+      const currentDate = weeklyData[i].date;
+
+      // ★ 약 1년 전 데이터 찾기 (일간 데이터 기준: 252 영업일)
+      // DEC-048 이후: TGA 일간 전환으로 인해 52주 → 252일로 변경
+      const yearAgoIdx = Math.max(0, i - 252);
+      const m2Now = weeklyData[i].m2;
+      const m2YearAgo = weeklyData[yearAgoIdx].m2;
+      weeklyData[i].m2YoY = ((m2Now - m2YearAgo) / m2YearAgo) * 100;
+
+      // ★ SC/M2 비율 (해당 날짜 SC / 해당 날짜 M2) - 시계열 사용
+      const scAtDate = findClosestScDate(currentDate);
+      if (scAtDate !== null) {
+        weeklyData[i].scMcap = scAtDate;  // 해당 날짜 SC 시총
+        weeklyData[i].scM2Ratio = (scAtDate / m2Now) * 100;
+      } else {
+        // Fallback: 시계열 없으면 현재값 사용
+        weeklyData[i].scMcap = scMcap;
+        weeklyData[i].scM2Ratio = (scMcap / m2Now) * 100;
+      }
+    }
+
+    return {
+      timeline: weeklyData,
+      stablecoinMcap: scMcap
+    };
+  }
+
+  // ===== CHART =====
+  let mainChart = null;
+  let currentTab = 'pulse';
+  let currentPeriod = 180;
+  let processedData = null;
+  let fullData = null;  // 전체 데이터 (상단 카드용)
+
+  window.switchTab = function(tab, btn) {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = tab;
+
+    // ★ 3탭 구조
+    const titles = {
+      pulse: 'Liquidity Pulse (Fed BS - TGA - RRP)',
+      credit: 'Credit Flow (M2 YoY%)',
+      crypto: 'Crypto Bridge (SC/M2)'
+    };
+    document.getElementById('chartTitleText').textContent = titles[tab];
+
+    // ★ 탭별 기간 버튼 제어
+    // Credit Flow: M2는 월간 데이터 → 1M/3M 비활성화, 6M 기본
+    // Pulse/Crypto: 모든 기간 활성화
+    const periodBtns = document.querySelectorAll('.p-btn');
+    const shortTermDays = [30, 90]; // 1M, 3M
+
+    periodBtns.forEach(pbtn => {
+      const days = parseInt(pbtn.getAttribute('onclick').match(/\d+/)[0]);
+      if (tab === 'credit' && shortTermDays.includes(days)) {
+        pbtn.classList.add('disabled');
+        pbtn.style.opacity = '0.4';
+        pbtn.style.pointerEvents = 'none';
+      } else {
+        pbtn.classList.remove('disabled');
+        pbtn.style.opacity = '1';
+        pbtn.style.pointerEvents = 'auto';
+      }
+    });
+
+    // Credit Flow로 전환 시 1M/3M 선택 중이면 6M으로 자동 변경
+    if (tab === 'credit' && shortTermDays.includes(currentPeriod)) {
+      currentPeriod = 180; // 6M
+      periodBtns.forEach(pbtn => {
+        pbtn.classList.remove('active');
+        if (pbtn.getAttribute('onclick').includes('180')) {
+          pbtn.classList.add('active');
+        }
+      });
+    }
+
+    // fullData에서 현재 기간으로 slice해서 차트 갱신
+    if (fullData) {
+      processedData = sliceDataByPeriod(fullData, currentPeriod);
+      renderChart(processedData);
+    }
+  };
+
+  window.updatePeriod = function(days, btn) {
+    document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = days;
+
+    // 이미 로드된 전체 데이터에서 기간만 slice해서 차트 갱신 (API 재호출 없음)
+    if (fullData) {
+      const sliced = sliceDataByPeriod(fullData, days);
+      renderChart(sliced);
+    }
+  };
+
+  // 기간별 데이터 슬라이스 (차트용, 상단 카드는 항상 전체 데이터 사용)
+  // ★ DEC-048 이후: 날짜 기반 필터링 + 장기 주간 리샘플링 (단순 샘플링 아님)
+  /**
+   * normalizeDeltas - 차트용 delta 정규화 (공유 함수)
+   * ★ 부호 계약(contract): netLiquidityDelta ≈ walclDelta + tgaContribution + rrpContribution
+   *    - tgaContribution := -ΔTGA (TGA 감소=유동성 방출이면 +)
+   *    - rrpContribution := -ΔRRP (RRP 감소=유동성 방출이면 +)
+   * ★ 재발 방지: 포인트별이 아닌 "기간 단위 1회"로 signMode 결정
+   *
+   * @param {Array} points - 일간/주간 데이터 배열
+   * @param {string} mode - 'daily' | 'weekly'
+   * @returns {Object} - { normalized, signMode, warnCount }
+   */
+  function normalizeDeltas(points, mode) {
+    if (!points || points.length === 0) {
+      return { normalized: [], signMode: 'A', warnCount: 0 };
+    }
+
+    const TOLERANCE = 0.5; // 허용 오차 $B
+    const isWeekly = mode === 'weekly';
+
+    // 1단계: 원본 값 추출 (raw 배열)
+    const rawData = points.map(p => ({
+      point: p,
+      net: isWeekly ? (p.netLiquidityDeltaWoW ?? p.netLiquidityDelta ?? 0) : (p.netLiquidityDelta ?? 0),
+      walcl: isWeekly ? (p.walclDeltaWoW ?? p.walclDelta ?? 0) : (p.walclDelta ?? 0),
+      tgaDeltaRaw: isWeekly ? (p.tgaDeltaWoW ?? p.tgaDelta ?? 0) : (p.tgaDelta ?? 0),
+      rrpDeltaRaw: isWeekly ? (p.rrpDeltaWoW ?? p.rrpDelta ?? 0) : (p.rrpDelta ?? 0),
+    }));
+
+    // 2단계: 기간 전체에 대해 A/B 가설 총 오차 계산 (포인트별 X, 기간 단위 1회 O)
+    let sumAbsDiffA = 0, sumAbsDiffB = 0;
+    rawData.forEach(r => {
+      const sumA = r.walcl + r.tgaDeltaRaw + r.rrpDeltaRaw;  // 가설 A: 이미 -Δ 형태
+      const sumB = r.walcl - r.tgaDeltaRaw - r.rrpDeltaRaw;  // 가설 B: 그냥 Δ 형태
+      sumAbsDiffA += Math.abs(r.net - sumA);
+      sumAbsDiffB += Math.abs(r.net - sumB);
+    });
+    const useA = sumAbsDiffA <= sumAbsDiffB;
+    const signMode = useA ? 'A' : 'B';
+
+    // 3단계: 동일한 signMode로 전체 포인트 정규화 + 경고 수집
+    let warnCount = 0;
+    const normalized = rawData.map((r, idx) => {
+      // tgaContribution/rrpContribution: 차트에 들어가는 "기여분" (= -ΔTGA, -ΔRRP)
+      const tgaContribution = useA ? r.tgaDeltaRaw : -r.tgaDeltaRaw;
+      const rrpContribution = useA ? r.rrpDeltaRaw : -r.rrpDeltaRaw;
+      const sum = r.walcl + tgaContribution + rrpContribution;
+      const diff = r.net - sum;
+
+      // 허용 오차 초과 시 경고
+      if (Math.abs(diff) > TOLERANCE) {
+        const label = r.point.weekKey || r.point.date;
+        console.warn(`[Chart] identity warn: ${label} net=${r.net.toFixed(1)} sum=${sum.toFixed(1)} diff=${diff.toFixed(2)}`);
+        warnCount++;
+      }
+
+      return {
+        ...r.point,
+        netLiquidityDelta: r.net,
+        walclDelta: r.walcl,
+        tgaDelta: tgaContribution,   // ★ 차트 label "-TGA Δ"와 일치: 기여분
+        rrpDelta: rrpContribution,   // ★ 차트 label "-RRP Δ"와 일치: 기여분
+      };
+    });
+
+    return { normalized, signMode, warnCount };
+  }
+
+  /**
+   * sliceDataByPeriod - daily/weekly 전환 + 표시용 미완결 주 제거
+   * ★ 단일 소스 원칙: weeklyTimeline을 직접 슬라이스 (중복 리샘플링 금지)
+   * ★ 부호 계약: normalizeDeltas()로 기간 단위 1회 결정
+   *
+   * @param {Object} data - { timeline(일간), weeklyTimeline(주간) }
+   * @param {number} days - 기간 (30=1M, 90=3M, 180=6M, ...)
+   * @returns {Object} - { ...data, timeline, mode }
+   */
+  function sliceDataByPeriod(data, days) {
+    // 1. cutoff 날짜 계산 (로컬 기준, DST 안전)
+    const cutoffDate = new Date();
+    cutoffDate.setHours(12, 0, 0, 0);
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    const cutoffStr = toLocalYMD(cutoffDate);
+
+    const WEEKLY_THRESHOLD = 90; // 3M 초과 시 weekly
+
+    // 2. days <= 90 (1M/3M): daily 사용 + 정규화
+    if (days <= WEEKLY_THRESHOLD) {
+      const filteredDaily = data.timeline.filter(d => d.date >= cutoffStr);
+      const { normalized, signMode, warnCount } = normalizeDeltas(filteredDaily, 'daily');
+
+      // 검증 로그: 기간별 summary
+      const lastPt = normalized[normalized.length - 1];
+      if (lastPt) {
+        const sum = lastPt.walclDelta + lastPt.tgaDelta + lastPt.rrpDelta;
+        const diff = (lastPt.netLiquidityDelta - sum).toFixed(2);
+        console.log(`[Chart] identity summary: points=${normalized.length}, warn=${warnCount}, signMode=${signMode}, lastDiff=${diff}`);
+      }
+
+      return {
+        ...data,
+        timeline: normalized,
+        mode: 'daily'
+      };
+    }
+
+    // 3. days > 90 (6M 이상): weeklyTimeline 직접 사용 (중복 리샘플링 금지!)
+    if (!data.weeklyTimeline || data.weeklyTimeline.length === 0) {
+      console.warn('[Slice] weeklyTimeline 없음, daily fallback');
+      const filteredDaily = data.timeline.filter(d => d.date >= cutoffStr);
+      const { normalized, signMode, warnCount } = normalizeDeltas(filteredDaily, 'daily');
+      console.log(`[Chart] identity summary: points=${normalized.length}, warn=${warnCount}, signMode=${signMode} (fallback)`);
+      return { ...data, timeline: normalized, mode: 'daily' };
+    }
+
+    // weeklyTimeline에서 cutoff 이후 슬라이스 (weekKey 또는 date 기준)
+    let filteredWeekly = data.weeklyTimeline.filter(w => w.date >= cutoffStr || w.weekKey >= cutoffStr);
+
+    // 미완결 주(오늘이 속한 주) 제거
+    const todayWeekKey = getWeekKeyFromDate(new Date());
+    if (filteredWeekly.length > 0) {
+      const lastWk = filteredWeekly[filteredWeekly.length - 1].weekKey;
+      if (lastWk === todayWeekKey) {
+        console.log(`[Slice] Dropping incomplete current week: ${lastWk}`);
+        filteredWeekly = filteredWeekly.slice(0, -1);
+      }
+    }
+
+    // ★ 정규화: 기간 단위 1회 signMode 결정
+    const { normalized, signMode, warnCount } = normalizeDeltas(filteredWeekly, 'weekly');
+
+    // 검증 로그: 기간별 summary (마지막 포인트 diff 포함)
+    const lastPt = normalized[normalized.length - 1];
+    if (lastPt) {
+      const sum = lastPt.walclDelta + lastPt.tgaDelta + lastPt.rrpDelta;
+      const diff = (lastPt.netLiquidityDelta - sum).toFixed(2);
+      console.log(`[Chart] identity summary: points=${normalized.length}, warn=${warnCount}, signMode=${signMode}, lastDiff=${diff}`);
+    }
+
+    return {
+      ...data,
+      timeline: normalized,
+      mode: 'weekly'
+    };
+  }
+
+  function renderChart(data) {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    if (mainChart) mainChart.destroy();
+
+    const dates = data.timeline.map(d => d.date);
+
+    let datasets = [];
+    let annotations = {};
+    let legendHtml = '';
+
+    if (currentTab === 'pulse') {
+      // ★ Liquidity Pulse: Stacked Bar (Fed BS, -TGA, -RRP) + Net Liquidity 선
+      datasets = [
+        {
+          label: 'Fed BS Δ',
+          data: data.timeline.map(d => d.walclDelta),
+          backgroundColor: 'rgba(59, 130, 246, 0.7)',
+          borderRadius: 2,
+          type: 'bar',
+          stack: 'stack',
+          order: 3
+        },
+        {
+          label: '-TGA Δ',
+          data: data.timeline.map(d => d.tgaDelta),  // 이미 음수로 계산됨 (TGA↓ = 시장유입)
+          backgroundColor: 'rgba(139, 92, 246, 0.7)',
+          borderRadius: 2,
+          type: 'bar',
+          stack: 'stack',
+          order: 3
+        },
+        {
+          label: '-RRP Δ',
+          data: data.timeline.map(d => d.rrpDelta),  // 이미 음수로 계산됨 (RRP↓ = 시장유입)
+          backgroundColor: 'rgba(245, 158, 11, 0.7)',
+          borderRadius: 2,
+          type: 'bar',
+          stack: 'stack',
+          order: 3
+        },
+        {
+          label: 'Net Liquidity Δ',
+          data: data.timeline.map(d => d.netLiquidityDelta),
+          borderColor: '#ef4444',
+          borderWidth: 2.5,
+          tension: 0.3,
+          pointRadius: 0,
+          type: 'line',
+          order: 1
+        }
+      ];
+      annotations = {
+        zeroLine: {
+          type: 'line',
+          yMin: 0, yMax: 0,
+          borderColor: '#94a3b8',
+          borderWidth: 1,
+          borderDash: [6, 4]
+        },
+        threshold50: {
+          type: 'line',
+          yMin: 50, yMax: 50,
+          borderColor: 'rgba(34, 197, 94, 0.5)',
+          borderWidth: 1.5,
+          borderDash: [8, 4],
+          label: { content: '확장 기준 +$50B', display: true, position: 'start', font: { size: 9 }, color: '#22c55e', backgroundColor: 'rgba(255,255,255,0.8)', padding: 2 }
+        },
+        thresholdNeg50: {
+          type: 'line',
+          yMin: -50, yMax: -50,
+          borderColor: 'rgba(239, 68, 68, 0.5)',
+          borderWidth: 1.5,
+          borderDash: [8, 4],
+          label: { content: '수축 기준 -$50B', display: true, position: 'start', font: { size: 9 }, color: '#ef4444', backgroundColor: 'rgba(255,255,255,0.8)', padding: 2 }
+        }
+      };
+      legendHtml = `
+        <div class="legend-item"><div class="legend-color" style="background: rgba(59, 130, 246, 0.7);"></div><span>Fed BS Δ</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: rgba(139, 92, 246, 0.7);"></div><span>-TGA Δ</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: rgba(245, 158, 11, 0.7);"></div><span>-RRP Δ</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #ef4444; height: 2px;"></div><span>Net Liq Δ</span></div>
+      `;
+    } else if (currentTab === 'credit') {
+      // ★ Credit Flow: M2 YoY% + M2 총량 면적
+      const m2YoY = data.timeline.map(d => d.m2YoY || 0);
+      const m2Total = data.timeline.map(d => d.m2 / 1000);  // $T 단위
+
+      datasets = [
+        {
+          label: 'M2 Total ($T)',
+          data: m2Total,
+          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+          borderColor: 'transparent',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          yAxisID: 'y1',
+          order: 2
+        },
+        {
+          label: 'M2 YoY%',
+          data: m2YoY,
+          borderColor: CONFIG.colors.m2,
+          borderWidth: 3,
+          tension: 0.3,
+          pointRadius: 0,
+          fill: false,
+          yAxisID: 'y',
+          order: 1
+        }
+      ];
+      annotations = {
+        // M2 YoY 임계선
+        threshold6: {
+          type: 'line',
+          yMin: 6, yMax: 6,
+          borderColor: 'rgba(34, 197, 94, 0.4)',
+          borderWidth: 1,
+          borderDash: [2, 2],
+          label: { content: '6% (확장)', display: true, position: 'start', font: { size: 9 }, color: '#22c55e' }
+        },
+        threshold2: {
+          type: 'line',
+          yMin: 2, yMax: 2,
+          borderColor: 'rgba(239, 68, 68, 0.4)',
+          borderWidth: 1,
+          borderDash: [2, 2],
+          label: { content: '2% (긴축)', display: true, position: 'start', font: { size: 9 }, color: '#ef4444' }
+        }
+      };
+      legendHtml = `
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.m2};"></div><span>M2 YoY%</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: rgba(59, 130, 246, 0.3);"></div><span>M2 Total ($T)</span></div>
+      `;
+    } else if (currentTab === 'crypto') {
+      // ★ Crypto Bridge: SC 시계열 총량 (좌축) + SC/M2 Ratio (우축)
+      const scMcap = data.stablecoinMcap;  // 최신 시총 (billions)
+      const scM2Ratio = data.timeline.map(d => d.scM2Ratio || 0);
+
+      // ★ SC 시계열 데이터 사용 (각 날짜별 실제 시총)
+      const scTimeSeries = data.timeline.map(d => d.scMcap || scMcap);
+
+      datasets = [
+        {
+          label: 'SC Total ($B)',
+          data: scTimeSeries,  // ★ 시계열 데이터
+          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+          borderColor: CONFIG.colors.inflow,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          yAxisID: 'y',
+          order: 2
+        },
+        {
+          label: 'SC/M2 Ratio',
+          data: scM2Ratio,
+          borderColor: CONFIG.colors.stablecoin,
+          borderWidth: 2.5,
+          borderDash: [6, 4],
+          tension: 0.3,
+          pointRadius: 0,
+          fill: false,
+          yAxisID: 'y1',
+          order: 1
+        }
+      ];
+      // SC/M2 비율 임계값 표시 (우축 y1 기준, 리서치 문서 참조)
+      annotations = {
+        scRatioThreshold15: {
+          type: 'line',
+          yMin: 1.5, yMax: 1.5,
+          borderColor: 'rgba(34, 197, 94, 0.5)',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          yScaleID: 'y1',
+          label: { content: '1.5% (유입)', display: true, position: 'start', font: { size: 9 }, color: '#22c55e', backgroundColor: 'rgba(255,255,255,0.8)', padding: 2 }
+        },
+        scRatioThreshold10: {
+          type: 'line',
+          yMin: 1.0, yMax: 1.0,
+          borderColor: 'rgba(239, 68, 68, 0.5)',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          yScaleID: 'y1',
+          label: { content: '1.0% (유출)', display: true, position: 'start', font: { size: 9 }, color: '#ef4444', backgroundColor: 'rgba(255,255,255,0.8)', padding: 2 }
+        }
+      };
+      // 최신 SC 값 (범례용)
+      const latestSc = scTimeSeries[scTimeSeries.length - 1] || scMcap;
+      legendHtml = `
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.inflow};"></div><span>SC Total (현재: $${latestSc.toFixed(0)}B)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: ${CONFIG.colors.stablecoin}; border: 1px dashed ${CONFIG.colors.stablecoin};"></div><span>SC/M2 Ratio (%)</span></div>
+      `;
+    }
+
+    document.getElementById('chartLegend').innerHTML = legendHtml;
+
+    // 탭별 scales 설정
+    let scales = {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+      y: {
+        grid: { color: '#f1f5f9' },
+        ticks: { callback: v => '$' + v.toFixed(0) + 'B', font: { size: 10 } }
+      }
+    };
+
+    if (currentTab === 'pulse') {
+      scales = {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } }, stacked: true },
+        y: {
+          grid: { color: '#f1f5f9' },
+          ticks: { callback: v => (v >= 0 ? '+' : '') + v.toFixed(0) + 'B', font: { size: 10 } },
+          stacked: true
+        }
+      };
+    } else if (currentTab === 'credit') {
+      scales = {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+        y: {
+          type: 'linear',
+          position: 'left',
+          grid: { color: '#f1f5f9' },
+          ticks: { callback: v => v.toFixed(1) + '%', color: CONFIG.colors.m2, font: { size: 10, weight: 'bold' } },
+          title: { display: true, text: 'M2 YoY%', color: CONFIG.colors.m2 }
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          grid: { display: false },
+          ticks: { callback: v => '$' + v.toFixed(1) + 'T', font: { size: 10 } },
+          title: { display: true, text: 'M2 Total ($T)' }
+        }
+      };
+    } else if (currentTab === 'crypto') {
+      // SC 시계열 최대값 계산 (동적 Y축)
+      const scValues = data.timeline.map(d => d.scMcap || 0);
+      const scMax = Math.max(...scValues, 100);  // 최소 100B
+      const yMax = Math.ceil(scMax / 50) * 50 + 50;  // 50B 단위로 올림 + 여유
+
+      scales = {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+        y: {
+          type: 'linear',
+          position: 'left',
+          grid: { color: '#f1f5f9' },
+          ticks: { callback: v => '$' + v.toFixed(0) + 'B', color: CONFIG.colors.inflow, font: { size: 10, weight: 'bold' } },
+          title: { display: true, text: 'SC Total ($B)', color: CONFIG.colors.inflow },
+          min: 0,
+          max: yMax  // 동적 최대값
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          grid: { display: false },
+          ticks: { callback: v => v.toFixed(2) + '%', color: CONFIG.colors.stablecoin, font: { size: 10 } },
+          title: { display: true, text: 'SC/M2 Ratio', color: CONFIG.colors.stablecoin }
+        }
+      };
+    }
+
+    // ===== 리세션 음영 추가 =====
+    const chartStart = dates[0];
+    const chartEnd = dates[dates.length - 1];
+    console.log('[Chart] 날짜 범위:', chartStart, '~', chartEnd);
+    if (typeof getRecessionAnnotations === 'function') {
+      const recessionAnnotations = getRecessionAnnotations(chartStart, chartEnd, { showLabel: true });
+
+      // Category 축에서는 라벨과 정확히 일치해야 함 → 가장 가까운 날짜로 매핑
+      const findClosestLabel = (targetDate) => {
+        const target = new Date(targetDate).getTime();
+        let closest = dates[0];
+        let minDiff = Math.abs(new Date(dates[0]).getTime() - target);
+
+        for (const d of dates) {
+          const diff = Math.abs(new Date(d).getTime() - target);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closest = d;
+          }
+        }
+        return closest;
+      };
+
+      // 리세션 날짜를 차트 라벨에 맞게 조정
+      Object.entries(recessionAnnotations).forEach(([key, val]) => {
+        const mappedMin = findClosestLabel(val.xMin);
+        const mappedMax = findClosestLabel(val.xMax);
+        console.log(`[Chart] ${key}: ${val.xMin} → ${mappedMin}, ${val.xMax} → ${mappedMax}`);
+        recessionAnnotations[key].xMin = mappedMin;
+        recessionAnnotations[key].xMax = mappedMax;
+      });
+
+      annotations = { ...annotations, ...recessionAnnotations };
+      console.log('[Chart] 최종 annotations 키:', Object.keys(annotations));
+    } else {
+      console.warn('[Chart] getRecessionAnnotations 함수 없음!');
+    }
+
+    mainChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: dates, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleFont: { family: 'Inter', size: 13, weight: '600' },
+            bodyFont: { family: 'Orbitron', size: 13 },
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: {
+              // ★ A-6: weekly 모드일 때 "Week of {weekKey}" 표시
+              title: (tooltipItems) => {
+                if (!tooltipItems.length) return '';
+                const idx = tooltipItems[0].dataIndex;
+                const item = data.timeline[idx];
+                // weekly 모드이고 weekKey가 있으면 "Week of" 표시
+                if (data.mode === 'weekly' && item?.weekKey) {
+                  return `Week of ${item.weekKey} (end: ${item.date})`;
+                }
+                return item?.date || '';
+              },
+              label: ctx => {
+                const val = ctx.raw;
+                // Credit Flow: M2 Total은 $T, M2 YoY%는 %
+                if (currentTab === 'credit') {
+                  if (ctx.datasetIndex === 0) return ` ${ctx.dataset.label}: $${val.toFixed(1)}T`;
+                  return ` ${ctx.dataset.label}: ${val.toFixed(2)}%`;
+                }
+                // Crypto Bridge: SC Total은 $B, SC/M2 Ratio는 %
+                if (currentTab === 'crypto') {
+                  if (ctx.datasetIndex === 0) return ` ${ctx.dataset.label}: $${val.toFixed(0)}B`;
+                  return ` ${ctx.dataset.label}: ${val.toFixed(2)}%`;
+                }
+                return ` ${ctx.dataset.label}: $${val.toFixed(1)}B`;
+              }
+            }
+          },
+          annotation: { annotations }
+        },
+        scales: scales
+      }
+    });
+  }
+
+  // ===== UI UPDATE =====
+
+  // ===== 상태 판단 함수들 (THRESHOLDS 기반, 용어: 상승/횡보/하락) =====
+
+  // M2 YoY 상태: 6% 이상=상승, 2-6%=횡보, 2% 미만=하락
+  function getM2Status(yoyPercent) {
+    const TH = { POSITIVE: getThreshold('M2_YOY', 'POSITIVE'), NEUTRAL: getThreshold('M2_YOY', 'NEUTRAL') };
+    if (yoyPercent >= TH.POSITIVE) return { color: 'green', status: '상승' };
+    if (yoyPercent >= TH.NEUTRAL) return { color: 'yellow', status: '횡보' };
+    return { color: 'red', status: '하락' };
+  }
+
+  // Net Liquidity Delta 상태: +$50B 이상=상승, ±$50B=횡보, -$50B 미만=하락
+  function getNetLiqStatus(deltaB) {
+    const TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
+    if (deltaB > TH.POSITIVE) return { color: 'green', status: '상승' };
+    if (deltaB < TH.NEGATIVE) return { color: 'red', status: '하락' };
+    return { color: 'yellow', status: '횡보' };
+  }
+
+  // SC/M2 Ratio 상태: 1.5% 이상=상승, 1.0-1.5%=횡보, 1.0% 미만=하락
+  function getScM2Status(ratioPercent) {
+    const TH = { POSITIVE: getThreshold('STABLECOIN', 'POSITIVE'), NEUTRAL: getThreshold('STABLECOIN', 'NEUTRAL') };
+    if (ratioPercent >= TH.POSITIVE) return { color: 'green', status: '상승' };
+    if (ratioPercent >= TH.NEUTRAL) return { color: 'yellow', status: '횡보' };
+    return { color: 'red', status: '하락' };
+  }
+
+  function updateSignalMatrix(data) {
+    const last = data.timeline[data.timeline.length - 1];
+    const prev = data.timeline.length > 1 ? data.timeline[data.timeline.length - 2] : last;
+
+    // ★ WoW 계산용 완결된 주 가져오기 (상단 Hero/위젯 전용)
+    const { lastComplete, prevComplete } = pickLastCompleteWeeks(data.weeklyTimeline);
+    const wowDelta = lastComplete?.netLiquidityDeltaWoW ?? 0;
+
+    // ===== 1. M2 YoY - THRESHOLDS 기반 상태 =====
+    const m2YoY = last.m2YoY || 0;
+    const m2TotalT = last.m2 / 1000;
+    const m2Status = getM2Status(m2YoY);
+
+    updateSignalCard('m2', `${m2YoY >= 0 ? '+' : ''}${m2YoY.toFixed(1)}`, '%',
+      m2Status.color, m2Status.status, { subtext: `$${m2TotalT.toFixed(1)}T` });
+
+    // ===== 2. Net Liquidity - THRESHOLDS 기반 상태 (★ WoW 변화량) =====
+    const netLiq = lastComplete?.netLiquidity ?? last.netLiquidity;
+    const netLiqDelta = lastComplete?.netLiquidityDeltaWoW ?? 0;
+    const nlStatus = getNetLiqStatus(netLiqDelta);
+
+    updateSignalCard('netLiq', `${netLiqDelta >= 0 ? '+' : ''}${netLiqDelta.toFixed(0)}`, '$B WoW',
+      nlStatus.color, nlStatus.status, { subtext: `$${(netLiq / 1000).toFixed(2)}T` });
+
+    // ===== 3. SC/M2 Ratio - THRESHOLDS 기반 상태 =====
+    const latestScMcap = last.scMcap || data.stablecoinMcap;
+    const scM2Ratio = last.scM2Ratio || 0;
+    const scStatus = getScM2Status(scM2Ratio);
+
+    updateSignalCard('sc', scM2Ratio.toFixed(2), '%',
+      scStatus.color, scStatus.status, { subtext: `$${latestScMcap.toFixed(0)}B` });
+
+    // ===== Hero Section: ★ WoW (완결된 주) Net Liquidity Delta =====
+    const HERO_TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
+    const netFlowEl = document.getElementById('netFlowValue');
+    netFlowEl.textContent = `$${wowDelta >= 0 ? '+' : ''}${wowDelta.toFixed(0)}B`;
+    netFlowEl.className = 'net-flow-value ' + (wowDelta >= 0 ? 'positive' : 'negative');
+
+    const trendEl = document.getElementById('netFlowTrend');
+    const trendIcon = trendEl.querySelector('i');
+    const trendDesc = document.getElementById('netFlowDesc');
+
+    if (wowDelta > HERO_TH.POSITIVE) {
+      trendEl.className = 'net-flow-trend up';
+      trendIcon.className = 'fas fa-arrow-up';
+      trendDesc.textContent = '유동성 상승';
+    } else if (wowDelta < HERO_TH.NEGATIVE) {
+      trendEl.className = 'net-flow-trend down';
+      trendIcon.className = 'fas fa-arrow-down';
+      trendDesc.textContent = '유동성 하락';
+    } else {
+      trendEl.className = 'net-flow-trend';
+      trendIcon.className = 'fas fa-minus';
+      trendDesc.textContent = '횡보';
+    }
+
+    // Status Badge & Info Cards & Time
+    updateStatusBadge(wowDelta, m2YoY);
+    updateInfoCards(lastComplete ?? last, prevComplete ?? prev);
+    // ★ 주간 기준 날짜 표시 (완결된 주)
+    const weekLabel = lastComplete ? `Week of ${lastComplete.weekKey}` : `Data: ${last.date}`;
+    document.getElementById('updateTime').textContent = weekLabel;
+  }
+
+  function updateSignalCard(id, value, unit, color, status, opts = {}) {
+    // 값 업데이트
+    document.getElementById(`${id}Value`).textContent = value;
+
+    const icon = document.getElementById(`${id}Icon`);
+    icon.className = 'signal-icon ' + color;
+
+    const statusEl = document.getElementById(`${id}Status`);
+    statusEl.textContent = status;
+    statusEl.className = 'signal-status ' + (color === 'green' ? 'normal' : color === 'yellow' ? 'caution' : 'danger');
+
+    // 서브텍스트
+    if (opts.subtext !== undefined) {
+      const sub = document.getElementById(`${id}Sub`);
+      if (sub) sub.textContent = opts.subtext;
+    }
+  }
+
+  // constants.js THRESHOLDS.OVERALL 사용
+  function updateStatusBadge(netLiqDelta, m2YoY) {
+    const badge = document.getElementById('statusBadge');
+    const text = document.getElementById('statusText');
+
+    const OVERALL_TH = {
+      EXPANDING: getThreshold('OVERALL', 'EXPANDING'),
+      CONTRACTING: getThreshold('OVERALL', 'CONTRACTING')
+    };
+
+    let status = 'normal';
+    if (netLiqDelta > OVERALL_TH.EXPANDING.netLiq && m2YoY >= OVERALL_TH.EXPANDING.m2YoY) status = 'inflow';
+    else if (netLiqDelta < OVERALL_TH.CONTRACTING.netLiq || m2YoY < OVERALL_TH.CONTRACTING.m2YoY) status = 'outflow';
+
+    if (status === 'inflow') {
+      badge.style.cssText = 'background:#dcfce7; border-color:#bbf7d0; color:#166534';
+      badge.querySelector('.status-dot').style.background = '#166534';
+      text.textContent = '유동성 상승';
+    } else if (status === 'outflow') {
+      badge.style.cssText = 'background:#fee2e2; border-color:#fecaca; color:#dc2626';
+      badge.querySelector('.status-dot').style.background = '#dc2626';
+      text.textContent = '유동성 하락';
+    } else {
+      badge.style.cssText = 'background:#fef9c3; border-color:#fde68a; color:#ca8a04';
+      badge.querySelector('.status-dot').style.background = '#ca8a04';
+      text.textContent = '횡보';
+    }
+  }
+
+  // constants.js THRESHOLDS.NET_LIQUIDITY 사용
+  // ★ last는 이제 lastComplete (완결된 주 데이터) 또는 fallback daily
+  function updateInfoCards(last, prev) {
+    const statusCard = document.getElementById('statusCard');
+    const summary = document.getElementById('statusSummary');
+    const weeklyChanges = document.getElementById('weeklyChanges');
+
+    const INFO_TH = { POSITIVE: getThreshold('NET_LIQUIDITY', 'POSITIVE'), NEGATIVE: getThreshold('NET_LIQUIDITY', 'NEGATIVE') };
+    // ★ WoW 우선, fallback으로 rolling 7D
+    const netLiqDelta = last.netLiquidityDeltaWoW ?? last.netLiquidityDelta1W ?? 0;
+    const weekLabel = last.weekKey ? `Week of ${last.weekKey}` : '주간';
+
+    if (netLiqDelta > INFO_TH.POSITIVE) {
+      statusCard.className = 'info-card inflow';
+      summary.innerHTML = `${weekLabel} <span class="info-value">+$${netLiqDelta.toFixed(0)}B</span> 순유입 - 상승`;
+    } else if (netLiqDelta < INFO_TH.NEGATIVE) {
+      statusCard.className = 'info-card outflow';
+      summary.innerHTML = `${weekLabel} <span class="info-value">-$${Math.abs(netLiqDelta).toFixed(0)}B</span> 순유출 - 하락`;
+    } else {
+      statusCard.className = 'info-card neutral';
+      summary.innerHTML = `${weekLabel} 변동 <span class="info-value">$${netLiqDelta >= 0 ? '+' : ''}${netLiqDelta.toFixed(0)}B</span> - 횡보`;
+    }
+
+    // ★ Components 분해 표시 - 차트와 동일한 부호 계약 사용
+    // 표준 contract: Net = WALCL + (-ΔTGA) + (-ΔRRP)
+    // tgaDeltaWoW/rrpDeltaWoW는 raw ΔTGA/ΔRRP이므로 부호 반전(signMode B)하여 기여분으로 변환
+    const walclD = last.walclDeltaWoW ?? last.walclDelta ?? 0;
+    const tgaContrib = -(last.tgaDeltaWoW ?? last.tgaDelta ?? 0);  // -ΔTGA (기여분)
+    const rrpContrib = -(last.rrpDeltaWoW ?? last.rrpDelta ?? 0);  // -ΔRRP (기여분)
+    weeklyChanges.innerHTML = `
+      <li>Fed BS Δ: <strong>${walclD >= 0 ? '+' : ''}${walclD.toFixed(1)}B</strong></li>
+      <li>-TGA Δ: <strong>${tgaContrib >= 0 ? '+' : ''}${tgaContrib.toFixed(1)}B</strong></li>
+      <li>-RRP Δ: <strong>${rrpContrib >= 0 ? '+' : ''}${rrpContrib.toFixed(1)}B</strong></li>
+      <li><strong>= Net Liquidity Δ: ${netLiqDelta >= 0 ? '+' : ''}${netLiqDelta.toFixed(1)}B</strong></li>
+    `;
+  }
+
+  window.toggleInfoCard = function(cardId) {
+    document.getElementById(cardId).classList.toggle('expanded');
+  };
+
+  // ===== CACHE =====
+  function saveWidgetCache(data) {
+    if (typeof DataManager === 'undefined') return;
+
+    const last = data.timeline[data.timeline.length - 1];
+
+    // ★ WoW (완결된 주) 계산
+    const { lastComplete } = pickLastCompleteWeeks(data.weeklyTimeline);
+    const wowDelta = lastComplete?.netLiquidityDeltaWoW ?? last.netLiquidityDelta1W ?? 0;
+
+    // ★ 새 구조: Net Liquidity 정식 공식 기반
+    // Widget 캐시는 WoW 변화량을 저장 (Hero Value용)
+    const widgetData = {
+      // Signal Matrix 3개 지표
+      m2YoY: last.m2YoY || 0,
+      m2Total: last.m2,
+      netLiquidity: lastComplete?.netLiquidity ?? last.netLiquidity, // ★ lastComplete 기준
+      netLiquidityDelta: wowDelta, // ★ 위젯 Hero는 WoW (완결된 주) 변화량 표시
+      netLiquidityDelta1D: last.netLiquidityDelta, // ★ 1D 변화량은 백업용
+      weekKey: lastComplete?.weekKey ?? null, // ★ 완결된 주 기준 날짜
+      asOfDate: lastComplete?.date ?? last.date, // ★ 기준 날짜
+      stablecoinMcap: data.stablecoinMcap,
+      scM2Ratio: last.scM2Ratio || 0,
+      // Components (Chart용)
+      walcl: last.walcl,
+      tga: last.tga,
+      rrp: last.rrp,
+      walclDelta: last.walclDelta,
+      tgaDelta: last.tgaDelta,
+      rrpDelta: last.rrpDelta,
+      // 기존 호환용
+      netFlow: last.netFlow,
+      updated: new Date().toISOString()
+    };
+
+    DataManager.saveWidgetData('liquidity-flow', widgetData);
+    console.log('[Detail] Widget cache saved (WoW):', widgetData);
+  }
+
+  // ===== DATA VALIDATION =====
+  function validateData(data, days) {
+    const issues = [];
+    const timeline = data.timeline;
+
+    if (!timeline || timeline.length === 0) {
+      issues.push('❌ 타임라인 데이터 없음');
+      return { valid: false, issues };
+    }
+
+    // 1. 날짜 연속성 검증
+    for (let i = 1; i < timeline.length; i++) {
+      const prev = new Date(timeline[i-1].date);
+      const curr = new Date(timeline[i].date);
+      const diffDays = (curr - prev) / (1000 * 60 * 60 * 24);
+      if (diffDays > 14) { // 2주 이상 갭
+        issues.push(`⚠️ 날짜 갭: ${timeline[i-1].date} → ${timeline[i].date} (${diffDays}일)`);
+      }
+    }
+
+    // 2. 값 범위 검증 (이상치 탐지)
+    const lastItem = timeline[timeline.length - 1];
+    if (lastItem.m2 < 15000 || lastItem.m2 > 30000) {
+      issues.push(`⚠️ M2 이상값: $${lastItem.m2.toFixed(1)}B (정상: 15-30T)`);
+    }
+    if (lastItem.netLiquidity < 3000 || lastItem.netLiquidity > 10000) {
+      issues.push(`⚠️ Net Liquidity 이상값: $${lastItem.netLiquidity.toFixed(1)}B (정상: 3-10T)`);
+    }
+
+    // 3. 데이터 충분성 검증
+    const expectedWeeks = Math.floor(days / 7) * 0.7; // 70% 이상 있어야 함
+    if (timeline.length < expectedWeeks) {
+      issues.push(`⚠️ 데이터 부족: ${timeline.length}일 (예상: ${Math.floor(expectedWeeks)}주+)`);
+    }
+
+    // 4. NaN/Infinity 검증
+    const hasInvalid = timeline.some(d =>
+      isNaN(d.m2) || isNaN(d.netLiquidity) || !isFinite(d.m2YoY)
+    );
+    if (hasInvalid) {
+      issues.push('❌ NaN/Infinity 값 발견');
+    }
+
+    if (issues.length > 0) {
+      console.warn('[Data Validation]', issues);
+    } else {
+      console.log(`[Data Validation] ✅ ${timeline.length}일 데이터 정상 (${days}일 요청)`);
+    }
+
+    return { valid: issues.filter(i => i.startsWith('❌')).length === 0, issues };
+  }
+
+  // ===== INIT =====
+  // 전체 데이터(MAX)를 한 번만 로드, 기간 변경 시 차트만 slice
+  async function init(initialPeriod = 180) {
+    try {
+      const MAX_DAYS = 2925;  // MAX 기간 (약 8년)
+      console.log(`[Init] 전체 데이터 로드 시작: ${MAX_DAYS}일`);
+
+      const [m2, tga, rrp, walcl, sc] = await Promise.all([
+        getFredSeries('M2SL', MAX_DAYS + 365),  // M2: YoY 계산을 위해 +1년
+        getTreasuryTGA(MAX_DAYS),               // TGA: 일간 (millions) - DEC-048
+        getFredSeries('RRPONTSYD', MAX_DAYS),   // RRP: 일간 (millions)
+        getFredSeries('WALCL', MAX_DAYS),       // Fed Balance Sheet: 주간 (millions)
+        getStablecoinData()                      // Stablecoin: 전체 시계열
+      ]);
+
+      // 데이터 가용성 체크
+      console.log(`[Init] 데이터 수신: M2=${m2.length}, TGA=${tga.length}, RRP=${rrp.length}, WALCL=${walcl.length}`);
+
+      if (!tga.length || !walcl.length) {
+        console.error('[Init] TGA or WALCL data not available');
+        return;
+      }
+
+      // 전체 데이터 저장
+      fullData = processData(m2, tga, rrp, walcl, sc);
+      console.log(`[Init] 전체 데이터 처리 완료: ${fullData.timeline.length}일 (일간 데이터)`);
+
+      // ★ Weekly Timeline 생성 (상단 KPI/위젯 WoW 계산용)
+      fullData.weeklyTimeline = buildWeeklyTimeline(fullData.timeline);
+
+      // 차트용 데이터 (기간별 slice)
+      processedData = sliceDataByPeriod(fullData, initialPeriod);
+
+      // 데이터 검증
+      const validation = validateData(fullData, MAX_DAYS);
+      if (!validation.valid) {
+        console.warn('[Init] 데이터 검증 경고:', validation.issues);
+      }
+
+      renderChart(processedData);
+      updateSignalMatrix(fullData);  // ★ 상단 카드는 전체 데이터의 마지막 값 사용
+      saveWidgetCache(fullData);
+
+    } catch (e) {
+      console.error('[Init] Error:', e);
+    }
+  }
+
+  // Start - ES Module 로드 완료 대기
+  // (type="module"은 defer처럼 동작하므로 DOMContentLoaded 후 실행되지만,
+  //  일반 script와의 실행 순서 보장 위해 약간의 지연 추가)
+  function startApp() {
+    if (typeof getRecessionAnnotations === 'function') {
+      console.log('[Init] getRecessionAnnotations loaded ✓');
+      init(180);
+    } else {
+      console.log('[Init] Waiting for ES modules...');
+      setTimeout(startApp, 50);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+  } else {
+    startApp();
+  }
+</script>
+</body>
+</html>

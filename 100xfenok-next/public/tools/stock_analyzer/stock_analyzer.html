@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analytics Dashboard - Sprint 4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <style>
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stat-card {
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .modal {
+            display: none;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <h1 class="text-2xl font-bold text-gray-800">Stock Analytics Dashboard</h1>
+            <p class="text-sm text-gray-500">Sprint 4 - Integrated Analytics System</p>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex space-x-8">
+                <button class="tab-btn py-4 px-2 border-b-2 border-blue-500 text-blue-600 font-medium"
+                    data-tab="dashboard">
+                    Dashboard
+                </button>
+                <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+                    data-tab="growth">
+                    Growth Analytics
+                </button>
+                <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+                    data-tab="ranking">
+                    Ranking Analytics
+                </button>
+                <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+                    data-tab="eps">
+                    EPS Analytics
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Dashboard Tab -->
+        <div id="dashboard-content" class="tab-content active">
+            <!-- Controls -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center gap-4">
+                        <label class="text-sm font-medium text-gray-700">업종:</label>
+                        <select id="industry-select" class="border rounded px-3 py-2 text-sm">
+                            <option value="all">전체</option>
+                            <option value="tech">IT/기술</option>
+                            <option value="finance">금융</option>
+                            <option value="healthcare">헬스케어</option>
+                            <option value="energy">에너지</option>
+                        </select>
+                        <button id="refresh-btn"
+                            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                            새로고침
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="export-csv-btn" class="px-4 py-2 border rounded hover:bg-gray-50 text-sm">
+                            CSV 내보내기
+                        </button>
+                        <button id="export-png-btn" class="px-4 py-2 border rounded hover:bg-gray-50 text-sm">
+                            PNG 내보내기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 1: Overview Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <!-- Growth Card -->
+                <div class="stat-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-600">평균 성장률</h3>
+                        <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline">
+                        <p id="growth-avg" class="text-3xl font-bold text-gray-900">--</p>
+                        <span class="ml-2 text-sm text-gray-500">%</span>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">최근 분기 대비</p>
+                </div>
+
+                <!-- Ranking Card -->
+                <div class="stat-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-600">Top 10 기업 수</h3>
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline">
+                        <p id="ranking-top10" class="text-3xl font-bold text-gray-900">--</p>
+                        <span class="ml-2 text-sm text-gray-500">개</span>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">선정 업종 내</p>
+                </div>
+
+                <!-- EPS Card -->
+                <div class="stat-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-600">평균 EPS</h3>
+                        <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline">
+                        <p id="eps-avg" class="text-3xl font-bold text-gray-900">--</p>
+                        <span class="ml-2 text-sm text-gray-500">원</span>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">최근 분기 기준</p>
+                </div>
+            </div>
+
+            <!-- Row 2: Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Growth Chart -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">성장률 분석</h3>
+                    <div class="chart-container">
+                        <canvas id="growth-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Ranking Chart -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">순위 변화</h3>
+                    <div class="chart-container">
+                        <canvas id="ranking-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: EPS + Combined -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- EPS Chart -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">EPS 추이</h3>
+                    <div class="chart-container">
+                        <canvas id="eps-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Combined Chart -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">통합 비교</h3>
+                    <div class="chart-container">
+                        <canvas id="combined-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Growth Analytics Tab -->
+        <div id="growth-content" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">성장률 상세 분석</h2>
+                <div id="growth-details"></div>
+            </div>
+        </div>
+
+        <!-- Ranking Analytics Tab -->
+        <div id="ranking-content" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">순위 상세 분석</h2>
+                <div id="ranking-details"></div>
+            </div>
+        </div>
+
+        <!-- EPS Analytics Tab -->
+        <div id="eps-content" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">EPS 상세 분석</h2>
+                <div id="eps-details"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Company Detail Modal -->
+    <div id="company-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 id="modal-title" class="text-2xl font-bold text-gray-800"></h2>
+                    <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Sprint 4 Analytics Modules -->
+    <script src="js/analytics/GrowthAnalytics.js"></script>
+    <script src="js/analytics/RankingAnalytics.js"></script>
+    <script src="js/analytics/EPSAnalytics.js"></script>
+    <script src="js/DashboardManager.js"></script>
+
+    <!-- Sprint 4 Phase 1 Modules -->
+    <script src="modules/CompanyMasterProvider.js"></script>
+    <script src="modules/DataCleanupManager.js"></script>
+
+    <!-- Sprint 4 Module 4: CompanyAnalyticsProvider -->
+    <script src="modules/CompanyAnalyticsProvider.js"></script>
+
+    <!-- Sprint 4 Module 5: EPSMonitoringProvider -->
+    <script src="modules/EPSMonitoringProvider.js"></script>
+
+    <!-- Sprint 4 Module 6: IndustryCostAnalytics -->
+    <script src="modules/IndustryCostAnalytics.js"></script>
+
+    <!-- Sprint 5 Analytics Modules -->
+    <script src="modules/CFOAnalytics.js"></script>
+    <script src="modules/CorrelationEngine.js"></script>
+
+    <script>
+        /**
+         * Load global data from JSON file
+         * Sets window.allData for tests and application use
+         */
+        async function loadData() {
+            try {
+                console.log('Loading data from global_scouter_integrated.json...');
+                const timestamp = new Date().getTime();
+                const response = await fetch(`data/global_scouter_integrated.json?v=${timestamp}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const jsonData = await response.json();
+                console.log('🔍 Raw JSON Data:', jsonData);
+
+                if (jsonData.data && jsonData.data.main && Array.isArray(jsonData.data.main.M_Company)) {
+                    window.allData = jsonData.data.main.M_Company;
+                    console.log('✅ Successfully extracted M_Company data');
+                } else {
+                    console.error('❌ Invalid JSON structure:', jsonData);
+                    console.log('Keys in data:', jsonData.data ? Object.keys(jsonData.data) : 'no data');
+                    if (jsonData.data && jsonData.data.main) {
+                        console.log('Keys in data.main:', Object.keys(jsonData.data.main));
+                    }
+                    window.allData = [];
+                }
+
+                console.log(`✅ Loaded ${window.allData.length} companies`);
+                console.log(`Metadata:`, jsonData.metadata);
+
+                return window.allData;
+            } catch (error) {
+                console.error('❌ Failed to load data:', error);
+                window.allData = [];
+                throw error;
+            }
+        }
+
+        // Initialize dashboard after data loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Load data first
+                await loadData();
+
+                // Create dataManager for Sprint 5 modules
+                window.dataManager = {
+                    companies: window.allData.map(item => ({
+                        ticker: item.Ticker,
+                        name: item.Corp,
+                        sector: item.WI26 || 'Unknown',
+                        marketCap: parseFloat(item['(USD mn)']) || 0
+                    }))
+                };
+
+                console.log(`✅ DataManager created with ${window.dataManager.companies.length} companies`);
+
+                // Initialize Sprint 4 Phase 1 modules
+                if (typeof CompanyMasterProvider !== 'undefined') {
+                    window.companyMaster = new CompanyMasterProvider();
+                    const loaded = await window.companyMaster.loadFromJSON('data/M_Company.json');
+                    if (loaded) {
+                        const stats = window.companyMaster.getStatistics();
+                        console.log(`✅ CompanyMasterProvider initialized: ${stats.totalCompanies} companies, ${stats.totalIndustries} industries`);
+                    } else {
+                        console.warn('⚠️ CompanyMasterProvider failed to load');
+                    }
+                }
+
+                // Initialize Sprint 4 Module 2: ValidationAnalytics
+                if (typeof DataCleanupManager !== 'undefined' && window.companyMaster && window.companyMaster.companies) {
+                    window.dataCleanupManager = new DataCleanupManager();
+                    // Generate validation report for M_Company.json data
+                    const validationReport = window.dataCleanupManager.generateValidationReport(window.companyMaster.companies);
+                    window.validationReport = validationReport;
+                    console.log(`✅ DataCleanupManager initialized with validation report`);
+                    console.log(`   - Quality Score: ${validationReport.qualityMetrics.qualityScore}`);
+                    console.log(`   - Coverage: ${validationReport.fieldCoverage.coveragePercentage}`);
+                }
+
+                // Initialize Sprint 4 Module 4: CompanyAnalyticsProvider
+                if (typeof CompanyAnalyticsProvider !== 'undefined') {
+                    window.companyAnalytics = new CompanyAnalyticsProvider();
+                    const loaded = await window.companyAnalytics.loadFromJSON('data/A_Company.json');
+                    if (loaded) {
+                        const stats = window.companyAnalytics.getStatistics();
+                        console.log(`✅ CompanyAnalyticsProvider initialized: ${stats.totalCompanies} companies`);
+                        console.log(`   - Avg PEG: ${stats.avgPEG?.toFixed(2)}`);
+                        console.log(`   - Median Return: ${(stats.medianReturn * 100)?.toFixed(2)}%`);
+                        console.log(`   - Avg Growth: ${(stats.avgGrowth * 100)?.toFixed(2)}%`);
+
+                        // Show valuation distribution
+                        const dist = stats.valuationDistribution;
+                        console.log(`   - PEG Distribution: undervalued(${dist.pegBuckets.undervalued}), fair(${dist.pegBuckets.fair}), overvalued(${dist.pegBuckets.overvalued})`);
+                    } else {
+                        console.warn('⚠️ CompanyAnalyticsProvider failed to load');
+                    }
+                }
+
+                // Initialize Sprint 4 Module 5: EPSMonitoringProvider
+                if (typeof EPSMonitoringProvider !== 'undefined') {
+                    window.epsMonitoring = new EPSMonitoringProvider();
+                    const loaded = await window.epsMonitoring.loadFromJSON('data/T_Chk.json');
+                    if (loaded) {
+                        const sentiment = window.epsMonitoring.getMarketSentiment();
+                        console.log(`✅ EPSMonitoringProvider initialized: ${window.epsMonitoring.data.length} companies (${window.epsMonitoring.activeCompanies.length} active)`);
+                        console.log(`   - Market Sentiment: ${sentiment.sentiment} (↑${sentiment.upgrades} ↓${sentiment.downgrades} ↔${sentiment.stable})`);
+                        console.log(`   - Upgrade Rate: ${(sentiment.upgradeRate * 100).toFixed(1)}%`);
+                        console.log(`   - Time-series: ${window.epsMonitoring.dateFields.length} snapshots (${window.epsMonitoring.metadata.dateRange || '371 days'})`);
+                    } else {
+                        console.warn('⚠️ EPSMonitoringProvider failed to load');
+                    }
+                }
+
+                // Initialize Sprint 4 Module 6: IndustryCostAnalytics
+                if (typeof IndustryCostAnalytics !== 'undefined') {
+                    window.industryCost = new IndustryCostAnalytics();
+                    const loaded = await window.industryCost.loadFromJSON('data/A_Compare.json');
+                    if (loaded) {
+                        const stats = window.industryCost.getMarketStatistics();
+                        console.log(`✅ IndustryCostAnalytics initialized: ${window.industryCost.validCompanies.length} valid companies (${window.industryCost.metadata.filterRatio})`);
+                        console.log(`   - Industries: ${window.industryCost.industryGroups.size}`);
+                        console.log(`   - Avg ROE: ${(stats.averages['ROE (Fwd)'] * 100).toFixed(1)}%`);
+                        console.log(`   - Avg OPM: ${(stats.averages['OPM (Fwd)'] * 100).toFixed(1)}%`);
+                    } else {
+                        console.warn('⚠️ IndustryCostAnalytics failed to load');
+                    }
+                }
+
+                // Initialize Sprint 5 modules
+                if (typeof CorrelationEngine !== 'undefined') {
+                    window.correlationEngine = new CorrelationEngine(window.dataManager);
+                    await window.correlationEngine.initialize();
+                    console.log('✅ CorrelationEngine initialized');
+                }
+
+                if (typeof CFOAnalytics !== 'undefined') {
+                    window.cfoAnalytics = new CFOAnalytics(window.dataManager);
+                    await window.cfoAnalytics.initialize();
+                    console.log('✅ CFOAnalytics initialized');
+                }
+
+                // Initialize dashboard
+                window.dashboardManager = new DashboardManager();
+                window.dashboardManager.initialize();
+
+                console.log('✅ Dashboard initialized successfully');
+            } catch (error) {
+                console.error('❌ Failed to initialize dashboard:', error);
+                // Show error to user
+                const main = document.querySelector('main');
+                if (main) {
+                    main.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                            <h2 class="text-2xl font-bold text-red-800 mb-2">Data Loading Error</h2>
+                            <p class="text-red-600">Failed to load stock data. Please check console for details.</p>
+                            <p class="text-sm text-red-500 mt-2">${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tab = e.target.dataset.tab;
+
+                // Update buttons
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('border-blue-500', 'text-blue-600');
+                    b.classList.add('border-transparent', 'text-gray-500');
+                });
+                e.target.classList.remove('border-transparent', 'text-gray-500');
+                e.target.classList.add('border-blue-500', 'text-blue-600');
+
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${tab}-content`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

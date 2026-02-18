@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Sentiment | 100x Market Radar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --fear: #dc2626;
+      --greed: #16a34a;
+      --neutral: #f59e0b;
+      --bg-page: #f1f5f9;
+      --bg-card: #ffffff;
+      --footer-offset: 60px;
+    }
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg-page); min-height: 100vh; }
+    .orbitron { font-family: 'Orbitron', monospace; }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border-bottom: 1px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn {
+      width: 40px; height: 40px;
+      border: none; background: #f1f5f9;
+      border-radius: 12px; cursor: pointer;
+      font-size: 16px; color: #64748b;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { background: #e2e8f0; transform: translateX(-2px); }
+    .title-group h1 { font-size: 20px; font-weight: 700; color: #1e293b; }
+    .title-group p { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .status-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+    }
+    .status-badge.fear { background: #fef2f2; color: var(--fear); }
+    .status-badge.greed { background: #f0fdf4; color: var(--greed); }
+    .status-badge.neutral { background: #fffbeb; color: var(--neutral); }
+    .update-time { font-size: 11px; color: #94a3b8; }
+
+    @media (max-width: 640px) {
+      .page-header { padding: 12px 16px; }
+      .title-group h1 { font-size: 16px; }
+      .title-group p { display: none; }
+      .update-time { display: none; }
+    }
+
+    /* ===== LAYOUT ===== */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+    @media (max-width: 1024px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        bottom: var(--footer-offset);
+        left: 0;
+        right: 0;
+        height: auto;
+        max-height: 55vh;
+        z-index: 100;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(calc(100% - 48px));
+        transition: transform 0.3s ease;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+      }
+      .sidebar.expanded { transform: translateY(0); }
+      .main-content { padding-bottom: calc(72px + var(--footer-offset)); }
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      background: var(--bg-card);
+      border-right: 1px solid #e2e8f0;
+      overflow-y: auto;
+    }
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
+      z-index: 10;
+    }
+    .sidebar-header h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .mobile-handle {
+      display: none;
+    }
+    .mobile-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 52px;
+      background: var(--bg-card);
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      user-select: none;
+      -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+      touch-action: manipulation;
+    }
+    .mobile-toggle:hover, .mobile-toggle:active { background: #f8fafc; }
+    .toggle-arrow {
+      font-size: 10px;
+      transition: transform 0.3s;
+    }
+    .sidebar.expanded .toggle-arrow {
+      transform: rotate(180deg);
+    }
+    @media (max-width: 1024px) {
+      .mobile-toggle { display: flex; }
+      .sidebar-header { display: none; }
+      .sidebar { overflow: hidden; }
+      .sidebar.expanded { overflow-y: auto; }
+    }
+    .section-title {
+      font-size: 10px; font-weight: 700;
+      color: #94a3b8; text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 20px 16px 8px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; margin: 2px 8px;
+      border-radius: 10px; cursor: pointer;
+      font-size: 13px; color: #475569;
+      transition: all 0.15s;
+    }
+    .nav-item:hover { background: #f1f5f9; }
+    .nav-item.active {
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      color: #4f46e5; font-weight: 500;
+    }
+    .nav-item .icon { font-size: 16px; width: 22px; text-align: center; }
+    .nav-item .label { flex: 1; }
+    .nav-item .value { font-size: 12px; font-weight: 600; }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content { padding: 20px; overflow-y: auto; }
+
+    /* ===== SIGNAL HERO (좌우 레이아웃) ===== */
+    .signal-hero {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+    .signal-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .signal-score-wrap {
+      text-align: center;
+    }
+    .signal-label {
+      font-size: 10px; font-weight: 600;
+      color: #64748b; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+    .signal-score {
+      font-size: 56px; font-weight: 800;
+      line-height: 1;
+    }
+    .signal-score.fear { color: var(--fear); }
+    .signal-score.greed { color: var(--greed); }
+    .signal-score.neutral { color: var(--neutral); }
+    .signal-status {
+      font-size: 13px; font-weight: 600;
+      color: #475569; margin-top: 4px;
+    }
+    .signal-info {
+      flex: 1;
+    }
+    .signal-info h3 {
+      font-size: 16px; font-weight: 700;
+      color: #1e293b; margin-bottom: 8px;
+    }
+    .signal-info p {
+      font-size: 12px; color: #64748b;
+      line-height: 1.5;
+    }
+    .signal-right {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .signal-gauges {
+      display: flex; gap: 12px;
+    }
+    .gauge-mini {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px; font-weight: 700;
+    }
+    .gauge-mini.fear { background: #fef2f2; color: var(--fear); }
+    .gauge-mini.greed { background: #f0fdf4; color: var(--greed); }
+    .signal-conditions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .condition-badge {
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .condition-badge.fear { background: #fef2f2; color: var(--fear); }
+    .condition-badge.neutral { background: #fffbeb; color: var(--neutral); }
+    .condition-badge.greed { background: #f0fdf4; color: var(--greed); }
+    @media (max-width: 768px) {
+      .signal-hero {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .signal-left { flex-direction: column; text-align: center; }
+      .signal-score { font-size: 48px; }
+      .signal-conditions { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ===== SIGNAL EXPLANATION ===== */
+    .signal-explain {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .signal-explain .section-header {
+      margin-bottom: 16px;
+    }
+    .explain-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .explain-card {
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .explain-card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .explain-card p {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .explain-card ul {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.8;
+      padding-left: 16px;
+      margin: 0;
+    }
+    .score-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px;
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+    .range-bar {
+      flex: 1;
+      height: 8px;
+      background: linear-gradient(to right, #dc2626, #f59e0b, #16a34a);
+      border-radius: 4px;
+    }
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    @media (max-width: 768px) {
+      .explain-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ===== INDICATOR CARDS (C-1 스타일) ===== */
+    .indicators-section {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .section-header {
+      font-size: 14px; font-weight: 600;
+      color: #334155; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .indicator-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .indicator-card {
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .indicator-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      border-color: #e0e7ff;
+    }
+    .indicator-card .icon { font-size: 24px; margin-bottom: 8px; }
+    .indicator-card .value { font-size: 18px; font-weight: 700; }
+    .indicator-card .label { font-size: 11px; color: #64748b; margin-top: 4px; }
+    .indicator-card .score {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .score-fear { background: #fef2f2; color: #dc2626; }
+    .score-neutral { background: #fffbeb; color: #d97706; }
+    .score-greed { background: #f0fdf4; color: #16a34a; }
+
+    /* ===== DETAIL VIEW ===== */
+    .detail-card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    /* Mini Header */
+    .detail-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .detail-back {
+      width: 32px; height: 32px;
+      border-radius: 8px; background: #f1f5f9;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #64748b; font-size: 14px;
+    }
+    .detail-back:hover { background: #e2e8f0; }
+    .mini-stats {
+      display: flex; align-items: center; gap: 10px; flex: 1;
+    }
+    .mini-stat {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .mini-stat .label { color: #64748b; }
+    .mini-stat .value { font-weight: 700; }
+    .mini-stat .value.fear { color: #dc2626; }
+    .mini-stat .value.neutral { color: #d97706; }
+    .mini-stat .value.greed { color: #16a34a; }
+
+    /* Mobile Header - 압축 */
+    @media (max-width: 640px) {
+      .mini-stats { gap: 6px; }
+      .mini-stat { padding: 4px 10px; font-size: 12px; }
+      .indicator-title { display: none; }
+      .mini-stat:last-child { display: none; }
+    }
+
+    .chart-container {
+      margin: 0;
+      background: #f8fafc;
+      border-radius: 0;
+      overflow: hidden;
+    }
+    .chart-container iframe {
+      width: 100%;
+      min-width: 100%;
+      height: calc(100vh - 200px);
+      min-height: 450px;
+      max-height: 600px;
+      border: none;
+      display: block;
+    }
+    .desc-tabs {
+      display: flex; gap: 4px;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 4px;
+      margin: 0 24px;
+    }
+    .desc-tab {
+      flex: 1; padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 12px; font-weight: 500;
+      color: #64748b; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .desc-tab:hover { color: #334155; }
+    .desc-tab.active {
+      background: white;
+      color: #4f46e5;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+    .desc-content {
+      margin: 12px 24px 24px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.7;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .chart-container iframe {
+        height: calc(100vh - 320px);
+        min-height: 400px;
+        max-height: 550px;
+      }
+    }
+    @media (max-width: 768px) {
+      .signal-score { font-size: 48px; }
+      .signal-gauges { flex-direction: column; gap: 10px; }
+      .indicator-grid { grid-template-columns: repeat(2, 1fr); }
+      .chart-container {
+        margin: 0 16px 16px;
+      }
+      .chart-container iframe {
+        height: calc(100vh - 280px);
+        min-height: 350px;
+        max-height: 500px;
+      }
+      /* stats-row removed - using mini-stats */
+      .desc-tabs { margin: 0 16px; }
+      .desc-content { margin: 12px 16px 20px; }
+    }
+
+    /* ===== 100x COMBO SIGNALS™ ===== */
+    .combo-overview {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .combo-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .combo-header h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .combo-header h2 .trademark {
+      font-size: 12px;
+      color: #6366f1;
+      font-weight: 600;
+    }
+    .combo-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+
+    /* 카드 그리드 - 2열 고정, 큰 카드 */
+    .combo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    /* 큰 카드 스타일 */
+    .combo-card {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 20px 24px;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      cursor: pointer;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+    }
+    .combo-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .combo-card.active {
+      border-color: #16a34a;
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    }
+    .combo-card.near {
+      border-color: #f59e0b;
+      border-style: dashed;
+      border-width: 2px;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      animation: pulse-near 2s ease-in-out infinite;
+    }
+    @keyframes pulse-near {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.2); }
+      50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    }
+    .combo-card.inactive {
+      opacity: 0.6;
+    }
+    /* Buy/Warn 기본 구분 */
+    .combo-card.buy { border-left: 4px solid #16a34a; }
+    .combo-card.warn { border-left: 4px solid #dc2626; }
+
+    /* 카드 헤더 */
+    .combo-card .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .combo-card .card-icon {
+      font-size: 22px;
+    }
+    .combo-card .card-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .combo-card .card-badge {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card-badge.active { background: #16a34a; color: white; }
+    .card-badge.near { background: #f59e0b; color: white; }
+    .card-badge.inactive { background: #e2e8f0; color: #94a3b8; }
+
+    /* Status 뱃지 위치 조정 */
+    .card-badge {
+      margin-left: auto;
+    }
+
+    /* 조건 표시 */
+    .combo-card .card-conditions {
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 16px;
+      line-height: 1.8;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cond-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .cond-item .cond-target {
+      color: #475569;
+    }
+    .cond-item .cond-arrow {
+      color: #94a3b8;
+      font-size: 10px;
+    }
+    .cond-item .cond-current {
+      font-weight: 700;
+      margin-left: auto;
+    }
+    .cond-item.met { background: rgba(22, 163, 74, 0.08); border-radius: 6px; padding: 4px 8px; margin: -4px -8px; }
+    .cond-item.met .cond-current { color: #16a34a; }
+    .cond-item.near { background: rgba(217, 119, 6, 0.1); border-radius: 6px; padding: 4px 8px; margin: -4px -8px; }
+    .cond-item.near .cond-current { color: #d97706; }
+    .cond-item.unmet .cond-current { color: #94a3b8; }
+
+    /* 통계 표시 */
+    .combo-card .card-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 13px;
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+    .combo-card .stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .combo-card .stat-label {
+      color: #64748b;
+      font-weight: 500;
+    }
+    .combo-card .stat-value {
+      font-weight: 700;
+      font-size: 15px;
+      color: #1e293b;
+    }
+    .combo-card .stat-value.win { color: #16a34a; }
+    .combo-card .stat-value.warn { color: #dc2626; }
+
+    /* Status Bar */
+    .combo-status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 20px;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border-radius: 14px;
+    }
+    .status-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .status-group .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+    .status-dots {
+      display: flex;
+      gap: 5px;
+    }
+    .status-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #e2e8f0;
+    }
+    .status-dot.active { background: #16a34a; }
+    .status-dot.near { background: #f59e0b; }
+    .status-divider {
+      width: 1px;
+      height: 24px;
+      background: #cbd5e1;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .combo-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .combo-card { padding: 16px 20px; min-height: 130px; }
+    }
+    @media (max-width: 768px) {
+      .combo-grid { grid-template-columns: 1fr; }
+      .combo-card { min-height: auto; }
+      .combo-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+      .combo-status-bar { flex-wrap: wrap; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Mobile Toggle Button -->
+      <div class="mobile-toggle" id="mobileToggle">
+        <span class="toggle-icon">☰</span>
+        <span class="toggle-text">메뉴</span>
+        <span class="toggle-arrow">▲</span>
+      </div>
+
+      <!-- Sidebar Header (제목 + 뒤로가기) -->
+      <div class="sidebar-header">
+        <button class="back-btn" onclick="goBackToRadar()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1>Market Sentiment</h1>
+      </div>
+
+      <div class="section-title">Dashboard</div>
+      <nav>
+        <div class="nav-item active" onclick="showHome()">
+          <span class="icon">🎯</span>
+          <span class="label">100x Combo Signals</span>
+        </div>
+      </nav>
+
+      <div class="section-title">Indicators</div>
+      <nav>
+        <div class="nav-item" onclick="showDetail('cnn')" data-indicator="cnn_fg">
+          <span class="icon">😐</span>
+          <span class="label">CNN F&G</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('cftc')" data-indicator="cftc_net">
+          <span class="icon">📊</span>
+          <span class="label">CFTC</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('aaii')" data-indicator="aaii_spread">
+          <span class="icon">👥</span>
+          <span class="label">AAII</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('vix')" data-indicator="vix_move">
+          <span class="icon">⚡</span>
+          <span class="label">VIX+MOVE</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('crypto')" data-indicator="crypto_fg">
+          <span class="icon">₿</span>
+          <span class="label">Crypto</span>
+          <span class="value">--</span>
+        </div>
+      </nav>
+
+      <div class="section-title">CNN Components</div>
+      <nav class="pb-4">
+        <div class="nav-item" onclick="showDetail('momentum')" data-indicator="momentum">
+          <span class="icon">🚀</span>
+          <span class="label">Momentum</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('strength')" data-indicator="strength">
+          <span class="icon">💪</span>
+          <span class="label">Strength</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('breadth')" data-indicator="breadth">
+          <span class="icon">📈</span>
+          <span class="label">Breadth</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('putcall')" data-indicator="putcall">
+          <span class="icon">⚖️</span>
+          <span class="label">Put/Call</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('safehaven')" data-indicator="safehaven">
+          <span class="icon">🛡️</span>
+          <span class="label">Safe Haven</span>
+          <span class="value">--</span>
+        </div>
+        <div class="nav-item" onclick="showDetail('junkbond')" data-indicator="junkbond">
+          <span class="icon">💰</span>
+          <span class="label">Junk Bond</span>
+          <span class="value">--</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- HOME VIEW -->
+      <div id="view-home">
+        <!-- 100x Combo Signals™ -->
+        <div class="combo-overview">
+          <div class="combo-header">
+            <h2>
+              <i class="fas fa-bullseye text-indigo-500"></i>
+              100x Combo Signals<span class="trademark">™</span>
+            </h2>
+            <span class="combo-subtitle">📊 백테스트 검증 | 승률 68-100%</span>
+          </div>
+          <div class="combo-grid" id="comboGrid">
+            <!-- Rendered by JavaScript -->
+          </div>
+          <div class="combo-status-bar" id="comboStatusBar">
+            <!-- Rendered by JavaScript -->
+          </div>
+        </div>
+
+        <!-- 간결한 통합 설명 -->
+        <div class="signal-explain">
+          <div class="section-header">
+            <i class="fas fa-info-circle text-indigo-500"></i>
+            시그널 해석 가이드
+          </div>
+          <div class="explain-grid">
+            <div class="explain-card">
+              <h4><i class="fas fa-traffic-light text-blue-500"></i> 상태 의미</h4>
+              <ul>
+                <li><strong style="color: #16a34a;">🟢 ACTIVE</strong> → 조건 충족, 즉시 검토</li>
+                <li><strong style="color: #f59e0b;">🟡 NEAR</strong> → 10% 근접, 모니터링</li>
+                <li><strong style="color: #94a3b8;">⚪ INACTIVE</strong> → 미충족, 대기</li>
+              </ul>
+            </div>
+            <div class="explain-card">
+              <h4><i class="fas fa-lightbulb text-amber-500"></i> 활용법</h4>
+              <ul>
+                <li><strong style="color: #16a34a;">Buy</strong>: 공포 극단 → 역발상 매수 기회</li>
+                <li><strong style="color: #dc2626;">Warn</strong>: 탐욕 극단 → 헤지/현금 비중 검토</li>
+              </ul>
+              <p style="font-size: 11px; color: #94a3b8; margin-top: 8px;">※ 과거 승률 기반, 미래 보장 아님</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div id="view-detail" style="display: none;">
+        <div class="detail-card">
+          <div class="detail-header">
+            <button class="detail-back" onclick="showHome()">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="mini-stats" id="miniStats">
+              <!-- Score badges dynamically inserted -->
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <iframe id="detailChart" src="" loading="lazy"></iframe>
+          </div>
+
+          <div class="desc-tabs">
+            <div class="desc-tab active" data-tab="what" onclick="showDescTab('what', this)">
+              <i class="fas fa-info-circle mr-1"></i>해석
+            </div>
+            <div class="desc-tab" data-tab="how" onclick="showDescTab('how', this)">
+              <i class="fas fa-chart-line mr-1"></i>신호
+            </div>
+            <div class="desc-tab" data-tab="insight" onclick="showDescTab('insight', this)">
+              <i class="fas fa-lightbulb mr-1"></i>활용
+            </div>
+          </div>
+          <div class="desc-content" id="descContent"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // 뒤로가기 - Market Radar 메인으로 이동
+    function goBackToRadar() {
+      const RADAR_PATH = 'tools/macro-monitor/index.html';
+      try {
+        if (window.top?.loadPage) { window.top.loadPage(RADAR_PATH); return; }
+        if (window.parent?.loadPage) { window.parent.loadPage(RADAR_PATH); return; }
+      } catch(e) {}
+      const base = window.top?.baseHref || '/';
+      (window.top||window).location.assign(`${base}index.html?path=${RADAR_PATH}`);
+    }
+
+    const data = {
+      cnn: { icon: '😐', title: 'CNN Fear & Greed Index', desc: '7개 지표 종합 심리', chart: 'charts/chart-cnn-fg.html',
+        stats: [{v:'18',l:'현재값'},{v:'Fear',l:'상태'},{v:'3,755',l:'데이터'}],
+        what: '<p class="mb-3">CNN이 발표하는 <strong>미국 주식시장 종합 심리 지표</strong>입니다. 0~100 범위로 표시되며, <span class="text-red-600 font-semibold">0에 가까울수록 공포</span>, <span class="text-green-600 font-semibold">100에 가까울수록 탐욕</span>을 의미합니다.</p><p class="mb-3"><strong>📊 7개 구성요소</strong> (동일 가중치):</p><ul class="list-disc ml-4 space-y-1 text-sm"><li><strong>Market Momentum</strong>: S&P 500 vs 125일 이동평균</li><li><strong>Stock Price Strength</strong>: 52주 신고가/신저가 비율</li><li><strong>Stock Price Breadth</strong>: McClellan 거래량 지수</li><li><strong>Put/Call Options</strong>: CBOE 풋/콜 비율</li><li><strong>Market Volatility</strong>: VIX 지수</li><li><strong>Safe Haven Demand</strong>: 주식 vs 채권 수익률</li><li><strong>Junk Bond Demand</strong>: 정크본드 스프레드</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매일 (장 마감 후) | 📅 데이터: 2011년~</p>',
+        how: '<p class="mb-3">차트에서 <strong>색상 영역</strong>으로 현재 심리 상태를 빠르게 파악할 수 있습니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>0~10 Extreme Fear</strong>: 극단적 공포. 패닉 매도 상태</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-400"></span><strong>10~25 Fear</strong>: 공포 우세. 약세장 분위기</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-yellow-400"></span><strong>25~45</strong>: 약한 공포~중립</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>45~55 Neutral</strong>: 중립. 뚜렷한 방향 없음</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-400"></span><strong>55~75 Greed</strong>: 탐욕 우세. 강세장 분위기</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>75~100 Extreme Greed</strong>: 극단적 탐욕. 과열 경고</div></div><p class="text-slate-600 text-sm"><strong>💡 핵심 임계값</strong>: <span class="text-red-600 font-bold">≤25 = 매수 검토</span>, <span class="text-green-600 font-bold">≥75 = 조정 대비</span></p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">🎯 역발상(Contrarian) 투자의 핵심 도구</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 매수 신호 (극단적 공포)</p><ul class="list-disc ml-4 mt-1 text-sm"><li><strong>F&G ≤ 10</strong>: 승률 ~90%, 12개월 평균 +20%+</li><li><strong>F&G ≤ 25</strong>: 승률 71.79% (14년 백테스트)</li><li>역사적 사례: 2020년 3월 12점 → 1년 후 +76%</li></ul></div><div class="bg-red-50 border-l-4 border-red-500 p-3 mb-3"><p class="font-bold text-red-800">⚠️ 조정 경고 (극단적 탐욕)</p><ul class="list-disc ml-4 mt-1 text-sm"><li><strong>F&G ≥ 90</strong>: 조정 확률 65%+</li><li>단, 강세장에서는 장기간 80+ 유지 가능</li></ul></div><p class="text-sm text-slate-600"><strong>🔍 활용법</strong>: 단독 사용보다 VIX, AAII와 함께 확인. 7개 구성요소 중 어떤 지표가 극단인지 분석하면 더 정확한 판단 가능.</p>' },
+      cftc: { icon: '📊', title: 'CFTC S&P 500 Futures', desc: '투기적 순포지션', chart: 'charts/chart-cftc.html',
+        stats: [{v:'-180K',l:'순포지션'},{v:'Bearish',l:'편향'},{v:'1,400+',l:'데이터'}],
+        what: '<p class="mb-3"><strong>CFTC COT(Commitment of Traders) 리포트</strong>에서 발표하는 S&P 500 E-mini 선물의 투기적 순포지션입니다.</p><p class="mb-3"><strong>📊 차트 해석</strong>:</p><ul class="list-disc ml-4 space-y-1 text-sm"><li><strong>양수(+)</strong>: 비상업 투자자(헤지펀드, 투기꾼)가 <span class="text-green-600 font-semibold">롱 우세</span> = 강세 베팅</li><li><strong>음수(-)</strong>: 비상업 투자자가 <span class="text-red-600 font-semibold">숏 우세</span> = 약세 베팅</li><li><strong>막대 높이</strong>: 순포지션 크기 (계약 수)</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매주 금요일 (화요일 기준 데이터) | 📅 데이터: 1997년~</p>',
+        how: '<p class="mb-3">차트의 <strong>막대 색상과 높이</strong>로 투기꾼들의 포지션을 파악합니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-16 h-4 rounded bg-green-600"></span><strong>+150K 이상</strong>: 극도 낙관 → <span class="text-red-600">조정 경계</span></div><div class="flex items-center gap-2"><span class="inline-block w-12 h-4 rounded bg-green-400"></span><strong>+50K ~ +150K</strong>: 낙관적 → 추세 추종</div><div class="flex items-center gap-2"><span class="inline-block w-8 h-4 rounded bg-gray-300"></span><strong>-50K ~ +50K</strong>: 중립 → 관망</div><div class="flex items-center gap-2"><span class="inline-block w-12 h-4 rounded bg-red-400"></span><strong>-100K ~ -50K</strong>: 비관적</div><div class="flex items-center gap-2"><span class="inline-block w-16 h-4 rounded bg-red-600"></span><strong>-150K 이하</strong>: 극도 비관 → <span class="text-green-600 font-bold">역발상 매수 기회</span></div></div><p class="text-slate-600 text-sm"><strong>💡 핵심</strong>: S&P 500 오버레이를 켜서 포지션과 실제 가격 움직임을 비교하세요.</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">🎯 "스마트머니 반대편" 전략</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 매수 신호 (극단적 숏)</p><ul class="list-disc ml-4 mt-1 text-sm"><li><strong>순포지션 < -150K</strong>: 승률 ~80% (비경기침체 시)</li><li>투기꾼이 극단적으로 숏 = 이미 약세 베팅 소진</li><li>역사적 사례: 2020년 3월 숏 극대치 → V자 반등</li></ul></div><div class="bg-amber-50 border-l-4 border-amber-500 p-3 mb-3"><p class="font-bold text-amber-800">⚠️ 주의사항</p><ul class="list-disc ml-4 mt-1 text-sm"><li><strong>숏 우세 ≠ 즉시 하락</strong>: 헤지펀드 숏은 헷지 목적 포함</li><li><strong>실제 시장 주도</strong>: 연기금, 패시브 자금이 진짜 시장 동력</li><li><strong>변화율 중요</strong>: 절대값보다 <span class="underline">주간 변화량</span>이 더 중요한 신호</li></ul></div><p class="text-sm text-slate-600"><strong>🔍 활용법</strong>: 급격한 포지션 전환(예: 한 주에 ±50K 이상)이 발생하면 시장 전환점 근접 신호.</p>' },
+      aaii: { icon: '👥', title: 'AAII Investor Sentiment', desc: '개인투자자 설문', chart: 'charts/chart-aaii.html',
+        stats: [{v:'-15%',l:'Bull-Bear'},{v:'Neutral',l:'상태'},{v:'3,000+',l:'데이터'}],
+        what: '<p class="mb-3"><strong>AAII(미국 개인투자자협회)</strong>가 매주 회원들에게 "향후 6개월 주식시장 전망"을 설문조사합니다.</p><p class="mb-3"><strong>📊 차트 구성요소</strong>:</p><ul class="list-disc ml-4 space-y-1 text-sm"><li><strong>Bullish(파란색)</strong>: 낙관 응답 비율</li><li><strong>Bearish(빨간색)</strong>: 비관 응답 비율</li><li><strong>Bull-Bear Spread</strong>: 낙관% - 비관% (역사적 평균 +7%)</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매주 목요일 오전 | 📅 데이터: 1987년~ (37년 역사)</p>',
+        how: '<p class="mb-3"><strong>Bull-Bear Spread</strong>가 핵심 지표입니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>+20% 이상</strong>: 극도 낙관 → <span class="text-red-600">조정 경계</span></div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-400"></span><strong>+7% ~ +20%</strong>: 평균 이상 낙관</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>0% ~ +7%</strong>: 평균 수준</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-400"></span><strong>-20% ~ 0%</strong>: 비관 우세</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>-30% 이하</strong>: 극도 비관 → <span class="text-green-600 font-bold">역발상 매수 기회</span></div></div><p class="text-slate-600 text-sm"><strong>💡 핵심</strong>: <strong>Bearish 비율 60%+</strong>가 가장 강력한 매수 신호입니다.</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">🏆 가장 강력한 역발상 지표 (37년 검증)</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 매수 신호</p><table class="w-full text-sm mt-2"><tr class="border-b"><td class="py-1"><strong>Bearish ≥ 60%</strong></td><td class="text-green-600 font-bold">100% 승률</td><td>8회 발생, 12M 평균 +27.3%</td></tr><tr class="border-b"><td class="py-1"><strong>Spread ≤ -30</strong></td><td class="text-green-600 font-bold">79.5% 승률</td><td>53회 발생, 12M 평균 +12.6%</td></tr><tr><td class="py-1"><strong>Bearish ≥ 55%</strong></td><td>72.7% 승률</td><td>42회 발생</td></tr></table></div><div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-3"><p class="font-bold text-blue-800">💡 왜 효과적인가?</p><ul class="list-disc ml-4 mt-1 text-sm"><li><strong>군중 심리 = 틀린다</strong>: 개인투자자가 극도로 비관적일 때가 오히려 바닥</li><li><strong>극단값에서만 유효</strong>: 평상시 노이즈, 극단에서 시그널</li><li><strong>최장 역사</strong>: 1987년부터 37년 데이터로 검증</li></ul></div><p class="text-sm text-slate-600"><strong>🔍 활용법</strong>: Bearish 60%+ 발생 시 VIX, CNN F&G도 함께 확인. 가격이 지지되면 적극 매수 검토.</p>' },
+      vix: { icon: '⚡', title: 'VIX + MOVE Volatility', desc: '주식 + 채권 변동성', chart: 'charts/chart-vix-move.html',
+        stats: [{v:'32.5',l:'VIX'},{v:'95',l:'MOVE'},{v:'2020~',l:'데이터'}],
+        what: '<p class="mb-3"><strong>VIX(Volatility Index)</strong>와 <strong>MOVE Index</strong>를 함께 표시합니다.</p><div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-orange-50 p-3 rounded"><p class="font-bold text-orange-700">VIX (주황색)</p><ul class="text-sm mt-1"><li>S&P 500 옵션 30일 내재변동성</li><li>"공포 지수"라고도 불림</li><li>주식시장 변동성 측정</li></ul></div><div class="bg-teal-50 p-3 rounded"><p class="font-bold text-teal-700">MOVE (청록색)</p><ul class="text-sm mt-1"><li>미국채 옵션 변동성</li><li>"채권의 VIX"</li><li>금리 시장 스트레스 측정</li></ul></div></div><p class="text-slate-500 text-sm">⏰ 업데이트: 실시간 | 📅 데이터: VIX 1990년~, MOVE 1988년~</p>',
+        how: '<p class="mb-3"><strong>VIX 임계값</strong> (주식시장 공포 수준):</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-300"></span><strong>VIX < 12</strong>: 자기만족 → <span class="text-amber-600">조정 취약</span></div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-500"></span><strong>VIX 12~20</strong>: 정상 범위</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-yellow-500"></span><strong>VIX 20~30</strong>: 불안 증가</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-orange-500"></span><strong>VIX 30~40</strong>: 공포 확산</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>VIX ≥ 40</strong>: 패닉 → <span class="text-green-600 font-bold">역발상 매수 기회</span></div></div><p class="mb-2"><strong>MOVE 임계값</strong> (채권시장 스트레스):</p><ul class="list-disc ml-4 text-sm"><li><strong>< 60</strong>: 채권 안정 | <strong>60~100</strong>: 불안 | <strong>> 100</strong>: 높은 스트레스</li></ul>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">⚡ 시장 바닥을 알려주는 "공포 지수"</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 VIX 패닉 매수 신호</p><table class="w-full text-sm mt-2"><tr class="border-b"><td class="py-1"><strong>VIX ≥ 40</strong></td><td class="text-green-600 font-bold">~100% 승률</td><td>35년 백테스트, 모두 시장 바닥</td></tr><tr class="border-b"><td class="py-1"><strong>VIX 30~40</strong></td><td>~75% 승률</td><td>12개월 평균 +15%</td></tr><tr><td class="py-1">2020년 3월 VIX 82.7</td><td colspan="2">→ 12개월 후 +76%</td></tr></table></div><div class="bg-amber-50 border-l-4 border-amber-500 p-3 mb-3"><p class="font-bold text-amber-800">⚠️ VIX + MOVE 동시 급등</p><ul class="list-disc ml-4 mt-1 text-sm"><li>주식 + 채권 동시 불안 = <strong>시스템 위기 신호</strong></li><li>역사적 사례: 2008 금융위기, 2020 코로나</li><li>이때는 현금 비중 확대 고려</li></ul></div><div class="bg-blue-50 border-l-4 border-blue-500 p-3"><p class="font-bold text-blue-800">💡 낮은 VIX 경고</p><p class="text-sm mt-1">VIX < 12 장기 지속 = 안일함. 갑작스러운 충격에 취약한 상태. 2017년 말~2018년 초 사례.</p></div>' },
+      crypto: { icon: '₿', title: 'Crypto Fear & Greed', desc: '암호화폐 심리', chart: 'charts/chart-crypto-fg.html',
+        stats: [{v:'35',l:'현재값'},{v:'Fear',l:'상태'},{v:'2,885',l:'데이터'}],
+        what: '<p class="mb-3"><strong>Alternative.me</strong>에서 제공하는 암호화폐 시장 종합 심리 지표입니다. 0~100 범위로, 비트코인 중심의 시장 분위기를 측정합니다.</p><p class="mb-3"><strong>📊 구성요소 (가중치)</strong>:</p><div class="grid grid-cols-2 gap-2 text-sm"><div class="bg-slate-50 p-2 rounded"><strong>변동성</strong>: 25%</div><div class="bg-slate-50 p-2 rounded"><strong>모멘텀/거래량</strong>: 25%</div><div class="bg-slate-50 p-2 rounded"><strong>소셜미디어</strong>: 15%</div><div class="bg-slate-50 p-2 rounded"><strong>설문조사</strong>: 15%</div><div class="bg-slate-50 p-2 rounded"><strong>BTC 점유율</strong>: 10%</div><div class="bg-slate-50 p-2 rounded"><strong>Google 트렌드</strong>: 10%</div></div><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매일 | 📅 데이터: 2018년 2월~</p>',
+        how: '<p class="mb-3">CNN F&G와 동일한 0~100 범위를 사용합니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>0~25</strong>: Extreme Fear (극단적 공포)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-400"></span><strong>25~45</strong>: Fear (공포)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>45~55</strong>: Neutral (중립)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-400"></span><strong>55~75</strong>: Greed (탐욕)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>75~100</strong>: Extreme Greed (극단적 탐욕)</div></div><p class="text-slate-600 text-sm"><strong>💡 특징</strong>: 주식보다 변동성이 커서 극단값이 더 자주 발생합니다.</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">₿ 암호화폐 역발상 투자</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 매수 검토 구간</p><ul class="list-disc ml-4 mt-1 text-sm"><li><strong>Extreme Fear ≤ 25</strong>: 역발상 매수 기회</li><li><strong>특히 ≤ 10</strong>: 패닉 매도 후 반등 확률 높음</li><li>2022년 6월 6점 → 이후 장기 바닥 형성</li></ul></div><div class="bg-amber-50 border-l-4 border-amber-500 p-3 mb-3"><p class="font-bold text-amber-800">⚠️ 주식시장과의 관계</p><ul class="list-disc ml-4 mt-1 text-sm"><li><strong>리스크 온/오프</strong> 국면에서 S&P 500과 동조화 경향</li><li>주식 하락 시 암호화폐도 함께 하락하는 경우 많음</li><li>CNN F&G와 함께 확인하면 시장 전체 심리 파악</li></ul></div><p class="text-sm text-slate-600"><strong>🔍 활용법</strong>: 암호화폐 투자 시 타이밍 참고. 단, 주식보다 변동성이 크므로 리스크 관리 필수.</p>' },
+      momentum: { icon: '🚀', title: 'Market Momentum', desc: 'S&P 500 vs 125일 MA', chart: 'charts/chart-cnn-momentum.html',
+        stats: [{v:'67',l:'점수'},{v:'Greed',l:'신호'},{v:'+2.3%',l:'vs MA'}],
+        what: '<p class="mb-3"><strong>S&P 500과 125일 이동평균선(MA)</strong>의 관계를 보여줍니다. CNN Fear & Greed Index의 구성요소 중 하나입니다.</p><p class="mb-3"><strong>📊 차트 구성</strong>:</p><ul class="list-disc ml-4 space-y-1 text-sm"><li><strong>파란 라인</strong>: S&P 500 지수</li><li><strong>주황 점선</strong>: 125일 이동평균선 (약 반년 추세)</li><li><strong>녹색 영역</strong>: MA 위 = 상승 추세 (Greed)</li><li><strong>적색 영역</strong>: MA 아래 = 하락 추세 (Fear)</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매일 | 📅 데이터: 2020년~</p>',
+        how: '<p class="mb-3"><strong>S&P 500과 MA의 위치 관계</strong>로 추세를 판단합니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>가격 > MA +5%</strong>: Strong Greed (과열 구간)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-400"></span><strong>가격 > MA</strong>: Greed (상승 추세)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>가격 ≈ MA</strong>: Neutral (추세 전환 가능)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-400"></span><strong>가격 < MA</strong>: Fear (하락 추세)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>가격 < MA -5%</strong>: Strong Fear (급락 구간)</div></div><p class="text-slate-600 text-sm"><strong>💡 핵심</strong>: MA를 상향 돌파/하향 이탈 시점이 추세 전환의 초기 신호.</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">🚀 추세 확인의 기본 도구</p><div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-3"><p class="font-bold text-blue-800">📈 MA 활용법</p><ul class="list-disc ml-4 mt-1 text-sm"><li><strong>MA 위</strong>: 상승장. 매수 우위 전략</li><li><strong>MA 아래</strong>: 하락장. 현금/방어 전략</li><li><strong>MA 접근 시</strong>: 지지/저항으로 작용 가능</li></ul></div><div class="bg-amber-50 border-l-4 border-amber-500 p-3 mb-3"><p class="font-bold text-amber-800">⚠️ 평균 회귀 원리</p><ul class="list-disc ml-4 mt-1 text-sm"><li>MA 대비 <strong>+10% 이상</strong>: 과열, 되돌림 가능성</li><li>MA 대비 <strong>-10% 이상</strong>: 과매도, 반등 가능성</li><li>단, 강세장/약세장에서는 괴리 지속 가능</li></ul></div><p class="text-sm text-slate-600"><strong>🔍 활용법</strong>: 단독보다는 다른 심리 지표(VIX, AAII)와 함께 확인. 추세 방향 확인용으로 활용.</p>' },
+      strength: { icon: '💪', title: 'Stock Price Strength', desc: '52주 신고가 vs 신저가', chart: 'charts/chart-cnn-strength.html',
+        stats: [{v:'45',l:'점수'},{v:'Neutral',l:'신호'},{v:'1.2x',l:'H/L'}],
+        what: '<p class="mb-3"><strong>NYSE 52주 신고가/신저가 비율</strong>입니다. CNN Fear & Greed Index 구성요소 중 하나로, 시장 전체의 강도(Strength)를 측정합니다.</p><p class="mb-3"><strong>📊 차트 해석</strong>:</p><ul class="list-disc ml-4 space-y-1 text-sm"><li><strong>양수(+) 영역</strong>: 신고가 종목 > 신저가 종목 = 시장 강세</li><li><strong>음수(-) 영역</strong>: 신저가 종목 > 신고가 종목 = 시장 약세</li><li><strong>0 라인</strong>: 균형점 (신고가 = 신저가)</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매일 | 📅 데이터: 2020년~</p>',
+        how: '<p class="mb-3"><strong>비율 값</strong>으로 시장 강도를 판단합니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>> +3.0</strong>: Strong Greed (신고가 압도적)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-400"></span><strong>+1.0 ~ +3.0</strong>: Greed (신고가 우세)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>-1.0 ~ +1.0</strong>: Neutral (균형)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-400"></span><strong>-3.0 ~ -1.0</strong>: Fear (신저가 우세)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>< -3.0</strong>: Strong Fear (신저가 압도적)</div></div><p class="text-slate-600 text-sm"><strong>💡 핵심</strong>: S&P 500 오버레이로 지수와 강도의 동조/괴리를 확인하세요.</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">💪 시장 폭(Breadth) 분석의 핵심</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 건강한 상승장 조건</p><ul class="list-disc ml-4 mt-1 text-sm"><li>지수 상승 <strong>+</strong> 신고가 종목 확대 = 건강한 랠리</li><li>다양한 섹터에서 신고가 발생해야 지속 가능</li><li>신고가 종목이 계속 늘면 추세 신뢰도 높음</li></ul></div><div class="bg-red-50 border-l-4 border-red-500 p-3 mb-3"><p class="font-bold text-red-800">⚠️ 다이버전스 경고</p><ul class="list-disc ml-4 mt-1 text-sm"><li>지수 상승 <strong>but</strong> 신고가 감소 = <span class="text-red-600 font-bold">좁은 랠리</span></li><li>소수 대형주만 끌어올리는 상태 = 취약</li><li>2021년 말 사례: 지수 신고가 but 개별 종목 부진</li></ul></div><div class="bg-blue-50 border-l-4 border-blue-500 p-3"><p class="font-bold text-blue-800">💡 바닥 신호</p><p class="text-sm mt-1">신저가 급증 후 감소 = 매도 압력 소진. 가격 안정과 함께 확인 시 바닥 신호.</p></div>' },
+      breadth: { icon: '📈', title: 'Market Breadth', desc: 'McClellan 합산 지수', chart: 'charts/chart-cnn-breadth.html',
+        stats: [{v:'52',l:'점수'},{v:'Neutral',l:'신호'},{v:'+450',l:'MCSI'}],
+        what: '<p class="mb-3"><strong>McClellan Volume Summation Index (MVSI)</strong>는 시장 참여 폭을 측정합니다. CNN Fear & Greed Index 구성요소 중 하나입니다.</p><p class="mb-3"><strong>📊 계산 원리</strong>:</p><ul class="list-disc ml-4 space-y-1 text-sm"><li><strong>상승 종목 거래량</strong> vs <strong>하락 종목 거래량</strong>의 차이</li><li>이 차이를 누적(Summation)하여 장기 추세 파악</li><li>양수 = 상승 종목에 자금 집중, 음수 = 하락 종목에 자금 집중</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매일 | 📅 데이터: 2020년~</p>',
+        how: '<p class="mb-3"><strong>MVSI 값</strong>으로 시장 폭을 판단합니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>상위 33% 이상</strong>: Greed (상승 종목 거래량 집중)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>33% ~ 67%</strong>: Neutral (균형)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>하위 33% 이하</strong>: Fear (하락 종목 거래량 집중)</div></div><p class="text-sm text-slate-600 mb-2">※ 백분위 기반 동적 임계값을 사용합니다.</p><p class="text-slate-600 text-sm"><strong>💡 핵심</strong>: 절대값보다 <strong>방향 변화</strong>가 중요합니다. 상승 전환 / 하락 전환 시점 주목.</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">📈 거래량 기반 시장 건강 진단</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">✅ 건강한 상승장</p><ul class="list-disc ml-4 mt-1 text-sm"><li>지수 상승 <strong>+</strong> Breadth 상승 = 폭넓은 참여</li><li>다수 종목이 상승에 동참 = 추세 신뢰도 높음</li></ul></div><div class="bg-red-50 border-l-4 border-red-500 p-3 mb-3"><p class="font-bold text-red-800">⚠️ 다이버전스 경고</p><ul class="list-disc ml-4 mt-1 text-sm"><li>지수 상승 <strong>but</strong> Breadth 하락 = <span class="text-red-600 font-bold">위험 신호</span></li><li>소수 대형주만 상승, 대다수 종목은 하락</li><li>상승 지속 어려움, 조정 가능성 높음</li></ul></div><div class="bg-blue-50 border-l-4 border-blue-500 p-3"><p class="font-bold text-blue-800">💡 극단값 활용</p><p class="text-sm mt-1">과매수(상위 극단) / 과매도(하위 극단) 영역에서 반전 가능성 증가. 다른 지표와 함께 확인.</p></div>' },
+      putcall: { icon: '⚖️', title: 'Put/Call Ratio', desc: '5일 평균', chart: 'charts/chart-cnn-put-call.html',
+        stats: [{v:'38',l:'점수'},{v:'Fear',l:'신호'},{v:'1.15',l:'비율'}],
+        what: '<p class="mb-3"><strong>Put/Call Ratio</strong>는 풋옵션과 콜옵션의 거래량 비율입니다. CNN Fear & Greed Index 구성요소 중 하나입니다.</p><div class="bg-violet-50 border-l-4 border-violet-500 p-3 mb-3"><p class="font-bold text-violet-700">⚠️ 역논리 지표 (Contrarian Indicator)</p><p class="text-sm mt-1">높은 P/C = Fear 표시지만, <strong>역발상으로는 매수 신호</strong>입니다!</p></div><p class="mb-3"><strong>📊 계산</strong>: CBOE 5일 평균 (Put 거래량 ÷ Call 거래량)</p><ul class="list-disc ml-4 space-y-1 text-sm"><li><strong>풋(Put)</strong>: 하락에 베팅하는 옵션</li><li><strong>콜(Call)</strong>: 상승에 베팅하는 옵션</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매일 | 📅 데이터: 2020년~</p>',
+        how: '<p class="mb-3"><strong>P/C 비율</strong>로 투자자 심리를 판단합니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>≥ 1.2</strong>: 극단적 비관 → <span class="text-green-600 font-bold">역발상 매수 기회!</span></div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-400"></span><strong>1.0 ~ 1.2</strong>: 비관 (풋 > 콜)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>0.7 ~ 1.0</strong>: 정상 범위</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-400"></span><strong>0.6 ~ 0.7</strong>: 낙관 (콜 > 풋)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>< 0.6</strong>: 극단적 낙관 → <span class="text-red-600 font-bold">조정 취약</span></div></div><p class="text-slate-600 text-sm"><strong>💡 핵심</strong>: 높은 P/C = 공포 → 역발상 매수. 낮은 P/C = 자기만족 → 조정 경계.</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">⚖️ 학술적으로 검증된 역발상 지표</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 매수 신호 (P/C 극단적 상승)</p><table class="w-full text-sm mt-2"><tr class="border-b"><td class="py-1"><strong>P/C ≥ 1.2</strong></td><td class="text-green-600 font-bold">68% 반전 확률</td><td>Billingsley & Chance 1988</td></tr><tr><td class="py-1 pt-2" colspan="3">극단적 풋 매수 = 패닉 정점 = 매도 소진</td></tr></table></div><div class="bg-red-50 border-l-4 border-red-500 p-3 mb-3"><p class="font-bold text-red-800">⚠️ 경고 신호 (P/C 극단적 하락)</p><table class="w-full text-sm mt-2"><tr class="border-b"><td class="py-1"><strong>P/C < 0.6 지속</strong></td><td class="text-red-600 font-bold">68% 조정 확률</td><td>10년 데이터 분석</td></tr><tr><td class="py-1 pt-2" colspan="3">모두가 낙관 = 추가 매수 여력 부족</td></tr></table></div><p class="text-sm text-slate-600"><strong>🔍 활용법</strong>: P/C 극단값 + VIX 급등 시 = 강력한 바닥 신호. 단독보다 복합 사용 권장.</p>' },
+      safehaven: { icon: '🛡️', title: 'Safe Haven Demand', desc: '주식 vs 채권 수익률', chart: 'charts/chart-cnn-safe-haven.html',
+        stats: [{v:'55',l:'점수'},{v:'Neutral',l:'신호'},{v:'+1.5%',l:'스프레드'}],
+        what: '<p class="mb-3"><strong>Safe Haven Demand</strong>는 주식(S&P 500)과 국채(20년물)의 <strong>20일 수익률 차이</strong>를 측정합니다. CNN Fear & Greed Index 구성요소입니다.</p><div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-3"><p class="font-bold text-blue-700">🔍 무엇을 측정하나?</p><p class="text-sm mt-1">투자자들이 <strong>위험자산(주식)</strong> vs <strong>안전자산(국채)</strong> 중 어디에 돈을 투자하는지</p></div><p class="mb-3"><strong>📊 계산 방식</strong>:</p><ul class="list-disc ml-4 space-y-1 text-sm"><li>S&P 500 20일 수익률 - 국채 20일 수익률</li><li><strong>양수(+)</strong>: 주식이 더 잘 나감 → 위험선호</li><li><strong>음수(-)</strong>: 국채가 더 잘 나감 → 안전자산 선호</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매일 | 📅 데이터: 2020년~</p>',
+        how: '<p class="mb-3"><strong>수익률 차이</strong>로 자금 흐름을 판단합니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>> +3%</strong>: 극단적 위험선호 → <span class="text-amber-600 font-bold">과열 경고</span></div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-400"></span><strong>+1% ~ +3%</strong>: 위험선호 (Greed)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>-1% ~ +1%</strong>: 균형 상태 (Neutral)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-400"></span><strong>-3% ~ -1%</strong>: 안전자산 선호 (Fear)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>< -3%</strong>: 극단적 안전자산 도피 → <span class="text-green-600 font-bold">역발상 매수 검토</span></div></div><p class="text-slate-600 text-sm"><strong>💡 핵심</strong>: 채권 급등(=주식 급락) 시 극단적 Fear 신호</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">📊 자금 흐름 후행 지표</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 매수 신호 (극단적 채권 선호)</p><table class="w-full text-sm mt-2"><tr class="border-b"><td class="py-1"><strong>차이 < -3%</strong></td><td class="text-green-600 font-bold">바닥 신호</td><td>패닉 셀링 + 채권 도피</td></tr><tr><td class="py-1 pt-2" colspan="3">2020년 3월, 2022년 6월에 이 패턴 후 반등</td></tr></table></div><div class="bg-amber-50 border-l-4 border-amber-500 p-3 mb-3"><p class="font-bold text-amber-800">⚠️ 주의사항</p><ul class="list-disc ml-4 text-sm mt-2 space-y-1"><li><strong>후행 지표</strong>: 이미 일어난 자금 이동 반영</li><li><strong>금리 환경</strong>: 금리 상승기엔 해석 주의 필요</li><li><strong>단독 사용 ❌</strong>: VIX, 거래량과 함께 확인</li></ul></div><p class="text-sm text-slate-600"><strong>🔍 활용법</strong>: 극단적 채권 도피 + VIX 급등 + 거래량 폭발 = 강력한 바닥 신호</p>' },
+      junkbond: { icon: '💰', title: 'Junk Bond Demand', desc: 'HY vs IG 스프레드', chart: 'charts/chart-cnn-junk-bond.html',
+        stats: [{v:'62',l:'점수'},{v:'Greed',l:'신호'},{v:'3.2%',l:'스프레드'}],
+        what: '<p class="mb-3"><strong>Junk Bond Demand</strong>는 정크본드(고위험 채권)와 투자등급 채권의 <strong>금리 스프레드</strong>를 측정합니다. CNN Fear & Greed Index 구성요소입니다.</p><div class="bg-amber-50 border-l-4 border-amber-500 p-3 mb-3"><p class="font-bold text-amber-700">⚠️ 역논리 지표 (Contrarian)</p><p class="text-sm mt-1">스프레드 축소 = Greed 신호, 스프레드 확대 = Fear 신호</p></div><p class="mb-3"><strong>📊 계산 방식</strong>:</p><ul class="list-disc ml-4 space-y-1 text-sm"><li><strong>HY(High Yield)</strong>: 정크본드 금리 (BB등급 이하)</li><li><strong>IG(Investment Grade)</strong>: 투자등급 채권 금리</li><li>스프레드 = HY 금리 - IG 금리</li></ul><p class="mt-3 text-slate-500 text-sm">⏰ 업데이트: 매일 | 📅 데이터: 2020년~</p>',
+        how: '<p class="mb-3"><strong>스프레드 수준</strong>으로 신용 리스크 선호도를 판단합니다:</p><div class="space-y-2 mb-4"><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-600"></span><strong>> 6%</strong>: 극단적 신용 스트레스 → <span class="text-green-600 font-bold">역발상 매수 검토</span></div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-red-400"></span><strong>4% ~ 6%</strong>: 신용 우려 (Fear)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-gray-300"></span><strong>2.5% ~ 4%</strong>: 정상 범위 (Neutral)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-400"></span><strong>2% ~ 2.5%</strong>: 위험선호 (Greed)</div><div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-green-600"></span><strong>< 2%</strong>: 극단적 위험선호 → <span class="text-amber-600 font-bold">과열 경고</span></div></div><p class="text-slate-600 text-sm"><strong>💡 핵심</strong>: 스프레드 급등 = 부도 우려 = Fear. 스프레드 축소 = 리스크 무시 = Greed</p>',
+        insight: '<p class="mb-3 font-semibold text-slate-700">💹 신용시장 스트레스 지표</p><div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3"><p class="font-bold text-green-800">📈 역사적 매수 신호 (스프레드 급등)</p><table class="w-full text-sm mt-2"><tr class="border-b"><td class="py-1"><strong>2008년 금융위기</strong></td><td class="text-green-600 font-bold">21%+</td><td>→ 2009년 3월 바닥</td></tr><tr class="border-b"><td class="py-1"><strong>2020년 3월</strong></td><td class="text-green-600 font-bold">10%+</td><td>→ 4월 급반등</td></tr><tr><td class="py-1 pt-2" colspan="3">극단적 스프레드 = 패닉 정점 = 매수 기회</td></tr></table></div><div class="bg-red-50 border-l-4 border-red-500 p-3 mb-3"><p class="font-bold text-red-800">⚠️ 경고 신호 (스프레드 극단적 축소)</p><ul class="list-disc ml-4 text-sm mt-2 space-y-1"><li><strong>스프레드 < 2% 장기 지속</strong>: 리스크 무시 → 조정 취약</li><li><strong>2021년 말</strong>: 스프레드 역대 최저 → 2022년 약세장</li></ul></div><p class="text-sm text-slate-600"><strong>🔍 활용법</strong>: 신용 스프레드 + VIX + 거래량 함께 확인. 스프레드 급등 시 역발상 매수 검토.</p>' }
+    };
+
+    let currentKey = 'cnn';
+
+    function showHome() {
+      document.getElementById('view-home').style.display = 'block';
+      document.getElementById('view-detail').style.display = 'none';
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelector('.nav-item').classList.add('active');
+      if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('expanded');
+    }
+
+    function showDetail(key) {
+      currentKey = key;
+      const d = data[key];
+      document.getElementById('detailChart').src = d.chart;
+
+      // 동적 stats 생성 (CURRENT_VALUES 사용)
+      const stats = getDynamicStats(key);
+
+      let miniHtml = `<span class="mini-stat"><span class="label">${d.icon}</span><span class="value indicator-title">${d.title}</span></span>`;
+      stats.forEach(s => {
+        miniHtml += `<div class="mini-stat"><span class="label">${s.label}</span><span class="value ${s.color}">${s.value}</span></div>`;
+      });
+      document.getElementById('miniStats').innerHTML = miniHtml;
+
+      showDescTab('what');
+      document.getElementById('view-home').style.display = 'none';
+      document.getElementById('view-detail').style.display = 'block';
+
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      if (event && event.currentTarget) event.currentTarget.classList.add('active');
+      if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('expanded');
+    }
+
+    // 동적 stats 생성 함수
+    function getDynamicStats(key) {
+      const fmt = (v, decimals = 0) => v != null ? (decimals ? v.toFixed(decimals) : Math.round(v)) : '--';
+      const fmtK = (v) => v != null ? (v / 1000).toFixed(0) + 'K' : '--';
+      const fmtPct = (v) => v != null ? (v >= 0 ? '+' : '') + Math.round(v) + '%' : '--';
+
+      // F&G 상태 판정 (0-100)
+      const getFGStatus = (v) => {
+        if (v == null) return { text: '--', color: '' };
+        if (v <= 25) return { text: 'Extreme Fear', color: 'fear' };
+        if (v <= 45) return { text: 'Fear', color: 'fear' };
+        if (v <= 55) return { text: 'Neutral', color: 'neutral' };
+        if (v <= 75) return { text: 'Greed', color: 'greed' };
+        return { text: 'Extreme Greed', color: 'greed' };
+      };
+
+      // CFTC 바이어스 판정
+      const getCFTCBias = (v) => {
+        if (v == null) return { text: '--', color: '' };
+        if (v < -100000) return { text: 'Strong Bear', color: 'fear' };
+        if (v < 0) return { text: 'Bearish', color: 'fear' };
+        if (v > 100000) return { text: 'Strong Bull', color: 'greed' };
+        return { text: 'Neutral', color: 'neutral' };
+      };
+
+      // AAII Spread 상태
+      const getSpreadStatus = (v) => {
+        if (v == null) return { text: '--', color: '' };
+        if (v <= -20) return { text: 'Bearish', color: 'fear' };
+        if (v < 0) return { text: 'Slightly Bear', color: 'fear' };
+        if (v >= 20) return { text: 'Bullish', color: 'greed' };
+        return { text: 'Neutral', color: 'neutral' };
+      };
+
+      switch (key) {
+        case 'cnn': {
+          const v = CURRENT_VALUES.cnn_fg;
+          const status = getFGStatus(v);
+          return [
+            { label: 'Current', value: fmt(v), color: status.color },
+            { label: 'Status', value: status.text, color: status.color }
+          ];
+        }
+        case 'cftc': {
+          const v = CURRENT_VALUES.cftc_net;
+          const bias = getCFTCBias(v);
+          return [
+            { label: 'Net Pos', value: fmtK(v), color: v < 0 ? 'fear' : 'greed' },
+            { label: 'Bias', value: bias.text, color: bias.color }
+          ];
+        }
+        case 'aaii': {
+          const v = CURRENT_VALUES.aaii_spread;
+          const status = getSpreadStatus(v);
+          return [
+            { label: 'Bull-Bear', value: fmtPct(v), color: v < 0 ? 'fear' : 'greed' },
+            { label: 'Status', value: status.text, color: status.color }
+          ];
+        }
+        case 'vix': {
+          const vix = CURRENT_VALUES.vix;
+          const move = CURRENT_VALUES.move;
+          return [
+            { label: 'VIX', value: fmt(vix, 1), color: vix >= 30 ? 'fear' : (vix >= 20 ? 'neutral' : 'greed') },
+            { label: 'MOVE', value: fmt(move, 1), color: move >= 120 ? 'fear' : (move >= 80 ? 'neutral' : 'greed') }
+          ];
+        }
+        case 'crypto': {
+          const v = CURRENT_VALUES.crypto_fg;
+          const status = getFGStatus(v);
+          return [
+            { label: 'Current', value: fmt(v), color: status.color },
+            { label: 'Status', value: status.text, color: status.color }
+          ];
+        }
+        case 'momentum': {
+          const v = CURRENT_VALUES.momentum;
+          const status = getFGStatus(v);
+          return [
+            { label: 'Score', value: fmt(v), color: status.color },
+            { label: 'Signal', value: status.text, color: status.color }
+          ];
+        }
+        case 'strength': {
+          const v = CURRENT_VALUES.strength;
+          const status = getFGStatus(v);
+          return [
+            { label: 'Score', value: fmt(v), color: status.color },
+            { label: 'Signal', value: status.text, color: status.color }
+          ];
+        }
+        case 'breadth': {
+          const v = CURRENT_VALUES.breadth;
+          const status = getFGStatus(v);
+          return [
+            { label: 'Score', value: fmt(v), color: status.color },
+            { label: 'Signal', value: status.text, color: status.color }
+          ];
+        }
+        case 'putcall': {
+          const score = CURRENT_VALUES.putcall;
+          const ratio = CURRENT_VALUES.putcall_ratio;
+          const status = getFGStatus(score);
+          return [
+            { label: 'Score', value: fmt(score), color: status.color },
+            { label: 'Ratio', value: ratio != null ? ratio.toFixed(2) : '--', color: ratio >= 1.0 ? 'fear' : 'greed' }
+          ];
+        }
+        case 'safehaven': {
+          const v = CURRENT_VALUES.safehaven;
+          const status = getFGStatus(v);
+          return [
+            { label: 'Score', value: fmt(v), color: status.color },
+            { label: 'Signal', value: status.text, color: status.color }
+          ];
+        }
+        case 'junkbond': {
+          const v = CURRENT_VALUES.junkbond;
+          const status = getFGStatus(v);
+          return [
+            { label: 'Score', value: fmt(v), color: status.color },
+            { label: 'Signal', value: status.text, color: status.color }
+          ];
+        }
+        default:
+          return [];
+      }
+    }
+
+    function showDescTab(tab, el) {
+      const d = data[currentKey];
+      document.getElementById('descContent').innerHTML = d[tab] || d.what;
+      document.querySelectorAll('.desc-tab').forEach(t => t.classList.remove('active'));
+      if (el) el.classList.add('active');
+      else document.querySelector('.desc-tab[data-tab="what"]').classList.add('active');
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('expanded');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const mobileToggle = document.getElementById('mobileToggle');
+      if (mobileToggle) {
+        const handleToggle = (event) => {
+          event.preventDefault();
+          toggleSidebar();
+        };
+        mobileToggle.addEventListener('click', handleToggle);
+        mobileToggle.addEventListener('touchend', handleToggle);
+      }
+    });
+
+    // ===== 100x COMBO SIGNALS™ =====
+    const COMBO_SIGNALS = [
+      {
+        id: 'vix-panic',
+        name: 'VIX Panic Buy',
+        icon: '⚡',
+        category: 'buy',
+        conditions: [{ indicator: 'vix', operator: '>=', value: 40, label: 'VIX ≥ 40' }],
+        winRate: '~100%',
+        avgReturn: '+35%',
+        sampleSize: '20년+',
+        priority: 5
+      },
+      {
+        id: 'aaii-extreme',
+        name: 'AAII Extreme Bear',
+        icon: '👥',
+        category: 'buy',
+        conditions: [{ indicator: 'aaii_bearish', operator: '>=', value: 60, label: 'Bearish ≥ 60%' }],
+        winRate: '100%',
+        avgReturn: '+27%',
+        sampleSize: '1987~',
+        priority: 5
+      },
+      {
+        id: 'cnn-extreme-fear',
+        name: 'CNN Extreme Fear',
+        icon: '😰',
+        category: 'buy',
+        conditions: [{ indicator: 'cnn_fg', operator: '<=', value: 10, label: 'F&G ≤ 10' }],
+        winRate: '~90%',
+        avgReturn: '+20%',
+        sampleSize: '2011~',
+        priority: 4
+      },
+      {
+        id: 'triple-fear',
+        name: 'Triple Fear',
+        icon: '🎯',
+        category: 'buy',
+        conditions: [
+          { indicator: 'vix', operator: '>=', value: 30, label: 'VIX ≥ 30' },
+          { indicator: 'cnn_fg', operator: '<=', value: 25, label: 'CNN ≤ 25' },
+          { indicator: 'cftc_net', operator: '<', value: -150000, label: 'CFTC < -150K' }
+        ],
+        winRate: '~85%',
+        avgReturn: '+25%',
+        sampleSize: '2011~',
+        priority: 4
+      },
+      {
+        id: 'fear-consensus',
+        name: 'Fear Consensus',
+        icon: '🤝',
+        category: 'buy',
+        conditions: [
+          { indicator: 'vix', operator: '>=', value: 30, label: 'VIX ≥ 30' },
+          { indicator: 'cnn_fg', operator: '<=', value: 25, label: 'CNN ≤ 25' }
+        ],
+        winRate: '84%',
+        avgReturn: '+20%',
+        sampleSize: '2011~',
+        priority: 4
+      },
+      {
+        id: 'aaii-spread-panic',
+        name: 'AAII Spread Panic',
+        icon: '📉',
+        category: 'buy',
+        conditions: [{ indicator: 'aaii_spread', operator: '<=', value: -30, label: 'Spread ≤ -30' }],
+        winRate: '79.5%',
+        avgReturn: '+12.6%',
+        sampleSize: '1987~',
+        priority: 3
+      },
+      {
+        id: 'putcall-extreme-fear',
+        name: 'Put/Call Extreme',
+        icon: '⚖️',
+        category: 'buy',
+        conditions: [{ indicator: 'putcall_ratio', operator: '>=', value: 1.2, label: 'P/C ≥ 1.2' }],
+        winRate: '68%',
+        avgReturn: '+5%',
+        sampleSize: '10년+',
+        source: 'Billingsley & Chance 1988',
+        priority: 3
+      },
+      {
+        id: 'triple-greed',
+        name: 'Triple Greed',
+        icon: '🔥',
+        category: 'warn',
+        conditions: [
+          { indicator: 'vix', operator: '<', value: 15, label: 'VIX < 15' },
+          { indicator: 'cnn_fg', operator: '>=', value: 75, label: 'CNN ≥ 75' },
+          { indicator: 'cftc_net', operator: '>', value: 150000, label: 'CFTC > 150K' }
+        ],
+        correctionProb: '~70%',
+        sampleSize: '2011~',
+        priority: 4
+      },
+      {
+        id: 'greed-consensus',
+        name: 'Greed Consensus',
+        icon: '🤑',
+        category: 'warn',
+        conditions: [
+          { indicator: 'vix', operator: '<', value: 15, label: 'VIX < 15' },
+          { indicator: 'cnn_fg', operator: '>=', value: 75, label: 'CNN ≥ 75' }
+        ],
+        correctionProb: '~71%',
+        sampleSize: '2011~',
+        priority: 3
+      },
+      {
+        id: 'putcall-complacency',
+        name: 'Put/Call Low',
+        icon: '⚠️',
+        category: 'warn',
+        conditions: [{ indicator: 'putcall_ratio', operator: '<', value: 0.6, label: 'P/C < 0.6' }],
+        correctionProb: '68%',
+        sampleSize: '10년+',
+        source: 'Billingsley & Chance 1988',
+        priority: 3
+      }
+    ];
+
+    // Current market values (auto-updated from JSON)
+    let CURRENT_VALUES = {
+      vix: null, move: null, cnn_fg: null,
+      aaii_bearish: null, aaii_spread: null, cftc_net: null,
+      crypto_fg: null, putcall_ratio: null,
+      // CNN Components
+      momentum: null, strength: null, breadth: null,
+      putcall: null, safehaven: null, junkbond: null
+    };
+
+    // JSON 데이터 자동 로드 - 실제 sentiment 폴더 경로
+    const DATA_SOURCES = {
+      vix: '../../../../data/sentiment/vix.json',
+      move: '../../../../data/sentiment/move.json',
+      cnn: '../../../../data/sentiment/cnn-fear-greed.json',
+      aaii: '../../../../data/sentiment/aaii.json',
+      cftc: '../../../../data/sentiment/cftc-sp500.json',
+      crypto: '../../../../data/sentiment/crypto-fear-greed.json',
+      putcall: '../../../../data/sentiment/cnn-put-call.json',
+      components: '../../../../data/sentiment/cnn-components.json'
+    };
+
+    async function loadMarketData() {
+      try {
+        // 병렬 fetch로 성능 개선
+        const [vixRes, moveRes, cnnRes, aaiiRes, cftcRes, cryptoRes, pcRes, compRes] = await Promise.allSettled([
+          fetch(DATA_SOURCES.vix),
+          fetch(DATA_SOURCES.move),
+          fetch(DATA_SOURCES.cnn),
+          fetch(DATA_SOURCES.aaii),
+          fetch(DATA_SOURCES.cftc),
+          fetch(DATA_SOURCES.crypto),
+          fetch(DATA_SOURCES.putcall),
+          fetch(DATA_SOURCES.components)
+        ]);
+
+        // VIX
+        if (vixRes.status === 'fulfilled' && vixRes.value.ok) {
+          const vixData = await vixRes.value.json();
+          const latest = vixData[vixData.length - 1];
+          if (latest) CURRENT_VALUES.vix = latest.value;
+        }
+        // MOVE
+        if (moveRes.status === 'fulfilled' && moveRes.value.ok) {
+          const moveData = await moveRes.value.json();
+          const latest = moveData[moveData.length - 1];
+          if (latest) CURRENT_VALUES.move = latest.value;
+        }
+        // CNN F&G (score 필드)
+        if (cnnRes.status === 'fulfilled' && cnnRes.value.ok) {
+          const cnnData = await cnnRes.value.json();
+          const latest = cnnData[cnnData.length - 1];
+          if (latest) CURRENT_VALUES.cnn_fg = latest.score;
+        }
+        // AAII (bullish, bearish 필드)
+        if (aaiiRes.status === 'fulfilled' && aaiiRes.value.ok) {
+          const aaiiData = await aaiiRes.value.json();
+          const latest = aaiiData[aaiiData.length - 1];
+          if (latest) {
+            CURRENT_VALUES.aaii_bearish = latest.bearish;
+            CURRENT_VALUES.aaii_spread = (latest.bullish || 0) - (latest.bearish || 0);
+          }
+        }
+        // CFTC (net 필드)
+        if (cftcRes.status === 'fulfilled' && cftcRes.value.ok) {
+          const cftcData = await cftcRes.value.json();
+          const latest = cftcData[cftcData.length - 1];
+          if (latest) CURRENT_VALUES.cftc_net = latest.net;
+        }
+        // Crypto F&G (value 필드)
+        if (cryptoRes.status === 'fulfilled' && cryptoRes.value.ok) {
+          const cryptoData = await cryptoRes.value.json();
+          const latest = cryptoData[cryptoData.length - 1];
+          if (latest) CURRENT_VALUES.crypto_fg = latest.value;
+        }
+        // Put/Call Ratio (value 필드, 이미 ratio 형태)
+        if (pcRes.status === 'fulfilled' && pcRes.value.ok) {
+          const pcData = await pcRes.value.json();
+          const latest = pcData[pcData.length - 1];
+          if (latest) CURRENT_VALUES.putcall_ratio = latest.value;
+        }
+        // CNN Components
+        if (compRes.status === 'fulfilled' && compRes.value.ok) {
+          const compData = await compRes.value.json();
+          const latest = compData[compData.length - 1];
+          if (latest) {
+            CURRENT_VALUES.momentum = latest.market_momentum;
+            CURRENT_VALUES.strength = latest.stock_strength;
+            CURRENT_VALUES.breadth = latest.stock_breadth;
+            CURRENT_VALUES.putcall = latest.put_call;
+            CURRENT_VALUES.safehaven = latest.safe_haven;
+            CURRENT_VALUES.junkbond = latest.junk_bond;
+          }
+        }
+
+        console.log('✅ Market data loaded:', CURRENT_VALUES);
+      } catch (e) {
+        console.warn('Data load error:', e);
+      }
+      // 데이터 로드 후 렌더링
+      renderComboCards();
+      updateSidebarValues();
+      updateHeaderStatus();
+    }
+
+    // 헤더 상태 배지 업데이트
+    function updateHeaderStatus() {
+      const buySignals = COMBO_SIGNALS.filter(s => s.category === 'buy');
+      const warnSignals = COMBO_SIGNALS.filter(s => s.category === 'warn');
+
+      let buyActive = 0, warnActive = 0;
+      buySignals.forEach(s => { if (evaluateSignal(s).status === 'active') buyActive++; });
+      warnSignals.forEach(s => { if (evaluateSignal(s).status === 'active') warnActive++; });
+
+      const badge = document.getElementById('statusBadge');
+      const icon = document.getElementById('statusIcon');
+      const text = document.getElementById('statusText');
+      const time = document.getElementById('updateTime');
+
+      // 상태 결정
+      if (warnActive > 0) {
+        badge.className = 'status-badge fear';
+        icon.textContent = '⚠️';
+        text.textContent = `Warn ${warnActive} Active`;
+      } else if (buyActive > 0) {
+        badge.className = 'status-badge greed';
+        icon.textContent = '🎯';
+        text.textContent = `Buy ${buyActive} Active`;
+      } else {
+        badge.className = 'status-badge neutral';
+        icon.textContent = '📊';
+        text.textContent = 'No Active Signal';
+      }
+
+      // 업데이트 시간
+      const now = new Date();
+      time.textContent = `Updated: ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    }
+
+    function evaluateCondition(current, operator, threshold) {
+      switch (operator) {
+        case '>=': return current >= threshold;
+        case '<=': return current <= threshold;
+        case '>': return current > threshold;
+        case '<': return current < threshold;
+        case '==': return current === threshold;
+        default: return false;
+      }
+    }
+
+    function isNearCondition(current, operator, threshold) {
+      const margin = Math.abs(threshold * 0.1);
+      switch (operator) {
+        case '>=': return current >= threshold - margin && current < threshold;
+        case '<=': return current <= threshold + margin && current > threshold;
+        case '>': return current > threshold - margin && current <= threshold;
+        case '<': return current < threshold + margin && current >= threshold;
+        default: return false;
+      }
+    }
+
+    function evaluateSignal(signal) {
+      let metCount = 0;
+      let nearCount = 0;
+      const conditionDetails = [];
+      const total = signal.conditions.length;
+
+      for (const cond of signal.conditions) {
+        const current = CURRENT_VALUES[cond.indicator];
+        if (current === undefined) {
+          conditionDetails.push({ ...cond, current: 'N/A', status: 'unknown' });
+          continue;
+        }
+
+        if (evaluateCondition(current, cond.operator, cond.value)) {
+          metCount++;
+          conditionDetails.push({ ...cond, current, status: 'met' });
+        } else if (isNearCondition(current, cond.operator, cond.value)) {
+          nearCount++;
+          conditionDetails.push({ ...cond, current, status: 'near' });
+        } else {
+          conditionDetails.push({ ...cond, current, status: 'unmet' });
+        }
+      }
+
+      // NEAR = (N-1) conditions MET + at least 1 NEAR
+      // e.g., 3 conditions: 2 MET + 1 NEAR = NEAR, 0 MET + 1 NEAR = INACTIVE
+      const isNearState = (metCount === total - 1) && (nearCount >= 1);
+      const overallStatus = (metCount === total) ? 'active' : (isNearState ? 'near' : 'inactive');
+      return { status: overallStatus, conditions: conditionDetails };
+    }
+
+    function renderComboCards() {
+      const container = document.getElementById('comboGrid');
+      if (!container) return;
+
+      const buySignals = COMBO_SIGNALS.filter(s => s.category === 'buy');
+      const warnSignals = COMBO_SIGNALS.filter(s => s.category === 'warn');
+
+      let buyActive = 0, buyNear = 0;
+      let warnActive = 0, warnNear = 0;
+
+      let html = '';
+      [...buySignals, ...warnSignals].forEach(signal => {
+        const result = evaluateSignal(signal);
+        const status = result.status;
+        const isBuy = signal.category === 'buy';
+
+        if (status === 'active') { isBuy ? buyActive++ : warnActive++; }
+        if (status === 'near') { isBuy ? buyNear++ : warnNear++; }
+
+        // 조건별 상세 표시: 아이콘 + 목표 → 현재값
+        const conditionsHtml = result.conditions.map(c => {
+          const statusIcon = c.status === 'met' ? '✅' : (c.status === 'near' ? '🟡' : '⬜');
+          const currentDisplay = typeof c.current === 'number'
+            ? (Math.abs(c.current) >= 1000 ? (c.current/1000).toFixed(0) + 'K' : c.current.toFixed(1))
+            : c.current;
+          return `<span class="cond-item ${c.status}">
+            ${statusIcon} <span class="cond-target">${c.label}</span>
+            <span class="cond-arrow">→</span>
+            <span class="cond-current">${currentDisplay}</span>
+          </span>`;
+        }).join('');
+
+        const statValue = isBuy ? signal.winRate : signal.correctionProb;
+        const statClass = isBuy ? 'win' : 'warn';
+
+        html += `
+          <div class="combo-card ${status} ${signal.category}" data-signal="${signal.id}">
+            <div class="card-header">
+              <span class="card-icon">${signal.icon || '📊'}</span>
+              <span class="card-name">${signal.name}</span>
+              <span class="card-badge ${status}">${status.toUpperCase()}</span>
+            </div>
+            <div class="card-conditions">${conditionsHtml}</div>
+            <div class="card-stats">
+              <div class="stat">
+                <span class="stat-label">${isBuy ? '승률' : '조정'}:</span>
+                <span class="stat-value ${statClass}">${statValue}</span>
+              </div>
+              ${signal.avgReturn ? `<div class="stat"><span class="stat-label">평균:</span><span class="stat-value">${signal.avgReturn}</span></div>` : ''}
+              ${signal.sampleSize ? `<div class="stat"><span class="stat-label">표본:</span><span class="stat-value" style="color:#64748b;">${signal.sampleSize}</span></div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      // Update status bar
+      updateStatusBar(buySignals.length, buyActive, buyNear, warnSignals.length, warnActive, warnNear);
+    }
+
+    function updateStatusBar(buyTotal, buyActive, buyNear, warnTotal, warnActive, warnNear) {
+      const bar = document.getElementById('comboStatusBar');
+      if (!bar) return;
+
+      let buyDots = '';
+      for (let i = 0; i < buyTotal; i++) {
+        const cls = i < buyActive ? 'active' : (i < buyActive + buyNear ? 'near' : '');
+        buyDots += `<div class="status-dot ${cls}"></div>`;
+      }
+
+      let warnDots = '';
+      for (let i = 0; i < warnTotal; i++) {
+        const cls = i < warnActive ? 'active' : (i < warnActive + warnNear ? 'near' : '');
+        warnDots += `<div class="status-dot ${cls}"></div>`;
+      }
+
+      bar.innerHTML = `
+        <div class="status-group">
+          <span class="label">🟢 Buy (${buyActive}/${buyTotal})</span>
+          <div class="status-dots">${buyDots}</div>
+        </div>
+        <div class="status-divider"></div>
+        <div class="status-group">
+          <span class="label">🔴 Warn (${warnActive}/${warnTotal})</span>
+          <div class="status-dots">${warnDots}</div>
+        </div>
+      `;
+    }
+
+    // 사이드바 값 업데이트 - 실제 DOM 반영
+    function updateSidebarValues() {
+      // 값 포맷팅 + 색상 클래스 결정
+      const formatters = {
+        cnn_fg: (v) => ({ text: v != null ? Math.round(v) : '--', color: getColorClass(v, 'fg') }),
+        cftc_net: (v) => ({ text: v != null ? (v / 1000).toFixed(0) + 'K' : '--', color: getColorClass(v, 'cftc') }),
+        aaii_spread: (v) => ({ text: v != null ? (v >= 0 ? '+' : '') + Math.round(v) + '%' : '--', color: getColorClass(v, 'spread') }),
+        vix: (v) => ({ text: v != null ? v.toFixed(1) : '--', color: getColorClass(v, 'vix') }),
+        vix_move: () => {
+          // VIX + MOVE 병행 표시
+          const vix = CURRENT_VALUES.vix;
+          const move = CURRENT_VALUES.move;
+          const vixText = vix != null ? vix.toFixed(0) : '--';
+          const moveText = move != null ? Math.round(move) : '--';
+          // 색상: VIX 기준 (더 민감한 지표)
+          return { text: `${vixText}/${moveText}`, color: getColorClass(vix, 'vix') };
+        },
+        crypto_fg: (v) => ({ text: v != null ? Math.round(v) : '--', color: getColorClass(v, 'fg') }),
+        momentum: (v) => ({ text: v != null ? Math.round(v) : '--', color: getColorClass(v, 'fg') }),
+        strength: (v) => ({ text: v != null ? Math.round(v) : '--', color: getColorClass(v, 'fg') }),
+        breadth: (v) => ({ text: v != null ? Math.round(v) : '--', color: getColorClass(v, 'fg') }),
+        putcall: (v) => ({ text: v != null ? Math.round(v) : '--', color: getColorClass(v, 'fg') }),
+        safehaven: (v) => ({ text: v != null ? Math.round(v) : '--', color: getColorClass(v, 'fg') }),
+        junkbond: (v) => ({ text: v != null ? Math.round(v) : '--', color: getColorClass(v, 'fg') })
+      };
+
+      // DOM 업데이트
+      document.querySelectorAll('[data-indicator]').forEach(el => {
+        const indicator = el.dataset.indicator;
+        const value = CURRENT_VALUES[indicator];
+        const formatter = formatters[indicator];
+        if (formatter) {
+          const { text, color } = formatter(value);
+          const valueEl = el.querySelector('.value');
+          if (valueEl) {
+            valueEl.textContent = text;
+            valueEl.className = 'value ' + color;
+          }
+        }
+      });
+    }
+
+    // 색상 클래스 결정
+    function getColorClass(value, type) {
+      if (value == null) return 'text-gray-400';
+
+      switch (type) {
+        case 'fg': // Fear & Greed 스타일 (0-100)
+          if (value <= 25) return 'text-red-500';
+          if (value <= 45) return 'text-orange-500';
+          if (value <= 55) return 'text-amber-500';
+          if (value <= 75) return 'text-lime-500';
+          return 'text-green-500';
+        case 'vix': // VIX (낮을수록 좋음)
+          if (value >= 30) return 'text-red-500';
+          if (value >= 20) return 'text-amber-500';
+          return 'text-green-500';
+        case 'cftc': // CFTC Net (양수=bullish, 음수=bearish)
+          if (value < -100000) return 'text-red-500';
+          if (value < 0) return 'text-orange-500';
+          if (value > 100000) return 'text-green-500';
+          return 'text-amber-500';
+        case 'spread': // AAII Spread (양수=bullish, 음수=bearish)
+          if (value <= -20) return 'text-red-500';
+          if (value < 0) return 'text-orange-500';
+          if (value >= 20) return 'text-green-500';
+          return 'text-amber-500';
+        default:
+          return 'text-gray-500';
+      }
+    }
+
+    // Initialize: 데이터 로드 후 렌더링
+    document.addEventListener('DOMContentLoaded', loadMarketData);
+  </script>
+
+</body>
+</html>
