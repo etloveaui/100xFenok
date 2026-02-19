@@ -19,7 +19,44 @@ export const viewport: Viewport = {
   themeColor: '#3b82f6',
 };
 
-export default function PostsPage() {
+type PageProps = {
+  searchParams?: Promise<{ path?: string | string[] }>;
+};
+
+function sanitizePostsPath(rawPath?: string): string | null {
+  if (!rawPath) return null;
+
+  let decoded = rawPath;
+  try {
+    decoded = decodeURIComponent(rawPath);
+  } catch {
+    return null;
+  }
+
+  const normalized = decoded.replace(/^\/+/, '');
+  if (!normalized.startsWith('posts/')) return null;
+  if (!/^[A-Za-z0-9/_\-.?=&]+$/.test(normalized)) return null;
+  if (!normalized.includes('.html')) return null;
+  return normalized;
+}
+
+export default async function PostsPage({ searchParams }: PageProps) {
+  const params = searchParams ? await searchParams : {};
+  const rawPath = Array.isArray(params.path) ? params.path[0] : params.path;
+  const safePath = sanitizePostsPath(rawPath);
+
+  if (safePath) {
+    return (
+      <div className="route-embed-shell">
+        <iframe
+          src={`/${safePath}`}
+          title="Posts Detail"
+          className="h-full w-full border-0"
+        />
+      </div>
+    );
+  }
+
   return (
     <div 
       className="text-slate-800 min-h-screen"
@@ -39,7 +76,7 @@ export default function PostsPage() {
         <section className="mb-12 md:mb-16">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Featured Post</h2>
           <a
-            href="/posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html"
+            href="/posts?path=posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html"
             className="posts-card group block md:flex gap-6 md:gap-8 p-4 sm:p-6 md:p-8"
           >
             <div className="md:w-1/2 mb-6 md:mb-0">
@@ -77,7 +114,7 @@ export default function PostsPage() {
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Archive</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <a
-              href="/posts/2025-06-23_stablecoin-revolution-complete-masterplan.html"
+              href="/posts?path=posts/2025-06-23_stablecoin-revolution-complete-masterplan.html"
               className="posts-card group block p-5 sm:p-8"
             >
               <div className="flex justify-between items-start mb-4">
@@ -98,7 +135,7 @@ export default function PostsPage() {
             </a>
 
             <a
-              href="/posts/2025-06-22_playbook.html"
+              href="/posts?path=posts/2025-06-22_playbook.html"
               className="posts-card group block p-5 sm:p-8"
             >
               <div className="flex justify-between items-start mb-4">

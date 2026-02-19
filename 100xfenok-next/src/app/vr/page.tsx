@@ -18,7 +18,44 @@ export const viewport: Viewport = {
   themeColor: '#0ea5e9',
 };
 
-export default function VRPage() {
+type PageProps = {
+  searchParams?: Promise<{ path?: string | string[] }>;
+};
+
+function sanitizeVrPath(rawPath?: string): string | null {
+  if (!rawPath) return null;
+
+  let decoded = rawPath;
+  try {
+    decoded = decodeURIComponent(rawPath);
+  } catch {
+    return null;
+  }
+
+  const normalized = decoded.replace(/^\/+/, '');
+  if (!normalized.startsWith('vr/')) return null;
+  if (!/^[A-Za-z0-9/_\-.?=&]+$/.test(normalized)) return null;
+  if (!normalized.includes('.html')) return null;
+  return normalized;
+}
+
+export default async function VRPage({ searchParams }: PageProps) {
+  const params = searchParams ? await searchParams : {};
+  const rawPath = Array.isArray(params.path) ? params.path[0] : params.path;
+  const safePath = sanitizeVrPath(rawPath);
+
+  if (safePath) {
+    return (
+      <div className="route-embed-shell">
+        <iframe
+          src={`/${safePath}`}
+          title="VR Detail"
+          className="h-full w-full border-0"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="vr-page-bg vr-mathematical-bg min-h-screen overflow-x-clip pb-2"
       style={{
@@ -50,7 +87,7 @@ export default function VRPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 max-w-6xl mx-auto mb-12 md:mb-16">
-          <a href="/vr/vr-complete-system.html" className="vr-card p-5 sm:p-8 block">
+          <a href="/vr?path=vr/vr-complete-system.html" className="vr-card p-5 sm:p-8 block">
             <div className="flex justify-between items-start mb-6">
               <span className="vr-system-badge text-white text-sm font-bold px-4 py-2 rounded-full">
                 🔬 시스템 가이드
@@ -84,7 +121,7 @@ export default function VRPage() {
             </div>
           </a>
 
-          <a href="/vr/vr-total-guide-calculator.html" className="vr-card p-5 sm:p-8 block">
+          <a href="/vr?path=vr/vr-total-guide-calculator.html" className="vr-card p-5 sm:p-8 block">
             <div className="flex justify-between items-start mb-6">
               <span className="vr-calculator-badge text-white text-sm font-bold px-4 py-2 rounded-full">
                 🧮 계산기

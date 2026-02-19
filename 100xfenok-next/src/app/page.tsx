@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
@@ -189,7 +188,13 @@ export default function Home() {
               <div className="bento-card p-4">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-xs font-bold text-slate-400 tracking-widest orbitron">SECTOR SNAPSHOT</h3>
-                  <Link href="/sectors" className="text-xs text-brand-interactive font-bold min-h-[44px] flex items-center">View All →</Link>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('sectors')}
+                    className="text-xs text-brand-interactive font-bold min-h-[44px] flex items-center"
+                  >
+                    View All →
+                  </button>
                 </div>
                 <div className="sector-snapshot">
                   <div className="flex gap-2 items-center">
