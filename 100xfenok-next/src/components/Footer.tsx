@@ -52,7 +52,6 @@ export default function Footer() {
     updateMarketStatus();
     const interval = setInterval(updateMarketStatus, 60000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleShareClick = () => {

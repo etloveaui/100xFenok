@@ -26,7 +26,7 @@ export default function Navbar() {
       await navigator.clipboard.writeText(window.location.href);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 2000);
-    } catch (err) {
+    } catch {
       // Fallback: navigate to home
       window.location.href = '/';
     }
@@ -93,7 +93,7 @@ export default function Navbar() {
                   MARKET
                   <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
                 </button>
-                <div className="dropdown-menu absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-xl p-2 min-w-[220px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
+                <div className="dropdown-menu absolute top-full left-0 mt-1 w-[min(90vw,220px)] bg-white border border-gray-200 shadow-xl rounded-xl p-2 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
                   <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-1">Briefing</div>
                   <Link href="/market" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
                     <span className="w-1 h-4 bg-brand-gold rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
@@ -125,7 +125,7 @@ export default function Navbar() {
                   ANALYTICS
                   <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
                 </button>
-                <div className="dropdown-menu absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-xl p-4 min-w-[360px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
+                <div className="dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-2">Tools & Charts</div>
                   <div className="grid grid-cols-3 gap-2">
                     <Link href="/multichart" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
@@ -157,7 +157,7 @@ export default function Navbar() {
                   STRATEGIES
                   <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
                 </button>
-                <div className="dropdown-menu absolute top-full right-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-xl p-3 min-w-[280px] opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
+                <div className="dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,280px)] bg-white border border-gray-200 shadow-xl rounded-xl p-3 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
                   <div className="px-2 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-2">Proven Methods</div>
                   <Link href="/ib" className="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors mb-1 group/strat">
                     <div className="w-8 h-8 rounded bg-rose-100 flex items-center justify-center text-rose-600 mr-3 mt-0.5 group-hover/strat:bg-rose-200 transition-colors">

@@ -16,48 +16,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const dateParam = params.get('date');
 
-    // 상대 경로를 올바르게 계산하기 위해 현재 스크립트 경로를 기준으로 설정
-    const scriptPath = document.currentScript ? document.currentScript.src : '';
-    const basePath = scriptPath.substring(0, scriptPath.lastIndexOf('/daily-wrap-system/'));
+    // 뷰어 URL 기준으로 basePath 계산 (DOMContentLoaded 시 document.currentScript는 null일 수 있음)
+    const basePath = new URL('.', window.location.href).pathname.replace(/\/$/, '');
 
-    let dataUrl;
-
-    if (dateParam) {
-        // 아카이브 경로: ?date=YYYY-MM-DD
-        dataUrl = `${basePath}/data/${dateParam}-data.json`;
-    } else {
-        // 최신 리포트 경로 (오늘 날짜)
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        dataUrl = `${basePath}/data/${year}-${month}-${day}-data.json`;
-    }
-
-    fetch(dataUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`리포트 파일(${response.status})을 찾을 수 없습니다.`);
+    loadReportData(basePath, dateParam)
+        .then(({ data, dataUrl, fallbackFromUrl }) => {
+            try {
+                populatePage(data);
+            } catch (renderError) {
+                renderError.dataUrl = dataUrl;
+                throw renderError;
             }
-            return response.json();
-        })
-        .then(data => {
-            populatePage(data);
             // 데이터 로딩 성공 시, 로딩 인디케이터 숨기고 콘텐츠 표시
             loadingIndicator.style.display = 'none';
             contentWrapper.style.visibility = 'visible';
+
+            if (fallbackFromUrl) {
+                console.warn('[DailyWrap] 오늘자 파일이 없어 최신 데이터로 fallback 로드했습니다.', {
+                    from: fallbackFromUrl,
+                    to: dataUrl,
+                });
+            } else {
+                console.info('[DailyWrap] 리포트 데이터 로드 성공:', dataUrl);
+            }
+
             // Alpine.js가 동적으로 추가된 컴포넌트를 초기화하도록 강제
             if (window.Alpine) {
                 window.Alpine.start();
             }
         })
         .catch(error => {
+            const failedUrl = error && error.dataUrl ? error.dataUrl : '(unknown)';
             console.error('리포트 데이터를 불러오는 데 실패했습니다:', error);
             const errorHtml = `
                 <div style="text-align: center; padding: 50px; color: #333;">
                     <h2 style="font-size: 1.5rem; font-weight: bold;">리포트를 불러올 수 없습니다.</h2>
                     <p style="color: #666;">선택하신 날짜의 리포트가 존재하지 않거나, 아직 발행되지 않았습니다.</p>
-                    <p style="color: #999; font-size: 0.8rem;">(요청 경로: ${dataUrl})</p>
+                    <p style="color: #999; font-size: 0.8rem;">(요청 경로: ${failedUrl})</p>
                 </div>
             `;
             // 로딩 인디케이터 영역에 에러 메시지 표시
@@ -75,6 +70,285 @@ const setHtml = (id, htmlString) => {
     const element = document.getElementById(id);
     if (element) element.innerHTML = htmlString || '';
 };
+
+const FALLBACK_CACHE_KEY = 'dailyWrap.latestDataDate';
+const DATE_FILE_REGEX = /^(\d{4}-\d{2}-\d{2})\.json$/;
+
+const formatDateForFile = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const buildDataUrl = (basePath, dateString) => `${basePath}/data/${dateString}-data.json`;
+
+const createLoadError = (message, dataUrl, status) => {
+    const error = new Error(message);
+    if (dataUrl) error.dataUrl = dataUrl;
+    if (typeof status === 'number') error.status = status;
+    return error;
+};
+
+const getCachedFallbackDate = () => {
+    try {
+        const cached = window.localStorage.getItem(FALLBACK_CACHE_KEY);
+        return cached && /^\d{4}-\d{2}-\d{2}$/.test(cached) ? cached : null;
+    } catch {
+        return null;
+    }
+};
+
+const setCachedFallbackDate = (dateString) => {
+    try {
+        window.localStorage.setItem(FALLBACK_CACHE_KEY, dateString);
+    } catch {
+        // localStorage unavailable 환경은 조용히 무시
+    }
+};
+
+const toArray = (value) => (Array.isArray(value) ? value : []);
+
+function normalizeLegacyDailyWrapData(data) {
+    if (!data || typeof data !== 'object') {
+        return data;
+    }
+
+    if (data.s08_techRadar && Array.isArray(data.s08_techRadar.keyTickers)) {
+        data.s08_techRadar.keyTickers = { items: data.s08_techRadar.keyTickers };
+    }
+
+    if (data.s09_tradeSignals) {
+        const { s09_tradeSignals } = data;
+
+        if (!s09_tradeSignals.brokerScanner && s09_tradeSignals.brokerAlpha) {
+            const brokerAlpha = s09_tradeSignals.brokerAlpha;
+            const rawItems = [brokerAlpha.hottest, brokerAlpha.upgrade, brokerAlpha.gem];
+            const brokerItems = rawItems
+                .filter((item) => item && typeof item === 'object')
+                .map((item) => ({
+                    title: item.title || '브로커 시그널',
+                    icon: item.icon || 'fas fa-chart-line',
+                    color: item.color || 'blue',
+                    color_to: item.color_to || item.color || 'indigo',
+                    details_left: toArray(item.details_left),
+                    details_right: toArray(item.details_right),
+                }));
+
+            s09_tradeSignals.brokerScanner = {
+                title: brokerAlpha.title || '브로커 스캐너',
+                items: brokerItems,
+            };
+        }
+
+        const rank = s09_tradeSignals.signalRank;
+        if (rank && typeof rank === 'object') {
+            const hasLegacyRankShape = typeof rank.highestConviction === 'string' && !rank.highestConviction?.details;
+            if (hasLegacyRankShape) {
+                rank.highestConviction = {
+                    title: rank.highestConviction || 'Highest Conviction',
+                    convictionScore: rank.score || '',
+                    details: [
+                        { label: '투자 논리', value: rank.thesis || '' },
+                        { label: '핵심 근거', value: rank.evidence || '' },
+                        { label: '차별화 포인트', value: rank.edge || '' },
+                        { label: '리스크', value: rank.risk || '' },
+                    ],
+                };
+            }
+        }
+    }
+
+    if (data.s10_catalystCalendar && !data.s10_catalysts) {
+        const legacy = data.s10_catalystCalendar;
+        data.s10_catalysts = {
+            title: legacy.title || '내일의 주요 이벤트',
+            economicCalendar: {
+                title: legacy.economic?.title || '경제 캘린더',
+                items: toArray(legacy.economic?.items).map((item) => ({
+                    release: item.release || '',
+                    time: item.time || item.date || '',
+                    consensus: item.consensus || '-',
+                    prior: item.prior || '-',
+                    interpretation: item.interpretation || '',
+                    color: item.color || 'indigo',
+                })),
+            },
+            earningsCalendar: {
+                title: legacy.earnings?.title || '실적 캘린더',
+                items: toArray(legacy.earnings?.items).map((item) => ({
+                    company: item.company || item.ticker || 'N/A',
+                    ticker: item.ticker || 'N/A',
+                    reportingTime: item.reportingTime || item.time || 'TBD',
+                    time_color: item.time_color || 'teal',
+                    epsConsensus: item.epsConsensus || '-',
+                    revenueConsensus: item.revenueConsensus || '-',
+                    impliedMove: item.impliedMove || '-',
+                })),
+            },
+            corporateEvents: {
+                title: legacy.events?.title || '기업/정책 이벤트',
+                items: toArray(legacy.events?.items).map((item) => ({
+                    event: item.event || '',
+                    time: item.time || item.date || '',
+                    agency: item.agency || '',
+                    impact_label: item.impact_label || '영향도',
+                    impact_text: item.impact_text || item.impact || '',
+                    color: item.color || 'purple',
+                })),
+            },
+        };
+    }
+
+    if (data.s11_appendix) {
+        const { s11_appendix } = data;
+        if (!s11_appendix.futuresMovements && s11_appendix.futures) {
+            s11_appendix.futuresMovements = s11_appendix.futures;
+        }
+        if (!s11_appendix.chartSummaries && s11_appendix.charts) {
+            s11_appendix.chartSummaries = s11_appendix.charts;
+        }
+    }
+
+    return data;
+}
+
+async function fetchJsonFromUrl(url, options = {}) {
+    const response = await fetch(url, { cache: 'no-store' });
+
+    if (options.allowNotFound && response.status === 404) {
+        return null;
+    }
+
+    if (!response.ok) {
+        throw createLoadError(`리포트 파일(${response.status})을 찾을 수 없습니다.`, url, response.status);
+    }
+
+    try {
+        return await response.json();
+    } catch (error) {
+        throw createLoadError(`리포트 JSON 파싱 실패: ${error.message}`, url, response.status);
+    }
+}
+
+async function loadLatestDateCandidates() {
+    const reportsIndexUrl = '/100x/data/reports-index.json';
+    const list = await fetchJsonFromUrl(reportsIndexUrl);
+
+    if (!Array.isArray(list)) return [];
+
+    const dates = [];
+    const uniqueDates = new Set();
+
+    list.forEach((item) => {
+        if (typeof item !== 'string') return;
+        const match = item.match(DATE_FILE_REGEX);
+        if (!match) return;
+        const date = match[1];
+        if (uniqueDates.has(date)) return;
+        uniqueDates.add(date);
+        dates.push(date);
+    });
+
+    return dates;
+}
+
+async function tryLoadDateData(basePath, dateString) {
+    const url = buildDataUrl(basePath, dateString);
+    const data = await fetchJsonFromUrl(url, { allowNotFound: true });
+    if (!data) return null;
+    return { data, dataUrl: url, date: dateString };
+}
+
+async function findLatestExistingData(basePath, candidateDates) {
+    if (!Array.isArray(candidateDates) || candidateDates.length === 0) {
+        return null;
+    }
+
+    const successByIndex = new Map();
+    const testedIndexes = new Set();
+
+    let step = 1;
+    let index = 0;
+    let lastMissIndex = -1;
+    let foundIndex = -1;
+
+    while (index < candidateDates.length) {
+        testedIndexes.add(index);
+        const candidate = await tryLoadDateData(basePath, candidateDates[index]);
+        if (candidate) {
+            successByIndex.set(index, candidate);
+            foundIndex = index;
+            break;
+        }
+
+        lastMissIndex = index;
+        index += step;
+        step *= 2;
+    }
+
+    const scanStart = Math.max(0, lastMissIndex + 1);
+    const scanEnd = foundIndex >= 0 ? foundIndex : candidateDates.length - 1;
+
+    for (let i = scanStart; i <= scanEnd; i += 1) {
+        if (successByIndex.has(i)) {
+            return successByIndex.get(i);
+        }
+        if (testedIndexes.has(i)) {
+            continue;
+        }
+
+        const candidate = await tryLoadDateData(basePath, candidateDates[i]);
+        if (candidate) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
+async function loadReportData(basePath, dateParam) {
+    if (dateParam) {
+        const explicitUrl = buildDataUrl(basePath, dateParam);
+        const explicitData = normalizeLegacyDailyWrapData(await fetchJsonFromUrl(explicitUrl));
+        return { data: explicitData, dataUrl: explicitUrl, fallbackFromUrl: null };
+    }
+
+    const todayDate = formatDateForFile(new Date());
+    const todayUrl = buildDataUrl(basePath, todayDate);
+    const todayData = await fetchJsonFromUrl(todayUrl, { allowNotFound: true });
+
+    if (todayData) {
+        return { data: normalizeLegacyDailyWrapData(todayData), dataUrl: todayUrl, fallbackFromUrl: null };
+    }
+
+    const cachedDate = getCachedFallbackDate();
+    if (cachedDate && cachedDate !== todayDate) {
+        const cachedCandidate = await tryLoadDateData(basePath, cachedDate);
+        if (cachedCandidate) {
+            return {
+                data: normalizeLegacyDailyWrapData(cachedCandidate.data),
+                dataUrl: cachedCandidate.dataUrl,
+                fallbackFromUrl: todayUrl,
+            };
+        }
+    }
+
+    const fallbackDates = await loadLatestDateCandidates();
+    const filteredDates = fallbackDates.filter((date) => date !== todayDate && date !== cachedDate);
+    const latestCandidate = await findLatestExistingData(basePath, filteredDates);
+
+    if (latestCandidate) {
+        setCachedFallbackDate(latestCandidate.date);
+        return {
+            data: normalizeLegacyDailyWrapData(latestCandidate.data),
+            dataUrl: latestCandidate.dataUrl,
+            fallbackFromUrl: todayUrl,
+        };
+    }
+
+    throw createLoadError('오늘자 및 fallback 리포트를 모두 찾을 수 없습니다.', todayUrl, 404);
+}
 
 /**
  * JSON 데이터를 HTML 요소에 채워 넣는 메인 함수

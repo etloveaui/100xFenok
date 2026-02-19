@@ -10,7 +10,10 @@
     "build:runtime": "npm run sync-static && NEXT_BUILD_TARGET=runtime next build",
     "build:static": "npm run sync-static && NEXT_BUILD_TARGET=static next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "qa:browser": "QA_BASE_URL=http://127.0.0.1:3105 node .qa-playwright.js",
+    "qa:browser:dev": "QA_BASE_URL=http://127.0.0.1:3000 QA_DEV=1 node .qa-playwright.js",
+    "qa:browser:dist": "QA_BASE_URL=http://127.0.0.1:4173 node .qa-playwright.js"
   },
   "dependencies": {
     "next": "16.1.6",

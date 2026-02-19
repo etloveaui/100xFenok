@@ -537,7 +537,8 @@ const BalanceManager = (function() {
   // =====================================================
 
   function roundPrice(price) {
-    return Math.round(price * 100) / 100;
+    // v3.0.0 (D-3): 2→4 decimal precision for sub-penny accuracy
+    return Math.round(price * 10000) / 10000;
   }
 
   function roundCalcPrice(price) {
