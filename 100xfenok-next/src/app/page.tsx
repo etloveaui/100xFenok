@@ -39,7 +39,7 @@ export default function Home() {
   }, [isPeriodMenuOpen]);
 
   return (
-    <main className="container mx-auto px-4 py-4">
+    <main className="container mx-auto overflow-x-hidden px-4 py-4">
       <section className="command-toolbar" role="toolbar" aria-label="Dashboard controls">
         <div className="command-main">
           <div className="tab-pills tab-pills-compact" role="tablist" aria-label="View tabs">
@@ -122,7 +122,7 @@ export default function Home() {
 
         {activeTab === 'overview' && (
           <>
-            <div className="hero-zone">
+            <div className="hero-zone min-w-0">
               <div className="bento-card p-4">
                 <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-2 orbitron">FEAR & GREED</h3>
                 <div className="flex items-center gap-3">

@@ -20,14 +20,14 @@ export const viewport: Viewport = {
 
 export default function VRPage() {
   return (
-    <div className="vr-page-bg vr-mathematical-bg min-h-screen pb-2"
+    <div className="vr-page-bg vr-mathematical-bg min-h-screen overflow-x-clip pb-2"
       style={{
         fontFamily: "'Noto Sans KR', sans-serif"
       }}
     >
       <div className="container mx-auto p-3 sm:p-4 md:p-8">
         <header className="text-center mb-10 md:mb-16">
-          <div className="vr-floating-formula text-6xl sm:text-7xl md:text-8xl mb-4 md:mb-6">⚖️</div>
+          <div className="vr-floating-formula mb-4 inline-block text-6xl sm:text-7xl md:mb-6 md:text-8xl">⚖️</div>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-800 mb-4 leading-tight">VR 시스템 아카이브</h1>
           <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
             밸류 리밸런싱(Value Rebalancing) 관련 문서와 계산기 모음<br/>
@@ -41,7 +41,7 @@ export default function VRPage() {
             <span className="text-slate-800 font-semibold">Core Formula</span>
             <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
           </div>
-          <div className="font-mono text-xs sm:text-base md:text-lg text-indigo-700 bg-indigo-50 p-3 sm:p-4 rounded-lg">
+          <div className="max-w-full overflow-x-auto rounded-lg bg-indigo-50 p-3 font-mono text-xs text-indigo-700 sm:p-4 sm:text-base md:text-lg">
             V₂ = V₁ + (Pool ÷ G) + (E - V₁) ÷ (2√G)
           </div>
           <p className="text-slate-600 text-sm mt-2">

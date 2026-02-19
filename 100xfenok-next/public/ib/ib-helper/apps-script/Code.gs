@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 2.9.0
+ * @version 3.0.0
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v3.0.0 (2026-02-19): Pipeline reliability overhaul — 10 fixes (S-1, S-2, S-3, D-1~D-4, R-1, R-2)
  * - v2.9.0 (2026-02-12): CRITICAL fix — removeStaleOrders moved AFTER checkExecutions (was deleting before checking)
  * - v2.8.1 (2026-02-12): removeStaleOrders Phase1 fix — date<today = all stale (not per-group)
  * - v2.8.0 (2026-02-12): removeStaleOrders() - stale BUY+SELL cleanup before execution
@@ -274,6 +275,11 @@ function processOrderExecutions() {
 
     // 1. Load yesterday's prices
     const prices = loadYesterdayPrices(pricesSheet);
+    // v3.0.0 (D-4): Zero-price guard — null means all prices are 0
+    if (!prices) {
+      Logger.log('Pipeline HALTED: all prices are 0 — aborting to prevent false executions');
+      return;
+    }
     Logger.log('Loaded prices: ' + JSON.stringify(prices));
 
     // 2. Load pending orders (execution column = empty) — includes old-date orders
@@ -352,6 +358,24 @@ function loadYesterdayPrices(sheet) {
     };
   }
 
+  // v3.0.0 (D-4): Zero-price validation — halt pipeline if ALL prices are 0
+  const tickers = Object.keys(prices);
+  if (tickers.length > 0) {
+    let allZero = true;
+    for (let t = 0; t < tickers.length; t++) {
+      const p = prices[tickers[t]];
+      if (p.close !== 0 || p.high !== 0) {
+        allZero = false;
+        break;
+      }
+      Logger.log('⚠️ Zero price: ' + tickers[t] + ' close=0, high=0');
+    }
+    if (allZero) {
+      Logger.log('🛑 HALT: ALL prices are 0 — pipeline aborted to prevent false executions');
+      return null;
+    }
+  }
+
   return prices;
 }
 
@@ -368,9 +392,9 @@ function loadYesterdayPrices(sheet) {
  */
 function loadPendingOrders(sheet) {
   const data = sheet.getDataRange().getValues();
-  const orders = [];
+  const allPending = [];
 
-  // Skip header row
+  // Phase 1: Load all pending orders (K=empty/N)
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     const execution = String(row[10]).trim();  // K: execution
@@ -378,7 +402,7 @@ function loadPendingOrders(sheet) {
     // Only pending orders
     if (execution !== '' && execution !== 'N') continue;
 
-    orders.push({
+    allPending.push({
       rowIndex: i + 1,  // 1-indexed for Sheet
       date: row[0],          // A: date
       googleId: row[1],      // B: googleId
@@ -396,7 +420,30 @@ function loadPendingOrders(sheet) {
     });
   }
 
-  return orders;
+  // v3.0.0 (S-2): Latest-date filter — keep only the most recent push per group
+  // Group key: googleId|profileId|ticker|side (NOT including orderType)
+  const maxDateByGroup = {};
+  allPending.forEach(order => {
+    const orderDate = parseOrderDate(order.date);
+    if (!orderDate) return;
+    const dateStr = Utilities.formatDate(orderDate, CONFIG.TIMEZONE, 'yyyy-MM-dd');
+    const groupKey = `${order.googleId}|${order.profileId}|${order.ticker}|${order.side}`;
+    if (!maxDateByGroup[groupKey] || dateStr > maxDateByGroup[groupKey]) {
+      maxDateByGroup[groupKey] = dateStr;
+    }
+  });
+
+  // Phase 3: Filter — keep only orders matching MAX(date) for their group
+  const filtered = allPending.filter(order => {
+    const orderDate = parseOrderDate(order.date);
+    if (!orderDate) return true;  // keep unparseable dates
+    const dateStr = Utilities.formatDate(orderDate, CONFIG.TIMEZONE, 'yyyy-MM-dd');
+    const groupKey = `${order.googleId}|${order.profileId}|${order.ticker}|${order.side}`;
+    return dateStr === maxDateByGroup[groupKey];
+  });
+
+  Logger.log('loadPendingOrders: total=' + allPending.length + ' → filtered=' + filtered.length);
+  return filtered;
 }
 
 // =====================================================
@@ -481,8 +528,12 @@ function dedupeOrders(sheet, daysLimit = 30) {
       continue;
     }
 
-    if (!key || !withinWindow(orderDate)) {
-      keepFlags[idx] = true;
+    if (!key) {
+      keepFlags[idx] = true;  // malformed rows: keep
+      continue;
+    }
+    if (!withinWindow(orderDate)) {
+      keepFlags[idx] = false;  // v3.0.0 (S-1): DELETE ancient orders (>30 days)
       continue;
     }
 
@@ -518,8 +569,25 @@ function dedupeOrders(sheet, daysLimit = 30) {
     return newRow;
   });
 
+  // v3.0.0 (S-3): Save original for recovery before clearContents
+  const normalizedOriginal = data.map(row => {
+    const newRow = row.slice(0, colCount);
+    while (newRow.length < colCount) newRow.push('');
+    return newRow;
+  });
+
   ordersSheet.clearContents();
-  ordersSheet.getRange(1, 1, normalizedRows.length, colCount).setValues(normalizedRows);
+  try {
+    ordersSheet.getRange(1, 1, normalizedRows.length, colCount).setValues(normalizedRows);
+  } catch (rewriteError) {
+    Logger.log('CRITICAL: dedupeOrders rewrite failed, restoring: ' + rewriteError.message);
+    try {
+      ordersSheet.getRange(1, 1, normalizedOriginal.length, colCount).setValues(normalizedOriginal);
+    } catch (restoreError) {
+      Logger.log('FATAL: dedupeOrders restore also failed: ' + restoreError.message);
+    }
+    throw rewriteError;
+  }
   Logger.log(`dedupeOrders: Removed ${data.length - uniqueRows.length} duplicate rows`);
 }
 
@@ -908,17 +976,10 @@ function archiveOldOrders(ss, ordersSheet) {
  * @param {Array} executedOrders - Orders that were executed
  */
 function updateOrdersSheet(sheet, executedOrders) {
+  // v3.0.0 (R-1): Batch setValue — 3N→N API calls
   executedOrders.forEach(order => {
     const row = order.rowIndex;
-
-    // K: execution = 'Y'
-    sheet.getRange(row, 11).setValue('Y');
-
-    // L: executionDate
-    sheet.getRange(row, 12).setValue(order.executionDate);
-
-    // M: actualPrice
-    sheet.getRange(row, 13).setValue(order.actualPrice);
+    sheet.getRange(row, 11, 1, 3).setValues([['Y', order.executionDate, order.actualPrice]]);
   });
 }
 
@@ -939,6 +1000,7 @@ function updatePortfolio(ss, executedOrders) {
   }
 
   const data = portfolioSheet.getDataRange().getValues();
+  const colCount = data[0].length;
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
   const defaultCommissionRate = normalizeCommissionRate(CONFIG.COMMISSION_RATE);
 
@@ -1004,15 +1066,13 @@ function updatePortfolio(ss, executedOrders) {
     balanceByProfile[profileKey] = balance;
   });
 
-  // Update each portfolio row
+  // v3.0.0 (R-2): Batch update — modify data[] in-memory, single setValues at end
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    // Portfolio v3.6: A=googleId, B=profileId, C=profileName, D=ticker
     const profileKey = `${String(row[0]).trim()}|${String(row[1]).trim()}`;
-    const key = `${String(row[0]).trim()}|${String(row[1]).trim()}|${String(row[3]).trim().toUpperCase()}`;  // A|B|D (skip C=profileName)
+    const key = `${String(row[0]).trim()}|${String(row[1]).trim()}|${String(row[3]).trim().toUpperCase()}`;
     const orders = ordersByKey[key];
-
-    const rowNum = i + 1;
+    const commissionRate = commissionByProfile[profileKey] ?? defaultCommissionRate;
 
     let touched = false;
 
@@ -1028,18 +1088,23 @@ function updatePortfolio(ss, executedOrders) {
         if (buyQty <= 0 || executionPrice <= 0) {
           return;
         }
-        const newCost = executionPrice * buyQty;
+        // v3.0.0 (D-1): Commission included in totalInvested
+        const newCost = executionPrice * buyQty * (1 + commissionRate);
         totalInvested += newCost;
         holdings += buyQty;
       });
 
       avgPrice = holdings > 0 && totalInvested > 0 ? totalInvested / holdings : 0;
 
-      // Process sells: decrease holdings, reduce totalInvested 비례 차감
+      // Process sells: decrease holdings, reduce totalInvested proportionally
       orders.sells.forEach(order => {
         const sellQtyRaw = Math.max(parseFloat(order.quantity) || 0, 0);
         if (sellQtyRaw <= 0 || holdings <= 0 || avgPrice <= 0) {
           return;
+        }
+        // v3.0.0 (D-2): SELL clamp logging
+        if (sellQtyRaw > holdings) {
+          Logger.log(`⚠️ SELL clamp: ${key} sellQty=${sellQtyRaw} > holdings=${holdings}, clamping to ${holdings}`);
         }
         const sellQty = Math.min(sellQtyRaw, holdings);
         totalInvested -= avgPrice * sellQty;
@@ -1053,25 +1118,34 @@ function updatePortfolio(ss, executedOrders) {
         }
       });
 
-      portfolioSheet.getRange(rowNum, 5).setValue(avgPrice);      // E: avgPrice
-      portfolioSheet.getRange(rowNum, 6).setValue(holdings);      // F: holdings
-      portfolioSheet.getRange(rowNum, 7).setValue(totalInvested); // G: totalInvested
-      portfolioSheet.getRange(rowNum, 11).setValue(today);        // K: date
+      data[i][4] = avgPrice;        // E: avgPrice
+      data[i][5] = holdings;        // F: holdings
+      data[i][6] = totalInvested;   // G: totalInvested
+      data[i][10] = today;          // K: date
       touched = true;
 
       Logger.log('Updated portfolio: ' + key + ' → holdings=' + holdings + ', avgPrice=' + avgPrice);
     }
 
+    // Balance: first row of profile only
     if (balanceByProfile[profileKey] !== undefined &&
         balanceRowByProfile[profileKey] === i) {
-      portfolioSheet.getRange(rowNum, 12).setValue(balanceByProfile[profileKey]); // L: balance
+      data[i][11] = balanceByProfile[profileKey];  // L: balance
       touched = true;
     }
 
     if (touched) {
-      portfolioSheet.getRange(rowNum, 15).setValue(Date.now()); // O: revision
+      data[i][14] = Date.now();  // O: revision
     }
   }
+
+  // v3.0.0 (R-2): Single batch write — 6N→1 API call
+  const normalizedData = data.map(row => {
+    const newRow = row.slice(0, colCount);
+    while (newRow.length < colCount) newRow.push('');
+    return newRow;
+  });
+  portfolioSheet.getRange(1, 1, normalizedData.length, colCount).setValues(normalizedData);
 }
 
 /**

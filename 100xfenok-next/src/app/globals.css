@@ -159,6 +159,8 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.04);
   padding: 1.25rem;
   transition: box-shadow 0.3s;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .bento-card:hover {
@@ -513,6 +515,11 @@
   grid-template-columns: 1fr 1fr 1.5fr;
   gap: 1rem;
   margin-bottom: 1rem;
+  min-width: 0;
+}
+
+.hero-zone > * {
+  min-width: 0;
 }
 
 .regime-badge {
@@ -552,6 +559,36 @@
   overflow-x: auto;
   padding-bottom: 0.5rem;
   -webkit-overflow-scrolling: touch;
+  min-width: 0;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+}
+
+.quick-indices-card {
+  min-width: 0;
+}
+
+.quick-indices-scroll .index-item {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .quick-indices-scroll {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    overflow-x: hidden;
+  }
+
+  .quick-indices-scroll .index-item {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .quick-indices-scroll .sparkline {
+    width: 100%;
+    max-width: 60px;
+  }
 }
 
 .tab-placeholder {
@@ -634,6 +671,8 @@
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.2s ease;
+  max-width: min(90vw, 28rem);
+  overflow-x: hidden;
 }
 
 .group:hover .dropdown-menu {
