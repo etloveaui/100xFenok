@@ -77,8 +77,23 @@ const routes = [
   "/admin/design-lab",
   "/admin/data-lab",
   "/admin/macro-monitor",
+  // Week 3 route (skeleton)
+  "/tools/stock-analyzer",
   "/this-route-should-not-exist",
 ];
+
+const expectedIframeRoutes = new Set([
+  "/ib",
+  "/infinite-buying",
+  "/admin/design-lab",
+  "/admin/data-lab",
+  "/admin/macro-monitor",
+  "/tools/stock-analyzer",
+]);
+
+const expectedIframeSrcByRoute = {
+  "/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html",
+};
 
 const viewports = [
   { name: "desktop", width: 1440, height: 900 },
@@ -125,6 +140,8 @@ async function prewarmRoutes() {
         hasNav: null,
         hasFooter: null,
         hasIframe: null,
+        iframeSrc: null,
+        expectedIframeSrcMatched: null,
         iframeOverlapFooter: null,
         hasHorizontalScroll: null,
         hasMobileMenuButton: null,
@@ -193,6 +210,7 @@ async function prewarmRoutes() {
               hasNav: !!nav,
               hasFooter: !!footer,
               hasIframe: !!iframe,
+              iframeSrc: iframe ? iframe.getAttribute("src") : null,
               iframeOverlapFooter,
               isScrollable,
               hasHorizontalScroll: html.scrollWidth > window.innerWidth + 1,
@@ -200,6 +218,10 @@ async function prewarmRoutes() {
             };
           });
           Object.assign(item, snapshot);
+          const expectedIframeSrc = expectedIframeSrcByRoute[route];
+          if (expectedIframeSrc) {
+            item.expectedIframeSrcMatched = snapshot.iframeSrc === expectedIframeSrc;
+          }
         } catch (err) {
           item.navigationError = `snapshot_error: ${String(err)}`;
         }
@@ -298,6 +320,8 @@ async function prewarmRoutes() {
     if (r.status && r.status >= 400 && r.route !== "/this-route-should-not-exist") return true;
     if (r.hasHorizontalScroll) return true;
     if (r.iframeOverlapFooter === true) return true;
+    if (expectedIframeRoutes.has(r.route) && !r.hasIframe) return true;
+    if (r.route === "/tools/stock-analyzer" && r.expectedIframeSrcMatched === false) return true;
     if (r.linkedChecks && r.linkedChecks.some((c) => c.status >= 400)) return true;
     // 404 test route: console errors from the 404 page itself are expected
     if (r.blockingConsoleErrorCount > 0 && r.route !== "/this-route-should-not-exist") return true;
