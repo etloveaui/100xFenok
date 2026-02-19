@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IB Calculator v9 - Ultimate Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#f8fafc',
+                surface: '#ffffff'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --nav-height-desktop: 60px;
+            --nav-height-mobile: 60px;
+            --touch-target: 44px;
+        }
+        body { background-color: #f1f5f9; font-family: 'Noto Sans KR', sans-serif; color: #1e293b; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Nav & Footer - 1-Tier EDGY Styles Copied from Integrated Demo */
+        .nav-edgy {
+            height: var(--nav-height-desktop);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(90deg, #010079 0%, #D5AD36 50%, #010079 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem;
+        }
+        /* ... (Simplified Nav styles for visual fidelity) ... */
+        .nav-pill-edgy {
+            padding: 0.5rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            font-weight: 700; color: #475569; font-size: 0.8125rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s;
+        }
+        .nav-pill-edgy:hover { transform: translateY(-2px); border-color: #D5AD36; }
+        .nav-pill-edgy.active { background: linear-gradient(135deg, #010079 0%, #0a0a8c 100%); color: white; border-color: #D5AD36; }
+
+        /* v9 Specific Styles */
+        .ultimate-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .asset-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .asset-card:hover { border-color: #1B73D3; background: #f8fafc; }
+        .asset-card.selected { border-color: #010079; background: #f0f9ff; ring: 2px solid #010079; }
+
+        .input-group label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.25rem; display: block; }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .input-field:focus { border-color: #1B73D3; box-shadow: 0 0 0 3px rgba(27, 115, 211, 0.1); background: white; }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #010079 0%, #1B73D3 100%);
+            color: white;
+            font-weight: 800;
+            padding: 1rem;
+            border-radius: 16px;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(1, 0, 121, 0.3);
+        }
+        .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(1, 0, 121, 0.4); }
+
+        .result-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-radius: 12px; margin-bottom: 0.5rem; }
+        .result-buy { background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .result-sell { background: #fef2f2; border: 1px solid #fecaca; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Nav 1-Tier EDGY (Simulated) -->
+    <nav class="sticky top-0 z-50 nav-edgy shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md border border-slate-100">
+                 <i class="fas fa-chart-line text-brand-navy"></i>
+            </div>
+            <span class="font-[900] orbitron text-slate-800 text-lg">100x <span class="text-brand-gold">FENOK</span></span>
+        </div>
+        <div class="hidden md:flex gap-2">
+            <button class="nav-pill-edgy active"><i class="fas fa-calculator"></i> Calculator</button>
+            <button class="nav-pill-edgy"><i class="fas fa-chart-line"></i> Dashboard</button>
+        </div>
+        <div class="w-10"></div> <!-- Spacer -->
+    </nav>
+
+    <main class="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-black text-slate-800 mb-2">Infinite Buying Strategy</h1>
+            <p class="text-slate-500">Professional Grade Calculator • v9 Standard</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Panel: Configuration -->
+            <div class="lg:col-span-7">
+                <div class="ultimate-card p-8">
+                    <h2 class="text-xl font-bold text-brand-navy mb-6 flex items-center gap-2">
+                        <i class="fas fa-sliders-h"></i> Configuration
+                    </h2>
+
+                    <!-- Asset Selection -->
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="asset-card selected" onclick="selectAsset(this, 'TQQQ')">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-lg text-slate-800">TQQQ</span>
+                                <span class="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">+1.24%</span>
+                            </div>
+                            <p class="text-3xl font-black text-slate-800 mb-1">$78.45</p>
+                            <p class="text-xs text-slate-500">ProShares UltraPro QQQ</p>
+                        </div>
+                        <div class="asset-card" onclick="selectAsset(this, 'SOXL')">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-lg text-slate-800">SOXL</span>
+                                <span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-1 rounded">-0.85%</span>
+                            </div>
+                            <p class="text-3xl font-black text-slate-800 mb-1">$34.12</p>
+                            <p class="text-xs text-slate-500">Direxion Daily Semi Bull</p>
+                        </div>
+                    </div>
+
+                    <!-- Inputs -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="input-group">
+                            <label>Seed Money ($)</label>
+                            <input type="number" class="input-field" value="10000" placeholder="10000">
+                        </div>
+                        <div class="input-group">
+                            <label>Invested Amount ($)</label>
+                            <input type="number" class="input-field" value="1500" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>Average Price ($)</label>
+                            <input type="number" class="input-field" value="55.20" placeholder="0.00">
+                        </div>
+                        <div class="input-group">
+                            <label>Current Quantity</label>
+                            <input type="number" class="input-field" value="27" placeholder="0">
+                        </div>
+                    </div>
+
+                    <button class="generate-btn" onclick="generateOrders()">
+                        GENERATE ORDERS <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="lg:col-span-5">
+                <div class="ultimate-card h-full flex flex-col relative bg-slate-50">
+                    <!-- Placeholder State -->
+                    <div id="placeholder-state" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+                        <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-robot text-3xl text-slate-400"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-600 mb-2">Ready to Calculate</h3>
+                        <p class="text-sm text-slate-400">Enter your portfolio details and click Generate to see today's optimized order plan.</p>
+                    </div>
+
+                    <!-- Result State -->
+                    <div id="result-state" class="p-8 hidden h-full flex flex-col">
+                        <h2 class="text-xl font-bold text-brand-navy mb-6 flex items-center gap-2">
+                            <i class="fas fa-clipboard-check"></i> Action Plan
+                        </h2>
+
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 mb-6 flex justify-between items-center shadow-sm">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">T-Value</p>
+                                <p class="text-2xl font-black text-slate-800">6.2</p>
+                            </div>
+                            <div class="h-8 w-px bg-slate-200"></div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">Progress</p>
+                                <p class="text-2xl font-black text-brand-interactive">15%</p>
+                            </div>
+                            <div class="h-8 w-px bg-slate-200"></div>
+                             <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">Split</p>
+                                <p class="text-2xl font-black text-slate-800">40</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 flex-1">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Buy Orders</h3>
+                            <div class="result-row result-buy">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs">1</div>
+                                    <div>
+                                        <p class="font-bold text-green-800">LOC Buy (Half)</p>
+                                        <p class="text-xs text-green-600">Limit: <span class="font-bold">$55.20</span></p>
+                                    </div>
+                                </div>
+                                <span class="text-xl font-black text-green-700">8 Qty</span>
+                            </div>
+                             <div class="result-row result-buy">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs">2</div>
+                                    <div>
+                                        <p class="font-bold text-green-800">LOC Buy (Star)</p>
+                                        <p class="text-xs text-green-600">Limit: <span class="font-bold">$58.40</span></p>
+                                    </div>
+                                </div>
+                                <span class="text-xl font-black text-green-700">7 Qty</span>
+                            </div>
+
+                            <div class="my-6 border-t border-dashed border-slate-300"></div>
+
+                            <h3 class="text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Sell Orders</h3>
+                            <div class="result-row result-sell">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-xs">S</div>
+                                    <div>
+                                        <p class="font-bold text-red-800">LOC Sell</p>
+                                        <p class="text-xs text-red-600">Limit: <span class="font-bold">$62.50</span></p>
+                                    </div>
+                                </div>
+                                <span class="text-xl font-black text-red-700">5 Qty</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-slate-200 text-center">
+                            <p class="text-xs text-slate-400">Executed on Real-time Price Logic v2.2</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer v21 (Simulated) -->
+    <footer class="bg-white border-t border-slate-200">
+        <div class="h-8 bg-slate-900 flex items-center justify-center overflow-hidden">
+             <span class="text-[10px] text-white font-bold opacity-80 tracking-widest">MARKET DATA STREAM ACTIVE • REAL-TIME CONNECTION ESTABLISHED</span>
+        </div>
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+             <div class="flex items-center gap-2 text-slate-500 text-sm">
+                 <span>© 2025 100xFenok</span>
+                 <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                 <span>v9.0.0</span>
+             </div>
+             <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">MARKET OPEN</span>
+        </div>
+    </footer>
+
+    <script>
+        function selectAsset(el, ticker) {
+            document.querySelectorAll('.asset-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function generateOrders() {
+            document.getElementById('placeholder-state').classList.add('hidden');
+            document.getElementById('result-state').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

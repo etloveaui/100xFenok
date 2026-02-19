@@ -1,0 +1,149 @@
+{
+  "folder": "sentiment",
+  "version": "1.0.0",
+  "updated": "2026-01-20",
+  "source": "Multiple (AAII, CNN, CFTC, CBOE, Alternative.me)",
+  "update_frequency": "daily/weekly",
+  "maintainer": "Apps Script automation",
+
+  "files": {
+    "aaii.json": {
+      "description": "AAII Investor Sentiment Survey (Bullish/Neutral/Bearish)",
+      "update_frequency": "weekly (Thursday)",
+      "size_kb": 186,
+      "history_start": "1987-07-24",
+      "schema": {
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "bullish": "number (0-100)",
+          "neutral": "number (0-100)",
+          "bearish": "number (0-100)"
+        }
+      }
+    },
+    "cnn-fear-greed.json": {
+      "description": "CNN Fear & Greed Index (0-100)",
+      "update_frequency": "daily",
+      "size_kb": 189,
+      "schema": {
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "value": "number (0-100)",
+          "rating": "string (Extreme Fear/Fear/Neutral/Greed/Extreme Greed)"
+        }
+      }
+    },
+    "cnn-components.json": {
+      "description": "7 CNN F&G component indicators (latest only)",
+      "update_frequency": "daily",
+      "size_kb": 4.3,
+      "components": ["Market Momentum", "Stock Price Strength", "Stock Price Breadth", "Put/Call Options", "Junk Bond Demand", "Market Volatility", "Safe Haven Demand"],
+      "schema": {
+        "timestamp": "ISO timestamp",
+        "overall": {"value": "number", "rating": "string"},
+        "components.{component_name}": {
+          "value": "number (0-100)",
+          "rating": "string"
+        }
+      }
+    },
+    "cnn-breadth.json": {
+      "description": "Market Breadth (McClellan Volume Summation Index)",
+      "update_frequency": "daily",
+      "size_kb": 45,
+      "schema": {
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "value": "number"
+        }
+      }
+    },
+    "cnn-momentum.json": {
+      "description": "Market Momentum (S&P 500 vs 125-day MA)",
+      "update_frequency": "daily",
+      "size_kb": 45,
+      "schema": "Same as cnn-breadth.json"
+    },
+    "cnn-put-call.json": {
+      "description": "Put/Call Options (5-day average)",
+      "update_frequency": "daily",
+      "size_kb": 42,
+      "schema": "Same as cnn-breadth.json"
+    },
+    "cnn-safe-haven.json": {
+      "description": "Safe Haven Demand (Bonds vs Stocks return difference)",
+      "update_frequency": "daily",
+      "size_kb": 43,
+      "schema": "Same as cnn-breadth.json"
+    },
+    "cnn-strength.json": {
+      "description": "Stock Price Strength (52-week highs vs lows)",
+      "update_frequency": "daily",
+      "size_kb": 43,
+      "schema": "Same as cnn-breadth.json"
+    },
+    "cnn-junk-bond.json": {
+      "description": "Junk Bond Demand (HY vs IG spread)",
+      "update_frequency": "daily",
+      "size_kb": 43,
+      "schema": "Same as cnn-breadth.json"
+    },
+    "cftc-sp500.json": {
+      "description": "CFTC Commitment of Traders - S&P 500 futures positioning",
+      "update_frequency": "weekly (Tuesday data, Friday release)",
+      "size_kb": 96,
+      "schema": {
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "asset_long": "number",
+          "asset_short": "number",
+          "leveraged_long": "number",
+          "leveraged_short": "number",
+          "net_positioning": "number"
+        }
+      }
+    },
+    "vix.json": {
+      "description": "CBOE Volatility Index (VIX)",
+      "update_frequency": "daily",
+      "size_kb": 479,
+      "history_start": "1990-01-02",
+      "schema": {
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "value": "number"
+        }
+      }
+    },
+    "move.json": {
+      "description": "MOVE Bond Volatility Index",
+      "update_frequency": "daily",
+      "size_kb": 67,
+      "schema": "Same as vix.json"
+    },
+    "crypto-fear-greed.json": {
+      "description": "Crypto Fear & Greed Index (Alternative.me)",
+      "update_frequency": "daily",
+      "size_kb": 239,
+      "schema": {
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "value": "number (0-100)",
+          "classification": "string"
+        }
+      }
+    }
+  },
+
+  "data_sources": {
+    "aaii": "https://www.aaii.com/sentimentsurvey",
+    "cnn": "https://www.cnn.com/markets/fear-and-greed",
+    "cftc": "https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm",
+    "vix": "https://www.cboe.com/tradable_products/vix/",
+    "crypto": "https://alternative.me/crypto/fear-and-greed-index/"
+  },
+
+  "breaking_changes_history": [
+    {"version": "1.0.0", "date": "2026-01-01", "change": "Initial schema documentation"}
+  ]
+}

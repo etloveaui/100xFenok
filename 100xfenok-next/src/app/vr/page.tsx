@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
@@ -51,7 +50,7 @@ export default function VRPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 max-w-6xl mx-auto mb-12 md:mb-16">
-          <Link href="/vr/vr-complete-system.html" className="vr-card p-5 sm:p-8 block">
+          <a href="/vr/vr-complete-system.html" className="vr-card p-5 sm:p-8 block">
             <div className="flex justify-between items-start mb-6">
               <span className="vr-system-badge text-white text-sm font-bold px-4 py-2 rounded-full">
                 🔬 시스템 가이드
@@ -83,9 +82,9 @@ export default function VRPage() {
               <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">시뮬레이터</span>
               <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">백테스트</span>
             </div>
-          </Link>
+          </a>
 
-          <Link href="/vr/vr-total-guide-calculator.html" className="vr-card p-5 sm:p-8 block">
+          <a href="/vr/vr-total-guide-calculator.html" className="vr-card p-5 sm:p-8 block">
             <div className="flex justify-between items-start mb-6">
               <span className="vr-calculator-badge text-white text-sm font-bold px-4 py-2 rounded-full">
                 🧮 계산기
@@ -117,7 +116,7 @@ export default function VRPage() {
               <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">실시간</span>
               <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">주문표</span>
             </div>
-          </Link>
+          </a>
         </div>
 
         <div className="vr-card p-6 sm:p-8 max-w-4xl mx-auto mb-12 md:mb-16">

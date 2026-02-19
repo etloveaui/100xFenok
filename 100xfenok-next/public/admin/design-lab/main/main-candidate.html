@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>FenoK · Investment Knowledge</title>
+  <meta name="description" content="Investment knowledge and market tools.">
+  <meta property="og:title" content="FenoK · Investment Knowledge">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#010079">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { navy: '#010079', gold: '#D5AD36', interactive: '#1B73D3', bg: '#f8fafc' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root { --touch: 48px; }
+    body { background: #f8fafc; font-family: 'Noto Sans KR', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .orbitron { font-family: 'Orbitron', sans-serif; }
+    *:focus-visible { outline: 2px solid #1B73D3; outline-offset: 2px; }
+    html { scroll-behavior: smooth; }
+
+    .market-state-badge {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      padding: 0.2rem 0.5rem; border-radius: 9999px;
+      font-size: 0.625rem; font-weight: 700;
+    }
+    .state-regular { background: #dcfce7; color: #166534; }
+    .state-pre { background: #fef9c3; color: #854d0e; }
+    .state-post { background: #e0e7ff; color: #3730a3; }
+    .state-closed { background: #f1f5f9; color: #94a3b8; }
+
+    /* Market Pulse */
+    .market-pulse {
+      border-radius: 1.25rem; padding: 1.5rem; color: white;
+      transition: background 0.6s ease; margin-bottom: 0.75rem;
+    }
+    .pulse-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+    .pulse-indices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .index-item {
+      padding: 0.875rem; background: rgba(255,255,255,0.08);
+      border-radius: 0.875rem; backdrop-filter: blur(4px);
+    }
+    .index-name { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; }
+    .index-price { font-size: 1.125rem; font-weight: 800; margin-top: 0.375rem; }
+    .index-change { font-size: 0.75rem; font-weight: 600; margin-top: 0.25rem; }
+    .idx-up { color: #bbf7d0; }
+    .idx-down { color: #fecaca; }
+    .idx-flat { color: rgba(255,255,255,0.6); }
+
+    @media (max-width: 639px) {
+      .market-pulse { padding: 1.25rem; border-radius: 1rem; }
+      .pulse-top { margin-bottom: 1rem; }
+      .pulse-indices { grid-template-columns: 1fr; gap: 0; }
+      .index-item {
+        display: flex; align-items: center;
+        padding: 0.625rem 0; background: transparent;
+        border-radius: 0; backdrop-filter: none;
+      }
+      .index-item + .index-item { border-top: 1px solid rgba(255,255,255,0.1); }
+      .index-name { flex: 1; font-size: 0.75rem; }
+      .index-price { font-size: 0.9375rem; margin: 0 0.75rem 0 0; }
+      .index-change { margin: 0; min-width: 4.5rem; text-align: right; }
+    }
+
+    /* Dark skeleton for pulse card */
+    .market-pulse .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 100%);
+      background-size: 200px 100%; animation: shimmer 1.5s infinite; border-radius: 0.5rem;
+    }
+
+    /* Bento Card */
+    .bento-card {
+      background: white; border-radius: 1.25rem;
+      border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      padding: 1.25rem; transition: box-shadow 0.3s;
+    }
+    .bento-card:hover { box-shadow: 0 8px 16px -4px rgba(0,0,0,0.08); }
+    .card-title { font-size: 0.6875rem; font-weight: 700; color: #94a3b8; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* Heatmap */
+    .heatmap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; min-height: 200px; }
+    @media (min-width: 768px) {
+      .heatmap-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); height: 260px; }
+      .heatmap-cell.xlk { grid-column: span 2; grid-row: span 2; }
+      .heatmap-cell.xlf { grid-row: span 2; }
+    }
+    .heatmap-cell {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;
+      min-height: var(--touch); padding: 0.5rem;
+    }
+    .heatmap-cell:hover { transform: scale(1.03); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+
+    /* Placeholder rows */
+    .placeholder-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0;
+    }
+    .placeholder-row + .placeholder-row { border-top: 1px solid #f1f5f9; }
+    .ph-tag {
+      font-size: 0.625rem; font-weight: 600; color: #cbd5e1;
+      background: #f8fafc; padding: 0.125rem 0.5rem; border-radius: 9999px;
+    }
+
+    /* Skeleton */
+    @keyframes shimmer {
+      0% { background-position: -200px 0; }
+      100% { background-position: calc(200px + 100%) 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+      background-size: 200px 100%; animation: shimmer 1.5s infinite; border-radius: 0.5rem;
+    }
+
+    main { padding-bottom: 1rem; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Content -->
+  <main class="max-w-5xl mx-auto px-3 py-3 sm:px-4 sm:py-4">
+
+    <!-- Market Pulse: Regime + VIX + Indices -->
+    <section class="market-pulse" id="market-pulse" style="background: linear-gradient(135deg, #64748b, #94a3b8);">
+      <div class="pulse-top">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <div id="market-state-badge" class="market-state-badge state-closed">
+              <span class="inline-block w-1.5 h-1.5 rounded-full bg-current"></span>
+              <span>--</span>
+            </div>
+          </div>
+          <div id="regime-label" class="text-2xl font-black orbitron">
+            <div class="skeleton" style="height:2rem;width:6rem;"></div>
+          </div>
+          <div id="regime-desc" class="text-xs opacity-60 mt-1">불러오는 중...</div>
+        </div>
+        <div class="text-right">
+          <div class="flex items-center gap-1.5 justify-end">
+            <span class="text-[10px] font-bold opacity-50 orbitron">VIX</span>
+            <span id="vix-price" class="text-xl font-black orbitron">--</span>
+          </div>
+          <div class="flex items-center gap-2 justify-end mt-1">
+            <span id="vix-level" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15">--</span>
+            <span id="vix-change" class="text-[10px] opacity-50">--</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pulse-indices" id="indices-grid">
+        <div class="index-item"><div class="skeleton" style="height:3rem;"></div></div>
+        <div class="index-item"><div class="skeleton" style="height:3rem;"></div></div>
+        <div class="index-item"><div class="skeleton" style="height:3rem;"></div></div>
+      </div>
+    </section>
+
+    <!-- Sector Heatmap -->
+    <div class="bento-card mb-3">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="card-title orbitron">섹터 히트맵</h3>
+        <span class="text-xs text-slate-400" id="sector-count"></span>
+      </div>
+      <div id="heatmap-grid" class="heatmap-grid">
+        <div class="skeleton" style="height:50px"></div>
+        <div class="skeleton" style="height:50px"></div>
+        <div class="skeleton" style="height:50px"></div>
+        <div class="skeleton" style="height:50px"></div>
+      </div>
+    </div>
+
+    <!-- Info Grid 2x2 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+      <!-- 투자 심리 -->
+      <div class="bento-card">
+        <h3 class="card-title orbitron mb-3">투자 심리</h3>
+        <div>
+          <div class="placeholder-row">
+            <span class="text-xs text-slate-500">AAII 강세/약세</span>
+            <span class="ph-tag">준비 중</span>
+          </div>
+          <div class="placeholder-row">
+            <span class="text-xs text-slate-500">Put/Call 비율</span>
+            <span class="ph-tag">준비 중</span>
+          </div>
+          <div class="placeholder-row">
+            <span class="text-xs text-slate-500">공포 & 탐욕</span>
+            <span class="ph-tag">준비 중</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 유동성 -->
+      <div class="bento-card">
+        <h3 class="card-title orbitron mb-3">유동성</h3>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xl font-bold text-brand-navy orbitron">--</span>
+          <span class="ph-tag">WoW</span>
+        </div>
+        <div class="h-8 bg-gradient-to-r from-slate-50 to-slate-100 rounded flex items-end px-1 gap-0.5">
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:40%"></div>
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:55%"></div>
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:65%"></div>
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:50%"></div>
+          <div class="w-2.5 bg-slate-200 rounded-t" style="height:70%"></div>
+          <div class="w-2.5 bg-slate-300 rounded-t" style="height:85%"></div>
+        </div>
+        <p class="text-[10px] text-slate-300 mt-2">Phase 2 연결 예정</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <!-- 금융 건전성 -->
+      <div class="bento-card">
+        <h3 class="card-title orbitron mb-3">금융 건전성</h3>
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 bg-slate-200 rounded-full"></div>
+          <span class="text-sm font-bold text-slate-400">--</span>
+        </div>
+        <p class="text-[10px] text-slate-300 mt-2">Phase 2 연결 예정</p>
+      </div>
+
+      <!-- 스트레스 지수 -->
+      <div class="bento-card">
+        <h3 class="card-title orbitron mb-3">스트레스 지수</h3>
+        <div class="flex items-center justify-between">
+          <span class="text-xl font-bold text-slate-400 orbitron">--</span>
+          <span class="ph-tag">N/A</span>
+        </div>
+        <p class="text-[10px] text-slate-300 mt-2">Phase 2 연결 예정</p>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const MARKET_DATA_URL = 'https://script.google.com/macros/s/AKfycbwu2wdFAGAKnZlsb7w7BHsZzVS7wxHHRoYsKNTBg3Jc4kLOLv8TVuTeOSOC_gUo_BRS/exec';
+
+    const SECTOR_WEIGHTS = { XLK:4, XLF:3, XLV:2, XLE:2, XLI:2, XLC:2, XLY:1, XLP:1, XLRE:1, XLB:1, XLU:1 };
+    const SECTOR_NAMES = {
+      XLK:'Tech', XLF:'Financials', XLV:'Healthcare', XLE:'Energy',
+      XLI:'Industrials', XLC:'Comm Svc', XLY:'Consumer Disc',
+      XLP:'Consumer Stpl', XLRE:'Real Estate', XLB:'Materials', XLU:'Utilities'
+    };
+
+    const REGIME_KO = { 'Growth':'성장', 'Neutral':'중립', 'Defensive':'방어', 'Risk-Off':'위험회피' };
+    const REGIME_DESC_KO = {
+      'Growth':'VIX < 20 — 위험 선호 환경',
+      'Neutral':'VIX 20-25 — 균형 상태',
+      'Defensive':'VIX 25-30 — 경계 구간',
+      'Risk-Off':'VIX > 30 — 고변동성 경보'
+    };
+    const VIX_LEVEL_KO = { low:'안정', mid:'보통', high:'경계', extreme:'극단' };
+
+    const GRADIENTS = {
+      green:  'linear-gradient(135deg, #065f46, #059669)',
+      blue:   'linear-gradient(135deg, #1e40af, #3b82f6)',
+      orange: 'linear-gradient(135deg, #9a3412, #ea580c)',
+      red:    'linear-gradient(135deg, #991b1b, #dc2626)',
+      gray:   'linear-gradient(135deg, #64748b, #94a3b8)'
+    };
+
+    const DataService = {
+      fetchAll() {
+        return new Promise((resolve, reject) => {
+          const cb = '_mkt_' + Date.now();
+          const timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 10000);
+          const s = document.createElement('script');
+
+          function cleanup() { clearTimeout(timer); delete window[cb]; if (s.parentNode) s.remove(); }
+
+          window[cb] = data => { cleanup(); resolve(data); };
+          s.src = `${MARKET_DATA_URL}?callback=${cb}`;
+          s.onerror = () => { cleanup(); reject(new Error('Network error')); };
+          document.head.appendChild(s);
+        });
+      },
+
+      renderPulse(indices, vix) {
+        const card = document.getElementById('market-pulse');
+
+        // Regime
+        if (vix && vix.regime) {
+          const r = vix.regime;
+          card.style.background = GRADIENTS[r.color] || GRADIENTS.gray;
+          document.getElementById('regime-label').textContent = REGIME_KO[r.label] || r.label;
+          document.getElementById('regime-desc').textContent = REGIME_DESC_KO[r.label] || '';
+        }
+
+        // VIX
+        if (vix) {
+          const p = vix.price;
+          document.getElementById('vix-price').textContent = p.toFixed(2);
+          const lk = p < 20 ? 'low' : p < 25 ? 'mid' : p < 30 ? 'high' : 'extreme';
+          document.getElementById('vix-level').textContent = VIX_LEVEL_KO[lk];
+          const arr = vix.changePercent > 0 ? '\u25B2' : vix.changePercent < 0 ? '\u25BC' : '\u2013';
+          document.getElementById('vix-change').textContent =
+            `${arr} ${vix.change > 0 ? '+' : ''}${vix.change.toFixed(2)} (${Math.abs(vix.changePercent).toFixed(2)}%)`;
+        }
+
+        // Indices
+        if (indices) {
+          const order = ['^GSPC', '^IXIC', '^DJI'];
+          document.getElementById('indices-grid').innerHTML = order.map(sym => {
+            const d = indices[sym];
+            if (!d) return '';
+            const cls = d.changePercent > 0 ? 'idx-up' : d.changePercent < 0 ? 'idx-down' : 'idx-flat';
+            const arr = d.changePercent > 0 ? '\u25B2' : d.changePercent < 0 ? '\u25BC' : '\u2013';
+            return `<div class="index-item">
+              <div class="index-name">${d.name}</div>
+              <div class="index-price orbitron">${d.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+              <div class="index-change ${cls}">${arr} ${Math.abs(d.changePercent).toFixed(2)}%</div>
+            </div>`;
+          }).join('');
+        }
+      },
+
+      renderMarketState(state) {
+        const badge = document.getElementById('market-state-badge');
+        if (!badge) return;
+        const m = { REGULAR:{c:'state-regular',l:'장중'}, PRE:{c:'state-pre',l:'프리마켓'}, POST:{c:'state-post',l:'애프터'}, CLOSED:{c:'state-closed',l:'장마감'} };
+        const s = m[state] || m.CLOSED;
+        badge.className = `market-state-badge ${s.c}`;
+        badge.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-current"></span><span>${s.l}</span>`;
+      },
+
+      renderSectors(sectors) {
+        if (!sectors) return;
+        const sorted = Object.entries(sectors).map(([sym, d]) => ({ sym, ...d })).sort((a, b) => b.changePercent - a.changePercent);
+
+        const up = sorted.filter(s => s.changePercent > 0).length;
+        const dn = sorted.length - up;
+        document.getElementById('sector-count').textContent = `${up} 상승 · ${dn} 하락`;
+
+        this.renderHeatmap(sorted);
+      },
+
+      renderHeatmap(sorted) {
+        const grid = document.getElementById('heatmap-grid');
+        const order = ['XLK','XLF','XLV','XLE','XLI','XLC','XLY','XLP','XLRE','XLB','XLU'];
+        const map = {}; sorted.forEach(s => { map[s.sym] = s; });
+
+        grid.innerHTML = order.map(sym => {
+          const d = map[sym];
+          if (!d) return '';
+          const pct = d.changePercent;
+          const w = SECTOR_WEIGHTS[sym] || 1;
+          const cls = w >= 3 ? sym.toLowerCase() : '';
+
+          let bg, fg;
+          if (pct > 2) { bg='bg-green-600'; fg='text-white'; }
+          else if (pct > 1) { bg='bg-green-500'; fg='text-white'; }
+          else if (pct > 0.5) { bg='bg-green-400'; fg='text-white'; }
+          else if (pct > 0) { bg='bg-green-200'; fg='text-green-800'; }
+          else if (pct > -0.5) { bg='bg-red-200'; fg='text-red-700'; }
+          else if (pct > -1) { bg='bg-red-400'; fg='text-white'; }
+          else { bg='bg-red-600'; fg='text-white'; }
+
+          const sign = pct > 0 ? '+' : '';
+          const fs = w >= 3 ? 'text-lg' : 'text-sm';
+          return `<div class="heatmap-cell ${cls} ${bg} ${fg}" role="button" tabindex="0"
+            aria-label="${SECTOR_NAMES[sym]} ${sign}${pct.toFixed(2)}%">
+            <span class="font-bold ${fs}">${sym}</span>
+            <span class="text-[10px]">${SECTOR_NAMES[sym]}</span>
+            <span class="font-bold text-xs">${sign}${pct.toFixed(2)}%</span>
+          </div>`;
+        }).join('');
+      },
+
+      showError() {
+        const card = document.getElementById('market-pulse');
+        card.style.background = GRADIENTS.gray;
+        document.getElementById('regime-label').textContent = '연결 실패';
+        document.getElementById('regime-desc').textContent = '데이터를 불러올 수 없습니다';
+        document.getElementById('vix-price').textContent = '--';
+        document.getElementById('vix-change').textContent = '';
+        document.getElementById('vix-level').textContent = '';
+        document.getElementById('indices-grid').innerHTML =
+          '<div class="text-sm opacity-50 py-4 text-center col-span-full">데이터를 불러올 수 없습니다</div>';
+      },
+
+      async init() {
+        try {
+          const data = await this.fetchAll();
+          this.renderPulse(data.indices, data.vix);
+          this.renderMarketState(data.marketState);
+          this.renderSectors(data.sectors);
+        } catch (err) {
+          console.error('[MarketPulse]', err);
+          this.showError();
+        }
+      }
+    };
+
+    // SPA Navigation
+    document.body.addEventListener('click', e => {
+      const spa = e.target.closest('[data-spa-link]');
+      if (spa) {
+        e.preventDefault();
+        const p = spa.getAttribute('data-spa-link');
+        if (window.parent && window.parent.loadPage) window.parent.loadPage(p);
+        else window.location.href = 'index.html?path=' + p;
+        return;
+      }
+      const direct = e.target.closest('[data-direct-link]');
+      if (direct) {
+        e.preventDefault();
+        window.open(direct.getAttribute('data-direct-link'), '_blank');
+        return;
+      }
+      const legacy = e.target.closest('a[href*="?path="]');
+      if (legacy) {
+        e.preventDefault();
+        const p = new URL(legacy.href, location.href).searchParams.get('path');
+        if (window.parent && window.parent.loadPage) window.parent.loadPage(p);
+      }
+    });
+
+    // Init
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => DataService.init());
+    } else {
+      DataService.init();
+    }
+  </script>
+</body>
+</html>

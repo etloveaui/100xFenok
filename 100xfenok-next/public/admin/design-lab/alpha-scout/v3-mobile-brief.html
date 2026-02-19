@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Scout v3 - Mobile Brief</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Manrope', sans-serif; }
+        
+        .mobile-container {
+            max-width: 420px; margin: 0 auto; background: white; min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative;
+        }
+
+        .header-card {
+            background: #111827; color: white; padding: 2rem 1.5rem; border-radius: 0 0 24px 24px;
+            margin-bottom: 1.5rem;
+        }
+
+        .brief-card {
+            background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 1.25rem;
+            margin: 0 1rem 1rem 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .score-donut { width: 80px; height: 80px; position: relative; display: flex; align-items: center; justify-content: center; }
+        .score-text { position: absolute; font-weight: 800; font-size: 1.25rem; }
+
+        .tag-pill { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 99px; background: #f3f4f6; color: #4b5563; }
+        .tag-pill.highlight { background: #eff6ff; color: #2563eb; }
+
+        .metric-row { display: flex; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f9fafb; }
+        .metric-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .bot-nav {
+            position: sticky; bottom: 0; background: white; border-top: 1px solid #e5e7eb;
+            display: flex; justify-content: space-around; padding: 1rem; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        
+        <div class="header-card">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h1 class="text-4xl font-black mb-1">IBM</h1>
+                    <p class="text-slate-400 text-sm">Intl Business Machines</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-2xl font-bold">$219.83</p>
+                    <p class="text-green-400 text-sm font-bold">▲ 1.24%</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 mb-6">
+                <span class="tag-pill bg-slate-800 text-white border border-slate-700">Tech</span>
+                <span class="tag-pill bg-slate-800 text-white border border-slate-700">Cloud</span>
+                <span class="tag-pill bg-slate-800 text-white border border-slate-700">AI</span>
+            </div>
+
+            <div class="flex items-center gap-4 bg-slate-800 p-4 rounded-xl">
+                <div class="score-donut">
+                    <canvas id="scoreChart"></canvas>
+                    <span class="score-text text-white">88</span>
+                </div>
+                <div>
+                    <p class="font-bold text-white text-lg">Strong Buy</p>
+                    <p class="text-xs text-slate-400">Quantitative Rank: Top 5%</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="brief-card">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <i class="fas fa-bolt text-yellow-500"></i> Quick Thesis
+            </h3>
+            <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                <strong class="text-slate-900">AI 주도 성장:</strong> 컨설팅 부문의 AI 프로젝트 수주 잔고가 급증하고 있습니다. 
+            </p>
+            <p class="text-sm text-slate-600 leading-relaxed">
+                <strong class="text-slate-900">안정적 현금흐름:</strong> 연간 $12B 이상의 FCF는 배당과 M&A의 든든한 재원입니다.
+            </p>
+        </div>
+
+        <div class="brief-card">
+            <h3 class="font-bold text-lg mb-3">Key Metrics</h3>
+            <div class="metric-row">
+                <span class="text-sm text-slate-500">Market Cap</span>
+                <span class="font-bold text-slate-800">$203.2B</span>
+            </div>
+            <div class="metric-row">
+                <span class="text-sm text-slate-500">P/E Ratio</span>
+                <span class="font-bold text-slate-800">34.2x</span>
+            </div>
+            <div class="metric-row">
+                <span class="text-sm text-slate-500">Div Yield</span>
+                <span class="font-bold text-green-600">3.03%</span>
+            </div>
+            <div class="metric-row">
+                <span class="text-sm text-slate-500">Revenue Growth</span>
+                <span class="font-bold text-slate-800">+1.4%</span>
+            </div>
+        </div>
+
+        <div class="brief-card">
+            <h3 class="font-bold text-lg mb-3">Valuation Check</h3>
+            <div class="relative h-2 bg-slate-100 rounded-full mt-6 mb-2">
+                <div class="absolute top-0 left-[20%] right-[20%] h-full bg-green-100 rounded-full"></div> <!-- Fair Value Range -->
+                <div class="absolute top-[-4px] left-[60%] w-3 h-4 bg-black rounded-sm border-2 border-white shadow"></div> <!-- Current -->
+            </div>
+            <div class="flex justify-between text-xs text-slate-400">
+                <span>Undervalued</span>
+                <span class="font-bold text-slate-800">Fair</span>
+                <span>Overvalued</span>
+            </div>
+        </div>
+
+        <div class="h-20"></div> <!-- Spacer -->
+
+        <div class="bot-nav">
+            <button class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span class="text-[10px] font-bold">Home</span>
+            </button>
+            <button class="flex flex-col items-center text-slate-400">
+                <i class="fas fa-chart-bar text-lg mb-1"></i>
+                <span class="text-[10px] font-bold">Fin</span>
+            </button>
+            <button class="flex flex-col items-center text-slate-400">
+                <i class="fas fa-newspaper text-lg mb-1"></i>
+                <span class="text-[10px] font-bold">News</span>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const ctx = document.getElementById('scoreChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Score', ''],
+                datasets: [{
+                    data: [88, 12],
+                    backgroundColor: ['#22c55e', '#374151'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '85%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+    </script>
+</body>
+</html>

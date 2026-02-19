@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100xFenok Design Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: bold; }
+        .status-todo { background: #e2e8f0; color: #475569; }
+        .status-doing { background: #bfdbfe; color: #1e40af; }
+        .status-done { background: #bbf7d0; color: #166534; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">🎨 Design Lab</h1>
+            <p class="text-slate-600 mt-2">100xFenok 리디자인 실험실 및 작업 대시보드</p>
+        </header>
+
+        <!-- 확정된 컴포넌트 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">✅ 확정된 컴포넌트</h2>
+
+            <!-- 통합 데모 (진짜 조합) -->
+            <div class="card border-2 border-brand-gold bg-amber-50 mb-4" style="border-color:#D5AD36;">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg text-amber-800">🎯 통합 데모 (실제 조합)</h3>
+                        <p class="text-sm text-amber-700">Nav 1-Tier EDGY (60px) + Main v17.8 + Footer v21 = <strong>확정 컴포넌트 완전 통합</strong></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="integrated-demo.html" class="px-4 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-colors">
+                            데모 보기 →
+                        </a>
+                        <a href="preview-all.html" class="px-3 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300 transition-colors">
+                            개별 프리뷰
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Nav 1-Tier EDGY -->
+                <div class="card border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Nav 1-Tier EDGY</h3>
+                        <span class="status-badge status-done">확정 (12-27)</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3"><strong>60px</strong> Glassmorphism + Dropdown + Gold Accent</p>
+                    <div class="flex gap-4 flex-wrap">
+                        <a href="integrated-demo.html" class="text-emerald-600 text-sm font-bold hover:underline">통합 데모 ⭐</a>
+                        <a href="components/nav-v11.html" class="text-slate-400 text-sm hover:underline">v11 참고</a>
+                    </div>
+                </div>
+
+                <!-- Main v17.8 확정 -->
+                <div class="card border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Main Page v17.8</h3>
+                        <span class="status-badge status-done">확정 (12-26)</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">Responsive Ultimate - P0~P2 완료, 모바일/접근성 대응</p>
+                    <div class="flex gap-4">
+                        <a href="main/v17.8-responsive.html" class="text-emerald-600 text-sm font-bold hover:underline">v17.8 보기 →</a>
+                        <a href="main/index.html" class="text-slate-400 text-sm hover:underline">전체 시안</a>
+                    </div>
+                </div>
+
+                <!-- Footer v21 확정 -->
+                <div class="card border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Footer v21</h3>
+                        <span class="status-badge status-done">확정 (12-27)</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">Broadcast HUD Pro - 미국 장 실시간 동기화</p>
+                    <div class="flex gap-4">
+                        <a href="footer/v21-broadcast-pro.html" class="text-emerald-600 text-sm font-bold hover:underline">v21 보기 →</a>
+                        <a href="footer/index.html" class="text-slate-400 text-sm hover:underline">전체 시안</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 확정된 Reports -->
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">📰 Reports v5 확정</h2>
+            <div class="card border-2 border-emerald-500 bg-emerald-50 mb-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg text-emerald-800">✅ Market Wrap v5 Unified Premium</h3>
+                        <p class="text-sm text-emerald-700">v3.1 기반 + 브랜드 통일 + Nav 1-Tier EDGY + Footer v21 완전 통합</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="reports/v5-unified-premium.html" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition-colors">
+                            v5 보기 →
+                        </a>
+                        <a href="reports/index.html" class="px-3 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300 transition-colors">
+                            시안 갤러리
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 진행 중인 작업 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">🚀 진행 중인 작업</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Posts (Content Hub) -->
+                <div class="card border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Posts (Content Hub)</h3>
+                        <span class="status-badge status-done">v1~v4 완료</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4"><code>posts-main.html</code> 리디자인: Magazine, Masonry, Timeline, Archive 4종</p>
+                    <div class="flex gap-4">
+                        <a href="posts/index.html" class="text-blue-600 text-sm font-bold hover:underline">시안 갤러리 →</a>
+                    </div>
+                </div>
+
+                <!-- Alpha Scout Redesign -->
+                <div class="card border-l-4 border-purple-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Alpha Scout</h3>
+                        <span class="status-badge status-done">v2~v5 완료</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4">개별 종목 리포트: v4 Analyst Desk & v5 Quantum Grid (Light Mode Only)</p>
+                    <div class="flex gap-4">
+                        <a href="alpha-scout/index.html" class="text-purple-600 text-sm font-bold hover:underline">시안 보기 →</a>
+                    </div>
+                </div>
+
+                <!-- Calculators IB -->
+                <div class="card border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Calculators - IB</h3>
+                        <span class="status-badge status-done">v1~v10 완료</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4">무한매수 계산기: 5종 시안 (v9 Ultimate Card, v10 Dashboard 포함)</p>
+                    <div class="flex gap-4">
+                        <a href="calculators/index.html" class="text-emerald-600 text-sm font-bold hover:underline">시안 보기 →</a>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="card border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">Charts</h3>
+                        <span class="status-badge status-done">v1, v2 완료</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4">멀티차트 리디자인: Grid Monitor & Compare Studio 시안</p>
+                    <div class="flex gap-4">
+                        <a href="charts/index.html" class="text-blue-600 text-sm font-bold hover:underline">시안 갤러리 →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Sentiment (Phase 4-C) -->
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">🎭 Market Sentiment (Phase 4-C)</h2>
+            <div class="card border-2 border-orange-500 bg-orange-50 mb-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg text-orange-800">🔥 Sentiment 위젯 시안 v1</h3>
+                        <p class="text-sm text-orange-700">Signal Score (-8~+8) + 바닥 체크리스트 + 4그룹 카드 + 차트 통합</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="sentiment/integrated-v1.html" class="px-4 py-2 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition-colors">
+                            시안 보기 →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <p class="text-sm text-slate-500">
+                <strong>브리핑</strong>: <code>docs/planning/sentiment-widget-design-v4.md</code> |
+                <strong>데이터</strong>: 12개 지표, 8개 트리거, 19,000+ 히스토리
+            </p>
+        </section>
+
+        <!-- Future Ideas (Backlog) -->
+        <section class="mb-12">
+            <h2 class="text-xl font-bold mb-4 text-slate-400 uppercase tracking-wider">💡 Future Ideas (Backlog)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-80 hover:opacity-100 transition-opacity">
+                
+                <!-- Settings -->
+                <div class="card border-2 border-dashed border-slate-300 bg-slate-50">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">⚙️</span>
+                        <h3 class="font-bold text-slate-700">Settings Center</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">Priority 2</p>
+                    <ul class="text-xs text-slate-600 list-disc list-inside">
+                        <li>Glass Modal (Quick)</li>
+                        <li>System Page (Full)</li>
+                        <li>API Key Security UI</li>
+                    </ul>
+                </div>
+
+                <!-- System States -->
+                <div class="card border-2 border-dashed border-slate-300 bg-slate-50">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">🚦</span>
+                        <h3 class="font-bold text-slate-700">System States</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">Priority 3</p>
+                    <ul class="text-xs text-slate-600 list-disc list-inside">
+                        <li>Brand Loading Animation</li>
+                        <li>Smart Empty States</li>
+                        <li>Witty 404 Page</li>
+                    </ul>
+                </div>
+
+                <!-- Mobile Opt -->
+                <div class="card border-2 border-dashed border-slate-300 bg-slate-50">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">📱</span>
+                        <h3 class="font-bold text-slate-700">Mobile UX</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">Priority 4</p>
+                    <ul class="text-xs text-slate-600 list-disc list-inside">
+                        <li>Bottom Sheet Nav</li>
+                        <li>Swipe Gestures</li>
+                        <li>Touch-friendly Charts</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 작업 공간 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">📂 작업 공간</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <!-- Identity & Structure -->
+                <a href="components/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">🧱</div>
+                    <div class="font-bold text-slate-700">Nav</div>
+                    <div class="text-xs text-slate-400 mt-1">v11 확정</div>
+                </a>
+                <a href="main/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">🏠</div>
+                    <div class="font-bold text-slate-700">Main</div>
+                    <div class="text-xs text-slate-400 mt-1">v17.8 확정</div>
+                </a>
+                <a href="footer/" class="card text-center hover:bg-emerald-50 block border-2 border-emerald-300">
+                    <div class="text-2xl mb-2">📋</div>
+                    <div class="font-bold text-emerald-700">Footer</div>
+                    <div class="text-xs text-emerald-400 mt-1">✅ v21 확정</div>
+                </a>
+                
+                <!-- Charts -->
+                <a href="charts/" class="card text-center hover:bg-blue-50 block border-2 border-blue-300">
+                    <div class="text-2xl mb-2">📈</div>
+                    <div class="font-bold text-blue-700">Charts</div>
+                    <div class="text-xs text-blue-400 mt-1">v1~v5 완료</div>
+                </a>
+                <a href="reports/" class="card text-center hover:bg-blue-50 block border-2 border-blue-300">
+                    <div class="text-2xl mb-2">📰</div>
+                    <div class="font-bold text-blue-700">Reports</div>
+                    <div class="text-xs text-blue-400 mt-1">🔥 진행 중</div>
+                </a>
+                <a href="dashboards/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">⚡</div>
+                    <div class="font-bold text-slate-700">Dashboards</div>
+                    <div class="text-xs text-slate-400 mt-1">Valuation / Sys</div>
+                </a>
+                <a href="widgets/" class="card text-center hover:bg-slate-50 block">
+                    <div class="text-2xl mb-2">🧩</div>
+                    <div class="font-bold text-slate-700">Widgets</div>
+                    <div class="text-xs text-slate-400 mt-1">Components</div>
+                </a>
+                <a href="sentiment/" class="card text-center hover:bg-orange-50 block border-2 border-orange-300">
+                    <div class="text-2xl mb-2">🎭</div>
+                    <div class="font-bold text-orange-700">Sentiment</div>
+                    <div class="text-xs text-orange-400 mt-1">🔥 v1 시안</div>
+                </a>
+
+                <!-- Live Link -->
+                <a href="../../index.html" target="_blank" class="card text-center hover:bg-slate-50 block border-dashed border-2 border-slate-300">
+                    <div class="text-2xl mb-2">👀</div>
+                    <div class="font-bold text-slate-700">Live Site</div>
+                    <div class="text-xs text-slate-400 mt-1">운영 사이트</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 참조 -->
+        <section>
+            <h2 class="text-xl font-bold mb-4 text-slate-700">📚 참조</h2>
+            <ul class="list-disc list-inside text-slate-600 bg-white p-6 rounded-lg shadow-sm">
+                <li><a href="https://tailwindcss.com/docs" target="_blank" class="text-blue-500 hover:underline">Tailwind CSS Docs</a></li>
+                <li><a href="https://fonts.google.com" target="_blank" class="text-blue-500 hover:underline">Google Fonts</a></li>
+                <li>Master Plan: <code>docs/planning/design-lab-master.md</code></li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>

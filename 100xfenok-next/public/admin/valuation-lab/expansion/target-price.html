@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>목표가 계산 - Valuation Lab</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-bullseye text-amber-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">목표가 계산</h1>
+            <p class="text-gray-500 text-sm">Global Scouter v2.0</p>
+          </div>
+        </div>
+        <a href="./" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> 확장 섹션
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-6">
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+        <div>
+          <span class="font-semibold text-gray-700">데이터 기준일:</span>
+          <span id="data-date" class="ml-1 mono">-</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">총 종목:</span>
+          <span id="total-count" class="ml-1 mono">-</span>
+        </div>
+        <div id="loading-status" class="text-blue-600 hidden">
+          <i class="fas fa-spinner fa-spin mr-1"></i>
+          <span id="loading-text">로딩 중...</span>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        목표가는 `per_band.avg × estimates.eps.fy1`로 계산합니다. PER 평균 1 미만은 제외합니다.
+      </p>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">필터</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <input id="search-input" type="text" placeholder="티커/기업명 검색"
+          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+
+        <select id="sector-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="">섹터 전체</option>
+        </select>
+
+        <select id="country-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="">국가 전체</option>
+        </select>
+
+        <select id="sort-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="target-desc">목표가 높은 순</option>
+          <option value="target-asc">목표가 낮은 순</option>
+          <option value="name-asc">이름 A-Z</option>
+        </select>
+
+        <select id="limit-filter" class="w-full px-3 py-2 border rounded-lg text-sm">
+          <option value="50">50개</option>
+          <option value="100" selected>100개</option>
+          <option value="200">200개</option>
+          <option value="all">전체</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-5 shadow">
+      <h2 class="font-semibold text-gray-700 mb-4">목표가 결과</h2>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr>
+              <th class="text-left px-3 py-2">티커</th>
+              <th class="text-left px-3 py-2">기업명</th>
+              <th class="text-left px-3 py-2">섹터</th>
+              <th class="text-right px-3 py-2">FY1 EPS</th>
+              <th class="text-right px-3 py-2">PER 평균</th>
+              <th class="text-right px-3 py-2">목표가</th>
+            </tr>
+          </thead>
+          <tbody id="result-body" class="divide-y"></tbody>
+        </table>
+      </div>
+      <p id="empty-state" class="text-sm text-gray-500 mt-4 hidden">표시할 결과가 없습니다.</p>
+    </section>
+
+  </main>
+
+  <script>
+    // v2.0 모듈화 구조 - 2단계 로딩
+    const getBasePath = () => {
+      const host = location.hostname;
+      if (location.protocol === 'file:') return '';
+      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return '';
+      if (host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')) return '';
+      if (host.endsWith('pages.dev')) return '';
+      return '/100xFenok';
+    };
+
+    const BASE_PATH = getBasePath();
+    const URLS = {
+      INDEX: `${BASE_PATH}/data/global-scouter/core/stocks_index.json`,
+      METADATA: `${BASE_PATH}/data/global-scouter/core/metadata.json`,
+      DETAIL_BASE: `${BASE_PATH}/data/global-scouter/stocks/detail/`
+    };
+
+    const state = {
+      index: null,
+      details: {},
+      rows: []
+    };
+
+    const elements = {
+      dataDate: document.getElementById('data-date'),
+      totalCount: document.getElementById('total-count'),
+      loadingStatus: document.getElementById('loading-status'),
+      loadingText: document.getElementById('loading-text'),
+      resultBody: document.getElementById('result-body'),
+      emptyState: document.getElementById('empty-state'),
+      search: document.getElementById('search-input'),
+      sector: document.getElementById('sector-filter'),
+      country: document.getElementById('country-filter'),
+      sort: document.getElementById('sort-filter'),
+      limit: document.getElementById('limit-filter')
+    };
+
+    function formatNumber(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      return Number(value).toFixed(2);
+    }
+
+    async function fetchDetail(ticker) {
+      try {
+        const res = await fetch(URLS.DETAIL_BASE + ticker + '.json');
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    }
+
+    async function fetchDetails(tickers) {
+      const batchSize = 50;
+      const results = {};
+      for (let i = 0; i < tickers.length; i += batchSize) {
+        const batch = tickers.slice(i, i + batchSize);
+        elements.loadingText.textContent = `상세 로딩 중... (${Math.min(i + batchSize, tickers.length)}/${tickers.length})`;
+        await Promise.all(batch.map(async (t) => {
+          const detail = await fetchDetail(t);
+          if (detail) results[t] = detail;
+        }));
+      }
+      return results;
+    }
+
+    function buildRows(index, details) {
+      const rows = [];
+      for (const [ticker, info] of Object.entries(index.stocks || {})) {
+        const detail = details[ticker];
+        if (!detail) continue;
+
+        const valuation = detail.valuation || {};
+        const estimates = detail.estimates || {};
+
+        const perAvg = valuation.per_band?.avg ?? null;
+        if (perAvg !== null && perAvg < 1) continue;
+
+        const epsFy1 = estimates.eps?.fy1 ?? null;
+        const target = (perAvg !== null && epsFy1 !== null) ? perAvg * epsFy1 : null;
+
+        rows.push({
+          ticker,
+          name: info.n || '-',
+          sector: info.s || '-',
+          country: info.c || '-',
+          perAvg,
+          epsFy1,
+          target
+        });
+      }
+      return rows;
+    }
+
+    function uniqueValues(rows, key) {
+      return [...new Set(rows.map(r => r[key]).filter(Boolean))].sort();
+    }
+
+    function applyFilters() {
+      const query = elements.search.value.trim().toLowerCase();
+      const sector = elements.sector.value;
+      const country = elements.country.value;
+
+      let rows = state.rows.filter(row => {
+        if (row.target === null) return false;
+        if (sector && row.sector !== sector) return false;
+        if (country && row.country !== country) return false;
+        if (query) {
+          const hay = `${row.ticker} ${row.name}`.toLowerCase();
+          if (!hay.includes(query)) return false;
+        }
+        return true;
+      });
+
+      rows = applySort(rows);
+      rows = applyLimit(rows);
+      renderRows(rows);
+    }
+
+    function applySort(rows) {
+      const mode = elements.sort.value;
+      const sorted = [...rows];
+      if (mode === 'target-desc') {
+        sorted.sort((a, b) => (b.target ?? -Infinity) - (a.target ?? -Infinity));
+      } else if (mode === 'target-asc') {
+        sorted.sort((a, b) => (a.target ?? Infinity) - (b.target ?? Infinity));
+      } else if (mode === 'name-asc') {
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      return sorted;
+    }
+
+    function applyLimit(rows) {
+      const limit = elements.limit.value;
+      if (limit === 'all') return rows;
+      return rows.slice(0, Number(limit));
+    }
+
+    function renderRows(rows) {
+      elements.resultBody.innerHTML = '';
+      if (rows.length === 0) {
+        elements.emptyState.classList.remove('hidden');
+        return;
+      }
+      elements.emptyState.classList.add('hidden');
+      for (const row of rows) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2 mono">${row.ticker}</td>
+          <td class="px-3 py-2">${row.name}</td>
+          <td class="px-3 py-2">${row.sector}</td>
+          <td class="px-3 py-2 text-right mono">${formatNumber(row.epsFy1)}</td>
+          <td class="px-3 py-2 text-right mono">${formatNumber(row.perAvg)}</td>
+          <td class="px-3 py-2 text-right mono">${formatNumber(row.target)}</td>
+        `;
+        elements.resultBody.appendChild(tr);
+      }
+    }
+
+    async function init() {
+      elements.loadingStatus.classList.remove('hidden');
+
+      // 1단계: 인덱스 + 메타데이터 로드
+      elements.loadingText.textContent = '인덱스 로딩 중...';
+      const [indexRes, metaRes] = await Promise.all([
+        fetch(URLS.INDEX),
+        fetch(URLS.METADATA)
+      ]);
+      if (!indexRes.ok) throw new Error('인덱스 로딩 실패');
+      state.index = await indexRes.json();
+      const meta = metaRes.ok ? await metaRes.json() : {};
+
+      elements.dataDate.textContent = meta.source_date || '-';
+      const tickers = Object.keys(state.index.stocks || {});
+
+      // 2단계: 상세 데이터 배치 로드
+      state.details = await fetchDetails(tickers);
+
+      // 3단계: 행 구성
+      state.rows = buildRows(state.index, state.details);
+      elements.totalCount.textContent = state.rows.length.toString();
+
+      // 필터 옵션 채우기
+      const sectors = uniqueValues(state.rows, 'sector');
+      const countries = uniqueValues(state.rows, 'country');
+
+      for (const value of sectors) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        elements.sector.appendChild(opt);
+      }
+      for (const value of countries) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        elements.country.appendChild(opt);
+      }
+
+      // URL 파라미터 처리
+      const symbol = new URLSearchParams(location.search).get('symbol');
+      if (symbol) {
+        elements.search.value = symbol;
+      }
+
+      elements.loadingStatus.classList.add('hidden');
+      applyFilters();
+    }
+
+    [elements.search, elements.sector, elements.country, elements.sort, elements.limit]
+      .forEach(el => el.addEventListener('input', applyFilters));
+
+    init().catch(err => {
+      elements.loadingStatus.classList.add('hidden');
+      elements.emptyState.classList.remove('hidden');
+      elements.emptyState.textContent = err.message;
+    });
+  </script>
+</body>
+</html>

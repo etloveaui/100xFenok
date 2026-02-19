@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100x FENOK - 통합 데모 (Nav v11 + Main v17.8 + Footer v21)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                cta: '#FED701',
+                bg: '#f8fafc'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* 1-Tier Nav: 60px */
+            --nav-height-desktop: 60px;
+            --nav-height-mobile: 60px;
+            --touch-target: 44px;
+        }
+        body { background-color: #f8fafc; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* P2-2: Focus Visible 스타일 */
+        *:focus-visible {
+            outline: 2px solid #1B73D3;
+            outline-offset: 2px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Nav 1-Tier EDGY Design
+           - Glassmorphism + Gradient Border
+           - Sharp Menu Pills with Glow Effects
+           ═══════════════════════════════════════════════════════════════ */
+
+        /* Nav Container: Glassmorphism */
+        .nav-edgy {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: var(--nav-height-desktop);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 2px solid transparent;
+            background-image: linear-gradient(white, white),
+                              linear-gradient(90deg, #010079 0%, #D5AD36 50%, #010079 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        /* Menu Pills Container */
+        .nav-pills-edgy {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        /* Edgy Menu Pill */
+        .nav-pill-edgy {
+            position: relative;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.025em;
+            color: #475569;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            /* Sharp shadow */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05),
+                        0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Hover: Lift + Glow */
+        .nav-pill-edgy:hover {
+            transform: translateY(-2px);
+            color: #1e293b;
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border-color: #D5AD36;
+            box-shadow: 0 4px 12px rgba(213, 173, 54, 0.2),
+                        0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Active: Navy + Gold Accent */
+        .nav-pill-edgy.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #010079 0%, #0a0a8c 100%);
+            border-color: #D5AD36;
+            box-shadow: 0 0 0 1px #D5AD36,
+                        0 4px 16px rgba(1, 0, 121, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .nav-pill-edgy.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #D5AD36, transparent);
+        }
+
+        /* Brand Section */
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Search Edgy */
+        .search-edgy {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            cursor: pointer;
+            min-height: var(--touch-target);
+            transition: all 0.2s;
+        }
+        .search-edgy:hover {
+            border-color: #D5AD36;
+            box-shadow: 0 2px 8px rgba(213, 173, 54, 0.15);
+        }
+
+        /* Mobile: Hide pills, show hamburger */
+        @media (max-width: 1024px) {
+            .nav-pills-edgy { display: none; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Dropdown Menu System
+           ═══════════════════════════════════════════════════════════════ */
+        .nav-dropdown {
+            position: relative;
+        }
+        .nav-dropdown-content {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.95);
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12),
+                        0 4px 12px rgba(0, 0, 0, 0.08);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            overflow: hidden;
+        }
+        /* Arrow */
+        .nav-dropdown-content::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            border-top: 1px solid #e2e8f0;
+        }
+        .nav-dropdown.open .nav-dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) scale(1);
+        }
+        .nav-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .nav-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .nav-dropdown-item:hover {
+            background: linear-gradient(90deg, #f8fafc 0%, #fff 100%);
+            color: #010079;
+            padding-left: 1.25rem;
+        }
+        .nav-dropdown-item i {
+            width: 16px;
+            color: #94a3b8;
+            transition: color 0.15s;
+        }
+        .nav-dropdown-item:hover i {
+            color: #D5AD36;
+        }
+        .nav-dropdown-header {
+            padding: 0.5rem 1rem;
+            font-size: 0.625rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* P0-1: 햄버거 메뉴 버튼 */
+        .hamburger-btn {
+            display: none;
+            width: var(--touch-target);
+            height: var(--touch-target);
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .hamburger-btn:hover { background: #e2e8f0; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+        }
+
+        /* P0-1: 모바일 슬라이드 패널 */
+        .mobile-nav-panel {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            z-index: 100;
+            transition: left 0.3s ease;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        .mobile-nav-panel.open { left: 0; }
+        .mobile-nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .mobile-nav-overlay.open { opacity: 1; pointer-events: auto; }
+        .mobile-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+            min-height: var(--touch-target);
+        }
+        .mobile-nav-item:hover { background: #f8fafc; }
+        .mobile-nav-item.active { background: #010079; color: white; }
+
+        /* Ticker */
+        .ticker-bar {
+            display: flex;
+            gap: 1.5rem;
+            padding: 0.5rem 1rem;
+            background: #f8fafc;
+            border-radius: 9999px;
+        }
+        .ticker-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* P0-2: 검색 버튼 (모바일용) */
+        .search-btn-mobile {
+            display: none;
+            width: var(--touch-target);
+            height: var(--touch-target);
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+        .search-btn-mobile:hover { background: #e2e8f0; }
+        @media (max-width: 768px) {
+            .search-btn-mobile { display: flex; }
+        }
+
+        /* Search Bar (Desktop) */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            cursor: pointer;
+            min-height: var(--touch-target);
+        }
+        .search-bar:hover { background: #e2e8f0; }
+
+        /* P0-2: 검색 모달 */
+        .search-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 15vh;
+            background: rgba(0,0,0,0.5);
+        }
+        .search-modal.open { display: flex; }
+        .search-modal-content {
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+        }
+        .search-modal-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            outline: none;
+        }
+        .search-modal-input:focus { border-color: #1B73D3; }
+
+        /* P0-3: Command Bar - calc() 기반 위치 */
+        .command-bar {
+            position: sticky;
+            top: var(--nav-height-desktop);
+            z-index: 40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .tab-pills {
+            display: flex;
+            gap: 0.25rem;
+            background: #f1f5f9;
+            padding: 0.25rem;
+            border-radius: 9999px;
+        }
+        .tab-pill {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            border-radius: 9999px;
+            transition: all 0.2s;
+            cursor: pointer;
+            /* P2-1: 터치 타겟 */
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+        }
+        .tab-pill.active { background: #010079; color: white; }
+        .period-pills {
+            display: flex;
+            gap: 0.125rem;
+            background: #f1f5f9;
+            padding: 0.25rem;
+            border-radius: 0.75rem;
+        }
+        .period-pill {
+            padding: 0.375rem 0.625rem;
+            /* P1-2: 최소 폰트 12px */
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            /* P2-1: 터치 타겟 */
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+        }
+        .period-pill.active { background: #D5AD36; color: #010079; }
+
+        /* Hero Zone */
+        .hero-zone {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.5fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        @media (max-width: 1024px) { .hero-zone { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px) { .hero-zone { grid-template-columns: 1fr; } }
+
+        /* Sparkline */
+        .sparkline { width: 60px; height: 20px; }
+
+        /* Bento */
+        .bento-card {
+            background: white;
+            border-radius: 1.25rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Regime Badge */
+        .regime-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+
+        /* Sector Snapshot */
+        .sector-snapshot {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .sector-chip {
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            /* P1-2: 최소 폰트 12px */
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* P1-1: Quick Indices 모바일 대응 */
+        .quick-indices-card {
+            display: block;
+        }
+        .quick-indices-scroll {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        .quick-indices-scroll::-webkit-scrollbar { height: 4px; }
+        .quick-indices-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .quick-indices-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .index-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        /* Tab Content */
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* P1-3: 히트맵 반응형 */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            min-height: 260px;
+        }
+        @media (min-width: 768px) {
+            .heatmap-grid {
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: repeat(3, 1fr);
+                height: 260px;
+            }
+            .heatmap-cell.xlk { grid-column: span 2; grid-row: span 2; }
+            .heatmap-cell.xlf { grid-row: span 2; }
+        }
+        .heatmap-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            /* P2-1: 터치 타겟 */
+            min-height: var(--touch-target);
+            padding: 0.5rem;
+        }
+        .heatmap-cell:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+
+        /* P2-3: 탭 플레이스홀더 개선 */
+        .tab-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            text-align: center;
+        }
+        .tab-placeholder-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+        .skeleton-bar {
+            height: 1rem;
+            background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.5rem;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* P0-3: Mobile Command Bar */
+        @media (max-width: 768px) {
+            .nav-bottom { display: none; }
+            .ticker-bar { display: none; }
+            .command-bar {
+                flex-direction: column;
+                gap: 0.5rem;
+                top: var(--nav-height-mobile);
+                padding: 0.75rem 1rem;
+            }
+            .tab-pills { width: 100%; justify-content: center; }
+            .period-pills { width: 100%; justify-content: center; }
+        }
+
+        /* ===== Footer v21 Styles ===== */
+
+        /* Ticker scroll */
+        .footer-ticker-scroll {
+            display: flex;
+            animation: footerTicker 12s linear infinite;
+        }
+        @keyframes footerTicker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Glow effect */
+        .glow-bar {
+            box-shadow: 0 0 15px rgba(1, 0, 121, 0.25);
+        }
+
+        /* Toast */
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .toast-animate { animation: toast-in 0.3s ease-out; }
+
+        /* Market status colors */
+        .market-regular { background: linear-gradient(135deg, #10b981, #059669); }
+        .market-pre { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .market-after { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .market-overnight { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .market-closed { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+        /* Admin modal */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Footer 여백 확보 */
+        main {
+            padding-bottom: 80px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- P0-1: 모바일 오버레이 -->
+    <div class="mobile-nav-overlay" id="mobileOverlay" onclick="closeMobileNav()" aria-hidden="true"></div>
+
+    <!-- P0-1: 모바일 네비게이션 패널 -->
+    <nav class="mobile-nav-panel" id="mobileNavPanel" role="navigation" aria-label="Mobile navigation">
+        <div class="p-4 border-b border-slate-200 flex justify-between items-center">
+            <span class="font-bold text-lg orbitron text-brand-navy">Menu</span>
+            <button onclick="closeMobileNav()" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100" aria-label="Close menu">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <a href="#" class="mobile-nav-item active" tabindex="0">
+            <i class="fas fa-chart-pie w-6 mr-3"></i> Dashboard
+        </a>
+        <a href="#" class="mobile-nav-item" tabindex="0">
+            <i class="fas fa-radar w-6 mr-3"></i> Market Radar
+        </a>
+        <a href="#" class="mobile-nav-item" tabindex="0">
+            <i class="fas fa-chart-line w-6 mr-3"></i> Multichart
+        </a>
+        <a href="#" class="mobile-nav-item" tabindex="0">
+            <i class="fas fa-flask w-6 mr-3"></i> Valuation Lab
+        </a>
+        <a href="#" class="mobile-nav-item" tabindex="0">
+            <i class="fas fa-cog w-6 mr-3"></i> Settings
+        </a>
+    </nav>
+
+    <!-- P0-2: 검색 모달 -->
+    <div class="search-modal" id="searchModal" role="dialog" aria-modal="true" aria-label="Search">
+        <div class="search-modal-content">
+            <div class="flex justify-between items-center mb-3">
+                <span class="font-bold text-sm text-slate-500">Quick Search</span>
+                <button onclick="closeSearchModal()" class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100" aria-label="Close search">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="text" class="search-modal-input" placeholder="Search tickers, sectors, indicators..." aria-label="Search input" autofocus>
+            <div class="mt-3 text-xs text-slate-400">
+                <span class="px-2 py-1 bg-slate-100 rounded mr-2">↵ Enter</span> to search
+                <span class="px-2 py-1 bg-slate-100 rounded ml-4">Esc</span> to close
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Nav 1-Tier EDGY - Brand | Menu Pills | Search
+         - Glassmorphism background
+         - Gradient border (Navy → Gold → Navy)
+         - Ticker 제거 (Footer v21이 담당)
+         ═══════════════════════════════════════════════════════════════ -->
+    <nav class="w-full sticky top-0 z-50 nav-edgy shadow-lg" role="navigation" aria-label="Main navigation">
+
+        <!-- Brand Section -->
+        <div class="brand-section">
+            <!-- 햄버거 버튼 (모바일) -->
+            <button class="hamburger-btn" onclick="openMobileNav()" aria-label="Open menu" aria-expanded="false">
+                <i class="fas fa-bars text-lg text-slate-600"></i>
+            </button>
+
+            <a href="#" class="flex items-center gap-3" aria-label="100x FENOK Home">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md border border-slate-100">
+                    <img src="../../../favicon.svg" alt="Logo" class="h-8 w-8">
+                </div>
+                <div class="hidden sm:block">
+                    <span class="font-[900] orbitron text-slate-800 text-lg">100x <span class="text-brand-gold">FENOK</span></span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Menu Pills (Desktop) - 1-Tier + Dropdown -->
+        <div class="nav-pills-edgy" role="tablist">
+            <!-- Dashboard -->
+            <div class="nav-dropdown">
+                <button class="nav-pill-edgy active" onclick="toggleDropdown(this)">
+                    <i class="fas fa-chart-line mr-2 text-xs opacity-70"></i>Dashboard
+                    <i class="fas fa-chevron-down ml-1.5 text-[10px] opacity-50"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <div class="nav-dropdown-header">Dashboard</div>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-home"></i>Overview</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-chart-bar"></i>Analytics</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-file-alt"></i>Reports</a>
+                </div>
+            </div>
+
+            <!-- Market Radar -->
+            <div class="nav-dropdown">
+                <button class="nav-pill-edgy" onclick="toggleDropdown(this)">
+                    <i class="fas fa-satellite-dish mr-2 text-xs opacity-70"></i>Market Radar
+                    <i class="fas fa-chevron-down ml-1.5 text-[10px] opacity-50"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <div class="nav-dropdown-header">Market Radar</div>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-heartbeat"></i>Fear & Greed</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-th"></i>Sectors</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-water"></i>Liquidity</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-brain"></i>Sentiment</a>
+                </div>
+            </div>
+
+            <!-- Multichart -->
+            <div class="nav-dropdown">
+                <button class="nav-pill-edgy" onclick="toggleDropdown(this)">
+                    <i class="fas fa-th-large mr-2 text-xs opacity-70"></i>Multichart
+                    <i class="fas fa-chevron-down ml-1.5 text-[10px] opacity-50"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <div class="nav-dropdown-header">Multichart</div>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-columns"></i>Compare</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-search-plus"></i>Analyze</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-download"></i>Export</a>
+                </div>
+            </div>
+
+            <!-- Valuation Lab -->
+            <div class="nav-dropdown">
+                <button class="nav-pill-edgy" onclick="toggleDropdown(this)">
+                    <i class="fas fa-calculator mr-2 text-xs opacity-70"></i>Valuation Lab
+                    <i class="fas fa-chevron-down ml-1.5 text-[10px] opacity-50"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <div class="nav-dropdown-header">Valuation Lab</div>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-percent"></i>DCF Model</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-balance-scale"></i>Comparables</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-code-branch"></i>Scenarios</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="flex items-center gap-2">
+            <!-- 모바일 검색 버튼 -->
+            <button class="search-btn-mobile" onclick="openSearchModal()" aria-label="Open search">
+                <i class="fas fa-search text-slate-600"></i>
+            </button>
+
+            <!-- Search (Desktop) -->
+            <div class="search-edgy hidden md:flex" onclick="openSearchModal()" role="button" tabindex="0" aria-label="Search">
+                <i class="fas fa-search"></i>
+                <span>Search...</span>
+                <span class="text-[10px] px-1.5 py-0.5 bg-white rounded border border-slate-200">⌘K</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Command Bar -->
+    <div class="command-bar" role="toolbar" aria-label="Content controls">
+        <div class="tab-pills" role="tablist" aria-label="View tabs">
+            <button class="tab-pill active" data-tab="overview" role="tab" aria-selected="true" aria-controls="tab-overview">Overview</button>
+            <button class="tab-pill" data-tab="sectors" role="tab" aria-selected="false" aria-controls="tab-sectors">Sectors</button>
+            <button class="tab-pill" data-tab="liquidity" role="tab" aria-selected="false" aria-controls="tab-liquidity">Liquidity</button>
+            <button class="tab-pill" data-tab="sentiment" role="tab" aria-selected="false" aria-controls="tab-sentiment">Sentiment</button>
+        </div>
+        <div class="period-pills" role="radiogroup" aria-label="Time period">
+            <button class="period-pill" data-period="1D" role="radio" aria-checked="false">1D</button>
+            <button class="period-pill active" data-period="1W" role="radio" aria-checked="true">1W</button>
+            <button class="period-pill" data-period="1M" role="radio" aria-checked="false">1M</button>
+            <button class="period-pill" data-period="YTD" role="radio" aria-checked="false">YTD</button>
+            <button class="period-pill" data-period="1Y" role="radio" aria-checked="false">1Y</button>
+        </div>
+    </div>
+
+    <!-- Main Content (from Main v17.8) -->
+    <main class="container mx-auto px-4 py-4">
+
+        <!-- Tab: Overview -->
+        <div id="tab-overview" class="tab-content active" role="tabpanel" aria-labelledby="tab-overview-btn">
+
+            <!-- P0 Hero Zone: F&G + Regime + Quick Indices -->
+            <div class="hero-zone">
+                <!-- F&G Mini -->
+                <div class="bento-card p-4">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-2 orbitron">FEAR & GREED</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="relative w-16 h-8">
+                            <svg viewBox="0 0 100 50" class="w-full h-full" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="gaugeFinal" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ef4444"/>
+                                        <stop offset="50%" stop-color="#eab308"/>
+                                        <stop offset="100%" stop-color="#22c55e"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#e2e8f0" stroke-width="6" stroke-linecap="round"/>
+                                <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="url(#gaugeFinal)" stroke-width="6" stroke-linecap="round" stroke-dasharray="126" stroke-dashoffset="35"/>
+                            </svg>
+                        </div>
+                        <span class="text-2xl font-bold text-brand-navy orbitron" aria-label="Fear and Greed Index: 72">72</span>
+                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold text-xs">GREED</span>
+                    </div>
+                </div>
+
+                <!-- Market Regime -->
+                <div class="bento-card p-4">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-2 orbitron">MARKET REGIME</h3>
+                    <div class="flex items-center justify-between">
+                        <div class="regime-badge">
+                            <i class="fas fa-rocket text-xs" aria-hidden="true"></i>
+                            <span>RISK-ON</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-400">Confidence</p>
+                            <p class="text-xl font-bold text-green-600 orbitron">87%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- P1-1: Quick Indices with Sparklines (반응형) -->
+                <div class="bento-card p-4 quick-indices-card">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-2 orbitron">QUICK INDICES</h3>
+                    <div class="quick-indices-scroll">
+                        <div class="index-item">
+                            <span class="text-xs text-slate-500">SPY</span>
+                            <svg class="sparkline" viewBox="0 0 60 20" aria-hidden="true">
+                                <polyline fill="none" stroke="#22c55e" stroke-width="1.5" points="0,16 10,14 20,12 30,10 40,11 50,6 60,4"/>
+                            </svg>
+                            <span class="font-bold text-green-600 text-sm">+0.85%</span>
+                        </div>
+                        <div class="index-item">
+                            <span class="text-xs text-slate-500">QQQ</span>
+                            <svg class="sparkline" viewBox="0 0 60 20" aria-hidden="true">
+                                <polyline fill="none" stroke="#22c55e" stroke-width="1.5" points="0,18 10,16 20,12 30,10 40,8 50,6 60,3"/>
+                            </svg>
+                            <span class="font-bold text-green-600 text-sm">+1.12%</span>
+                        </div>
+                        <div class="index-item">
+                            <span class="text-xs text-slate-500">DXY</span>
+                            <svg class="sparkline" viewBox="0 0 60 20" aria-hidden="true">
+                                <polyline fill="none" stroke="#ef4444" stroke-width="1.5" points="0,8 10,10 20,12 30,14 40,12 50,14 60,16"/>
+                            </svg>
+                            <span class="font-bold text-red-500 text-sm">-0.3%</span>
+                        </div>
+                        <div class="index-item">
+                            <span class="text-xs text-slate-500">BTC</span>
+                            <svg class="sparkline" viewBox="0 0 60 20" aria-hidden="true">
+                                <polyline fill="none" stroke="#22c55e" stroke-width="1.5" points="0,14 10,12 20,10 30,8 40,10 50,7 60,5"/>
+                            </svg>
+                            <span class="font-bold text-green-600 text-sm">+2.4%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- P1 Main Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+
+                <!-- Sector Snapshot -->
+                <div class="bento-card p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-slate-400 tracking-widest orbitron">SECTOR SNAPSHOT</h3>
+                        <button class="text-xs text-brand-interactive font-bold min-h-[var(--touch-target)] flex items-center" onclick="switchTab('sectors')">View All →</button>
+                    </div>
+                    <div class="sector-snapshot">
+                        <div class="flex gap-2 items-center">
+                            <span class="w-2 h-2 bg-green-500 rounded-full" aria-hidden="true"></span>
+                            <span class="font-bold text-green-600 text-sm">7 Up</span>
+                            <span class="w-2 h-2 bg-red-500 rounded-full ml-2" aria-hidden="true"></span>
+                            <span class="font-bold text-red-600 text-sm">4 Down</span>
+                        </div>
+                        <div class="flex gap-1 flex-wrap mt-2">
+                            <span class="sector-chip bg-green-100 text-green-700">XLK +2.3%</span>
+                            <span class="sector-chip bg-green-100 text-green-700">XLF +1.5%</span>
+                            <span class="sector-chip bg-green-100 text-green-700">XLC +1.1%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liquidity -->
+                <div class="bento-card p-4">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">LIQUIDITY FLOW</h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-2xl font-bold text-brand-navy orbitron">+$87B</span>
+                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">WoW</span>
+                    </div>
+                    <div class="h-10 bg-gradient-to-r from-green-100 to-green-50 rounded flex items-end px-1 gap-0.5" aria-hidden="true">
+                        <div class="w-3 bg-green-400 rounded-t" style="height: 60%"></div>
+                        <div class="w-3 bg-green-400 rounded-t" style="height: 75%"></div>
+                        <div class="w-3 bg-green-500 rounded-t" style="height: 90%"></div>
+                        <div class="w-3 bg-green-400 rounded-t" style="height: 70%"></div>
+                        <div class="w-3 bg-green-500 rounded-t" style="height: 85%"></div>
+                        <div class="w-3 bg-green-600 rounded-t" style="height: 100%"></div>
+                    </div>
+                </div>
+
+                <!-- Sentiment -->
+                <div class="bento-card p-4">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">SENTIMENT</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-500">VIX</span>
+                            <span class="font-bold text-green-600 text-sm">14.2 <span class="text-xs text-slate-400">Low</span></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-500">Put/Call</span>
+                            <span class="font-bold text-slate-700 text-sm">0.78</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-500">Crypto F&G</span>
+                            <span class="font-bold text-brand-gold text-sm">78 <span class="text-xs">Greed</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banking + Stress -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bento-card p-4">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">BANKING HEALTH</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse" aria-hidden="true"></div>
+                        <span class="text-lg font-bold text-green-600">Stable</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">BTFP $12.3B ↓ / DW $4.1B</p>
+                </div>
+                <div class="bento-card p-4">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">STRESS INDEX</h3>
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl font-bold text-green-600 orbitron">0.12</span>
+                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">Low Risk</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">SOFR-IORB Spread</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Sectors (P1-3: 반응형 Heatmap) -->
+        <div id="tab-sectors" class="tab-content" role="tabpanel" aria-labelledby="tab-sectors-btn">
+            <div class="bento-card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-widest orbitron">SECTOR HEATMAP</h3>
+                    <span class="text-xs text-slate-400">Treemap by Market Cap</span>
+                </div>
+                <div class="heatmap-grid">
+                    <div class="heatmap-cell xlk bg-green-500 text-white" role="button" tabindex="0" aria-label="Technology sector XLK up 2.34%">
+                        <span class="font-bold text-lg">XLK</span>
+                        <span class="text-sm">Tech</span>
+                        <span class="font-bold">+2.34%</span>
+                    </div>
+                    <div class="heatmap-cell xlf bg-green-400 text-white" role="button" tabindex="0" aria-label="Financial sector XLF up 1.56%">
+                        <span class="font-bold">XLF</span>
+                        <span class="text-xs">+1.56%</span>
+                    </div>
+                    <div class="heatmap-cell bg-green-300 text-green-800" role="button" tabindex="0" aria-label="Healthcare sector XLV up 0.89%">
+                        <span class="font-bold">XLV</span>
+                        <span class="text-xs">+0.89%</span>
+                    </div>
+                    <div class="heatmap-cell bg-red-400 text-white" role="button" tabindex="0" aria-label="Energy sector XLE down 1.23%">
+                        <span class="font-bold">XLE</span>
+                        <span class="text-xs">-1.23%</span>
+                    </div>
+                    <div class="heatmap-cell bg-green-200 text-green-800" role="button" tabindex="0" aria-label="Industrial sector XLI up 0.45%">
+                        <span class="font-bold">XLI</span>
+                        <span class="text-xs">+0.45%</span>
+                    </div>
+                    <div class="heatmap-cell bg-green-400 text-white" role="button" tabindex="0" aria-label="Communication sector XLC up 1.12%">
+                        <span class="font-bold">XLC</span>
+                        <span class="text-xs">+1.12%</span>
+                    </div>
+                    <div class="heatmap-cell bg-red-300 text-red-800" role="button" tabindex="0" aria-label="Consumer Discretionary sector XLY down 0.67%">
+                        <span class="font-bold">XLY</span>
+                        <span class="text-xs">-0.67%</span>
+                    </div>
+                    <div class="heatmap-cell bg-slate-200 text-slate-600" role="button" tabindex="0" aria-label="Consumer Staples sector XLP up 0.12%">
+                        <span class="font-bold">XLP</span>
+                        <span class="text-xs">+0.12%</span>
+                    </div>
+                    <div class="heatmap-cell bg-red-200 text-red-700" role="button" tabindex="0" aria-label="Real Estate sector XLRE down 0.34%">
+                        <span class="font-bold">XLRE</span>
+                        <span class="text-xs">-0.34%</span>
+                    </div>
+                    <div class="heatmap-cell bg-green-300 text-green-800" role="button" tabindex="0" aria-label="Materials sector XLB up 0.78%">
+                        <span class="font-bold">XLB</span>
+                        <span class="text-xs">+0.78%</span>
+                    </div>
+                    <div class="heatmap-cell bg-red-500 text-white" role="button" tabindex="0" aria-label="Utilities sector XLU down 1.89%">
+                        <span class="font-bold">XLU</span>
+                        <span class="text-xs">-1.89%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- P2-3: 탭 플레이스홀더 개선 -->
+        <div id="tab-liquidity" class="tab-content" role="tabpanel" aria-labelledby="tab-liquidity-btn">
+            <div class="bento-card p-6">
+                <div class="tab-placeholder">
+                    <i class="fas fa-water tab-placeholder-icon text-blue-400"></i>
+                    <h3 class="text-xl font-bold text-slate-700 mb-4">Liquidity Analysis</h3>
+                    <div class="w-full max-w-md space-y-3">
+                        <div class="skeleton-bar w-full"></div>
+                        <div class="skeleton-bar w-4/5"></div>
+                        <div class="skeleton-bar w-3/5"></div>
+                    </div>
+                    <p class="text-sm text-slate-400 mt-4">Loading liquidity data...</p>
+                </div>
+            </div>
+        </div>
+        <div id="tab-sentiment" class="tab-content" role="tabpanel" aria-labelledby="tab-sentiment-btn">
+            <div class="bento-card p-6">
+                <div class="tab-placeholder">
+                    <i class="fas fa-heart-pulse tab-placeholder-icon text-red-400"></i>
+                    <h3 class="text-xl font-bold text-slate-700 mb-4">Sentiment Indicators</h3>
+                    <div class="w-full max-w-md space-y-3">
+                        <div class="skeleton-bar w-full"></div>
+                        <div class="skeleton-bar w-4/5"></div>
+                        <div class="skeleton-bar w-3/5"></div>
+                    </div>
+                    <p class="text-sm text-slate-400 mt-4">Loading sentiment data...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== Footer v21: Toast ===== -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 bg-brand-navy text-white text-sm font-medium rounded-lg shadow-lg hidden z-50"></div>
+
+    <!-- ===== Footer v21: Admin Password Modal ===== -->
+    <div id="admin-modal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-80 max-w-[90vw]">
+            <h3 class="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
+                <i class="fas fa-lock text-brand-interactive"></i>
+                관리자 인증
+            </h3>
+            <input
+                type="password"
+                id="admin-password"
+                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-interactive mb-4"
+                placeholder="비밀번호 입력"
+                onkeydown="if(event.key==='Enter') checkAdminPassword()"
+            >
+            <div class="flex gap-2">
+                <button
+                    class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
+                    onclick="closeAdminModal()"
+                >
+                    취소
+                </button>
+                <button
+                    class="flex-1 px-4 py-2 bg-brand-interactive hover:bg-brand-navy text-white rounded-lg font-medium transition-colors"
+                    onclick="checkAdminPassword()"
+                >
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Footer v21: Broadcast HUD Pro ===== -->
+    <footer class="fixed bottom-0 left-0 right-0 z-40">
+        <!-- Upper Ticker Bar - Slim with Market Status on Right -->
+        <div class="hidden md:block bg-gradient-to-r from-brand-navy via-brand-interactive to-brand-navy glow-bar overflow-hidden">
+            <div class="h-6 flex items-center px-4">
+                <!-- Left: LIVE Badge -->
+                <div class="flex items-center gap-1.5 flex-shrink-0 mr-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                    <span class="text-[9px] font-bold text-white uppercase">LIVE</span>
+                </div>
+
+                <!-- Center: Data Ticker -->
+                <div class="flex-1 overflow-hidden">
+                    <div class="footer-ticker-scroll">
+                        <div class="flex items-center gap-3 text-[10px] font-medium text-white/90 whitespace-nowrap">
+                            <span class="text-green-300 font-semibold">SPY +1.24%</span>
+                            <span class="text-white/40">•</span>
+                            <span class="text-brand-gold font-semibold">BTC $98,432</span>
+                            <span class="text-white/40">•</span>
+                            <span>VIX <span class="text-cyan-300">14.2</span></span>
+                            <span class="text-white/40">•</span>
+                            <span>FEAR <span class="text-orange-300">72</span></span>
+                            <span class="text-white/30 mx-3">───</span>
+                            <!-- Duplicate -->
+                            <span class="text-green-300 font-semibold">SPY +1.24%</span>
+                            <span class="text-white/40">•</span>
+                            <span class="text-brand-gold font-semibold">BTC $98,432</span>
+                            <span class="text-white/40">•</span>
+                            <span>VIX <span class="text-cyan-300">14.2</span></span>
+                            <span class="text-white/40">•</span>
+                            <span>FEAR <span class="text-orange-300">72</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Market Status Badge (Fixed) - v20 Style -->
+                <button
+                    id="market-badge"
+                    class="px-2.5 py-1 rounded text-white text-[10px] font-bold tracking-wide shadow-sm transition-all duration-200 hover:scale-105 hover:brightness-110 ml-3 flex-shrink-0"
+                    onclick="showMarketInfo()"
+                    aria-label="장 상태"
+                >
+                    <span id="market-text">MARKET OPEN</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Bar - Compact -->
+        <div class="bg-white/95 backdrop-blur-md border-t border-brand-navy/20 shadow-[0_-6px_20px_rgba(0,0,0,0.08)]">
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="h-12 flex items-center justify-between gap-3">
+
+                    <!-- Left: Brand -->
+                    <button
+                        class="flex items-center gap-2 group cursor-pointer min-w-0"
+                        onclick="copyUrl()"
+                        aria-label="URL 복사"
+                    >
+                        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-navy/10 to-brand-interactive/10 flex items-center justify-center text-brand-navy group-hover:from-brand-navy group-hover:to-brand-interactive group-hover:text-white transition-all duration-300 flex-shrink-0">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="hidden sm:flex flex-col">
+                            <span class="font-[800] orbitron text-slate-800 text-sm group-hover:text-brand-interactive transition-colors leading-none">
+                                100x <span class="text-brand-gold">FENOK</span>
+                            </span>
+                            <span class="text-[8px] text-slate-400">© 2025 All rights reserved</span>
+                        </div>
+                    </button>
+
+                    <!-- Center: Disclaimer Message -->
+                    <div class="flex-1 flex justify-center min-w-0">
+                        <p class="hidden md:block text-[11px] text-slate-600 truncate max-w-[400px]">
+                            모든 정보는 투자 참고용이지만, <span class="font-bold text-slate-800">손실 나면 니 탓</span> <span class="font-bold text-brand-gold">수익 나면 내 탓</span>
+                        </p>
+                        <!-- Mobile: Market Status Badge - v20 Style -->
+                        <button
+                            id="market-badge-mobile"
+                            class="md:hidden px-3 py-1.5 rounded text-white text-[10px] font-bold tracking-wide shadow-sm"
+                            onclick="showMarketInfo()"
+                        >
+                            <span id="market-text-mobile">MARKET OPEN</span>
+                        </button>
+                    </div>
+
+                    <!-- Right: Utility Buttons -->
+                    <div class="flex items-center gap-1.5">
+                        <button
+                            class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                            onclick="showToast('알림 없음')"
+                            aria-label="알림"
+                        >
+                            <i class="fas fa-bell text-sm"></i>
+                        </button>
+                        <button
+                            class="hidden sm:flex w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                            onclick="openAdminModal()"
+                            aria-label="관리자"
+                        >
+                            <i class="fas fa-cog text-sm"></i>
+                        </button>
+                        <button
+                            class="hidden sm:flex w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                            onclick="showToast('도움말: 100xFenok 시장 모니터링 도구')"
+                            aria-label="도움말"
+                        >
+                            <i class="fas fa-question text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ===== Main v17.8 Scripts =====
+
+        // P0-1: 모바일 네비게이션
+        function openMobileNav() {
+            document.getElementById('mobileNavPanel').classList.add('open');
+            document.getElementById('mobileOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMobileNav() {
+            document.getElementById('mobileNavPanel').classList.remove('open');
+            document.getElementById('mobileOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // P0-2: 검색 모달
+        function openSearchModal() {
+            document.getElementById('searchModal').classList.add('open');
+            setTimeout(() => {
+                document.querySelector('.search-modal-input').focus();
+            }, 100);
+        }
+        function closeSearchModal() {
+            document.getElementById('searchModal').classList.remove('open');
+        }
+
+        // ===== Nav Dropdown System =====
+        function toggleDropdown(btn) {
+            const dropdown = btn.closest('.nav-dropdown');
+            const wasOpen = dropdown.classList.contains('open');
+
+            // 다른 모든 드롭다운 닫기
+            document.querySelectorAll('.nav-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+            });
+
+            // 현재 드롭다운 토글
+            if (!wasOpen) {
+                dropdown.classList.add('open');
+            }
+        }
+
+        // 바깥 클릭 시 드롭다운 닫기
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.nav-dropdown.open').forEach(d => {
+                    d.classList.remove('open');
+                });
+            }
+        });
+
+        // ESC 키로 드롭다운 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.nav-dropdown.open').forEach(d => {
+                    d.classList.remove('open');
+                });
+            }
+        });
+
+        // 탭 전환
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pill').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            const activeTab = document.querySelector(`[data-tab="${tabId}"]`);
+            activeTab.classList.add('active');
+            activeTab.setAttribute('aria-selected', 'true');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        document.querySelectorAll('.tab-pill').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        document.querySelectorAll('.period-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.period-pill').forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-checked', 'false');
+                });
+                btn.classList.add('active');
+                btn.setAttribute('aria-checked', 'true');
+            });
+        });
+
+        // ===== Footer v21: 미국 장 시간 동기화 =====
+
+        function isDST(date) {
+            const year = date.getFullYear();
+            const marchFirst = new Date(year, 2, 1);
+            const dstStart = new Date(year, 2, 8 + (7 - marchFirst.getDay()) % 7);
+            const novFirst = new Date(year, 10, 1);
+            const dstEnd = new Date(year, 10, 1 + (7 - novFirst.getDay()) % 7);
+            return date >= dstStart && date < dstEnd;
+        }
+
+        function getETTime() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const offset = isDST(now) ? -4 : -5;
+            return new Date(utc + (3600000 * offset));
+        }
+
+        function getMarketStatus() {
+            const et = getETTime();
+            const day = et.getDay();
+            const hours = et.getHours();
+            const minutes = et.getMinutes();
+            const time = hours * 100 + minutes;
+
+            if (day === 0 || day === 6) {
+                return { status: 'closed', text: 'MARKET CLOSED', class: 'market-closed' };
+            }
+
+            if (time >= 400 && time < 930) {
+                return { status: 'pre', text: 'MARKET PRE', class: 'market-pre' };
+            } else if (time >= 930 && time < 1600) {
+                return { status: 'regular', text: 'MARKET OPEN', class: 'market-regular' };
+            } else if (time >= 1600 && time < 2000) {
+                return { status: 'after', text: 'MARKET AFTER', class: 'market-after' };
+            } else {
+                return { status: 'overnight', text: 'MARKET NIGHT', class: 'market-overnight' };
+            }
+        }
+
+        function updateMarketStatus() {
+            const market = getMarketStatus();
+
+            // Desktop badge (ticker) - v20 style (no icon)
+            const badge = document.getElementById('market-badge');
+            const text = document.getElementById('market-text');
+            if (badge && text) {
+                text.textContent = market.text;
+                badge.className = badge.className.replace(/market-\w+/g, '');
+                badge.classList.add(market.class);
+            }
+
+            // Mobile badge - v20 style (no icon)
+            const badgeMobile = document.getElementById('market-badge-mobile');
+            const textMobile = document.getElementById('market-text-mobile');
+            if (badgeMobile && textMobile) {
+                textMobile.textContent = market.text;
+                badgeMobile.className = badgeMobile.className.replace(/market-\w+/g, '');
+                badgeMobile.classList.add(market.class);
+            }
+        }
+
+        function showMarketInfo() {
+            const et = getETTime();
+            const market = getMarketStatus();
+            const dst = isDST(new Date()) ? 'DST' : 'EST';
+            const etTime = et.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            showToast(`${market.text} | ET ${etTime} (${dst})`);
+        }
+
+        updateMarketStatus();
+        setInterval(updateMarketStatus, 60000);
+
+        // ===== Footer v21: 관리자 모달 =====
+
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            document.getElementById('admin-password').value = '';
+            document.getElementById('admin-password').focus();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function checkAdminPassword() {
+            const password = document.getElementById('admin-password').value;
+            if (password === '100x') {
+                closeAdminModal();
+                showToast('관리자 인증 성공! 이동 중...');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 1000);
+            } else {
+                showToast('비밀번호가 틀렸습니다');
+                document.getElementById('admin-password').value = '';
+                document.getElementById('admin-password').focus();
+            }
+        }
+
+        document.getElementById('admin-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeAdminModal();
+        });
+
+        // ===== 유틸리티 =====
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add('toast-animate');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('toast-animate');
+            }, 2500);
+        }
+
+        function copyUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('URL 복사 완료!');
+            });
+        }
+
+        // ===== 키보드 단축키 (통합) =====
+        document.addEventListener('keydown', (e) => {
+            // ⌘K or Ctrl+K: 검색 열기
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                openSearchModal();
+            }
+            // Esc: 모달/패널 닫기
+            if (e.key === 'Escape') {
+                closeSearchModal();
+                closeMobileNav();
+                closeAdminModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay Utils - TDD Test</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; background: #f8fafc; }
+    .test-suite { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .test-case { padding: 8px 12px; margin: 4px 0; border-radius: 6px; font-family: monospace; font-size: 14px; }
+    .pass { background: #dcfce7; color: #166534; }
+    .fail { background: #fee2e2; color: #991b1b; }
+    h1 { color: #1f2937; }
+    h2 { color: #4b5563; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+    .summary { font-size: 18px; font-weight: bold; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Overlay Utils - TDD Test</h1>
+
+  <div class="test-suite" id="testResults">
+    <h2>Test Results</h2>
+    <div id="tests"></div>
+    <div class="summary" id="summary"></div>
+  </div>
+
+  <script>
+    // ============================================
+    // 테스트 대상: Overlay Utility Functions
+    // ============================================
+
+    /**
+     * % 변화율 정규화
+     * @param {Array} data - [{date, value}, ...]
+     * @param {number} baseIndex - 기준점 인덱스 (기본: 0 = 첫 데이터)
+     * @returns {Array} - [{date, value: %변화율}, ...]
+     */
+    function normalizeToPercent(data, baseIndex = 0) {
+      if (!data || data.length === 0) return [];
+
+      const baseValue = data[baseIndex].value;
+      if (baseValue === 0) return data.map(d => ({ date: d.date, value: 0 }));
+
+      return data.map(d => ({
+        date: d.date,
+        value: ((d.value - baseValue) / baseValue) * 100
+      }));
+    }
+
+    /**
+     * 날짜 기준 데이터 병합 (메인 데이터 날짜 기준)
+     * @param {Array} mainData - 기준 데이터 [{date, value}, ...]
+     * @param {Array} overlayData - 오버레이 데이터 [{date, value}, ...]
+     * @returns {Array} - [{date, mainValue, overlayValue}, ...]
+     */
+    function mergeByDate(mainData, overlayData) {
+      if (!mainData || mainData.length === 0) return [];
+
+      const overlayMap = new Map(overlayData.map(d => [d.date, d.value]));
+
+      return mainData.map(d => ({
+        date: d.date,
+        mainValue: d.value,
+        overlayValue: overlayMap.get(d.date) || null
+      }));
+    }
+
+    /**
+     * 기간 변화율 계산
+     * @param {Array} data - [{date, value}, ...]
+     * @returns {number} - %변화율
+     */
+    function calculatePeriodChange(data) {
+      if (!data || data.length < 2) return 0;
+
+      const first = data[0].value;
+      const last = data[data.length - 1].value;
+
+      if (first === 0) return 0;
+      return ((last - first) / first) * 100;
+    }
+
+    // ============================================
+    // 테스트 프레임워크
+    // ============================================
+
+    let passed = 0;
+    let failed = 0;
+
+    function test(name, condition) {
+      const testsDiv = document.getElementById('tests');
+      const result = condition ? 'pass' : 'fail';
+
+      if (condition) passed++;
+      else failed++;
+
+      testsDiv.innerHTML += `
+        <div class="test-case ${result}">
+          ${condition ? '✅' : '❌'} ${name}
+        </div>
+      `;
+    }
+
+    function assertEquals(actual, expected, name) {
+      const isEqual = JSON.stringify(actual) === JSON.stringify(expected);
+      test(name, isEqual);
+      if (!isEqual) {
+        console.log(`FAIL: ${name}`);
+        console.log('  Expected:', expected);
+        console.log('  Actual:', actual);
+      }
+    }
+
+    function assertClose(actual, expected, tolerance, name) {
+      const isClose = Math.abs(actual - expected) < tolerance;
+      test(name, isClose);
+      if (!isClose) {
+        console.log(`FAIL: ${name}`);
+        console.log(`  Expected: ~${expected} (±${tolerance})`);
+        console.log(`  Actual: ${actual}`);
+      }
+    }
+
+    // ============================================
+    // 테스트 케이스
+    // ============================================
+
+    // Test 1: normalizeToPercent - 기준점 = 0%
+    const testData1 = [
+      { date: '2024-01-01', value: 100 },
+      { date: '2024-01-02', value: 110 },
+      { date: '2024-01-03', value: 90 }
+    ];
+    const normalized1 = normalizeToPercent(testData1);
+    assertClose(normalized1[0].value, 0, 0.01, 'normalizeToPercent: 기준점(첫째) = 0%');
+    assertClose(normalized1[1].value, 10, 0.01, 'normalizeToPercent: 10% 상승 = +10');
+    assertClose(normalized1[2].value, -10, 0.01, 'normalizeToPercent: 10% 하락 = -10');
+
+    // Test 2: normalizeToPercent - 빈 배열
+    const normalized2 = normalizeToPercent([]);
+    assertEquals(normalized2, [], 'normalizeToPercent: 빈 배열 → 빈 배열');
+
+    // Test 3: normalizeToPercent - 기준값 0 처리
+    const testData3 = [
+      { date: '2024-01-01', value: 0 },
+      { date: '2024-01-02', value: 100 }
+    ];
+    const normalized3 = normalizeToPercent(testData3);
+    assertEquals(normalized3[0].value, 0, 'normalizeToPercent: 기준값 0 → 0% 반환');
+
+    // Test 4: mergeByDate - 정상 병합
+    const mainData = [
+      { date: '2024-01-01', value: 15 },
+      { date: '2024-01-02', value: 20 },
+      { date: '2024-01-03', value: 18 }
+    ];
+    const overlayData = [
+      { date: '2024-01-01', value: 4500 },
+      { date: '2024-01-03', value: 4600 }
+    ];
+    const merged = mergeByDate(mainData, overlayData);
+    assertEquals(merged[0].overlayValue, 4500, 'mergeByDate: 첫째 날 매칭');
+    assertEquals(merged[1].overlayValue, null, 'mergeByDate: 매칭 없음 → null');
+    assertEquals(merged[2].overlayValue, 4600, 'mergeByDate: 셋째 날 매칭');
+
+    // Test 5: mergeByDate - 빈 오버레이
+    const merged2 = mergeByDate(mainData, []);
+    assertEquals(merged2[0].overlayValue, null, 'mergeByDate: 빈 오버레이 → 모두 null');
+
+    // Test 6: calculatePeriodChange - 정상 계산
+    const changeData = [
+      { date: '2024-01-01', value: 100 },
+      { date: '2024-01-10', value: 120 }
+    ];
+    assertClose(calculatePeriodChange(changeData), 20, 0.01, 'calculatePeriodChange: 100→120 = +20%');
+
+    // Test 7: calculatePeriodChange - 하락
+    const changeData2 = [
+      { date: '2024-01-01', value: 100 },
+      { date: '2024-01-10', value: 80 }
+    ];
+    assertClose(calculatePeriodChange(changeData2), -20, 0.01, 'calculatePeriodChange: 100→80 = -20%');
+
+    // Test 8: calculatePeriodChange - 데이터 부족
+    assertEquals(calculatePeriodChange([{ date: '2024-01-01', value: 100 }]), 0, 'calculatePeriodChange: 1개 데이터 → 0');
+
+    // Test 9: 실제 시나리오 - VIX + S&P 500 정규화 비교
+    const vixSample = [
+      { date: '2024-01-01', value: 13 },
+      { date: '2024-06-01', value: 15 },
+      { date: '2024-12-01', value: 18 }
+    ];
+    const sp500Sample = [
+      { date: '2024-01-01', value: 4700 },
+      { date: '2024-06-01', value: 5200 },
+      { date: '2024-12-01', value: 5800 }
+    ];
+    const vixNorm = normalizeToPercent(vixSample);
+    const sp500Norm = normalizeToPercent(sp500Sample);
+
+    // 둘 다 첫 값 = 0%, 이후 %로 비교 가능해야 함
+    assertClose(vixNorm[0].value, 0, 0.01, '실제 시나리오: VIX 정규화 기준점 = 0%');
+    assertClose(sp500Norm[0].value, 0, 0.01, '실제 시나리오: S&P 500 정규화 기준점 = 0%');
+
+    // VIX: 13→18 = +38.46%
+    assertClose(vixNorm[2].value, 38.46, 0.1, '실제 시나리오: VIX 13→18 = ~38.5%');
+
+    // S&P 500: 4700→5800 = +23.40%
+    assertClose(sp500Norm[2].value, 23.40, 0.1, '실제 시나리오: S&P 500 4700→5800 = ~23.4%');
+
+    // ============================================
+    // 결과 요약
+    // ============================================
+
+    const summaryDiv = document.getElementById('summary');
+    const total = passed + failed;
+    const allPassed = failed === 0;
+
+    summaryDiv.innerHTML = `
+      <span style="color: ${allPassed ? '#166534' : '#991b1b'}">
+        ${allPassed ? '✅ ALL PASSED' : '❌ SOME FAILED'}: ${passed}/${total} tests
+      </span>
+    `;
+
+    console.log(`\n=== TEST SUMMARY ===`);
+    console.log(`Passed: ${passed}/${total}`);
+    console.log(`Failed: ${failed}/${total}`);
+  </script>
+</body>
+</html>

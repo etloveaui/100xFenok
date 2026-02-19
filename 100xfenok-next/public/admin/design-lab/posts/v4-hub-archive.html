@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts Hub v4 - Minimal Archive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#ffffff',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #ffffff; font-family: 'IBM Plex Sans KR', sans-serif; color: #1e293b; }
+
+        /* Nav (1-Tier EDGY - Light) */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 2rem;
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        .archive-container { max-width: 1000px; margin: 0 auto; padding: 3rem 1rem; }
+
+        .search-bar {
+            width: 100%; padding: 1rem; font-size: 1.125rem; border: 2px solid #f1f5f9; border-radius: 12px;
+            margin-bottom: 2rem; transition: border-color 0.2s;
+        }
+        .search-bar:focus { border-color: #010079; outline: none; }
+
+        /* List Item */
+        .archive-item {
+            display: grid; grid-template-columns: 100px 1fr 120px; gap: 1.5rem; align-items: center;
+            padding: 1.25rem 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s;
+        }
+        .archive-item:hover { background: #f8fafc; padding-left: 1rem; padding-right: 1rem; border-radius: 8px; border-bottom-color: transparent; }
+        @media (max-width: 640px) { 
+            .archive-item { grid-template-columns: 1fr; gap: 0.5rem; } 
+            .archive-meta { order: 1; } .archive-content { order: 2; } .archive-tags { order: 3; }
+        }
+
+        .cat-badge {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            color: #64748b; background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-block; text-align: center;
+        }
+        .cat-badge.alpha { color: #7e22ce; background: #f3e8ff; }
+        .cat-badge.macro { color: #1d4ed8; background: #eff6ff; }
+        .cat-badge.play { color: #15803d; background: #dcfce7; }
+
+        .item-title { font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.25rem; word-break: keep-all; }
+        .item-excerpt { font-size: 0.875rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .item-date { font-size: 0.8125rem; color: #94a3b8; text-align: right; }
+
+    </style>
+</head>
+<body>
+
+    <nav class="nav-edgy">
+        <span class="font-bold text-slate-800 text-lg">100x ARCHIVE</span>
+        <span class="text-xs font-bold text-slate-400">TOTAL 128 POSTS</span>
+    </nav>
+
+    <main class="archive-container">
+        
+        <input type="text" class="search-bar" placeholder="리포트 검색 (키워드, 티커, 주제)...">
+
+        <div class="archive-list">
+            
+            <div class="archive-item">
+                <div class="archive-meta"><span class="cat-badge macro">Market Wrap</span></div>
+                <div class="archive-content">
+                    <h3 class="item-title">연준의 피벗(Pivot) 신호와 포트폴리오 전략</h3>
+                    <p class="item-excerpt">제롬 파월 의장의 잭슨홀 연설 분석 및 금리 인하 수혜 섹터 점검</p>
+                </div>
+                <div class="item-date">2025.06.30</div>
+            </div>
+
+            <div class="archive-item">
+                <div class="archive-meta"><span class="cat-badge alpha">Alpha Scout</span></div>
+                <div class="archive-content">
+                    <h3 class="item-title">ResMed (RMD): 수면 테크의 독점적 해자</h3>
+                    <p class="item-excerpt">필립스 리콜 반사이익 지속성과 GLP-1 리스크에 대한 역발상 투자</p>
+                </div>
+                <div class="item-date">2025.06.30</div>
+            </div>
+
+            <div class="archive-item">
+                <div class="archive-meta"><span class="cat-badge play">Playbook</span></div>
+                <div class="archive-content">
+                    <h3 class="item-title">구리(Copper) 슈퍼사이클: 에너지 전환의 핵심</h3>
+                    <p class="item-excerpt">AI 데이터센터 전력 수요와 전기차 인프라가 만드는 구조적 공급 부족</p>
+                </div>
+                <div class="item-date">2025.06.29</div>
+            </div>
+
+            <div class="archive-item">
+                <div class="archive-meta"><span class="cat-badge alpha">Alpha Scout</span></div>
+                <div class="archive-content">
+                    <h3 class="item-title">Palantir (PLTR): AIP 부트캠프의 폭발적 성장</h3>
+                    <p class="item-excerpt">상업용 매출 가속화와 S&P 500 편입 기대감 분석</p>
+                </div>
+                <div class="item-date">2025.06.27</div>
+            </div>
+
+            <div class="archive-item">
+                <div class="archive-meta"><span class="cat-badge">Deep Dive</span></div>
+                <div class="archive-content">
+                    <h3 class="item-title">스테이블코인 마스터플랜: 디지털 달러 패권</h3>
+                    <p class="item-excerpt">USDC와 USDT의 시가총액 추이와 미국 재무부의 규제 방향성</p>
+                </div>
+                <div class="item-date">2025.06.23</div>
+            </div>
+
+            <div class="archive-item">
+                <div class="archive-meta"><span class="cat-badge alpha">Alpha Scout</span></div>
+                <div class="archive-content">
+                    <h3 class="item-title">IBM: 하이브리드 클라우드로 춤추는 코끼리</h3>
+                    <p class="item-excerpt">Red Hat 인수 시너지 본격화와 AI 컨설팅 수주 잔고 분석</p>
+                </div>
+                <div class="item-date">2025.06.20</div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

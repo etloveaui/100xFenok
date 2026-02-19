@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Roboto:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1: Fintech Standard - IB Calculator</title>
+    <meta name="theme-color" content="#f3f4f6">
+    <script type="module" src="../../../../initBaseHref.js"></script>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; padding-bottom: 100px; }
+        .input-group { margin-bottom: 1.5rem; }
+        .input-field {
+            width: 100%; padding: 1rem; border-radius: 1rem; background: #f9fafb; 
+            border: 2px solid transparent; font-size: 1.125rem; font-weight: 700; color: #111827; transition: all 0.2s;
+        }
+        .input-field:focus { border-color: #3b82f6; background: white; outline: none; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); }
+        .input-label { display: block; font-size: 0.875rem; font-weight: 500; color: #6b7280; mb-2; margin-left: 0.5rem; }
+        
+        .tab-btn { flex: 1; padding: 0.75rem; text-align: center; font-weight: 700; color: #9ca3af; border-radius: 0.75rem; transition: all 0.2s; }
+        .tab-btn.active { background: white; color: #3b82f6; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        
+        .bottom-sheet {
+            position: fixed; bottom: 0; left: 0; right: 0; background: white; 
+            border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15); transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50;
+            max-width: 480px; margin: 0 auto;
+        }
+        .bottom-sheet.open { transform: translateY(0); }
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 40;
+        }
+        .overlay.open { opacity: 1; pointer-events: auto; }
+        
+        .result-card { background: #f0f9ff; border-radius: 1rem; padding: 1rem; margin-bottom: 0.5rem; border: 1px solid #bae6fd; }
+        .result-value { font-family: 'Roboto', sans-serif; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- App Header -->
+        <header class="p-6 pb-2 sticky top-0 bg-white z-10">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">IB</div>
+                    <h1 class="text-xl font-bold text-slate-900">무한매수</h1>
+                </div>
+                <button class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                    <i class="fas fa-question"></i>
+                </button>
+            </div>
+
+            <!-- Ticker Toggle -->
+            <div class="flex bg-slate-100 p-1 rounded-xl mb-4">
+                <button class="tab-btn active" data-ticker="TQQQ">TQQQ</button>
+                <button class="tab-btn" data-ticker="SOXL">SOXL</button>
+            </div>
+            
+            <!-- Live Price Banner -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4">
+                    <i class="fas fa-chart-line text-8xl"></i>
+                </div>
+                <div class="relative z-10">
+                    <p class="text-xs text-slate-400 font-bold uppercase mb-1">Current Price</p>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black result-value" id="live-price">Loading...</span>
+                        <span class="text-sm font-medium text-emerald-400" id="live-change">--</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2 text-right w-full" id="last-update">Updating...</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Input Form -->
+        <main class="p-6 pt-2">
+            <div class="space-y-6">
+                <div class="input-group">
+                    <label class="input-label mb-2">시드머니 (원금)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                        <input type="number" id="virtualSeed" class="input-field pl-8" placeholder="20000" inputmode="decimal">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label class="input-label mb-2">총 매입금</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                            <input type="number" id="cumulativeBuy" class="input-field pl-8" placeholder="0" inputmode="decimal">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label mb-2">보유 수량</label>
+                        <input type="number" id="totalQuantity" class="input-field" placeholder="0" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label mb-2">내 평단가</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                        <input type="number" id="avgPrice" class="input-field pl-8" placeholder="0.00" inputmode="decimal">
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Action Button -->
+        <div class="fixed bottom-6 left-0 right-0 max-w-[480px] mx-auto px-6 z-30">
+            <button id="calculateBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-2">
+                <i class="fas fa-calculator"></i> 주문 생성하기
+            </button>
+        </div>
+    </div>
+
+    <!-- Results Overlay -->
+    <div class="overlay" id="overlay"></div>
+    <div class="bottom-sheet" id="bottomSheet">
+        <div class="p-2 flex justify-center">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+        </div>
+        <div class="p-6 pb-8 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-slate-900">오늘의 주문</h2>
+                <button id="closeSheet" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Summary Status -->
+            <div class="flex gap-3 mb-6 overflow-x-auto pb-2">
+                <div class="bg-slate-50 rounded-xl p-3 min-w-[100px] border border-slate-100">
+                    <div class="text-xs text-slate-500 font-bold">진행률</div>
+                    <div class="text-lg font-black text-slate-800 result-value" id="res-t-value">T-0</div>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3 min-w-[100px] border border-slate-100">
+                    <div class="text-xs text-slate-500 font-bold">1회 매수</div>
+                    <div class="text-lg font-black text-slate-800 result-value" id="res-one-buy">$0</div>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3 min-w-[100px] border border-slate-100">
+                    <div class="text-xs text-slate-500 font-bold">현재수익</div>
+                    <div class="text-lg font-black text-slate-800 result-value" id="res-profit">0%</div>
+                </div>
+            </div>
+
+            <!-- Buy Orders -->
+            <h3 class="text-sm font-bold text-blue-600 uppercase mb-3 flex items-center gap-2">
+                <i class="fas fa-shopping-cart"></i> 매수 주문 (LOC)
+            </h3>
+            <div id="buy-orders-list" class="space-y-3 mb-6">
+                <!-- JS Generated -->
+            </div>
+
+            <!-- Sell Orders -->
+            <h3 class="text-sm font-bold text-red-500 uppercase mb-3 flex items-center gap-2">
+                <i class="fas fa-money-bill-wave"></i> 매도 주문 (지정가/LOC)
+            </h3>
+            <div id="sell-orders-list" class="space-y-3 mb-24">
+                <!-- JS Generated -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const state = { ticker: 'TQQQ', price: 0 };
+            
+            // UI Elements
+            const tabs = document.querySelectorAll('.tab-btn');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const bottomSheet = document.getElementById('bottomSheet');
+            const overlay = document.getElementById('overlay');
+            const closeSheet = document.getElementById('closeSheet');
+            
+            // Logic Configuration
+            const config = {
+                TQQQ: { split: 40, starFormula: t => 10 - (t / 2), sellProfit: 10 },
+                SOXL: { split: 40, starFormula: t => 12 - (t * 0.6), sellProfit: 12 }
+            };
+
+            // 1. Ticker Switching
+            tabs.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.ticker = btn.dataset.ticker;
+                    updateLivePrice();
+                });
+            });
+
+            // 2. Live Price (Yahoo Finance Proxy)
+            async function updateLivePrice() {
+                const priceEl = document.getElementById('live-price');
+                const timeEl = document.getElementById('last-update');
+                
+                priceEl.classList.add('opacity-50');
+                
+                try {
+                    const proxyUrl = 'https://api.allorigins.win/get?url=';
+                    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${state.ticker}`;
+                    const res = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                    const data = await res.json();
+                    const content = JSON.parse(data.contents);
+                    const price = content?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                    
+                    if (price) {
+                        state.price = price;
+                        priceEl.textContent = `$${price.toFixed(2)}`;
+                        timeEl.textContent = new Date().toLocaleTimeString();
+                    } else {
+                        priceEl.textContent = 'Error';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    priceEl.textContent = 'Retry';
+                } finally {
+                    priceEl.classList.remove('opacity-50');
+                }
+            }
+            
+            // Initial Load
+            updateLivePrice();
+
+            // 3. Calculation Logic (Core)
+            function calculate() {
+                const virtualSeed = parseFloat(document.getElementById('virtualSeed').value) || 0;
+                const cumulativeBuy = parseFloat(document.getElementById('cumulativeBuy').value) || 0;
+                const totalQuantity = parseFloat(document.getElementById('totalQuantity').value) || 0;
+                const avgPrice = parseFloat(document.getElementById('avgPrice').value) || 0;
+
+                if (virtualSeed <= 0) return alert('시드머니를 입력해주세요.');
+
+                const currentConfig = config[state.ticker];
+                const oneTimeBuy = virtualSeed / currentConfig.split;
+                
+                // T-Value Logic
+                let tValue = 0;
+                if (oneTimeBuy > 0) {
+                    tValue = Math.ceil((cumulativeBuy / oneTimeBuy) * 10) / 10;
+                }
+                if (tValue === 0) tValue = 0; // Start
+
+                const starPercent = currentConfig.starFormula(tValue);
+                const starPrice = avgPrice * (1 + starPercent / 100);
+                const profitPrice = avgPrice * (1 + currentConfig.sellProfit / 100);
+                
+                // Profit Calc
+                const currentProfit = state.price > 0 && avgPrice > 0 
+                    ? ((state.price - avgPrice) / avgPrice * 100) 
+                    : 0;
+
+                // Update Summary UI
+                document.getElementById('res-t-value').textContent = `T-${tValue}`;
+                document.getElementById('res-one-buy').textContent = `$${oneTimeBuy.toFixed(0)}`;
+                const profitEl = document.getElementById('res-profit');
+                profitEl.textContent = `${currentProfit.toFixed(2)}%`;
+                profitEl.className = `text-lg font-black result-value ${currentProfit >= 0 ? 'text-red-500' : 'text-blue-500'}`;
+
+                // Order Logic (Simplified for Demo)
+                const buyList = document.getElementById('buy-orders-list');
+                const sellList = document.getElementById('sell-orders-list');
+                
+                // Buy Orders (Half & Half)
+                const halfBuy = oneTimeBuy / 2;
+                let buyHtml = '';
+                
+                // 1. LOC Avg
+                const qty1 = avgPrice > 0 ? Math.floor(halfBuy / avgPrice) : 0;
+                if (qty1 > 0) {
+                    buyHtml += createOrderCard('평단 LOC 매수', qty1, avgPrice, 'bg-blue-50 text-blue-700');
+                }
+                
+                // 2. LOC Star
+                const qty2 = starPrice > 0 ? Math.floor(halfBuy / starPrice) : 0;
+                if (qty2 > 0) {
+                    buyHtml += createOrderCard('큰수 LOC 매수', qty2, starPrice, 'bg-blue-50 text-blue-700');
+                }
+                
+                if (buyHtml === '') buyHtml = '<div class="text-center text-gray-400 py-4">매수 주문 없음</div>';
+                buyList.innerHTML = buyHtml;
+
+                // Sell Orders (Quarter)
+                let sellHtml = '';
+                const sellQty1 = Math.floor(totalQuantity / 4);
+                const sellQty2 = totalQuantity - sellQty1;
+                
+                if (sellQty1 > 0) {
+                    sellHtml += createOrderCard('LOC 매도 (★)', sellQty1, starPrice, 'bg-red-50 text-red-700');
+                }
+                if (sellQty2 > 0) {
+                    sellHtml += createOrderCard(`지정가 매도 (+${currentConfig.sellProfit}%)`, sellQty2, profitPrice, 'bg-red-50 text-red-700');
+                }
+                
+                if (sellHtml === '') sellHtml = '<div class="text-center text-gray-400 py-4">매도 주문 없음</div>';
+                sellList.innerHTML = sellHtml;
+
+                // Show Sheet
+                openResultSheet();
+            }
+
+            function createOrderCard(title, qty, price, colorClass) {
+                return `
+                    <div class="result-card flex justify-between items-center ${colorClass}">
+                        <div>
+                            <div class="text-xs font-bold opacity-70">${title}</div>
+                            <div class="font-black text-lg result-value">$${price.toFixed(2)}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs font-bold opacity-70">수량</div>
+                            <div class="font-black text-xl result-value">${qty}주</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 4. Modal Interaction
+            function openResultSheet() {
+                overlay.classList.add('open');
+                bottomSheet.classList.add('open');
+            }
+            function closeResultSheet() {
+                overlay.classList.remove('open');
+                bottomSheet.classList.remove('open');
+            }
+
+            calculateBtn.addEventListener('click', calculate);
+            closeSheet.addEventListener('click', closeResultSheet);
+            overlay.addEventListener('click', closeResultSheet);
+        });
+    </script>
+</body>
+</html>

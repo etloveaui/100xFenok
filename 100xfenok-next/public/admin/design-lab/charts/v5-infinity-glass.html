@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="ko"><head>
+  <meta charset="utf-8">
+  <title>Multichart v5 - Infinity Glass (Light)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { 
+        background-color: #f8fafc; color: #1e293b; font-family: 'Outfit', sans-serif; 
+        height: 100vh; overflow: hidden; position: relative;
+    }
+    
+    /* Ambient Background (Light) */
+    .ambient-bg {
+        position: absolute; inset: 0; z-index: -1;
+        background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%);
+        transition: background 1s ease;
+    }
+    .ambient-bg.positive { background: radial-gradient(circle at 50% 50%, #f0fdf4 0%, #f1f5f9 100%); } /* Green tint */
+    .ambient-bg.negative { background: radial-gradient(circle at 50% 50%, #fef2f2 0%, #f1f5f9 100%); } /* Red tint */
+
+    /* Glass Island (Light) */
+    .glass-island {
+        background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+        border-radius: 24px; transition: all 0.3s ease;
+    }
+
+    /* Floating Controller */
+    .controller-desktop {
+        position: absolute; top: 40px; left: 40px; width: 300px; padding: 1.5rem;
+        display: flex; flex-direction: column; gap: 1rem; z-index: 50;
+    }
+    @media (max-width: 768px) { .controller-desktop { display: none; } }
+
+    /* Dynamic Island (Mobile) */
+    .dynamic-island {
+        position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: auto; min-width: 120px; height: 44px;
+        background: white; border-radius: 99px; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 50; overflow: hidden;
+    }
+    .dynamic-island.expanded {
+        width: 90%; max-width: 360px; height: auto; border-radius: 24px; padding: 1.5rem;
+        flex-direction: column; align-items: stretch;
+    }
+    @media (min-width: 769px) { .dynamic-island { display: none; } }
+
+    /* Elements */
+    .glass-input {
+        background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); color: #1e293b; padding: 0.8rem; border-radius: 12px; width: 100%; outline: none;
+        font-weight: 800; text-align: center; text-transform: uppercase; transition: background 0.2s;
+    }
+    .glass-input:focus { background: white; border-color: #3b82f6; }
+    
+    .glass-btn {
+        background: #0f172a; color: white; font-weight: 800; padding: 1rem; border-radius: 16px; width: 100%; border: none;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2); transition: transform 0.1s;
+    }
+    .glass-btn:active { transform: scale(0.98); }
+
+    /* Summary Cards */
+    .summary-dock {
+        position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+        display: flex; gap: 1rem; z-index: 40; width: 90%; max-width: 800px; overflow-x: auto; padding-bottom: 10px;
+    }
+    .stat-card {
+        flex: 1; min-width: 140px; background: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
+        border: 1px solid white; border-radius: 16px; padding: 1rem; text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    .stat-val { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
+    
+    .chart-container { position: absolute; inset: 0; padding: 0; z-index: 10; }
+
+  </style>
+
+  <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script defer="" src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script defer="" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script defer="" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+    const STOOQ_PROXY = 'https://stooq-proxy.etloveaui.workers.dev';
+    async function fetchStooq(symbol) {
+        try {
+            const res = await fetch(STOOQ_PROXY + encodeURIComponent(`https://stooq.com/q/d/l/?s=${symbol.toLowerCase()}.us&i=d`));
+            if(!res.ok) return [];
+            const txt = await res.text();
+            return txt.trim().split('\n').slice(1).map(l=>{
+                const f=l.split(',');
+                return{date:f[0],price:+f[4]}
+            }).sort((a,b)=>a.date.localeCompare(b.date));
+        } catch(e) { return []; }
+    }
+
+    function App() {
+        const [rows, setRows] = useState([{id:1, v:'TQQQ'}, {id:2, v:'SOXL'}]);
+        const [summary, setSummary] = useState([]);
+        const [mobileExpanded, setMobileExpanded] = useState(false);
+        const [mood, setMood] = useState('neutral');
+        const canvasRef = useRef(null);
+        const chartRef = useRef(null);
+
+        const addRow = () => rows.length < 3 && setRows([...rows, {id: Date.now(), v:''}]);
+        const upd = (id,v) => setRows(rows.map(r=>r.id===id?{...r,v:v.toUpperCase()}:r));
+        const del = id => setRows(rows.filter(r=>r.id!==id));
+
+        const run = async () => {
+            const tickers = rows.map(r=>r.v.trim()).filter(Boolean);
+            if(!tickers.length) return;
+            setMobileExpanded(false);
+
+            const map = {};
+            for(const t of tickers) map[t] = await fetchStooq(t);
+            
+            const end = new Date(); const start = new Date();
+            start.setFullYear(end.getFullYear()-1);
+            const sStr = start.toISOString().slice(0,10);
+            const dates = [...new Set(Object.values(map).flat().map(p=>p.date))].filter(d=>d>=sStr).sort();
+            
+            const ds = [], sum = [];
+            let totalRet = 0;
+
+            tickers.forEach((t,i) => {
+                const d = map[t]?.filter(p=>p.date>=sStr);
+                if(!d?.length) return;
+                const f = d[0].price;
+                const color = ["#2563eb","#d97706","#059669"][i%3]; // Brighter colors for light theme
+                
+                ds.push({
+                    label: t,
+                    data: dates.map(dt=>{
+                        const x=d.find(p=>p.date===dt);
+                        return x?(x.price/f-1)*100:null
+                    }),
+                    borderColor: color, borderWidth: 3, pointRadius: 0, tension: 0.4
+                });
+                
+                const ret = ((d[d.length-1].price/f-1)*100);
+                totalRet += ret;
+                sum.push({ sym: t, ret: ret.toFixed(2), color });
+            });
+
+            setSummary(sum);
+            setMood(totalRet > 0 ? 'positive' : 'negative');
+
+            if(chartRef.current) chartRef.current.destroy();
+            Chart.defaults.color = '#64748b';
+            Chart.defaults.borderColor = '#e2e8f0';
+            
+            chartRef.current = new Chart(canvasRef.current, {
+                type: 'line', data: { labels: dates, datasets: ds },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: false } }, plugins: { legend: { display: false } } }
+            });
+        };
+
+        const ConfigContent = () => (
+            <>
+                <h3 className="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest">Active Assets</h3>
+                <div className="space-y-3 mb-6">
+                    {rows.map(r=>(
+                        <div key={r.id} className="relative">
+                            <input value={r.v} onChange={e=>upd(r.id,e.target.value)} className="glass-input" placeholder="SYM" />
+                            <button onClick={()=>del(r.id)} className="absolute right-3 top-3 text-slate-400 hover:text-red-500"><i className="fas fa-times"></i></button>
+                        </div>
+                    ))}
+                    <button onClick={addRow} className="text-xs text-blue-500 font-bold w-full hover:text-blue-600">+ Add Ticker</button>
+                </div>
+                <button onClick={run} className="glass-btn text-sm">LAUNCH ANALYSIS</button>
+            </>
+        );
+
+        return (
+            <>
+                <div className={`ambient-bg ${mood}`}></div>
+                
+                {/* Desktop Controller */}
+                <div className="glass-island controller-desktop">
+                    <div className="flex items-center gap-2 mb-2 text-slate-800">
+                        <i className="fas fa-infinity text-xl"></i>
+                        <span className="font-bold text-lg">Infinity Glass</span>
+                    </div>
+                    <ConfigContent />
+                </div>
+
+                {/* Mobile Dynamic Island */}
+                <div className={`dynamic-island ${mobileExpanded?'expanded':''}`} onClick={()=>!mobileExpanded && setMobileExpanded(true)}>
+                    {!mobileExpanded ? (
+                        <>
+                            <div className="flex items-center gap-2 text-slate-800">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                <span className="font-bold text-sm">Active</span>
+                            </div>
+                            <i className="fas fa-chevron-down text-slate-400 text-xs"></i>
+                        </>
+                    ) : (
+                        <div className="w-full relative">
+                            <button onClick={(e)=>{e.stopPropagation();setMobileExpanded(false)}} className="absolute -top-2 right-0 text-slate-400 p-2"><i className="fas fa-times"></i></button>
+                            <div className="mt-4"><ConfigContent /></div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="chart-container">
+                    <canvas ref={canvasRef}></canvas>
+                </div>
+
+                <div className="summary-dock">
+                    {summary.map(s=>(
+                        <div key={s.sym} className="stat-card">
+                            <p className="text-xs font-bold text-slate-500 mb-1 uppercase" style={{color:s.color}}>{s.sym}</p>
+                            <p className={`stat-val ${parseFloat(s.ret)>=0?'text-green-600':'text-red-500'}`}>{s.ret}%</p>
+                        </div>
+                    ))}
+                </div>
+            </>
+        );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

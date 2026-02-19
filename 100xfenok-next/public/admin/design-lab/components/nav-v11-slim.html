@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nav V11 Slim - 1-Tier Production Navigation</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#010079',
+              gold: '#D5AD36',
+              interactive: '#1B73D3',
+              cta: '#FED701'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    .orbitron { font-family: 'Orbitron', sans-serif; }
+    body { font-family: 'Noto Sans KR', sans-serif; }
+
+    /* Slim Nav: 60px 높이 */
+    .nav-slim {
+      height: 60px;
+      background: white;
+      box-shadow: 0 4px 20px -5px rgba(0,0,0,0.08);
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* Nav Pills 스타일 */
+    .nav-pill {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #64748b;
+      border-radius: 9999px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-pill:hover { color: #1e293b; background: #f1f5f9; }
+    .nav-pill.active { background: #010079; color: white; }
+    .nav-pill i { font-size: 0.5rem; }
+
+    /* Mini Ticker */
+    .mini-ticker {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.65rem;
+    }
+    .mini-ticker .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .mini-ticker .ticker-price {
+      font-weight: 800;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .mini-ticker .ticker-change.up { color: #22c55e; }
+    .mini-ticker .ticker-change.down { color: #ef4444; }
+
+    /* 드롭다운 */
+    .dropdown-wrapper:hover .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.2s;
+      z-index: 100;
+    }
+
+    /* 모바일 메뉴 */
+    .mobile-menu {
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    .mobile-menu.active { transform: translateX(0); }
+    .mobile-overlay {
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    .mobile-overlay.active { opacity: 1; visibility: visible; }
+
+    /* 검색 모달 */
+    .search-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,0.5);
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 15vh;
+    }
+    .search-modal.active { display: flex; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- V11 Slim: 1-Tier Navigation (60px) -->
+<nav class="nav-slim sticky top-0 z-50">
+  <div class="container mx-auto px-4 h-full flex items-center justify-between gap-4">
+
+    <!-- Left: Brand + Nav Pills -->
+    <div class="flex items-center gap-4">
+      <!-- Brand -->
+      <a href="#" class="flex items-center gap-2 group flex-shrink-0">
+        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
+          <img src="../../../favicon.svg" alt="Icon" class="h-5 w-5">
+        </div>
+        <span class="font-[900] orbitron text-slate-800 text-sm leading-none tracking-tight hidden sm:block">
+          100x<span class="text-brand-gold">F</span>
+        </span>
+      </a>
+
+      <!-- Nav Pills (Desktop) -->
+      <div class="hidden md:flex items-center gap-1">
+        <a href="#dashboard" class="nav-pill active">DASHBOARD</a>
+
+        <!-- MARKET 드롭다운 -->
+        <div class="relative dropdown-wrapper">
+          <button class="nav-pill flex items-center gap-1">
+            MARKET <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="dropdown-menu bg-white border border-gray-200 shadow-xl rounded-lg p-2 min-w-[180px]">
+            <a href="#market-wrap" class="block px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 rounded-md">Market Wrap</a>
+            <a href="#alpha-scout" class="block px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 rounded-md">Alpha Scout</a>
+          </div>
+        </div>
+
+        <!-- ANALYTICS 드롭다운 -->
+        <div class="relative dropdown-wrapper">
+          <button class="nav-pill flex items-center gap-1">
+            ANALYTICS <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="dropdown-menu bg-white border border-gray-200 shadow-xl rounded-lg p-2 min-w-[180px]">
+            <a href="#multichart" class="block px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 rounded-md">Multichart</a>
+            <a href="#radar" class="block px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 rounded-md">Radar</a>
+          </div>
+        </div>
+
+        <!-- STRATEGIES 드롭다운 -->
+        <div class="relative dropdown-wrapper">
+          <button class="nav-pill flex items-center gap-1">
+            STRATEGIES <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="dropdown-menu bg-white border border-gray-200 shadow-xl rounded-lg p-2 min-w-[180px]">
+            <a href="#infinite-buying" class="block px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 rounded-md">Infinite Buying</a>
+            <a href="#value-rebalancing" class="block px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 rounded-md">Value Rebalancing</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Mini Ticker (Desktop) -->
+    <div class="mini-ticker hidden lg:flex items-center bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+      <div class="ticker-item">
+        <span class="text-slate-400">SPY</span>
+        <span class="ticker-price">595.42</span>
+        <span class="ticker-change up">+0.85%</span>
+      </div>
+      <div class="w-px h-3 bg-slate-200 mx-2"></div>
+      <div class="ticker-item">
+        <span class="text-slate-400">QQQ</span>
+        <span class="ticker-price">518.73</span>
+        <span class="ticker-change up">+1.12%</span>
+      </div>
+      <div class="w-px h-3 bg-slate-200 mx-2"></div>
+      <div class="ticker-item">
+        <span class="text-slate-400">VIX</span>
+        <span class="ticker-price">13.45</span>
+        <span class="ticker-change down">-5.23%</span>
+      </div>
+    </div>
+
+    <!-- Right: Tools -->
+    <div class="flex items-center gap-2">
+      <!-- 검색 버튼 -->
+      <button onclick="openSearch()" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 flex items-center justify-center">
+        <i class="fas fa-search text-xs"></i>
+      </button>
+
+      <!-- 알림 버튼 -->
+      <button class="w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 flex items-center justify-center relative">
+        <i class="fas fa-bell text-xs"></i>
+        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">3</span>
+      </button>
+
+      <!-- 앱 그리드 -->
+      <button class="hidden sm:flex w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 items-center justify-center">
+        <i class="fas fa-th text-xs"></i>
+      </button>
+
+      <!-- 햄버거 (모바일) -->
+      <button onclick="toggleMobileMenu()" class="md:hidden w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 flex items-center justify-center">
+        <i class="fas fa-bars text-xs"></i>
+      </button>
+    </div>
+
+  </div>
+</nav>
+
+<!-- 검색 모달 -->
+<div id="searchModal" class="search-modal">
+  <div class="bg-white rounded-xl p-4 w-full max-w-md mx-4 shadow-2xl">
+    <div class="flex items-center gap-3 mb-4">
+      <i class="fas fa-search text-slate-400"></i>
+      <input type="text" class="flex-1 outline-none text-lg" placeholder="심볼 또는 메뉴 검색..." autofocus>
+      <button onclick="closeSearch()" class="text-slate-400 hover:text-slate-600">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="text-xs text-slate-400">
+      <kbd class="px-2 py-0.5 bg-slate-100 rounded mr-1">ESC</kbd> 닫기
+    </div>
+  </div>
+</div>
+
+<!-- 모바일 메뉴 -->
+<div id="mobileMenu" class="mobile-menu fixed inset-y-0 right-0 w-72 bg-white shadow-2xl z-50">
+  <div class="flex items-center justify-between p-4 border-b border-gray-100">
+    <span class="font-bold orbitron text-slate-800 text-sm">MENU</span>
+    <button onclick="toggleMobileMenu()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center">
+      <i class="fas fa-times text-slate-600"></i>
+    </button>
+  </div>
+  <div class="p-4 space-y-2">
+    <a href="#dashboard" class="block px-4 py-3 rounded-lg bg-blue-50 border-l-4 border-brand-navy font-bold text-sm text-brand-navy">
+      DASHBOARD
+    </a>
+    <a href="#market" class="block px-4 py-3 rounded-lg hover:bg-slate-50 font-semibold text-sm text-slate-600">
+      MARKET
+    </a>
+    <a href="#analytics" class="block px-4 py-3 rounded-lg hover:bg-slate-50 font-semibold text-sm text-slate-600">
+      ANALYTICS
+    </a>
+    <a href="#strategies" class="block px-4 py-3 rounded-lg hover:bg-slate-50 font-semibold text-sm text-slate-600">
+      STRATEGIES
+    </a>
+  </div>
+
+  <!-- 모바일 Ticker -->
+  <div class="p-4 border-t border-gray-100">
+    <div class="text-[10px] font-bold text-slate-400 mb-2 uppercase">Live Market</div>
+    <div class="space-y-2 text-xs">
+      <div class="flex justify-between">
+        <span class="text-slate-500">S&P 500</span>
+        <span class="font-bold orbitron">595.42 <span class="text-green-500">+0.85%</span></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">NASDAQ</span>
+        <span class="font-bold orbitron">518.73 <span class="text-green-500">+1.12%</span></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">VIX</span>
+        <span class="font-bold orbitron">13.45 <span class="text-red-500">-5.23%</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 모바일 오버레이 -->
+<div id="mobileOverlay" class="mobile-overlay fixed inset-0 bg-black/50 z-40" onclick="toggleMobileMenu()"></div>
+
+<!-- 데모 콘텐츠 -->
+<div class="container mx-auto px-4 py-8">
+  <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+    <h1 class="text-2xl font-bold orbitron text-slate-800 mb-2">Nav V11 Slim</h1>
+    <p class="text-slate-600 mb-4">2-Tier → 1-Tier 슬림화 (110px → 60px)</p>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+      <div class="bg-emerald-50 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-emerald-600 orbitron">60px</div>
+        <div class="text-xs text-slate-500 mt-1">Nav 높이</div>
+      </div>
+      <div class="bg-blue-50 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-blue-600 orbitron">1</div>
+        <div class="text-xs text-slate-500 mt-1">Tier</div>
+      </div>
+      <div class="bg-amber-50 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-amber-600 orbitron">-45%</div>
+        <div class="text-xs text-slate-500 mt-1">높이 절감</div>
+      </div>
+      <div class="bg-purple-50 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-purple-600 orbitron">✓</div>
+        <div class="text-xs text-slate-500 mt-1">모든 기능</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스크롤 테스트용 더미 콘텐츠 -->
+  <div class="space-y-4">
+    <div class="bg-white rounded-lg shadow p-6 h-48"></div>
+    <div class="bg-white rounded-lg shadow p-6 h-48"></div>
+    <div class="bg-white rounded-lg shadow p-6 h-48"></div>
+  </div>
+</div>
+
+<script>
+  // 검색 모달
+  function openSearch() {
+    document.getElementById('searchModal').classList.add('active');
+    document.querySelector('#searchModal input').focus();
+  }
+  function closeSearch() {
+    document.getElementById('searchModal').classList.remove('active');
+  }
+
+  // ESC로 검색 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSearch();
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      openSearch();
+    }
+  });
+
+  // 검색 모달 배경 클릭 시 닫기
+  document.getElementById('searchModal').addEventListener('click', (e) => {
+    if (e.target.id === 'searchModal') closeSearch();
+  });
+
+  // 모바일 메뉴
+  function toggleMobileMenu() {
+    document.getElementById('mobileMenu').classList.toggle('active');
+    document.getElementById('mobileOverlay').classList.toggle('active');
+    document.body.classList.toggle('overflow-hidden');
+  }
+</script>
+
+</body>
+</html>

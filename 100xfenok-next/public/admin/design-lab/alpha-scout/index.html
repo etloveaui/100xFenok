@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Scout Design Gallery - 100x Design Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .gallery-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s; border: 1px solid #e2e8f0; }
+        .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #7c3aed; }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <a href="../index.html" class="text-slate-400 hover:text-slate-600 text-sm font-bold mb-2 block">← Dashboard</a>
+                <h1 class="text-3xl font-bold text-slate-800">🕵️ Alpha Scout Gallery</h1>
+                <p class="text-slate-500">개별 종목 심층 분석 리포트 (Deep Dive Report) 리디자인</p>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- v4: Analyst Desk -->
+            <div class="gallery-card border-t-4 border-[#010079] shadow-lg">
+                <div class="h-48 bg-white flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-[#010079]">🏛️</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-[#010079] text-white">PREMIUM</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-[#010079] font-serif">v4: Analyst Desk</h3>
+                    <p class="text-sm text-slate-600 mb-6">기관 리포트 스타일. 세리프 폰트와 깔끔한 화이트 테마. 깊이 있는 텍스트 분석에 최적화.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v4-analyst-desk.html</span>
+                        <a href="v4-analyst-desk.html" class="bg-[#010079] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#1B73D3] transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v5: Quantum Grid -->
+            <div class="gallery-card border border-slate-300 bg-slate-50 shadow-md">
+                <div class="h-48 flex items-center justify-center relative bg-slate-100 border-b border-slate-200">
+                    <span class="text-4xl text-blue-600">💠</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-white text-blue-600 border border-blue-200">FINTECH</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800 font-mono">v5: Quantum Grid</h3>
+                    <p class="text-sm text-slate-600 mb-6">모듈형 Bento Grid 터미널. Factor Radar, Valuation Field 등 직관적 시각화.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v5-quantum-grid.html</span>
+                        <a href="v5-quantum-grid.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v2: Visual Story -->
+            <div class="gallery-card border border-slate-200">
+                <div class="h-48 bg-white flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl text-slate-700">📖</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-blue-50 text-blue-600">STORY</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800 font-serif">v2: Visual Story</h3>
+                    <p class="text-sm text-slate-500 mb-6">인포그래픽과 내러티브 중심. 일반 투자자를 위한 스토리텔링.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v2-visual-story.html</span>
+                        <a href="v2-visual-story.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v3: Mobile Brief -->
+            <div class="gallery-card border border-slate-200">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-200 relative">
+                    <span class="text-4xl text-slate-600">📱</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-green-50 text-green-600">MOBILE</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">v3: Mobile Brief</h3>
+                    <p class="text-sm text-slate-500 mb-6">앱 스타일의 모바일 최적화 뷰. 핵심 요약 카드 스택.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v3-mobile-brief.html</span>
+                        <a href="v3-mobile-brief.html" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

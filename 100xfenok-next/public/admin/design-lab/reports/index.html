@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports Design Gallery - 100x Design Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .gallery-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s; border: 1px solid #e2e8f0; }
+        .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #010079; }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <a href="../index.html" class="text-slate-400 hover:text-slate-600 text-sm font-bold mb-2 block">← Dashboard</a>
+                <h1 class="text-3xl font-bold text-slate-800">📰 Reports Design Gallery</h1>
+                <p class="text-slate-500">Market Wrap, Alpha Scout 등 콘텐츠 중심 페이지 리디자인</p>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- v1: Classic Premium -->
+            <div class="gallery-card">
+                <div class="h-48 bg-slate-100 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl">📜</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-blue-100 text-blue-700">검토 대기</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2">v1: Classic Premium</h3>
+                    <p class="text-sm text-slate-500 mb-6">정통 경제지 스타일. Deep Navy & Gold 조합으로 신뢰감 강조.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v1-classic-premium.html</span>
+                        <a href="v1-classic-premium.html" class="bg-[#010079] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-800 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v2: Modern Bold -->
+            <div class="gallery-card">
+                <div class="h-48 bg-indigo-50 flex items-center justify-center border-b border-indigo-100 relative">
+                    <span class="text-4xl">🚀</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-purple-100 text-purple-700">검토 대기</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2">v2: Modern Bold</h3>
+                    <p class="text-sm text-slate-500 mb-6">트렌디한 매거진 레이아웃. 과감한 타이포와 강렬한 색채 대비.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v2-modern-bold.html</span>
+                        <a href="v2-modern-bold.html" class="bg-[#010079] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-800 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v3: Minimal Elite -->
+            <div class="gallery-card opacity-75">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl">💎</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-slate-200 text-slate-500">보류</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-500">v3: Minimal Elite</h3>
+                    <p class="text-sm text-slate-400 mb-6">고액 자산가용 프라이빗 리포트 스타일. 여백과 선의 미학.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v3-minimal-elite.html</span>
+                        <a href="v3-minimal-elite.html" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-300 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v3.1: Enhanced Elite -->
+            <div class="gallery-card border-2 border-emerald-500 shadow-lg">
+                <div class="h-48 bg-slate-50 flex items-center justify-center border-b border-slate-100 relative">
+                    <span class="text-4xl">📰</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-emerald-100 text-emerald-700">강력 추천</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-[#0f172a]">v3.1: Enhanced Elite</h3>
+                    <p class="text-sm text-slate-600 mb-6 font-medium">Financial Times 스타일. 고대비 타이포와 명확한 섹션 구분으로 가독성/주목도 극대화.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v3-1-enhanced-elite.html</span>
+                        <a href="v3-1-enhanced-elite.html" class="bg-[#0f172a] text-[#c5a059] px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors shadow-md">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v4: Intelligent Briefing -->
+            <div class="gallery-card border-2 border-sky-400 shadow-xl ring-4 ring-sky-50">
+                <div class="h-48 bg-slate-900 flex items-center justify-center border-b border-slate-700 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20"></div>
+                    <span class="text-4xl relative z-10">⚡</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-sky-500 text-white">실험적</span>
+                    </div>
+                </div>
+                <div class="p-6 bg-slate-50">
+                    <h3 class="font-bold text-xl mb-2 text-slate-900">v4: Intelligent Briefing</h3>
+                    <p class="text-sm text-slate-600 mb-6">Bento Grid 레이아웃 & 데이터 시각화 결합. 핀테크 앱 스타일의 대시보드형 리포트.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v4-intelligent-briefing.html</span>
+                        <a href="v4-intelligent-briefing.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-lg">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v5: Unified Premium (NEW) -->
+            <div class="gallery-card border-2 border-amber-400 shadow-xl ring-4 ring-amber-50">
+                <div class="h-48 flex items-center justify-center border-b relative overflow-hidden" style="background: linear-gradient(135deg, #010079 0%, #D5AD36 100%);">
+                    <span class="text-4xl relative z-10">👑</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-amber-500 text-white">NEW</span>
+                    </div>
+                </div>
+                <div class="p-6 bg-amber-50">
+                    <h3 class="font-bold text-xl mb-2" style="color:#010079;">v5: Unified Premium</h3>
+                    <p class="text-sm text-slate-600 mb-6">v3.1 + 브랜드 통일 + Nav 1-Tier EDGY + Footer v21 통합. 접근성/모바일 최적화.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v5-unified-premium.html</span>
+                        <a href="v5-unified-premium.html" class="text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg" style="background:#010079;">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

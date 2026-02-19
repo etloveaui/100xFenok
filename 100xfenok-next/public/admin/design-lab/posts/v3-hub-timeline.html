@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts Hub v3 - Timeline Stream</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#ffffff',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #ffffff; font-family: 'Noto Sans KR', sans-serif; color: #1e293b; }
+
+        /* Nav (1-Tier EDGY - Light) */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 1px solid #f1f5f9;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 2rem;
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+
+        /* Timeline Layout */
+        .timeline { position: relative; padding-left: 2rem; border-left: 2px solid #e2e8f0; margin-top: 2rem; }
+        
+        .time-group { margin-bottom: 3rem; position: relative; }
+        .time-label {
+            position: absolute; left: -2.65rem; top: 0;
+            background: #f1f5f9; color: #64748b; font-size: 0.75rem; font-weight: 700;
+            padding: 0.25rem 0.75rem; border-radius: 99px; border: 2px solid white;
+        }
+
+        .post-card {
+            background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1.5rem;
+            margin-bottom: 1.5rem; transition: all 0.2s;
+            position: relative;
+        }
+        .post-card:hover { border-color: #cbd5e1; transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .post-card::before {
+            content: ''; position: absolute; left: -2.4rem; top: 1.5rem;
+            width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; border: 2px solid white;
+        }
+        .post-card.highlight::before { background: #D5AD36; box-shadow: 0 0 0 4px rgba(213, 173, 54, 0.2); }
+
+        .post-meta { display: flex; gap: 0.75rem; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; align-items: center; }
+        .post-tag { font-weight: 700; color: #010079; text-transform: uppercase; }
+        
+        .post-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; line-height: 1.4; word-break: keep-all; }
+        .post-summary { font-size: 0.95rem; color: #64748b; line-height: 1.6; word-break: keep-all; }
+
+        .market-wrap-box {
+            background: #f8fafc; border-radius: 8px; padding: 1rem; margin-top: 1rem;
+            border-left: 3px solid #010079;
+        }
+        .key-stat { display: flex; justify-content: space-between; font-size: 0.875rem; border-bottom: 1px solid #e2e8f0; padding: 0.5rem 0; }
+        .key-stat:last-child { border-bottom: none; }
+
+    </style>
+</head>
+<body>
+
+    <nav class="nav-edgy">
+        <span class="font-[900] text-slate-800 text-lg">LIVE FEED</span>
+        <div class="flex gap-2 text-sm font-bold text-slate-500">
+            <span class="text-brand-navy">최신순</span>
+            <span>중요순</span>
+        </div>
+    </nav>
+
+    <main class="container">
+        
+        <div class="timeline">
+            
+            <!-- Today -->
+            <div class="time-group">
+                <span class="time-label">오늘</span>
+                
+                <div class="post-card highlight">
+                    <div class="post-meta">
+                        <span class="post-tag">Market Wrap</span>
+                        <span>2시간 전</span>
+                    </div>
+                    <h3 class="post-title">연준의 피벗 신호: 이제는 포트폴리오를 재편할 때</h3>
+                    <p class="post-summary">제롬 파월 의장이 잭슨홀 미팅에서 비둘기파적 발언을 내놓았습니다. 금리 인하 기대감이 시장을 지배하는 가운데, 즉각적인 수혜가 예상되는 섹터 3가지를 분석합니다.</p>
+                    <div class="market-wrap-box">
+                        <div class="key-stat"><span>S&P 500</span> <span class="font-bold text-green-600">▲ 1.2%</span></div>
+                        <div class="key-stat"><span>US 10Y</span> <span class="font-bold text-red-600">▼ 3.82%</span></div>
+                    </div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-meta">
+                        <span class="post-tag text-purple-600">Alpha Scout</span>
+                        <span>5시간 전</span>
+                    </div>
+                    <h3 class="post-title">ResMed (RMD): 악재는 기회다</h3>
+                    <p class="post-summary">필립스의 리콜 사태로 호흡기 치료 기기 시장의 독점적 지위를 확보한 ResMed. 강력 매수(Strong Buy) 의견을 제시합니다.</p>
+                </div>
+            </div>
+
+            <!-- Yesterday -->
+            <div class="time-group">
+                <span class="time-label">어제</span>
+
+                <div class="post-card">
+                    <div class="post-meta">
+                        <span class="post-tag text-green-600">Playbook</span>
+                        <span>6월 29일</span>
+                    </div>
+                    <h3 class="post-title">에너지 전환의 핵심, 구리(Copper) 슈퍼사이클</h3>
+                    <p class="post-summary">AI 데이터센터와 전기차 인프라 구축으로 구리 수요가 폭증하고 있습니다. 공급 부족이 야기할 슈퍼사이클 시나리오를 점검합니다.</p>
+                </div>
+            </div>
+
+            <!-- This Week -->
+            <div class="time-group">
+                <span class="time-label">이번 주</span>
+
+                <div class="post-card">
+                    <div class="post-meta">
+                        <span class="post-tag text-orange-600">Crypto</span>
+                        <span>6월 27일</span>
+                    </div>
+                    <h3 class="post-title">비트코인 반감기 그 후: 온체인 데이터 분석</h3>
+                    <p class="post-summary">채굴자들의 항복(Capitulation) 신호가 포착되었습니다. 과거 사이클과 비교했을 때 현재 위치는 어디일까요?</p>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-meta">
+                        <span class="post-tag">Deep Dive</span>
+                        <span>6월 25일</span>
+                    </div>
+                    <h3 class="post-title">스테이블코인 전쟁: USDC vs USDT</h3>
+                    <p class="post-summary">디지털 달러 패권을 둘러싼 써클과 테더의 경쟁. 규제 환경 변화가 미칠 영향을 심층 분석합니다.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
