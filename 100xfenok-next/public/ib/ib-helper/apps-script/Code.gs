@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 3.0.0
+ * @version 3.1.0
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v3.1.0 (2026-02-20): ExecutionLog noise reduction (EXECUTED-only), 30-day log rotation, ARCHIVE_DAYS 14→7
  * - v3.0.0 (2026-02-19): Pipeline reliability overhaul — 10 fixes (S-1, S-2, S-3, D-1~D-4, R-1, R-2)
  * - v2.9.0 (2026-02-12): CRITICAL fix — removeStaleOrders moved AFTER checkExecutions (was deleting before checking)
  * - v2.8.1 (2026-02-12): removeStaleOrders Phase1 fix — date<today = all stale (not per-group)
@@ -48,7 +49,8 @@ const CONFIG = {
   COMMISSION_RATE: 0.0007,  // 0.07%
   EXECUTION_LOG_SHEET: 'ExecutionLog',
   ORDERS_ARCHIVE_SHEET: 'Orders_Archive',
-  ARCHIVE_DAYS: 14  // Days to keep executed orders before archiving
+  ARCHIVE_DAYS: 7,  // Days to keep executed orders before archiving
+  EXECUTION_LOG_RETENTION_DAYS: 30  // Days to keep ExecutionLog entries
 };
 
 // =====================================================
@@ -322,6 +324,13 @@ function processOrderExecutions() {
       archiveOldOrders(ss, ordersSheet);
     } catch (archiveError) {
       Logger.log('archiveOldOrders error (ignored): ' + archiveError.message);
+    }
+
+    // 9. v3.1.0: Rotate old ExecutionLog entries (failure won't break main pipeline)
+    try {
+      rotateExecutionLog(ss);
+    } catch (rotateError) {
+      Logger.log('rotateExecutionLog error (ignored): ' + rotateError.message);
     }
 
     Logger.log('Process complete: ' + executedOrders.length + ' orders executed');
@@ -868,7 +877,16 @@ function writeExecutionLog(ss, logEntries) {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
   }
 
-  var rows = logEntries.map(function(e) {
+  // v3.1.0: Only log EXECUTED entries (filter out PENDING/SKIPPED noise)
+  var executedEntries = logEntries.filter(function(e) {
+    return e.result === 'EXECUTED';
+  });
+  if (executedEntries.length === 0) {
+    Logger.log('writeExecutionLog: 0 EXECUTED entries (skipped ' + logEntries.length + ' non-executed)');
+    return;
+  }
+
+  var rows = executedEntries.map(function(e) {
     return [
       e.timestamp, e.user, 'execution_check', e.ticker,
       e.orderPrice, e.closePrice, e.highPrice, e.result, e.reason
@@ -878,6 +896,53 @@ function writeExecutionLog(ss, logEntries) {
   var lastRow = sheet.getLastRow();
   sheet.getRange(lastRow + 1, 1, rows.length, HEADERS.length).setValues(rows);
   Logger.log('writeExecutionLog: ' + rows.length + ' entries written');
+}
+
+/**
+ * Rotate ExecutionLog: delete entries older than EXECUTION_LOG_RETENTION_DAYS
+ * v3.1.0: Prevents ExecutionLog sheet from growing unbounded (~120 rows/day)
+ *
+ * @param {Spreadsheet} ss - Spreadsheet
+ */
+function rotateExecutionLog(ss) {
+  var sheet = ss.getSheetByName(CONFIG.EXECUTION_LOG_SHEET);
+  if (!sheet) return;
+
+  var data = sheet.getDataRange().getValues();
+  if (!data || data.length <= 1) return;
+
+  var header = data[0];
+  var colCount = header.length;
+  var cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - CONFIG.EXECUTION_LOG_RETENTION_DAYS);
+
+  var keepRows = [header];
+  for (var i = 1; i < data.length; i++) {
+    var timestamp = data[i][0];
+    if (!timestamp) { keepRows.push(data[i]); continue; }
+    var ts = (Object.prototype.toString.call(timestamp) === '[object Date]')
+      ? timestamp : new Date(timestamp);
+    if (isNaN(ts.getTime()) || ts >= cutoff) {
+      keepRows.push(data[i]);
+    }
+  }
+
+  var removed = data.length - keepRows.length;
+  if (removed === 0) {
+    Logger.log('rotateExecutionLog: nothing to rotate');
+    return;
+  }
+
+  var normalizedKeep = keepRows.map(function(r) {
+    var nr = r.slice(0, colCount);
+    while (nr.length < colCount) nr.push('');
+    return nr;
+  });
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, normalizedKeep.length, colCount).setValues(normalizedKeep);
+  Logger.log('rotateExecutionLog: removed ' + removed + ' entries older than ' +
+    CONFIG.EXECUTION_LOG_RETENTION_DAYS + ' days');
 }
 
 // =====================================================
@@ -1320,6 +1385,7 @@ function onOpen() {
     .addItem('🧹 Stale 주문 정리', 'manualRemoveStaleOrders')
     .addItem('체결 예수금 마이그레이션', 'migrateExecutedOrdersBalance')
     .addItem('📦 Archive Old Orders', 'manualArchiveOldOrders')
+    .addItem('🔄 Rotate ExecutionLog (30d)', 'manualRotateExecutionLog')
     .addSeparator()
     .addItem('매일 자동 실행 설정', 'setupTrigger')
     .addItem('자동 실행 해제', 'removeTrigger')
@@ -1347,6 +1413,28 @@ function manualArchiveOldOrders() {
   } catch (e) {
     SpreadsheetApp.getUi().alert('Archive failed: ' + e.message);
     Logger.log('manualArchiveOldOrders error: ' + e.message);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Manual ExecutionLog rotation with LockService protection
+ */
+function manualRotateExecutionLog() {
+  var lock = LockService.getDocumentLock();
+  if (!lock.tryLock(30000)) {
+    SpreadsheetApp.getUi().alert('Another process is running. Please try again later.');
+    return;
+  }
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    rotateExecutionLog(ss);
+    SpreadsheetApp.getUi().alert('ExecutionLog rotation complete. Entries older than ' +
+      CONFIG.EXECUTION_LOG_RETENTION_DAYS + ' days removed.');
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Rotation failed: ' + e.message);
+    Logger.log('manualRotateExecutionLog error: ' + e.message);
   } finally {
     lock.releaseLock();
   }
@@ -1429,4 +1517,62 @@ function createPricesSheet() {
   sheet.setFrozenRows(1);
 
   Logger.log('Prices sheet created with GOOGLEFINANCE formulas');
+}
+
+/**
+ * One-time utility: Purge non-EXECUTED entries from ExecutionLog
+ * Removes PENDING/SKIPPED rows to clean up historical noise.
+ * Safe to run multiple times (idempotent).
+ */
+function purgeNonExecutedLogs() {
+  var lock = LockService.getDocumentLock();
+  if (!lock.tryLock(30000)) {
+    SpreadsheetApp.getUi().alert('Another process is running.');
+    return;
+  }
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(CONFIG.EXECUTION_LOG_SHEET);
+    if (!sheet) {
+      SpreadsheetApp.getUi().alert('ExecutionLog sheet not found');
+      return;
+    }
+
+    var data = sheet.getDataRange().getValues();
+    if (!data || data.length <= 1) return;
+
+    var header = data[0];
+    var colCount = header.length;
+    var keepRows = [header];
+
+    for (var i = 1; i < data.length; i++) {
+      var result = String(data[i][7] || '').trim().toUpperCase();  // H: result
+      if (result === 'EXECUTED') {
+        keepRows.push(data[i]);
+      }
+    }
+
+    var removed = data.length - keepRows.length;
+    if (removed === 0) {
+      SpreadsheetApp.getUi().alert('No non-EXECUTED entries found.');
+      return;
+    }
+
+    var normalizedKeep = keepRows.map(function(r) {
+      var nr = r.slice(0, colCount);
+      while (nr.length < colCount) nr.push('');
+      return nr;
+    });
+
+    sheet.clearContents();
+    sheet.getRange(1, 1, normalizedKeep.length, colCount).setValues(normalizedKeep);
+    SpreadsheetApp.getUi().alert('Purged ' + removed + ' non-EXECUTED entries. ' +
+      keepRows.length + ' rows remaining (including header).');
+    Logger.log('purgeNonExecutedLogs: removed ' + removed + ' rows');
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Purge failed: ' + e.message);
+    Logger.log('purgeNonExecutedLogs error: ' + e.message);
+  } finally {
+    lock.releaseLock();
+  }
 }
