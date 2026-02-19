@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.0.0",
   "created": "2026-01-20",
-  "last_updated": "2026-02-16",
+  "last_updated": "2026-02-20",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "benchmarks": {
@@ -41,13 +41,13 @@
       "description": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
     "sec-13f": {
-      "version": "2.1.0",
-      "updated": "2026-01-05",
+      "version": "3.0.1",
+      "updated": "2026-02-20",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
-      "file_count": 20,
+      "file_count": 37,
       "schema": true,
-      "description": "Institutional holdings from major investors"
+      "description": "Institutional holdings from 30 major investors (20Q accumulate, analytics)"
     },
     "sentiment": {
       "version": "1.0.0",
@@ -69,6 +69,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-02-20",
+      "folder": "sec-13f",
+      "version": "3.0.1",
+      "change": "Major update: 17→30 investors, 20Q accumulate mode, analytics/ folder (consensus, new_positions, buying_pressure, conviction)",
+      "breaking": true
+    },
     {
       "date": "2026-02-16",
       "folder": "global-scouter",
