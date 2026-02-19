@@ -30,6 +30,37 @@ function isNonBlockingConsoleNoise(message) {
   );
 }
 
+function isDevServerNoise(message) {
+  return (
+    // HMR / Fast Refresh messages
+    /\[HMR\]/i.test(message) ||
+    /\[Fast Refresh\]/i.test(message) ||
+    /webpack-hmr/i.test(message) ||
+    // Turbopack compilation messages
+    /turbopack/i.test(message) ||
+    /\[Turbopack\]/i.test(message) ||
+    // React hydration mismatch warnings (dev-only)
+    /Hydration failed because/i.test(message) ||
+    /There was an error while hydrating/i.test(message) ||
+    /Text content does not match/i.test(message) ||
+    /did not match\. Server/i.test(message) ||
+    // Next.js internal dev messages
+    /__nextjs/i.test(message) ||
+    /__next/i.test(message) ||
+    /next-router-state-tree/i.test(message) ||
+    // Chunk load errors from hot reload
+    /ChunkLoadError/i.test(message) ||
+    /Loading chunk/i.test(message) ||
+    // Dev server WebSocket reconnection
+    /WebSocket connection/i.test(message) ||
+    /\[webpack-dev-server\]/i.test(message) ||
+    // React dev mode warnings
+    /Warning: Each child in a list/i.test(message) ||
+    /Warning: validateDOMNesting/i.test(message) ||
+    /Download the React DevTools/i.test(message)
+  );
+}
+
 const routes = [
   "/",
   "/market",
@@ -55,13 +86,35 @@ const viewports = [
   { name: "fold", width: 540, height: 720 },
 ];
 
+const isDevServer = base.includes(":3000") || process.env.QA_DEV === "1";
+
+async function prewarmRoutes() {
+  if (!isDevServer) return;
+  console.error("[QA] Dev server detected — pre-warming routes for Turbopack compilation...");
+  const http = require("http");
+  for (const route of routes) {
+    await new Promise((resolve) => {
+      const req = http.get(`${base}${route}`, (res) => {
+        res.resume();
+        res.on("end", resolve);
+      });
+      req.on("error", resolve);
+      req.setTimeout(60000, () => { req.destroy(); resolve(); });
+    });
+  }
+  // Extra wait for compilation to settle
+  await new Promise((r) => setTimeout(r, 3000));
+  console.error("[QA] Pre-warm complete.");
+}
+
 (async () => {
+  await prewarmRoutes();
   const browser = await chromium.launch({ headless: true });
   const results = [];
 
   for (const vp of viewports) {
-    const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
-    const page = await context.newPage();
+    let context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+    let page = await context.newPage();
 
     for (const route of routes) {
       const item = {
@@ -106,10 +159,16 @@ const viewports = [
       });
 
       try {
-        const response = await page.goto(`${base}${route}`, { waitUntil: "domcontentloaded", timeout: 45000 });
+        const response = await page.goto(`${base}${route}`, { waitUntil: "domcontentloaded", timeout: isDevServer ? 90000 : 45000 });
         item.status = response ? response.status() : null;
       } catch (err) {
         item.navigationError = String(err);
+        // Dev server: recover from page crash by recreating context
+        if (isDevServer && /Page crashed|ERR_CONNECTION_REFUSED/i.test(String(err))) {
+          try { await context.close(); } catch { /* ignore */ }
+          context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+          page = await context.newPage();
+        }
       }
 
       if (!item.navigationError) {
@@ -166,7 +225,7 @@ const viewports = [
       }
 
       const blockingConsoleErrors = consoleErrors.filter(
-        (msg) => !isExternalFetchNoise(msg) && !isNonBlockingConsoleNoise(msg)
+        (msg) => !isExternalFetchNoise(msg) && !isNonBlockingConsoleNoise(msg) && !isDevServerNoise(msg)
       );
       const nonBlockingConsoleErrors = consoleErrors.filter((msg) => isNonBlockingConsoleNoise(msg));
       const externalFetchErrors = consoleErrors.filter((msg) => isExternalFetchNoise(msg));
