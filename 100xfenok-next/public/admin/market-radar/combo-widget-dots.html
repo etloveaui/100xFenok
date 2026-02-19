@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combo Signals Widget | Phase 4-D</title>
+  <meta name="robots" content="noindex, nofollow">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    .signal-row { display: grid; grid-template-columns: 4px 1fr auto; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 8px; background: #f8fafc; margin-bottom: 4px; }
+    .bar-buy { background: #3b82f6; border-radius: 2px; height: 100%; }
+    .bar-warn { background: #ef4444; border-radius: 2px; height: 100%; }
+  </style>
+</head>
+<body class="bg-slate-50 p-4">
+  <div class="max-w-sm mx-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xs font-bold text-slate-400 tracking-widest orbitron">COMBO SIGNALS</h2>
+      <span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-bold">DEV · Phase 4-D</span>
+    </div>
+
+    <!-- Signal grid placeholder -->
+    <div class="space-y-1 mb-4">
+      <!-- BUY signals -->
+      <div class="signal-row"><div class="bar-buy self-stretch"></div><span class="text-xs text-slate-600">Liquidity Inflow</span><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">BUY</span></div>
+      <div class="signal-row"><div class="bar-buy self-stretch"></div><span class="text-xs text-slate-600">SOFR Spread Low</span><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">BUY</span></div>
+      <div class="signal-row"><div class="bar-buy self-stretch"></div><span class="text-xs text-slate-600">Fear &amp; Greed &gt; 60</span><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">BUY</span></div>
+      <div class="signal-row"><div class="bar-buy self-stretch"></div><span class="text-xs text-slate-600">TGA Drawdown</span><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">BUY</span></div>
+      <div class="signal-row"><div class="bar-buy self-stretch"></div><span class="text-xs text-slate-600">RRP &lt; 1T</span><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">BUY</span></div>
+      <div class="signal-row"><div class="bar-buy self-stretch"></div><span class="text-xs text-slate-600">DXY Falling</span><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">BUY</span></div>
+      <div class="signal-row"><div class="bar-buy self-stretch"></div><span class="text-xs text-slate-600">VIX &lt; 18</span><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">BUY</span></div>
+      <!-- WARN signals -->
+      <div class="signal-row"><div class="bar-warn self-stretch"></div><span class="text-xs text-slate-600">Yield Curve Flat</span><span class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold">WARN</span></div>
+      <div class="signal-row"><div class="bar-warn self-stretch"></div><span class="text-xs text-slate-600">Put/Call &gt; 1.1</span><span class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold">WARN</span></div>
+      <div class="signal-row"><div class="bar-warn self-stretch"></div><span class="text-xs text-slate-600">CPI Surprise</span><span class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold">WARN</span></div>
+    </div>
+
+    <div class="border-t border-slate-200 pt-3 flex items-center justify-between">
+      <span class="text-[10px] text-slate-400">7 BUY · 3 WARN</span>
+      <span class="text-[10px] text-amber-600 font-bold">🚧 구현 예정 · Phase 4-D</span>
+    </div>
+  </div>
+</body>
+</html>
