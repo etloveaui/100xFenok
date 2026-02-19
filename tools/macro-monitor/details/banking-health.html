@@ -1015,8 +1015,8 @@
       if (window.top?.loadPage) { window.top.loadPage(RADAR_PATH); return; }
       if (window.parent?.loadPage) { window.parent.loadPage(RADAR_PATH); return; }
     } catch(e) {}
-    const base = window.top?.baseHref || '/';
-    (window.top||window).location.assign(`${base}index.html?path=${RADAR_PATH}`);
+    const targetPath = String(RADAR_PATH || '').replace(/^\/+/, '');
+    (window.top || window).location.assign(`/radar?path=${encodeURIComponent(targetPath)}`);
   }
 
   // ===== 설명 카드 토글 =====

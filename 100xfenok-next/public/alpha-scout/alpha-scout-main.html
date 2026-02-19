@@ -268,7 +268,10 @@
                         if (window.parent && typeof window.parent.loadPage === 'function') {
                             window.parent.loadPage(path);
                         } else {
-                            console.warn('loadPage function not found in parent window.');
+                            const normalizedPath = String(path || '').replace(/^\/+/, '');
+                            if (normalizedPath) {
+                                (window.top || window).location.assign(`/alpha-scout?path=${encodeURIComponent(normalizedPath)}`);
+                            }
                         }
                     });
                 });
