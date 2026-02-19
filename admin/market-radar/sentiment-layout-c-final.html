@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Full Dashboard (c-final) | Phase 4-D</title>
+  <meta name="robots" content="noindex, nofollow">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; }
+    .orbitron { font-family: 'Orbitron', monospace; }
+  </style>
+</head>
+<body class="bg-slate-50 p-4">
+  <div class="max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xs font-bold text-slate-400 tracking-widest orbitron">FULL DASHBOARD · C-FINAL</h2>
+      <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-bold">DEV · Phase 4-D</span>
+    </div>
+
+    <!-- Dashboard layout placeholder -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="bg-white rounded-xl p-4 border border-slate-200">
+        <p class="text-[10px] text-slate-400 font-bold tracking-widest mb-2 orbitron">COMBO SIGNALS</p>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl font-bold text-blue-600 orbitron">7</span>
+          <span class="text-xs text-slate-500">BUY</span>
+          <span class="text-2xl font-bold text-red-500 orbitron ml-2">3</span>
+          <span class="text-xs text-slate-500">WARN</span>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-4 border border-slate-200">
+        <p class="text-[10px] text-slate-400 font-bold tracking-widest mb-2 orbitron">SENTIMENT</p>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl font-bold text-green-600 orbitron">72</span>
+          <span class="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold">GREED</span>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-4 border border-slate-200">
+        <p class="text-[10px] text-slate-400 font-bold tracking-widest mb-2 orbitron">LIQUIDITY</p>
+        <div class="flex items-center gap-2">
+          <span class="text-xl font-bold text-blue-600 orbitron">+$87B</span>
+          <span class="text-xs text-slate-400">WoW</span>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-4 border border-slate-200">
+        <p class="text-[10px] text-slate-400 font-bold tracking-widest mb-2 orbitron">STRESS</p>
+        <div class="flex items-center gap-2">
+          <span class="text-xl font-bold text-green-600 orbitron">0.12</span>
+          <span class="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold">Low</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-4 border border-slate-200 mb-3">
+      <p class="text-[10px] text-slate-400 font-bold tracking-widest mb-3 orbitron">SIGNAL DETAILS</p>
+      <div class="space-y-2 text-xs text-slate-600">
+        <div class="flex justify-between items-center py-1 border-b border-slate-100">
+          <span>Liquidity Inflow (FRED M2)</span><span class="text-blue-600 font-bold">Active ✓</span>
+        </div>
+        <div class="flex justify-between items-center py-1 border-b border-slate-100">
+          <span>SOFR-IORB Spread</span><span class="text-blue-600 font-bold">Active ✓</span>
+        </div>
+        <div class="flex justify-between items-center py-1 border-b border-slate-100">
+          <span>Fear &amp; Greed Index</span><span class="text-blue-600 font-bold">Active ✓</span>
+        </div>
+        <div class="flex justify-between items-center py-1">
+          <span>Yield Curve (10Y-2Y)</span><span class="text-red-500 font-bold">Warn ⚠</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center gap-2 text-xs text-amber-600 font-bold py-2">
+      <i class="fas fa-tools"></i>
+      <span>🚧 Phase 4-D 구현 예정 — 실데이터 연동 전</span>
+    </div>
+  </div>
+</body>
+</html>

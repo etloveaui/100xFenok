@@ -41,8 +41,8 @@ export default function VRPage() {
             <span className="text-slate-800 font-semibold">Core Formula</span>
             <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
           </div>
-          <div className="font-mono text-base sm:text-lg text-indigo-700 bg-indigo-50 p-3 sm:p-4 rounded-lg overflow-x-auto">
-            <span className="whitespace-nowrap">V₂ = V₁ + (Pool ÷ G) + (E - V₁) ÷ (2√G)</span>
+          <div className="font-mono text-xs sm:text-base md:text-lg text-indigo-700 bg-indigo-50 p-3 sm:p-4 rounded-lg">
+            V₂ = V₁ + (Pool ÷ G) + (E - V₁) ÷ (2√G)
           </div>
           <p className="text-slate-600 text-sm mt-2">
             V₁: 이전 목표값 | Pool: 현금풀 | G: G-Value | E: 평가금
