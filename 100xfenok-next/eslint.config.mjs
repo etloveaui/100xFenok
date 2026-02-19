@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Ignore copied static files from original source
     "public/**",
+    // Node.js CommonJS scripts (not part of Next.js compilation)
+    ".qa-playwright.js",
   ]),
 ]);
 

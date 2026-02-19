@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts Hub v1 - 매거진 스타일</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#ffffff',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #ffffff; font-family: 'Noto Sans KR', sans-serif; color: #334155; }
+        .serif { font-family: 'Noto Serif KR', serif; }
+
+        /* Nav (1-Tier EDGY - Light) */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 3px solid #010079;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 2rem;
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;
+            max-width: 1200px; margin: 0 auto; padding: 3rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        @media (max-width: 1024px) { .hero-section { grid-template-columns: 1fr; } }
+
+        .hero-main { position: relative; cursor: pointer; }
+        .hero-img { width: 100%; height: 400px; object-fit: cover; border-radius: 4px; margin-bottom: 1.5rem; background-color: #e2e8f0; }
+        .hero-category { font-size: 0.75rem; font-weight: 800; color: #010079; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: block; }
+        .hero-title { font-family: 'Noto Serif KR', serif; font-size: 2.5rem; font-weight: 900; color: #0f172a; line-height: 1.3; margin-bottom: 1rem; transition: color 0.2s; word-break: keep-all; }
+        .hero-title:hover { color: #1B73D3; }
+        .hero-excerpt { font-size: 1.125rem; color: #64748b; line-height: 1.6; margin-bottom: 1.5rem; word-break: keep-all; }
+        .hero-meta { font-size: 0.875rem; color: #94a3b8; font-weight: 500; }
+
+        /* Side List */
+        .side-list { display: flex; flex-direction: column; gap: 2rem; border-left: 1px solid #e2e8f0; padding-left: 2rem; }
+        @media (max-width: 1024px) { .side-list { border-left: none; padding-left: 0; border-top: 1px solid #e2e8f0; padding-top: 2rem; } }
+        
+        .side-item { padding-bottom: 2rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+        .side-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .side-category { font-size: 0.75rem; font-weight: 800; color: #D5AD36; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: block; }
+        .side-title { font-family: 'Noto Serif KR', serif; font-size: 1.125rem; font-weight: 700; color: #1e293b; line-height: 1.4; margin-bottom: 0.5rem; transition: color 0.2s; word-break: keep-all; }
+        .side-title:hover { color: #1B73D3; }
+
+        /* Section Header */
+        .section-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            max-width: 1200px; margin: 3rem auto 2rem; padding: 0 1rem;
+            border-bottom: 2px solid #0f172a; padding-bottom: 0.5rem;
+        }
+        .section-title { font-size: 1.5rem; font-weight: 900; color: #0f172a; font-family: 'Noto Serif KR', serif; }
+        .section-link { font-size: 0.875rem; font-weight: 700; color: #1B73D3; text-decoration: none; }
+        .section-link:hover { text-decoration: underline; }
+
+        /* Grid Layout */
+        .content-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+            max-width: 1200px; margin: 0 auto; padding: 0 1rem 4rem;
+        }
+        @media (max-width: 768px) { .content-grid { grid-template-columns: 1fr; } }
+
+        .grid-item { display: flex; flex-direction: column; cursor: pointer; transition: opacity 0.3s; }
+        .grid-item.hidden { display: none; }
+        .grid-img { width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin-bottom: 1rem; transition: opacity 0.2s; background-color: #e2e8f0; }
+        .grid-item:hover .grid-img { opacity: 0.9; }
+        .grid-cat { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .grid-title { font-family: 'Noto Serif KR', serif; font-size: 1.125rem; font-weight: 700; color: #1e293b; line-height: 1.4; margin-bottom: 0.5rem; word-break: keep-all; }
+        .grid-meta { font-size: 0.75rem; color: #94a3b8; margin-top: auto; }
+
+        /* Filter Tab */
+        .filter-bar {
+            display: flex; gap: 1.5rem; justify-content: center; margin: 2rem 0;
+            border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;
+        }
+        .filter-item { font-size: 0.9rem; font-weight: 600; color: #64748b; cursor: pointer; padding-bottom: 1rem; margin-bottom: -1.1rem; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .filter-item:hover { color: #0f172a; }
+        .filter-item.active { color: #010079; border-bottom-color: #010079; }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-edgy">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-layer-group text-brand-navy text-xl"></i>
+            <span class="font-bold text-slate-800 text-lg">100x 분석실</span>
+        </div>
+        <div class="flex gap-4">
+            <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><i class="fas fa-search"></i></button>
+        </div>
+    </nav>
+
+    <!-- Category Filter -->
+    <div class="filter-bar" id="filterBar">
+        <span class="filter-item active" data-filter="all">전체</span>
+        <span class="filter-item" data-filter="macro">마켓 랩 (Macro)</span>
+        <span class="filter-item" data-filter="alpha">알파 스카우트 (Stock)</span>
+        <span class="filter-item" data-filter="deep">딥 다이브</span>
+        <span class="filter-item" data-filter="playbook">플레이북</span>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="hero-main" data-category="alpha">
+            <img src="https://placehold.co/1000x400/010079/ffffff?text=ResMed+Analysis" alt="ResMed" class="hero-img">
+            <span class="hero-category">Alpha Scout • 강력 매수</span>
+            <h1 class="hero-title">ResMed (RMD): 수면 테크의 제왕이 깨어나다</h1>
+            <p class="hero-excerpt">경쟁사의 대규모 리콜 사태로 반사이익을 넘어 독점적 지위를 굳히고 있는 ResMed. GLP-1 비만 치료제 확산이 오히려 기회가 되는 역설적인 이유를 분석합니다.</p>
+            <div class="hero-meta">
+                <span>2025.06.30</span> • <span>100x 리서치팀</span>
+            </div>
+        </div>
+
+        <div class="side-list">
+            <div class="side-item" data-category="macro">
+                <span class="side-category">Market Wrap</span>
+                <h3 class="side-title">CPI 쇼크: 연준의 조기 금리 인하 가능성이 높아진 이유</h3>
+                <span class="text-xs text-slate-400">2시간 전</span>
+            </div>
+            <div class="side-item" data-category="deep">
+                <span class="side-category">Deep Dive</span>
+                <h3 class="side-title">스테이블코인 마스터플랜: 디지털 달러 패권의 설계도</h3>
+                <span class="text-xs text-slate-400">2025.06.23</span>
+            </div>
+            <div class="side-item" data-category="playbook">
+                <span class="side-category">Playbook</span>
+                <h3 class="side-title">AI 인프라 트레이딩: 엔비디아 그 이후를 준비하라</h3>
+                <span class="text-xs text-slate-400">2025.06.22</span>
+            </div>
+            <div class="side-item" data-category="alpha">
+                <span class="side-category">Alpha Scout</span>
+                <h3 class="side-title">IBM: 하이브리드 클라우드로 춤추는 코끼리</h3>
+                <span class="text-xs text-slate-400">2025.06.20</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Latest Analysis -->
+    <div class="section-header">
+        <h2 class="section-title">최신 분석</h2>
+        <a href="#" class="section-link">아카이브 더보기 →</a>
+    </div>
+
+    <div class="content-grid" id="contentGrid">
+        <div class="grid-item" data-category="macro">
+            <img src="https://placehold.co/500x300/e0f2fe/0369a1?text=Global+Liquidity" class="grid-img">
+            <span class="grid-cat text-blue-600">Market Wrap</span>
+            <h3 class="grid-title">글로벌 유동성 모니터: 중앙은행들이 다시 돈을 풀기 시작했다</h3>
+            <span class="grid-meta">6월 28일 • 읽는 시간 5분</span>
+        </div>
+        <div class="grid-item" data-category="alpha">
+            <img src="https://placehold.co/500x300/f3e8ff/7e22ce?text=Palantir+PLTR" class="grid-img">
+            <span class="grid-cat text-purple-600">Alpha Scout</span>
+            <h3 class="grid-title">Palantir (PLTR): AIP 부트캠프 전환율이 폭발하고 있다</h3>
+            <span class="grid-meta">6월 27일 • 읽는 시간 8분</span>
+        </div>
+        <div class="grid-item" data-category="playbook">
+            <img src="https://placehold.co/500x300/dcfce7/15803d?text=Copper+Supercycle" class="grid-img">
+            <span class="grid-cat text-green-600">Playbook</span>
+            <h3 class="grid-title">에너지 전환: 구리(Copper) 슈퍼사이클 가설 검증</h3>
+            <span class="grid-meta">6월 25일 • 읽는 시간 12분</span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterItems = document.querySelectorAll('.filter-item');
+            const gridItems = document.querySelectorAll('.grid-item');
+            const sideItems = document.querySelectorAll('.side-item');
+            const heroMain = document.querySelector('.hero-main');
+
+            filterItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // 1. Activate Tab
+                    filterItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+
+                    // 2. Filter Content
+                    const filter = item.getAttribute('data-filter');
+                    
+                    // Filter Grid Items
+                    gridItems.forEach(gridItem => {
+                        if (filter === 'all' || gridItem.getAttribute('data-category') === filter) {
+                            gridItem.classList.remove('hidden');
+                            gridItem.style.opacity = '0';
+                            setTimeout(() => gridItem.style.opacity = '1', 50);
+                        } else {
+                            gridItem.classList.add('hidden');
+                        }
+                    });
+
+                    // (Optional) Visual feedback for side items or hero based on filter?
+                    // For now, we only filter the grid as the Hero section is usually static featured content.
+                    // But let's dim the side items that don't match for a cool effect.
+                    sideItems.forEach(sideItem => {
+                        if (filter === 'all' || sideItem.getAttribute('data-category') === filter) {
+                            sideItem.style.opacity = '1';
+                        } else {
+                            sideItem.style.opacity = '0.3';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Calculator v1 - Ultimate Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#f8fafc',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #f1f5f9; font-family: 'Noto Sans KR', sans-serif; color: #1e293b; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Nav & Footer - 1-Tier EDGY Styles */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(90deg, #010079 0%, #D5AD36 50%, #010079 100%);
+            background-origin: border-box; background-clip: padding-box, border-box;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem;
+        }
+        .nav-pill-edgy {
+            padding: 0.5rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            font-weight: 700; color: #475569; font-size: 0.8125rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s;
+        }
+        .nav-pill-edgy:hover { transform: translateY(-2px); border-color: #D5AD36; }
+        .nav-pill-edgy.active { background: linear-gradient(135deg, #010079 0%, #0a0a8c 100%); color: white; border-color: #D5AD36; }
+
+        /* Ultimate Card Styles */
+        .ultimate-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .mode-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .mode-card:hover { border-color: #1B73D3; background: #f0f9ff; }
+        .mode-card.selected { border-color: #010079; background: #f0f9ff; box-shadow: 0 4px 6px -1px rgba(1, 0, 121, 0.1); }
+        .mode-card.selected::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; top: -10px; right: -10px;
+            width: 24px; height: 24px; background: #010079; color: white;
+            border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .input-group label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.25rem; display: block; }
+        .input-field {
+            width: 100%; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 600;
+            background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s;
+        }
+        .input-field:focus { border-color: #1B73D3; background: white; }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #010079 0%, #1B73D3 100%);
+            color: white; font-weight: 800; padding: 1rem; border-radius: 16px; width: 100%;
+            font-size: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(1, 0, 121, 0.3);
+        }
+        .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(1, 0, 121, 0.4); }
+
+        /* Order List Styles */
+        .order-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-radius: 12px; margin-bottom: 0.5rem; border: 1px solid #f1f5f9; }
+        .order-row.buy { background: #f0fdf4; border-color: #bbf7d0; }
+        .order-row.sell { background: #fef2f2; border-color: #fecaca; }
+
+        /* Band Visualizer (Mini) */
+        .band-viz { height: 8px; background: #e2e8f0; border-radius: 999px; position: relative; margin: 2rem 0; }
+        .band-viz-bar { position: absolute; top: 0; bottom: 0; background: #94a3b8; opacity: 0.2; }
+        .band-marker { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <nav class="sticky top-0 z-50 nav-edgy shadow-sm">
+        <div class="flex items-center gap-3">
+             <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md border border-slate-100">
+                 <i class="fas fa-chart-line text-brand-navy"></i>
+            </div>
+            <span class="font-[900] orbitron text-slate-800 text-lg">100x <span class="text-brand-gold">FENOK</span></span>
+        </div>
+        <div class="hidden md:flex gap-2">
+            <button class="nav-pill-edgy active"><i class="fas fa-flask"></i> VR Lab</button>
+            <button class="nav-pill-edgy"><i class="fas fa-cog"></i> Settings</button>
+        </div>
+        <div class="w-10"></div>
+    </nav>
+
+    <main class="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-black text-slate-800 mb-2">Value Rebalancing</h1>
+            <p class="text-slate-500">Long-term Asset Growth Strategy • v1 Ultimate</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left: Configuration -->
+            <div class="lg:col-span-7">
+                <div class="ultimate-card p-8">
+                    <h2 class="text-xl font-bold text-brand-navy mb-6 flex items-center gap-2">
+                        <i class="fas fa-layer-group"></i> Strategy Mode
+                    </h2>
+                    
+                    <!-- 3 Modes -->
+                    <div class="grid grid-cols-3 gap-4 mb-8">
+                        <div class="mode-card" onclick="selectMode(this)">
+                            <div class="text-2xl mb-2">🌱</div>
+                            <h3 class="font-bold text-slate-700 text-sm">적립식</h3>
+                            <p class="text-xs text-slate-400 mt-1">Accumulation</p>
+                        </div>
+                        <div class="mode-card selected" onclick="selectMode(this)">
+                            <div class="text-2xl mb-2">🌳</div>
+                            <h3 class="font-bold text-slate-700 text-sm">거치식</h3>
+                            <p class="text-xs text-slate-400 mt-1">Lump-sum</p>
+                        </div>
+                        <div class="mode-card" onclick="selectMode(this)">
+                            <div class="text-2xl mb-2">🍎</div>
+                            <h3 class="font-bold text-slate-700 text-sm">인출식</h3>
+                            <p class="text-xs text-slate-400 mt-1">Withdrawal</p>
+                        </div>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-brand-navy mb-6 flex items-center gap-2">
+                        <i class="fas fa-sliders-h"></i> Parameters
+                    </h2>
+
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+                        <div class="input-group">
+                            <label>Previous V ($V_1$)</label>
+                            <input type="number" class="input-field" value="18300">
+                        </div>
+                        <div class="input-group">
+                            <label>Current Pool ($P$)</label>
+                            <input type="number" class="input-field" value="2000">
+                        </div>
+                        <div class="input-group">
+                            <label>Gradient ($G$)</label>
+                            <input type="number" class="input-field" value="10">
+                        </div>
+                        <div class="input-group">
+                            <label>TQQQ Price</label>
+                            <div class="relative">
+                                <input type="number" class="input-field pl-10" value="62.00">
+                                <span class="absolute left-3 top-3.5 text-slate-400 font-bold">$</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Shares Held</label>
+                            <input type="number" class="input-field" value="300">
+                        </div>
+                        <div class="input-group">
+                            <label>Pool Limit (%)</label>
+                            <input type="number" class="input-field" value="50">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-8 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <input type="checkbox" id="advFormula" class="w-5 h-5 text-brand-navy rounded focus:ring-brand-navy" checked>
+                        <label for="advFormula" class="text-sm font-bold text-slate-700 cursor-pointer select-none">
+                            Use Advanced Formula (실력공식)
+                            <span class="block text-xs font-normal text-slate-500">Applies volatility correction based on Evaluation Value</span>
+                        </label>
+                    </div>
+
+                    <button class="generate-btn" onclick="generateResult()">
+                        CALCULATE NEXT CYCLE <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Result -->
+            <div class="lg:col-span-5">
+                <div class="ultimate-card h-full flex flex-col relative bg-slate-50">
+                    
+                    <!-- Placeholder -->
+                    <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100">
+                            <i class="fas fa-calculator text-3xl text-slate-300"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-600 mb-2">Awaiting Input</h3>
+                        <p class="text-sm text-slate-400">Configure your parameters and click calculate to see the Value Rebalancing plan.</p>
+                    </div>
+
+                    <!-- Result Content -->
+                    <div id="result" class="hidden h-full flex flex-col p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">New Target ($V_2$)</p>
+                                <p class="text-3xl font-black text-brand-navy orbitron">$19,450.00</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-slate-400 uppercase">Pool Status</p>
+                                <p class="text-lg font-bold text-slate-700">$2,000 <span class="text-slate-400">/ $10k</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Band Viz -->
+                        <div class="mb-8">
+                            <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                                <span>Min $16,532</span>
+                                <span>Max $22,367</span>
+                            </div>
+                            <div class="band-viz">
+                                <div class="band-viz-bar" style="left: 0; right: 0;"></div> <!-- Full range -->
+                                <div class="absolute top-0 bottom-0 bg-green-200" style="left: 0; width: 40%; opacity: 0.5; border-radius: 999px 0 0 999px;"></div> <!-- Buy Zone -->
+                                <div class="absolute top-0 bottom-0 bg-red-200" style="right: 0; width: 40%; opacity: 0.5; border-radius: 0 999px 999px 0;"></div> <!-- Sell Zone -->
+                                <div class="band-marker bg-brand-gold" style="left: 45%;"></div> <!-- Current Position -->
+                            </div>
+                            <p class="text-center text-xs font-bold text-brand-gold">Current Evaluation: $18,600 (Balanced)</p>
+                        </div>
+
+                        <h3 class="text-sm font-bold text-slate-700 uppercase mb-4 border-b pb-2">Action Plan (Next 2 Weeks)</h3>
+                        
+                        <div class="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                            <!-- Sell Orders -->
+                            <div class="order-row sell">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs">S1</span>
+                                    <div>
+                                        <p class="font-bold text-red-900">Sell 1 Qty</p>
+                                        <p class="text-xs text-red-600">@ $74.50</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-600 text-sm">+$74.50 Pool</span>
+                            </div>
+                             <div class="order-row sell">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs">S2</span>
+                                    <div>
+                                        <p class="font-bold text-red-900">Sell 1 Qty</p>
+                                        <p class="text-xs text-red-600">@ $78.20</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-600 text-sm">+$78.20 Pool</span>
+                            </div>
+
+                            <div class="text-center py-2 text-xs font-bold text-slate-300">--- Current Price $62.00 ---</div>
+
+                            <!-- Buy Orders -->
+                            <div class="order-row buy">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-xs">B1</span>
+                                    <div>
+                                        <p class="font-bold text-green-900">Buy 1 Qty</p>
+                                        <p class="text-xs text-green-600">@ $55.10</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-600 text-sm">-$55.10 Pool</span>
+                            </div>
+                            <div class="order-row buy">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-xs">B2</span>
+                                    <div>
+                                        <p class="font-bold text-green-900">Buy 1 Qty</p>
+                                        <p class="text-xs text-green-600">@ $52.40</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-600 text-sm">-$52.40 Pool</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer v21 (Static) -->
+    <footer class="bg-white border-t border-slate-200 py-4">
+        <div class="container mx-auto px-4 flex justify-between items-center text-xs text-slate-500">
+            <span>© 2025 100xFenok • VR Lab</span>
+            <span class="px-2 py-1 bg-green-100 text-green-700 font-bold rounded">MARKET OPEN</span>
+        </div>
+    </footer>
+
+    <script>
+        function selectMode(el) {
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+        function generateResult() {
+            document.getElementById('placeholder').classList.add('hidden');
+            document.getElementById('result').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

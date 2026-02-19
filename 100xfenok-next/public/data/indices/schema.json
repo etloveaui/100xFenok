@@ -1,0 +1,52 @@
+{
+  "folder": "indices",
+  "version": "2.0.0",
+  "updated": "2026-01-25",
+  "source": "Google Sheets (Apps Script automation)",
+  "update_frequency": "daily",
+  "maintainer": "indices.gs (Google Apps Script)",
+
+  "status": "ACTIVE",
+  "note": "Daily price time series for S&P 500 and NASDAQ. 46 years of historical data (1980-present).",
+
+  "files": {
+    "sp500.json": {
+      "description": "S&P 500 daily price history",
+      "records": 11610,
+      "date_range": "1980-01-02 ~ present",
+      "schema": {
+        "type": "array",
+        "items": {
+          "date": "string (YYYY-MM-DD)",
+          "value": "number (index value)"
+        }
+      }
+    },
+    "nasdaq.json": {
+      "description": "NASDAQ daily price history",
+      "records": 11610,
+      "date_range": "1980-01-02 ~ present",
+      "schema": "Same as sp500.json"
+    }
+  },
+
+  "usage": {
+    "primary": "Chart background overlay (S&P 500 vs sentiment indicators)",
+    "locations": [
+      "tools/macro-monitor/ (17 charts)",
+      "admin/market-radar/chart-sp500.html",
+      "admin/market-radar/chart-nasdaq.html"
+    ]
+  },
+
+  "automation": {
+    "script": "admin/market-radar/scripts/indices.gs",
+    "source": "Google Sheets",
+    "method": "Apps Script trigger -> GitHub API commit"
+  },
+
+  "breaking_changes_history": [
+    {"version": "1.0.0", "date": "2025-12-01", "change": "Initial (incorrectly marked as legacy)"},
+    {"version": "2.0.0", "date": "2026-01-25", "change": "Corrected to ACTIVE status, fixed schema definition to match actual data (price time series, not constituents)"}
+  ]
+}

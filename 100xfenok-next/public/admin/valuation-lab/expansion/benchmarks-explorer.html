@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benchmarks Explorer - 100xFenok</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Loading State */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Content Tabs (New) */
+    .content-tab {
+      padding: 12px 20px;
+      border-radius: 8px 8px 0 0;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      background: transparent;
+      color: #64748b;
+      border-bottom: 3px solid transparent;
+    }
+    .content-tab.active {
+      background: white;
+      color: #3b82f6;
+      border-bottom-color: #3b82f6;
+    }
+    .content-tab:not(.active):hover {
+      background: rgba(255,255,255,0.5);
+      color: #475569;
+    }
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+    }
+
+    /* Filter Tabs */
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .tab-btn.active { background: #3b82f6; color: white; }
+    .tab-btn:not(.active) { background: #f1f5f9; color: #475569; }
+    .tab-btn:not(.active):hover { background: #e2e8f0; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #6b7280; }
+    tbody tr { transition: all 0.2s; cursor: pointer; }
+    tbody tr:hover { background: #f9fafb; }
+    tbody tr.selected { background: #dbeafe !important; }
+
+    /* Checkbox */
+    .checkbox-cell { width: 40px; text-align: center; }
+    input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+
+    /* Sparkline */
+    .sparkline { display: inline-block; vertical-align: middle; }
+
+    /* Badge */
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .badge-country { background: #dbeafe; color: #1e40af; }
+    .badge-sector { background: #fef3c7; color: #92400e; }
+
+    /* Selection Counter */
+    .selection-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #dbeafe;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e40af;
+    }
+
+    /* Chart Container */
+    .chart-container { height: 400px; position: relative; }
+    .chart-empty-state {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(249, 250, 251, 0.9);
+      border-radius: 8px;
+    }
+
+    /* Metric Tabs */
+    .metric-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .metric-tab {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+    }
+    .metric-tab.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .metric-tab:not(.active) { background: white; color: #64748b; }
+    .metric-tab:not(.active):hover { background: #f8fafc; }
+
+    /* Period Selector */
+    .period-selector { display: flex; gap: 6px; }
+    .period-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+    }
+    .period-btn.active { background: #10b981; color: white; border-color: #10b981; }
+    .period-btn:not(.active) { background: white; color: #64748b; }
+    .period-btn:not(.active):hover { background: #f8fafc; }
+
+    /* Top5/Bottom5 Cards (New) */
+    .metric-card {
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    /* Modal (New) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: modalIn 0.2s ease-out;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Export Buttons (New) */
+    .export-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #64748b;
+    }
+    .export-btn:hover { background: #f8fafc; }
+    .export-btn.primary { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .export-btn.primary:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="text-gray-600 mt-4">Loading data...</p>
+    <p class="text-gray-400 text-sm mt-2">36 indices × 829 weeks + momentum + yearly returns</p>
+  </div>
+
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="card">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Benchmarks Explorer</h1>
+          <p class="text-gray-500">Multi-Index Comparison • Momentum • Yearly Returns</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportCSV()" class="export-btn">
+            <i class="fas fa-file-csv mr-1"></i>CSV
+          </button>
+          <button onclick="exportPNG()" class="export-btn">
+            <i class="fas fa-image mr-1"></i>PNG
+          </button>
+          <a href="../" class="text-blue-500 hover:underline ml-2">← Back</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Tabs (New) -->
+    <div class="flex gap-1 bg-gray-100 rounded-t-lg p-1 mb-0">
+      <button class="content-tab active" data-tab="overview" onclick="setContentTab('overview')">
+        <i class="fas fa-table mr-2"></i>Overview
+      </button>
+      <button class="content-tab" data-tab="comparison" onclick="setContentTab('comparison')">
+        <i class="fas fa-chart-line mr-2"></i>Comparison
+      </button>
+      <button class="content-tab" data-tab="momentum" onclick="setContentTab('momentum')">
+        <i class="fas fa-rocket mr-2"></i>Momentum
+      </button>
+      <button class="content-tab" data-tab="yearly" onclick="setContentTab('yearly')">
+        <i class="fas fa-calendar-alt mr-2"></i>Yearly Returns
+      </button>
+      <button class="content-tab" data-tab="analysis" onclick="setContentTab('analysis')">
+        <i class="fas fa-microscope mr-2"></i>Analysis
+      </button>
+    </div>
+
+    <!-- Filter Tabs (Shared) -->
+    <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+      <div class="flex flex-wrap gap-2">
+        <button id="tab-all" onclick="setFilter('all')" class="tab-btn active">All (36)</button>
+        <button id="tab-us" onclick="setFilter('us')" class="tab-btn">🇺🇸 US (4)</button>
+        <button id="tab-sectors" onclick="setFilter('sectors')" class="tab-btn">📊 Sectors (12)</button>
+        <button id="tab-developed" onclick="setFilter('developed')" class="tab-btn">🌍 Developed (4)</button>
+        <button id="tab-emerging" onclick="setFilter('emerging')" class="tab-btn">🌏 Emerging (6)</button>
+        <button id="tab-msci" onclick="setFilter('msci')" class="tab-btn">📈 MSCI (6)</button>
+        <button id="tab-micro" onclick="setFilter('micro')" class="tab-btn">🔬 Micro (4)</button>
+      </div>
+    </div>
+
+    <!-- ==================== OVERVIEW TAB ==================== -->
+    <div id="section-overview" class="content-section active">
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-table text-blue-500 mr-2"></i>Index Screener
+          </h2>
+          <div class="flex items-center gap-3">
+            <span class="selection-counter">
+              <i class="fas fa-check-circle"></i>
+              <span id="selectedCount">0</span> / 5 Selected
+            </span>
+            <button onclick="clearSelection()" class="text-sm text-gray-500 hover:text-red-600">
+              <i class="fas fa-times mr-1"></i>Clear
+            </button>
+          </div>
+        </div>
+
+        <input id="search" type="text" placeholder="Search indices..."
+               class="w-full p-3 border rounded-lg mb-4" oninput="filterTable()">
+
+        <div style="overflow-x: auto;">
+          <table id="screenerTable">
+            <thead>
+              <tr>
+                <th class="checkbox-cell">
+                  <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                </th>
+                <th onclick="sortTable('name')">Index <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('type')">Type <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('pe')">Current P/E <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('pb')">P/B <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortTable('roe')">ROE <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th>16Y P/E Trend</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-3">
+          <i class="fas fa-info-circle mr-1"></i>
+          Click rows to select (max 5) • Sparkline shows 16-year P/E trend • Click index name for details
+        </p>
+      </div>
+    </div>
+
+    <!-- ==================== COMPARISON TAB ==================== -->
+    <div id="section-comparison" class="content-section">
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-chart-line text-purple-500 mr-2"></i>Multi-Index Comparison
+          </h2>
+          <div class="period-selector">
+            <button class="period-btn" data-period="1y" onclick="setPeriod('1y')">1Y</button>
+            <button class="period-btn" data-period="3y" onclick="setPeriod('3y')">3Y</button>
+            <button class="period-btn" data-period="5y" onclick="setPeriod('5y')">5Y</button>
+            <button class="period-btn" data-period="10y" onclick="setPeriod('10y')">10Y</button>
+            <button class="period-btn active" data-period="all" onclick="setPeriod('all')">All</button>
+          </div>
+        </div>
+
+        <div class="metric-tabs">
+          <div class="metric-tab active" data-metric="pe" onclick="setMetric('pe')">
+            <i class="fas fa-chart-bar mr-1"></i>P/E Ratio
+          </div>
+          <div class="metric-tab" data-metric="eps" onclick="setMetric('eps')">
+            <i class="fas fa-dollar-sign mr-1"></i>EPS
+          </div>
+          <div class="metric-tab" data-metric="roe" onclick="setMetric('roe')">
+            <i class="fas fa-percent mr-1"></i>ROE
+          </div>
+          <div class="metric-tab" data-metric="price" onclick="setMetric('price')">
+            <i class="fas fa-money-bill-wave mr-1"></i>Price (Normalized)
+          </div>
+        </div>
+
+        <div id="comparisonChartContainer" class="chart-container">
+          <canvas id="comparisonChart"></canvas>
+          <div id="chartEmptyState" class="chart-empty-state">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-chart-line text-5xl mb-3"></i>
+              <p class="text-lg font-medium">Select indices to compare</p>
+              <p class="text-sm mt-1">Choose up to 5 indices from Overview tab</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MOMENTUM TAB (New) ==================== -->
+    <div id="section-momentum" class="content-section">
+      <!-- Top5 / Bottom5 Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-green-600 flex items-center gap-1.5">
+              <i class="fas fa-crown"></i>Top 5 (6M Momentum)
+            </h2>
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-lg">6M Return</span>
+          </div>
+          <div id="top5-cards" class="space-y-2"></div>
+        </div>
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-red-600 flex items-center gap-1.5">
+              <i class="fas fa-exclamation-circle"></i>Bottom 5 (6M Momentum)
+            </h2>
+            <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-lg">6M Return</span>
+          </div>
+          <div id="bottom5-cards" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- Momentum Table -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-table text-amber-500 mr-2"></i>Momentum Table
+          </h2>
+          <input id="momentumSearch" type="text" placeholder="Search..."
+                 class="p-2 border rounded-lg text-sm w-48" oninput="filterMomentumTable()">
+        </div>
+        <div style="overflow-x: auto;">
+          <table id="momentumTable">
+            <thead>
+              <tr>
+                <th onclick="sortMomentumTable('name')">Index <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortMomentumTable('1m')">1M <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortMomentumTable('3m')">3M <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortMomentumTable('6m')">6M <i class="fas fa-sort text-xs ml-1"></i></th>
+                <th onclick="sortMomentumTable('ytd')">YTD <i class="fas fa-sort text-xs ml-1"></i></th>
+              </tr>
+            </thead>
+            <tbody id="momentumTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== YEARLY RETURNS TAB (New) ==================== -->
+    <div id="section-yearly" class="content-section">
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-calendar-alt text-indigo-500 mr-2"></i>Yearly Returns (2018-2025)
+          </h2>
+          <div class="flex gap-2">
+            <button onclick="yearlyChartAll()" class="export-btn">
+              <i class="fas fa-layer-group mr-1"></i>All
+            </button>
+            <button onclick="yearlyChartTop5()" class="export-btn primary">
+              <i class="fas fa-crown mr-1"></i>Top 5
+            </button>
+            <button onclick="yearlyChartClear()" class="export-btn">
+              <i class="fas fa-times mr-1"></i>Clear
+            </button>
+          </div>
+        </div>
+        <div id="yearlyChartContainer" class="chart-container">
+          <canvas id="yearlyChart"></canvas>
+          <div id="yearlyEmptyState" class="chart-empty-state">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-chart-bar text-5xl mb-3"></i>
+              <p class="text-lg font-medium">Click "All" or "Top 5" to display</p>
+              <p class="text-sm mt-1">Or click rows in the table below</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Yearly Returns Table -->
+      <div class="card">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-table text-purple-500 mr-2"></i>Returns by Year
+        </h3>
+        <div style="overflow-x: auto;">
+          <table id="yearlyTable">
+            <thead>
+              <tr>
+                <th>Index</th>
+                <th>2018</th>
+                <th>2019</th>
+                <th>2020</th>
+                <th>2021</th>
+                <th>2022</th>
+                <th>2023</th>
+                <th>2024</th>
+                <th>2025</th>
+              </tr>
+            </thead>
+            <tbody id="yearlyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ANALYSIS TAB (New) ==================== -->
+    <div id="section-analysis" class="content-section">
+      <!-- Index Selector -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-microscope text-purple-500 mr-2"></i>Deep Analysis
+          </h2>
+          <div class="flex items-center gap-3">
+            <label for="analysisIndexSelector" class="text-sm text-gray-600">Select Index:</label>
+            <select id="analysisIndexSelector" onchange="renderAnalysis()" class="p-2 border rounded-lg text-sm min-w-48">
+              <option value="">-- Choose Index --</option>
+            </select>
+          </div>
+        </div>
+        <p class="text-sm text-gray-500">
+          <i class="fas fa-info-circle mr-1"></i>
+          Select an index to view P/E Band, EPS Trend, ROE Trend, and Factor Radar analysis
+        </p>
+      </div>
+
+      <!-- Analysis Grid (2x2) -->
+      <div id="analysisContent" class="hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- P/E Band Chart -->
+          <div class="card">
+            <h3 class="text-md font-bold text-gray-800 mb-3">
+              <i class="fas fa-chart-area text-blue-500 mr-2"></i>P/E Band (16Y Historical)
+            </h3>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="peBandChart"></canvas>
+            </div>
+            <div id="peBandStats" class="mt-3 grid grid-cols-5 gap-2 text-center text-xs"></div>
+          </div>
+
+          <!-- EPS Trend Chart -->
+          <div class="card">
+            <h3 class="text-md font-bold text-gray-800 mb-3">
+              <i class="fas fa-dollar-sign text-green-500 mr-2"></i>EPS Trend & Growth
+            </h3>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="epsTrendChart"></canvas>
+            </div>
+            <div id="epsStats" class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"></div>
+          </div>
+
+          <!-- ROE Trend Chart -->
+          <div class="card">
+            <h3 class="text-md font-bold text-gray-800 mb-3">
+              <i class="fas fa-percent text-amber-500 mr-2"></i>ROE Trend
+            </h3>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="roeTrendChart"></canvas>
+            </div>
+            <div id="roeStats" class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"></div>
+          </div>
+
+          <!-- Factor Radar Chart -->
+          <div class="card">
+            <h3 class="text-md font-bold text-gray-800 mb-3">
+              <i class="fas fa-bullseye text-purple-500 mr-2"></i>Factor Radar
+            </h3>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="factorRadarChart"></canvas>
+            </div>
+            <div id="radarStats" class="mt-3 text-center text-xs text-gray-500">
+              Normalized scores (0-100) based on all 36 indices
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="analysisEmptyState" class="card">
+        <div class="text-center py-12 text-gray-400">
+          <i class="fas fa-microscope text-5xl mb-4"></i>
+          <p class="text-lg font-medium">Select an index to begin analysis</p>
+          <p class="text-sm mt-2">Choose from the dropdown above to view detailed metrics</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="card">
+      <h3 class="font-bold mb-2 text-gray-800">
+        <i class="fas fa-book text-indigo-500 mr-2"></i>About This Tool
+      </h3>
+      <div class="text-sm text-gray-600 space-y-2">
+        <p><strong>Data Coverage:</strong> 36 indices × 829 weekly records (2010-2026) + Momentum + Yearly Returns</p>
+        <p><strong>Tabs:</strong></p>
+        <ul class="list-disc list-inside ml-4 space-y-1">
+          <li><strong>Overview</strong>: Index screener with P/E sparklines (select up to 5 for comparison)</li>
+          <li><strong>Comparison</strong>: Multi-index time series chart with metric/period selection</li>
+          <li><strong>Momentum</strong>: Top5/Bottom5 cards + 1M/3M/6M/YTD momentum table</li>
+          <li><strong>Yearly Returns</strong>: 2018-2025 returns chart and table</li>
+          <li><strong>Analysis</strong>: P/E Band, EPS Trend, ROE Trend, Factor Radar (single index deep dive)</li>
+        </ul>
+        <p><strong>Source:</strong> Bloomberg Terminal via weekly snapshots + summaries.json</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal (New) -->
+  <div id="detailModal" class="modal-overlay hidden" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="p-4 border-b flex items-center justify-between">
+        <div>
+          <h3 id="modalTitle" class="text-xl font-bold"></h3>
+          <p id="modalSubtitle" class="text-sm text-gray-500"></p>
+        </div>
+        <button onclick="closeModal()" class="p-2 text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+      <div id="modalContent" class="p-4"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== CONFIG ====================
+    const CONFIG = {
+      dataPath: '../../../data/benchmarks/',
+      files: ['us.json', 'us_sectors.json', 'developed.json', 'emerging.json', 'msci.json', 'micro_sectors.json'],
+      summaryFile: 'summaries.json',
+      MAX_SELECTION: 5
+    };
+
+    const INDEX_GROUPS = {
+      all: [],
+      us: ['sp500', 'nasdaq100', 'nasdaq_composite', 'russell2000'],
+      sectors: ['information_technology', 'health_care', 'financials', 'consumer_discretionary',
+                'communication_services', 'industrials', 'consumer_staples', 'energy',
+                'utilities', 'real_estate', 'materials', 'homebuilders'],
+      developed: ['euro_stoxx_50', 'topix', 'hong_kong', 'nikkei'],
+      emerging: ['shanghai', 'india_sensex', 'kospi', 'brazil', 'vietnam', 'hang_seng_h'],
+      msci: ['msci_world', 'msci_developed', 'msci_emerging', 'msci_china', 'msci_india', 'msci_korea'],
+      micro: ['philadelphia_semi', 'us_regional_banks', 'hang_seng_tech', 'us_biotech']
+    };
+
+    const INDEX_NAMES = {
+      sp500: 'S&P 500', nasdaq100: 'Nasdaq 100', nasdaq_composite: 'Nasdaq Composite', russell2000: 'Russell 2000',
+      information_technology: 'Info Tech', health_care: 'Healthcare', financials: 'Financials', consumer_discretionary: 'Consumer Disc',
+      communication_services: 'Comm Services', industrials: 'Industrials', consumer_staples: 'Consumer Staples', energy: 'Energy',
+      utilities: 'Utilities', real_estate: 'Real Estate', materials: 'Materials', homebuilders: 'Homebuilders',
+      euro_stoxx_50: 'Euro Stoxx 50', topix: 'TOPIX', hong_kong: 'Hong Kong', nikkei: 'Nikkei 225',
+      shanghai: 'Shanghai', india_sensex: 'India Sensex', kospi: 'KOSPI', brazil: 'Bovespa', vietnam: 'VN-Index', hang_seng_h: 'HSCEI',
+      msci_world: 'MSCI World', msci_developed: 'MSCI Dev', msci_emerging: 'MSCI EM', msci_china: 'MSCI China', msci_india: 'MSCI India', msci_korea: 'MSCI Korea',
+      philadelphia_semi: 'SOX', us_regional_banks: 'Regional Banks', hang_seng_tech: 'HS Tech', us_biotech: 'Biotech',
+      // Legacy names for summaries.json compatibility
+      world: 'MSCI World', developed: 'MSCI Dev', emerging: 'MSCI EM', china: 'MSCI China', india: 'MSCI India', korea: 'MSCI Korea'
+    };
+
+    const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1'];
+    const YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+
+    // ==================== STATE ====================
+    let allIndices = {};  // Historical data: { key: { name, type, pe, pb, roe, timeSeries } }
+    let summaryData = null;  // From summaries.json: { momentum, yearly_returns }
+    let currentFilter = 'all';
+    let currentSort = { column: 'name', direction: 'asc' };
+    let selectedIndices = new Set();
+    let currentMetric = 'pe';
+    let currentPeriod = 'all';
+    let currentContentTab = 'overview';
+    let comparisonChart = null;
+    let yearlyChart = null;
+    let momentumSort = { column: '6m', direction: 'desc' };
+    let yearlyChartSelected = new Set();
+    // Analysis Tab State
+    let peBandChart = null;
+    let epsTrendChart = null;
+    let roeTrendChart = null;
+    let factorRadarChart = null;
+    let currentAnalysisIndex = null;
+
+    // ==================== INITIALIZATION ====================
+    async function init() {
+      try {
+        await Promise.all([loadAllData(), loadSummaryData()]);
+        render();
+        document.getElementById('loadingOverlay').classList.add('hidden');
+      } catch (error) {
+        console.error('Init error:', error);
+        showError('Failed to load data: ' + error.message);
+      }
+    }
+
+    // ==================== DATA LOADING ====================
+    async function loadAllData() {
+      console.log('🔄 Loading historical benchmark data...');
+
+      const promises = CONFIG.files.map(file =>
+        fetch(CONFIG.dataPath + file)
+          .then(res => {
+            if (!res.ok) throw new Error(`Failed to load ${file}: ${res.status}`);
+            return res.json();
+          })
+          .then(data => ({ file, data }))
+      );
+
+      const results = await Promise.all(promises);
+
+      results.forEach(({ file, data }) => {
+        if (!data.sections) {
+          console.warn(`⚠️ No sections in ${file}`);
+          return;
+        }
+
+        Object.entries(data.sections).forEach(([key, section]) => {
+          const indexKey = file === 'msci.json' ? 'msci_' + key : key;
+          const type = determineType(file, key);
+          const timeSeriesData = section.data || [];
+          const latest = timeSeriesData[timeSeriesData.length - 1] || {};
+
+          const timeSeries = {
+            dates: timeSeriesData.map(d => d.date),
+            pe: timeSeriesData.map(d => d.best_pe_ratio || d.pe_ratio || null),
+            eps: timeSeriesData.map(d => d.best_eps || null),
+            roe: timeSeriesData.map(d => d.roe || null),
+            price: timeSeriesData.map(d => d.px_last || null),
+            pb: timeSeriesData.map(d => d.px_to_book_ratio || null)
+          };
+
+          allIndices[indexKey] = {
+            name: section.name || section.name_en || key,
+            type: type,
+            pe: latest.best_pe_ratio || latest.pe_ratio || null,
+            pb: latest.px_to_book_ratio || null,
+            roe: latest.roe || null,
+            timeSeries: timeSeries
+          };
+        });
+
+        console.log(`✅ Processed ${Object.keys(data.sections).length} indices from ${file}`);
+      });
+
+      INDEX_GROUPS.all = Object.keys(allIndices);
+      console.log(`✅ Total historical: ${Object.keys(allIndices).length} indices`);
+    }
+
+    async function loadSummaryData() {
+      console.log('🔄 Loading summary data...');
+      const response = await fetch(CONFIG.dataPath + CONFIG.summaryFile);
+      if (!response.ok) throw new Error('Failed to load summaries.json');
+      summaryData = await response.json();
+      console.log('✅ Loaded summaries.json (momentum + yearly_returns)');
+    }
+
+    function determineType(file, key) {
+      if (file === 'us_sectors.json' || file === 'micro_sectors.json') return 'Sector';
+      const sectorKeys = ['energy', 'materials', 'industrials', 'consumer_discretionary',
+                          'consumer_staples', 'health_care', 'financials', 'information_technology',
+                          'communication_services', 'utilities', 'real_estate', 'homebuilders'];
+      if (sectorKeys.some(sk => key.toLowerCase().includes(sk.replace('_', '')))) return 'Sector';
+      return 'Country';
+    }
+
+    // ==================== RENDERING ====================
+    function render() {
+      renderTable();
+      renderComparisonChart();
+      renderMomentumSection();
+      renderYearlySection();
+      populateAnalysisSelector();
+      updateSelectionCounter();
+    }
+
+    // ==================== CONTENT TABS ====================
+    function setContentTab(tab) {
+      currentContentTab = tab;
+      document.querySelectorAll('.content-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.content-tab[data-tab="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-' + tab).classList.add('active');
+    }
+
+    // ==================== OVERVIEW TABLE ====================
+    function renderTable() {
+      const filtered = getFilteredIndices();
+      const tbody = document.getElementById('tableBody');
+
+      tbody.innerHTML = filtered.map(key => {
+        const index = allIndices[key];
+        const isSelected = selectedIndices.has(key);
+        const badgeClass = index.type === 'Country' ? 'badge-country' : 'badge-sector';
+
+        return `
+          <tr class="${isSelected ? 'selected' : ''}" data-key="${key}" onclick="toggleSelection('${key}')">
+            <td class="checkbox-cell">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelection('${key}')">
+            </td>
+            <td class="font-medium">
+              <span class="cursor-pointer hover:text-blue-600" onclick="event.stopPropagation(); showDetail('${key}')">${index.name}</span>
+            </td>
+            <td><span class="badge ${badgeClass}">${index.type}</span></td>
+            <td>${index.pe ? index.pe.toFixed(2) : 'N/A'}</td>
+            <td>${index.pb ? index.pb.toFixed(2) : 'N/A'}</td>
+            <td>${index.roe ? (index.roe * 100).toFixed(1) + '%' : 'N/A'}</td>
+            <td><canvas class="sparkline" id="spark-${key}" width="80" height="30"></canvas></td>
+          </tr>
+        `;
+      }).join('');
+
+      filtered.forEach(key => renderSparkline(key));
+    }
+
+    function renderSparkline(key) {
+      const canvas = document.getElementById(`spark-${key}`);
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const index = allIndices[key];
+      const data = index.timeSeries.pe.filter(v => v !== null);
+
+      if (data.length === 0) {
+        ctx.fillStyle = '#e5e7eb';
+        ctx.fillRect(0, 0, 80, 30);
+        return;
+      }
+
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min || 1;
+
+      ctx.clearRect(0, 0, 80, 30);
+      ctx.beginPath();
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 1.5;
+
+      const xStep = data.length > 1 ? 80 / (data.length - 1) : 0;
+      data.forEach((value, i) => {
+        const x = data.length === 1 ? 40 : i * xStep;
+        const y = 30 - ((value - min) / range) * 28;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+
+      ctx.stroke();
+      ctx.lineTo(80, 30);
+      ctx.lineTo(0, 30);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+      ctx.fill();
+    }
+
+    // ==================== COMPARISON CHART ====================
+    function renderComparisonChart() {
+      const canvas = document.getElementById('comparisonChart');
+      const ctx = canvas.getContext('2d');
+      const emptyState = document.getElementById('chartEmptyState');
+
+      if (selectedIndices.size === 0) {
+        emptyState.style.display = 'flex';
+        if (comparisonChart) { comparisonChart.destroy(); comparisonChart = null; }
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      const selectedKeys = Array.from(selectedIndices);
+      const firstIndex = allIndices[selectedKeys[0]];
+      const allDates = firstIndex.timeSeries.dates;
+
+      let startIdx = 0;
+      const endIdx = allDates.length - 1;
+
+      switch (currentPeriod) {
+        case '1y': startIdx = Math.max(0, endIdx - 52); break;
+        case '3y': startIdx = Math.max(0, endIdx - 156); break;
+        case '5y': startIdx = Math.max(0, endIdx - 260); break;
+        case '10y': startIdx = Math.max(0, endIdx - 520); break;
+        case 'all': startIdx = 0; break;
+      }
+
+      const dates = allDates.slice(startIdx, endIdx + 1);
+
+      const datasets = selectedKeys.map((key, i) => {
+        const index = allIndices[key];
+        let data;
+
+        switch (currentMetric) {
+          case 'pe': data = index.timeSeries.pe.slice(startIdx, endIdx + 1); break;
+          case 'eps': data = index.timeSeries.eps.slice(startIdx, endIdx + 1); break;
+          case 'roe': data = index.timeSeries.roe.slice(startIdx, endIdx + 1).map(v => v ? v * 100 : null); break;
+          case 'price':
+            const prices = index.timeSeries.price.slice(startIdx, endIdx + 1);
+            const firstPrice = prices.find(p => p !== null);
+            data = prices.map(p => p && firstPrice ? (p / firstPrice) * 100 : null);
+            break;
+        }
+
+        return {
+          label: index.name,
+          data: data,
+          borderColor: CHART_COLORS[i % CHART_COLORS.length],
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2
+        };
+      });
+
+      if (comparisonChart) comparisonChart.destroy();
+
+      comparisonChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: dates, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { position: 'top', align: 'start', labels: { usePointStyle: true, boxWidth: 8, font: { size: 12 } } },
+            tooltip: {
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: function(ctx) {
+                  let label = ctx.dataset.label || '';
+                  if (label) label += ': ';
+                  if (ctx.parsed.y !== null) {
+                    if (currentMetric === 'price') label += ctx.parsed.y.toFixed(1);
+                    else if (currentMetric === 'roe') label += ctx.parsed.y.toFixed(1) + '%';
+                    else label += ctx.parsed.y.toFixed(2);
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { title: { display: true, text: getYAxisLabel() }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } }
+          }
+        }
+      });
+    }
+
+    function getYAxisLabel() {
+      switch (currentMetric) {
+        case 'pe': return 'P/E Ratio';
+        case 'eps': return 'EPS ($)';
+        case 'roe': return 'ROE (%)';
+        case 'price': return 'Normalized Price (Base 100)';
+        default: return '';
+      }
+    }
+
+    // ==================== MOMENTUM SECTION (New) ====================
+    function renderMomentumSection() {
+      if (!summaryData || !summaryData.momentum) return;
+
+      // Get all indices with momentum data
+      const allKeys = Object.keys(summaryData.momentum);
+      const sorted = allKeys.map(key => ({
+        key,
+        name: INDEX_NAMES[key] || INDEX_NAMES['msci_' + key] || key,
+        value: (summaryData.momentum[key] || {})['6m'] || 0
+      })).sort((a, b) => b.value - a.value);
+
+      const top5 = sorted.slice(0, 5);
+      const bottom5 = sorted.slice(-5).reverse();
+
+      // Render Top5 cards
+      document.getElementById('top5-cards').innerHTML = top5.map((item, i) => {
+        const pct = (item.value * 100).toFixed(1);
+        const isPositive = item.value > 0;
+        const emoji = isPositive ? '📈' : '📉';
+        return `
+          <div class="metric-card bg-gradient-to-br ${isPositive ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-rose-50 border-red-200'} rounded-xl p-4 border" onclick="showDetail('${item.key}')">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-medium text-gray-600 truncate flex-1">${item.name}</span>
+              <span class="text-lg">${emoji}</span>
+            </div>
+            <div class="text-2xl font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">${isPositive ? '+' : ''}${pct}%</div>
+            <div class="text-xs text-gray-400 mt-1">6개월 수익률</div>
+          </div>
+        `;
+      }).join('');
+
+      // Render Bottom5 cards
+      document.getElementById('bottom5-cards').innerHTML = bottom5.map((item, i) => {
+        const pct = (item.value * 100).toFixed(1);
+        const isPositive = item.value > 0;
+        const emoji = isPositive ? '📈' : '📉';
+        return `
+          <div class="metric-card bg-gradient-to-br from-red-50 to-rose-50 border-red-200 rounded-xl p-4 border" onclick="showDetail('${item.key}')">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-medium text-gray-600 truncate flex-1">${item.name}</span>
+              <span class="text-lg">${emoji}</span>
+            </div>
+            <div class="text-2xl font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">${isPositive ? '+' : ''}${pct}%</div>
+            <div class="text-xs text-gray-400 mt-1">6개월 수익률</div>
+          </div>
+        `;
+      }).join('');
+
+      // Render momentum table
+      renderMomentumTable();
+    }
+
+    function renderMomentumTable() {
+      if (!summaryData || !summaryData.momentum) return;
+
+      const filtered = getFilteredMomentumIndices();
+
+      // Sort
+      filtered.sort((a, b) => {
+        const mom_a = summaryData.momentum[a] || {};
+        const mom_b = summaryData.momentum[b] || {};
+
+        let valA, valB;
+        if (momentumSort.column === 'name') {
+          valA = INDEX_NAMES[a] || a;
+          valB = INDEX_NAMES[b] || b;
+          return momentumSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else {
+          valA = mom_a[momentumSort.column] || 0;
+          valB = mom_b[momentumSort.column] || 0;
+          return momentumSort.direction === 'asc' ? valA - valB : valB - valA;
+        }
+      });
+
+      const tbody = document.getElementById('momentumTableBody');
+      tbody.innerHTML = filtered.map(key => {
+        const mom = summaryData.momentum[key] || {};
+        const fmt = (v) => {
+          if (v === undefined || v === null) return '<span class="text-gray-400">N/A</span>';
+          const pct = (v * 100).toFixed(1);
+          const cls = v > 0 ? 'text-green-600' : v < 0 ? 'text-red-600' : 'text-gray-500';
+          return `<span class="${cls}">${v > 0 ? '+' : ''}${pct}%</span>`;
+        };
+        return `
+          <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="showDetail('${key}')">
+            <td class="px-4 py-3 font-medium">${INDEX_NAMES[key] || INDEX_NAMES['msci_' + key] || key}</td>
+            <td class="px-4 py-3 text-right">${fmt(mom['1m'])}</td>
+            <td class="px-4 py-3 text-right">${fmt(mom['3m'])}</td>
+            <td class="px-4 py-3 text-right font-semibold">${fmt(mom['6m'])}</td>
+            <td class="px-4 py-3 text-right">${fmt(mom.ytd)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getFilteredMomentumIndices() {
+      // Get indices from current filter group that exist in summaryData
+      const searchQuery = document.getElementById('momentumSearch')?.value?.toLowerCase() || '';
+      let indices;
+
+      if (currentFilter === 'all') {
+        indices = Object.keys(summaryData.momentum);
+      } else {
+        // Map INDEX_GROUPS to summaryData keys (handle msci_ prefix)
+        indices = INDEX_GROUPS[currentFilter].map(key => {
+          if (key.startsWith('msci_')) return key.replace('msci_', '');  // summaries uses 'world' not 'msci_world'
+          return key;
+        }).filter(key => summaryData.momentum[key]);
+      }
+
+      if (searchQuery) {
+        indices = indices.filter(key => {
+          const name = (INDEX_NAMES[key] || INDEX_NAMES['msci_' + key] || key).toLowerCase();
+          return name.includes(searchQuery) || key.includes(searchQuery);
+        });
+      }
+
+      return indices;
+    }
+
+    function filterMomentumTable() {
+      renderMomentumTable();
+    }
+
+    function sortMomentumTable(column) {
+      if (momentumSort.column === column) {
+        momentumSort.direction = momentumSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        momentumSort.column = column;
+        momentumSort.direction = column === 'name' ? 'asc' : 'desc';
+      }
+      renderMomentumTable();
+    }
+
+    // ==================== YEARLY RETURNS SECTION (New) ====================
+    function renderYearlySection() {
+      if (!summaryData || !summaryData.yearly_returns) return;
+
+      renderYearlyTable();
+      renderYearlyChart();
+    }
+
+    function renderYearlyTable() {
+      const filtered = getFilteredYearlyIndices();
+      const tbody = document.getElementById('yearlyTableBody');
+
+      tbody.innerHTML = filtered.map(key => {
+        const returns = summaryData.yearly_returns[key] || {};
+        const fmt = (v) => {
+          if (v === undefined || v === null) return '<span class="text-gray-400">-</span>';
+          const pct = (v * 100).toFixed(1);
+          const cls = v > 0 ? 'text-green-600' : v < 0 ? 'text-red-600' : 'text-gray-500';
+          return `<span class="${cls}">${v > 0 ? '+' : ''}${pct}%</span>`;
+        };
+        const isSelected = yearlyChartSelected.has(key);
+        return `
+          <tr class="border-b hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-blue-50' : ''}" onclick="toggleYearlySelection('${key}')">
+            <td class="px-4 py-3 font-medium">${INDEX_NAMES[key] || INDEX_NAMES['msci_' + key] || key}</td>
+            ${YEARS.map(y => `<td class="px-4 py-3 text-right">${fmt(returns[y])}</td>`).join('')}
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getFilteredYearlyIndices() {
+      if (currentFilter === 'all') {
+        return Object.keys(summaryData.yearly_returns);
+      }
+      return INDEX_GROUPS[currentFilter].map(key => {
+        if (key.startsWith('msci_')) return key.replace('msci_', '');
+        return key;
+      }).filter(key => summaryData.yearly_returns[key]);
+    }
+
+    function toggleYearlySelection(key) {
+      if (yearlyChartSelected.has(key)) {
+        yearlyChartSelected.delete(key);
+      } else {
+        if (yearlyChartSelected.size >= 8) {
+          alert('Maximum 8 indices can be selected');
+          return;
+        }
+        yearlyChartSelected.add(key);
+      }
+      renderYearlyTable();
+      renderYearlyChart();
+    }
+
+    function yearlyChartAll() {
+      const filtered = getFilteredYearlyIndices();
+      yearlyChartSelected = new Set(filtered.slice(0, 8));
+      renderYearlyTable();
+      renderYearlyChart();
+    }
+
+    function yearlyChartTop5() {
+      if (!summaryData || !summaryData.momentum) return;
+      const allKeys = Object.keys(summaryData.momentum);
+      const sorted = allKeys.map(key => ({
+        key,
+        value: (summaryData.momentum[key] || {})['6m'] || 0
+      })).sort((a, b) => b.value - a.value);
+      yearlyChartSelected = new Set(sorted.slice(0, 5).map(x => x.key));
+      renderYearlyTable();
+      renderYearlyChart();
+    }
+
+    function yearlyChartClear() {
+      yearlyChartSelected.clear();
+      renderYearlyTable();
+      renderYearlyChart();
+    }
+
+    function renderYearlyChart() {
+      const canvas = document.getElementById('yearlyChart');
+      const ctx = canvas.getContext('2d');
+      const emptyState = document.getElementById('yearlyEmptyState');
+
+      if (yearlyChartSelected.size === 0) {
+        emptyState.style.display = 'flex';
+        if (yearlyChart) { yearlyChart.destroy(); yearlyChart = null; }
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      const selectedKeys = Array.from(yearlyChartSelected);
+      const datasets = selectedKeys.map((key, i) => ({
+        label: INDEX_NAMES[key] || INDEX_NAMES['msci_' + key] || key,
+        data: YEARS.map(y => {
+          const val = summaryData.yearly_returns[key]?.[y];
+          return val !== undefined ? val * 100 : null;
+        }),
+        borderColor: CHART_COLORS[i % CHART_COLORS.length],
+        backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + '20',
+        tension: 0.3,
+        fill: false,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }));
+
+      if (yearlyChart) yearlyChart.destroy();
+
+      yearlyChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: YEARS, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%` }
+            }
+          },
+          scales: {
+            y: { title: { display: true, text: 'Return (%)' }, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: v => v + '%' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // ==================== DETAIL MODAL (New) ====================
+    function showDetail(key) {
+      // Try to find the correct key (handle msci_ prefix)
+      let actualKey = key;
+      let momKey = key;
+      if (key.startsWith('msci_')) {
+        momKey = key.replace('msci_', '');  // summaries uses 'world' not 'msci_world'
+      }
+
+      const index = allIndices[actualKey] || allIndices['msci_' + key];
+      const mom = summaryData?.momentum?.[momKey] || summaryData?.momentum?.[key] || {};
+      const returns = summaryData?.yearly_returns?.[momKey] || summaryData?.yearly_returns?.[key] || {};
+
+      document.getElementById('modalTitle').textContent = INDEX_NAMES[key] || INDEX_NAMES['msci_' + key] || key;
+      document.getElementById('modalSubtitle').textContent = 'Valuation, Momentum & Yearly Returns';
+
+      const fmt = (v) => {
+        if (v === undefined || v === null) return { text: 'N/A', cls: 'text-gray-400' };
+        const pct = (v * 100).toFixed(1);
+        const cls = v > 0 ? 'text-green-600' : v < 0 ? 'text-red-600' : 'text-gray-500';
+        return { text: (v > 0 ? '+' : '') + pct + '%', cls };
+      };
+
+      const m1 = fmt(mom['1m']), m3 = fmt(mom['3m']), m6 = fmt(mom['6m']), mytd = fmt(mom.ytd);
+
+      document.getElementById('modalContent').innerHTML = `
+        <div class="space-y-4">
+          <!-- Current Valuation -->
+          ${index ? `
+          <div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Current Valuation</h4>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">P/E</div>
+                <div class="text-lg font-bold text-gray-800">${index.pe ? index.pe.toFixed(2) : 'N/A'}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">P/B</div>
+                <div class="text-lg font-bold text-gray-800">${index.pb ? index.pb.toFixed(2) : 'N/A'}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">ROE</div>
+                <div class="text-lg font-bold text-gray-800">${index.roe ? (index.roe * 100).toFixed(1) + '%' : 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- Momentum -->
+          <div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Momentum</h4>
+            <div class="grid grid-cols-4 gap-3">
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">1M</div>
+                <div class="text-lg font-bold ${m1.cls}">${m1.text}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">3M</div>
+                <div class="text-lg font-bold ${m3.cls}">${m3.text}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">6M</div>
+                <div class="text-lg font-bold ${m6.cls}">${m6.text}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 text-center">
+                <div class="text-xs text-gray-500 mb-1">YTD</div>
+                <div class="text-lg font-bold ${mytd.cls}">${mytd.text}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Yearly Returns -->
+          <div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Yearly Returns</h4>
+            <div class="grid grid-cols-4 gap-2">
+              ${YEARS.map(y => {
+                const r = fmt(returns[y]);
+                return `
+                  <div class="bg-gray-50 rounded-lg p-2 text-center">
+                    <div class="text-xs text-gray-500">${y}</div>
+                    <div class="font-medium ${r.cls}">${r.text}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    // ==================== EXPORT (New) ====================
+    function exportCSV() {
+      let csv = '';
+      if (currentContentTab === 'overview' || currentContentTab === 'comparison') {
+        csv = 'Index,Type,PE,PB,ROE\n';
+        getFilteredIndices().forEach(key => {
+          const idx = allIndices[key];
+          csv += `"${idx.name}","${idx.type}",${idx.pe || ''},${idx.pb || ''},${idx.roe ? (idx.roe * 100).toFixed(1) : ''}\n`;
+        });
+      } else if (currentContentTab === 'momentum') {
+        csv = 'Index,1M,3M,6M,YTD\n';
+        getFilteredMomentumIndices().forEach(key => {
+          const mom = summaryData.momentum[key] || {};
+          csv += `"${INDEX_NAMES[key] || key}",${(mom['1m'] || 0) * 100},${(mom['3m'] || 0) * 100},${(mom['6m'] || 0) * 100},${(mom.ytd || 0) * 100}\n`;
+        });
+      } else {
+        csv = 'Index,' + YEARS.join(',') + '\n';
+        getFilteredYearlyIndices().forEach(key => {
+          const r = summaryData.yearly_returns[key] || {};
+          csv += `"${INDEX_NAMES[key] || key}",${YEARS.map(y => r[y] !== undefined ? (r[y] * 100).toFixed(1) : '').join(',')}\n`;
+        });
+      }
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.download = `benchmarks-${currentContentTab}-${currentFilter}.csv`;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    }
+
+    function exportPNG() {
+      let canvas;
+      if (currentContentTab === 'comparison' && comparisonChart) {
+        canvas = document.getElementById('comparisonChart');
+      } else if (currentContentTab === 'yearly' && yearlyChart) {
+        canvas = document.getElementById('yearlyChart');
+      } else {
+        alert('No chart to export. Switch to Comparison or Yearly Returns tab.');
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.download = `benchmarks-${currentContentTab}-chart.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // ==================== FILTERS & SORTING ====================
+    function getFilteredIndices() {
+      const group = INDEX_GROUPS[currentFilter] || [];
+      const searchQuery = document.getElementById('search').value.toLowerCase();
+
+      let filtered = group.filter(key => {
+        if (!allIndices[key]) return false;
+        if (!searchQuery) return true;
+        const name = allIndices[key].name.toLowerCase();
+        return name.includes(searchQuery) || key.includes(searchQuery);
+      });
+
+      filtered.sort((a, b) => {
+        const indexA = allIndices[a];
+        const indexB = allIndices[b];
+        let valA, valB;
+
+        switch (currentSort.column) {
+          case 'name': valA = indexA.name; valB = indexB.name; break;
+          case 'type': valA = indexA.type; valB = indexB.type; break;
+          case 'pe': valA = indexA.pe || 0; valB = indexB.pe || 0; break;
+          case 'pb': valA = indexA.pb || 0; valB = indexB.pb || 0; break;
+          case 'roe': valA = indexA.roe || 0; valB = indexB.roe || 0; break;
+        }
+
+        if (typeof valA === 'string') {
+          return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else {
+          return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+        }
+      });
+
+      return filtered;
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('tab-' + filter).classList.add('active');
+      render();
+    }
+
+    function sortTable(column) {
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+      }
+      render();
+    }
+
+    function filterTable() {
+      render();
+    }
+
+    // ==================== SELECTION ====================
+    function toggleSelection(key) {
+      if (selectedIndices.has(key)) {
+        selectedIndices.delete(key);
+      } else {
+        if (selectedIndices.size >= CONFIG.MAX_SELECTION) {
+          alert(`Maximum ${CONFIG.MAX_SELECTION} indices can be selected`);
+          return;
+        }
+        selectedIndices.add(key);
+      }
+      render();
+    }
+
+    function toggleSelectAll() {
+      const checkbox = document.getElementById('selectAll');
+      const filtered = getFilteredIndices();
+
+      if (checkbox.checked) {
+        filtered.slice(0, CONFIG.MAX_SELECTION).forEach(key => selectedIndices.add(key));
+      } else {
+        filtered.forEach(key => selectedIndices.delete(key));
+      }
+      render();
+    }
+
+    function clearSelection() {
+      selectedIndices.clear();
+      document.getElementById('selectAll').checked = false;
+      render();
+    }
+
+    function updateSelectionCounter() {
+      document.getElementById('selectedCount').textContent = selectedIndices.size;
+    }
+
+    // ==================== METRIC & PERIOD ====================
+    function setMetric(metric) {
+      currentMetric = metric;
+      document.querySelectorAll('.metric-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelector(`.metric-tab[data-metric="${metric}"]`).classList.add('active');
+      renderComparisonChart();
+    }
+
+    function setPeriod(period) {
+      currentPeriod = period;
+      document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.period-btn[data-period="${period}"]`).classList.add('active');
+      renderComparisonChart();
+    }
+
+    // ==================== ERROR HANDLING ====================
+    function showError(message) {
+      document.body.innerHTML = `
+        <div class="card max-w-lg mx-auto mt-10">
+          <h2 class="text-red-600 font-bold text-xl mb-3">
+            <i class="fas fa-exclamation-triangle mr-2"></i>Error
+          </h2>
+          <p class="text-gray-700 mb-4">${message}</p>
+          <button onclick="location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+            <i class="fas fa-redo mr-2"></i>Retry
+          </button>
+        </div>
+      `;
+    }
+
+    // ==================== ANALYSIS SECTION (New) ====================
+    function populateAnalysisSelector() {
+      const selector = document.getElementById('analysisIndexSelector');
+      if (!selector) return;
+
+      // Keep existing selection
+      const currentValue = selector.value;
+
+      // Build options from all loaded indices
+      const indices = Object.keys(allIndices).sort((a, b) => {
+        const nameA = allIndices[a].name;
+        const nameB = allIndices[b].name;
+        return nameA.localeCompare(nameB);
+      });
+
+      selector.innerHTML = '<option value="">-- Choose Index --</option>' +
+        indices.map(key => `<option value="${key}">${allIndices[key].name}</option>`).join('');
+
+      // Restore selection if valid
+      if (currentValue && allIndices[currentValue]) {
+        selector.value = currentValue;
+      }
+    }
+
+    function renderAnalysis() {
+      const selector = document.getElementById('analysisIndexSelector');
+      const selectedKey = selector?.value;
+
+      if (!selectedKey || !allIndices[selectedKey]) {
+        document.getElementById('analysisEmptyState').classList.remove('hidden');
+        document.getElementById('analysisContent').classList.add('hidden');
+        return;
+      }
+
+      currentAnalysisIndex = selectedKey;
+      document.getElementById('analysisEmptyState').classList.add('hidden');
+      document.getElementById('analysisContent').classList.remove('hidden');
+
+      // Render each chart with error isolation
+      try { renderPEBandChart(selectedKey); } catch (e) { console.error('P/E Band Chart error:', e); }
+      try { renderEPSTrendChart(selectedKey); } catch (e) { console.error('EPS Trend Chart error:', e); }
+      try { renderROETrendChart(selectedKey); } catch (e) { console.error('ROE Trend Chart error:', e); }
+      try { renderFactorRadarChart(selectedKey); } catch (e) { console.error('Factor Radar error:', e); }
+    }
+
+    // ==================== P/E BAND CHART ====================
+    function renderPEBandChart(key) {
+      const index = allIndices[key];
+      const canvas = document.getElementById('peBandChart');
+      const ctx = canvas.getContext('2d');
+
+      // Get P/E data and filter nulls
+      const peData = index.timeSeries.pe.filter(v => v !== null);
+      const dates = index.timeSeries.dates.filter((d, i) => index.timeSeries.pe[i] !== null);
+
+      if (peData.length === 0) {
+        if (peBandChart) peBandChart.destroy();
+        document.getElementById('peBandStats').innerHTML = '<p class="col-span-5 text-gray-400">No P/E data available</p>';
+        return;
+      }
+
+      // Calculate percentiles with edge case handling
+      const sorted = [...peData].sort((a, b) => a - b);
+      const getPercentile = (arr, p) => {
+        if (arr.length === 0) return null;
+        if (arr.length === 1) return arr[0];
+        const idx = Math.min(Math.floor(arr.length * p), arr.length - 1);
+        return arr[idx];
+      };
+      const p10 = getPercentile(sorted, 0.10);
+      const p25 = getPercentile(sorted, 0.25);
+      const p50 = getPercentile(sorted, 0.50);
+      const p75 = getPercentile(sorted, 0.75);
+      const p90 = getPercentile(sorted, 0.90);
+      const current = peData[peData.length - 1];
+
+      // Determine current percentile position
+      let currentPercentile = 0;
+      for (let i = 0; i < sorted.length; i++) {
+        if (current <= sorted[i]) {
+          currentPercentile = Math.round((i / sorted.length) * 100);
+          break;
+        }
+      }
+      if (current > sorted[sorted.length - 1]) currentPercentile = 100;
+
+      if (peBandChart) peBandChart.destroy();
+
+      peBandChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'P/E Ratio',
+              data: peData,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 2
+            },
+            {
+              label: 'P90',
+              data: Array(dates.length).fill(p90),
+              borderColor: '#ef4444',
+              borderDash: [5, 5],
+              borderWidth: 1,
+              pointRadius: 0
+            },
+            {
+              label: 'P75',
+              data: Array(dates.length).fill(p75),
+              borderColor: '#f97316',
+              borderDash: [3, 3],
+              borderWidth: 1,
+              pointRadius: 0
+            },
+            {
+              label: 'P50 (Median)',
+              data: Array(dates.length).fill(p50),
+              borderColor: '#10b981',
+              borderWidth: 1.5,
+              pointRadius: 0
+            },
+            {
+              label: 'P25',
+              data: Array(dates.length).fill(p25),
+              borderColor: '#06b6d4',
+              borderDash: [3, 3],
+              borderWidth: 1,
+              pointRadius: 0
+            },
+            {
+              label: 'P10',
+              data: Array(dates.length).fill(p10),
+              borderColor: '#8b5cf6',
+              borderDash: [5, 5],
+              borderWidth: 1,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            y: { title: { display: true, text: 'P/E Ratio' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }
+          }
+        }
+      });
+
+      // Update stats
+      const positionColor = currentPercentile > 75 ? 'text-red-600' : currentPercentile > 50 ? 'text-amber-600' : currentPercentile > 25 ? 'text-green-600' : 'text-blue-600';
+      document.getElementById('peBandStats').innerHTML = `
+        <div class="bg-purple-50 rounded p-2"><div class="text-gray-500">P10</div><div class="font-bold">${p10.toFixed(1)}</div></div>
+        <div class="bg-cyan-50 rounded p-2"><div class="text-gray-500">P25</div><div class="font-bold">${p25.toFixed(1)}</div></div>
+        <div class="bg-green-50 rounded p-2"><div class="text-gray-500">P50</div><div class="font-bold">${p50.toFixed(1)}</div></div>
+        <div class="bg-orange-50 rounded p-2"><div class="text-gray-500">P75</div><div class="font-bold">${p75.toFixed(1)}</div></div>
+        <div class="bg-red-50 rounded p-2"><div class="text-gray-500">P90</div><div class="font-bold">${p90.toFixed(1)}</div></div>
+        <div class="col-span-5 mt-2 bg-blue-50 rounded p-2">
+          <span class="text-gray-600">Current:</span>
+          <span class="font-bold text-blue-600">${current.toFixed(1)}</span>
+          <span class="mx-2">|</span>
+          <span class="text-gray-600">Percentile:</span>
+          <span class="font-bold ${positionColor}">${currentPercentile}%</span>
+        </div>
+      `;
+    }
+
+    // ==================== EPS TREND CHART ====================
+    function renderEPSTrendChart(key) {
+      const index = allIndices[key];
+      const canvas = document.getElementById('epsTrendChart');
+      const ctx = canvas.getContext('2d');
+
+      // Get EPS data
+      const epsData = index.timeSeries.eps;
+      const dates = index.timeSeries.dates;
+
+      // Calculate YoY growth (52 weeks = 1 year)
+      const growthData = epsData.map((eps, i) => {
+        if (i < 52 || eps === null || epsData[i - 52] === null || epsData[i - 52] === 0) return null;
+        return ((eps - epsData[i - 52]) / Math.abs(epsData[i - 52])) * 100;
+      });
+
+      const validEps = epsData.filter(v => v !== null);
+      if (validEps.length === 0) {
+        if (epsTrendChart) epsTrendChart.destroy();
+        document.getElementById('epsStats').innerHTML = '<p class="col-span-3 text-gray-400">No EPS data available</p>';
+        return;
+      }
+
+      if (epsTrendChart) epsTrendChart.destroy();
+
+      epsTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'EPS',
+              data: epsData,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 2,
+              yAxisID: 'y'
+            },
+            {
+              label: 'YoY Growth %',
+              data: growthData,
+              borderColor: '#f59e0b',
+              backgroundColor: 'transparent',
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: function(ctx) {
+                  if (ctx.datasetIndex === 0) return `EPS: $${ctx.parsed.y?.toFixed(2) || 'N/A'}`;
+                  return `YoY: ${ctx.parsed.y?.toFixed(1) || 'N/A'}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: { display: true, text: 'EPS ($)' },
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              title: { display: true, text: 'YoY Growth (%)' },
+              grid: { drawOnChartArea: false }
+            },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }
+          }
+        }
+      });
+
+      // Calculate stats
+      const currentEps = validEps[validEps.length - 1];
+      const validGrowth = growthData.filter(v => v !== null);
+      const avgGrowth = validGrowth.length > 0 ? validGrowth.reduce((a, b) => a + b, 0) / validGrowth.length : null;
+      const latestGrowth = validGrowth.length > 0 ? validGrowth[validGrowth.length - 1] : null;
+
+      document.getElementById('epsStats').innerHTML = `
+        <div class="bg-green-50 rounded p-2"><div class="text-gray-500">Current EPS</div><div class="font-bold text-green-600">$${currentEps.toFixed(2)}</div></div>
+        <div class="bg-amber-50 rounded p-2"><div class="text-gray-500">Latest YoY</div><div class="font-bold ${latestGrowth > 0 ? 'text-green-600' : 'text-red-600'}">${latestGrowth ? (latestGrowth > 0 ? '+' : '') + latestGrowth.toFixed(1) + '%' : 'N/A'}</div></div>
+        <div class="bg-blue-50 rounded p-2"><div class="text-gray-500">Avg YoY (16Y)</div><div class="font-bold ${avgGrowth > 0 ? 'text-green-600' : 'text-red-600'}">${avgGrowth ? (avgGrowth > 0 ? '+' : '') + avgGrowth.toFixed(1) + '%' : 'N/A'}</div></div>
+      `;
+    }
+
+    // ==================== ROE TREND CHART ====================
+    function renderROETrendChart(key) {
+      const index = allIndices[key];
+      const canvas = document.getElementById('roeTrendChart');
+      const ctx = canvas.getContext('2d');
+
+      // Get ROE data (convert to percentage)
+      const roeData = index.timeSeries.roe.map(v => v !== null ? v * 100 : null);
+      const dates = index.timeSeries.dates;
+
+      const validRoe = roeData.filter(v => v !== null);
+      if (validRoe.length === 0) {
+        if (roeTrendChart) roeTrendChart.destroy();
+        document.getElementById('roeStats').innerHTML = '<p class="col-span-3 text-gray-400">No ROE data available</p>';
+        return;
+      }
+
+      // Calculate average ROE
+      const avgRoe = validRoe.reduce((a, b) => a + b, 0) / validRoe.length;
+
+      if (roeTrendChart) roeTrendChart.destroy();
+
+      roeTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'ROE',
+              data: roeData,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 2
+            },
+            {
+              label: 'Average',
+              data: Array(dates.length).fill(avgRoe),
+              borderColor: '#6b7280',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: function(ctx) {
+                  return `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { title: { display: true, text: 'ROE (%)' }, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: v => v + '%' } },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }
+          }
+        }
+      });
+
+      // Calculate stats
+      const currentRoe = validRoe[validRoe.length - 1];
+      const minRoe = Math.min(...validRoe);
+      const maxRoe = Math.max(...validRoe);
+
+      document.getElementById('roeStats').innerHTML = `
+        <div class="bg-amber-50 rounded p-2"><div class="text-gray-500">Current</div><div class="font-bold text-amber-600">${currentRoe.toFixed(1)}%</div></div>
+        <div class="bg-gray-50 rounded p-2"><div class="text-gray-500">16Y Avg</div><div class="font-bold">${avgRoe.toFixed(1)}%</div></div>
+        <div class="bg-blue-50 rounded p-2"><div class="text-gray-500">Range</div><div class="font-bold">${minRoe.toFixed(1)}% - ${maxRoe.toFixed(1)}%</div></div>
+      `;
+    }
+
+    // ==================== FACTOR RADAR CHART ====================
+    function renderFactorRadarChart(key) {
+      const index = allIndices[key];
+      const canvas = document.getElementById('factorRadarChart');
+      const ctx = canvas.getContext('2d');
+
+      // Validate data availability
+      if (!index || Object.keys(allIndices).length === 0) {
+        if (factorRadarChart) factorRadarChart.destroy();
+        document.getElementById('radarStats').innerHTML = '<p class="text-gray-400">Insufficient data for radar analysis</p>';
+        return;
+      }
+
+      // Calculate normalized scores (0-100) relative to all indices
+      const allPE = Object.values(allIndices).map(i => i.pe).filter(v => v !== null);
+      const allPB = Object.values(allIndices).map(i => i.pb).filter(v => v !== null);
+      const allROE = Object.values(allIndices).map(i => i.roe).filter(v => v !== null);
+
+      // Get 6M momentum from summaryData
+      let momentum6m = 0;
+      if (summaryData?.momentum) {
+        // Try different key formats
+        const momKey = key.startsWith('msci_') ? key.replace('msci_', '') : key;
+        momentum6m = summaryData.momentum[momKey]?.['6m'] || summaryData.momentum[key]?.['6m'] || 0;
+      }
+      const allMomentum = summaryData?.momentum ?
+        Object.values(summaryData.momentum).map(m => m['6m'] || 0) : [0];
+
+      // Normalize function (inverse for P/E and P/B - lower is better)
+      const normalize = (value, arr, inverse = false) => {
+        if (value === null || arr.length === 0) return 50;
+        const min = Math.min(...arr);
+        const max = Math.max(...arr);
+        if (max === min) return 50;
+        let score = ((value - min) / (max - min)) * 100;
+        return inverse ? 100 - score : score;
+      };
+
+      const peScore = normalize(index.pe, allPE, true);  // Lower P/E is better
+      const pbScore = normalize(index.pb, allPB, true);  // Lower P/B is better
+      const roeScore = normalize(index.roe, allROE, false);  // Higher ROE is better
+      const momentumScore = normalize(momentum6m, allMomentum, false);  // Higher momentum is better
+
+      if (factorRadarChart) factorRadarChart.destroy();
+
+      factorRadarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['P/E (Value)', 'P/B (Value)', 'ROE (Quality)', '6M Momentum'],
+          datasets: [{
+            label: index.name,
+            data: [peScore, pbScore, roeScore, momentumScore],
+            fill: true,
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            borderColor: '#6366f1',
+            pointBackgroundColor: '#6366f1',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#6366f1'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: function(ctx) {
+                  const labels = ['P/E', 'P/B', 'ROE', '6M Mom'];
+                  const values = [
+                    index.pe ? index.pe.toFixed(1) : 'N/A',
+                    index.pb ? index.pb.toFixed(1) : 'N/A',
+                    index.roe ? (index.roe * 100).toFixed(1) + '%' : 'N/A',
+                    (momentum6m * 100).toFixed(1) + '%'
+                  ];
+                  return `${labels[ctx.dataIndex]}: ${values[ctx.dataIndex]} (Score: ${ctx.parsed.r.toFixed(0)})`;
+                }
+              }
+            }
+          },
+          scales: {
+            r: {
+              angleLines: { color: 'rgba(0,0,0,0.1)' },
+              grid: { color: 'rgba(0,0,0,0.1)' },
+              pointLabels: { font: { size: 11 } },
+              suggestedMin: 0,
+              suggestedMax: 100,
+              ticks: { stepSize: 25, display: false }
+            }
+          }
+        }
+      });
+
+      // Calculate composite score
+      const compositeScore = ((peScore + pbScore + roeScore + momentumScore) / 4).toFixed(0);
+      document.getElementById('radarStats').innerHTML = `
+        <span class="text-gray-600">Composite Score:</span>
+        <span class="font-bold text-lg ml-2 ${compositeScore >= 60 ? 'text-green-600' : compositeScore >= 40 ? 'text-amber-600' : 'text-red-600'}">${compositeScore}/100</span>
+        <span class="text-gray-400 ml-2">(Higher = Better Value & Quality)</span>
+      `;
+    }
+
+    // ==================== START ====================
+    init();
+  </script>
+</body>
+</html>

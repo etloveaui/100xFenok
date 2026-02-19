@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Lab - 100x FenoK</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <script src="shared/data-lab-config.js?v=2.1"></script>
+  <script src="shared/validators.js?v=2.0"></script>
+  <script src="shared/slickcharts-validator.js?v=1.0"></script>
+
+  <header class="py-6 border-b bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-database text-emerald-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">Data Lab</h1>
+            <p class="text-gray-500 text-sm">데이터 상태 및 스키마 검증</p>
+          </div>
+        </div>
+        <a href="../" class="text-gray-500 hover:text-blue-600">
+          <i class="fas fa-arrow-left mr-1"></i> Admin
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-signal text-emerald-500 mr-2"></i>데이터 상태
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Damodaran</h3>
+              <p class="text-xs text-gray-500">Country Risk Premium</p>
+            </div>
+            <span id="damodaran-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>레코드: <span id="damodaran-count">-</span> <span class="text-xs text-gray-400">(ERP + Industries)</span></p>
+            <p>갱신일: <span id="damodaran-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="damodaran-sample">-</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Global Scouter</h3>
+              <p class="text-xs text-gray-500">Stocks Master</p>
+            </div>
+            <span id="scouter-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>레코드: <span id="scouter-count">-</span> <span class="text-xs text-gray-400">(core 3개 파일)</span></p>
+            <p>갱신일: <span id="scouter-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="scouter-sample">-</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Benchmarks</h3>
+              <p class="text-xs text-gray-500">Market Benchmarks</p>
+            </div>
+            <span id="benchmarks-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>레코드: <span id="benchmarks-sections">-</span> <span class="text-xs text-gray-400">(6개 파일)</span></p>
+            <p>갱신일: <span id="benchmarks-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="benchmarks-sample">-</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">SEC 13F</h3>
+              <p class="text-xs text-gray-500">Investor Holdings</p>
+            </div>
+            <span id="sec13f-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">준비 중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>레코드: <span id="sec13f-count">-</span> <span class="text-xs text-gray-400">(3개 파일 + 17 투자자)</span></p>
+            <p>갱신일: <span id="sec13f-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="sec13f-sample">Warren Buffett, Michael Burry...</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Sentiment</h3>
+              <p class="text-xs text-gray-500">Market Sentiment Indicators</p>
+            </div>
+            <span id="sentiment-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>파일: <span id="sentiment-files">-</span> <span class="text-xs text-gray-400">(6개 파일)</span></p>
+            <p>갱신일: <span id="sentiment-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="sentiment-sample">-</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-semibold">Indices</h3>
+              <p class="text-xs text-gray-500">Market Indices</p>
+            </div>
+            <span id="indices-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p>파일: <span id="indices-files">-</span> <span class="text-xs text-gray-400">(2개 파일)</span></p>
+            <p>갱신일: <span id="indices-date">-</span></p>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">
+            샘플: <span id="indices-sample">-</span>
+          </div>
+          </div>
+
+        <!-- SlickCharts 카테고리별 상태 (별도 섹션) -->
+        <div class="space-y-3 mt-6">
+          
+          <!-- Index Holdings (3) -->
+          <details class="border rounded-lg overflow-hidden" open>
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-chart-pie text-blue-500"></i>
+                <span class="font-semibold text-sm">Index Holdings (3)</span>
+              </div>
+              <span id="slick-indexHoldings-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-3 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">S&P 500</div>
+                <span id="slick-sp500-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">NASDAQ 100</div>
+                <span id="slick-nasdaq100-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Dow Jones</div>
+                <span id="slick-dowjones-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Performance (3) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-chart-line text-green-500"></i>
+                <span class="font-semibold text-sm">Performance (3)</span>
+              </div>
+              <span id="slick-performance-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-3 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">S&P 500</div>
+                <span id="slick-sp500-perf-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">NASDAQ 100</div>
+                <span id="slick-nasdaq100-perf-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Dow Jones</div>
+                <span id="slick-dowjones-perf-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Returns (5) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-percent text-purple-500"></i>
+                <span class="font-semibold text-sm">Returns (5)</span>
+              </div>
+              <span id="slick-returns-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-3 lg:grid-cols-5 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">S&P 500</div>
+                <span id="slick-sp500-returns-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">NASDAQ 100</div>
+                <span id="slick-nasdaq100-returns-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Dow Jones</div>
+                <span id="slick-dowjones-returns-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">BTC</div>
+                <span id="slick-btc-returns-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">ETH</div>
+                <span id="slick-eth-returns-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Analysis (3) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-chart-area text-orange-500"></i>
+                <span class="font-semibold text-sm">Analysis (3)</span>
+              </div>
+              <span id="slick-analysis-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-3 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">S&P 500</div>
+                <span id="slick-sp500-analysis-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">NASDAQ 100</div>
+                <span id="slick-nasdaq100-analysis-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">NASDAQ Ratio</div>
+                <span id="slick-nasdaq100-ratio-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Yields (3) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-coins text-yellow-500"></i>
+                <span class="font-semibold text-sm">Yields (3)</span>
+              </div>
+              <span id="slick-yields-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-3 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">S&P 500</div>
+                <span id="slick-sp500-yield-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">NASDAQ 100</div>
+                <span id="slick-nasdaq100-yield-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Dow Jones</div>
+                <span id="slick-dowjones-yield-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Drawdown/Marketcap (2) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-chart-bar text-red-500"></i>
+                <span class="font-semibold text-sm">Drawdown/Marketcap (2)</span>
+              </div>
+              <span id="slick-drawdown-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-2 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">Drawdown</div>
+                <span id="slick-sp500-drawdown-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Marketcap</div>
+                <span id="slick-sp500-marketcap-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Movers (2) -->
+          <details class="border rounded-lg overflow-hidden" open>
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-arrows-alt-v text-indigo-500"></i>
+                <span class="font-semibold text-sm">Movers (2)</span>
+              </div>
+              <span id="slick-movers-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-2 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">Gainers</div>
+                <span id="slick-gainers-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Losers</div>
+                <span id="slick-losers-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Macro (4) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-globe text-cyan-500"></i>
+                <span class="font-semibold text-sm">Macro (4)</span>
+              </div>
+              <span id="slick-macro-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">Treasury</div>
+                <span id="slick-treasury-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Currency</div>
+                <span id="slick-currency-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Inflation</div>
+                <span id="slick-inflation-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Mortgage</div>
+                <span id="slick-mortgage-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Portfolio (2) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-briefcase text-pink-500"></i>
+                <span class="font-semibold text-sm">Portfolio (2)</span>
+              </div>
+              <span id="slick-portfolio-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-2 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">Magnificent 7</div>
+                <span id="slick-magnificent7-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">ETF</div>
+                <span id="slick-etf-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Stocks (4) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-layer-group text-teal-500"></i>
+                <span class="font-semibold text-sm">Stocks (4)</span>
+              </div>
+              <span id="slick-stocks-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">Returns</div>
+                <span id="slick-stocks-returns-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Dividends</div>
+                <span id="slick-stocks-dividends-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Dividends (Recent)</div>
+                <span id="slick-stocks-dividends-recent-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Dividends (Historical)</div>
+                <span id="slick-stocks-dividends-historical-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Reference (3) -->
+          <details class="border rounded-lg overflow-hidden">
+            <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-database text-gray-500"></i>
+                <span class="font-semibold text-sm">Reference (3)</span>
+              </div>
+              <span id="slick-reference-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">-</span>
+              <i class="fas fa-chevron-down text-gray-400"></i>
+            </summary>
+            <div class="p-3 grid grid-cols-3 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-medium">Universe</div>
+                  <span id="slick-universe-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Symbols All</div>
+                  <span id="slick-symbols-all-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+              <div class="text-center">
+                <div class="font-medium">Membership Changes</div>
+                  <span id="slick-membership-changes-status" class="text-xs px-1 py-0.5 rounded bg-gray-100">-</span>
+              </div>
+            </div>
+          </details>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-bell text-amber-500 mr-2"></i>업데이트 신호
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Benchmarks</h3>
+            <span id="update-bench-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">주간 갱신</div>
+          <div class="mono text-sm" id="update-bench-date">-</div>
+          <button data-revalidate="benchmarks" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Global Scouter</h3>
+            <span id="update-scouter-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">주간 갱신</div>
+          <div class="mono text-sm" id="update-scouter-date">-</div>
+          <button data-revalidate="scouter" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Damodaran</h3>
+            <span id="update-damodaran-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">연간 갱신</div>
+          <div class="mono text-sm" id="update-damodaran-date">-</div>
+          <button data-revalidate="damodaran" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">SEC 13F</h3>
+            <span id="update-13f-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">분기 갱신</div>
+          <div class="mono text-sm" id="update-13f-date">-</div>
+          <button data-revalidate="sec13f" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <!-- Sentiment 카드 -->
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Sentiment</h3>
+            <span id="update-sentiment-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">일일 갱신</div>
+          <div class="mono text-sm" id="update-sentiment-date">-</div>
+          <button data-revalidate="sentiment" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <!-- Indices 카드 -->
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Indices</h3>
+            <span id="update-indices-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">일일 갱신</div>
+          <div class="mono text-sm" id="update-indices-date">-</div>
+          <button data-revalidate="indices" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+        <!-- SlickCharts 단일 카드 (전체 요약) -->
+        <div class="bg-white rounded-xl p-5 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">SlickCharts</h3>
+            <span id="update-slick-status" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">로딩중</span>
+          </div>
+          <div class="text-xs text-gray-500">일일/주간 갱신</div>
+          <div class="mono text-sm" id="update-slick-date">-</div>
+          <button data-revalidate="slickcharts" class="mt-3 text-xs text-sky-600 hover:underline">재검증</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-terminal text-sky-500 mr-2"></i>통합 콘솔
+      </h2>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <div class="flex flex-wrap gap-2 mb-4 text-sm">
+          <button class="tab-btn px-3 py-2 rounded-lg border bg-sky-50 text-sky-700" data-tab="bench-console">Benchmarks</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="scouter-console">Global Scouter</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="damodaran-console">Damodaran</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="sec13f-console">SEC 13F</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="slick-console">SlickCharts</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="sentiment-console">Sentiment</button>
+          <button class="tab-btn px-3 py-2 rounded-lg border text-gray-600" data-tab="indices-console">Indices</button>
+        </div>
+
+        <div id="bench-console" class="console-panel space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">파일 수</span>
+              <div class="mono" id="bench-console-files">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">섹션 수</span>
+              <div class="mono" id="bench-console-sections">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">최신 데이터</span>
+              <div class="mono" id="bench-console-latest">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">샘플 섹션</span>
+              <div class="mono" id="bench-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="bench-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+
+        <div id="scouter-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">종목 수</span>
+              <div class="mono" id="scouter-console-count">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">기준일</span>
+              <div class="mono" id="scouter-console-date">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">생성일</span>
+              <div class="mono" id="scouter-console-generated">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">샘플 티커</span>
+              <div class="mono" id="scouter-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="scouter-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+
+        <div id="damodaran-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">ERP 국가</span>
+              <div class="mono" id="damodaran-console-erp">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">EV/Sales 섹터</span>
+              <div class="mono" id="damodaran-console-ev">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">최신 생성일</span>
+              <div class="mono" id="damodaran-console-date">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">샘플 키</span>
+              <div class="mono" id="damodaran-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="damodaran-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+
+        <div id="sec13f-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">투자자 수</span>
+              <div class="mono" id="sec13f-console-investors">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">Top 종목</span>
+              <div class="mono" id="sec13f-console-stocks">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">분기</span>
+              <div class="mono" id="sec13f-console-quarter">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">주요 투자자</span>
+              <div class="mono" id="sec13f-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="sec13f-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+
+        <div id="slick-console" class="console-panel space-y-4 hidden">
+          <!-- Category Sub-Tabs -->
+          <div class="flex flex-wrap gap-1 text-xs mb-3">
+            <button class="slick-tab-btn px-2 py-1 rounded border bg-sky-50 text-sky-700" data-slick-tab="indexHoldings">Index Holdings</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="performance">Performance</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="returns">Returns</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="analysis">Analysis</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="yields">Yields</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="drawdown">Drawdown</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="movers">Movers</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="macro">Macro</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="portfolio">Portfolio</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="stocks">Stocks</button>
+            <button class="slick-tab-btn px-2 py-1 rounded border text-gray-600" data-slick-tab="reference">Reference</button>
+          </div>
+
+          <!-- Index Holdings Panel -->
+          <div id="slick-panel-indexHoldings" class="slick-subpanel space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-indexHoldings-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-indexHoldings-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-indexHoldings-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-indexHoldings-select" class="border rounded px-2 py-1">
+                <option value="sp500">S&P 500</option>
+                <option value="nasdaq100">Nasdaq 100</option>
+                <option value="dowjones">Dow Jones</option>
+              </select>
+            </div>
+            <pre id="slick-indexHoldings-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Performance Panel -->
+          <div id="slick-panel-performance" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-performance-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-performance-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-performance-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-performance-select" class="border rounded px-2 py-1">
+                <option value="sp500-performance">S&P 500 Performance</option>
+                <option value="nasdaq100-performance">Nasdaq 100 Performance</option>
+                <option value="dowjones-performance">Dow Jones Performance</option>
+              </select>
+            </div>
+            <pre id="slick-performance-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Returns Panel -->
+          <div id="slick-panel-returns" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-returns-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-returns-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-returns-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-returns-select" class="border rounded px-2 py-1">
+                <option value="sp500-returns">S&P 500 Returns</option>
+                <option value="nasdaq100-returns">Nasdaq 100 Returns</option>
+                <option value="dowjones-returns">Dow Jones Returns</option>
+                <option value="btc-returns">BTC Returns</option>
+                <option value="eth-returns">ETH Returns</option>
+              </select>
+            </div>
+            <pre id="slick-returns-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Analysis Panel -->
+          <div id="slick-panel-analysis" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-analysis-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-analysis-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-analysis-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-analysis-select" class="border rounded px-2 py-1">
+                <option value="sp500-analysis">S&P 500 Analysis</option>
+                <option value="nasdaq100-analysis">Nasdaq 100 Analysis</option>
+                <option value="nasdaq100-ratio">Nasdaq 100 Ratio</option>
+              </select>
+            </div>
+            <pre id="slick-analysis-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Yields Panel -->
+          <div id="slick-panel-yields" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-yields-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-yields-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-yields-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-yields-select" class="border rounded px-2 py-1">
+                <option value="sp500-yield">S&P 500 Yield</option>
+                <option value="nasdaq100-yield">Nasdaq 100 Yield</option>
+                <option value="dowjones-yield">Dow Jones Yield</option>
+              </select>
+            </div>
+            <pre id="slick-yields-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Drawdown Panel -->
+          <div id="slick-panel-drawdown" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-drawdown-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-drawdown-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-drawdown-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-drawdown-select" class="border rounded px-2 py-1">
+                <option value="sp500-drawdown">S&P 500 Drawdown</option>
+                <option value="sp500-marketcap">S&P 500 Marketcap</option>
+              </select>
+            </div>
+            <pre id="slick-drawdown-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Movers Panel -->
+          <div id="slick-panel-movers" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-movers-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-movers-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-movers-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-movers-select" class="border rounded px-2 py-1">
+                <option value="gainers" selected>Gainers</option>
+                <option value="losers">Losers</option>
+              </select>
+            </div>
+            <pre id="slick-movers-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Macro Panel -->
+          <div id="slick-panel-macro" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-macro-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-macro-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-macro-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-macro-select" class="border rounded px-2 py-1">
+                <option value="treasury">Treasury</option>
+                <option value="currency">Currency</option>
+                <option value="inflation">Inflation</option>
+                <option value="mortgage">Mortgage</option>
+              </select>
+            </div>
+            <pre id="slick-macro-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Portfolio Panel -->
+          <div id="slick-panel-portfolio" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-portfolio-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-portfolio-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-portfolio-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-portfolio-select" class="border rounded px-2 py-1">
+                <option value="magnificent7">Magnificent 7</option>
+                <option value="etf">ETF</option>
+              </select>
+            </div>
+            <pre id="slick-portfolio-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Stocks Panel -->
+          <div id="slick-panel-stocks" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-stocks-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-stocks-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-stocks-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-stocks-select" class="border rounded px-2 py-1">
+                <option value="stocks-returns">Individual Returns (516)</option>
+                <option value="stocks-dividends">Individual Dividends</option>
+                <option value="stocks-dividends-recent">Dividends Recent</option>
+                <option value="stocks-dividends-historical">Dividends Historical</option>
+              </select>
+            </div>
+            <pre id="slick-stocks-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+          </div>
+
+          <!-- Reference Panel -->
+          <div id="slick-panel-reference" class="slick-subpanel space-y-3 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-semibold text-gray-700">파일 수</span>
+                <div class="mono" id="slick-reference-files">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">최신 갱신</span>
+                <div class="mono" id="slick-reference-updated">-</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">샘플 파일</span>
+                <div class="mono" id="slick-reference-sample">-</div>
+              </div>
+            </div>
+            <div class="flex gap-2 text-xs mb-2">
+              <select id="slick-reference-select" class="border rounded px-2 py-1">
+                <option value="universe">Universe</option>
+                <option value="symbols-all">Symbols All</option>
+                <option value="membership-changes">Membership Changes</option>
+              </select>
+            </div>
+              <pre id="slick-reference-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+            </div>
+          </div>
+        </div>
+        <!-- Sentiment Panel -->
+        <div id="sentiment-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">파일 수</span>
+              <div class="mono" id="sentiment-console-files">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">최신 갱신</span>
+              <div class="mono" id="sentiment-console-updated">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">샘플 파일</span>
+              <div class="mono" id="sentiment-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="sentiment-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+        <!-- Indices Panel -->
+        <div id="indices-console" class="console-panel space-y-4 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+            <div>
+              <span class="font-semibold text-gray-700">파일 수</span>
+              <div class="mono" id="indices-console-files">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">최신 갱신</span>
+              <div class="mono" id="indices-console-updated">-</div>
+            </div>
+            <div>
+              <span class="font-semibold text-gray-700">샘플 파일</span>
+              <div class="mono" id="indices-console-sample">-</div>
+            </div>
+          </div>
+          <pre id="indices-console-preview" class="bg-gray-900 text-emerald-300 text-xs p-4 rounded-lg overflow-auto h-48">로딩중...</pre>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-shield-check text-indigo-500 mr-2"></i>검증 결과
+      </h2>
+      <div class="bg-white rounded-xl p-5 shadow">
+        <ul id="validation-log" class="text-sm text-gray-700 space-y-2">
+          <li class="text-gray-500">// 데이터 로딩 후 자동 검증</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const logEl = document.getElementById('validation-log');
+    function addLog(message, ok = true) {
+      const li = document.createElement('li');
+      li.textContent = message;
+      li.className = ok ? 'text-emerald-600' : 'text-rose-600';
+      logEl.appendChild(li);
+    }
+
+    function setStatus(elId, ok, label) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      if (ok) {
+        el.textContent = label || '정상';
+        el.className = 'text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700';
+      } else {
+        el.textContent = label || '오류';
+        el.className = 'text-xs px-2 py-1 rounded bg-rose-100 text-rose-700';
+      }
+    }
+
+    function getMetaDate(data) {
+      return data?.metadata?.generated_at || data?.metadata?.date || '-';
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function sampleKeys(obj, limit) {
+      return Object.keys(obj || {}).slice(0, limit).join(', ');
+    }
+
+    function daysSince(dateStr) {
+      if (!dateStr) return null;
+      const date = new Date(dateStr);
+      if (Number.isNaN(date.getTime())) return null;
+      const diff = Date.now() - date.getTime();
+      return Math.floor(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function setUpdateStatus(id, days, warn, danger) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (days === null) {
+        el.textContent = '알 수 없음';
+        el.className = 'text-xs px-2 py-1 rounded bg-gray-100 text-gray-600';
+        return;
+      }
+      if (days >= danger) {
+        el.textContent = `갱신 필요 (${days}일)`;
+        el.className = 'text-xs px-2 py-1 rounded bg-rose-100 text-rose-700';
+        return;
+      }
+      if (days >= warn) {
+        el.textContent = `주의 (${days}일)`;
+        el.className = 'text-xs px-2 py-1 rounded bg-amber-100 text-amber-700';
+        return;
+      }
+      el.textContent = `정상 (${days}일)`;
+      el.className = 'text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700';
+    }
+    function setTab(activeId) {
+      document.querySelectorAll('.console-panel').forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== activeId);
+      });
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === activeId;
+        btn.className = `tab-btn px-3 py-2 rounded-lg border ${isActive ? 'bg-sky-50 text-sky-700' : 'text-gray-600'}`;
+      });
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toISOString().slice(0, 10);
+    }
+
+    function safeStringify(value, limit = 900) {
+      const raw = JSON.stringify(value, null, 2) || '';
+      return raw.length > limit ? `${raw.slice(0, limit)}\n...` : raw;
+    }
+
+    function pickSample(obj) {
+      const keys = Object.keys(obj || {});
+      if (!keys.length) return null;
+      return { key: keys[0], value: obj[keys[0]] };
+    }
+
+    async function loadDamodaranConsole() {
+      const erp = await fetchDataLabFile('DAMODARAN_ERP');
+      const erpSample = pickSample(erp?.countries || {});
+
+      setText('damodaran-console-erp', Object.keys(erp?.countries || {}).length || '-');
+      setText('damodaran-console-date', formatDate(erp?.metadata?.generated_at));
+      setText('damodaran-console-sample', erpSample?.key || '-');
+      document.getElementById('damodaran-console-preview').textContent = safeStringify(erpSample);
+
+      // Update single Damodaran card in Update Signals section
+      setText('update-damodaran-date', formatDate(erp?.metadata?.generated_at));
+      setUpdateStatus('update-damodaran-status', daysSince(erp?.metadata?.generated_at), 365, 730);
+    }
+
+    async function loadGlobalScouter() {
+      try {
+        const [meta, indexData, dashboard] = await Promise.all([
+          fetchDataLabFile('SCOUTER_METADATA'),
+          fetchDataLabFile('SCOUTER_INDEX'),
+          fetchDataLabFile('SCOUTER_DASHBOARD')
+        ]);
+        const result = validateGlobalScouter(meta, indexData, dashboard);
+        setStatus('scouter-status', result.ok, result.ok ? '정상' : '오류');
+        setText('scouter-count', result.stats.metaCount || '-');
+        setText('scouter-date', formatDate(meta?.source_date));
+        setText('scouter-sample', sampleKeys(indexData?.stocks, 5));
+        const scouterDate = meta?.source_date || meta?.generated_at;
+        setText('update-scouter-date', formatDate(scouterDate));
+        setUpdateStatus('update-scouter-status', daysSince(scouterDate), 10, 21);
+        const warnText = result.warnings.length ? ` (경고: ${result.warnings.join(' / ')})` : '';
+        addLog(`Global Scouter: ${result.ok ? 'OK' : result.issues.join(' / ')}${warnText}`, result.ok);
+      } catch (err) {
+        setStatus('scouter-status', false, '로드 실패');
+        addLog(`Global Scouter: ${err.message}`, false);
+      }
+    }
+
+    async function loadSec13F() {
+      try {
+        const summary = await fetchDataLabFile('SEC13F_SUMMARY');
+        // summary.json은 Object 구조 (Array 아님)
+        const investorCount = Object.keys(summary?.investors || {}).length;
+        const stockCount = Object.keys(summary?.top_stocks || {}).length;
+        const latestDate = summary?.metadata?.quarter || summary?.metadata?.generated_at;
+
+        setStatus('sec13f-status', true, '정상');
+        setText('sec13f-count', `${investorCount} 투자자`);
+        setText('sec13f-date', formatDate(latestDate));
+        setText('update-13f-date', formatDate(latestDate));
+        setUpdateStatus('update-13f-status', daysSince(latestDate), 100, 180);
+        addLog(`SEC 13F: OK (${investorCount} investors, ${stockCount} stocks)`, true);
+      } catch (err) {
+        setStatus('sec13f-status', false, '로드 실패');
+        setText('sec13f-count', '-');
+        setText('sec13f-date', '-');
+        addLog(`SEC 13F: ${err.message}`, false);
+      }
+    }
+
+    async function loadSec13FConsole() {
+      try {
+        const summary = await fetchDataLabFile('SEC13F_SUMMARY');
+        // summary.json은 Object 구조 → Object.values로 배열 변환
+        const investors = Object.values(summary?.investors || {});
+        const topStocks = Object.values(summary?.top_stocks || {});
+
+        setText('sec13f-console-investors', investors.length || '-');
+        setText('sec13f-console-stocks', topStocks.length || '-');
+        setText('sec13f-console-quarter', summary?.metadata?.quarter || '-');
+        setText('sec13f-console-sample', investors.slice(0, 3).map(i => i.name).join(', ') || '-');
+        document.getElementById('sec13f-console-preview').textContent = safeStringify({
+          top_investors: investors.slice(0, 3),
+          top_stocks: topStocks.slice(0, 5)
+        });
+      } catch (err) {
+        document.getElementById('sec13f-console-preview').textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function loadBenchmarks() {
+      const files = DATA_LAB_CONFIG.BENCHMARKS || [];
+      let okCount = 0;
+      let totalSections = 0;
+      const samples = [];
+      let latestGenerated = null;
+      let latestData = null;
+
+      for (const file of files) {
+        try {
+          const data = await fetchDataLabPath(file.path);
+          const result = validateBenchmarkFile(data);
+          totalSections += result.stats.sectionCount || 0;
+          const sampleKeys = Object.keys(data.sections || {}).slice(0, 2).join(', ');
+          samples.push(`${file.key}: ${sampleKeys}`);
+          const generated = data?.metadata?.generated;
+          if (generated && (!latestGenerated || new Date(generated) > new Date(latestGenerated))) {
+            latestGenerated = generated;
+          }
+          const sectionEntries = Object.entries(data?.sections || {});
+          for (const [, section] of sectionEntries) {
+            const rows = section?.data || [];
+            if (rows.length) {
+              const lastDate = rows[rows.length - 1]?.date;
+              if (lastDate && (!latestData || new Date(lastDate) > new Date(latestData))) {
+                latestData = lastDate;
+              }
+            }
+          }
+          addLog(`Benchmarks(${file.key}): ${result.ok ? 'OK' : result.issues.join(' / ')}`, result.ok);
+          if (result.ok) okCount += 1;
+        } catch (err) {
+          addLog(`Benchmarks(${file.key}): ${err.message}`, false);
+        }
+      }
+
+      const allOk = okCount === files.length;
+      setStatus('benchmarks-status', allOk, allOk ? '정상' : `${okCount}/${files.length}`);
+      setText('benchmarks-sections', totalSections);
+      const updateDate = latestData || latestGenerated;
+      setText('benchmarks-date', formatDate(updateDate));
+      setText('benchmarks-sample', samples.slice(0, 2).join(' | ') || '-');
+      setText('update-bench-date', formatDate(updateDate));
+      setUpdateStatus('update-bench-status', daysSince(updateDate), 10, 21);
+    }
+
+    async function loadBenchConsole() {
+      const files = DATA_LAB_CONFIG.BENCHMARKS || [];
+      let totalSections = 0;
+      let latestGenerated = null;
+      let latestData = null;
+      let sampleSection = null;
+      let preview = null;
+
+      for (const file of files) {
+        const data = await fetchDataLabPath(file.path);
+        const generated = data?.metadata?.generated;
+        if (generated && (!latestGenerated || new Date(generated) > new Date(latestGenerated))) {
+          latestGenerated = generated;
+        }
+        const sections = Object.entries(data?.sections || {});
+        totalSections += sections.length;
+        if (!sampleSection && sections.length) {
+          sampleSection = sections[0][0];
+          const rows = sections[0][1]?.data || [];
+          preview = rows.length ? rows[0] : sections[0][1];
+        }
+        for (const [, section] of sections) {
+          const rows = section?.data || [];
+          if (rows.length) {
+            const lastDate = rows[rows.length - 1]?.date;
+            if (lastDate && (!latestData || new Date(lastDate) > new Date(latestData))) {
+              latestData = lastDate;
+            }
+          }
+        }
+      }
+
+      setText('bench-console-files', files.length);
+      setText('bench-console-sections', totalSections);
+      setText('bench-console-latest', formatDate(latestData || latestGenerated));
+      setText('bench-console-sample', sampleSection || '-');
+      document.getElementById('bench-console-preview').textContent = preview ? safeStringify(preview) : '샘플 없음';
+    }
+
+    async function loadScouterConsole() {
+      const [meta, indexData] = await Promise.all([
+        fetchDataLabFile('SCOUTER_METADATA'),
+        fetchDataLabFile('SCOUTER_INDEX')
+      ]);
+      const sample = pickSample(indexData?.stocks || {});
+      setText('scouter-console-count', meta?.counts?.stocks || indexData?.count || '-');
+      setText('scouter-console-date', formatDate(meta?.source_date || meta?.generated_at));
+      setText('scouter-console-generated', formatDate(meta?.generated_at));
+      setText('scouter-console-sample', sample ? sample.key : '-');
+      document.getElementById('scouter-console-preview').textContent = sample ? safeStringify(sample.value) : '샘플 없음';
+    }
+
+    async function loadSlickCharts() {
+      try {
+        const categoryKeys = Object.keys(SLICKCHARTS_CATEGORIES);
+        const results = [];
+        let totalOkCount = 0;
+        let totalFiles = 0;
+        let overallLatestDate = null;
+
+        for (const catKey of categoryKeys) {
+          const result = await validateSlickChartsCategory(catKey, fetchDataLabFile);
+          results.push(result);
+          totalFiles += result.files;
+          if (result.allOk) totalOkCount++;
+
+          if (result.latestDate && (!overallLatestDate || new Date(result.latestDate) > new Date(overallLatestDate))) {
+            overallLatestDate = result.latestDate;
+          }
+        }
+
+        const allCategoriesOk = results.every(r => r.allOk);
+        setStatus('slick-overall-status', allCategoriesOk, allCategoriesOk ? '정상' : `${totalOkCount}/${totalFiles}`);
+        setText('slick-total', `${totalOkCount}/${totalFiles}`);
+        setText('slick-overall-date', formatDate(overallLatestDate));
+
+        // Store results for loadSlickConsole reuse
+        window.slickChartsValidationResults = results;
+
+        // Update individual category status
+        updateCategoryStatuses(results);
+
+        // Update SlickCharts single card in Update Signals section
+        // Use overall latest date and worst stale status
+        let worstStaleStatus = null;
+        let worstDaysSince = null;
+
+        results.forEach(result => {
+          const catConfig = SLICKCHARTS_CATEGORIES[result.categoryKey];
+          if (catConfig && catConfig.staleDays && result.latestDate) {
+            const days = daysSince(result.latestDate);
+            const isStale = days >= catConfig.staleDays.warn;
+
+            if (isStale) {
+              if (!worstStaleStatus || days > worstDaysSince) {
+                worstStaleStatus = result.categoryKey;
+                worstDaysSince = days;
+              }
+            }
+          }
+        });
+
+        // Update single SlickCharts card
+        setText('update-slick-date', formatDate(overallLatestDate));
+
+        const worstConfig = worstStaleStatus ? SLICKCHARTS_CATEGORIES[worstStaleStatus] : null;
+        if (worstConfig && worstConfig.staleDays) {
+          setUpdateStatus('update-slick-status', worstDaysSince, worstConfig.staleDays.warn, worstConfig.staleDays.danger);
+        } else {
+          setText('update-slick-status', '정상');
+          const statusEl = document.getElementById('update-slick-status');
+          if (statusEl) {
+            statusEl.textContent = '정상';
+            statusEl.className = 'text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700';
+          }
+        }
+
+        // Update console panels
+        updateSlickConsolePanels(results);
+
+        // Add logs
+        results.forEach(result => {
+          if (result.results) {
+            result.results.forEach(r => {
+              if (r.error) {
+                addLog(`SlickCharts [${result.category}]: ${r.file} - ${r.error}`, false);
+              } else if (!r.ok) {
+                addLog(`SlickCharts [${result.category}]: ${r.file} - ${r.issues.join(' / ')}`, false);
+              }
+            });
+          }
+        });
+      } catch (err) {
+        setStatus('slick-overall-status', false, '로드 실패');
+        addLog(`SlickCharts: ${err.message}`, false);
+      }
+    }
+
+    function updateSlickConsolePanels(results) {
+      results.forEach(result => {
+        const catKey = result.categoryKey;
+        setText(`slick-${catKey}-files`, `${result.files}`);
+        setText(`slick-${catKey}-updated`, formatDate(result.latestDate));
+
+        const catConfig = SLICKCHARTS_CATEGORIES[catKey];
+        if (catConfig && catConfig.files.length > 0) {
+          setText(`slick-${catKey}-sample`, catConfig.files[0].path);
+        }
+      });
+    }
+
+    function updateCategoryStatuses(results) {
+      results.forEach(result => {
+        const statusEl = document.getElementById(`slick-${result.categoryKey}-status`);
+        const statusText = result.allOk ? `${result.okCount}/${result.files}` : 'Error';
+        if (statusEl) {
+          statusEl.textContent = statusText;
+          statusEl.className = result.allOk
+            ? 'text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700'
+            : 'text-xs px-2 py-1 rounded bg-rose-100 text-rose-700';
+        }
+
+        // Update individual file statuses in category
+        if (result.results) {
+          result.results.forEach(r => {
+            const fileKey = r.key.replace('SLICK_', '').toLowerCase();
+            const fileStatusEl = document.getElementById(`slick-${fileKey}-status`);
+            if (fileStatusEl) {
+              fileStatusEl.textContent = r.ok ? 'OK' : 'Error';
+              fileStatusEl.className = r.ok
+                ? 'text-xs px-1 py-0.5 rounded bg-emerald-100 text-emerald-700'
+                : 'text-xs px-1 py-0.5 rounded bg-rose-100 text-rose-700';
+            }
+          });
+        }
+      });
+    }
+
+    async function loadSlickConsole() {
+      const fileMap = {
+        // Index Holdings (3)
+        sp500: 'SLICK_SP500',
+        nasdaq100: 'SLICK_NASDAQ100',
+        dowjones: 'SLICK_DOWJONES',
+        // Performance (3)
+        'sp500-performance': 'SLICK_SP500_PERFORMANCE',
+        'nasdaq100-performance': 'SLICK_NASDAQ100_PERFORMANCE',
+        'dowjones-performance': 'SLICK_DOWJONES_PERFORMANCE',
+        // Returns (5)
+        'sp500-returns': 'SLICK_SP500_RETURNS',
+        'nasdaq100-returns': 'SLICK_NASDAQ100_RETURNS',
+        'dowjones-returns': 'SLICK_DOWJONES_RETURNS',
+        'btc-returns': 'SLICK_BTC_RETURNS',
+        'eth-returns': 'SLICK_ETH_RETURNS',
+        // Analysis (3)
+        'sp500-analysis': 'SLICK_SP500_ANALYSIS',
+        'nasdaq100-analysis': 'SLICK_NASDAQ100_ANALYSIS',
+        'nasdaq100-ratio': 'SLICK_NASDAQ100_RATIO',
+        // Yields (3)
+        'sp500-yield': 'SLICK_SP500_YIELD',
+        'nasdaq100-yield': 'SLICK_NASDAQ100_YIELD',
+        'dowjones-yield': 'SLICK_DOWJONES_YIELD',
+        // Drawdown/Marketcap (2)
+        'sp500-drawdown': 'SLICK_SP500_DRAWDOWN',
+        'sp500-marketcap': 'SLICK_SP500_MARKETCAP',
+        // Movers (2)
+        gainers: 'SLICK_GAINERS',
+        losers: 'SLICK_LOSERS',
+        // Macro (4)
+        treasury: 'SLICK_TREASURY',
+        currency: 'SLICK_CURRENCY',
+        inflation: 'SLICK_INFLATION',
+        mortgage: 'SLICK_MORTGAGE',
+        // Portfolio (2)
+        magnificent7: 'SLICK_MAGNIFICENT7',
+        etf: 'SLICK_ETF',
+        // Stocks Aggregated (4)
+        'stocks-returns': 'SLICK_STOCKS_RETURNS',
+        'stocks-dividends': 'SLICK_STOCKS_DIVIDENDS',
+        'stocks-dividends-recent': 'SLICK_STOCKS_DIVIDENDS_RECENT',
+        'stocks-dividends-historical': 'SLICK_STOCKS_DIVIDENDS_HISTORICAL',
+        // Reference (3)
+        universe: 'SLICK_UNIVERSE',
+        'symbols-all': 'SLICK_SYMBOLS_ALL',
+        'membership-changes': 'SLICK_MEMBERSHIP_CHANGES'
+      };
+
+      // Category configuration
+      const categoryConfigs = {
+        indexHoldings: { files: ['sp500', 'nasdaq100', 'dowjones'], key: 'indexHoldings' },
+        performance: { files: ['sp500-performance', 'nasdaq100-performance', 'dowjones-performance'], key: 'performance' },
+        returns: { files: ['sp500-returns', 'nasdaq100-returns', 'dowjones-returns', 'btc-returns', 'eth-returns'], key: 'returns' },
+        analysis: { files: ['sp500-analysis', 'nasdaq100-analysis', 'nasdaq100-ratio'], key: 'analysis' },
+        yields: { files: ['sp500-yield', 'nasdaq100-yield', 'dowjones-yield'], key: 'yields' },
+        drawdown: { files: ['sp500-drawdown', 'sp500-marketcap'], key: 'drawdown' },
+        movers: { files: ['gainers', 'losers'], key: 'movers', default: 'gainers' },
+        macro: { files: ['treasury', 'currency', 'inflation', 'mortgage'], key: 'macro' },
+        portfolio: { files: ['magnificent7', 'etf'], key: 'portfolio' },
+        stocks: { files: ['stocks-returns', 'stocks-dividends', 'stocks-dividends-recent', 'stocks-dividends-historical'], key: 'stocks' },
+        reference: { files: ['universe', 'symbols-all', 'membership-changes'], key: 'reference' }
+      };
+
+      // Load preview data for each category
+      for (const [catKey, config] of Object.entries(categoryConfigs)) {
+        try {
+          const firstFileKey = config.default || config.files[0];
+          const data = await fetchDataLabFile(fileMap[firstFileKey]).catch(() => null);
+          const sample = data?.history?.[0] || data;
+
+          const previewEl = document.getElementById(`slick-${catKey}-preview`);
+          if (previewEl) {
+            previewEl.textContent = sample ? safeStringify(sample) : 'No data';
+          }
+
+          // Set up file select for this category
+          const selectEl = document.getElementById(`slick-${catKey}-select`);
+          if (selectEl) {
+            selectEl.addEventListener('change', async (e) => {
+              const data = await fetchDataLabFile(fileMap[e.target.value]).catch(() => null);
+              const sample = data?.history?.[0] || data;
+              const previewEl = document.getElementById(`slick-${catKey}-preview`);
+              if (previewEl) {
+                previewEl.textContent = sample ? safeStringify(sample) : `Error: ${e.target.value}`;
+              }
+            });
+          }
+        } catch (err) {
+          const previewEl = document.getElementById(`slick-${catKey}-preview`);
+          if (previewEl) {
+            previewEl.textContent = `Error: ${err.message}`;
+          }
+        }
+      }
+
+      // SlickCharts sub-tab switching
+      document.querySelectorAll('.slick-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabKey = btn.dataset.slickTab;
+          document.querySelectorAll('.slick-tab-btn').forEach(b => {
+            b.classList.remove('bg-sky-50', 'text-sky-700');
+            b.classList.add('text-gray-600');
+          });
+          btn.classList.add('bg-sky-50', 'text-sky-700');
+          btn.classList.remove('text-gray-600');
+
+          document.querySelectorAll('.slick-subpanel').forEach(panel => {
+            panel.classList.add('hidden');
+          });
+          const targetPanel = document.getElementById(`slick-panel-${tabKey}`);
+          if (targetPanel) {
+            targetPanel.classList.remove('hidden');
+          }
+        });
+      });
+    }
+
+    async function loadSentiment() {
+      const files = DATA_LAB_CONFIG.SENTIMENT || [];
+      let totalFiles = 0;
+      let latestUpdated = null;
+      let sampleFile = null;
+
+      for (const file of files) {
+        try {
+          const data = await fetchDataLabFile(file.key).catch(() => null);
+          if (data?.updated) {
+            if (!latestUpdated || new Date(data.updated) > new Date(latestUpdated)) {
+              latestUpdated = data.updated;
+              sampleFile = file.path;
+            }
+            totalFiles++;
+          }
+        } catch (err) {
+          addLog(`Sentiment[${file.key}]: ${err.message}`, false);
+        }
+      }
+
+      setStatus('sentiment-status', totalFiles > 0, totalFiles > 0 ? '정상' : '오류');
+      setText('sentiment-files', totalFiles);
+      setText('sentiment-date', formatDate(latestUpdated));
+      setText('sentiment-sample', sampleFile || '-');
+
+      const previewEl = document.getElementById('sentiment-console-preview');
+      if (latestUpdated && previewEl) {
+        previewEl.textContent = `Files: ${totalFiles}, Latest: ${formatDate(latestUpdated)}`;
+      }
+
+      setText('update-sentiment-date', formatDate(latestUpdated));
+      setUpdateStatus('update-sentiment-status', daysSince(latestUpdated), 2, 7);
+    }
+
+    async function loadIndices() {
+      const files = DATA_LAB_CONFIG.INDICES || [];
+      let totalFiles = 0;
+      let latestUpdated = null;
+      let sampleFile = null;
+
+      for (const file of files) {
+        try {
+          const data = await fetchDataLabFile(file.key).catch(() => null);
+          if (data?.updated) {
+            if (!latestUpdated || new Date(data.updated) > new Date(latestUpdated)) {
+              latestUpdated = data.updated;
+              sampleFile = file.path;
+            }
+            totalFiles++;
+          }
+        } catch (err) {
+          addLog(`Indices[${file.key}]: ${err.message}`, false);
+        }
+      }
+
+      setStatus('indices-status', totalFiles > 0, totalFiles > 0 ? '정상' : '오류');
+      setText('indices-files', totalFiles);
+      setText('indices-date', formatDate(latestUpdated));
+      setText('indices-sample', sampleFile || '-');
+
+      const previewEl = document.getElementById('indices-console-preview');
+      if (latestUpdated && previewEl) {
+        previewEl.textContent = `Files: ${totalFiles}, Latest: ${formatDate(latestUpdated)}`;
+      }
+
+      setText('update-indices-date', formatDate(latestUpdated));
+      setUpdateStatus('update-indices-status', daysSince(latestUpdated), 2, 7);
+    }
+
+    async function loadSentimentConsole() {
+      const fileMap = {
+        aai: 'SENTIMENT_AII',
+        cftc: 'SENTIMENT_CFTC_SP500',
+        cnn: 'SENTIMENT_CNN',
+        crypto: 'SENTIMENT_CRYPTO',
+        move: 'SENTIMENT_MOVE',
+        vix: 'SENTIMENT_VIX'
+      };
+
+      let totalFiles = 0;
+      let latestUpdated = null;
+
+      for (const [fileKey, dataKey] of Object.entries(fileMap)) {
+        try {
+          const data = await fetchDataLabFile(dataKey).catch(() => null);
+          if (data?.updated) {
+            if (!latestUpdated || new Date(data.updated) > new Date(latestUpdated)) {
+              latestUpdated = data.updated;
+            }
+            totalFiles++;
+          }
+        } catch (err) {
+          addLog(`Sentiment[${fileKey}]: ${err.message}`, false);
+        }
+      }
+
+      setText('sentiment-console-files', totalFiles);
+      setText('sentiment-console-updated', formatDate(latestUpdated));
+
+      const selectEl = document.getElementById('sentiment-console-sample');
+      if (selectEl) {
+        selectEl.addEventListener('change', async (e) => {
+          try {
+            const data = await fetchDataLabFile(fileMap[e.target.value]).catch(() => null);
+            const previewEl = document.getElementById('sentiment-console-preview');
+            if (previewEl) {
+              previewEl.textContent = data ? safeStringify(data) : `Error: ${e.target.value}`;
+            }
+          } catch (err) {
+            const previewEl = document.getElementById('sentiment-console-preview');
+            if (previewEl) {
+              previewEl.textContent = `Error: ${err.message}`;
+            }
+          }
+        });
+      }
+
+      const previewEl = document.getElementById('sentiment-console-preview');
+      if (latestUpdated && previewEl) {
+        previewEl.textContent = `Latest: ${formatDate(latestUpdated)}, Files: ${totalFiles}`;
+      } else if (previewEl) {
+        previewEl.textContent = 'No data';
+      }
+    }
+
+    async function loadIndicesConsole() {
+      const fileMap = {
+        sp500: 'INDICES_SP500',
+        nasdaq: 'INDICES_NASDAQ100'
+      };
+
+      let totalFiles = 0;
+      let latestUpdated = null;
+
+      for (const [fileKey, dataKey] of Object.entries(fileMap)) {
+        try {
+          const data = await fetchDataLabFile(dataKey).catch(() => null);
+          if (data?.updated) {
+            if (!latestUpdated || new Date(data.updated) > new Date(latestUpdated)) {
+              latestUpdated = data.updated;
+            }
+            totalFiles++;
+          }
+        } catch (err) {
+          addLog(`Indices[${fileKey}]: ${err.message}`, false);
+        }
+      }
+
+      setText('indices-console-files', totalFiles);
+      setText('indices-console-updated', formatDate(latestUpdated));
+
+      const selectEl = document.getElementById('indices-console-sample');
+      if (selectEl) {
+        selectEl.addEventListener('change', async (e) => {
+          try {
+            const data = await fetchDataLabFile(fileMap[e.target.value]).catch(() => null);
+            const previewEl = document.getElementById('indices-console-preview');
+            if (previewEl) {
+              previewEl.textContent = data ? safeStringify(data) : `Error: ${e.target.value}`;
+            }
+          } catch (err) {
+            const previewEl = document.getElementById('indices-console-preview');
+            if (previewEl) {
+              previewEl.textContent = `Error: ${err.message}`;
+            }
+          }
+        });
+      }
+
+      const previewEl = document.getElementById('indices-console-preview');
+      if (latestUpdated && previewEl) {
+        previewEl.textContent = `Latest: ${formatDate(latestUpdated)}, Files: ${totalFiles}`;
+      } else if (previewEl) {
+        previewEl.textContent = 'No data';
+      }
+    }
+
+    (async function init() {
+      logEl.innerHTML = '';
+      await Promise.all([loadDamodaranConsole(), loadGlobalScouter(), loadBenchmarks(), loadSec13F(), loadSlickCharts(), loadSentiment(), loadIndices()]);
+      await Promise.all([loadBenchConsole(), loadScouterConsole(), loadDamodaranConsole(), loadSec13FConsole(), loadSlickConsole(), loadSentimentConsole(), loadIndicesConsole()]);
+    })();
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTab(btn.dataset.tab));
+    });
+    setTab('bench-console');
+
+    async function revalidate(kind) {
+      addLog(`재검증 시작: ${kind}`, true);
+      if (kind === 'benchmarks') {
+        await loadBenchmarks();
+        await loadBenchConsole();
+      }
+      if (kind === 'scouter') {
+        await loadGlobalScouter();
+        await loadScouterConsole();
+      }
+      if (kind === 'damodaran') {
+        await loadDamodaranConsole();
+      }
+      if (kind === 'sec13f') {
+        await loadSec13F();
+        await loadSec13FConsole();
+      }
+      if (kind === 'slickcharts') {
+        await loadSlickCharts();
+        await loadSlickConsole();
+      }
+      if (kind === 'sentiment') {
+        await loadSentiment();
+        await loadSentimentConsole();
+      }
+      if (kind === 'indices') {
+        await loadIndices();
+        await loadIndicesConsole();
+      }
+      addLog(`재검증 완료: ${kind}`, true);
+    }
+
+    document.querySelectorAll('[data-revalidate]').forEach(btn => {
+      btn.addEventListener('click', () => revalidate(btn.dataset.revalidate));
+    });
+  </script>
+</body>
+</html>

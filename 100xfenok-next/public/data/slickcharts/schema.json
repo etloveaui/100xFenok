@@ -1,0 +1,157 @@
+{
+  "folder": "slickcharts",
+  "version": "2.1.0",
+  "updated": "2026-01-20",
+  "source": "SlickCharts.com (32 scrapers)",
+  "update_frequency": "daily/weekly/monthly",
+  "maintainer": "GitHub Actions automation",
+
+  "workflows": {
+    "slickcharts-daily.yml": {
+      "schedule": "6:00 UTC",
+      "files": ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"]
+    },
+    "slickcharts-weekly.yml": {
+      "schedule": "7:00 UTC Monday",
+      "files": ["sp500.json", "nasdaq100.json", "dowjones.json", "magnificent7.json", "etf.json"]
+    },
+    "slickcharts-monthly.yml": {
+      "schedule": "8:00 UTC 1st",
+      "files": ["*-returns.json", "*-performance.json", "*-yield.json", "*-analysis.json"]
+    },
+    "slickcharts-symbols.yml": {
+      "schedule": "7:30 UTC Monday",
+      "files": ["symbols-all.json", "stocks/*.json"]
+    }
+  },
+
+  "file_categories": {
+    "index_holdings": {
+      "update": "weekly",
+      "files": {
+        "sp500.json": {"description": "S&P 500 constituents", "stock_count": 503},
+        "nasdaq100.json": {"description": "Nasdaq 100 constituents", "stock_count": 102},
+        "dowjones.json": {"description": "Dow Jones 30 constituents", "stock_count": 30}
+      },
+      "schema": {
+        "data[]": {
+          "rank": "number",
+          "symbol": "string",
+          "company": "string",
+          "weight": "number (percent)",
+          "price": "number",
+          "change": "number (percent)",
+          "sector": "string (sp500 only)"
+        }
+      }
+    },
+    "index_returns": {
+      "update": "monthly",
+      "files": {
+        "sp500-returns.json": {"description": "S&P 500 annual returns", "years": 97},
+        "nasdaq100-returns.json": {"description": "Nasdaq 100 annual returns", "years": 41},
+        "dowjones-returns.json": {"description": "Dow Jones annual returns", "years": 141}
+      },
+      "schema": {
+        "data[]": {
+          "year": "number",
+          "return": "number (percent)",
+          "price": "number (optional)"
+        }
+      }
+    },
+    "daily_movers": {
+      "update": "daily (cumulative 90-day)",
+      "files": {
+        "gainers.json": {"description": "Top daily gainers", "size_kb": 506},
+        "losers.json": {"description": "Top daily losers", "size_kb": 450}
+      },
+      "schema": {
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "movers[]": {
+            "rank": "number",
+            "symbol": "string",
+            "company": "string",
+            "price": "number",
+            "change": "number (percent)"
+          }
+        }
+      }
+    },
+    "rates": {
+      "update": "daily",
+      "files": {
+        "treasury.json": {"description": "14 treasury maturities"},
+        "mortgage.json": {"description": "Mortgage rates (cumulative)"},
+        "inflation.json": {"description": "Inflation data"}
+      },
+      "schema": {
+        "treasury.json": {
+          "date": "YYYY-MM-DD",
+          "rates.{maturity}": "number (e.g., 1m, 3m, 6m, 1y, 2y, 5y, 10y, 30y)"
+        }
+      }
+    },
+    "crypto": {
+      "update": "daily/monthly",
+      "files": {
+        "currency.json": {"description": "Top 100 cryptos", "update": "daily"},
+        "btc-returns.json": {"description": "Bitcoin annual returns", "years": 13},
+        "eth-returns.json": {"description": "Ethereum annual returns", "years": 10}
+      }
+    },
+    "individual_stocks": {
+      "update": "weekly/monthly",
+      "files": {
+        "universe.json": {"description": "All 516 tickers from indices"},
+        "symbols-all.json": {"description": "Current metrics for all stocks"},
+        "stocks-returns.json": {"description": "47-year annual returns all stocks"},
+        "stocks-dividends.json": {"description": "13-year dividend history"},
+        "stocks-dividends-recent.json": {"description": "Recent 5 years (2021+)"},
+        "stocks-dividends-historical.json": {"description": "Historical (pre-2021)"},
+        "membership-changes.json": {"description": "Index composition changes"}
+      }
+    },
+    "individual_stock_files": {
+      "location": "stocks/",
+      "file_count": 516,
+      "update": "weekly",
+      "schema": {
+        "symbol": "string",
+        "company": "string",
+        "updated": "ISO timestamp",
+        "current": {
+          "price": "number",
+          "pe_trailing": "number",
+          "pe_forward": "number",
+          "eps_trailing": "number",
+          "dividend_yield": "number (percent)",
+          "market_cap_billions": "number"
+        },
+        "metrics_history[]": {
+          "date": "YYYY-MM-DD",
+          "price": "number",
+          "pe": "number",
+          "eps": "number"
+        },
+        "returns[]": {
+          "year": "number",
+          "return": "number (percent)"
+        },
+        "dividends[]": {
+          "amount": "number",
+          "exDate": "YYYY-MM-DD",
+          "payDate": "YYYY-MM-DD"
+        }
+      }
+    }
+  },
+
+  "breaking_changes_history": [
+    {"version": "2.1.0", "date": "2026-01-17", "change": "516 individual stock files in stocks/ subfolder"},
+    {"version": "2.0.0", "date": "2026-01-10", "change": "stocks-dividends split into recent/historical"},
+    {"version": "1.5.0", "date": "2026-01-09", "change": "32 scrapers complete"},
+    {"version": "1.0.0", "date": "2026-01-05", "change": "Initial 10 scrapers"}
+  ]
+}

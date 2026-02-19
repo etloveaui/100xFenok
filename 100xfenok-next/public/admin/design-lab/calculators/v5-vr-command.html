@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Calculator v5 - Strategic Command</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#f3f4f6',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --nav-height: 60px; }
+        body { background-color: #f3f4f6; font-family: 'Noto Sans KR', sans-serif; color: #1f2937; }
+        .mono { font-family: 'Roboto Mono', monospace; }
+
+        /* Nav (1-Tier EDGY - Static) */
+        .nav-edgy {
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 2px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(90deg, #010079 0%, #D5AD36 50%, #010079 100%);
+            background-origin: border-box; background-clip: padding-box, border-box;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem;
+        }
+
+        /* Bento Grid */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, minmax(140px, auto));
+            gap: 1rem;
+            max-width: 1400px; margin: 0 auto; padding: 2rem 1rem;
+        }
+        @media (max-width: 1024px) { .bento-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; } }
+        @media (max-width: 640px) { .bento-grid { grid-template-columns: 1fr; } }
+
+        .bento-card {
+            background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 1.5rem;
+            display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .bento-card.dark { background: #1f2937; color: white; border: none; }
+        .bento-card.highlight { background: #eff6ff; border-color: #bfdbfe; }
+
+        /* Elements */
+        .label-sm { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em; }
+        .value-xl { font-size: 2rem; font-weight: 800; line-height: 1; }
+        
+        .grid-span-2 { grid-column: span 2; }
+        .grid-row-2 { grid-row: span 2; }
+
+        /* Action List */
+        .action-list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.75rem; background: #f9fafb; border-radius: 8px; margin-bottom: 0.5rem;
+            border-left: 4px solid transparent;
+        }
+        .action-list-item.buy { border-left-color: #10b981; }
+        .action-list-item.sell { border-left-color: #ef4444; }
+        .action-list-item:hover { background: #f3f4f6; }
+
+        /* Chart Placeholder */
+        .mini-chart {
+            width: 100%; height: 60px; background: #f3f4f6; border-radius: 8px; margin-top: 1rem;
+            display: flex; align-items: end; gap: 4px; padding: 0 4px 4px 4px;
+        }
+        .chart-bar { flex: 1; background: #cbd5e1; border-radius: 2px; }
+        .chart-bar.active { background: #3b82f6; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <nav class="sticky top-0 z-50 nav-edgy shadow-sm">
+        <div class="flex items-center gap-3">
+            <span class="font-[800] text-slate-800 text-lg mono">100xFenok_VR</span>
+        </div>
+        <div class="flex gap-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <span>Strategic Command v5</span>
+        </div>
+    </nav>
+
+    <main class="bento-grid">
+        
+        <!-- 1. Main Status (Dark) -->
+        <div class="bento-card dark grid-span-2">
+            <div class="flex justify-between items-start">
+                <p class="label-sm text-slate-400">Current V-Value</p>
+                <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">ON TRACK</span>
+            </div>
+            <p class="value-xl mono mt-2">$18,300.00</p>
+            <div class="mt-4 flex gap-4 text-sm text-slate-400">
+                <span>Target: <span class="text-white font-bold">$19,450</span></span>
+                <span>•</span>
+                <span>Remaining: <span class="text-white font-bold">14 Days</span></span>
+            </div>
+        </div>
+
+        <!-- 2. Pool Tank -->
+        <div class="bento-card highlight">
+            <p class="label-sm text-blue-400">Pool Reserve</p>
+            <p class="text-2xl font-bold text-blue-900 mt-1">$2,000</p>
+            <div class="w-full bg-blue-200 h-2 rounded-full mt-auto overflow-hidden">
+                <div class="bg-blue-600 h-full w-[45%]"></div>
+            </div>
+            <p class="text-xs text-blue-600 mt-2 font-bold text-right">45% Full</p>
+        </div>
+
+        <!-- 3. Shares -->
+        <div class="bento-card">
+            <p class="label-sm">Shares Held</p>
+            <p class="text-2xl font-bold text-slate-800 mt-1">300 Qty</p>
+            <p class="text-xs text-slate-500 mt-1">Avg: $55.20</p>
+            <div class="mini-chart">
+                <div class="chart-bar" style="height: 40%"></div>
+                <div class="chart-bar" style="height: 50%"></div>
+                <div class="chart-bar active" style="height: 70%"></div>
+                <div class="chart-bar" style="height: 60%"></div>
+                <div class="chart-bar" style="height: 80%"></div>
+            </div>
+        </div>
+
+        <!-- 4. Action Grid (Large) -->
+        <div class="bento-card grid-span-2 grid-row-2">
+            <div class="flex justify-between items-center mb-4">
+                <p class="label-sm">Strategic Orders (Today)</p>
+                <button class="text-xs bg-slate-100 px-3 py-1 rounded font-bold hover:bg-slate-200">Export</button>
+            </div>
+            
+            <div class="space-y-2 overflow-y-auto h-full pr-2">
+                <div class="action-list-item buy">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-green-100 text-green-700 w-8 h-8 rounded flex items-center justify-center font-bold text-xs">B1</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-700">LOC Buy</p>
+                            <p class="text-xs text-slate-500">Limit $55.10</p>
+                        </div>
+                    </div>
+                    <span class="font-mono font-bold text-slate-800">1 Qty</span>
+                </div>
+                <div class="action-list-item buy">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-green-100 text-green-700 w-8 h-8 rounded flex items-center justify-center font-bold text-xs">B2</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-700">LOC Buy</p>
+                            <p class="text-xs text-slate-500">Limit $52.40</p>
+                        </div>
+                    </div>
+                    <span class="font-mono font-bold text-slate-800">1 Qty</span>
+                </div>
+                
+                <div class="my-4 border-t border-dashed border-slate-200 text-center">
+                    <span class="bg-white px-2 text-xs text-slate-400 font-bold relative top-[-10px]">Current Price $62.00</span>
+                </div>
+
+                <div class="action-list-item sell">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-red-100 text-red-700 w-8 h-8 rounded flex items-center justify-center font-bold text-xs">S1</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-700">LOC Sell</p>
+                            <p class="text-xs text-slate-500">Limit $74.50</p>
+                        </div>
+                    </div>
+                    <span class="font-mono font-bold text-slate-800">1 Qty</span>
+                </div>
+                 <div class="action-list-item sell">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-red-100 text-red-700 w-8 h-8 rounded flex items-center justify-center font-bold text-xs">S2</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-700">LOC Sell</p>
+                            <p class="text-xs text-slate-500">Limit $78.20</p>
+                        </div>
+                    </div>
+                    <span class="font-mono font-bold text-slate-800">1 Qty</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Min Band -->
+        <div class="bento-card bg-red-50 border-red-100">
+            <p class="label-sm text-red-400">Min Band</p>
+            <p class="text-xl font-bold text-red-900 mt-1 mono">$16,532</p>
+            <p class="text-xs text-red-400 mt-2">Defensive Line</p>
+        </div>
+
+        <!-- 6. Max Band -->
+        <div class="bento-card bg-green-50 border-green-100">
+            <p class="label-sm text-green-500">Max Band</p>
+            <p class="text-xl font-bold text-green-900 mt-1 mono">$22,367</p>
+            <p class="text-xs text-green-500 mt-2">Profit Target</p>
+        </div>
+
+        <!-- 7. G-Value Config -->
+        <div class="bento-card grid-span-2">
+            <div class="flex justify-between items-center mb-2">
+                <p class="label-sm">Gradient (G-Value)</p>
+                <span class="font-bold text-slate-800">10</span>
+            </div>
+            <input type="range" min="1" max="50" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-navy">
+            <p class="text-xs text-slate-400 mt-2">Higher G = More conservative accumulation.</p>
+        </div>
+
+    </main>
+
+</body>
+</html>

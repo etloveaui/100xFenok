@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v5: Unified Premium - Market Wrap</title>
+    <meta name="description" content="100x Market Wrap - Professional Insight">
+    <meta name="theme-color" content="#010079">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#010079',
+                            gold: '#D5AD36',
+                            interactive: '#1B73D3',
+                            bg: '#fdfbf7'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+Pro:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <script type="module" src="../../../initBaseHref.js"></script>
+    <style>
+        :root {
+            --brand-navy: #010079;
+            --brand-gold: #D5AD36;
+            --brand-interactive: #1B73D3;
+            --paper-bg: #fdfbf7;
+            --nav-height: 60px;
+            --footer-height: 48px;
+            --touch-target: 44px;
+        }
+
+        body {
+            background-color: var(--paper-bg);
+            color: #1e293b;
+            font-family: 'Source Sans Pro', 'Noto Sans KR', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Typography */
+        h1, h2, h3 { font-family: 'Playfair Display', 'Noto Sans KR', serif; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Focus Visible */
+        *:focus-visible {
+            outline: 2px solid var(--brand-gold);
+            outline-offset: 2px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Nav 1-Tier EDGY (확정 버전)
+           ═══════════════════════════════════════════════════════════════ */
+        .nav-edgy {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 2px solid transparent;
+            background-image: linear-gradient(white, white),
+                              linear-gradient(90deg, var(--brand-navy) 0%, var(--brand-gold) 50%, var(--brand-navy) 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .nav-pills-edgy {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .nav-pill-edgy {
+            position: relative;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.025em;
+            color: #475569;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .nav-pill-edgy:hover {
+            transform: translateY(-2px);
+            color: #1e293b;
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border-color: var(--brand-gold);
+            box-shadow: 0 4px 12px rgba(213, 173, 54, 0.2);
+        }
+        .nav-pill-edgy.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #0a0a8c 100%);
+            border-color: var(--brand-gold);
+            box-shadow: 0 0 0 1px var(--brand-gold), 0 4px 16px rgba(1, 0, 121, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .nav-pills-edgy { display: none; }
+        }
+
+        /* Dropdown Menu System */
+        .nav-dropdown { position: relative; }
+        .nav-dropdown-content {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.95);
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            overflow: hidden;
+        }
+        .nav-dropdown-content::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            border-top: 1px solid #e2e8f0;
+        }
+        .nav-dropdown.open .nav-dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) scale(1);
+        }
+        .nav-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .nav-dropdown-item:last-child { border-bottom: none; }
+        .nav-dropdown-item:hover {
+            background: linear-gradient(90deg, #f8fafc 0%, #fff 100%);
+            color: var(--brand-navy);
+            padding-left: 1.25rem;
+        }
+        .nav-dropdown-item i { width: 16px; color: #94a3b8; transition: color 0.15s; }
+        .nav-dropdown-item:hover i { color: var(--brand-gold); }
+        .nav-dropdown-header {
+            padding: 0.5rem 1rem;
+            font-size: 0.625rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* Hamburger Button (Mobile) */
+        .hamburger-btn {
+            display: none;
+            width: var(--touch-target);
+            height: var(--touch-target);
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        .hamburger-btn:hover { background: #e2e8f0; }
+        @media (max-width: 1024px) {
+            .hamburger-btn { display: flex; }
+        }
+
+        /* Mobile Nav Panel */
+        .mobile-nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .mobile-nav-overlay.open { opacity: 1; pointer-events: auto; }
+        .mobile-nav-panel {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            z-index: 100;
+            transition: left 0.3s ease;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        .mobile-nav-panel.open { left: 0; }
+        .mobile-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+            min-height: var(--touch-target);
+        }
+        .mobile-nav-item:hover { background: #f8fafc; }
+        .mobile-nav-item.active { background: var(--brand-navy); color: white; }
+
+        /* Search */
+        .search-edgy {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            cursor: pointer;
+            min-height: var(--touch-target);
+            transition: all 0.2s;
+        }
+        .search-edgy:hover {
+            border-color: var(--brand-gold);
+            box-shadow: 0 2px 8px rgba(213, 173, 54, 0.15);
+        }
+        .search-btn-mobile {
+            display: none;
+            width: var(--touch-target);
+            height: var(--touch-target);
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+        @media (max-width: 1024px) {
+            .search-btn-mobile { display: flex; }
+            .search-edgy { display: none !important; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Content Styles (v3.1 기반)
+           ═══════════════════════════════════════════════════════════════ */
+        .double-border {
+            border-top: 4px solid var(--brand-navy);
+            border-bottom: 1px solid var(--brand-gold);
+        }
+
+        .item-border-top {
+            border-top: 2px solid #1e293b;
+            padding-top: 1rem;
+        }
+
+        .hover-underline::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            transform: scaleX(0);
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--brand-gold);
+            transform-origin: bottom right;
+            transition: transform 0.25s ease-out;
+        }
+        .hover-underline:hover::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+        .loader {
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid var(--brand-navy);
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Footer v21 (확정 버전)
+           ═══════════════════════════════════════════════════════════════ */
+        .footer-ticker-scroll {
+            display: flex;
+            animation: footerTicker 12s linear infinite;
+        }
+        @keyframes footerTicker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .glow-bar {
+            box-shadow: 0 0 15px rgba(1, 0, 121, 0.25);
+        }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .toast-animate { animation: toast-in 0.3s ease-out; }
+
+        /* Market status colors */
+        .market-regular { background: linear-gradient(135deg, #10b981, #059669); }
+        .market-pre { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .market-after { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .market-overnight { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .market-closed { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+        /* Admin modal */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Footer 여백 확보 */
+        main { padding-bottom: 80px; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-nav-overlay" id="mobileOverlay" onclick="closeMobileNav()" aria-hidden="true"></div>
+
+    <!-- Mobile Navigation Panel -->
+    <nav class="mobile-nav-panel" id="mobileNavPanel" role="navigation" aria-label="Mobile navigation">
+        <div class="p-4 border-b border-slate-200 flex justify-between items-center">
+            <span class="font-bold text-lg orbitron text-brand-navy">Menu</span>
+            <button onclick="closeMobileNav()" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100" aria-label="Close menu">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <a href="#" class="mobile-nav-item" tabindex="0"><i class="fas fa-chart-pie w-6 mr-3"></i> Dashboard</a>
+        <a href="#" class="mobile-nav-item" tabindex="0"><i class="fas fa-satellite-dish w-6 mr-3"></i> Market Radar</a>
+        <a href="#" class="mobile-nav-item active" tabindex="0"><i class="fas fa-file-alt w-6 mr-3"></i> Reports</a>
+        <a href="#" class="mobile-nav-item" tabindex="0"><i class="fas fa-calculator w-6 mr-3"></i> Valuation Lab</a>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Nav 1-Tier EDGY (확정 버전 + 드롭다운)
+         ═══════════════════════════════════════════════════════════════ -->
+    <nav class="nav-edgy sticky top-0 z-50 shadow-lg" role="navigation" aria-label="Main navigation">
+
+        <!-- Brand Section -->
+        <div class="flex items-center gap-3">
+            <!-- Hamburger (Mobile) -->
+            <button class="hamburger-btn" onclick="openMobileNav()" aria-label="Open menu">
+                <i class="fas fa-bars text-lg text-slate-600"></i>
+            </button>
+
+            <a href="#" class="flex items-center gap-3" aria-label="100x FENOK Home">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md border border-slate-100">
+                    <span class="orbitron text-brand-navy font-black text-sm">100x</span>
+                </div>
+                <span class="hidden sm:block font-[900] orbitron text-slate-800 text-lg">
+                    100x <span class="text-brand-gold">FENOK</span>
+                </span>
+            </a>
+        </div>
+
+        <!-- Menu Pills (Desktop) - 드롭다운 시스템 -->
+        <div class="nav-pills-edgy" role="tablist">
+            <!-- Dashboard -->
+            <div class="nav-dropdown">
+                <button class="nav-pill-edgy" onclick="toggleDropdown(this)">
+                    <i class="fas fa-chart-line mr-2 text-xs opacity-70"></i>Dashboard
+                    <i class="fas fa-chevron-down ml-1.5 text-[10px] opacity-50"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <div class="nav-dropdown-header">Dashboard</div>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-home"></i>Overview</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-chart-bar"></i>Analytics</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-file-alt"></i>Reports</a>
+                </div>
+            </div>
+
+            <!-- Market Radar -->
+            <div class="nav-dropdown">
+                <button class="nav-pill-edgy" onclick="toggleDropdown(this)">
+                    <i class="fas fa-satellite-dish mr-2 text-xs opacity-70"></i>Market Radar
+                    <i class="fas fa-chevron-down ml-1.5 text-[10px] opacity-50"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <div class="nav-dropdown-header">Market Radar</div>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-heartbeat"></i>Fear & Greed</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-th"></i>Sectors</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-water"></i>Liquidity</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-brain"></i>Sentiment</a>
+                </div>
+            </div>
+
+            <!-- Reports (Active) -->
+            <div class="nav-dropdown">
+                <button class="nav-pill-edgy active" onclick="toggleDropdown(this)">
+                    <i class="fas fa-newspaper mr-2 text-xs opacity-70"></i>Reports
+                    <i class="fas fa-chevron-down ml-1.5 text-[10px] opacity-50"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <div class="nav-dropdown-header">Reports</div>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-globe"></i>Market Wrap</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-search"></i>Alpha Scout</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-archive"></i>Archive</a>
+                </div>
+            </div>
+
+            <!-- Valuation Lab -->
+            <div class="nav-dropdown">
+                <button class="nav-pill-edgy" onclick="toggleDropdown(this)">
+                    <i class="fas fa-calculator mr-2 text-xs opacity-70"></i>Valuation Lab
+                    <i class="fas fa-chevron-down ml-1.5 text-[10px] opacity-50"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <div class="nav-dropdown-header">Valuation Lab</div>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-percent"></i>DCF Model</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-balance-scale"></i>Comparables</a>
+                    <a href="#" class="nav-dropdown-item"><i class="fas fa-code-branch"></i>Scenarios</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="flex items-center gap-2">
+            <button class="search-btn-mobile" onclick="openSearchModal()" aria-label="Open search">
+                <i class="fas fa-search text-slate-600"></i>
+            </button>
+            <div class="search-edgy hidden md:flex" onclick="openSearchModal()" role="button" tabindex="0" aria-label="Search">
+                <i class="fas fa-search"></i>
+                <span>Search...</span>
+                <span class="text-[10px] px-1.5 py-0.5 bg-white rounded border border-slate-200">⌘K</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Content Header (브랜드 컬러 적용)
+         ═══════════════════════════════════════════════════════════════ -->
+    <header class="bg-white double-border py-6 mb-8">
+        <div class="container mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <div class="text-[10px] font-bold tracking-[0.2em] text-brand-gold uppercase mb-1">Weekly Intelligence</div>
+                <h1 class="text-3xl md:text-4xl font-black text-brand-navy tracking-tight leading-none">MARKET WRAP</h1>
+            </div>
+            <div class="hidden md:block h-8 w-px bg-slate-200 mx-4"></div>
+            <div class="text-sm font-semibold text-slate-500 text-center md:text-right">
+                <p>100xFenok Original Series</p>
+                <p class="text-xs text-slate-400 font-normal mt-0.5">Global Macro & Asset Allocation</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Main Content
+         ═══════════════════════════════════════════════════════════════ -->
+    <main class="container mx-auto px-4 md:px-6 max-w-6xl flex-grow">
+
+        <!-- Featured Report -->
+        <section id="featured-reports" class="mb-12">
+            <div id="featured-grid">
+                <div class="flex justify-center py-12"><div class="loader"></div></div>
+            </div>
+        </section>
+
+        <!-- Archive Grid -->
+        <section id="report-archive" class="py-8">
+            <div class="flex items-center gap-4 mb-8">
+                <h2 class="text-2xl font-bold text-brand-navy italic">Archive</h2>
+                <div class="h-px bg-brand-navy flex-grow opacity-20"></div>
+            </div>
+
+            <div id="archive-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+                <div class="col-span-full flex justify-center py-8"><div class="loader"></div></div>
+            </div>
+
+            <nav id="pagination-container" aria-label="Page navigation" class="flex justify-center mt-16 pt-8 border-t border-slate-200">
+            </nav>
+        </section>
+
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 bg-brand-navy text-white text-sm font-medium rounded-lg shadow-lg hidden z-50"></div>
+
+    <!-- Admin Password Modal -->
+    <div id="admin-modal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-80 max-w-[90vw]">
+            <h3 class="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
+                <i class="fas fa-lock text-brand-interactive"></i>
+                관리자 인증
+            </h3>
+            <input
+                type="password"
+                id="admin-password"
+                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-interactive mb-4"
+                placeholder="비밀번호 입력"
+                onkeydown="if(event.key==='Enter') checkAdminPassword()"
+            >
+            <div class="flex gap-2">
+                <button class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors" onclick="closeAdminModal()">취소</button>
+                <button class="flex-1 px-4 py-2 bg-brand-interactive hover:bg-brand-navy text-white rounded-lg font-medium transition-colors" onclick="checkAdminPassword()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Footer v21: Broadcast HUD Pro (확정 버전)
+         ═══════════════════════════════════════════════════════════════ -->
+    <footer class="fixed bottom-0 left-0 right-0 z-40">
+        <!-- Upper Ticker Bar - Desktop Only -->
+        <div class="hidden md:block bg-gradient-to-r from-brand-navy via-brand-interactive to-brand-navy glow-bar overflow-hidden">
+            <div class="h-6 flex items-center px-4">
+                <!-- Left: LIVE Badge -->
+                <div class="flex items-center gap-1.5 flex-shrink-0 mr-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                    <span class="text-[9px] font-bold text-white uppercase">LIVE</span>
+                </div>
+
+                <!-- Center: Data Ticker -->
+                <div class="flex-1 overflow-hidden">
+                    <div class="footer-ticker-scroll">
+                        <div class="flex items-center gap-3 text-[10px] font-medium text-white/90 whitespace-nowrap">
+                            <span class="text-green-300 font-semibold">SPY +1.24%</span>
+                            <span class="text-white/40">•</span>
+                            <span class="text-brand-gold font-semibold">BTC $98,432</span>
+                            <span class="text-white/40">•</span>
+                            <span>VIX <span class="text-cyan-300">14.2</span></span>
+                            <span class="text-white/40">•</span>
+                            <span>FEAR <span class="text-orange-300">72</span></span>
+                            <span class="text-white/30 mx-3">───</span>
+                            <!-- Duplicate for seamless scroll -->
+                            <span class="text-green-300 font-semibold">SPY +1.24%</span>
+                            <span class="text-white/40">•</span>
+                            <span class="text-brand-gold font-semibold">BTC $98,432</span>
+                            <span class="text-white/40">•</span>
+                            <span>VIX <span class="text-cyan-300">14.2</span></span>
+                            <span class="text-white/40">•</span>
+                            <span>FEAR <span class="text-orange-300">72</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Market Status Badge -->
+                <button
+                    id="market-badge"
+                    class="px-2.5 py-1 rounded text-white text-[10px] font-bold tracking-wide shadow-sm transition-all duration-200 hover:scale-105 hover:brightness-110 ml-3 flex-shrink-0"
+                    onclick="showMarketInfo()"
+                    aria-label="장 상태"
+                >
+                    <span id="market-text">MARKET OPEN</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Bar -->
+        <div class="bg-white/95 backdrop-blur-md border-t border-brand-navy/20 shadow-[0_-6px_20px_rgba(0,0,0,0.08)]">
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="h-12 flex items-center justify-between gap-3">
+
+                    <!-- Left: Brand -->
+                    <button class="flex items-center gap-2 group cursor-pointer min-w-0" onclick="copyUrl()" aria-label="URL 복사">
+                        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-navy/10 to-brand-interactive/10 flex items-center justify-center text-brand-navy group-hover:from-brand-navy group-hover:to-brand-interactive group-hover:text-white transition-all duration-300 flex-shrink-0">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="hidden sm:flex flex-col">
+                            <span class="font-[800] orbitron text-slate-800 text-sm group-hover:text-brand-interactive transition-colors leading-none">
+                                100x <span class="text-brand-gold">FENOK</span>
+                            </span>
+                            <span class="text-[8px] text-slate-400">© 2025 All rights reserved</span>
+                        </div>
+                    </button>
+
+                    <!-- Center: Disclaimer / Mobile Market Badge -->
+                    <div class="flex-1 flex justify-center min-w-0">
+                        <p class="hidden md:block text-[11px] text-slate-600 truncate max-w-[400px]">
+                            모든 정보는 투자 참고용이지만, <span class="font-bold text-slate-800">손실 나면 니 탓</span> <span class="font-bold text-brand-gold">수익 나면 내 탓</span>
+                        </p>
+                        <!-- Mobile: Market Status Badge -->
+                        <button
+                            id="market-badge-mobile"
+                            class="md:hidden px-3 py-1.5 rounded text-white text-[10px] font-bold tracking-wide shadow-sm"
+                            onclick="showMarketInfo()"
+                        >
+                            <span id="market-text-mobile">MARKET OPEN</span>
+                        </button>
+                    </div>
+
+                    <!-- Right: Utility Buttons -->
+                    <div class="flex items-center gap-1.5">
+                        <button class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200" onclick="showToast('알림 없음')" aria-label="알림">
+                            <i class="fas fa-bell text-sm"></i>
+                        </button>
+                        <button class="hidden sm:flex w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200" onclick="openAdminModal()" aria-label="관리자">
+                            <i class="fas fa-cog text-sm"></i>
+                        </button>
+                        <button class="hidden sm:flex w-9 h-9 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200" onclick="showToast('도움말: 100xFenok 시장 모니터링 도구')" aria-label="도움말">
+                            <i class="fas fa-question text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Scripts
+         ═══════════════════════════════════════════════════════════════ -->
+    <script>
+        // ===== Mobile Navigation =====
+        function openMobileNav() {
+            document.getElementById('mobileNavPanel').classList.add('open');
+            document.getElementById('mobileOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMobileNav() {
+            document.getElementById('mobileNavPanel').classList.remove('open');
+            document.getElementById('mobileOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // ===== Search Modal =====
+        function openSearchModal() {
+            showToast('검색 기능 준비 중...');
+        }
+
+        // ===== Nav Dropdown System =====
+        function toggleDropdown(btn) {
+            const dropdown = btn.closest('.nav-dropdown');
+            const wasOpen = dropdown.classList.contains('open');
+            document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+            if (!wasOpen) dropdown.classList.add('open');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+            }
+        });
+
+        // ===== Footer v21: 미국 장 시간 동기화 =====
+        function isDST(date) {
+            const year = date.getFullYear();
+            const marchFirst = new Date(year, 2, 1);
+            const dstStart = new Date(year, 2, 8 + (7 - marchFirst.getDay()) % 7);
+            const novFirst = new Date(year, 10, 1);
+            const dstEnd = new Date(year, 10, 1 + (7 - novFirst.getDay()) % 7);
+            return date >= dstStart && date < dstEnd;
+        }
+
+        function getETTime() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const offset = isDST(now) ? -4 : -5;
+            return new Date(utc + (3600000 * offset));
+        }
+
+        function getMarketStatus() {
+            const et = getETTime();
+            const day = et.getDay();
+            const hours = et.getHours();
+            const minutes = et.getMinutes();
+            const time = hours * 100 + minutes;
+
+            if (day === 0 || day === 6) {
+                return { status: 'closed', text: 'MARKET CLOSED', class: 'market-closed' };
+            }
+
+            if (time >= 400 && time < 930) {
+                return { status: 'pre', text: 'MARKET PRE', class: 'market-pre' };
+            } else if (time >= 930 && time < 1600) {
+                return { status: 'regular', text: 'MARKET OPEN', class: 'market-regular' };
+            } else if (time >= 1600 && time < 2000) {
+                return { status: 'after', text: 'MARKET AFTER', class: 'market-after' };
+            } else {
+                return { status: 'overnight', text: 'MARKET NIGHT', class: 'market-overnight' };
+            }
+        }
+
+        function updateMarketStatus() {
+            const market = getMarketStatus();
+
+            const badge = document.getElementById('market-badge');
+            const text = document.getElementById('market-text');
+            if (badge && text) {
+                text.textContent = market.text;
+                badge.className = badge.className.replace(/market-\w+/g, '');
+                badge.classList.add(market.class);
+            }
+
+            const badgeMobile = document.getElementById('market-badge-mobile');
+            const textMobile = document.getElementById('market-text-mobile');
+            if (badgeMobile && textMobile) {
+                textMobile.textContent = market.text;
+                badgeMobile.className = badgeMobile.className.replace(/market-\w+/g, '');
+                badgeMobile.classList.add(market.class);
+            }
+        }
+
+        function showMarketInfo() {
+            const et = getETTime();
+            const market = getMarketStatus();
+            const dst = isDST(new Date()) ? 'DST' : 'EST';
+            const etTime = et.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            showToast(`${market.text} | ET ${etTime} (${dst})`);
+        }
+
+        updateMarketStatus();
+        setInterval(updateMarketStatus, 60000);
+
+        // ===== Admin Modal =====
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            document.getElementById('admin-password').value = '';
+            document.getElementById('admin-password').focus();
+        }
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+        function checkAdminPassword() {
+            const password = document.getElementById('admin-password').value;
+            if (password === '100x') {
+                closeAdminModal();
+                showToast('관리자 인증 성공! 이동 중...');
+                setTimeout(() => { window.location.href = '../../index.html'; }, 1000);
+            } else {
+                showToast('비밀번호가 틀렸습니다');
+                document.getElementById('admin-password').value = '';
+                document.getElementById('admin-password').focus();
+            }
+        }
+
+        document.getElementById('admin-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeAdminModal();
+        });
+
+        // ===== Utilities =====
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add('toast-animate');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('toast-animate');
+            }, 2500);
+        }
+
+        function copyUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('URL 복사 완료!');
+            });
+        }
+
+        // ===== Keyboard Shortcuts =====
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                openSearchModal();
+            }
+            if (e.key === 'Escape') {
+                closeMobileNav();
+                closeAdminModal();
+                document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+            }
+        });
+
+        // ===== Reports Data Loading =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const BASE_HREF = window.baseHref || '../../../';
+            const DATA_FOLDER_PATH = `${BASE_HREF}100x/data/`;
+            const METADATA_PATH = `${DATA_FOLDER_PATH}metadata/`;
+            const INDEX_PATH = `${DATA_FOLDER_PATH}reports-index.json`;
+            const ITEMS_PER_PAGE = 9;
+
+            const featuredGrid = document.getElementById('featured-grid');
+            const archiveGrid = document.getElementById('archive-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+
+            let reportIndex = [];
+            let featuredFilenames = [];
+            let archiveFilenames = [];
+            let totalPages = 0;
+            let currentPage = 1;
+
+            function parseDate(dateString) {
+                if (!dateString) return '';
+                if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) return dateString;
+                return dateString.replace(/년|월|일/g, '.');
+            }
+
+            async function initialize() {
+                try {
+                    const response = await fetch(INDEX_PATH);
+                    if (!response.ok) throw new Error('Index load failed');
+                    reportIndex = await response.json();
+
+                    featuredFilenames = reportIndex.slice(0, 1);
+                    archiveFilenames = reportIndex.slice(1);
+                    totalPages = Math.ceil(archiveFilenames.length / ITEMS_PER_PAGE);
+
+                    await renderFeatured(featuredFilenames);
+                    await showArchivePage(1);
+                } catch (error) {
+                    console.error(error);
+                    featuredGrid.innerHTML = '<p class="text-center text-slate-400 py-12">리포트를 불러올 수 없습니다.</p>';
+                    archiveGrid.innerHTML = '';
+                }
+            }
+
+            async function renderFeatured(filenames) {
+                if (!featuredGrid || filenames.length === 0) return;
+                try {
+                    const requests = filenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+                    const latest = reports[0];
+
+                    if (latest) {
+                        featuredGrid.innerHTML = `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                                <div class="lg:col-span-8">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <span class="bg-brand-navy text-white text-xs font-bold px-2 py-1 rounded">LATEST</span>
+                                        <span class="text-sm font-bold text-brand-gold uppercase">${latest.date}</span>
+                                    </div>
+                                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-brand-navy mb-6 leading-tight hover:text-brand-gold transition-colors cursor-pointer">
+                                        <a href="#" data-path="${latest.path}" class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold">${latest.title}</a>
+                                    </h2>
+                                    <p class="text-lg md:text-xl text-slate-700 leading-relaxed mb-6 border-l-4 border-brand-gold pl-6">${latest.summary}</p>
+                                    <a href="#" data-path="${latest.path}" class="inline-flex items-center gap-2 text-brand-navy font-bold border-b-2 border-brand-navy hover:bg-brand-navy hover:text-white transition-all px-2 py-1 min-h-[44px]">
+                                        READ FULL REPORT <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                                <div class="lg:col-span-4 bg-white p-6 border border-slate-200 shadow-sm rounded-lg">
+                                    <h3 class="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">In This Issue</h3>
+                                    <div class="space-y-4">
+                                        ${latest.keywords.map(k => `
+                                            <div class="flex items-center gap-3 group cursor-pointer min-h-[44px]">
+                                                <div class="w-2 h-2 bg-brand-gold rounded-full group-hover:scale-150 transition-transform"></div>
+                                                <span class="text-sm font-semibold text-slate-700 group-hover:text-brand-navy">${k.name} Analysis</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <div class="mt-6 pt-4 border-t border-slate-100">
+                                        <span class="text-xs text-slate-400">Published by 100xFenok AI</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) { console.error(error); }
+            }
+
+            async function showArchivePage(page) {
+                currentPage = page;
+                const startIndex = (page - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const pageFilenames = archiveFilenames.slice(startIndex, endIndex);
+
+                try {
+                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+
+                    let archiveHTML = '';
+                    reports.forEach(report => {
+                        const displayDate = parseDate(report.date);
+                        archiveHTML += `
+                            <article class="group flex flex-col h-full item-border-top hover:border-brand-gold transition-colors duration-300">
+                                <div class="mb-3 flex justify-between items-baseline">
+                                    <span class="text-xs font-bold text-brand-gold">${displayDate}</span>
+                                    ${report.keywords[0] ? `<span class="text-[10px] font-bold text-slate-400 uppercase">${report.keywords[0].name}</span>` : ''}
+                                </div>
+                                <h3 class="text-xl md:text-2xl font-bold text-brand-navy leading-tight mb-3 group-hover:text-brand-gold transition-colors">
+                                    <a href="#" data-path="${report.path}" class="relative hover-underline focus-visible:outline-none">${report.title}</a>
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-3">${report.summary || ''}</p>
+                            </article>`;
+                    });
+                    archiveGrid.innerHTML = archiveHTML || '<p class="col-span-full text-center text-slate-400">아카이브가 없습니다.</p>';
+                } catch (error) { console.error(error); }
+
+                renderPaginationControls();
+                setupDynamicLinks();
+            }
+
+            function renderPaginationControls() {
+                if (totalPages <= 1) { paginationContainer.innerHTML = ''; return; }
+
+                let paginationHTML = '<div class="flex gap-2">';
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    const style = isActive
+                        ? 'w-10 h-10 flex items-center justify-center bg-brand-navy text-white font-bold rounded'
+                        : 'w-10 h-10 flex items-center justify-center bg-white text-slate-500 border border-slate-200 hover:border-brand-gold hover:text-brand-navy transition-colors rounded';
+                    paginationHTML += `<a href="#" data-page="${i}" class="${style}" aria-label="Page ${i}">${i}</a>`;
+                }
+                paginationHTML += '</div>';
+                paginationContainer.innerHTML = paginationHTML;
+            }
+
+            paginationContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('a');
+                if (!target) return;
+                const page = parseInt(target.dataset.page, 10);
+                if (isNaN(page)) return;
+                showArchivePage(page);
+                document.getElementById('report-archive').scrollIntoView({ behavior: 'smooth' });
+            });
+
+            function setupDynamicLinks() {
+                document.querySelectorAll('a[data-path]').forEach(a => {
+                    if (a.dataset.bound) return;
+                    a.dataset.bound = 'true';
+                    a.addEventListener('click', e => {
+                        e.preventDefault();
+                        const path = a.dataset.path;
+                        const urlParams = new URLSearchParams(path.split('?')[1]);
+                        const finalPath = urlParams.get('path') || path;
+                        if (window.parent && typeof window.parent.loadPage === 'function') {
+                            window.parent.loadPage(finalPath);
+                        } else if (typeof loadPage === 'function') {
+                            loadPage(finalPath);
+                        }
+                    });
+                });
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>

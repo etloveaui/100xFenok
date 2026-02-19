@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1: Classic Premium - Market Wrap</title>
+    <meta name="description" content="100x Market Wrap 리포트 아카이브 페이지입니다.">
+    <link rel="canonical" href="./100x-main.html">
+    <meta property="og:title" content="100x Market Wrap - El Fenomeno Kim">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../favicon-96x96.png">
+    <meta name="theme-color" content="#010079">
+    <script type="module" src="../../../initBaseHref.js"></script>
+    <style>
+        :root {
+            --brand-navy: #010079;
+            --brand-gold: #D5AD36;
+            --brand-gold-light: #F4E4BC;
+            --brand-navy-bright: #1B73D3;
+        }
+        * { font-family: 'Noto Sans KR', sans-serif; }
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .card-shadow { box-shadow: 0 4px 15px rgba(1, 0, 121, 0.05); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(1, 0, 121, 0.1); }
+        .tag { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; }
+        .btn-premium {
+            background: var(--brand-navy);
+            color: white;
+            transition: all 0.2s;
+            border: 1px solid var(--brand-navy);
+        }
+        .btn-premium:hover {
+            background: white;
+            color: var(--brand-navy);
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--brand-navy);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Premium Typography */
+        .editorial-title { letter-spacing: -0.02em; line-height: 1.2; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Premium Header -->
+    <header class="bg-[#010079] text-white py-12 mb-12">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-4xl md:text-6xl font-black mb-4 orbitron tracking-tighter text-[#D5AD36]">MARKET WRAP</h1>
+            <p class="text-lg text-blue-100 max-w-2xl mx-auto font-medium">AI Intelligence & Multi-Asset Deep Dive</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6">
+        <!-- 최신 리포트 하이라이트 섹션 -->
+        <section id="featured-reports" class="mb-20">
+            <div id="featured-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-[300px] justify-center items-center">
+                <div class="col-span-full flex justify-center"><div class="loader"></div></div>
+            </div>
+        </section>
+
+        <!-- 리포트 아카이브 섹션 -->
+        <section id="report-archive" class="py-12 border-t border-slate-200">
+            <div class="container mx-auto">
+                <div class="flex items-center gap-4 mb-10">
+                    <h2 class="text-2xl font-bold text-slate-900">Archive</h2>
+                    <div class="h-px bg-slate-200 flex-grow"></div>
+                </div>
+                
+                <div id="archive-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[400px]">
+                    <div class="col-span-full flex justify-center items-center"><div class="loader"></div></div>
+                </div>
+
+                <nav id="pagination-container" aria-label="Page navigation" class="flex justify-center mt-16">
+                </nav>
+            </div>
+        </section>
+        
+    </main>
+
+    <script>
+        // --- Dynamic Data Loading and Rendering Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- 설정 (Configuration) ---
+            const BASE_HREF = window.baseHref || '../../../';
+            const DATA_FOLDER_PATH = `${BASE_HREF}100x/data/`;
+            const METADATA_PATH = `${DATA_FOLDER_PATH}metadata/`;
+            const INDEX_PATH = `${DATA_FOLDER_PATH}reports-index.json`;
+            const ITEMS_PER_PAGE = 9; 
+
+            // --- DOM 요소 (DOM Elements) ---
+            const featuredGrid = document.getElementById('featured-grid');
+            const archiveGrid = document.getElementById('archive-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+
+            // --- 상태 변수 (State Variables) ---
+            let reportIndex = [];
+            let featuredFilenames = [];
+            let archiveFilenames = [];
+            let totalPages = 0;
+            let currentPage = 1;
+
+            // --- 헬퍼 함수: 날짜 파싱 ---
+            function parseDate(dateString) {
+                if (!dateString) return '';
+                let parts = dateString.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+                if (parts) return `${parts[1]}-${parts[2].padStart(2, '0')}-${parts[3].padStart(2, '0')}`;
+                
+                const monthMap = {
+                    'January': '01', 'February': '02', 'March': '03', 'April': '04', 'May': '05', 'June': '06',
+                    'July': '07', 'August': '08', 'September': '09', 'October': '10', 'November': '11', 'December': '12'
+                };
+                parts = dateString.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+                if (parts && monthMap[parts[1]]) return `${parts[3]}-${monthMap[parts[1]]}-${parts[2].padStart(2, '0')}`;
+                
+                if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) return dateString.split(' ')[0];
+                return dateString; 
+            }
+
+            // --- 데이터 로딩 및 초기 렌더링 ---
+            async function initialize() {
+                try {
+                    const response = await fetch(INDEX_PATH);
+                    if (!response.ok) throw new Error(`인덱스 파일(${INDEX_PATH})을 불러올 수 없습니다.`);
+                    
+                    reportIndex = await response.json();
+                    
+                    featuredFilenames = reportIndex.slice(0, 3);
+                    archiveFilenames = reportIndex.slice(3);
+                    totalPages = Math.ceil(archiveFilenames.length / ITEMS_PER_PAGE);
+
+                    await renderFeatured(featuredFilenames);
+                    await showArchivePage(1);
+
+                } catch (error) {
+                    console.error("초기화 실패:", error);
+                    featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">리포트 목록을 불러오는 데 실패했습니다.</p>`;
+                    archiveGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">아카이브를 불러오는 데 실패했습니다.</p>`;
+                }
+            }
+
+            // --- 추천 리포트 렌더링 ---
+            async function renderFeatured(filenames) {
+                if (!featuredGrid || filenames.length === 0) {
+                    if(featuredGrid) featuredGrid.innerHTML = '<p class="text-slate-500 col-span-full text-center">추천 리포트가 없습니다.</p>';
+                    return;
+                }
+
+                try {
+                    const requests = filenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+                    const [latest, second, third] = reports;
+
+                    let featuredHTML = '';
+                    
+                    if (latest) {
+                        const tagsHTML = latest.keywords.map(tag => `<span class="tag bg-slate-100 text-slate-600 border border-slate-200">${tag.name}</span>`).join('');
+                        featuredHTML += `
+                            <div class="lg:col-span-12 bg-white rounded-xl p-0 overflow-hidden card-shadow card-hover flex flex-col md:flex-row items-stretch border border-slate-100">
+                                <div class="md:w-1/2 p-10 flex flex-col justify-center">
+                                    <div class="flex items-center gap-3 mb-6">
+                                       <span class="bg-[#D5AD36] text-[#010079] text-[10px] font-extrabold px-2.5 py-1 rounded-sm uppercase tracking-wider">LATEST BRIEFING</span>
+                                       <div class="text-xs font-bold text-slate-400 orbitron">${latest.date}</div>
+                                    </div>
+                                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-5 editorial-title hover:text-[#010079] transition-colors leading-tight">
+                                        <a href="#" data-path="${latest.path}">${latest.title}</a>
+                                    </h2>
+                                    <p class="text-slate-500 text-base leading-relaxed mb-8">${latest.summary}</p>
+                                    <div class="flex flex-wrap gap-2 mb-8">${tagsHTML}</div>
+                                    <div>
+                                        <a href="#" data-path="${latest.path}" class="btn-premium px-8 py-3.5 rounded-sm text-xs font-bold uppercase tracking-widest inline-flex items-center">
+                                            Read Full Report <i class="fas fa-chevron-right ml-3 text-[10px]"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="md:w-1/2 bg-slate-100 flex items-center justify-center p-12">
+                                    <img src="${BASE_HREF}100x-fenok-logo.png" alt="Report visual" class="w-48 h-48 opacity-20 grayscale">
+                                </div>
+                            </div>`;
+                    }
+
+                    const renderSubFeatured = (report) => {
+                        const tagsHTML = report.keywords.map(tag => `<span class="tag bg-slate-50 text-slate-500 border border-slate-100">${tag.name}</span>`).join('');
+                        return `
+                            <div class="lg:col-span-6 bg-white rounded-xl p-8 card-shadow card-hover border border-slate-100 flex flex-col justify-between">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 orbitron mb-3">${report.date}</div>
+                                    <h3 class="text-xl font-bold text-slate-900 mb-4 editorial-title hover:text-[#010079] transition-colors">
+                                        <a href="#" data-path="${report.path}">${report.title}</a>
+                                    </h3>
+                                    <p class="text-slate-500 text-sm leading-relaxed mb-6 line-clamp-2">${report.summary}</p>
+                                </div>
+                                <div class="flex flex-wrap gap-2">${tagsHTML}</div>
+                            </div>`;
+                    };
+                    if (second) featuredHTML += renderSubFeatured(second);
+                    if (third) featuredHTML += renderSubFeatured(third);
+                    
+                    featuredGrid.innerHTML = featuredHTML;
+                } catch (error) {
+                    console.error("추천 리포트 렌더링 실패:", error);
+                    featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">추천 리포트를 불러오는 데 실패했습니다.</p>`;
+                }
+            }
+
+            // --- 아카이브 페이지 렌더링 ---
+            async function showArchivePage(page) {
+                currentPage = page;
+                const startIndex = (page - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const pageFilenames = archiveFilenames.slice(startIndex, endIndex);
+
+                archiveGrid.innerHTML = `<div class="w-full flex justify-center items-center"><div class="loader"></div></div>`;
+
+                if (pageFilenames.length === 0) {
+                    archiveGrid.innerHTML = `<p class="w-full text-center text-slate-500">아카이브된 리포트가 없습니다.</p>`;
+                    renderPaginationControls();
+                    return;
+                }
+
+                try {
+                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+
+                    let archiveHTML = '';
+                    reports.forEach(report => {
+                        const tagsHTML = report.keywords.map(tag => `<span class="tag bg-slate-50 text-slate-400 border border-slate-100">${tag.name}</span>`).join('');
+                        const displayDate = parseDate(report.date);
+
+                        archiveHTML += `
+                            <div class="bg-white rounded-lg p-8 card-shadow card-hover flex flex-col w-full h-72 border border-slate-100">
+                                <div class="flex-grow">
+                                    <p class="text-[10px] font-bold text-slate-400 orbitron mb-3">${displayDate}</p>
+                                    <h3 class="text-lg font-bold text-slate-800 leading-snug hover:text-[#010079] cursor-pointer">
+                                        <a href="#" data-path="${report.path}">${report.title}</a>
+                                    </h3>
+                                    <p class="text-slate-400 text-xs mt-4 line-clamp-3 leading-relaxed">${report.summary || ''}</p>
+                                </div>
+                                <div class="mt-6 flex items-center justify-between border-t border-slate-50 pt-4">
+                                    <div class="flex flex-wrap gap-1">${tagsHTML}</div>
+                                    <i class="fas fa-arrow-right text-slate-200 text-xs"></i>
+                                </div>
+                            </div>`;
+                    });
+                    archiveGrid.innerHTML = archiveHTML;
+
+                } catch (error) {
+                    console.error(`아카이브 페이지 ${page} 렌더링 실패:`, error);
+                    archiveGrid.innerHTML = `<p class="w-full text-center text-red-500">아카이브를 불러오는 데 실패했습니다.</p>`;
+                }
+                
+                renderPaginationControls();
+                setupDynamicLinks();
+            }
+
+            // --- 페이지네이션 컨트롤 렌더링 ---
+            function renderPaginationControls() {
+                if (totalPages <= 1) {
+                    paginationContainer.innerHTML = '';
+                    return;
+                }
+                
+                let paginationHTML = '<ul class="inline-flex items-center gap-2">';
+                paginationHTML += `<li><a href="#" data-page="${currentPage - 1}" class="px-4 py-2 text-xs font-bold text-slate-400 bg-white border border-slate-200 hover:bg-slate-50 rounded-sm ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}">PREV</a></li>`;
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    const activeClasses = 'z-10 px-4 py-2 text-xs font-bold text-white bg-[#010079] border border-[#010079] rounded-sm';
+                    const defaultClasses = 'px-4 py-2 text-xs font-bold text-slate-400 bg-white border border-slate-200 hover:bg-slate-50 rounded-sm';
+                    paginationHTML += `<li><a href="#" data-page="${i}" class="${isActive ? activeClasses : defaultClasses}">${i}</a></li>`;
+                }
+
+                paginationHTML += `<li><a href="#" data-page="${currentPage + 1}" class="px-4 py-2 text-xs font-bold text-slate-400 bg-white border border-slate-200 hover:bg-slate-50 rounded-sm ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}">NEXT</a></li>`;
+                paginationHTML += '</ul>';
+                paginationContainer.innerHTML = paginationHTML;
+            }
+
+            // --- 이벤트 리스너 ---
+            paginationContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('a');
+                if (!target || target.classList.contains('cursor-not-allowed')) return;
+                const page = parseInt(target.dataset.page, 10);
+                if (isNaN(page) || page < 1 || page > totalPages || currentPage === page) return;
+                showArchivePage(page);
+                document.getElementById('report-archive').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // --- 동적 링크 이벤트 바인딩 ---
+            function setupDynamicLinks() {
+                document.querySelectorAll('a[data-path]').forEach(a => {
+                    if (a.dataset.bound) return;
+                    a.dataset.bound = 'true';
+                    
+                    a.addEventListener('click', e => {
+                        e.preventDefault();
+                        const path = a.dataset.path;
+                        const urlParams = new URLSearchParams(path.split('?')[1]);
+                        const finalPath = urlParams.get('path') || path; // Fallback
+                        
+                        if (window.parent && typeof window.parent.loadPage === 'function') {
+                            window.parent.loadPage(finalPath);
+                        } else if (typeof loadPage === 'function') {
+                            loadPage(finalPath);
+                        }
+                    });
+                });
+            }
+
+            // --- 실행 ---
+            initialize();
+        });
+    </script>
+
+</body>
+</html>

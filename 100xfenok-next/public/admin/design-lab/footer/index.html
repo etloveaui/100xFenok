@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Lab - Footer Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#010079',
+                            gold: '#D5AD36',
+                            interactive: '#1B73D3'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 p-8 text-slate-800">
+
+    <div class="max-w-6xl mx-auto space-y-8 pb-20">
+
+        <header class="flex justify-between items-center border-b border-gray-200 pb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 mb-2">📋 Footer Gallery</h1>
+                <p class="text-slate-500">확정: <strong class="text-emerald-600">v21 Broadcast HUD Pro</strong></p>
+            </div>
+            <a href="../index.html" class="text-blue-600 hover:underline font-bold">← Back to Dashboard</a>
+        </header>
+
+        <!-- v21: Broadcast HUD Pro (확정) -->
+        <section class="bg-gradient-to-br from-emerald-50 to-white p-6 rounded-xl shadow-lg border-2 border-emerald-500">
+            <div class="flex items-center gap-3 mb-4">
+                <h2 class="text-2xl font-bold text-emerald-800">🏆 v21 Broadcast HUD Pro</h2>
+                <span class="px-3 py-1 text-xs font-bold bg-emerald-500 text-white rounded-full">확정</span>
+            </div>
+            <p class="mb-4 text-slate-600">
+                <strong>최종 버전:</strong> 미국 장 실시간 동기화 + v20 스타일 사각형 뱃지 + 비밀번호 Admin
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
+                <div class="bg-white/50 p-3 rounded-lg">
+                    <p class="font-bold text-slate-600 mb-2">주요 기능</p>
+                    <ul class="text-slate-600 space-y-1">
+                        <li>🟢 MARKET OPEN (초록 박스)</li>
+                        <li>🟡 MARKET PRE (노랑 박스)</li>
+                        <li>🟠 MARKET AFTER (주황 박스)</li>
+                        <li>🔵 MARKET NIGHT (파랑 박스)</li>
+                        <li>⚫ MARKET CLOSED (회색 박스)</li>
+                    </ul>
+                </div>
+                <div class="bg-white/50 p-3 rounded-lg">
+                    <p class="font-bold text-slate-600 mb-2">개선 사항</p>
+                    <ul class="text-slate-600 space-y-1">
+                        <li>✓ 섬머타임 자동 감지</li>
+                        <li>✓ 티커 우측 고정 뱃지</li>
+                        <li>✓ 비밀번호 Admin 모달</li>
+                        <li>✓ "손실 니 탓 수익 내 탓" 메시지</li>
+                        <li>✓ © 2025 저작권</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border border-emerald-400 rounded-lg overflow-hidden bg-slate-200 min-h-[220px]">
+                <iframe src="v21-broadcast-pro.html" class="w-full h-[220px] border-0" title="Footer v21"></iframe>
+            </div>
+            <div class="mt-3 flex justify-between items-center">
+                <span class="text-xs text-slate-400">확정일: 2025-12-27</span>
+                <a href="v21-broadcast-pro.html" target="_blank" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition-all">
+                    새 창에서 보기 ↗
+                </a>
+            </div>
+        </section>
+
+        <!-- Archive Note -->
+        <div class="bg-slate-200 p-4 rounded-lg text-center text-slate-500 text-sm">
+            <i class="fas fa-archive mr-2"></i>
+            이전 시안 (v1~v20)은 정리되었습니다. v21이 최종 확정 버전입니다.
+        </div>
+
+    </div>
+
+</body>
+</html>

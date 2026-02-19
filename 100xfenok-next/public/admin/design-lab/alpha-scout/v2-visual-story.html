@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Scout v2 - Visual Story</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                navy: '#010079',
+                gold: '#D5AD36',
+                interactive: '#1B73D3',
+                bg: '#ffffff',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #ffffff; font-family: 'Inter', sans-serif; color: #1e293b; }
+        .serif { font-family: 'Playfair Display', serif; }
+
+        /* Nav (Light & Clean) */
+        .nav-clean {
+            height: 60px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem;
+            position: sticky; top: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); z-index: 50;
+        }
+
+        /* Hero Header */
+        .hero-header {
+            padding: 4rem 2rem; max-width: 1000px; margin: 0 auto; text-align: center;
+        }
+        .big-ticker { font-size: 5rem; font-weight: 900; line-height: 1; color: #0f172a; letter-spacing: -0.05em; }
+        .hero-desc { font-size: 1.25rem; color: #64748b; margin-top: 1rem; line-height: 1.6; }
+
+        /* Infographic Sections */
+        .story-section { padding: 4rem 2rem; max-width: 1000px; margin: 0 auto; }
+        .story-title { font-size: 2rem; font-weight: 700; margin-bottom: 2rem; font-family: 'Playfair Display', serif; display: flex; align-items: center; gap: 1rem; }
+        .story-title::before { content: ''; width: 40px; height: 2px; background: #D5AD36; }
+
+        /* Visual Cards */
+        .visual-card {
+            background: #f8fafc; border-radius: 20px; padding: 2rem; transition: transform 0.3s;
+        }
+        .visual-card:hover { transform: translateY(-5px); }
+        .big-number { font-size: 3.5rem; font-weight: 900; color: #1B73D3; line-height: 1; }
+        .card-label { text-transform: uppercase; font-weight: 700; color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.5rem; }
+
+        /* Thesis Grid */
+        .thesis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        @media (max-width: 768px) { .thesis-grid { grid-template-columns: 1fr; } }
+        
+        .thesis-box { padding: 2rem; border-radius: 16px; border: 1px solid #e2e8f0; }
+        .thesis-box.bull { background: #f0fdf4; border-color: #bbf7d0; }
+        .thesis-box.bear { background: #fef2f2; border-color: #fecaca; }
+
+        /* Chart */
+        .chart-wrapper { height: 300px; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-clean">
+        <span class="font-black text-xl tracking-tight">100x Alpha.</span>
+        <button class="bg-black text-white px-4 py-2 rounded-full font-bold text-sm">Download PDF</button>
+    </nav>
+
+    <header class="hero-header">
+        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase mb-4 inline-block">Tech Hardware</span>
+        <h1 class="big-ticker serif">IBM</h1>
+        <p class="hero-desc">
+            "The Elephant dances again." <br>
+            클라우드와 AI로의 성공적인 체질 개선, 그리고 강력한 현금 흐름이 매력적인 배당 귀족주.
+        </p>
+        <div class="mt-8 flex justify-center gap-8 text-center">
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase">Price</p>
+                <p class="text-2xl font-bold">$219.83</p>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase">Market Cap</p>
+                <p class="text-2xl font-bold">$203B</p>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase">Score</p>
+                <p class="text-2xl font-bold text-green-600">88/100</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="story-section bg-white">
+        <h2 class="story-title">Three Key Numbers</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="visual-card">
+                <p class="card-label">Operating Cash Flow</p>
+                <p class="big-number">$13.4B</p>
+                <p class="text-slate-500 mt-2">안정적인 현금 창출 능력은 배당과 AI 투자의 원천입니다.</p>
+            </div>
+            <div class="visual-card">
+                <p class="card-label">Dividend Yield</p>
+                <p class="big-number text-brand-gold">3.0%</p>
+                <p class="text-slate-500 mt-2">S&P 500 평균을 상회하는 매력적인 주주 환원.</p>
+            </div>
+            <div class="visual-card">
+                <p class="card-label">Software Growth</p>
+                <p class="big-number text-green-500">+5.5%</p>
+                <p class="text-slate-500 mt-2">하이브리드 클라우드 부문이 성장을 견인하고 있습니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="story-section">
+        <h2 class="story-title">Financial Trend</h2>
+        <p class="text-lg text-slate-600 mb-8">매출은 안정화 단계에 접어들었으나, 이익률(Margin) 개선이 돋보입니다. 효율적인 비용 관리와 고마진 소프트웨어 사업 비중 확대가 주효했습니다.</p>
+        <div class="visual-card bg-white border border-slate-200">
+            <div class="chart-wrapper">
+                <canvas id="storyChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <section class="story-section bg-white">
+        <h2 class="story-title">Investment Thesis</h2>
+        <div class="thesis-grid">
+            <div class="thesis-box bull">
+                <h3 class="font-bold text-green-800 text-xl mb-4 serif">Why Buy?</h3>
+                <p class="text-green-900 leading-relaxed">
+                    AI 컨설팅 수요 폭증의 직접적인 수혜자입니다. 기업용 AI 도입이 가속화되면서 IBM의 컨설팅 및 소프트웨어 통합 역량이 재평가받고 있습니다. 안정적인 배당은 하락장에서 훌륭한 방어막이 됩니다.
+                </p>
+            </div>
+            <div class="thesis-box bear">
+                <h3 class="font-bold text-red-800 text-xl mb-4 serif">Risk Factors</h3>
+                <p class="text-red-900 leading-relaxed">
+                    환율 변동성은 글로벌 매출 비중이 높은 IBM에게 단기적인 악재가 될 수 있습니다. 또한, 클라우드 시장에서의 경쟁 심화는 마진 압박 요인으로 작용할 수 있습니다.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 text-center text-slate-400 text-sm border-t border-slate-100">
+        <p>© 2025 100xFenok Alpha Scout. Data provided by FMP.</p>
+    </footer>
+
+    <script>
+        const ctx = document.getElementById('storyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: [
+                    {
+                        label: 'Net Margin (%)',
+                        data: [10.1, 10.0, 2.7, 12.1, 9.6],
+                        borderColor: '#1B73D3',
+                        backgroundColor: 'rgba(27, 115, 211, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { borderDash: [5, 5] } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html><html lang="ko"><head>
+  <meta charset="utf-8">
+  <title>Multichart v4 - Quantum Workspace (Light)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { brand: { navy: '#010079', gold: '#D5AD36', interactive: '#1B73D3' } },
+          boxShadow: { 'subtle': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { background-color: #f8fafc; color: #334155; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Workspace Layout */
+    .workspace { flex: 1; display: flex; overflow: hidden; border-top: 1px solid #e2e8f0; }
+    
+    /* Sidebar */
+    .sidebar { width: 260px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; flex-shrink: 0; }
+    @media (max-width: 1024px) { .sidebar { display: none; } }
+    
+    /* Main Chart */
+    .main-stage { flex: 1; display: flex; flex-direction: column; background: #f8fafc; position: relative; }
+    
+    /* Right Panel */
+    .inspector { width: 280px; background: #ffffff; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; flex-shrink: 0; }
+    @media (max-width: 1280px) { .inspector { display: none; } }
+
+    /* Mobile Bottom Nav */
+    .mobile-tab-bar { display: none; height: 60px; background: white; border-top: 1px solid #e2e8f0; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); }
+    @media (max-width: 1024px) { .mobile-tab-bar { display: flex; } }
+
+    /* Header */
+    .ide-header { height: 48px; background: white; display: flex; align-items: center; padding: 0 1rem; border-bottom: 1px solid #e2e8f0; justify-content: space-between; }
+    
+    /* Tabs */
+    .tab { padding: 0.5rem 1rem; font-size: 0.75rem; color: #64748b; border-right: 1px solid #e2e8f0; cursor: pointer; background: white; font-weight: 600; }
+    .tab.active { background: #f8fafc; color: #010079; border-top: 3px solid #010079; }
+    
+    /* List Items */
+    .ticker-item { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
+    .ticker-item:hover { background: #f1f5f9; }
+    
+    /* Stats */
+    .stat-row { display: flex; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.8rem; }
+    .stat-label { color: #64748b; font-weight: 600; }
+    .stat-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #1e293b; }
+
+    /* Mobile Sheet */
+    .mobile-sheet {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.2); backdrop-filter: blur(2px); z-index: 100;
+        display: flex; justify-content: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .mobile-sheet.open { opacity: 1; pointer-events: auto; }
+    .sheet-content {
+        width: 85%; max-width: 320px; background: white; height: 100%; box-shadow: -4px 0 20px rgba(0,0,0,0.05);
+        transform: translateX(100%); transition: transform 0.3s; display: flex; flex-direction: column;
+    }
+    .mobile-sheet.open .sheet-content { transform: translateX(0); }
+
+    /* Buttons */
+    .btn-action { background: #010079; color: white; width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 700; font-size: 0.875rem; box-shadow: 0 4px 6px rgba(1,0,121,0.2); transition: transform 0.1s; }
+    .btn-action:active { transform: scale(0.98); }
+
+  </style>
+
+  <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script defer="" src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script defer="" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script defer="" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+
+  <div id="root" class="h-full flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+    /* Logic Copy - Stooq Proxy */
+    const STOOQ_PROXY = 'https://stooq-proxy.etloveaui.workers.dev';
+    async function fetchStooq(symbol) {
+        try {
+            const res = await fetch(STOOQ_PROXY + encodeURIComponent(`https://stooq.com/q/d/l/?s=${symbol.toLowerCase()}.us&i=d`));
+            if(!res.ok) return [];
+            const txt = await res.text();
+            return txt.trim().split('\n').slice(1).map(l=>{const f=l.split(',');return{date:f[0],price:+f[4]}}).sort((a,b)=>a.date.localeCompare(b.date));
+        } catch(e) { return []; }
+    }
+    const calculateMDD = p => { let peak=-Infinity, maxDD=0; p.forEach(v=>{if(v>peak)peak=v; const dd=(v-peak)/peak; if(dd<maxDD)maxDD=dd;}); return maxDD*-100; };
+    const calculateVol = p => { if(p.length<2)return 0; const r=[]; for(let i=1;i<p.length;i++) r.push(Math.log(p[i]/p[i-1])); const m=r.reduce((a,b)=>a+b,0)/r.length; return Math.sqrt(r.reduce((a,v)=>a+(v-m)**2,0)/(r.length-1))*Math.sqrt(252)*100; };
+
+    function App() {
+        const [rows, setRows] = useState([{id:1, v:'SPY'}, {id:2, v:'QQQ'}]);
+        const [period, setPeriod] = useState('1Y');
+        const [summary, setSummary] = useState([]);
+        const [isLoading, setIsLoading] = useState(false);
+        const [mobileMenu, setMobileMenu] = useState(null);
+        const chartRef = useRef(null);
+        const canvasRef = useRef(null);
+
+        const addRow = () => rows.length < 5 && setRows([...rows, { id: Date.now(), v: '' }]);
+        const upd = (id, v) => setRows(rows.map(r => r.id === id ? { ...r, v: v.toUpperCase() } : r));
+        const del = id => setRows(rows.filter(r => r.id !== id));
+
+        const run = async () => {
+            setIsLoading(true);
+            const tickers = rows.map(r=>r.v.trim()).filter(Boolean);
+            if(!tickers.length) { setIsLoading(false); return; }
+            
+            const map = {};
+            for(const t of tickers) map[t] = await fetchStooq(t);
+            
+            const end = new Date(); const start = new Date();
+            const m = {'1M':-1,'6M':-6,'1Y':-12,'YTD':0}[period]||-12;
+            if(period==='YTD') start.setMonth(0,1); else start.setMonth(end.getMonth()+m);
+            const sStr = start.toISOString().slice(0,10);
+            
+            const dates = [...new Set(Object.values(map).flat().map(p=>p.date))].filter(d=>d>=sStr).sort();
+            const ds = [], sum = [];
+            
+            tickers.forEach((t,i) => {
+                const d = map[t]?.filter(p=>p.date>=sStr);
+                if(!d?.length) return;
+                const f = d[0].price;
+                const color = ["#010079","#D5AD36","#16a34a","#ef4444"][i%4];
+                
+                ds.push({
+                    label: t,
+                    data: dates.map(dt => { const find=d.find(p=>p.date===dt); return find ? (find.price/f-1)*100 : null; }),
+                    borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.1
+                });
+                
+                const pr = d.map(p=>p.price);
+                sum.push({ sym: t, ret: ((pr[pr.length-1]/f-1)*100).toFixed(2), mdd: calculateMDD(pr).toFixed(2), vol: calculateVol(pr).toFixed(2), color });
+            });
+            
+            setSummary(sum.sort((a,b)=>b.ret-a.ret));
+            
+            if(chartRef.current) chartRef.current.destroy();
+            Chart.defaults.color = '#64748b';
+            Chart.defaults.borderColor = '#e2e8f0';
+            
+            chartRef.current = new Chart(canvasRef.current, {
+                type: 'line', data: { labels: dates, datasets: ds },
+                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { display: false }, y: { position: 'right' } }, plugins: { legend: { display: false } } }
+            });
+            setIsLoading(false);
+            setMobileMenu(null);
+        };
+
+        const SidebarContent = () => (
+            <div className="flex flex-col h-full">
+                <div className="p-4 border-b border-slate-100 font-bold text-slate-500 text-xs uppercase tracking-wider">Explorer</div>
+                <div className="flex-1 overflow-y-auto p-2">
+                    {rows.map(r=>(
+                        <div key={r.id} className="ticker-item rounded-lg">
+                            <input value={r.v} onChange={e=>upd(r.id,e.target.value)} className="bg-transparent font-bold text-slate-700 outline-none w-20 uppercase placeholder-slate-300" placeholder="SYM" />
+                            <button onClick={()=>del(r.id)} className="text-slate-300 hover:text-red-500"><i className="fas fa-times"></i></button>
+                        </div>
+                    ))}
+                    <button onClick={addRow} className="w-full py-3 text-xs text-blue-600 font-bold hover:bg-blue-50 rounded-lg mt-2 transition-colors">+ Add Symbol</button>
+                </div>
+                <div className="p-4 border-t border-slate-100 bg-slate-50">
+                    <div className="grid grid-cols-4 gap-1 mb-4">
+                        {['1M','6M','YTD','1Y'].map(p=>(<button key={p} onClick={()=>setPeriod(p)} className={`py-1 text-[10px] font-bold rounded ${period===p?'bg-white text-blue-600 shadow-sm border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>{p}</button>))}
+                    </div>
+                    <button onClick={run} className="btn-action">{isLoading?'LOADING...':'RUN ANALYSIS'}</button>
+                </div>
+            </div>
+        );
+
+        return (
+            <div className="h-full flex flex-col">
+                <div className="ide-header">
+                    <div className="flex items-center gap-3">
+                        <i className="fas fa-layer-group text-blue-600"></i>
+                        <span className="font-bold text-slate-800 text-sm">Quantum Workspace</span>
+                    </div>
+                    <div className="flex text-xs text-slate-400 gap-4 hidden md:flex font-mono">
+                        <span><i className="fas fa-circle text-green-500 text-[8px] mr-1"></i>READY</span>
+                    </div>
+                </div>
+
+                <div className="workspace">
+                    <aside className="sidebar"><SidebarContent/></aside>
+                    
+                    <main className="main-stage">
+                        <div className="flex bg-white border-b border-slate-200">
+                            <div className="tab active">Analysis.chart</div>
+                            <div className="tab">Data.table</div>
+                        </div>
+                        <div className="flex-1 p-4 relative">
+                            <canvas ref={canvasRef}></canvas>
+                        </div>
+                    </main>
+
+                    <aside className="inspector">
+                        <div className="p-3 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">Properties</div>
+                        <div className="flex-1 overflow-y-auto">
+                            {summary.map(s=>(
+                                <div key={s.sym} className="border-b border-slate-50">
+                                    <div className="p-3 bg-slate-50 font-bold text-xs text-slate-700 flex items-center">
+                                        <span className="w-2 h-2 rounded-full mr-2" style={{background:s.color}}></span>{s.sym}
+                                    </div>
+                                    <div className="stat-row"><span className="stat-label">Return</span><span className={`stat-val ${s.ret>=0?'text-green-600':'text-red-500'}`}>{s.ret}%</span></div>
+                                    <div className="stat-row"><span className="stat-label">Max DD</span><span className="stat-val text-red-500">{s.mdd}%</span></div>
+                                    <div className="stat-row"><span className="stat-label">Volatility</span><span className="stat-val text-slate-500">{s.vol}%</span></div>
+                                </div>
+                            ))}
+                            {!summary.length && <div className="p-8 text-xs text-slate-400 text-center">Run analysis to view data</div>}
+                        </div>
+                    </aside>
+                </div>
+
+                {/* Mobile Bottom Tab */}
+                <div className="mobile-tab-bar">
+                    <button className="text-slate-400 hover:text-blue-600" onClick={()=>setMobileMenu('assets')}><i className="fas fa-bars text-xl"></i></button>
+                    <button className="text-white bg-brand-navy rounded-full w-12 h-12 flex items-center justify-center -mt-6 shadow-lg border-4 border-white" onClick={run}><i className={`fas ${isLoading?'fa-spinner fa-spin':'fa-play'}`}></i></button>
+                    <button className="text-slate-400 hover:text-blue-600" onClick={()=>setMobileMenu('stats')}><i className="fas fa-chart-pie text-xl"></i></button>
+                </div>
+
+                {/* Mobile Sheets */}
+                <div className={`mobile-sheet ${mobileMenu==='assets'?'open':''}`} onClick={(e)=>e.target===e.currentTarget&&setMobileMenu(null)}>
+                    <div className="sheet-content"><SidebarContent/></div>
+                </div>
+                <div className={`mobile-sheet ${mobileMenu==='stats'?'open':''}`} onClick={(e)=>e.target===e.currentTarget&&setMobileMenu(null)}>
+                    <div className="sheet-content p-4 overflow-y-auto">
+                        <h3 className="text-slate-800 font-bold mb-4 text-lg">Summary</h3>
+                        {summary.map(s=>(
+                            <div key={s.sym} className="mb-4 bg-slate-50 border border-slate-100 p-4 rounded-xl">
+                                <div className="flex justify-between text-slate-800 font-bold text-sm mb-2"><span>{s.sym}</span><span style={{color:s.color}}>●</span></div>
+                                <div className="flex justify-between text-xs text-slate-500 mb-1"><span>Return</span><span className={s.ret>=0?'text-green-600 font-bold':'text-red-500 font-bold'}>{s.ret}%</span></div>
+                                <div className="flex justify-between text-xs text-slate-500"><span>MDD</span><span className="text-red-500">{s.mdd}%</span></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+            </div>
+        );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

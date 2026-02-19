@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts (Content Hub) Gallery - 100x Design Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .gallery-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s; border: 1px solid #e2e8f0; }
+        .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #3b82f6; }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <a href="../index.html" class="text-slate-400 hover:text-slate-600 text-sm font-bold mb-2 block">← Dashboard</a>
+                <h1 class="text-3xl font-bold text-slate-800">📰 Posts (Content Hub)</h1>
+                <p class="text-slate-500">Market Wrap과 Alpha Scout를 모아보는 메인 피드(posts-main.html) 리디자인</p>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- v1: Magazine Hub -->
+            <div class="gallery-card border border-blue-200 shadow-md">
+                <div class="h-48 bg-blue-50 flex items-center justify-center relative">
+                    <span class="text-4xl text-blue-500">📰</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-green-100 text-green-700">DONE</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">v1: Magazine Hub</h3>
+                    <p class="text-sm text-slate-500 mb-6">최신 콘텐츠를 강조하는 뉴스 매거진 스타일 피드. Serif 폰트로 신뢰감 강조.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v1-hub-magazine.html</span>
+                        <a href="v1-hub-magazine.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v2: Masonry Grid -->
+            <div class="gallery-card border border-purple-200 shadow-md">
+                <div class="h-48 bg-purple-50 flex items-center justify-center relative">
+                    <span class="text-4xl text-purple-500">🧱</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-green-100 text-green-700">DONE</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">v2: Masonry Grid</h3>
+                    <p class="text-sm text-slate-500 mb-6">Pinterest 스타일의 시각적 탐색 중심 그리드. 필터링 및 태그 시스템 적용.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v2-hub-masonry.html</span>
+                        <a href="v2-hub-masonry.html" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-purple-700 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+            <!-- v3: Timeline Stream -->
+            <div class="gallery-card border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="h-48 bg-white flex items-center justify-center relative border-b border-slate-100">
+                    <span class="text-4xl text-slate-600">⏱️</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-green-100 text-green-700">DONE</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">v3: Timeline Stream</h3>
+                    <p class="text-sm text-slate-500 mb-6">트위터/SNS 스타일의 시간순 피드. 속보성 콘텐츠(Market Wrap)에 최적화.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v3-hub-timeline.html</span>
+                        <a href="v3-hub-timeline.html" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v4: Minimal Archive -->
+            <div class="gallery-card border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200">
+                    <span class="text-4xl text-slate-500">🗄️</span>
+                    <div class="absolute top-4 right-4">
+                        <span class="status-badge bg-green-100 text-green-700">DONE</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">v4: Minimal Archive</h3>
+                    <p class="text-sm text-slate-500 mb-6">데이터베이스 리스트 스타일. 높은 정보 밀도와 검색/탐색 효율성.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono">v4-hub-archive.html</span>
+                        <a href="v4-hub-archive.html" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors">시안 보기</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sweet Spot Scanner v8.1 - 100xFenok</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .metric {
+      text-align: center;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .metric-sweet { background: #dcfce7; }
+    .metric-danger { background: #fee2e2; }
+    .metric-neutral { background: #f1f5f9; }
+    .metric-value { font-size: 24px; font-weight: bold; }
+    .metric-label { font-size: 12px; color: #666; }
+    .zone-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .zone-item:hover { opacity: 0.8; }
+    .sweet-spot { background: #dcfce7; }
+    .danger-zone { background: #fee2e2; }
+    table { width: 100%; border-collapse: collapse; }
+
+    /* Loading State */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; cursor: pointer; }
+    th:hover { background: #f3f4f6; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .badge-country { background: #dbeafe; color: #1e40af; }
+    .badge-sector { background: #fef3c7; color: #92400e; }
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .tab-btn.active { background: #3b82f6; color: white; }
+    .tab-btn:not(.active) { background: #f1f5f9; color: #475569; }
+    .tab-btn:not(.active):hover { background: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="text-gray-600 mt-4">Loading market data...</p>
+  </div>
+
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="card">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Sweet Spot Scanner v8.1</h1>
+          <p class="text-gray-500">P/E vs Momentum - Finding Optimal Entry Points</p>
+        </div>
+        <a href="../" class="text-blue-500 hover:underline">← Back</a>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="card">
+      <div class="flex gap-2">
+        <button id="tab-all" onclick="setFilter('all')" class="tab-btn active">All (36)</button>
+        <button id="tab-country" onclick="setFilter('Country')" class="tab-btn">Country (16)</button>
+        <button id="tab-sector" onclick="setFilter('Sector')" class="tab-btn">Sector (20)</button>
+      </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div id="metrics" class="grid grid-cols-4 gap-4 mb-6"></div>
+
+    <!-- Scatter Plot -->
+    <div class="card">
+      <h2 class="text-lg font-bold mb-4">P/E vs 6M Momentum</h2>
+      <canvas id="scatterChart" height="300"></canvas>
+    </div>
+
+    <!-- Zones -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="card">
+        <h3 class="text-green-600 font-bold mb-3">🟢 Sweet Spot</h3>
+        <div id="sweetSpotList"></div>
+      </div>
+      <div class="card">
+        <h3 class="text-red-600 font-bold mb-3">🔴 Danger Zone</h3>
+        <div id="dangerZoneList"></div>
+      </div>
+    </div>
+
+    <!-- Full Table -->
+    <div class="card">
+      <h2 class="text-lg font-bold mb-4">All Indices</h2>
+      <input id="search" type="text" placeholder="Search..."
+             class="w-full p-2 border rounded mb-4" oninput="filterTable()">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('name')">Index</th>
+            <th onclick="sortTable('type')">Type</th>
+            <th onclick="sortTable('pe')">P/E</th>
+            <th onclick="sortTable('momentum6m')">6M</th>
+            <th onclick="sortTable('zone')">Zone</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Methodology -->
+    <div class="card">
+      <h3 class="font-bold mb-2">Methodology</h3>
+      <p class="text-sm text-gray-600">
+        <strong>Sweet Spot:</strong> P/E &lt; 15 AND 6M &gt; 20%<br>
+        <strong>Danger Zone:</strong> P/E &gt; 25 AND 6M &lt; 5%
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // ==================== CONFIG ====================
+    const CONFIG = {
+      dataPath: '../../../data/benchmarks/',
+      files: ['us.json', 'us_sectors.json', 'developed.json', 'emerging.json', 'msci.json', 'micro_sectors.json'],
+      SWEET_PE: 15,
+      SWEET_MOMENTUM: 0.20,
+      DANGER_PE: 25,
+      DANGER_MOMENTUM: 0.05,
+      CORRELATION_PE_6M: -0.399  // P/E vs 6M Momentum correlation
+    };
+
+    let allData = [];
+    let currentSort = { column: 'momentum6m', direction: 'desc' };
+    let currentFilter = 'all';
+
+    // ==================== INITIALIZATION ====================
+    async function init() {
+      try {
+        const data = await loadData();
+        processData(data);
+        render();
+        // Hide loading overlay
+        document.getElementById('loadingOverlay').classList.add('hidden');
+      } catch (error) {
+        console.error('Init error:', error);
+        showError('Failed to load data');
+        // Note: showError replaces body, so loadingOverlay no longer exists
+      }
+    }
+
+    // ==================== DATA LOADING ====================
+    async function loadData() {
+      console.log('🔄 Loading data from:', CONFIG.dataPath);
+
+      let summaries;
+      try {
+        const summariesUrl = CONFIG.dataPath + 'summaries.json';
+        console.log('📊 Fetching summaries from:', summariesUrl);
+        const summariesResponse = await fetch(summariesUrl);
+        if (!summariesResponse.ok) {
+          throw new Error(`Failed to load summaries.json: ${summariesResponse.status} ${summariesResponse.statusText}`);
+        }
+        summaries = await summariesResponse.json();
+        console.log('✅ Summaries loaded:', Object.keys(summaries));
+      } catch (e) {
+        console.error('❌ Summaries loading error:', e);
+        throw new Error(`Cannot load summaries.json: ${e.message}`);
+      }
+
+      for (const file of CONFIG.files) {
+        try {
+          const fileUrl = CONFIG.dataPath + file;
+          console.log(`📁 Loading ${file}...`);
+          const response = await fetch(fileUrl);
+          if (!response.ok) {
+            console.warn(`⚠️ Failed to fetch ${file}: ${response.status} ${response.statusText}`);
+            continue;
+          }
+          const data = await response.json();
+          console.log(`✅ ${file} loaded:`, Object.keys(data));
+
+          if (data.sections) {
+            for (const [key, section] of Object.entries(data.sections)) {
+              const latest = section.data?.[section.data.length - 1] || {};
+              const momentum = summaries.momentum[key] || {};
+
+              // Determine type based on file and key
+              const type = determineType(file, key);
+
+              const item = {
+                name: section.name || key,
+                pe: latest.best_pe_ratio || latest.pe_ratio || null,
+                momentum6m: momentum['6m'] || null,
+                type: type
+              };
+              allData.push(item);
+            }
+            console.log(`  → Processed ${Object.keys(data.sections).length} sections from ${file}`);
+          }
+        } catch (e) {
+          console.error(`❌ Error processing ${file}:`, e);
+        }
+      }
+
+      const validData = allData.filter(d => d.pe != null || d.momentum6m != null);
+      console.log(`✅ Total data loaded: ${allData.length} items (${validData.length} valid)`);
+      console.log('📊 Data breakdown:', {
+        country: allData.filter(d => d.type === 'Country').length,
+        sector: allData.filter(d => d.type === 'Sector').length
+      });
+
+      return validData;
+    }
+
+    // Determine if index is a Country or Sector
+    function determineType(file, key) {
+      // Sector files
+      if (file === 'us_sectors.json' || file === 'micro_sectors.json') {
+        return 'Sector';
+      }
+      // Sector keys (GICS sectors)
+      const sectorKeys = ['energy', 'materials', 'industrials', 'consumer-discretionary',
+                          'consumer-staples', 'health-care', 'financials', 'it',
+                          'communication-services', 'utilities', 'real-estate'];
+      if (sectorKeys.some(sk => key.toLowerCase().includes(sk))) {
+        return 'Sector';
+      }
+      // Default to Country for MSCI, developed, emerging, us indices
+      return 'Country';
+    }
+
+    // ==================== PROCESSING ====================
+    function processData(data) {
+      data.forEach(item => {
+        // Skip classification if pe or momentum is null/undefined
+        if (item.pe == null || item.momentum6m == null) {
+          item.zone = 'neutral';
+          return;
+        }
+        if (item.pe < CONFIG.SWEET_PE && item.momentum6m > CONFIG.SWEET_MOMENTUM) {
+          item.zone = 'sweet-spot';
+        } else if (item.pe > CONFIG.DANGER_PE && item.momentum6m < CONFIG.DANGER_MOMENTUM) {
+          item.zone = 'danger-zone';
+        } else {
+          item.zone = 'neutral';
+        }
+      });
+    }
+
+    // ==================== RENDERING ====================
+    function render() {
+      const filtered = getFilteredData();
+      renderMetrics(filtered);
+      renderChart(filtered);
+      renderZones(filtered);
+      renderTable(filtered);
+      updateTabCounts();
+    }
+
+    function getFilteredData() {
+      if (currentFilter === 'all') return allData;
+      return allData.filter(d => d.type === currentFilter);
+    }
+
+    function renderMetrics(data) {
+      const sweet = data.filter(d => d.zone === 'sweet-spot').length;
+      const danger = data.filter(d => d.zone === 'danger-zone').length;
+
+      document.getElementById('metrics').innerHTML = `
+        <div class="metric metric-sweet">
+          <div class="metric-value text-green-600">${sweet}</div>
+          <div class="metric-label">Sweet Spot</div>
+        </div>
+        <div class="metric metric-danger">
+          <div class="metric-value text-red-600">${danger}</div>
+          <div class="metric-label">Danger Zone</div>
+        </div>
+        <div class="metric metric-neutral">
+          <div class="metric-value text-purple-600">${CONFIG.CORRELATION_PE_6M}</div>
+          <div class="metric-label">Correlation</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value text-blue-600">${data.length}</div>
+          <div class="metric-label">Total</div>
+        </div>
+      `;
+    }
+
+    let chartInstance = null;
+
+    function renderChart(data) {
+      const ctx = document.getElementById('scatterChart').getContext('2d');
+
+      // Destroy previous chart instance
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Sweet Spot',
+              data: data.filter(d => d.zone === 'sweet-spot').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
+              backgroundColor: 'rgba(34, 197, 94, 0.7)',
+              pointRadius: 10
+            },
+            {
+              label: 'Danger Zone',
+              data: data.filter(d => d.zone === 'danger-zone').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
+              backgroundColor: 'rgba(239, 68, 68, 0.7)',
+              pointRadius: 10
+            },
+            {
+              label: 'Neutral',
+              data: data.filter(d => d.zone === 'neutral').map(d => ({ x: d.pe, y: d.momentum6m * 100, name: d.name })),
+              backgroundColor: 'rgba(156, 163, 175, 0.5)',
+              pointRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { title: 'P/E', min: 0, max: 40 },
+            y: { title: '6M Momentum (%)', min: -20, max: 100 }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return `${ctx.raw.name}: P/E ${ctx.raw.x.toFixed(1)}, 6M ${ctx.raw.y.toFixed(1)}%`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderZones(data) {
+      const sweet = data.filter(d => d.zone === 'sweet-spot')
+        .sort((a, b) => b.momentum6m - a.momentum6m);
+      const danger = data.filter(d => d.zone === 'danger-zone')
+        .sort((a, b) => a.momentum6m - b.momentum6m);
+
+      document.getElementById('sweetSpotList').innerHTML = sweet.length > 0
+        ? sweet.map((item, i) => `
+            <div class="zone-item sweet-spot">
+              <span>#${i + 1} ${item.name}</span>
+              <strong>${formatPercent(item.momentum6m)}</strong> (P/E: ${item.pe?.toFixed(1) || '-'})
+            </div>
+          `).join('')
+        : '<p class="text-gray-500">No Sweet Spot indices</p>';
+
+      document.getElementById('dangerZoneList').innerHTML = danger.length > 0
+        ? danger.map((item, i) => `
+            <div class="zone-item danger-zone">
+              <span>#${i + 1} ${item.name}</span>
+              <strong>${formatPercent(item.momentum6m)}</strong> (P/E: ${item.pe?.toFixed(1) || '-'})
+            </div>
+          `).join('')
+        : '<p class="text-gray-500">No Danger Zone indices</p>';
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = data.map(item => {
+        const zoneClass = item.zone === 'sweet-spot' ? 'text-green-600'
+                        : item.zone === 'danger-zone' ? 'text-red-600' : 'text-gray-600';
+        const badgeClass = item.type === 'Country' ? 'badge-country' : 'badge-sector';
+        return `
+          <tr>
+            <td>${item.name}</td>
+            <td><span class="badge ${badgeClass}">${item.type}</span></td>
+            <td>${item.pe ? item.pe.toFixed(2) : 'N/A'}</td>
+            <td class="${item.momentum6m > 0 ? 'text-green-600' : 'text-red-600'}">
+              ${formatPercent(item.momentum6m)}
+            </td>
+            <td class="${zoneClass}">${item.zone.replace('-', ' ').toUpperCase()}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ==================== UTILITIES ====================
+    function formatPercent(value) {
+      return value ? (value * 100).toFixed(1) + '%' : 'N/A';
+    }
+
+    function sortTable(column) {
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = column;
+        currentSort.direction = 'desc';
+      }
+
+      const filtered = getFilteredData();
+      const sorted = [...filtered].sort((a, b) => {
+        let aVal = a[column], bVal = b[column];
+        if (column === 'zone') {
+          const order = { 'sweet-spot': 1, 'neutral': 2, 'danger-zone': 3 };
+          aVal = order[a.zone] || 2;
+          bVal = order[b.zone] || 2;
+        }
+        return currentSort.direction === 'asc'
+          ? (aVal > bVal ? 1 : -1)
+          : (aVal < bVal ? 1 : -1);
+      });
+
+      renderTable(sorted);
+    }
+
+    function setFilter(type) {
+      currentFilter = type;
+
+      // Update tab active states
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const tabId = type === 'all' ? 'tab-all' : `tab-${type.toLowerCase()}`;
+      document.getElementById(tabId).classList.add('active');
+
+      // Re-render with filtered data
+      render();
+    }
+
+    function updateTabCounts() {
+      const countryCount = allData.filter(d => d.type === 'Country').length;
+      const sectorCount = allData.filter(d => d.type === 'Sector').length;
+
+      document.getElementById('tab-all').textContent = `All (${allData.length})`;
+      document.getElementById('tab-country').textContent = `Country (${countryCount})`;
+      document.getElementById('tab-sector').textContent = `Sector (${sectorCount})`;
+    }
+
+    function filterTable() {
+      const query = document.getElementById('search').value.toLowerCase();
+      const filtered = getFilteredData().filter(item => item.name.toLowerCase().includes(query));
+      renderTable(filtered);
+    }
+
+    function showError(message) {
+      document.body.innerHTML = `
+        <div class="card max-w-lg mx-auto mt-10">
+          <h2 class="text-red-600 font-bold">Error</h2>
+          <p>${message}</p>
+          <button onclick="location.reload()" class="text-blue-500 underline">Retry</button>
+        </div>
+      `;
+    }
+
+    // ==================== START ====================
+    init();
+  </script>
+</body>
+</html>

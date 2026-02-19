@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v4: Intelligent Briefing - Market Wrap</title>
+    <meta name="theme-color" content="#f8fafc">
+    <script type="module" src="../../../initBaseHref.js"></script>
+    <style>
+        :root {
+            --tech-navy: #0f172a;
+            --tech-blue: #3b82f6;
+            --tech-green: #10b981;
+            --tech-red: #ef4444;
+            --tech-gold: #f59e0b;
+        }
+        body { font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        
+        /* Glass & Bento Styles */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) { .bento-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .bento-grid { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 320px; } }
+        
+        .bento-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .bento-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: var(--tech-blue);
+            z-index: 10;
+        }
+        
+        /* Dynamic Spans */
+        .col-span-2 { grid-column: span 2; }
+        .row-span-2 { grid-row: span 2; }
+        
+        /* Sparkline Simulation */
+        .sparkline { stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        
+        /* Tags */
+        .tech-tag {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            padding: 0.35rem 0.75rem; border-radius: 9999px;
+            background: #f1f5f9; color: #64748b; transition: all 0.2s;
+        }
+        .bento-card:hover .tech-tag { background: #e0f2fe; color: #0284c7; }
+
+        /* Loader */
+        .loader {
+            width: 48px; height: 48px; border-radius: 50%; display: inline-block;
+            border-top: 4px solid var(--tech-blue); border-right: 4px solid transparent;
+            box-sizing: border-box; animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Gradient Text */
+        .text-gradient { background-clip: text; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(to right, #0f172a, #3b82f6); }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">100x</div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900">Intelligent Briefing</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Market Open
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 flex-grow">
+        
+        <div class="mb-8 flex justify-between items-end">
+            <div>
+                <h2 class="text-3xl font-extrabold text-slate-900 mb-2">Market Overview</h2>
+                <p class="text-slate-500">AI-curated insights for intelligent investors.</p>
+            </div>
+            <!-- Filter Pills -->
+            <div class="hidden md:flex gap-2">
+                <button class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-full">All</button>
+                <button class="px-4 py-2 bg-white text-slate-600 border border-slate-200 text-xs font-bold rounded-full hover:bg-slate-50">Macro</button>
+                <button class="px-4 py-2 bg-white text-slate-600 border border-slate-200 text-xs font-bold rounded-full hover:bg-slate-50">Crypto</button>
+            </div>
+        </div>
+
+        <div id="bento-grid" class="bento-grid min-h-[500px]">
+            <div class="col-span-full flex justify-center py-20"><div class="loader"></div></div>
+        </div>
+
+        <nav id="pagination-container" class="flex justify-center mt-12 mb-8"></nav>
+        
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const BASE_HREF = window.baseHref || '../../../';
+            const DATA_FOLDER_PATH = `${BASE_HREF}100x/data/`;
+            const METADATA_PATH = `${DATA_FOLDER_PATH}metadata/`;
+            const INDEX_PATH = `${DATA_FOLDER_PATH}reports-index.json`;
+            const ITEMS_PER_PAGE = 7; // 1 big + 6 small
+
+            const grid = document.getElementById('bento-grid');
+            const paginationContainer = document.getElementById('pagination-container');
+
+            let reportIndex = [];
+            let totalPages = 0;
+            let currentPage = 1;
+
+            // Fake data generator for visuals
+            function generateSparkline(trend) {
+                const color = trend === 'up' ? '#10b981' : (trend === 'down' ? '#ef4444' : '#94a3b8');
+                const points = Array.from({length: 10}, () => Math.floor(Math.random() * 30) + 10).join(',');
+                // Simplified SVG for demo
+                let d = `M0,${Math.random()*40} `;
+                for(let i=1; i<=10; i++) d += `L${i*10},${Math.random()*40} `;
+                
+                return `
+                    <svg class="sparkline" width="100" height="40" viewBox="0 0 100 40">
+                        <path d="${d}" stroke="${color}" fill="none" stroke-width="2" />
+                    </svg>
+                `;
+            }
+
+            function generateSentiment() {
+                const score = Math.floor(Math.random() * 100);
+                const color = score > 60 ? 'bg-green-500' : (score < 40 ? 'bg-red-500' : 'bg-yellow-500');
+                return `<div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-2">
+                            <div class="${color} h-full" style="width: ${score}%"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                            <span>Bearish</span><span>Bullish</span>
+                        </div>`;
+            }
+
+            async function initialize() {
+                try {
+                    const response = await fetch(INDEX_PATH);
+                    if (!response.ok) throw new Error('Index load failed');
+                    reportIndex = await response.json();
+                    totalPages = Math.ceil(reportIndex.length / ITEMS_PER_PAGE);
+                    await renderPage(1);
+                } catch (error) { console.error(error); }
+            }
+
+            async function renderPage(page) {
+                currentPage = page;
+                const start = (page - 1) * ITEMS_PER_PAGE;
+                const end = start + ITEMS_PER_PAGE;
+                const pageFilenames = reportIndex.slice(start, end);
+
+                try {
+                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
+                    const reports = await Promise.all(requests);
+
+                    let html = '';
+                    reports.forEach((report, index) => {
+                        // First item is Hero (2x2 or 2x1)
+                        const isHero = index === 0;
+                        const colSpan = isHero ? 'md:col-span-2 lg:col-span-2 lg:row-span-2' : '';
+                        const date = report.date.replace(/년|월|일/g, '.');
+                        const tags = report.keywords.slice(0, 2).map(t => `<span class="tech-tag">${t.name}</span>`).join('');
+                        const trend = Math.random() > 0.5 ? 'up' : 'down';
+                        
+                        if (isHero) {
+                            html += `
+                                <div class="bento-card ${colSpan} flex flex-col justify-between bg-gradient-to-br from-white to-slate-50">
+                                    <div class="absolute top-0 right-0 p-6 opacity-10 text-9xl font-black text-slate-900 z-0">
+                                        ${new Date(report.date.replace(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/, '$1-$2-$3')).getDate()}
+                                    </div>
+                                    <div class="relative z-10">
+                                        <div class="flex items-center gap-3 mb-4">
+                                            <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded">HEADLINE</span>
+                                            <span class="text-xs font-bold text-slate-400">${date}</span>
+                                        </div>
+                                        <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight hover:text-blue-600 transition-colors cursor-pointer">
+                                            <a href="#" data-path="${report.path}">${report.title}</a>
+                                        </h2>
+                                        <p class="text-lg text-slate-600 leading-relaxed mb-6 border-l-4 border-blue-500 pl-4 bg-white/50 py-2 rounded-r-lg backdrop-blur-sm">
+                                            ${report.summary}
+                                        </p>
+                                    </div>
+                                    <div class="relative z-10 flex items-end justify-between mt-auto">
+                                        <div class="flex gap-2">${tags}</div>
+                                        <a href="#" data-path="${report.path}" class="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-blue-600 transition-colors shadow-lg">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            html += `
+                                <div class="bento-card flex flex-col">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <span class="text-[10px] font-bold text-slate-400">${date}</span>
+                                        ${generateSparkline(trend)}
+                                    </div>
+                                    <h3 class="text-lg font-bold text-slate-800 mb-2 leading-snug line-clamp-2 hover:text-blue-600 cursor-pointer">
+                                        <a href="#" data-path="${report.path}">${report.title}</a>
+                                    </h3>
+                                    <div class="mt-auto">
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase mb-1">Market Sentiment</div>
+                                        ${generateSentiment()}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                    grid.innerHTML = html;
+                } catch (e) { console.error(e); }
+                
+                renderPagination();
+                setupLinks();
+            }
+
+            function renderPagination() {
+                let html = '';
+                for(let i=1; i<=totalPages; i++) {
+                    const active = i === currentPage ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-100';
+                    html += `<button onclick="renderPage(${i})" class="${active} w-8 h-8 rounded-full text-xs font-bold mx-1 transition-colors shadow-sm">${i}</button>`; // Note: inline onclick for simplicity in this proto
+                }
+                paginationContainer.innerHTML = html;
+                
+                // Re-bind onclick because inline is not robust in module scope
+                paginationContainer.querySelectorAll('button').forEach((btn, idx) => {
+                    btn.onclick = () => renderPage(idx + 1);
+                });
+            }
+
+            function setupLinks() {
+                document.querySelectorAll('a[data-path]').forEach(a => {
+                    a.addEventListener('click', e => {
+                        e.preventDefault();
+                        const path = a.dataset.path;
+                        const finalPath = new URLSearchParams(path.split('?')[1]).get('path') || path;
+                        if (window.parent && typeof window.parent.loadPage === 'function') window.parent.loadPage(finalPath);
+                        else if (typeof loadPage === 'function') loadPage(finalPath);
+                    });
+                });
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>

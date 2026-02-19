@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NASDAQ Chart | Market Radar</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: #f8fafc; }
+
+    /* Period Dropdown */
+    .period-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .period-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .period-btn:hover { border-color: #10b981; }
+    .period-btn svg { width: 16px; height: 16px; color: #64748b; transition: transform 0.2s; }
+    .period-btn.open svg { transform: rotate(180deg); }
+
+    .period-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 320px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      padding: 16px;
+      z-index: 100;
+      display: none;
+    }
+    .period-panel.open { display: block; }
+
+    .period-section { margin-bottom: 16px; }
+    .period-section:last-child { margin-bottom: 0; }
+    .period-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .period-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .period-option {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #475569;
+      background: #f8fafc;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .period-option:hover { background: #e2e8f0; }
+    .period-option.active {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+
+    /* Custom Date Range */
+    .custom-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .custom-range input[type="date"] {
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #334155;
+      flex: 1;
+      min-width: 120px;
+    }
+    .custom-range input[type="date"]:focus {
+      outline: none;
+      border-color: #10b981;
+    }
+    .custom-range .apply-btn {
+      padding: 8px 16px;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .custom-range .apply-btn:hover { background: #059669; }
+
+    /* Backdrop for mobile */
+    .period-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 99;
+    }
+    .period-backdrop.open { display: block; }
+
+    @media (max-width: 640px) {
+      .period-panel {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        top: auto;
+        bottom: 16px;
+        min-width: auto;
+        border-radius: 20px;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      .period-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* MA Chips */
+    .ma-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .ma-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+    }
+    .ma-chip.off {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+    }
+    .ma-chip.on {
+      color: white;
+      border-color: transparent;
+    }
+    .ma-chip .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .ma-20.on { background: #06b6d4; }
+    .ma-20.on .dot { background: rgba(255,255,255,0.8); }
+    .ma-20.off .dot { background: #06b6d4; }
+    .ma-50.on { background: #8b5cf6; }
+    .ma-50.on .dot { background: rgba(255,255,255,0.8); }
+    .ma-50.off .dot { background: #8b5cf6; }
+    .ma-200.on { background: #f97316; }
+    .ma-200.on .dot { background: rgba(255,255,255,0.8); }
+    .ma-200.off .dot { background: #f97316; }
+
+    /* Stats Card */
+    .stats-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+    .stat-value.sm {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    /* Legend */
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+    }
+    .legend-line {
+      width: 20px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    .legend-line.dashed {
+      background: repeating-linear-gradient(90deg, currentColor 0, currentColor 4px, transparent 4px, transparent 8px);
+      height: 2px;
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-8">
+
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Backdrop for mobile -->
+    <div id="periodBackdrop" class="period-backdrop"></div>
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+          <span class="text-3xl">📊</span>
+          NASDAQ Composite
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">U.S. Tech-Heavy Index · 1980 ~ Present</p>
+      </div>
+      <div class="period-dropdown">
+        <button id="periodBtn" class="period-btn">
+          <span id="periodLabel">1 Year</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div id="periodPanel" class="period-panel">
+          <!-- Quick -->
+          <div class="period-section">
+            <div class="period-section-title">⚡ Quick</div>
+            <div class="period-grid">
+              <button class="period-option" data-period="7" data-label="1W">1W</button>
+              <button class="period-option" data-period="14" data-label="2W">2W</button>
+              <button class="period-option" data-period="30" data-label="1M">1M</button>
+              <button class="period-option" data-period="90" data-label="3M">3M</button>
+            </div>
+          </div>
+          <!-- Standard -->
+          <div class="period-section">
+            <div class="period-section-title">📈 Standard</div>
+            <div class="period-grid">
+              <button class="period-option" data-period="180" data-label="6M">6M</button>
+              <button class="period-option" data-period="ytd" data-label="YTD">YTD</button>
+              <button class="period-option active" data-period="365" data-label="1Y">1Y</button>
+              <button class="period-option" data-period="730" data-label="2Y">2Y</button>
+            </div>
+          </div>
+          <!-- Long-term -->
+          <div class="period-section">
+            <div class="period-section-title">📊 Long-term</div>
+            <div class="period-grid">
+              <button class="period-option" data-period="1095" data-label="3Y">3Y</button>
+              <button class="period-option" data-period="1825" data-label="5Y">5Y</button>
+              <button class="period-option" data-period="3650" data-label="10Y">10Y</button>
+              <button class="period-option" data-period="7300" data-label="20Y">20Y</button>
+            </div>
+          </div>
+          <!-- Year Selection -->
+          <div class="period-section">
+            <div class="period-section-title">📅 Year</div>
+            <div class="period-grid" id="yearGrid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          <!-- Custom Range -->
+          <div class="period-section">
+            <div class="period-section-title">🗓️ Custom Range</div>
+            <div class="custom-range">
+              <input type="date" id="startDate" />
+              <span class="text-slate-400">~</span>
+              <input type="date" id="endDate" />
+              <button class="apply-btn" id="applyCustom">Apply</button>
+            </div>
+          </div>
+          <!-- MAX -->
+          <div class="period-section">
+            <button class="period-option w-full" data-period="9999" data-label="All Data (MAX)" style="grid-column: 1/-1;">
+              📊 All Data (MAX)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats & MA Controls -->
+    <div class="flex flex-col sm:flex-row gap-4">
+      <div class="stats-card flex-1">
+        <div class="flex items-center gap-8">
+          <div class="stat-item">
+            <span class="stat-label">Current</span>
+            <span id="currentValue" class="stat-value">--</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Date</span>
+            <span id="currentDate" class="stat-value sm text-slate-600">--</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Period Change</span>
+            <span id="changeValue" class="stat-value sm">--</span>
+          </div>
+        </div>
+      </div>
+      <div class="stats-card">
+        <div class="flex flex-col gap-2">
+          <span class="stat-label">Moving Averages</span>
+          <div class="ma-chips">
+            <button class="ma-chip ma-20 off" data-ma="20">
+              <span class="dot"></span>
+              20D
+            </button>
+            <button class="ma-chip ma-50 on" data-ma="50">
+              <span class="dot"></span>
+              50D
+            </button>
+            <button class="ma-chip ma-200 on" data-ma="200">
+              <span class="dot"></span>
+              200D
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container">
+      <div id="legendContainer" class="chart-legend">
+        <div class="legend-item">
+          <span class="legend-line" style="background: #10b981;"></span>
+          NASDAQ
+        </div>
+      </div>
+      <div style="height: 400px;">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { getRecessionAnnotations } from '../../../tools/macro-monitor/shared/chart-annotations.js';
+
+    let allData = [];
+    let chart = null;
+    let currentPeriod = 365;
+    let currentLabel = '1Y';
+    let customStart = null;
+    let customEnd = null;
+
+    const maSettings = {
+      20: { enabled: false, color: '#06b6d4', label: '20D MA' },
+      50: { enabled: true, color: '#8b5cf6', label: '50D MA' },
+      200: { enabled: true, color: '#f97316', label: '200D MA' }
+    };
+
+    async function fetchData() {
+      try {
+        const response = await fetch('../../../data/indices/nasdaq.json');
+        allData = await response.json();
+        allData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return allData;
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        return [];
+      }
+    }
+
+    function calculateMA(data, period) {
+      const result = [];
+      for (let i = 0; i < data.length; i++) {
+        if (i < period - 1) {
+          result.push(null);
+        } else {
+          let sum = 0;
+          for (let j = 0; j < period; j++) {
+            sum += data[i - j].value;
+          }
+          result.push(sum / period);
+        }
+      }
+      return result;
+    }
+
+    function filterByPeriod(data, period) {
+      // MAX
+      if (period >= 9999) return data;
+
+      // YTD
+      if (period === 'ytd') {
+        const now = new Date();
+        const ytdStart = new Date(now.getFullYear(), 0, 1);
+        return data.filter(d => new Date(d.date) >= ytdStart);
+      }
+
+      // Specific year (e.g., 'year:2024')
+      if (typeof period === 'string' && period.startsWith('year:')) {
+        const year = parseInt(period.split(':')[1]);
+        return data.filter(d => new Date(d.date).getFullYear() === year);
+      }
+
+      // Custom range
+      if (period === 'custom' && customStart && customEnd) {
+        const start = new Date(customStart);
+        const end = new Date(customEnd);
+        return data.filter(d => {
+          const date = new Date(d.date);
+          return date >= start && date <= end;
+        });
+      }
+
+      // Days-based period
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - period);
+      return data.filter(d => new Date(d.date) >= cutoff);
+    }
+
+    function updateCurrentDisplay(data) {
+      if (!data.length) return;
+      const latest = data[data.length - 1];
+      const first = data[0];
+      const value = latest.value;
+      const change = ((value - first.value) / first.value * 100);
+
+      document.getElementById('currentValue').textContent = value.toLocaleString('en-US', {maximumFractionDigits: 2});
+      document.getElementById('currentDate').textContent = latest.date;
+
+      const changeEl = document.getElementById('changeValue');
+      const sign = change >= 0 ? '+' : '';
+      changeEl.textContent = `${sign}${change.toFixed(2)}%`;
+      changeEl.className = change >= 0 ? 'stat-value sm text-emerald-600' : 'stat-value sm text-red-500';
+    }
+
+    function updateLegend() {
+      const container = document.getElementById('legendContainer');
+      let html = `
+        <div class="legend-item">
+          <span class="legend-line" style="background: #10b981;"></span>
+          NASDAQ
+        </div>
+      `;
+
+      for (const [period, settings] of Object.entries(maSettings)) {
+        if (settings.enabled) {
+          html += `
+            <div class="legend-item">
+              <span class="legend-line dashed" style="color: ${settings.color};"></span>
+              ${settings.label}
+            </div>
+          `;
+        }
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderChart(data) {
+      const ctx = document.getElementById('mainChart').getContext('2d');
+      const dates = data.map(d => d.date);
+      const values = data.map(d => d.value);
+      const startIdx = allData.findIndex(d => d.date === data[0]?.date);
+
+      const datasets = [
+        {
+          label: 'NASDAQ',
+          data: values,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.08)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 2.5
+        }
+      ];
+
+      for (const [period, settings] of Object.entries(maSettings)) {
+        if (settings.enabled) {
+          const fullMA = calculateMA(allData, parseInt(period));
+          const maValues = startIdx >= 0 ? fullMA.slice(startIdx, startIdx + data.length) : [];
+          datasets.push({
+            label: settings.label,
+            data: maValues,
+            borderColor: settings.color,
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 1.5,
+            borderDash: [6, 4]
+          });
+        }
+      }
+
+      const recessionAnnotations = dates.length > 0
+        ? getRecessionAnnotations(dates[0], dates[dates.length - 1])
+        : {};
+
+      updateCurrentDisplay(data);
+      updateLegend();
+
+      const config = {
+        type: 'line',
+        data: { labels: dates, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: currentPeriod <= 365 ? 'month' : currentPeriod <= 1825 ? 'quarter' : 'year',
+                displayFormats: { month: 'MMM yy', quarter: 'MMM yy', year: 'yyyy' }
+              },
+              grid: { display: false },
+              ticks: {
+                maxTicksLimit: 8,
+                color: '#94a3b8',
+                font: { size: 11, weight: 500 }
+              },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: '#f1f5f9', lineWidth: 1 },
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 11, weight: 500 },
+                callback: (v) => v.toLocaleString()
+              },
+              border: { display: false }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#f8fafc',
+              bodyColor: '#e2e8f0',
+              titleFont: { size: 13, weight: 600 },
+              bodyFont: { size: 12 },
+              padding: 12,
+              cornerRadius: 10,
+              displayColors: true,
+              boxWidth: 8,
+              boxHeight: 8,
+              boxPadding: 4,
+              callbacks: {
+                title: (items) => items[0].label,
+                label: (context) => ` ${context.dataset.label}: ${context.parsed.y?.toLocaleString('en-US', {maximumFractionDigits: 2}) || '--'}`
+              }
+            },
+            annotation: { annotations: recessionAnnotations }
+          }
+        }
+      };
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, config);
+    }
+
+    function setupPeriodDropdown() {
+      const btn = document.getElementById('periodBtn');
+      const panel = document.getElementById('periodPanel');
+      const backdrop = document.getElementById('periodBackdrop');
+      const labelEl = document.getElementById('periodLabel');
+
+      // Toggle dropdown
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('open');
+        panel.classList.toggle('open');
+        backdrop.classList.toggle('open');
+      });
+
+      // Close on backdrop click
+      backdrop.addEventListener('click', () => {
+        btn.classList.remove('open');
+        panel.classList.remove('open');
+        backdrop.classList.remove('open');
+      });
+
+      // Period options
+      document.querySelectorAll('.period-option').forEach(option => {
+        option.addEventListener('click', () => {
+          const periodValue = option.dataset.period;
+          const label = option.dataset.label;
+
+          // Update active state
+          document.querySelectorAll('.period-option').forEach(o => o.classList.remove('active'));
+          option.classList.add('active');
+
+          // Set period
+          if (periodValue === 'ytd') {
+            currentPeriod = 'ytd';
+          } else if (periodValue.startsWith('year:')) {
+            currentPeriod = periodValue;
+          } else {
+            currentPeriod = parseInt(periodValue);
+          }
+
+          currentLabel = label;
+          labelEl.textContent = label;
+
+          // Close dropdown
+          btn.classList.remove('open');
+          panel.classList.remove('open');
+          backdrop.classList.remove('open');
+
+          // Render
+          const filtered = filterByPeriod(allData, currentPeriod);
+          renderChart(filtered);
+        });
+      });
+
+      // Populate years (last 10 years + current)
+      const yearGrid = document.getElementById('yearGrid');
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let y = currentYear; y >= currentYear - 9; y--) {
+        years.push(y);
+      }
+      yearGrid.innerHTML = years.map(y => `
+        <button class="period-option" data-period="year:${y}" data-label="${y}">${y}</button>
+      `).join('');
+
+      // Re-attach event listeners for year buttons
+      yearGrid.querySelectorAll('.period-option').forEach(option => {
+        option.addEventListener('click', () => {
+          const periodValue = option.dataset.period;
+          const label = option.dataset.label;
+
+          document.querySelectorAll('.period-option').forEach(o => o.classList.remove('active'));
+          option.classList.add('active');
+
+          currentPeriod = periodValue;
+          currentLabel = label;
+          labelEl.textContent = label;
+
+          btn.classList.remove('open');
+          panel.classList.remove('open');
+          backdrop.classList.remove('open');
+
+          const filtered = filterByPeriod(allData, currentPeriod);
+          renderChart(filtered);
+        });
+      });
+
+      // Custom date range
+      const startInput = document.getElementById('startDate');
+      const endInput = document.getElementById('endDate');
+      const applyBtn = document.getElementById('applyCustom');
+
+      // Set default values
+      const today = new Date();
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(today.getFullYear() - 1);
+      startInput.value = oneYearAgo.toISOString().split('T')[0];
+      endInput.value = today.toISOString().split('T')[0];
+
+      applyBtn.addEventListener('click', () => {
+        customStart = startInput.value;
+        customEnd = endInput.value;
+
+        if (!customStart || !customEnd) return;
+
+        document.querySelectorAll('.period-option').forEach(o => o.classList.remove('active'));
+
+        currentPeriod = 'custom';
+        currentLabel = `${customStart} ~ ${customEnd}`;
+        labelEl.textContent = 'Custom';
+
+        btn.classList.remove('open');
+        panel.classList.remove('open');
+        backdrop.classList.remove('open');
+
+        const filtered = filterByPeriod(allData, currentPeriod);
+        renderChart(filtered);
+      });
+    }
+
+    function setupMAToggles() {
+      document.querySelectorAll('.ma-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const period = btn.dataset.ma;
+          maSettings[period].enabled = !maSettings[period].enabled;
+          btn.classList.toggle('on', maSettings[period].enabled);
+          btn.classList.toggle('off', !maSettings[period].enabled);
+          const filtered = filterByPeriod(allData, currentPeriod);
+          renderChart(filtered);
+        });
+      });
+    }
+
+    async function init() {
+      await fetchData();
+      const filtered = filterByPeriod(allData, currentPeriod);
+      renderChart(filtered);
+      setupPeriodDropdown();
+      setupMAToggles();
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+{
+  "folder": "sec-13f",
+  "version": "2.1.0",
+  "updated": "2026-01-05",
+  "source": "SEC EDGAR 13F filings",
+  "update_frequency": "quarterly (45 days after quarter end)",
+  "maintainer": "Manual conversion from SEC filings",
+
+  "structure": {
+    "summary.json": "Aggregated holdings summary",
+    "by_sector.json": "Holdings by sector",
+    "by_ticker.json": "Holdings by ticker",
+    "investors/": "17 individual investor files"
+  },
+
+  "files": {
+    "summary.json": {
+      "description": "Aggregated holdings summary across all investors",
+      "size_kb": 6.2,
+      "schema": {
+        "last_updated": "YYYY-MM-DD",
+        "total_aum": "number",
+        "investor_count": "number",
+        "top_holdings[]": {
+          "ticker": "string",
+          "name": "string",
+          "total_value": "number",
+          "investor_count": "number"
+        }
+      }
+    },
+    "by_sector.json": {
+      "description": "Holdings aggregated by sector",
+      "size_kb": 2.6,
+      "schema": {
+        "sectors.{sector_name}": {
+          "total_value": "number",
+          "weight": "number (0-1)",
+          "top_stocks[]": {
+            "ticker": "string",
+            "value": "number"
+          }
+        }
+      }
+    },
+    "by_ticker.json": {
+      "description": "All holdings by ticker",
+      "size_kb": 288,
+      "schema": {
+        "tickers.{TICKER}": {
+          "name": "string",
+          "total_value": "number",
+          "holders[]": {
+            "investor": "string",
+            "shares": "number",
+            "value": "number"
+          }
+        }
+      }
+    },
+    "investors/{name}.json": {
+      "description": "Individual investor holdings (17 files)",
+      "investors": ["buffett", "ackman", "dalio", "druckenmiller", "cohen", "griffin", "fisher", "fidelity", "asness", "hohn", "tepper", "einhorn", "loeb", "icahn", "soros", "burry", "pabrai"],
+      "schema": {
+        "metadata": {
+          "version": "string",
+          "quarters_covered": "string[] (e.g., 2025-Q3, 2025-Q2)"
+        },
+        "investor": {
+          "name": "string",
+          "entity": "string (fund name)",
+          "cik": "string (SEC CIK number)",
+          "group": "string (value/macro/activist/quant)"
+        },
+        "filings[]": {
+          "quarter": "string (YYYY-QN)",
+          "filing_date": "YYYY-MM-DD",
+          "aum_total": "number",
+          "holdings_count": "number",
+          "top_10_weight": "number (0-1)",
+          "holdings[]": {
+            "ticker": "string",
+            "name": "string",
+            "shares": "number",
+            "value": "number",
+            "weight": "number (0-1)",
+            "change": "string (NEW/INCREASED/DECREASED/SOLD)"
+          }
+        }
+      }
+    }
+  },
+
+  "investor_groups": {
+    "value": ["buffett", "ackman", "pabrai", "einhorn"],
+    "macro": ["dalio", "druckenmiller", "soros"],
+    "activist": ["icahn", "loeb", "hohn"],
+    "quant": ["griffin", "asness", "cohen"]
+  },
+
+  "breaking_changes_history": [
+    {"version": "2.1.0", "date": "2026-01-05", "change": "Added burry, pabrai investors"},
+    {"version": "2.0.0", "date": "2025-12-01", "change": "Restructured with quarterly filings array"},
+    {"version": "1.0.0", "date": "2025-11-01", "change": "Initial schema"}
+  ]
+}

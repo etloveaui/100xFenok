@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Radar Dev | Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+    }
+    .orbitron { font-family: 'Orbitron', monospace; }
+    .card {
+      background: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-color: #6366f1;
+      transform: translateY(-2px);
+    }
+    .preview-frame {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+    .preview-frame:hover {
+      border-color: #6366f1;
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <!-- Header -->
+  <header class="py-6 sm:py-8 border-b border-gray-200 bg-white">
+    <div class="container mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <i class="fas fa-satellite-dish text-lg sm:text-xl text-white"></i>
+          </div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold orbitron text-gray-800">Market Radar</h1>
+            <p class="text-gray-500 text-xs sm:text-sm">Development & Testing</p>
+          </div>
+        </div>
+        <a href="../index.html" class="text-gray-500 hover:text-indigo-600 transition-colors text-sm flex items-center gap-2">
+          <i class="fas fa-arrow-left"></i>
+          <span class="hidden sm:inline">Back to Admin</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
+
+    <!-- Phase 4-D: Combo Signals Widget -->
+    <section>
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">NEW</span>
+        <h2 class="text-lg font-semibold text-gray-700">Phase 4-D: 100x Combo Signals&trade;</h2>
+        <span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-bold">DEV</span>
+      </div>
+
+      <p class="text-sm text-gray-600 mb-6">
+        10개 시그널 (7 Buy + 3 Warning)을 280px 위젯에 표시. 왼쪽 컬러 바 + B/W 태그로 카테고리 구분.
+      </p>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+        <!-- Combo Signals Widget -->
+        <div class="card rounded-2xl p-5 border-2 border-green-400">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-bullseye text-green-500"></i>
+              Combo Signals Widget
+              <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold">SELECTED</span>
+            </h3>
+            <a href="combo-widget-dots.html" target="_blank"
+               class="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame border-green-200">
+            <iframe src="combo-widget-dots.html"
+                    class="w-full h-[320px]"
+                    scrolling="no"
+                    loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-sm text-gray-600">
+            <strong>구조:</strong> 2열x5행 그리드 | BUY(파랑)/WARN(빨강) 표시 | Active/Near/Off 상태
+          </p>
+        </div>
+
+        <!-- Full Dashboard -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-th-large text-purple-500"></i>
+              Full Dashboard (c-final)
+              <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-bold">FINAL</span>
+            </h3>
+            <a href="sentiment-layout-c-final.html" target="_blank"
+               class="px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg text-xs font-medium hover:bg-purple-100 transition-colors">
+              <i class="fas fa-external-link-alt mr-1"></i>Open
+            </a>
+          </div>
+          <div class="preview-frame">
+            <iframe src="sentiment-layout-c-final.html"
+                    class="w-full h-[320px]"
+                    scrolling="no"
+                    loading="lazy"></iframe>
+          </div>
+          <p class="mt-3 text-sm text-gray-500">
+            콤보시그널 전체 대시보드 (상세 조건 포함)
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Quick Links -->
+      <div class="flex flex-wrap gap-3">
+        <a href="combo-widget-dots.html" target="_blank"
+           class="px-4 py-2 bg-green-50 border border-green-200 rounded-xl text-sm font-medium text-green-700 hover:bg-green-100 transition-colors flex items-center gap-2">
+          <i class="fas fa-bullseye"></i> Combo Widget
+        </a>
+        <a href="sentiment-layout-c-final.html" target="_blank"
+           class="px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-medium hover:bg-purple-500 transition-colors flex items-center gap-2">
+          <i class="fas fa-expand"></i> Full Dashboard
+        </a>
+        <a href="../../tools/macro-monitor/index.html" target="_blank"
+           class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-emerald-300 hover:text-emerald-600 transition-colors flex items-center gap-2">
+          <i class="fas fa-th-large"></i> Market Radar Main
+        </a>
+      </div>
+    </section>
+
+    <!-- Status Info -->
+    <section class="bg-white rounded-2xl p-6 border border-gray-200">
+      <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fas fa-info-circle text-blue-500"></i>
+        개발 상태
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div class="p-4 bg-emerald-50 rounded-xl">
+          <div class="text-emerald-600 font-semibold mb-1">Phase 4-C</div>
+          <div class="text-emerald-700">Sentiment 완료</div>
+        </div>
+        <div class="p-4 bg-amber-50 rounded-xl">
+          <div class="text-amber-600 font-semibold mb-1">현재 단계</div>
+          <div class="text-amber-700">Phase 4-D 위젯 테스트</div>
+        </div>
+        <div class="p-4 bg-gray-50 rounded-xl">
+          <div class="text-gray-600 font-semibold mb-1">배포 상태</div>
+          <div class="text-gray-700">미배포 (Admin Only)</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-200 py-4 sm:py-6 mt-auto bg-white">
+    <div class="container mx-auto px-4 sm:px-6 text-center text-gray-500 text-xs sm:text-sm">
+      <span class="orbitron">100x Market Radar</span> Dev Panel
+    </div>
+  </footer>
+
+</body>
+</html>

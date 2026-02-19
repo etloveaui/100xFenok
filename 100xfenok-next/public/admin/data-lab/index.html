@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>데이터 랩 - 100x FenoK</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="데이터 상태 모니터링 대시보드">
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Dashboard Styles -->
+  <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
+
+  <!-- Header -->
+  <header class="py-6 border-b bg-white shadow-sm">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-database text-emerald-500"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">데이터 랩</h1>
+            <p class="text-gray-500 text-sm">데이터 상태 모니터링</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="last-updated" class="text-xs text-gray-400"></span>
+          <button onclick="DataLabUI.refresh()" class="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="새로고침">
+            <i class="fas fa-refresh"></i>
+          </button>
+          <a href="../" class="text-gray-500 hover:text-blue-600 flex items-center gap-1">
+            <i class="fas fa-arrow-left"></i>
+            <span class="hidden sm:inline">관리자</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8">
+
+    <!-- Summary Section -->
+    <section id="summary-container" class="mb-8">
+      <!-- Rendered by Renderer.renderSummary() -->
+    </section>
+
+    <!-- Data Sources Grid -->
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-600 mb-4">
+        <i class="fas fa-signal text-emerald-500 mr-2"></i>데이터 소스
+      </h2>
+      <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Rendered by Renderer.renderCards() -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Details Panel (Slide-in) -->
+  <aside id="details-panel" class="hidden fixed top-0 right-0 w-full lg:w-[480px] h-full bg-white shadow-2xl overflow-y-auto z-40">
+    <!-- Rendered by Renderer.renderDetails() -->
+  </aside>
+
+  <!-- Footer -->
+  <footer class="border-t bg-white py-4 mt-auto">
+    <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+      <p>데이터 랩 v2.0</p>
+      <p class="text-xs mt-1">
+        <a href="#" onclick="console.log(DataLabUI.debug()); alert('디버그 정보가 콘솔에 출력되었습니다.');" class="hover:text-emerald-600">디버그</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Shared Modules (from admin/shared/) -->
+  <script src="../shared/config/manifest-loader.js"></script>
+  <script src="../shared/core/cache-manager.js"></script>
+  <script src="../shared/core/data-manager.js"></script>
+  <script src="../shared/core/formatters.js"></script>
+  <script src="../shared/validators/freshness-checker.js"></script>
+  <script src="../shared/validators/schema-validator.js"></script>
+  <script src="../shared/ui/status-card.js"></script>
+
+  <script>
+    // Set prefix for Data Lab
+    if (window.CacheManager) CacheManager.setPrefix('dlab_cache_');
+  </script>
+
+  <!-- App -->
+  <script src="app/state-manager.js"></script>
+  <script src="app/renderer.js"></script>
+  <script src="app/dashboard.js"></script>
+
+</body>
+</html>

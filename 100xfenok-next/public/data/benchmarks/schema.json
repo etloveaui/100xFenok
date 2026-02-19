@@ -1,0 +1,97 @@
+{
+  "folder": "benchmarks",
+  "version": "3.7.0",
+  "updated": "2026-02-09",
+  "source": "Bloomberg Terminal",
+  "update_frequency": "weekly (Sunday)",
+  "maintainer": "Manual upload from Bloomberg",
+
+  "files": {
+    "us.json": {
+      "description": "S&P 500, Nasdaq 100, Nasdaq Composite, Russell 2000",
+      "size_kb": 689,
+      "records_per_index": 829,
+      "date_range": ["2010-03", "2026-01"],
+      "schema": {
+        "metadata": {
+          "version": "string (YYYY-MM-DD)",
+          "source": "string",
+          "update_frequency": "string"
+        },
+        "sections.{index_key}": {
+          "name": "string (display name with ticker)",
+          "data[]": {
+            "date": "YYYY-MM-DD",
+            "px_last": "number (price)",
+            "best_eps": "number (EPS estimate)",
+            "best_pe_ratio": "number",
+            "px_to_book_ratio": "number",
+            "roe": "number (0-1 decimal)"
+          }
+        }
+      }
+    },
+    "us_sectors.json": {
+      "description": "11 GICS sectors + Housing",
+      "size_kb": 2048,
+      "sectors": ["Technology", "Healthcare", "Financials", "Consumer Discretionary", "Communication Services", "Industrials", "Consumer Staples", "Energy", "Utilities", "Real Estate", "Materials", "Housing"],
+      "schema": "Same as us.json"
+    },
+    "micro_sectors.json": {
+      "description": "Philadelphia Semi, Regional Banks, Hang Seng Tech, Biotech",
+      "size_kb": 626,
+      "schema": "Same as us.json"
+    },
+    "developed.json": {
+      "description": "Euro STOXX 50, TOPIX, Hong Kong, Nikkei",
+      "size_kb": 689,
+      "schema": "Same as us.json"
+    },
+    "emerging.json": {
+      "description": "Shanghai, Sensex, KOSPI, Brazil, Vietnam, Hang Seng H",
+      "size_kb": 1126,
+      "schema": "Same as us.json"
+    },
+    "msci.json": {
+      "description": "MSCI World/Developed/Emerging/China/India/Korea",
+      "size_kb": 1024,
+      "schema": "Same as us.json"
+    },
+    "summaries.json": {
+      "added_in": "3.7.0",
+      "description": "Momentum (1M/3M/6M/YTD) + Yearly Returns for all 37 indices/sectors",
+      "size_kb": 12,
+      "sections": 37,
+      "schema": {
+        "metadata": {
+          "version": "YYYY-MM-DD",
+          "generated": "ISO timestamp",
+          "type": "summary",
+          "source": "Bloomberg Terminal"
+        },
+        "momentum.{index_key}": {
+          "1m": "number (decimal, e.g., 0.0182 = 1.82%)",
+          "3m": "number (decimal)",
+          "6m": "number (decimal)",
+          "ytd": "number (decimal)"
+        },
+        "yearly_returns.{index_key}": {
+          "YYYY": "number (decimal, e.g., 2025, 2024, 2023...2018)"
+        }
+      }
+    }
+  },
+
+  "index_keys": {
+    "us.json": ["sp500", "nasdaq100", "nasdaq_composite", "russell2000"],
+    "developed.json": ["euro_stoxx50", "topix", "hang_seng", "nikkei225"],
+    "emerging.json": ["shanghai", "sensex", "kospi", "bovespa", "vietnam", "hscei"],
+    "msci.json": ["msci_world", "msci_developed", "msci_emerging", "msci_china", "msci_india", "msci_korea"]
+  },
+
+  "breaking_changes_history": [
+    {"version": "3.7.0", "date": "2026-01-20", "change": "summaries.json added"},
+    {"version": "3.6.0", "date": "2026-01-15", "change": "micro_sectors.json added"},
+    {"version": "3.0.0", "date": "2025-12-01", "change": "Schema unified across all files"}
+  ]
+}

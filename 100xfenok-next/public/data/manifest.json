@@ -1,0 +1,156 @@
+{
+  "manifest_version": "1.0.0",
+  "created": "2026-01-20",
+  "last_updated": "2026-02-16",
+  "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
+  "folders": {
+    "benchmarks": {
+      "version": "3.7.0",
+      "updated": "2026-02-03",
+      "update_frequency": "weekly",
+      "source": "Bloomberg Terminal",
+      "file_count": 7,
+      "schema": true,
+      "description": "Market indices P/E, P/B, ROE - 15+ years history"
+    },
+    "damodaran": {
+      "version": "2.0.0",
+      "updated": "2026-01-15",
+      "update_frequency": "yearly",
+      "source": "NYU Stern (Aswath Damodaran)",
+      "file_count": 4,
+      "schema": true,
+      "description": "Industry valuation data, ERP, credit ratings"
+    },
+    "global-scouter": {
+      "version": "2.2.0",
+      "updated": "2026-02-16",
+      "update_frequency": "on-demand",
+      "source": "Custom aggregation",
+      "file_count": 1244,
+      "schema": true,
+      "description": "Stock screening (1,240), ETFs (23), indicators (1,048) + extended: eps_consensus, growth_consensus, per_bands"
+    },
+    "indices": {
+      "version": "2.0.0",
+      "updated": "2026-01-26",
+      "update_frequency": "daily",
+      "source": "Google Sheets (Apps Script)",
+      "file_count": 2,
+      "schema": true,
+      "description": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
+    },
+    "sec-13f": {
+      "version": "2.1.0",
+      "updated": "2026-01-05",
+      "update_frequency": "quarterly",
+      "source": "SEC EDGAR",
+      "file_count": 20,
+      "schema": true,
+      "description": "Institutional holdings from major investors"
+    },
+    "sentiment": {
+      "version": "1.0.0",
+      "updated": "2026-01-26",
+      "update_frequency": "daily",
+      "source": "Multiple (AAII, CNN, CFTC, CBOE)",
+      "file_count": 13,
+      "schema": true,
+      "description": "Market sentiment indicators"
+    },
+    "slickcharts": {
+      "version": "2.1.0",
+      "updated": "2026-01-26",
+      "update_frequency": "daily/weekly/monthly",
+      "source": "SlickCharts.com (32 scrapers)",
+      "file_count": 550,
+      "schema": true,
+      "description": "Index holdings, returns, individual stocks"
+    }
+  },
+  "recent_changes": [
+    {
+      "date": "2026-02-16",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Data refresh (2026-02-13 source): 1,239 stocks (-1), 1,048 indicators, per_bands 95.8%",
+      "breaking": false
+    },
+    {
+      "date": "2026-02-09",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Data refresh (2026-02-06 source): 1,240 stocks (-1), 1,048 indicators (+1), per_bands 95.8%",
+      "breaking": false
+    },
+    {
+      "date": "2026-02-03",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "Weekly data update: 829 data points (2010-03-19 ~ 2026-01-30), summaries 37 sections",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-30",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Weekly data refresh: 1,241 stocks (-2), 1,047 indicators (+1)",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-26",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "Weekly data update: 829 data points (2010-03-12 ~ 2026-01-23)",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-26",
+      "folder": "all",
+      "version": "-",
+      "change": "Synced manifest dates with actual file timestamps (sentiment, indices, benchmarks, slickcharts → 01-26)",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-25",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Extended fields: fiscal_month (100%), eps_consensus (100%), growth_consensus (100%), per_bands (95.7%)",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-25",
+      "folder": "indices",
+      "version": "2.0.0",
+      "change": "Documentation correction: LEGACY->ACTIVE, manual->daily, fixed schema to match actual data structure (price time series, not constituents)",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-20",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "summaries.json added with momentum and yearly returns",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-17",
+      "folder": "slickcharts",
+      "version": "2.1.0",
+      "change": "516 individual stock files in stocks/ subfolder",
+      "breaking": false
+    },
+    {
+      "date": "2026-01-10",
+      "folder": "global-scouter",
+      "version": "2.1.0",
+      "change": "etfs/index.json and indicators/economic.json added",
+      "breaking": false
+    }
+  ],
+  "agent_instructions": {
+    "on_session_start": "Read this manifest to understand current data structure",
+    "on_schema_change": "Update folder schema.json AND this manifest recent_changes",
+    "on_new_file": "Add to folder schema.json files section",
+    "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
+  }
+}
