@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showToast, setShowToast] = useState(false);
   const pathname = usePathname();
 
   const isDashboard = pathname === '/';
@@ -15,22 +14,6 @@ export default function Navbar() {
   const isStrategies = pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr';
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
-
-  const handleBrandClick = async (e: React.MouseEvent) => {
-    // Allow normal navigation on middle-click or ctrl/cmd+click
-    if (e.button === 1 || e.ctrlKey || e.metaKey) return;
-    
-    e.preventDefault();
-    
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
-    } catch {
-      // Fallback: navigate to home
-      window.location.href = '/';
-    }
-  };
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
@@ -44,13 +27,11 @@ export default function Navbar() {
       <nav className="relative w-full z-50" id="mainNav">
         <div className="nav-wrapper w-full bg-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border-b border-gray-100 sticky top-0">
           <div className="container mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-            {/* Brand - Click to copy URL */}
+            {/* Brand */}
               <Link
                 href="/"
-                onClick={handleBrandClick}
                 className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0 cursor-pointer"
-                aria-label="Copy current URL to clipboard"
-                title="Click to copy URL"
+                aria-label="Go to home"
               >
                 <div className="brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300 border border-slate-100 active:scale-95">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -288,16 +269,6 @@ export default function Navbar() {
                 <Link href="/vr" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Value Rebalancing</Link>
               </div>
             </details>
-          </div>
-        </div>
-      )}
-
-      {/* URL Copy Toast */}
-      {showToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-brand-navy text-white px-4 py-2.5 rounded-lg shadow-lg animate-fade-in-down">
-          <div className="flex items-center gap-2">
-            <i className="fas fa-check-circle text-green-400" />
-            <span className="text-sm font-medium">URL 복사 완료!</span>
           </div>
         </div>
       )}

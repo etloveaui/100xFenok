@@ -55,7 +55,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-screen bg-[#f8fafc] overflow-x-hidden">
         <Navbar />
-        <main className="pt-14 sm:pt-16">
+        <main>
           {children}
         </main>
         <Footer />
