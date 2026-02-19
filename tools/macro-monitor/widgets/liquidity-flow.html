@@ -823,8 +823,8 @@
       if (window.top?.loadPage) { window.top.loadPage(DETAIL_PATH); return; }
       if (window.parent?.loadPage) { window.parent.loadPage(DETAIL_PATH); return; }
     } catch(e) {}
-    const base = window.top?.baseHref || '/';
-    (window.top||window).location.assign(`${base}index.html?path=${DETAIL_PATH}`);
+    const targetPath = String(DETAIL_PATH || '').replace(/^\/+/, '');
+    (window.top || window).location.assign(`/radar?path=${encodeURIComponent(targetPath)}`);
   }
 
   // window.init 노출 (module에서 호출)

@@ -459,8 +459,9 @@
       console.error('Parent navigation failed:', e);
     }
 
-    // 직접 접근 시 상대 경로로 이동
-    window.location.href = path;
+    // Next.js 라우트 fallback: nav/footer를 유지한 채 상세 이동
+    const fullPath = `tools/macro-monitor/${String(path || '').replace(/^\/+/, '')}`;
+    (window.top || window).location.assign(`/radar?path=${encodeURIComponent(fullPath)}`);
   }
 
   // ===== Coming Soon 카드 클릭 시 알림 =====

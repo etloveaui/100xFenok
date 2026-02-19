@@ -321,6 +321,9 @@
                             window.parent.loadPage(finalPath);
                         } else if (typeof loadPage === 'function') {
                             loadPage(finalPath);
+                        } else if (finalPath) {
+                            const normalizedPath = finalPath.replace(/^\/+/, '');
+                            (window.top || window).location.assign(`/market?path=${encodeURIComponent(normalizedPath)}`);
                         }
                     });
                 });
