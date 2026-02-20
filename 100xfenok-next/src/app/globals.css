@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Orbitron:wght@600;800;900&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -20,13 +19,13 @@
   --color-brand-gold: var(--brand-gold);
   --color-brand-interactive: var(--brand-interactive);
   --color-brand-bg: var(--brand-bg);
-  --font-sans: 'Noto Sans KR', Arial, Helvetica, sans-serif;
-  --font-orbitron: 'Orbitron', sans-serif;
+  --font-sans: var(--font-noto-sans-kr), Arial, Helvetica, sans-serif;
+  --font-orbitron: var(--font-orbitron-face), sans-serif;
 }
 
 /* Orbitron Font Class */
 .orbitron {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-orbitron);
 }
 
 /* Custom Brand Colors as Utilities */
@@ -741,7 +740,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Noto Sans KR', Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
 }
 

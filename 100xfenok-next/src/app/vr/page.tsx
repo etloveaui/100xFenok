@@ -57,11 +57,7 @@ export default async function VRPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="vr-page-bg vr-mathematical-bg min-h-screen overflow-x-clip pb-2"
-      style={{
-        fontFamily: "'Noto Sans KR', sans-serif"
-      }}
-    >
+    <div className="vr-page-bg vr-mathematical-bg min-h-screen overflow-x-clip pb-2">
       <div className="container mx-auto p-3 sm:p-4 md:p-8">
         <header className="text-center mb-10 md:mb-16">
           <div className="vr-floating-formula mb-4 inline-block text-6xl sm:text-7xl md:mb-6 md:text-8xl">⚖️</div>

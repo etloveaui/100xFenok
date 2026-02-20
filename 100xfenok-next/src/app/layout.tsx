@@ -1,7 +1,22 @@
 import type { Metadata } from "next";
+import { Noto_Sans_KR, Orbitron } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+
+const notoSansKr = Noto_Sans_KR({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  variable: "--font-noto-sans-kr",
+});
+
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  weight: ["600", "800", "900"],
+  display: "swap",
+  variable: "--font-orbitron-face",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://100x-fenok.vercel.app'),
@@ -53,7 +68,7 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
-      <body className="antialiased min-h-screen bg-[#f8fafc] overflow-x-hidden">
+      <body className={`${notoSansKr.variable} ${orbitron.variable} antialiased min-h-screen bg-[#f8fafc] overflow-x-hidden`}>
         <Navbar />
         <main>
           {children}

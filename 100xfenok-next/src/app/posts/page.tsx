@@ -61,7 +61,6 @@ export default async function PostsPage({ searchParams }: PageProps) {
     <div 
       className="text-slate-800 min-h-screen"
       style={{
-        fontFamily: "'Noto Sans KR', sans-serif",
         backgroundColor: '#f8fafc'
       }}
     >

@@ -4,6 +4,14 @@ const { chromium } = require("playwright");
 const base = process.env.QA_BASE_URL || "http://127.0.0.1:4173";
 const baseOrigin = new URL(base).origin;
 
+function parseCsvEnv(value) {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 function isExternalUrl(url) {
   try {
     return new URL(url, base).origin !== baseOrigin;
@@ -61,7 +69,7 @@ function isDevServerNoise(message) {
   );
 }
 
-const routes = [
+const defaultRoutes = [
   "/",
   "/market",
   "/alpha-scout",
@@ -77,10 +85,19 @@ const routes = [
   "/admin/design-lab",
   "/admin/data-lab",
   "/admin/macro-monitor",
+  "/admin/market-radar",
+  "/admin/valuation-lab",
+  "/admin/stark-lab",
+  "/admin/ib-helper",
+  "/admin/stats",
+  "/admin/api-test",
   // Week 3 route (skeleton)
   "/tools/stock-analyzer",
+  "/tools/stock-analyzer/native",
   "/this-route-should-not-exist",
 ];
+const requestedRoutes = parseCsvEnv(process.env.QA_ROUTES);
+const routes = requestedRoutes.length > 0 ? requestedRoutes : defaultRoutes;
 
 const expectedIframeRoutes = new Set([
   "/ib",
@@ -88,20 +105,54 @@ const expectedIframeRoutes = new Set([
   "/admin/design-lab",
   "/admin/data-lab",
   "/admin/macro-monitor",
+  "/admin/market-radar",
+  "/admin/valuation-lab",
+  "/admin/stark-lab",
+  "/admin/ib-helper",
+  "/admin/stats",
+  "/admin/api-test",
   "/tools/stock-analyzer",
 ]);
 
 const expectedIframeSrcByRoute = {
+  "/admin/design-lab": "/admin/design-lab/index.html",
+  "/admin/data-lab": "/admin/data-lab/index.html",
+  "/admin/macro-monitor": "/admin/market-radar/index.html",
+  "/admin/market-radar": "/admin/market-radar/index.html",
+  "/admin/valuation-lab": "/admin/valuation-lab/index.html",
+  "/admin/stark-lab": "/admin/stark-lab/index.html",
+  "/admin/ib-helper": "/admin/ib-helper/index.html",
+  "/admin/stats": "/admin/stats.html",
+  "/admin/api-test": "/admin/api-test.html",
   "/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html",
 };
 
-const viewports = [
+const defaultViewports = [
   { name: "desktop", width: 1440, height: 900 },
   { name: "mobile", width: 390, height: 844 },
   { name: "fold", width: 540, height: 720 },
 ];
+const requestedViewportNames = parseCsvEnv(process.env.QA_VIEWPORTS).map((value) =>
+  value.toLowerCase(),
+);
+const viewports =
+  requestedViewportNames.length > 0
+    ? defaultViewports.filter((viewport) =>
+        requestedViewportNames.includes(viewport.name),
+      )
+    : defaultViewports;
 
 const isDevServer = base.includes(":3000") || process.env.QA_DEV === "1";
+
+if (routes.length === 0) {
+  throw new Error("No routes configured. Set QA_ROUTES or use default routes.");
+}
+
+if (viewports.length === 0) {
+  throw new Error(
+    "No viewports configured. Set QA_VIEWPORTS with desktop,mobile,fold or use defaults.",
+  );
+}
 
 async function prewarmRoutes() {
   if (!isDevServer) return;
