@@ -380,12 +380,12 @@ const SheetsSync = (function() {
    * @returns {Promise<Object>} Token response
    */
   function signIn() {
-    // 🔴 v4.0.0: Proxy mode — use GasProxy sign-in
+    // 🔴 v4.0.0: Proxy mode — use GasProxy sign-in (returns Promise)
     if (CONFIG.USE_PROXY) {
-      return new Promise(function(resolve) {
-        GasProxy.signIn();
-        // GasProxy.init callback will update state
-        resolve({ proxy: true });
+      return GasProxy.signIn().then(function(email) {
+        currentUserEmail = email;
+        isSignedIn = true;
+        return { proxy: true, email: email };
       });
     }
 
