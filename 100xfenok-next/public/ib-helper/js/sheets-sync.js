@@ -1,10 +1,10 @@
 /**
- * IB Helper Google Sheets Sync - v3.8.0 (Row Upsert + Security Hardening)
+ * IB Helper Google Sheets Sync - v4.0.0 (GAS Proxy Auth Migration)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 3.8.0
+ * @version 4.0.0
  * @feature #221: Apps Script WebApp으로 현재가 공개 API 구현 (로그인 불필요)
  * @fix Codex Review R1: CORS (Accept 헤더 제거), CONFIG 통합, ticker 검증, 1분 캐시
  * @fix Codex Review R2: 티커별 캐시 TTL 분리 (전역 타임스탬프 → 티커별 타임스탬프)
@@ -47,6 +47,11 @@ const SheetsSync = (function() {
     // 🔴 v3.7.0 (#221): Apps Script WebApp URL (현재가 공개 API)
     // 배포 후 URL 입력: https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
     WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbz2oCTIJyMFyAKUqoaZfcHMDz46rUEcSNFXnq2VDnXIKsdJcUl4oQQT6_FHRoeDyQAA/exec',
+
+    // 🔴 v4.0.0 (#258/#226): GAS Proxy mode — all Sheets ops through doPost()
+    // true = proxy path (no OAuth spreadsheets scope, 7-day session)
+    // false = legacy gapi.client.sheets path (1-hour token, unverified app warning)
+    USE_PROXY: true,
 
     DISCOVERY_DOCS: [
       'https://sheets.googleapis.com/$discovery/rest?version=v4'
@@ -194,12 +199,36 @@ const SheetsSync = (function() {
    * @returns {Promise<boolean>} Success status
    */
   async function init() {
-    if (!CONFIG.CLIENT_ID || !CONFIG.API_KEY) {
-      console.warn('SheetsSync: CLIENT_ID or API_KEY not configured');
+    if (!CONFIG.CLIENT_ID) {
+      console.warn('SheetsSync: CLIENT_ID not configured');
       return false;
     }
 
     try {
+      // 🔴 v4.0.0: Proxy mode — skip gapi, only load GIS for identity
+      if (CONFIG.USE_PROXY) {
+        var restored = await GasProxy.init({
+          onSignIn: function(email) {
+            currentUserEmail = email;
+            isSignedIn = true;
+          },
+          onSignOut: function() {
+            currentUserEmail = null;
+            isSignedIn = false;
+          }
+        });
+        if (restored) {
+          currentUserEmail = GasProxy.getUserEmail();
+          isSignedIn = true;
+        }
+        return true;
+      }
+
+      // Legacy path: load gapi + GIS
+      if (!CONFIG.API_KEY) {
+        console.warn('SheetsSync: API_KEY not configured');
+        return false;
+      }
       await loadGapiScript();
       await loadGisScript();
       return true;
@@ -351,6 +380,15 @@ const SheetsSync = (function() {
    * @returns {Promise<Object>} Token response
    */
   function signIn() {
+    // 🔴 v4.0.0: Proxy mode — use GasProxy sign-in
+    if (CONFIG.USE_PROXY) {
+      return new Promise(function(resolve) {
+        GasProxy.signIn();
+        // GasProxy.init callback will update state
+        resolve({ proxy: true });
+      });
+    }
+
     return new Promise(async (resolve, reject) => {
       if (!gisInited) {
         reject(new Error('Google Identity Services not initialized'));
@@ -432,6 +470,14 @@ const SheetsSync = (function() {
    * 🔴 v3.6.0: 저장된 세션도 삭제
    */
   function signOut() {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      GasProxy.signOut();
+      isSignedIn = false;
+      currentUserEmail = null;
+      return;
+    }
+
     try {
       // gapi가 로드되지 않았으면 스킵
       if (typeof gapi !== 'undefined' && gapi.client) {
@@ -456,6 +502,10 @@ const SheetsSync = (function() {
    * @returns {boolean}
    */
   function isAuthenticated() {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      return GasProxy.isAuthenticated();
+    }
     try {
       return isSignedIn &&
              typeof gapi !== 'undefined' &&
@@ -471,6 +521,10 @@ const SheetsSync = (function() {
    * @returns {string|null}
    */
   function getUserEmail() {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      return GasProxy.getUserEmail() || currentUserEmail;
+    }
     return currentUserEmail;
   }
 
@@ -507,6 +561,13 @@ const SheetsSync = (function() {
    * 🔴 v3.5.0: withRetry 적용 (C-10)
    */
   async function readAllRows() {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('readPortfolio', null, {});
+      if (!result.ok) throw new Error(result.error || 'readPortfolio failed');
+      return result.data.values || [];
+    }
+
     const sheetId = getSpreadsheetId();
     if (!sheetId) {
       throw new Error('Spreadsheet ID not set');
@@ -616,6 +677,13 @@ const SheetsSync = (function() {
    * v3.8.0: clear() 제거. 유지보수 호환용으로만 유지.
    */
   async function writeAllRows(rows) {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('writePortfolio', null, { rows: rows || [] });
+      if (!result.ok) throw new Error(result.error || 'writePortfolio failed');
+      return;
+    }
+
     const sheetId = getSpreadsheetId();
     if (!sheetId) {
       throw new Error('Spreadsheet ID not set');
@@ -634,6 +702,12 @@ const SheetsSync = (function() {
 
   async function batchUpdatePortfolioRows(rowUpdates) {
     if (!rowUpdates || rowUpdates.length === 0) return;
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('batchUpdatePortfolio', null, { rowUpdates });
+      if (!result.ok) throw new Error(result.error || 'batchUpdatePortfolio failed');
+      return;
+    }
     const sheetId = getSpreadsheetId();
     if (!sheetId) throw new Error('Spreadsheet ID not set');
 
@@ -653,6 +727,12 @@ const SheetsSync = (function() {
 
   async function batchClearPortfolioRows(rowIndices) {
     if (!rowIndices || rowIndices.length === 0) return;
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('batchClearPortfolio', null, { rowIndices });
+      if (!result.ok) throw new Error(result.error || 'batchClearPortfolio failed');
+      return;
+    }
     const sheetId = getSpreadsheetId();
     if (!sheetId) throw new Error('Spreadsheet ID not set');
 
@@ -668,6 +748,12 @@ const SheetsSync = (function() {
 
   async function appendPortfolioRows(rows) {
     if (!rows || rows.length === 0) return;
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('appendPortfolio', null, { rows });
+      if (!result.ok) throw new Error(result.error || 'appendPortfolio failed');
+      return;
+    }
     const sheetId = getSpreadsheetId();
     if (!sheetId) throw new Error('Spreadsheet ID not set');
 
@@ -1107,6 +1193,37 @@ const SheetsSync = (function() {
    * Example: { TQQQ: { current: 55.1, close: 54, high: 55.7, low: 53.1, marketState: 'PRE' }, ... }
    */
   async function fetchCurrentPrices() {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      try {
+        const result = await GasProxy.request('readPrices', null, {});
+        if (!result.ok) throw new Error(result.error || 'readPrices failed');
+        const rows = result.data.values || [];
+        const prices = {};
+        rows.forEach(row => {
+          const ticker = (row[0] || '').toUpperCase().trim();
+          if (!ticker) return;
+          const current = parseFloat(row[1]) || 0;
+          if (current > 0) {
+            prices[ticker] = {
+              current,
+              close: parseFloat(row[2]) || 0,
+              high: parseFloat(row[3]) || 0,
+              low: parseFloat(row[4]) || 0,
+              marketState: (row[5] || 'UNKNOWN').toUpperCase(),
+              updatedAt: row[6] || '',
+              timestamp: new Date().toISOString()
+            };
+          }
+        });
+        console.log(`SheetsSync: Fetched prices for ${Object.keys(prices).length} tickers (proxy)`);
+        return prices;
+      } catch (error) {
+        console.error('SheetsSync: fetchCurrentPrices proxy error:', error);
+        return {};
+      }
+    }
+
     const sheetId = getSpreadsheetId();
     if (!sheetId) {
       console.warn('SheetsSync: Spreadsheet ID not set, cannot fetch prices');
@@ -1359,6 +1476,16 @@ const SheetsSync = (function() {
   }
 
   async function createCashReserveSheet() {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('ensureSheet', null, {
+        sheetName: getCashReserveSheetName(),
+        headers: ['googleId', 'profileId', 'symbol', 'holdings', 'avgCost', 'updatedAt']
+      });
+      if (!result.ok) throw new Error(result.error || 'ensureSheet(CashReserve) failed');
+      return;
+    }
+
     const sheetId = getSpreadsheetId();
 
     try {
@@ -1394,6 +1521,13 @@ const SheetsSync = (function() {
   }
 
   async function readCashReserveRows() {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('readCashReserve', null, {});
+      if (!result.ok) throw new Error(result.error || 'readCashReserve failed');
+      return result.data.values || [];
+    }
+
     const sheetId = getSpreadsheetId();
     if (!sheetId) {
       throw new Error('Spreadsheet ID not set');
@@ -1437,6 +1571,13 @@ const SheetsSync = (function() {
   }
 
   async function writeCashReserveRows(rows) {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('writeCashReserve', null, { rows: rows || [] });
+      if (!result.ok) throw new Error(result.error || 'writeCashReserve failed');
+      return;
+    }
+
     const sheetId = getSpreadsheetId();
     if (!sheetId) {
       throw new Error('Spreadsheet ID not set');
@@ -1522,7 +1663,7 @@ const SheetsSync = (function() {
    * @returns {Promise<number>} Number of orders saved
    */
   async function saveOrders({ ticker, buyOrders, sellOrders }) {
-    if (!currentUserEmail) {
+    if (!currentUserEmail && !(CONFIG.USE_PROXY && GasProxy.isAuthenticated())) {
       throw new Error('로그인이 필요합니다');
     }
 
@@ -1587,6 +1728,14 @@ const SheetsSync = (function() {
       return 0;
     }
 
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('saveOrders', null, { rows: orderRows });
+      if (!result.ok) throw new Error(result.error || 'saveOrders failed');
+      console.log(`SheetsSync.saveOrders: Saved ${orderRows.length} orders for ${ticker} (proxy)`);
+      return orderRows.length;
+    }
+
     // Append to Orders sheet
     try {
       await gapi.client.sheets.spreadsheets.values.append({
@@ -1623,6 +1772,16 @@ const SheetsSync = (function() {
    * Create Orders sheet with headers if it doesn't exist
    */
   async function createOrdersSheet() {
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      const result = await GasProxy.request('ensureSheet', null, {
+        sheetName: 'Orders',
+        headers: ['날짜', '구글ID', '프로필ID', '종목', '주문타입', '매수매도', '가격', '수량', '총액', '체결기준', '체결', '체결일', '실제가격']
+      });
+      if (!result.ok) throw new Error(result.error || 'ensureSheet(Orders) failed');
+      return;
+    }
+
     const sheetId = getSpreadsheetId();
 
     // Add new sheet
@@ -1665,8 +1824,41 @@ const SheetsSync = (function() {
    * @returns {Promise<Array>} Array of pending orders
    */
   async function readPendingOrders() {
-    if (!currentUserEmail) {
+    if (!currentUserEmail && !(CONFIG.USE_PROXY && GasProxy.isAuthenticated())) {
       throw new Error('로그인이 필요합니다');
+    }
+
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      try {
+        const result = await GasProxy.request('readOrders', null, {});
+        if (!result.ok) throw new Error(result.error || 'readOrders failed');
+        const rows = result.data.values || [];
+        return rows.reduce((pending, row, index) => {
+          const isPending = !row[10] || row[10] === '';
+          if (!isPending) return pending;
+          pending.push({
+            rowIndex: index + 2,
+            date: row[0],
+            googleId: row[1],
+            profileId: row[2],
+            ticker: row[3],
+            orderType: row[4],
+            side: row[5],
+            price: parseFloat(row[6]) || 0,
+            quantity: parseInt(row[7]) || 0,
+            total: parseFloat(row[8]) || 0,
+            executionBasis: row[9],
+            execution: row[10],
+            executionDate: row[11],
+            actualPrice: row[12]
+          });
+          return pending;
+        }, []);
+      } catch (error) {
+        console.error('SheetsSync.readPendingOrders proxy error:', error);
+        return [];
+      }
     }
 
     const sheetId = getSpreadsheetId();
@@ -1719,16 +1911,11 @@ const SheetsSync = (function() {
    * @returns {Promise<number>} Total BUY quantity for yesterday
    */
   async function getYesterdayBuyQuantity(profileId, ticker) {
-    if (!currentUserEmail) {
+    if (!currentUserEmail && !(CONFIG.USE_PROXY && GasProxy.isAuthenticated())) {
       throw new Error('로그인이 필요합니다');
     }
     if (!profileId || !ticker) {
       return 0;
-    }
-
-    const sheetId = getSpreadsheetId();
-    if (!sheetId) {
-      throw new Error('Spreadsheet ID not set');
     }
 
     const now = new Date();
@@ -1736,6 +1923,35 @@ const SheetsSync = (function() {
     const yesterday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     const sym = String(ticker || '').toUpperCase().trim();
     if (!sym) return 0;
+
+    // 🔴 v4.0.0: Proxy mode
+    if (CONFIG.USE_PROXY) {
+      try {
+        const result = await GasProxy.request('readOrders', null, {});
+        if (!result.ok) throw new Error(result.error || 'readOrders failed');
+        const rows = result.data.values || [];
+        let total = 0;
+        rows.forEach(row => {
+          if (
+            row[0] === yesterday &&
+            row[2] === profileId &&
+            row[3] === sym &&
+            row[5] === 'BUY'
+          ) {
+            total += parseInt(row[7]) || 0;
+          }
+        });
+        return total;
+      } catch (error) {
+        console.error('SheetsSync.getYesterdayBuyQuantity proxy error:', error);
+        return 0;
+      }
+    }
+
+    const sheetId = getSpreadsheetId();
+    if (!sheetId) {
+      throw new Error('Spreadsheet ID not set');
+    }
 
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({

@@ -489,7 +489,7 @@
       </button>
 
       <p class="mt-3 text-xs text-gray-400">
-        📊 Google Sheets 자동 동기화 (1시간 세션)
+        📊 Google Sheets 자동 동기화
       </p>
 
       <button onclick="quickStartOffline()" class="mt-4 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2">
@@ -1060,13 +1060,14 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.50.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.51.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
   <script src="js/calculator.js"></script>
   <script src="js/profile-manager.js"></script>
   <script src="js/balance-manager.js"></script>
+  <script src="js/gas-proxy.js"></script>
   <script src="js/sheets-sync.js"></script>
   <script>
     // =====================================================
@@ -2879,6 +2880,7 @@
     function getGuardBannerModel(result) {
       const deadZone = result?.deadZone || null;
       const seedInfo = result?.seedInfo || null;
+      const crossGuard = result?.crossGuard || null;
       const minPrincipal = Number.isFinite(Number(deadZone?.minPrincipal))
         ? Number(deadZone.minPrincipal)
         : (Number.isFinite(Number(seedInfo?.minPrincipal)) ? Number(seedInfo.minPrincipal) : null);
@@ -2907,6 +2909,28 @@
           title: '🔴 데드존: 매수 불가 + 하락대비 차단',
           detail: deadZone.reason || '정규매수 0건으로 dead-zone이 유지되어 하락대비 주문을 차단합니다.',
           minPrincipal
+        };
+      }
+
+      if (crossGuard?.active) {
+        const before = Number.isFinite(Number(crossGuard.beforeMaxBuyPrice))
+          ? formatDollarShort(crossGuard.beforeMaxBuyPrice)
+          : '-';
+        const after = Number.isFinite(Number(crossGuard.afterMaxBuyPrice))
+          ? formatDollarShort(crossGuard.afterMaxBuyPrice)
+          : '-';
+        const sellFloor = Number.isFinite(Number(crossGuard.minSellPrice))
+          ? formatDollarShort(crossGuard.minSellPrice)
+          : '-';
+        const adjustedCount = parseInt(crossGuard.adjustedCount, 10) || 0;
+        const detail = crossGuard.resolved === false
+          ? `매수/매도 겹침 감지. 자동 조정 실패(매도 하단 ${sellFloor})`
+          : `매수 ${adjustedCount}건 자동 조정 (${before} → ${after}, 매도 하단 ${sellFloor} 미만 유지)`;
+        return {
+          type: 'cross',
+          title: crossGuard.resolved === false ? '⚠️ 자가거래 방지: 수동 확인 필요' : '🛡️ 자가거래 방지: 매수가 자동 조정',
+          detail,
+          minPrincipal: null
         };
       }
 
@@ -4288,6 +4312,27 @@
     }
 
     function buildResultAttemptSnapshot(result) {
+      if (result?.calculation && Array.isArray(result?.buyOrders)) {
+        const symbol = result?.ticker || 'UNKNOWN';
+        const buyOrders = result.buyOrders.filter(o => {
+          const price = Number(o?.price);
+          const quantity = Number(o?.quantity);
+          return Number.isFinite(price) && price > 0 && Number.isFinite(quantity) && quantity > 0;
+        });
+        const mainOrders = buyOrders.filter(o => !String(o?.type || '').includes('하락대비'));
+        const declineOrders = buyOrders.filter(o => String(o?.type || '').includes('하락대비'));
+        const oneTimeBuy = mainOrders.reduce((sum, o) => sum + (Number(o.price) * Number(o.quantity)), 0);
+        const additionalAmount = declineOrders.reduce((sum, o) => sum + (Number(o.price) * Number(o.quantity)), 0);
+        const total = oneTimeBuy + additionalAmount;
+        return {
+          symbol,
+          oneTimeBuy: roundMoney(oneTimeBuy),
+          additionalAmount: roundMoney(additionalAmount),
+          total: roundMoney(total),
+          percentage: 0
+        };
+      }
+
       // B-006: required 기준을 "일매수시도금액(1회매수+하락대비)"으로 단일화한다.
       if (typeof BalanceManager !== 'undefined' && typeof BalanceManager.calcStockDailyAttempt === 'function') {
         const input = result?.input || {};
