@@ -1,0 +1,67 @@
+# Update Manifest — Automatic manifest.json sync
+#
+# Triggered whenever any file under data/ is pushed to main.
+# Updates file_count and updated fields for changed folders.
+#
+# Infinite loop prevention:
+#   This workflow's own commit uses "[skip ci]" → GitHub Actions skips it.
+#
+# What is updated:  file_count, updated, last_updated
+# What is NOT touched: version, update_frequency, source, description, recent_changes
+
+name: Update Manifest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for git push (manifest.json update)
+
+    # Skip commits made by this workflow itself ([skip ci] pattern)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need HEAD~1 for git diff (changed folder detection)
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run update-manifest.py
+        # Exit code 1 = warnings only (orphan files / missing folders)
+        # These are non-fatal — the manifest update still proceeds
+        # BEFORE_SHA: covers ALL commits in the push (not just HEAD~1)
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: python3 scripts/update-manifest.py
+        continue-on-error: true
+
+      - name: Check if manifest changed
+        id: check
+        run: |
+          git diff --quiet data/manifest.json \
+            && echo "changed=false" >> "$GITHUB_OUTPUT" \
+            || echo "changed=true"  >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push manifest
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/manifest.json
+          git commit -m "chore: update manifest.json [skip ci]"
+          git push
+
+      - name: No changes needed
+        if: steps.check.outputs.changed == 'false'
+        run: echo "manifest.json already up to date — nothing to commit"
