@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
@@ -75,35 +74,32 @@ export default async function PostsPage({ searchParams }: PageProps) {
         <section className="mb-12 md:mb-16">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Featured Post</h2>
           <a
-            href="/posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html"
+            href="/posts/2026-02-21_tariff-ruling-comprehensive.html"
             className="posts-card group block md:flex gap-6 md:gap-8 p-4 sm:p-6 md:p-8"
           >
-            <div className="md:w-1/2 mb-6 md:mb-0">
-              <Image
-                src="https://placehold.co/600x400/ef4444/ffffff?text=Alpha+Pick"
-                alt="Alpha Pick RMD"
-                width={600}
-                height={400}
-                unoptimized
-                className="rounded-lg w-full aspect-[16/10] md:aspect-auto h-full object-cover"
-              />
+            <div className="md:w-1/2 mb-6 md:mb-0 flex items-center justify-center rounded-lg min-h-[200px]"
+              style={{ background: 'linear-gradient(135deg, #fef2f2, #fffbeb, #f1f5f9)' }}>
+              <div className="text-center p-6">
+                <div className="text-6xl mb-3">&#9878;</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-red-600 bg-red-100 px-3 py-1 rounded-full inline-block">Breaking Analysis</div>
+              </div>
             </div>
             <div className="md:w-1/2 flex flex-col">
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <span className="posts-badge posts-badge-new">LATEST</span>
-                <span className="text-sm text-slate-500">2025-06-30</span>
+                <span className="posts-badge posts-badge-alphapick">BREAKING</span>
+                <span className="text-sm text-slate-500">2026-02-21</span>
               </div>
               <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 group-hover:text-red-600 transition-colors duration-300 mb-4 leading-tight">
-                Alpha Pick: ResMed (RMD) 투자 분석
+                IEEPA 관세 위헌 판결 — 종합 분석
               </h3>
               <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-6 flex-grow">
-                경쟁사의 리콜 사태로 압도적인 시장 지위를 확보한 ResMed(RMD)에 대한 심층 분석. 독점적 해자, 재무 건전성, 그리고 GLP-1 약물 확산이 가져올 역설적 기회까지 종합적으로 평가하여 최우선 투자 대상으로 선정했습니다.
+                대법원 6-3 위헌 판결, 트럼프 122조 즉시 서명(10% + 150일), 국가별 관세율 영향 분석. 외신 반응부터 포트폴리오 함의까지 완전 정리.
               </p>
               <div className="flex flex-wrap gap-2">
-                <span className="posts-badge posts-badge-alphapick">Alpha Pick</span>
-                <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">리스크 분석</span>
+                <span className="posts-badge posts-badge-alphapick">SCOTUS 6-3</span>
+                <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">관세 분석</span>
                 <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">포트폴리오</span>
-                <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">재무 분석</span>
+                <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">국가별 영향</span>
               </div>
             </div>
           </a>
@@ -112,6 +108,25 @@ export default async function PostsPage({ searchParams }: PageProps) {
         <section>
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Archive</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <a
+              href="/posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html"
+              className="posts-card group block p-5 sm:p-8"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <span className="posts-badge posts-badge-alphapick">Alpha Pick</span>
+                <span className="text-sm text-slate-500">2025-06-30</span>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 group-hover:text-red-600 transition-colors duration-300 mb-3">
+                Alpha Pick: ResMed (RMD) 투자 분석
+              </h3>
+              <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                경쟁사 리콜 사태로 압도적 시장 지위를 확보한 ResMed에 대한 심층 분석. 독점적 해자와 GLP-1 역설적 기회까지 종합 평가.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">리스크 분석</span>
+                <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">재무 분석</span>
+              </div>
+            </a>
             <a
               href="/posts/2025-06-23_stablecoin-revolution-complete-masterplan.html"
               className="posts-card group block p-5 sm:p-8"
