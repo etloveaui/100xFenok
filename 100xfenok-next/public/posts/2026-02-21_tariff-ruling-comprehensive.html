@@ -41,6 +41,8 @@
     font-size: 16px;
     line-height: 1.8;
     overflow-x: hidden;
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
 
   /* ── HEADER ── */
@@ -1392,9 +1394,54 @@
     .key-quote { padding: 20px 24px; }
     .nav-bar { overflow-x: auto; }
   }
+  /* Accessibility: Focus visible styles */
+  :focus-visible {
+    outline: 3px solid var(--amber);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .nav-link:focus-visible {
+    outline: none;
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+    background: rgba(217, 119, 6, 0.06);
+  }
+
+  /* Fix: sticky nav overlapping section anchors */
+  section {
+    scroll-margin-top: 56px;
+  }
+
+  /* Accessibility: skip link */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 8px 16px;
+    z-index: 1000;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .skip-link:focus {
+    top: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .masthead-inner > * {
+      animation: none !important;
+    }
+    .live-dot {
+      animation: none !important;
+      opacity: 1;
+    }
+  }
 </style>
 </head>
 <body>
+<a href="#main-content" class="skip-link">본문으로 건너뛰기</a>
 
 <!-- MASTHEAD -->
 <header class="masthead">
@@ -1433,7 +1480,7 @@
 </header>
 
 <!-- NAV -->
-<nav class="nav-bar">
+<nav class="nav-bar" aria-label="섹션 내비게이션">
   <div class="nav-inner">
     <a class="nav-link" href="#summary">Executive Summary</a>
     <a class="nav-link" href="#ruling">대법원 판결</a>
@@ -1445,6 +1492,7 @@
     <a class="nav-link" href="#portfolio">포트폴리오</a>
   </div>
 </nav>
+<main id="main-content">
 
 <!-- EXECUTIVE SUMMARY -->
 <section id="summary">
@@ -2340,6 +2388,8 @@
     </div>
   </div>
 </section>
+
+</main>
 
 <!-- FOOTER -->
 <footer>
