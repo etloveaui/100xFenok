@@ -75,7 +75,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
         <section className="mb-12 md:mb-16">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Featured Post</h2>
           <a
-            href="/posts?path=posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html"
+            href="/posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html"
             className="posts-card group block md:flex gap-6 md:gap-8 p-4 sm:p-6 md:p-8"
           >
             <div className="md:w-1/2 mb-6 md:mb-0">
@@ -113,7 +113,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Archive</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <a
-              href="/posts?path=posts/2025-06-23_stablecoin-revolution-complete-masterplan.html"
+              href="/posts/2025-06-23_stablecoin-revolution-complete-masterplan.html"
               className="posts-card group block p-5 sm:p-8"
             >
               <div className="flex justify-between items-start mb-4">
@@ -134,7 +134,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
             </a>
 
             <a
-              href="/posts?path=posts/2025-06-22_playbook.html"
+              href="/posts/2025-06-22_playbook.html"
               className="posts-card group block p-5 sm:p-8"
             >
               <div className="flex justify-between items-start mb-4">

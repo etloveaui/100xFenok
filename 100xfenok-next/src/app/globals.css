@@ -43,6 +43,43 @@
 .hover\:bg-brand-gold\/30:hover { background-color: rgba(213, 173, 54, 0.3); }
 .bg-brand-gold\/20 { background-color: rgba(213, 173, 54, 0.2); }
 
+/* Lightweight icon fallback for legacy Font Awesome class names */
+.fas {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.fas::before {
+  display: inline-block;
+}
+
+.fa-arrow-left::before { content: "←"; }
+.fa-balance-scale::before { content: "⚖"; }
+.fa-bars::before { content: "☰"; }
+.fa-bell::before { content: "🔔"; }
+.fa-calendar-days::before { content: "📅"; }
+.fa-calculator::before { content: "🧮"; }
+.fa-chart-bar::before { content: "📊"; }
+.fa-chart-line::before { content: "📈"; }
+.fa-chevron-down::before { content: "▾"; }
+.fa-cog::before { content: "⚙"; }
+.fa-compass::before { content: "🧭"; }
+.fa-home::before { content: "⌂"; }
+.fa-infinity::before { content: "∞"; }
+.fa-lightbulb::before { content: "💡"; }
+.fa-question::before { content: "?"; }
+.fa-question-circle::before { content: "❔"; }
+.fa-rocket::before { content: "🚀"; }
+.fa-satellite-dish::before { content: "📡"; }
+.fa-sliders-h::before { content: "☷"; }
+.fa-sync-alt::before { content: "↻"; }
+.fa-table::before { content: "▦"; }
+.fa-times::before { content: "✕"; }
+
 /* Market State Badges */
 .market-state-badge {
   display: inline-flex;

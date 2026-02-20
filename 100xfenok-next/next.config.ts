@@ -39,21 +39,6 @@ const nextConfig: NextConfig = {
         destination: "/vr/?path=vr/vr-total-guide-calculator.html",
         permanent: false,
       },
-      {
-        source: "/posts/2025-06-23_stablecoin-revolution-complete-masterplan.html",
-        destination: "/posts/?path=posts/2025-06-23_stablecoin-revolution-complete-masterplan.html",
-        permanent: false,
-      },
-      {
-        source: "/posts/2025-06-22_playbook.html",
-        destination: "/posts/?path=posts/2025-06-22_playbook.html",
-        permanent: false,
-      },
-      {
-        source: "/posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html",
-        destination: "/posts/?path=posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html",
-        permanent: false,
-      },
     ];
   },
 };

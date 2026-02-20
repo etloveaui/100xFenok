@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
@@ -62,7 +62,6 @@ export function StockAnalyzerDashboard() {
   const updateFilters = useStockAnalyzerStore((state) => state.updateFilters);
   const resetFilters = useStockAnalyzerStore((state) => state.resetFilters);
   const selectSymbol = useStockAnalyzerStore((state) => state.selectSymbol);
-  const [heavyPanelsReady, setHeavyPanelsReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,28 +90,6 @@ export function StockAnalyzerDashboard() {
       }
     };
   }, [initialize]);
-
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let idleId: number | null = null;
-
-    const activate = () => setHeavyPanelsReady(true);
-
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      idleId = window.requestIdleCallback(() => activate(), { timeout: 1800 });
-    } else {
-      timeoutId = setTimeout(() => activate(), 900);
-    }
-
-    return () => {
-      if (idleId !== null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
-        window.cancelIdleCallback(idleId);
-      }
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, []);
 
   const sectors = useMemo(() => {
     return [...new Set(dashboard.records.map((record) => record.sector).filter(Boolean))]
@@ -144,11 +121,12 @@ export function StockAnalyzerDashboard() {
     return values.reduce((sum, value) => sum + value, 0) / values.length;
   }, [dashboard.filteredRecords]);
 
-  const shouldRenderHeavyPanels =
-    heavyPanelsReady || dashboard.activeTab !== "overview";
+  const shouldRenderHeavyPanels = dashboard.activeTab !== "overview";
   const visibleRows = shouldRenderHeavyPanels
     ? dashboard.filteredRecords.slice(0, 50)
     : dashboard.filteredRecords.slice(0, 12);
+  const quickSnapshotRows = dashboard.filteredRecords.slice(0, 6);
+  const tablePlaceholderRows = shouldRenderHeavyPanels ? 20 : 12;
 
   return (
     <main className="container mx-auto overflow-x-hidden px-4 py-4" data-stock-analyzer-native="true">
@@ -310,19 +288,29 @@ export function StockAnalyzerDashboard() {
           <p className="mt-1 text-xs text-slate-500">
             초기 렌더 성능을 위해 차트는 유휴 시간에 순차 로드됩니다.
           </p>
-          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-            {dashboard.filteredRecords.slice(0, 6).map((record) => (
-              <div key={record.symbol} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                <p className="text-sm font-bold text-slate-800">{record.symbol}</p>
-                <p className="text-xs text-slate-600">{record.companyName}</p>
-              </div>
-            ))}
+          <div className="mt-3 grid min-h-[170px] grid-cols-1 gap-2 md:grid-cols-2">
+            {quickSnapshotRows.length > 0
+              ? quickSnapshotRows.map((record) => (
+                  <div key={record.symbol} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <p className="text-sm font-bold text-slate-800">{record.symbol}</p>
+                    <p className="text-xs text-slate-600">{record.companyName}</p>
+                  </div>
+                ))
+              : Array.from({ length: 6 }, (_, index) => (
+                  <div
+                    key={`quick-skeleton-${index}`}
+                    className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+                  >
+                    <div className="skeleton-bar h-4 w-20" />
+                    <div className="skeleton-bar mt-2 h-3 w-full max-w-[180px]" />
+                  </div>
+                ))}
           </div>
         </section>
       )}
 
       <section className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="min-h-[430px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-700">Filtered Universe</h2>
             <span className="text-xs text-slate-500">
@@ -344,29 +332,55 @@ export function StockAnalyzerDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {visibleRows.map((record) => (
-                  <tr
-                    key={record.symbol}
-                    onClick={() => selectSymbol(record.symbol)}
-                    className={`cursor-pointer border-b border-slate-100 transition hover:bg-blue-50/50 ${
-                      dashboard.selectedSymbol === record.symbol ? "bg-blue-50" : ""
-                    }`}
-                  >
-                    <td className="py-2 pr-2 font-bold text-slate-800">{record.symbol}</td>
-                    <td className="py-2 pr-2 text-slate-700">{record.companyName}</td>
-                    <td className="py-2 pr-2 text-slate-600">{record.sector ?? "-"}</td>
-                    <td className="py-2 pr-2 text-slate-600">{formatNumber(record.marketCap, 0)}</td>
-                    <td className="py-2 pr-2 text-slate-600">{formatPercent(record.growthRate)}</td>
-                    <td className="py-2 pr-2 text-slate-600">{formatNumber(record.per, 2)}</td>
-                    <td className="py-2 pr-2 text-slate-600">{formatNumber(record.rank, 0)}</td>
-                  </tr>
-                ))}
+                {visibleRows.length > 0
+                  ? visibleRows.map((record) => (
+                      <tr
+                        key={record.symbol}
+                        onClick={() => selectSymbol(record.symbol)}
+                        className={`cursor-pointer border-b border-slate-100 transition hover:bg-blue-50/50 ${
+                          dashboard.selectedSymbol === record.symbol ? "bg-blue-50" : ""
+                        }`}
+                      >
+                        <td className="py-2 pr-2 font-bold text-slate-800">{record.symbol}</td>
+                        <td className="py-2 pr-2 text-slate-700">{record.companyName}</td>
+                        <td className="py-2 pr-2 text-slate-600">{record.sector ?? "-"}</td>
+                        <td className="py-2 pr-2 text-slate-600">{formatNumber(record.marketCap, 0)}</td>
+                        <td className="py-2 pr-2 text-slate-600">{formatPercent(record.growthRate)}</td>
+                        <td className="py-2 pr-2 text-slate-600">{formatNumber(record.per, 2)}</td>
+                        <td className="py-2 pr-2 text-slate-600">{formatNumber(record.rank, 0)}</td>
+                      </tr>
+                    ))
+                  : Array.from({ length: tablePlaceholderRows }, (_, index) => (
+                      <tr key={`table-skeleton-${index}`} className="border-b border-slate-100">
+                        <td className="py-2 pr-2">
+                          <div className="skeleton-bar h-4 w-16" />
+                        </td>
+                        <td className="py-2 pr-2">
+                          <div className="skeleton-bar h-4 w-full max-w-[200px]" />
+                        </td>
+                        <td className="py-2 pr-2">
+                          <div className="skeleton-bar h-4 w-24" />
+                        </td>
+                        <td className="py-2 pr-2">
+                          <div className="skeleton-bar h-4 w-20" />
+                        </td>
+                        <td className="py-2 pr-2">
+                          <div className="skeleton-bar h-4 w-20" />
+                        </td>
+                        <td className="py-2 pr-2">
+                          <div className="skeleton-bar h-4 w-16" />
+                        </td>
+                        <td className="py-2 pr-2">
+                          <div className="skeleton-bar h-4 w-14" />
+                        </td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="min-h-[240px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-sm font-black text-slate-700">Selected Snapshot</h2>
 
           {selectedRecord ? (
@@ -399,12 +413,6 @@ export function StockAnalyzerDashboard() {
           )}
         </article>
       </section>
-
-      {dashboard.isLoading && (
-        <section className="mt-4 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-500">
-          데이터를 불러오는 중입니다...
-        </section>
-      )}
     </main>
   );
 }

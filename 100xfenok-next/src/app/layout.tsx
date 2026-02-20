@@ -65,9 +65,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-      </head>
       <body className={`${notoSansKr.variable} ${orbitron.variable} antialiased min-h-screen bg-[#f8fafc] overflow-x-hidden`}>
         <Navbar />
         <main>
