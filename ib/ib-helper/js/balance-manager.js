@@ -3,9 +3,12 @@
  *
  * 예수금 관리 + 부족 알림 기능
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @author 100xFenok Claude
  * @spec _tmp/PHASE3_SPEC.md (Asset Allocator)
+ *
+ * CHANGELOG:
+ * - v1.1.0 (2026-02-20): Balance 0-floor guard — updateBalance()/calcOrderStatus() Math.max(0) (#264)
  */
 
 const BalanceManager = (function() {
@@ -362,7 +365,7 @@ const BalanceManager = (function() {
    * @returns {Object} Order status info
    */
   function calcOrderStatus(profile) {
-    const balance = profile.settings?.balance?.available || 0;
+    const balance = Math.max(0, profile.settings?.balance?.available || 0);  // v1.1.0 (#264): 음수 잔고 0-floor
     const { total: dailyAttempt, details } = calcDailyBuyAttempt(profile);
     const diff = balance - dailyAttempt;
 
@@ -408,7 +411,7 @@ const BalanceManager = (function() {
       profile.settings.balance = { currency: 'USD' };
     }
 
-    profile.settings.balance.available = parseFloat(amount) || 0;
+    profile.settings.balance.available = Math.max(0, parseFloat(amount) || 0);  // v1.1.0 (#264): 음수 잔고 0-floor
     profile.settings.balance.lastUpdated = new Date().toISOString();
 
     ProfileManager.save(data);

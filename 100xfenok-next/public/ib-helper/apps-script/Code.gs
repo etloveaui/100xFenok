@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 3.1.0
+ * @version 3.2.0
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v3.2.0 (2026-02-20): Balance 0-floor guard — updatePortfolio() balanceByProfile Math.max(0) (#264)
  * - v3.1.0 (2026-02-20): ExecutionLog noise reduction (EXECUTED-only), 30-day log rotation, ARCHIVE_DAYS 14→7
  * - v3.0.0 (2026-02-19): Pipeline reliability overhaul — 10 fixes (S-1, S-2, S-3, D-1~D-4, R-1, R-2)
  * - v2.9.0 (2026-02-12): CRITICAL fix — removeStaleOrders moved AFTER checkExecutions (was deleting before checking)
@@ -1128,7 +1129,7 @@ function updatePortfolio(ss, executedOrders) {
       }
       Logger.log(`💰 ${order.ticker}: Balance ${order.side} ${amount} → new balance: ${balance}`);
     });
-    balanceByProfile[profileKey] = balance;
+    balanceByProfile[profileKey] = Math.max(0, balance);  // v3.2.0 (#264): 음수 잔고 0-floor
   });
 
   // v3.0.0 (R-2): Batch update — modify data[] in-memory, single setValues at end
