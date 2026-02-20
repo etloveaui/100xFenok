@@ -6,7 +6,7 @@ const path = require("path");
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const iterations = Number.parseInt(process.env.QA_LIGHTHOUSE_RUNS || "3", 10);
-const routes = (process.env.QA_LIGHTHOUSE_ROUTES || "/,/tools/stock-analyzer/native")
+const routes = (process.env.QA_LIGHTHOUSE_ROUTES || "/,/tools/stock-analyzer/native/")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);

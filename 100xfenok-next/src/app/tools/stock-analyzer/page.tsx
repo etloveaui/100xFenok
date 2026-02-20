@@ -20,7 +20,7 @@ export default function StockAnalyzerPage() {
             </p>
           </div>
           <Link
-            href="/tools/stock-analyzer/native"
+            href="/tools/stock-analyzer/native/"
             className="min-h-11 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
           >
             Native Pilot 열기
