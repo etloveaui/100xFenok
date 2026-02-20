@@ -2,8 +2,13 @@
 
 > **Version**: 4.51.0
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-13
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.51.0 T=0 + 예수금 경로 안정화** + **Code.gs v2.9.0** (Execution order + stale cleanup) | ❌ #220 REVERTED
+> **Updated**: 2026-02-20
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.51.0 T=0 + 예수금 경로 안정화** + **Code.gs v3.2.0** (Balance 0-floor #264) | ❌ #220 REVERTED
+>
+> **🔑 GAS Resources**:
+> - **Spreadsheet**: `1shNx-xmzsJ7ninBly4HUjOjrMFqlvj-u3aBg6PmTGBE`
+> - **Script ID**: `11e-BN2t7f30sspqGRuxiwbh0GTcVG92HtyKmeBszIq1MytkcO_z3VbuO`
+> - Script ID는 공개 노출 무방 (수정/실행은 Google OAuth 인증 필요)
 > **Priority**: 🟡 E2E 실사용 모니터링 (T=0 포함) → #207 Telegram
 >
 > **📋 Price Data Flow** (DEC-172):
