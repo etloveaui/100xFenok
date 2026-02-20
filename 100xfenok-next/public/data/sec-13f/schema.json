@@ -1,16 +1,17 @@
 {
   "folder": "sec-13f",
-  "version": "2.1.0",
-  "updated": "2026-01-05",
+  "version": "3.0.1",
+  "updated": "2026-02-20",
   "source": "SEC EDGAR 13F filings",
   "update_frequency": "quarterly (45 days after quarter end)",
-  "maintainer": "Manual conversion from SEC filings",
+  "maintainer": "SEC 13F Converter (accumulate mode)",
 
   "structure": {
     "summary.json": "Aggregated holdings summary",
     "by_sector.json": "Holdings by sector",
     "by_ticker.json": "Holdings by ticker",
-    "investors/": "17 individual investor files"
+    "investors/": "30 individual investor files",
+    "analytics/": "Derived metrics (consensus, new positions, buying pressure, conviction)"
   },
 
   "files": {
@@ -59,8 +60,8 @@
       }
     },
     "investors/{name}.json": {
-      "description": "Individual investor holdings (17 files)",
-      "investors": ["buffett", "ackman", "dalio", "druckenmiller", "cohen", "griffin", "fisher", "fidelity", "asness", "hohn", "tepper", "einhorn", "loeb", "icahn", "soros", "burry", "pabrai"],
+      "description": "Individual investor holdings (30 files)",
+      "investors": ["buffett", "marks", "klarman", "greenblatt", "einhorn", "pabrai", "gayner", "russo", "miller", "fidelity", "druckenmiller", "soros", "dalio", "tudor", "griffin", "cohen", "hohn", "laffont", "halvorsen", "coleman", "mandel", "ackman", "icahn", "peltz", "tepper", "loeb", "singer", "fisher", "asness", "wood"],
       "schema": {
         "metadata": {
           "version": "string",
@@ -70,7 +71,7 @@
           "name": "string",
           "entity": "string (fund name)",
           "cik": "string (SEC CIK number)",
-          "group": "string (value/macro/activist/quant)"
+          "group": "string (value/macro/hedge/tiger_cubs/activist/event_driven/quant/growth)"
         },
         "filings[]": {
           "quarter": "string (YYYY-QN)",
@@ -88,17 +89,64 @@
           }
         }
       }
+    },
+    "analytics/consensus.json": {
+      "description": "Consensus score across all investors per ticker",
+      "schema": {
+        "tickers.{TICKER}": {
+          "score": "number",
+          "holder_count": "number",
+          "total_value": "number"
+        }
+      }
+    },
+    "analytics/new_positions.json": {
+      "description": "Newly initiated positions in latest quarter",
+      "schema": {
+        "positions[]": {
+          "ticker": "string",
+          "investor": "string",
+          "value": "number",
+          "quarter": "string"
+        }
+      }
+    },
+    "analytics/buying_pressure.json": {
+      "description": "Net buying/selling pressure by ticker",
+      "schema": {
+        "tickers.{TICKER}": {
+          "net_buyers": "number",
+          "net_sellers": "number",
+          "pressure_score": "number"
+        }
+      }
+    },
+    "analytics/conviction.json": {
+      "description": "High-conviction positions (top weight per investor)",
+      "schema": {
+        "positions[]": {
+          "ticker": "string",
+          "investor": "string",
+          "weight": "number",
+          "value": "number"
+        }
+      }
     }
   },
 
   "investor_groups": {
-    "value": ["buffett", "ackman", "pabrai", "einhorn"],
-    "macro": ["dalio", "druckenmiller", "soros"],
-    "activist": ["icahn", "loeb", "hohn"],
-    "quant": ["griffin", "asness", "cohen"]
+    "value": ["buffett", "marks", "klarman", "greenblatt", "einhorn", "pabrai", "gayner", "russo", "miller", "fidelity"],
+    "macro": ["druckenmiller", "soros", "dalio", "tudor"],
+    "hedge": ["griffin", "cohen", "hohn", "laffont"],
+    "tiger_cubs": ["halvorsen", "coleman", "mandel"],
+    "activist": ["ackman", "icahn", "peltz"],
+    "event_driven": ["tepper", "loeb", "singer"],
+    "quant": ["fisher", "asness"],
+    "growth": ["wood"]
   },
 
   "breaking_changes_history": [
+    {"version": "3.0.1", "date": "2026-02-20", "change": "30 investors, 20Q accumulate mode, analytics/ folder added"},
     {"version": "2.1.0", "date": "2026-01-05", "change": "Added burry, pabrai investors"},
     {"version": "2.0.0", "date": "2025-12-01", "change": "Restructured with quarterly filings array"},
     {"version": "1.0.0", "date": "2025-11-01", "change": "Initial schema"}
