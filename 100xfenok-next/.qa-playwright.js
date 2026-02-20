@@ -127,20 +127,22 @@ const expectedIframeSrcByRoute = {
   "/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html",
 };
 
-const defaultViewports = [
+const viewportCatalog = [
   { name: "desktop", width: 1440, height: 900 },
   { name: "mobile", width: 390, height: 844 },
+  { name: "tablet", width: 1024, height: 1366 },
   { name: "fold", width: 540, height: 720 },
 ];
+const defaultViewportNames = new Set(["desktop", "mobile", "fold"]);
 const requestedViewportNames = parseCsvEnv(process.env.QA_VIEWPORTS).map((value) =>
   value.toLowerCase(),
 );
 const viewports =
   requestedViewportNames.length > 0
-    ? defaultViewports.filter((viewport) =>
+    ? viewportCatalog.filter((viewport) =>
         requestedViewportNames.includes(viewport.name),
       )
-    : defaultViewports;
+    : viewportCatalog.filter((viewport) => defaultViewportNames.has(viewport.name));
 
 const isDevServer = base.includes(":3000") || process.env.QA_DEV === "1";
 
@@ -150,7 +152,7 @@ if (routes.length === 0) {
 
 if (viewports.length === 0) {
   throw new Error(
-    "No viewports configured. Set QA_VIEWPORTS with desktop,mobile,fold or use defaults.",
+    "No viewports configured. Set QA_VIEWPORTS with desktop,mobile,tablet,fold or use defaults.",
   );
 }
 

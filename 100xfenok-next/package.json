@@ -13,6 +13,8 @@
     "lint": "eslint",
     "qa:browser": "QA_BASE_URL=http://127.0.0.1:3105 node .qa-playwright.js",
     "qa:browser:lite": "QA_BASE_URL=http://127.0.0.1:3105 QA_VIEWPORTS=desktop QA_ROUTES=/,/tools/stock-analyzer/native node .qa-playwright.js",
+    "qa:browser:mobile": "QA_BASE_URL=http://127.0.0.1:3105 QA_VIEWPORTS=mobile,tablet,fold QA_ROUTES=/,/market,/alpha-scout,/ib,/vr,/posts,/tools/stock-analyzer,/tools/stock-analyzer/native,/100x/daily-wrap node .qa-playwright.js",
+    "qa:browser:webkit": "timeout 25s env QA_BASE_URL=http://127.0.0.1:3105 QA_WEBKIT_ROUTE=/ QA_WEBKIT_TIMEOUT_MS=10000 node .qa-webkit-smoke.js",
     "qa:browser:dev": "QA_BASE_URL=http://127.0.0.1:3000 QA_DEV=1 node .qa-playwright.js",
     "qa:browser:dist": "QA_BASE_URL=http://127.0.0.1:4173 node .qa-playwright.js",
     "qa:lighthouse": "QA_BASE_URL=http://127.0.0.1:3105 QA_LIGHTHOUSE_RUNS=3 node .qa-lighthouse.js",
