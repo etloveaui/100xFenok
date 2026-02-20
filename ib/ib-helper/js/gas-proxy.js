@@ -47,6 +47,9 @@ const GasProxy = (function() {
   let _initialized = false;
   let _signInCallback = null;  // called after successful login
   let _signOutCallback = null; // called after sign out
+  let _pendingSignInResolve = null;  // resolve for signIn() promise
+  let _pendingSignInReject = null;   // reject for signIn() promise
+  let _signInTimeoutId = null;       // timeout for signIn() promise
 
   // =====================================================
   // INITIALIZATION
@@ -115,26 +118,42 @@ const GasProxy = (function() {
 
   /**
    * Trigger Google Sign-In prompt (One Tap).
+   * Returns a Promise that resolves with email after successful login.
    * For browsers that block FedCM, use renderButton() as fallback.
+   *
+   * @returns {Promise<string>} Resolves with user email on success
    */
   function signIn() {
     if (!_initialized) {
-      console.warn('GasProxy: Not initialized. Call init() first.');
-      return;
+      return Promise.reject(new Error('GasProxy: Not initialized. Call init() first.'));
     }
 
     // If already signed in, just notify
     if (_sessionToken && _email) {
       if (_signInCallback) _signInCallback(_email);
-      return;
+      return Promise.resolve(_email);
     }
 
-    // Trigger One Tap prompt
-    google.accounts.id.prompt(function(notification) {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        console.log('GasProxy: One Tap not shown (' + notification.getNotDisplayedReason() +
-          ' / ' + notification.getSkippedReason() + '). Use renderButton fallback.');
-      }
+    // Return a promise that resolves when _handleCredentialResponse completes
+    return new Promise(function(resolve, reject) {
+      _pendingSignInResolve = resolve;
+      _pendingSignInReject = reject;
+
+      // 60s timeout for the entire sign-in flow
+      _signInTimeoutId = setTimeout(function() {
+        _pendingSignInResolve = null;
+        _pendingSignInReject = null;
+        _signInTimeoutId = null;
+        reject(new Error('Sign-in timeout (60s)'));
+      }, 60000);
+
+      // Trigger One Tap prompt
+      google.accounts.id.prompt(function(notification) {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          console.log('GasProxy: One Tap not shown (' + notification.getNotDisplayedReason() +
+            ' / ' + notification.getSkippedReason() + '). Use renderButton fallback.');
+        }
+      });
     });
   }
 
@@ -189,9 +208,29 @@ const GasProxy = (function() {
       if (_signInCallback) {
         _signInCallback(_email);
       }
+
+      // Resolve pending signIn() promise
+      if (_pendingSignInResolve) {
+        clearTimeout(_signInTimeoutId);
+        var resolve = _pendingSignInResolve;
+        _pendingSignInResolve = null;
+        _pendingSignInReject = null;
+        _signInTimeoutId = null;
+        resolve(_email);
+      }
     } catch (error) {
       console.error('GasProxy: Login error:', error);
       _clearSession();
+
+      // Reject pending signIn() promise
+      if (_pendingSignInReject) {
+        clearTimeout(_signInTimeoutId);
+        var reject = _pendingSignInReject;
+        _pendingSignInResolve = null;
+        _pendingSignInReject = null;
+        _signInTimeoutId = null;
+        reject(error);
+      }
     }
   }
 
