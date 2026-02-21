@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 
 export const metadata: Metadata = {
   title: 'Multichart Pro',
@@ -6,14 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function MultichartPage() {
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src="/tools/asset/multichart.html"
-        title="100x Multichart Pro"
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src="/tools/asset/multichart.html" title="100x Multichart Pro" loading="eager" />;
 }

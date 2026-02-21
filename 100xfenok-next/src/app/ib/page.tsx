@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 
 export const metadata: Metadata = {
   title: 'IB Helper',
@@ -6,14 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function IBPage() {
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src="/ib-helper/index.html"
-        title="100x IB Helper"
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src="/ib-helper/index.html" title="100x IB Helper" loading="eager" />;
 }

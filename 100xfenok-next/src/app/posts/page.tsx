@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
+import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 
 export const metadata: Metadata = {
   title: '분석 아카이브',
@@ -46,16 +47,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
   const safePath = sanitizePostsPath(rawPath);
 
   if (safePath) {
-    return (
-      <div className="route-embed-shell">
-        <iframe
-          src={`/${safePath}`}
-          title="Posts Detail"
-          loading="eager"
-          className="h-full w-full border-0"
-        />
-      </div>
-    );
+    return <RouteEmbedFrame src={`/${safePath}`} title="Posts Detail" loading="eager" />;
   }
 
   return (

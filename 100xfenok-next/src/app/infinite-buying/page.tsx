@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 
 export const metadata: Metadata = {
   title: 'Infinite Buying',
@@ -6,14 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function InfiniteBuyingPage() {
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src="/ib/ib-total-guide-calculator.html"
-        title="Infinite Buying Guide"
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src="/ib/ib-total-guide-calculator.html" title="Infinite Buying Guide" loading="eager" />;
 }

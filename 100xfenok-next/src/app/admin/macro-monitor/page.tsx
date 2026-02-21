@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 
 export const metadata: Metadata = {
   title: "Admin · Macro Monitor",
@@ -6,14 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminMacroMonitorPage() {
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src="/admin/market-radar/index.html"
-        title="100x Admin Macro Monitor"
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src="/admin/market-radar/index.html" title="100x Admin Macro Monitor" loading="eager" />;
 }
