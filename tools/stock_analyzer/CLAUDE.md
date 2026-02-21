@@ -1,7 +1,7 @@
 # CLAUDE.md - Stock Analyzer 핵심 가이드
 
 **작성일**: 2025년 10월 19일
-**최종 업데이트**: 2025년 10월 19일
+**최종 업데이트**: 2026-02-22 (경로 수정)
 **목적**: Claude Code 작업 시 필수 준수사항
 
 ---
@@ -26,7 +26,7 @@
 ## 🎯 절대 작업 경로
 
 ```
-C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
+source/100xFenok/tools/stock_analyzer/ (프로젝트 루트 기준)
 ```
 
 **⚠️ CRITICAL**: 이 경로에서만 작업. 다른 경로 절대 사용 금지.
@@ -275,7 +275,7 @@ C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
 
 ---
 
-**최종 업데이트**: 2025년 10월 19일
+**최종 업데이트**: 2026-02-22 (경로 수정)
 **작성자**: Claude Code (Sonnet 4.5)
 **프로젝트**: Stock Analyzer - 100xFenok
 **Sprint**: Sprint 5 (테스팅 미완) → Sprint 6 준비
