@@ -11,6 +11,7 @@ export default function MultichartPage() {
       <iframe
         src="/tools/asset/multichart.html"
         title="100x Multichart Pro"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

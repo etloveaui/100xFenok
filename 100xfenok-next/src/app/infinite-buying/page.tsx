@@ -11,6 +11,7 @@ export default function InfiniteBuyingPage() {
       <iframe
         src="/ib/ib-total-guide-calculator.html"
         title="Infinite Buying Guide"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

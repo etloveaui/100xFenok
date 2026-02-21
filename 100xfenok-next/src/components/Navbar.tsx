@@ -1,11 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const mobilePanelRef = useRef<HTMLDivElement | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const scrollOffsetRef = useRef(0);
   const pathname = usePathname();
 
   const isDashboard = pathname === '/';
@@ -16,9 +21,74 @@ export default function Navbar() {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   useEffect(() => {
-    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    if (!mobileMenuOpen) return;
+
+    previouslyFocusedRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    const body = document.body;
+    scrollOffsetRef.current = window.scrollY;
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollOffsetRef.current}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    closeButtonRef.current?.focus();
+
     return () => {
-      document.body.style.overflow = '';
+      body.style.overflow = '';
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      window.scrollTo(0, scrollOffsetRef.current);
+      previouslyFocusedRef.current?.focus();
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const panel = mobilePanelRef.current;
+      if (!panel) return;
+
+      const focusables = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute('disabled') && !el.getAttribute('aria-hidden'));
+
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+        return;
+      }
+
+      if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeydown);
+    return () => {
+      window.removeEventListener('keydown', handleKeydown);
     };
   }, [mobileMenuOpen]);
 
@@ -34,8 +104,15 @@ export default function Navbar() {
                 aria-label="Go to home"
               >
                 <div className="brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300 border border-slate-100 active:scale-95">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/favicon.svg" alt="" className="h-6 w-6 sm:h-8 sm:w-8" />
+                  <Image
+                    src="/favicon.svg"
+                    alt=""
+                    width={32}
+                    height={32}
+                    priority
+                    sizes="(max-width: 640px) 24px, 32px"
+                    className="h-6 w-6 sm:h-8 sm:w-8"
+                  />
                 </div>
                 <span className="brand-text font-[900] orbitron text-slate-800 text-base min-[390px]:text-lg sm:text-xl leading-none tracking-tight whitespace-nowrap">
                   100x <span className="text-brand-gold">FENOK</span>
@@ -75,19 +152,19 @@ export default function Navbar() {
                   <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
                 </button>
                 <div className="dropdown-menu absolute top-full left-0 mt-1 w-[min(90vw,220px)] bg-white border border-gray-200 shadow-xl rounded-xl p-2 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
-                  <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-1">Briefing</div>
+                  <div className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-1">Briefing</div>
                   <Link href="/market" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
                     <span className="w-1 h-4 bg-brand-gold rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
                     <div>
                       <span className="block font-bold text-slate-700">Market Wrap</span>
-                      <span className="text-[10px] text-slate-400">Daily Updates</span>
+                      <span className="text-[10px] text-slate-500">Daily Updates</span>
                     </div>
                   </Link>
                   <Link href="/alpha-scout" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
                     <span className="w-1 h-4 bg-brand-interactive rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
                     <div>
                       <span className="block font-bold text-slate-700">Alpha Scout</span>
-                      <span className="text-[10px] text-slate-400">Weekly Deep Dive</span>
+                      <span className="text-[10px] text-slate-500">Weekly Deep Dive</span>
                     </div>
                   </Link>
                 </div>
@@ -107,7 +184,7 @@ export default function Navbar() {
                   <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
                 </button>
                 <div className="dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
-                  <div className="px-1 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-2">Tools & Charts</div>
+                  <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Tools & Charts</div>
                   <div className="grid grid-cols-3 gap-2">
                     <Link href="/multichart" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-chart-line text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
@@ -140,7 +217,7 @@ export default function Navbar() {
                   <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
                 </button>
                 <div className="dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,280px)] bg-white border border-gray-200 shadow-xl rounded-xl p-3 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
-                  <div className="px-2 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 mb-2">Proven Methods</div>
+                  <div className="px-2 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Proven Methods</div>
                   <Link href="/ib" className="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors mb-1 group/strat">
                     <div className="w-8 h-8 rounded bg-rose-100 flex items-center justify-center text-rose-600 mr-3 mt-0.5 group-hover/strat:bg-rose-200 transition-colors">
                       <i className="fas fa-calculator text-xs" />
@@ -194,6 +271,8 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(true)}
               className="md:hidden w-11 h-11 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 shadow-sm flex items-center justify-center"
               aria-label="Open menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-panel"
             >
               <i className="fas fa-bars text-sm" />
             </button>
@@ -203,10 +282,18 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="mobile-menu open fixed inset-y-0 right-0 w-[min(22rem,100vw)] bg-white shadow-2xl z-50">
+        <div
+          ref={mobilePanelRef}
+          id="mobile-navigation-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation menu"
+          className="mobile-menu open fixed inset-y-0 right-0 w-[min(22rem,100vw)] bg-white shadow-2xl z-50"
+        >
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <span className="font-bold orbitron text-slate-800">MENU</span>
-            <button 
+            <button
+              ref={closeButtonRef}
               type="button"
               onClick={closeMobileMenu}
               className="w-11 h-11 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center"
@@ -235,7 +322,7 @@ export default function Navbar() {
                   isMarket ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
                 }`}>
                 <span><i className="fas fa-chart-bar mr-2" /> MARKET</span>
-                <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
+                <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
                 <Link href="/market" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Market Wrap</Link>
@@ -248,7 +335,7 @@ export default function Navbar() {
                   isAnalytics ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
                 }`}>
                 <span><i className="fas fa-chart-line mr-2" /> ANALYTICS</span>
-                <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
+                <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
                 <Link href="/multichart" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Multichart</Link>
@@ -262,7 +349,7 @@ export default function Navbar() {
                   isStrategies ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
                 }`}>
                 <span><i className="fas fa-lightbulb mr-2" /> STRATEGIES</span>
-                <i className="fas fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform" />
+                <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
                 <Link href="/ib" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">IB Helper (무한매수)</Link>

@@ -11,6 +11,7 @@ export default function DailyWrapPage() {
       <iframe
         src="/100x/daily-wrap/daily-wrap-viewer.html"
         title="100x Daily Wrap"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

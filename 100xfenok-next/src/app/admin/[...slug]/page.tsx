@@ -59,6 +59,7 @@ export default async function AdminLegacyPage({ params }: AdminLegacyPageProps) 
       <iframe
         src={iframeSrc}
         title={`100x Admin ${slug.join(" / ")}`}
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

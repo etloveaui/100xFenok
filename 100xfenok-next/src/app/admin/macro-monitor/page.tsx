@@ -11,6 +11,7 @@ export default function AdminMacroMonitorPage() {
       <iframe
         src="/admin/market-radar/index.html"
         title="100x Admin Macro Monitor"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

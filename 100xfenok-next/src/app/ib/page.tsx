@@ -11,6 +11,7 @@ export default function IBPage() {
       <iframe
         src="/ib-helper/index.html"
         title="100x IB Helper"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

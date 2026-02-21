@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: '분석 아카이브',
@@ -50,6 +51,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
         <iframe
           src={`/${safePath}`}
           title="Posts Detail"
+          loading="eager"
           className="h-full w-full border-0"
         />
       </div>
@@ -73,7 +75,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
 
         <section className="mb-12 md:mb-16">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Featured Post</h2>
-          <a
+          <Link
             href="/posts/2026-02-21_tariff-ruling-comprehensive.html"
             className="posts-card group block md:flex gap-6 md:gap-8 p-4 sm:p-6 md:p-8"
           >
@@ -81,7 +83,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
               style={{ background: 'linear-gradient(135deg, #fef2f2, #fffbeb, #f1f5f9)' }}>
               <div className="text-center p-6">
                 <div className="text-6xl mb-3">&#9878;</div>
-                <div className="text-xs font-bold uppercase tracking-wider text-red-600 bg-red-100 px-3 py-1 rounded-full inline-block">Breaking Analysis</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-red-800 bg-red-100 px-3 py-1 rounded-full inline-block">Breaking Analysis</div>
               </div>
             </div>
             <div className="md:w-1/2 flex flex-col">
@@ -102,13 +104,13 @@ export default async function PostsPage({ searchParams }: PageProps) {
                 <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">국가별 영향</span>
               </div>
             </div>
-          </a>
+          </Link>
         </section>
 
         <section>
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Archive</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <a
+            <Link
               href="/posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html"
               className="posts-card group block p-5 sm:p-8"
             >
@@ -126,8 +128,8 @@ export default async function PostsPage({ searchParams }: PageProps) {
                 <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">리스크 분석</span>
                 <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">재무 분석</span>
               </div>
-            </a>
-            <a
+            </Link>
+            <Link
               href="/posts/2025-06-23_stablecoin-revolution-complete-masterplan.html"
               className="posts-card group block p-5 sm:p-8"
             >
@@ -146,9 +148,9 @@ export default async function PostsPage({ searchParams }: PageProps) {
                 <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">RRP</span>
                 <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">시뮬레이터</span>
               </div>
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/posts/2025-06-22_playbook.html"
               className="posts-card group block p-5 sm:p-8"
             >
@@ -166,7 +168,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
                 <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">패권전략</span>
                 <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-600">AI혁명</span>
               </div>
-            </a>
+            </Link>
           </div>
         </section>
 
