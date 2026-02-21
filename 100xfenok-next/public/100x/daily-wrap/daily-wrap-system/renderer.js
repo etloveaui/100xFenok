@@ -72,7 +72,10 @@ const setHtml = (id, htmlString) => {
 };
 
 const FALLBACK_CACHE_KEY = 'dailyWrap.latestDataDate';
-const DATE_FILE_REGEX = /^(\d{4}-\d{2}-\d{2})\.json$/;
+const KNOWN_DATA_FALLBACK_DATES = ['2025-07-12', '2025-07-11'];
+const DATE_ONLY_REGEX = /^(\d{4}-\d{2}-\d{2})$/;
+const DATE_JSON_REGEX = /^(\d{4}-\d{2}-\d{2})\.json$/;
+const DATE_DATA_JSON_REGEX = /^(\d{4}-\d{2}-\d{2})-data\.json$/;
 
 const formatDateForFile = (date) => {
     const year = date.getFullYear();
@@ -108,6 +111,42 @@ const setCachedFallbackDate = (dateString) => {
 };
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
+
+const extractDateCandidate = (value) => {
+    if (typeof value !== 'string') return null;
+
+    if (DATE_ONLY_REGEX.test(value)) {
+        return value;
+    }
+
+    const dataMatch = value.match(DATE_DATA_JSON_REGEX);
+    if (dataMatch) {
+        return dataMatch[1];
+    }
+
+    const jsonMatch = value.match(DATE_JSON_REGEX);
+    if (jsonMatch) {
+        return jsonMatch[1];
+    }
+
+    return null;
+};
+
+const collectUniqueDates = (list) => {
+    if (!Array.isArray(list)) return [];
+
+    const dates = [];
+    const uniqueDates = new Set();
+
+    list.forEach((item) => {
+        const date = extractDateCandidate(item);
+        if (!date || uniqueDates.has(date)) return;
+        uniqueDates.add(date);
+        dates.push(date);
+    });
+
+    return dates;
+};
 
 function normalizeLegacyDailyWrapData(data) {
     if (!data || typeof data !== 'object') {
@@ -233,24 +272,8 @@ async function fetchJsonFromUrl(url, options = {}) {
 
 async function loadLatestDateCandidates() {
     const reportsIndexUrl = '/100x/data/reports-index.json';
-    const list = await fetchJsonFromUrl(reportsIndexUrl);
-
-    if (!Array.isArray(list)) return [];
-
-    const dates = [];
-    const uniqueDates = new Set();
-
-    list.forEach((item) => {
-        if (typeof item !== 'string') return;
-        const match = item.match(DATE_FILE_REGEX);
-        if (!match) return;
-        const date = match[1];
-        if (uniqueDates.has(date)) return;
-        uniqueDates.add(date);
-        dates.push(date);
-    });
-
-    return dates;
+    const reportsList = await fetchJsonFromUrl(reportsIndexUrl, { allowNotFound: true });
+    return collectUniqueDates(reportsList);
 }
 
 async function tryLoadDateData(basePath, dateString) {
@@ -316,14 +339,29 @@ async function loadReportData(basePath, dateParam) {
 
     const todayDate = formatDateForFile(new Date());
     const todayUrl = buildDataUrl(basePath, todayDate);
-    const todayData = await fetchJsonFromUrl(todayUrl, { allowNotFound: true });
+    let fallbackDates = [];
 
-    if (todayData) {
-        return { data: normalizeLegacyDailyWrapData(todayData), dataUrl: todayUrl, fallbackFromUrl: null };
+    try {
+        fallbackDates = await loadLatestDateCandidates();
+    } catch (error) {
+        console.warn('[DailyWrap] reports-index 조회 실패. today/cached fallback으로 진행합니다.', error);
+    }
+
+    const knownDateSet = fallbackDates.length > 0 ? new Set(fallbackDates) : null;
+    const shouldTryToday = !knownDateSet || knownDateSet.has(todayDate);
+
+    if (shouldTryToday) {
+        const todayData = await fetchJsonFromUrl(todayUrl, { allowNotFound: true });
+        if (todayData) {
+            return { data: normalizeLegacyDailyWrapData(todayData), dataUrl: todayUrl, fallbackFromUrl: null };
+        }
     }
 
     const cachedDate = getCachedFallbackDate();
-    if (cachedDate && cachedDate !== todayDate) {
+    const shouldTryCached = cachedDate
+        && cachedDate !== todayDate
+        && (!knownDateSet || knownDateSet.has(cachedDate) || KNOWN_DATA_FALLBACK_DATES.includes(cachedDate));
+    if (shouldTryCached) {
         const cachedCandidate = await tryLoadDateData(basePath, cachedDate);
         if (cachedCandidate) {
             return {
@@ -334,8 +372,7 @@ async function loadReportData(basePath, dateParam) {
         }
     }
 
-    const fallbackDates = await loadLatestDateCandidates();
-    const filteredDates = fallbackDates.filter((date) => date !== todayDate && date !== cachedDate);
+    const filteredDates = KNOWN_DATA_FALLBACK_DATES.filter((date) => date !== todayDate && date !== cachedDate);
     const latestCandidate = await findLatestExistingData(basePath, filteredDates);
 
     if (latestCandidate) {

@@ -31,15 +31,38 @@ function detectPlaywrightChrome() {
     .filter((entry) => entry.isDirectory() && entry.name.startsWith("chromium-"))
     .map((entry) => ({
       name: entry.name,
-      chromePath: path.join(playwrightCacheDir, entry.name, "chrome-linux", "chrome"),
+      chromePathCandidates: [
+        path.join(playwrightCacheDir, entry.name, "chrome-linux", "chrome"),
+        path.join(playwrightCacheDir, entry.name, "chrome-linux64", "chrome"),
+      ],
     }))
-    .filter((entry) => fs.existsSync(entry.chromePath))
+    .map((entry) => ({
+      name: entry.name,
+      chromePath: entry.chromePathCandidates.find((candidate) => fs.existsSync(candidate)),
+    }))
+    .filter((entry) => Boolean(entry.chromePath))
     .sort((a, b) => b.name.localeCompare(a.name, undefined, { numeric: true }));
 
   return candidates[0]?.chromePath ?? null;
 }
 
-const chromePath = process.env.CHROME_PATH || detectPlaywrightChrome();
+function detectSystemChrome() {
+  const candidates = [
+    process.env.CHROME_BIN,
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+    "/snap/bin/chromium",
+    "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
+    "/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+  ].filter(Boolean);
+
+  return candidates.find((candidate) => fs.existsSync(candidate)) || null;
+}
+
+const playwrightChromePath = detectPlaywrightChrome();
+let chromePath = process.env.CHROME_PATH || detectSystemChrome() || playwrightChromePath;
 
 function percentile50(values) {
   const sorted = [...values].sort((a, b) => a - b);
@@ -51,7 +74,7 @@ function percentile50(values) {
 }
 
 function runLighthouse(url, outputPath, preset) {
-  const lighthouseArgs = [
+  const baseArgs = [
     url,
     "--output=json",
     `--output-path=${outputPath}`,
@@ -61,22 +84,64 @@ function runLighthouse(url, outputPath, preset) {
   ];
 
   if (preset === "desktop") {
-    lighthouseArgs.push("--preset=desktop");
+    baseArgs.push("--preset=desktop");
   }
 
-  execFileSync(
-    "npx",
-    ["lighthouse", ...lighthouseArgs],
-    {
+  const runWithChrome = (candidateChromePath) => {
+    const args = [...baseArgs];
+    if (candidateChromePath) {
+      args.push(`--chrome-path=${candidateChromePath}`);
+    }
+    execFileSync("npx", ["lighthouse", ...args], {
       stdio: "inherit",
-      env: chromePath
+      env: candidateChromePath
         ? {
             ...process.env,
-            CHROME_PATH: chromePath,
+            CHROME_PATH: candidateChromePath,
           }
         : process.env,
-    },
-  );
+    });
+  };
+
+  const isChromeConnectError = (message) =>
+    /Unable to connect to Chrome|Could not find Chrome/i.test(message);
+
+  try {
+    runWithChrome(chromePath);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const canFallbackToPlaywright =
+      playwrightChromePath &&
+      playwrightChromePath !== chromePath;
+
+    if (canFallbackToPlaywright) {
+      console.error(
+        `[qa:lighthouse] primary chrome failed (${chromePath}), retrying with Playwright Chromium (${playwrightChromePath})`,
+      );
+      try {
+        runWithChrome(playwrightChromePath);
+        chromePath = playwrightChromePath;
+        return;
+      } catch (fallbackError) {
+        const fallbackMessage =
+          fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+        if (isChromeConnectError(fallbackMessage)) {
+          throw new Error(
+            `Both primary chrome (${chromePath}) and Playwright Chromium (${playwrightChromePath}) failed (${fallbackMessage})`,
+          );
+        }
+        throw fallbackError;
+      }
+    }
+
+    if (isChromeConnectError(message)) {
+      const hint = chromePath
+        ? `Configured CHROME_PATH is not usable: ${chromePath}`
+        : "No Chrome binary detected. Install Chromium or set CHROME_PATH explicitly.";
+      throw new Error(`${hint} (${message})`);
+    }
+    throw error;
+  }
 }
 
 function readScores(filePath) {

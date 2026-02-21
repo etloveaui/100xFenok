@@ -32,6 +32,26 @@ async function safeCloseBrowser(browser, ms = 3000) {
 function classifyFailure(errorMessage) {
   const message = String(errorMessage || "");
   if (
+    message.includes("Host system is missing dependencies to run browsers") ||
+    message.includes("playwright install-deps")
+  ) {
+    return {
+      category: "host-deps-missing",
+      hint: "WebKit 런타임 의존성이 누락됨. `npx playwright install --with-deps webkit` 또는 apt 패키지 설치 필요.",
+    };
+  }
+
+  if (
+    message.includes("Executable doesn't exist") ||
+    message.includes("Please run the following command to download new browsers")
+  ) {
+    return {
+      category: "browser-binary-missing",
+      hint: "WebKit 바이너리가 없음. `npx playwright install webkit`로 브라우저 설치 필요.",
+    };
+  }
+
+  if (
     message.includes("newPage:timeout") ||
     message.includes("automation is not allowed in the context")
   ) {

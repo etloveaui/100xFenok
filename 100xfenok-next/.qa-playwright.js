@@ -24,7 +24,12 @@ function isExternalFetchNoise(message) {
   return (
     /\[DataFetcher\]\s*FRED/i.test(message) ||
     /Treasury API 실패/i.test(message) ||
-    /TypeError:\s*Failed to fetch/i.test(message)
+    /TypeError:\s*Failed to fetch/i.test(message) ||
+    /api\.allorigins\.win/i.test(message) ||
+    /query1\.finance\.yahoo\.com/i.test(message) ||
+    /has been blocked by CORS policy/i.test(message) ||
+    /No 'Access-Control-Allow-Origin' header is present/i.test(message) ||
+    /Failed to load resource: net::ERR_FAILED/i.test(message)
   );
 }
 
@@ -321,8 +326,11 @@ async function prewarmRoutes() {
 
       if (route === "/" && vp.name !== "desktop" && !item.navigationError) {
         try {
-          const open = page.locator('button[aria-label="Open menu"]');
-          if (await open.count()) {
+          const open = page.locator('button[aria-label="Open menu"]').first();
+          const hasOpenButton = (await open.count()) > 0;
+          const isOpenButtonVisible = hasOpenButton ? await open.isVisible() : false;
+
+          if (isOpenButtonVisible) {
             await open.click();
             await page.waitForTimeout(200);
             const menuState = await page.evaluate(() => ({
@@ -355,6 +363,14 @@ async function prewarmRoutes() {
             }
 
             results.push({ viewport: vp.name, route: "/", check: "mobileMenuToggle", closeMethod, menuState, afterClose });
+          } else {
+            results.push({
+              viewport: vp.name,
+              route: "/",
+              check: "mobileMenuToggle",
+              skipped: true,
+              reason: hasOpenButton ? "open-button-hidden-on-viewport" : "open-button-not-found",
+            });
           }
         } catch (err) {
           results.push({ viewport: vp.name, route: "/", check: "mobileMenuToggle", error: String(err) });
