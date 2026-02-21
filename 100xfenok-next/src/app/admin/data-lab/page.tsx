@@ -11,6 +11,7 @@ export default function AdminDataLabPage() {
       <iframe
         src="/admin/data-lab/index.html"
         title="100x Admin Data Lab"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

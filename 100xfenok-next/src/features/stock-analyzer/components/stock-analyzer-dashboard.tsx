@@ -129,11 +129,11 @@ export function StockAnalyzerDashboard() {
   const tablePlaceholderRows = shouldRenderHeavyPanels ? 20 : 12;
 
   return (
-    <main className="container mx-auto overflow-x-hidden px-4 py-4" data-stock-analyzer-native="true">
+    <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4" data-stock-analyzer-native="true">
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600">
               STOCK ANALYZER NATIVE
             </p>
             <h1 className="mt-1 text-xl font-black text-slate-800 sm:text-2xl">
@@ -161,13 +161,13 @@ export function StockAnalyzerDashboard() {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setTab(tab.id)}
-              className={`min-h-11 rounded-full px-4 text-sm font-bold transition ${
+              className={`min-h-11 flex-shrink-0 rounded-full px-4 text-sm font-bold transition ${
                 dashboard.activeTab === tab.id
                   ? "bg-brand-navy text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -263,19 +263,19 @@ export function StockAnalyzerDashboard() {
 
       <section className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Universe</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Universe</p>
           <p className="mt-1 text-2xl font-black text-slate-800">{formatNumber(dashboard.records.length, 0)}</p>
         </article>
         <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Filtered</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Filtered</p>
           <p className="mt-1 text-2xl font-black text-slate-800">{formatNumber(dashboard.filteredRecords.length, 0)}</p>
         </article>
         <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Avg 3M Growth</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Avg 3M Growth</p>
           <p className="mt-1 text-2xl font-black text-emerald-600">{formatPercent(averageGrowth)}</p>
         </article>
         <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Avg PER</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Avg PER</p>
           <p className="mt-1 text-2xl font-black text-blue-700">{formatNumber(averagePer, 2)}</p>
         </article>
       </section>
@@ -309,7 +309,7 @@ export function StockAnalyzerDashboard() {
         </section>
       )}
 
-      <section className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
+      <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
         <article className="min-h-[430px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-700">Filtered Universe</h2>
@@ -318,7 +318,68 @@ export function StockAnalyzerDashboard() {
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="grid grid-cols-1 gap-2 min-[520px]:grid-cols-2 md:hidden">
+            {visibleRows.length > 0
+              ? visibleRows.map((record) => (
+                  <button
+                    type="button"
+                    key={`mobile-${record.symbol}`}
+                    onClick={() => selectSymbol(record.symbol)}
+                    className={`w-full rounded-xl border p-3 text-left transition ${
+                      dashboard.selectedSymbol === record.symbol
+                        ? "border-blue-200 bg-blue-50/60"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-800">{record.symbol}</p>
+                        <p className="truncate text-xs text-slate-600">{record.companyName}</p>
+                      </div>
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-bold ${
+                          typeof record.growthRate === "number" && record.growthRate < 0
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {formatPercent(record.growthRate)}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                      <div className="rounded-md bg-slate-50 px-2 py-1.5">
+                        <p className="text-slate-600">Sector</p>
+                        <p className="font-semibold text-slate-700">{record.sector ?? "-"}</p>
+                      </div>
+                      <div className="rounded-md bg-slate-50 px-2 py-1.5">
+                        <p className="text-slate-600">PER</p>
+                        <p className="font-semibold text-slate-700">{formatNumber(record.per, 2)}</p>
+                      </div>
+                      <div className="rounded-md bg-slate-50 px-2 py-1.5">
+                        <p className="text-slate-600">Market Cap</p>
+                        <p className="font-semibold text-slate-700">{formatNumber(record.marketCap, 0)}</p>
+                      </div>
+                      <div className="rounded-md bg-slate-50 px-2 py-1.5">
+                        <p className="text-slate-600">Rank</p>
+                        <p className="font-semibold text-slate-700">{formatNumber(record.rank, 0)}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))
+              : Array.from({ length: Math.min(tablePlaceholderRows, 8) }, (_, index) => (
+                  <div key={`table-mobile-skeleton-${index}`} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <div className="skeleton-bar h-4 w-20" />
+                    <div className="skeleton-bar mt-2 h-3 w-full" />
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div className="skeleton-bar h-9" />
+                      <div className="skeleton-bar h-9" />
+                    </div>
+                  </div>
+                ))}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[720px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
@@ -389,26 +450,26 @@ export function StockAnalyzerDashboard() {
               <p className="text-slate-600">{selectedRecord.companyName}</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg bg-slate-50 p-2">
-                  <p className="text-slate-400">Sector</p>
+                  <p className="text-slate-600">Sector</p>
                   <p className="font-bold text-slate-700">{selectedRecord.sector ?? "-"}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2">
-                  <p className="text-slate-400">Market Cap</p>
+                  <p className="text-slate-600">Market Cap</p>
                   <p className="font-bold text-slate-700">{formatNumber(selectedRecord.marketCap, 0)}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2">
-                  <p className="text-slate-400">3M Growth</p>
+                  <p className="text-slate-600">3M Growth</p>
                   <p className="font-bold text-emerald-600">{formatPercent(selectedRecord.growthRate)}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2">
-                  <p className="text-slate-400">PER</p>
+                  <p className="text-slate-600">PER</p>
                   <p className="font-bold text-blue-700">{formatNumber(selectedRecord.per, 2)}</p>
                 </div>
               </div>
             </div>
           ) : (
             <p className="mt-3 text-sm text-slate-500">
-              테이블 행을 선택하면 스냅샷이 표시됩니다.
+              테이블 행 또는 모바일 카드를 선택하면 스냅샷이 표시됩니다.
             </p>
           )}
         </article>

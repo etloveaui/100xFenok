@@ -147,7 +147,7 @@ export default function Footer() {
                   <span className="font-[800] orbitron text-slate-800 text-sm group-hover:text-brand-interactive transition-colors leading-none">
                     100x <span className="text-brand-gold">FENOK</span>
                   </span>
-                  <span className="text-[8px] text-slate-400">© 2025 All rights reserved</span>
+                  <span className="text-[8px] text-slate-600">© 2025 All rights reserved</span>
                 </div>
               </button>
 

@@ -112,6 +112,7 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
       <iframe
         src={iframeSrc}
         title={`Posts Detail ${slug.join(" / ")}`}
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

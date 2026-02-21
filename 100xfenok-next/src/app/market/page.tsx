@@ -37,6 +37,7 @@ export default async function MarketPage({ searchParams }: PageProps) {
       <iframe
         src={iframeSrc}
         title="100x Market Wrap"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

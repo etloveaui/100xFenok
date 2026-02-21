@@ -37,6 +37,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
       <iframe
         src={iframeSrc}
         title="100x Market Radar"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

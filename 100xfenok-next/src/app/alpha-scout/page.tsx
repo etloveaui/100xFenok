@@ -58,6 +58,7 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
       <iframe
         src={iframeSrc}
         title="100x Alpha Scout"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>

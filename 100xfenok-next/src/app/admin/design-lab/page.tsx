@@ -11,6 +11,7 @@ export default function AdminDesignLabPage() {
       <iframe
         src="/admin/design-lab/index.html"
         title="100x Admin Design Lab"
+        loading="eager"
         className="h-full w-full border-0"
       />
     </div>
