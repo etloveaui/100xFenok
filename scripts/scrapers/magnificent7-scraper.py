@@ -14,13 +14,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-import requests
 from bs4 import BeautifulSoup
 
 # Add parent directory to path for scraper_utils imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scraper_utils import fetch_html, clean_number, to_float
+from scraper_utils import fetch_html_playwright, clean_number, to_float
 
 SOURCE_URL = "https://www.slickcharts.com/magnificent7"
 DEFAULT_OUTPUT = Path(__file__).with_name("magnificent7.json")
@@ -114,8 +113,7 @@ def main() -> None:
     args = parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    with requests.Session() as session:
-        html = fetch_html(session, SOURCE_URL)
+    html = fetch_html_playwright(SOURCE_URL, wait_for_selector="table.table.table-hover")
     data = parse_magnificent7(html)
     if not data:
         raise RuntimeError("No Magnificent 7 data parsed from SlickCharts response")

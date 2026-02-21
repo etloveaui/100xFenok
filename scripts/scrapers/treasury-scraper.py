@@ -15,13 +15,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-import requests
 from bs4 import BeautifulSoup
 
 # Add parent directory for scraper_utils import
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scraper_utils import (
-    fetch_html, to_float, create_session,
+    fetch_html_playwright, to_float,
     load_existing_history, build_cumulative_payload, write_cumulative_output,
     DEFAULT_RETENTION_DAYS
 )
@@ -115,10 +114,7 @@ def main() -> None:
     args = parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    session = create_session()
-    html = fetch_html(session, SOURCE_URL)
-    session.close()
-
+    html = fetch_html_playwright(SOURCE_URL)
     rates = parse_treasury(html)
     if not rates:
         raise RuntimeError("No treasury rates parsed from SlickCharts response")

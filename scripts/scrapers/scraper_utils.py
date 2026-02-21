@@ -46,6 +46,42 @@ REQUEST_TIMEOUT = 30
 # HTTP Functions
 # ==============================================================================
 
+def fetch_html_playwright(
+    url: str,
+    *,
+    wait_for_selector: str = "table.table",
+    timeout: int = 60000,
+) -> str:
+    """
+    Fetch HTML content using Playwright headless browser.
+    Use for pages protected by Cloudflare or requiring JavaScript rendering.
+
+    Args:
+        url: Target URL to fetch
+        wait_for_selector: CSS selector to wait for before capturing HTML
+        timeout: Navigation timeout in milliseconds (default: 60000)
+
+    Returns:
+        Rendered HTML content as string
+
+    Raises:
+        RuntimeError: If page load or selector wait times out
+    """
+    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.set_extra_http_headers({"User-Agent": USER_AGENT})
+            page.goto(url, wait_until="domcontentloaded", timeout=timeout)
+            page.wait_for_selector(wait_for_selector, timeout=15000)
+            html = page.content()
+            browser.close()
+        return html
+    except PlaywrightTimeout as exc:
+        raise RuntimeError(f"Playwright timed out fetching {url}") from exc
+
+
 def fetch_html(
     session: Session,
     url: str,
