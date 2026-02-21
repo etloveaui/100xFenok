@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import fs from "node:fs";
 import path from "node:path";
 import { notFound } from "next/navigation";
+import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 
 export const metadata: Metadata = {
   title: "분석 아카이브 상세",
@@ -107,14 +108,5 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
     notFound();
   }
 
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src={iframeSrc}
-        title={`Posts Detail ${slug.join(" / ")}`}
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src={iframeSrc} title={`Posts Detail ${slug.join(" / ")}`} loading="eager" />;
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 
 export const metadata: Metadata = {
   title: "Admin · Data Lab",
@@ -6,14 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminDataLabPage() {
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src="/admin/data-lab/index.html"
-        title="100x Admin Data Lab"
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src="/admin/data-lab/index.html" title="100x Admin Data Lab" loading="eager" />;
 }

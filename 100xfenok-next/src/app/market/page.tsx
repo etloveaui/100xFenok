@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 
 export const metadata: Metadata = {
   title: 'Market Wrap',
@@ -32,14 +33,5 @@ export default async function MarketPage({ searchParams }: PageProps) {
   const safePath = sanitizeMarketPath(rawPath);
   const iframeSrc = safePath ? `/${safePath}` : '/100x/100x-main.html';
 
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src={iframeSrc}
-        title="100x Market Wrap"
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src={iframeSrc} title="100x Market Wrap" loading="eager" />;
 }

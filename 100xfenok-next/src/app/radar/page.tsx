@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 
 export const metadata: Metadata = {
   title: 'Market Radar',
@@ -32,14 +33,5 @@ export default async function RadarPage({ searchParams }: PageProps) {
   const safePath = sanitizeRadarPath(rawPath);
   const iframeSrc = safePath ? `/${safePath}` : '/tools/macro-monitor/index.html';
 
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src={iframeSrc}
-        title="100x Market Radar"
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src={iframeSrc} title="100x Market Radar" loading="eager" />;
 }

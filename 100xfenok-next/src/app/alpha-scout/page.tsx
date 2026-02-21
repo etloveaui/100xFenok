@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 
 export const metadata: Metadata = {
   title: 'Alpha Scout',
@@ -53,14 +54,5 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
       ? `/alpha-scout/reports/${safeReport}`
       : '/alpha-scout/alpha-scout-main.html';
 
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src={iframeSrc}
-        title="100x Alpha Scout"
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src={iframeSrc} title="100x Alpha Scout" loading="eager" />;
 }

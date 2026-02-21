@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 
 export const metadata: Metadata = {
   title: "Stock Analyzer",
@@ -28,14 +29,7 @@ export default function StockAnalyzerPage() {
         </div>
       </section>
 
-      <div className="route-embed-shell">
-        <iframe
-          src="/tools/stock_analyzer/stock_analyzer.html"
-          title="Stock Analyzer"
-          loading="eager"
-          className="h-full w-full border-0"
-        />
-      </div>
+      <RouteEmbedFrame src="/tools/stock_analyzer/stock_analyzer.html" title="Stock Analyzer" loading="eager" />
     </main>
   );
 }

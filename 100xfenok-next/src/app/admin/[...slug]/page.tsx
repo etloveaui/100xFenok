@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import fs from "node:fs";
 import path from "node:path";
 import { notFound } from "next/navigation";
+import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 
 export const metadata: Metadata = {
   title: "Admin Legacy Bridge",
@@ -54,14 +55,5 @@ export default async function AdminLegacyPage({ params }: AdminLegacyPageProps) 
     notFound();
   }
 
-  return (
-    <div className="route-embed-shell">
-      <iframe
-        src={iframeSrc}
-        title={`100x Admin ${slug.join(" / ")}`}
-        loading="eager"
-        className="h-full w-full border-0"
-      />
-    </div>
-  );
+  return <RouteEmbedFrame src={iframeSrc} title={`100x Admin ${slug.join(" / ")}`} loading="eager" />;
 }
