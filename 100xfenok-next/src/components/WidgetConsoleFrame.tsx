@@ -65,14 +65,8 @@ function WidgetConsoleFrameInner({
   const bridgeTimeLabel = lastDispatchAt ? formatTimeLabel(lastDispatchAt) : '--';
   const compactPath = formatWidgetPath(src);
 
-  const markPayloadLinked = useCallback(() => {
-    if (!payload) return;
-    setIsPayloadLinked(true);
-    setLastDispatchAt(new Date().toISOString());
-  }, [payload]);
-
-  const dispatchPayload = useCallback(() => {
-    if (!payload || !iframeRef.current?.contentWindow) return;
+  const dispatchPayload = useCallback((trackDispatch = true) => {
+    if (!payload || !iframeRef.current?.contentWindow) return false;
     try {
       const targetOrigin = resolveTargetOrigin(src);
       iframeRef.current.contentWindow.postMessage(
@@ -89,8 +83,14 @@ function WidgetConsoleFrameInner({
         title,
         widgetId,
       });
+      if (trackDispatch) {
+        setIsPayloadLinked(true);
+        setLastDispatchAt(new Date().toISOString());
+      }
+      return true;
     } catch {
       // payload 전달 실패는 로딩/렌더 동작에 영향이 없으므로 무시
+      return false;
     }
   }, [payload, src, title, widgetId]);
 
@@ -130,7 +130,6 @@ function WidgetConsoleFrameInner({
       setFailureReason(null);
       setReady(true);
       dispatchPayload();
-      markPayloadLinked();
       emitWidgetTelemetry({
         event: 'widget-ready',
         src,
@@ -142,7 +141,7 @@ function WidgetConsoleFrameInner({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [dispatchPayload, markPayloadLinked, src, title, widgetId]);
+  }, [dispatchPayload, src, title, widgetId]);
 
   useEffect(() => {
     return () => {
@@ -155,14 +154,32 @@ function WidgetConsoleFrameInner({
 
   useEffect(() => {
     if (!ready) return;
-    dispatchPayload();
-  }, [dispatchPayload, payload, ready]);
+    if (!payload || !iframeRef.current?.contentWindow) return;
+    try {
+      const targetOrigin = resolveTargetOrigin(src);
+      iframeRef.current.contentWindow.postMessage(
+        {
+          type: 'WIDGET_DATA_UPDATE',
+          widgetId,
+          payload,
+        },
+        targetOrigin,
+      );
+      emitWidgetTelemetry({
+        event: 'data-dispatch',
+        src,
+        title,
+        widgetId,
+      });
+    } catch {
+      // no-op
+    }
+  }, [payload, ready, src, title, widgetId]);
 
   const handleFrameLoad = () => {
     if (failed || ready) return;
 
     dispatchPayload();
-    markPayloadLinked();
 
     if (readyFallbackTimerRef.current !== null) {
       window.clearTimeout(readyFallbackTimerRef.current);
