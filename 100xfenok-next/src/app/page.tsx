@@ -240,6 +240,15 @@ function getStressTone(score: number): StressTone {
   return 'high';
 }
 
+function getMarketStateMeta(marketState: string | null): { label: string; className: string } | null {
+  if (!marketState) return null;
+  if (marketState.includes('REGULAR')) return { label: 'LIVE', className: 'state-regular' };
+  if (marketState.includes('PRE')) return { label: 'PRE', className: 'state-pre' };
+  if (marketState.includes('POST')) return { label: 'POST', className: 'state-post' };
+  if (marketState.includes('CLOSED')) return { label: 'CLOSED', className: 'state-closed' };
+  return null;
+}
+
 function getHeatmapToneClass(change: number, horizon: '1D' | '1M'): string {
   const strongPositive = horizon === '1D' ? 0.012 : 0.025;
   const positive = horizon === '1D' ? 0.007 : 0.012;
@@ -982,6 +991,7 @@ export default function Home() {
             <div className="heatmap-grid">
               {dashboard.sectorRows.map((sector) => {
                 const pinClass = sector.etf === 'XLK' ? 'xlk' : sector.etf === 'XLF' ? 'xlf' : '';
+                const marketStateMeta = getMarketStateMeta(sector.marketState);
                 return (
                   <div key={sector.key} className={`heatmap-cell ${pinClass} ${getHeatmapToneClass(sector.displayChange, sector.displayHorizon)}`}>
                     <span className="font-bold text-lg">{sector.etf}</span>
@@ -990,6 +1000,11 @@ export default function Home() {
                     <span className="heatmap-cell-horizon">{sector.displayHorizon}</span>
                     {sector.quotePrice !== null ? (
                       <span className="heatmap-cell-price">${sector.quotePrice.toFixed(2)}</span>
+                    ) : null}
+                    {marketStateMeta ? (
+                      <span className={`market-state-badge heatmap-market-state ${marketStateMeta.className}`}>
+                        {marketStateMeta.label}
+                      </span>
                     ) : null}
                   </div>
                 );
