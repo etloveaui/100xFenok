@@ -945,6 +945,7 @@
 
     try {
       await refreshWidgets();
+      await hydrateCorporateHealthPreview();
       emitRadarIndexTelemetry('manual-sync-success');
     } catch (error) {
       console.warn('[Index] 수동 동기화 실패:', error);
