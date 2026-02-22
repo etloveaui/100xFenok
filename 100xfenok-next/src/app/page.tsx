@@ -401,23 +401,31 @@ export default function Home() {
         )}
 
         {activeTab === 'sectors' && (
-          <div className="bento-card p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xs font-bold text-slate-600 tracking-widest orbitron">SECTOR HEATMAP</h3>
-              <span className="text-xs text-slate-600">Treemap by Market Cap</span>
+          <div className="heatmap-panel">
+            <div className="heatmap-panel-head">
+              <div>
+                <p className="heatmap-panel-kicker orbitron">SECTOR HEATMAP</p>
+                <h3 className="heatmap-panel-title">Market Cap Weighted Map</h3>
+              </div>
+              <span className="heatmap-panel-meta">Treemap by Market Cap</span>
+            </div>
+            <div className="heatmap-legend" aria-label="섹터 히트맵 범례">
+              <span className="heatmap-legend-chip is-risk-on">Risk-On</span>
+              <span className="heatmap-legend-chip is-neutral">Neutral</span>
+              <span className="heatmap-legend-chip is-risk-off">Risk-Off</span>
             </div>
             <div className="heatmap-grid">
-              <div className="heatmap-cell xlk bg-green-500 text-white"><span className="font-bold text-lg">XLK</span><span className="text-sm">Tech</span><span className="font-bold">+2.34%</span></div>
-              <div className="heatmap-cell xlf bg-green-400 text-white"><span className="font-bold">XLF</span><span className="text-xs">+1.56%</span></div>
-              <div className="heatmap-cell bg-green-300 text-green-800"><span className="font-bold">XLV</span><span className="text-xs">+0.89%</span></div>
-              <div className="heatmap-cell bg-red-400 text-white"><span className="font-bold">XLE</span><span className="text-xs">-1.23%</span></div>
-              <div className="heatmap-cell bg-green-200 text-green-800"><span className="font-bold">XLI</span><span className="text-xs">+0.45%</span></div>
-              <div className="heatmap-cell bg-green-400 text-white"><span className="font-bold">XLC</span><span className="text-xs">+1.12%</span></div>
-              <div className="heatmap-cell bg-red-300 text-red-800"><span className="font-bold">XLY</span><span className="text-xs">-0.67%</span></div>
-              <div className="heatmap-cell bg-slate-200 text-slate-600"><span className="font-bold">XLP</span><span className="text-xs">+0.12%</span></div>
-              <div className="heatmap-cell bg-red-200 text-red-700"><span className="font-bold">XLRE</span><span className="text-xs">-0.34%</span></div>
-              <div className="heatmap-cell bg-green-300 text-green-800"><span className="font-bold">XLB</span><span className="text-xs">+0.78%</span></div>
-              <div className="heatmap-cell bg-red-500 text-white"><span className="font-bold">XLU</span><span className="text-xs">-1.89%</span></div>
+              <div className="heatmap-cell xlk heatmap-positive-strong"><span className="font-bold text-lg">XLK</span><span className="text-sm">Tech</span><span className="font-bold">+2.34%</span></div>
+              <div className="heatmap-cell xlf heatmap-positive"><span className="font-bold">XLF</span><span className="text-xs">+1.56%</span></div>
+              <div className="heatmap-cell heatmap-positive-soft"><span className="font-bold">XLV</span><span className="text-xs">+0.89%</span></div>
+              <div className="heatmap-cell heatmap-negative"><span className="font-bold">XLE</span><span className="text-xs">-1.23%</span></div>
+              <div className="heatmap-cell heatmap-positive-faint"><span className="font-bold">XLI</span><span className="text-xs">+0.45%</span></div>
+              <div className="heatmap-cell heatmap-positive"><span className="font-bold">XLC</span><span className="text-xs">+1.12%</span></div>
+              <div className="heatmap-cell heatmap-negative-soft"><span className="font-bold">XLY</span><span className="text-xs">-0.67%</span></div>
+              <div className="heatmap-cell heatmap-neutral"><span className="font-bold">XLP</span><span className="text-xs">+0.12%</span></div>
+              <div className="heatmap-cell heatmap-negative-faint"><span className="font-bold">XLRE</span><span className="text-xs">-0.34%</span></div>
+              <div className="heatmap-cell heatmap-positive-soft"><span className="font-bold">XLB</span><span className="text-xs">+0.78%</span></div>
+              <div className="heatmap-cell heatmap-negative-strong"><span className="font-bold">XLU</span><span className="text-xs">-1.89%</span></div>
             </div>
           </div>
         )}
