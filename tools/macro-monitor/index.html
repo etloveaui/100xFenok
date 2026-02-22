@@ -755,6 +755,20 @@
   const VALID_CATEGORIES = new Set(['all', 'liquidity', 'rates', 'sentiment']);
   const CATEGORY_TAB_ORDER = ['all', 'liquidity', 'rates', 'sentiment'];
 
+  function emitRadarIndexTelemetry(event, payload = {}) {
+    try {
+      window.dispatchEvent(new CustomEvent('fenok:radar-index', {
+        detail: {
+          event,
+          ...payload,
+          at: new Date().toISOString(),
+        },
+      }));
+    } catch (error) {
+      console.debug('[Radar] telemetry skipped:', error);
+    }
+  }
+
   function updateCategoryQuery(category) {
     const url = new URL(window.location.href);
     if (category === 'all') {
@@ -798,6 +812,11 @@
     if (syncUrl) {
       updateCategoryQuery(normalized);
     }
+
+    emitRadarIndexTelemetry('category-change', {
+      category: normalized,
+      syncUrl,
+    });
   }
 
   function initializeCategoryFilter() {
@@ -890,11 +909,16 @@
 
     button.disabled = true;
     button.textContent = 'Syncing...';
+    emitRadarIndexTelemetry('manual-sync-start');
 
     try {
       await refreshWidgets();
+      emitRadarIndexTelemetry('manual-sync-success');
     } catch (error) {
       console.warn('[Index] 수동 동기화 실패:', error);
+      emitRadarIndexTelemetry('manual-sync-error', {
+        message: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       if (typeof window.updateWidgetStatusBadges === 'function') {
         window.updateWidgetStatusBadges();
@@ -966,6 +990,11 @@
       } else {
         setCorporateWidgetStatus('Research Data', 'is-empty');
       }
+
+      emitRadarIndexTelemetry('research-preview-success', {
+        source: sourceLabel,
+        date: dateLabel,
+      });
     } catch (error) {
       console.warn('[Index] Corporate Health preview load failed:', error);
       peElement.textContent = '--';
@@ -973,6 +1002,9 @@
       roeElement.textContent = '--';
       noteElement.textContent = 'Corporate benchmark snapshot unavailable';
       setCorporateWidgetStatus('Snapshot Offline', 'is-empty');
+      emitRadarIndexTelemetry('research-preview-error', {
+        message: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
