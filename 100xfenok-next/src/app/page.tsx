@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type TouchEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type TouchEvent } from 'react';
 import Link from 'next/link';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
@@ -300,6 +300,17 @@ function getHeatmapToneClass(change: number, horizon: '1D' | '1M'): string {
   if (change <= softNegative) return 'heatmap-negative-soft';
   if (change < 0) return 'heatmap-negative-faint';
   return 'heatmap-neutral';
+}
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toLowerCase();
+  return (
+    tagName === 'input' ||
+    tagName === 'textarea' ||
+    tagName === 'select' ||
+    target.isContentEditable
+  );
 }
 
 async function fetchJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Promise<T | null> {
@@ -653,7 +664,7 @@ export default function Home() {
     };
   }, [isPeriodMenuOpen]);
 
-  const dismissSwipeHint = () => {
+  const dismissSwipeHint = useCallback(() => {
     setShowSwipeHint(false);
     if (typeof window === 'undefined') return;
     try {
@@ -661,9 +672,9 @@ export default function Home() {
     } catch {
       // ignore storage failures
     }
-  };
+  }, []);
 
-  const selectTab = (nextTab: TabId) => {
+  const selectTab = useCallback((nextTab: TabId) => {
     if (nextTab === activeTab) return;
     const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
     const nextIndex = TAB_SEQUENCE.indexOf(nextTab);
@@ -673,9 +684,9 @@ export default function Home() {
       setTabMotion('direct');
     }
     setActiveTab(nextTab);
-  };
+  }, [activeTab]);
 
-  const handleSwipeTabChange = (direction: 'next' | 'prev') => {
+  const handleSwipeTabChange = useCallback((direction: 'next' | 'prev') => {
     const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
     if (currentIndex < 0) return;
     const offset = direction === 'next' ? 1 : -1;
@@ -686,7 +697,7 @@ export default function Home() {
     if (showSwipeHint) {
       dismissSwipeHint();
     }
-  };
+  }, [activeTab, dismissSwipeHint, showSwipeHint]);
 
   const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
     const first = event.touches[0];
@@ -710,6 +721,36 @@ export default function Home() {
 
     handleSwipeTabChange(deltaX < 0 ? 'next' : 'prev');
   };
+
+  useEffect(() => {
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return;
+      if (!event.altKey || event.metaKey || event.ctrlKey) return;
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleSwipeTabChange('next');
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handleSwipeTabChange('prev');
+        return;
+      }
+
+      const numeric = Number(event.key);
+      if (Number.isNaN(numeric) || numeric < 1 || numeric > TAB_SEQUENCE.length) return;
+      event.preventDefault();
+      const selected = TAB_SEQUENCE[numeric - 1];
+      if (selected) selectTab(selected);
+    };
+
+    window.addEventListener('keydown', handleKeydown);
+    return () => {
+      window.removeEventListener('keydown', handleKeydown);
+    };
+  }, [handleSwipeTabChange, selectTab]);
 
   const sectorTopRows = [...dashboard.sectorRows]
     .sort((left, right) => right.displayChange - left.displayChange)
