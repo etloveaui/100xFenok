@@ -643,11 +643,11 @@
     </div>
 
     <!-- 카테고리 탭 -->
-    <div class="category-tabs">
-      <button class="tab-btn active" data-category="all" onclick="filterCategory('all', this)">All</button>
-      <button class="tab-btn" data-category="liquidity" onclick="filterCategory('liquidity', this)">Liquidity</button>
-      <button class="tab-btn" data-category="rates" onclick="filterCategory('rates', this)">Rates</button>
-      <button class="tab-btn" data-category="sentiment" onclick="filterCategory('sentiment', this)">Sentiment</button>
+    <div class="category-tabs" role="tablist" aria-label="Radar categories">
+      <button class="tab-btn active" role="tab" aria-selected="true" tabindex="0" data-category="all" onclick="filterCategory('all', this)">All</button>
+      <button class="tab-btn" role="tab" aria-selected="false" tabindex="-1" data-category="liquidity" onclick="filterCategory('liquidity', this)">Liquidity</button>
+      <button class="tab-btn" role="tab" aria-selected="false" tabindex="-1" data-category="rates" onclick="filterCategory('rates', this)">Rates</button>
+      <button class="tab-btn" role="tab" aria-selected="false" tabindex="-1" data-category="sentiment" onclick="filterCategory('sentiment', this)">Sentiment</button>
     </div>
     <div class="radar-toolbar">
       <button class="radar-sync-button" id="radar-sync-button" type="button">Sync Data</button>
@@ -797,8 +797,19 @@
     const normalized = VALID_CATEGORIES.has(category) ? category : 'all';
 
     // 탭 활성화 상태 업데이트
-    document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach((tab) => {
+      tab.classList.remove('active');
+      if (tab instanceof HTMLButtonElement) {
+        tab.setAttribute('aria-selected', 'false');
+        tab.tabIndex = -1;
+      }
+    });
+
+    if (btn instanceof HTMLButtonElement) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      btn.tabIndex = 0;
+    }
 
     // 카드 필터링
     const cards = document.querySelectorAll('.indicator-card');
