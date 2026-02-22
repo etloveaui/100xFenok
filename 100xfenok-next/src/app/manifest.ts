@@ -20,15 +20,15 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
       },
       {
-        src: "/tools/stock_analyzer/icons/icon-144x144.png",
-        sizes: "144x144",
+        src: "/favicon-192x192.png",
+        sizes: "192x192",
         type: "image/png",
       },
       {
-        src: "/favicon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "any",
+        src: "/favicon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
   };

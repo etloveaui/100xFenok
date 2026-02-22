@@ -158,11 +158,20 @@ export default function Footer() {
     showToastMessage('도움말: 100xFenok 시장 모니터링 도구');
   };
 
+  const navigateToAdmin = () => {
+    router.push('/admin');
+    window.setTimeout(() => {
+      if (window.location.pathname !== '/admin') {
+        window.location.assign('/admin');
+      }
+    }, 420);
+  };
+
   const handleAdminClick = () => {
     const sessionActive = hasAdminSession || isAdminAuthenticated();
     if (sessionActive) {
       setHasAdminSession(true);
-      router.push('/admin');
+      navigateToAdmin();
       return;
     }
 
@@ -197,7 +206,7 @@ export default function Footer() {
         setShowAdminModal(false);
         setAdminPassword('');
         setAdminInputError(false);
-        router.push('/admin');
+        navigateToAdmin();
         return;
       }
 

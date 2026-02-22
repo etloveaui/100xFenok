@@ -137,6 +137,7 @@ export default function AppEnhancements() {
   const dockEnabled = isDockRoute(pathname);
   const lastScrollYRef = useRef(0);
   const dockNavTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dockNavLockUntilRef = useRef(0);
   const [isOnline, setIsOnline] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.navigator.onLine;
@@ -182,10 +183,11 @@ export default function AppEnhancements() {
       setScrollProgress(progress);
       setShowBackToTop(currentY > 560);
       setDockCollapsed((prev) => {
-        if (currentY < 80) return false;
+        if (currentY < 72) return false;
+        if (Date.now() < dockNavLockUntilRef.current) return false;
         const delta = currentY - lastScrollYRef.current;
-        if (delta > 14) return true;
-        if (delta < -14) return false;
+        if (delta > 28 && currentY > 220) return true;
+        if (delta < -18) return false;
         return prev;
       });
       lastScrollYRef.current = currentY;
@@ -240,6 +242,20 @@ export default function AppEnhancements() {
       window.removeEventListener('focusout', handleFocusOut);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    lastScrollYRef.current = window.scrollY;
+    dockNavLockUntilRef.current = Date.now() + 360;
+    const frameId = window.requestAnimationFrame(() => {
+      setDockCollapsed(false);
+      setIsDockNavigating(false);
+      setIsInputFocused(false);
+    });
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     return () => {
@@ -378,14 +394,16 @@ export default function AppEnhancements() {
   };
 
   const handleDockNavigation = () => {
+    setDockCollapsed(false);
     setIsDockNavigating(true);
+    dockNavLockUntilRef.current = Date.now() + 900;
     if (dockNavTimeoutRef.current) {
       clearTimeout(dockNavTimeoutRef.current);
     }
     dockNavTimeoutRef.current = setTimeout(() => {
       setIsDockNavigating(false);
       dockNavTimeoutRef.current = null;
-    }, 420);
+    }, 520);
   };
 
   const handleDockIntentPrefetch = (href: string) => {
@@ -393,12 +411,12 @@ export default function AppEnhancements() {
     router.prefetch(href);
   };
 
-  const dockHidden = !dockEnabled || isKeyboardOpen || isInputFocused || dockCollapsed;
+  const dockHidden = !dockEnabled || isKeyboardOpen || isInputFocused || (dockCollapsed && !isDockNavigating);
   const showActionStack =
     !isKeyboardOpen &&
     !isInputFocused &&
     (isDataSaver || !isOnline || showInstallButton || showIOSHint || showBackToTop);
-  const stackCollapsed = dockCollapsed && isOnline && !showInstallButton && !showIOSHint;
+  const stackCollapsed = dockCollapsed && !isDockNavigating && isOnline && !showInstallButton && !showIOSHint;
 
   return (
     <>
