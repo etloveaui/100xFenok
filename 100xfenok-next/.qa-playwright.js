@@ -107,6 +107,7 @@ const defaultRoutes = [
   "/sectors",
   // Week 2 routes
   "/100x/daily-wrap",
+  "/admin",
   "/admin/design-lab",
   designLabNativeRoute,
   "/admin/data-lab",

@@ -13,7 +13,7 @@
     "lint": "eslint",
     "qa:browser": "node .qa-playwright.js",
     "qa:browser:lite": "QA_VIEWPORTS=desktop QA_ROUTES=/,/tools/stock-analyzer/native node .qa-playwright.js",
-    "qa:browser:mobile": "QA_VIEWPORTS=mobile,tablet,fold QA_ROUTES=/,/market,/alpha-scout,/alpha-scout?report=2025-08-24_100x-alpha-scout.html,/ib,/vr,/vr/?path=vr/vr-complete-system.html,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/admin/design-lab?mode=native,/tools/stock-analyzer,/tools/stock-analyzer/native,/100x/daily-wrap node .qa-playwright.js",
+    "qa:browser:mobile": "QA_VIEWPORTS=mobile,tablet,fold QA_ROUTES=/,/market,/alpha-scout,/alpha-scout?report=2025-08-24_100x-alpha-scout.html,/ib,/vr,/vr/?path=vr/vr-complete-system.html,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/admin,/admin/design-lab?mode=native,/tools/stock-analyzer,/tools/stock-analyzer/native,/100x/daily-wrap node .qa-playwright.js",
     "qa:browser:webkit": "timeout 25s env QA_WEBKIT_ROUTE=/ QA_WEBKIT_TIMEOUT_MS=10000 node .qa-webkit-smoke.js",
     "qa:browser:dev": "QA_BASE_URL=http://127.0.0.1:3000 QA_DEV=1 node .qa-playwright.js",
     "qa:browser:dist": "QA_BASE_URL=http://127.0.0.1:4173 node .qa-playwright.js",
@@ -21,7 +21,7 @@
     "qa:lighthouse:lite": "QA_LIGHTHOUSE_RUNS=1 QA_LIGHTHOUSE_PRESETS=desktop QA_LIGHTHOUSE_ROUTES=/tools/stock-analyzer/native/ node .qa-lighthouse.js",
     "qa:lighthouse:dev": "QA_BASE_URL=http://127.0.0.1:3000 QA_LIGHTHOUSE_RUNS=3 node .qa-lighthouse.js",
     "qa:a11y": "node .qa-a11y.js",
-    "qa:a11y:mobile": "QA_A11Y_VIEWPORTS=mobile,fold QA_A11Y_ROUTES=/,/posts,/vr,/admin/design-lab?mode=native,/tools/stock-analyzer/native node .qa-a11y.js",
+    "qa:a11y:mobile": "QA_A11Y_VIEWPORTS=mobile,fold QA_A11Y_ROUTES=/,/posts,/vr,/admin,/admin/design-lab?mode=native,/tools/stock-analyzer/native node .qa-a11y.js",
     "qa:a11y:strict": "QA_A11Y_STRICT=1 node .qa-a11y.js"
   },
   "dependencies": {
