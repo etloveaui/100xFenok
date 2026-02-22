@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   isAdminAuthenticated,
@@ -27,6 +27,13 @@ const ET_WEEKDAY_MAP: Record<string, number> = {
   Fri: 5,
   Sat: 6,
 };
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+}
 
 function getETSnapshot(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -86,7 +93,10 @@ export default function Footer() {
   const [adminInputError, setAdminInputError] = useState(false);
   const [isVerifyingAdmin, setIsVerifyingAdmin] = useState(false);
   const [hasAdminSession, setHasAdminSession] = useState(false);
+  const [adminFailCount, setAdminFailCount] = useState(0);
+  const [adminLockRemainingMs, setAdminLockRemainingMs] = useState(0);
   const adminInputRef = useRef<HTMLInputElement>(null);
+  const adminLockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const updateMarketStatus = () => {
@@ -96,6 +106,21 @@ export default function Footer() {
     updateMarketStatus();
     const interval = setInterval(updateMarketStatus, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('fenok:admin-modal-state', {
+      detail: { open: showAdminModal },
+    }));
+  }, [showAdminModal]);
+
+  useEffect(() => {
+    return () => {
+      if (adminLockTimerRef.current) {
+        clearInterval(adminLockTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -158,16 +183,16 @@ export default function Footer() {
     showToastMessage('도움말: 100xFenok 시장 모니터링 도구');
   };
 
-  const navigateToAdmin = () => {
+  const navigateToAdmin = useCallback(() => {
     router.push('/admin');
     window.setTimeout(() => {
       if (window.location.pathname !== '/admin') {
         window.location.assign('/admin');
       }
     }, 420);
-  };
+  }, [router]);
 
-  const handleAdminClick = () => {
+  const handleAdminClick = useCallback(() => {
     const sessionActive = hasAdminSession || isAdminAuthenticated();
     if (sessionActive) {
       setHasAdminSession(true);
@@ -178,6 +203,42 @@ export default function Footer() {
     setAdminPassword('');
     setAdminInputError(false);
     setShowAdminModal(true);
+  }, [hasAdminSession, navigateToAdmin]);
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || !event.altKey) return;
+      if (event.key.toLowerCase() !== 'a') return;
+      if (isTypingTarget(event.target)) return;
+      event.preventDefault();
+      handleAdminClick();
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => {
+      window.removeEventListener('keydown', handleShortcut);
+    };
+  }, [handleAdminClick]);
+
+  const startAdminLock = (durationMs: number) => {
+    if (adminLockTimerRef.current) {
+      clearInterval(adminLockTimerRef.current);
+    }
+
+    const deadline = Date.now() + durationMs;
+    setAdminLockRemainingMs(durationMs);
+
+    adminLockTimerRef.current = setInterval(() => {
+      const remaining = Math.max(0, deadline - Date.now());
+      setAdminLockRemainingMs(remaining);
+      if (remaining <= 0) {
+        if (adminLockTimerRef.current) {
+          clearInterval(adminLockTimerRef.current);
+          adminLockTimerRef.current = null;
+        }
+      }
+    }, 200);
   };
 
   const closeAdminModal = () => {
@@ -190,6 +251,12 @@ export default function Footer() {
   };
 
   const handleVerifyAdminPassword = async () => {
+    if (adminLockRemainingMs > 0) {
+      const lockSeconds = Math.max(1, Math.ceil(adminLockRemainingMs / 1000));
+      showToastMessage(`잠시 후 다시 시도하세요 (${lockSeconds}s)`);
+      return;
+    }
+
     const input = adminPassword.trim();
     if (!input || isVerifyingAdmin) {
       return;
@@ -206,6 +273,7 @@ export default function Footer() {
         setShowAdminModal(false);
         setAdminPassword('');
         setAdminInputError(false);
+        setAdminFailCount(0);
         navigateToAdmin();
         return;
       }
@@ -213,9 +281,18 @@ export default function Footer() {
       setAdminPassword('');
       setAdminInputError(true);
       if (result === 'unsupported') {
+        setAdminFailCount(0);
         showToastMessage('브라우저 인증 기능을 사용할 수 없습니다.');
       } else {
-        showToastMessage('Access denied');
+        const nextFailCount = adminFailCount + 1;
+        if (nextFailCount >= 3) {
+          setAdminFailCount(0);
+          startAdminLock(3000);
+          showToastMessage('Access denied · 3초 후 재시도');
+        } else {
+          setAdminFailCount(nextFailCount);
+          showToastMessage(`Access denied (${nextFailCount}/3)`);
+        }
       }
       adminInputRef.current?.focus();
     } catch {
@@ -227,6 +304,8 @@ export default function Footer() {
 
   const status = marketStatusConfig[marketStatus];
   const etClock = formatETClock();
+  const isAdminLocked = adminLockRemainingMs > 0;
+  const adminLockSeconds = Math.max(1, Math.ceil(adminLockRemainingMs / 1000));
 
   return (
     <>
@@ -365,6 +444,7 @@ export default function Footer() {
               ref={adminInputRef}
               type="password"
               value={adminPassword}
+              disabled={isAdminLocked}
               onChange={(event) => {
                 setAdminPassword(event.target.value);
                 if (adminInputError) {
@@ -381,6 +461,11 @@ export default function Footer() {
               autoComplete="off"
               aria-invalid={adminInputError}
             />
+            {isAdminLocked ? (
+              <p className="mt-2 text-xs font-semibold text-amber-700">
+                보호 모드 활성화: {adminLockSeconds}s 후 재시도
+              </p>
+            ) : null}
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
@@ -396,7 +481,7 @@ export default function Footer() {
                   void handleVerifyAdminPassword();
                 }}
                 className="flex-1 rounded-lg bg-brand-interactive px-4 py-2 font-medium text-white transition-colors hover:bg-brand-navy disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isVerifyingAdmin || adminPassword.trim().length === 0}
+                disabled={isVerifyingAdmin || isAdminLocked || adminPassword.trim().length === 0}
               >
                 Confirm
               </button>

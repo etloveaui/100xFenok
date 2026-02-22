@@ -164,6 +164,7 @@ export default function AppEnhancements() {
   const [isDockNavigating, setIsDockNavigating] = useState(false);
   const [isDockLockPinned, setIsDockLockPinned] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [showIOSHint, setShowIOSHint] = useState(() => {
     if (typeof window === 'undefined') return false;
     if (getDismissedInstallHint()) return false;
@@ -256,6 +257,46 @@ export default function AppEnhancements() {
       window.removeEventListener('focusout', handleFocusOut);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleTabIntent = () => {
+      setDockCollapsed(false);
+      setIsDockNavigating(true);
+      armDockLock(1400);
+      if (dockNavTimeoutRef.current) {
+        clearTimeout(dockNavTimeoutRef.current);
+      }
+      dockNavTimeoutRef.current = setTimeout(() => {
+        setIsDockNavigating(false);
+        dockNavTimeoutRef.current = null;
+      }, 420);
+    };
+
+    const handleAdminModalState = (event: Event) => {
+      const customEvent = event as CustomEvent<{ open?: boolean }>;
+      const open = Boolean(customEvent.detail?.open);
+      setIsAdminModalOpen(open);
+
+      if (open) {
+        setDockCollapsed(true);
+        setIsDockNavigating(false);
+        return;
+      }
+
+      setDockCollapsed(false);
+      armDockLock(900);
+    };
+
+    window.addEventListener('fenok:tab-intent', handleTabIntent as EventListener);
+    window.addEventListener('fenok:admin-modal-state', handleAdminModalState as EventListener);
+
+    return () => {
+      window.removeEventListener('fenok:tab-intent', handleTabIntent as EventListener);
+      window.removeEventListener('fenok:admin-modal-state', handleAdminModalState as EventListener);
+    };
+  }, [armDockLock]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -441,10 +482,12 @@ export default function AppEnhancements() {
     !dockEnabled ||
     isKeyboardOpen ||
     isInputFocused ||
+    isAdminModalOpen ||
     (dockCollapsed && !isDockNavigating && !isDockLockPinned);
   const showActionStack =
     !isKeyboardOpen &&
     !isInputFocused &&
+    !isAdminModalOpen &&
     (isDataSaver || !isOnline || showInstallButton || showIOSHint || showBackToTop);
   const stackCollapsed = dockCollapsed && !isDockNavigating && isOnline && !showInstallButton && !showIOSHint;
 

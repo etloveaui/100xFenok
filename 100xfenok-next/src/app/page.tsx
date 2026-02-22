@@ -6,6 +6,7 @@ import WidgetConsoleFrame from '@/components/WidgetConsoleFrame';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
 type TabMotion = 'next' | 'prev' | 'direct';
+type TabIntentReason = 'click' | 'swipe' | 'keyboard' | 'shortcut';
 
 type NumberPoint = {
   date: string;
@@ -606,6 +607,7 @@ export default function Home() {
   const [isDataConnected, setIsDataConnected] = useState(false);
   const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [syncTick, setSyncTick] = useState(() => Date.now());
   const [liveSourceStats, setLiveSourceStats] = useState<{ live: number; total: number }>({ live: 0, total: 0 });
   const [liquidityWidgetPayload, setLiquidityWidgetPayload] = useState<LiquidityWidgetPayload | null>(null);
   const [sentimentWidgetPayload, setSentimentWidgetPayload] = useState<SentimentWidgetPayload | null>(null);
@@ -788,6 +790,15 @@ export default function Home() {
   }, [loadOverviewData]);
 
   useEffect(() => {
+    const tickId = window.setInterval(() => {
+      setSyncTick(Date.now());
+    }, 60 * 1000);
+    return () => {
+      window.clearInterval(tickId);
+    };
+  }, []);
+
+  useEffect(() => {
     const maybeRefreshIfStale = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
         return;
@@ -858,7 +869,18 @@ export default function Home() {
     }
   }, []);
 
-  const selectTab = useCallback((nextTab: TabId) => {
+  const emitTabIntent = useCallback((nextTab: TabId, reason: TabIntentReason) => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('fenok:tab-intent', {
+      detail: {
+        tab: nextTab,
+        reason,
+        at: Date.now(),
+      },
+    }));
+  }, []);
+
+  const selectTab = useCallback((nextTab: TabId, reason: TabIntentReason = 'click') => {
     if (nextTab === activeTab) return;
     const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
     const nextIndex = TAB_SEQUENCE.indexOf(nextTab);
@@ -868,7 +890,8 @@ export default function Home() {
       setTabMotion('direct');
     }
     setActiveTab(nextTab);
-  }, [activeTab]);
+    emitTabIntent(nextTab, reason);
+  }, [activeTab, emitTabIntent]);
 
   const handleSwipeTabChange = useCallback((direction: 'next' | 'prev') => {
     const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
@@ -876,12 +899,15 @@ export default function Home() {
     const offset = direction === 'next' ? 1 : -1;
     const nextIndex = currentIndex + offset;
     if (nextIndex < 0 || nextIndex >= TAB_SEQUENCE.length) return;
+    const nextTab = TAB_SEQUENCE[nextIndex];
+    if (!nextTab) return;
     setTabMotion(direction);
-    setActiveTab(TAB_SEQUENCE[nextIndex]);
+    setActiveTab(nextTab);
+    emitTabIntent(nextTab, 'swipe');
     if (showSwipeHint) {
       dismissSwipeHint();
     }
-  }, [activeTab, dismissSwipeHint, showSwipeHint]);
+  }, [activeTab, dismissSwipeHint, emitTabIntent, showSwipeHint]);
 
   const handleTabKeyNavigation = useCallback((event: ReactKeyboardEvent<HTMLButtonElement>, currentTab: TabId) => {
     const currentIndex = TAB_SEQUENCE.indexOf(currentTab);
@@ -904,7 +930,7 @@ export default function Home() {
     const nextTab = TAB_SEQUENCE[targetIndex];
     if (!nextTab) return;
 
-    selectTab(nextTab);
+    selectTab(nextTab, 'keyboard');
     window.requestAnimationFrame(() => {
       const tabButton = document.getElementById(TAB_BUTTON_IDS[nextTab]);
       if (tabButton instanceof HTMLButtonElement) {
@@ -957,7 +983,7 @@ export default function Home() {
       if (Number.isNaN(numeric) || numeric < 1 || numeric > TAB_SEQUENCE.length) return;
       event.preventDefault();
       const selected = TAB_SEQUENCE[numeric - 1];
-      if (selected) selectTab(selected);
+      if (selected) selectTab(selected, 'shortcut');
     };
 
     window.addEventListener('keydown', handleKeydown);
@@ -989,6 +1015,14 @@ export default function Home() {
   const sectorPanelTimestamp = dashboard.sectorMode !== 'BASE_1M'
     ? formatTimeLabel(dashboard.tickerFetchedAt)
     : '--';
+  const sectorLiveCoverageRate = dashboard.sectorRows.length > 0
+    ? clamp(dashboard.sectorLiveCount / dashboard.sectorRows.length, 0, 1)
+    : 0;
+  const sectorConfidenceLabel = dashboard.sectorMode === 'LIVE_1D'
+    ? `Live coverage ${Math.round(sectorLiveCoverageRate * 100)}%`
+    : dashboard.sectorMode === 'MIXED'
+      ? `Mixed mode · ${Math.round(sectorLiveCoverageRate * 100)}% live`
+      : 'Base snapshot mode';
   const sectorLeaders = [...dashboard.sectorRows]
     .sort((left, right) => right.displayChange - left.displayChange)
     .slice(0, 3);
@@ -1045,6 +1079,22 @@ export default function Home() {
   const commandSourceCoverage = liveSourceStats.total > 0
     ? `${liveSourceStats.live}/${liveSourceStats.total}`
     : '--';
+  const syncedAtEpoch = lastSyncedAt ? new Date(lastSyncedAt).getTime() : null;
+  const syncAgeMinutes = syncedAtEpoch !== null && Number.isFinite(syncedAtEpoch)
+    ? Math.max(0, Math.floor((syncTick - syncedAtEpoch) / (60 * 1000)))
+    : null;
+  const syncHealthClass = syncAgeMinutes === null
+    ? 'is-fallback'
+    : syncAgeMinutes <= 3
+      ? 'is-live'
+      : syncAgeMinutes <= 10
+        ? 'is-mixed'
+        : 'is-fallback';
+  const syncHealthLabel = syncAgeMinutes === null
+    ? 'Sync Idle'
+    : syncAgeMinutes === 0
+      ? 'Sync Just now'
+      : `Sync ${syncAgeMinutes}m`;
   const tickerHealthClass = dashboard.sectorMode === 'LIVE_1D'
     ? 'is-live'
     : dashboard.sectorMode === 'MIXED'
@@ -1186,6 +1236,7 @@ export default function Home() {
           <span className={`command-health-chip ${tickerHealthClass}`}>{tickerHealthLabel}</span>
           <span className={`command-health-chip ${macroHealthClass}`}>{macroHealthLabel}</span>
           <span className={`command-health-chip ${bridgeHealthClass}`}>{bridgeHealthLabel}</span>
+          <span className={`command-health-chip ${syncHealthClass}`}>{syncHealthLabel}</span>
         </div>
       </section>
 
@@ -1351,7 +1402,7 @@ export default function Home() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => selectTab('sectors')}
+                    onClick={() => selectTab('sectors', 'click')}
                     className="overview-widget-action"
                     aria-label="섹터 히트맵 보기"
                   >
@@ -1404,7 +1455,7 @@ export default function Home() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => selectTab('liquidity')}
+                  onClick={() => selectTab('liquidity', 'click')}
                   className="overview-widget-link"
                   aria-label="Liquidity 탭 열기"
                 >
@@ -1439,7 +1490,7 @@ export default function Home() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => selectTab('sentiment')}
+                  onClick={() => selectTab('sentiment', 'click')}
                   className="overview-widget-link"
                   aria-label="Sentiment 탭 열기"
                 >
@@ -1454,6 +1505,7 @@ export default function Home() {
                   <div>
                     <p className="overview-widget-kicker orbitron">BANKING HEALTH</p>
                     <h3 className="overview-widget-subtitle">Funding Stress Guard</h3>
+                    <p className="overview-source-meta">Macro Source · FRED Weekly Credit Stack</p>
                   </div>
                 </header>
                 <div className="overview-health-row">
@@ -1471,6 +1523,7 @@ export default function Home() {
                   <div>
                     <p className="overview-widget-kicker orbitron">STRESS INDEX</p>
                     <h3 className="overview-widget-subtitle">Spread Monitor</h3>
+                    <p className="overview-source-meta">Macro Source · HY OAS + UST10Y Composite</p>
                   </div>
                   <span className={`overview-status-pill ${stressPillClass}`}>{dashboard.stressLabel}</span>
                 </header>
@@ -1502,6 +1555,15 @@ export default function Home() {
               <span className="heatmap-legend-chip is-risk-on">Risk-On</span>
               <span className="heatmap-legend-chip is-neutral">Neutral</span>
               <span className="heatmap-legend-chip is-risk-off">Risk-Off</span>
+            </div>
+            <div className="heatmap-confidence" role="status" aria-live="polite">
+              <span className="heatmap-confidence-label">{sectorConfidenceLabel}</span>
+              <div className="heatmap-confidence-track" aria-hidden="true">
+                <span
+                  className={`heatmap-confidence-fill ${sectorPanelMetaClass}`}
+                  style={{ width: `${Math.max(8, Math.round(sectorLiveCoverageRate * 100))}%` }}
+                />
+              </div>
             </div>
             <div className="heatmap-grid">
               {dashboard.sectorRows.map((sector) => {
@@ -1595,6 +1657,10 @@ export default function Home() {
                 <span>Banking Tone</span>
                 <strong>{dashboard.bankingLabel}</strong>
               </article>
+              <article className="insight-tab-metric-card">
+                <span>Bridge Signals</span>
+                <strong>{bridgeSignalCount}</strong>
+              </article>
             </div>
             <div className="insight-tab-frame">
               <WidgetConsoleFrame
@@ -1639,6 +1705,10 @@ export default function Home() {
               <article className="insight-tab-metric-card">
                 <span>CNN F&amp;G</span>
                 <strong>{Math.round(dashboard.fearGreedScore)}</strong>
+              </article>
+              <article className="insight-tab-metric-card">
+                <span>Sync Freshness</span>
+                <strong>{syncAgeMinutes === null ? '--' : `${syncAgeMinutes}m`}</strong>
               </article>
             </div>
             <div className="insight-tab-frame">
