@@ -30,6 +30,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
     ? `/${safePath}`
     : '/tools/macro-monitor/index.html';
   const shouldApplyCategory = isValidCategory
+    && rawCategory !== 'all'
     && (safePath === null || safePath === 'tools/macro-monitor/index.html');
   const iframeSrc = shouldApplyCategory
     ? `${baseIframeSrc}?category=${encodeURIComponent(rawCategory)}`
