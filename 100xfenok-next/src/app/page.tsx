@@ -1047,6 +1047,8 @@ export default function Home() {
     : '--';
   const liquidityRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html';
   const sentimentRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html';
+  const bankingRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html';
+  const stressRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-stress.html';
 
   return (
     <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
@@ -1428,6 +1430,9 @@ export default function Home() {
                   <strong>{dashboard.bankingLabel}</strong>
                 </div>
                 <p className="overview-metric-sub">{dashboard.bankingSummary}</p>
+                <Link href={bankingRadarDetailHref} className="overview-widget-link">
+                  Open Banking Detail
+                </Link>
               </article>
 
               <article className="overview-widget-card overview-widget-card--stress">
@@ -1442,6 +1447,9 @@ export default function Home() {
                   <strong className="overview-metric-main orbitron">{dashboard.stressScore.toFixed(2)}</strong>
                 </div>
                 <p className="overview-metric-sub">HY {formatPercent(dashboard.hySpread, 2)} · UST10Y {formatPercent(dashboard.tenYearYield, 2)}</p>
+                <Link href={stressRadarDetailHref} className="overview-widget-link">
+                  Open Stress Detail
+                </Link>
               </article>
             </div>
           </>
