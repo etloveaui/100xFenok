@@ -94,7 +94,7 @@ type DashboardSnapshot = {
   sectorRows: SectorSnapshot[];
   sectorUp: number;
   sectorDown: number;
-  sectorMode: 'LIVE_1D' | 'BASE_1M';
+  sectorMode: 'LIVE_1D' | 'MIXED' | 'BASE_1M';
   sectorLiveCount: number;
   tickerFetchedAt: string | null;
   quickIndices: QuickIndexSnapshot[];
@@ -127,6 +127,7 @@ const TAB_LABELS: Record<TabId, string> = {
   sentiment: 'Sentiment',
 };
 const SWIPE_HINT_DISMISS_KEY = 'fenok_swipe_hint_dismissed_v1';
+const CLIENT_FETCH_TIMEOUT_MS = 5500;
 
 const SECTOR_DEFINITIONS: SectorDefinition[] = [
   { key: 'information_technology', etf: 'XLK', name: 'Tech', fallback: 0.0234 },
@@ -301,13 +302,20 @@ function getHeatmapToneClass(change: number, horizon: '1D' | '1M'): string {
   return 'heatmap-neutral';
 }
 
-async function fetchJson<T>(url: string): Promise<T | null> {
+async function fetchJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Promise<T | null> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, { cache: 'no-store' });
+    const response = await fetch(url, {
+      cache: 'no-store',
+      signal: controller.signal,
+    });
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {
     return null;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 }
 
@@ -357,7 +365,11 @@ function buildDashboardSnapshot(payload: {
   const sectorUp = sectorRows.filter((sector) => sector.displayChange > 0).length;
   const sectorDown = sectorRows.filter((sector) => sector.displayChange < 0).length;
   const sectorLiveCount = sectorRows.filter((sector) => sector.displayHorizon === '1D').length;
-  const sectorMode: DashboardSnapshot['sectorMode'] = sectorLiveCount > 0 ? 'LIVE_1D' : 'BASE_1M';
+  const sectorMode: DashboardSnapshot['sectorMode'] = sectorLiveCount === 0
+    ? 'BASE_1M'
+    : sectorLiveCount === sectorRows.length
+      ? 'LIVE_1D'
+      : 'MIXED';
   const tickerFetchedAtCandidates = Object.values(payload.sectorTicker)
     .map((quote) => quote?.fetchedAt)
     .filter((value): value is string => typeof value === 'string' && value.length > 0)
@@ -528,7 +540,11 @@ export default function Home() {
     let cancelled = false;
 
     const loadOverviewData = async () => {
-      const [fearGreed, vix, putCall, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking] = await Promise.all([
+      const tickerSymbols = [
+        ...SECTOR_DEFINITIONS.map((sector) => sector.etf),
+        ...QUICK_INDEX_DEFINITIONS.map((item) => item.symbol),
+      ];
+      const dataPromise = Promise.all([
         fetchJson<CnnFearGreedPoint[]>('/data/sentiment/cnn-fear-greed.json'),
         fetchJson<NumberPoint[]>('/data/sentiment/vix.json'),
         fetchJson<PutCallPoint[]>('/data/sentiment/cnn-put-call.json'),
@@ -538,16 +554,16 @@ export default function Home() {
         fetchJson<FredSeriesPayload>('/data/fred-banking-quarterly.json'),
         fetchJson<FredSeriesPayload>('/data/fred-banking-daily.json'),
       ]);
-      const tickerSymbols = [
-        ...SECTOR_DEFINITIONS.map((sector) => sector.etf),
-        ...QUICK_INDEX_DEFINITIONS.map((item) => item.symbol),
-      ];
-      const tickerSettled = await Promise.allSettled(
+      const tickerPromise = Promise.allSettled(
         tickerSymbols.map(async (symbol) => ({
           symbol,
-          quote: await fetchJson<TickerQuotePayload>(`/api/ticker/${symbol}`),
+          quote: await fetchJson<TickerQuotePayload>(`/api/ticker/${symbol}`, 3200),
         })),
       );
+      const [[fearGreed, vix, putCall, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking], tickerSettled] = await Promise.all([
+        dataPromise,
+        tickerPromise,
+      ]);
 
       if (cancelled) return;
 
@@ -705,8 +721,15 @@ export default function Home() {
   const nextTab = activeTabIndex >= 0 && activeTabIndex < TAB_SEQUENCE.length - 1 ? TAB_SEQUENCE[activeTabIndex + 1] : null;
   const sectorPanelModeLabel = dashboard.sectorMode === 'LIVE_1D'
     ? `LIVE 1D · ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length} sectors`
-    : 'BASE 1M · Treemap by Market Cap';
-  const sectorPanelTimestamp = dashboard.sectorMode === 'LIVE_1D'
+    : dashboard.sectorMode === 'MIXED'
+      ? `MIXED · ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length} live`
+      : 'BASE 1M · Treemap by Market Cap';
+  const sectorPanelMetaClass = dashboard.sectorMode === 'LIVE_1D'
+    ? 'is-live'
+    : dashboard.sectorMode === 'MIXED'
+      ? 'is-mixed'
+      : 'is-fallback';
+  const sectorPanelTimestamp = dashboard.sectorMode !== 'BASE_1M'
     ? formatTimeLabel(dashboard.tickerFetchedAt)
     : '--';
 
@@ -957,7 +980,7 @@ export default function Home() {
                   <div className="index-item">
                     <span className="text-xs text-slate-600">HY OAS</span>
                     <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#f59e0b" strokeWidth="1.5" points="0,12 10,11 20,10 30,9 40,10 50,11 60,12" /></svg>
-                    <span className="font-bold text-amber-700 text-sm">{formatPercent(dashboard.hySpread, 2)}</span>
+                    <span className="font-bold text-amber-800 text-sm">{formatPercent(dashboard.hySpread, 2)}</span>
                   </div>
                 </div>
               </div>
@@ -1086,9 +1109,9 @@ export default function Home() {
                 <p className="heatmap-panel-kicker orbitron">SECTOR HEATMAP</p>
                 <h3 className="heatmap-panel-title">Market Cap Weighted Map</h3>
               </div>
-              <span className={`heatmap-panel-meta ${dashboard.sectorMode === 'LIVE_1D' ? 'is-live' : 'is-fallback'}`}>
+              <span className={`heatmap-panel-meta ${sectorPanelMetaClass}`}>
                 {sectorPanelModeLabel}
-                {dashboard.sectorMode === 'LIVE_1D' && sectorPanelTimestamp !== '--' ? ` · ${sectorPanelTimestamp}` : ''}
+                {dashboard.sectorMode !== 'BASE_1M' && sectorPanelTimestamp !== '--' ? ` · ${sectorPanelTimestamp}` : ''}
               </span>
             </div>
             <div className="heatmap-legend" aria-label="섹터 히트맵 범례">
