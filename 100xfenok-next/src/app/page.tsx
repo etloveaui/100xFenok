@@ -1088,7 +1088,9 @@ export default function Home() {
       if (event.key.toLowerCase() === 'p') {
         event.preventDefault();
         const currentPeriodIndex = periods.indexOf(activePeriod);
-        const nextPeriod = periods[(currentPeriodIndex + 1) % periods.length] ?? periods[0];
+        const step = event.shiftKey ? -1 : 1;
+        const nextIndex = (currentPeriodIndex + step + periods.length) % periods.length;
+        const nextPeriod = periods[nextIndex] ?? periods[0];
         if (!nextPeriod) return;
         setActivePeriod(nextPeriod);
         emitPeriodIntent(nextPeriod, 'shortcut');
@@ -1237,7 +1239,8 @@ export default function Home() {
         : bridgeSignalClass;
   const bridgeHealthLabel = widgetBridgeRuntime.freshness === 'IDLE'
     ? bridgeSignalLabel
-    : `Bridge ${widgetBridgeRuntime.freshness}`;
+    : `Bridge ${widgetBridgeRuntime.freshness}/${widgetBridgeRuntime.dataState}`;
+  const bridgeRuntimeStamp = widgetBridgeRuntime.at ? formatTimeLabel(widgetBridgeRuntime.at) : '--';
   const liquidityRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html';
   const sentimentRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html';
   const bankingRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html';
@@ -1363,6 +1366,7 @@ export default function Home() {
           <span className={`command-health-chip ${tickerHealthClass}`}>{tickerHealthLabel}</span>
           <span className={`command-health-chip ${macroHealthClass}`}>{macroHealthLabel}</span>
           <span className={`command-health-chip ${bridgeHealthClass}`}>{bridgeHealthLabel}</span>
+          <span className={`command-health-chip ${bridgeHealthClass}`}>Widget Sync {bridgeRuntimeStamp}</span>
           <span className={`command-health-chip ${syncHealthClass}`}>{syncHealthLabel}</span>
         </div>
       </section>
