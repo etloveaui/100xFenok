@@ -1045,6 +1045,8 @@ export default function Home() {
   const commandSourceCoverage = liveSourceStats.total > 0
     ? `${liveSourceStats.live}/${liveSourceStats.total}`
     : '--';
+  const liquidityRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html';
+  const sentimentRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html';
 
   return (
     <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
@@ -1529,7 +1531,17 @@ export default function Home() {
                 <p className="insight-tab-kicker orbitron">LIQUIDITY DETAIL</p>
                 <h3 className="insight-tab-title">Flow Engine Console</h3>
               </div>
-              <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
+              <div className="insight-tab-head-side">
+                <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
+                <div className="insight-tab-actions">
+                  <Link href="/radar" className="insight-tab-action-link">
+                    Radar Hub
+                  </Link>
+                  <Link href={liquidityRadarDetailHref} className="insight-tab-action-link is-primary">
+                    Open Detail
+                  </Link>
+                </div>
+              </div>
             </header>
             <div className="insight-tab-metrics">
               <article className="insight-tab-metric-card">
@@ -1564,7 +1576,17 @@ export default function Home() {
                 <p className="insight-tab-kicker orbitron">SENTIMENT DETAIL</p>
                 <h3 className="insight-tab-title">Risk Monitor Console</h3>
               </div>
-              <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
+              <div className="insight-tab-head-side">
+                <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
+                <div className="insight-tab-actions">
+                  <Link href="/radar" className="insight-tab-action-link">
+                    Radar Hub
+                  </Link>
+                  <Link href={sentimentRadarDetailHref} className="insight-tab-action-link is-primary">
+                    Open Detail
+                  </Link>
+                </div>
+              </div>
             </header>
             <div className="insight-tab-metrics">
               <article className="insight-tab-metric-card">
