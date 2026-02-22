@@ -182,6 +182,24 @@
       color: #1d4f8f;
     }
 
+    .summary-pill.summary-pill-research.is-live {
+      border-color: #9be7b0;
+      background: #f3fff6;
+      color: #166534;
+    }
+
+    .summary-pill.summary-pill-research.is-stale {
+      border-color: #f7dd8b;
+      background: #fff9e8;
+      color: #92400e;
+    }
+
+    .summary-pill.summary-pill-research.is-empty {
+      border-color: #d4dce8;
+      background: #f8fafc;
+      color: #64748b;
+    }
+
     .category-tabs {
       display: flex;
       justify-content: center;
@@ -616,6 +634,7 @@
       <span class="summary-pill summary-pill-stale"><strong id="summary-stale-count">0</strong> Stale Signals</span>
       <span class="summary-pill summary-pill-empty"><strong id="summary-empty-count">0</strong> Empty Slots</span>
       <span class="summary-pill summary-pill-sync" id="summary-sync-label">SYNC --:--</span>
+      <span class="summary-pill summary-pill-research is-empty" id="summary-research-status">Research --</span>
     </div>
 
     <!-- 카테고리 탭 -->
@@ -835,6 +854,13 @@
     statusElement.textContent = label;
     statusElement.classList.remove('is-live', 'is-stale', 'is-empty');
     statusElement.classList.add(tone);
+
+    const summaryElement = document.getElementById('summary-research-status');
+    if (summaryElement instanceof HTMLElement) {
+      summaryElement.textContent = `Research ${label}`;
+      summaryElement.classList.remove('is-live', 'is-stale', 'is-empty');
+      summaryElement.classList.add(tone);
+    }
   }
 
   async function hydrateCorporateHealthPreview() {
