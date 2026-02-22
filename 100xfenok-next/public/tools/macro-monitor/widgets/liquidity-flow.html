@@ -541,6 +541,12 @@
 <script>
   const WIDGET_ID = 'liquidity-flow';
   const DETAIL_PATH = 'tools/macro-monitor/details/liquidity-flow.html';
+  const useParentDataMode = new URLSearchParams(window.location.search).get('parentData') === '1';
+  let CURRENT_WIDGET_DATA = null;
+
+  function toFiniteNumber(value, fallback = 0) {
+    return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+  }
 
   // 임계값 헬퍼 - constants.js THRESHOLDS 사용 (fallback 포함)
   const getThreshold = (category, level) => {
@@ -606,19 +612,21 @@
 
     mainContent.style.display = 'flex';
     noCache.style.display = 'none';
+    CURRENT_WIDGET_DATA = { ...data };
 
     // 데이터 파싱
-    const netFlow = data.netLiquidityDelta || data.netFlow || 0;
-    const m2YoY = data.m2YoY || 0;
+    const netFlow = toFiniteNumber(data.netFlow, toFiniteNumber(data.weeklyNetFlow, toFiniteNumber(data.netLiquidityDelta, 0)));
+    const netLiquidityDelta = toFiniteNumber(data.netLiquidityDelta, netFlow);
+    const m2YoY = toFiniteNumber(data.m2YoY, 0);
 
-    let m2Raw = data.m2Total || 22298;
+    let m2Raw = toFiniteNumber(data.m2Total, 22298);
     const m2TotalT = m2Raw > 100 ? m2Raw / 1000 : m2Raw;
     const m2TotalB = m2Raw > 100 ? m2Raw : m2Raw * 1000;
 
-    let nlRaw = data.netLiquidity || 5649;
+    let nlRaw = toFiniteNumber(data.netLiquidity, 5649);
     const nlTotalT = nlRaw > 100 ? nlRaw / 1000 : nlRaw;
 
-    const sc = data.stablecoinMcap || 0;
+    const sc = toFiniteNumber(data.stablecoinMcap, 0);
     const scM2Ratio = m2TotalB > 0 ? (sc / m2TotalB * 100) : 0;
 
     // 1. Hero Section
@@ -642,10 +650,10 @@
     document.getElementById('m2Sub').textContent = '$' + m2TotalT.toFixed(1) + 'T';
 
     // 3. Net Liq Tributary
-    const nlStatus = getNetFlowStatus(netFlow);
+    const nlStatus = getNetFlowStatus(netLiquidityDelta);
     document.getElementById('nlArrow').textContent = getArrow(nlStatus);
     document.getElementById('nlArrow').className = 'tributary-trend ' + getArrowClass(nlStatus);
-    document.getElementById('nlValue').textContent = (netFlow >= 0 ? '+' : '') + Math.round(netFlow);
+    document.getElementById('nlValue').textContent = (netLiquidityDelta >= 0 ? '+' : '') + Math.round(netLiquidityDelta);
     document.getElementById('nlSub').textContent = '$' + nlTotalT.toFixed(2) + 'T';
 
     // 4. Stablecoin Tributary
@@ -682,18 +690,47 @@
     } catch (e) {}
   }
 
+  function applyParentPayload(payload) {
+    if (!payload || typeof payload !== 'object') return false;
+    const source = payload.metrics && typeof payload.metrics === 'object'
+      ? payload.metrics
+      : payload;
+    const fields = ['netFlow', 'netLiquidityDelta', 'weeklyNetFlow', 'm2YoY', 'm2Total', 'netLiquidity', 'stablecoinMcap', 'loanDepositRatio'];
+    const merged = CURRENT_WIDGET_DATA && typeof CURRENT_WIDGET_DATA === 'object'
+      ? { ...CURRENT_WIDGET_DATA }
+      : {};
+
+    let changed = false;
+    fields.forEach((field) => {
+      const value = source[field];
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        if (merged[field] !== value) {
+          merged[field] = value;
+          changed = true;
+        }
+      }
+    });
+
+    if (!changed) return false;
+    if (merged.netFlow === undefined) {
+      merged.netFlow = merged.weeklyNetFlow ?? merged.netLiquidityDelta ?? 0;
+    }
+    renderWidget(merged);
+
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'none';
+    const staleWarning = document.getElementById('staleWarning');
+    if (staleWarning) staleWarning.style.display = 'none';
+    return true;
+  }
+
   // postMessage 수신 리스너
   window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'WIDGET_DATA_UPDATE') {
-      console.log('[Widget] 부모로부터 데이터 수신');
-      renderWidget(event.data.payload);
-
-      const loader = document.getElementById('loader');
-      if (loader) loader.style.display = 'none';
-
-      const staleWarning = document.getElementById('staleWarning');
-      if (staleWarning) staleWarning.style.display = 'none';
-    }
+    const message = event.data;
+    if (!message || typeof message !== 'object') return;
+    if (message.type !== 'WIDGET_DATA_UPDATE') return;
+    if (message.widgetId && message.widgetId !== WIDGET_ID) return;
+    applyParentPayload(message.payload);
   });
 
   // Age formatter
@@ -705,9 +742,10 @@
     return `${Math.floor(hours / 24)}일 전`;
   }
 
-  async function init() {
+  async function fetchAndRender() {
     const loader = document.getElementById('loader');
     const staleWarning = document.getElementById('staleWarning');
+    if (loader) loader.style.display = 'flex';
 
     let result = { data: null, isStale: true, isFresh: false, ageMs: 0 };
 
@@ -733,7 +771,10 @@
 
       // 2. 데이터 렌더링
       if (result.data) {
-        const widgetData = convertToWidgetFormat(result.data);
+        let widgetData = convertToWidgetFormat(result.data);
+        if (useParentDataMode && CURRENT_WIDGET_DATA && typeof CURRENT_WIDGET_DATA === 'object') {
+          widgetData = { ...widgetData, ...CURRENT_WIDGET_DATA };
+        }
         renderWidget(widgetData);
 
         if (result.isStale && result.ageMs > 0) {
@@ -741,11 +782,11 @@
             ? MacroDataManager.formatAge(result.ageMs)
             : formatAgeSimple(result.ageMs);
           document.getElementById('staleAge').textContent = ageText;
-          staleWarning.style.display = 'flex';
+          if (staleWarning) staleWarning.style.display = 'flex';
         } else {
-          staleWarning.style.display = 'none';
+          if (staleWarning) staleWarning.style.display = 'none';
         }
-        loader.style.display = 'none';
+        if (loader) loader.style.display = 'none';
       } else {
         // 데이터 없음 - postMessage 대기 (3초 후에도 없으면 '데이터 없음' 표시)
         setTimeout(() => {
@@ -754,16 +795,28 @@
           const mainContent = document.getElementById('mainContent');
           if (mainContent && mainContent.style.display === 'none') {
             renderWidget(null);
-            loader.style.display = 'none';
+            if (loader) loader.style.display = 'none';
           }
         }, 3000);
       }
     } catch (e) {
       console.error('[Widget] Init error:', e);
       renderWidget(null);
-      staleWarning.style.display = 'none';
-      loader.style.display = 'none';
+      if (staleWarning) staleWarning.style.display = 'none';
+      if (loader) loader.style.display = 'none';
     }
+  }
+
+  async function init() {
+    if (useParentDataMode) {
+      // 부모 데이터 우선 렌더 후, 캐시/API 데이터로 누락 지표 보강
+      setTimeout(() => {
+        fetchAndRender();
+      }, 700);
+      return;
+    }
+
+    fetchAndRender();
   }
 
   // DataFetcher 반환 형식 → Widget 형식 변환

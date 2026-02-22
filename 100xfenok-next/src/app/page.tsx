@@ -112,6 +112,14 @@ type SentimentWidgetPayload = {
   };
 };
 
+type LiquidityWidgetPayload = {
+  netFlow?: number;
+  netLiquidityDelta?: number;
+  weeklyNetFlow?: number;
+  loanDepositRatio?: number;
+  source?: string;
+};
+
 type BankingTone = 'stable' | 'watch' | 'stress';
 
 type StressTone = 'low' | 'medium' | 'high';
@@ -591,6 +599,7 @@ export default function Home() {
   const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [liveSourceStats, setLiveSourceStats] = useState<{ live: number; total: number }>({ live: 0, total: 0 });
+  const [liquidityWidgetPayload, setLiquidityWidgetPayload] = useState<LiquidityWidgetPayload | null>(null);
   const [sentimentWidgetPayload, setSentimentWidgetPayload] = useState<SentimentWidgetPayload | null>(null);
   const [showSwipeHint, setShowSwipeHint] = useState(() => {
     if (typeof window === 'undefined') return true;
@@ -713,6 +722,9 @@ export default function Home() {
       const putCallValue = optionalNumber(nextSnapshot.putCallValue);
       const fearGreedValue = optionalNumber(nextSnapshot.fearGreedScore);
       const cryptoValue = optionalNumber(nextSnapshot.cryptoFearGreed);
+      const liquidityFlowValue = optionalNumber(nextSnapshot.liquidityFlow);
+      const loanDepositRatioValue = optionalNumber(nextSnapshot.loanDepositRatio);
+      const liquidityIndicators: LiquidityWidgetPayload = {};
 
       if (vixValue !== null) indicators.vix = vixValue;
       if (putCallValue !== null) indicators.putcall_ratio = putCallValue;
@@ -722,6 +734,18 @@ export default function Home() {
       if (aaiiBearish !== null) indicators.aaii_bearish = aaiiBearish;
       if (aaiiSpread !== null) indicators.aaii_spread = aaiiSpread;
       if (cftcNet !== null) indicators.cftc_net = cftcNet;
+      if (liquidityFlowValue !== null) {
+        const normalizedFlow = Number(liquidityFlowValue.toFixed(2));
+        liquidityIndicators.netFlow = normalizedFlow;
+        liquidityIndicators.netLiquidityDelta = normalizedFlow;
+        liquidityIndicators.weeklyNetFlow = normalizedFlow;
+      }
+      if (loanDepositRatioValue !== null) {
+        liquidityIndicators.loanDepositRatio = Number(loanDepositRatioValue.toFixed(2));
+      }
+      if (Object.keys(liquidityIndicators).length > 0) {
+        liquidityIndicators.source = 'next-dashboard';
+      }
 
       setDashboard(nextSnapshot);
       setIsDataConnected(liveSourceCount > 0);
@@ -729,6 +753,7 @@ export default function Home() {
         live: liveSourceCount,
         total: sourcePayloads.length,
       });
+      setLiquidityWidgetPayload(Object.keys(liquidityIndicators).length > 0 ? liquidityIndicators : null);
       setSentimentWidgetPayload({ indicators });
       const syncedAt = Date.now();
       lastSyncedEpochRef.current = syncedAt;
@@ -1444,10 +1469,11 @@ export default function Home() {
             </div>
             <div className="insight-tab-frame">
               <WidgetConsoleFrame
-                src="/tools/macro-monitor/widgets/liquidity-flow.html"
+                src="/tools/macro-monitor/widgets/liquidity-flow.html?parentData=1"
                 title="Liquidity Flow"
                 widgetId="liquidity-flow"
                 timeoutMs={12000}
+                payload={liquidityWidgetPayload ?? undefined}
               />
             </div>
           </section>
