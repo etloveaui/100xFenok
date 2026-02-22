@@ -105,7 +105,7 @@ export default function Navbar() {
               >
                 <div className="brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300 border border-slate-100 active:scale-95">
                   <Image
-                    src="/favicon.svg"
+                    src="/favicon-96x96.png"
                     alt=""
                     width={32}
                     height={32}
@@ -151,22 +151,20 @@ export default function Navbar() {
                   MARKET
                   <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
                 </button>
-                <div className="dropdown-menu absolute top-full left-0 mt-1 w-[min(90vw,220px)] bg-white border border-gray-200 shadow-xl rounded-xl p-2 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
-                  <div className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-1">Briefing</div>
-                  <Link href="/market" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
-                    <span className="w-1 h-4 bg-brand-gold rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                    <div>
-                      <span className="block font-bold text-slate-700">Market Wrap</span>
-                      <span className="text-[10px] text-slate-500">Daily Updates</span>
-                    </div>
-                  </Link>
-                  <Link href="/alpha-scout" className="flex items-center px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg group/link transition-colors">
-                    <span className="w-1 h-4 bg-brand-interactive rounded-full mr-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                    <div>
-                      <span className="block font-bold text-slate-700">Alpha Scout</span>
-                      <span className="text-[10px] text-slate-500">Weekly Deep Dive</span>
-                    </div>
-                  </Link>
+                <div className="dropdown-menu absolute top-full left-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
+                  <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Briefing Deck</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link href="/market" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-chart-bar text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">Market Wrap</span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">Daily Pulse</span>
+                    </Link>
+                    <Link href="/alpha-scout" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-compass text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">Alpha Scout</span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">Weekly Deep Dive</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
 
@@ -205,7 +203,7 @@ export default function Navbar() {
 
               {/* STRATEGIES Dropdown */}
               <div className="relative dropdown-wrapper h-full flex items-center group">
-                <button type="button" className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+                <button type="button" className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
                     isStrategies
                       ? 'text-brand-navy bg-blue-50/50'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
@@ -216,35 +214,25 @@ export default function Navbar() {
                   STRATEGIES
                   <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
                 </button>
-                <div className="dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,280px)] bg-white border border-gray-200 shadow-xl rounded-xl p-3 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
-                  <div className="px-2 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Proven Methods</div>
-                  <Link href="/ib" className="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors mb-1 group/strat">
-                    <div className="w-8 h-8 rounded bg-rose-100 flex items-center justify-center text-rose-600 mr-3 mt-0.5 group-hover/strat:bg-rose-200 transition-colors">
-                      <i className="fas fa-calculator text-xs" />
-                    </div>
-                    <div>
-                      <span className="block text-sm font-bold text-slate-700 group-hover/strat:text-brand-navy">IB Helper (무한매수)</span>
-                      <span className="block text-[10px] text-slate-500 leading-tight mt-0.5">V2.2 실사용 계산기</span>
-                    </div>
-                  </Link>
-                  <Link href="/infinite-buying" className="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors mb-1 group/strat">
-                    <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center text-green-600 mr-3 mt-0.5 group-hover/strat:bg-green-200 transition-colors">
-                      <i className="fas fa-infinity text-xs" />
-                    </div>
-                    <div>
-                      <span className="block text-sm font-bold text-slate-700 group-hover/strat:text-brand-navy">Infinite Buying</span>
-                      <span className="block text-[10px] text-slate-500 leading-tight mt-0.5">DCA strategy for volatile markets</span>
-                    </div>
-                  </Link>
-                  <Link href="/vr" className="flex items-start p-2 rounded-lg hover:bg-slate-50 transition-colors group/strat">
-                    <div className="w-8 h-8 rounded bg-brand-gold/20 flex items-center justify-center text-brand-gold mr-3 mt-0.5 group-hover/strat:bg-brand-gold/30 transition-colors">
-                      <i className="fas fa-balance-scale text-xs" />
-                    </div>
-                    <div>
-                      <span className="block text-sm font-bold text-slate-700 group-hover/strat:text-brand-navy">Value Rebalancing</span>
-                      <span className="block text-[10px] text-slate-500 leading-tight mt-0.5">Asset allocation optimization</span>
-                    </div>
-                  </Link>
+                <div className="dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
+                  <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Playbooks</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Link href="/ib" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-calculator text-xl text-rose-600 mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">IB Helper</span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">V2.2</span>
+                    </Link>
+                    <Link href="/infinite-buying" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-infinity text-xl text-green-600 mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">Infinite</span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">DCA</span>
+                    </Link>
+                    <Link href="/vr" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-balance-scale text-xl text-brand-gold mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">Rebalance</span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">VR</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </nav>

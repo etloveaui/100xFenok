@@ -1468,9 +1468,9 @@ export default function Home() {
                 const marketStateMeta = getMarketStateMeta(sector.marketState);
                 return (
                   <div key={sector.key} className={`heatmap-cell ${pinClass} ${getHeatmapToneClass(sector.displayChange, sector.displayHorizon)}`}>
-                    <span className="font-bold text-lg">{sector.etf}</span>
-                    <span className="text-xs">{sector.name}</span>
-                    <span className="font-bold text-xs">{formatSignedPercentDecimal(sector.displayChange)}</span>
+                    <span className="heatmap-cell-symbol" title={sector.etf}>{sector.etf}</span>
+                    <span className="heatmap-cell-name" title={sector.name}>{sector.name}</span>
+                    <span className="heatmap-cell-value">{formatSignedPercentDecimal(sector.displayChange)}</span>
                     <span className="heatmap-cell-horizon">{sector.displayHorizon}</span>
                     {sector.quotePrice !== null ? (
                       <span className="heatmap-cell-price">${sector.quotePrice.toFixed(2)}</span>
