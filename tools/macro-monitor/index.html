@@ -262,6 +262,49 @@
       text-align: right;
     }
 
+    .widget-meta-main {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .widget-status {
+      min-height: 19px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .widget-status.is-live {
+      border-color: #86efac;
+      background: #f0fdf4;
+      color: #166534;
+    }
+
+    .widget-status.is-stale {
+      border-color: #fde68a;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .widget-status.is-empty {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+      color: #64748b;
+    }
+
     .live-widget iframe {
       border: 0;
       width: 100%;
@@ -388,6 +431,11 @@
       .widget-title {
         font-size: 12px;
       }
+      .widget-status {
+        min-height: 18px;
+        font-size: 8px;
+        padding: 0 7px;
+      }
       .live-widget iframe {
         min-height: 285px;
       }
@@ -455,7 +503,10 @@
     <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/liquidity-flow.html')">
       <div class="widget-meta">
         <span class="widget-kicker">Liquidity</span>
-        <span class="widget-title">Liquidity Flow Monitor</span>
+        <div class="widget-meta-main">
+          <span class="widget-title">Liquidity Flow Monitor</span>
+          <span class="widget-status is-empty" id="widget-status-liquidity-flow">Cache Empty</span>
+        </div>
       </div>
       <iframe
         src="widgets/liquidity-flow.html"
@@ -469,7 +520,10 @@
     <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/liquidity-stress.html')">
       <div class="widget-meta">
         <span class="widget-kicker">Liquidity</span>
-        <span class="widget-title">Liquidity Stress Monitor</span>
+        <div class="widget-meta-main">
+          <span class="widget-title">Liquidity Stress Monitor</span>
+          <span class="widget-status is-empty" id="widget-status-liquidity-stress">Cache Empty</span>
+        </div>
       </div>
       <iframe
         src="widgets/liquidity-stress.html"
@@ -483,7 +537,10 @@
     <div class="indicator-card live-widget fade-in" data-category="liquidity" onclick="openDetail('details/banking-health.html')">
       <div class="widget-meta">
         <span class="widget-kicker">Funding</span>
-        <span class="widget-title">Banking Health Monitor</span>
+        <div class="widget-meta-main">
+          <span class="widget-title">Banking Health Monitor</span>
+          <span class="widget-status is-empty" id="widget-status-banking-health">Cache Empty</span>
+        </div>
       </div>
       <iframe
         src="widgets/banking-health.html"
@@ -497,7 +554,10 @@
     <div class="indicator-card live-widget fade-in" data-category="sentiment" onclick="openDetail('details/sentiment-signal/index.html')">
       <div class="widget-meta">
         <span class="widget-kicker">Sentiment</span>
-        <span class="widget-title">Sentiment Signal Monitor</span>
+        <div class="widget-meta-main">
+          <span class="widget-title">Sentiment Signal Monitor</span>
+          <span class="widget-status is-empty" id="widget-status-sentiment-signal">Cache Empty</span>
+        </div>
       </div>
       <iframe
         src="widgets/sentiment-signal.html"
@@ -631,6 +691,88 @@
   // iframe sandbox에서 localStorage 접근 불가 → 부모에서 데이터 전달
   (function() {
     const WIDGET_IDS = ['liquidity-flow', 'liquidity-stress', 'banking-health', 'sentiment-signal'];
+    const STATUS_CLASS_LIST = ['is-live', 'is-stale', 'is-empty'];
+    const STALE_DAY_LIMIT_MS = 24 * 60 * 60 * 1000;
+
+    function formatCacheAge(ageMs) {
+      if (!Number.isFinite(ageMs) || ageMs < 0) {
+        return 'Now';
+      }
+
+      const minutes = Math.floor(ageMs / 60000);
+      if (minutes < 1) {
+        return 'Now';
+      }
+      if (minutes < 60) {
+        return `${minutes}m`;
+      }
+
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) {
+        return `${hours}h`;
+      }
+
+      const days = Math.floor(hours / 24);
+      return `${days}d`;
+    }
+
+    function resolveWidgetCacheStatus(widgetId) {
+      const cacheKey = `macro_${widgetId}`;
+      const rawData = localStorage.getItem(cacheKey);
+      if (!rawData) {
+        return { label: 'Cache Empty', tone: 'is-empty' };
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(rawData);
+      } catch (error) {
+        return { label: 'Cache Empty', tone: 'is-empty' };
+      }
+
+      if (!parsed || typeof parsed !== 'object' || !parsed.data) {
+        return { label: 'Cache Empty', tone: 'is-empty' };
+      }
+
+      const now = Date.now();
+      const timestamp = Number(parsed.timestamp);
+      const expires = Number(parsed.expires);
+
+      if (!Number.isFinite(timestamp) || timestamp <= 0) {
+        return { label: 'Stale · Unknown', tone: 'is-stale' };
+      }
+
+      const ageMs = Math.max(0, now - timestamp);
+      const ageLabel = formatCacheAge(ageMs);
+
+      if (Number.isFinite(expires) && expires > now) {
+        return { label: `Live · ${ageLabel}`, tone: 'is-live' };
+      }
+
+      if (ageMs >= STALE_DAY_LIMIT_MS) {
+        return { label: 'Stale 24h+', tone: 'is-stale' };
+      }
+
+      return { label: `Stale · ${ageLabel}`, tone: 'is-stale' };
+    }
+
+    function updateWidgetStatusBadge(widgetId) {
+      const statusElement = document.getElementById(`widget-status-${widgetId}`);
+      if (!(statusElement instanceof HTMLElement)) {
+        return;
+      }
+
+      const status = resolveWidgetCacheStatus(widgetId);
+      statusElement.textContent = status.label;
+      statusElement.classList.remove(...STATUS_CLASS_LIST);
+      statusElement.classList.add(status.tone);
+    }
+
+    function updateWidgetStatusBadges() {
+      WIDGET_IDS.forEach(widgetId => updateWidgetStatusBadge(widgetId));
+    }
+
+    window.updateWidgetStatusBadges = updateWidgetStatusBadges;
 
     function sendDataToWidgets() {
       WIDGET_IDS.forEach(widgetId => {
@@ -651,13 +793,16 @@
           console.warn(`[Index] ${widgetId} 데이터 전송 실패:`, e);
         }
       });
+      updateWidgetStatusBadges();
     }
 
     // 페이지 로드 시 + iframe 로드 완료 시
     window.addEventListener('load', () => {
+      updateWidgetStatusBadges();
       // iframe 로드 대기 후 전송
       setTimeout(sendDataToWidgets, 500);
       setTimeout(sendDataToWidgets, 1500);
+      setTimeout(updateWidgetStatusBadges, 1700);
     });
 
     // 각 iframe onload 이벤트
@@ -678,8 +823,16 @@
               console.log(`[Index] ${widgetId} iframe 로드 후 데이터 전송`);
             }
           } catch (e) {}
+          updateWidgetStatusBadge(widgetId);
         }, 300);
       });
+    });
+
+    window.addEventListener('storage', (event) => {
+      if (!event.key || !event.key.startsWith('macro_')) {
+        return;
+      }
+      updateWidgetStatusBadges();
     });
   })();
 </script>
@@ -719,6 +872,9 @@
       }
     }
 
+    if (typeof window.updateWidgetStatusBadges === 'function') {
+      window.updateWidgetStatusBadges();
+    }
     console.log('[Index] 위젯 데이터 갱신 완료');
   }
 
