@@ -11,17 +11,29 @@ export const metadata: Metadata = {
   description: '거시경제 지표 통합 대시보드',
 };
 
+const VALID_RADAR_CATEGORIES = new Set(['all', 'liquidity', 'rates', 'sentiment']);
+
 type PageProps = {
-  searchParams?: Promise<{ path?: string | string[] }>;
+  searchParams?: Promise<{
+    path?: string | string[];
+    category?: string | string[];
+  }>;
 };
 
 export default async function RadarPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
   const rawPath = getSingleSearchParam(params.path);
+  const rawCategory = getSingleSearchParam(params.category);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['tools/macro-monitor/'] });
-  const iframeSrc = safePath && legacyPublicFileExists(safePath)
+  const isValidCategory = typeof rawCategory === 'string' && VALID_RADAR_CATEGORIES.has(rawCategory);
+  const baseIframeSrc = safePath && legacyPublicFileExists(safePath)
     ? `/${safePath}`
     : '/tools/macro-monitor/index.html';
+  const shouldApplyCategory = isValidCategory
+    && (safePath === null || safePath === 'tools/macro-monitor/index.html');
+  const iframeSrc = shouldApplyCategory
+    ? `${baseIframeSrc}?category=${encodeURIComponent(rawCategory)}`
+    : baseIframeSrc;
 
   return <RouteEmbedFrame src={iframeSrc} title="100x Market Radar" loading="eager" />;
 }
