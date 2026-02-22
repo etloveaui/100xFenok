@@ -375,6 +375,63 @@
       background: #ffffff;
     }
 
+    .research-widget {
+      background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+    }
+
+    .research-body {
+      padding: 14px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+      height: calc(100% - 56px);
+    }
+
+    .research-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .research-metric {
+      border: 1px solid #d5e1f0;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 8px 9px;
+      min-height: 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .research-metric span {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #597394;
+    }
+
+    .research-metric strong {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 15px;
+      line-height: 1.1;
+      color: #0f284f;
+    }
+
+    .research-note {
+      margin-top: auto;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #5a6f8b;
+      border-radius: 10px;
+      border: 1px solid #d9e5f3;
+      background: #f8fbff;
+      padding: 8px 9px;
+    }
+
     .coming-soon {
       background: linear-gradient(180deg, #ffffff 0%, #f6fbff 100%);
       padding: 28px 22px;
@@ -504,6 +561,9 @@
       }
       .live-widget iframe {
         min-height: 285px;
+      }
+      .research-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -641,19 +701,32 @@
       </iframe>
     </div>
 
-    <!-- 5. Corporate Health (4-B) - 리서치 완료 -->
-    <div class="indicator-card coming-soon category-rates fade-in" data-category="rates">
-      <div class="cs-icon">🏢</div>
-      <h3 class="cs-title">Corporate Health</h3>
-      <p class="cs-category">Foundation</p>
-      <span class="cs-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        Coming Soon
-      </span>
-      <p class="cs-description">기업 수익성 (기업이익/GDP, Forward P/E)</p>
+    <!-- 5. Corporate Health (4-B) - 리서치 슬롯 -->
+    <div class="indicator-card research-widget fade-in" data-category="rates" onclick="openDetail('details/corporate-health.html')">
+      <div class="widget-meta">
+        <span class="widget-kicker">Rates</span>
+        <div class="widget-meta-main">
+          <span class="widget-title">Corporate Health Console</span>
+          <span class="widget-status is-empty" id="widget-status-corporate-health">Loading</span>
+        </div>
+      </div>
+      <div class="research-body">
+        <div class="research-grid">
+          <p class="research-metric">
+            <span>Forward P/E</span>
+            <strong id="corp-pe-value">--</strong>
+          </p>
+          <p class="research-metric">
+            <span>P/B Ratio</span>
+            <strong id="corp-pb-value">--</strong>
+          </p>
+          <p class="research-metric">
+            <span>ROE</span>
+            <strong id="corp-roe-value">--</strong>
+          </p>
+        </div>
+        <p class="research-note" id="corp-note">Loading benchmark snapshot...</p>
+      </div>
     </div>
 
   </div>
@@ -754,6 +827,71 @@
     }
   }
 
+  function setCorporateWidgetStatus(label, tone = 'is-empty') {
+    const statusElement = document.getElementById('widget-status-corporate-health');
+    if (!(statusElement instanceof HTMLElement)) {
+      return;
+    }
+    statusElement.textContent = label;
+    statusElement.classList.remove('is-live', 'is-stale', 'is-empty');
+    statusElement.classList.add(tone);
+  }
+
+  async function hydrateCorporateHealthPreview() {
+    const peElement = document.getElementById('corp-pe-value');
+    const pbElement = document.getElementById('corp-pb-value');
+    const roeElement = document.getElementById('corp-roe-value');
+    const noteElement = document.getElementById('corp-note');
+
+    if (!(peElement instanceof HTMLElement) || !(pbElement instanceof HTMLElement) || !(roeElement instanceof HTMLElement) || !(noteElement instanceof HTMLElement)) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/data/benchmarks/us.json', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = await response.json();
+      const rows = payload?.sections?.sp500?.data;
+      if (!Array.isArray(rows) || rows.length === 0) {
+        throw new Error('sp500 benchmark data unavailable');
+      }
+
+      const latestRow = rows[rows.length - 1] ?? {};
+      const pe = Number(latestRow.best_pe_ratio);
+      const pb = Number(latestRow.px_to_book_ratio);
+      const roeRaw = Number(latestRow.roe);
+      const roe = Number.isFinite(roeRaw) ? (roeRaw <= 1 ? roeRaw * 100 : roeRaw) : Number.NaN;
+
+      peElement.textContent = Number.isFinite(pe) ? pe.toFixed(1) : '--';
+      pbElement.textContent = Number.isFinite(pb) ? pb.toFixed(2) : '--';
+      roeElement.textContent = Number.isFinite(roe) ? `${roe.toFixed(1)}%` : '--';
+
+      const dateLabel = typeof latestRow.date === 'string' && latestRow.date.length > 0 ? latestRow.date : '--';
+      const sourceLabel = payload?.metadata?.source || 'Benchmark';
+      noteElement.textContent = `${sourceLabel} snapshot · ${dateLabel}`;
+
+      if (Number.isFinite(pe)) {
+        if (pe >= 22) {
+          setCorporateWidgetStatus('Valuation Hot', 'is-stale');
+        } else {
+          setCorporateWidgetStatus('Research Live', 'is-live');
+        }
+      } else {
+        setCorporateWidgetStatus('Research Data', 'is-empty');
+      }
+    } catch (error) {
+      console.warn('[Index] Corporate Health preview load failed:', error);
+      peElement.textContent = '--';
+      pbElement.textContent = '--';
+      roeElement.textContent = '--';
+      noteElement.textContent = 'Corporate benchmark snapshot unavailable';
+      setCorporateWidgetStatus('Snapshot Offline', 'is-empty');
+    }
+  }
+
   // ===== 디테일 페이지 열기 =====
   function openDetail(path) {
     // iframe 내부라면 부모 창에서 페이지 로드
@@ -801,6 +939,8 @@
         void handleManualRadarSync(syncButton);
       });
     }
+
+    void hydrateCorporateHealthPreview();
   });
 
   // ===== 위젯 데이터 전달 (postMessage) =====

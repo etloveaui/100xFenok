@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- Google tag (gtag.js) - 호스트별 자동 선택 -->
+  <script>
+    (function() {
+      const GA_IDS = {
+        'etloveaui.github.io': 'G-X7MZFQZRBW',
+        '100xfenok.pages.dev': 'G-BWHGXQPH2D'
+      };
+      const id = GA_IDS[location.hostname] || 'G-X7MZFQZRBW';
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', id);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corporate Health Console | 100xFenok</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #5f6f86;
+      --card-border: #d7e3f2;
+      --surface: #ffffff;
+      --surface-soft: #f8fbff;
+      --primary: #0f5ccf;
+      --primary-soft: #e9f1ff;
+      --good: #166534;
+      --warn: #92400e;
+      --danger: #991b1b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 360px at 0% -10%, rgba(14, 116, 224, 0.15), transparent 62%),
+        radial-gradient(900px 360px at 100% -10%, rgba(2, 132, 199, 0.12), transparent 60%),
+        linear-gradient(180deg, #f5f9ff 0%, #e8f0fb 100%);
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 26px 16px 32px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid #c9d8eb;
+      background: #ffffff;
+      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-1px);
+      background: #f5f8fd;
+      border-color: #9ab7df;
+    }
+
+    .title h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #0b3a7b;
+    }
+
+    .title p {
+      margin-top: 5px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .status {
+      border-radius: 999px;
+      border: 1px solid #b6d6f4;
+      background: #eef6ff;
+      color: #164f8c;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      min-height: 30px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .kpi {
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: var(--surface);
+      padding: 12px;
+      box-shadow: 0 14px 24px -22px rgba(15, 23, 42, 0.6);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: #5f738f;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      margin-top: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 23px;
+      font-weight: 700;
+      line-height: 1;
+      color: #102a4a;
+    }
+
+    .kpi-delta {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #526785;
+    }
+
+    .panel {
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      background: var(--surface);
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 14px 24px -22px rgba(15, 23, 42, 0.6);
+    }
+
+    .panel h2 {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      color: #243a5c;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .panel p {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #4b5f79;
+    }
+
+    .bar {
+      margin-top: 10px;
+      height: 8px;
+      border-radius: 999px;
+      background: #e5edf8;
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #16a34a, #f59e0b, #dc2626);
+      transition: width 0.35s ease;
+    }
+
+    .dual {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 7px 6px;
+      border-bottom: 1px solid #e3ebf7;
+    }
+
+    th {
+      color: #4f6787;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    td {
+      color: #223c5f;
+      font-weight: 600;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .dual {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .header {
+        flex-direction: column;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .title h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-left">
+        <button type="button" class="back-btn" aria-label="Radar로 돌아가기" onclick="goBackToRadar()">←</button>
+        <div class="title">
+          <h1>Corporate Health Console</h1>
+          <p>Forward Valuation + Credit Spread Regime</p>
+        </div>
+      </div>
+      <span class="status" id="statusBadge">Snapshot Loading</span>
+    </header>
+
+    <section class="grid">
+      <article class="kpi"><p class="kpi-label">Forward P/E</p><p class="kpi-value" id="peValue">--</p><p class="kpi-delta" id="peDelta">--</p></article>
+      <article class="kpi"><p class="kpi-label">P/B Ratio</p><p class="kpi-value" id="pbValue">--</p><p class="kpi-delta" id="pbDelta">--</p></article>
+      <article class="kpi"><p class="kpi-label">ROE</p><p class="kpi-value" id="roeValue">--</p><p class="kpi-delta" id="roeDelta">--</p></article>
+      <article class="kpi"><p class="kpi-label">Earnings Yield</p><p class="kpi-value" id="earningsYield">--</p><p class="kpi-delta" id="snapshotDate">--</p></article>
+    </section>
+
+    <section class="panel">
+      <h2>Valuation Regime</h2>
+      <p id="regimeSummary">Latest benchmark snapshot is loading.</p>
+      <div class="bar"><span id="regimeFill"></span></div>
+      <p class="muted">PE 16~22 구간을 중립 밸류에이션으로 가정한 운영 지표입니다.</p>
+    </section>
+
+    <section class="dual">
+      <article class="panel">
+        <h2>Recent Weekly History</h2>
+        <table>
+          <thead>
+            <tr><th>Date</th><th>P/E</th><th>P/B</th><th>ROE</th></tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="4">Loading...</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="panel">
+        <h2>Credit Spread Ladder</h2>
+        <table>
+          <thead>
+            <tr><th>Rating</th><th>Spread</th></tr>
+          </thead>
+          <tbody id="creditBody">
+            <tr><td colspan="2">Loading...</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    function goBackToRadar() {
+      const RADAR_PATH = 'tools/macro-monitor/index.html';
+      try {
+        if (window.top?.loadPage) { window.top.loadPage(RADAR_PATH); return; }
+        if (window.parent?.loadPage) { window.parent.loadPage(RADAR_PATH); return; }
+      } catch (e) {}
+      const targetPath = String(RADAR_PATH || '').replace(/^\/+/, '');
+      (window.top || window).location.assign(`/radar?path=${encodeURIComponent(targetPath)}`);
+    }
+
+    function toPercent(value, digits = 1) {
+      return Number.isFinite(value) ? `${value.toFixed(digits)}%` : '--';
+    }
+
+    function toDelta(current, previous, digits = 2) {
+      if (!Number.isFinite(current) || !Number.isFinite(previous)) return '--';
+      const delta = current - previous;
+      const sign = delta > 0 ? '+' : '';
+      return `${sign}${delta.toFixed(digits)} vs prev`;
+    }
+
+    function setStatusBadge(label, tone) {
+      const badge = document.getElementById('statusBadge');
+      if (!badge) return;
+      badge.textContent = label;
+      if (tone === 'hot') {
+        badge.style.background = '#fff7ed';
+        badge.style.borderColor = '#fcd9b0';
+        badge.style.color = '#9a3412';
+      } else if (tone === 'cool') {
+        badge.style.background = '#f0fdf4';
+        badge.style.borderColor = '#bbf7d0';
+        badge.style.color = '#166534';
+      } else {
+        badge.style.background = '#eef6ff';
+        badge.style.borderColor = '#b6d6f4';
+        badge.style.color = '#164f8c';
+      }
+    }
+
+    async function loadCorporateHealth() {
+      const [usRes, creditRes] = await Promise.all([
+        fetch('/data/benchmarks/us.json', { cache: 'no-store' }),
+        fetch('/data/damodaran/credit_ratings.json', { cache: 'no-store' })
+      ]);
+
+      if (!usRes.ok) throw new Error(`us.json ${usRes.status}`);
+      if (!creditRes.ok) throw new Error(`credit_ratings.json ${creditRes.status}`);
+
+      const usPayload = await usRes.json();
+      const creditPayload = await creditRes.json();
+
+      const sp500Rows = usPayload?.sections?.sp500?.data;
+      if (!Array.isArray(sp500Rows) || sp500Rows.length < 2) {
+        throw new Error('insufficient sp500 rows');
+      }
+
+      const latest = sp500Rows[sp500Rows.length - 1];
+      const prev = sp500Rows[sp500Rows.length - 2];
+
+      const pe = Number(latest.best_pe_ratio);
+      const prevPe = Number(prev.best_pe_ratio);
+      const pb = Number(latest.px_to_book_ratio);
+      const prevPb = Number(prev.px_to_book_ratio);
+      const roeRaw = Number(latest.roe);
+      const prevRoeRaw = Number(prev.roe);
+      const roe = Number.isFinite(roeRaw) ? (roeRaw <= 1 ? roeRaw * 100 : roeRaw) : Number.NaN;
+      const prevRoe = Number.isFinite(prevRoeRaw) ? (prevRoeRaw <= 1 ? prevRoeRaw * 100 : prevRoeRaw) : Number.NaN;
+      const earningsYield = Number.isFinite(pe) && pe > 0 ? 100 / pe : Number.NaN;
+
+      document.getElementById('peValue').textContent = Number.isFinite(pe) ? pe.toFixed(1) : '--';
+      document.getElementById('pbValue').textContent = Number.isFinite(pb) ? pb.toFixed(2) : '--';
+      document.getElementById('roeValue').textContent = toPercent(roe, 1);
+      document.getElementById('earningsYield').textContent = toPercent(earningsYield, 2);
+
+      document.getElementById('peDelta').textContent = toDelta(pe, prevPe, 2);
+      document.getElementById('pbDelta').textContent = toDelta(pb, prevPb, 2);
+      document.getElementById('roeDelta').textContent = toDelta(roe, prevRoe, 1);
+      document.getElementById('snapshotDate').textContent = latest.date || '--';
+
+      const fill = document.getElementById('regimeFill');
+      const summary = document.getElementById('regimeSummary');
+      const normalizedPe = Number.isFinite(pe) ? Math.max(0, Math.min(35, pe)) : 0;
+      fill.style.width = `${(normalizedPe / 35) * 100}%`;
+
+      if (Number.isFinite(pe) && pe >= 22) {
+        setStatusBadge('Valuation Hot', 'hot');
+        summary.textContent = `Forward P/E ${pe.toFixed(1)}배로 고평가 구간에 근접했습니다. 크레딧 스프레드와 이익 가이던스 둔화 여부를 동시 점검하세요.`;
+      } else if (Number.isFinite(pe) && pe <= 16) {
+        setStatusBadge('Valuation Cool', 'cool');
+        summary.textContent = `Forward P/E ${pe.toFixed(1)}배로 밸류에이션 부담이 낮은 구간입니다. 펀더멘털 반등 지속성을 확인하며 리스크를 관리하세요.`;
+      } else {
+        setStatusBadge('Valuation Balanced', 'neutral');
+        summary.textContent = `Forward P/E ${pe.toFixed(1)}배로 중립 구간입니다. 멀티플 변동보다 이익 성장률과 신용여건 변화가 방향성을 결정할 가능성이 큽니다.`;
+      }
+
+      const historyBody = document.getElementById('historyBody');
+      const recentRows = sp500Rows.slice(-8).reverse();
+      historyBody.innerHTML = recentRows.map((row) => {
+        const rowRoeRaw = Number(row.roe);
+        const rowRoe = Number.isFinite(rowRoeRaw) ? (rowRoeRaw <= 1 ? rowRoeRaw * 100 : rowRoeRaw) : Number.NaN;
+        return `<tr>
+          <td>${row.date || '--'}</td>
+          <td>${Number.isFinite(Number(row.best_pe_ratio)) ? Number(row.best_pe_ratio).toFixed(1) : '--'}</td>
+          <td>${Number.isFinite(Number(row.px_to_book_ratio)) ? Number(row.px_to_book_ratio).toFixed(2) : '--'}</td>
+          <td>${Number.isFinite(rowRoe) ? `${rowRoe.toFixed(1)}%` : '--'}</td>
+        </tr>`;
+      }).join('');
+
+      const creditBody = document.getElementById('creditBody');
+      const creditRows = creditPayload?.lookup_tables?.large_manufacturing;
+      if (Array.isArray(creditRows) && creditRows.length > 0) {
+        creditBody.innerHTML = creditRows.slice(0, 8).map((row) => {
+          const spread = Number(row.spread);
+          return `<tr><td>${row.rating || '--'}</td><td>${Number.isFinite(spread) ? `${(spread * 100).toFixed(2)}%` : '--'}</td></tr>`;
+        }).join('');
+      } else {
+        creditBody.innerHTML = '<tr><td colspan="2">Credit table unavailable</td></tr>';
+      }
+    }
+
+    window.addEventListener('load', () => {
+      loadCorporateHealth().catch((error) => {
+        console.warn('[Corporate Health] load failed:', error);
+        setStatusBadge('Snapshot Offline', 'neutral');
+        document.getElementById('regimeSummary').textContent = 'Corporate benchmark data unavailable. 데이터 소스를 확인하세요.';
+      });
+    });
+  </script>
+</body>
+</html>
