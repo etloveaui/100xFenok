@@ -347,6 +347,10 @@
         badge.style.background = '#f0fdf4';
         badge.style.borderColor = '#bbf7d0';
         badge.style.color = '#166534';
+      } else if (tone === 'error') {
+        badge.style.background = '#fef2f2';
+        badge.style.borderColor = '#fecaca';
+        badge.style.color = '#991b1b';
       } else {
         badge.style.background = '#eef6ff';
         badge.style.borderColor = '#b6d6f4';
@@ -438,7 +442,7 @@
     window.addEventListener('load', () => {
       loadCorporateHealth().catch((error) => {
         console.warn('[Corporate Health] load failed:', error);
-        setStatusBadge('Snapshot Offline', 'neutral');
+        setStatusBadge('Snapshot Offline', 'error');
         document.getElementById('regimeSummary').textContent = 'Corporate benchmark data unavailable. 데이터 소스를 확인하세요.';
       });
     });
