@@ -7,6 +7,8 @@ import WidgetConsoleFrame from '@/components/WidgetConsoleFrame';
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
 type TabMotion = 'next' | 'prev' | 'direct';
 type TabIntentReason = 'click' | 'swipe' | 'keyboard' | 'shortcut';
+type PeriodIntentReason = 'menu' | 'shortcut';
+type RefreshIntentReason = 'button' | 'shortcut' | 'stale-focus' | 'widget';
 
 type NumberPoint = {
   date: string;
@@ -806,6 +808,12 @@ export default function Home() {
 
       const lastSynced = lastSyncedEpochRef.current;
       if (lastSynced === null || Date.now() - lastSynced >= FOCUS_REFRESH_STALE_MS) {
+        window.dispatchEvent(new CustomEvent('fenok:refresh-intent', {
+          detail: {
+            reason: 'stale-focus',
+            at: Date.now(),
+          },
+        }));
         void loadOverviewData();
       }
     };
@@ -879,6 +887,32 @@ export default function Home() {
       },
     }));
   }, []);
+
+  const emitPeriodIntent = useCallback((period: string, reason: PeriodIntentReason) => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('fenok:period-intent', {
+      detail: {
+        period,
+        reason,
+        at: Date.now(),
+      },
+    }));
+  }, []);
+
+  const emitRefreshIntent = useCallback((reason: RefreshIntentReason) => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('fenok:refresh-intent', {
+      detail: {
+        reason,
+        at: Date.now(),
+      },
+    }));
+  }, []);
+
+  const refreshOverview = useCallback((reason: RefreshIntentReason = 'button') => {
+    emitRefreshIntent(reason);
+    void loadOverviewData();
+  }, [emitRefreshIntent, loadOverviewData]);
 
   const selectTab = useCallback((nextTab: TabId, reason: TabIntentReason = 'click') => {
     if (nextTab === activeTab) return;
@@ -979,6 +1013,46 @@ export default function Home() {
         return;
       }
 
+      if (event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        refreshOverview('shortcut');
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'o') {
+        event.preventDefault();
+        selectTab('overview', 'shortcut');
+        return;
+      }
+
+      if (event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        selectTab('sectors', 'shortcut');
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'l') {
+        event.preventDefault();
+        selectTab('liquidity', 'shortcut');
+        return;
+      }
+
+      if (event.key.toLowerCase() === 't') {
+        event.preventDefault();
+        selectTab('sentiment', 'shortcut');
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'p') {
+        event.preventDefault();
+        const currentPeriodIndex = periods.indexOf(activePeriod);
+        const nextPeriod = periods[(currentPeriodIndex + 1) % periods.length] ?? periods[0];
+        if (!nextPeriod) return;
+        setActivePeriod(nextPeriod);
+        emitPeriodIntent(nextPeriod, 'shortcut');
+        return;
+      }
+
       const numeric = Number(event.key);
       if (Number.isNaN(numeric) || numeric < 1 || numeric > TAB_SEQUENCE.length) return;
       event.preventDefault();
@@ -990,7 +1064,7 @@ export default function Home() {
     return () => {
       window.removeEventListener('keydown', handleKeydown);
     };
-  }, [handleSwipeTabChange, selectTab]);
+  }, [activePeriod, emitPeriodIntent, handleSwipeTabChange, refreshOverview, selectTab]);
 
   const sectorTopRows = [...dashboard.sectorRows]
     .sort((left, right) => right.displayChange - left.displayChange)
@@ -1130,7 +1204,7 @@ export default function Home() {
               aria-controls={TAB_PANEL_IDS.overview}
               tabIndex={activeTab === 'overview' ? 0 : -1}
               className={`tab-pill ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => selectTab('overview')}
+              onClick={() => selectTab('overview', 'click')}
               onKeyDown={(event) => handleTabKeyNavigation(event, 'overview')}
             >
               Overview
@@ -1143,7 +1217,7 @@ export default function Home() {
               aria-controls={TAB_PANEL_IDS.sectors}
               tabIndex={activeTab === 'sectors' ? 0 : -1}
               className={`tab-pill ${activeTab === 'sectors' ? 'active' : ''}`}
-              onClick={() => selectTab('sectors')}
+              onClick={() => selectTab('sectors', 'click')}
               onKeyDown={(event) => handleTabKeyNavigation(event, 'sectors')}
             >
               Sectors
@@ -1156,7 +1230,7 @@ export default function Home() {
               aria-controls={TAB_PANEL_IDS.liquidity}
               tabIndex={activeTab === 'liquidity' ? 0 : -1}
               className={`tab-pill ${activeTab === 'liquidity' ? 'active' : ''}`}
-              onClick={() => selectTab('liquidity')}
+              onClick={() => selectTab('liquidity', 'click')}
               onKeyDown={(event) => handleTabKeyNavigation(event, 'liquidity')}
             >
               Liquidity
@@ -1169,7 +1243,7 @@ export default function Home() {
               aria-controls={TAB_PANEL_IDS.sentiment}
               tabIndex={activeTab === 'sentiment' ? 0 : -1}
               className={`tab-pill ${activeTab === 'sentiment' ? 'active' : ''}`}
-              onClick={() => selectTab('sentiment')}
+              onClick={() => selectTab('sentiment', 'click')}
               onKeyDown={(event) => handleTabKeyNavigation(event, 'sentiment')}
             >
               Sentiment
@@ -1203,6 +1277,7 @@ export default function Home() {
                     className={`period-option ${activePeriod === period ? 'active' : ''}`}
                     onClick={() => {
                       setActivePeriod(period);
+                      emitPeriodIntent(period, 'menu');
                       setIsPeriodMenuOpen(false);
                     }}
                   >
@@ -1223,7 +1298,7 @@ export default function Home() {
             type="button"
             className="command-refresh-btn"
             onClick={() => {
-              void loadOverviewData();
+              refreshOverview('button');
             }}
             disabled={isRefreshingData}
             aria-label="데이터 새로고침"
@@ -1669,6 +1744,7 @@ export default function Home() {
                 widgetId="liquidity-flow"
                 timeoutMs={12000}
                 payload={liquidityWidgetPayload ?? undefined}
+                onSyncRequest={() => refreshOverview('widget')}
               />
             </div>
           </section>
@@ -1718,6 +1794,7 @@ export default function Home() {
                 widgetId="sentiment-signal"
                 timeoutMs={12000}
                 payload={sentimentWidgetPayload ?? undefined}
+                onSyncRequest={() => refreshOverview('widget')}
               />
             </div>
           </section>

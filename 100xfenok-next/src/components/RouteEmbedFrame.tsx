@@ -60,6 +60,8 @@ function RouteEmbedFrameInner({
   const railLabel = formatEmbedRailLabel(src);
   const railStateLabel = failed ? 'ERROR' : ready ? 'READY' : 'LOADING';
   const railStateClass = failed ? 'is-error' : ready ? 'is-ready' : 'is-loading';
+  const shellGuardLabel = hideEmbeddedShell ? 'SHELL ON' : 'SHELL OFF';
+  const shellGuardClass = hideEmbeddedShell ? 'is-on' : 'is-off';
 
   useEffect(() => {
     if (ready || failed) return;
@@ -132,7 +134,13 @@ function RouteEmbedFrameInner({
         <span className={`route-embed-health ${railStateClass}`} aria-live="polite">
           {railStateLabel}
         </span>
+        <span className={`route-embed-shell-guard ${shellGuardClass}`} aria-live="polite">
+          {shellGuardLabel}
+        </span>
         <span className="route-embed-path" title={railLabel}>{railLabel}</span>
+        <button type="button" className="route-embed-rail-btn" onClick={handleRetry}>
+          Reload
+        </button>
         <a href={src} target="_blank" rel="noreferrer" className="route-embed-rail-link">
           새 창
         </a>
