@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type TouchEvent } from 'react';
 import Link from 'next/link';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
+type TabMotion = 'next' | 'prev' | 'direct';
 
 type NumberPoint = {
   date: string;
@@ -119,6 +120,12 @@ type DashboardSnapshot = {
 
 const periods = ['1D', '1W', '1M', 'YTD', '1Y'];
 const TAB_SEQUENCE: TabId[] = ['overview', 'sectors', 'liquidity', 'sentiment'];
+const TAB_LABELS: Record<TabId, string> = {
+  overview: 'Overview',
+  sectors: 'Sectors',
+  liquidity: 'Liquidity',
+  sentiment: 'Sentiment',
+};
 const SWIPE_HINT_DISMISS_KEY = 'fenok_swipe_hint_dismissed_v1';
 
 const SECTOR_DEFINITIONS: SectorDefinition[] = [
@@ -500,6 +507,7 @@ function buildDashboardSnapshot(payload: {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [tabMotion, setTabMotion] = useState<TabMotion>('direct');
   const [activePeriod, setActivePeriod] = useState('1W');
   const [isPeriodMenuOpen, setIsPeriodMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
@@ -639,12 +647,25 @@ export default function Home() {
     }
   };
 
+  const selectTab = (nextTab: TabId) => {
+    if (nextTab === activeTab) return;
+    const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
+    const nextIndex = TAB_SEQUENCE.indexOf(nextTab);
+    if (currentIndex >= 0 && nextIndex >= 0) {
+      setTabMotion(nextIndex > currentIndex ? 'next' : 'prev');
+    } else {
+      setTabMotion('direct');
+    }
+    setActiveTab(nextTab);
+  };
+
   const handleSwipeTabChange = (direction: 'next' | 'prev') => {
     const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
     if (currentIndex < 0) return;
     const offset = direction === 'next' ? 1 : -1;
     const nextIndex = currentIndex + offset;
     if (nextIndex < 0 || nextIndex >= TAB_SEQUENCE.length) return;
+    setTabMotion(direction);
     setActiveTab(TAB_SEQUENCE[nextIndex]);
     if (showSwipeHint) {
       dismissSwipeHint();
@@ -679,6 +700,9 @@ export default function Home() {
     .slice(0, 3);
   const spyIndex = dashboard.quickIndices.find((item) => item.symbol === 'SPY') ?? DEFAULT_DASHBOARD.quickIndices[0];
   const qqqIndex = dashboard.quickIndices.find((item) => item.symbol === 'QQQ') ?? DEFAULT_DASHBOARD.quickIndices[1];
+  const activeTabIndex = TAB_SEQUENCE.indexOf(activeTab);
+  const prevTab = activeTabIndex > 0 ? TAB_SEQUENCE[activeTabIndex - 1] : null;
+  const nextTab = activeTabIndex >= 0 && activeTabIndex < TAB_SEQUENCE.length - 1 ? TAB_SEQUENCE[activeTabIndex + 1] : null;
   const sectorPanelModeLabel = dashboard.sectorMode === 'LIVE_1D'
     ? `LIVE 1D · ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length} sectors`
     : 'BASE 1M · Treemap by Market Cap';
@@ -730,7 +754,7 @@ export default function Home() {
               role="tab"
               aria-selected={activeTab === 'overview'}
               className={`tab-pill ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveTab('overview')}
+              onClick={() => selectTab('overview')}
             >
               Overview
             </button>
@@ -739,7 +763,7 @@ export default function Home() {
               role="tab"
               aria-selected={activeTab === 'sectors'}
               className={`tab-pill ${activeTab === 'sectors' ? 'active' : ''}`}
-              onClick={() => setActiveTab('sectors')}
+              onClick={() => selectTab('sectors')}
             >
               Sectors
             </button>
@@ -748,7 +772,7 @@ export default function Home() {
               role="tab"
               aria-selected={activeTab === 'liquidity'}
               className={`tab-pill ${activeTab === 'liquidity' ? 'active' : ''}`}
-              onClick={() => setActiveTab('liquidity')}
+              onClick={() => selectTab('liquidity')}
             >
               Liquidity
             </button>
@@ -757,7 +781,7 @@ export default function Home() {
               role="tab"
               aria-selected={activeTab === 'sentiment'}
               className={`tab-pill ${activeTab === 'sentiment' ? 'active' : ''}`}
-              onClick={() => setActiveTab('sentiment')}
+              onClick={() => selectTab('sentiment')}
             >
               Sentiment
             </button>
@@ -802,6 +826,16 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="tab-scene-status sm:hidden" aria-live="polite">
+        <span className="tab-scene-status-step">{activeTabIndex + 1}/{TAB_SEQUENCE.length}</span>
+        <strong className="tab-scene-status-title">{TAB_LABELS[activeTab]}</strong>
+        <span className="tab-scene-status-neighbor">
+          {prevTab ? `← ${TAB_LABELS[prevTab]}` : '←'}
+          {' · '}
+          {nextTab ? `${TAB_LABELS[nextTab]} →` : '→'}
+        </span>
+      </div>
+
       {showSwipeHint ? (
         <button
           type="button"
@@ -815,7 +849,7 @@ export default function Home() {
 
       <section
         key={activeTab}
-        className="tab-scene"
+        className={`tab-scene tab-scene-${tabMotion}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

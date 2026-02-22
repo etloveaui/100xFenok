@@ -1700,7 +1700,21 @@ main {
 }
 
 .tab-scene {
-  animation: tabSceneIn 220ms ease-out;
+  animation-duration: 240ms;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tab-scene.tab-scene-next {
+  animation-name: tabSceneNext;
+}
+
+.tab-scene.tab-scene-prev {
+  animation-name: tabScenePrev;
+}
+
+.tab-scene.tab-scene-direct {
+  animation-name: tabSceneIn;
 }
 
 @keyframes tabSceneIn {
@@ -1712,6 +1726,67 @@ main {
     opacity: 1;
     transform: translate3d(0, 0, 0);
   }
+}
+
+@keyframes tabSceneNext {
+  0% {
+    opacity: 0.84;
+    transform: translate3d(14px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes tabScenePrev {
+  0% {
+    opacity: 0.84;
+    transform: translate3d(-14px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.tab-scene-status {
+  margin: 0 0 0.45rem;
+  min-height: 1.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.24rem 0.48rem;
+}
+
+.tab-scene-status-step {
+  min-height: 1.2rem;
+  border-radius: 9999px;
+  border: 1px solid #dbeafe;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 0 0.45rem;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.tab-scene-status-title {
+  font-size: 0.73rem;
+  line-height: 1;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.tab-scene-status-neighbor {
+  margin-left: auto;
+  font-size: 0.62rem;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .app-scroll-progress {
