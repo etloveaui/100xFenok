@@ -9,6 +9,7 @@ type WidgetConsoleFrameProps = {
   payload?: unknown;
   loading?: 'eager' | 'lazy';
   timeoutMs?: number;
+  hideEmbeddedShell?: boolean;
 };
 
 export default function WidgetConsoleFrame({
@@ -18,19 +19,22 @@ export default function WidgetConsoleFrame({
   payload,
   loading = 'lazy',
   timeoutMs = 10000,
+  hideEmbeddedShell = true,
 }: WidgetConsoleFrameProps) {
   const [reloadToken, setReloadToken] = useState(0);
-  const frameKey = `${src}:${widgetId}:${reloadToken}`;
+  const effectiveSrc = appendEmbedParam(src, hideEmbeddedShell);
+  const frameKey = `${effectiveSrc}:${widgetId}:${reloadToken}`;
 
   return (
     <WidgetConsoleFrameInner
       key={frameKey}
-      src={src}
+      src={effectiveSrc}
       title={title}
       widgetId={widgetId}
       payload={payload}
       loading={loading}
       timeoutMs={timeoutMs}
+      hideEmbeddedShell={hideEmbeddedShell}
       onRetry={() => setReloadToken((prev) => prev + 1)}
     />
   );
@@ -47,6 +51,7 @@ function WidgetConsoleFrameInner({
   payload,
   loading,
   timeoutMs,
+  hideEmbeddedShell = true,
   onRetry,
 }: WidgetConsoleFrameInnerProps) {
   const [ready, setReady] = useState(false);
@@ -55,6 +60,12 @@ function WidgetConsoleFrameInner({
   const [isPayloadLinked, setIsPayloadLinked] = useState(false);
   const [lastDispatchAt, setLastDispatchAt] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const setIframeRef = useCallback((node: HTMLIFrameElement | null) => {
+    if (iframeRef.current && iframeRef.current !== node) {
+      disconnectWidgetShellObserver(iframeRef.current);
+    }
+    iframeRef.current = node;
+  }, []);
   const loadStartedAtRef = useRef<number>(getNowMs());
   const readyFallbackTimerRef = useRef<number | null>(null);
 
@@ -178,6 +189,11 @@ function WidgetConsoleFrameInner({
 
   const handleFrameLoad = () => {
     if (failed || ready) return;
+    if (hideEmbeddedShell) {
+      maskWidgetShell(iframeRef.current);
+      window.setTimeout(() => maskWidgetShell(iframeRef.current), 180);
+      window.setTimeout(() => maskWidgetShell(iframeRef.current), 900);
+    }
 
     dispatchPayload();
 
@@ -200,6 +216,7 @@ function WidgetConsoleFrameInner({
   };
 
   const handleFrameError = () => {
+    disconnectWidgetShellObserver(iframeRef.current);
     if (readyFallbackTimerRef.current !== null) {
       window.clearTimeout(readyFallbackTimerRef.current);
       readyFallbackTimerRef.current = null;
@@ -217,6 +234,7 @@ function WidgetConsoleFrameInner({
   };
 
   const handleRetry = () => {
+    disconnectWidgetShellObserver(iframeRef.current);
     if (readyFallbackTimerRef.current !== null) {
       window.clearTimeout(readyFallbackTimerRef.current);
       readyFallbackTimerRef.current = null;
@@ -284,7 +302,7 @@ function WidgetConsoleFrameInner({
         ) : null}
 
         <iframe
-          ref={iframeRef}
+          ref={setIframeRef}
           src={src}
           title={title}
           loading={loading}
@@ -301,6 +319,17 @@ function formatWidgetPath(src: string): string {
   const compact = src.replace(/^\//, '');
   if (compact.length <= 44) return compact;
   return `...${compact.slice(-44)}`;
+}
+
+function appendEmbedParam(src: string, enabled: boolean): string {
+  if (!enabled) return src;
+  const [baseAndQuery, hash = ''] = src.split('#', 2);
+  const cleaned = baseAndQuery
+    .replace(/([?&])embed=[^&#]*/g, '$1')
+    .replace(/[?&]+$/, '')
+    .replace(/\?&/, '?');
+  const glue = cleaned.includes('?') ? '&' : '?';
+  return `${cleaned}${glue}embed=1${hash ? `#${hash}` : ''}`;
 }
 
 type WidgetTelemetryEvent =
@@ -356,5 +385,114 @@ function resolveTargetOrigin(src: string): string {
     return new URL(src, window.location.origin).origin;
   } catch {
     return window.location.origin;
+  }
+}
+
+const WIDGET_EMBED_SHELL_SELECTOR = [
+  '#mainNav',
+  'nav#mainNav',
+  'body > nav',
+  'body > header nav',
+  '.sticky-header',
+  'header.sticky-header',
+  '.top-nav',
+  '.global-nav',
+  '.nav-wrapper',
+  '.navbar',
+  'footer',
+  '[role="contentinfo"]',
+  '#mainFooter',
+  '#footer',
+  '.site-footer',
+  '.footer',
+  '[aria-label*="footer" i]',
+  '[id*="footer" i]',
+  '[class*="footer" i]',
+].join(', ');
+
+type WidgetShellObserverState = {
+  doc: Document;
+  observer: MutationObserver;
+};
+
+const widgetShellObserverMap = new WeakMap<HTMLIFrameElement, WidgetShellObserverState>();
+
+function disconnectWidgetShellObserver(frame: HTMLIFrameElement | null): void {
+  if (!frame) return;
+  const state = widgetShellObserverMap.get(frame);
+  if (!state) return;
+  state.observer.disconnect();
+  widgetShellObserverMap.delete(frame);
+}
+
+function hideWidgetShellNodes(doc: Document): void {
+  const shellNodes = doc.querySelectorAll(WIDGET_EMBED_SHELL_SELECTOR);
+  shellNodes.forEach((node) => {
+    if (!(node instanceof HTMLElement)) return;
+    node.setAttribute('data-next-widget-embed-hidden', '1');
+    node.style.display = 'none';
+  });
+}
+
+function ensureWidgetShellObserver(frame: HTMLIFrameElement, doc: Document): void {
+  const currentState = widgetShellObserverMap.get(frame);
+  if (currentState && currentState.doc === doc) return;
+
+  currentState?.observer.disconnect();
+
+  const observer = new MutationObserver(() => {
+    hideWidgetShellNodes(doc);
+  });
+  observer.observe(doc.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'id', 'style'],
+  });
+  widgetShellObserverMap.set(frame, { doc, observer });
+}
+
+function maskWidgetShell(frame: HTMLIFrameElement | null): void {
+  if (!frame) return;
+  try {
+    const doc = frame.contentDocument;
+    if (!doc || !doc.documentElement || !doc.body) return;
+
+    doc.documentElement.setAttribute('data-next-widget-embed-shell', '1');
+    doc.body.setAttribute('data-next-widget-embed-shell', '1');
+
+    if (!doc.getElementById('next-widget-embed-shell-style')) {
+      const style = doc.createElement('style');
+      style.id = 'next-widget-embed-shell-style';
+      style.textContent = `
+        html[data-next-widget-embed-shell="1"] #mainNav,
+        html[data-next-widget-embed-shell="1"] nav#mainNav,
+        html[data-next-widget-embed-shell="1"] body > nav,
+        html[data-next-widget-embed-shell="1"] body > header nav,
+        html[data-next-widget-embed-shell="1"] .sticky-header,
+        html[data-next-widget-embed-shell="1"] header.sticky-header,
+        html[data-next-widget-embed-shell="1"] .top-nav,
+        html[data-next-widget-embed-shell="1"] .global-nav,
+        html[data-next-widget-embed-shell="1"] .nav-wrapper,
+        html[data-next-widget-embed-shell="1"] .navbar,
+        html[data-next-widget-embed-shell="1"] footer,
+        html[data-next-widget-embed-shell="1"] [role="contentinfo"],
+        html[data-next-widget-embed-shell="1"] #mainFooter,
+        html[data-next-widget-embed-shell="1"] #footer,
+        html[data-next-widget-embed-shell="1"] .site-footer,
+        html[data-next-widget-embed-shell="1"] .footer,
+        html[data-next-widget-embed-shell="1"] [aria-label*="footer" i],
+        html[data-next-widget-embed-shell="1"] [id*="footer" i],
+        html[data-next-widget-embed-shell="1"] [class*="footer" i] {
+          display: none !important;
+        }
+      `;
+      doc.head?.appendChild(style);
+    }
+
+    hideWidgetShellNodes(doc);
+    ensureWidgetShellObserver(frame, doc);
+  } catch {
+    // cross-origin 문서 접근 실패 시 마스킹을 건너뜀
   }
 }
