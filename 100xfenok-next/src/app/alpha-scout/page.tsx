@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import {
+  getSingleSearchParam,
+  legacyPublicFileExists,
+  sanitizeLegacyPath,
+} from '@/lib/server/legacy-bridge';
 
 export const metadata: Metadata = {
   title: 'Alpha Scout',
@@ -9,23 +14,6 @@ export const metadata: Metadata = {
 type PageProps = {
   searchParams?: Promise<{ path?: string | string[]; report?: string | string[] }>;
 };
-
-function sanitizeAlphaPath(rawPath?: string): string | null {
-  if (!rawPath) return null;
-
-  let decoded = rawPath;
-  try {
-    decoded = decodeURIComponent(rawPath);
-  } catch {
-    return null;
-  }
-
-  const normalized = decoded.replace(/^\/+/, '');
-  if (!normalized.startsWith('alpha-scout/')) return null;
-  if (!/^[A-Za-z0-9/_\-.?=&]+$/.test(normalized)) return null;
-  if (!normalized.includes('.html')) return null;
-  return normalized;
-}
 
 function sanitizeReportFilename(rawReport?: string): string | null {
   if (!rawReport) return null;
@@ -37,22 +25,26 @@ function sanitizeReportFilename(rawReport?: string): string | null {
     return null;
   }
 
-  if (!/^[A-Za-z0-9._-]+\.html$/.test(decoded)) return null;
-  return decoded;
+  const normalized = decoded.trim();
+  if (!/^[A-Za-z0-9._-]+\.html$/.test(normalized)) return null;
+  if (normalized.startsWith(".") || normalized.includes("..")) return null;
+  return normalized;
 }
 
 export default async function AlphaScoutPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
-  const rawPath = Array.isArray(params.path) ? params.path[0] : params.path;
-  const rawReport = Array.isArray(params.report) ? params.report[0] : params.report;
+  const rawPath = getSingleSearchParam(params.path);
+  const rawReport = getSingleSearchParam(params.report);
 
-  const safePath = sanitizeAlphaPath(rawPath);
+  const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['alpha-scout/'] });
   const safeReport = sanitizeReportFilename(rawReport);
-  const iframeSrc = safePath
-    ? `/${safePath}`
-    : safeReport
-      ? `/alpha-scout/reports/${safeReport}`
-      : '/alpha-scout/alpha-scout-main.html';
+  const reportPath = safeReport ? `alpha-scout/reports/${safeReport}` : null;
+  const iframeSrc =
+    safePath && legacyPublicFileExists(safePath)
+      ? `/${safePath}`
+      : reportPath && legacyPublicFileExists(reportPath)
+        ? `/${reportPath}`
+        : '/alpha-scout/alpha-scout-main.html';
 
   return <RouteEmbedFrame src={iframeSrc} title="100x Alpha Scout" loading="eager" />;
 }

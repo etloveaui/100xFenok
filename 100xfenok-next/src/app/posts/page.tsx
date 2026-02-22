@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import {
+  getSingleSearchParam,
+  legacyPublicFileExists,
+  sanitizeLegacyPath,
+} from '@/lib/server/legacy-bridge';
 
 export const metadata: Metadata = {
   title: '분석 아카이브',
@@ -24,29 +29,12 @@ type PageProps = {
   searchParams?: Promise<{ path?: string | string[] }>;
 };
 
-function sanitizePostsPath(rawPath?: string): string | null {
-  if (!rawPath) return null;
-
-  let decoded = rawPath;
-  try {
-    decoded = decodeURIComponent(rawPath);
-  } catch {
-    return null;
-  }
-
-  const normalized = decoded.replace(/^\/+/, '');
-  if (!normalized.startsWith('posts/')) return null;
-  if (!/^[A-Za-z0-9/_\-.?=&]+$/.test(normalized)) return null;
-  if (!normalized.includes('.html')) return null;
-  return normalized;
-}
-
 export default async function PostsPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
-  const rawPath = Array.isArray(params.path) ? params.path[0] : params.path;
-  const safePath = sanitizePostsPath(rawPath);
+  const rawPath = getSingleSearchParam(params.path);
+  const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['posts/'] });
 
-  if (safePath) {
+  if (safePath && legacyPublicFileExists(safePath)) {
     return <RouteEmbedFrame src={`/${safePath}`} title="Posts Detail" loading="eager" />;
   }
 
