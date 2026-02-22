@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type RouteEmbedFrameProps = {
   src: string;
@@ -50,6 +50,12 @@ function RouteEmbedFrameInner({
   const [failed, setFailed] = useState(false);
   const [failureReason, setFailureReason] = useState<'timeout' | 'load-error' | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const setIframeRef = useCallback((node: HTMLIFrameElement | null) => {
+    if (iframeRef.current && iframeRef.current !== node) {
+      disconnectLegacyShellObserver(iframeRef.current);
+    }
+    iframeRef.current = node;
+  }, []);
   const loadStartedAtRef = useRef<number>(getNowMs());
   const railLabel = formatEmbedRailLabel(src);
   const railStateLabel = failed ? 'ERROR' : ready ? 'READY' : 'LOADING';
@@ -90,6 +96,7 @@ function RouteEmbedFrameInner({
   };
 
   const handleFrameError = () => {
+    disconnectLegacyShellObserver(iframeRef.current);
     setReady(false);
     setFailureReason('load-error');
     setFailed(true);
@@ -103,6 +110,7 @@ function RouteEmbedFrameInner({
   };
 
   const handleRetry = () => {
+    disconnectLegacyShellObserver(iframeRef.current);
     setReady(false);
     setFailed(false);
     setFailureReason(null);
@@ -164,7 +172,7 @@ function RouteEmbedFrameInner({
         ) : null}
 
         <iframe
-          ref={iframeRef}
+          ref={setIframeRef}
           src={src}
           title={title}
           loading={loading}
@@ -229,6 +237,74 @@ function emitEmbedTelemetry(detail: Omit<EmbedTelemetryDetail, 'at'>): void {
   }
 }
 
+const EMBED_SHELL_SELECTOR = [
+  '#mainNav',
+  'nav#mainNav',
+  'body > nav',
+  'body > header nav',
+  '.sticky-header',
+  'header.sticky-header',
+  '.top-nav',
+  '.global-nav',
+  '.nav-wrapper',
+  '.navbar',
+  'footer',
+  '[role="contentinfo"]',
+  '#mainFooter',
+  '#footer',
+  '.site-footer',
+  '.footer',
+  '[aria-label*="footer" i]',
+  '[id*="footer" i]',
+  '[class*="footer" i]',
+].join(', ');
+
+type EmbedShellObserverState = {
+  doc: Document;
+  observer: MutationObserver;
+};
+
+const embedShellObserverMap = new WeakMap<HTMLIFrameElement, EmbedShellObserverState>();
+
+function disconnectLegacyShellObserver(frame: HTMLIFrameElement | null): void {
+  if (!frame) return;
+  const state = embedShellObserverMap.get(frame);
+  if (!state) return;
+  state.observer.disconnect();
+  embedShellObserverMap.delete(frame);
+}
+
+function hideLegacyShellNodes(doc: Document): void {
+  const shellNodes = doc.querySelectorAll(EMBED_SHELL_SELECTOR);
+  shellNodes.forEach((node) => {
+    if (!(node instanceof HTMLElement)) return;
+    node.setAttribute('data-next-embed-hidden', '1');
+    node.style.display = 'none';
+  });
+}
+
+function ensureLegacyShellObserver(frame: HTMLIFrameElement, doc: Document): void {
+  const currentState = embedShellObserverMap.get(frame);
+  if (currentState && currentState.doc === doc) {
+    return;
+  }
+
+  currentState?.observer.disconnect();
+
+  const observer = new MutationObserver(() => {
+    hideLegacyShellNodes(doc);
+  });
+
+  observer.observe(doc.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'id', 'style'],
+  });
+
+  embedShellObserverMap.set(frame, { doc, observer });
+}
+
 function maskLegacyShell(frame: HTMLIFrameElement | null): void {
   if (!frame) return;
 
@@ -259,23 +335,22 @@ function maskLegacyShell(frame: HTMLIFrameElement | null): void {
         html[data-next-embed-shell="1"] .nav-wrapper,
         html[data-next-embed-shell="1"] .navbar,
         html[data-next-embed-shell="1"] footer,
+        html[data-next-embed-shell="1"] [role="contentinfo"],
         html[data-next-embed-shell="1"] #mainFooter,
+        html[data-next-embed-shell="1"] #footer,
         html[data-next-embed-shell="1"] .site-footer,
-        html[data-next-embed-shell="1"] .footer {
+        html[data-next-embed-shell="1"] .footer,
+        html[data-next-embed-shell="1"] [aria-label*="footer" i],
+        html[data-next-embed-shell="1"] [id*="footer" i],
+        html[data-next-embed-shell="1"] [class*="footer" i] {
           display: none !important;
         }
       `;
       doc.head?.appendChild(style);
     }
 
-    const shellNodes = doc.querySelectorAll(
-      '#mainNav, body > nav, body > header nav, .sticky-header, header.sticky-header, .top-nav, .global-nav, .nav-wrapper, .navbar, footer, #mainFooter, .site-footer, .footer',
-    );
-    shellNodes.forEach((node) => {
-      if (!(node instanceof HTMLElement)) return;
-      node.setAttribute('data-next-embed-hidden', '1');
-      node.style.display = 'none';
-    });
+    hideLegacyShellNodes(doc);
+    ensureLegacyShellObserver(frame, doc);
   } catch {
     // iframe 문서 접근 불가(cross-origin 등) 시 조용히 건너뜀
   }

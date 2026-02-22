@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -137,6 +137,7 @@ export default function AppEnhancements() {
   const dockEnabled = isDockRoute(pathname);
   const lastScrollYRef = useRef(0);
   const dockNavTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dockLockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dockNavLockUntilRef = useRef(0);
   const [isOnline, setIsOnline] = useState(() => {
     if (typeof window === 'undefined') return true;
@@ -161,6 +162,7 @@ export default function AppEnhancements() {
   });
   const [dockCollapsed, setDockCollapsed] = useState(false);
   const [isDockNavigating, setIsDockNavigating] = useState(false);
+  const [isDockLockPinned, setIsDockLockPinned] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showIOSHint, setShowIOSHint] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -168,6 +170,18 @@ export default function AppEnhancements() {
     if (getIsStandaloneMode()) return false;
     return getIsIOS();
   });
+
+  const armDockLock = useCallback((durationMs: number) => {
+    dockNavLockUntilRef.current = Date.now() + durationMs;
+    setIsDockLockPinned(true);
+    if (dockLockTimeoutRef.current) {
+      clearTimeout(dockLockTimeoutRef.current);
+    }
+    dockLockTimeoutRef.current = setTimeout(() => {
+      setIsDockLockPinned(false);
+      dockLockTimeoutRef.current = null;
+    }, durationMs + 40);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -246,8 +260,16 @@ export default function AppEnhancements() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     lastScrollYRef.current = window.scrollY;
-    dockNavLockUntilRef.current = Date.now() + 360;
+    dockNavLockUntilRef.current = Date.now() + 1400;
+    if (dockLockTimeoutRef.current) {
+      clearTimeout(dockLockTimeoutRef.current);
+    }
+    dockLockTimeoutRef.current = setTimeout(() => {
+      setIsDockLockPinned(false);
+      dockLockTimeoutRef.current = null;
+    }, 1440);
     const frameId = window.requestAnimationFrame(() => {
+      setIsDockLockPinned(true);
       setDockCollapsed(false);
       setIsDockNavigating(false);
       setIsInputFocused(false);
@@ -261,6 +283,9 @@ export default function AppEnhancements() {
     return () => {
       if (dockNavTimeoutRef.current) {
         clearTimeout(dockNavTimeoutRef.current);
+      }
+      if (dockLockTimeoutRef.current) {
+        clearTimeout(dockLockTimeoutRef.current);
       }
     };
   }, []);
@@ -396,7 +421,7 @@ export default function AppEnhancements() {
   const handleDockNavigation = () => {
     setDockCollapsed(false);
     setIsDockNavigating(true);
-    dockNavLockUntilRef.current = Date.now() + 900;
+    armDockLock(2200);
     if (dockNavTimeoutRef.current) {
       clearTimeout(dockNavTimeoutRef.current);
     }
@@ -407,11 +432,16 @@ export default function AppEnhancements() {
   };
 
   const handleDockIntentPrefetch = (href: string) => {
+    armDockLock(900);
     if (isDataSaver) return;
     router.prefetch(href);
   };
 
-  const dockHidden = !dockEnabled || isKeyboardOpen || isInputFocused || (dockCollapsed && !isDockNavigating);
+  const dockHidden =
+    !dockEnabled ||
+    isKeyboardOpen ||
+    isInputFocused ||
+    (dockCollapsed && !isDockNavigating && !isDockLockPinned);
   const showActionStack =
     !isKeyboardOpen &&
     !isInputFocused &&
