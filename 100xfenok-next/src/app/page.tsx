@@ -290,76 +290,112 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-              <div className="bento-card p-4">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-xs font-bold text-slate-600 tracking-widest orbitron">SECTOR SNAPSHOT</h3>
+            <div className="overview-widget-grid mb-4">
+              <article className="overview-widget-card overview-widget-card--sector">
+                <header className="overview-widget-head">
+                  <div>
+                    <p className="overview-widget-kicker orbitron">SECTOR SNAPSHOT</p>
+                    <h3 className="overview-widget-subtitle">Breadth Expansion</h3>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setActiveTab('sectors')}
-                    className="text-xs text-brand-navy font-bold min-h-[44px] flex items-center hover:text-brand-interactive transition-colors"
+                    className="overview-widget-action"
+                    aria-label="섹터 히트맵 보기"
                   >
-                    View All →
+                    Heatmap
                   </button>
-                </div>
-                <div className="sector-snapshot">
-                  <div className="flex gap-2 items-center">
-                    <span className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span className="font-bold text-emerald-800 text-sm">7 Up</span>
-                    <span className="w-2 h-2 bg-red-500 rounded-full ml-2" />
-                    <span className="font-bold text-red-700 text-sm">4 Down</span>
+                </header>
+                <div className="overview-breadth">
+                  <div className="overview-breadth-ledger">
+                    <span className="overview-dot is-up" aria-hidden="true" />
+                    <span className="overview-breadth-value">7 Up</span>
+                    <span className="overview-dot is-down" aria-hidden="true" />
+                    <span className="overview-breadth-value is-down">4 Down</span>
                   </div>
-                  <div className="flex gap-1 flex-wrap mt-2">
-                    <span className="sector-chip bg-green-100 text-green-800">XLK +2.3%</span>
-                    <span className="sector-chip bg-green-100 text-green-800">XLF +1.5%</span>
-                    <span className="sector-chip bg-green-100 text-green-800">XLC +1.1%</span>
+                  <div className="overview-chip-row">
+                    <span className="overview-chip is-up">XLK +2.3%</span>
+                    <span className="overview-chip is-up">XLF +1.5%</span>
+                    <span className="overview-chip is-up">XLC +1.1%</span>
                   </div>
                 </div>
-              </div>
+              </article>
 
-              <div className="bento-card p-4">
-                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-3 orbitron">LIQUIDITY FLOW</h3>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl font-bold text-brand-navy orbitron">+$87B</span>
-                  <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-bold">WoW</span>
+              <article className="overview-widget-card overview-widget-card--liquidity">
+                <header className="overview-widget-head">
+                  <div>
+                    <p className="overview-widget-kicker orbitron">LIQUIDITY FLOW</p>
+                    <h3 className="overview-widget-subtitle">Funding Pulse</h3>
+                  </div>
+                  <span className="overview-status-pill is-positive">WoW</span>
+                </header>
+                <div className="overview-metric-stack">
+                  <p className="overview-metric-main orbitron">+$87B</p>
+                  <p className="overview-metric-sub">순유동성 4주 최고치</p>
                 </div>
-                <div className="h-10 bg-gradient-to-r from-green-100 to-green-50 rounded flex items-end px-1 gap-0.5">
-                  <div className="w-3 bg-green-400 rounded-t h-[60%]" />
-                  <div className="w-3 bg-green-400 rounded-t h-[75%]" />
-                  <div className="w-3 bg-green-500 rounded-t h-[90%]" />
-                  <div className="w-3 bg-green-400 rounded-t h-[70%]" />
-                  <div className="w-3 bg-green-500 rounded-t h-[85%]" />
-                  <div className="w-3 bg-green-600 rounded-t h-full" />
+                <div className="overview-mini-bars" aria-hidden="true">
+                  <span style={{ height: '60%' }} />
+                  <span style={{ height: '75%' }} />
+                  <span style={{ height: '90%' }} />
+                  <span style={{ height: '70%' }} />
+                  <span style={{ height: '85%' }} />
+                  <span style={{ height: '100%' }} />
                 </div>
-              </div>
+              </article>
 
-              <div className="bento-card p-4">
-                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-3 orbitron">SENTIMENT</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center"><span className="text-xs text-slate-600">VIX</span><span className="font-bold text-emerald-800 text-sm">14.2 <span className="text-xs text-slate-600">Low</span></span></div>
-                  <div className="flex justify-between items-center"><span className="text-xs text-slate-600">Put/Call</span><span className="font-bold text-slate-700 text-sm">0.78</span></div>
-                  <div className="flex justify-between items-center"><span className="text-xs text-slate-600">Crypto F&G</span><span className="font-bold text-brand-gold text-sm">78 <span className="text-xs">Greed</span></span></div>
+              <article className="overview-widget-card overview-widget-card--sentiment">
+                <header className="overview-widget-head">
+                  <div>
+                    <p className="overview-widget-kicker orbitron">SENTIMENT</p>
+                    <h3 className="overview-widget-subtitle">Risk Appetite</h3>
+                  </div>
+                  <span className="overview-status-pill">Live</span>
+                </header>
+                <div className="overview-stat-list">
+                  <p className="overview-stat-row">
+                    <span>VIX</span>
+                    <strong className="text-emerald-800">14.2 <em>Low</em></strong>
+                  </p>
+                  <p className="overview-stat-row">
+                    <span>Put/Call</span>
+                    <strong className="text-slate-700">0.78</strong>
+                  </p>
+                  <p className="overview-stat-row">
+                    <span>Crypto F&G</span>
+                    <strong className="text-brand-gold">78 <em>Greed</em></strong>
+                  </p>
                 </div>
-              </div>
+              </article>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bento-card p-4">
-                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-3 orbitron">BANKING HEALTH</h3>
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-lg font-bold text-emerald-800">Stable</span>
+            <div className="overview-widget-grid overview-widget-grid--secondary">
+              <article className="overview-widget-card overview-widget-card--banking">
+                <header className="overview-widget-head">
+                  <div>
+                    <p className="overview-widget-kicker orbitron">BANKING HEALTH</p>
+                    <h3 className="overview-widget-subtitle">Funding Stress Guard</h3>
+                  </div>
+                </header>
+                <div className="overview-health-row">
+                  <span className="overview-pulse-dot" aria-hidden="true" />
+                  <strong>Stable</strong>
                 </div>
-                <p className="text-xs text-slate-600 mt-1">BTFP $12.3B ↓ / DW $4.1B</p>
-              </div>
-              <div className="bento-card p-4">
-                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-3 orbitron">STRESS INDEX</h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-emerald-800 orbitron">0.12</span>
-                  <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-bold">Low Risk</span>
+                <p className="overview-metric-sub">BTFP $12.3B ↓ / DW $4.1B</p>
+              </article>
+
+              <article className="overview-widget-card overview-widget-card--stress">
+                <header className="overview-widget-head">
+                  <div>
+                    <p className="overview-widget-kicker orbitron">STRESS INDEX</p>
+                    <h3 className="overview-widget-subtitle">Spread Monitor</h3>
+                  </div>
+                  <span className="overview-status-pill is-positive">Low Risk</span>
+                </header>
+                <div className="overview-health-row">
+                  <strong className="overview-metric-main orbitron">0.12</strong>
                 </div>
-                <p className="text-xs text-slate-600 mt-1">SOFR-IORB Spread</p>
-              </div>
+                <p className="overview-metric-sub">SOFR-IORB Spread</p>
+              </article>
             </div>
           </>
         )}
