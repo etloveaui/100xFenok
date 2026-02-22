@@ -141,6 +141,7 @@ const TAB_PANEL_IDS: Record<TabId, string> = {
 };
 const SWIPE_HINT_DISMISS_KEY = 'fenok_swipe_hint_dismissed_v1';
 const CLIENT_FETCH_TIMEOUT_MS = 5500;
+const FOCUS_REFRESH_STALE_MS = 3 * 60 * 1000;
 
 const SECTOR_DEFINITIONS: SectorDefinition[] = [
   { key: 'information_technology', etf: 'XLK', name: 'Tech', fallback: 0.0234 },
@@ -572,6 +573,7 @@ export default function Home() {
   const touchStartYRef = useRef<number | null>(null);
   const loadInFlightRef = useRef(false);
   const isMountedRef = useRef(true);
+  const lastSyncedEpochRef = useRef<number | null>(null);
 
   const loadOverviewData = useCallback(async () => {
     if (loadInFlightRef.current) {
@@ -663,7 +665,9 @@ export default function Home() {
         live: liveSourceCount,
         total: sourcePayloads.length,
       });
-      setLastSyncedAt(new Date().toISOString());
+      const syncedAt = Date.now();
+      lastSyncedEpochRef.current = syncedAt;
+      setLastSyncedAt(new Date(syncedAt).toISOString());
     } finally {
       loadInFlightRef.current = false;
       if (isMountedRef.current) {
@@ -682,6 +686,27 @@ export default function Home() {
     return () => {
       isMountedRef.current = false;
       window.clearInterval(refreshId);
+    };
+  }, [loadOverviewData]);
+
+  useEffect(() => {
+    const maybeRefreshIfStale = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
+
+      const lastSynced = lastSyncedEpochRef.current;
+      if (lastSynced === null || Date.now() - lastSynced >= FOCUS_REFRESH_STALE_MS) {
+        void loadOverviewData();
+      }
+    };
+
+    window.addEventListener('focus', maybeRefreshIfStale);
+    document.addEventListener('visibilitychange', maybeRefreshIfStale);
+
+    return () => {
+      window.removeEventListener('focus', maybeRefreshIfStale);
+      document.removeEventListener('visibilitychange', maybeRefreshIfStale);
     };
   }, [loadOverviewData]);
 
