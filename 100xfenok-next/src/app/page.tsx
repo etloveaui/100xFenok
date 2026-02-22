@@ -123,6 +123,8 @@ type LiquidityWidgetPayload = {
   source?: string;
 };
 
+type WidgetBridgeFreshness = 'IDLE' | 'HOT' | 'WARM' | 'STALE';
+
 type BankingTone = 'stable' | 'watch' | 'stress';
 
 type StressTone = 'low' | 'medium' | 'high';
@@ -369,6 +371,11 @@ function isTypingTarget(target: EventTarget | null): boolean {
   );
 }
 
+function normalizeBridgeFreshness(value: unknown): WidgetBridgeFreshness {
+  if (value === 'HOT' || value === 'WARM' || value === 'STALE') return value;
+  return 'IDLE';
+}
+
 function isTabId(value: string): value is TabId {
   return TAB_SEQUENCE.includes(value as TabId);
 }
@@ -613,6 +620,17 @@ export default function Home() {
   const [liveSourceStats, setLiveSourceStats] = useState<{ live: number; total: number }>({ live: 0, total: 0 });
   const [liquidityWidgetPayload, setLiquidityWidgetPayload] = useState<LiquidityWidgetPayload | null>(null);
   const [sentimentWidgetPayload, setSentimentWidgetPayload] = useState<SentimentWidgetPayload | null>(null);
+  const [widgetBridgeRuntime, setWidgetBridgeRuntime] = useState<{
+    freshness: WidgetBridgeFreshness;
+    dataState: string;
+    widgetId: string | null;
+    at: string | null;
+  }>({
+    freshness: 'IDLE',
+    dataState: 'LOCAL',
+    widgetId: null,
+    at: null,
+  });
   const [showSwipeHint, setShowSwipeHint] = useState(() => {
     if (typeof window === 'undefined') return true;
     try {
@@ -797,6 +815,30 @@ export default function Home() {
     }, 60 * 1000);
     return () => {
       window.clearInterval(tickId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleWidgetBridge = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        freshness?: string;
+        dataState?: string;
+        widgetId?: string;
+        at?: string;
+      }>;
+      const detail = customEvent.detail;
+      if (!detail) return;
+      setWidgetBridgeRuntime({
+        freshness: normalizeBridgeFreshness(detail.freshness),
+        dataState: typeof detail.dataState === 'string' ? detail.dataState : 'LOCAL',
+        widgetId: typeof detail.widgetId === 'string' ? detail.widgetId : null,
+        at: typeof detail.at === 'string' ? detail.at : null,
+      });
+    };
+
+    window.addEventListener('fenok:widget-bridge', handleWidgetBridge as EventListener);
+    return () => {
+      window.removeEventListener('fenok:widget-bridge', handleWidgetBridge as EventListener);
     };
   }, []);
 
@@ -1184,8 +1226,18 @@ export default function Home() {
   const sentimentIndicatorCount = Object.keys(sentimentWidgetPayload?.indicators ?? {}).length;
   const liquidityIndicatorCount = liquidityWidgetPayload ? Object.keys(liquidityWidgetPayload).length : 0;
   const bridgeSignalCount = sentimentIndicatorCount + liquidityIndicatorCount;
-  const bridgeHealthClass = bridgeSignalCount >= 8 ? 'is-live' : bridgeSignalCount >= 4 ? 'is-mixed' : 'is-fallback';
-  const bridgeHealthLabel = bridgeSignalCount >= 8 ? 'Bridge Armed' : bridgeSignalCount >= 4 ? 'Bridge Partial' : 'Bridge Idle';
+  const bridgeSignalClass = bridgeSignalCount >= 8 ? 'is-live' : bridgeSignalCount >= 4 ? 'is-mixed' : 'is-fallback';
+  const bridgeSignalLabel = bridgeSignalCount >= 8 ? 'Bridge Armed' : bridgeSignalCount >= 4 ? 'Bridge Partial' : 'Bridge Idle';
+  const bridgeHealthClass = widgetBridgeRuntime.freshness === 'HOT'
+    ? 'is-live'
+    : widgetBridgeRuntime.freshness === 'WARM'
+      ? 'is-mixed'
+      : widgetBridgeRuntime.freshness === 'STALE'
+        ? 'is-fallback'
+        : bridgeSignalClass;
+  const bridgeHealthLabel = widgetBridgeRuntime.freshness === 'IDLE'
+    ? bridgeSignalLabel
+    : `Bridge ${widgetBridgeRuntime.freshness}`;
   const liquidityRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html';
   const sentimentRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html';
   const bankingRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html';

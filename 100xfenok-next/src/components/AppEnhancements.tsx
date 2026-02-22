@@ -292,6 +292,18 @@ export default function AppEnhancements() {
       pulseDock(1700, 560);
     };
 
+    const handleEmbedFrame = (event: Event) => {
+      const customEvent = event as CustomEvent<{ event?: string }>;
+      const embedEvent = customEvent.detail?.event;
+      if (embedEvent === 'retry') {
+        pulseDock(1200, 360);
+        return;
+      }
+      if (embedEvent === 'load-error') {
+        pulseDock(900, 260);
+      }
+    };
+
     const handleAdminModalState = (event: Event) => {
       const customEvent = event as CustomEvent<{ open?: boolean }>;
       const open = Boolean(customEvent.detail?.open);
@@ -311,6 +323,7 @@ export default function AppEnhancements() {
     window.addEventListener('fenok:refresh-intent', handleRefreshIntent as EventListener);
     window.addEventListener('fenok:period-intent', handlePeriodIntent as EventListener);
     window.addEventListener('fenok:widget-bridge', handleWidgetBridge as EventListener);
+    window.addEventListener('fenok:embed-frame', handleEmbedFrame as EventListener);
     window.addEventListener('fenok:admin-modal-state', handleAdminModalState as EventListener);
 
     return () => {
@@ -318,6 +331,7 @@ export default function AppEnhancements() {
       window.removeEventListener('fenok:refresh-intent', handleRefreshIntent as EventListener);
       window.removeEventListener('fenok:period-intent', handlePeriodIntent as EventListener);
       window.removeEventListener('fenok:widget-bridge', handleWidgetBridge as EventListener);
+      window.removeEventListener('fenok:embed-frame', handleEmbedFrame as EventListener);
       window.removeEventListener('fenok:admin-modal-state', handleAdminModalState as EventListener);
     };
   }, [armDockLock, pulseDock]);
