@@ -158,6 +158,24 @@
       font-weight: 800;
     }
 
+    .summary-pill.summary-pill-live {
+      border-color: #9be7b0;
+      background: #f3fff6;
+      color: #166534;
+    }
+
+    .summary-pill.summary-pill-stale {
+      border-color: #f7dd8b;
+      background: #fff9e8;
+      color: #92400e;
+    }
+
+    .summary-pill.summary-pill-empty {
+      border-color: #d4dce8;
+      background: #f8fafc;
+      color: #64748b;
+    }
+
     .category-tabs {
       display: flex;
       justify-content: center;
@@ -482,9 +500,9 @@
     <h1 class="page-title"><span class="title-icon">R</span> 100x Market Radar</h1>
     <p class="page-subtitle">거시경제 리스크 신호를 위젯 단위로 추적하고, 상세 페이지로 즉시 전환하는 실시간 모니터링 허브</p>
     <div class="radar-summary" aria-label="Radar Summary">
-      <span class="summary-pill"><strong>4</strong> Live Widgets</span>
-      <span class="summary-pill"><strong>1</strong> Research Slot</span>
-      <span class="summary-pill">Realtime Risk Desk</span>
+      <span class="summary-pill summary-pill-live"><strong id="summary-live-count">0</strong> Live Widgets</span>
+      <span class="summary-pill summary-pill-stale"><strong id="summary-stale-count">0</strong> Stale Signals</span>
+      <span class="summary-pill summary-pill-empty"><strong id="summary-empty-count">0</strong> Empty Slots</span>
     </div>
 
     <!-- 카테고리 탭 -->
@@ -646,6 +664,10 @@
     }
   }
 
+  window.addEventListener('popstate', () => {
+    initializeCategoryFilter();
+  });
+
   // ===== 디테일 페이지 열기 =====
   function openDetail(path) {
     // iframe 내부라면 부모 창에서 페이지 로드
@@ -756,20 +778,51 @@
       return { label: `Stale · ${ageLabel}`, tone: 'is-stale' };
     }
 
-    function updateWidgetStatusBadge(widgetId) {
+    function updateWidgetStatusBadge(widgetId, status = resolveWidgetCacheStatus(widgetId)) {
       const statusElement = document.getElementById(`widget-status-${widgetId}`);
       if (!(statusElement instanceof HTMLElement)) {
         return;
       }
 
-      const status = resolveWidgetCacheStatus(widgetId);
       statusElement.textContent = status.label;
       statusElement.classList.remove(...STATUS_CLASS_LIST);
       statusElement.classList.add(status.tone);
     }
 
     function updateWidgetStatusBadges() {
-      WIDGET_IDS.forEach(widgetId => updateWidgetStatusBadge(widgetId));
+      let liveCount = 0;
+      let staleCount = 0;
+      let emptyCount = 0;
+
+      WIDGET_IDS.forEach(widgetId => {
+        const status = resolveWidgetCacheStatus(widgetId);
+        updateWidgetStatusBadge(widgetId, status);
+
+        if (status.tone === 'is-live') {
+          liveCount += 1;
+          return;
+        }
+        if (status.tone === 'is-stale') {
+          staleCount += 1;
+          return;
+        }
+        emptyCount += 1;
+      });
+
+      const liveCountElement = document.getElementById('summary-live-count');
+      if (liveCountElement) {
+        liveCountElement.textContent = String(liveCount);
+      }
+
+      const staleCountElement = document.getElementById('summary-stale-count');
+      if (staleCountElement) {
+        staleCountElement.textContent = String(staleCount);
+      }
+
+      const emptyCountElement = document.getElementById('summary-empty-count');
+      if (emptyCountElement) {
+        emptyCountElement.textContent = String(emptyCount);
+      }
     }
 
     window.updateWidgetStatusBadges = updateWidgetStatusBadges;
