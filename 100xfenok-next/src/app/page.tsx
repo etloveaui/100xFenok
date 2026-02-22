@@ -35,6 +35,17 @@ type FredSeriesPayload = {
   series?: Record<string, NumberPoint[]>;
 };
 
+type TickerQuotePayload = {
+  symbol?: string;
+  price?: number;
+  changePercent?: number;
+  marketState?: string;
+  fetchedAt?: string;
+  source?: string;
+};
+
+type SectorTickerMap = Record<string, TickerQuotePayload | null>;
+
 type SectorDefinition = {
   key: string;
   etf: string;
@@ -47,6 +58,11 @@ type SectorSnapshot = {
   etf: string;
   name: string;
   oneMonth: number;
+  dayChange: number | null;
+  displayChange: number;
+  displayHorizon: '1D' | '1M';
+  quotePrice: number | null;
+  marketState: string | null;
 };
 
 type LiquidityBar = {
@@ -64,6 +80,9 @@ type DashboardSnapshot = {
   sectorRows: SectorSnapshot[];
   sectorUp: number;
   sectorDown: number;
+  sectorMode: 'LIVE_1D' | 'BASE_1M';
+  sectorLiveCount: number;
+  tickerFetchedAt: string | null;
   liquidityFlow: number;
   liquidityFlowLabel: string;
   liquidityBars: LiquidityBar[];
@@ -110,9 +129,17 @@ const DEFAULT_DASHBOARD: DashboardSnapshot = {
     etf: sector.etf,
     name: sector.name,
     oneMonth: sector.fallback,
+    dayChange: null,
+    displayChange: sector.fallback,
+    displayHorizon: '1M',
+    quotePrice: null,
+    marketState: null,
   })),
   sectorUp: 7,
   sectorDown: 4,
+  sectorMode: 'BASE_1M',
+  sectorLiveCount: 0,
+  tickerFetchedAt: null,
   liquidityFlow: 87,
   liquidityFlowLabel: 'Bank credit flow acceleration',
   liquidityBars: [60, 75, 90, 70, 85, 100].map((height) => ({ delta: 1, height })),
@@ -168,6 +195,17 @@ function formatPercent(value: number, digits = 1): string {
   return `${value.toFixed(digits)}%`;
 }
 
+function formatTimeLabel(value: string | null): string {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
 function getFearGreedLabel(score: number): string {
   if (score >= 75) return 'EXTREME GREED';
   if (score >= 55) return 'GREED';
@@ -202,15 +240,22 @@ function getStressTone(score: number): StressTone {
   return 'high';
 }
 
-function getHeatmapToneClass(oneMonth: number): string {
-  if (oneMonth >= 0.025) return 'heatmap-positive-strong';
-  if (oneMonth >= 0.012) return 'heatmap-positive';
-  if (oneMonth >= 0.006) return 'heatmap-positive-soft';
-  if (oneMonth > 0) return 'heatmap-positive-faint';
-  if (oneMonth <= -0.02) return 'heatmap-negative-strong';
-  if (oneMonth <= -0.012) return 'heatmap-negative';
-  if (oneMonth <= -0.006) return 'heatmap-negative-soft';
-  if (oneMonth < 0) return 'heatmap-negative-faint';
+function getHeatmapToneClass(change: number, horizon: '1D' | '1M'): string {
+  const strongPositive = horizon === '1D' ? 0.012 : 0.025;
+  const positive = horizon === '1D' ? 0.007 : 0.012;
+  const softPositive = horizon === '1D' ? 0.003 : 0.006;
+  const strongNegative = horizon === '1D' ? -0.012 : -0.02;
+  const negative = horizon === '1D' ? -0.007 : -0.012;
+  const softNegative = horizon === '1D' ? -0.003 : -0.006;
+
+  if (change >= strongPositive) return 'heatmap-positive-strong';
+  if (change >= positive) return 'heatmap-positive';
+  if (change >= softPositive) return 'heatmap-positive-soft';
+  if (change > 0) return 'heatmap-positive-faint';
+  if (change <= strongNegative) return 'heatmap-negative-strong';
+  if (change <= negative) return 'heatmap-negative';
+  if (change <= softNegative) return 'heatmap-negative-soft';
+  if (change < 0) return 'heatmap-negative-faint';
   return 'heatmap-neutral';
 }
 
@@ -233,21 +278,48 @@ function buildDashboardSnapshot(payload: {
   weeklyBanking: FredSeriesPayload | null;
   quarterlyBanking: FredSeriesPayload | null;
   dailyBanking: FredSeriesPayload | null;
+  sectorTicker: SectorTickerMap;
 }): DashboardSnapshot {
   const fallback = DEFAULT_DASHBOARD;
 
   const sectorRows = SECTOR_DEFINITIONS.map((sector) => {
     const momentum = payload.summaries?.momentum?.[sector.key]?.['1m'];
+    const oneMonth = safeNumber(momentum, sector.fallback);
+    const ticker = payload.sectorTicker[sector.etf];
+    const dayChange = typeof ticker?.changePercent === 'number' && Number.isFinite(ticker.changePercent)
+      ? ticker.changePercent / 100
+      : null;
+    const displayHorizon: SectorSnapshot['displayHorizon'] = dayChange === null ? '1M' : '1D';
+    const displayChange = dayChange ?? oneMonth;
+    const quotePrice = typeof ticker?.price === 'number' && Number.isFinite(ticker.price)
+      ? ticker.price
+      : null;
+    const marketState = typeof ticker?.marketState === 'string' && ticker.marketState.trim().length > 0
+      ? ticker.marketState.toUpperCase()
+      : null;
+
     return {
       key: sector.key,
       etf: sector.etf,
       name: sector.name,
-      oneMonth: safeNumber(momentum, sector.fallback),
+      oneMonth,
+      dayChange,
+      displayChange,
+      displayHorizon,
+      quotePrice,
+      marketState,
     };
   });
 
-  const sectorUp = sectorRows.filter((sector) => sector.oneMonth > 0).length;
-  const sectorDown = sectorRows.filter((sector) => sector.oneMonth < 0).length;
+  const sectorUp = sectorRows.filter((sector) => sector.displayChange > 0).length;
+  const sectorDown = sectorRows.filter((sector) => sector.displayChange < 0).length;
+  const sectorLiveCount = sectorRows.filter((sector) => sector.displayHorizon === '1D').length;
+  const sectorMode: DashboardSnapshot['sectorMode'] = sectorLiveCount > 0 ? 'LIVE_1D' : 'BASE_1M';
+  const tickerFetchedAtCandidates = Object.values(payload.sectorTicker)
+    .map((quote) => quote?.fetchedAt)
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .sort();
+  const tickerFetchedAt = tickerFetchedAtCandidates.at(-1) ?? null;
 
   const fearGreedLatest = payload.fearGreed?.[payload.fearGreed.length - 1];
   const fearGreedScore = safeNumber(fearGreedLatest?.score, fallback.fearGreedScore);
@@ -337,6 +409,9 @@ function buildDashboardSnapshot(payload: {
     sectorRows,
     sectorUp,
     sectorDown,
+    sectorMode,
+    sectorLiveCount,
+    tickerFetchedAt,
     liquidityFlow,
     liquidityFlowLabel,
     liquidityBars,
@@ -390,8 +465,24 @@ export default function Home() {
         fetchJson<FredSeriesPayload>('/data/fred-banking-quarterly.json'),
         fetchJson<FredSeriesPayload>('/data/fred-banking-daily.json'),
       ]);
+      const tickerSettled = await Promise.allSettled(
+        SECTOR_DEFINITIONS.map(async (sector) => ({
+          etf: sector.etf,
+          quote: await fetchJson<TickerQuotePayload>(`/api/ticker/${sector.etf}`),
+        })),
+      );
 
       if (cancelled) return;
+
+      const sectorTicker: SectorTickerMap = {};
+      for (const sector of SECTOR_DEFINITIONS) {
+        sectorTicker[sector.etf] = null;
+      }
+      tickerSettled.forEach((result, index) => {
+        const etf = SECTOR_DEFINITIONS[index]?.etf;
+        if (!etf || result.status !== 'fulfilled') return;
+        sectorTicker[etf] = result.value.quote;
+      });
 
       const nextSnapshot = buildDashboardSnapshot({
         fearGreed,
@@ -402,6 +493,7 @@ export default function Home() {
         weeklyBanking,
         quarterlyBanking,
         dailyBanking,
+        sectorTicker,
       });
 
       setDashboard(nextSnapshot);
@@ -415,6 +507,7 @@ export default function Home() {
         weeklyBanking,
         quarterlyBanking,
         dailyBanking,
+        ...Object.values(sectorTicker),
       ].some((payload) => payload !== null);
       setIsDataConnected(hasAnyLiveSource);
     };
@@ -501,8 +594,16 @@ export default function Home() {
   };
 
   const sectorTopRows = [...dashboard.sectorRows]
-    .sort((left, right) => right.oneMonth - left.oneMonth)
+    .sort((left, right) => right.displayChange - left.displayChange)
     .slice(0, 3);
+  const techProxy = dashboard.sectorRows.find((row) => row.etf === 'XLK');
+  const commProxy = dashboard.sectorRows.find((row) => row.etf === 'XLC');
+  const sectorPanelModeLabel = dashboard.sectorMode === 'LIVE_1D'
+    ? `LIVE 1D · ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length} sectors`
+    : 'BASE 1M · Treemap by Market Cap';
+  const sectorPanelTimestamp = dashboard.sectorMode === 'LIVE_1D'
+    ? formatTimeLabel(dashboard.tickerFetchedAt)
+    : '--';
 
   const fearGreedOffset = Number((126 * (1 - clamp(dashboard.fearGreedScore, 0, 100) / 100)).toFixed(2));
 
@@ -720,12 +821,16 @@ export default function Home() {
                   <div className="index-item">
                     <span className="text-xs text-slate-600">SPY</span>
                     <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,16 10,14 20,12 30,10 40,11 50,6 60,4" /></svg>
-                    <span className="font-bold text-emerald-800 text-sm">{formatSignedPercentDecimal(dashboard.sectorRows.find((row) => row.etf === 'XLK')?.oneMonth ?? 0.0085)}</span>
+                    <span className={`font-bold text-sm ${(techProxy?.displayChange ?? 0) >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
+                      {formatSignedPercentDecimal(techProxy?.displayChange ?? 0.0085)}
+                    </span>
                   </div>
                   <div className="index-item">
                     <span className="text-xs text-slate-600">QQQ</span>
                     <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,18 10,16 20,12 30,10 40,8 50,6 60,3" /></svg>
-                    <span className="font-bold text-emerald-800 text-sm">{formatSignedPercentDecimal(dashboard.sectorRows.find((row) => row.etf === 'XLC')?.oneMonth ?? 0.0112)}</span>
+                    <span className={`font-bold text-sm ${(commProxy?.displayChange ?? 0) >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
+                      {formatSignedPercentDecimal(commProxy?.displayChange ?? 0.0112)}
+                    </span>
                   </div>
                   <div className="index-item">
                     <span className="text-xs text-slate-600">UST10Y</span>
@@ -766,8 +871,9 @@ export default function Home() {
                   </div>
                   <div className="overview-chip-row">
                     {sectorTopRows.map((sector) => (
-                      <span key={sector.key} className={`overview-chip ${sector.oneMonth >= 0 ? 'is-up' : 'is-down'}`}>
-                        {sector.etf} {formatSignedPercentDecimal(sector.oneMonth, 1)}
+                      <span key={sector.key} className={`overview-chip ${sector.displayChange >= 0 ? 'is-up' : 'is-down'}`}>
+                        {sector.etf} {formatSignedPercentDecimal(sector.displayChange, 1)}
+                        <em className="overview-chip-horizon">{sector.displayHorizon}</em>
                       </span>
                     ))}
                   </div>
@@ -863,7 +969,10 @@ export default function Home() {
                 <p className="heatmap-panel-kicker orbitron">SECTOR HEATMAP</p>
                 <h3 className="heatmap-panel-title">Market Cap Weighted Map</h3>
               </div>
-              <span className="heatmap-panel-meta">Treemap by Market Cap</span>
+              <span className={`heatmap-panel-meta ${dashboard.sectorMode === 'LIVE_1D' ? 'is-live' : 'is-fallback'}`}>
+                {sectorPanelModeLabel}
+                {dashboard.sectorMode === 'LIVE_1D' && sectorPanelTimestamp !== '--' ? ` · ${sectorPanelTimestamp}` : ''}
+              </span>
             </div>
             <div className="heatmap-legend" aria-label="섹터 히트맵 범례">
               <span className="heatmap-legend-chip is-risk-on">Risk-On</span>
@@ -874,10 +983,14 @@ export default function Home() {
               {dashboard.sectorRows.map((sector) => {
                 const pinClass = sector.etf === 'XLK' ? 'xlk' : sector.etf === 'XLF' ? 'xlf' : '';
                 return (
-                  <div key={sector.key} className={`heatmap-cell ${pinClass} ${getHeatmapToneClass(sector.oneMonth)}`}>
+                  <div key={sector.key} className={`heatmap-cell ${pinClass} ${getHeatmapToneClass(sector.displayChange, sector.displayHorizon)}`}>
                     <span className="font-bold text-lg">{sector.etf}</span>
                     <span className="text-xs">{sector.name}</span>
-                    <span className="font-bold text-xs">{formatSignedPercentDecimal(sector.oneMonth)}</span>
+                    <span className="font-bold text-xs">{formatSignedPercentDecimal(sector.displayChange)}</span>
+                    <span className="heatmap-cell-horizon">{sector.displayHorizon}</span>
+                    {sector.quotePrice !== null ? (
+                      <span className="heatmap-cell-price">${sector.quotePrice.toFixed(2)}</span>
+                    ) : null}
                   </div>
                 );
               })}
