@@ -971,6 +971,8 @@ export default function Home() {
     .slice(0, 3);
   const spyIndex = dashboard.quickIndices.find((item) => item.symbol === 'SPY') ?? DEFAULT_DASHBOARD.quickIndices[0];
   const qqqIndex = dashboard.quickIndices.find((item) => item.symbol === 'QQQ') ?? DEFAULT_DASHBOARD.quickIndices[1];
+  const spyMarketStateMeta = getMarketStateMeta(spyIndex.marketState);
+  const qqqMarketStateMeta = getMarketStateMeta(qqqIndex.marketState);
   const activeTabIndex = TAB_SEQUENCE.indexOf(activeTab);
   const prevTab = activeTabIndex > 0 ? TAB_SEQUENCE[activeTabIndex - 1] : null;
   const nextTab = activeTabIndex >= 0 && activeTabIndex < TAB_SEQUENCE.length - 1 ? TAB_SEQUENCE[activeTabIndex + 1] : null;
@@ -1278,6 +1280,11 @@ export default function Home() {
                       {formatSignedPercentDecimal(spyIndex.change)}
                     </span>
                     <span className="index-live-detail">{spyIndex.price !== null ? `$${spyIndex.price.toFixed(2)} · ` : ''}{spyIndex.displayHorizon}</span>
+                    {spyMarketStateMeta ? (
+                      <span className={`market-state-badge index-market-state ${spyMarketStateMeta.className}`}>
+                        {spyMarketStateMeta.label}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="index-item">
                     <span className="text-xs text-slate-600">QQQ</span>
@@ -1286,6 +1293,11 @@ export default function Home() {
                       {formatSignedPercentDecimal(qqqIndex.change)}
                     </span>
                     <span className="index-live-detail">{qqqIndex.price !== null ? `$${qqqIndex.price.toFixed(2)} · ` : ''}{qqqIndex.displayHorizon}</span>
+                    {qqqMarketStateMeta ? (
+                      <span className={`market-state-badge index-market-state ${qqqMarketStateMeta.className}`}>
+                        {qqqMarketStateMeta.label}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="index-item">
                     <span className="text-xs text-slate-600">UST10Y</span>
