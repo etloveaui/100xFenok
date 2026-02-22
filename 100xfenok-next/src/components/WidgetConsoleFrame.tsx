@@ -7,6 +7,7 @@ type WidgetConsoleFrameProps = {
   title: string;
   widgetId: string;
   payload?: unknown;
+  onSyncRequest?: () => void;
   loading?: 'eager' | 'lazy';
   timeoutMs?: number;
   hideEmbeddedShell?: boolean;
@@ -17,6 +18,7 @@ export default function WidgetConsoleFrame({
   title,
   widgetId,
   payload,
+  onSyncRequest,
   loading = 'lazy',
   timeoutMs = 10000,
   hideEmbeddedShell = true,
@@ -32,6 +34,7 @@ export default function WidgetConsoleFrame({
       title={title}
       widgetId={widgetId}
       payload={payload}
+      onSyncRequest={onSyncRequest}
       loading={loading}
       timeoutMs={timeoutMs}
       hideEmbeddedShell={hideEmbeddedShell}
@@ -49,6 +52,7 @@ function WidgetConsoleFrameInner({
   title,
   widgetId,
   payload,
+  onSyncRequest,
   loading,
   timeoutMs,
   hideEmbeddedShell = true,
@@ -59,6 +63,7 @@ function WidgetConsoleFrameInner({
   const [failureReason, setFailureReason] = useState<'timeout' | 'load-error' | null>(null);
   const [isPayloadLinked, setIsPayloadLinked] = useState(false);
   const [lastDispatchAt, setLastDispatchAt] = useState<string | null>(null);
+  const [bridgeTick, setBridgeTick] = useState(() => Date.now());
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const setIframeRef = useCallback((node: HTMLIFrameElement | null) => {
     if (iframeRef.current && iframeRef.current !== node) {
@@ -76,6 +81,14 @@ function WidgetConsoleFrameInner({
   const shellGuardLabel = hideEmbeddedShell ? 'SHELL ON' : 'SHELL OFF';
   const shellGuardClass = hideEmbeddedShell ? 'is-on' : 'is-off';
   const bridgeTimeLabel = lastDispatchAt ? formatTimeLabel(lastDispatchAt) : '--';
+  const bridgeFreshness = getBridgeFreshness({
+    hasPayload: Boolean(payload),
+    isPayloadLinked,
+    lastDispatchAt,
+    nowMs: bridgeTick,
+  });
+  const bridgeFreshLabel = payload ? `BRIDGE ${bridgeFreshness.label}` : 'BRIDGE LOCAL';
+  const bridgeFreshClass = payload ? bridgeFreshness.className : 'is-local';
   const compactPath = formatWidgetPath(src);
 
   const dispatchPayload = useCallback((trackDispatch = true) => {
@@ -99,6 +112,7 @@ function WidgetConsoleFrameInner({
       if (trackDispatch) {
         setIsPayloadLinked(true);
         setLastDispatchAt(new Date().toISOString());
+        setBridgeTick(Date.now());
       }
       return true;
     } catch {
@@ -164,6 +178,28 @@ function WidgetConsoleFrameInner({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!payload) return;
+    const tickId = window.setInterval(() => {
+      setBridgeTick(Date.now());
+    }, 60 * 1000);
+    return () => {
+      window.clearInterval(tickId);
+    };
+  }, [payload]);
+
+  useEffect(() => {
+    emitWidgetBridgeTelemetry({
+      event: 'state',
+      src,
+      title,
+      widgetId,
+      dataState: railBridgeLabel,
+      freshness: bridgeFreshness.label,
+      syncAgeMinutes: bridgeFreshness.ageMinutes,
+    });
+  }, [bridgeFreshness.ageMinutes, bridgeFreshness.label, railBridgeLabel, src, title, widgetId]);
 
   useEffect(() => {
     if (!ready) return;
@@ -257,6 +293,19 @@ function WidgetConsoleFrameInner({
     onRetry();
   };
 
+  const handleSyncRequest = () => {
+    emitWidgetBridgeTelemetry({
+      event: 'sync-request',
+      src,
+      title,
+      widgetId,
+      dataState: railBridgeLabel,
+      freshness: bridgeFreshness.label,
+      syncAgeMinutes: bridgeFreshness.ageMinutes,
+    });
+    onSyncRequest?.();
+  };
+
   return (
     <div className="widget-console-shell">
       <div className="widget-console-rail">
@@ -265,7 +314,13 @@ function WidgetConsoleFrameInner({
         <span className={`widget-console-bridge ${railBridgeClass}`} aria-live="polite">DATA {railBridgeLabel}</span>
         <span className={`widget-console-shell-guard ${shellGuardClass}`} aria-live="polite">{shellGuardLabel}</span>
         {payload ? <span className="widget-console-bridge-time">SYNC {bridgeTimeLabel}</span> : null}
+        <span className={`widget-console-fresh ${bridgeFreshClass}`} aria-live="polite">{bridgeFreshLabel}</span>
         <span className="widget-console-path" title={compactPath}>{compactPath}</span>
+        {onSyncRequest ? (
+          <button type="button" className="widget-console-rail-btn is-sync" onClick={handleSyncRequest}>
+            Sync
+          </button>
+        ) : null}
         <button type="button" className="widget-console-rail-btn" onClick={handleRetry}>
           Reload
         </button>
@@ -368,6 +423,34 @@ function emitWidgetTelemetry(detail: Omit<WidgetTelemetryDetail, 'at'>): void {
   }
 }
 
+type WidgetBridgeEvent = 'state' | 'sync-request';
+
+type WidgetBridgeTelemetryDetail = {
+  event: WidgetBridgeEvent;
+  src: string;
+  title: string;
+  widgetId: string;
+  dataState: string;
+  freshness: string;
+  syncAgeMinutes: number | null;
+  at: string;
+};
+
+function emitWidgetBridgeTelemetry(detail: Omit<WidgetBridgeTelemetryDetail, 'at'>): void {
+  try {
+    window.dispatchEvent(
+      new CustomEvent<WidgetBridgeTelemetryDetail>('fenok:widget-bridge', {
+        detail: {
+          ...detail,
+          at: new Date().toISOString(),
+        },
+      }),
+    );
+  } catch {
+    // 이벤트 송신 실패는 기능 동작에 영향이 없으므로 무시
+  }
+}
+
 function getNowMs(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
@@ -380,6 +463,36 @@ function formatTimeLabel(value: string): string {
     minute: '2-digit',
     hour12: false,
   });
+}
+
+function getBridgeFreshness(params: {
+  hasPayload: boolean;
+  isPayloadLinked: boolean;
+  lastDispatchAt: string | null;
+  nowMs: number;
+}): { label: 'IDLE' | 'HOT' | 'WARM' | 'STALE'; className: 'is-idle' | 'is-hot' | 'is-warm' | 'is-stale'; ageMinutes: number | null } {
+  const { hasPayload, isPayloadLinked, lastDispatchAt, nowMs } = params;
+  if (!hasPayload) {
+    return { label: 'IDLE', className: 'is-idle', ageMinutes: null };
+  }
+  if (!isPayloadLinked || !lastDispatchAt) {
+    return { label: 'IDLE', className: 'is-idle', ageMinutes: null };
+  }
+
+  const syncedMs = new Date(lastDispatchAt).getTime();
+  if (!Number.isFinite(syncedMs)) {
+    return { label: 'IDLE', className: 'is-idle', ageMinutes: null };
+  }
+
+  const ageMs = Math.max(0, nowMs - syncedMs);
+  const ageMinutes = Math.floor(ageMs / 60000);
+  if (ageMs <= 90 * 1000) {
+    return { label: 'HOT', className: 'is-hot', ageMinutes };
+  }
+  if (ageMs <= 5 * 60 * 1000) {
+    return { label: 'WARM', className: 'is-warm', ageMinutes };
+  }
+  return { label: 'STALE', className: 'is-stale', ageMinutes };
 }
 
 function resolveTargetOrigin(src: string): string {

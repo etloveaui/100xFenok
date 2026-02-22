@@ -184,6 +184,19 @@ export default function AppEnhancements() {
     }, durationMs + 40);
   }, []);
 
+  const pulseDock = useCallback((lockMs: number, navigatingMs: number) => {
+    setDockCollapsed(false);
+    setIsDockNavigating(true);
+    armDockLock(lockMs);
+    if (dockNavTimeoutRef.current) {
+      clearTimeout(dockNavTimeoutRef.current);
+    }
+    dockNavTimeoutRef.current = setTimeout(() => {
+      setIsDockNavigating(false);
+      dockNavTimeoutRef.current = null;
+    }, navigatingMs);
+  }, [armDockLock]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -262,16 +275,21 @@ export default function AppEnhancements() {
     if (typeof window === 'undefined') return;
 
     const handleTabIntent = () => {
-      setDockCollapsed(false);
-      setIsDockNavigating(true);
-      armDockLock(1400);
-      if (dockNavTimeoutRef.current) {
-        clearTimeout(dockNavTimeoutRef.current);
-      }
-      dockNavTimeoutRef.current = setTimeout(() => {
-        setIsDockNavigating(false);
-        dockNavTimeoutRef.current = null;
-      }, 420);
+      pulseDock(1400, 420);
+    };
+
+    const handleRefreshIntent = () => {
+      pulseDock(1700, 540);
+    };
+
+    const handlePeriodIntent = () => {
+      pulseDock(1100, 320);
+    };
+
+    const handleWidgetBridge = (event: Event) => {
+      const customEvent = event as CustomEvent<{ event?: string }>;
+      if (customEvent.detail?.event !== 'sync-request') return;
+      pulseDock(1700, 560);
     };
 
     const handleAdminModalState = (event: Event) => {
@@ -290,13 +308,19 @@ export default function AppEnhancements() {
     };
 
     window.addEventListener('fenok:tab-intent', handleTabIntent as EventListener);
+    window.addEventListener('fenok:refresh-intent', handleRefreshIntent as EventListener);
+    window.addEventListener('fenok:period-intent', handlePeriodIntent as EventListener);
+    window.addEventListener('fenok:widget-bridge', handleWidgetBridge as EventListener);
     window.addEventListener('fenok:admin-modal-state', handleAdminModalState as EventListener);
 
     return () => {
       window.removeEventListener('fenok:tab-intent', handleTabIntent as EventListener);
+      window.removeEventListener('fenok:refresh-intent', handleRefreshIntent as EventListener);
+      window.removeEventListener('fenok:period-intent', handlePeriodIntent as EventListener);
+      window.removeEventListener('fenok:widget-bridge', handleWidgetBridge as EventListener);
       window.removeEventListener('fenok:admin-modal-state', handleAdminModalState as EventListener);
     };
-  }, [armDockLock]);
+  }, [armDockLock, pulseDock]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
