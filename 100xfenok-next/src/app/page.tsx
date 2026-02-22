@@ -1349,6 +1349,8 @@ export default function Home() {
           </span>
           <span className="command-meta-chip">Sources {commandSourceCoverage}</span>
           <span className="command-meta-chip">Updated {commandSyncLabel}</span>
+          <span className="command-meta-chip">Alt+R Sync</span>
+          <span className="command-meta-chip">Alt+P Period</span>
           <button
             type="button"
             className="command-refresh-btn"
@@ -1801,6 +1803,7 @@ export default function Home() {
                 timeoutMs={12000}
                 payload={liquidityWidgetPayload ?? undefined}
                 onSyncRequest={() => refreshOverview('widget')}
+                isSyncing={isRefreshingData}
               />
             </div>
           </section>
@@ -1851,6 +1854,7 @@ export default function Home() {
                 timeoutMs={12000}
                 payload={sentimentWidgetPayload ?? undefined}
                 onSyncRequest={() => refreshOverview('widget')}
+                isSyncing={isRefreshingData}
               />
             </div>
           </section>
