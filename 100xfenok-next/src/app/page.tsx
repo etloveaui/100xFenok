@@ -974,6 +974,24 @@ export default function Home() {
   const sectorPanelTimestamp = dashboard.sectorMode !== 'BASE_1M'
     ? formatTimeLabel(dashboard.tickerFetchedAt)
     : '--';
+  const sectorLeaders = [...dashboard.sectorRows]
+    .sort((left, right) => right.displayChange - left.displayChange)
+    .slice(0, 3);
+  const sectorLaggards = [...dashboard.sectorRows]
+    .sort((left, right) => left.displayChange - right.displayChange)
+    .slice(0, 3);
+  const sectorLiveRows = dashboard.sectorRows.filter((sector) => sector.displayHorizon === '1D');
+  const sectorSessionMix = sectorLiveRows.reduce(
+    (acc, sector) => {
+      const state = sector.marketState ?? '';
+      if (state.includes('REGULAR')) acc.regular += 1;
+      else if (state.includes('PRE')) acc.pre += 1;
+      else if (state.includes('POST')) acc.post += 1;
+      else acc.closed += 1;
+      return acc;
+    },
+    { regular: 0, pre: 0, post: 0, closed: 0 },
+  );
 
   const fearGreedOffset = Number((126 * (1 - clamp(dashboard.fearGreedScore, 0, 100) / 100)).toFixed(2));
 
@@ -1440,6 +1458,41 @@ export default function Home() {
                   </div>
                 );
               })}
+            </div>
+            <div className="sector-insight-strip" aria-label="섹터 요약 인사이트">
+              <article className="sector-insight-card">
+                <h4 className="sector-insight-title">Leaders</h4>
+                <div className="sector-insight-list">
+                  {sectorLeaders.map((sector) => (
+                    <div key={`leader-${sector.key}`} className="sector-insight-row">
+                      <span className="sector-insight-symbol">{sector.etf}</span>
+                      <span className="sector-insight-horizon">{sector.displayHorizon}</span>
+                      <strong className="sector-insight-value is-up">{formatSignedPercentDecimal(sector.displayChange, 1)}</strong>
+                    </div>
+                  ))}
+                </div>
+              </article>
+              <article className="sector-insight-card">
+                <h4 className="sector-insight-title">Laggards</h4>
+                <div className="sector-insight-list">
+                  {sectorLaggards.map((sector) => (
+                    <div key={`laggard-${sector.key}`} className="sector-insight-row">
+                      <span className="sector-insight-symbol">{sector.etf}</span>
+                      <span className="sector-insight-horizon">{sector.displayHorizon}</span>
+                      <strong className="sector-insight-value is-down">{formatSignedPercentDecimal(sector.displayChange, 1)}</strong>
+                    </div>
+                  ))}
+                </div>
+              </article>
+              <article className="sector-insight-card">
+                <h4 className="sector-insight-title">Session Mix</h4>
+                <div className="sector-session-grid">
+                  <span className="sector-session-chip is-regular">LIVE {sectorSessionMix.regular}</span>
+                  <span className="sector-session-chip is-pre">PRE {sectorSessionMix.pre}</span>
+                  <span className="sector-session-chip is-post">POST {sectorSessionMix.post}</span>
+                  <span className="sector-session-chip is-closed">CLOSED {sectorSessionMix.closed}</span>
+                </div>
+              </article>
             </div>
           </div>
         )}

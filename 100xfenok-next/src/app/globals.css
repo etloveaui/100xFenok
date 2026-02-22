@@ -390,6 +390,126 @@
   box-shadow: 0 10px 24px -14px rgba(15, 23, 42, 0.35);
 }
 
+.sector-insight-strip {
+  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.sector-insight-card {
+  border-radius: 0.75rem;
+  border: 1px solid #dbe5f2;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 0.55rem;
+}
+
+.sector-insight-title {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.sector-insight-list {
+  margin-top: 0.45rem;
+  display: grid;
+  gap: 0.24rem;
+}
+
+.sector-insight-row {
+  min-height: 1.55rem;
+  border-radius: 0.55rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 0 0.42rem;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.sector-insight-symbol {
+  font-size: 0.66rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.sector-insight-horizon {
+  min-height: 1rem;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  padding: 0 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.sector-insight-value {
+  justify-self: end;
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.sector-insight-value.is-up {
+  color: #166534;
+}
+
+.sector-insight-value.is-down {
+  color: #991b1b;
+}
+
+.sector-session-grid {
+  margin-top: 0.45rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.26rem;
+}
+
+.sector-session-chip {
+  min-height: 1.42rem;
+  border-radius: 0.55rem;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.sector-session-chip.is-regular {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.sector-session-chip.is-pre {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.sector-session-chip.is-post {
+  border-color: #fdba74;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.sector-session-chip.is-closed {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+}
+
 .heatmap-positive-strong {
   color: #ffffff;
   background: linear-gradient(140deg, #16a34a 0%, #15803d 100%);
@@ -1333,6 +1453,9 @@
   .heatmap-panel-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .sector-insight-strip {
+    grid-template-columns: 1fr;
   }
   .overview-widget-grid,
   .overview-widget-grid--secondary {
