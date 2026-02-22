@@ -5,14 +5,365 @@ import Link from 'next/link';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
 
+type NumberPoint = {
+  date: string;
+  value: number;
+};
+
+type CnnFearGreedPoint = {
+  date: string;
+  score: number;
+};
+
+type PutCallPoint = {
+  date: string;
+  value: number;
+  rating?: string;
+};
+
+type CryptoFearGreedPoint = {
+  date: string;
+  value: number;
+  classification?: string;
+};
+
+type BenchmarksSummaryPayload = {
+  momentum?: Record<string, { '1m'?: number }>;
+};
+
+type FredSeriesPayload = {
+  series?: Record<string, NumberPoint[]>;
+};
+
+type SectorDefinition = {
+  key: string;
+  etf: string;
+  name: string;
+  fallback: number;
+};
+
+type SectorSnapshot = {
+  key: string;
+  etf: string;
+  name: string;
+  oneMonth: number;
+};
+
+type LiquidityBar = {
+  delta: number;
+  height: number;
+};
+
+type BankingTone = 'stable' | 'watch' | 'stress';
+
+type StressTone = 'low' | 'medium' | 'high';
+
+type DashboardSnapshot = {
+  fearGreedScore: number;
+  fearGreedLabel: string;
+  sectorRows: SectorSnapshot[];
+  sectorUp: number;
+  sectorDown: number;
+  liquidityFlow: number;
+  liquidityFlowLabel: string;
+  liquidityBars: LiquidityBar[];
+  loanDepositRatio: number;
+  vixValue: number;
+  vixLabel: string;
+  putCallValue: number;
+  putCallLabel: string;
+  cryptoFearGreed: number;
+  cryptoLabel: string;
+  bankingTone: BankingTone;
+  bankingLabel: string;
+  bankingSummary: string;
+  stressScore: number;
+  stressTone: StressTone;
+  stressLabel: string;
+  tenYearYield: number;
+  hySpread: number;
+};
+
 const periods = ['1D', '1W', '1M', 'YTD', '1Y'];
 const TAB_SEQUENCE: TabId[] = ['overview', 'sectors', 'liquidity', 'sentiment'];
 const SWIPE_HINT_DISMISS_KEY = 'fenok_swipe_hint_dismissed_v1';
+
+const SECTOR_DEFINITIONS: SectorDefinition[] = [
+  { key: 'information_technology', etf: 'XLK', name: 'Tech', fallback: 0.0234 },
+  { key: 'financials', etf: 'XLF', name: 'Financials', fallback: 0.0156 },
+  { key: 'health_care', etf: 'XLV', name: 'Health Care', fallback: 0.0089 },
+  { key: 'energy', etf: 'XLE', name: 'Energy', fallback: -0.0123 },
+  { key: 'industrials', etf: 'XLI', name: 'Industrials', fallback: 0.0045 },
+  { key: 'communication_services', etf: 'XLC', name: 'Communication', fallback: 0.0112 },
+  { key: 'consumer_discretionary', etf: 'XLY', name: 'Discretionary', fallback: -0.0067 },
+  { key: 'consumer_staples', etf: 'XLP', name: 'Staples', fallback: 0.0012 },
+  { key: 'real_estate', etf: 'XLRE', name: 'Real Estate', fallback: -0.0034 },
+  { key: 'materials', etf: 'XLB', name: 'Materials', fallback: 0.0078 },
+  { key: 'utilities', etf: 'XLU', name: 'Utilities', fallback: -0.0189 },
+];
+
+const DEFAULT_DASHBOARD: DashboardSnapshot = {
+  fearGreedScore: 72,
+  fearGreedLabel: 'GREED',
+  sectorRows: SECTOR_DEFINITIONS.map((sector) => ({
+    key: sector.key,
+    etf: sector.etf,
+    name: sector.name,
+    oneMonth: sector.fallback,
+  })),
+  sectorUp: 7,
+  sectorDown: 4,
+  liquidityFlow: 87,
+  liquidityFlowLabel: 'Bank credit flow acceleration',
+  liquidityBars: [60, 75, 90, 70, 85, 100].map((height) => ({ delta: 1, height })),
+  loanDepositRatio: 71.5,
+  vixValue: 14.2,
+  vixLabel: 'Low',
+  putCallValue: 0.78,
+  putCallLabel: 'Neutral',
+  cryptoFearGreed: 78,
+  cryptoLabel: 'Greed',
+  bankingTone: 'stable',
+  bankingLabel: 'Stable',
+  bankingSummary: 'Delinq 1.47% · Tier1 14.17% · LDR 71.5%',
+  stressScore: 0.12,
+  stressTone: 'low',
+  stressLabel: 'Low Risk',
+  tenYearYield: 4.08,
+  hySpread: 2.88,
+};
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function safeNumber(value: unknown, fallback = 0): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function lastValue(series: NumberPoint[] | undefined, fallback = 0): number {
+  if (!Array.isArray(series) || series.length === 0) return fallback;
+  return safeNumber(series[series.length - 1]?.value, fallback);
+}
+
+function average(values: number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((acc, item) => acc + item, 0) / values.length;
+}
+
+function formatSignedBillions(value: number): string {
+  const absValue = Math.abs(value);
+  const precision = absValue >= 100 ? 0 : 1;
+  const prefix = value > 0 ? '+' : value < 0 ? '-' : '';
+  return `${prefix}$${absValue.toFixed(precision)}B`;
+}
+
+function formatSignedPercentDecimal(value: number, digits = 2): string {
+  const percent = value * 100;
+  const prefix = percent > 0 ? '+' : percent < 0 ? '-' : '';
+  return `${prefix}${Math.abs(percent).toFixed(digits)}%`;
+}
+
+function formatPercent(value: number, digits = 1): string {
+  return `${value.toFixed(digits)}%`;
+}
+
+function getFearGreedLabel(score: number): string {
+  if (score >= 75) return 'EXTREME GREED';
+  if (score >= 55) return 'GREED';
+  if (score >= 45) return 'NEUTRAL';
+  if (score >= 25) return 'FEAR';
+  return 'EXTREME FEAR';
+}
+
+function getVixLabel(value: number): string {
+  if (value < 15) return 'Low';
+  if (value < 22) return 'Moderate';
+  if (value < 30) return 'Elevated';
+  return 'High';
+}
+
+function getPutCallLabel(value: number, rating?: string): string {
+  if (rating && rating.trim().length > 0) {
+    return rating
+      .toLowerCase()
+      .split(' ')
+      .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+      .join(' ');
+  }
+  if (value < 0.7) return 'Greed';
+  if (value <= 1) return 'Neutral';
+  return 'Fear';
+}
+
+function getStressTone(score: number): StressTone {
+  if (score < 0.33) return 'low';
+  if (score < 0.66) return 'medium';
+  return 'high';
+}
+
+function getHeatmapToneClass(oneMonth: number): string {
+  if (oneMonth >= 0.025) return 'heatmap-positive-strong';
+  if (oneMonth >= 0.012) return 'heatmap-positive';
+  if (oneMonth >= 0.006) return 'heatmap-positive-soft';
+  if (oneMonth > 0) return 'heatmap-positive-faint';
+  if (oneMonth <= -0.02) return 'heatmap-negative-strong';
+  if (oneMonth <= -0.012) return 'heatmap-negative';
+  if (oneMonth <= -0.006) return 'heatmap-negative-soft';
+  if (oneMonth < 0) return 'heatmap-negative-faint';
+  return 'heatmap-neutral';
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) return null;
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+function buildDashboardSnapshot(payload: {
+  fearGreed: CnnFearGreedPoint[] | null;
+  vix: NumberPoint[] | null;
+  putCall: PutCallPoint[] | null;
+  crypto: CryptoFearGreedPoint[] | null;
+  summaries: BenchmarksSummaryPayload | null;
+  weeklyBanking: FredSeriesPayload | null;
+  quarterlyBanking: FredSeriesPayload | null;
+  dailyBanking: FredSeriesPayload | null;
+}): DashboardSnapshot {
+  const fallback = DEFAULT_DASHBOARD;
+
+  const sectorRows = SECTOR_DEFINITIONS.map((sector) => {
+    const momentum = payload.summaries?.momentum?.[sector.key]?.['1m'];
+    return {
+      key: sector.key,
+      etf: sector.etf,
+      name: sector.name,
+      oneMonth: safeNumber(momentum, sector.fallback),
+    };
+  });
+
+  const sectorUp = sectorRows.filter((sector) => sector.oneMonth > 0).length;
+  const sectorDown = sectorRows.filter((sector) => sector.oneMonth < 0).length;
+
+  const fearGreedLatest = payload.fearGreed?.[payload.fearGreed.length - 1];
+  const fearGreedScore = safeNumber(fearGreedLatest?.score, fallback.fearGreedScore);
+  const fearGreedLabel = getFearGreedLabel(fearGreedScore);
+
+  const vixLatest = payload.vix?.[payload.vix.length - 1];
+  const vixValue = safeNumber(vixLatest?.value, fallback.vixValue);
+  const vixLabel = getVixLabel(vixValue);
+
+  const putCallLatest = payload.putCall?.[payload.putCall.length - 1];
+  const putCallValue = safeNumber(putCallLatest?.value, fallback.putCallValue);
+  const putCallLabel = getPutCallLabel(putCallValue, putCallLatest?.rating);
+
+  const cryptoLatest = payload.crypto?.[payload.crypto.length - 1];
+  const cryptoFearGreed = safeNumber(cryptoLatest?.value, fallback.cryptoFearGreed);
+  const cryptoLabel = cryptoLatest?.classification?.trim() || fallback.cryptoLabel;
+
+  const loans = payload.weeklyBanking?.series?.TOTLL ?? [];
+  const deposits = payload.weeklyBanking?.series?.DPSACBW027SBOG ?? [];
+  const latestLoans = lastValue(loans);
+  const previousLoans = loans.length >= 2 ? safeNumber(loans[loans.length - 2]?.value, latestLoans) : latestLoans;
+  const liquidityFlow = loans.length >= 2 ? latestLoans - previousLoans : fallback.liquidityFlow;
+
+  const loanDeltas = loans
+    .slice(Math.max(0, loans.length - 7))
+    .map((point, index, array) => (index === 0 ? null : safeNumber(point.value, 0) - safeNumber(array[index - 1]?.value, 0)))
+    .filter((delta): delta is number => delta !== null);
+
+  const fallbackBars = fallback.liquidityBars;
+  const activeDeltas = loanDeltas.length > 0 ? loanDeltas : fallbackBars.map((bar) => bar.delta);
+  const maxAbsDelta = Math.max(...activeDeltas.map((delta) => Math.abs(delta)), 1);
+  const liquidityBars = activeDeltas.map((delta, index) => {
+    const fallbackHeight = fallbackBars[index]?.height ?? 60;
+    return {
+      delta,
+      height: Math.round(clamp((Math.abs(delta) / maxAbsDelta) * 100, 24, 100) || fallbackHeight),
+    };
+  });
+
+  const latestDeposits = lastValue(deposits);
+  const loanDepositRatio = latestLoans > 0 && latestDeposits > 0
+    ? (latestLoans / latestDeposits) * 100
+    : fallback.loanDepositRatio;
+
+  const liquidityFlowLabel = liquidityFlow >= 0
+    ? 'Bank credit flow acceleration'
+    : 'Bank credit flow deceleration';
+
+  const delinquency = lastValue(payload.quarterlyBanking?.series?.DRALACBN, 1.47);
+  const tier1 = lastValue(payload.quarterlyBanking?.series?.BOGZ1FL010000016Q, 14.17);
+
+  const delinquencySeverity = delinquency >= 4 ? 3 : delinquency >= 3 ? 2 : delinquency >= 2 ? 1 : 0;
+  const tier1Severity = tier1 < 8 ? 3 : tier1 < 10 ? 2 : tier1 < 12 ? 1 : 0;
+  const ratioSeverity = loanDepositRatio > 85 || loanDepositRatio < 55 ? 2 : loanDepositRatio < 60 ? 1 : 0;
+  const bankingSeverity = Math.max(delinquencySeverity, tier1Severity, ratioSeverity);
+
+  let bankingTone: BankingTone = 'stable';
+  let bankingLabel = 'Stable';
+  if (bankingSeverity === 1) {
+    bankingTone = 'watch';
+    bankingLabel = 'Watch';
+  } else if (bankingSeverity >= 2) {
+    bankingTone = 'stress';
+    bankingLabel = 'Stress';
+  }
+
+  const bankingSummary = `Delinq ${delinquency.toFixed(2)}% · Tier1 ${tier1.toFixed(2)}% · LDR ${loanDepositRatio.toFixed(1)}%`;
+
+  const dgs10Series = payload.dailyBanking?.series?.DGS10 ?? [];
+  const hySeries = payload.dailyBanking?.series?.BAMLH0A0HYM2 ?? [];
+  const tenYearYield = lastValue(dgs10Series, fallback.tenYearYield);
+  const hySpread = lastValue(hySeries, fallback.hySpread);
+
+  const recentTenYear = dgs10Series.slice(-20).map((point) => safeNumber(point.value, tenYearYield));
+  const tenYearAverage = recentTenYear.length > 0 ? average(recentTenYear) : tenYearYield;
+  const tenYearDeviation = Math.abs(tenYearYield - tenYearAverage);
+
+  const hyNormalized = clamp((hySpread - 2.5) / 3.5, 0, 1);
+  const rateNormalized = clamp(tenYearDeviation / 0.8, 0, 1);
+  const stressScore = Number((hyNormalized * 0.8 + rateNormalized * 0.2).toFixed(2));
+  const stressTone = getStressTone(stressScore);
+  const stressLabel = stressTone === 'low' ? 'Low Risk' : stressTone === 'medium' ? 'Guard' : 'High Risk';
+
+  return {
+    fearGreedScore,
+    fearGreedLabel,
+    sectorRows,
+    sectorUp,
+    sectorDown,
+    liquidityFlow,
+    liquidityFlowLabel,
+    liquidityBars,
+    loanDepositRatio,
+    vixValue,
+    vixLabel,
+    putCallValue,
+    putCallLabel,
+    cryptoFearGreed,
+    cryptoLabel,
+    bankingTone,
+    bankingLabel,
+    bankingSummary,
+    stressScore,
+    stressTone,
+    stressLabel,
+    tenYearYield,
+    hySpread,
+  };
+}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [activePeriod, setActivePeriod] = useState('1W');
   const [isPeriodMenuOpen, setIsPeriodMenuOpen] = useState(false);
+  const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
+  const [isDataConnected, setIsDataConnected] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(() => {
     if (typeof window === 'undefined') return true;
     try {
@@ -24,6 +375,60 @@ export default function Home() {
   const periodMenuRef = useRef<HTMLDivElement>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadOverviewData = async () => {
+      const [fearGreed, vix, putCall, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking] = await Promise.all([
+        fetchJson<CnnFearGreedPoint[]>('/data/sentiment/cnn-fear-greed.json'),
+        fetchJson<NumberPoint[]>('/data/sentiment/vix.json'),
+        fetchJson<PutCallPoint[]>('/data/sentiment/cnn-put-call.json'),
+        fetchJson<CryptoFearGreedPoint[]>('/data/sentiment/crypto-fear-greed.json'),
+        fetchJson<BenchmarksSummaryPayload>('/data/benchmarks/summaries.json'),
+        fetchJson<FredSeriesPayload>('/data/fred-banking-weekly.json'),
+        fetchJson<FredSeriesPayload>('/data/fred-banking-quarterly.json'),
+        fetchJson<FredSeriesPayload>('/data/fred-banking-daily.json'),
+      ]);
+
+      if (cancelled) return;
+
+      const nextSnapshot = buildDashboardSnapshot({
+        fearGreed,
+        vix,
+        putCall,
+        crypto,
+        summaries,
+        weeklyBanking,
+        quarterlyBanking,
+        dailyBanking,
+      });
+
+      setDashboard(nextSnapshot);
+
+      const hasAnyLiveSource = [
+        fearGreed,
+        vix,
+        putCall,
+        crypto,
+        summaries,
+        weeklyBanking,
+        quarterlyBanking,
+        dailyBanking,
+      ].some((payload) => payload !== null);
+      setIsDataConnected(hasAnyLiveSource);
+    };
+
+    void loadOverviewData();
+    const refreshId = window.setInterval(() => {
+      void loadOverviewData();
+    }, 10 * 60 * 1000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(refreshId);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isPeriodMenuOpen) return;
@@ -94,6 +499,44 @@ export default function Home() {
 
     handleSwipeTabChange(deltaX < 0 ? 'next' : 'prev');
   };
+
+  const sectorTopRows = [...dashboard.sectorRows]
+    .sort((left, right) => right.oneMonth - left.oneMonth)
+    .slice(0, 3);
+
+  const fearGreedOffset = Number((126 * (1 - clamp(dashboard.fearGreedScore, 0, 100) / 100)).toFixed(2));
+
+  const fearGreedBadgeClass = dashboard.fearGreedScore >= 55
+    ? 'bg-green-100 text-green-800'
+    : dashboard.fearGreedScore <= 45
+      ? 'bg-red-100 text-red-700'
+      : 'bg-amber-100 text-amber-800';
+
+  const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
+  const breadthRatio = dashboard.sectorUp / breadthTotal;
+  const regimeScore = clamp(
+    dashboard.fearGreedScore / 100 * 0.45 + breadthRatio * 0.35 + (1 - dashboard.stressScore) * 0.2,
+    0,
+    1,
+  );
+  const regimeLabel = regimeScore >= 0.62 ? 'RISK-ON' : regimeScore >= 0.45 ? 'BALANCED' : 'RISK-OFF';
+  const regimeClass = regimeScore >= 0.62 ? 'is-risk-on' : regimeScore >= 0.45 ? 'is-balanced' : 'is-risk-off';
+  const regimeConfidence = Math.round(regimeScore * 100);
+
+  const liquidityPillClass = dashboard.liquidityFlow >= 0 ? 'is-positive' : 'is-negative';
+  const stressPillClass = dashboard.stressTone === 'low'
+    ? 'is-positive'
+    : dashboard.stressTone === 'medium'
+      ? 'is-warning'
+      : 'is-negative';
+
+  const bankingDotClass = dashboard.bankingTone === 'stable'
+    ? 'is-stable'
+    : dashboard.bankingTone === 'watch'
+      ? 'is-watch'
+      : 'is-stress';
+
+  const tabPanelModeLabel = isDataConnected ? 'LIVE DATA' : 'FALLBACK';
 
   return (
     <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
@@ -196,12 +639,13 @@ export default function Home() {
       >
         {activeTab === 'overview' && (
           <>
-            {/* Latest Analysis Spotlight */}
-            <Link href="/posts/2026-02-21_tariff-ruling-comprehensive.html"
+            <Link
+              href="/posts/2026-02-21_tariff-ruling-comprehensive.html"
               className="group block w-full rounded-2xl overflow-hidden mb-4
                         bg-gradient-to-r from-red-50 via-amber-50/80 to-slate-50
                         border border-red-200/50 hover:border-amber-300/70
-                        shadow-sm hover:shadow-lg transition-all duration-300">
+                        shadow-sm hover:shadow-lg transition-all duration-300"
+            >
               <div className="flex items-start gap-3 px-3 py-3 sm:items-center sm:gap-4 sm:px-5 sm:py-4">
                 <span className="text-2xl flex-shrink-0">&#9878;</span>
                 <div className="flex-1 min-w-0">
@@ -218,10 +662,9 @@ export default function Home() {
                     대법원 6-3 위헌 · 트럼프 122조 10% 즉시 서명 · 국가별 관세 영향 · 포트폴리오 함의
                   </p>
                 </div>
-                <div className="hidden min-[420px]:block flex-shrink-0 text-slate-300 group-hover:text-amber-600
-                                transition-colors">
+                <div className="hidden min-[420px]:block flex-shrink-0 text-slate-300 group-hover:text-amber-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
               </div>
@@ -229,7 +672,7 @@ export default function Home() {
 
             <div className="hero-zone min-w-0">
               <div className="bento-card p-4">
-                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">FEAR & GREED</h3>
+                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">FEAR &amp; GREED</h3>
                 <div className="flex items-center gap-3">
                   <div className="relative w-16 h-8">
                     <svg viewBox="0 0 100 50" className="w-full h-full" aria-hidden="true">
@@ -241,24 +684,32 @@ export default function Home() {
                         </linearGradient>
                       </defs>
                       <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#e2e8f0" strokeWidth="6" strokeLinecap="round" />
-                      <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="url(#gaugeFinal)" strokeWidth="6" strokeLinecap="round" strokeDasharray="126" strokeDashoffset="35" />
+                      <path
+                        d="M 10 45 A 40 40 0 0 1 90 45"
+                        fill="none"
+                        stroke="url(#gaugeFinal)"
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeDasharray="126"
+                        strokeDashoffset={fearGreedOffset}
+                      />
                     </svg>
                   </div>
-                  <span className="text-2xl font-bold text-brand-navy orbitron">72</span>
-                  <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full font-bold text-xs">GREED</span>
+                  <span className="text-2xl font-bold text-brand-navy orbitron">{Math.round(dashboard.fearGreedScore)}</span>
+                  <span className={`px-2 py-0.5 rounded-full font-bold text-xs ${fearGreedBadgeClass}`}>{dashboard.fearGreedLabel}</span>
                 </div>
               </div>
 
               <div className="bento-card p-4">
                 <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">MARKET REGIME</h3>
                 <div className="flex items-center justify-between">
-                  <div className="regime-badge">
+                  <div className={`regime-badge ${regimeClass}`}>
                     <i className="fas fa-rocket text-xs" />
-                    <span>RISK-ON</span>
+                    <span>{regimeLabel}</span>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-600">Confidence</p>
-                    <p className="text-xl font-bold text-emerald-800 orbitron">87%</p>
+                    <p className="text-xl font-bold text-emerald-800 orbitron">{regimeConfidence}%</p>
                   </div>
                 </div>
               </div>
@@ -269,22 +720,22 @@ export default function Home() {
                   <div className="index-item">
                     <span className="text-xs text-slate-600">SPY</span>
                     <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,16 10,14 20,12 30,10 40,11 50,6 60,4" /></svg>
-                    <span className="font-bold text-emerald-800 text-sm">+0.85%</span>
+                    <span className="font-bold text-emerald-800 text-sm">{formatSignedPercentDecimal(dashboard.sectorRows.find((row) => row.etf === 'XLK')?.oneMonth ?? 0.0085)}</span>
                   </div>
                   <div className="index-item">
                     <span className="text-xs text-slate-600">QQQ</span>
                     <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,18 10,16 20,12 30,10 40,8 50,6 60,3" /></svg>
-                    <span className="font-bold text-emerald-800 text-sm">+1.12%</span>
+                    <span className="font-bold text-emerald-800 text-sm">{formatSignedPercentDecimal(dashboard.sectorRows.find((row) => row.etf === 'XLC')?.oneMonth ?? 0.0112)}</span>
                   </div>
                   <div className="index-item">
-                    <span className="text-xs text-slate-600">DXY</span>
-                    <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#ef4444" strokeWidth="1.5" points="0,8 10,10 20,12 30,14 40,12 50,14 60,16" /></svg>
-                    <span className="font-bold text-red-700 text-sm">-0.3%</span>
+                    <span className="text-xs text-slate-600">UST10Y</span>
+                    <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#ef4444" strokeWidth="1.5" points="0,8 10,9 20,10 30,11 40,12 50,13 60,14" /></svg>
+                    <span className="font-bold text-slate-700 text-sm">{formatPercent(dashboard.tenYearYield, 2)}</span>
                   </div>
                   <div className="index-item">
-                    <span className="text-xs text-slate-600">BTC</span>
-                    <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,14 10,12 20,10 30,8 40,10 50,7 60,5" /></svg>
-                    <span className="font-bold text-emerald-800 text-sm">+2.4%</span>
+                    <span className="text-xs text-slate-600">HY OAS</span>
+                    <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#f59e0b" strokeWidth="1.5" points="0,12 10,11 20,10 30,9 40,10 50,11 60,12" /></svg>
+                    <span className="font-bold text-amber-700 text-sm">{formatPercent(dashboard.hySpread, 2)}</span>
                   </div>
                 </div>
               </div>
@@ -309,14 +760,16 @@ export default function Home() {
                 <div className="overview-breadth">
                   <div className="overview-breadth-ledger">
                     <span className="overview-dot is-up" aria-hidden="true" />
-                    <span className="overview-breadth-value">7 Up</span>
+                    <span className="overview-breadth-value">{dashboard.sectorUp} Up</span>
                     <span className="overview-dot is-down" aria-hidden="true" />
-                    <span className="overview-breadth-value is-down">4 Down</span>
+                    <span className="overview-breadth-value is-down">{dashboard.sectorDown} Down</span>
                   </div>
                   <div className="overview-chip-row">
-                    <span className="overview-chip is-up">XLK +2.3%</span>
-                    <span className="overview-chip is-up">XLF +1.5%</span>
-                    <span className="overview-chip is-up">XLC +1.1%</span>
+                    {sectorTopRows.map((sector) => (
+                      <span key={sector.key} className={`overview-chip ${sector.oneMonth >= 0 ? 'is-up' : 'is-down'}`}>
+                        {sector.etf} {formatSignedPercentDecimal(sector.oneMonth, 1)}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </article>
@@ -327,19 +780,22 @@ export default function Home() {
                     <p className="overview-widget-kicker orbitron">LIQUIDITY FLOW</p>
                     <h3 className="overview-widget-subtitle">Funding Pulse</h3>
                   </div>
-                  <span className="overview-status-pill is-positive">WoW</span>
+                  <span className={`overview-status-pill ${liquidityPillClass}`}>
+                    {dashboard.liquidityFlow >= 0 ? 'WoW +' : 'WoW -'}
+                  </span>
                 </header>
                 <div className="overview-metric-stack">
-                  <p className="overview-metric-main orbitron">+$87B</p>
-                  <p className="overview-metric-sub">순유동성 4주 최고치</p>
+                  <p className="overview-metric-main orbitron">{formatSignedBillions(dashboard.liquidityFlow)}</p>
+                  <p className="overview-metric-sub">{dashboard.liquidityFlowLabel}</p>
                 </div>
                 <div className="overview-mini-bars" aria-hidden="true">
-                  <span style={{ height: '60%' }} />
-                  <span style={{ height: '75%' }} />
-                  <span style={{ height: '90%' }} />
-                  <span style={{ height: '70%' }} />
-                  <span style={{ height: '85%' }} />
-                  <span style={{ height: '100%' }} />
+                  {dashboard.liquidityBars.map((bar, index) => (
+                    <span
+                      key={`${bar.delta}-${index}`}
+                      className={bar.delta >= 0 ? 'is-up' : 'is-down'}
+                      style={{ height: `${bar.height}%` }}
+                    />
+                  ))}
                 </div>
               </article>
 
@@ -349,20 +805,20 @@ export default function Home() {
                     <p className="overview-widget-kicker orbitron">SENTIMENT</p>
                     <h3 className="overview-widget-subtitle">Risk Appetite</h3>
                   </div>
-                  <span className="overview-status-pill">Live</span>
+                  <span className={`overview-status-pill ${isDataConnected ? 'is-positive' : ''}`}>{isDataConnected ? 'Live' : 'Fallback'}</span>
                 </header>
                 <div className="overview-stat-list">
                   <p className="overview-stat-row">
                     <span>VIX</span>
-                    <strong className="text-emerald-800">14.2 <em>Low</em></strong>
+                    <strong className="text-emerald-800">{dashboard.vixValue.toFixed(2)} <em>{dashboard.vixLabel}</em></strong>
                   </p>
                   <p className="overview-stat-row">
                     <span>Put/Call</span>
-                    <strong className="text-slate-700">0.78</strong>
+                    <strong className="text-slate-700">{dashboard.putCallValue.toFixed(2)} <em>{dashboard.putCallLabel}</em></strong>
                   </p>
                   <p className="overview-stat-row">
-                    <span>Crypto F&G</span>
-                    <strong className="text-brand-gold">78 <em>Greed</em></strong>
+                    <span>Crypto F&amp;G</span>
+                    <strong className="text-brand-gold">{Math.round(dashboard.cryptoFearGreed)} <em>{dashboard.cryptoLabel}</em></strong>
                   </p>
                 </div>
               </article>
@@ -377,10 +833,10 @@ export default function Home() {
                   </div>
                 </header>
                 <div className="overview-health-row">
-                  <span className="overview-pulse-dot" aria-hidden="true" />
-                  <strong>Stable</strong>
+                  <span className={`overview-pulse-dot ${bankingDotClass}`} aria-hidden="true" />
+                  <strong>{dashboard.bankingLabel}</strong>
                 </div>
-                <p className="overview-metric-sub">BTFP $12.3B ↓ / DW $4.1B</p>
+                <p className="overview-metric-sub">{dashboard.bankingSummary}</p>
               </article>
 
               <article className="overview-widget-card overview-widget-card--stress">
@@ -389,12 +845,12 @@ export default function Home() {
                     <p className="overview-widget-kicker orbitron">STRESS INDEX</p>
                     <h3 className="overview-widget-subtitle">Spread Monitor</h3>
                   </div>
-                  <span className="overview-status-pill is-positive">Low Risk</span>
+                  <span className={`overview-status-pill ${stressPillClass}`}>{dashboard.stressLabel}</span>
                 </header>
                 <div className="overview-health-row">
-                  <strong className="overview-metric-main orbitron">0.12</strong>
+                  <strong className="overview-metric-main orbitron">{dashboard.stressScore.toFixed(2)}</strong>
                 </div>
-                <p className="overview-metric-sub">SOFR-IORB Spread</p>
+                <p className="overview-metric-sub">HY {formatPercent(dashboard.hySpread, 2)} · UST10Y {formatPercent(dashboard.tenYearYield, 2)}</p>
               </article>
             </div>
           </>
@@ -415,41 +871,86 @@ export default function Home() {
               <span className="heatmap-legend-chip is-risk-off">Risk-Off</span>
             </div>
             <div className="heatmap-grid">
-              <div className="heatmap-cell xlk heatmap-positive-strong"><span className="font-bold text-lg">XLK</span><span className="text-sm">Tech</span><span className="font-bold">+2.34%</span></div>
-              <div className="heatmap-cell xlf heatmap-positive"><span className="font-bold">XLF</span><span className="text-xs">+1.56%</span></div>
-              <div className="heatmap-cell heatmap-positive-soft"><span className="font-bold">XLV</span><span className="text-xs">+0.89%</span></div>
-              <div className="heatmap-cell heatmap-negative"><span className="font-bold">XLE</span><span className="text-xs">-1.23%</span></div>
-              <div className="heatmap-cell heatmap-positive-faint"><span className="font-bold">XLI</span><span className="text-xs">+0.45%</span></div>
-              <div className="heatmap-cell heatmap-positive"><span className="font-bold">XLC</span><span className="text-xs">+1.12%</span></div>
-              <div className="heatmap-cell heatmap-negative-soft"><span className="font-bold">XLY</span><span className="text-xs">-0.67%</span></div>
-              <div className="heatmap-cell heatmap-neutral"><span className="font-bold">XLP</span><span className="text-xs">+0.12%</span></div>
-              <div className="heatmap-cell heatmap-negative-faint"><span className="font-bold">XLRE</span><span className="text-xs">-0.34%</span></div>
-              <div className="heatmap-cell heatmap-positive-soft"><span className="font-bold">XLB</span><span className="text-xs">+0.78%</span></div>
-              <div className="heatmap-cell heatmap-negative-strong"><span className="font-bold">XLU</span><span className="text-xs">-1.89%</span></div>
+              {dashboard.sectorRows.map((sector) => {
+                const pinClass = sector.etf === 'XLK' ? 'xlk' : sector.etf === 'XLF' ? 'xlf' : '';
+                return (
+                  <div key={sector.key} className={`heatmap-cell ${pinClass} ${getHeatmapToneClass(sector.oneMonth)}`}>
+                    <span className="font-bold text-lg">{sector.etf}</span>
+                    <span className="text-xs">{sector.name}</span>
+                    <span className="font-bold text-xs">{formatSignedPercentDecimal(sector.oneMonth)}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
         {activeTab === 'liquidity' && (
-          <div className="route-embed-shell">
-            <iframe
-              src="/tools/macro-monitor/widgets/liquidity-flow.html"
-              title="Liquidity Flow"
-              loading="lazy"
-              className="h-full w-full border-0"
-            />
-          </div>
+          <section className="insight-tab-panel">
+            <header className="insight-tab-head">
+              <div>
+                <p className="insight-tab-kicker orbitron">LIQUIDITY DETAIL</p>
+                <h3 className="insight-tab-title">Flow Engine Console</h3>
+              </div>
+              <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
+            </header>
+            <div className="insight-tab-metrics">
+              <article className="insight-tab-metric-card">
+                <span>Loan Flow WoW</span>
+                <strong>{formatSignedBillions(dashboard.liquidityFlow)}</strong>
+              </article>
+              <article className="insight-tab-metric-card">
+                <span>Loan/Deposit</span>
+                <strong>{formatPercent(dashboard.loanDepositRatio)}</strong>
+              </article>
+              <article className="insight-tab-metric-card">
+                <span>Banking Tone</span>
+                <strong>{dashboard.bankingLabel}</strong>
+              </article>
+            </div>
+            <div className="insight-tab-frame">
+              <iframe
+                src="/tools/macro-monitor/widgets/liquidity-flow.html"
+                title="Liquidity Flow"
+                loading="lazy"
+                className="insight-tab-iframe"
+              />
+            </div>
+          </section>
         )}
 
         {activeTab === 'sentiment' && (
-          <div className="route-embed-shell">
-            <iframe
-              src="/tools/macro-monitor/widgets/sentiment-signal.html"
-              title="Sentiment Signal"
-              loading="lazy"
-              className="h-full w-full border-0"
-            />
-          </div>
+          <section className="insight-tab-panel insight-tab-panel--sentiment">
+            <header className="insight-tab-head">
+              <div>
+                <p className="insight-tab-kicker orbitron">SENTIMENT DETAIL</p>
+                <h3 className="insight-tab-title">Risk Monitor Console</h3>
+              </div>
+              <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
+            </header>
+            <div className="insight-tab-metrics">
+              <article className="insight-tab-metric-card">
+                <span>VIX</span>
+                <strong>{dashboard.vixValue.toFixed(2)}</strong>
+              </article>
+              <article className="insight-tab-metric-card">
+                <span>Put/Call</span>
+                <strong>{dashboard.putCallValue.toFixed(2)}</strong>
+              </article>
+              <article className="insight-tab-metric-card">
+                <span>CNN F&amp;G</span>
+                <strong>{Math.round(dashboard.fearGreedScore)}</strong>
+              </article>
+            </div>
+            <div className="insight-tab-frame">
+              <iframe
+                src="/tools/macro-monitor/widgets/sentiment-signal.html"
+                title="Sentiment Signal"
+                loading="lazy"
+                className="insight-tab-iframe"
+              />
+            </div>
+          </section>
         )}
       </section>
     </main>
