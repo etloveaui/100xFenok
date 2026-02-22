@@ -176,12 +176,55 @@
       color: #64748b;
     }
 
+    .summary-pill.summary-pill-sync {
+      border-color: #b9d6f2;
+      background: #eff6ff;
+      color: #1d4f8f;
+    }
+
     .category-tabs {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       gap: 8px;
       margin-top: 16px;
+    }
+
+    .radar-toolbar {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .radar-sync-button {
+      border: 1px solid #a9c7eb;
+      background: linear-gradient(135deg, #0f5ccf, #0783d1);
+      color: #ffffff;
+      min-height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      box-shadow: 0 10px 18px -14px rgba(15, 92, 207, 0.9);
+    }
+
+    .radar-sync-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 20px -14px rgba(15, 92, 207, 0.92);
+    }
+
+    .radar-sync-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.72;
+      transform: none;
+      box-shadow: none;
     }
 
     .tab-btn {
@@ -438,6 +481,11 @@
         padding: 0 13px;
         font-size: 11px;
       }
+      .radar-sync-button {
+        min-height: 32px;
+        padding: 0 12px;
+        font-size: 10px;
+      }
       .indicator-card,
       .coming-soon {
         grid-column: span 12;
@@ -465,6 +513,10 @@
       }
       .summary-pill {
         font-size: 10px;
+      }
+      .radar-sync-button {
+        width: 100%;
+        max-width: 260px;
       }
       .live-widget iframe {
         min-height: 310px;
@@ -503,6 +555,7 @@
       <span class="summary-pill summary-pill-live"><strong id="summary-live-count">0</strong> Live Widgets</span>
       <span class="summary-pill summary-pill-stale"><strong id="summary-stale-count">0</strong> Stale Signals</span>
       <span class="summary-pill summary-pill-empty"><strong id="summary-empty-count">0</strong> Empty Slots</span>
+      <span class="summary-pill summary-pill-sync" id="summary-sync-label">SYNC --:--</span>
     </div>
 
     <!-- 카테고리 탭 -->
@@ -511,6 +564,9 @@
       <button class="tab-btn" data-category="liquidity" onclick="filterCategory('liquidity', this)">Liquidity</button>
       <button class="tab-btn" data-category="rates" onclick="filterCategory('rates', this)">Rates</button>
       <button class="tab-btn" data-category="sentiment" onclick="filterCategory('sentiment', this)">Sentiment</button>
+    </div>
+    <div class="radar-toolbar">
+      <button class="radar-sync-button" id="radar-sync-button" type="button">Sync Data</button>
     </div>
   </header>
 
@@ -668,6 +724,36 @@
     initializeCategoryFilter();
   });
 
+  async function handleManualRadarSync(button) {
+    if (!(button instanceof HTMLButtonElement) || button.disabled) {
+      return;
+    }
+
+    const refreshWidgets = window.refreshRadarWidgets;
+    if (typeof refreshWidgets !== 'function') {
+      button.textContent = 'Sync Pending';
+      setTimeout(() => {
+        button.textContent = 'Sync Data';
+      }, 900);
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Syncing...';
+
+    try {
+      await refreshWidgets();
+    } catch (error) {
+      console.warn('[Index] 수동 동기화 실패:', error);
+    } finally {
+      if (typeof window.updateWidgetStatusBadges === 'function') {
+        window.updateWidgetStatusBadges();
+      }
+      button.disabled = false;
+      button.textContent = 'Sync Data';
+    }
+  }
+
   // ===== 디테일 페이지 열기 =====
   function openDetail(path) {
     // iframe 내부라면 부모 창에서 페이지 로드
@@ -707,6 +793,14 @@
         card.classList.add('fade-in');
       }, index * 50);
     });
+
+    const syncButton = document.getElementById('radar-sync-button');
+    if (syncButton instanceof HTMLButtonElement && syncButton.dataset.bound !== '1') {
+      syncButton.dataset.bound = '1';
+      syncButton.addEventListener('click', () => {
+        void handleManualRadarSync(syncButton);
+      });
+    }
   });
 
   // ===== 위젯 데이터 전달 (postMessage) =====
@@ -738,22 +832,40 @@
       return `${days}d`;
     }
 
+    function formatSyncLabel(timestamp) {
+      if (!Number.isFinite(timestamp) || timestamp <= 0) {
+        return 'SYNC --:--';
+      }
+
+      const date = new Date(timestamp);
+      if (Number.isNaN(date.getTime())) {
+        return 'SYNC --:--';
+      }
+
+      const clock = date.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      return `SYNC ${clock}`;
+    }
+
     function resolveWidgetCacheStatus(widgetId) {
       const cacheKey = `macro_${widgetId}`;
       const rawData = localStorage.getItem(cacheKey);
       if (!rawData) {
-        return { label: 'Cache Empty', tone: 'is-empty' };
+        return { label: 'Cache Empty', tone: 'is-empty', timestamp: 0 };
       }
 
       let parsed;
       try {
         parsed = JSON.parse(rawData);
       } catch (error) {
-        return { label: 'Cache Empty', tone: 'is-empty' };
+        return { label: 'Cache Empty', tone: 'is-empty', timestamp: 0 };
       }
 
       if (!parsed || typeof parsed !== 'object' || !parsed.data) {
-        return { label: 'Cache Empty', tone: 'is-empty' };
+        return { label: 'Cache Empty', tone: 'is-empty', timestamp: 0 };
       }
 
       const now = Date.now();
@@ -761,21 +873,21 @@
       const expires = Number(parsed.expires);
 
       if (!Number.isFinite(timestamp) || timestamp <= 0) {
-        return { label: 'Stale · Unknown', tone: 'is-stale' };
+        return { label: 'Stale · Unknown', tone: 'is-stale', timestamp: 0 };
       }
 
       const ageMs = Math.max(0, now - timestamp);
       const ageLabel = formatCacheAge(ageMs);
 
       if (Number.isFinite(expires) && expires > now) {
-        return { label: `Live · ${ageLabel}`, tone: 'is-live' };
+        return { label: `Live · ${ageLabel}`, tone: 'is-live', timestamp };
       }
 
       if (ageMs >= STALE_DAY_LIMIT_MS) {
-        return { label: 'Stale 24h+', tone: 'is-stale' };
+        return { label: 'Stale 24h+', tone: 'is-stale', timestamp };
       }
 
-      return { label: `Stale · ${ageLabel}`, tone: 'is-stale' };
+      return { label: `Stale · ${ageLabel}`, tone: 'is-stale', timestamp };
     }
 
     function updateWidgetStatusBadge(widgetId, status = resolveWidgetCacheStatus(widgetId)) {
@@ -793,10 +905,15 @@
       let liveCount = 0;
       let staleCount = 0;
       let emptyCount = 0;
+      let latestTimestamp = 0;
 
       WIDGET_IDS.forEach(widgetId => {
         const status = resolveWidgetCacheStatus(widgetId);
         updateWidgetStatusBadge(widgetId, status);
+
+        if (Number.isFinite(status.timestamp) && status.timestamp > latestTimestamp) {
+          latestTimestamp = status.timestamp;
+        }
 
         if (status.tone === 'is-live') {
           liveCount += 1;
@@ -822,6 +939,11 @@
       const emptyCountElement = document.getElementById('summary-empty-count');
       if (emptyCountElement) {
         emptyCountElement.textContent = String(emptyCount);
+      }
+
+      const syncLabelElement = document.getElementById('summary-sync-label');
+      if (syncLabelElement) {
+        syncLabelElement.textContent = formatSyncLabel(latestTimestamp);
       }
     }
 
@@ -930,6 +1052,8 @@
     }
     console.log('[Index] 위젯 데이터 갱신 완료');
   }
+
+  window.refreshRadarWidgets = refreshWidgetData;
 
   // 페이지 로드 시 실행 (iframe 로드 대기)
   window.addEventListener('load', () => {
