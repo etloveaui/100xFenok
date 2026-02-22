@@ -53,6 +53,11 @@ type SectorDefinition = {
   fallback: number;
 };
 
+type QuickIndexDefinition = {
+  symbol: 'SPY' | 'QQQ';
+  fallback: number;
+};
+
 type SectorSnapshot = {
   key: string;
   etf: string;
@@ -62,6 +67,14 @@ type SectorSnapshot = {
   displayChange: number;
   displayHorizon: '1D' | '1M';
   quotePrice: number | null;
+  marketState: string | null;
+};
+
+type QuickIndexSnapshot = {
+  symbol: 'SPY' | 'QQQ';
+  price: number | null;
+  change: number;
+  displayHorizon: '1D' | 'BASE';
   marketState: string | null;
 };
 
@@ -83,6 +96,7 @@ type DashboardSnapshot = {
   sectorMode: 'LIVE_1D' | 'BASE_1M';
   sectorLiveCount: number;
   tickerFetchedAt: string | null;
+  quickIndices: QuickIndexSnapshot[];
   liquidityFlow: number;
   liquidityFlowLabel: string;
   liquidityBars: LiquidityBar[];
@@ -121,6 +135,11 @@ const SECTOR_DEFINITIONS: SectorDefinition[] = [
   { key: 'utilities', etf: 'XLU', name: 'Utilities', fallback: -0.0189 },
 ];
 
+const QUICK_INDEX_DEFINITIONS: QuickIndexDefinition[] = [
+  { symbol: 'SPY', fallback: 0.0085 },
+  { symbol: 'QQQ', fallback: 0.0112 },
+];
+
 const DEFAULT_DASHBOARD: DashboardSnapshot = {
   fearGreedScore: 72,
   fearGreedLabel: 'GREED',
@@ -140,6 +159,13 @@ const DEFAULT_DASHBOARD: DashboardSnapshot = {
   sectorMode: 'BASE_1M',
   sectorLiveCount: 0,
   tickerFetchedAt: null,
+  quickIndices: QUICK_INDEX_DEFINITIONS.map((item) => ({
+    symbol: item.symbol,
+    price: null,
+    change: item.fallback,
+    displayHorizon: 'BASE',
+    marketState: null,
+  })),
   liquidityFlow: 87,
   liquidityFlowLabel: 'Bank credit flow acceleration',
   liquidityBars: [60, 75, 90, 70, 85, 100].map((height) => ({ delta: 1, height })),
@@ -288,6 +314,7 @@ function buildDashboardSnapshot(payload: {
   quarterlyBanking: FredSeriesPayload | null;
   dailyBanking: FredSeriesPayload | null;
   sectorTicker: SectorTickerMap;
+  indexTicker: SectorTickerMap;
 }): DashboardSnapshot {
   const fallback = DEFAULT_DASHBOARD;
 
@@ -329,6 +356,34 @@ function buildDashboardSnapshot(payload: {
     .filter((value): value is string => typeof value === 'string' && value.length > 0)
     .sort();
   const tickerFetchedAt = tickerFetchedAtCandidates.at(-1) ?? null;
+
+  const quickIndices: QuickIndexSnapshot[] = QUICK_INDEX_DEFINITIONS.map((item, index): QuickIndexSnapshot => {
+    const ticker = payload.indexTicker[item.symbol];
+    const fallbackQuick: QuickIndexSnapshot = fallback.quickIndices[index] ?? {
+      symbol: item.symbol,
+      price: null,
+      change: item.fallback,
+      displayHorizon: 'BASE' as const,
+      marketState: null,
+    };
+    const liveChange = typeof ticker?.changePercent === 'number' && Number.isFinite(ticker.changePercent)
+      ? ticker.changePercent / 100
+      : null;
+    const price = typeof ticker?.price === 'number' && Number.isFinite(ticker.price)
+      ? ticker.price
+      : fallbackQuick.price;
+    const marketState = typeof ticker?.marketState === 'string' && ticker.marketState.trim().length > 0
+      ? ticker.marketState.toUpperCase()
+      : fallbackQuick.marketState;
+
+    return {
+      symbol: item.symbol,
+      price,
+      change: liveChange ?? fallbackQuick.change,
+      displayHorizon: liveChange === null ? 'BASE' : '1D',
+      marketState,
+    };
+  });
 
   const fearGreedLatest = payload.fearGreed?.[payload.fearGreed.length - 1];
   const fearGreedScore = safeNumber(fearGreedLatest?.score, fallback.fearGreedScore);
@@ -421,6 +476,7 @@ function buildDashboardSnapshot(payload: {
     sectorMode,
     sectorLiveCount,
     tickerFetchedAt,
+    quickIndices,
     liquidityFlow,
     liquidityFlowLabel,
     liquidityBars,
@@ -474,24 +530,38 @@ export default function Home() {
         fetchJson<FredSeriesPayload>('/data/fred-banking-quarterly.json'),
         fetchJson<FredSeriesPayload>('/data/fred-banking-daily.json'),
       ]);
+      const tickerSymbols = [
+        ...SECTOR_DEFINITIONS.map((sector) => sector.etf),
+        ...QUICK_INDEX_DEFINITIONS.map((item) => item.symbol),
+      ];
       const tickerSettled = await Promise.allSettled(
-        SECTOR_DEFINITIONS.map(async (sector) => ({
-          etf: sector.etf,
-          quote: await fetchJson<TickerQuotePayload>(`/api/ticker/${sector.etf}`),
+        tickerSymbols.map(async (symbol) => ({
+          symbol,
+          quote: await fetchJson<TickerQuotePayload>(`/api/ticker/${symbol}`),
         })),
       );
 
       if (cancelled) return;
 
-      const sectorTicker: SectorTickerMap = {};
-      for (const sector of SECTOR_DEFINITIONS) {
-        sectorTicker[sector.etf] = null;
+      const tickerMap: SectorTickerMap = {};
+      for (const symbol of tickerSymbols) {
+        tickerMap[symbol] = null;
       }
       tickerSettled.forEach((result, index) => {
-        const etf = SECTOR_DEFINITIONS[index]?.etf;
-        if (!etf || result.status !== 'fulfilled') return;
-        sectorTicker[etf] = result.value.quote;
+        const symbol = tickerSymbols[index];
+        if (!symbol || result.status !== 'fulfilled') return;
+        tickerMap[symbol] = result.value.quote;
       });
+
+      const sectorTicker: SectorTickerMap = {};
+      for (const sector of SECTOR_DEFINITIONS) {
+        sectorTicker[sector.etf] = tickerMap[sector.etf] ?? null;
+      }
+
+      const indexTicker: SectorTickerMap = {};
+      for (const item of QUICK_INDEX_DEFINITIONS) {
+        indexTicker[item.symbol] = tickerMap[item.symbol] ?? null;
+      }
 
       const nextSnapshot = buildDashboardSnapshot({
         fearGreed,
@@ -503,6 +573,7 @@ export default function Home() {
         quarterlyBanking,
         dailyBanking,
         sectorTicker,
+        indexTicker,
       });
 
       setDashboard(nextSnapshot);
@@ -517,6 +588,7 @@ export default function Home() {
         quarterlyBanking,
         dailyBanking,
         ...Object.values(sectorTicker),
+        ...Object.values(indexTicker),
       ].some((payload) => payload !== null);
       setIsDataConnected(hasAnyLiveSource);
     };
@@ -605,8 +677,8 @@ export default function Home() {
   const sectorTopRows = [...dashboard.sectorRows]
     .sort((left, right) => right.displayChange - left.displayChange)
     .slice(0, 3);
-  const techProxy = dashboard.sectorRows.find((row) => row.etf === 'XLK');
-  const commProxy = dashboard.sectorRows.find((row) => row.etf === 'XLC');
+  const spyIndex = dashboard.quickIndices.find((item) => item.symbol === 'SPY') ?? DEFAULT_DASHBOARD.quickIndices[0];
+  const qqqIndex = dashboard.quickIndices.find((item) => item.symbol === 'QQQ') ?? DEFAULT_DASHBOARD.quickIndices[1];
   const sectorPanelModeLabel = dashboard.sectorMode === 'LIVE_1D'
     ? `LIVE 1D · ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length} sectors`
     : 'BASE 1M · Treemap by Market Cap';
@@ -830,16 +902,18 @@ export default function Home() {
                   <div className="index-item">
                     <span className="text-xs text-slate-600">SPY</span>
                     <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,16 10,14 20,12 30,10 40,11 50,6 60,4" /></svg>
-                    <span className={`font-bold text-sm ${(techProxy?.displayChange ?? 0) >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
-                      {formatSignedPercentDecimal(techProxy?.displayChange ?? 0.0085)}
+                    <span className={`font-bold text-sm ${spyIndex.change >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
+                      {formatSignedPercentDecimal(spyIndex.change)}
                     </span>
+                    <span className="index-live-detail">{spyIndex.price !== null ? `$${spyIndex.price.toFixed(2)} · ` : ''}{spyIndex.displayHorizon}</span>
                   </div>
                   <div className="index-item">
                     <span className="text-xs text-slate-600">QQQ</span>
                     <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,18 10,16 20,12 30,10 40,8 50,6 60,3" /></svg>
-                    <span className={`font-bold text-sm ${(commProxy?.displayChange ?? 0) >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
-                      {formatSignedPercentDecimal(commProxy?.displayChange ?? 0.0112)}
+                    <span className={`font-bold text-sm ${qqqIndex.change >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
+                      {formatSignedPercentDecimal(qqqIndex.change)}
                     </span>
+                    <span className="index-live-detail">{qqqIndex.price !== null ? `$${qqqIndex.price.toFixed(2)} · ` : ''}{qqqIndex.displayHorizon}</span>
                   </div>
                   <div className="index-item">
                     <span className="text-xs text-slate-600">UST10Y</span>
