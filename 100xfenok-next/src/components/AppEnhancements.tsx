@@ -280,8 +280,17 @@ export default function AppEnhancements() {
 
     const handleRefreshIntent = (event: Event) => {
       const customEvent = event as CustomEvent<{ reason?: string }>;
-      if (customEvent.detail?.reason === 'widget') {
+      const reason = customEvent.detail?.reason;
+      if (reason === 'widget') {
         pulseDock(1950, 620);
+        return;
+      }
+      if (reason === 'shortcut') {
+        pulseDock(1800, 560);
+        return;
+      }
+      if (reason === 'stale-focus') {
+        pulseDock(1500, 460);
         return;
       }
       pulseDock(1700, 540);

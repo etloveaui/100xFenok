@@ -138,7 +138,13 @@ function RouteEmbedFrameInner({
           {shellGuardLabel}
         </span>
         <span className="route-embed-path" title={railLabel}>{railLabel}</span>
-        <button type="button" className="route-embed-rail-btn" onClick={handleRetry}>
+        <button
+          type="button"
+          className="route-embed-rail-btn"
+          onClick={handleRetry}
+          aria-label="임베드 프레임 다시 불러오기"
+          title="임베드 프레임 다시 불러오기"
+        >
           Reload
         </button>
         <a href={src} target="_blank" rel="noreferrer" className="route-embed-rail-link">
