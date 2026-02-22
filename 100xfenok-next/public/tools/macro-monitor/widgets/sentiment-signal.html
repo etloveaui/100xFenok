@@ -265,6 +265,24 @@
     putcall_ratio: '../../../data/sentiment/cnn-put-call.json'
   };
 
+  function toFiniteNumber(value) {
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  }
+
+  function pickLatestPoint(raw) {
+    if (Array.isArray(raw)) {
+      if (raw.length === 0) return null;
+      return raw[raw.length - 1];
+    }
+    if (!raw || typeof raw !== 'object') return null;
+    if (Array.isArray(raw.data)) {
+      if (raw.data.length === 0) return null;
+      return raw.data[raw.data.length - 1];
+    }
+    if (raw.value && typeof raw.value === 'object') return raw.value;
+    return raw;
+  }
+
   function evaluateCondition(cond) {
     const value = CURRENT_VALUES[cond.indicator];
     if (value === null || value === undefined) return false;
@@ -333,13 +351,44 @@
 
     const fetches = missingEntries.map(async ([key, url]) => {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) return;
         const json = await res.json();
-        if (key === 'aaii_bearish') CURRENT_VALUES.aaii_bearish = json.bearish ?? json.value?.bearish;
-        else if (key === 'aaii_spread') CURRENT_VALUES.aaii_spread = json.spread ?? (json.value?.bullish - json.value?.bearish);
-        else if (key === 'cftc_net') CURRENT_VALUES.cftc_net = json.net ?? json.value?.net ?? json.value;
-        else CURRENT_VALUES[key] = json.value ?? json[key] ?? json.index;
+        const latest = pickLatestPoint(json);
+        if (!latest || typeof latest !== 'object') return;
+
+        if (key === 'aaii_bearish') {
+          const bearish = toFiniteNumber(latest.bearish);
+          if (bearish !== null) CURRENT_VALUES.aaii_bearish = bearish;
+          return;
+        }
+
+        if (key === 'aaii_spread') {
+          const directSpread = toFiniteNumber(latest.spread);
+          if (directSpread !== null) {
+            CURRENT_VALUES.aaii_spread = directSpread;
+            return;
+          }
+          const bullish = toFiniteNumber(latest.bullish);
+          const bearish = toFiniteNumber(latest.bearish);
+          if (bullish !== null && bearish !== null) {
+            CURRENT_VALUES.aaii_spread = bullish - bearish;
+          }
+          return;
+        }
+
+        if (key === 'cftc_net') {
+          const net = toFiniteNumber(latest.net) ?? toFiniteNumber(latest.value);
+          if (net !== null) CURRENT_VALUES.cftc_net = net;
+          return;
+        }
+
+        const genericValue = toFiniteNumber(latest.value)
+          ?? toFiniteNumber(latest[key])
+          ?? toFiniteNumber(latest.index);
+        if (genericValue !== null) {
+          CURRENT_VALUES[key] = genericValue;
+        }
       } catch (e) {}
     });
     await Promise.allSettled(fetches);
