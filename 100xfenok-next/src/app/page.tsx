@@ -1534,7 +1534,7 @@ export default function Home() {
               <div className="insight-tab-head-side">
                 <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
                 <div className="insight-tab-actions">
-                  <Link href="/radar" className="insight-tab-action-link">
+                  <Link href="/radar?category=liquidity" className="insight-tab-action-link">
                     Radar Hub
                   </Link>
                   <Link href={liquidityRadarDetailHref} className="insight-tab-action-link is-primary">
@@ -1579,7 +1579,7 @@ export default function Home() {
               <div className="insight-tab-head-side">
                 <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
                 <div className="insight-tab-actions">
-                  <Link href="/radar" className="insight-tab-action-link">
+                  <Link href="/radar?category=sentiment" className="insight-tab-action-link">
                     Radar Hub
                   </Link>
                   <Link href={sentimentRadarDetailHref} className="insight-tab-action-link is-primary">
