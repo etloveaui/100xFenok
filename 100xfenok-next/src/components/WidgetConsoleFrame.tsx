@@ -77,6 +77,7 @@ function WidgetConsoleFrameInner({
   }, []);
   const loadStartedAtRef = useRef<number>(getNowMs());
   const readyFallbackTimerRef = useRef<number | null>(null);
+  const bridgeStateSignatureRef = useRef<string>('');
 
   const railStateLabel = failed ? 'ERROR' : ready ? 'READY' : 'LOADING';
   const railStateClass = failed ? 'is-error' : ready ? 'is-ready' : 'is-loading';
@@ -194,6 +195,9 @@ function WidgetConsoleFrameInner({
   }, [payload]);
 
   useEffect(() => {
+    const signature = `${railBridgeLabel}|${bridgeFreshness.label}|${bridgeFreshness.ageMinutes ?? -1}`;
+    if (signature === bridgeStateSignatureRef.current) return;
+    bridgeStateSignatureRef.current = signature;
     emitWidgetBridgeTelemetry({
       event: 'state',
       src,
@@ -327,6 +331,8 @@ function WidgetConsoleFrameInner({
             className={`widget-console-rail-btn is-sync ${isSyncing ? 'is-disabled' : ''}`}
             onClick={handleSyncRequest}
             disabled={isSyncing}
+            aria-keyshortcuts="Alt+R"
+            title="메인 데이터와 위젯 브리지를 즉시 동기화"
           >
             {isSyncing ? 'Syncing' : 'Sync'}
           </button>

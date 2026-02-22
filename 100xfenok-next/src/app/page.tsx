@@ -160,6 +160,13 @@ type DashboardSnapshot = {
 };
 
 const periods = ['1D', '1W', '1M', 'YTD', '1Y'];
+const PERIOD_SHORTCUT_MAP: Record<string, string> = {
+  d: '1D',
+  w: '1W',
+  m: '1M',
+  h: 'YTD',
+  y: '1Y',
+};
 const TAB_SEQUENCE: TabId[] = ['overview', 'sectors', 'liquidity', 'sentiment'];
 const TAB_LABELS: Record<TabId, string> = {
   overview: 'Overview',
@@ -374,6 +381,12 @@ function isTypingTarget(target: EventTarget | null): boolean {
 function normalizeBridgeFreshness(value: unknown): WidgetBridgeFreshness {
   if (value === 'HOT' || value === 'WARM' || value === 'STALE') return value;
   return 'IDLE';
+}
+
+function toEpochMs(value: string | null | undefined): number {
+  if (!value) return 0;
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function isTabId(value: string): value is TabId {
@@ -828,11 +841,17 @@ export default function Home() {
       }>;
       const detail = customEvent.detail;
       if (!detail) return;
-      setWidgetBridgeRuntime({
-        freshness: normalizeBridgeFreshness(detail.freshness),
-        dataState: typeof detail.dataState === 'string' ? detail.dataState : 'LOCAL',
-        widgetId: typeof detail.widgetId === 'string' ? detail.widgetId : null,
-        at: typeof detail.at === 'string' ? detail.at : null,
+      setWidgetBridgeRuntime((prev) => {
+        const nextAt = typeof detail.at === 'string' ? detail.at : null;
+        if (toEpochMs(nextAt) < toEpochMs(prev.at)) {
+          return prev;
+        }
+        return {
+          freshness: normalizeBridgeFreshness(detail.freshness),
+          dataState: typeof detail.dataState === 'string' ? detail.dataState : 'LOCAL',
+          widgetId: typeof detail.widgetId === 'string' ? detail.widgetId : null,
+          at: nextAt,
+        };
       });
     };
 
@@ -956,14 +975,19 @@ export default function Home() {
     void loadOverviewData();
   }, [emitRefreshIntent, loadOverviewData]);
 
+  const setPeriodWithIntent = useCallback((period: string, reason: PeriodIntentReason) => {
+    if (!isValidPeriod(period)) return;
+    setActivePeriod(period);
+    emitPeriodIntent(period, reason);
+  }, [emitPeriodIntent]);
+
   const cyclePeriod = useCallback((step: 1 | -1, reason: PeriodIntentReason = 'shortcut') => {
     const currentPeriodIndex = periods.indexOf(activePeriod);
     const nextIndex = (currentPeriodIndex + step + periods.length) % periods.length;
     const nextPeriod = periods[nextIndex] ?? periods[0];
     if (!nextPeriod) return;
-    setActivePeriod(nextPeriod);
-    emitPeriodIntent(nextPeriod, reason);
-  }, [activePeriod, emitPeriodIntent]);
+    setPeriodWithIntent(nextPeriod, reason);
+  }, [activePeriod, setPeriodWithIntent]);
 
   const selectTab = useCallback((nextTab: TabId, reason: TabIntentReason = 'click') => {
     if (nextTab === activeTab) return;
@@ -1112,6 +1136,13 @@ export default function Home() {
         return;
       }
 
+      const shortcutPeriod = PERIOD_SHORTCUT_MAP[event.key.toLowerCase()];
+      if (shortcutPeriod) {
+        event.preventDefault();
+        setPeriodWithIntent(shortcutPeriod, 'shortcut');
+        return;
+      }
+
       const numeric = Number(event.key);
       if (Number.isNaN(numeric) || numeric < 1 || numeric > TAB_SEQUENCE.length) return;
       event.preventDefault();
@@ -1123,7 +1154,7 @@ export default function Home() {
     return () => {
       window.removeEventListener('keydown', handleKeydown);
     };
-  }, [cyclePeriod, handleSwipeTabChange, refreshOverview, selectTab]);
+  }, [cyclePeriod, handleSwipeTabChange, refreshOverview, selectTab, setPeriodWithIntent]);
 
   const sectorTopRows = [...dashboard.sectorRows]
     .sort((left, right) => right.displayChange - left.displayChange)
@@ -1256,6 +1287,10 @@ export default function Home() {
     ? bridgeSignalLabel
     : `Bridge ${widgetBridgeRuntime.freshness}/${widgetBridgeRuntime.dataState}`;
   const bridgeRuntimeStamp = widgetBridgeRuntime.at ? formatTimeLabel(widgetBridgeRuntime.at) : '--';
+  const bridgeRuntimeWidgetLabel = widgetBridgeRuntime.widgetId
+    ? widgetBridgeRuntime.widgetId.replace(/-/g, ' ').toUpperCase()
+    : 'WIDGET --';
+  const showBridgeSyncHint = widgetBridgeRuntime.freshness === 'STALE' && !isRefreshingData;
   const liquidityRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html';
   const sentimentRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html';
   const bankingRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html';
@@ -1351,8 +1386,7 @@ export default function Home() {
                     aria-checked={activePeriod === period}
                     className={`period-option ${activePeriod === period ? 'active' : ''}`}
                     onClick={() => {
-                      setActivePeriod(period);
-                      emitPeriodIntent(period, 'menu');
+                      setPeriodWithIntent(period, 'menu');
                       setIsPeriodMenuOpen(false);
                     }}
                   >
@@ -1371,6 +1405,18 @@ export default function Home() {
           <span className="command-meta-chip">Updated {commandSyncLabel}</span>
           <span className="command-meta-chip">Alt+R Sync</span>
           <span className="command-meta-chip">Alt+P Period</span>
+          <span className="command-meta-chip">Alt+D/W/M/H/Y</span>
+          {showBridgeSyncHint ? (
+            <button
+              type="button"
+              className="command-refresh-btn is-compact"
+              onClick={() => refreshOverview('widget')}
+              disabled={isRefreshingData}
+              aria-label="브리지 stale 동기화"
+            >
+              Bridge stale
+            </button>
+          ) : null}
           <button
             type="button"
             className="command-refresh-btn"
@@ -1391,6 +1437,7 @@ export default function Home() {
           <span className={`command-health-chip ${macroHealthClass}`}>{macroHealthLabel}</span>
           <span className={`command-health-chip ${bridgeHealthClass}`}>{bridgeHealthLabel}</span>
           <span className={`command-health-chip ${bridgeHealthClass}`}>Widget Sync {bridgeRuntimeStamp}</span>
+          <span className={`command-health-chip ${bridgeHealthClass}`}>{bridgeRuntimeWidgetLabel}</span>
           <span className={`command-health-chip ${syncHealthClass}`}>{syncHealthLabel}</span>
         </div>
       </section>
