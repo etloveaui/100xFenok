@@ -226,6 +226,7 @@
 <script>
   const WIDGET_ID = 'sentiment-signal';
   const DETAIL_PATH = 'tools/macro-monitor/details/sentiment-signal/index.html';
+  const useParentDataMode = new URLSearchParams(window.location.search).get('parentData') === '1';
 
   // 상세 페이지 열기
   function openDetail() {
@@ -323,7 +324,14 @@
   }
 
   async function loadData() {
-    const fetches = Object.entries(DATA_SOURCES).map(async ([key, url]) => {
+    const missingEntries = Object.entries(DATA_SOURCES).filter(([key]) => CURRENT_VALUES[key] === null || CURRENT_VALUES[key] === undefined);
+    if (missingEntries.length === 0) {
+      render();
+      notifyReady();
+      return;
+    }
+
+    const fetches = missingEntries.map(async ([key, url]) => {
       try {
         const res = await fetch(url);
         if (!res.ok) return;
@@ -339,6 +347,39 @@
     notifyReady();
   }
 
+  function applyParentPayload(payload) {
+    if (!payload || typeof payload !== 'object') return;
+    const source = payload.indicators && typeof payload.indicators === 'object'
+      ? payload.indicators
+      : payload;
+
+    const nextValues = {
+      vix: source.vix,
+      move: source.move,
+      cnn_fg: source.cnn_fg,
+      aaii_bearish: source.aaii_bearish,
+      aaii_spread: source.aaii_spread,
+      cftc_net: source.cftc_net,
+      crypto_fg: source.crypto_fg,
+      putcall_ratio: source.putcall_ratio
+    };
+
+    let changed = false;
+    Object.entries(nextValues).forEach(([key, value]) => {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        if (CURRENT_VALUES[key] !== value) {
+          CURRENT_VALUES[key] = value;
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      render();
+      notifyReady();
+    }
+  }
+
   function notifyReady() {
     if (readySent) return;
     readySent = true;
@@ -347,9 +388,22 @@
     } catch (e) {}
   }
 
+  window.addEventListener('message', (event) => {
+    const payload = event.data;
+    if (!payload || typeof payload !== 'object') return;
+    if (payload.type !== 'WIDGET_DATA_UPDATE') return;
+    if (payload.widgetId && payload.widgetId !== WIDGET_ID) return;
+    applyParentPayload(payload.payload);
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
     render(); // 스켈레톤 렌더 후 비동기 데이터 반영
     setTimeout(notifyReady, 700); // 데이터가 지연돼도 carousel 전환을 막지 않음
+    if (useParentDataMode) {
+      // 부모 주입 데이터 우선, 누락된 지표만 보강 fetch
+      setTimeout(() => loadData(), 450);
+      return;
+    }
     loadData();
   });
 </script>
