@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import {
+  getSingleSearchParam,
+  legacyPublicFileExists,
+  sanitizeLegacyPath,
+} from '@/lib/server/legacy-bridge';
 
 export const metadata: Metadata = {
   title: 'VR 시스템',
@@ -24,29 +29,12 @@ type PageProps = {
   searchParams?: Promise<{ path?: string | string[] }>;
 };
 
-function sanitizeVrPath(rawPath?: string): string | null {
-  if (!rawPath) return null;
-
-  let decoded = rawPath;
-  try {
-    decoded = decodeURIComponent(rawPath);
-  } catch {
-    return null;
-  }
-
-  const normalized = decoded.replace(/^\/+/, '');
-  if (!normalized.startsWith('vr/')) return null;
-  if (!/^[A-Za-z0-9/_\-.?=&]+$/.test(normalized)) return null;
-  if (!normalized.includes('.html')) return null;
-  return normalized;
-}
-
 export default async function VRPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
-  const rawPath = Array.isArray(params.path) ? params.path[0] : params.path;
-  const safePath = sanitizeVrPath(rawPath);
+  const rawPath = getSingleSearchParam(params.path);
+  const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['vr/'] });
 
-  if (safePath) {
+  if (safePath && legacyPublicFileExists(safePath)) {
     return <RouteEmbedFrame src={`/${safePath}`} title="VR Detail" loading="eager" />;
   }
 

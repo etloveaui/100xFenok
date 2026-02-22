@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { notFound } from "next/navigation";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
 
 export const metadata: Metadata = {
   title: "분석 아카이브 상세",
@@ -14,17 +15,6 @@ interface PostLegacyPageProps {
 }
 
 const POSTS_ROOT = path.join(process.cwd(), "public", "posts");
-
-function isSafeSlug(slug: string[]): boolean {
-  return slug.every(
-    (segment) =>
-      !!segment &&
-      !segment.includes("/") &&
-      !segment.includes("\\") &&
-      !segment.includes("..") &&
-      !segment.startsWith("."),
-  );
-}
 
 function normalizePublicPath(absolutePath: string): string | null {
   const relative = path.relative(POSTS_ROOT, absolutePath);
@@ -99,7 +89,7 @@ export function generateStaticParams(): Array<{ slug: string[] }> {
 export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
   const { slug } = await params;
 
-  if (!slug || slug.length === 0 || !isSafeSlug(slug)) {
+  if (!slug || slug.length === 0 || !isSafeSlugSegments(slug)) {
     notFound();
   }
 
