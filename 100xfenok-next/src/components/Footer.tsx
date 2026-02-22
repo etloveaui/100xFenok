@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { setAdminAuthenticated, verifyAdminPassword } from '@/lib/client/admin-auth';
 
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
-
-const ADMIN_PASSWORD_HASH = '8736ca6f3957409305f60068e93215c85f8751e4dcdc9303832b325a72c7789f';
 
 const marketStatusConfig: Record<FooterMarketStatus, { label: string; className: string }> = {
   regular: { label: 'MARKET OPEN', className: 'market-regular' },
@@ -130,27 +129,19 @@ export default function Footer() {
     setAdminInputError(false);
   };
 
-  const verifyAdminPassword = async () => {
+  const handleVerifyAdminPassword = async () => {
     const input = adminPassword.trim();
     if (!input || isVerifyingAdmin) {
-      return;
-    }
-
-    if (!window.crypto?.subtle) {
-      showToastMessage('브라우저 인증 기능을 사용할 수 없습니다.');
       return;
     }
 
     setIsVerifyingAdmin(true);
 
     try {
-      const hashBuffer = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-      const hashHex = Array.from(new Uint8Array(hashBuffer))
-        .map((byte) => byte.toString(16).padStart(2, '0'))
-        .join('');
+      const result = await verifyAdminPassword(input);
 
-      if (hashHex === ADMIN_PASSWORD_HASH) {
-        sessionStorage.setItem('adminAuth', 'true');
+      if (result === 'matched') {
+        setAdminAuthenticated();
         setShowAdminModal(false);
         setAdminPassword('');
         setAdminInputError(false);
@@ -160,7 +151,11 @@ export default function Footer() {
 
       setAdminPassword('');
       setAdminInputError(true);
-      showToastMessage('Access denied');
+      if (result === 'unsupported') {
+        showToastMessage('브라우저 인증 기능을 사용할 수 없습니다.');
+      } else {
+        showToastMessage('Access denied');
+      }
       adminInputRef.current?.focus();
     } catch {
       showToastMessage('인증 처리 중 오류가 발생했습니다.');
@@ -319,11 +314,11 @@ export default function Footer() {
                   setAdminInputError(false);
                 }
               }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  void verifyAdminPassword();
-                }
-              }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    void handleVerifyAdminPassword();
+                  }
+                }}
               className={`w-full rounded-lg border px-4 py-3 outline-none transition ${adminInputError ? 'border-red-500 ring-2 ring-red-100' : 'border-slate-300 focus:ring-2 focus:ring-brand-interactive'}`}
               placeholder="Password"
               autoComplete="off"
@@ -341,7 +336,7 @@ export default function Footer() {
               <button
                 type="button"
                 onClick={() => {
-                  void verifyAdminPassword();
+                  void handleVerifyAdminPassword();
                 }}
                 className="flex-1 rounded-lg bg-brand-interactive px-4 py-2 font-medium text-white transition-colors hover:bg-brand-navy disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isVerifyingAdmin || adminPassword.trim().length === 0}
