@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type TouchEvent } from 'react';
 import Link from 'next/link';
+import WidgetConsoleFrame from '@/components/WidgetConsoleFrame';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
 type TabMotion = 'next' | 'prev' | 'direct';
@@ -1352,11 +1353,11 @@ export default function Home() {
               </article>
             </div>
             <div className="insight-tab-frame">
-              <iframe
+              <WidgetConsoleFrame
                 src="/tools/macro-monitor/widgets/liquidity-flow.html"
                 title="Liquidity Flow"
-                loading="lazy"
-                className="insight-tab-iframe"
+                widgetId="liquidity-flow"
+                timeoutMs={12000}
               />
             </div>
           </section>
@@ -1386,11 +1387,11 @@ export default function Home() {
               </article>
             </div>
             <div className="insight-tab-frame">
-              <iframe
+              <WidgetConsoleFrame
                 src="/tools/macro-monitor/widgets/sentiment-signal.html"
                 title="Sentiment Signal"
-                loading="lazy"
-                className="insight-tab-iframe"
+                widgetId="sentiment-signal"
+                timeoutMs={12000}
               />
             </div>
           </section>
