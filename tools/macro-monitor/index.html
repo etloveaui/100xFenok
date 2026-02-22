@@ -303,6 +303,11 @@
       box-shadow: 0 32px 40px -32px rgba(15, 23, 42, 0.75);
     }
 
+    .indicator-card:focus-visible {
+      outline: 3px solid rgba(15, 92, 207, 0.45);
+      outline-offset: 2px;
+    }
+
     .live-widget {
       background: linear-gradient(180deg, #f9fcff 0%, #f0f6ff 100%);
     }
@@ -893,6 +898,33 @@
     initializeCategoryFilter();
   });
 
+  function bindCardKeyboardAccessibility() {
+    document.querySelectorAll('.indicator-card').forEach((card) => {
+      if (!(card instanceof HTMLElement)) {
+        return;
+      }
+      if (card.dataset.keyboardCardBound === '1') {
+        return;
+      }
+
+      card.dataset.keyboardCardBound = '1';
+      if (!card.hasAttribute('tabindex')) {
+        card.tabIndex = 0;
+      }
+      if (!card.hasAttribute('role')) {
+        card.setAttribute('role', 'button');
+      }
+
+      card.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+          return;
+        }
+        event.preventDefault();
+        card.click();
+      });
+    });
+  }
+
   async function handleManualRadarSync(button) {
     if (!(button instanceof HTMLButtonElement) || button.disabled) {
       return;
@@ -1063,6 +1095,7 @@
       }
     });
 
+    bindCardKeyboardAccessibility();
     void hydrateCorporateHealthPreview();
   });
 
