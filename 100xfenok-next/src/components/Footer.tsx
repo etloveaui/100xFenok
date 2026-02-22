@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { setAdminAuthenticated, verifyAdminPassword } from '@/lib/client/admin-auth';
+import {
+  isAdminAuthenticated,
+  setAdminAuthenticated,
+  verifyAdminPassword,
+} from '@/lib/client/admin-auth';
 
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
 
@@ -50,6 +54,7 @@ export default function Footer() {
   const [adminPassword, setAdminPassword] = useState('');
   const [adminInputError, setAdminInputError] = useState(false);
   const [isVerifyingAdmin, setIsVerifyingAdmin] = useState(false);
+  const [hasAdminSession, setHasAdminSession] = useState(false);
   const adminInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,6 +65,19 @@ export default function Footer() {
     updateMarketStatus();
     const interval = setInterval(updateMarketStatus, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const syncAdminSession = () => {
+      setHasAdminSession(isAdminAuthenticated());
+    };
+    syncAdminSession();
+    window.addEventListener('focus', syncAdminSession);
+    window.addEventListener('storage', syncAdminSession);
+    return () => {
+      window.removeEventListener('focus', syncAdminSession);
+      window.removeEventListener('storage', syncAdminSession);
+    };
   }, []);
 
   useEffect(() => {
@@ -115,6 +133,13 @@ export default function Footer() {
   };
 
   const handleAdminClick = () => {
+    const sessionActive = hasAdminSession || isAdminAuthenticated();
+    if (sessionActive) {
+      setHasAdminSession(true);
+      router.push('/admin');
+      return;
+    }
+
     setAdminPassword('');
     setAdminInputError(false);
     setShowAdminModal(true);
@@ -142,6 +167,7 @@ export default function Footer() {
 
       if (result === 'matched') {
         setAdminAuthenticated();
+        setHasAdminSession(true);
         setShowAdminModal(false);
         setAdminPassword('');
         setAdminInputError(false);
@@ -266,8 +292,8 @@ export default function Footer() {
                 <button
                   type="button"
                   onClick={handleAdminClick}
-                  className="w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
-                  aria-label="Admin"
+                  className={`w-11 h-11 rounded-lg border flex items-center justify-center transition-all duration-200 ${hasAdminSession ? 'bg-brand-navy text-white border-brand-navy hover:bg-brand-interactive' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-brand-interactive'}`}
+                  aria-label={hasAdminSession ? 'Admin (authenticated)' : 'Admin'}
                   aria-haspopup="dialog"
                 >
                   <i className="fas fa-cog text-sm" />
