@@ -90,9 +90,15 @@ const postsDeepLinkRoute = "/posts/?path=posts/2026-02-21_tariff-ruling-comprehe
 const vrDeepLinkRoute = "/vr/?path=vr/vr-complete-system.html";
 const alphaReportDeepLinkRoute = "/alpha-scout?report=2025-08-24_100x-alpha-scout.html";
 const designLabNativeRoute = "/admin/design-lab?mode=native";
+const tabSectorsRoute = "/?tab=sectors";
+const tabLiquidityRoute = "/?tab=liquidity";
+const tabSentimentRoute = "/?tab=sentiment";
 
 const defaultRoutes = [
   "/",
+  tabSectorsRoute,
+  tabLiquidityRoute,
+  tabSentimentRoute,
   "/market",
   "/alpha-scout",
   alphaReportDeepLinkRoute,
