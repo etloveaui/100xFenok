@@ -526,8 +526,30 @@
 </div>
 
 <script>
+  const VALID_CATEGORIES = new Set(['all', 'liquidity', 'rates', 'sentiment']);
+
+  function updateCategoryQuery(category) {
+    const url = new URL(window.location.href);
+    if (category === 'all') {
+      url.searchParams.delete('category');
+    } else {
+      url.searchParams.set('category', category);
+    }
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function resolveCategoryFromQuery() {
+    const requested = new URLSearchParams(window.location.search).get('category');
+    if (!requested || !VALID_CATEGORIES.has(requested)) {
+      return 'all';
+    }
+    return requested;
+  }
+
   // ===== 카테고리 필터링 =====
-  function filterCategory(category, btn) {
+  function filterCategory(category, btn, syncUrl = true) {
+    const normalized = VALID_CATEGORIES.has(category) ? category : 'all';
+
     // 탭 활성화 상태 업데이트
     document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
     btn.classList.add('active');
@@ -537,7 +559,7 @@
     cards.forEach(card => {
       const cardCategory = card.getAttribute('data-category');
 
-      if (category === 'all' || cardCategory === category) {
+      if (normalized === 'all' || cardCategory === normalized) {
         card.classList.remove('hidden');
         card.classList.add('fade-in');
       } else {
@@ -545,6 +567,23 @@
         card.classList.remove('fade-in');
       }
     });
+
+    if (syncUrl) {
+      updateCategoryQuery(normalized);
+    }
+  }
+
+  function initializeCategoryFilter() {
+    const initialCategory = resolveCategoryFromQuery();
+    const initialButton = document.querySelector(`.tab-btn[data-category="${initialCategory}"]`);
+    if (initialButton instanceof HTMLButtonElement) {
+      filterCategory(initialCategory, initialButton, false);
+      return;
+    }
+    const fallbackButton = document.querySelector('.tab-btn[data-category="all"]');
+    if (fallbackButton instanceof HTMLButtonElement) {
+      filterCategory('all', fallbackButton, false);
+    }
   }
 
   // ===== 디테일 페이지 열기 =====
@@ -579,6 +618,7 @@
 
   // ===== 초기 애니메이션 =====
   window.addEventListener('load', () => {
+    initializeCategoryFilter();
     const cards = document.querySelectorAll('.indicator-card');
     cards.forEach((card, index) => {
       setTimeout(() => {
