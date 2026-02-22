@@ -527,13 +527,12 @@
 <script>
   // 뒤로가기 - Market Radar 메인으로 이동
   function goBackToRadar() {
-    const RADAR_PATH = 'tools/macro-monitor/index.html';
+    const RADAR_PATH = 'tools/macro-monitor/index.html?category=liquidity';
     try {
       if (window.top?.loadPage) { window.top.loadPage(RADAR_PATH); return; }
       if (window.parent?.loadPage) { window.parent.loadPage(RADAR_PATH); return; }
     } catch(e) {}
-    const targetPath = String(RADAR_PATH || '').replace(/^\/+/, '');
-    (window.top || window).location.assign(`/radar?path=${encodeURIComponent(targetPath)}`);
+    (window.top || window).location.assign('/radar?category=liquidity');
   }
 
   // ===== 날짜 유틸리티 (전역) =====
