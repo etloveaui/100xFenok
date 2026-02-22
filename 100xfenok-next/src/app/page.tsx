@@ -972,7 +972,7 @@ export default function Home() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setActiveTab('sectors')}
+                    onClick={() => selectTab('sectors')}
                     className="overview-widget-action"
                     aria-label="섹터 히트맵 보기"
                   >
