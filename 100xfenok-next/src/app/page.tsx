@@ -543,6 +543,9 @@ export default function Home() {
   const [isPeriodMenuOpen, setIsPeriodMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
   const [isDataConnected, setIsDataConnected] = useState(false);
+  const [isRefreshingData, setIsRefreshingData] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [liveSourceStats, setLiveSourceStats] = useState<{ live: number; total: number }>({ live: 0, total: 0 });
   const [showSwipeHint, setShowSwipeHint] = useState(() => {
     if (typeof window === 'undefined') return true;
     try {
@@ -554,11 +557,17 @@ export default function Home() {
   const periodMenuRef = useRef<HTMLDivElement>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+  const loadInFlightRef = useRef(false);
+  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadOverviewData = useCallback(async () => {
+    if (loadInFlightRef.current) {
+      return;
+    }
+    loadInFlightRef.current = true;
+    setIsRefreshingData(true);
 
-    const loadOverviewData = async () => {
+    try {
       const tickerSymbols = [
         ...SECTOR_DEFINITIONS.map((sector) => sector.etf),
         ...QUICK_INDEX_DEFINITIONS.map((item) => item.symbol),
@@ -583,8 +592,6 @@ export default function Home() {
         dataPromise,
         tickerPromise,
       ]);
-
-      if (cancelled) return;
 
       const tickerMap: SectorTickerMap = {};
       for (const symbol of tickerSymbols) {
@@ -619,9 +626,7 @@ export default function Home() {
         indexTicker,
       });
 
-      setDashboard(nextSnapshot);
-
-      const hasAnyLiveSource = [
+      const sourcePayloads = [
         fearGreed,
         vix,
         putCall,
@@ -632,20 +637,40 @@ export default function Home() {
         dailyBanking,
         ...Object.values(sectorTicker),
         ...Object.values(indexTicker),
-      ].some((payload) => payload !== null);
-      setIsDataConnected(hasAnyLiveSource);
-    };
+      ];
+      const liveSourceCount = sourcePayloads.filter((payload) => payload !== null).length;
 
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setDashboard(nextSnapshot);
+      setIsDataConnected(liveSourceCount > 0);
+      setLiveSourceStats({
+        live: liveSourceCount,
+        total: sourcePayloads.length,
+      });
+      setLastSyncedAt(new Date().toISOString());
+    } finally {
+      loadInFlightRef.current = false;
+      if (isMountedRef.current) {
+        setIsRefreshingData(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
     void loadOverviewData();
     const refreshId = window.setInterval(() => {
       void loadOverviewData();
     }, 10 * 60 * 1000);
 
     return () => {
-      cancelled = true;
+      isMountedRef.current = false;
       window.clearInterval(refreshId);
     };
-  }, []);
+  }, [loadOverviewData]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -825,6 +850,10 @@ export default function Home() {
       : 'is-stress';
 
   const tabPanelModeLabel = isDataConnected ? 'LIVE DATA' : 'FALLBACK';
+  const commandSyncLabel = lastSyncedAt ? formatTimeLabel(lastSyncedAt) : '--';
+  const commandSourceCoverage = liveSourceStats.total > 0
+    ? `${liveSourceStats.live}/${liveSourceStats.total}`
+    : '--';
 
   return (
     <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
@@ -905,6 +934,25 @@ export default function Home() {
               </div>
             )}
           </div>
+        </div>
+        <div className="command-meta" aria-live="polite">
+          <span className={`command-live-pill ${isDataConnected ? 'is-live' : 'is-fallback'}`}>
+            {isDataConnected ? 'LIVE DATA' : 'FALLBACK DATA'}
+          </span>
+          <span className="command-meta-chip">Sources {commandSourceCoverage}</span>
+          <span className="command-meta-chip">Updated {commandSyncLabel}</span>
+          <button
+            type="button"
+            className="command-refresh-btn"
+            onClick={() => {
+              void loadOverviewData();
+            }}
+            disabled={isRefreshingData}
+            aria-label="데이터 새로고침"
+          >
+            <i className={`fas fa-rotate-right ${isRefreshingData ? 'is-spinning' : ''}`} aria-hidden="true" />
+            <span>{isRefreshingData ? 'Syncing' : 'Refresh'}</span>
+          </button>
         </div>
       </section>
 
@@ -1102,6 +1150,14 @@ export default function Home() {
                     />
                   ))}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => selectTab('liquidity')}
+                  className="overview-widget-link"
+                  aria-label="Liquidity 탭 열기"
+                >
+                  Open Liquidity Console
+                </button>
               </article>
 
               <article className="overview-widget-card overview-widget-card--sentiment">
@@ -1126,6 +1182,14 @@ export default function Home() {
                     <strong className="text-brand-gold">{Math.round(dashboard.cryptoFearGreed)} <em>{dashboard.cryptoLabel}</em></strong>
                   </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => selectTab('sentiment')}
+                  className="overview-widget-link"
+                  aria-label="Sentiment 탭 열기"
+                >
+                  Open Sentiment Console
+                </button>
               </article>
             </div>
 
