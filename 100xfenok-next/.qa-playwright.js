@@ -12,6 +12,18 @@ function parseCsvEnv(value) {
     .filter(Boolean);
 }
 
+function stripEmbedParam(raw) {
+  if (!raw) return raw;
+  try {
+    const parsed = new URL(raw, baseOrigin);
+    parsed.searchParams.delete("embed");
+    const nextQuery = parsed.searchParams.toString();
+    return `${parsed.pathname}${nextQuery ? `?${nextQuery}` : ""}${parsed.hash || ""}`;
+  } catch {
+    return raw.replace(/([?&])embed=1(&|$)/, "$1").replace(/[?&]$/, "");
+  }
+}
+
 function isExternalUrl(url) {
   try {
     return new URL(url, base).origin !== baseOrigin;
@@ -74,20 +86,29 @@ function isDevServerNoise(message) {
   );
 }
 
+const postsDeepLinkRoute = "/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html";
+const vrDeepLinkRoute = "/vr/?path=vr/vr-complete-system.html";
+const alphaReportDeepLinkRoute = "/alpha-scout?report=2025-08-24_100x-alpha-scout.html";
+const designLabNativeRoute = "/admin/design-lab?mode=native";
+
 const defaultRoutes = [
   "/",
   "/market",
   "/alpha-scout",
+  alphaReportDeepLinkRoute,
   "/multichart",
   "/radar",
   "/ib",
   "/infinite-buying",
   "/vr",
+  vrDeepLinkRoute,
   "/posts",
+  postsDeepLinkRoute,
   "/sectors",
   // Week 2 routes
   "/100x/daily-wrap",
   "/admin/design-lab",
+  designLabNativeRoute,
   "/admin/data-lab",
   "/admin/macro-monitor",
   "/admin/market-radar",
@@ -105,8 +126,12 @@ const requestedRoutes = parseCsvEnv(process.env.QA_ROUTES);
 const routes = requestedRoutes.length > 0 ? requestedRoutes : defaultRoutes;
 
 const expectedIframeRoutes = new Set([
+  "/market",
   "/ib",
   "/infinite-buying",
+  vrDeepLinkRoute,
+  postsDeepLinkRoute,
+  alphaReportDeepLinkRoute,
   "/admin/design-lab",
   "/admin/data-lab",
   "/admin/macro-monitor",
@@ -119,14 +144,32 @@ const expectedIframeRoutes = new Set([
   "/tools/stock-analyzer",
 ]);
 
+const expectedInnerShellCleanRoutes = new Set([
+  "/market",
+  postsDeepLinkRoute,
+  vrDeepLinkRoute,
+  "/admin/data-lab",
+  "/admin/macro-monitor",
+  "/admin/market-radar",
+  "/admin/valuation-lab",
+  "/admin/stark-lab",
+  "/admin/ib-helper",
+  "/admin/stats",
+  "/admin/api-test",
+]);
+
 const expectedIframeSrcByRoute = {
+  "/market": "/100x/100x-main.html",
+  [alphaReportDeepLinkRoute]: "/alpha-scout/reports/2025-08-24_100x-alpha-scout.html",
+  [postsDeepLinkRoute]: "/posts/2026-02-21_tariff-ruling-comprehensive.html",
+  [vrDeepLinkRoute]: "/vr/vr-complete-system.html",
   "/admin/design-lab": "/admin/design-lab/index.html",
   "/admin/data-lab": "/admin/data-lab/index.html",
   "/admin/macro-monitor": "/admin/market-radar/index.html",
   "/admin/market-radar": "/admin/market-radar/index.html",
   "/admin/valuation-lab": "/admin/valuation-lab/index.html",
   "/admin/stark-lab": "/admin/stark-lab/index.html",
-  "/admin/ib-helper": "/admin/ib-helper/index.html",
+  "/admin/ib-helper": "/ib/ib-helper/index.html",
   "/admin/stats": "/admin/stats.html",
   "/admin/api-test": "/admin/api-test.html",
   "/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html",
@@ -197,10 +240,17 @@ async function prewarmRoutes() {
         navigationError: null,
         hasNav: null,
         hasFooter: null,
+        outerNavCount: null,
+        outerFooterCount: null,
         hasIframe: null,
         iframeSrc: null,
         expectedIframeSrcMatched: null,
         iframeOverlapFooter: null,
+        innerNavCount: null,
+        innerFooterCount: null,
+        innerVisibleNavCount: null,
+        innerVisibleFooterCount: null,
+        innerShellProbeError: null,
         hasHorizontalScroll: null,
         hasMobileMenuButton: null,
         linkedChecks: [],
@@ -249,9 +299,14 @@ async function prewarmRoutes() {
       if (!item.navigationError) {
         try {
           await page.waitForTimeout(700);
+          if (expectedInnerShellCleanRoutes.has(route)) {
+            await page.waitForTimeout(350);
+          }
           const snapshot = await page.evaluate(() => {
-            const nav = document.querySelector("#mainNav");
-            const footer = document.querySelector("footer");
+            const navNodes = document.querySelectorAll("#mainNav");
+            const footerNodes = document.querySelectorAll("footer");
+            const nav = navNodes[0];
+            const footer = footerNodes[0];
             const iframe = document.querySelector("iframe");
             const menuOpen = document.querySelector('button[aria-label="Open menu"]');
             const html = document.documentElement;
@@ -265,8 +320,10 @@ async function prewarmRoutes() {
             }
 
             return {
-              hasNav: !!nav,
-              hasFooter: !!footer,
+              hasNav: navNodes.length > 0,
+              hasFooter: footerNodes.length > 0,
+              outerNavCount: navNodes.length,
+              outerFooterCount: footerNodes.length,
               hasIframe: !!iframe,
               iframeSrc: iframe ? iframe.getAttribute("src") : null,
               iframeOverlapFooter,
@@ -278,7 +335,62 @@ async function prewarmRoutes() {
           Object.assign(item, snapshot);
           const expectedIframeSrc = expectedIframeSrcByRoute[route];
           if (expectedIframeSrc) {
-            item.expectedIframeSrcMatched = snapshot.iframeSrc === expectedIframeSrc;
+            item.expectedIframeSrcMatched = stripEmbedParam(snapshot.iframeSrc) === expectedIframeSrc;
+          }
+
+          if (snapshot.hasIframe) {
+            try {
+              const iframeHandle = await page.$("iframe");
+              if (!iframeHandle) {
+                item.innerShellProbeError = "iframe_not_found_for_probe";
+              } else {
+                const frame = await iframeHandle.contentFrame();
+                if (!frame) {
+                  item.innerShellProbeError = "iframe_content_unavailable";
+                } else {
+                  await frame.waitForLoadState("domcontentloaded", { timeout: 5000 }).catch(() => {});
+                  if (expectedInnerShellCleanRoutes.has(route)) {
+                    await frame.waitForTimeout(950);
+                  }
+                  const innerSnapshot = await frame.evaluate(() => {
+                    const dedupe = (nodes) => Array.from(new Set(nodes));
+                    const isVisible = (el) => {
+                      if (!(el instanceof HTMLElement)) return false;
+                      const style = window.getComputedStyle(el);
+                      if (style.display === "none" || style.visibility === "hidden") return false;
+                      const rect = el.getBoundingClientRect();
+                      return rect.width > 0 && rect.height > 0;
+                    };
+
+                    const navCandidates = dedupe([
+                      ...Array.from(document.querySelectorAll("#mainNav")),
+                      ...Array.from(document.querySelectorAll("body > nav")),
+                      ...Array.from(document.querySelectorAll("body > header nav")),
+                      ...Array.from(document.querySelectorAll(".sticky-header")),
+                      ...Array.from(document.querySelectorAll("header.sticky-header")),
+                      ...Array.from(document.querySelectorAll(".top-nav")),
+                      ...Array.from(document.querySelectorAll(".global-nav")),
+                    ]);
+                    const footerCandidates = dedupe([
+                      ...Array.from(document.querySelectorAll("footer")),
+                      ...Array.from(document.querySelectorAll("#mainFooter")),
+                      ...Array.from(document.querySelectorAll(".site-footer")),
+                      ...Array.from(document.querySelectorAll(".footer")),
+                    ]);
+
+                    return {
+                      innerNavCount: navCandidates.length,
+                      innerFooterCount: footerCandidates.length,
+                      innerVisibleNavCount: navCandidates.filter(isVisible).length,
+                      innerVisibleFooterCount: footerCandidates.filter(isVisible).length,
+                    };
+                  });
+                  Object.assign(item, innerSnapshot);
+                }
+              }
+            } catch (innerErr) {
+              item.innerShellProbeError = String(innerErr);
+            }
           }
         } catch (err) {
           item.navigationError = `snapshot_error: ${String(err)}`;
@@ -292,7 +404,9 @@ async function prewarmRoutes() {
                 .filter((href) => !!href && href.startsWith("/"))
             );
             const unique = [...new Set(hrefs)].filter((href) =>
-              route === "/vr" ? href.startsWith("/vr/") : href.startsWith("/posts/")
+              route === "/vr"
+                ? href.startsWith("/vr/") || href.startsWith("/vr?path=")
+                : href.startsWith("/posts/") || href.startsWith("/posts?path=")
             );
             for (const href of unique.slice(0, 5)) {
               const res = await page.request.get(`${base}${href}`);
@@ -390,6 +504,12 @@ async function prewarmRoutes() {
     if (r.hasHorizontalScroll) return true;
     if (r.iframeOverlapFooter === true) return true;
     if (expectedIframeRoutes.has(r.route) && !r.hasIframe) return true;
+    if (
+      expectedInnerShellCleanRoutes.has(r.route) &&
+      ((r.innerVisibleNavCount || 0) > 0 || (r.innerVisibleFooterCount || 0) > 0)
+    ) {
+      return true;
+    }
     if (r.route === "/tools/stock-analyzer" && r.expectedIframeSrcMatched === false) return true;
     if (r.linkedChecks && r.linkedChecks.some((c) => c.status >= 400)) return true;
     // 404 test route: console errors from the 404 page itself are expected
