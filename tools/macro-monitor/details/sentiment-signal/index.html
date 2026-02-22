@@ -893,14 +893,35 @@
   </div>
 
   <script>
+    function isEmbedMode() {
+      try {
+        return new URLSearchParams(window.location.search).get('embed') === '1';
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function appendEmbedParam(path) {
+      if (!isEmbedMode() || !path) return path;
+      if (/(?:\?|&)embed=1(?:&|$)/.test(path)) return path;
+      return `${path}${path.includes('?') ? '&' : '?'}embed=1`;
+    }
+
+    function applyEmbedLayoutMode() {
+      if (!isEmbedMode()) return;
+      document.documentElement.style.setProperty('--footer-offset', '0px');
+    }
+
+    applyEmbedLayoutMode();
+
     // 뒤로가기 - Market Radar 메인으로 이동
     function goBackToRadar() {
-      const RADAR_PATH = 'tools/macro-monitor/index.html?category=sentiment';
+      const RADAR_PATH = appendEmbedParam('tools/macro-monitor/index.html?category=sentiment');
       try {
         if (window.top?.loadPage) { window.top.loadPage(RADAR_PATH); return; }
         if (window.parent?.loadPage) { window.parent.loadPage(RADAR_PATH); return; }
       } catch(e) {}
-      (window.top || window).location.assign('/radar?category=sentiment');
+      (window.top || window).location.assign(appendEmbedParam('/radar?category=sentiment'));
     }
 
     const data = {
@@ -974,7 +995,7 @@
     function showDetail(key) {
       currentKey = key;
       const d = data[key];
-      document.getElementById('detailChart').src = d.chart;
+      document.getElementById('detailChart').src = appendEmbedParam(d.chart);
 
       // 동적 stats 생성 (CURRENT_VALUES 사용)
       const stats = getDynamicStats(key);

@@ -73,6 +73,8 @@ function WidgetConsoleFrameInner({
   const railStateClass = failed ? 'is-error' : ready ? 'is-ready' : 'is-loading';
   const railBridgeLabel = !payload ? 'LOCAL' : isPayloadLinked ? 'LINKED' : 'WAIT';
   const railBridgeClass = !payload ? 'is-local' : isPayloadLinked ? 'is-linked' : 'is-waiting';
+  const shellGuardLabel = hideEmbeddedShell ? 'SHELL ON' : 'SHELL OFF';
+  const shellGuardClass = hideEmbeddedShell ? 'is-on' : 'is-off';
   const bridgeTimeLabel = lastDispatchAt ? formatTimeLabel(lastDispatchAt) : '--';
   const compactPath = formatWidgetPath(src);
 
@@ -261,6 +263,7 @@ function WidgetConsoleFrameInner({
         <span className="widget-console-chip" aria-hidden="true">WIDGET</span>
         <span className={`widget-console-health ${railStateClass}`} aria-live="polite">{railStateLabel}</span>
         <span className={`widget-console-bridge ${railBridgeClass}`} aria-live="polite">DATA {railBridgeLabel}</span>
+        <span className={`widget-console-shell-guard ${shellGuardClass}`} aria-live="polite">{shellGuardLabel}</span>
         {payload ? <span className="widget-console-bridge-time">SYNC {bridgeTimeLabel}</span> : null}
         <span className="widget-console-path" title={compactPath}>{compactPath}</span>
         <button type="button" className="widget-console-rail-btn" onClick={handleRetry}>

@@ -1063,16 +1063,34 @@
     }
   }
 
+  function appendEmbedParam(path) {
+    try {
+      const currentParams = new URLSearchParams(window.location.search);
+      if (currentParams.get('embed') !== '1') {
+        return path;
+      }
+      const normalizedPath = String(path || '');
+      if (/(?:\?|&)embed=1(?:&|$)/.test(normalizedPath)) {
+        return normalizedPath;
+      }
+      return `${normalizedPath}${normalizedPath.includes('?') ? '&' : '?'}embed=1`;
+    } catch (error) {
+      console.warn('[Index] embed param append failed:', error);
+      return path;
+    }
+  }
+
   // ===== 디테일 페이지 열기 =====
   function openDetail(path) {
+    const targetPath = appendEmbedParam(path);
     // iframe 내부라면 부모 창에서 페이지 로드
     try {
       if (window.top?.loadPage) {
-        window.top.loadPage('tools/macro-monitor/' + path);
+        window.top.loadPage('tools/macro-monitor/' + targetPath);
         return;
       }
       if (window.parent?.loadPage) {
-        window.parent.loadPage('tools/macro-monitor/' + path);
+        window.parent.loadPage('tools/macro-monitor/' + targetPath);
         return;
       }
     } catch(e) {
@@ -1080,7 +1098,7 @@
     }
 
     // Next.js 라우트 fallback: nav/footer를 유지한 채 상세 이동
-    const fullPath = `tools/macro-monitor/${String(path || '').replace(/^\/+/, '')}`;
+    const fullPath = `tools/macro-monitor/${String(targetPath || '').replace(/^\/+/, '')}`;
     (window.top || window).location.assign(`/radar?path=${encodeURIComponent(fullPath)}`);
   }
 

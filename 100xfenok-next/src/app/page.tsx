@@ -1045,6 +1045,23 @@ export default function Home() {
   const commandSourceCoverage = liveSourceStats.total > 0
     ? `${liveSourceStats.live}/${liveSourceStats.total}`
     : '--';
+  const tickerHealthClass = dashboard.sectorMode === 'LIVE_1D'
+    ? 'is-live'
+    : dashboard.sectorMode === 'MIXED'
+      ? 'is-mixed'
+      : 'is-fallback';
+  const tickerHealthLabel = dashboard.sectorMode === 'LIVE_1D'
+    ? 'Ticker Stream Live'
+    : dashboard.sectorMode === 'MIXED'
+      ? 'Ticker Stream Mixed'
+      : 'Ticker Stream Base';
+  const macroHealthClass = isDataConnected ? 'is-live' : 'is-fallback';
+  const macroHealthLabel = isDataConnected ? 'Macro Stack Linked' : 'Macro Stack Fallback';
+  const sentimentIndicatorCount = Object.keys(sentimentWidgetPayload?.indicators ?? {}).length;
+  const liquidityIndicatorCount = liquidityWidgetPayload ? Object.keys(liquidityWidgetPayload).length : 0;
+  const bridgeSignalCount = sentimentIndicatorCount + liquidityIndicatorCount;
+  const bridgeHealthClass = bridgeSignalCount >= 8 ? 'is-live' : bridgeSignalCount >= 4 ? 'is-mixed' : 'is-fallback';
+  const bridgeHealthLabel = bridgeSignalCount >= 8 ? 'Bridge Armed' : bridgeSignalCount >= 4 ? 'Bridge Partial' : 'Bridge Idle';
   const liquidityRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html';
   const sentimentRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html';
   const bankingRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html';
@@ -1164,6 +1181,11 @@ export default function Home() {
             <i className={`fas fa-rotate-right ${isRefreshingData ? 'is-spinning' : ''}`} aria-hidden="true" />
             <span>{isRefreshingData ? 'Syncing' : 'Refresh'}</span>
           </button>
+        </div>
+        <div className="command-health-strip" role="status" aria-live="polite">
+          <span className={`command-health-chip ${tickerHealthClass}`}>{tickerHealthLabel}</span>
+          <span className={`command-health-chip ${macroHealthClass}`}>{macroHealthLabel}</span>
+          <span className={`command-health-chip ${bridgeHealthClass}`}>{bridgeHealthLabel}</span>
         </div>
       </section>
 
@@ -1323,6 +1345,9 @@ export default function Home() {
                   <div>
                     <p className="overview-widget-kicker orbitron">SECTOR SNAPSHOT</p>
                     <h3 className="overview-widget-subtitle">Breadth Expansion</h3>
+                    <p className="overview-source-meta">
+                      {dashboard.sectorMode === 'BASE_1M' ? 'Ticker Source · Base 1M Momentum' : `Ticker Source · Live 1D ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length}`}
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -1356,6 +1381,9 @@ export default function Home() {
                   <div>
                     <p className="overview-widget-kicker orbitron">LIQUIDITY FLOW</p>
                     <h3 className="overview-widget-subtitle">Funding Pulse</h3>
+                    <p className="overview-source-meta">
+                      {liquidityWidgetPayload?.source === 'next-dashboard' ? 'Bridge Source · Next Dashboard Payload' : 'Bridge Source · Snapshot'}
+                    </p>
                   </div>
                   <span className={`overview-status-pill ${liquidityPillClass}`}>
                     {dashboard.liquidityFlow >= 0 ? 'WoW +' : 'WoW -'}
@@ -1389,6 +1417,9 @@ export default function Home() {
                   <div>
                     <p className="overview-widget-kicker orbitron">SENTIMENT</p>
                     <h3 className="overview-widget-subtitle">Risk Appetite</h3>
+                    <p className="overview-source-meta">
+                      {isDataConnected ? `Sentiment Source · Live Stack (${sentimentIndicatorCount})` : 'Sentiment Source · Fallback Snapshot'}
+                    </p>
                   </div>
                   <span className={`overview-status-pill ${isDataConnected ? 'is-positive' : ''}`}>{isDataConnected ? 'Live' : 'Fallback'}</span>
                 </header>
