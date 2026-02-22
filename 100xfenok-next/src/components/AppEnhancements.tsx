@@ -282,7 +282,12 @@ export default function AppEnhancements() {
       pulseDock(1700, 540);
     };
 
-    const handlePeriodIntent = () => {
+    const handlePeriodIntent = (event: Event) => {
+      const customEvent = event as CustomEvent<{ reason?: string }>;
+      if (customEvent.detail?.reason === 'shortcut') {
+        pulseDock(1400, 380);
+        return;
+      }
       pulseDock(1100, 320);
     };
 
