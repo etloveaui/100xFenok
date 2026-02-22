@@ -18,25 +18,56 @@ const marketStatusConfig: Record<FooterMarketStatus, { label: string; className:
   closed: { label: 'MARKET CLOSED', className: 'market-closed' },
 };
 
-function isDST(date: Date) {
-  const year = date.getFullYear();
-  const marchFirst = new Date(year, 2, 1);
-  const dstStart = new Date(year, 2, 8 + (7 - marchFirst.getDay()) % 7);
-  const novFirst = new Date(year, 10, 1);
-  const dstEnd = new Date(year, 10, 1 + (7 - novFirst.getDay()) % 7);
-  return date >= dstStart && date < dstEnd;
+const ET_WEEKDAY_MAP: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+function getETSnapshot(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'short',
+  }).formatToParts(date);
+
+  let weekday = 'Mon';
+  let hour = 0;
+  let minute = 0;
+  let zone = 'ET';
+
+  for (const part of parts) {
+    if (part.type === 'weekday') weekday = part.value;
+    if (part.type === 'hour') hour = Number(part.value) || 0;
+    if (part.type === 'minute') minute = Number(part.value) || 0;
+    if (part.type === 'timeZoneName') zone = part.value || 'ET';
+  }
+
+  return {
+    day: ET_WEEKDAY_MAP[weekday] ?? 1,
+    time: hour * 100 + minute,
+    zone,
+  };
 }
 
-function getETTime(date = new Date()) {
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-  const offset = isDST(date) ? -4 : -5;
-  return new Date(utc + 3600000 * offset);
+function formatETClock(date = new Date()) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date);
 }
 
 function getMarketStatus(date = new Date()): FooterMarketStatus {
-  const et = getETTime(date);
-  const day = et.getDay();
-  const time = et.getHours() * 100 + et.getMinutes();
+  const { day, time } = getETSnapshot(date);
 
   if (day === 0 || day === 6) return 'closed';
   if (time >= 400 && time < 930) return 'pre';
@@ -114,14 +145,9 @@ export default function Footer() {
   const handleMarketStatusClick = () => {
     const status = marketStatusConfig[marketStatus];
     const now = new Date();
-    const et = getETTime(now);
-    const dst = isDST(now) ? 'DST' : 'EST';
-    const etTime = et.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-    showToastMessage(`${status.label} | ET ${etTime} (${dst})`);
+    const etTime = formatETClock(now);
+    const etMeta = getETSnapshot(now);
+    showToastMessage(`${status.label} | ET ${etTime} (${etMeta.zone})`);
   };
 
   const handleNotificationClick = () => {
@@ -191,11 +217,7 @@ export default function Footer() {
   };
 
   const status = marketStatusConfig[marketStatus];
-  const etClock = getETTime().toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
+  const etClock = formatETClock();
 
   return (
     <>
