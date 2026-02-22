@@ -1016,21 +1016,31 @@
       const pb = Number(latestRow.px_to_book_ratio);
       const roeRaw = Number(latestRow.roe);
       const roe = Number.isFinite(roeRaw) ? (roeRaw <= 1 ? roeRaw * 100 : roeRaw) : Number.NaN;
+      const dateLabel = typeof latestRow.date === 'string' && latestRow.date.length > 0 ? latestRow.date : '--';
+      const snapshotAgeDays = (() => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateLabel)) {
+          return null;
+        }
+        const snapshotTime = Date.parse(`${dateLabel}T00:00:00Z`);
+        if (!Number.isFinite(snapshotTime)) {
+          return null;
+        }
+        const ageMs = Date.now() - snapshotTime;
+        return Math.max(0, Math.floor(ageMs / (24 * 60 * 60 * 1000)));
+      })();
 
       peElement.textContent = Number.isFinite(pe) ? pe.toFixed(1) : '--';
       pbElement.textContent = Number.isFinite(pb) ? pb.toFixed(2) : '--';
       roeElement.textContent = Number.isFinite(roe) ? `${roe.toFixed(1)}%` : '--';
 
-      const dateLabel = typeof latestRow.date === 'string' && latestRow.date.length > 0 ? latestRow.date : '--';
       const sourceLabel = payload?.metadata?.source || 'Benchmark';
-      noteElement.textContent = `${sourceLabel} snapshot · ${dateLabel}`;
+      const ageLabel = snapshotAgeDays === null ? '' : ` · age ${snapshotAgeDays}d`;
+      noteElement.textContent = `${sourceLabel} snapshot · ${dateLabel}${ageLabel}`;
 
-      if (Number.isFinite(pe)) {
-        if (pe >= 22) {
-          setCorporateWidgetStatus('Valuation Hot', 'is-stale');
-        } else {
-          setCorporateWidgetStatus('Research Live', 'is-live');
-        }
+      if (snapshotAgeDays !== null && snapshotAgeDays > 10) {
+        setCorporateWidgetStatus(`Research Stale ${snapshotAgeDays}d`, 'is-stale');
+      } else if (Number.isFinite(pe)) {
+        setCorporateWidgetStatus(pe >= 22 ? 'Valuation Hot' : 'Research Live', 'is-live');
       } else {
         setCorporateWidgetStatus('Research Data', 'is-empty');
       }
@@ -1038,6 +1048,7 @@
       emitRadarIndexTelemetry('research-preview-success', {
         source: sourceLabel,
         date: dateLabel,
+        ageDays: snapshotAgeDays,
       });
     } catch (error) {
       console.warn('[Index] Corporate Health preview load failed:', error);
