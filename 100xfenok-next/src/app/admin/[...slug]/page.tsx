@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { notFound } from "next/navigation";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
 
 export const metadata: Metadata = {
   title: "Admin Legacy Bridge",
@@ -13,19 +14,19 @@ interface AdminLegacyPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-function isSafeSlug(slug: string[]): boolean {
-  return slug.every(
-    (segment) =>
-      !!segment &&
-      !segment.includes("/") &&
-      !segment.includes("\\") &&
-      !segment.includes("..") &&
-      !segment.startsWith("."),
-  );
-}
+const legacyAliasBySlug: Record<string, string> = {
+  "ib-helper": "ib/ib-helper/index.html",
+};
 
 function resolveLegacyIframeSrc(slug: string[]): string | null {
   const joined = slug.join("/");
+  const alias = legacyAliasBySlug[joined];
+  if (alias) {
+    const aliasAbsPath = path.join(process.cwd(), "public", alias);
+    if (fs.existsSync(aliasAbsPath) && fs.statSync(aliasAbsPath).isFile()) {
+      return `/${alias.replaceAll(path.sep, "/")}`;
+    }
+  }
 
   const candidates = joined.endsWith(".html")
     ? [joined]
@@ -46,7 +47,7 @@ function resolveLegacyIframeSrc(slug: string[]): string | null {
 export default async function AdminLegacyPage({ params }: AdminLegacyPageProps) {
   const { slug } = await params;
 
-  if (!slug || slug.length === 0 || !isSafeSlug(slug)) {
+  if (!slug || slug.length === 0 || !isSafeSlugSegments(slug)) {
     notFound();
   }
 
