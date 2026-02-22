@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type WidgetConsoleFrameProps = {
   src: string;
   title: string;
   widgetId: string;
+  payload?: unknown;
   loading?: 'eager' | 'lazy';
   timeoutMs?: number;
 };
@@ -14,6 +15,7 @@ export default function WidgetConsoleFrame({
   src,
   title,
   widgetId,
+  payload,
   loading = 'lazy',
   timeoutMs = 10000,
 }: WidgetConsoleFrameProps) {
@@ -26,6 +28,7 @@ export default function WidgetConsoleFrame({
       src={src}
       title={title}
       widgetId={widgetId}
+      payload={payload}
       loading={loading}
       timeoutMs={timeoutMs}
       onRetry={() => setReloadToken((prev) => prev + 1)}
@@ -41,6 +44,7 @@ function WidgetConsoleFrameInner({
   src,
   title,
   widgetId,
+  payload,
   loading,
   timeoutMs,
   onRetry,
@@ -48,12 +52,36 @@ function WidgetConsoleFrameInner({
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failureReason, setFailureReason] = useState<'timeout' | 'load-error' | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const loadStartedAtRef = useRef<number>(getNowMs());
   const readyFallbackTimerRef = useRef<number | null>(null);
 
   const railStateLabel = failed ? 'ERROR' : ready ? 'READY' : 'LOADING';
   const railStateClass = failed ? 'is-error' : ready ? 'is-ready' : 'is-loading';
   const compactPath = formatWidgetPath(src);
+
+  const dispatchPayload = useCallback(() => {
+    if (!payload || !iframeRef.current?.contentWindow) return;
+    try {
+      const targetOrigin = resolveTargetOrigin(src);
+      iframeRef.current.contentWindow.postMessage(
+        {
+          type: 'WIDGET_DATA_UPDATE',
+          widgetId,
+          payload,
+        },
+        targetOrigin,
+      );
+      emitWidgetTelemetry({
+        event: 'data-dispatch',
+        src,
+        title,
+        widgetId,
+      });
+    } catch {
+      // payload 전달 실패는 로딩/렌더 동작에 영향이 없으므로 무시
+    }
+  }, [payload, src, title, widgetId]);
 
   useEffect(() => {
     if (ready || failed) return;
@@ -90,6 +118,7 @@ function WidgetConsoleFrameInner({
       setFailed(false);
       setFailureReason(null);
       setReady(true);
+      dispatchPayload();
       emitWidgetTelemetry({
         event: 'widget-ready',
         src,
@@ -101,7 +130,7 @@ function WidgetConsoleFrameInner({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [src, title, widgetId]);
+  }, [dispatchPayload, src, title, widgetId]);
 
   useEffect(() => {
     return () => {
@@ -112,8 +141,15 @@ function WidgetConsoleFrameInner({
     };
   }, []);
 
+  useEffect(() => {
+    if (!ready) return;
+    dispatchPayload();
+  }, [dispatchPayload, payload, ready]);
+
   const handleFrameLoad = () => {
     if (failed || ready) return;
+
+    dispatchPayload();
 
     if (readyFallbackTimerRef.current !== null) {
       window.clearTimeout(readyFallbackTimerRef.current);
@@ -214,6 +250,7 @@ function WidgetConsoleFrameInner({
         ) : null}
 
         <iframe
+          ref={iframeRef}
           src={src}
           title={title}
           loading={loading}
@@ -237,7 +274,8 @@ type WidgetTelemetryEvent =
   | 'load-timeout'
   | 'load-error'
   | 'retry'
-  | 'load-fallback-ready';
+  | 'load-fallback-ready'
+  | 'data-dispatch';
 
 type WidgetTelemetryDetail = {
   event: WidgetTelemetryEvent;
@@ -266,4 +304,13 @@ function emitWidgetTelemetry(detail: Omit<WidgetTelemetryDetail, 'at'>): void {
 
 function getNowMs(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
+}
+
+function resolveTargetOrigin(src: string): string {
+  if (typeof window === 'undefined') return '*';
+  try {
+    return new URL(src, window.location.origin).origin;
+  } catch {
+    return window.location.origin;
+  }
 }

@@ -23,6 +23,20 @@ type PutCallPoint = {
   rating?: string;
 };
 
+type AaiiPoint = {
+  date: string;
+  bullish?: number;
+  bearish?: number;
+  neutral?: number;
+  spread?: number;
+};
+
+type CftcPoint = {
+  date: string;
+  net?: number;
+  value?: number;
+};
+
 type CryptoFearGreedPoint = {
   date: string;
   value: number;
@@ -83,6 +97,19 @@ type QuickIndexSnapshot = {
 type LiquidityBar = {
   delta: number;
   height: number;
+};
+
+type SentimentWidgetPayload = {
+  indicators: {
+    vix?: number;
+    move?: number;
+    cnn_fg?: number;
+    putcall_ratio?: number;
+    aaii_bearish?: number;
+    aaii_spread?: number;
+    cftc_net?: number;
+    crypto_fg?: number;
+  };
 };
 
 type BankingTone = 'stable' | 'watch' | 'stress';
@@ -224,6 +251,10 @@ function lastValue(series: NumberPoint[] | undefined, fallback = 0): number {
 function average(values: number[]): number {
   if (values.length === 0) return 0;
   return values.reduce((acc, item) => acc + item, 0) / values.length;
+}
+
+function optionalNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
 function formatSignedBillions(value: number): string {
@@ -560,6 +591,7 @@ export default function Home() {
   const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [liveSourceStats, setLiveSourceStats] = useState<{ live: number; total: number }>({ live: 0, total: 0 });
+  const [sentimentWidgetPayload, setSentimentWidgetPayload] = useState<SentimentWidgetPayload | null>(null);
   const [showSwipeHint, setShowSwipeHint] = useState(() => {
     if (typeof window === 'undefined') return true;
     try {
@@ -591,6 +623,9 @@ export default function Home() {
         fetchJson<CnnFearGreedPoint[]>('/data/sentiment/cnn-fear-greed.json'),
         fetchJson<NumberPoint[]>('/data/sentiment/vix.json'),
         fetchJson<PutCallPoint[]>('/data/sentiment/cnn-put-call.json'),
+        fetchJson<NumberPoint[]>('/data/sentiment/move.json'),
+        fetchJson<AaiiPoint[]>('/data/sentiment/aaii.json'),
+        fetchJson<CftcPoint[]>('/data/sentiment/cftc-sp500.json'),
         fetchJson<CryptoFearGreedPoint[]>('/data/sentiment/crypto-fear-greed.json'),
         fetchJson<BenchmarksSummaryPayload>('/data/benchmarks/summaries.json'),
         fetchJson<FredSeriesPayload>('/data/fred-banking-weekly.json'),
@@ -603,7 +638,7 @@ export default function Home() {
           quote: await fetchJson<TickerQuotePayload>(`/api/ticker/${symbol}`, 3200),
         })),
       );
-      const [[fearGreed, vix, putCall, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking], tickerSettled] = await Promise.all([
+      const [[fearGreed, vix, putCall, move, aaii, cftc, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking], tickerSettled] = await Promise.all([
         dataPromise,
         tickerPromise,
       ]);
@@ -645,6 +680,9 @@ export default function Home() {
         fearGreed,
         vix,
         putCall,
+        move,
+        aaii,
+        cftc,
         crypto,
         summaries,
         weeklyBanking,
@@ -659,12 +697,39 @@ export default function Home() {
         return;
       }
 
+      const latestMove = Array.isArray(move) && move.length > 0
+        ? optionalNumber(move[move.length - 1]?.value)
+        : null;
+      const latestAaii = Array.isArray(aaii) && aaii.length > 0 ? aaii[aaii.length - 1] : null;
+      const latestCftc = Array.isArray(cftc) && cftc.length > 0 ? cftc[cftc.length - 1] : null;
+      const aaiiBearish = optionalNumber(latestAaii?.bearish);
+      const aaiiBullish = optionalNumber(latestAaii?.bullish);
+      const aaiiSpread = optionalNumber(latestAaii?.spread)
+        ?? (aaiiBullish !== null && aaiiBearish !== null ? aaiiBullish - aaiiBearish : null);
+      const cftcNet = optionalNumber(latestCftc?.net) ?? optionalNumber(latestCftc?.value);
+
+      const indicators: SentimentWidgetPayload['indicators'] = {};
+      const vixValue = optionalNumber(nextSnapshot.vixValue);
+      const putCallValue = optionalNumber(nextSnapshot.putCallValue);
+      const fearGreedValue = optionalNumber(nextSnapshot.fearGreedScore);
+      const cryptoValue = optionalNumber(nextSnapshot.cryptoFearGreed);
+
+      if (vixValue !== null) indicators.vix = vixValue;
+      if (putCallValue !== null) indicators.putcall_ratio = putCallValue;
+      if (fearGreedValue !== null) indicators.cnn_fg = fearGreedValue;
+      if (cryptoValue !== null) indicators.crypto_fg = cryptoValue;
+      if (latestMove !== null) indicators.move = latestMove;
+      if (aaiiBearish !== null) indicators.aaii_bearish = aaiiBearish;
+      if (aaiiSpread !== null) indicators.aaii_spread = aaiiSpread;
+      if (cftcNet !== null) indicators.cftc_net = cftcNet;
+
       setDashboard(nextSnapshot);
       setIsDataConnected(liveSourceCount > 0);
       setLiveSourceStats({
         live: liveSourceCount,
         total: sourcePayloads.length,
       });
+      setSentimentWidgetPayload({ indicators });
       const syncedAt = Date.now();
       lastSyncedEpochRef.current = syncedAt;
       setLastSyncedAt(new Date(syncedAt).toISOString());
@@ -1413,10 +1478,11 @@ export default function Home() {
             </div>
             <div className="insight-tab-frame">
               <WidgetConsoleFrame
-                src="/tools/macro-monitor/widgets/sentiment-signal.html"
+                src="/tools/macro-monitor/widgets/sentiment-signal.html?parentData=1"
                 title="Sentiment Signal"
                 widgetId="sentiment-signal"
                 timeoutMs={12000}
+                payload={sentimentWidgetPayload ?? undefined}
               />
             </div>
           </section>
