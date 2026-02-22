@@ -956,6 +956,15 @@ export default function Home() {
     void loadOverviewData();
   }, [emitRefreshIntent, loadOverviewData]);
 
+  const cyclePeriod = useCallback((step: 1 | -1, reason: PeriodIntentReason = 'shortcut') => {
+    const currentPeriodIndex = periods.indexOf(activePeriod);
+    const nextIndex = (currentPeriodIndex + step + periods.length) % periods.length;
+    const nextPeriod = periods[nextIndex] ?? periods[0];
+    if (!nextPeriod) return;
+    setActivePeriod(nextPeriod);
+    emitPeriodIntent(nextPeriod, reason);
+  }, [activePeriod, emitPeriodIntent]);
+
   const selectTab = useCallback((nextTab: TabId, reason: TabIntentReason = 'click') => {
     if (nextTab === activeTab) return;
     const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
@@ -1087,13 +1096,19 @@ export default function Home() {
 
       if (event.key.toLowerCase() === 'p') {
         event.preventDefault();
-        const currentPeriodIndex = periods.indexOf(activePeriod);
-        const step = event.shiftKey ? -1 : 1;
-        const nextIndex = (currentPeriodIndex + step + periods.length) % periods.length;
-        const nextPeriod = periods[nextIndex] ?? periods[0];
-        if (!nextPeriod) return;
-        setActivePeriod(nextPeriod);
-        emitPeriodIntent(nextPeriod, 'shortcut');
+        cyclePeriod(event.shiftKey ? -1 : 1, 'shortcut');
+        return;
+      }
+
+      if (event.key === '[') {
+        event.preventDefault();
+        cyclePeriod(-1, 'shortcut');
+        return;
+      }
+
+      if (event.key === ']') {
+        event.preventDefault();
+        cyclePeriod(1, 'shortcut');
         return;
       }
 
@@ -1108,7 +1123,7 @@ export default function Home() {
     return () => {
       window.removeEventListener('keydown', handleKeydown);
     };
-  }, [activePeriod, emitPeriodIntent, handleSwipeTabChange, refreshOverview, selectTab]);
+  }, [cyclePeriod, handleSwipeTabChange, refreshOverview, selectTab]);
 
   const sectorTopRows = [...dashboard.sectorRows]
     .sort((left, right) => right.displayChange - left.displayChange)
@@ -1257,6 +1272,7 @@ export default function Home() {
               role="tab"
               aria-selected={activeTab === 'overview'}
               aria-controls={TAB_PANEL_IDS.overview}
+              aria-keyshortcuts="Alt+O Alt+1"
               tabIndex={activeTab === 'overview' ? 0 : -1}
               className={`tab-pill ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => selectTab('overview', 'click')}
@@ -1270,6 +1286,7 @@ export default function Home() {
               role="tab"
               aria-selected={activeTab === 'sectors'}
               aria-controls={TAB_PANEL_IDS.sectors}
+              aria-keyshortcuts="Alt+S Alt+2"
               tabIndex={activeTab === 'sectors' ? 0 : -1}
               className={`tab-pill ${activeTab === 'sectors' ? 'active' : ''}`}
               onClick={() => selectTab('sectors', 'click')}
@@ -1283,6 +1300,7 @@ export default function Home() {
               role="tab"
               aria-selected={activeTab === 'liquidity'}
               aria-controls={TAB_PANEL_IDS.liquidity}
+              aria-keyshortcuts="Alt+L Alt+3"
               tabIndex={activeTab === 'liquidity' ? 0 : -1}
               className={`tab-pill ${activeTab === 'liquidity' ? 'active' : ''}`}
               onClick={() => selectTab('liquidity', 'click')}
@@ -1296,6 +1314,7 @@ export default function Home() {
               role="tab"
               aria-selected={activeTab === 'sentiment'}
               aria-controls={TAB_PANEL_IDS.sentiment}
+              aria-keyshortcuts="Alt+T Alt+4"
               tabIndex={activeTab === 'sentiment' ? 0 : -1}
               className={`tab-pill ${activeTab === 'sentiment' ? 'active' : ''}`}
               onClick={() => selectTab('sentiment', 'click')}
@@ -1311,6 +1330,7 @@ export default function Home() {
               className="period-trigger"
               aria-haspopup="menu"
               aria-expanded={isPeriodMenuOpen}
+              aria-keyshortcuts="Alt+P Alt+Shift+P Alt+[ Alt+]"
               onClick={() => setIsPeriodMenuOpen((prev) => !prev)}
             >
               <i className="fas fa-calendar-days" aria-hidden="true" />
@@ -1359,6 +1379,8 @@ export default function Home() {
             }}
             disabled={isRefreshingData}
             aria-label="데이터 새로고침"
+            aria-keyshortcuts="Alt+R"
+            title="Alt+R 단축키로 새로고침"
           >
             <i className={`fas fa-rotate-right ${isRefreshingData ? 'is-spinning' : ''}`} aria-hidden="true" />
             <span>{isRefreshingData ? 'Syncing' : 'Refresh'}</span>
