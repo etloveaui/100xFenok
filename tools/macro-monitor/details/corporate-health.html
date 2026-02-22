@@ -316,13 +316,12 @@
 
   <script>
     function goBackToRadar() {
-      const RADAR_PATH = 'tools/macro-monitor/index.html';
+      const RADAR_PATH = 'tools/macro-monitor/index.html?category=rates';
       try {
         if (window.top?.loadPage) { window.top.loadPage(RADAR_PATH); return; }
         if (window.parent?.loadPage) { window.parent.loadPage(RADAR_PATH); return; }
       } catch (e) {}
-      const targetPath = String(RADAR_PATH || '').replace(/^\/+/, '');
-      (window.top || window).location.assign(`/radar?path=${encodeURIComponent(targetPath)}`);
+      (window.top || window).location.assign('/radar?category=rates');
     }
 
     function toPercent(value, digits = 1) {
