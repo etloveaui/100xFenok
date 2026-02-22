@@ -370,6 +370,10 @@ function isTabId(value: string): value is TabId {
   return TAB_SEQUENCE.includes(value as TabId);
 }
 
+function isValidPeriod(value: string): boolean {
+  return periods.includes(value);
+}
+
 async function fetchJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Promise<T | null> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -592,7 +596,11 @@ export default function Home() {
     return requestedTab && isTabId(requestedTab) ? requestedTab : 'overview';
   });
   const [tabMotion, setTabMotion] = useState<TabMotion>('direct');
-  const [activePeriod, setActivePeriod] = useState('1W');
+  const [activePeriod, setActivePeriod] = useState(() => {
+    if (typeof window === 'undefined') return '1W';
+    const requestedPeriod = new URLSearchParams(window.location.search).get('period');
+    return requestedPeriod && isValidPeriod(requestedPeriod) ? requestedPeriod : '1W';
+  });
   const [isPeriodMenuOpen, setIsPeriodMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
   const [isDataConnected, setIsDataConnected] = useState(false);
@@ -807,8 +815,13 @@ export default function Home() {
     } else {
       url.searchParams.set('tab', activeTab);
     }
+    if (activePeriod === '1W') {
+      url.searchParams.delete('period');
+    } else {
+      url.searchParams.set('period', activePeriod);
+    }
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
-  }, [activeTab]);
+  }, [activePeriod, activeTab]);
 
   useEffect(() => {
     if (!isPeriodMenuOpen) return;
