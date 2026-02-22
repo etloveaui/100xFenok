@@ -8,6 +8,7 @@ type WidgetConsoleFrameProps = {
   widgetId: string;
   payload?: unknown;
   onSyncRequest?: () => void;
+  isSyncing?: boolean;
   loading?: 'eager' | 'lazy';
   timeoutMs?: number;
   hideEmbeddedShell?: boolean;
@@ -19,6 +20,7 @@ export default function WidgetConsoleFrame({
   widgetId,
   payload,
   onSyncRequest,
+  isSyncing = false,
   loading = 'lazy',
   timeoutMs = 10000,
   hideEmbeddedShell = true,
@@ -35,6 +37,7 @@ export default function WidgetConsoleFrame({
       widgetId={widgetId}
       payload={payload}
       onSyncRequest={onSyncRequest}
+      isSyncing={isSyncing}
       loading={loading}
       timeoutMs={timeoutMs}
       hideEmbeddedShell={hideEmbeddedShell}
@@ -53,6 +56,7 @@ function WidgetConsoleFrameInner({
   widgetId,
   payload,
   onSyncRequest,
+  isSyncing = false,
   loading,
   timeoutMs,
   hideEmbeddedShell = true,
@@ -294,6 +298,7 @@ function WidgetConsoleFrameInner({
   };
 
   const handleSyncRequest = () => {
+    if (isSyncing) return;
     emitWidgetBridgeTelemetry({
       event: 'sync-request',
       src,
@@ -317,8 +322,13 @@ function WidgetConsoleFrameInner({
         <span className={`widget-console-fresh ${bridgeFreshClass}`} aria-live="polite">{bridgeFreshLabel}</span>
         <span className="widget-console-path" title={compactPath}>{compactPath}</span>
         {onSyncRequest ? (
-          <button type="button" className="widget-console-rail-btn is-sync" onClick={handleSyncRequest}>
-            Sync
+          <button
+            type="button"
+            className={`widget-console-rail-btn is-sync ${isSyncing ? 'is-disabled' : ''}`}
+            onClick={handleSyncRequest}
+            disabled={isSyncing}
+          >
+            {isSyncing ? 'Syncing' : 'Sync'}
           </button>
         ) : null}
         <button type="button" className="widget-console-rail-btn" onClick={handleRetry}>

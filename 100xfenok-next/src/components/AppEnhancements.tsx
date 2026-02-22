@@ -278,7 +278,12 @@ export default function AppEnhancements() {
       pulseDock(1400, 420);
     };
 
-    const handleRefreshIntent = () => {
+    const handleRefreshIntent = (event: Event) => {
+      const customEvent = event as CustomEvent<{ reason?: string }>;
+      if (customEvent.detail?.reason === 'widget') {
+        pulseDock(1950, 620);
+        return;
+      }
       pulseDock(1700, 540);
     };
 
