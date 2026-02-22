@@ -753,6 +753,7 @@
 
 <script>
   const VALID_CATEGORIES = new Set(['all', 'liquidity', 'rates', 'sentiment']);
+  const CATEGORY_TAB_ORDER = ['all', 'liquidity', 'rates', 'sentiment'];
 
   function updateCategoryQuery(category) {
     const url = new URL(window.location.href);
@@ -809,6 +810,63 @@
     const fallbackButton = document.querySelector('.tab-btn[data-category="all"]');
     if (fallbackButton instanceof HTMLButtonElement) {
       filterCategory('all', fallbackButton, false);
+    }
+  }
+
+  function activateCategoryFromKeyboard(category, shouldFocus = true) {
+    if (!VALID_CATEGORIES.has(category)) {
+      return;
+    }
+    const targetButton = document.querySelector(`.tab-btn[data-category="${category}"]`);
+    if (!(targetButton instanceof HTMLButtonElement)) {
+      return;
+    }
+    if (shouldFocus) {
+      targetButton.focus();
+    }
+    filterCategory(category, targetButton);
+  }
+
+  function handleCategoryTabKeydown(event) {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    const currentCategory = target.dataset.category ?? 'all';
+    const currentIndex = Math.max(0, CATEGORY_TAB_ORDER.indexOf(currentCategory));
+
+    switch (event.key) {
+      case 'ArrowRight': {
+        event.preventDefault();
+        const nextIndex = (currentIndex + 1) % CATEGORY_TAB_ORDER.length;
+        activateCategoryFromKeyboard(CATEGORY_TAB_ORDER[nextIndex], true);
+        return;
+      }
+      case 'ArrowLeft': {
+        event.preventDefault();
+        const prevIndex = (currentIndex - 1 + CATEGORY_TAB_ORDER.length) % CATEGORY_TAB_ORDER.length;
+        activateCategoryFromKeyboard(CATEGORY_TAB_ORDER[prevIndex], true);
+        return;
+      }
+      case 'Home': {
+        event.preventDefault();
+        activateCategoryFromKeyboard(CATEGORY_TAB_ORDER[0], true);
+        return;
+      }
+      case 'End': {
+        event.preventDefault();
+        activateCategoryFromKeyboard(CATEGORY_TAB_ORDER[CATEGORY_TAB_ORDER.length - 1], true);
+        return;
+      }
+      case 'Enter':
+      case ' ': {
+        event.preventDefault();
+        filterCategory(currentCategory, target);
+        return;
+      }
+      default:
+        return;
     }
   }
 
@@ -965,6 +1023,13 @@
         void handleManualRadarSync(syncButton);
       });
     }
+
+    document.querySelectorAll('.tab-btn').forEach((button) => {
+      if (button instanceof HTMLButtonElement && button.dataset.keyboardBound !== '1') {
+        button.dataset.keyboardBound = '1';
+        button.addEventListener('keydown', handleCategoryTabKeydown);
+      }
+    });
 
     void hydrateCorporateHealthPreview();
   });
