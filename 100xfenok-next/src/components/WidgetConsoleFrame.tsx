@@ -52,13 +52,24 @@ function WidgetConsoleFrameInner({
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failureReason, setFailureReason] = useState<'timeout' | 'load-error' | null>(null);
+  const [isPayloadLinked, setIsPayloadLinked] = useState(false);
+  const [lastDispatchAt, setLastDispatchAt] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const loadStartedAtRef = useRef<number>(getNowMs());
   const readyFallbackTimerRef = useRef<number | null>(null);
 
   const railStateLabel = failed ? 'ERROR' : ready ? 'READY' : 'LOADING';
   const railStateClass = failed ? 'is-error' : ready ? 'is-ready' : 'is-loading';
+  const railBridgeLabel = !payload ? 'LOCAL' : isPayloadLinked ? 'LINKED' : 'WAIT';
+  const railBridgeClass = !payload ? 'is-local' : isPayloadLinked ? 'is-linked' : 'is-waiting';
+  const bridgeTimeLabel = lastDispatchAt ? formatTimeLabel(lastDispatchAt) : '--';
   const compactPath = formatWidgetPath(src);
+
+  const markPayloadLinked = useCallback(() => {
+    if (!payload) return;
+    setIsPayloadLinked(true);
+    setLastDispatchAt(new Date().toISOString());
+  }, [payload]);
 
   const dispatchPayload = useCallback(() => {
     if (!payload || !iframeRef.current?.contentWindow) return;
@@ -119,6 +130,7 @@ function WidgetConsoleFrameInner({
       setFailureReason(null);
       setReady(true);
       dispatchPayload();
+      markPayloadLinked();
       emitWidgetTelemetry({
         event: 'widget-ready',
         src,
@@ -130,7 +142,7 @@ function WidgetConsoleFrameInner({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [dispatchPayload, src, title, widgetId]);
+  }, [dispatchPayload, markPayloadLinked, src, title, widgetId]);
 
   useEffect(() => {
     return () => {
@@ -150,6 +162,7 @@ function WidgetConsoleFrameInner({
     if (failed || ready) return;
 
     dispatchPayload();
+    markPayloadLinked();
 
     if (readyFallbackTimerRef.current !== null) {
       window.clearTimeout(readyFallbackTimerRef.current);
@@ -194,6 +207,8 @@ function WidgetConsoleFrameInner({
     setReady(false);
     setFailed(false);
     setFailureReason(null);
+    setIsPayloadLinked(false);
+    setLastDispatchAt(null);
     loadStartedAtRef.current = getNowMs();
     emitWidgetTelemetry({
       event: 'retry',
@@ -210,6 +225,8 @@ function WidgetConsoleFrameInner({
       <div className="widget-console-rail">
         <span className="widget-console-chip" aria-hidden="true">WIDGET</span>
         <span className={`widget-console-health ${railStateClass}`} aria-live="polite">{railStateLabel}</span>
+        <span className={`widget-console-bridge ${railBridgeClass}`} aria-live="polite">DATA {railBridgeLabel}</span>
+        {payload ? <span className="widget-console-bridge-time">SYNC {bridgeTimeLabel}</span> : null}
         <span className="widget-console-path" title={compactPath}>{compactPath}</span>
         <button type="button" className="widget-console-rail-btn" onClick={handleRetry}>
           Reload
@@ -304,6 +321,16 @@ function emitWidgetTelemetry(detail: Omit<WidgetTelemetryDetail, 'at'>): void {
 
 function getNowMs(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
+}
+
+function formatTimeLabel(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
 function resolveTargetOrigin(src: string): string {
