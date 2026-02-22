@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
+
+const ADMIN_PASSWORD_HASH = '8736ca6f3957409305f60068e93215c85f8751e4dcdc9303832b325a72c7789f';
 
 const marketStatusConfig: Record<FooterMarketStatus, { label: string; className: string }> = {
   regular: { label: 'MARKET OPEN', className: 'market-regular' },
@@ -40,9 +43,15 @@ function getMarketStatus(date = new Date()): FooterMarketStatus {
 }
 
 export default function Footer() {
+  const router = useRouter();
   const [marketStatus, setMarketStatus] = useState<FooterMarketStatus>('regular');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminInputError, setAdminInputError] = useState(false);
+  const [isVerifyingAdmin, setIsVerifyingAdmin] = useState(false);
+  const adminInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const updateMarketStatus = () => {
@@ -54,11 +63,35 @@ export default function Footer() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleShareClick = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setToastMessage('URL 복사 완료!');
+  useEffect(() => {
+    if (!showAdminModal) {
+      return;
+    }
+
+    adminInputRef.current?.focus();
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowAdminModal(false);
+        setAdminPassword('');
+        setAdminInputError(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [showAdminModal]);
+
+  const showToastMessage = (message: string) => {
+    setToastMessage(message);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
+  };
+
+  const handleShareClick = () => {
+    navigator.clipboard.writeText(window.location.href);
+    showToastMessage('URL 복사 완료!');
   };
 
   const handleMarketStatusClick = () => {
@@ -71,21 +104,69 @@ export default function Footer() {
       minute: '2-digit',
       hour12: true,
     });
-    setToastMessage(`${status.label} | ET ${etTime} (${dst})`);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
+    showToastMessage(`${status.label} | ET ${etTime} (${dst})`);
   };
 
   const handleNotificationClick = () => {
-    setToastMessage('알림 없음');
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
+    showToastMessage('알림 없음');
   };
 
   const handleHelpClick = () => {
-    setToastMessage('도움말: 100xFenok 시장 모니터링 도구');
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
+    showToastMessage('도움말: 100xFenok 시장 모니터링 도구');
+  };
+
+  const handleAdminClick = () => {
+    setAdminPassword('');
+    setAdminInputError(false);
+    setShowAdminModal(true);
+  };
+
+  const closeAdminModal = () => {
+    if (isVerifyingAdmin) {
+      return;
+    }
+    setShowAdminModal(false);
+    setAdminPassword('');
+    setAdminInputError(false);
+  };
+
+  const verifyAdminPassword = async () => {
+    const input = adminPassword.trim();
+    if (!input || isVerifyingAdmin) {
+      return;
+    }
+
+    if (!window.crypto?.subtle) {
+      showToastMessage('브라우저 인증 기능을 사용할 수 없습니다.');
+      return;
+    }
+
+    setIsVerifyingAdmin(true);
+
+    try {
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+      const hashHex = Array.from(new Uint8Array(hashBuffer))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('');
+
+      if (hashHex === ADMIN_PASSWORD_HASH) {
+        sessionStorage.setItem('adminAuth', 'true');
+        setShowAdminModal(false);
+        setAdminPassword('');
+        setAdminInputError(false);
+        router.push('/admin');
+        return;
+      }
+
+      setAdminPassword('');
+      setAdminInputError(true);
+      showToastMessage('Access denied');
+      adminInputRef.current?.focus();
+    } catch {
+      showToastMessage('인증 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsVerifyingAdmin(false);
+    }
   };
 
   const status = marketStatusConfig[marketStatus];
@@ -189,8 +270,10 @@ export default function Footer() {
                 </button>
                 <button
                   type="button"
-                  className="hidden sm:flex w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                  onClick={handleAdminClick}
+                  className="w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
                   aria-label="Admin"
+                  aria-haspopup="dialog"
                 >
                   <i className="fas fa-cog text-sm" />
                 </button>
@@ -207,6 +290,68 @@ export default function Footer() {
           </div>
         </div>
       </footer>
+
+      {showAdminModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeAdminModal();
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Admin Access Control"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-brand-navy">
+              <i className="fas fa-lock text-brand-interactive" />
+              Access Control
+            </h3>
+            <p className="mb-4 text-sm text-slate-500">관리자 인증이 필요합니다.</p>
+            <input
+              ref={adminInputRef}
+              type="password"
+              value={adminPassword}
+              onChange={(event) => {
+                setAdminPassword(event.target.value);
+                if (adminInputError) {
+                  setAdminInputError(false);
+                }
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  void verifyAdminPassword();
+                }
+              }}
+              className={`w-full rounded-lg border px-4 py-3 outline-none transition ${adminInputError ? 'border-red-500 ring-2 ring-red-100' : 'border-slate-300 focus:ring-2 focus:ring-brand-interactive'}`}
+              placeholder="Password"
+              autoComplete="off"
+              aria-invalid={adminInputError}
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={closeAdminModal}
+                className="flex-1 rounded-lg bg-slate-100 px-4 py-2 font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isVerifyingAdmin}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void verifyAdminPassword();
+                }}
+                className="flex-1 rounded-lg bg-brand-interactive px-4 py-2 font-medium text-white transition-colors hover:bg-brand-navy disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isVerifyingAdmin || adminPassword.trim().length === 0}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {showToast && (
