@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type TouchEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type TouchEvent } from 'react';
 import Link from 'next/link';
 
 type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
@@ -125,6 +125,18 @@ const TAB_LABELS: Record<TabId, string> = {
   sectors: 'Sectors',
   liquidity: 'Liquidity',
   sentiment: 'Sentiment',
+};
+const TAB_BUTTON_IDS: Record<TabId, string> = {
+  overview: 'tab-overview',
+  sectors: 'tab-sectors',
+  liquidity: 'tab-liquidity',
+  sentiment: 'tab-sentiment',
+};
+const TAB_PANEL_IDS: Record<TabId, string> = {
+  overview: 'panel-overview',
+  sectors: 'panel-sectors',
+  liquidity: 'panel-liquidity',
+  sentiment: 'panel-sentiment',
 };
 const SWIPE_HINT_DISMISS_KEY = 'fenok_swipe_hint_dismissed_v1';
 const CLIENT_FETCH_TIMEOUT_MS = 5500;
@@ -742,6 +754,36 @@ export default function Home() {
     }
   }, [activeTab, dismissSwipeHint, showSwipeHint]);
 
+  const handleTabKeyNavigation = useCallback((event: ReactKeyboardEvent<HTMLButtonElement>, currentTab: TabId) => {
+    const currentIndex = TAB_SEQUENCE.indexOf(currentTab);
+    if (currentIndex < 0) return;
+
+    let targetIndex = currentIndex;
+    if (event.key === 'ArrowRight') {
+      targetIndex = Math.min(currentIndex + 1, TAB_SEQUENCE.length - 1);
+    } else if (event.key === 'ArrowLeft') {
+      targetIndex = Math.max(currentIndex - 1, 0);
+    } else if (event.key === 'Home') {
+      targetIndex = 0;
+    } else if (event.key === 'End') {
+      targetIndex = TAB_SEQUENCE.length - 1;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    const nextTab = TAB_SEQUENCE[targetIndex];
+    if (!nextTab) return;
+
+    selectTab(nextTab);
+    window.requestAnimationFrame(() => {
+      const tabButton = document.getElementById(TAB_BUTTON_IDS[nextTab]);
+      if (tabButton instanceof HTMLButtonElement) {
+        tabButton.focus();
+      }
+    });
+  }, [selectTab]);
+
   const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
     const first = event.touches[0];
     if (!first) return;
@@ -861,38 +903,54 @@ export default function Home() {
         <div className="command-main">
           <div className="tab-pills tab-pills-compact" role="tablist" aria-label="View tabs">
             <button
+              id={TAB_BUTTON_IDS.overview}
               type="button"
               role="tab"
               aria-selected={activeTab === 'overview'}
+              aria-controls={TAB_PANEL_IDS.overview}
+              tabIndex={activeTab === 'overview' ? 0 : -1}
               className={`tab-pill ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => selectTab('overview')}
+              onKeyDown={(event) => handleTabKeyNavigation(event, 'overview')}
             >
               Overview
             </button>
             <button
+              id={TAB_BUTTON_IDS.sectors}
               type="button"
               role="tab"
               aria-selected={activeTab === 'sectors'}
+              aria-controls={TAB_PANEL_IDS.sectors}
+              tabIndex={activeTab === 'sectors' ? 0 : -1}
               className={`tab-pill ${activeTab === 'sectors' ? 'active' : ''}`}
               onClick={() => selectTab('sectors')}
+              onKeyDown={(event) => handleTabKeyNavigation(event, 'sectors')}
             >
               Sectors
             </button>
             <button
+              id={TAB_BUTTON_IDS.liquidity}
               type="button"
               role="tab"
               aria-selected={activeTab === 'liquidity'}
+              aria-controls={TAB_PANEL_IDS.liquidity}
+              tabIndex={activeTab === 'liquidity' ? 0 : -1}
               className={`tab-pill ${activeTab === 'liquidity' ? 'active' : ''}`}
               onClick={() => selectTab('liquidity')}
+              onKeyDown={(event) => handleTabKeyNavigation(event, 'liquidity')}
             >
               Liquidity
             </button>
             <button
+              id={TAB_BUTTON_IDS.sentiment}
               type="button"
               role="tab"
               aria-selected={activeTab === 'sentiment'}
+              aria-controls={TAB_PANEL_IDS.sentiment}
+              tabIndex={activeTab === 'sentiment' ? 0 : -1}
               className={`tab-pill ${activeTab === 'sentiment' ? 'active' : ''}`}
               onClick={() => selectTab('sentiment')}
+              onKeyDown={(event) => handleTabKeyNavigation(event, 'sentiment')}
             >
               Sentiment
             </button>
@@ -979,6 +1037,9 @@ export default function Home() {
 
       <section
         key={activeTab}
+        id={TAB_PANEL_IDS[activeTab]}
+        role="tabpanel"
+        aria-labelledby={TAB_BUTTON_IDS[activeTab]}
         className={`tab-scene tab-scene-${tabMotion}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
