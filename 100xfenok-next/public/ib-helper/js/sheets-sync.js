@@ -377,12 +377,13 @@ const SheetsSync = (function() {
   /**
    * Sign in to Google and get user email
    * 🔴 v3.6.0: 저장된 세션 먼저 확인, 없으면 새 로그인
+   * @param {Object} options - Proxy sign-in options (forceAccountSelect, buttonContainer, callbacks)
    * @returns {Promise<Object>} Token response
    */
-  function signIn() {
+  function signIn(options) {
     // 🔴 v4.0.0: Proxy mode — use GasProxy sign-in (returns Promise)
     if (CONFIG.USE_PROXY) {
-      return GasProxy.signIn().then(function(email) {
+      return GasProxy.signIn(options || {}).then(function(email) {
         currentUserEmail = email;
         isSignedIn = true;
         return { proxy: true, email: email };
