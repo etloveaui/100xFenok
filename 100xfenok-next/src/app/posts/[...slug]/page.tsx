@@ -14,7 +14,7 @@ interface PostLegacyPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-const POSTS_ROOT = path.join(process.cwd(), "public", "posts");
+const POSTS_ROOT = path.join(process.cwd(), "public", "posts-raw");
 
 function normalizePublicPath(absolutePath: string): string | null {
   const relative = path.relative(POSTS_ROOT, absolutePath);

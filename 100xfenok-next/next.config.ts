@@ -42,19 +42,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Route /posts-raw/* to static public/posts/* before App Router matching.
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: "/posts-raw/:path*",
-          destination: "/posts/:path*",
-        },
-      ],
-      afterFiles: [],
-      fallback: [],
-    };
-  },
 };
 
 export default nextConfig;
