@@ -4,7 +4,7 @@
  * Frontend module for Google Sign-In (email only) + GAS doPost() proxy.
  * Replaces OAuth2 spreadsheets scope with simple identity verification.
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @author 100xFenok Claude
  * @feature #258 (no more "unverified app" warning)
  * @feature #226 (7-day session persistence via HMAC tokens)
@@ -17,6 +17,7 @@
  *   5. All Sheets ops go through gasProxy.request(action, params)
  *
  * CHANGELOG:
+ * - v1.1.0 (2026-02-23): Account-switch hardening (force chooser + fallback button wiring)
  * - v1.0.0 (2026-02-21): Initial release — Sign-In + session + fetch wrapper
  */
 
@@ -100,7 +101,7 @@ const GasProxy = (function() {
         google.accounts.id.initialize({
           client_id: PROXY_CLIENT_CONFIG.CLIENT_ID,
           callback: _handleCredentialResponse,
-          auto_select: true,
+          auto_select: false,
           cancel_on_tap_outside: false
         });
         resolve();
@@ -123,13 +124,23 @@ const GasProxy = (function() {
    *
    * @returns {Promise<string>} Resolves with user email on success
    */
-  function signIn() {
+  function signIn(options) {
+    options = options || {};
+    var forceAccountSelect = !!options.forceAccountSelect;
+    var fallbackContainer = options.buttonContainer || null;
+    var onFallbackShown = typeof options.onFallbackShown === 'function' ? options.onFallbackShown : null;
+    var onPromptStarted = typeof options.onPromptStarted === 'function' ? options.onPromptStarted : null;
+
     if (!_initialized) {
       return Promise.reject(new Error('GasProxy: Not initialized. Call init() first.'));
     }
 
+    if (forceAccountSelect) {
+      _prepareAccountSwitch();
+    }
+
     // If already signed in, just notify
-    if (_sessionToken && _email) {
+    if (_sessionToken && _email && !forceAccountSelect) {
       if (_signInCallback) _signInCallback(_email);
       return Promise.resolve(_email);
     }
@@ -139,19 +150,49 @@ const GasProxy = (function() {
       _pendingSignInResolve = resolve;
       _pendingSignInReject = reject;
 
-      // 60s timeout for the entire sign-in flow
+      // Give enough time for account chooser interaction + manual fallback button.
       _signInTimeoutId = setTimeout(function() {
         _pendingSignInResolve = null;
         _pendingSignInReject = null;
         _signInTimeoutId = null;
-        reject(new Error('Sign-in timeout (60s)'));
-      }, 60000);
+        reject(new Error('Sign-in timeout (120s)'));
+      }, 120000);
 
       // Trigger One Tap prompt
+      if (onPromptStarted) {
+        try { onPromptStarted(); } catch (e) {}
+      }
       google.accounts.id.prompt(function(notification) {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          console.log('GasProxy: One Tap not shown (' + notification.getNotDisplayedReason() +
-            ' / ' + notification.getSkippedReason() + '). Use renderButton fallback.');
+        var isNotDisplayed = notification.isNotDisplayed && notification.isNotDisplayed();
+        var isSkipped = notification.isSkippedMoment && notification.isSkippedMoment();
+        var isDismissed = notification.isDismissedMoment && notification.isDismissedMoment();
+
+        if (isNotDisplayed || isSkipped || isDismissed) {
+          var reasons = [];
+          if (notification.getNotDisplayedReason) {
+            var notDisplayedReason = notification.getNotDisplayedReason();
+            if (notDisplayedReason) reasons.push(notDisplayedReason);
+          }
+          if (notification.getSkippedReason) {
+            var skippedReason = notification.getSkippedReason();
+            if (skippedReason) reasons.push(skippedReason);
+          }
+          if (notification.getDismissedReason) {
+            var dismissedReason = notification.getDismissedReason();
+            if (dismissedReason) reasons.push(dismissedReason);
+          }
+
+          var reasonText = reasons.length > 0 ? reasons.join(' / ') : 'unknown';
+          console.log('GasProxy: One Tap not shown (' + reasonText + '). Using fallback button if available.');
+
+          if (fallbackContainer) {
+            renderButton(fallbackContainer);
+            if (onFallbackShown) {
+              try { onFallbackShown(reasonText); } catch (e) {}
+            }
+          } else if (onFallbackShown) {
+            try { onFallbackShown(reasonText); } catch (e) {}
+          }
         }
       });
     });
@@ -169,6 +210,7 @@ const GasProxy = (function() {
       console.warn('GasProxy.renderButton: container not found');
       return;
     }
+    el.innerHTML = '';
     google.accounts.id.renderButton(el, {
       type: 'standard',
       theme: 'outline',
@@ -176,6 +218,34 @@ const GasProxy = (function() {
       text: 'signin_with',
       logo_alignment: 'left'
     });
+  }
+
+  /**
+   * Prepare account switching by removing local session and disabling auto-selection.
+   * Revoke is best-effort only; failures should not block sign-in.
+   */
+  function _prepareAccountSwitch() {
+    var previousEmail = _email;
+
+    _clearSession();
+
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      try {
+        google.accounts.id.disableAutoSelect();
+      } catch (e) {
+        console.warn('GasProxy: disableAutoSelect failed:', e);
+      }
+
+      if (previousEmail && google.accounts.id.revoke) {
+        try {
+          google.accounts.id.revoke(previousEmail, function() {
+            console.log('GasProxy: Revoked Google credential for', previousEmail);
+          });
+        } catch (e2) {
+          console.warn('GasProxy: revoke failed (ignored):', e2);
+        }
+      }
+    }
   }
 
   /**
@@ -238,11 +308,25 @@ const GasProxy = (function() {
    * Sign out: clear session + revoke Google credential.
    */
   function signOut() {
+    var previousEmail = _email;
     _clearSession();
 
     // Revoke Google credential to ensure clean re-login
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-      google.accounts.id.disableAutoSelect();
+      try {
+        google.accounts.id.disableAutoSelect();
+      } catch (e) {
+        console.warn('GasProxy: disableAutoSelect failed:', e);
+      }
+      if (previousEmail && google.accounts.id.revoke) {
+        try {
+          google.accounts.id.revoke(previousEmail, function() {
+            console.log('GasProxy: Signed out + revoked', previousEmail);
+          });
+        } catch (e2) {
+          console.warn('GasProxy: revoke failed (ignored):', e2);
+        }
+      }
     }
 
     if (_signOutCallback) {
