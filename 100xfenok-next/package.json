@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "sync-static": "cp -r ../100x ../alpha-scout ../tools ../ib ../posts ../admin ../data public/ 2>/dev/null || true; cp -r ../100x/data/* public/data/ 2>/dev/null || true; cp -rn ../alpha-scout/data/* public/data/ 2>/dev/null || true",
+    "sync-static": "cp -r ../100x ../alpha-scout ../tools ../ib ../admin ../data public/ 2>/dev/null || true; mkdir -p public/posts-raw; cp -r ../posts/. public/posts-raw/ 2>/dev/null || true; cp -r ../100x/data/* public/data/ 2>/dev/null || true; cp -rn ../alpha-scout/data/* public/data/ 2>/dev/null || true",
     "predev": "npm run sync-static",
     "dev": "next dev",
     "build": "npm run build:runtime",

@@ -34,8 +34,9 @@ export default async function PostsPage({ searchParams }: PageProps) {
   const rawPath = getSingleSearchParam(params.path);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['posts/'] });
 
-  if (safePath && legacyPublicFileExists(safePath)) {
-    const rawSrc = `/posts-raw/${safePath.replace(/^posts\//, '')}`;
+  const filePath = safePath ? safePath.replace(/^posts\//, 'posts-raw/') : null;
+  if (filePath && legacyPublicFileExists(filePath)) {
+    const rawSrc = `/${filePath}`;
     return <RouteEmbedFrame src={rawSrc} title="Posts Detail" loading="eager" />;
   }
 
