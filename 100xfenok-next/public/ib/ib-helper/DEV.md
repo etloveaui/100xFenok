@@ -2,8 +2,8 @@
 
 > **Version**: 4.51.0
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-20
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.51.0 T=0 + 예수금 경로 안정화** + **Code.gs v3.2.0** (Balance 0-floor #264) | ❌ #220 REVERTED
+> **Updated**: 2026-02-23
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.51.0 T=0 + 예수금 경로 안정화** + **Code.gs v3.2.1(local)** (totalInvested cost-basis rollback) | ❌ #220 REVERTED
 >
 > **🔑 GAS Resources**:
 > - **Spreadsheet**: `1shNx-xmzsJ7ninBly4HUjOjrMFqlvj-u3aBg6PmTGBE`
@@ -827,6 +827,13 @@ ib/ib-helper/
 - [x] **Verification**: 3/3 agents independently CONFIRMED (model-x, model-y, model-3)
 - [x] **Code.gs v2.3.3**: `commissionByProfile[profileKey] ?? defaultCommissionRate` applied to totalInvested
 - [x] **Frontend v4.47.2**: `BalanceManager.getCommissionRate()` / fallback 0.07% applied in `applyTodayBuy()`
+
+### v4.51.1 / Code.gs v3.2.1: totalInvested Cost Basis Rollback (02-23)
+- [x] **User feedback**: 총매입금이 `0.xx` 단위로 누적 오차 체감
+- [x] **Policy change**: totalInvested 누적식을 체결가×수량 기준으로 복원 (수수료 제외)
+  - Code.gs `updatePortfolio()`: `executionPrice * buyQty`
+  - Frontend `applyTodayBuy()`: `o.price * o.quantity`
+- [x] **Note**: 예수금(balance) 증감은 기존대로 수수료 반영 경로 유지
 
 ### Phase 4: Telegram
 - [ ] 프로필별 알림 발송
