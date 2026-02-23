@@ -2718,12 +2718,8 @@
       // 1. 수량 추가 (adjustHoldings 내부에서 saveDailyInputs 호출)
       adjustHoldings(totalBuyQty);
 
-      // 2. 총매입금 업데이트 (🔴 v4.47.2: 수수료 포함 - balance consistency fix)
-      const commPercent = (typeof BalanceManager !== 'undefined')
-        ? BalanceManager.getCommissionRate(currentProfile.id)
-        : 0.07;
-      const commRate = (Number.isFinite(commPercent) ? commPercent : 0.07) / 100;
-      const totalAmount = allBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity * (1 + commRate)), 0);
+      // 2. 총매입금 업데이트 (체결가×수량 기준, 수수료 제외)
+      const totalAmount = allBuyOrders.reduce((sum, o) => sum + (o.price * o.quantity), 0);
       const investedInput = document.getElementById('input-totalInvested');
       const currentInvested = parseFloat(investedInput.value) || 0;
       investedInput.value = (currentInvested + totalAmount).toFixed(2);

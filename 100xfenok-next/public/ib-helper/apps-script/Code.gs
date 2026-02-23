@@ -2,7 +2,7 @@
  * IB Helper - Order Execution Automation
  * Google Apps Script for Google Sheets
  *
- * @version 3.2.0
+ * @version 3.2.1
  * @author 100xFenok Claude
  * @decision DEC-153 (2026-02-03), DEC-155 (2026-02-04), DEC-162 (2026-02-04)
  *
@@ -19,6 +19,7 @@
  * - Sheet3 "Orders": Order history (A:M - auto-created)
  *
  * CHANGELOG:
+ * - v3.2.1 (2026-02-23): totalInvested buy cost reverted to executionPrice*qty (commission excluded)
  * - v3.2.0 (2026-02-20): Balance 0-floor guard — updatePortfolio() balanceByProfile Math.max(0) (#264)
  * - v3.1.0 (2026-02-20): ExecutionLog noise reduction (EXECUTED-only), 30-day log rotation, ARCHIVE_DAYS 14→7
  * - v3.0.0 (2026-02-19): Pipeline reliability overhaul — 10 fixes (S-1, S-2, S-3, D-1~D-4, R-1, R-2)
@@ -1154,8 +1155,8 @@ function updatePortfolio(ss, executedOrders) {
         if (buyQty <= 0 || executionPrice <= 0) {
           return;
         }
-        // v3.0.0 (D-1): Commission included in totalInvested
-        const newCost = executionPrice * buyQty * (1 + commissionRate);
+        // totalInvested는 체결가×수량 기준(수수료 제외)으로 누적
+        const newCost = executionPrice * buyQty;
         totalInvested += newCost;
         holdings += buyQty;
       });
