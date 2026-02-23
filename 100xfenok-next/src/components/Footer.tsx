@@ -10,12 +10,12 @@ import {
 
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
 
-const marketStatusConfig: Record<FooterMarketStatus, { label: string; className: string }> = {
-  regular: { label: 'MARKET OPEN', className: 'market-regular' },
-  pre: { label: 'MARKET PRE', className: 'market-pre' },
-  after: { label: 'MARKET AFTER', className: 'market-after' },
-  overnight: { label: 'MARKET NIGHT', className: 'market-overnight' },
-  closed: { label: 'MARKET CLOSED', className: 'market-closed' },
+const marketStatusConfig: Record<FooterMarketStatus, { label: string; className: string; tickerLabel: string }> = {
+  regular: { label: 'MARKET OPEN', className: 'market-regular', tickerLabel: 'Market data live' },
+  pre: { label: 'MARKET PRE', className: 'market-pre', tickerLabel: 'Pre-market session' },
+  after: { label: 'MARKET AFTER', className: 'market-after', tickerLabel: 'After-hours session' },
+  overnight: { label: 'MARKET NIGHT', className: 'market-overnight', tickerLabel: 'Market closed' },
+  closed: { label: 'MARKET CLOSED', className: 'market-closed', tickerLabel: 'Market closed' },
 };
 
 const ET_WEEKDAY_MAP: Record<string, number> = {
@@ -323,7 +323,7 @@ export default function Footer() {
             <div className="flex-1 overflow-hidden">
               <div className="ticker-scroll">
                 <div className="flex items-center gap-3 text-[10px] font-medium text-white/90 whitespace-nowrap" aria-hidden="true">
-                  <span className="text-white/50">Loading market data...</span>
+                  <span className="text-white/50">{status.tickerLabel}</span>
                 </div>
               </div>
             </div>

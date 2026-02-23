@@ -21,7 +21,7 @@ function normalizePublicPath(absolutePath: string): string | null {
   if (!relative || relative.startsWith("..")) {
     return null;
   }
-  return `/posts/${relative.replaceAll(path.sep, "/")}`;
+  return `/posts-raw/${relative.replaceAll(path.sep, "/")}`;
 }
 
 function resolveLegacyPostSrc(slug: string[]): string | null {
