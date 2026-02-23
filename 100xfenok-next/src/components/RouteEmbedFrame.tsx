@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isAdminAuthenticated } from '@/lib/client/admin-auth';
 
 type RouteEmbedFrameProps = {
   src: string;
@@ -46,6 +47,7 @@ function RouteEmbedFrameInner({
   hideEmbeddedShell = true,
   onRetry,
 }: RouteEmbedFrameInnerProps) {
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => isAdminAuthenticated());
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failureReason, setFailureReason] = useState<'timeout' | 'load-error' | null>(null);
@@ -62,6 +64,19 @@ function RouteEmbedFrameInner({
   const railStateClass = failed ? 'is-error' : ready ? 'is-ready' : 'is-loading';
   const shellGuardLabel = hideEmbeddedShell ? 'SHELL ON' : 'SHELL OFF';
   const shellGuardClass = hideEmbeddedShell ? 'is-on' : 'is-off';
+
+  useEffect(() => {
+    const syncAdminSession = () => {
+      setIsAdmin(isAdminAuthenticated());
+    };
+    syncAdminSession();
+    window.addEventListener('focus', syncAdminSession);
+    window.addEventListener('storage', syncAdminSession);
+    return () => {
+      window.removeEventListener('focus', syncAdminSession);
+      window.removeEventListener('storage', syncAdminSession);
+    };
+  }, []);
 
   useEffect(() => {
     if (ready || failed) return;
@@ -129,28 +144,30 @@ function RouteEmbedFrameInner({
 
   return (
     <div className="route-embed-shell route-embed-shell-framed">
-      <div className="route-embed-rail">
-        <span className="route-embed-chip" aria-hidden="true">EMBED</span>
-        <span className={`route-embed-health ${railStateClass}`} aria-live="polite">
-          {railStateLabel}
-        </span>
-        <span className={`route-embed-shell-guard ${shellGuardClass}`} aria-live="polite">
-          {shellGuardLabel}
-        </span>
-        <span className="route-embed-path" title={railLabel}>{railLabel}</span>
-        <button
-          type="button"
-          className="route-embed-rail-btn"
-          onClick={handleRetry}
-          aria-label="임베드 프레임 다시 불러오기"
-          title="임베드 프레임 다시 불러오기"
-        >
-          Reload
-        </button>
-        <a href={src} target="_blank" rel="noreferrer" className="route-embed-rail-link">
-          새 창
-        </a>
-      </div>
+      {isAdmin ? (
+        <div className="route-embed-rail">
+          <span className="route-embed-chip" aria-hidden="true">EMBED</span>
+          <span className={`route-embed-health ${railStateClass}`} aria-live="polite">
+            {railStateLabel}
+          </span>
+          <span className={`route-embed-shell-guard ${shellGuardClass}`} aria-live="polite">
+            {shellGuardLabel}
+          </span>
+          <span className="route-embed-path" title={railLabel}>{railLabel}</span>
+          <button
+            type="button"
+            className="route-embed-rail-btn"
+            onClick={handleRetry}
+            aria-label="임베드 프레임 다시 불러오기"
+            title="임베드 프레임 다시 불러오기"
+          >
+            Reload
+          </button>
+          <a href={src} target="_blank" rel="noreferrer" className="route-embed-rail-link">
+            새 창
+          </a>
+        </div>
+      ) : null}
       <div className="route-embed-stage">
         {!ready ? (
           <div
