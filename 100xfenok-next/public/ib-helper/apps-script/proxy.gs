@@ -5,7 +5,7 @@
  * Sheets operations through GAS doPost(). Frontend only needs
  * Google Sign-In for identity (email) — no sensitive scopes.
  *
- * @version 1.1.2
+ * @version 1.1.3
  * @author 100xFenok Claude
  * @feature #258 (unverified app warning fix)
  * @feature #226 (session persistence — 7-day HMAC tokens)
@@ -18,6 +18,7 @@
  * - LockService on all write operations
  *
  * CHANGELOG:
+ * - v1.1.3 (2026-02-24): Manual login allowlist check removed (all valid emails allowed)
  * - v1.1.2 (2026-02-24): Manual login allowlist is now optional (default: allow all valid emails)
  * - v1.1.1 (2026-02-24): Portfolio write guards (profileId-scoped batch update/clear/append)
  * - v1.1.0 (2026-02-24): Manual email login (allowlist-gated) for auth fallback
@@ -230,9 +231,7 @@ function _getManualLoginAllowlist() {
 
 function _isManualLoginAllowed(email) {
   if (!PROXY_CONFIG.MANUAL_LOGIN_ENABLED) return false;
-  var allowlist = _getManualLoginAllowlist();
-  if (allowlist.length === 0) return true;
-  return allowlist.indexOf(_normalizeEmail(email)) !== -1;
+  return true;
 }
 
 // =====================================================
