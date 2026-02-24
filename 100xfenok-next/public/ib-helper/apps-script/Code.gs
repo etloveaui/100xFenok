@@ -1092,7 +1092,12 @@ function updatePortfolio(ss, executedOrders) {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row || row.length === 0) continue;
-    const profileKey = `${String(row[0]).trim()}|${String(row[1]).trim()}`;
+    const googleId = String(row[0] || '').trim();
+    const profileId = String(row[1] || '').trim();
+    const symbol = String(row[3] || '').trim().toUpperCase();
+    if (!googleId || !profileId || !symbol) continue;
+
+    const profileKey = `${googleId}|${profileId}`;
     if (!balanceRowByProfile[profileKey]) {
       balanceRowByProfile[profileKey] = i;
       balanceByProfile[profileKey] = parseFloat(row[11]) || 0;  // L: balance
@@ -1136,8 +1141,13 @@ function updatePortfolio(ss, executedOrders) {
   // v3.0.0 (R-2): Batch update — modify data[] in-memory, single setValues at end
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    const profileKey = `${String(row[0]).trim()}|${String(row[1]).trim()}`;
-    const key = `${String(row[0]).trim()}|${String(row[1]).trim()}|${String(row[3]).trim().toUpperCase()}`;
+    const googleId = String(row[0] || '').trim();
+    const profileId = String(row[1] || '').trim();
+    const symbol = String(row[3] || '').trim().toUpperCase();
+    if (!googleId || !profileId || !symbol) continue;
+
+    const profileKey = `${googleId}|${profileId}`;
+    const key = `${profileKey}|${symbol}`;
     const orders = ordersByKey[key];
     const commissionRate = commissionByProfile[profileKey] ?? defaultCommissionRate;
 

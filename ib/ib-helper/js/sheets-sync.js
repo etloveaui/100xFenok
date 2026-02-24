@@ -701,11 +701,15 @@ const SheetsSync = (function() {
     });
   }
 
-  async function batchUpdatePortfolioRows(rowUpdates) {
+  async function batchUpdatePortfolioRows(rowUpdates, profileId) {
     if (!rowUpdates || rowUpdates.length === 0) return;
+    const targetProfileId = String(profileId || currentProfileId || '').trim();
     // 🔴 v4.0.0: Proxy mode
     if (CONFIG.USE_PROXY) {
-      const result = await GasProxy.request('batchUpdatePortfolio', null, { rowUpdates });
+      const result = await GasProxy.request('batchUpdatePortfolio', null, {
+        rowUpdates,
+        profileId: targetProfileId
+      });
       if (!result.ok) throw new Error(result.error || 'batchUpdatePortfolio failed');
       return;
     }
@@ -726,11 +730,15 @@ const SheetsSync = (function() {
     });
   }
 
-  async function batchClearPortfolioRows(rowIndices) {
+  async function batchClearPortfolioRows(rowIndices, profileId) {
     if (!rowIndices || rowIndices.length === 0) return;
+    const targetProfileId = String(profileId || currentProfileId || '').trim();
     // 🔴 v4.0.0: Proxy mode
     if (CONFIG.USE_PROXY) {
-      const result = await GasProxy.request('batchClearPortfolio', null, { rowIndices });
+      const result = await GasProxy.request('batchClearPortfolio', null, {
+        rowIndices,
+        profileId: targetProfileId
+      });
       if (!result.ok) throw new Error(result.error || 'batchClearPortfolio failed');
       return;
     }
@@ -747,11 +755,15 @@ const SheetsSync = (function() {
     });
   }
 
-  async function appendPortfolioRows(rows) {
+  async function appendPortfolioRows(rows, profileId) {
     if (!rows || rows.length === 0) return;
+    const targetProfileId = String(profileId || currentProfileId || '').trim();
     // 🔴 v4.0.0: Proxy mode
     if (CONFIG.USE_PROXY) {
-      const result = await GasProxy.request('appendPortfolio', null, { rows });
+      const result = await GasProxy.request('appendPortfolio', null, {
+        rows,
+        profileId: targetProfileId
+      });
       if (!result.ok) throw new Error(result.error || 'appendPortfolio failed');
       return;
     }
@@ -894,6 +906,13 @@ const SheetsSync = (function() {
         }
       });
 
+      if (targetSymbols.size === 0) {
+        console.warn(
+          `SheetsSync: Skip push for ${currentUserEmail}/${profile.id} (no valid symbols in local profile)`
+        );
+        return;
+      }
+
       const staleRowIndices = [];
       myRows.forEach((entry) => {
         const sym = _getRowSymbol(entry.row);
@@ -902,9 +921,9 @@ const SheetsSync = (function() {
       });
 
       const rowsToClear = [...new Set([...staleRowIndices, ...duplicateRowIndices])];
-      await batchClearPortfolioRows(rowsToClear);
-      await batchUpdatePortfolioRows(rowUpdates);
-      await appendPortfolioRows(appendRows);
+      await batchClearPortfolioRows(rowsToClear, profile.id);
+      await batchUpdatePortfolioRows(rowUpdates, profile.id);
+      await appendPortfolioRows(appendRows, profile.id);
 
       localStorage.setItem(revisionKey, revision);
       console.log(
