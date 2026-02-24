@@ -5,7 +5,7 @@
  * Sheets operations through GAS doPost(). Frontend only needs
  * Google Sign-In for identity (email) — no sensitive scopes.
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @author 100xFenok Claude
  * @feature #258 (unverified app warning fix)
  * @feature #226 (session persistence — 7-day HMAC tokens)
@@ -18,6 +18,7 @@
  * - LockService on all write operations
  *
  * CHANGELOG:
+ * - v1.1.0 (2026-02-24): Manual email login (allowlist-gated) for auth fallback
  * - v1.0.0 (2026-02-21): Initial release — doPost router + HMAC session + 12 actions
  */
 
@@ -41,6 +42,8 @@ const PROXY_CONFIG = {
 
   // Session
   SESSION_EXPIRY_MS: 7 * 24 * 60 * 60 * 1000,  // 7 days
+  MANUAL_LOGIN_ENABLED: true,
+  MANUAL_LOGIN_ALLOWLIST_FALLBACK: ['etloveaui@gmail.com'],
 
   // Portfolio columns: A:O (15)
   PORTFOLIO_COLS: 15
@@ -192,6 +195,39 @@ function _verifyIdToken(idToken) {
   return data;
 }
 
+function _normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function _isValidEmailFormat(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ''));
+}
+
+function _getManualLoginAllowlist() {
+  var props = PropertiesService.getScriptProperties();
+  var configured = props.getProperty('MANUAL_LOGIN_ALLOWLIST');
+  var raw = configured
+    ? configured.split(',')
+    : PROXY_CONFIG.MANUAL_LOGIN_ALLOWLIST_FALLBACK;
+
+  var list = [];
+  for (var i = 0; i < raw.length; i++) {
+    var normalized = _normalizeEmail(raw[i]);
+    if (!normalized) continue;
+    if (list.indexOf(normalized) === -1) {
+      list.push(normalized);
+    }
+  }
+  return list;
+}
+
+function _isManualLoginAllowed(email) {
+  if (!PROXY_CONFIG.MANUAL_LOGIN_ENABLED) return false;
+  var allowlist = _getManualLoginAllowlist();
+  if (allowlist.length === 0) return false;
+  return allowlist.indexOf(_normalizeEmail(email)) !== -1;
+}
+
 // =====================================================
 // doPost() ROUTER
 // =====================================================
@@ -218,6 +254,10 @@ function doPost(e) {
     // Login action: verify idToken, create session
     if (action === 'login') {
       return _handleLogin(body);
+    }
+
+    if (action === 'manualLogin') {
+      return _handleManualLogin(body);
     }
 
     // All other actions require valid session token
@@ -283,6 +323,32 @@ function _handleLogin(body) {
   return _jsonResponse({
     ok: true,
     data: { email: email },
+    sessionToken: sessionToken
+  });
+}
+
+function _handleManualLogin(body) {
+  if (!PROXY_CONFIG.MANUAL_LOGIN_ENABLED) {
+    return _jsonResponse({ ok: false, error: '수동 로그인이 비활성화되어 있습니다', code: 403 });
+  }
+
+  if (!body.params || !body.params.email) {
+    return _jsonResponse({ ok: false, error: '이메일이 필요합니다', code: 400 });
+  }
+
+  var email = _normalizeEmail(body.params.email);
+  if (!_isValidEmailFormat(email)) {
+    return _jsonResponse({ ok: false, error: '이메일 형식이 올바르지 않습니다', code: 400 });
+  }
+
+  if (!_isManualLoginAllowed(email)) {
+    return _jsonResponse({ ok: false, error: '허용되지 않은 이메일입니다', code: 403 });
+  }
+
+  var sessionToken = _createSessionToken(email);
+  return _jsonResponse({
+    ok: true,
+    data: { email: email, manual: true },
     sessionToken: sessionToken
   });
 }

@@ -1,9 +1,9 @@
 # IB Helper (무한매수 도우미) - Development Specification
 
-> **Version**: 4.51.0
+> **Version**: 4.52.0
 > **Created**: 2026-02-02
-> **Updated**: 2026-02-23
-> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.51.0 T=0 + 예수금 경로 안정화** + **Code.gs v3.2.1(local)** (totalInvested cost-basis rollback) | ❌ #220 REVERTED
+> **Updated**: 2026-02-24
+> **Status**: ✅ Phase 1-3 Complete + P4 SGOV + **#256 v4.51.0 T=0 + 예수금 경로 안정화** + **v4.52.0 수동 이메일 로그인 fallback(allowlist)** + **Code.gs v3.2.1(local)** (totalInvested cost-basis rollback) | ❌ #220 REVERTED
 >
 > **🔑 GAS Resources**:
 > - **Spreadsheet**: `1shNx-xmzsJ7ninBly4HUjOjrMFqlvj-u3aBg6PmTGBE`
