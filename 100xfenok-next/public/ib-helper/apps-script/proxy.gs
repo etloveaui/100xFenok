@@ -5,7 +5,7 @@
  * Sheets operations through GAS doPost(). Frontend only needs
  * Google Sign-In for identity (email) — no sensitive scopes.
  *
- * @version 1.1.0
+ * @version 1.1.1
  * @author 100xFenok Claude
  * @feature #258 (unverified app warning fix)
  * @feature #226 (session persistence — 7-day HMAC tokens)
@@ -18,6 +18,7 @@
  * - LockService on all write operations
  *
  * CHANGELOG:
+ * - v1.1.1 (2026-02-24): Portfolio write guards (profileId-scoped batch update/clear/append)
  * - v1.1.0 (2026-02-24): Manual email login (allowlist-gated) for auth fallback
  * - v1.0.0 (2026-02-21): Initial release — doPost router + HMAC session + 12 actions
  */
@@ -197,6 +198,10 @@ function _verifyIdToken(idToken) {
 
 function _normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
+}
+
+function _normalizeCellText(value) {
+  return String(value === null || value === undefined ? '' : value).trim();
 }
 
 function _isValidEmailFormat(email) {
@@ -452,14 +457,36 @@ function _handleBatchUpdatePortfolio(email, params, refreshedToken) {
     // Security: verify each row belongs to this email
     var data = sheet.getDataRange().getValues();
     var updated = 0;
+    var normalizedEmail = _normalizeEmail(email);
+    var requestedProfileId = _normalizeCellText(params.profileId);
 
     params.rowUpdates.forEach(function(u) {
-      var rowIndex = u.rowIndex;
+      if (!u || !Array.isArray(u.values)) return;
+      var rowIndex = parseInt(u.rowIndex, 10);
+      if (!isFinite(rowIndex)) return;
+
       // Verify the row at this index belongs to the user
       if (rowIndex >= 1 && rowIndex <= data.length) {
         var existingRow = data[rowIndex - 1];  // 0-indexed in array
-        if (existingRow[0] === email || u.values[0] === email) {
-          sheet.getRange('A' + rowIndex + ':O' + rowIndex).setValues([u.values]);
+        var existingEmail = _normalizeEmail(existingRow[0]);
+        var existingProfileId = _normalizeCellText(existingRow[1]);
+        var existingSymbol = _normalizeCellText(existingRow[3]).toUpperCase();
+
+        var nextEmail = _normalizeEmail(u.values[0]);
+        var nextProfileId = _normalizeCellText(u.values[1]);
+        var nextSymbol = _normalizeCellText(u.values[3]).toUpperCase();
+
+        var profileMatches = requestedProfileId
+          ? (existingProfileId === requestedProfileId && nextProfileId === requestedProfileId)
+          : (existingProfileId === nextProfileId);
+
+        if (existingEmail === normalizedEmail &&
+            nextEmail === normalizedEmail &&
+            profileMatches &&
+            existingSymbol === nextSymbol) {
+          var rowValues = u.values.slice(0, PROXY_CONFIG.PORTFOLIO_COLS);
+          while (rowValues.length < PROXY_CONFIG.PORTFOLIO_COLS) rowValues.push('');
+          sheet.getRange('A' + rowIndex + ':O' + rowIndex).setValues([rowValues]);
           updated++;
         }
       }
@@ -498,11 +525,18 @@ function _handleBatchClearPortfolio(email, params, refreshedToken) {
     // Security: verify rows belong to this email before clearing
     var data = sheet.getDataRange().getValues();
     var cleared = 0;
+    var normalizedEmail = _normalizeEmail(email);
+    var requestedProfileId = _normalizeCellText(params.profileId);
 
     params.rowIndices.forEach(function(rowIndex) {
+      rowIndex = parseInt(rowIndex, 10);
+      if (!isFinite(rowIndex)) return;
       if (rowIndex >= 1 && rowIndex <= data.length) {
         var row = data[rowIndex - 1];
-        if (row[0] === email) {
+        var rowEmail = _normalizeEmail(row[0]);
+        var rowProfileId = _normalizeCellText(row[1]);
+        var profileMatches = requestedProfileId ? (rowProfileId === requestedProfileId) : true;
+        if (rowEmail === normalizedEmail && profileMatches) {
           sheet.getRange('A' + rowIndex + ':O' + rowIndex).clearContent();
           cleared++;
         }
@@ -540,8 +574,14 @@ function _handleAppendPortfolio(email, params, refreshedToken) {
     }
 
     // Security: ensure all rows have correct email
+    var normalizedEmail = _normalizeEmail(email);
+    var requestedProfileId = _normalizeCellText(params.profileId);
     var validRows = params.rows.filter(function(row) {
-      return row[0] === email;
+      if (!Array.isArray(row)) return false;
+      var rowEmail = _normalizeEmail(row[0]);
+      var rowProfileId = _normalizeCellText(row[1]);
+      return rowEmail === normalizedEmail &&
+        (requestedProfileId ? rowProfileId === requestedProfileId : true);
     });
 
     if (validRows.length > 0) {
