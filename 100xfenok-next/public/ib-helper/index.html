@@ -497,8 +497,8 @@
         📊 Google Sheets 자동 동기화
       </p>
 
-      <button onclick="quickStartOffline()" class="mt-4 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2">
-        로그인 없이 시작
+      <button onclick="startManualEmailLogin()" class="mt-4 text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
+        이메일 수동 로그인
       </button>
 
       <!-- Powered by -->
@@ -561,7 +561,7 @@
           </div>
         </div>
         <!-- 🔴 v4.46.0: 버전 표시 -->
-        <div class="text-right text-[10px] text-gray-300 mt-2">v4.50.0 (02-12)</div>
+        <div class="text-right text-[10px] text-gray-300 mt-2">v4.52.0 (02-24)</div>
       </div>
     </details>
 
@@ -1068,7 +1068,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.51.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.52.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -1195,6 +1195,14 @@
 
     function sanitizeTickerSymbol(symbol) {
       return String(symbol ?? '').toUpperCase().trim().replace(/[^A-Z0-9._-]/g, '').slice(0, 16);
+    }
+
+    function normalizeEmailInput(email) {
+      return String(email ?? '').trim().toLowerCase();
+    }
+
+    function isValidEmailInput(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email ?? ''));
     }
 
     function showToast(message, type = 'info', duration = 3000) {
@@ -2062,15 +2070,23 @@
      * - 시트 = SSOT (Single Source of Truth)
      */
     async function quickStart(options = {}) {
+      const manualEmail = normalizeEmailInput(options.manualEmail || '');
+      const showOfflineFallback = options.showOfflineFallback !== false;
+      const requireCreateConfirmOnEmpty = !!options.requireCreateConfirmOnEmpty;
+
       try {
-        // 1. Google 로그인
-        showToast('Google 로그인 중...', 'info');
-        await initSheets(options);
+        // 1. 로그인
+        if (manualEmail) {
+          showToast(`${manualEmail} 확인 중...`, 'info');
+        } else {
+          showToast(options.forceAccountSelect ? '계정 전환 중...' : 'Google 로그인 중...', 'info');
+        }
+        await initSheets({ ...options, manualEmail });
 
         const userEmail = SheetsSync.getUserEmail();
         if (!userEmail) {
           showToast('로그인 실패', 'error');
-          return;
+          return { ok: false, reason: 'no-email' };
         }
 
         showToast(`${userEmail} 로그인 완료`, 'success');
@@ -2078,12 +2094,34 @@
         // 🔴 #242: 체크박스 enabled 상태 보존 (resetToDefaults로 프로필 삭제 전)
         const savedEnabledStates = _collectEnabledStates();
 
-        // 🔴 v4.29.0: 기존 로컬 데이터 클리어 (다른 계정 데이터 충돌 방지)
-        ProfileManager.resetToDefaults();
-        selectedTicker = null;
-
         // 2. 시트에서 프로필 가져오기 (핵심 변경)
         const sheetProfiles = await SheetsSync.getMyProfilesFromSheet();
+
+        if (sheetProfiles.length === 0) {
+          if (requireCreateConfirmOnEmpty) {
+            const { confirmed } = await showAppDialog({
+              title: '등록된 데이터 없음',
+              message: `${userEmail} 계정 데이터가 없습니다.`,
+              confirmText: '새로 만들기',
+              cancelText: '다시 입력',
+              showCancel: true,
+              extraLines: ['취소를 누르면 이메일 입력창으로 돌아갑니다.']
+            });
+
+            if (!confirmed) {
+              try { SheetsSync.signOut(); } catch (e) {}
+              sheetsInitialized = false;
+              sheetsInitPromise = null;
+              setGoogleFallbackVisible(false);
+              showToast('이메일을 다시 입력하세요', 'info');
+              return { ok: false, reason: 'empty-cancelled' };
+            }
+          }
+        }
+
+        // 🔴 v4.52.0: 시트 조회/빈계정 확인 이후에만 로컬 초기화 (전환 실패 시 기존 데이터 보존)
+        ProfileManager.resetToDefaults();
+        selectedTicker = null;
 
         if (sheetProfiles.length === 0) {
           // 시트에 데이터 없음 → 새 프로필 생성
@@ -2123,10 +2161,15 @@
         const headerSyncBtn = document.getElementById('header-sync-btn');
         if (headerSyncBtn) headerSyncBtn.classList.remove('hidden');
         updateSyncStatus('synced');
+        return { ok: true, email: userEmail, profileCount: sheetProfiles.length };
 
       } catch (error) {
         console.error('Quick start error:', error);
         showToast('시작 실패: ' + error.message, 'error');
+
+        if (!showOfflineFallback) {
+          return { ok: false, reason: 'error', error };
+        }
 
         // 폴백: 오프라인 모드 제안
         const { confirmed } = await showAppDialog({
@@ -2138,7 +2181,57 @@
         });
         if (confirmed) {
           await quickStartOffline();
+          return { ok: false, reason: 'offline-started', error };
         }
+        return { ok: false, reason: 'cancelled', error };
+      }
+    }
+
+    async function startManualEmailLogin() {
+      while (true) {
+        const { confirmed, value } = await showAppDialog({
+          title: '이메일 수동 로그인',
+          message: 'Google 로그인 없이 이메일로 데이터를 불러옵니다.',
+          confirmText: '불러오기',
+          cancelText: '닫기',
+          showCancel: true,
+          input: {
+            value: '',
+            placeholder: 'name@example.com'
+          },
+          extraLines: [
+            '등록된 이메일이면 기존 데이터를 불러옵니다.',
+            '등록되지 않은 이메일이면 새 프로필 생성 여부를 확인합니다.'
+          ]
+        });
+
+        if (!confirmed) return;
+
+        const email = normalizeEmailInput(value);
+        if (!isValidEmailInput(email)) {
+          showToast('유효한 이메일을 입력하세요', 'warning');
+          continue;
+        }
+
+        const result = await quickStart({
+          manualEmail: email,
+          showOfflineFallback: false,
+          requireCreateConfirmOnEmpty: true
+        });
+
+        if (result?.ok) return;
+        if (result?.reason === 'empty-cancelled') {
+          continue;
+        }
+
+        const { confirmed: retry } = await showAppDialog({
+          title: '수동 로그인 실패',
+          message: result?.error?.message || '로그인 중 오류가 발생했습니다.',
+          confirmText: '다시 입력',
+          cancelText: '닫기',
+          showCancel: true
+        });
+        if (!retry) return;
       }
     }
 
@@ -5087,6 +5180,7 @@
           await SheetsSync.init();
           await SheetsSync.signIn({
             forceAccountSelect: !!options.forceAccountSelect,
+            manualEmail: options.manualEmail || '',
             buttonContainer: 'google-signin-fallback',
             onPromptStarted: function() {
               setGoogleFallbackVisible(false);
@@ -5376,12 +5470,14 @@
       if (!confirmed) return;
 
       try {
-        SheetsSync.signOut();
-        sheetsInitialized = false;
-        sheetsInitPromise = null;
         setGoogleFallbackVisible(false);
-
-        await quickStart({ forceAccountSelect: true });
+        const result = await quickStart({
+          forceAccountSelect: true,
+          showOfflineFallback: false
+        });
+        if (!result?.ok) {
+          throw result?.error || new Error('계정 전환이 취소되었습니다.');
+        }
       } catch (error) {
         console.error('Switch account error:', error);
         showToast('계정 전환 실패: ' + (error.message || '알 수 없는 오류'), 'error');

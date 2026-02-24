@@ -4,7 +4,7 @@
  * Frontend module for Google Sign-In (email only) + GAS doPost() proxy.
  * Replaces OAuth2 spreadsheets scope with simple identity verification.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @author 100xFenok Claude
  * @feature #258 (no more "unverified app" warning)
  * @feature #226 (7-day session persistence via HMAC tokens)
@@ -17,6 +17,7 @@
  *   5. All Sheets ops go through gasProxy.request(action, params)
  *
  * CHANGELOG:
+ * - v1.2.0 (2026-02-24): Manual email login + pending sign-in cleanup + switch rollback safety
  * - v1.1.0 (2026-02-23): Account-switch hardening (force chooser + fallback button wiring)
  * - v1.0.0 (2026-02-21): Initial release — Sign-In + session + fetch wrapper
  */
@@ -51,6 +52,30 @@ const GasProxy = (function() {
   let _pendingSignInResolve = null;  // resolve for signIn() promise
   let _pendingSignInReject = null;   // reject for signIn() promise
   let _signInTimeoutId = null;       // timeout for signIn() promise
+
+  function _normalizeEmail(raw) {
+    return String(raw || '').trim().toLowerCase();
+  }
+
+  function _isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ''));
+  }
+
+  function _resetPendingSignIn(error) {
+    if (_signInTimeoutId) {
+      clearTimeout(_signInTimeoutId);
+      _signInTimeoutId = null;
+    }
+    if (_pendingSignInReject) {
+      try {
+        _pendingSignInReject(error || new Error('Sign-in cancelled'));
+      } catch (e) {
+        // ignore
+      }
+    }
+    _pendingSignInResolve = null;
+    _pendingSignInReject = null;
+  }
 
   // =====================================================
   // INITIALIZATION
@@ -130,9 +155,15 @@ const GasProxy = (function() {
     var fallbackContainer = options.buttonContainer || null;
     var onFallbackShown = typeof options.onFallbackShown === 'function' ? options.onFallbackShown : null;
     var onPromptStarted = typeof options.onPromptStarted === 'function' ? options.onPromptStarted : null;
+    var manualEmail = _normalizeEmail(options.manualEmail || '');
 
     if (!_initialized) {
       return Promise.reject(new Error('GasProxy: Not initialized. Call init() first.'));
+    }
+
+    if (manualEmail) {
+      _resetPendingSignIn(new Error('Sign-in replaced by manual login.'));
+      return _manualSignInByEmail(manualEmail);
     }
 
     if (forceAccountSelect) {
@@ -147,6 +178,7 @@ const GasProxy = (function() {
 
     // Return a promise that resolves when _handleCredentialResponse completes
     return new Promise(function(resolve, reject) {
+      _resetPendingSignIn(new Error('Sign-in replaced by a new attempt.'));
       _pendingSignInResolve = resolve;
       _pendingSignInReject = reject;
 
@@ -198,6 +230,46 @@ const GasProxy = (function() {
     });
   }
 
+  async function _manualSignInByEmail(email) {
+    if (!_isValidEmail(email)) {
+      throw new Error('유효한 이메일 형식이 아닙니다.');
+    }
+
+    var previousToken = _sessionToken;
+    var previousEmail = _email;
+
+    try {
+      var result = await _fetchGAS({
+        action: 'manualLogin',
+        params: { email: email }
+      });
+
+      if (!result.ok) {
+        throw new Error(result.error || '수동 로그인 실패');
+      }
+
+      var resolvedEmail = _normalizeEmail(result?.data?.email || email);
+      _sessionToken = result.sessionToken;
+      _email = resolvedEmail;
+      _saveSession();
+
+      if (_signInCallback) {
+        _signInCallback(_email);
+      }
+
+      return _email;
+    } catch (error) {
+      _sessionToken = previousToken;
+      _email = previousEmail;
+      if (_sessionToken && _email) {
+        _saveSession();
+      } else {
+        _clearSession();
+      }
+      throw error;
+    }
+  }
+
   /**
    * Render a sign-in button in a container element.
    * Fallback for when One Tap is blocked (Safari, incognito).
@@ -221,13 +293,14 @@ const GasProxy = (function() {
   }
 
   /**
-   * Prepare account switching by removing local session and disabling auto-selection.
+   * Prepare account switching without dropping current session immediately.
+   * Current session is kept until new sign-in succeeds, to avoid lockout on cancel/failure.
    * Revoke is best-effort only; failures should not block sign-in.
    */
   function _prepareAccountSwitch() {
     var previousEmail = _email;
 
-    _clearSession();
+    _resetPendingSignIn(new Error('Sign-in cancelled by account switch.'));
 
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
       try {
@@ -309,6 +382,7 @@ const GasProxy = (function() {
    */
   function signOut() {
     var previousEmail = _email;
+    _resetPendingSignIn(new Error('Sign-in cancelled by sign-out.'));
     _clearSession();
 
     // Revoke Google credential to ensure clean re-login
@@ -417,7 +491,7 @@ const GasProxy = (function() {
     retryCount = retryCount || 0;
 
     // Attach session token (except for login)
-    if (body.action !== 'login' && _sessionToken) {
+    if (body.action !== 'login' && body.action !== 'manualLogin' && _sessionToken) {
       body.sessionToken = _sessionToken;
     }
 

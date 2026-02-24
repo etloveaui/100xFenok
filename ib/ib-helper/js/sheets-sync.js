@@ -377,7 +377,7 @@ const SheetsSync = (function() {
   /**
    * Sign in to Google and get user email
    * 🔴 v3.6.0: 저장된 세션 먼저 확인, 없으면 새 로그인
-   * @param {Object} options - Proxy sign-in options (forceAccountSelect, buttonContainer, callbacks)
+   * @param {Object} options - Proxy sign-in options (forceAccountSelect, manualEmail, buttonContainer, callbacks)
    * @returns {Promise<Object>} Token response
    */
   function signIn(options) {
