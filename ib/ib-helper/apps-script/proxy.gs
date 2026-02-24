@@ -5,7 +5,7 @@
  * Sheets operations through GAS doPost(). Frontend only needs
  * Google Sign-In for identity (email) — no sensitive scopes.
  *
- * @version 1.1.1
+ * @version 1.1.2
  * @author 100xFenok Claude
  * @feature #258 (unverified app warning fix)
  * @feature #226 (session persistence — 7-day HMAC tokens)
@@ -18,6 +18,7 @@
  * - LockService on all write operations
  *
  * CHANGELOG:
+ * - v1.1.2 (2026-02-24): Manual login allowlist is now optional (default: allow all valid emails)
  * - v1.1.1 (2026-02-24): Portfolio write guards (profileId-scoped batch update/clear/append)
  * - v1.1.0 (2026-02-24): Manual email login (allowlist-gated) for auth fallback
  * - v1.0.0 (2026-02-21): Initial release — doPost router + HMAC session + 12 actions
@@ -44,7 +45,8 @@ const PROXY_CONFIG = {
   // Session
   SESSION_EXPIRY_MS: 7 * 24 * 60 * 60 * 1000,  // 7 days
   MANUAL_LOGIN_ENABLED: true,
-  MANUAL_LOGIN_ALLOWLIST_FALLBACK: ['etloveaui@gmail.com'],
+  // Empty list = allow all valid emails. Use ScriptProperties MANUAL_LOGIN_ALLOWLIST to restrict.
+  MANUAL_LOGIN_ALLOWLIST_FALLBACK: [],
 
   // Portfolio columns: A:O (15)
   PORTFOLIO_COLS: 15
@@ -229,7 +231,7 @@ function _getManualLoginAllowlist() {
 function _isManualLoginAllowed(email) {
   if (!PROXY_CONFIG.MANUAL_LOGIN_ENABLED) return false;
   var allowlist = _getManualLoginAllowlist();
-  if (allowlist.length === 0) return false;
+  if (allowlist.length === 0) return true;
   return allowlist.indexOf(_normalizeEmail(email)) !== -1;
 }
 
