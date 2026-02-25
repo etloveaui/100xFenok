@@ -1,10 +1,10 @@
 /**
- * IB Helper Google Sheets Sync - v4.0.1 (GAS Proxy Auth Migration)
+ * IB Helper Google Sheets Sync - v4.0.2 (GAS Proxy Auth Migration)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 4.0.1
+ * @version 4.0.2
  * @feature #221: Apps Script WebApp으로 현재가 공개 API 구현 (로그인 불필요)
  * @fix Codex Review R1: CORS (Accept 헤더 제거), CONFIG 통합, ticker 검증, 1분 캐시
  * @fix Codex Review R2: 티커별 캐시 TTL 분리 (전역 타임스탬프 → 티커별 타임스탬프)
@@ -21,6 +21,7 @@
  * @fix #29 (2026-02-03): 라오어 가이드 기준 기본값 (SOXL 12%/5%, 기타 10%/5%)
  * @feature #222-P4 (2026-02-04): CashReserve 시트 연동 (SGOV/BIL/BILS)
  * @fix v4.0.1 (2026-02-25): Proxy rowIndex alignment for push/pendingOrders + optional GIS preload bypass
+ * @fix v4.0.2 (2026-02-25): Pull/Push duplicate freshness resolution + missing local dailyData overwrite guard
  *
  * Sheet1 "Portfolio" Structure (v3.8 - 15 columns):
  * | 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%) | 분할수 | revision |
@@ -87,7 +88,6 @@ const SheetsSync = (function() {
   }
 
   const PORTFOLIO_COLS = 15; // A~O
-  const LEGACY_PORTFOLIO_COLS = 13; // A~M
 
   function _sanitizeSymbol(symbol) {
     const raw = String(symbol || '').toUpperCase().trim();
@@ -115,6 +115,42 @@ const SheetsSync = (function() {
   function _getRowSymbol(row) {
     const normalized = _normalizePortfolioRow(row);
     return _sanitizeSymbol(normalized[3]);
+  }
+
+  function _parseRevisionNumber(value) {
+    const parsed = parseInt(String(value || '').trim(), 10);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function _isRowFresher(nextRow, prevRow) {
+    const next = _normalizePortfolioRow(nextRow);
+    const prev = _normalizePortfolioRow(prevRow);
+
+    const nextRevision = _parseRevisionNumber(next[14]);
+    const prevRevision = _parseRevisionNumber(prev[14]);
+    if (nextRevision !== prevRevision) {
+      return nextRevision > prevRevision;
+    }
+
+    const nextDate = String(next[10] || '').trim();
+    const prevDate = String(prev[10] || '').trim();
+    if (nextDate !== prevDate) {
+      return nextDate > prevDate;
+    }
+
+    const nextInvested = parseFloat(next[6]);
+    const prevInvested = parseFloat(prev[6]);
+    if (Number.isFinite(nextInvested) && Number.isFinite(prevInvested) && nextInvested !== prevInvested) {
+      return nextInvested > prevInvested;
+    }
+
+    const nextHoldings = parseFloat(next[5]);
+    const prevHoldings = parseFloat(prev[5]);
+    if (Number.isFinite(nextHoldings) && Number.isFinite(prevHoldings) && nextHoldings !== prevHoldings) {
+      return nextHoldings > prevHoldings;
+    }
+
+    return false;
   }
 
   function _getProfileRevision(rows, googleId, profileId) {
@@ -619,52 +655,44 @@ const SheetsSync = (function() {
    * @returns {Array} Stocks array
    */
   function parseRows(rows) {
-    const stocks = [];
+    const latestRowsBySymbol = new Map();
 
     rows.forEach(row => {
       if (!row || row.length < 3) return;
 
       const normalized = _normalizePortfolioRow(row);
-      const hasProfileName = normalized.length >= LEGACY_PORTFOLIO_COLS;
-      const googleId = normalized[0] || '';
-      const profileId = normalized[1] || '';
-      const profileName = hasProfileName ? normalized[2] : '';
-      const baseIndex = hasProfileName ? 3 : 2;
-      const symbol = normalized[baseIndex];
-
-      if (!symbol) return;
-
-      const holdings = parseInt(normalized[baseIndex + 2]) || 0;
-      const totalInvested = parseFloat(normalized[baseIndex + 3]) || 0;
-      const principal = normalized[baseIndex + 4];
-      const afterPercent = normalized[baseIndex + 5];
-      const locPercent = normalized[baseIndex + 6];
-      const date = normalized[baseIndex + 7];
-      const balance = normalized[baseIndex + 8];
-      const commissionRate = normalized[baseIndex + 9];
-      const divisions = parseInt(normalized[baseIndex + 10]) || 40;
-      const revision = String(normalized[baseIndex + 11] || '');
-      const parsedBalance = parseFloat(balance);
-      const parsedCommission = parseFloat(commissionRate);
-
-      const sym = _sanitizeSymbol(symbol);
+      const sym = _sanitizeSymbol(normalized[3]);
       if (!sym) return;
+
+      const existingRow = latestRowsBySymbol.get(sym);
+      if (!existingRow || _isRowFresher(normalized, existingRow)) {
+        latestRowsBySymbol.set(sym, normalized);
+      }
+    });
+
+    const stocks = [];
+    latestRowsBySymbol.forEach((normalized, sym) => {
+      const holdings = parseInt(normalized[5], 10) || 0;
+      const totalInvested = parseFloat(normalized[6]) || 0;
+      const parsedBalance = parseFloat(normalized[11]);
+      const parsedCommission = parseFloat(normalized[12]);
+
       stocks.push({
-        googleId,
-        profileId,
+        googleId: normalized[0] || '',
+        profileId: normalized[1] || '',
         symbol: sym,
-        profileName: profileName || '',
+        profileName: normalized[2] || '',
         avgPrice: _computeAvgPrice(totalInvested, holdings),
         holdings,
         totalInvested,
-        principal: parseFloat(principal) || 0,
-        divisions,
-        sellPercent: parseFloat(afterPercent) || (sym === 'SOXL' ? 12 : 10),
-        locSellPercent: parseFloat(locPercent) || 5,
-        date: date || '',
+        principal: parseFloat(normalized[7]) || 0,
+        divisions: parseInt(normalized[13], 10) || 40,
+        sellPercent: parseFloat(normalized[8]) || (sym === 'SOXL' ? 12 : 10),
+        locSellPercent: parseFloat(normalized[9]) || 5,
+        date: normalized[10] || '',
         balance: Number.isFinite(parsedBalance) ? parsedBalance : null,
         commissionRate: Number.isFinite(parsedCommission) ? parsedCommission : null,
-        revision
+        revision: String(normalized[14] || '')
       });
     });
 
@@ -874,11 +902,17 @@ const SheetsSync = (function() {
       myRows.forEach((entry) => {
         const sym = _getRowSymbol(entry.row);
         if (!sym) return;
-        if (existingBySymbol.has(sym)) {
-          duplicateRowIndices.push(entry.rowIndex);
+        const existingEntry = existingBySymbol.get(sym);
+        if (!existingEntry) {
+          existingBySymbol.set(sym, entry);
           return;
         }
-        existingBySymbol.set(sym, entry.rowIndex);
+        if (_isRowFresher(entry.row, existingEntry.row)) {
+          duplicateRowIndices.push(existingEntry.rowIndex);
+          existingBySymbol.set(sym, entry);
+          return;
+        }
+        duplicateRowIndices.push(entry.rowIndex);
       });
 
       const targetSymbols = new Set();
@@ -893,26 +927,43 @@ const SheetsSync = (function() {
         const isFirstWrittenRow = writtenCount === 0;
         writtenCount += 1;
 
-        const dailyData = ProfileManager.loadDailyData(profile.id, sym) || {};
+        const existingEntry = existingBySymbol.get(sym);
+        const existingRow = existingEntry ? _normalizePortfolioRow(existingEntry.row) : null;
+        const dailyData = ProfileManager.loadDailyData(profile.id, sym);
+        const hasLocalDailySnapshot = !!(dailyData && (
+          Object.prototype.hasOwnProperty.call(dailyData, 'holdings') ||
+          Object.prototype.hasOwnProperty.call(dailyData, 'totalInvested')
+        ));
+
+        const localHoldings = parseInt(dailyData?.holdings, 10);
+        const localTotalInvested = parseFloat(dailyData?.totalInvested);
+        const fallbackHoldings = existingRow ? (parseInt(existingRow[5], 10) || 0) : 0;
+        const fallbackTotalInvested = existingRow ? (parseFloat(existingRow[6]) || 0) : 0;
+        const holdings = Number.isFinite(localHoldings) ? localHoldings : fallbackHoldings;
+        const totalInvested = Number.isFinite(localTotalInvested) ? localTotalInvested : fallbackTotalInvested;
+        const rowDate = hasLocalDailySnapshot
+          ? today
+          : (existingRow ? (String(existingRow[10] || '').trim() || today) : today);
+
         const rowValues = [
           currentUserEmail,             // A: 구글ID
           profile.id,                   // B: 프로필ID
           profileName,                  // C: 프로필 이름
           sym,                          // D: 종목
-          _computeAvgPrice(dailyData.totalInvested || 0, dailyData.holdings || 0), // E
-          dailyData.holdings || 0,      // F: 수량
-          dailyData.totalInvested || 0, // G: 총매입금
+          _computeAvgPrice(totalInvested, holdings), // E
+          holdings,                     // F: 수량
+          totalInvested,                // G: 총매입금
           stock.principal || 0,         // H: 세팅원금
           stock.sellPercent || (sym === 'SOXL' ? 12 : 10), // I: AFTER%
           stock.locSellPercent || 5,    // J: LOC%
-          today,                        // K: 날짜
+          rowDate,                      // K: 날짜
           isFirstWrittenRow ? (balance || 0) : 0, // L: 예수금
           isFirstWrittenRow ? (effectiveCommissionRate || 0) : 0, // M: 수수료(%)
           stock.divisions || 40,        // N: 분할수
           revision                       // O: revision
         ];
 
-        const existingRowIndex = existingBySymbol.get(sym);
+        const existingRowIndex = existingEntry ? existingEntry.rowIndex : null;
         if (existingRowIndex) {
           rowUpdates.push({ rowIndex: existingRowIndex, values: rowValues });
         } else {
@@ -1066,67 +1117,77 @@ const SheetsSync = (function() {
     // Filter by my Google ID
     const myRows = allRows.filter(row => row[0] === currentUserEmail);
 
-    // Group by profile ID (v3.8: 예수금 + 수수료 + 분할수 포함)
+    // Group by profile ID and keep latest row per symbol
     const profileMap = {};
     myRows.forEach(row => {
       if (!row || row.length < 3) return;
       const normalized = _normalizePortfolioRow(row);
-      const hasProfileName = normalized.length >= LEGACY_PORTFOLIO_COLS;
       const profileId = normalized[1];
-      const profileName = hasProfileName
-        ? String(normalized[2] || '').trim()
-        : (profileId.split('_')[0] || 'Profile');
-      const baseIndex = hasProfileName ? 3 : 2;
-      const sym = _sanitizeSymbol(normalized[baseIndex]);
+      const profileName = String(normalized[2] || '').trim() || (profileId.split('_')[0] || 'Profile');
+      const sym = _sanitizeSymbol(normalized[3]);
       if (!sym) return;
 
       if (!profileMap[profileId]) {
         profileMap[profileId] = {
           profileId,
           profileName: profileName || 'Profile',
-          balance: 0,
-          commissionRate: 0,
-          hasBalance: false,
-          hasCommissionRate: false,
-          stocks: []
+          rowsBySymbol: {}
         };
       }
 
-      const rowBalance = parseFloat(normalized[baseIndex + 8]);
-      if (Number.isFinite(rowBalance) && !profileMap[profileId].hasBalance) {
-        profileMap[profileId].balance = rowBalance;
-        profileMap[profileId].hasBalance = true;
+      const existing = profileMap[profileId].rowsBySymbol[sym];
+      if (!existing || _isRowFresher(normalized, existing)) {
+        profileMap[profileId].rowsBySymbol[sym] = normalized;
       }
-
-      if (normalized.length > (baseIndex + 9)) {
-        const rowCommission = parseFloat(normalized[baseIndex + 9]);
-        if (Number.isFinite(rowCommission) && !profileMap[profileId].hasCommissionRate) {
-          profileMap[profileId].commissionRate = rowCommission;
-          profileMap[profileId].hasCommissionRate = true;
-        }
-      }
-
-      const holdings = parseInt(normalized[baseIndex + 2]) || 0;
-      const totalInvested = parseFloat(normalized[baseIndex + 3]) || 0;
-      const divisions = parseInt(normalized[baseIndex + 10]) || 40;
-      const revision = String(normalized[baseIndex + 11] || '');
-
-      profileMap[profileId].stocks.push({
-        symbol: sym,
-        avgPrice: _computeAvgPrice(totalInvested, holdings),
-        holdings,
-        totalInvested,
-        principal: parseFloat(normalized[baseIndex + 4]) || 0,
-        divisions,
-        sellPercent: parseFloat(normalized[baseIndex + 5]) || (sym === 'SOXL' ? 12 : 10),
-        locSellPercent: parseFloat(normalized[baseIndex + 6]) || 5,
-        revision
-      });
     });
 
     return Object.values(profileMap).map((profile) => {
-      const { hasBalance, hasCommissionRate, ...rest } = profile;
-      return rest;
+      const rows = Object.values(profile.rowsBySymbol);
+
+      let balance = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const parsedBalance = parseFloat(rows[i][11]);
+        if (Number.isFinite(parsedBalance)) {
+          balance = parsedBalance;
+          break;
+        }
+      }
+
+      let commissionRate = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const parsedCommission = parseFloat(rows[i][12]);
+        if (Number.isFinite(parsedCommission)) {
+          commissionRate = parsedCommission;
+          break;
+        }
+      }
+
+      const stocks = rows.reduce((acc, normalized) => {
+        const sym = _sanitizeSymbol(normalized[3]);
+        if (!sym) return acc;
+        const holdings = parseInt(normalized[5], 10) || 0;
+        const totalInvested = parseFloat(normalized[6]) || 0;
+        acc.push({
+          symbol: sym,
+          avgPrice: _computeAvgPrice(totalInvested, holdings),
+          holdings,
+          totalInvested,
+          principal: parseFloat(normalized[7]) || 0,
+          divisions: parseInt(normalized[13], 10) || 40,
+          sellPercent: parseFloat(normalized[8]) || (sym === 'SOXL' ? 12 : 10),
+          locSellPercent: parseFloat(normalized[9]) || 5,
+          revision: String(normalized[14] || '')
+        });
+        return acc;
+      }, []);
+
+      return {
+        profileId: profile.profileId,
+        profileName: profile.profileName,
+        balance,
+        commissionRate,
+        stocks
+      };
     });
   }
 
