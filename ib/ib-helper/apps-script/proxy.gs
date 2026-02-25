@@ -5,7 +5,7 @@
  * Sheets operations through GAS doPost(). Frontend only needs
  * Google Sign-In for identity (email) — no sensitive scopes.
  *
- * @version 1.1.3
+ * @version 1.1.4
  * @author 100xFenok Claude
  * @feature #258 (unverified app warning fix)
  * @feature #226 (session persistence — 7-day HMAC tokens)
@@ -18,6 +18,7 @@
  * - LockService on all write operations
  *
  * CHANGELOG:
+ * - v1.1.4 (2026-02-25): readPortfolio/readOrders returns absolute rowIndices + lastRow-based read optimization
  * - v1.1.3 (2026-02-24): Manual login allowlist check removed (all valid emails allowed)
  * - v1.1.2 (2026-02-24): Manual login allowlist is now optional (default: allow all valid emails)
  * - v1.1.1 (2026-02-24): Portfolio write guards (profileId-scoped batch update/clear/append)
@@ -369,20 +370,33 @@ function _handleReadPortfolio(email, params, refreshedToken) {
     return _jsonResponse({ ok: false, error: 'Portfolio sheet not found', code: 404 });
   }
 
-  var data = sheet.getRange(PROXY_CONFIG.PORTFOLIO_RANGE).getValues();
-  // Filter by email (column A)
-  var filtered = data.filter(function(row) {
-    return row[0] === email;
-  });
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return _jsonResponse({
+      ok: true,
+      data: { values: [], rowIndices: [] },
+      sessionToken: refreshedToken
+    });
+  }
 
-  // Remove trailing empty rows
-  var values = filtered.filter(function(row) {
-    return row.some(function(cell) { return cell !== '' && cell !== null; });
-  });
+  var data = sheet.getRange(2, 1, lastRow - 1, PROXY_CONFIG.PORTFOLIO_COLS).getValues();
+  var normalizedEmail = _normalizeEmail(email);
+  var values = [];
+  var rowIndices = [];
+
+  for (var i = 0; i < data.length; i++) {
+    var row = data[i];
+    var rowEmail = _normalizeEmail(row[0]);
+    var hasContent = row.some(function(cell) { return cell !== '' && cell !== null; });
+    if (rowEmail === normalizedEmail && hasContent) {
+      values.push(row);
+      rowIndices.push(i + 2); // Absolute sheet row (header is row 1)
+    }
+  }
 
   return _jsonResponse({
     ok: true,
-    data: { values: values },
+    data: { values: values, rowIndices: rowIndices },
     sessionToken: refreshedToken
   });
 }
@@ -410,14 +424,16 @@ function _handleWritePortfolio(email, params, refreshedToken) {
 
     var data = sheet.getRange(PROXY_CONFIG.PORTFOLIO_RANGE).getValues();
 
+    var normalizedEmail = _normalizeEmail(email);
+
     // Keep other users' rows
     var otherRows = data.filter(function(row) {
-      return row[0] !== email && row.some(function(c) { return c !== '' && c !== null; });
+      return _normalizeEmail(row[0]) !== normalizedEmail && row.some(function(c) { return c !== '' && c !== null; });
     });
 
     // Validate incoming rows belong to this email
     var newRows = params.rows.filter(function(row) {
-      return row[0] === email;
+      return _normalizeEmail(row[0]) === normalizedEmail;
     });
 
     var allRows = otherRows.concat(newRows);
@@ -680,9 +696,19 @@ function _handleReadCashReserve(email, params, refreshedToken) {
     });
   }
 
-  var data = sheet.getRange(PROXY_CONFIG.CASH_RESERVE_RANGE).getValues();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return _jsonResponse({
+      ok: true,
+      data: { values: [] },
+      sessionToken: refreshedToken
+    });
+  }
+
+  var data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  var normalizedEmail = _normalizeEmail(email);
   var filtered = data.filter(function(row) {
-    return row[0] === email && row.some(function(c) { return c !== '' && c !== null; });
+    return _normalizeEmail(row[0]) === normalizedEmail && row.some(function(c) { return c !== '' && c !== null; });
   });
 
   return _jsonResponse({
@@ -800,20 +826,37 @@ function _handleReadOrders(email, params, refreshedToken) {
   if (!sheet) {
     return _jsonResponse({
       ok: true,
-      data: { values: [] },
+      data: { values: [], rowIndices: [] },
       sessionToken: refreshedToken
     });
   }
 
-  var data = sheet.getRange('A2:M10000').getValues();
-  // Filter by email (column B) and remove empty rows
-  var filtered = data.filter(function(row) {
-    return row[1] === email && row.some(function(c) { return c !== '' && c !== null; });
-  });
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return _jsonResponse({
+      ok: true,
+      data: { values: [], rowIndices: [] },
+      sessionToken: refreshedToken
+    });
+  }
+
+  var data = sheet.getRange(2, 1, lastRow - 1, 13).getValues();
+  var normalizedEmail = _normalizeEmail(email);
+  var filtered = [];
+  var rowIndices = [];
+  for (var i = 0; i < data.length; i++) {
+    var row = data[i];
+    var rowEmail = _normalizeEmail(row[1]); // Orders email column is B
+    var hasContent = row.some(function(c) { return c !== '' && c !== null; });
+    if (rowEmail === normalizedEmail && hasContent) {
+      filtered.push(row);
+      rowIndices.push(i + 2); // Absolute sheet row
+    }
+  }
 
   return _jsonResponse({
     ok: true,
-    data: { values: filtered },
+    data: { values: filtered, rowIndices: rowIndices },
     sessionToken: refreshedToken
   });
 }
