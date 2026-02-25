@@ -559,7 +559,7 @@
           </div>
         </div>
         <!-- 🔴 v4.46.0: 버전 표시 -->
-        <div class="text-right text-[10px] text-gray-300 mt-2">v4.52.0 (02-24)</div>
+        <div class="text-right text-[10px] text-gray-300 mt-2">v4.52.1 (02-25)</div>
       </div>
     </details>
 
@@ -1066,7 +1066,7 @@
 
   <!-- Footer (v4.21.0: Hidden on mobile, shown on desktop only) -->
   <footer class="hidden lg:block px-4 py-4 text-center">
-    <p class="text-xs text-gray-400">IB Helper v4.52.0 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
+    <p class="text-xs text-gray-400">IB Helper v4.52.1 | Powered by <span class="font-semibold text-rose-500">FENOK</span></p>
   </footer>
 
   <!-- Scripts -->
@@ -5179,9 +5179,15 @@
      * @returns {Promise<boolean>} 성공 여부
      */
     async function initSheets(options = {}) {
+      const requestedManualEmail = normalizeLoginIdentifier(options.manualEmail || '');
+      const currentEmail = normalizeEmailInput(SheetsSync.getUserEmail() || '');
+
       // 이미 초기화 완료
-      if (sheetsInitialized && SheetsSync.getUserEmail() && !options.forceAccountSelect) {
-        return true;
+      if (sheetsInitialized && currentEmail && !options.forceAccountSelect) {
+        // 수동 이메일 로그인 요청이 없거나, 동일 이메일이면 기존 세션 재사용
+        if (!requestedManualEmail || requestedManualEmail === currentEmail) {
+          return true;
+        }
       }
 
       // 🔴 v4.29.3: 초기화 진행 중이면 기존 Promise 반환 (중복 호출 방지)
