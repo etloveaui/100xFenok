@@ -1,10 +1,10 @@
 /**
- * IB Helper Google Sheets Sync - v4.0.0 (GAS Proxy Auth Migration)
+ * IB Helper Google Sheets Sync - v4.0.1 (GAS Proxy Auth Migration)
  *
  * Multi-user Google Sheets 동기화 모듈
  * Dual-Key Structure: GoogleID + ProfileID
  *
- * @version 4.0.0
+ * @version 4.0.1
  * @feature #221: Apps Script WebApp으로 현재가 공개 API 구현 (로그인 불필요)
  * @fix Codex Review R1: CORS (Accept 헤더 제거), CONFIG 통합, ticker 검증, 1분 캐시
  * @fix Codex Review R2: 티커별 캐시 TTL 분리 (전역 타임스탬프 → 티커별 타임스탬프)
@@ -20,6 +20,7 @@
  * @fix C-11 (2026-02-03): isAuthenticated() - gapi.client undefined 체크
  * @fix #29 (2026-02-03): 라오어 가이드 기준 기본값 (SOXL 12%/5%, 기타 10%/5%)
  * @feature #222-P4 (2026-02-04): CashReserve 시트 연동 (SGOV/BIL/BILS)
+ * @fix v4.0.1 (2026-02-25): Proxy rowIndex alignment for push/pendingOrders + optional GIS preload bypass
  *
  * Sheet1 "Portfolio" Structure (v3.8 - 15 columns):
  * | 구글ID | 프로필ID | 프로필이름 | 종목 | 평단가 | 수량 | 총매입금 | 세팅원금 | AFTER% | LOC% | 날짜 | 예수금 | 수수료(%) | 분할수 | revision |
@@ -208,6 +209,7 @@ const SheetsSync = (function() {
       // 🔴 v4.0.0: Proxy mode — skip gapi, only load GIS for identity
       if (CONFIG.USE_PROXY) {
         var restored = await GasProxy.init({
+          preloadGis: false, // 수동 이메일 로그인 경로에서는 GIS 선로딩 생략
           onSignIn: function(email) {
             currentUserEmail = email;
             isSignedIn = true;
@@ -832,12 +834,24 @@ const SheetsSync = (function() {
       const profileName = profile.name || '프로필';
 
       // 1) Snapshot read
-      const allRows = await readAllRows();
+      let allRows = [];
+      let allRowIndices = [];
+      if (CONFIG.USE_PROXY) {
+        const snapshot = await GasProxy.request('readPortfolio', null, {});
+        if (!snapshot.ok) throw new Error(snapshot.error || 'readPortfolio failed');
+        allRows = snapshot?.data?.values || [];
+        allRowIndices = snapshot?.data?.rowIndices || [];
+      } else {
+        allRows = await readAllRows();
+      }
+
       const myRows = [];
       allRows.forEach((row, idx) => {
         const normalized = _normalizePortfolioRow(row);
         if (normalized[0] === currentUserEmail && normalized[1] === profile.id) {
-          myRows.push({ rowIndex: idx + 2, row: normalized });
+          const absoluteRowIndexRaw = parseInt(allRowIndices[idx], 10);
+          const absoluteRowIndex = Number.isFinite(absoluteRowIndexRaw) ? absoluteRowIndexRaw : (idx + 2);
+          myRows.push({ rowIndex: absoluteRowIndex, row: normalized });
         }
       });
 
@@ -1854,11 +1868,14 @@ const SheetsSync = (function() {
         const result = await GasProxy.request('readOrders', null, {});
         if (!result.ok) throw new Error(result.error || 'readOrders failed');
         const rows = result.data.values || [];
+        const rowIndices = result.data.rowIndices || [];
         return rows.reduce((pending, row, index) => {
           const isPending = !row[10] || row[10] === '';
           if (!isPending) return pending;
+          const absoluteRowIndexRaw = parseInt(rowIndices[index], 10);
+          const absoluteRowIndex = Number.isFinite(absoluteRowIndexRaw) ? absoluteRowIndexRaw : (index + 2);
           pending.push({
-            rowIndex: index + 2,
+            rowIndex: absoluteRowIndex,
             date: row[0],
             googleId: row[1],
             profileId: row[2],

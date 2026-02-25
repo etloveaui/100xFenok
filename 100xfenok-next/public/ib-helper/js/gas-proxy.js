@@ -4,7 +4,7 @@
  * Frontend module for Google Sign-In (email only) + GAS doPost() proxy.
  * Replaces OAuth2 spreadsheets scope with simple identity verification.
  *
- * @version 1.2.0
+ * @version 1.2.2
  * @author 100xFenok Claude
  * @feature #258 (no more "unverified app" warning)
  * @feature #226 (7-day session persistence via HMAC tokens)
@@ -17,6 +17,7 @@
  *   5. All Sheets ops go through gasProxy.request(action, params)
  *
  * CHANGELOG:
+ * - v1.2.1 (2026-02-25): Lazy GIS load for manual-email path (defer One Tap script until needed)
  * - v1.2.0 (2026-02-24): Manual email login + pending sign-in cleanup + switch rollback safety
  * - v1.1.0 (2026-02-23): Account-switch hardening (force chooser + fallback button wiring)
  * - v1.0.0 (2026-02-21): Initial release — Sign-In + session + fetch wrapper
@@ -52,6 +53,8 @@ const GasProxy = (function() {
   let _pendingSignInResolve = null;  // resolve for signIn() promise
   let _pendingSignInReject = null;   // reject for signIn() promise
   let _signInTimeoutId = null;       // timeout for signIn() promise
+  let _gisReady = false;
+  let _gisLoadPromise = null;
 
   function _normalizeEmail(raw) {
     return String(raw || '').trim().toLowerCase();
@@ -93,12 +96,15 @@ const GasProxy = (function() {
     opts = opts || {};
     _signInCallback = opts.onSignIn || null;
     _signOutCallback = opts.onSignOut || null;
+    var shouldPreloadGis = opts.preloadGis !== false;
 
     // Restore session from localStorage
     var restored = _restoreSession();
 
-    // Load GIS script (needed for sign-in button/prompt)
-    await _loadGisScript();
+    // Optional GIS preload (manual login path can skip)
+    if (shouldPreloadGis) {
+      await _loadGisScript();
+    }
 
     _initialized = true;
 
@@ -114,28 +120,57 @@ const GasProxy = (function() {
    * Only loads the sign-in part (google.accounts.id), NOT oauth2.
    */
   function _loadGisScript() {
-    return new Promise(function(resolve, reject) {
+    if (_gisReady && typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      return Promise.resolve();
+    }
+
+    if (_gisLoadPromise) {
+      return _gisLoadPromise;
+    }
+
+    _gisLoadPromise = new Promise(function(resolve, reject) {
       if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-        resolve();
+        try {
+          google.accounts.id.initialize({
+            client_id: PROXY_CLIENT_CONFIG.CLIENT_ID,
+            callback: _handleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: false
+          });
+          _gisReady = true;
+          resolve();
+        } catch (e) {
+          _gisLoadPromise = null;
+          reject(e);
+        }
         return;
       }
 
       var script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.onload = function() {
-        google.accounts.id.initialize({
-          client_id: PROXY_CLIENT_CONFIG.CLIENT_ID,
-          callback: _handleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: false
-        });
-        resolve();
+        try {
+          google.accounts.id.initialize({
+            client_id: PROXY_CLIENT_CONFIG.CLIENT_ID,
+            callback: _handleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: false
+          });
+          _gisReady = true;
+          resolve();
+        } catch (e) {
+          _gisLoadPromise = null;
+          reject(e);
+        }
       };
       script.onerror = function() {
+        _gisLoadPromise = null;
         reject(new Error('Failed to load Google Identity Services'));
       };
       document.body.appendChild(script);
     });
+
+    return _gisLoadPromise;
   }
 
   // =====================================================
@@ -162,70 +197,76 @@ const GasProxy = (function() {
     }
 
     if (manualEmail) {
+      if (_sessionToken && _email && _normalizeEmail(_email) === manualEmail && !forceAccountSelect) {
+        if (_signInCallback) _signInCallback(_email);
+        return Promise.resolve(_email);
+      }
       _resetPendingSignIn(new Error('Sign-in replaced by manual login.'));
       return _manualSignInByEmail(manualEmail);
     }
 
-    if (forceAccountSelect) {
-      _prepareAccountSwitch();
-    }
-
-    // If already signed in, just notify
-    if (_sessionToken && _email && !forceAccountSelect) {
-      if (_signInCallback) _signInCallback(_email);
-      return Promise.resolve(_email);
-    }
-
-    // Return a promise that resolves when _handleCredentialResponse completes
-    return new Promise(function(resolve, reject) {
-      _resetPendingSignIn(new Error('Sign-in replaced by a new attempt.'));
-      _pendingSignInResolve = resolve;
-      _pendingSignInReject = reject;
-
-      // Give enough time for account chooser interaction + manual fallback button.
-      _signInTimeoutId = setTimeout(function() {
-        _pendingSignInResolve = null;
-        _pendingSignInReject = null;
-        _signInTimeoutId = null;
-        reject(new Error('Sign-in timeout (120s)'));
-      }, 120000);
-
-      // Trigger One Tap prompt
-      if (onPromptStarted) {
-        try { onPromptStarted(); } catch (e) {}
+    return _loadGisScript().then(function() {
+      if (forceAccountSelect) {
+        _prepareAccountSwitch();
       }
-      google.accounts.id.prompt(function(notification) {
-        var isNotDisplayed = notification.isNotDisplayed && notification.isNotDisplayed();
-        var isSkipped = notification.isSkippedMoment && notification.isSkippedMoment();
-        var isDismissed = notification.isDismissedMoment && notification.isDismissedMoment();
 
-        if (isNotDisplayed || isSkipped || isDismissed) {
-          var reasons = [];
-          if (notification.getNotDisplayedReason) {
-            var notDisplayedReason = notification.getNotDisplayedReason();
-            if (notDisplayedReason) reasons.push(notDisplayedReason);
-          }
-          if (notification.getSkippedReason) {
-            var skippedReason = notification.getSkippedReason();
-            if (skippedReason) reasons.push(skippedReason);
-          }
-          if (notification.getDismissedReason) {
-            var dismissedReason = notification.getDismissedReason();
-            if (dismissedReason) reasons.push(dismissedReason);
-          }
+      // If already signed in, just notify
+      if (_sessionToken && _email && !forceAccountSelect) {
+        if (_signInCallback) _signInCallback(_email);
+        return Promise.resolve(_email);
+      }
 
-          var reasonText = reasons.length > 0 ? reasons.join(' / ') : 'unknown';
-          console.log('GasProxy: One Tap not shown (' + reasonText + '). Using fallback button if available.');
+      // Return a promise that resolves when _handleCredentialResponse completes
+      return new Promise(function(resolve, reject) {
+        _resetPendingSignIn(new Error('Sign-in replaced by a new attempt.'));
+        _pendingSignInResolve = resolve;
+        _pendingSignInReject = reject;
 
-          if (fallbackContainer) {
-            renderButton(fallbackContainer);
-            if (onFallbackShown) {
+        // Give enough time for account chooser interaction + manual fallback button.
+        _signInTimeoutId = setTimeout(function() {
+          _pendingSignInResolve = null;
+          _pendingSignInReject = null;
+          _signInTimeoutId = null;
+          reject(new Error('Sign-in timeout (120s)'));
+        }, 120000);
+
+        // Trigger One Tap prompt
+        if (onPromptStarted) {
+          try { onPromptStarted(); } catch (e) {}
+        }
+        google.accounts.id.prompt(function(notification) {
+          var isNotDisplayed = notification.isNotDisplayed && notification.isNotDisplayed();
+          var isSkipped = notification.isSkippedMoment && notification.isSkippedMoment();
+          var isDismissed = notification.isDismissedMoment && notification.isDismissedMoment();
+
+          if (isNotDisplayed || isSkipped || isDismissed) {
+            var reasons = [];
+            if (notification.getNotDisplayedReason) {
+              var notDisplayedReason = notification.getNotDisplayedReason();
+              if (notDisplayedReason) reasons.push(notDisplayedReason);
+            }
+            if (notification.getSkippedReason) {
+              var skippedReason = notification.getSkippedReason();
+              if (skippedReason) reasons.push(skippedReason);
+            }
+            if (notification.getDismissedReason) {
+              var dismissedReason = notification.getDismissedReason();
+              if (dismissedReason) reasons.push(dismissedReason);
+            }
+
+            var reasonText = reasons.length > 0 ? reasons.join(' / ') : 'unknown';
+            console.log('GasProxy: One Tap not shown (' + reasonText + '). Using fallback button if available.');
+
+            if (fallbackContainer) {
+              renderButton(fallbackContainer);
+              if (onFallbackShown) {
+                try { onFallbackShown(reasonText); } catch (e) {}
+              }
+            } else if (onFallbackShown) {
               try { onFallbackShown(reasonText); } catch (e) {}
             }
-          } else if (onFallbackShown) {
-            try { onFallbackShown(reasonText); } catch (e) {}
           }
-        }
+        });
       });
     });
   }
