@@ -5,7 +5,7 @@
  * Sheets operations through GAS doPost(). Frontend only needs
  * Google Sign-In for identity (email) — no sensitive scopes.
  *
- * @version 1.1.4
+ * @version 1.1.5
  * @author 100xFenok Claude
  * @feature #258 (unverified app warning fix)
  * @feature #226 (session persistence — 7-day HMAC tokens)
@@ -18,6 +18,7 @@
  * - LockService on all write operations
  *
  * CHANGELOG:
+ * - v1.1.5 (2026-02-25): appendPortfolio upsert-by-key (profileId+symbol) + duplicate-row self-heal
  * - v1.1.4 (2026-02-25): readPortfolio/readOrders returns absolute rowIndices + lastRow-based read optimization
  * - v1.1.3 (2026-02-24): Manual login allowlist check removed (all valid emails allowed)
  * - v1.1.2 (2026-02-24): Manual login allowlist is now optional (default: allow all valid emails)
@@ -206,6 +207,14 @@ function _normalizeEmail(email) {
 
 function _normalizeCellText(value) {
   return String(value === null || value === undefined ? '' : value).trim();
+}
+
+function _normalizePortfolioSymbol(value) {
+  return _normalizeCellText(value).toUpperCase();
+}
+
+function _makePortfolioKey(profileId, symbol) {
+  return _normalizeCellText(profileId) + '::' + _normalizePortfolioSymbol(symbol);
 }
 
 function _isValidEmailFormat(email) {
@@ -601,19 +610,75 @@ function _handleAppendPortfolio(email, params, refreshedToken) {
         (requestedProfileId ? rowProfileId === requestedProfileId : true);
     });
 
-    if (validRows.length > 0) {
+    if (validRows.length === 0) {
+      return _jsonResponse({
+        ok: true,
+        data: { appended: 0, updated: 0, dedupCleared: 0 },
+        sessionToken: refreshedToken
+      });
+    }
+
+    var incomingByKey = {};
+    validRows.forEach(function(r) {
+      var row = r.slice(0, PROXY_CONFIG.PORTFOLIO_COLS);
+      while (row.length < PROXY_CONFIG.PORTFOLIO_COLS) row.push('');
+      var key = _makePortfolioKey(row[1], row[3]);
+      if (!key || key === '::') return;
+      incomingByKey[key] = row; // Last row wins for same key within request
+    });
+
+    var existingByKey = {};
+    var duplicateRowIndices = [];
+    var data = sheet.getDataRange().getValues(); // Includes header row
+
+    for (var i = 1; i < data.length; i++) {
+      var existingRow = data[i];
+      var rowEmail = _normalizeEmail(existingRow[0]);
+      if (rowEmail !== normalizedEmail) continue;
+
+      var rowProfileId = _normalizeCellText(existingRow[1]);
+      if (requestedProfileId && rowProfileId !== requestedProfileId) continue;
+
+      var key = _makePortfolioKey(rowProfileId, existingRow[3]);
+      if (!key || key === '::') continue;
+
+      var absoluteRowIndex = i + 1; // 1-indexed sheet row
+      if (!existingByKey[key]) {
+        existingByKey[key] = absoluteRowIndex;
+      } else {
+        duplicateRowIndices.push(absoluteRowIndex);
+      }
+    }
+
+    var dedupCleared = 0;
+    duplicateRowIndices.forEach(function(rowIndex) {
+      sheet.getRange('A' + rowIndex + ':O' + rowIndex).clearContent();
+      dedupCleared++;
+    });
+
+    var updated = 0;
+    var appendRows = [];
+    Object.keys(incomingByKey).forEach(function(key) {
+      var rowValues = incomingByKey[key];
+      var existingRowIndex = existingByKey[key];
+      if (existingRowIndex) {
+        sheet.getRange('A' + existingRowIndex + ':O' + existingRowIndex).setValues([rowValues]);
+        updated++;
+      } else {
+        appendRows.push(rowValues);
+      }
+    });
+
+    var appended = 0;
+    if (appendRows.length > 0) {
       var lastRow = sheet.getLastRow();
-      sheet.getRange(lastRow + 1, 1, validRows.length, PROXY_CONFIG.PORTFOLIO_COLS)
-        .setValues(validRows.map(function(r) {
-          var row = r.slice(0, PROXY_CONFIG.PORTFOLIO_COLS);
-          while (row.length < PROXY_CONFIG.PORTFOLIO_COLS) row.push('');
-          return row;
-        }));
+      sheet.getRange(lastRow + 1, 1, appendRows.length, PROXY_CONFIG.PORTFOLIO_COLS).setValues(appendRows);
+      appended = appendRows.length;
     }
 
     return _jsonResponse({
       ok: true,
-      data: { appended: validRows.length },
+      data: { appended: appended, updated: updated, dedupCleared: dedupCleared },
       sessionToken: refreshedToken
     });
   } finally {
