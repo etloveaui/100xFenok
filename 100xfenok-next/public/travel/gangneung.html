@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>강릉 여행 일정 | 2/28~3/2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sun:#F97316;--ocean:#0EA5E9;--forest:#10B981;--purple:#8B5CF6;
+  --red:#EF4444;--amber:#F59E0B;--pink:#EC4899;
+  --bg:#FAFAF9;--bg2:#FFFFFF;--bg3:#F5F5F4;--bg4:#E7E5E4;
+  --tx:#1C1917;--tx2:#44403C;--tx3:#78716C;--tx4:#A8A29E;
+  --sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shm:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
+  --shl:0 10px 25px rgba(0,0,0,.1),0 4px 10px rgba(0,0,0,.06);
+  --r:12px;--rs:8px;--rx:6px;
+  --f:'Noto Sans KR',system-ui,-apple-system,sans-serif;
+  --nh:52px;
+}
+[data-theme="dark"]{
+  --bg:#1C1917;--bg2:#292524;--bg3:#44403C;--bg4:#57534E;
+  --tx:#FAFAF9;--tx2:#D6D3D1;--tx3:#A8A29E;--tx4:#78716C;
+  --sh:0 1px 3px rgba(0,0,0,.3);--shm:0 4px 6px rgba(0,0,0,.25);--shl:0 10px 25px rgba(0,0,0,.35);
+}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nh) + 12px)}
+body{font-family:var(--f);background:var(--bg);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--ocean);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* NAV */
+.fnav{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--bg2);border-bottom:1px solid var(--bg4);height:var(--nh);display:flex;align-items:center;gap:2px;padding:0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;transform:translateY(-100%);transition:transform .3s;scrollbar-width:none}
+.fnav::-webkit-scrollbar{display:none}
+.fnav a{font-size:12px;font-weight:500;color:var(--tx3);padding:5px 8px;border-radius:var(--rx);white-space:nowrap;transition:all .2s}
+.fnav a:hover,.fnav a.on{color:var(--sun);background:rgba(249,115,22,.08);text-decoration:none}
+.fnav.vis{transform:translateY(0)}
+.tbtn{margin-left:auto;background:none;border:1px solid var(--bg4);border-radius:var(--rx);padding:3px 8px;cursor:pointer;font-size:15px;color:var(--tx2);flex-shrink:0}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1e3a5f 0%,#0c4a6e 30%,#0e7490 60%,#f97316 100%);color:#fff;padding:56px 20px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 70%,rgba(255,255,255,.06) 0%,transparent 50%);animation:shm 8s ease-in-out infinite alternate}
+@keyframes shm{0%{transform:translate(0,0)}100%{transform:translate(5%,3%)}}
+.hero h1{font-size:26px;font-weight:800;margin-bottom:4px;position:relative}
+.hero .sub{font-size:14px;opacity:.9;margin-bottom:14px;font-weight:300;position:relative}
+.badges{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;position:relative}
+.bdg{display:inline-flex;align-items:center;gap:3px;padding:4px 10px;border-radius:18px;font-size:11px;font-weight:600;backdrop-filter:blur(8px)}
+.bdg-d{background:rgba(255,255,255,.2);color:#fff}
+.bdg-p{background:rgba(16,185,129,.3);color:#d1fae5}
+.bdg-c{background:rgba(236,72,153,.3);color:#fce7f3}
+
+/* SECTION */
+.sec{padding:24px 14px;max-width:680px;margin:0 auto}
+.st{font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.st .ic{font-size:20px}
+
+/* WEATHER */
+.wg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wc{background:var(--bg2);border-radius:var(--r);padding:12px 8px;text-align:center;box-shadow:var(--sh);position:relative;overflow:hidden}
+.wc .dl{font-size:12px;font-weight:700;color:var(--ocean);margin-bottom:3px}
+.wc .tp{font-size:20px;font-weight:800;margin:4px 0}
+.wc .cn{font-size:10px;color:var(--tx3);margin-bottom:4px;min-height:26px}
+.wc .pr{font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(14,165,233,.1);color:var(--ocean);display:inline-block}
+.wc .ad{font-size:10px;color:var(--tx3);margin-top:4px}
+.wc.tbd{opacity:.7}
+.wc.tbd::after{content:'미확인';position:absolute;top:6px;right:6px;font-size:8px;background:var(--amber);color:#fff;padding:1px 5px;border-radius:6px}
+.wtip{margin-top:8px;padding:7px 10px;background:rgba(245,158,11,.08);border-radius:var(--rx);font-size:11px;color:var(--tx2)}
+
+/* MEAL TABLE */
+.mt{width:100%;border-collapse:separate;border-spacing:0;background:var(--bg2);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);font-size:12px}
+.mt th{background:linear-gradient(135deg,#1e3a5f,#0e7490);color:#fff;padding:8px 6px;font-weight:600;text-align:left;font-size:11px}
+.mt td{padding:8px 6px;border-bottom:1px solid var(--bg3);vertical-align:top}
+.mt tr:last-child td{border-bottom:none}
+.mt .mty{font-weight:600;color:var(--sun);white-space:nowrap;font-size:11px}
+.mt .rn{font-weight:700;display:block}
+.mw{display:inline-block;font-size:9px;background:rgba(239,68,68,.1);color:var(--red);padding:1px 5px;border-radius:6px;margin-top:2px;font-weight:500}
+
+/* TABS */
+.tbar{display:flex;gap:3px;margin-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:3px}
+.tbar::-webkit-scrollbar{display:none}
+.tb{padding:7px 14px;border:none;border-radius:var(--rs);font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;background:var(--bg3);color:var(--tx3);transition:all .2s;white-space:nowrap;flex-shrink:0}
+.tb.on{background:var(--sun);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,.3)}
+.pbar{display:flex;gap:3px;margin-bottom:14px;background:var(--bg3);border-radius:var(--rs);padding:2px;width:fit-content}
+.pb{padding:4px 12px;border:none;border-radius:var(--rx);font-family:var(--f);font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--tx3);transition:all .2s}
+.pb.on{background:var(--bg2);color:var(--tx);box-shadow:var(--sh)}
+.tc{display:none}.tc.on{display:block}
+
+/* TIMELINE */
+.tl{position:relative;padding-left:26px}
+.tl::before{content:'';position:absolute;left:7px;top:5px;bottom:5px;width:2px;background:var(--bg4);border-radius:1px}
+.ti{position:relative;margin-bottom:12px}
+.td{position:absolute;left:-22px;top:3px;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg4);background:var(--bg2)}
+.td.meal{border-color:var(--sun);background:var(--sun)}
+.td.move{border-color:var(--ocean);background:var(--ocean)}
+.td.sight{border-color:var(--forest);background:var(--forest)}
+.td.htl{border-color:var(--purple);background:var(--purple)}
+.td.wrn{border-color:var(--red);background:var(--red)}
+.tt{font-size:11px;font-weight:700;color:var(--ocean)}
+.tw{font-size:13px;font-weight:600;margin:1px 0}
+.tn{font-size:11px;color:var(--tx3);line-height:1.4}
+.ts{margin-top:3px;padding-left:12px;font-size:11px;color:var(--tx2)}
+.ts li{margin-bottom:1px}
+.twb{display:inline-block;font-size:9px;background:rgba(239,68,68,.12);color:var(--red);padding:1px 7px;border-radius:6px;font-weight:600;margin-top:2px}
+.star{color:var(--amber)}
+.tto{margin-top:6px;padding:6px 10px;background:rgba(245,158,11,.08);border-left:3px solid var(--amber);border-radius:0 var(--rx) var(--rx) 0;font-size:11px;color:var(--tx2)}
+.dstr{padding:8px 12px;background:linear-gradient(135deg,rgba(14,165,233,.06),rgba(249,115,22,.06));border-radius:var(--rs);margin-bottom:12px;font-size:12px;color:var(--tx2);border:1px solid var(--bg4)}
+.dwm{font-size:11px;color:var(--tx3);margin-bottom:6px;padding:4px 8px;background:var(--bg3);border-radius:var(--rx);display:inline-block}
+
+/* PLACES */
+.fb{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.fbtn{padding:4px 10px;border:1px solid var(--bg4);border-radius:18px;font-family:var(--f);font-size:10px;font-weight:500;cursor:pointer;background:var(--bg2);color:var(--tx3);transition:all .2s}
+.fbtn.on{border-color:var(--sun);background:rgba(249,115,22,.08);color:var(--sun);font-weight:600}
+.pgt{font-size:13px;font-weight:700;color:var(--tx2);margin:16px 0 6px;padding-bottom:3px;border-bottom:2px solid var(--bg4)}
+.pc{background:var(--bg2);border-radius:var(--r);padding:12px;box-shadow:var(--sh);margin-bottom:8px;cursor:pointer;transition:all .2s}
+.pc:hover{box-shadow:var(--shm)}
+.pc.exc{opacity:.5;border-left:3px solid var(--red)}
+.pch{display:flex;justify-content:space-between;align-items:flex-start}
+.pcn{font-size:14px;font-weight:700}
+.pca{font-size:9px;padding:2px 7px;border-radius:8px;background:var(--bg3);color:var(--tx3);font-weight:600;white-space:nowrap}
+.pcb{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--bg3)}
+.pc.op .pcb{display:block}
+.pr2{display:flex;gap:5px;margin-bottom:4px;font-size:11px;align-items:flex-start}
+.pl{color:var(--tx3);min-width:46px;flex-shrink:0;font-weight:500}
+.pv{color:var(--tx2)}
+.pact{display:flex;gap:5px;margin-top:6px}
+.plk{display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border-radius:var(--rx);font-size:11px;font-weight:600;background:rgba(249,115,22,.1);color:var(--sun);transition:all .2s}
+.plk:hover{background:rgba(249,115,22,.2);text-decoration:none}
+.pas{display:inline-block;font-size:9px;padding:2px 6px;border-radius:6px;background:rgba(16,185,129,.1);color:var(--forest);font-weight:600}
+
+/* AREA MAP */
+.amc{background:var(--bg2);border-radius:var(--r);padding:16px 10px;box-shadow:var(--sh);overflow-x:auto}
+.am{display:flex;align-items:center;gap:0;min-width:580px;padding:8px 0;justify-content:center}
+.an{text-align:center;flex-shrink:0}
+.an .nn{font-size:11px;font-weight:700;padding:8px 10px;border-radius:var(--rs);background:linear-gradient(135deg,var(--ocean),#0284c7);color:#fff;display:inline-block;min-width:60px;box-shadow:var(--sh)}
+.an .ns{font-size:9px;color:var(--tx3);margin-top:3px}
+.an.ht .nn{background:linear-gradient(135deg,var(--purple),#7c3aed)}
+.an.sp .nn{background:linear-gradient(135deg,var(--pink),#db2777)}
+.ae{font-size:9px;color:var(--tx3);padding:0 4px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.ae .el{width:32px;height:2px;background:var(--bg4);margin:3px 0}
+.ae .et{white-space:nowrap}
+
+/* HOTEL */
+.hc{background:linear-gradient(135deg,rgba(139,92,246,.05),rgba(139,92,246,.02));border:1px solid rgba(139,92,246,.15);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.hc h3{font-size:16px;font-weight:700;color:var(--purple);margin-bottom:8px}
+.hd{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px}
+.hdl{color:var(--tx3);font-weight:500}
+.hdv{color:var(--tx);font-weight:600}
+
+/* CHECKLIST */
+.cg{margin-bottom:12px}
+.cg h4{font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:6px}
+.ci{display:flex;align-items:flex-start;gap:8px;padding:6px 10px;background:var(--bg2);border-radius:var(--rx);margin-bottom:3px;box-shadow:var(--sh);cursor:pointer;transition:all .15s;user-select:none}
+.ci:active{transform:scale(.98)}
+.ci input[type="checkbox"]{width:16px;height:16px;margin-top:1px;accent-color:var(--forest);flex-shrink:0;cursor:pointer}
+.ci label{font-size:12px;cursor:pointer;flex:1}
+.ci.ck label{text-decoration:line-through;color:var(--tx4)}
+
+/* ACTION */
+.ac{border-radius:var(--r);padding:12px;margin-bottom:6px;box-shadow:var(--sh)}
+.ac.urg{background:rgba(239,68,68,.06);border-left:4px solid var(--red)}
+.ac.nor{background:var(--bg2);border-left:4px solid var(--ocean)}
+.act{font-size:13px;font-weight:700}
+.acd{font-size:11px;color:var(--tx3);margin-top:2px}
+.acl{font-size:10px;color:var(--red);font-weight:600;margin-top:3px}
+
+/* WARNINGS */
+.wp{background:var(--bg2);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.wt{width:100%;padding:12px 14px;background:rgba(239,68,68,.06);border:none;font-family:var(--f);font-size:13px;font-weight:700;color:var(--red);cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+.wt .arr{transition:transform .2s}
+.wp.opn .wt .arr{transform:rotate(180deg)}
+.wb{max-height:0;overflow:hidden;transition:max-height .3s}
+.wp.opn .wb{max-height:800px}
+.wi{padding:8px 14px;border-bottom:1px solid var(--bg3);font-size:12px;color:var(--tx2);line-height:1.4}
+.wi:last-child{border-bottom:none}
+.wl{font-weight:700;color:var(--red)}
+
+.foot{text-align:center;padding:20px 14px;font-size:10px;color:var(--tx4)}
+
+@media print{
+  .fnav,.tbtn,.fb,.pbar{display:none!important}
+  .tc{display:block!important}
+  .pcb{display:block!important}
+  .wb{max-height:none!important}
+  .hero{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-size:10px}.sec{padding:10px 6px}
+}
+@media(min-width:480px){.sec{padding:28px 18px}.hero{padding:64px 24px 44px}.hero h1{font-size:32px}}
+@media(max-width:360px){.wg{grid-template-columns:1fr;gap:6px}.mt{font-size:10px}.mt td,.mt th{padding:6px 4px}.hd{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- FLOATING NAV -->
+<nav class="fnav" id="fn" aria-label="빠른 이동">
+  <a href="#weather">날씨</a>
+  <a href="#meals">식사</a>
+  <a href="#itin">일정</a>
+  <a href="#places">장소</a>
+  <a href="#amap">지도</a>
+  <a href="#hotel">숙소</a>
+  <a href="#cklist">준비물</a>
+  <a href="#acts">할일</a>
+  <a href="#warns">주의</a>
+  <button class="tbtn" onclick="tglT()" aria-label="테마 전환" id="tb">🌙</button>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="hero">
+  <h1>강릉 여행</h1>
+  <p class="sub">with Mona &mdash; 삼일절 연휴 2박 3일</p>
+  <div class="badges">
+    <span class="bdg bdg-d">📅 2/28(금) ~ 3/2(일)</span>
+    <span class="bdg bdg-p">📍 강릉 &middot; 정동진</span>
+    <span class="bdg bdg-c">👫 Mona</span>
+  </div>
+</header>
+
+<!-- WEATHER -->
+<section class="sec" id="weather">
+  <h2 class="st"><span class="ic">🌤</span> 날씨 예보</h2>
+  <div class="wg">
+    <div class="wc">
+      <div class="dl">1일차 금 2/28</div>
+      <div class="tp">3~6°C</div>
+      <div class="cn">오전 흐림 → 오후 소나기 가능</div>
+      <span class="pr">🌧 0.3~0.5mm</span>
+      <div class="ad">우산 소지, 방한 필수</div>
+    </div>
+    <div class="wc">
+      <div class="dl">2일차 토 3/1</div>
+      <div class="tp">4~6°C</div>
+      <div class="cn">하루종일 소나기 가능</div>
+      <span class="pr">🌧 0.3~0.9mm</span>
+      <div class="ad">실내 위주 + 우산 필수</div>
+    </div>
+    <div class="wc tbd">
+      <div class="dl">3일차 일 3/2</div>
+      <div class="tp">?°C</div>
+      <div class="cn">예보 미확인 — 출발 전 확인</div>
+      <span class="pr">-</span>
+      <div class="ad">기상청 확인 필요</div>
+    </div>
+  </div>
+  <div class="wtip">💡 <strong>종합</strong>: 완전 겨울 방한 필수. 핫팩 추천. 우산 반드시 소지.</div>
+</section>
+
+<!-- MEALS -->
+<section class="sec" id="meals">
+  <h2 class="st"><span class="ic">🍽</span> 식사 일정표</h2>
+  <p style="font-size:11px;color:var(--tx3);margin-bottom:10px">Mona 대화 기반 확정 스케줄</p>
+  <div style="overflow-x:auto">
+  <table class="mt">
+    <thead><tr><th>날짜</th><th>끼니</th><th>식당 / 시간</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr>
+        <td rowspan="2" style="font-weight:600">금 2/28</td>
+        <td class="mty">저녁</td>
+        <td><span class="rn">9남매두부집</span>~18:30</td>
+        <td><span class="mw">현장 줄서기만</span></td>
+      </tr>
+      <tr>
+        <td class="mty">2차</td>
+        <td><span class="rn">버드나무브루어리</span>~21:00</td>
+        <td style="font-size:10px;color:var(--tx3)">연중무휴, ~24:00</td>
+      </tr>
+      <tr>
+        <td rowspan="3" style="font-weight:600">토 3/1</td>
+        <td class="mty">점심</td>
+        <td><span class="rn">동해일미</span>11:00 오픈런</td>
+        <td><span class="mw">⚠️ LO 13:00, 일 휴무</span></td>
+      </tr>
+      <tr>
+        <td class="mty">저녁</td>
+        <td><span class="rn">미트컬쳐</span>17:30~</td>
+        <td><span class="mw">⚠️ 캐치테이블 예약 필수</span></td>
+      </tr>
+      <tr>
+        <td class="mty">늦저녁</td>
+        <td><span class="rn">더그로브테이블</span>19:30~</td>
+        <td><span class="mw">⚠️ 영업시간 전화확인</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600">일 3/2</td>
+        <td class="mty">브런치</td>
+        <td><span class="rn">가람집옹심이</span>10:30~</td>
+        <td style="font-size:10px;color:var(--tx3)">화 휴무, 일 OK</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ITINERARY -->
+<section class="sec" id="itin">
+  <h2 class="st"><span class="ic">📋</span> 일정</h2>
+  <p style="font-size:11px;color:var(--tx3);margin-bottom:10px">추천 조합: Plan A + A + A</p>
+
+  <div class="tbar" role="tablist" aria-label="일차 선택">
+    <button class="tb on" data-tab="day1" role="tab" aria-selected="true">1일차 (금 2/28)</button>
+    <button class="tb" data-tab="day2" role="tab" aria-selected="false">2일차 (토 3/1)</button>
+    <button class="tb" data-tab="day3" role="tab" aria-selected="false">3일차 (일 3/2)</button>
+  </div>
+
+  <!-- DAY 1 -->
+  <div class="tc on" id="day1" role="tabpanel">
+    <div class="dwm">🌤 오전 흐림 → 오후 소나기 가능 | 3~6°C</div>
+    <div class="dstr"><strong>전략:</strong> 오후 도착 → 초당 (여유 시) → 9남매 저녁 → 시내 야간 (버드나무)</div>
+    <div class="pbar" data-g="day1">
+      <button class="pb on" data-p="d1a">Plan A 기본</button>
+      <button class="pb" data-p="d1b">Plan B 늦은도착</button>
+      <button class="pb" data-p="d1c">Plan C 최소</button>
+    </div>
+
+    <div class="tc on" id="d1a"><div class="tl">
+      <div class="ti"><div class="td move"></div><div class="tt">13:00~14:00</div><div class="tw">판교 출발</div><div class="tn">영동고속도로. 횡성 or 대관령 휴게소 간식 (미결정).</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">15:30~16:00</div><div class="tw">강릉IC 도착</div><div class="tn">금요일 오후 — 교통 지연 가능.</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">16:00</div><div class="tw">초당 클러스터</div><ul class="ts"><li>강원옥 찹쌀떡 (선물용 구매)</li><li>순두부젤라또</li><li>애프터이미지 카페</li></ul></div>
+      <div class="ti"><div class="td wrn"></div><div class="tt">17:30</div><div class="tw">9남매두부집 줄서기 시작</div><div class="tn">BT 16시 종료. 현장 줄서기만.</div><div class="twb">줄서기 필수</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">18:30~19:00</div><div class="tw"><span class="star">★</span> 9남매 식사</div><div class="tn">순두부전골(2인~), 모두부.</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">19:30</div><div class="tw">초당 → 시내 이동 (10min)</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">20:00</div><div class="tw">시내 자유 (월화거리 산책)</div><div class="tn">야시장 2월 미운영. 거리 야경 감상 가능.</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">21:00</div><div class="tw"><span class="star">★</span> 버드나무브루어리 (2차)</div><div class="tn">12:00~24:00 연중무휴. 크래프트맥주 + 안주.</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">23:00~23:30</div><div class="tw">시내 → 호텔 (35~40min)</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">23:40~00:10</div><div class="tw">호텔 도착 + 체크인</div></div>
+    </div></div>
+
+    <div class="tc" id="d1b"><div class="tl">
+      <div class="ti"><div class="td move"></div><div class="tt">15:00~16:00</div><div class="tw">판교 출발 (늦은 출발)</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">17:30~18:00</div><div class="tw">강릉IC 도착</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">18:00</div><div class="tw"><span class="star">★</span> 9남매두부집 직행 (줄서기)</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">19:30</div><div class="tw">식사 완료 → 시내 이동</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">20:00</div><div class="tw">월화거리 산책</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">21:00</div><div class="tw"><span class="star">★</span> 버드나무브루어리</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">23:00</div><div class="tw">호텔</div></div>
+    </div>
+    <div class="tto">⚖️ <strong>트레이드오프:</strong> 초당 클러스터 → 2일차로 이월</div></div>
+
+    <div class="tc" id="d1c"><div class="tl">
+      <div class="ti"><div class="td move"></div><div class="tt">16:00+</div><div class="tw">판교 출발</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">19:00</div><div class="tw">호텔 직행 (IC→40min via 7번국도)</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">19:30</div><div class="tw">호텔 체크인</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">20:00</div><div class="tw">큰기와집 저녁 (호텔 근처 3min)</div><div class="tn">주말 ~20:00. 순두부전골 + 생선구이 백반.</div></div>
+    </div>
+    <div class="tto">⚖️ <strong>트레이드오프:</strong> 9남매 + 버드나무 모두 2일차 이월 (토요일 동선 과부하 주의)</div></div>
+  </div>
+
+  <!-- DAY 2 -->
+  <div class="tc" id="day2" role="tabpanel">
+    <div class="dwm">🌧 하루종일 소나기 가능 | 4~6°C | 삼일절</div>
+    <div class="dstr"><strong>전략:</strong> 동해일미 오픈런 MUST (일요일 휴무) → 시장/소품샵 → 미트컬쳐 디너 → 더그로브테이블</div>
+    <div class="pbar" data-g="day2">
+      <button class="pb on" data-p="d2a">Plan A 풀코스</button>
+      <button class="pb" data-p="d2b">Plan B 안전</button>
+      <button class="pb" data-p="d2c">Plan C 최소</button>
+    </div>
+
+    <div class="tc on" id="d2a"><div class="tl">
+      <div class="ti"><div class="td meal"></div><div class="tt">07:00</div><div class="tw">큰기와집 아침 (호텔 3min)</div><div class="tn">Opens 07:00. 순두부전골 + 생선구이 백반.</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">08:00</div><div class="tw">호텔 복귀, 준비</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">09:00</div><div class="tw">하슬라아트월드 (호텔 5min)</div><div class="tn">Opens 09:00. 조각공원(야외) + 미술관(실내). ~1.5hr. 비 시 실내만.</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">10:30</div><div class="tw">아트월드 → 시내 출발 (35min)</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">11:00</div><div class="tw"><span class="star">★</span> 동해일미 오픈런 (간장게장)</div><div class="tn">암꽃게 소 3만/중 3.6만. 숫꽃게 2.5만.</div><div class="twb">⚠️ 일요일 휴무 → 토요일 유일 기회! LO 13:00</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">12:30</div><div class="tw">동해일미 식사 완료</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">12:40</div><div class="tw">중앙시장 탐방</div><ul class="ts"><li>길감자 (웨이팅 1~4hr, 시간 여유 시)</li><li>감자유원지 (메밀김밥)</li><li>칼언니횟집 (지하 회센터)</li><li>강원옥 찹쌀떡 시장점 (선물 구매)</li></ul></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">13:30</div><div class="tw">르봉마젤 소품샵 방문</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">14:00</div><div class="tw">시내 소품샵 투어</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">15:00</div><div class="tw">안목해변 카페거리 (시내→10min)</div><div class="tn">해변 산책 + 카페. 미트컬쳐 근처라 동선 자연스러움.</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">16:30</div><div class="tw">자유시간 / 카페</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">17:30</div><div class="tw"><span class="star">★</span> 미트컬쳐 (디너)</div><div class="tn">흑백요리사 장지수 셰프. 스테이크, 피쉬앤칩스, 헤링, 스웨디시미트볼.</div><div class="twb">⚠️ 캐치테이블 예약 필수!</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">19:00</div><div class="tw">미트컬쳐 → 더그로브테이블 이동</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">19:30</div><div class="tw"><span class="star">★</span> 더그로브테이블 (가볍게)</div><div class="tn">신라모노그램 강릉 내 복합 미식 푸드홀.</div><div class="twb">⚠️ 영업시간 전화 확인 필요 (033-820-0140)</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">20:30</div><div class="tw">더그로브 종료 → 호텔</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">21:00~21:30</div><div class="tw">호텔 도착</div></div>
+    </div></div>
+
+    <div class="tc" id="d2b"><div class="tl">
+      <div class="ti"><div class="td meal"></div><div class="tt">08:30</div><div class="tw">큰기와집 아침</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">09:30</div><div class="tw">하슬라아트월드 실내만 (40min)</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">10:15</div><div class="tw">호텔 → 시내 (35min)</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">11:00</div><div class="tw"><span class="star">★</span> 동해일미 (MUST)</div><div class="twb">⚠️ 토요일 유일 기회</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">12:30</div><div class="tw">시장 간단 탐방 + 강원옥 찹쌀떡</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">13:30</div><div class="tw">카페 / 자유시간</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">17:30</div><div class="tw"><span class="star">★</span> 미트컬쳐 (MUST)</div><div class="twb">⚠️ 캐치테이블 예약 필수!</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">19:30</div><div class="tw">더그로브테이블 (선택)</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">20:30</div><div class="tw">호텔</div></div>
+    </div>
+    <div class="tto">⚖️ <strong>트레이드오프:</strong> 소품샵/안목해변 축소, 아트월드 실내만</div></div>
+
+    <div class="tc" id="d2c"><div class="tl">
+      <div class="ti"><div class="td meal"></div><div class="tt">09:00</div><div class="tw">큰기와집 아침</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">10:00</div><div class="tw">호텔 → 시내 (35min)</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">11:00</div><div class="tw"><span class="star">★</span> 동해일미 (MUST)</div><div class="twb">⚠️ 토요일 유일 기회</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">12:30</div><div class="tw">시장 최소 탐방</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">14:00</div><div class="tw">실내 자유 (카페)</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">17:30</div><div class="tw"><span class="star">★</span> 미트컬쳐</div><div class="twb">⚠️ 캐치테이블 예약 필수!</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">19:00</div><div class="tw">호텔 직행 (더그로브 스킵)</div></div>
+    </div>
+    <div class="tto">⚖️ <strong>트레이드오프:</strong> 아트월드/안목/소품샵 전부 스킵</div></div>
+  </div>
+
+  <!-- DAY 3 -->
+  <div class="tc" id="day3" role="tabpanel">
+    <div class="dwm">❓ 예보 미확인 — 출발 전 기상청 체크</div>
+    <div class="dstr"><strong>전략:</strong> 브런치 → 테라로사 → 12:00 출발 (삼일절 정체 대비)<br><span style="color:var(--red);font-weight:600">⚠️ 동해일미 일요일 휴무. 3/2 복귀 시 12시 이전 출발 권장.</span></div>
+    <div class="pbar" data-g="day3">
+      <button class="pb on" data-p="d3a">Plan A 기본</button>
+      <button class="pb" data-p="d3b">Plan B 빠른복귀</button>
+      <button class="pb" data-p="d3c">Plan C 최속</button>
+    </div>
+
+    <div class="tc on" id="d3a"><div class="tl">
+      <div class="ti"><div class="td htl"></div><div class="tt">08:00</div><div class="tw">기상, 짐 정리</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">09:00</div><div class="tw">호텔 체크아웃</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">09:10</div><div class="tw">호텔 → 시내 (35min)</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">09:45</div><div class="tw">인솔트베이커리 소금빵</div><div class="tn">10:00 오픈, 수 휴무 → 일요일 OK. 갓 나온 게 맛있음.</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">10:30</div><div class="tw"><span class="star">★</span> 가람집옹심이 (브런치)</div><div class="tn">감자옹심이, 장칼옹심이, 감자전. 주문 즉시 조리라 시간 소요.</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">11:15</div><div class="tw">브런치 완료</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">11:20</div><div class="tw">테라로사 경포호수점 (15min)</div><div class="tn">연중무휴. 커피 + 디저트. 마지막 강릉 여운.</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">11:50</div><div class="tw">테라로사 출발</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">12:00</div><div class="tw">영동고속도로 진입</div><div class="twb">⚠️ 삼일절 정체 대비 12시 이전 출발 목표</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">14:30~15:30</div><div class="tw">판교 도착 (정체 시 +1hr)</div></div>
+    </div></div>
+
+    <div class="tc" id="d3b"><div class="tl">
+      <div class="ti"><div class="td htl"></div><div class="tt">08:00</div><div class="tw">기상, 짐 정리</div></div>
+      <div class="ti"><div class="td meal"></div><div class="tt">08:30</div><div class="tw">큰기와집 간단 아침</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">09:30</div><div class="tw">호텔 체크아웃</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">09:40</div><div class="tw">호텔 → 테라로사 직행</div></div>
+      <div class="ti"><div class="td sight"></div><div class="tt">10:15</div><div class="tw">테라로사 경포호수점 (takeout)</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">10:30</div><div class="tw">영동고속도로 진입</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">13:00</div><div class="tw">판교 도착 (정체 전)</div></div>
+    </div>
+    <div class="tto">⚖️ <strong>장점:</strong> 13:00 도착, 오후 자유 | <strong>포기:</strong> 가람집옹심이 스킵</div></div>
+
+    <div class="tc" id="d3c"><div class="tl">
+      <div class="ti"><div class="td htl"></div><div class="tt">08:00</div><div class="tw">기상</div></div>
+      <div class="ti"><div class="td htl"></div><div class="tt">08:30</div><div class="tw">호텔 체크아웃</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">08:40</div><div class="tw">출발 (큰기와집 or 편의점 간단히)</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">09:00</div><div class="tw">영동고속도로 진입</div></div>
+      <div class="ti"><div class="td move"></div><div class="tt">11:30</div><div class="tw">판교 도착</div></div>
+    </div>
+    <div class="tto">⚖️ <strong>장점:</strong> 정체 완전 회피 | <strong>포기:</strong> 브런치/테라로사 전부 스킵</div></div>
+  </div>
+</section>
+
+<!-- PLACES -->
+<section class="sec" id="places">
+  <h2 class="st"><span class="ic">📍</span> 장소 목록</h2>
+  <div class="fb" id="af">
+    <button class="fbtn on" data-a="all">전체</button>
+    <button class="fbtn" data-a="chodang">초당</button>
+    <button class="fbtn" data-a="downtown">다운타운</button>
+    <button class="fbtn" data-a="anmok">안목</button>
+    <button class="fbtn" data-a="city">시내</button>
+    <button class="fbtn" data-a="jeongdongjin">정동진</button>
+    <button class="fbtn" data-a="gyeongpo">경포</button>
+    <button class="fbtn" data-a="shilla_monogram">신라모노그램</button>
+  </div>
+
+  <h3 class="pgt">🗓 일정 배정</h3>
+  <div class="pc" data-a="chodang" onclick="tgC(this)"><div class="pch"><div><span class="pcn">9남매두부집</span> <span class="pas">금 저녁</span></div><span class="pca">초당</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">08:00~20:00 (BT 15~16시, 목 휴무)</span></div><div class="pr2"><span class="pl">전화</span><span class="pv">033-653-9909</span></div><div class="pr2"><span class="pl">메뉴</span><span class="pv">순두부전골(2인~), 순두부백반, 모두부</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">캐치테이블 없음, 현장 줄서기만. 강릉 최고 순두부.</span></div><div class="pr2" style="background:#e8f5e9;border-radius:6px;padding:4px 8px;margin-top:4px"><span class="pl" style="color:#2e7d32">실시간</span><span class="pv" style="color:#2e7d32;font-weight:600">2/28 금 ~19:00 도착 — 웨이팅 없음, 바로 입장!</span></div><div class="pact"><a href="http://place.map.kakao.com/18636898" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="downtown" onclick="tgC(this)"><div class="pch"><div><span class="pcn">버드나무브루어리</span> <span class="pas">금 2차</span></div><span class="pca">다운타운</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">12:00~24:00 (연중무휴)</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">크래프트맥주 + 안주. TripAdvisor 강릉 #5.</span></div><div class="pact"><a href="http://place.map.kakao.com/27152913" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="downtown" onclick="tgC(this)"><div class="pch"><div><span class="pcn">동해일미</span> <span class="pas">토 점심</span></div><span class="pca">다운타운</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv" style="color:var(--red);font-weight:700">11:00~14:00 (LO 13:00, 일요일 휴무)</span></div><div class="pr2"><span class="pl">전화</span><span class="pv">033-643-1346</span></div><div class="pr2"><span class="pl">메뉴</span><span class="pv">암꽃게 소 3만 / 중 3.6만 / 숫꽃게 2.5만</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">⚠️ 일요일 휴무 → 토요일 유일 기회. 오픈런 필수.</span></div><div class="pact"><a href="http://place.map.kakao.com/8273555" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="anmok" onclick="tgC(this)"><div class="pch"><div><span class="pcn">미트컬쳐</span> <span class="pas">토 저녁</span></div><span class="pca">안목</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">11:30~21:00 (BT 15~17:30, 화수 휴무)</span></div><div class="pr2"><span class="pl">전화</span><span class="pv">0507-1318-5439</span></div><div class="pr2"><span class="pl">메뉴</span><span class="pv">스테이크, 피쉬앤칩스, 헤링, 스웨디시미트볼</span></div><div class="pr2"><span class="pl">팁</span><span class="pv" style="color:var(--red);font-weight:700">⚠️ 캐치테이블 100% 예약제. 흑백요리사 장지수 셰프.</span></div></div></div>
+
+  <div class="pc" data-a="shilla_monogram" onclick="tgC(this)"><div class="pch"><div><span class="pcn">더그로브테이블</span> <span class="pas">토 늦저녁</span></div><span class="pca">신라모노그램</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv" style="color:var(--red)">TBD (호텔 부대시설, 연중무휴 추정)</span></div><div class="pr2"><span class="pl">전화</span><span class="pv">033-820-0140</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">2025년 8월 개장 복합 미식 푸드홀. 영업시간 방문 전 확인 필요.</span></div></div></div>
+
+  <div class="pc" data-a="city" onclick="tgC(this)"><div class="pch"><div><span class="pcn">가람집옹심이</span> <span class="pas">일 브런치</span></div><span class="pca">시내</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">10:30~20:00 (LO 19:20, 화 휴무)</span></div><div class="pr2"><span class="pl">전화</span><span class="pv">0507-1313-3266</span></div><div class="pr2"><span class="pl">메뉴</span><span class="pv">감자옹심이, 장칼옹심이, 감자전</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">주문 즉시 조리라 시간 소요. 현지인 단골.</span></div><div class="pact"><a href="http://place.map.kakao.com/1741049647" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="gyeongpo" onclick="tgC(this)"><div class="pch"><div><span class="pcn">테라로사 경포호수점</span> <span class="pas">일 마지막 커피</span></div><span class="pca">경포</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">연중무휴</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">본점(사천), 임당점, 경포호수점, 박물관, 신라모노그램점 등.</span></div><div class="pact"><a href="http://place.map.kakao.com/16685252" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="city" onclick="tgC(this)"><div class="pch"><div><span class="pcn">인솔트베이커리</span> <span class="pas">일 소금빵</span></div><span class="pca">시내</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">10:00~19:00 (수 휴무 → 일요일 OK)</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">갓 나온 게 맛있음 — 식으면 식감 떨어짐.</span></div><div class="pact"><a href="http://place.map.kakao.com/805132874" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <h3 class="pgt">✅ 검증완료 (미배정)</h3>
+  <div class="pc" data-a="downtown" onclick="tgC(this)"><div class="pch"><div><span class="pcn">길감자</span></div><span class="pca">다운타운</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">10:30~20:50 (BT 15~16시, 화 휴무)</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">웨이팅 1~4시간. 감자몽티기. 시간 여유 시.</span></div><div class="pact"><a href="http://place.map.kakao.com/1545071550" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="city" onclick="tgC(this)"><div class="pch"><div><span class="pcn">이모네생선찜</span></div><span class="pca">시내</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">11:00~20:00 (BT 15~17시, 수 휴무, 당일 전화예약 필수)</span></div><div class="pact"><a href="http://place.map.kakao.com/16653374" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="chodang" onclick="tgC(this)"><div class="pch"><div><span class="pcn">갤러리밥스</span></div><span class="pca">초당</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">11:30~19:00 (BT 15:30~16:20, 목 휴무)</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">카페 스타일. 초당 콘 커피.</span></div><div class="pact"><a href="http://place.map.kakao.com/22726983" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="chodang" onclick="tgC(this)"><div class="pch"><div><span class="pcn">정은숙초당순두부</span></div><span class="pca">초당</span></div><div class="pcb"><div class="pr2"><span class="pl">예약</span><span class="pv">테이블링 예약</span></div><div class="pact"><a href="http://place.map.kakao.com/10833103" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="jeongdongjin" onclick="tgC(this)"><div class="pch"><div><span class="pcn">큰기와집</span></div><span class="pca">정동진</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">07:00~19:30 (주말 ~20:00)</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">호텔 근처 3min. 아침 옵션. 순두부전골 + 생선구이 백반.</span></div></div></div>
+
+  <div class="pc" data-a="downtown" onclick="tgC(this)"><div class="pch"><div><span class="pcn">칼언니횟집</span></div><span class="pca">다운타운</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">10:00~20:00</span></div><div class="pr2"><span class="pl">팁</span><span class="pv">복어 + 방어 + 모듬회. 주문진항 직송. 중앙시장 지하.</span></div><div class="pact"><a href="http://place.map.kakao.com/1190498697" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="chodang" onclick="tgC(this)"><div class="pch"><div><span class="pcn">강원옥 찹쌀떡</span></div><span class="pca">초당</span></div><div class="pcb"><div class="pr2"><span class="pl">팁</span><span class="pv">3곳: 초당(본점), 중앙시장점, 안목해변점. 토/일 중 선물 구매.</span></div><div class="pact"><a href="http://place.map.kakao.com/1659998491" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <div class="pc" data-a="downtown" onclick="tgC(this)"><div class="pch"><div><span class="pcn">브라더앤브라더</span></div><span class="pca">다운타운</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">11:30~21:00 (BT 15~17:30, 월 미운영, 사전예약제)</span></div><div class="pact"><a href="http://place.map.kakao.com/1584608763" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+
+  <h3 class="pgt">❓ 미검증</h3>
+  <div class="pc" data-a="downtown" onclick="tgC(this)"><div class="pch"><div><span class="pcn">감자유원지</span></div><span class="pca">다운타운</span></div><div class="pcb"><div class="pr2"><span class="pl">팁</span><span class="pv">메밀김밥. 시장 탐방 중 간식.</span></div></div></div>
+  <div class="pc" data-a="downtown" onclick="tgC(this)"><div class="pch"><div><span class="pcn">시만차</span></div><span class="pca">다운타운</span></div><div class="pcb"><div class="pr2"><span class="pl">영업</span><span class="pv">12:00~19:00 (LO 18:00, 화수 휴무)</span></div></div></div>
+  <div class="pc" data-a="chodang" onclick="tgC(this)"><div class="pch"><div><span class="pcn">애프터이미지</span></div><span class="pca">초당</span></div><div class="pcb"><div class="pr2"><span class="pl">팁</span><span class="pv">카페. 미검증.</span></div></div></div>
+  <div class="pc" data-a="chodang" onclick="tgC(this)"><div class="pch"><div><span class="pcn">순두부젤라또</span></div><span class="pca">초당</span></div><div class="pcb"><div class="pr2"><span class="pl">팁</span><span class="pv">초당 클러스터 간식. 미검증.</span></div></div></div>
+
+  <h3 class="pgt">❌ 제외</h3>
+  <div class="pc exc" data-a="chodang" onclick="tgC(this)"><div class="pch"><div><span class="pcn">카페 툇마루</span></div><span class="pca">초당</span></div><div class="pcb"><div class="pr2"><span class="pl">사유</span><span class="pv" style="color:var(--red)">화 휴무 + 주말 웨이팅 1시간 → 제외</span></div><div class="pact"><a href="http://place.map.kakao.com/401540066" target="_blank" rel="noopener" class="plk">📍 카카오맵</a></div></div></div>
+</section>
+
+<!-- AREA MAP -->
+<section class="sec" id="amap">
+  <h2 class="st"><span class="ic">🗺</span> 에어리어 맵</h2>
+  <p style="font-size:11px;color:var(--tx3);margin-bottom:10px">호텔(정동진)은 시내에서 남쪽 31km. 이동 최소화 원칙.</p>
+  <div class="amc">
+    <div class="am">
+      <div class="an ht"><div class="nn">정동진<br><small>호텔</small></div><div class="ns">하슬라아트월드<br>큰기와집</div></div>
+      <div class="ae"><div class="et">25min</div><div class="el"></div><div class="et">23km</div></div>
+      <div class="an"><div class="nn">안목</div><div class="ns">카페거리<br>미트컬쳐</div></div>
+      <div class="ae"><div class="et">10min</div><div class="el"></div><div class="et">8km</div></div>
+      <div class="an"><div class="nn">다운타운</div><div class="ns">동해일미, 버드나무<br>중앙시장, 월화거리</div></div>
+      <div class="ae"><div class="et">10min</div><div class="el"></div><div class="et">5km</div></div>
+      <div class="an"><div class="nn">초당</div><div class="ns">9남매두부집<br>강원옥, 순두부젤라또</div></div>
+      <div class="ae"><div class="et">10min</div><div class="el"></div><div class="et">~8km</div></div>
+      <div class="an"><div class="nn">경포</div><div class="ns">테라로사<br>경포호수점</div></div>
+    </div>
+    <div style="text-align:center;margin-top:12px;padding-top:8px;border-top:1px dashed var(--bg4)">
+      <div class="an sp" style="display:inline-block"><div class="nn">신라모노그램</div><div class="ns">더그로브테이블<br>테라로사 신라점</div></div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:4px">안목 해변 인접 (차로 5~10min)</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOTEL -->
+<section class="sec" id="hotel">
+  <h2 class="st"><span class="ic">🏨</span> 숙소</h2>
+  <div class="hc">
+    <h3>호텔 탑스텐 정동진</h3>
+    <div class="hd">
+      <span class="hdl">객실</span><span class="hdv">디럭스 더블 (부분바다전망)</span>
+      <span class="hdl">인원</span><span class="hdv">2명</span>
+      <span class="hdl">조식</span><span class="hdv">미포함</span>
+      <span class="hdl">위치</span><span class="hdv">시내 남쪽 31km (차 35~40분)</span>
+    </div>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bg3)">
+      <p style="font-size:12px;font-weight:600;margin-bottom:6px">예약 분할</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+        <div style="padding:6px 8px;background:var(--bg3);border-radius:var(--rx)">
+          <div style="font-weight:600">2/28~3/1 (1박)</div>
+          <div style="color:var(--tx3)">결제: TBD</div>
+        </div>
+        <div style="padding:6px 8px;background:var(--bg3);border-radius:var(--rx)">
+          <div style="font-weight:600">3/1~3/2 (1박)</div>
+          <div style="color:var(--tx3)">쿠팡 / 182,060원</div>
+          <div style="color:var(--tx3)">하나카드 4개월 할부</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--tx3)">💡 프론트에서 연박 처리 요청 (별도 예약이지만 같은 방 유지)</div>
+  </div>
+</section>
+
+<!-- CHECKLIST -->
+<section class="sec" id="cklist">
+  <h2 class="st"><span class="ic">✅</span> 준비물 체크리스트</h2>
+  <p style="font-size:11px;color:var(--tx3);margin-bottom:10px">체크하면 자동 저장됩니다</p>
+
+  <div class="cg"><h4>필수품</h4>
+    <div class="ci" data-k="e1"><input type="checkbox" id="e1"><label for="e1">지갑 / 신분증 / 카드</label></div>
+    <div class="ci" data-k="e2"><input type="checkbox" id="e2"><label for="e2">핸드폰 충전기 / 보조배터리</label></div>
+    <div class="ci" data-k="e3"><input type="checkbox" id="e3"><label for="e3">상비약</label></div>
+  </div>
+  <div class="cg"><h4>의류</h4>
+    <div class="ci" data-k="c1"><input type="checkbox" id="c1"><label for="c1">아우터 (2월 말 추위)</label></div>
+    <div class="ci" data-k="c2"><input type="checkbox" id="c2"><label for="c2">편한 워킹 슈즈</label></div>
+    <div class="ci" data-k="c3"><input type="checkbox" id="c3"><label for="c3">잠옷</label></div>
+  </div>
+  <div class="cg"><h4>세면도구</h4>
+    <div class="ci" data-k="t1"><input type="checkbox" id="t1"><label for="t1">칫솔 / 치약</label></div>
+    <div class="ci" data-k="t2"><input type="checkbox" id="t2"><label for="t2">기초 스킨케어</label></div>
+  </div>
+  <div class="cg"><h4>선택</h4>
+    <div class="ci" data-k="o1"><input type="checkbox" id="o1"><label for="o1">카메라</label></div>
+    <div class="ci" data-k="o2"><input type="checkbox" id="o2"><label for="o2">차 안 간식</label></div>
+    <div class="ci" data-k="o3"><input type="checkbox" id="o3"><label for="o3">우산 (3/1~3/2 비 예보)</label></div>
+    <div class="ci" data-k="o4"><input type="checkbox" id="o4"><label for="o4">핫팩</label></div>
+  </div>
+</section>
+
+<!-- ACTIONS -->
+<section class="sec" id="acts">
+  <h2 class="st"><span class="ic">🚨</span> 액션 아이템</h2>
+  <div class="ac urg"><div class="act">미트컬쳐 캐치테이블 예약</div><div class="acd">토요일 디너 17:30 이후 타임 — 100% 예약제, 안 하면 못 감</div><div class="acl">마감: 출발 전</div></div>
+  <div class="ac urg"><div class="act">더그로브테이블 영업시간 확인</div><div class="acd">033-820-0140 전화 — 영업시간 미공개</div><div class="acl">마감: 출발 전</div></div>
+  <div class="ac nor"><div class="act">도착 시간 확정</div><div class="acd">금요일 몇 시 강릉 도착인지에 따라 9남매 타이밍 조정</div></div>
+  <div class="ac nor"><div class="act">횡성 vs 대관령 휴게소</div><div class="acd">가는 길 간식 스팟 결정</div></div>
+  <div class="ac nor"><div class="act">강원옥 찹쌀떡 선물 구매</div><div class="acd">토/일 중 (초당 본점 or 중앙시장점)</div></div>
+  <div class="ac nor"><div class="act">르봉마젤 소품샵 방문</div><div class="acd">토요일 배치 — KakaoMap 미등록, 방문 전 위치 확인</div></div>
+</section>
+
+<!-- WARNINGS -->
+<section class="sec" id="warns">
+  <h2 class="st"><span class="ic">⚠️</span> 주의사항</h2>
+  <div class="wp opn" id="wp">
+    <button class="wt" onclick="document.getElementById('wp').classList.toggle('opn')" aria-expanded="true">
+      <span>영업시간 제약 및 휴무 정보</span><span class="arr">▼</span>
+    </button>
+    <div class="wb">
+      <div class="wi"><span class="wl">동해일미:</span> 일요일(3/2) 휴무 + 점심만 (LO 13:00). 토요일(3/1)이 유일한 기회.</div>
+      <div class="wi"><span class="wl">미트컬쳐:</span> 캐치테이블 100% 예약제. 화/수 휴무. BT 15:00~17:30.</div>
+      <div class="wi"><span class="wl">더그로브테이블:</span> 영업시간 미공개 — 033-820-0140 전화 확인 필수.</div>
+      <div class="wi"><span class="wl">월화거리 야시장:</span> 2월 미운영 (5~10월 금/토만). 거리 산책만 가능.</div>
+      <div class="wi"><span class="wl">9남매두부집:</span> BT 15~16시. 목 휴무. 캐치테이블 없음, 현장 줄서기만.</div>
+      <div class="wi"><span class="wl">인솔트베이커리:</span> 수 휴무 (일요일 방문 — 영향 없음).</div>
+      <div class="wi"><span class="wl">카페 툇마루:</span> 주말 웨이팅 1시간 → 일정에서 제외됨.</div>
+      <div class="wi"><span class="wl">삼일절(3/1):</span> 고속도로 정체 예상 — 3/2 복귀 시 12시 이전 출발 권장.</div>
+      <div class="wi"><span class="wl">호텔 위치:</span> 시내에서 남쪽 31km. 이동 시간 35~40분 고려 필수.</div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <p>강릉 여행 2026.02.28~03.02 | 최종 업데이트: 2026-02-27</p>
+  <p style="margin-top:3px">case 10.30.001 | feno-life-ops</p>
+</footer>
+
+<script>
+(function(){
+'use strict';
+// Theme
+function tglT(){var d=document.documentElement,k=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',k?'light':'dark');document.getElementById('tb').textContent=k?'🌙':'☀️';try{localStorage.setItem('gnt',k?'light':'dark')}catch(e){}}
+window.tglT=tglT;
+try{if(localStorage.getItem('gnt')==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('tb').textContent='☀️'}}catch(e){}
+
+// Floating nav
+var fn=document.getElementById('fn'),hr=document.getElementById('hero');
+function ckN(){var y=window.pageYOffset||document.documentElement.scrollTop;fn.classList.toggle('vis',y>hr.offsetTop+hr.offsetHeight-20)}
+window.addEventListener('scroll',ckN,{passive:true});
+
+// Day tabs
+var dbs=document.querySelectorAll('.tb[data-tab]');
+dbs.forEach(function(b){b.addEventListener('click',function(){
+  dbs.forEach(function(x){x.classList.remove('on');x.setAttribute('aria-selected','false')});
+  b.classList.add('on');b.setAttribute('aria-selected','true');
+  document.querySelectorAll('[role="tabpanel"]').forEach(function(t){t.classList.remove('on')});
+  var t=document.getElementById(b.getAttribute('data-tab'));if(t)t.classList.add('on');
+})});
+
+// Plan pills
+document.querySelectorAll('.pbar').forEach(function(bar){
+  var ps=bar.querySelectorAll('.pb');
+  ps.forEach(function(p){p.addEventListener('click',function(){
+    ps.forEach(function(x){x.classList.remove('on')});p.classList.add('on');
+    var par=bar.parentElement;
+    par.querySelectorAll('[id]').forEach(function(el){if(el.id&&el.id.match(/^d\d[abc]$/))el.classList.remove('on')});
+    var t=document.getElementById(p.getAttribute('data-p'));if(t)t.classList.add('on');
+  })});
+});
+
+// Place cards
+window.tgC=function(el){el.classList.toggle('op')};
+
+// Area filter
+var fbs=document.querySelectorAll('#af .fbtn');
+fbs.forEach(function(b){b.addEventListener('click',function(){
+  fbs.forEach(function(x){x.classList.remove('on')});b.classList.add('on');
+  var a=b.getAttribute('data-a'),cs=document.querySelectorAll('#places .pc');
+  cs.forEach(function(c){c.style.display=(a==='all'||c.getAttribute('data-a')===a)?'':'none'});
+  document.querySelectorAll('#places .pgt').forEach(function(t){
+    var n=t.nextElementSibling,v=false;
+    while(n&&!n.classList.contains('pgt')){if(n.classList.contains('pc')&&n.style.display!=='none'){v=true;break}n=n.nextElementSibling}
+    t.style.display=v?'':'none';
+  });
+})});
+
+// Checklist
+document.querySelectorAll('.ci').forEach(function(it){
+  var k=it.getAttribute('data-k'),cb=it.querySelector('input[type="checkbox"]');
+  if(!k||!cb)return;
+  try{if(localStorage.getItem('gn-'+k)==='1'){cb.checked=true;it.classList.add('ck')}}catch(e){}
+  cb.addEventListener('change',function(){it.classList.toggle('ck',cb.checked);try{localStorage.setItem('gn-'+k,cb.checked?'1':'0')}catch(e){}});
+  it.addEventListener('click',function(e){if(e.target!==cb&&e.target.tagName!=='LABEL'){cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))}});
+});
+
+// Active nav highlight
+var secs=['weather','meals','itin','places','amap','hotel','cklist','acts','warns'];
+var nls=fn.querySelectorAll('a');
+function hN(){var y=window.pageYOffset+70,c='';secs.forEach(function(id){var el=document.getElementById(id);if(el&&el.offsetTop<=y)c=id});nls.forEach(function(l){l.classList.toggle('on',l.getAttribute('href')==='#'+c)})}
+window.addEventListener('scroll',hN,{passive:true});
+})();
+</script>
+</body>
+</html>
