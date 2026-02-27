@@ -1,12 +1,12 @@
 {
   "manifest_version": "1.0.0",
   "created": "2026-01-20",
-  "last_updated": "2026-02-22",
+  "last_updated": "2026-02-27",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "benchmarks": {
       "version": "3.7.0",
-      "updated": "2026-02-20",
+      "updated": "2026-02-23",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 8,
@@ -33,7 +33,7 @@
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-02-20",
+      "updated": "2026-02-27",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
       "file_count": 2,
@@ -41,17 +41,17 @@
       "description": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
     "sec-13f": {
-      "version": "3.0.1",
-      "updated": "2026-02-20",
+      "version": "3.2.0",
+      "updated": "2026-02-27",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
-      "file_count": 37,
+      "file_count": 41,
       "schema": true,
-      "description": "Institutional holdings from 30 major investors (20Q accumulate, analytics)"
+      "description": "Institutional holdings from 30 major investors (20Q accumulate, enrichment + 8 analytics)"
     },
     "sentiment": {
       "version": "1.0.0",
-      "updated": "2026-02-22",
+      "updated": "2026-02-26",
       "update_frequency": "daily",
       "source": "Multiple (AAII, CNN, CFTC, CBOE)",
       "file_count": 13,
@@ -69,6 +69,20 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-02-27",
+      "folder": "sec-13f",
+      "version": "3.2.0",
+      "change": "v3.2.0 sync: enrichment metadata added (sector/cap/filing-return coverage + source mix), analytics expanded 4->8",
+      "breaking": true
+    },
+    {
+      "date": "2026-02-23",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "Weekly data update: 829 data points (2010-04-02 ~ 2026-02-13), micro_sectors +1 (kosdaq_150), summaries 37 sections",
+      "breaking": false
+    },
     {
       "date": "2026-02-22",
       "folder": "global-scouter",

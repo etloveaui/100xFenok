@@ -41,13 +41,13 @@
       "description": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
     "sec-13f": {
-      "version": "3.0.1",
+      "version": "3.2.0",
       "updated": "2026-02-27",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
       "file_count": 41,
       "schema": true,
-      "description": "Institutional holdings from 30 major investors (20Q accumulate, analytics)"
+      "description": "Institutional holdings from 30 major investors (20Q accumulate, enrichment + 8 analytics)"
     },
     "sentiment": {
       "version": "1.0.0",
@@ -69,6 +69,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-02-27",
+      "folder": "sec-13f",
+      "version": "3.2.0",
+      "change": "v3.2.0 sync: enrichment metadata added (sector/cap/filing-return coverage + source mix), analytics expanded 4->8",
+      "breaking": true
+    },
     {
       "date": "2026-02-23",
       "folder": "benchmarks",

@@ -1,91 +1,151 @@
 {
   "folder": "sec-13f",
-  "version": "3.0.1",
-  "updated": "2026-02-20",
+  "version": "3.2.0",
+  "updated": "2026-02-27",
   "source": "SEC EDGAR 13F filings",
   "update_frequency": "quarterly (45 days after quarter end)",
-  "maintainer": "SEC 13F Converter (accumulate mode)",
-
+  "maintainer": "SEC 13F Converter v3.2.0 (accumulate mode)",
   "structure": {
     "summary.json": "Aggregated holdings summary",
     "by_sector.json": "Holdings by sector",
     "by_ticker.json": "Holdings by ticker",
     "investors/": "30 individual investor files",
-    "analytics/": "Derived metrics (consensus, new positions, buying pressure, conviction)"
+    "analytics/": "Derived metrics (8 files)"
   },
-
   "files": {
     "summary.json": {
       "description": "Aggregated holdings summary across all investors",
-      "size_kb": 6.2,
+      "size_kb": 10,
       "schema": {
-        "last_updated": "YYYY-MM-DD",
-        "total_aum": "number",
-        "investor_count": "number",
-        "top_holdings[]": {
-          "ticker": "string",
-          "name": "string",
-          "total_value": "number",
-          "investor_count": "number"
-        }
+        "metadata": {
+          "version": "string",
+          "generated_at": "ISO8601 datetime",
+          "quarters_covered": "string[] (YYYY-QN)",
+          "investor_count": "number",
+          "data_latency_note": "string",
+          "enrichment_coverage": {
+            "sector": "number (0-1)",
+            "industry": "number (0-1)",
+            "market_cap": "number (0-1)",
+            "price_at_filing": "number (0-1)",
+            "return_since_filing": "number (0-1)"
+          },
+          "enrichment_source_mix": "object<string, number>",
+          "mode": {
+            "strict_official": "boolean",
+            "backfill_mode": "latest|full",
+            "use_yahoo": "boolean"
+          }
+        },
+        "investors": "object",
+        "top_stocks": "object"
       }
     },
     "by_sector.json": {
       "description": "Holdings aggregated by sector",
-      "size_kb": 2.6,
+      "size_kb": 4,
       "schema": {
-        "sectors.{sector_name}": {
-          "total_value": "number",
-          "weight": "number (0-1)",
-          "top_stocks[]": {
-            "ticker": "string",
-            "value": "number"
-          }
+        "{sector_name}": {
+          "investors": "string[]",
+          "avg_weight": "number (0-1)",
+          "top_holdings": "string[]"
+        },
+        "_meta": {
+          "source_mix": "object<string, number>"
         }
       }
     },
     "by_ticker.json": {
       "description": "All holdings by ticker",
-      "size_kb": 288,
+      "size_kb": 401,
       "schema": {
-        "tickers.{TICKER}": {
+        "{TICKER}": {
           "name": "string",
+          "investors": "string[]",
+          "holder_count": "number",
           "total_value": "number",
-          "holders[]": {
-            "investor": "string",
-            "shares": "number",
-            "value": "number"
-          }
+          "avg_weight": "number (0-1)"
         }
       }
     },
     "investors/{name}.json": {
       "description": "Individual investor holdings (30 files)",
-      "investors": ["buffett", "marks", "klarman", "greenblatt", "einhorn", "pabrai", "gayner", "russo", "miller", "fidelity", "druckenmiller", "soros", "dalio", "tudor", "griffin", "cohen", "hohn", "laffont", "halvorsen", "coleman", "mandel", "ackman", "icahn", "peltz", "tepper", "loeb", "singer", "fisher", "asness", "wood"],
+      "investors": [
+        "buffett",
+        "marks",
+        "klarman",
+        "greenblatt",
+        "einhorn",
+        "pabrai",
+        "gayner",
+        "russo",
+        "miller",
+        "fidelity",
+        "druckenmiller",
+        "soros",
+        "dalio",
+        "tudor",
+        "griffin",
+        "cohen",
+        "hohn",
+        "laffont",
+        "halvorsen",
+        "coleman",
+        "mandel",
+        "ackman",
+        "icahn",
+        "peltz",
+        "tepper",
+        "loeb",
+        "singer",
+        "fisher",
+        "asness",
+        "wood"
+      ],
       "schema": {
         "metadata": {
           "version": "string",
-          "quarters_covered": "string[] (e.g., 2025-Q3, 2025-Q2)"
+          "generated_at": "ISO8601 datetime",
+          "quarters_covered": "string[] (YYYY-QN)"
         },
         "investor": {
           "name": "string",
           "entity": "string (fund name)",
           "cik": "string (SEC CIK number)",
-          "group": "string (value/macro/hedge/tiger_cubs/activist/event_driven/quant/growth)"
-        },
-        "filings[]": {
-          "quarter": "string (YYYY-QN)",
-          "filing_date": "YYYY-MM-DD",
-          "aum_total": "number",
-          "holdings_count": "number",
-          "top_10_weight": "number (0-1)",
-          "holdings[]": {
-            "ticker": "string",
-            "name": "string",
-            "shares": "number",
-            "value": "number",
-            "weight": "number (0-1)",
-            "change": "string (NEW/INCREASED/DECREASED/SOLD)"
+          "group": "string (value/macro/hedge/tiger_cubs/activist/event/quant/growth)",
+          "filings[]": {
+            "quarter": "string (YYYY-QN)",
+            "filing_date": "YYYY-MM-DD",
+            "aum_total": "number",
+            "holdings_count": "number",
+            "top_10_weight": "number (0-1)",
+            "holdings[]": {
+              "ticker": "string",
+              "cusip": "string",
+              "name": "string",
+              "shares": "number",
+              "market_value": "number",
+              "weight": "number (0-1)",
+              "title_of_class": "string|null",
+              "investment_discretion": "string|null",
+              "voting_authority": {
+                "sole": "number",
+                "shared": "number",
+                "none": "number"
+              },
+              "sector": "string|null",
+              "industry": "string|null",
+              "enrichment_source": "fallback|openfigi|sec|unknown|null",
+              "market_cap_usd": "number|null",
+              "market_cap_bucket": "mega|large|mid|small|micro|unknown|null",
+              "market_cap_as_of": "YYYY-MM-DD|null",
+              "market_cap_source": "string|null",
+              "price_at_filing": "number|null",
+              "price_latest": "number|null",
+              "return_since_filing_pct": "number|null",
+              "return_as_of": "YYYY-MM-DD|null",
+              "price_source": "string|null"
+            }
           }
         }
       }
@@ -93,31 +153,32 @@
     "analytics/consensus.json": {
       "description": "Consensus score across all investors per ticker",
       "schema": {
-        "tickers.{TICKER}": {
-          "score": "number",
+        "{TICKER}": {
           "holder_count": "number",
-          "total_value": "number"
+          "total_value": "number",
+          "consensus_score": "number"
         }
       }
     },
     "analytics/new_positions.json": {
       "description": "Newly initiated positions in latest quarter",
       "schema": {
+        "latest_quarter": "string",
         "positions[]": {
-          "ticker": "string",
           "investor": "string",
-          "value": "number",
-          "quarter": "string"
+          "ticker": "string",
+          "market_value": "number",
+          "weight": "number"
         }
       }
     },
     "analytics/buying_pressure.json": {
       "description": "Net buying/selling pressure by ticker",
       "schema": {
-        "tickers.{TICKER}": {
-          "net_buyers": "number",
-          "net_sellers": "number",
-          "pressure_score": "number"
+        "{TICKER}": {
+          "buyers": "number",
+          "sellers": "number",
+          "net_value_change": "number"
         }
       }
     },
@@ -125,30 +186,128 @@
       "description": "High-conviction positions (top weight per investor)",
       "schema": {
         "positions[]": {
-          "ticker": "string",
           "investor": "string",
+          "ticker": "string",
           "weight": "number",
-          "value": "number"
+          "market_value": "number"
+        }
+      }
+    },
+    "analytics/hhi.json": {
+      "description": "Holding concentration metric (Herfindahl-Hirschman Index)",
+      "schema": {
+        "{investor}": {
+          "quarter": "string",
+          "hhi": "number",
+          "effective_positions": "number"
+        }
+      }
+    },
+    "analytics/turnover.json": {
+      "description": "Quarter-over-quarter turnover by investor",
+      "schema": {
+        "{investor}": {
+          "quarter": "string",
+          "turnover_rate": "number (0-1)",
+          "added": "number",
+          "removed": "number"
+        }
+      }
+    },
+    "analytics/options_hedge.json": {
+      "description": "Options hedge usage summary",
+      "schema": {
+        "{investor}": {
+          "quarter": "string",
+          "options_value": "number",
+          "options_ratio": "number (0-1)"
+        }
+      }
+    },
+    "analytics/enhanced_consensus.json": {
+      "description": "Consensus plus concentration/conviction weighted signals",
+      "schema": {
+        "{TICKER}": {
+          "holder_count": "number",
+          "weighted_score": "number",
+          "signal": "bullish|neutral|bearish"
         }
       }
     }
   },
-
   "investor_groups": {
-    "value": ["buffett", "marks", "klarman", "greenblatt", "einhorn", "pabrai", "gayner", "russo", "miller", "fidelity"],
-    "macro": ["druckenmiller", "soros", "dalio", "tudor"],
-    "hedge": ["griffin", "cohen", "hohn", "laffont"],
-    "tiger_cubs": ["halvorsen", "coleman", "mandel"],
-    "activist": ["ackman", "icahn", "peltz"],
-    "event_driven": ["tepper", "loeb", "singer"],
-    "quant": ["fisher", "asness"],
-    "growth": ["wood"]
+    "value": [
+      "buffett",
+      "marks",
+      "klarman",
+      "greenblatt",
+      "einhorn",
+      "pabrai",
+      "gayner",
+      "russo",
+      "miller",
+      "fidelity"
+    ],
+    "macro": [
+      "druckenmiller",
+      "soros",
+      "dalio",
+      "tudor"
+    ],
+    "hedge": [
+      "griffin",
+      "cohen",
+      "hohn",
+      "laffont"
+    ],
+    "tiger_cubs": [
+      "halvorsen",
+      "coleman",
+      "mandel"
+    ],
+    "activist": [
+      "ackman",
+      "icahn",
+      "peltz"
+    ],
+    "event": [
+      "tepper",
+      "loeb",
+      "singer"
+    ],
+    "quant": [
+      "fisher",
+      "asness"
+    ],
+    "growth": [
+      "wood"
+    ]
   },
-
   "breaking_changes_history": [
-    {"version": "3.0.1", "date": "2026-02-20", "change": "30 investors, 20Q accumulate mode, analytics/ folder added"},
-    {"version": "2.1.0", "date": "2026-01-05", "change": "Added burry, pabrai investors"},
-    {"version": "2.0.0", "date": "2025-12-01", "change": "Restructured with quarterly filings array"},
-    {"version": "1.0.0", "date": "2025-11-01", "change": "Initial schema"}
+    {
+      "version": "3.2.0",
+      "date": "2026-02-27",
+      "change": "Enrichment metadata, filing-return fields, and analytics expansion (4 -> 8)"
+    },
+    {
+      "version": "3.0.1",
+      "date": "2026-02-20",
+      "change": "30 investors, 20Q accumulate mode, analytics folder added"
+    },
+    {
+      "version": "2.1.0",
+      "date": "2026-01-05",
+      "change": "Added burry, pabrai investors"
+    },
+    {
+      "version": "2.0.0",
+      "date": "2025-12-01",
+      "change": "Restructured with quarterly filings array"
+    },
+    {
+      "version": "1.0.0",
+      "date": "2025-11-01",
+      "change": "Initial schema"
+    }
   ]
 }

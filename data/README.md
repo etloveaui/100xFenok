@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-02-23
-> **Total Files**: 1,682 JSON files
+> **Last Updated**: 2026-02-27
+> **Total Files**: 1,686 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -14,7 +14,7 @@
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,068 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
-| [sec-13f/](sec-13f/README.md) | 37 | Quarterly | SEC EDGAR |
+| [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
 | [slickcharts/](slickcharts/README.md) | 550 | Daily/Weekly/Monthly | SlickCharts.com |
 
@@ -33,7 +33,8 @@
 
 ### Institutional Data (sec-13f/)
 - 30 investors' 13F holdings (20Q accumulate mode)
-- Analytics: consensus, new positions, buying pressure, conviction
+- Analytics: 8 files (consensus, new_positions, buying_pressure, conviction, hhi, turnover, options_hedge, enhanced_consensus)
+- Enrichment metadata: sector/cap/filing-return coverage + source mix
 - Quarterly updates
 
 ### Sentiment Data (sentiment/)
