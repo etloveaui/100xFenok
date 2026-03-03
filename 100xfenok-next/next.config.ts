@@ -39,6 +39,11 @@ const nextConfig: NextConfig = {
         destination: "/vr/?path=vr/vr-total-guide-calculator.html",
         permanent: false,
       },
+      {
+        source: "/travel/:path*",
+        destination: "/admin/personal/travel/",
+        permanent: true,
+      },
     ];
   },
 
