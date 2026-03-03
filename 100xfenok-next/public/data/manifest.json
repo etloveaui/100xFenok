@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.0.0",
   "created": "2026-01-20",
-  "last_updated": "2026-02-27",
+  "last_updated": "2026-03-03",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "benchmarks": {
@@ -24,16 +24,16 @@
     },
     "global-scouter": {
       "version": "2.2.0",
-      "updated": "2026-02-22",
+      "updated": "2026-03-02",
       "update_frequency": "on-demand",
       "source": "Custom aggregation",
       "file_count": 1068,
       "schema": true,
-      "description": "Stock screening (1,063), ETFs (23), indicators (1,050) + extended: eps_consensus, growth_consensus, per_bands"
+      "description": "Stock screening (1,063), ETFs (23), indicators (1,051) + extended: eps_consensus, growth_consensus, per_bands"
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-02-27",
+      "updated": "2026-03-03",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
       "file_count": 2,
@@ -51,7 +51,7 @@
     },
     "sentiment": {
       "version": "1.0.0",
-      "updated": "2026-02-26",
+      "updated": "2026-03-02",
       "update_frequency": "daily",
       "source": "Multiple (AAII, CNN, CFTC, CBOE)",
       "file_count": 13,
@@ -60,15 +60,22 @@
     },
     "slickcharts": {
       "version": "2.1.0",
-      "updated": "2026-02-20",
+      "updated": "2026-03-01",
       "update_frequency": "daily/weekly/monthly",
       "source": "SlickCharts.com (32 scrapers)",
-      "file_count": 555,
+      "file_count": 556,
       "schema": true,
       "description": "Index holdings, returns, individual stocks"
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-03-02",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Data refresh (2026-02-27 source): 1,063 stocks, 1,051 indicators (+1), per_bands 97.5%",
+      "breaking": false
+    },
     {
       "date": "2026-02-27",
       "folder": "sec-13f",
