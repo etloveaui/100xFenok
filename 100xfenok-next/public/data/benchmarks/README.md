@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-03-26 ~ 2026-02-06 (16 years, 829 data points)
+> **Period**: 2010-04-02 ~ 2026-02-13 (16 years, 829 data points)
 > **Version**: 3.7.0
-> **Last Update**: 2026-02-09
+> **Last Update**: 2026-02-23
 
 ---
 
@@ -13,7 +13,7 @@
 |------|-------------|----------|
 | `us.json` | US Major Indices | `sp500`, `nasdaq100`, `nasdaq_composite`, `russell2000` |
 | `us_sectors.json` | GICS 11 Sectors + Housing | `energy`, `materials`, `industrials`, `consumer_discretionary`, `consumer_staples`, `health_care`, `financials`, `information_technology`, `communication_services`, `utilities`, `real_estate`, `homebuilders` |
-| `micro_sectors.json` | Micro Sectors | `philadelphia_semi`, `us_regional_banks`, `hang_seng_tech`, `us_biotech` |
+| `micro_sectors.json` | Micro Sectors | `philadelphia_semi`, `us_regional_banks`, `hang_seng_tech`, `us_biotech`, `kosdaq_150` |
 | `developed.json` | Developed Markets | `euro_stoxx_50`, `topix`, `hong_kong`, `nikkei` |
 | `emerging.json` | Emerging Markets | `shanghai`, `india_sensex`, `kospi`, `brazil`, `vietnam`, `hang_seng_h` |
 | `msci.json` | MSCI Indices | `world`, `developed`, `emerging`, `china`, `india`, `korea` |
