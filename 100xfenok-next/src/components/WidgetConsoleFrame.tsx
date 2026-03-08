@@ -33,6 +33,7 @@ export default function WidgetConsoleFrame({
     <WidgetConsoleFrameInner
       key={frameKey}
       src={effectiveSrc}
+      originalSrc={src}
       title={title}
       widgetId={widgetId}
       payload={payload}
@@ -47,11 +48,13 @@ export default function WidgetConsoleFrame({
 }
 
 type WidgetConsoleFrameInnerProps = WidgetConsoleFrameProps & {
+  originalSrc: string;
   onRetry: () => void;
 };
 
 function WidgetConsoleFrameInner({
   src,
+  originalSrc,
   title,
   widgetId,
   payload,
@@ -94,7 +97,8 @@ function WidgetConsoleFrameInner({
   });
   const bridgeFreshLabel = payload ? `BRIDGE ${bridgeFreshness.label}` : 'BRIDGE LOCAL';
   const bridgeFreshClass = payload ? bridgeFreshness.className : 'is-local';
-  const compactPath = formatWidgetPath(src);
+  const compactPath = formatWidgetPath(originalSrc);
+  const newWindowHref = stripEmbedParam(originalSrc);
 
   const dispatchPayload = useCallback((trackDispatch = true) => {
     if (!payload || !iframeRef.current?.contentWindow) return false;
@@ -340,7 +344,7 @@ function WidgetConsoleFrameInner({
         <button type="button" className="widget-console-rail-btn" onClick={handleRetry}>
           Reload
         </button>
-        <a href={src} target="_blank" rel="noreferrer" className="widget-console-rail-link">
+        <a href={newWindowHref} target="_blank" rel="noreferrer" className="widget-console-rail-link">
           Open
         </a>
       </div>
@@ -360,7 +364,7 @@ function WidgetConsoleFrameInner({
                   <button type="button" className="widget-console-btn" onClick={handleRetry}>
                     다시 시도
                   </button>
-                  <a href={src} target="_blank" rel="noreferrer" className="widget-console-link">
+                  <a href={newWindowHref} target="_blank" rel="noreferrer" className="widget-console-link">
                     새 창에서 열기
                   </a>
                 </div>
@@ -404,6 +408,15 @@ function appendEmbedParam(src: string, enabled: boolean): string {
     .replace(/\?&/, '?');
   const glue = cleaned.includes('?') ? '&' : '?';
   return `${cleaned}${glue}embed=1${hash ? `#${hash}` : ''}`;
+}
+
+function stripEmbedParam(src: string): string {
+  const [baseAndQuery, hash = ''] = src.split('#', 2);
+  const cleaned = baseAndQuery
+    .replace(/([?&])embed=[^&#]*/g, '$1')
+    .replace(/[?&]+$/, '')
+    .replace(/\?&/, '?');
+  return `${cleaned}${hash ? `#${hash}` : ''}`;
 }
 
 type WidgetTelemetryEvent =
@@ -523,23 +536,14 @@ function resolveTargetOrigin(src: string): string {
 const WIDGET_EMBED_SHELL_SELECTOR = [
   '#mainNav',
   'nav#mainNav',
-  'body > nav',
-  'body > header nav',
   '.sticky-header',
   'header.sticky-header',
   '.top-nav',
   '.global-nav',
   '.nav-wrapper',
-  '.navbar',
-  'footer',
-  '[role="contentinfo"]',
   '#mainFooter',
   '#footer',
   '.site-footer',
-  '.footer',
-  '[aria-label*="footer" i]',
-  '[id*="footer" i]',
-  '[class*="footer" i]',
 ].join(', ');
 
 type WidgetShellObserverState = {
@@ -560,7 +564,14 @@ function disconnectWidgetShellObserver(frame: HTMLIFrameElement | null): void {
 function hideWidgetShellNodes(doc: Document): void {
   const shellNodes = doc.querySelectorAll(WIDGET_EMBED_SHELL_SELECTOR);
   shellNodes.forEach((node) => {
-    if (!(node instanceof HTMLElement)) return;
+    if (!(node instanceof HTMLElement) || !shouldHideWidgetShellNode(node, doc)) return;
+    node.setAttribute('data-next-widget-embed-hidden', '1');
+    node.style.display = 'none';
+  });
+
+  const edgeShellNodes = doc.querySelectorAll('body > header, body > nav, body > footer, body > [role="contentinfo"]');
+  edgeShellNodes.forEach((node) => {
+    if (!(node instanceof HTMLElement) || !shouldHideWidgetShellNode(node, doc)) return;
     node.setAttribute('data-next-widget-embed-hidden', '1');
     node.style.display = 'none';
   });
@@ -599,23 +610,14 @@ function maskWidgetShell(frame: HTMLIFrameElement | null): void {
       style.textContent = `
         html[data-next-widget-embed-shell="1"] #mainNav,
         html[data-next-widget-embed-shell="1"] nav#mainNav,
-        html[data-next-widget-embed-shell="1"] body > nav,
-        html[data-next-widget-embed-shell="1"] body > header nav,
         html[data-next-widget-embed-shell="1"] .sticky-header,
         html[data-next-widget-embed-shell="1"] header.sticky-header,
         html[data-next-widget-embed-shell="1"] .top-nav,
         html[data-next-widget-embed-shell="1"] .global-nav,
         html[data-next-widget-embed-shell="1"] .nav-wrapper,
-        html[data-next-widget-embed-shell="1"] .navbar,
-        html[data-next-widget-embed-shell="1"] footer,
-        html[data-next-widget-embed-shell="1"] [role="contentinfo"],
         html[data-next-widget-embed-shell="1"] #mainFooter,
         html[data-next-widget-embed-shell="1"] #footer,
-        html[data-next-widget-embed-shell="1"] .site-footer,
-        html[data-next-widget-embed-shell="1"] .footer,
-        html[data-next-widget-embed-shell="1"] [aria-label*="footer" i],
-        html[data-next-widget-embed-shell="1"] [id*="footer" i],
-        html[data-next-widget-embed-shell="1"] [class*="footer" i] {
+        html[data-next-widget-embed-shell="1"] .site-footer {
           display: none !important;
         }
       `;
@@ -627,4 +629,50 @@ function maskWidgetShell(frame: HTMLIFrameElement | null): void {
   } catch {
     // cross-origin 문서 접근 실패 시 마스킹을 건너뜀
   }
+}
+
+function shouldHideWidgetShellNode(node: HTMLElement, doc: Document): boolean {
+  const className = typeof node.className === 'string' ? node.className : '';
+  const nodeKey = `${node.id} ${className}`.toLowerCase();
+  if (/(?:^|[\s_-])(mainnav|mainfooter|site-footer|sticky-header|global-nav|top-nav|nav-wrapper)(?:$|[\s_-])/.test(nodeKey)) {
+    return true;
+  }
+
+  const isEdgeNode = node.parentElement === doc.body;
+  if (!isEdgeNode) {
+    return false;
+  }
+
+  if (node.matches('header, nav')) {
+    return true;
+  }
+
+  if (!node.matches('footer, [role="contentinfo"]')) {
+    return false;
+  }
+
+  if (looksLikeWidgetContentFooter(node)) {
+    return false;
+  }
+
+  const styles = doc.defaultView?.getComputedStyle(node);
+  if (styles?.position === 'fixed' || styles?.position === 'sticky') {
+    return true;
+  }
+
+  return (node.textContent || '').trim().length < 240;
+}
+
+function looksLikeWidgetContentFooter(node: HTMLElement): boolean {
+  const text = (node.textContent || '').toLowerCase();
+  if (!text) return false;
+  return (
+    text.includes('sources') ||
+    text.includes('verified') ||
+    text.includes('estimated') ||
+    text.includes('uncertain') ||
+    text.includes('research') ||
+    text.includes('출처') ||
+    text.includes('리서치')
+  );
 }

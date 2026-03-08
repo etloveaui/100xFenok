@@ -139,38 +139,19 @@ export default function AppEnhancements() {
   const dockNavTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dockLockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dockNavLockUntilRef = useRef(0);
-  const [isOnline, setIsOnline] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return window.navigator.onLine;
-  });
-  const [scrollProgress, setScrollProgress] = useState(() => {
-    if (typeof window === 'undefined') return 0;
-    const doc = document.documentElement;
-    const scrollableHeight = Math.max(1, doc.scrollHeight - window.innerHeight);
-    return Math.min(1, Math.max(0, window.scrollY / scrollableHeight));
-  });
-  const [showBackToTop, setShowBackToTop] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.scrollY > 560;
-  });
+  const [isOnline, setIsOnline] = useState(true);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
-  const [isDataSaver, setIsDataSaver] = useState(() => getIsDataSaverMode());
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return false;
-    return window.visualViewport.height < window.innerHeight * 0.78;
-  });
+  const [isDataSaver, setIsDataSaver] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [dockCollapsed, setDockCollapsed] = useState(false);
   const [isDockNavigating, setIsDockNavigating] = useState(false);
   const [isDockLockPinned, setIsDockLockPinned] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [showIOSHint, setShowIOSHint] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    if (getDismissedInstallHint()) return false;
-    if (getIsStandaloneMode()) return false;
-    return getIsIOS();
-  });
+  const [showIOSHint, setShowIOSHint] = useState(false);
 
   const armDockLock = useCallback((durationMs: number) => {
     dockNavLockUntilRef.current = Date.now() + durationMs;
@@ -199,6 +180,28 @@ export default function AppEnhancements() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    const syncClientState = () => {
+      setIsOnline(window.navigator.onLine);
+      setIsDataSaver(getIsDataSaverMode());
+      setShowIOSHint(
+        !getDismissedInstallHint() &&
+          !getIsStandaloneMode() &&
+          getIsIOS(),
+      );
+
+      const doc = document.documentElement;
+      const scrollableHeight = Math.max(1, doc.scrollHeight - window.innerHeight);
+      const progress = Math.min(1, Math.max(0, window.scrollY / scrollableHeight));
+      setScrollProgress(progress);
+      setShowBackToTop(window.scrollY > 560);
+
+      if (window.visualViewport) {
+        setIsKeyboardOpen(window.visualViewport.height < window.innerHeight * 0.78);
+      } else {
+        setIsKeyboardOpen(false);
+      }
+    };
 
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -252,6 +255,7 @@ export default function AppEnhancements() {
       }
     };
 
+    syncClientState();
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('scroll', handleScroll, { passive: true });

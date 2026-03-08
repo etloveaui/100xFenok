@@ -14,6 +14,7 @@ import {
   setAdminAuthenticated,
   verifyAdminPassword,
 } from '@/lib/client/admin-auth';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/client/body-scroll-lock';
 
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
 type FooterTickerItem = {
@@ -146,7 +147,7 @@ export default function Footer() {
   const adminLockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const adminModalPanelRef = useRef<HTMLDivElement>(null);
   const adminPreviousFocusRef = useRef<HTMLElement | null>(null);
-  const adminScrollOffsetRef = useRef(0);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearAdminLockTimer = useCallback(() => {
     if (adminLockTimerRef.current) {
@@ -271,6 +272,9 @@ export default function Footer() {
   useEffect(() => {
     return () => {
       clearAdminLockTimer();
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
     };
   }, [clearAdminLockTimer]);
 
@@ -299,14 +303,7 @@ export default function Footer() {
     adminPreviousFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-    const body = document.body;
-    adminScrollOffsetRef.current = window.scrollY;
-    body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
-    body.style.top = `-${adminScrollOffsetRef.current}px`;
-    body.style.left = '0';
-    body.style.right = '0';
-    body.style.width = '100%';
+    lockBodyScroll('footer-admin-modal');
 
     window.requestAnimationFrame(() => {
       adminInputRef.current?.focus();
@@ -357,26 +354,34 @@ export default function Footer() {
     window.addEventListener('keydown', handleModalKeydown);
     return () => {
       window.removeEventListener('keydown', handleModalKeydown);
-      body.style.overflow = '';
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      window.scrollTo(0, adminScrollOffsetRef.current);
+      unlockBodyScroll('footer-admin-modal');
       adminPreviousFocusRef.current?.focus();
     };
   }, [closeAdminModal, showAdminModal]);
 
   const showToastMessage = (message: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = null;
+    }
     setToastMessage(message);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
+    toastTimeoutRef.current = setTimeout(() => {
+      setShowToast(false);
+      toastTimeoutRef.current = null;
+    }, 2500);
   };
 
-  const handleShareClick = () => {
-    navigator.clipboard.writeText(window.location.href);
-    showToastMessage('URL 복사 완료!');
+  const handleShareClick = async () => {
+    try {
+      if (!window.isSecureContext || !navigator.clipboard?.writeText) {
+        throw new Error('Clipboard API unavailable');
+      }
+      await navigator.clipboard.writeText(window.location.href);
+      showToastMessage('URL 복사 완료!');
+    } catch {
+      showToastMessage('URL 복사 실패');
+    }
   };
 
   const handleMarketStatusClick = () => {

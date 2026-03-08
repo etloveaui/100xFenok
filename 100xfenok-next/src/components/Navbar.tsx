@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/client/body-scroll-lock';
 
 type DesktopMenuId = 'market' | 'analytics' | 'strategies';
 
@@ -13,7 +14,6 @@ export default function Navbar() {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobilePanelRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
-  const scrollOffsetRef = useRef(0);
   const marketDropdownRef = useRef<HTMLDivElement | null>(null);
   const analyticsDropdownRef = useRef<HTMLDivElement | null>(null);
   const strategiesDropdownRef = useRef<HTMLDivElement | null>(null);
@@ -141,24 +141,11 @@ export default function Navbar() {
         ? document.activeElement
         : null;
 
-    const body = document.body;
-    scrollOffsetRef.current = window.scrollY;
-    body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollOffsetRef.current}px`;
-    body.style.left = '0';
-    body.style.right = '0';
-    body.style.width = '100%';
+    lockBodyScroll('navbar-mobile-menu');
     closeButtonRef.current?.focus();
 
     return () => {
-      body.style.overflow = '';
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      window.scrollTo(0, scrollOffsetRef.current);
+      unlockBodyScroll('navbar-mobile-menu');
       previouslyFocusedRef.current?.focus();
     };
   }, [mobileMenuOpen]);

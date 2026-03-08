@@ -618,7 +618,6 @@ export default function Home() {
   const [activePeriod, setActivePeriod] = useState('1W');
   const [isPeriodMenuOpen, setIsPeriodMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
-  const [isDataConnected, setIsDataConnected] = useState(false);
   const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [syncTick, setSyncTick] = useState(() => Date.now());
@@ -796,7 +795,6 @@ export default function Home() {
       }
 
       setDashboard(nextSnapshot);
-      setIsDataConnected(liveSourceCount > 0);
       setLiveSourceStats({
         live: liveSourceCount,
         total: sourcePayloads.length,
@@ -1243,11 +1241,30 @@ export default function Home() {
       ? 'is-watch'
       : 'is-stress';
 
-  const tabPanelModeLabel = isDataConnected ? 'LIVE DATA' : 'FALLBACK';
   const commandSyncLabel = lastSyncedAt ? formatTimeLabel(lastSyncedAt) : '--';
   const commandSourceCoverage = liveSourceStats.total > 0
     ? `${liveSourceStats.live}/${liveSourceStats.total}`
     : '--';
+  const dataCoverageRate = liveSourceStats.total > 0
+    ? liveSourceStats.live / liveSourceStats.total
+    : 0;
+  const dataConnectionMode = liveSourceStats.total === 0
+    ? 'fallback'
+    : dataCoverageRate >= 0.75
+      ? 'live'
+      : dataCoverageRate >= 0.35
+        ? 'mixed'
+        : 'fallback';
+  const tabPanelModeLabel = dataConnectionMode === 'live'
+    ? 'LIVE DATA'
+    : dataConnectionMode === 'mixed'
+      ? 'PARTIAL DATA'
+      : 'FALLBACK';
+  const dataConnectionClass = dataConnectionMode === 'live'
+    ? 'is-live'
+    : dataConnectionMode === 'mixed'
+      ? 'is-mixed'
+      : 'is-fallback';
   const syncedAtEpoch = lastSyncedAt ? new Date(lastSyncedAt).getTime() : null;
   const syncAgeMinutes = syncedAtEpoch !== null && Number.isFinite(syncedAtEpoch)
     ? Math.max(0, Math.floor((syncTick - syncedAtEpoch) / (60 * 1000)))
@@ -1274,8 +1291,12 @@ export default function Home() {
     : dashboard.sectorMode === 'MIXED'
       ? 'Ticker Stream Mixed'
       : 'Ticker Stream Base';
-  const macroHealthClass = isDataConnected ? 'is-live' : 'is-fallback';
-  const macroHealthLabel = isDataConnected ? 'Macro Stack Linked' : 'Macro Stack Fallback';
+  const macroHealthClass = dataConnectionClass;
+  const macroHealthLabel = dataConnectionMode === 'live'
+    ? 'Macro Stack Linked'
+    : dataConnectionMode === 'mixed'
+      ? 'Macro Stack Partial'
+      : 'Macro Stack Fallback';
   const sentimentIndicatorCount = Object.keys(sentimentWidgetPayload?.indicators ?? {}).length;
   const liquidityIndicatorCount = liquidityWidgetPayload ? Object.keys(liquidityWidgetPayload).length : 0;
   const bridgeSignalCount = sentimentIndicatorCount + liquidityIndicatorCount;
@@ -1403,8 +1424,12 @@ export default function Home() {
           </div>
         </div>
         <div className="command-meta" aria-live="polite">
-          <span className={`command-live-pill ${isDataConnected ? 'is-live' : 'is-fallback'}`}>
-            {isDataConnected ? 'LIVE DATA' : 'FALLBACK DATA'}
+          <span className={`command-live-pill ${dataConnectionClass}`}>
+            {dataConnectionMode === 'live'
+              ? 'LIVE DATA'
+              : dataConnectionMode === 'mixed'
+                ? 'PARTIAL DATA'
+                : 'FALLBACK DATA'}
           </span>
           <span className="command-meta-chip">Sources {commandSourceCoverage}</span>
           <span className="command-meta-chip">Updated {commandSyncLabel}</span>
@@ -1676,10 +1701,16 @@ export default function Home() {
                     <p className="overview-widget-kicker orbitron">SENTIMENT</p>
                     <h3 className="overview-widget-subtitle">Risk Appetite</h3>
                     <p className="overview-source-meta">
-                      {isDataConnected ? `Sentiment Source · Live Stack (${sentimentIndicatorCount})` : 'Sentiment Source · Fallback Snapshot'}
+                      {dataConnectionMode === 'live'
+                        ? `Sentiment Source · Live Stack (${sentimentIndicatorCount})`
+                        : dataConnectionMode === 'mixed'
+                          ? `Sentiment Source · Partial Stack (${sentimentIndicatorCount})`
+                          : 'Sentiment Source · Fallback Snapshot'}
                     </p>
                   </div>
-                  <span className={`overview-status-pill ${isDataConnected ? 'is-positive' : ''}`}>{isDataConnected ? 'Live' : 'Fallback'}</span>
+                  <span className={`overview-status-pill ${dataConnectionMode === 'live' ? 'is-positive' : dataConnectionMode === 'mixed' ? 'is-warning' : ''}`}>
+                    {dataConnectionMode === 'live' ? 'Live' : dataConnectionMode === 'mixed' ? 'Partial' : 'Fallback'}
+                  </span>
                 </header>
                 <div className="overview-stat-list">
                   <p className="overview-stat-row">
@@ -1840,7 +1871,7 @@ export default function Home() {
                 <h3 className="insight-tab-title">Flow Engine Console</h3>
               </div>
               <div className="insight-tab-head-side">
-                <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
+                <span className={`insight-tab-badge ${dataConnectionClass}`}>{tabPanelModeLabel}</span>
                 <div className="insight-tab-actions">
                   <Link href="/radar?category=liquidity" className="insight-tab-action-link">
                     Radar Hub
@@ -1891,7 +1922,7 @@ export default function Home() {
                 <h3 className="insight-tab-title">Risk Monitor Console</h3>
               </div>
               <div className="insight-tab-head-side">
-                <span className={`insight-tab-badge ${isDataConnected ? 'is-live' : 'is-fallback'}`}>{tabPanelModeLabel}</span>
+                <span className={`insight-tab-badge ${dataConnectionClass}`}>{tabPanelModeLabel}</span>
                 <div className="insight-tab-actions">
                   <Link href="/radar?category=sentiment" className="insight-tab-action-link">
                     Radar Hub
