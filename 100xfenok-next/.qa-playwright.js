@@ -33,6 +33,20 @@ function isExternalUrl(url) {
   }
 }
 
+function isIgnoredRequestFailure(failure) {
+  return /ERR_ABORTED|ERR_CANCELED/i.test(failure.errorText || "");
+}
+
+function isCriticalSameOriginDataFailure(failure) {
+  if (isExternalUrl(failure.url)) return false;
+  if (isIgnoredRequestFailure(failure)) return false;
+  return (
+    /\/api\//i.test(failure.url) ||
+    /\/data\//i.test(failure.url) ||
+    /\.json(?:[?#]|$)/i.test(failure.url)
+  );
+}
+
 function isExternalFetchNoise(message) {
   return (
     /\[DataFetcher\]\s*FRED/i.test(message) ||
@@ -581,6 +595,9 @@ async function runStockAnalyzerNativeChecks(page) {
       const externalFetchErrors = consoleErrors.filter((msg) => isExternalFetchNoise(msg));
       const sameOriginRequestFailures = requestFailures.filter((req) => !isExternalUrl(req.url));
       const externalRequestFailures = requestFailures.filter((req) => isExternalUrl(req.url));
+      const criticalSameOriginDataFailures = requestFailures.filter((req) =>
+        isCriticalSameOriginDataFailure(req),
+      );
 
       item.errorCount = consoleErrors.length;
       item.warningCount = consoleWarnings.length;
@@ -589,6 +606,7 @@ async function runStockAnalyzerNativeChecks(page) {
       item.externalFetchErrorCount = externalFetchErrors.length;
       item.sameOriginRequestFailureCount = sameOriginRequestFailures.length;
       item.externalRequestFailureCount = externalRequestFailures.length;
+      item.criticalSameOriginDataFailureCount = criticalSameOriginDataFailures.length;
       item.blockingConsoleErrors = blockingConsoleErrors.slice(0, 3);
       item.consoleErrors = consoleErrors.slice(0, 3);
 
@@ -712,6 +730,7 @@ async function runStockAnalyzerNativeChecks(page) {
     }
     if (r.route === "/tools/stock-analyzer" && r.expectedIframeSrcMatched === false) return true;
     if (r.linkedChecks && r.linkedChecks.some((c) => c.status >= 400)) return true;
+    if ((r.criticalSameOriginDataFailureCount || 0) > 0) return true;
     // 404 test route: console errors from the 404 page itself are expected
     if (r.blockingConsoleErrorCount > 0 && r.route !== "/this-route-should-not-exist") return true;
     return false;

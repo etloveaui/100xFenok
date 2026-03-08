@@ -3,7 +3,7 @@ const { chromium } = require("playwright");
 const AxeBuilder = require("@axe-core/playwright").default;
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
-const includeIframeRoutes = process.env.QA_A11Y_INCLUDE_IFRAME_ROUTES === "1";
+const includeIframeRoutes = process.env.QA_A11Y_INCLUDE_IFRAME_ROUTES !== "0";
 const strictMode = process.env.QA_A11Y_STRICT === "1";
 
 const routes = (
@@ -114,6 +114,9 @@ function compactViolations(violations) {
   const failingResults = scannedResults.filter(
     (result) => result.seriousOrCriticalCount > 0,
   );
+  const iframeSkippedResults = results.filter(
+    (result) => result.skippedReason === "iframe_route_skipped",
+  );
 
   const summary = {
     total: results.length,
@@ -127,7 +130,7 @@ function compactViolations(violations) {
 
   console.log(JSON.stringify(summary, null, 2));
 
-  if (strictMode && failingResults.length > 0) {
+  if (strictMode && (failingResults.length > 0 || iframeSkippedResults.length > 0)) {
     process.exit(1);
   }
 })();
