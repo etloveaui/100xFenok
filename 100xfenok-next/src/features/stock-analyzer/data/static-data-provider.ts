@@ -45,7 +45,7 @@ async function fetchDataset(
 ): Promise<JsonRecord[]> {
   const response = await fetch(path, {
     signal: context?.signal,
-    cache: "force-cache",
+    cache: "no-store",
   });
 
   if (!response.ok) {
@@ -114,8 +114,7 @@ export class StaticStockAnalyzerDataProvider
       .filter((row) => row !== null)
       .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
 
-    // Native pilot: cap initial universe size to reduce client bootstrap cost.
-    return (merged as StockAnalyzerRecord[]).slice(0, 800);
+    return merged as StockAnalyzerRecord[];
   }
 
   async getBySymbol(

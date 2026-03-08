@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
+    <div className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
       <section className="command-toolbar">
         <div className="command-main">
           <div className="tab-pills">
@@ -26,6 +26,6 @@ export default function Loading() {
           <div className="skeleton-bar h-8 w-32" />
         </div>
       </section>
-    </main>
+    </div>
   );
 }

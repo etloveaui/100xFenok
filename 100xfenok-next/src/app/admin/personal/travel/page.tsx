@@ -3,10 +3,19 @@ import fs from "node:fs";
 import path from "node:path";
 import Link from "next/link";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import {
+  getSingleSearchParam,
+  legacyPublicFileExists,
+  sanitizeLegacyPath,
+} from "@/lib/server/legacy-bridge";
 
 export const metadata: Metadata = {
   title: "Travel Records",
   description: "여행 기록 목록",
+};
+
+type TravelPageProps = {
+  searchParams?: Promise<{ path?: string | string[] }>;
 };
 
 function getTravelFiles(): string[] {
@@ -18,8 +27,13 @@ function getTravelFiles(): string[] {
     .sort();
 }
 
-export default function TravelPage() {
+export default async function TravelPage({ searchParams }: TravelPageProps) {
   const files = getTravelFiles();
+  const params = searchParams ? await searchParams : {};
+  const requestedPath = getSingleSearchParam(params.path);
+  const safePath = sanitizeLegacyPath(requestedPath, {
+    prefixes: ["admin/personal/travel/"],
+  });
 
   if (files.length === 0) {
     return (
@@ -29,10 +43,21 @@ export default function TravelPage() {
     );
   }
 
-  if (files.length === 1) {
-    const fileName = files[0];
-    const src = `/admin/personal/travel/${fileName}`;
-    const label = fileName.replace(/\.html$/, "").replaceAll("-", " ");
+  const singleFile = files.length === 1 ? files[0] : null;
+  const selectedPath =
+    safePath && legacyPublicFileExists(safePath)
+      ? safePath
+      : singleFile
+        ? `admin/personal/travel/${singleFile}`
+        : null;
+
+  if (selectedPath) {
+    const src = `/${selectedPath}`;
+    const label = selectedPath
+      .split("/")
+      .at(-1)
+      ?.replace(/\.html$/, "")
+      .replaceAll("-", " ") ?? "travel";
     return <RouteEmbedFrame src={src} title={label} loading="eager" />;
   }
 
@@ -46,7 +71,9 @@ export default function TravelPage() {
           return (
             <li key={slug}>
               <Link
-                href={`/admin/personal/travel/${slug}/`}
+                href={`/admin/personal/travel?path=${encodeURIComponent(
+                  `admin/personal/travel/${f}`,
+                )}`}
                 className="block rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-800 transition hover:border-purple-400 hover:shadow-sm"
               >
                 {label}

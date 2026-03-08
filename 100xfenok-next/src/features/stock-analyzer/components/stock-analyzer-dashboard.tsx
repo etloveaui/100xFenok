@@ -127,6 +127,8 @@ export function StockAnalyzerDashboard() {
     : dashboard.filteredRecords.slice(0, 12);
   const quickSnapshotRows = dashboard.filteredRecords.slice(0, 6);
   const tablePlaceholderRows = shouldRenderHeavyPanels ? 20 : 12;
+  const hasNoFilteredResults =
+    !dashboard.isLoading && dashboard.filteredRecords.length === 0;
 
   return (
     <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4" data-stock-analyzer-native="true">
@@ -250,7 +252,7 @@ export function StockAnalyzerDashboard() {
             필터 초기화
           </button>
           <span className="text-xs text-slate-500">
-            Last updated: {dashboard.lastUpdatedAt ? new Date(dashboard.lastUpdatedAt).toLocaleString() : "-"}
+            Loaded at: {dashboard.lastUpdatedAt ? new Date(dashboard.lastUpdatedAt).toLocaleString() : "-"}
           </span>
         </div>
       </section>
@@ -319,7 +321,11 @@ export function StockAnalyzerDashboard() {
           </div>
 
           <div className="grid grid-cols-1 gap-2 min-[520px]:grid-cols-2 md:hidden">
-            {visibleRows.length > 0
+            {hasNoFilteredResults ? (
+              <div className="min-[520px]:col-span-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-sm text-slate-600">
+                조건에 맞는 종목이 없습니다. 검색어 또는 필터를 조정해 주세요.
+              </div>
+            ) : visibleRows.length > 0
               ? visibleRows.map((record) => (
                   <button
                     type="button"
@@ -338,7 +344,9 @@ export function StockAnalyzerDashboard() {
                       </div>
                       <span
                         className={`rounded-full px-2 py-1 text-xs font-bold ${
-                          typeof record.growthRate === "number" && record.growthRate < 0
+                          typeof record.growthRate !== "number"
+                            ? "bg-slate-100 text-slate-600"
+                            : record.growthRate < 0
                             ? "bg-rose-100 text-rose-700"
                             : "bg-emerald-100 text-emerald-700"
                         }`}
@@ -398,6 +406,15 @@ export function StockAnalyzerDashboard() {
                       <tr
                         key={record.symbol}
                         onClick={() => selectSymbol(record.symbol)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            selectSymbol(record.symbol);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-pressed={dashboard.selectedSymbol === record.symbol}
                         className={`cursor-pointer border-b border-slate-100 transition hover:bg-blue-50/50 ${
                           dashboard.selectedSymbol === record.symbol ? "bg-blue-50" : ""
                         }`}
@@ -411,7 +428,15 @@ export function StockAnalyzerDashboard() {
                         <td className="py-2 pr-2 text-slate-600">{formatNumber(record.rank, 0)}</td>
                       </tr>
                     ))
-                  : Array.from({ length: tablePlaceholderRows }, (_, index) => (
+                  : hasNoFilteredResults
+                    ? (
+                      <tr className="border-b border-slate-100">
+                        <td className="py-6 text-center text-sm text-slate-500" colSpan={7}>
+                          조건에 맞는 종목이 없습니다. 검색어 또는 필터를 조정해 주세요.
+                        </td>
+                      </tr>
+                    )
+                    : Array.from({ length: tablePlaceholderRows }, (_, index) => (
                       <tr key={`table-skeleton-${index}`} className="border-b border-slate-100">
                         <td className="py-2 pr-2">
                           <div className="skeleton-bar h-4 w-16" />

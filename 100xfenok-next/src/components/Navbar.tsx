@@ -5,12 +5,21 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
+type DesktopMenuId = 'market' | 'analytics' | 'strategies';
+
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopMenuOpen, setDesktopMenuOpen] = useState<DesktopMenuId | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobilePanelRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const scrollOffsetRef = useRef(0);
+  const marketDropdownRef = useRef<HTMLDivElement | null>(null);
+  const analyticsDropdownRef = useRef<HTMLDivElement | null>(null);
+  const strategiesDropdownRef = useRef<HTMLDivElement | null>(null);
+  const marketMenuPanelRef = useRef<HTMLDivElement | null>(null);
+  const analyticsMenuPanelRef = useRef<HTMLDivElement | null>(null);
+  const strategiesMenuPanelRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
 
   const isDashboard = pathname === '/';
@@ -19,6 +28,110 @@ export default function Navbar() {
   const isStrategies = pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr';
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
+  const closeDesktopMenu = () => setDesktopMenuOpen(null);
+  const hasFinePointer = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  const getDesktopDropdownRef = (menuId: DesktopMenuId) => {
+    switch (menuId) {
+      case 'market':
+        return marketDropdownRef.current;
+      case 'analytics':
+        return analyticsDropdownRef.current;
+      case 'strategies':
+        return strategiesDropdownRef.current;
+      default:
+        return null;
+    }
+  };
+
+  const getDesktopMenuPanelRef = (menuId: DesktopMenuId) => {
+    switch (menuId) {
+      case 'market':
+        return marketMenuPanelRef.current;
+      case 'analytics':
+        return analyticsMenuPanelRef.current;
+      case 'strategies':
+        return strategiesMenuPanelRef.current;
+      default:
+        return null;
+    }
+  };
+
+  const focusFirstDesktopMenuItem = (menuId: DesktopMenuId) => {
+    const focusMenuItem = () => {
+      const panel = getDesktopMenuPanelRef(menuId);
+      const firstLink = panel?.querySelector<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      firstLink?.focus();
+    };
+
+    window.requestAnimationFrame(() => {
+      focusMenuItem();
+      window.setTimeout(focusMenuItem, 40);
+    });
+  };
+
+  const openDesktopMenu = (menuId: DesktopMenuId) => {
+    setDesktopMenuOpen(menuId);
+  };
+
+  const toggleDesktopMenu = (menuId: DesktopMenuId) => {
+    if (hasFinePointer()) {
+      openDesktopMenu(menuId);
+      return;
+    }
+    setDesktopMenuOpen((current) => (current === menuId ? null : menuId));
+  };
+
+  const handleDesktopMenuKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    menuId: DesktopMenuId,
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (desktopMenuOpen === menuId) {
+        closeDesktopMenu();
+        return;
+      }
+      openDesktopMenu(menuId);
+      focusFirstDesktopMenuItem(menuId);
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      openDesktopMenu(menuId);
+      focusFirstDesktopMenuItem(menuId);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeDesktopMenu();
+    }
+  };
+
+  const handleDesktopMenuBlur = (
+    event: React.FocusEvent<HTMLDivElement>,
+    menuId: DesktopMenuId,
+  ) => {
+    const nextTarget = event.relatedTarget;
+    const wrapper = getDesktopDropdownRef(menuId);
+    if (wrapper && nextTarget instanceof Node && wrapper.contains(nextTarget)) return;
+    if (desktopMenuOpen === menuId) {
+      closeDesktopMenu();
+    }
+  };
+
+  const handleDesktopMenuMouseLeave = (menuId: DesktopMenuId) => {
+    if (!hasFinePointer()) return;
+    const wrapper = getDesktopDropdownRef(menuId);
+    if (wrapper?.contains(document.activeElement)) return;
+    if (desktopMenuOpen === menuId) {
+      closeDesktopMenu();
+    }
+  };
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -92,6 +205,29 @@ export default function Navbar() {
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    if (!desktopMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return;
+      const wrapper = getDesktopDropdownRef(desktopMenuOpen);
+      if (wrapper?.contains(event.target)) return;
+      closeDesktopMenu();
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      closeDesktopMenu();
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [desktopMenuOpen]);
+
   return (
     <>
       <nav className="relative w-full z-50" id="mainNav">
@@ -137,29 +273,46 @@ export default function Navbar() {
               <div className="h-4 w-[1px] bg-gray-200 mx-1" />
 
               {/* MARKET Dropdown */}
-              <div className="relative dropdown-wrapper h-full flex items-center group">
+              <div
+                ref={marketDropdownRef}
+                className="relative dropdown-wrapper h-full flex items-center"
+                onMouseEnter={() => {
+                  if (hasFinePointer()) openDesktopMenu('market');
+                }}
+                onMouseLeave={() => handleDesktopMenuMouseLeave('market')}
+                onBlur={(event) => handleDesktopMenuBlur(event, 'market')}
+              >
                 <button
                   type="button"
-                  className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+                  className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
                     isMarket
                       ? 'text-brand-navy bg-blue-50/50'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
-                  aria-haspopup="true"
-                  aria-expanded="false"
+                  } ${desktopMenuOpen === 'market' ? 'bg-white shadow-sm text-brand-navy' : ''}`}
+                  aria-haspopup="menu"
+                  aria-expanded={desktopMenuOpen === 'market'}
+                  aria-controls="desktop-market-menu"
+                  onClick={() => toggleDesktopMenu('market')}
+                  onKeyDown={(event) => handleDesktopMenuKeyDown(event, 'market')}
                 >
                   MARKET
-                  <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
+                  <i className={`fas fa-chevron-down text-[8px] transition-all ${desktopMenuOpen === 'market' ? 'text-brand-gold rotate-180' : 'opacity-30'}`} />
                 </button>
-                <div className="dropdown-menu absolute top-full left-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
+                <div
+                  ref={marketMenuPanelRef}
+                  id="desktop-market-menu"
+                  role="menu"
+                  aria-label="Market menu"
+                  className={`dropdown-menu absolute top-full left-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 transition-all transform z-50 ${desktopMenuOpen === 'market' ? '!visible !opacity-100 !translate-y-0 !pointer-events-auto' : '!invisible !opacity-0 !translate-y-[-10px] !pointer-events-none'}`}
+                >
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Briefing Deck</div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Link href="/market" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/market" role="menuitem" tabIndex={desktopMenuOpen === 'market' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-chart-bar text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Market Wrap</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">Daily Pulse</span>
                     </Link>
-                    <Link href="/alpha-scout" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/alpha-scout" role="menuitem" tabIndex={desktopMenuOpen === 'market' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-compass text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Alpha Scout</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">Weekly Deep Dive</span>
@@ -169,30 +322,47 @@ export default function Navbar() {
               </div>
 
               {/* ANALYTICS Dropdown */}
-              <div className="relative dropdown-wrapper h-full flex items-center group">
-                <button type="button" className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+              <div
+                ref={analyticsDropdownRef}
+                className="relative dropdown-wrapper h-full flex items-center"
+                onMouseEnter={() => {
+                  if (hasFinePointer()) openDesktopMenu('analytics');
+                }}
+                onMouseLeave={() => handleDesktopMenuMouseLeave('analytics')}
+                onBlur={(event) => handleDesktopMenuBlur(event, 'analytics')}
+              >
+                <button type="button" className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
                     isAnalytics
                       ? 'text-brand-navy bg-blue-50/50'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
-                  aria-haspopup="true"
-                  aria-expanded="false"
+                  } ${desktopMenuOpen === 'analytics' ? 'bg-white shadow-sm text-brand-navy' : ''}`}
+                  aria-haspopup="menu"
+                  aria-expanded={desktopMenuOpen === 'analytics'}
+                  aria-controls="desktop-analytics-menu"
+                  onClick={() => toggleDesktopMenu('analytics')}
+                  onKeyDown={(event) => handleDesktopMenuKeyDown(event, 'analytics')}
                 >
                   ANALYTICS
-                  <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
+                  <i className={`fas fa-chevron-down text-[8px] transition-all ${desktopMenuOpen === 'analytics' ? 'text-brand-gold rotate-180' : 'opacity-30'}`} />
                 </button>
-                <div className="dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
+                <div
+                  ref={analyticsMenuPanelRef}
+                  id="desktop-analytics-menu"
+                  role="menu"
+                  aria-label="Analytics menu"
+                  className={`dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 transition-all transform z-50 ${desktopMenuOpen === 'analytics' ? '!visible !opacity-100 !translate-y-0 !pointer-events-auto' : '!invisible !opacity-0 !translate-y-[-10px] !pointer-events-none'}`}
+                >
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Tools & Charts</div>
                   <div className="grid grid-cols-3 gap-2">
-                    <Link href="/multichart" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/multichart" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-chart-line text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Multichart</span>
                     </Link>
-                    <Link href="/radar" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/radar" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-satellite-dish text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Radar</span>
                     </Link>
-                    <Link href="/posts" className="relative flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/posts" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="relative flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
                       <i className="fas fa-lightbulb text-xl text-amber-500 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Insights</span>
@@ -202,32 +372,49 @@ export default function Navbar() {
               </div>
 
               {/* STRATEGIES Dropdown */}
-              <div className="relative dropdown-wrapper h-full flex items-center group">
-                <button type="button" className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 group-hover:bg-white group-hover:shadow-sm ${
+              <div
+                ref={strategiesDropdownRef}
+                className="relative dropdown-wrapper h-full flex items-center"
+                onMouseEnter={() => {
+                  if (hasFinePointer()) openDesktopMenu('strategies');
+                }}
+                onMouseLeave={() => handleDesktopMenuMouseLeave('strategies')}
+                onBlur={(event) => handleDesktopMenuBlur(event, 'strategies')}
+              >
+                <button type="button" className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
                     isStrategies
                       ? 'text-brand-navy bg-blue-50/50'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
-                  aria-haspopup="true"
-                  aria-expanded="false"
+                  } ${desktopMenuOpen === 'strategies' ? 'bg-white shadow-sm text-brand-navy' : ''}`}
+                  aria-haspopup="menu"
+                  aria-expanded={desktopMenuOpen === 'strategies'}
+                  aria-controls="desktop-strategies-menu"
+                  onClick={() => toggleDesktopMenu('strategies')}
+                  onKeyDown={(event) => handleDesktopMenuKeyDown(event, 'strategies')}
                 >
                   STRATEGIES
-                  <i className="fas fa-chevron-down text-[8px] opacity-30 group-hover:text-brand-gold transition-colors" />
+                  <i className={`fas fa-chevron-down text-[8px] transition-all ${desktopMenuOpen === 'strategies' ? 'text-brand-gold rotate-180' : 'opacity-30'}`} />
                 </button>
-                <div className="dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all transform group-hover:translate-y-0 translate-y-[-10px] z-50">
+                <div
+                  ref={strategiesMenuPanelRef}
+                  id="desktop-strategies-menu"
+                  role="menu"
+                  aria-label="Strategies menu"
+                  className={`dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 transition-all transform z-50 ${desktopMenuOpen === 'strategies' ? '!visible !opacity-100 !translate-y-0 !pointer-events-auto' : '!invisible !opacity-0 !translate-y-[-10px] !pointer-events-none'}`}
+                >
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Playbooks</div>
                   <div className="grid grid-cols-3 gap-2">
-                    <Link href="/ib" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/ib" role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-calculator text-xl text-rose-600 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">IB Helper</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">V2.2</span>
                     </Link>
-                    <Link href="/infinite-buying" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/infinite-buying" role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-infinity text-xl text-green-600 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Infinite</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">DCA</span>
                     </Link>
-                    <Link href="/vr" className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/vr" role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-balance-scale text-xl text-brand-gold mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Rebalance</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">VR</span>

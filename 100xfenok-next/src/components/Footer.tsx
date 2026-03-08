@@ -3,12 +3,32 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  ADMIN_AUTH_CHANGE_EVENT,
+  ADMIN_MAX_FAILURES,
+  ADMIN_VERIFY_STATE_EVENT,
+  clearAdminVerifyState,
+  getAdminVerifyLockRemainingMs,
   isAdminAuthenticated,
+  refreshAdminAuthenticated,
+  registerAdminVerifyFailure,
   setAdminAuthenticated,
   verifyAdminPassword,
 } from '@/lib/client/admin-auth';
 
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
+type FooterTickerItem = {
+  symbol: string;
+  price: number;
+  changePercent: number;
+  marketState: string;
+  source: 'live' | 'fallback';
+};
+
+type FooterTickerQuotePayload = {
+  price?: number;
+  changePercent?: number;
+  marketState?: string;
+};
 
 const marketStatusConfig: Record<FooterMarketStatus, { label: string; className: string; tickerLabel: string }> = {
   regular: { label: 'MARKET OPEN', className: 'market-regular', tickerLabel: 'Market data live' },
@@ -27,6 +47,23 @@ const ET_WEEKDAY_MAP: Record<string, number> = {
   Fri: 5,
   Sat: 6,
 };
+
+const FOOTER_TICKER_CATALOG = [
+  { symbol: 'SPY', fallbackPrice: 672.38, fallbackChangePercent: -1.98 },
+  { symbol: 'QQQ', fallbackPrice: 589.5, fallbackChangePercent: -2.11 },
+  { symbol: 'IWM', fallbackPrice: 212.44, fallbackChangePercent: -1.37 },
+  { symbol: 'DIA', fallbackPrice: 436.22, fallbackChangePercent: -1.12 },
+] as const;
+
+function getDefaultFooterTickerItems(): FooterTickerItem[] {
+  return FOOTER_TICKER_CATALOG.map((item) => ({
+    symbol: item.symbol,
+    price: item.fallbackPrice,
+    changePercent: item.fallbackChangePercent,
+    marketState: 'BASE',
+    source: 'fallback',
+  }));
+}
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -73,6 +110,15 @@ function formatETClock(date = new Date()) {
   }).format(date);
 }
 
+function formatTickerPrice(value: number): string {
+  return `$${value.toFixed(value >= 100 ? 2 : 2)}`;
+}
+
+function formatTickerChange(value: number): string {
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${value.toFixed(2)}%`;
+}
+
 function getMarketStatus(date = new Date()): FooterMarketStatus {
   const { day, time } = getETSnapshot(date);
 
@@ -85,7 +131,8 @@ function getMarketStatus(date = new Date()): FooterMarketStatus {
 
 export default function Footer() {
   const router = useRouter();
-  const [marketStatus, setMarketStatus] = useState<FooterMarketStatus>('regular');
+  const [marketStatus, setMarketStatus] = useState<FooterMarketStatus>('closed');
+  const [etClock, setEtClock] = useState('--');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -93,19 +140,125 @@ export default function Footer() {
   const [adminInputError, setAdminInputError] = useState(false);
   const [isVerifyingAdmin, setIsVerifyingAdmin] = useState(false);
   const [hasAdminSession, setHasAdminSession] = useState(false);
-  const [adminFailCount, setAdminFailCount] = useState(0);
   const [adminLockRemainingMs, setAdminLockRemainingMs] = useState(0);
+  const [tickerItems, setTickerItems] = useState<FooterTickerItem[]>(() => getDefaultFooterTickerItems());
   const adminInputRef = useRef<HTMLInputElement>(null);
   const adminLockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const adminModalPanelRef = useRef<HTMLDivElement>(null);
+  const adminPreviousFocusRef = useRef<HTMLElement | null>(null);
+  const adminScrollOffsetRef = useRef(0);
+
+  const clearAdminLockTimer = useCallback(() => {
+    if (adminLockTimerRef.current) {
+      clearInterval(adminLockTimerRef.current);
+      adminLockTimerRef.current = null;
+    }
+  }, []);
+
+  const startAdminLock = useCallback((remainingMs: number) => {
+    clearAdminLockTimer();
+    setAdminLockRemainingMs(remainingMs);
+
+    if (remainingMs <= 0) {
+      return;
+    }
+
+    const deadline = Date.now() + remainingMs;
+    adminLockTimerRef.current = setInterval(() => {
+      const remaining = Math.max(0, deadline - Date.now());
+      setAdminLockRemainingMs(remaining);
+      if (remaining <= 0) {
+        clearAdminLockTimer();
+      }
+    }, 200);
+  }, [clearAdminLockTimer]);
+
+  const syncAdminState = useCallback(async () => {
+    const authenticatedState = await refreshAdminAuthenticated();
+    setHasAdminSession(authenticatedState);
+    startAdminLock(getAdminVerifyLockRemainingMs());
+  }, [startAdminLock]);
+
+  const closeAdminModal = useCallback((force = false) => {
+    if (isVerifyingAdmin && !force) {
+      return;
+    }
+    setShowAdminModal(false);
+    setAdminPassword('');
+    setAdminInputError(false);
+  }, [isVerifyingAdmin]);
 
   useEffect(() => {
     const updateMarketStatus = () => {
-      setMarketStatus(getMarketStatus());
+      const now = new Date();
+      setMarketStatus(getMarketStatus(now));
+      setEtClock(formatETClock(now));
     };
 
     updateMarketStatus();
     const interval = setInterval(updateMarketStatus, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    let disposed = false;
+
+    const loadTickerItems = async () => {
+      const results = await Promise.allSettled(
+        FOOTER_TICKER_CATALOG.map(async (item) => {
+          const response = await fetch(`/api/ticker/${item.symbol}`, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const payload = (await response.json()) as FooterTickerQuotePayload;
+          return {
+            symbol: item.symbol,
+            price: typeof payload.price === 'number' ? payload.price : item.fallbackPrice,
+            changePercent:
+              typeof payload.changePercent === 'number'
+                ? payload.changePercent
+                : item.fallbackChangePercent,
+            marketState:
+              typeof payload.marketState === 'string' && payload.marketState.trim()
+                ? payload.marketState
+                : 'LIVE',
+            source: 'live' as const,
+          };
+        }),
+      );
+
+      if (disposed) return;
+
+      setTickerItems(
+        FOOTER_TICKER_CATALOG.map((item, index) => {
+          const result = results[index];
+          if (result?.status === 'fulfilled') {
+            return result.value;
+          }
+          return {
+            symbol: item.symbol,
+            price: item.fallbackPrice,
+            changePercent: item.fallbackChangePercent,
+            marketState: 'BASE',
+            source: 'fallback' as const,
+          };
+        }),
+      );
+    };
+
+    void loadTickerItems();
+    const intervalId = window.setInterval(() => {
+      void loadTickerItems();
+    }, 60 * 1000);
+
+    return () => {
+      disposed = true;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
@@ -117,44 +270,103 @@ export default function Footer() {
 
   useEffect(() => {
     return () => {
-      if (adminLockTimerRef.current) {
-        clearInterval(adminLockTimerRef.current);
-      }
+      clearAdminLockTimer();
     };
-  }, []);
+  }, [clearAdminLockTimer]);
 
   useEffect(() => {
-    const syncAdminSession = () => {
-      setHasAdminSession(isAdminAuthenticated());
+    void syncAdminState();
+    const handleSync = () => {
+      void syncAdminState();
     };
-    syncAdminSession();
-    window.addEventListener('focus', syncAdminSession);
-    window.addEventListener('storage', syncAdminSession);
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('storage', handleSync);
+    window.addEventListener(ADMIN_AUTH_CHANGE_EVENT, handleSync as EventListener);
+    window.addEventListener(ADMIN_VERIFY_STATE_EVENT, handleSync as EventListener);
     return () => {
-      window.removeEventListener('focus', syncAdminSession);
-      window.removeEventListener('storage', syncAdminSession);
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener(ADMIN_AUTH_CHANGE_EVENT, handleSync as EventListener);
+      window.removeEventListener(ADMIN_VERIFY_STATE_EVENT, handleSync as EventListener);
     };
-  }, []);
+  }, [syncAdminState]);
 
   useEffect(() => {
     if (!showAdminModal) {
       return;
     }
 
-    adminInputRef.current?.focus();
+    adminPreviousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-    const handleEscape = (event: KeyboardEvent) => {
+    const body = document.body;
+    adminScrollOffsetRef.current = window.scrollY;
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${adminScrollOffsetRef.current}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+
+    window.requestAnimationFrame(() => {
+      adminInputRef.current?.focus();
+    });
+
+    const handleModalKeydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        setShowAdminModal(false);
-        setAdminPassword('');
-        setAdminInputError(false);
+        closeAdminModal();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const panel = adminModalPanelRef.current;
+      if (!panel) {
+        return;
+      }
+
+      const focusableItems = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+
+      if (focusableItems.length === 0) {
+        return;
+      }
+
+      const first = focusableItems[0];
+      const last = focusableItems[focusableItems.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+        return;
+      }
+
+      if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [showAdminModal]);
+    window.addEventListener('keydown', handleModalKeydown);
+    return () => {
+      window.removeEventListener('keydown', handleModalKeydown);
+      body.style.overflow = '';
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      window.scrollTo(0, adminScrollOffsetRef.current);
+      adminPreviousFocusRef.current?.focus();
+    };
+  }, [closeAdminModal, showAdminModal]);
 
   const showToastMessage = (message: string) => {
     setToastMessage(message);
@@ -195,7 +407,7 @@ export default function Footer() {
   const handleAdminClick = useCallback(() => {
     const sessionActive = hasAdminSession || isAdminAuthenticated();
     if (sessionActive) {
-      setHasAdminSession(true);
+      syncAdminState();
       navigateToAdmin();
       return;
     }
@@ -203,7 +415,7 @@ export default function Footer() {
     setAdminPassword('');
     setAdminInputError(false);
     setShowAdminModal(true);
-  }, [hasAdminSession, navigateToAdmin]);
+  }, [hasAdminSession, navigateToAdmin, syncAdminState]);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -220,35 +432,6 @@ export default function Footer() {
       window.removeEventListener('keydown', handleShortcut);
     };
   }, [handleAdminClick]);
-
-  const startAdminLock = (durationMs: number) => {
-    if (adminLockTimerRef.current) {
-      clearInterval(adminLockTimerRef.current);
-    }
-
-    const deadline = Date.now() + durationMs;
-    setAdminLockRemainingMs(durationMs);
-
-    adminLockTimerRef.current = setInterval(() => {
-      const remaining = Math.max(0, deadline - Date.now());
-      setAdminLockRemainingMs(remaining);
-      if (remaining <= 0) {
-        if (adminLockTimerRef.current) {
-          clearInterval(adminLockTimerRef.current);
-          adminLockTimerRef.current = null;
-        }
-      }
-    }, 200);
-  };
-
-  const closeAdminModal = () => {
-    if (isVerifyingAdmin) {
-      return;
-    }
-    setShowAdminModal(false);
-    setAdminPassword('');
-    setAdminInputError(false);
-  };
 
   const handleVerifyAdminPassword = async () => {
     if (adminLockRemainingMs > 0) {
@@ -269,11 +452,10 @@ export default function Footer() {
 
       if (result === 'matched') {
         setAdminAuthenticated();
-        setHasAdminSession(true);
-        setShowAdminModal(false);
+        syncAdminState();
+        closeAdminModal(true);
         setAdminPassword('');
         setAdminInputError(false);
-        setAdminFailCount(0);
         navigateToAdmin();
         return;
       }
@@ -281,17 +463,16 @@ export default function Footer() {
       setAdminPassword('');
       setAdminInputError(true);
       if (result === 'unsupported') {
-        setAdminFailCount(0);
+        clearAdminVerifyState();
+        startAdminLock(0);
         showToastMessage('브라우저 인증 기능을 사용할 수 없습니다.');
       } else {
-        const nextFailCount = adminFailCount + 1;
-        if (nextFailCount >= 3) {
-          setAdminFailCount(0);
-          startAdminLock(3000);
+        const failureState = registerAdminVerifyFailure();
+        if (failureState.locked) {
+          startAdminLock(failureState.remainingMs);
           showToastMessage('Access denied · 3초 후 재시도');
         } else {
-          setAdminFailCount(nextFailCount);
-          showToastMessage(`Access denied (${nextFailCount}/3)`);
+          showToastMessage(`Access denied (${failureState.failCount}/${ADMIN_MAX_FAILURES})`);
         }
       }
       adminInputRef.current?.focus();
@@ -303,9 +484,18 @@ export default function Footer() {
   };
 
   const status = marketStatusConfig[marketStatus];
-  const etClock = formatETClock();
   const isAdminLocked = adminLockRemainingMs > 0;
   const adminLockSeconds = Math.max(1, Math.ceil(adminLockRemainingMs / 1000));
+  const tickerTape = tickerItems.map((item) => (
+    <span key={item.symbol} className="footer-ticker-item">
+      <span className="footer-ticker-symbol">{item.symbol}</span>
+      <span className="footer-ticker-price">{formatTickerPrice(item.price)}</span>
+      <span className={`footer-ticker-change ${item.changePercent >= 0 ? 'is-up' : 'is-down'}`}>
+        {formatTickerChange(item.changePercent)}
+      </span>
+      <span className="footer-ticker-state">{item.source === 'live' ? item.marketState : 'BASE'}</span>
+    </span>
+  ));
 
   return (
     <>
@@ -322,8 +512,13 @@ export default function Footer() {
             {/* Ticker */}
             <div className="flex-1 overflow-hidden">
               <div className="ticker-scroll">
-                <div className="flex items-center gap-3 text-[10px] font-medium text-white/90 whitespace-nowrap" aria-hidden="true">
-                  <span className="text-white/50">{status.tickerLabel}</span>
+                <div className="footer-ticker-track" aria-label="실시간 가격 바">
+                  <span className="footer-ticker-lead">{status.tickerLabel}</span>
+                  {tickerTape}
+                </div>
+                <div className="footer-ticker-track" aria-hidden="true">
+                  <span className="footer-ticker-lead">{status.tickerLabel}</span>
+                  {tickerTape}
                 </div>
               </div>
             </div>
@@ -434,7 +629,10 @@ export default function Footer() {
           aria-modal="true"
           aria-label="Admin Access Control"
         >
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+          <div
+            ref={adminModalPanelRef}
+            className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+          >
             <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-brand-navy">
               <i className="fas fa-lock text-brand-interactive" />
               Access Control
@@ -469,7 +667,9 @@ export default function Footer() {
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
-                onClick={closeAdminModal}
+                onClick={() => {
+                  closeAdminModal();
+                }}
                 className="flex-1 rounded-lg bg-slate-100 px-4 py-2 font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isVerifyingAdmin}
               >

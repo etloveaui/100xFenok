@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function StockAnalyzerPage() {
   return (
-    <main className="container mx-auto px-4 py-4">
+    <main className="route-embed-page container mx-auto px-4 py-4">
       <section className="mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -29,7 +29,14 @@ export default function StockAnalyzerPage() {
         </div>
       </section>
 
-      <RouteEmbedFrame src="/tools/stock_analyzer/stock_analyzer.html" title="Stock Analyzer" loading="eager" />
+      <div className="route-embed-page-body">
+        <RouteEmbedFrame
+          src="/tools/stock_analyzer/stock_analyzer.html"
+          title="Stock Analyzer"
+          loading="eager"
+          shellClassName="route-embed-shell-fill-parent"
+        />
+      </div>
     </main>
   );
 }

@@ -26,9 +26,8 @@ export function sanitizeLegacyPath(
     return null;
   }
 
-  const [withoutHash] = decoded.split("#", 1);
-  const [withoutQuery] = withoutHash.split("?", 1);
-  const normalized = withoutQuery.trim().replace(/^\/+/, "");
+  const { pathname, suffix } = splitLegacyPathSuffix(decoded);
+  const normalized = pathname.trim().replace(/^\/+/, "");
 
   if (!normalized || normalized.includes("\\")) return null;
   if (!LEGACY_PATH_PATTERN.test(normalized)) return null;
@@ -51,7 +50,7 @@ export function sanitizeLegacyPath(
   const matchedPrefix = prefixes.some((prefix) => normalized.startsWith(prefix));
   if (!matchedPrefix) return null;
 
-  return normalized;
+  return `${normalized}${suffix}`;
 }
 
 export function isSafeSlugSegments(slug: string[]): boolean {
@@ -68,7 +67,8 @@ export function isSafeSlugSegments(slug: string[]): boolean {
 
 export function legacyPublicFileExists(relativePath: string): boolean {
   const publicRoot = path.resolve(process.cwd(), "public");
-  const safeRelativePath = relativePath.replace(/^\/+/, "");
+  const { pathname } = splitLegacyPathSuffix(relativePath);
+  const safeRelativePath = pathname.replace(/^\/+/, "");
   const absolutePath = path.resolve(publicRoot, safeRelativePath);
 
   if (
@@ -79,4 +79,24 @@ export function legacyPublicFileExists(relativePath: string): boolean {
   }
   if (!fs.existsSync(absolutePath)) return false;
   return fs.statSync(absolutePath).isFile();
+}
+
+function splitLegacyPathSuffix(value: string): { pathname: string; suffix: string } {
+  const queryIndex = value.indexOf("?");
+  const hashIndex = value.indexOf("#");
+  const suffixIndex =
+    queryIndex === -1
+      ? hashIndex
+      : hashIndex === -1
+        ? queryIndex
+        : Math.min(queryIndex, hashIndex);
+
+  if (suffixIndex === -1) {
+    return { pathname: value, suffix: "" };
+  }
+
+  return {
+    pathname: value.slice(0, suffixIndex),
+    suffix: value.slice(suffixIndex),
+  };
 }

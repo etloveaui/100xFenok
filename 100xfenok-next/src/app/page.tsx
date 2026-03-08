@@ -613,17 +613,9 @@ function buildDashboardSnapshot(payload: {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabId>(() => {
-    if (typeof window === 'undefined') return 'overview';
-    const requestedTab = new URLSearchParams(window.location.search).get('tab');
-    return requestedTab && isTabId(requestedTab) ? requestedTab : 'overview';
-  });
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [tabMotion, setTabMotion] = useState<TabMotion>('direct');
-  const [activePeriod, setActivePeriod] = useState(() => {
-    if (typeof window === 'undefined') return '1W';
-    const requestedPeriod = new URLSearchParams(window.location.search).get('period');
-    return requestedPeriod && isValidPeriod(requestedPeriod) ? requestedPeriod : '1W';
-  });
+  const [activePeriod, setActivePeriod] = useState('1W');
   const [isPeriodMenuOpen, setIsPeriodMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
   const [isDataConnected, setIsDataConnected] = useState(false);
@@ -644,20 +636,33 @@ export default function Home() {
     widgetId: null,
     at: null,
   });
-  const [showSwipeHint, setShowSwipeHint] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    try {
-      return window.localStorage.getItem(SWIPE_HINT_DISMISS_KEY) !== '1';
-    } catch {
-      return true;
-    }
-  });
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
   const periodMenuRef = useRef<HTMLDivElement>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const loadInFlightRef = useRef(false);
   const isMountedRef = useRef(true);
   const lastSyncedEpochRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedTab = params.get('tab');
+    const requestedPeriod = params.get('period');
+
+    if (requestedTab && isTabId(requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+
+    if (requestedPeriod && isValidPeriod(requestedPeriod)) {
+      setActivePeriod(requestedPeriod);
+    }
+
+    try {
+      setShowSwipeHint(window.localStorage.getItem(SWIPE_HINT_DISMISS_KEY) !== '1');
+    } catch {
+      setShowSwipeHint(true);
+    }
+  }, []);
 
   const loadOverviewData = useCallback(async () => {
     if (loadInFlightRef.current) {
@@ -1297,7 +1302,7 @@ export default function Home() {
   const stressRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-stress.html';
 
   return (
-    <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
+    <div className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
       <section className="command-toolbar" role="toolbar" aria-label="Dashboard controls">
         <div className="command-main">
           <div className="tab-pills tab-pills-compact" role="tablist" aria-label="View tabs">
@@ -1929,6 +1934,6 @@ export default function Home() {
           </section>
         )}
       </section>
-    </main>
+    </div>
   );
 }

@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { isAdminAuthenticated } from '@/lib/client/admin-auth';
+import {
+  ADMIN_AUTH_CHANGE_EVENT,
+  isAdminAuthenticated,
+} from '@/lib/client/admin-auth';
 
 type RouteEmbedFrameProps = {
   src: string;
@@ -9,6 +12,7 @@ type RouteEmbedFrameProps = {
   loading?: 'eager' | 'lazy';
   timeoutMs?: number;
   hideEmbeddedShell?: boolean;
+  shellClassName?: string;
 };
 
 export default function RouteEmbedFrame({
@@ -17,6 +21,7 @@ export default function RouteEmbedFrame({
   loading = 'eager',
   timeoutMs = 12000,
   hideEmbeddedShell = true,
+  shellClassName,
 }: RouteEmbedFrameProps) {
   const [reloadToken, setReloadToken] = useState(0);
   const effectiveSrc = appendEmbedParam(src, hideEmbeddedShell);
@@ -26,25 +31,30 @@ export default function RouteEmbedFrame({
     <RouteEmbedFrameInner
       key={frameKey}
       src={effectiveSrc}
+      originalSrc={src}
       title={title}
       loading={loading}
       timeoutMs={timeoutMs}
       hideEmbeddedShell={hideEmbeddedShell}
+      shellClassName={shellClassName}
       onRetry={() => setReloadToken((prev) => prev + 1)}
     />
   );
 }
 
 type RouteEmbedFrameInnerProps = RouteEmbedFrameProps & {
+  originalSrc: string;
   onRetry: () => void;
 };
 
 function RouteEmbedFrameInner({
   src,
+  originalSrc,
   title,
   loading,
   timeoutMs,
   hideEmbeddedShell = true,
+  shellClassName,
   onRetry,
 }: RouteEmbedFrameInnerProps) {
   const [isAdmin, setIsAdmin] = useState<boolean>(() => isAdminAuthenticated());
@@ -59,11 +69,12 @@ function RouteEmbedFrameInner({
     iframeRef.current = node;
   }, []);
   const loadStartedAtRef = useRef<number>(getNowMs());
-  const railLabel = formatEmbedRailLabel(src);
+  const railLabel = formatEmbedRailLabel(originalSrc);
   const railStateLabel = failed ? 'ERROR' : ready ? 'READY' : 'LOADING';
   const railStateClass = failed ? 'is-error' : ready ? 'is-ready' : 'is-loading';
   const shellGuardLabel = hideEmbeddedShell ? 'SHELL ON' : 'SHELL OFF';
   const shellGuardClass = hideEmbeddedShell ? 'is-on' : 'is-off';
+  const newWindowHref = stripEmbedParam(originalSrc);
 
   useEffect(() => {
     const syncAdminSession = () => {
@@ -72,9 +83,11 @@ function RouteEmbedFrameInner({
     syncAdminSession();
     window.addEventListener('focus', syncAdminSession);
     window.addEventListener('storage', syncAdminSession);
+    window.addEventListener(ADMIN_AUTH_CHANGE_EVENT, syncAdminSession as EventListener);
     return () => {
       window.removeEventListener('focus', syncAdminSession);
       window.removeEventListener('storage', syncAdminSession);
+      window.removeEventListener(ADMIN_AUTH_CHANGE_EVENT, syncAdminSession as EventListener);
     };
   }, []);
 
@@ -143,7 +156,7 @@ function RouteEmbedFrameInner({
   };
 
   return (
-    <div className="route-embed-shell route-embed-shell-framed">
+    <div className={['route-embed-shell', 'route-embed-shell-framed', shellClassName].filter(Boolean).join(' ')}>
       {isAdmin ? (
         <div className="route-embed-rail">
           <span className="route-embed-chip" aria-hidden="true">EMBED</span>
@@ -163,7 +176,7 @@ function RouteEmbedFrameInner({
           >
             Reload
           </button>
-          <a href={src} target="_blank" rel="noreferrer" className="route-embed-rail-link">
+          <a href={newWindowHref} target="_blank" rel="noreferrer" className="route-embed-rail-link">
             새 창
           </a>
         </div>
@@ -187,7 +200,7 @@ function RouteEmbedFrameInner({
                   <button type="button" className="route-embed-btn" onClick={handleRetry}>
                     다시 시도
                   </button>
-                  <a href={src} target="_blank" rel="noreferrer" className="route-embed-link">
+                  <a href={newWindowHref} target="_blank" rel="noreferrer" className="route-embed-link">
                     새 창에서 열기
                   </a>
                 </div>
@@ -226,6 +239,15 @@ function appendEmbedParam(src: string, enabled: boolean): string {
     .replace(/\?&/, '?');
   const glue = cleaned.includes('?') ? '&' : '?';
   return `${cleaned}${glue}embed=1${hash ? `#${hash}` : ''}`;
+}
+
+function stripEmbedParam(src: string): string {
+  const [baseAndQuery, hash = ''] = src.split('#', 2);
+  const cleaned = baseAndQuery
+    .replace(/([?&])embed=[^&#]*/g, '$1')
+    .replace(/[?&]+$/, '')
+    .replace(/\?&/, '?');
+  return `${cleaned}${hash ? `#${hash}` : ''}`;
 }
 
 function formatEmbedRailLabel(src: string): string {
@@ -271,23 +293,14 @@ function emitEmbedTelemetry(detail: Omit<EmbedTelemetryDetail, 'at'>): void {
 const EMBED_SHELL_SELECTOR = [
   '#mainNav',
   'nav#mainNav',
-  'body > nav',
-  'body > header nav',
   '.sticky-header',
   'header.sticky-header',
   '.top-nav',
   '.global-nav',
   '.nav-wrapper',
-  '.navbar',
-  'footer',
-  '[role="contentinfo"]',
   '#mainFooter',
   '#footer',
   '.site-footer',
-  '.footer',
-  '[aria-label*="footer" i]',
-  '[id*="footer" i]',
-  '[class*="footer" i]',
 ].join(', ');
 
 type EmbedShellObserverState = {
@@ -308,7 +321,14 @@ function disconnectLegacyShellObserver(frame: HTMLIFrameElement | null): void {
 function hideLegacyShellNodes(doc: Document): void {
   const shellNodes = doc.querySelectorAll(EMBED_SHELL_SELECTOR);
   shellNodes.forEach((node) => {
-    if (!(node instanceof HTMLElement)) return;
+    if (!(node instanceof HTMLElement) || !shouldHideLegacyShellNode(node, doc)) return;
+    node.setAttribute('data-next-embed-hidden', '1');
+    node.style.display = 'none';
+  });
+
+  const edgeShellNodes = doc.querySelectorAll('body > header, body > nav, body > footer, body > [role="contentinfo"]');
+  edgeShellNodes.forEach((node) => {
+    if (!(node instanceof HTMLElement) || !shouldHideLegacyShellNode(node, doc)) return;
     node.setAttribute('data-next-embed-hidden', '1');
     node.style.display = 'none';
   });
@@ -357,23 +377,14 @@ function maskLegacyShell(frame: HTMLIFrameElement | null): void {
         }
         html[data-next-embed-shell="1"] #mainNav,
         html[data-next-embed-shell="1"] nav#mainNav,
-        html[data-next-embed-shell="1"] body > nav,
-        html[data-next-embed-shell="1"] body > header nav,
         html[data-next-embed-shell="1"] .sticky-header,
         html[data-next-embed-shell="1"] header.sticky-header,
         html[data-next-embed-shell="1"] .top-nav,
         html[data-next-embed-shell="1"] .global-nav,
         html[data-next-embed-shell="1"] .nav-wrapper,
-        html[data-next-embed-shell="1"] .navbar,
-        html[data-next-embed-shell="1"] footer,
-        html[data-next-embed-shell="1"] [role="contentinfo"],
         html[data-next-embed-shell="1"] #mainFooter,
         html[data-next-embed-shell="1"] #footer,
-        html[data-next-embed-shell="1"] .site-footer,
-        html[data-next-embed-shell="1"] .footer,
-        html[data-next-embed-shell="1"] [aria-label*="footer" i],
-        html[data-next-embed-shell="1"] [id*="footer" i],
-        html[data-next-embed-shell="1"] [class*="footer" i] {
+        html[data-next-embed-shell="1"] .site-footer {
           display: none !important;
         }
       `;
@@ -385,4 +396,50 @@ function maskLegacyShell(frame: HTMLIFrameElement | null): void {
   } catch {
     // iframe 문서 접근 불가(cross-origin 등) 시 조용히 건너뜀
   }
+}
+
+function shouldHideLegacyShellNode(node: HTMLElement, doc: Document): boolean {
+  const className = typeof node.className === 'string' ? node.className : '';
+  const nodeKey = `${node.id} ${className}`.toLowerCase();
+  if (/(?:^|[\s_-])(mainnav|mainfooter|site-footer|sticky-header|global-nav|top-nav|nav-wrapper)(?:$|[\s_-])/.test(nodeKey)) {
+    return true;
+  }
+
+  const isEdgeNode = node.parentElement === doc.body;
+  if (!isEdgeNode) {
+    return false;
+  }
+
+  if (node.matches('header, nav')) {
+    return true;
+  }
+
+  if (!node.matches('footer, [role="contentinfo"]')) {
+    return false;
+  }
+
+  if (looksLikeContentFooter(node)) {
+    return false;
+  }
+
+  const styles = doc.defaultView?.getComputedStyle(node);
+  if (styles?.position === 'fixed' || styles?.position === 'sticky') {
+    return true;
+  }
+
+  return (node.textContent || '').trim().length < 240;
+}
+
+function looksLikeContentFooter(node: HTMLElement): boolean {
+  const text = (node.textContent || '').toLowerCase();
+  if (!text) return false;
+  return (
+    text.includes('sources') ||
+    text.includes('verified') ||
+    text.includes('estimated') ||
+    text.includes('uncertain') ||
+    text.includes('research') ||
+    text.includes('출처') ||
+    text.includes('리서치')
+  );
 }

@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { clearAdminAuthenticated } from "@/lib/client/admin-auth";
+import {
+  logoutAdminSession,
+} from "@/lib/client/admin-auth";
 
 export default function AdminSessionControl() {
   const router = useRouter();
@@ -15,8 +17,8 @@ export default function AdminSessionControl() {
           </p>
           <button
             type="button"
-            onClick={() => {
-              clearAdminAuthenticated();
+            onClick={async () => {
+              await logoutAdminSession();
               router.push("/");
               router.refresh();
             }}

@@ -33,15 +33,29 @@ const nextConfig: NextConfig = {
         source: "/vr/vr-complete-system.html",
         destination: "/vr/?path=vr/vr-complete-system.html",
         permanent: false,
+        missing: [
+          {
+            type: "query",
+            key: "embed",
+            value: "1",
+          },
+        ],
       },
       {
         source: "/vr/vr-total-guide-calculator.html",
         destination: "/vr/?path=vr/vr-total-guide-calculator.html",
         permanent: false,
+        missing: [
+          {
+            type: "query",
+            key: "embed",
+            value: "1",
+          },
+        ],
       },
       {
         source: "/travel/:path*",
-        destination: "/admin/personal/travel/",
+        destination: "/admin/personal/travel?path=admin/personal/travel/:path*",
         permanent: true,
       },
     ];

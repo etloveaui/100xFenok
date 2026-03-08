@@ -9,6 +9,11 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const safeErrorMessage =
+    process.env.NODE_ENV === "production"
+      ? "일시적인 내부 오류가 발생했습니다."
+      : error.message || "Unknown error";
+
   return (
     <html lang="ko">
       <body className="min-h-screen bg-slate-50 text-slate-800">
@@ -36,7 +41,7 @@ export default function GlobalError({
             </Link>
           </div>
           <p className="max-w-xl break-words rounded-md bg-white px-3 py-2 text-xs text-slate-500">
-            {error.message || "Unknown error"}
+            {safeErrorMessage}
           </p>
         </div>
       </body>

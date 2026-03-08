@@ -58,7 +58,7 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
     : "/admin/design-lab/index.html";
 
   return (
-    <main className="container mx-auto px-4 py-4">
+    <main className="route-embed-page container mx-auto px-4 py-4">
       <section className="mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -80,7 +80,14 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      <RouteEmbedFrame src={iframeSrc} title="100x Admin Design Lab" loading="eager" />
+      <div className="route-embed-page-body">
+        <RouteEmbedFrame
+          src={iframeSrc}
+          title="100x Admin Design Lab"
+          loading="eager"
+          shellClassName="route-embed-shell-fill-parent"
+        />
+      </div>
     </main>
   );
 }
