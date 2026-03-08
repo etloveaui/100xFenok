@@ -365,7 +365,7 @@ const BalanceManager = (function() {
    * @returns {Object} Order status info
    */
   function calcOrderStatus(profile) {
-    const balance = Math.max(0, profile.settings?.balance?.available || 0);  // v1.1.0 (#264): 음수 잔고 0-floor
+    const balance = profile.settings?.balance?.available || 0;  // v4.0.3 (#272-C): Math.max 제거 — 음수 표시 허용
     const { total: dailyAttempt, details } = calcDailyBuyAttempt(profile);
     const diff = balance - dailyAttempt;
 
@@ -411,7 +411,7 @@ const BalanceManager = (function() {
       profile.settings.balance = { currency: 'USD' };
     }
 
-    profile.settings.balance.available = Math.max(0, parseFloat(amount) || 0);  // v1.1.0 (#264): 음수 잔고 0-floor
+    profile.settings.balance.available = parseFloat(amount) || 0;  // v4.0.3 (#272-C): Math.max 제거 — 음수 입력 허용
     profile.settings.balance.lastUpdated = new Date().toISOString();
 
     ProfileManager.save(data);

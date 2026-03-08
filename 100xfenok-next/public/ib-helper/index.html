@@ -1123,7 +1123,7 @@
      * - 로그인 상태일 때만 실행
      * - 연속 입력 시 마지막 입력 후 5초 뒤 동기화
      */
-    const debouncedSheetSync = debounce(async function() {
+    const debouncedSheetSync = debounce(async function(syncProfileId) {
       // Check if SheetsSync is available and authenticated
       if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
         console.log('Auto-sync: Skipped (not logged in)');
@@ -1139,11 +1139,11 @@
       try {
         updateSyncStatus('syncing');
 
-        // Set current profile for sync
-        SheetsSync.setCurrentProfile(currentProfile.id);
+        // v4.0.3 (#272-C): debounce 안전성 — 캡처된 profileId 사용
+        SheetsSync.setCurrentProfile(syncProfileId || currentProfile.id);
 
-        // Push to sheets
-        await SheetsSync.push();
+        // Push to sheets with captured profileId
+        await SheetsSync.push(syncProfileId);
 
         // Visual feedback (subtle)
         const status = document.getElementById('sheets-status');
@@ -1170,11 +1170,11 @@
      * Trigger auto-sync after local save
      * Called from saveCurrentInputs()
      */
-    function triggerAutoSync() {
+    function triggerAutoSync(syncProfileId) {
       if (!currentProfile) return;
       if (typeof SheetsSync !== 'undefined' && SheetsSync.isAuthenticated()) {
         updateSyncStatus('pending');
-        debouncedSheetSync();
+        debouncedSheetSync(syncProfileId || currentProfile.id);
       } else {
         updateSyncStatus('local');
       }
@@ -1573,6 +1573,10 @@
       // 프로필 변경 시 이전 계산 상태/결과 제거
       calculationResults = {};
       lastCalculation = null;
+      // v4.0.3 (#272-C): 프로필 전환 시 CashReserve 상태 초기화 (이전 종목 잔류 방지)
+      cashReserveEntries = [];
+      cashReservePrices = {};
+      cashReserveAction = null;
       const multiResults = document.getElementById('multi-results-section');
       const accordion = document.getElementById('results-accordion');
       if (multiResults) multiResults.classList.add('hidden');

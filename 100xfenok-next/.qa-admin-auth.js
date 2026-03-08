@@ -116,11 +116,17 @@ async function runGateLockFlow(page) {
   const confirmButton = page.getByRole("button", { name: "Confirm" });
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    await passwordInput.click();
-    await passwordInput.press("ControlOrMeta+A");
-    await passwordInput.press("Backspace");
-    await page.keyboard.type("wrong-password");
+    await passwordInput.fill("wrong-password");
     await confirmButton.click();
+    if (attempt < 2) {
+      await page.waitForFunction(
+        () => {
+          const input = document.getElementById("admin-auth-input");
+          return input instanceof HTMLInputElement && input.value === "";
+        },
+        { timeout: 3000 },
+      );
+    }
   }
 
   await page.getByText("보호 모드 활성화", { exact: false }).waitFor({ state: "visible", timeout: 10000 });

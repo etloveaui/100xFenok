@@ -823,7 +823,7 @@ const SheetsSync = (function() {
    *
    * 🔴 v3.4.0: 중복 실행 방지 (isPushing flag)
    */
-  async function push() {
+  async function push(overrideProfileId) {
     if (!currentUserEmail) {
       throw new Error('로그인이 필요합니다');
     }
@@ -834,7 +834,10 @@ const SheetsSync = (function() {
       return;
     }
 
-    const profile = ProfileManager.getActive();
+    // v4.0.3 (#272-C): debounce 안전성 — 호출 시점의 profileId 사용
+    const profile = overrideProfileId
+      ? ProfileManager.getAll().profiles[overrideProfileId]
+      : ProfileManager.getActive();
 
     if (!profile || !profile.stocks) {
       throw new Error('프로필이 없습니다');

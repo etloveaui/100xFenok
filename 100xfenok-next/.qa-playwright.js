@@ -338,20 +338,31 @@ async function runStockAnalyzerNativeChecks(page) {
       (await page.locator('button[key], [data-stock-analyzer-native="true"] button').first().textContent().catch(() => null)),
   });
 
-  const growthButton = page.getByRole("button", { name: "Growth View" });
-  const rankingButton = page.getByRole("button", { name: "Ranking View" });
-  const epsButton = page.getByRole("button", { name: "EPS View" });
+  const clickTabAndWait = async (buttonName, expectedText) => {
+    const button = page.getByRole("button", { name: buttonName });
+    await button.scrollIntoViewIfNeeded();
+    await button.click({ force: true });
+    await page.waitForFunction(
+      ({ selector, expected }) => {
+        const element = document.querySelector(selector);
+        return (
+          element instanceof HTMLElement &&
+          element.textContent &&
+          element.textContent.includes(expected)
+        );
+      },
+      { selector: '[data-stock-sort-label="true"]', expected: expectedText },
+      { timeout: 3000 },
+    );
+  };
 
-  await growthButton.click();
-  await page.waitForTimeout(150);
+  await clickTabAndWait("Growth View", "Growth");
   const growthState = await readState();
 
-  await rankingButton.click();
-  await page.waitForTimeout(150);
+  await clickTabAndWait("Ranking View", "Rank");
   const rankingState = await readState();
 
-  await epsButton.click();
-  await page.waitForTimeout(150);
+  await clickTabAndWait("EPS View", "EPS");
   const epsState = await readState();
 
   return {
