@@ -3,6 +3,7 @@ const { chromium } = require("playwright");
 
 const base = process.env.QA_BASE_URL || "http://127.0.0.1:4173";
 const baseOrigin = new URL(base).origin;
+const adminPassword = process.env.QA_ADMIN_PASSWORD || "";
 
 function parseCsvEnv(value) {
   if (!value) return [];
@@ -153,7 +154,6 @@ const expectedIframeRoutes = new Set([
 
 const expectedInnerShellCleanRoutes = new Set([
   "/market",
-  postsDeepLinkRoute,
   vrDeepLinkRoute,
   "/admin/data-lab",
   "/admin/macro-monitor",
@@ -168,7 +168,7 @@ const expectedInnerShellCleanRoutes = new Set([
 const expectedIframeSrcByRoute = {
   "/market": "/100x/100x-main.html",
   [alphaReportDeepLinkRoute]: "/alpha-scout/reports/2025-08-24_100x-alpha-scout.html",
-  [postsDeepLinkRoute]: "/posts/2026-02-21_tariff-ruling-comprehensive.html",
+  [postsDeepLinkRoute]: "/posts-raw/2026-02-21_tariff-ruling-comprehensive.html",
   [vrDeepLinkRoute]: "/vr/vr-complete-system.html",
   "/admin/design-lab": "/admin/design-lab/index.html",
   "/admin/data-lab": "/admin/data-lab/index.html",
@@ -228,6 +228,97 @@ async function prewarmRoutes() {
   // Extra wait for compilation to settle
   await new Promise((r) => setTimeout(r, 3000));
   console.error("[QA] Pre-warm complete.");
+}
+
+async function runDesktopDropdownChecks(page) {
+  const menuConfigs = [
+    { label: "MARKET", itemText: "Market Wrap", hrefPrefix: "/market", panelId: "#desktop-market-menu", openWith: "click", expectFocusMove: false },
+    { label: "ANALYTICS", itemText: "Multichart", hrefPrefix: "/multichart", panelId: "#desktop-analytics-menu", openWith: "enter", expectFocusMove: true },
+    { label: "STRATEGIES", itemText: "IB Helper", hrefPrefix: "/ib", panelId: "#desktop-strategies-menu", openWith: "space", expectFocusMove: true },
+  ];
+
+  const checks = [];
+
+  const openMenu = async (button, openWith) => {
+    if (openWith === "click") {
+      await button.click();
+      return;
+    }
+    if (openWith === "enter") {
+      await button.focus();
+      await page.keyboard.press("Enter");
+      return;
+    }
+    if (openWith === "space") {
+      await button.focus();
+      await page.keyboard.press("Space");
+      return;
+    }
+    await button.focus();
+    await page.keyboard.press("ArrowDown");
+  };
+
+  for (const config of menuConfigs) {
+    const button = page.getByRole("button", { name: config.label }).first();
+    await button.waitFor({ state: "visible", timeout: 5000 });
+    await page.waitForTimeout(1100);
+    await openMenu(button, config.openWith);
+
+    const waitForPanelOpen = () =>
+      page.waitForFunction(
+        (panelId) => {
+          const panel = document.querySelector(panelId);
+          return (
+            panel instanceof HTMLElement &&
+            window.getComputedStyle(panel).visibility === "visible"
+          );
+        },
+        config.panelId,
+        { timeout: 2500 },
+      );
+
+    try {
+      await waitForPanelOpen();
+    } catch {
+      await page.waitForTimeout(450);
+      await openMenu(button, config.openWith);
+      await waitForPanelOpen();
+    }
+
+    const item = page.locator(`${config.panelId} a[href^="${config.hrefPrefix}"]`).first();
+    await item.waitFor({ state: "visible", timeout: 5000 });
+    await page.waitForTimeout(220);
+
+    const ariaExpanded = await button.getAttribute("aria-expanded");
+    const itemVisible = await item.isVisible();
+    const focusedState = await page.evaluate(() => {
+      if (!(document.activeElement instanceof HTMLElement)) return "";
+      const activeHref = document.activeElement.getAttribute("href");
+      const activeText = document.activeElement.innerText || document.activeElement.textContent || "";
+      return `${activeHref || ""} ${activeText}`.trim();
+    });
+    const focusMoved = focusedState.includes(config.hrefPrefix) || focusedState.includes(config.itemText);
+
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(120);
+    const ariaExpandedAfterClose = await button.getAttribute("aria-expanded");
+
+    checks.push({
+      menu: config.label,
+      openWith: config.openWith,
+      itemText: config.itemText,
+      ariaExpanded,
+      ariaExpandedAfterClose,
+      itemVisible,
+      focusMoved,
+      pass:
+        ariaExpanded === "true" &&
+        itemVisible &&
+        ariaExpandedAfterClose === "false",
+    });
+  }
+
+  return checks;
 }
 
 (async () => {
@@ -291,6 +382,26 @@ async function prewarmRoutes() {
       });
 
       try {
+        if (route.startsWith("/admin")) {
+          if (!adminPassword) {
+            throw new Error("QA_ADMIN_PASSWORD is required for admin route checks.");
+          }
+          await page.goto(`${base}/`, {
+            waitUntil: "domcontentloaded",
+            timeout: isDevServer ? 90000 : 45000,
+          }).catch(() => {});
+          await page.evaluate(async (password) => {
+            await fetch("/api/admin/session", {
+              method: "POST",
+              cache: "no-store",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({ password }),
+            });
+          }, adminPassword).catch(() => {});
+        }
         const response = await page.goto(`${base}${route}`, { waitUntil: "domcontentloaded", timeout: isDevServer ? 90000 : 45000 });
         item.status = response ? response.status() : null;
       } catch (err) {
@@ -497,6 +608,28 @@ async function prewarmRoutes() {
           results.push({ viewport: vp.name, route: "/", check: "mobileMenuToggle", error: String(err) });
         }
       }
+
+      if (route === "/" && vp.name === "desktop" && !item.navigationError) {
+        try {
+          const dropdownChecks = await runDesktopDropdownChecks(page);
+          dropdownChecks.forEach((check) => {
+            results.push({
+              viewport: vp.name,
+              route: "/",
+              check: "desktopDropdown",
+              ...check,
+            });
+          });
+        } catch (err) {
+          results.push({
+            viewport: vp.name,
+            route: "/",
+            check: "desktopDropdown",
+            pass: false,
+            error: String(err),
+          });
+        }
+      }
     }
 
     await context.close();
@@ -505,6 +638,7 @@ async function prewarmRoutes() {
   await browser.close();
 
   const failures = results.filter((r) => {
+    if (r.check === "desktopDropdown") return r.pass === false;
     if (r.check === "mobileMenuToggle") return false;
     if (r.navigationError) return true;
     if (r.status && r.status >= 400 && r.route !== "/this-route-should-not-exist") return true;
