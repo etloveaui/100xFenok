@@ -280,16 +280,16 @@
                 }
                 
                 let paginationHTML = '<ul class="inline-flex items-center -space-x-px">';
-                paginationHTML += `<li><a href="#" data-page="${currentPage - 1}" class="px-3 py-2 ml-0 leading-tight text-slate-500 bg-white border border-slate-300 rounded-l-lg hover:bg-slate-100 hover:text-slate-700 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}">이전</a></li>`;
+                paginationHTML += `<li><a href="#" data-page="${currentPage - 1}" class="px-3 py-2 ml-0 leading-tight text-slate-700 bg-white border border-slate-300 rounded-l-lg hover:bg-slate-100 hover:text-slate-900 ${currentPage === 1 ? 'bg-slate-100 text-slate-400 hover:bg-slate-100 hover:text-slate-400 cursor-not-allowed pointer-events-none' : ''}">이전</a></li>`;
 
                 for (let i = 1; i <= totalPages; i++) {
                     const isActive = i === currentPage;
                     const activeClasses = 'z-10 px-3 py-2 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700';
-                    const defaultClasses = 'px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 hover:bg-slate-100 hover:text-slate-700';
+                    const defaultClasses = 'px-3 py-2 leading-tight text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 hover:text-slate-900';
                     paginationHTML += `<li><a href="#" data-page="${i}" class="${isActive ? activeClasses : defaultClasses}">${i}</a></li>`;
                 }
 
-                paginationHTML += `<li><a href="#" data-page="${currentPage + 1}" class="px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 rounded-r-lg hover:bg-slate-100 hover:text-slate-700 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}">다음</a></li>`;
+                paginationHTML += `<li><a href="#" data-page="${currentPage + 1}" class="px-3 py-2 leading-tight text-slate-700 bg-white border border-slate-300 rounded-r-lg hover:bg-slate-100 hover:text-slate-900 ${currentPage === totalPages ? 'bg-slate-100 text-slate-400 hover:bg-slate-100 hover:text-slate-400 cursor-not-allowed pointer-events-none' : ''}">다음</a></li>`;
                 paginationHTML += '</ul>';
                 paginationContainer.innerHTML = paginationHTML;
             }

@@ -2,7 +2,10 @@
 const { webkit } = require("playwright");
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
-const route = process.env.QA_WEBKIT_ROUTE || "/";
+const routes = (process.env.QA_WEBKIT_ROUTES || process.env.QA_WEBKIT_ROUTE || "/,/market,/admin/design-lab?mode=native")
+  .split(",")
+  .map((route) => route.trim())
+  .filter(Boolean);
 const timeoutMs = Number.parseInt(process.env.QA_WEBKIT_TIMEOUT_MS || "25000", 10);
 
 function withTimeout(promise, stage, ms) {
@@ -98,16 +101,23 @@ function classifyFailure(errorMessage) {
     console.error(`[webkit-smoke] stage=${stage}`);
     const page = await withTimeout(context.newPage(), stage, timeoutMs);
 
-    stage = "goto";
-    console.error(`[webkit-smoke] stage=${stage}`);
-    const response = await withTimeout(
-      page.goto(`${baseUrl}${route}`, {
-        waitUntil: "domcontentloaded",
-        timeout: timeoutMs,
-      }),
-      stage,
-      timeoutMs,
-    );
+    const results = [];
+    for (const route of routes) {
+      stage = `goto:${route}`;
+      console.error(`[webkit-smoke] stage=${stage}`);
+      const response = await withTimeout(
+        page.goto(`${baseUrl}${route}`, {
+          waitUntil: "domcontentloaded",
+          timeout: timeoutMs,
+        }),
+        stage,
+        timeoutMs,
+      );
+      results.push({
+        route,
+        status: response ? response.status() : null,
+      });
+    }
 
     await safeCloseBrowser(browser);
     browser = null;
@@ -120,8 +130,8 @@ function classifyFailure(errorMessage) {
           endedAt: new Date().toISOString(),
           stage: "done",
           baseUrl,
-          route,
-          status: response ? response.status() : null,
+          routes,
+          results,
           message: "WebKit smoke passed",
         },
         null,
@@ -144,7 +154,7 @@ function classifyFailure(errorMessage) {
           endedAt: new Date().toISOString(),
           stage,
           baseUrl,
-          route,
+          routes,
           timeoutMs,
           error: message,
           category: details.category,

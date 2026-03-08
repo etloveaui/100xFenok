@@ -411,6 +411,7 @@ async function runStockAnalyzerNativeChecks(page) {
         externalFetchErrorCount: 0,
         sameOriginRequestFailureCount: 0,
         externalRequestFailureCount: 0,
+        criticalSameOriginDataFailureCount: 0,
         blockingConsoleErrors: [],
         consoleErrors: [],
       };
@@ -593,9 +594,12 @@ async function runStockAnalyzerNativeChecks(page) {
       );
       const nonBlockingConsoleErrors = consoleErrors.filter((msg) => isNonBlockingConsoleNoise(msg));
       const externalFetchErrors = consoleErrors.filter((msg) => isExternalFetchNoise(msg));
-      const sameOriginRequestFailures = requestFailures.filter((req) => !isExternalUrl(req.url));
-      const externalRequestFailures = requestFailures.filter((req) => isExternalUrl(req.url));
-      const criticalSameOriginDataFailures = requestFailures.filter((req) =>
+      const relevantRequestFailures = requestFailures.filter(
+        (req) => !isIgnoredRequestFailure(req),
+      );
+      const sameOriginRequestFailures = relevantRequestFailures.filter((req) => !isExternalUrl(req.url));
+      const externalRequestFailures = relevantRequestFailures.filter((req) => isExternalUrl(req.url));
+      const criticalSameOriginDataFailures = relevantRequestFailures.filter((req) =>
         isCriticalSameOriginDataFailure(req),
       );
 
@@ -609,6 +613,7 @@ async function runStockAnalyzerNativeChecks(page) {
       item.criticalSameOriginDataFailureCount = criticalSameOriginDataFailures.length;
       item.blockingConsoleErrors = blockingConsoleErrors.slice(0, 3);
       item.consoleErrors = consoleErrors.slice(0, 3);
+      item.criticalSameOriginDataFailures = criticalSameOriginDataFailures.slice(0, 3);
 
       results.push(item);
 
@@ -623,6 +628,7 @@ async function runStockAnalyzerNativeChecks(page) {
             await page.waitForTimeout(200);
             const menuState = await page.evaluate(() => ({
               bodyOverflow: document.body.style.overflow || "",
+              bodyPosition: document.body.style.position || "",
               overlayVisible: document.querySelector(".mobile-overlay.visible") !== null,
             }));
 
@@ -637,6 +643,7 @@ async function runStockAnalyzerNativeChecks(page) {
 
             let afterClose = await page.evaluate(() => ({
               bodyOverflow: document.body.style.overflow || "",
+              bodyPosition: document.body.style.position || "",
               overlayVisible: document.querySelector(".mobile-overlay.visible") !== null,
             }));
 
@@ -646,6 +653,7 @@ async function runStockAnalyzerNativeChecks(page) {
               await page.waitForTimeout(200);
               afterClose = await page.evaluate(() => ({
                 bodyOverflow: document.body.style.overflow || "",
+                bodyPosition: document.body.style.position || "",
                 overlayVisible: document.querySelector(".mobile-overlay.visible") !== null,
               }));
             }
@@ -716,7 +724,14 @@ async function runStockAnalyzerNativeChecks(page) {
   const failures = results.filter((r) => {
     if (r.check === "desktopDropdown") return r.pass === false;
     if (r.check === "stockAnalyzerNativeTabs") return r.pass === false;
-    if (r.check === "mobileMenuToggle") return false;
+    if (r.check === "mobileMenuToggle") {
+      if (r.error) return true;
+      if (r.skipped) return false;
+      if (r.afterClose?.overlayVisible) return true;
+      if ((r.afterClose?.bodyOverflow || "") !== "") return true;
+      if ((r.afterClose?.bodyPosition || "") !== "") return true;
+      return false;
+    }
     if (r.navigationError) return true;
     if (r.status && r.status >= 400 && r.route !== "/this-route-should-not-exist") return true;
     if (r.hasHorizontalScroll) return true;

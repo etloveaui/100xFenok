@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { chromium } = require("playwright");
 const AxeBuilder = require("@axe-core/playwright").default;
+const axeSourcePath = require.resolve("axe-core/axe.min.js");
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const includeIframeRoutes = process.env.QA_A11Y_INCLUDE_IFRAME_ROUTES !== "0";
-const strictMode = process.env.QA_A11Y_STRICT === "1";
+const strictMode = process.env.QA_A11Y_STRICT !== "0";
 
 const routes = (
   process.env.QA_A11Y_ROUTES ||
@@ -53,6 +54,45 @@ function compactViolations(violations) {
   }));
 }
 
+async function analyzeIframe(page) {
+  const iframeHandle = await page.locator("iframe").first().elementHandle();
+  if (!iframeHandle) {
+    return { scanned: false, skippedReason: "iframe_not_found", violations: [] };
+  }
+
+  const frame = await iframeHandle.contentFrame();
+  if (!frame) {
+    return { scanned: false, skippedReason: "iframe_content_unavailable", violations: [] };
+  }
+
+  try {
+    await frame.addScriptTag({ path: axeSourcePath });
+    const result = await frame.evaluate(async () => {
+      return axe.run(document, {
+        runOnly: {
+          type: "tag",
+          values: ["wcag2a", "wcag2aa"],
+        },
+      });
+    });
+
+    return {
+      scanned: true,
+      skippedReason: null,
+      violations: compactViolations(result.violations || []).map((violation) => ({
+        ...violation,
+        id: `iframe:${violation.id}`,
+      })),
+    };
+  } catch (error) {
+    return {
+      scanned: false,
+      skippedReason: `iframe_scan_error: ${String(error)}`,
+      violations: [],
+    };
+  }
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const results = [];
@@ -96,9 +136,19 @@ function compactViolations(violations) {
         .withTags(["wcag2a", "wcag2aa"])
         .analyze();
 
+      let iframeViolations = [];
+      if (iframeCount > 0 && includeIframeRoutes) {
+        const iframeAnalysis = await analyzeIframe(page);
+        if (iframeAnalysis.scanned) {
+          iframeViolations = iframeAnalysis.violations;
+        } else {
+          record.skippedReason = iframeAnalysis.skippedReason;
+        }
+      }
+
       record.scanned = true;
-      record.violations = compactViolations(analysis.violations);
-      record.seriousOrCriticalCount = analysis.violations.filter((violation) =>
+      record.violations = compactViolations(analysis.violations).concat(iframeViolations);
+      record.seriousOrCriticalCount = record.violations.filter((violation) =>
         violation.impact === "serious" || violation.impact === "critical",
       ).length;
 
