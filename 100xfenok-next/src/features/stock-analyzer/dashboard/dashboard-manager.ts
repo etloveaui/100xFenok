@@ -44,6 +44,18 @@ interface DashboardManagerOptions {
   initialTab?: StockAnalyzerTab;
 }
 
+const TAB_SORT_PRESETS: Record<
+  StockAnalyzerTab,
+  Pick<StockAnalyzerFilterState, "sortKey" | "sortOrder">
+> = {
+  overview: { sortKey: "marketCap", sortOrder: "desc" },
+  growth: { sortKey: "growthRate", sortOrder: "desc" },
+  ranking: { sortKey: "rank", sortOrder: "asc" },
+  eps: { sortKey: "eps", sortOrder: "desc" },
+  portfolio: { sortKey: "marketCap", sortOrder: "desc" },
+  compare: { sortKey: "symbol", sortOrder: "asc" },
+};
+
 export class DashboardManager
   implements StockAnalyzerDashboardController<StockAnalyzerRecord>
 {
@@ -100,10 +112,19 @@ export class DashboardManager
   }
 
   setTab(tab: StockAnalyzerTab): void {
+    const preset = TAB_SORT_PRESETS[tab];
     this.state = {
       ...this.state,
       activeTab: tab,
+      filters: preset
+        ? {
+            ...this.state.filters,
+            sortKey: preset.sortKey,
+            sortOrder: preset.sortOrder,
+          }
+        : this.state.filters,
     };
+    this.recompute();
   }
 
   setFilters(nextState: StockAnalyzerFilterState): void {

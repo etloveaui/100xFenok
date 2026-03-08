@@ -27,11 +27,11 @@ const StockAnalyzerCharts = dynamic(
 
 const tabs: { id: StockAnalyzerTab; label: string }[] = [
   { id: "overview", label: "Overview" },
-  { id: "growth", label: "Growth" },
-  { id: "ranking", label: "Ranking" },
-  { id: "eps", label: "EPS" },
-  { id: "portfolio", label: "Portfolio" },
-  { id: "compare", label: "Compare" },
+  { id: "growth", label: "Growth View" },
+  { id: "ranking", label: "Ranking View" },
+  { id: "eps", label: "EPS View" },
+  { id: "portfolio", label: "Portfolio View" },
+  { id: "compare", label: "Compare View" },
 ];
 
 function formatNumber(value: number | undefined, maximumFractionDigits = 1): string {
@@ -44,6 +44,38 @@ function formatNumber(value: number | undefined, maximumFractionDigits = 1): str
 function formatPercent(value: number | undefined): string {
   if (value === undefined || Number.isNaN(value)) return "-";
   return `${(value * 100).toFixed(2)}%`;
+}
+
+function getTabDescription(tab: StockAnalyzerTab): string {
+  switch (tab) {
+    case "overview":
+      return "빠른 개요와 핵심 차트";
+    case "growth":
+      return "성장률 기준 정렬 + 상세 표";
+    case "ranking":
+      return "랭킹 기준 정렬 + 상세 표";
+    case "eps":
+      return "EPS 중심 상세 표";
+    case "portfolio":
+      return "포트폴리오 검토용 상세 표";
+    case "compare":
+      return "비교 검토용 상세 표";
+    default:
+      return "상세 표";
+  }
+}
+
+function formatSortLabel(sortKey: string, sortOrder: "asc" | "desc"): string {
+  const keyLabel = {
+    marketCap: "Market Cap",
+    growthRate: "Growth",
+    rank: "Rank",
+    eps: "EPS",
+    per: "PER",
+    symbol: "Ticker",
+  }[sortKey] ?? sortKey;
+
+  return `${keyLabel} · ${sortOrder.toUpperCase()}`;
 }
 
 function findSelectedRecord(
@@ -122,6 +154,11 @@ export function StockAnalyzerDashboard() {
   }, [dashboard.filteredRecords]);
 
   const shouldRenderHeavyPanels = dashboard.activeTab !== "overview";
+  const activeTabDescription = getTabDescription(dashboard.activeTab);
+  const activeSortLabel = formatSortLabel(
+    dashboard.filters.sortKey,
+    dashboard.filters.sortOrder,
+  );
   const visibleRows = shouldRenderHeavyPanels
     ? dashboard.filteredRecords.slice(0, 50)
     : dashboard.filteredRecords.slice(0, 12);
@@ -255,6 +292,12 @@ export function StockAnalyzerDashboard() {
             Loaded at: {dashboard.lastUpdatedAt ? new Date(dashboard.lastUpdatedAt).toLocaleString() : "-"}
           </span>
         </div>
+
+        <p className="mt-2 text-xs text-slate-500">
+          현재 탭: {activeTabDescription}
+          {" · "}
+          현재 정렬: <span data-stock-sort-label="true">{activeSortLabel}</span>
+        </p>
       </section>
 
       {dashboard.errorMessage && (
@@ -316,7 +359,7 @@ export function StockAnalyzerDashboard() {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-700">Filtered Universe</h2>
             <span className="text-xs text-slate-500">
-              {shouldRenderHeavyPanels ? "Top 50 rows" : "Top 12 rows (quick mode)"}
+              {shouldRenderHeavyPanels ? `Top 50 rows · ${activeTabDescription}` : "Top 12 rows (quick mode)"}
             </span>
           </div>
 

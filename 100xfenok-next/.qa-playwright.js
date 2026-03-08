@@ -321,6 +321,44 @@ async function runDesktopDropdownChecks(page) {
   return checks;
 }
 
+async function runStockAnalyzerNativeChecks(page) {
+  const sortLabel = page.locator('[data-stock-sort-label="true"]');
+  await sortLabel.waitFor({ state: "visible", timeout: 10000 });
+
+  const readState = async () => ({
+    sortLabel: await sortLabel.textContent(),
+    firstSymbol:
+      (await page.locator('tbody tr td').first().textContent().catch(() => null)) ||
+      (await page.locator('button[key], [data-stock-analyzer-native="true"] button').first().textContent().catch(() => null)),
+  });
+
+  const growthButton = page.getByRole("button", { name: "Growth View" });
+  const rankingButton = page.getByRole("button", { name: "Ranking View" });
+  const epsButton = page.getByRole("button", { name: "EPS View" });
+
+  await growthButton.click();
+  await page.waitForTimeout(150);
+  const growthState = await readState();
+
+  await rankingButton.click();
+  await page.waitForTimeout(150);
+  const rankingState = await readState();
+
+  await epsButton.click();
+  await page.waitForTimeout(150);
+  const epsState = await readState();
+
+  return {
+    growthState,
+    rankingState,
+    epsState,
+    pass:
+      String(growthState.sortLabel || "").includes("Growth") &&
+      String(rankingState.sortLabel || "").includes("Rank") &&
+      String(epsState.sortLabel || "").includes("EPS"),
+  };
+}
+
 (async () => {
   await prewarmRoutes();
   const browser = await chromium.launch({ headless: true });
@@ -630,6 +668,26 @@ async function runDesktopDropdownChecks(page) {
           });
         }
       }
+
+      if (route === "/tools/stock-analyzer/native" && !item.navigationError) {
+        try {
+          const nativeCheck = await runStockAnalyzerNativeChecks(page);
+          results.push({
+            viewport: vp.name,
+            route,
+            check: "stockAnalyzerNativeTabs",
+            ...nativeCheck,
+          });
+        } catch (err) {
+          results.push({
+            viewport: vp.name,
+            route,
+            check: "stockAnalyzerNativeTabs",
+            pass: false,
+            error: String(err),
+          });
+        }
+      }
     }
 
     await context.close();
@@ -639,6 +697,7 @@ async function runDesktopDropdownChecks(page) {
 
   const failures = results.filter((r) => {
     if (r.check === "desktopDropdown") return r.pass === false;
+    if (r.check === "stockAnalyzerNativeTabs") return r.pass === false;
     if (r.check === "mobileMenuToggle") return false;
     if (r.navigationError) return true;
     if (r.status && r.status >= 400 && r.route !== "/this-route-should-not-exist") return true;
