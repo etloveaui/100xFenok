@@ -169,14 +169,6 @@ const expectedIframeRoutes = new Set([
 const expectedInnerShellCleanRoutes = new Set([
   "/market",
   vrDeepLinkRoute,
-  "/admin/data-lab",
-  "/admin/macro-monitor",
-  "/admin/market-radar",
-  "/admin/valuation-lab",
-  "/admin/stark-lab",
-  "/admin/ib-helper",
-  "/admin/stats",
-  "/admin/api-test",
 ]);
 
 const expectedIframeSrcByRoute = {

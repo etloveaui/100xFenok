@@ -62,6 +62,14 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value ?? null;
   const authenticated = await verifyAdminSessionToken(token);
 
+  if (
+    normalizedAdminPath &&
+    request.nextUrl.searchParams.get("embed") === "1" &&
+    authenticated
+  ) {
+    return NextResponse.next();
+  }
+
   if (normalizedTravelPath && !authenticated) {
     return NextResponse.redirect(targetUrl);
   }
