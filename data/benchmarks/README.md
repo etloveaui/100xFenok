@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-04-02 ~ 2026-02-13 (16 years, 829 data points)
+> **Period**: 2010-04-23 ~ 2026-03-06 (16 years, 829 data points)
 > **Version**: 3.7.0
-> **Last Update**: 2026-02-23
+> **Last Update**: 2026-03-09
 
 ---
 
