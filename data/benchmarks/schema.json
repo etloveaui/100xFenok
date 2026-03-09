@@ -38,7 +38,7 @@
       "schema": "Same as us.json"
     },
     "micro_sectors.json": {
-      "description": "Philadelphia Semi, Regional Banks, Hang Seng Tech, Biotech",
+      "description": "Philadelphia Semi, Regional Banks, Hang Seng Tech, Biotech, KOSDAQ 150",
       "size_kb": 626,
       "schema": "Same as us.json"
     },
@@ -59,9 +59,10 @@
     },
     "summaries.json": {
       "added_in": "3.7.0",
-      "description": "Momentum (1M/3M/6M/YTD) + Yearly Returns for all 37 indices/sectors",
+      "description": "Momentum + Yearly Returns for all 37 sections (74 summary blocks total)",
       "size_kb": 12,
       "sections": 37,
+      "summary_blocks": 74,
       "schema": {
         "metadata": {
           "version": "YYYY-MM-DD",
@@ -84,9 +85,9 @@
 
   "index_keys": {
     "us.json": ["sp500", "nasdaq100", "nasdaq_composite", "russell2000"],
-    "developed.json": ["euro_stoxx50", "topix", "hang_seng", "nikkei225"],
-    "emerging.json": ["shanghai", "sensex", "kospi", "bovespa", "vietnam", "hscei"],
-    "msci.json": ["msci_world", "msci_developed", "msci_emerging", "msci_china", "msci_india", "msci_korea"]
+    "developed.json": ["euro_stoxx_50", "topix", "hong_kong", "nikkei"],
+    "emerging.json": ["shanghai", "india_sensex", "kospi", "brazil", "vietnam", "hang_seng_h"],
+    "msci.json": ["world", "developed", "emerging", "china", "india", "korea"]
   },
 
   "breaking_changes_history": [

@@ -17,7 +17,7 @@
 | `developed.json` | Developed Markets | `euro_stoxx_50`, `topix`, `hong_kong`, `nikkei` |
 | `emerging.json` | Emerging Markets | `shanghai`, `india_sensex`, `kospi`, `brazil`, `vietnam`, `hang_seng_h` |
 | `msci.json` | MSCI Indices | `world`, `developed`, `emerging`, `china`, `india`, `korea` |
-| `summaries.json` | Momentum & Yearly Returns | All 37 sections |
+| `summaries.json` | Momentum & Yearly Returns | 37 sections × 2 summary sets (74 blocks) |
 
 ---
 
