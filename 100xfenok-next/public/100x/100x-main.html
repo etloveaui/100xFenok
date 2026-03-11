@@ -132,6 +132,14 @@
                 return dateString; 
             }
 
+            async function loadMetadata(filename) {
+                const response = await fetch(`${METADATA_PATH}${filename}`);
+                if (!response.ok) {
+                    throw new Error(`메타데이터 로드 실패: ${filename} (${response.status})`);
+                }
+                return response.json();
+            }
+
             // --- 데이터 로딩 및 초기 렌더링 ---
             async function initialize() {
                 try {
@@ -162,8 +170,10 @@
                 }
 
                 try {
-                    const requests = filenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
-                    const reports = await Promise.all(requests);
+                    const settled = await Promise.allSettled(filenames.map(loadMetadata));
+                    const reports = settled
+                        .filter(result => result.status === 'fulfilled')
+                        .map(result => result.value);
                     const [latest, second, third] = reports;
 
                     let featuredHTML = '';
@@ -216,6 +226,10 @@
                             </div>`;
                     }
                     
+                    if (!featuredHTML) {
+                        featuredGrid.innerHTML = '<p class="text-slate-500 col-span-full text-center">추천 리포트를 준비 중입니다.</p>';
+                        return;
+                    }
                     featuredGrid.innerHTML = featuredHTML;
                 } catch (error) {
                     console.error("추천 리포트 렌더링 실패:", error);
@@ -239,8 +253,10 @@
                 }
 
                 try {
-                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
-                    const reports = await Promise.all(requests);
+                    const settled = await Promise.allSettled(pageFilenames.map(loadMetadata));
+                    const reports = settled
+                        .filter(result => result.status === 'fulfilled')
+                        .map(result => result.value);
 
                     let archiveHTML = '';
                     reports.forEach(report => {
@@ -261,6 +277,11 @@
                                 </div>
                             </div>`;
                     });
+                    if (!archiveHTML) {
+                        archiveGrid.innerHTML = `<p class="w-full text-center text-slate-500">표시할 리포트가 없습니다.</p>`;
+                        renderPaginationControls();
+                        return;
+                    }
                     archiveGrid.innerHTML = archiveHTML;
 
                 } catch (error) {
@@ -314,8 +335,15 @@
                     a.addEventListener('click', e => {
                         e.preventDefault();
                         const path = a.dataset.path;
-                        const urlParams = new URLSearchParams(path.split('?')[1]);
-                        const finalPath = urlParams.get('path');
+                        let finalPath = null;
+                        if (path) {
+                            try {
+                                const parsed = new URL(path, window.location.origin);
+                                finalPath = parsed.searchParams.get('path') || path;
+                            } catch (error) {
+                                finalPath = path;
+                            }
+                        }
                         
                         if (window.parent && typeof window.parent.loadPage === 'function') {
                             window.parent.loadPage(finalPath);

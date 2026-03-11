@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { StockAnalyzerDashboard } from "@/features/stock-analyzer/components/stock-analyzer-dashboard";
 
 export const metadata: Metadata = {
-  title: "Stock Analyzer Native Pilot",
-  description: "Week3 Phase 6-2 네이티브 모듈 기반 Stock Analyzer 파일럿",
+  title: "Stock Analyzer",
+  description: "종목 탐색과 비교를 위한 분석 대시보드",
 };
 
 export default function StockAnalyzerNativePage() {

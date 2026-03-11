@@ -700,48 +700,20 @@ class MacroDataFetcher {
     startDate.setHours(12, 0, 0, 0);
     startDate.setDate(startDate.getDate() - days);
     const start = this.toLocalYMD(startDate);
-    const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
-
     try {
-      // 3개 account_type 모두 fetch (시기별 다른 이름 사용)
-      const urls = [
-        // 1. Federal Reserve Account (2005 ~ 2021-09-30)
-        `${baseUrl}?filter=account_type:eq:Federal Reserve Account,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
-        // 2. Treasury General Account (TGA) (2021-10-01 ~ 2022-04-15)
-        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA),record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
-        // 3. Treasury General Account (TGA) Opening Balance (2022-04-18 ~ 현재) ★ 추가!
-        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA) Opening Balance,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`
-      ];
+      const json = await this.fetchWithTimeout(
+        `${window.location.origin}/api/data?dataset=treasury-tga&start=${encodeURIComponent(start)}`
+      );
+      const rows = Array.isArray(json?.data) ? json.data : [];
 
-      const responses = await Promise.all(urls.map(url => this.fetchWithTimeout(url)));
-
-      // 데이터 병합
-      const allData = [];
-      responses.forEach((json, idx) => {
-        if (json?.data) {
-          const typeName = ['FRA', 'TGA', 'TGA-Opening'][idx];
-          json.data.forEach(d => {
-            if (d.open_today_bal && d.open_today_bal !== 'null') {
-              allData.push({ date: d.record_date, val: parseFloat(d.open_today_bal) });
-            }
-          });
-          console.log(`[DataFetcher] ${typeName}: ${json.data.length}개`);
-        }
-      });
-
-      if (allData.length === 0) {
+      if (rows.length === 0) {
         console.warn('[DataFetcher] Treasury API 데이터 없음, FRED 폴백');
         return this.fetchFRED('WTREGEN', days);
       }
-
-      // 날짜 정렬 (오름차순)
-      allData.sort((a, b) => a.date.localeCompare(b.date));
-
-      // 중복 제거 (같은 날짜면 나중 데이터 = Opening Balance 우선)
-      const uniqueMap = new Map();
-      allData.forEach(d => uniqueMap.set(d.date, d.val));
-
-      const result = Array.from(uniqueMap.entries()).map(([date, val]) => ({ date, val }));
+      const result = rows
+        .filter(d => d?.record_date && d?.open_today_bal && d.open_today_bal !== 'null')
+        .map(d => ({ date: d.record_date, val: parseFloat(d.open_today_bal) }))
+        .filter(d => Number.isFinite(d.val));
       console.log(`[DataFetcher] Treasury TGA 로드: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
 
       return result;

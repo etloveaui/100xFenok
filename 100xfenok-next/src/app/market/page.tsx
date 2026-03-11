@@ -23,5 +23,12 @@ export default async function MarketPage({ searchParams }: PageProps) {
   const effectiveIframeSrc =
     safePath && legacyPublicFileExists(safePath) ? iframeSrc : '/100x/100x-main.html';
 
-  return <RouteEmbedFrame src={effectiveIframeSrc} title="100x Market Wrap" loading="eager" />;
+  return (
+    <RouteEmbedFrame
+      src={effectiveIframeSrc}
+      title="100x Market Wrap"
+      loading="eager"
+      timeoutMs={20000}
+    />
+  );
 }

@@ -169,10 +169,10 @@ const PERIOD_SHORTCUT_MAP: Record<string, string> = {
 };
 const TAB_SEQUENCE: TabId[] = ['overview', 'sectors', 'liquidity', 'sentiment'];
 const TAB_LABELS: Record<TabId, string> = {
-  overview: 'Overview',
-  sectors: 'Sectors',
-  liquidity: 'Liquidity',
-  sentiment: 'Sentiment',
+  overview: '개요',
+  sectors: '섹터',
+  liquidity: '유동성',
+  sentiment: '심리',
 };
 const TAB_BUTTON_IDS: Record<TabId, string> = {
   overview: 'tab-overview',
@@ -624,7 +624,7 @@ export default function Home() {
   const [liveSourceStats, setLiveSourceStats] = useState<{ live: number; total: number }>({ live: 0, total: 0 });
   const [liquidityWidgetPayload, setLiquidityWidgetPayload] = useState<LiquidityWidgetPayload | null>(null);
   const [sentimentWidgetPayload, setSentimentWidgetPayload] = useState<SentimentWidgetPayload | null>(null);
-  const [widgetBridgeRuntime, setWidgetBridgeRuntime] = useState<{
+  const [, setWidgetBridgeRuntime] = useState<{
     freshness: WidgetBridgeFreshness;
     dataState: string;
     widgetId: string | null;
@@ -1256,10 +1256,10 @@ export default function Home() {
         ? 'mixed'
         : 'fallback';
   const tabPanelModeLabel = dataConnectionMode === 'live'
-    ? 'LIVE DATA'
+    ? '실시간 반영'
     : dataConnectionMode === 'mixed'
-      ? 'PARTIAL DATA'
-      : 'FALLBACK';
+      ? '부분 반영'
+      : '기본 데이터';
   const dataConnectionClass = dataConnectionMode === 'live'
     ? 'is-live'
     : dataConnectionMode === 'mixed'
@@ -1269,54 +1269,14 @@ export default function Home() {
   const syncAgeMinutes = syncedAtEpoch !== null && Number.isFinite(syncedAtEpoch)
     ? Math.max(0, Math.floor((syncTick - syncedAtEpoch) / (60 * 1000)))
     : null;
-  const syncHealthClass = syncAgeMinutes === null
-    ? 'is-fallback'
-    : syncAgeMinutes <= 3
-      ? 'is-live'
-      : syncAgeMinutes <= 10
-        ? 'is-mixed'
-        : 'is-fallback';
-  const syncHealthLabel = syncAgeMinutes === null
-    ? 'Sync Idle'
-    : syncAgeMinutes === 0
-      ? 'Sync Just now'
-      : `Sync ${syncAgeMinutes}m`;
-  const tickerHealthClass = dashboard.sectorMode === 'LIVE_1D'
-    ? 'is-live'
-    : dashboard.sectorMode === 'MIXED'
-      ? 'is-mixed'
-      : 'is-fallback';
-  const tickerHealthLabel = dashboard.sectorMode === 'LIVE_1D'
-    ? 'Ticker Stream Live'
-    : dashboard.sectorMode === 'MIXED'
-      ? 'Ticker Stream Mixed'
-      : 'Ticker Stream Base';
-  const macroHealthClass = dataConnectionClass;
-  const macroHealthLabel = dataConnectionMode === 'live'
-    ? 'Macro Stack Linked'
+  const dataStatusLabel = dataConnectionMode === 'live'
+    ? '실시간 데이터'
     : dataConnectionMode === 'mixed'
-      ? 'Macro Stack Partial'
-      : 'Macro Stack Fallback';
+      ? '부분 반영'
+      : '기본 데이터';
   const sentimentIndicatorCount = Object.keys(sentimentWidgetPayload?.indicators ?? {}).length;
   const liquidityIndicatorCount = liquidityWidgetPayload ? Object.keys(liquidityWidgetPayload).length : 0;
   const bridgeSignalCount = sentimentIndicatorCount + liquidityIndicatorCount;
-  const bridgeSignalClass = bridgeSignalCount >= 8 ? 'is-live' : bridgeSignalCount >= 4 ? 'is-mixed' : 'is-fallback';
-  const bridgeSignalLabel = bridgeSignalCount >= 8 ? 'Bridge Armed' : bridgeSignalCount >= 4 ? 'Bridge Partial' : 'Bridge Idle';
-  const bridgeHealthClass = widgetBridgeRuntime.freshness === 'HOT'
-    ? 'is-live'
-    : widgetBridgeRuntime.freshness === 'WARM'
-      ? 'is-mixed'
-      : widgetBridgeRuntime.freshness === 'STALE'
-        ? 'is-fallback'
-        : bridgeSignalClass;
-  const bridgeHealthLabel = widgetBridgeRuntime.freshness === 'IDLE'
-    ? bridgeSignalLabel
-    : `Bridge ${widgetBridgeRuntime.freshness}/${widgetBridgeRuntime.dataState}`;
-  const bridgeRuntimeStamp = widgetBridgeRuntime.at ? formatTimeLabel(widgetBridgeRuntime.at) : '--';
-  const bridgeRuntimeWidgetLabel = widgetBridgeRuntime.widgetId
-    ? widgetBridgeRuntime.widgetId.replace(/-/g, ' ').toUpperCase()
-    : 'WIDGET --';
-  const showBridgeSyncHint = widgetBridgeRuntime.freshness === 'STALE' && !isRefreshingData;
   const liquidityRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html';
   const sentimentRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html';
   const bankingRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html';
@@ -1324,7 +1284,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
-      <section className="command-toolbar" role="toolbar" aria-label="Dashboard controls">
+      <section className="command-toolbar" role="toolbar" aria-label="대시보드 설정">
         <div className="command-main">
           <div className="tab-pills tab-pills-compact" role="tablist" aria-label="View tabs">
             <button
@@ -1339,7 +1299,7 @@ export default function Home() {
               onClick={() => selectTab('overview', 'click')}
               onKeyDown={(event) => handleTabKeyNavigation(event, 'overview')}
             >
-              Overview
+              개요
             </button>
             <button
               id={TAB_BUTTON_IDS.sectors}
@@ -1353,7 +1313,7 @@ export default function Home() {
               onClick={() => selectTab('sectors', 'click')}
               onKeyDown={(event) => handleTabKeyNavigation(event, 'sectors')}
             >
-              Sectors
+              섹터
             </button>
             <button
               id={TAB_BUTTON_IDS.liquidity}
@@ -1367,7 +1327,7 @@ export default function Home() {
               onClick={() => selectTab('liquidity', 'click')}
               onKeyDown={(event) => handleTabKeyNavigation(event, 'liquidity')}
             >
-              Liquidity
+              유동성
             </button>
             <button
               id={TAB_BUTTON_IDS.sentiment}
@@ -1381,7 +1341,7 @@ export default function Home() {
               onClick={() => selectTab('sentiment', 'click')}
               onKeyDown={(event) => handleTabKeyNavigation(event, 'sentiment')}
             >
-              Sentiment
+              심리
             </button>
           </div>
 
@@ -1424,29 +1384,9 @@ export default function Home() {
           </div>
         </div>
         <div className="command-meta" aria-live="polite">
-          <span className={`command-live-pill ${dataConnectionClass}`}>
-            {dataConnectionMode === 'live'
-              ? 'LIVE DATA'
-              : dataConnectionMode === 'mixed'
-                ? 'PARTIAL DATA'
-                : 'FALLBACK DATA'}
-          </span>
-          <span className="command-meta-chip">Sources {commandSourceCoverage}</span>
-          <span className="command-meta-chip">Updated {commandSyncLabel}</span>
-          <span className="command-meta-chip">Alt+R Sync</span>
-          <span className="command-meta-chip">Alt+P Period</span>
-          <span className="command-meta-chip">Alt+D/W/M/H/Y</span>
-          {showBridgeSyncHint ? (
-            <button
-              type="button"
-              className="command-refresh-btn is-compact"
-              onClick={() => refreshOverview('widget')}
-              disabled={isRefreshingData}
-              aria-label="브리지 stale 동기화"
-            >
-              Bridge stale
-            </button>
-          ) : null}
+          <span className={`command-live-pill ${dataConnectionClass}`}>{dataStatusLabel}</span>
+          <span className="command-meta-chip">반영 소스 {commandSourceCoverage}</span>
+          <span className="command-meta-chip">최근 갱신 {commandSyncLabel}</span>
           <button
             type="button"
             className="command-refresh-btn"
@@ -1456,19 +1396,11 @@ export default function Home() {
             disabled={isRefreshingData}
             aria-label="데이터 새로고침"
             aria-keyshortcuts="Alt+R"
-            title="Alt+R 단축키로 새로고침"
+            title="데이터 새로고침"
           >
             <i className={`fas fa-rotate-right ${isRefreshingData ? 'is-spinning' : ''}`} aria-hidden="true" />
-            <span>{isRefreshingData ? 'Syncing' : 'Refresh'}</span>
+            <span>{isRefreshingData ? '새로고침 중' : '새로고침'}</span>
           </button>
-        </div>
-        <div className="command-health-strip" role="status" aria-live="polite">
-          <span className={`command-health-chip ${tickerHealthClass}`}>{tickerHealthLabel}</span>
-          <span className={`command-health-chip ${macroHealthClass}`}>{macroHealthLabel}</span>
-          <span className={`command-health-chip ${bridgeHealthClass}`}>{bridgeHealthLabel}</span>
-          <span className={`command-health-chip ${bridgeHealthClass}`}>Widget Sync {bridgeRuntimeStamp}</span>
-          <span className={`command-health-chip ${bridgeHealthClass}`}>{bridgeRuntimeWidgetLabel}</span>
-          <span className={`command-health-chip ${syncHealthClass}`}>{syncHealthLabel}</span>
         </div>
       </section>
 
@@ -1638,7 +1570,7 @@ export default function Home() {
                     className="overview-widget-action"
                     aria-label="섹터 히트맵 보기"
                   >
-                    Heatmap
+                    히트맵
                   </button>
                 </header>
                 <div className="overview-breadth">
@@ -1691,7 +1623,7 @@ export default function Home() {
                   className="overview-widget-link"
                   aria-label="Liquidity 탭 열기"
                 >
-                  Open Liquidity Console
+                  자세히 보기
                 </button>
               </article>
 
@@ -1732,7 +1664,7 @@ export default function Home() {
                   className="overview-widget-link"
                   aria-label="Sentiment 탭 열기"
                 >
-                  Open Sentiment Console
+                  자세히 보기
                 </button>
               </article>
             </div>
@@ -1752,7 +1684,7 @@ export default function Home() {
                 </div>
                 <p className="overview-metric-sub">{dashboard.bankingSummary}</p>
                 <Link href={bankingRadarDetailHref} className="overview-widget-link">
-                  Open Banking Detail
+                  상세 보기
                 </Link>
               </article>
 
@@ -1770,7 +1702,7 @@ export default function Home() {
                 </div>
                 <p className="overview-metric-sub">HY {formatPercent(dashboard.hySpread, 2)} · UST10Y {formatPercent(dashboard.tenYearYield, 2)}</p>
                 <Link href={stressRadarDetailHref} className="overview-widget-link">
-                  Open Stress Detail
+                  상세 보기
                 </Link>
               </article>
             </div>
@@ -1874,10 +1806,10 @@ export default function Home() {
                 <span className={`insight-tab-badge ${dataConnectionClass}`}>{tabPanelModeLabel}</span>
                 <div className="insight-tab-actions">
                   <Link href="/radar?category=liquidity" className="insight-tab-action-link">
-                    Radar Hub
+                    레이더
                   </Link>
                   <Link href={liquidityRadarDetailHref} className="insight-tab-action-link is-primary">
-                    Open Detail
+                    상세 페이지
                   </Link>
                 </div>
               </div>
@@ -1925,10 +1857,10 @@ export default function Home() {
                 <span className={`insight-tab-badge ${dataConnectionClass}`}>{tabPanelModeLabel}</span>
                 <div className="insight-tab-actions">
                   <Link href="/radar?category=sentiment" className="insight-tab-action-link">
-                    Radar Hub
+                    레이더
                   </Link>
                   <Link href={sentimentRadarDetailHref} className="insight-tab-action-link is-primary">
-                    Open Detail
+                    상세 페이지
                   </Link>
                 </div>
               </div>

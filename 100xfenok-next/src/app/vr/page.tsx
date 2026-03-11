@@ -8,14 +8,14 @@ import {
 } from '@/lib/server/legacy-bridge';
 
 export const metadata: Metadata = {
-  title: 'VR 시스템',
-  description: 'VR 시스템 개발 자료를 모아 둔 아카이브입니다.',
+  title: 'VR 전략 가이드',
+  description: 'VR 전략 가이드와 계산기 모음입니다.',
   alternates: {
     canonical: '/vr',
   },
   openGraph: {
-    title: 'VR 시스템 아카이브 - El Fenomeno',
-    description: 'VR 시스템 개발 자료를 모아 둔 아카이브입니다.',
+    title: 'VR 전략 가이드 - El Fenomeno',
+    description: 'VR 전략 가이드와 계산기 모음입니다.',
     type: 'website',
     images: ['/favicon-96x96.png'],
   },
@@ -35,7 +35,12 @@ export default async function VRPage({ searchParams }: PageProps) {
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['vr/'] });
 
   if (safePath && legacyPublicFileExists(safePath)) {
-    return <RouteEmbedFrame src={`/${safePath}`} title="VR Detail" loading="eager" />;
+    const frameTitle = safePath.endsWith('vr-complete-system.html')
+      ? 'VR 완전 가이드'
+      : safePath.endsWith('vr-total-guide-calculator.html')
+        ? 'VR 계산기'
+        : 'VR 전략 가이드';
+    return <RouteEmbedFrame src={`/${safePath}`} title={frameTitle} loading="eager" />;
   }
 
   return (
@@ -43,7 +48,7 @@ export default async function VRPage({ searchParams }: PageProps) {
       <div className="container mx-auto p-3 sm:p-4 md:p-8">
         <header className="text-center mb-10 md:mb-16">
           <div className="vr-floating-formula mb-4 inline-block text-6xl sm:text-7xl md:mb-6 md:text-8xl">⚖️</div>
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-800 mb-4 leading-tight">VR 시스템 아카이브</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-800 mb-4 leading-tight">VR 전략 가이드</h1>
           <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
             밸류 리밸런싱(Value Rebalancing) 관련 문서와 계산기 모음<br/>
             <span className="text-indigo-600 font-semibold">수학적 원칙에 기반한 체계적 투자 시스템</span>
@@ -135,7 +140,7 @@ export default async function VRPage({ searchParams }: PageProps) {
         </div>
 
         <div className="vr-card p-6 sm:p-8 max-w-4xl mx-auto mb-12 md:mb-16">
-          <h3 className="text-2xl font-bold text-slate-800 text-center mb-6">⚖️ VR 시스템의 핵심 특징</h3>
+          <h3 className="text-2xl font-bold text-slate-800 text-center mb-6">⚖️ VR 전략의 핵심 특징</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div>
               <div className="text-4xl mb-3">🎯</div>
@@ -157,7 +162,7 @@ export default async function VRPage({ searchParams }: PageProps) {
 
         <div className="vr-card p-6 sm:p-8 text-center max-w-2xl mx-auto border-2 border-green-200">
           <div className="text-5xl mb-4">📈</div>
-          <h3 className="text-2xl font-bold text-slate-800 mb-4">VR 시스템 성과 지표</h3>
+          <h3 className="text-2xl font-bold text-slate-800 mb-4">VR 전략 성과 지표</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-3xl font-black text-green-600">49.5%</div>

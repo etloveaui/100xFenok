@@ -100,6 +100,12 @@
             let totalPages = 0;
             let currentPage = 1;
 
+            async function loadReportData(filename) {
+                const response = await fetch(`${METADATA_PATH}${filename}`);
+                if (!response.ok) throw new Error(`리포트 데이터 로딩 실패: ${filename} (${response.status})`);
+                return response.json();
+            }
+
             // --- 초기화 함수 ---
             async function initialize() {
                 try {
@@ -134,8 +140,7 @@
                 }
 
                 try {
-                    const res = await fetch(`${METADATA_PATH}${filename}`);
-                    const report = await res.json();
+                    const report = await loadReportData(filename);
 
                     featuredReportDate.textContent = `${report.displayDate} 리포트`;
                     featuredReportHeader.style.display = 'block';
@@ -169,7 +174,7 @@
 
                     featuredGrid.innerHTML = featuredHTML;
                     
-                    featuredReportLink.href = `index.html?path=${report.filePath}`;
+                    featuredReportLink.href = `/alpha-scout?path=${encodeURIComponent(report.filePath)}`;
                     featuredReportLink.setAttribute('data-path', report.filePath);
                     featuredReportLinkContainer.style.display = 'block';
 
@@ -195,14 +200,16 @@
                 }
 
                 try {
-                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
-                    const reports = await Promise.all(requests);
+                    const settled = await Promise.allSettled(pageFilenames.map(loadReportData));
+                    const reports = settled
+                        .filter(result => result.status === 'fulfilled')
+                        .map(result => result.value);
 
                     let archiveHTML = '';
                     reports.forEach(report => {
                         const p = report.archivePicks;
                         archiveHTML += `
-                            <a href="index.html?path=${report.filePath}" data-path="${report.filePath}" class="block bg-white rounded-xl p-6 card-shadow card-hover">
+                            <a href="/alpha-scout?path=${encodeURIComponent(report.filePath)}" data-path="${report.filePath}" class="block bg-white rounded-xl p-6 card-shadow card-hover">
                                 <p class="text-sm text-slate-500 mb-2">${report.displayDate}</p>
                                 <h3 class="font-bold text-lg text-slate-800 mb-4">${report.archiveTitle}</h3>
                                 <div class="pt-4 border-t border-slate-100 space-y-3 text-sm">
@@ -221,6 +228,11 @@
                                 </div>
                             </a>`;
                     });
+                    if (!archiveHTML) {
+                        archiveGrid.innerHTML = `<p class="w-full text-center text-slate-500">표시할 리포트가 없습니다.</p>`;
+                        renderPaginationControls();
+                        return;
+                    }
                     archiveGrid.innerHTML = archiveHTML;
 
                 } catch (error) {

@@ -4,10 +4,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>무한매수법 완전정복 인포그래픽 (API 연동 최종본)</title>
+    <title>무한매수법 완전정복</title>
     <meta name="description" content="무한매수법 전략을 시각화한 인포그래픽과 계산기.">
     <link rel="canonical" href="./ib-total-guide-calculator.html">
-    <meta property="og:title" content="무한매수법 완전정복 인포그래픽 (API 연동 최종본)">
+    <meta property="og:title" content="무한매수법 완전정복">
     <meta property="og:type" content="website">
     <meta property="og:image" content="${window.baseHref}favicon-96x96.png">
     <meta name="theme-color" content="#0ea5e9">
@@ -270,14 +270,11 @@
             const livePrices = { TQQQ: null, SOXL: null };
 
             async function fetchStockPrice(symbol) {
-                const proxyUrl = 'https://api.allorigins.win/get?url=';
-                const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
                 try {
-                    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                    const response = await fetch(`/api/ticker/${symbol}/`, { cache: 'no-store' });
                     if (!response.ok) throw new Error(`Network response was not ok for ${symbol}`);
                     const data = await response.json();
-                    const content = JSON.parse(data.contents);
-                    const price = content?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                    const price = Number(data?.price);
                     return price ? price.toFixed(2) : 'N/A';
                 } catch (error) {
                     console.error('Price fetch error for ' + symbol + ':', error);

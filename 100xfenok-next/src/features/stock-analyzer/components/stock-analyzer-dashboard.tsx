@@ -173,13 +173,13 @@ export function StockAnalyzerDashboard() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600">
-              STOCK ANALYZER NATIVE
+              STOCK ANALYZER
             </p>
             <h1 className="mt-1 text-xl font-black text-slate-800 sm:text-2xl">
-              Week3 Phase 6-2 Pilot Dashboard
+              Stock Analyzer Dashboard
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              기존 도구와 병행 운영. 데이터 공급/필터/차트/대시보드 모듈을 네이티브로 분리했습니다.
+              종목 탐색과 비교에 필요한 핵심 지표를 한곳에서 확인합니다.
             </p>
           </div>
 
@@ -189,13 +189,13 @@ export function StockAnalyzerDashboard() {
               onClick={() => void refresh()}
               className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
             >
-              Refresh
+              새로고침
             </button>
             <Link
               href="/tools/stock-analyzer"
               className="min-h-11 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
             >
-              Legacy View
+              기본 화면
             </Link>
           </div>
         </div>

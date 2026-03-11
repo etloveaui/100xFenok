@@ -566,7 +566,7 @@ export default function Footer() {
               {/* Center: Disclaimer / Mobile Market Status */}
               <div className="flex-1 flex justify-center min-w-0">
                 <p className="hidden md:block text-[11px] text-slate-600 truncate max-w-[400px]">
-                  모든 정보는 투자 참고용이지만, <span className="font-bold text-slate-800">손실 나면 니 탓</span> <span className="font-bold text-brand-gold">수익 나면 내 탓</span>
+                  모든 정보는 투자 참고용이며, <span className="font-bold text-slate-800">최종 판단과 책임은 본인에게 있습니다.</span>
                 </p>
                 {/* Mobile Market Status */}
                 <div className="md:hidden flex flex-col items-center gap-1">

@@ -11,7 +11,6 @@ import {
   clearAdminAuthenticated,
   clearAdminVerifyState,
   getAdminVerifyLockRemainingMs,
-  isAdminAuthenticated,
   refreshAdminAuthenticated,
   registerAdminVerifyFailure,
   setAdminAuthenticated,
