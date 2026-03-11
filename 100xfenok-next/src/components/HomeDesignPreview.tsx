@@ -217,24 +217,48 @@ const progressOptions = [
 const dockOptions = [
   {
     id: "D1",
-    title: "핵심 라우트만",
-    summary: "현재 방식. 홈, 마켓, 인사이트, 전략 계열만 노출합니다.",
-    routes: ["/", "/market", "/alpha-scout", "/posts*", "/ib", "/vr"],
-  },
-  {
-    id: "D2",
-    title: "모든 공개 페이지",
-    summary: "admin과 인증 화면만 빼고 public 라우트 전역에 표시합니다.",
-    routes: ["/", "/market", "/sectors", "/posts", "/multichart", "/radar", "/ib", "/vr"],
+    title: "공개 페이지 전역 + 버그 수정만",
+    summary: "지금 문제였던 trailing slash 버그만 잡고, 공개 페이지 전역에서 동일하게 보이게 합니다.",
+    routes: ["/", "/market/", "/posts/", "/sectors", "/ib", "/vr"],
     recommended: true,
   },
   {
+    id: "D2",
+    title: "전역 + hide on scroll 완화",
+    summary: "공개 페이지 전역 노출은 유지하되, 스크롤 중 너무 쉽게 사라지지 않게 완화합니다.",
+    routes: ["public 전역", "scroll hide 완화", "읽는 중에도 유지"],
+  },
+  {
     id: "D3",
-    title: "전역 + opt-out",
+    title: "전역 + embed만 opt-out",
     summary: "기본은 전역 노출, full-screen embed 페이지에서만 코드로 끄는 방식입니다.",
-    routes: ["public 전체", "embed/fullscreen만 opt-out"],
+    routes: ["public 전체", "embed/fullscreen만 opt-out", "정책 단순"],
   },
 ];
+
+const strongerVariants = [
+  {
+    id: "B1",
+    name: "Pulse Stack",
+    badge: "추천",
+    summary: "상단에 큰 핵심 신호를 두고, 아래 카드를 얇고 빠르게 읽히는 묶음으로 정리한 안입니다.",
+    emphasis: "큰 hero metric + 얇은 signal stack",
+  },
+  {
+    id: "B2",
+    name: "Signal Terminal",
+    badge: "강조형",
+    summary: "단말기처럼 핵심 수치를 강하게 드러내고, 상태값을 짧은 줄로 압축한 안입니다.",
+    emphasis: "dark hero + compact state rows",
+  },
+  {
+    id: "B3",
+    name: "Portfolio Board",
+    badge: "균형형",
+    summary: "카드 간 크기 차이를 키워서, 중요한 카드가 먼저 들어오게 만든 안입니다.",
+    emphasis: "비대칭 grid + clear priority",
+  },
+] as const;
 
 function toneForRow(tone?: "up" | "down" | "neutral") {
   if (tone === "up") return "text-emerald-700";
@@ -421,6 +445,239 @@ function PreviewVariant({ variant }: { variant: (typeof variantTones)[number] })
   );
 }
 
+function StrongPreviewVariant({
+  variant,
+}: {
+  variant: (typeof strongerVariants)[number];
+}) {
+  if (variant.id === "B1") {
+    return (
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">
+                {variant.id}
+              </span>
+              <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
+                {variant.badge}
+              </span>
+            </div>
+            <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">{variant.name}</h3>
+            <p className="mt-2 text-sm text-slate-600">{variant.summary}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{variant.emphasis}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-[1.6rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f6faff_58%,#ecf3ff_100%)] p-4 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.42)]">
+          <div className="rounded-[1.4rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[0_24px_44px_-30px_rgba(2,6,23,0.82)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/80">
+                  Market Regime
+                </p>
+                <h4 className="mt-3 text-3xl font-black tracking-tight">Risk On</h4>
+                <p className="mt-2 max-w-md text-sm text-white/70">확산, 유동성, 스트레스 3축이 동시에 개선되는 구간을 가장 먼저 보여주는 방식입니다.</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-right">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-200">Confidence</p>
+                <p className="mt-1 text-4xl font-black text-emerald-300">36%</p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/55">Liquidity</p>
+                <p className="mt-2 text-2xl font-black">+$27.6B</p>
+                <p className="mt-2 text-xs text-white/60">대출 흐름 개선</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/55">Sentiment</p>
+                <p className="mt-2 text-2xl font-black">28</p>
+                <p className="mt-2 text-xs text-white/60">공포 구간 유지</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/55">Stress</p>
+                <p className="mt-2 text-2xl font-black">0.16</p>
+                <p className="mt-2 text-xs text-white/60">낮은 압력</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Breadth</p>
+              <p className="mt-3 text-xl font-black text-slate-950">상승 2 · 하락 9</p>
+              <p className="mt-2 text-sm text-slate-600">강한 섹터와 약한 섹터를 두 묶음으로 빠르게 확인</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Funding Pulse</p>
+              <div className="mt-3 flex h-10 items-end gap-2 rounded-xl border border-emerald-100 bg-emerald-50/70 px-2 py-2">
+                <span className="h-[34%] flex-1 rounded-t-md bg-gradient-to-t from-rose-600 to-orange-400" />
+                <span className="h-[52%] flex-1 rounded-t-md bg-gradient-to-t from-emerald-700 to-emerald-400" />
+                <span className="h-[68%] flex-1 rounded-t-md bg-gradient-to-t from-emerald-700 to-emerald-400" />
+                <span className="h-[46%] flex-1 rounded-t-md bg-gradient-to-t from-emerald-700 to-emerald-400" />
+              </div>
+              <p className="mt-2 text-sm text-slate-600">예대율 71.5%</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Risk Appetite</p>
+              <div className="mt-3 space-y-2 text-sm">
+                <div className="flex items-center justify-between"><span className="text-slate-500">VIX</span><strong className="text-emerald-700">24.93 높음</strong></div>
+                <div className="flex items-center justify-between"><span className="text-slate-500">Put/Call</span><strong className="text-slate-800">0.84 중립</strong></div>
+                <div className="flex items-center justify-between"><span className="text-slate-500">Crypto F&G</span><strong className="text-amber-700">13 극단적 공포</strong></div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Stress Guard</p>
+              <p className="mt-3 text-xl font-black text-slate-950">안정</p>
+              <p className="mt-2 text-sm text-slate-600">연체율 1.47% · 자본비율 14.17%</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (variant.id === "B2") {
+    return (
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">
+                {variant.id}
+              </span>
+              <span className="inline-flex rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+                {variant.badge}
+              </span>
+            </div>
+            <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">{variant.name}</h3>
+            <p className="mt-2 text-sm text-slate-600">{variant.summary}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{variant.emphasis}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-[1.6rem] border border-slate-900 bg-slate-950 p-5 text-white shadow-[0_28px_46px_-32px_rgba(2,6,23,0.9)]">
+            <div className="flex items-end justify-between gap-4 border-b border-white/10 pb-4">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/45">Funding Pulse</p>
+                <p className="mt-3 text-5xl font-black tracking-tight">+$27.6B</p>
+                <p className="mt-2 text-sm text-white/65">대출 흐름이 개선되고 있습니다.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-right">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/45">Stress</p>
+                <p className="mt-1 text-3xl font-black text-emerald-300">0.16</p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/45">Sentiment</p>
+                <p className="mt-2 text-3xl font-black">28</p>
+                <p className="mt-2 text-xs text-white/60">공포 구간</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/45">Crypto F&G</p>
+                <p className="mt-2 text-3xl font-black">13</p>
+                <p className="mt-2 text-xs text-white/60">극단적 공포</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.6rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4 shadow-[0_18px_36px_-28px_rgba(15,23,42,0.42)]">
+            <div className="space-y-3">
+              {[
+                { label: "Breadth", value: "상승 2 / 하락 9", tone: "text-blue-700" },
+                { label: "Regime", value: "Risk On · 36%", tone: "text-emerald-700" },
+                { label: "Banking", value: "안정", tone: "text-emerald-700" },
+                { label: "HY / UST10Y", value: "3.13% / 4.15%", tone: "text-slate-900" },
+              ].map((row) => (
+                <div key={row.label} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">{row.label}</p>
+                  <p className={`mt-2 text-xl font-black ${row.tone}`}>{row.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">
+              {variant.id}
+            </span>
+            <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
+              {variant.badge}
+            </span>
+          </div>
+          <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">{variant.name}</h3>
+          <p className="mt-2 text-sm text-slate-600">{variant.summary}</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{variant.emphasis}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-[1.6rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_55%,#eef4ff_100%)] p-5 shadow-[0_20px_38px_-30px_rgba(15,23,42,0.46)]">
+            <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-blue-700">
+              Breadth Expansion
+            </span>
+            <h4 className="mt-4 text-3xl font-black tracking-tight text-slate-950">상승 2 / 하락 9</h4>
+            <p className="mt-2 text-sm text-slate-600">강세와 약세를 한 카드에서 먼저 읽게 하고, 세부 섹터는 아래 rail로 흘려 보냅니다.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {["XLK +1.6%", "XLY +0.1%", "XLB -4.0%", "XLP -2.3%"].map((chip) => (
+                <span key={chip} className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-sm">
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-4">
+            <div className="rounded-[1.45rem] border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Funding</p>
+              <p className="mt-3 text-3xl font-black text-brand-navy">+$27.6B</p>
+              <p className="mt-2 text-sm text-slate-600">예대율 71.5%</p>
+            </div>
+            <div className="rounded-[1.45rem] border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Stress</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">0.16</p>
+              <p className="mt-2 text-sm text-slate-600">HY 3.13% · UST10Y 4.15%</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[1.6rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[0_24px_44px_-32px_rgba(2,6,23,0.84)]">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-white/45">Investor Pulse</p>
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="text-sm text-white/55">VIX</p>
+              <p className="mt-1 text-2xl font-black text-emerald-300">24.93</p>
+            </div>
+            <div>
+              <p className="text-sm text-white/55">Put/Call</p>
+              <p className="mt-1 text-2xl font-black">0.84</p>
+            </div>
+            <div>
+              <p className="text-sm text-white/55">Crypto F&G</p>
+              <p className="mt-1 text-2xl font-black text-amber-300">13</p>
+            </div>
+          </div>
+          <button type="button" className="mt-6 flex min-h-11 w-full items-center justify-between rounded-2xl border border-white/10 bg-white text-sm font-black text-slate-950 px-4">
+            <span>심리 흐름 열기</span>
+            <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ProgressOptionCard({
   title,
   summary,
@@ -513,6 +770,19 @@ export default function HomeDesignPreview() {
         ))}
       </section>
 
+      <section className="space-y-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">1-B. Stronger Variants</p>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">B 기반 stronger preview</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            기존 A/B/C가 약하게 느껴져서, 구조 차이가 더 크게 보이는 stronger 안을 따로 만들었습니다.
+          </p>
+        </div>
+        {strongerVariants.map((variant) => (
+          <StrongPreviewVariant key={variant.id} variant={variant} />
+        ))}
+      </section>
+
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">2. Progress Bar Position</p>
@@ -530,10 +800,10 @@ export default function HomeDesignPreview() {
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">3. Mobile Dock Scope</p>
-          <h2 className="mt-2 text-2xl font-black text-slate-950">모바일 하단 dock 범위안</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">3. Mobile Dock Consistency</p>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">모바일 하단 dock 정리안</h2>
           <p className="mt-2 text-sm text-slate-600">
-            지금은 일부 공개 페이지에만 보입니다. 여기서 범위를 고르면 그 규칙으로 통일합니다.
+            현재 문제는 범위보다도 페이지마다 보였다 안 보였다 하는 일관성입니다. trailing slash 버그는 수정했고, 아래는 그 이후 정책안입니다.
           </p>
         </div>
         <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
