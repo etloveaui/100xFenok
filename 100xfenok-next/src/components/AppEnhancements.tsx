@@ -4,20 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-type InstallChoice = {
-  outcome: 'accepted' | 'dismissed';
-  platform: string;
-};
-
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<InstallChoice>;
-};
-
-type NavigatorWithStandalone = Navigator & {
-  standalone?: boolean;
-};
-
 type NetworkInformationLike = {
   effectiveType?: string;
   saveData?: boolean;
@@ -28,8 +14,6 @@ type NetworkInformationLike = {
 type NavigatorWithConnection = Navigator & {
   connection?: NetworkInformationLike;
 };
-
-const INSTALL_HINT_DISMISS_KEY = 'fenok_install_hint_dismissed_v1';
 
 const dockItems = [
   {
@@ -89,35 +73,6 @@ function isEditableTarget(target: EventTarget | null) {
   );
 }
 
-function getIsStandaloneMode() {
-  if (typeof window === 'undefined') return false;
-  const nav = window.navigator as NavigatorWithStandalone;
-  return window.matchMedia('(display-mode: standalone)').matches || nav.standalone === true;
-}
-
-function getIsIOS() {
-  if (typeof window === 'undefined') return false;
-  return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-}
-
-function getDismissedInstallHint() {
-  if (typeof window === 'undefined') return false;
-  try {
-    return window.localStorage.getItem(INSTALL_HINT_DISMISS_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function dismissInstallHint() {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(INSTALL_HINT_DISMISS_KEY, '1');
-  } catch {
-    // no-op
-  }
-}
-
 function getConnection() {
   if (typeof window === 'undefined') return null;
   return (window.navigator as NavigatorWithConnection).connection ?? null;
@@ -142,8 +97,6 @@ export default function AppEnhancements() {
   const [isOnline, setIsOnline] = useState(true);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallButton, setShowInstallButton] = useState(false);
   const [isDataSaver, setIsDataSaver] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [dockCollapsed, setDockCollapsed] = useState(false);
@@ -151,7 +104,6 @@ export default function AppEnhancements() {
   const [isDockLockPinned, setIsDockLockPinned] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [showIOSHint, setShowIOSHint] = useState(false);
 
   const armDockLock = useCallback((durationMs: number) => {
     dockNavLockUntilRef.current = Date.now() + durationMs;
@@ -184,11 +136,6 @@ export default function AppEnhancements() {
     const syncClientState = () => {
       setIsOnline(window.navigator.onLine);
       setIsDataSaver(getIsDataSaverMode());
-      setShowIOSHint(
-        !getDismissedInstallHint() &&
-          !getIsStandaloneMode() &&
-          getIsIOS(),
-      );
 
       const doc = document.documentElement;
       const scrollableHeight = Math.max(1, doc.scrollHeight - window.innerHeight);
@@ -224,21 +171,6 @@ export default function AppEnhancements() {
       lastScrollYRef.current = currentY;
     };
 
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      if (getDismissedInstallHint()) return;
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
-      setShowInstallButton(true);
-      setShowIOSHint(false);
-    };
-
-    const handleAppInstalled = () => {
-      setDeferredPrompt(null);
-      setShowInstallButton(false);
-      setShowIOSHint(false);
-      dismissInstallHint();
-    };
-
     const handleFocusIn = (event: FocusEvent) => {
       if (isEditableTarget(event.target)) {
         setIsInputFocused(true);
@@ -259,8 +191,6 @@ export default function AppEnhancements() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
     window.addEventListener('focusin', handleFocusIn);
     window.addEventListener('focusout', handleFocusOut);
 
@@ -268,8 +198,6 @@ export default function AppEnhancements() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('focusin', handleFocusIn);
       window.removeEventListener('focusout', handleFocusOut);
     };
@@ -498,24 +426,6 @@ export default function AppEnhancements() {
     [scrollProgress],
   );
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
-    setShowInstallButton(false);
-    if (choice.outcome === 'accepted') {
-      dismissInstallHint();
-      setShowIOSHint(false);
-    }
-  };
-
-  const handleDismissHint = () => {
-    dismissInstallHint();
-    setShowInstallButton(false);
-    setShowIOSHint(false);
-  };
-
   const handleBackToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -549,8 +459,8 @@ export default function AppEnhancements() {
     !isKeyboardOpen &&
     !isInputFocused &&
     !isAdminModalOpen &&
-    (isDataSaver || !isOnline || showInstallButton || showIOSHint || showBackToTop);
-  const stackCollapsed = dockCollapsed && !isDockNavigating && isOnline && !showInstallButton && !showIOSHint;
+    (isDataSaver || !isOnline || showBackToTop);
+  const stackCollapsed = dockCollapsed && !isDockNavigating && isOnline;
 
   return (
     <>
@@ -572,45 +482,6 @@ export default function AppEnhancements() {
           {!isOnline ? (
             <div className="app-float-pill app-float-pill-alert" aria-live="polite">
               OFFLINE MODE
-            </div>
-          ) : null}
-
-          {showInstallButton ? (
-            <div className="app-float-inline">
-              <button
-                type="button"
-                className="app-float-pill app-float-pill-primary"
-                onClick={() => {
-                  void handleInstallClick();
-                }}
-                aria-label="앱 설치"
-              >
-                앱 설치
-              </button>
-              <button
-                type="button"
-                className="app-float-dismiss"
-                onClick={handleDismissHint}
-                aria-label="설치 힌트 닫기"
-              >
-                ×
-              </button>
-            </div>
-          ) : null}
-
-          {showIOSHint ? (
-            <div className="app-float-inline">
-              <div className="app-float-pill app-float-pill-muted">
-                iOS: 공유 → 홈 화면 추가
-              </div>
-              <button
-                type="button"
-                className="app-float-dismiss"
-                onClick={handleDismissHint}
-                aria-label="iOS 설치 힌트 닫기"
-              >
-                ×
-              </button>
             </div>
           ) : null}
 

@@ -31,6 +31,20 @@ type FooterTickerQuotePayload = {
   marketState?: string;
 };
 
+type InstallChoice = {
+  outcome: 'accepted' | 'dismissed';
+  platform: string;
+};
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<InstallChoice>;
+};
+
+type NavigatorWithStandalone = Navigator & {
+  standalone?: boolean;
+};
+
 const marketStatusConfig: Record<FooterMarketStatus, { label: string; className: string; tickerLabel: string }> = {
   regular: { label: 'MARKET OPEN', className: 'market-regular', tickerLabel: 'Market data live' },
   pre: { label: 'MARKET PRE', className: 'market-pre', tickerLabel: 'Pre-market session' },
@@ -120,6 +134,15 @@ function formatTickerChange(value: number): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+function canInstallOnIOS() {
+  if (typeof window === 'undefined') return false;
+  const nav = window.navigator as NavigatorWithStandalone;
+  const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches || nav.standalone === true;
+  return isIOS && !isStandalone;
+}
+
 function getMarketStatus(date = new Date()): FooterMarketStatus {
   const { day, time } = getETSnapshot(date);
 
@@ -143,6 +166,8 @@ export default function Footer() {
   const [hasAdminSession, setHasAdminSession] = useState(false);
   const [adminLockRemainingMs, setAdminLockRemainingMs] = useState(0);
   const [tickerItems, setTickerItems] = useState<FooterTickerItem[]>(() => getDefaultFooterTickerItems());
+  const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallAction, setShowInstallAction] = useState(false);
   const adminInputRef = useRef<HTMLInputElement>(null);
   const adminLockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const adminModalPanelRef = useRef<HTMLDivElement>(null);
@@ -199,6 +224,34 @@ export default function Footer() {
     updateMarketStatus();
     const interval = setInterval(updateMarketStatus, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncInstallState = () => {
+      setShowInstallAction(canInstallOnIOS());
+    };
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event as BeforeInstallPromptEvent);
+      setShowInstallAction(true);
+    };
+
+    const handleAppInstalled = () => {
+      setInstallPromptEvent(null);
+      setShowInstallAction(false);
+    };
+
+    syncInstallState();
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
 
   useEffect(() => {
@@ -396,8 +449,22 @@ export default function Footer() {
     showToastMessage('알림 없음');
   };
 
-  const handleHelpClick = () => {
-    showToastMessage('도움말: 100xFenok 시장 모니터링 도구');
+  const handleInstallClick = async () => {
+    if (installPromptEvent) {
+      await installPromptEvent.prompt();
+      const choice = await installPromptEvent.userChoice;
+      setInstallPromptEvent(null);
+      setShowInstallAction(false);
+      showToastMessage(choice.outcome === 'accepted' ? '앱 설치를 진행합니다.' : '앱 설치가 취소되었습니다.');
+      return;
+    }
+
+    if (canInstallOnIOS()) {
+      showToastMessage('iPhone/iPad: 공유 -> 홈 화면에 추가');
+      return;
+    }
+
+    showToastMessage('이 브라우저에서는 앱 설치를 지원하지 않습니다.');
   };
 
   const navigateToAdmin = useCallback(() => {
@@ -610,11 +677,18 @@ export default function Footer() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleHelpClick}
-                  className="hidden sm:flex w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
-                  aria-label="Help"
+                  onClick={() => {
+                    void handleInstallClick();
+                  }}
+                  className={`w-11 h-11 rounded-lg border flex items-center justify-center transition-all duration-200 ${
+                    showInstallAction
+                      ? 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-brand-interactive'
+                      : 'bg-slate-50/60 border-slate-200 text-slate-300'
+                  }`}
+                  aria-label="앱 설치"
+                  disabled={!showInstallAction}
                 >
-                  <i className="fas fa-question text-sm" />
+                  <i className="fas fa-download text-sm" />
                 </button>
               </div>
             </div>

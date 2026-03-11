@@ -3050,7 +3050,7 @@ main {
   right: 0.75rem;
   bottom: calc(3.45rem + env(safe-area-inset-bottom));
   z-index: 44;
-  display: grid;
+  display: none;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.35rem;
   padding: 0.35rem;
@@ -3104,6 +3104,18 @@ main {
 .app-mobile-dock-item:focus-visible {
   outline: 2px solid #1b73d3;
   outline-offset: 1px;
+}
+
+@media (max-width: 767px) {
+  .app-mobile-dock {
+    display: grid;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-mobile-dock {
+    display: none !important;
+  }
 }
 
 @media (min-width: 520px) and (max-width: 767px) {

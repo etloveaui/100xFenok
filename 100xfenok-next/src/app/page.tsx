@@ -1,14 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type TouchEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import WidgetConsoleFrame from '@/components/WidgetConsoleFrame';
-
-type TabId = 'overview' | 'sectors' | 'liquidity' | 'sentiment';
-type TabMotion = 'next' | 'prev' | 'direct';
-type TabIntentReason = 'click' | 'swipe' | 'keyboard' | 'shortcut';
-type PeriodIntentReason = 'menu' | 'shortcut';
-type RefreshIntentReason = 'button' | 'shortcut' | 'stale-focus' | 'widget';
 
 type NumberPoint = {
   date: string;
@@ -24,20 +17,6 @@ type PutCallPoint = {
   date: string;
   value: number;
   rating?: string;
-};
-
-type AaiiPoint = {
-  date: string;
-  bullish?: number;
-  bearish?: number;
-  neutral?: number;
-  spread?: number;
-};
-
-type CftcPoint = {
-  date: string;
-  net?: number;
-  value?: number;
 };
 
 type CryptoFearGreedPoint = {
@@ -102,31 +81,7 @@ type LiquidityBar = {
   height: number;
 };
 
-type SentimentWidgetPayload = {
-  indicators: {
-    vix?: number;
-    move?: number;
-    cnn_fg?: number;
-    putcall_ratio?: number;
-    aaii_bearish?: number;
-    aaii_spread?: number;
-    cftc_net?: number;
-    crypto_fg?: number;
-  };
-};
-
-type LiquidityWidgetPayload = {
-  netFlow?: number;
-  netLiquidityDelta?: number;
-  weeklyNetFlow?: number;
-  loanDepositRatio?: number;
-  source?: string;
-};
-
-type WidgetBridgeFreshness = 'IDLE' | 'HOT' | 'WARM' | 'STALE';
-
 type BankingTone = 'stable' | 'watch' | 'stress';
-
 type StressTone = 'low' | 'medium' | 'high';
 
 type DashboardSnapshot = {
@@ -159,49 +114,21 @@ type DashboardSnapshot = {
   hySpread: number;
 };
 
-const periods = ['1D', '1W', '1M', 'YTD', '1Y'];
-const PERIOD_SHORTCUT_MAP: Record<string, string> = {
-  d: '1D',
-  w: '1W',
-  m: '1M',
-  h: 'YTD',
-  y: '1Y',
-};
-const TAB_SEQUENCE: TabId[] = ['overview', 'sectors', 'liquidity', 'sentiment'];
-const TAB_LABELS: Record<TabId, string> = {
-  overview: '개요',
-  sectors: '섹터',
-  liquidity: '유동성',
-  sentiment: '심리',
-};
-const TAB_BUTTON_IDS: Record<TabId, string> = {
-  overview: 'tab-overview',
-  sectors: 'tab-sectors',
-  liquidity: 'tab-liquidity',
-  sentiment: 'tab-sentiment',
-};
-const TAB_PANEL_IDS: Record<TabId, string> = {
-  overview: 'panel-overview',
-  sectors: 'panel-sectors',
-  liquidity: 'panel-liquidity',
-  sentiment: 'panel-sentiment',
-};
-const SWIPE_HINT_DISMISS_KEY = 'fenok_swipe_hint_dismissed_v1';
 const CLIENT_FETCH_TIMEOUT_MS = 5500;
 const FOCUS_REFRESH_STALE_MS = 3 * 60 * 1000;
 
 const SECTOR_DEFINITIONS: SectorDefinition[] = [
   { key: 'information_technology', etf: 'XLK', name: 'Tech', fallback: 0.0234 },
-  { key: 'financials', etf: 'XLF', name: 'Financials', fallback: 0.0156 },
-  { key: 'health_care', etf: 'XLV', name: 'Health Care', fallback: 0.0089 },
-  { key: 'energy', etf: 'XLE', name: 'Energy', fallback: -0.0123 },
-  { key: 'industrials', etf: 'XLI', name: 'Industrials', fallback: 0.0045 },
-  { key: 'communication_services', etf: 'XLC', name: 'Communication', fallback: 0.0112 },
-  { key: 'consumer_discretionary', etf: 'XLY', name: 'Discretionary', fallback: -0.0067 },
-  { key: 'consumer_staples', etf: 'XLP', name: 'Staples', fallback: 0.0012 },
-  { key: 'real_estate', etf: 'XLRE', name: 'Real Estate', fallback: -0.0034 },
-  { key: 'materials', etf: 'XLB', name: 'Materials', fallback: 0.0078 },
-  { key: 'utilities', etf: 'XLU', name: 'Utilities', fallback: -0.0189 },
+  { key: 'financials', etf: 'XLF', name: '금융', fallback: 0.0156 },
+  { key: 'health_care', etf: 'XLV', name: '헬스케어', fallback: 0.0089 },
+  { key: 'energy', etf: 'XLE', name: '에너지', fallback: -0.0123 },
+  { key: 'industrials', etf: 'XLI', name: '산업재', fallback: 0.0045 },
+  { key: 'communication_services', etf: 'XLC', name: '커뮤니케이션', fallback: 0.0112 },
+  { key: 'consumer_discretionary', etf: 'XLY', name: '자유소비재', fallback: -0.0067 },
+  { key: 'consumer_staples', etf: 'XLP', name: '필수소비재', fallback: 0.0012 },
+  { key: 'real_estate', etf: 'XLRE', name: '부동산', fallback: -0.0034 },
+  { key: 'materials', etf: 'XLB', name: '소재', fallback: 0.0078 },
+  { key: 'utilities', etf: 'XLU', name: '유틸리티', fallback: -0.0189 },
 ];
 
 const QUICK_INDEX_DEFINITIONS: QuickIndexDefinition[] = [
@@ -211,7 +138,7 @@ const QUICK_INDEX_DEFINITIONS: QuickIndexDefinition[] = [
 
 const DEFAULT_DASHBOARD: DashboardSnapshot = {
   fearGreedScore: 72,
-  fearGreedLabel: 'GREED',
+  fearGreedLabel: '탐욕',
   sectorRows: SECTOR_DEFINITIONS.map((sector) => ({
     key: sector.key,
     etf: sector.etf,
@@ -236,21 +163,21 @@ const DEFAULT_DASHBOARD: DashboardSnapshot = {
     marketState: null,
   })),
   liquidityFlow: 87,
-  liquidityFlowLabel: 'Bank credit flow acceleration',
+  liquidityFlowLabel: '대출 흐름이 개선되고 있습니다.',
   liquidityBars: [60, 75, 90, 70, 85, 100].map((height) => ({ delta: 1, height })),
   loanDepositRatio: 71.5,
   vixValue: 14.2,
-  vixLabel: 'Low',
+  vixLabel: '낮음',
   putCallValue: 0.78,
-  putCallLabel: 'Neutral',
+  putCallLabel: '중립',
   cryptoFearGreed: 78,
-  cryptoLabel: 'Greed',
+  cryptoLabel: '탐욕',
   bankingTone: 'stable',
-  bankingLabel: 'Stable',
-  bankingSummary: 'Delinq 1.47% · Tier1 14.17% · LDR 71.5%',
+  bankingLabel: '안정',
+  bankingSummary: '연체율 1.47% · 자본비율 14.17% · 예대율 71.5%',
   stressScore: 0.12,
   stressTone: 'low',
-  stressLabel: 'Low Risk',
+  stressLabel: '낮음',
   tenYearYield: 4.08,
   hySpread: 2.88,
 };
@@ -273,10 +200,6 @@ function average(values: number[]): number {
   return values.reduce((acc, item) => acc + item, 0) / values.length;
 }
 
-function optionalNumber(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null;
-}
-
 function formatSignedBillions(value: number): string {
   const absValue = Math.abs(value);
   const precision = absValue >= 100 ? 0 : 1;
@@ -294,43 +217,41 @@ function formatPercent(value: number, digits = 1): string {
   return `${value.toFixed(digits)}%`;
 }
 
-function formatTimeLabel(value: string | null): string {
-  if (!value) return '--';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '--';
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-}
-
 function getFearGreedLabel(score: number): string {
-  if (score >= 75) return 'EXTREME GREED';
-  if (score >= 55) return 'GREED';
-  if (score >= 45) return 'NEUTRAL';
-  if (score >= 25) return 'FEAR';
-  return 'EXTREME FEAR';
+  if (score >= 75) return '극단적 탐욕';
+  if (score >= 55) return '탐욕';
+  if (score >= 45) return '중립';
+  if (score >= 25) return '공포';
+  return '극단적 공포';
 }
 
 function getVixLabel(value: number): string {
-  if (value < 15) return 'Low';
-  if (value < 22) return 'Moderate';
-  if (value < 30) return 'Elevated';
-  return 'High';
+  if (value < 15) return '낮음';
+  if (value < 22) return '보통';
+  if (value < 30) return '높음';
+  return '매우 높음';
 }
 
 function getPutCallLabel(value: number, rating?: string): string {
   if (rating && rating.trim().length > 0) {
-    return rating
-      .toLowerCase()
-      .split(' ')
-      .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
-      .join(' ');
+    const normalized = rating.trim().toLowerCase();
+    if (normalized.includes('greed')) return '탐욕';
+    if (normalized.includes('fear')) return '공포';
+    if (normalized.includes('neutral')) return '중립';
+    return rating.trim();
   }
-  if (value < 0.7) return 'Greed';
-  if (value <= 1) return 'Neutral';
-  return 'Fear';
+  if (value < 0.7) return '탐욕';
+  if (value <= 1) return '중립';
+  return '공포';
+}
+
+function getCryptoLabel(label?: string | null): string {
+  const normalized = (label || '').trim().toLowerCase();
+  if (normalized.includes('extreme fear')) return '극단적 공포';
+  if (normalized.includes('fear')) return '공포';
+  if (normalized.includes('neutral')) return '중립';
+  if (normalized.includes('greed')) return '탐욕';
+  return label?.trim() || '중립';
 }
 
 function getStressTone(score: number): StressTone {
@@ -348,53 +269,16 @@ function getMarketStateMeta(marketState: string | null): { label: string; classN
   return null;
 }
 
-function getHeatmapToneClass(change: number, horizon: '1D' | '1M'): string {
-  const strongPositive = horizon === '1D' ? 0.012 : 0.025;
-  const positive = horizon === '1D' ? 0.007 : 0.012;
-  const softPositive = horizon === '1D' ? 0.003 : 0.006;
-  const strongNegative = horizon === '1D' ? -0.012 : -0.02;
-  const negative = horizon === '1D' ? -0.007 : -0.012;
-  const softNegative = horizon === '1D' ? -0.003 : -0.006;
-
-  if (change >= strongPositive) return 'heatmap-positive-strong';
-  if (change >= positive) return 'heatmap-positive';
-  if (change >= softPositive) return 'heatmap-positive-soft';
-  if (change > 0) return 'heatmap-positive-faint';
-  if (change <= strongNegative) return 'heatmap-negative-strong';
-  if (change <= negative) return 'heatmap-negative';
-  if (change <= softNegative) return 'heatmap-negative-soft';
-  if (change < 0) return 'heatmap-negative-faint';
-  return 'heatmap-neutral';
+function getRegimeLabel(score: number): string {
+  if (score >= 0.62) return '위험 선호';
+  if (score >= 0.45) return '중립';
+  return '방어';
 }
 
-function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  const tagName = target.tagName.toLowerCase();
-  return (
-    tagName === 'input' ||
-    tagName === 'textarea' ||
-    tagName === 'select' ||
-    target.isContentEditable
-  );
-}
-
-function normalizeBridgeFreshness(value: unknown): WidgetBridgeFreshness {
-  if (value === 'HOT' || value === 'WARM' || value === 'STALE') return value;
-  return 'IDLE';
-}
-
-function toEpochMs(value: string | null | undefined): number {
-  if (!value) return 0;
-  const parsed = new Date(value).getTime();
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function isTabId(value: string): value is TabId {
-  return TAB_SEQUENCE.includes(value as TabId);
-}
-
-function isValidPeriod(value: string): boolean {
-  return periods.includes(value);
+function getRegimeClass(score: number): string {
+  if (score >= 0.62) return 'is-risk-on';
+  if (score >= 0.45) return 'is-balanced';
+  return 'is-risk-off';
 }
 
 async function fetchJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Promise<T | null> {
@@ -513,7 +397,7 @@ function buildDashboardSnapshot(payload: {
 
   const cryptoLatest = payload.crypto?.[payload.crypto.length - 1];
   const cryptoFearGreed = safeNumber(cryptoLatest?.value, fallback.cryptoFearGreed);
-  const cryptoLabel = cryptoLatest?.classification?.trim() || fallback.cryptoLabel;
+  const cryptoLabel = getCryptoLabel(cryptoLatest?.classification) || fallback.cryptoLabel;
 
   const loans = payload.weeklyBanking?.series?.TOTLL ?? [];
   const deposits = payload.weeklyBanking?.series?.DPSACBW027SBOG ?? [];
@@ -543,8 +427,8 @@ function buildDashboardSnapshot(payload: {
     : fallback.loanDepositRatio;
 
   const liquidityFlowLabel = liquidityFlow >= 0
-    ? 'Bank credit flow acceleration'
-    : 'Bank credit flow deceleration';
+    ? '대출 흐름이 개선되고 있습니다.'
+    : '대출 흐름이 둔화되고 있습니다.';
 
   const delinquency = lastValue(payload.quarterlyBanking?.series?.DRALACBN, 1.47);
   const tier1 = lastValue(payload.quarterlyBanking?.series?.BOGZ1FL010000016Q, 14.17);
@@ -555,16 +439,16 @@ function buildDashboardSnapshot(payload: {
   const bankingSeverity = Math.max(delinquencySeverity, tier1Severity, ratioSeverity);
 
   let bankingTone: BankingTone = 'stable';
-  let bankingLabel = 'Stable';
+  let bankingLabel = '안정';
   if (bankingSeverity === 1) {
     bankingTone = 'watch';
-    bankingLabel = 'Watch';
+    bankingLabel = '주의';
   } else if (bankingSeverity >= 2) {
     bankingTone = 'stress';
-    bankingLabel = 'Stress';
+    bankingLabel = '경계';
   }
 
-  const bankingSummary = `Delinq ${delinquency.toFixed(2)}% · Tier1 ${tier1.toFixed(2)}% · LDR ${loanDepositRatio.toFixed(1)}%`;
+  const bankingSummary = `연체율 ${delinquency.toFixed(2)}% · 자본비율 ${tier1.toFixed(2)}% · 예대율 ${loanDepositRatio.toFixed(1)}%`;
 
   const dgs10Series = payload.dailyBanking?.series?.DGS10 ?? [];
   const hySeries = payload.dailyBanking?.series?.BAMLH0A0HYM2 ?? [];
@@ -579,7 +463,7 @@ function buildDashboardSnapshot(payload: {
   const rateNormalized = clamp(tenYearDeviation / 0.8, 0, 1);
   const stressScore = Number((hyNormalized * 0.8 + rateNormalized * 0.2).toFixed(2));
   const stressTone = getStressTone(stressScore);
-  const stressLabel = stressTone === 'low' ? 'Low Risk' : stressTone === 'medium' ? 'Guard' : 'High Risk';
+  const stressLabel = stressTone === 'low' ? '낮음' : stressTone === 'medium' ? '주의' : '높음';
 
   return {
     fearGreedScore,
@@ -613,62 +497,16 @@ function buildDashboardSnapshot(payload: {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
-  const [tabMotion, setTabMotion] = useState<TabMotion>('direct');
-  const [activePeriod, setActivePeriod] = useState('1W');
-  const [isPeriodMenuOpen, setIsPeriodMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
-  const [isRefreshingData, setIsRefreshingData] = useState(false);
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
-  const [syncTick, setSyncTick] = useState(() => Date.now());
-  const [liveSourceStats, setLiveSourceStats] = useState<{ live: number; total: number }>({ live: 0, total: 0 });
-  const [liquidityWidgetPayload, setLiquidityWidgetPayload] = useState<LiquidityWidgetPayload | null>(null);
-  const [sentimentWidgetPayload, setSentimentWidgetPayload] = useState<SentimentWidgetPayload | null>(null);
-  const [, setWidgetBridgeRuntime] = useState<{
-    freshness: WidgetBridgeFreshness;
-    dataState: string;
-    widgetId: string | null;
-    at: string | null;
-  }>({
-    freshness: 'IDLE',
-    dataState: 'LOCAL',
-    widgetId: null,
-    at: null,
-  });
-  const [showSwipeHint, setShowSwipeHint] = useState(true);
-  const periodMenuRef = useRef<HTMLDivElement>(null);
-  const touchStartXRef = useRef<number | null>(null);
-  const touchStartYRef = useRef<number | null>(null);
   const loadInFlightRef = useRef(false);
   const isMountedRef = useRef(true);
   const lastSyncedEpochRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const requestedTab = params.get('tab');
-    const requestedPeriod = params.get('period');
-
-    if (requestedTab && isTabId(requestedTab)) {
-      setActiveTab(requestedTab);
-    }
-
-    if (requestedPeriod && isValidPeriod(requestedPeriod)) {
-      setActivePeriod(requestedPeriod);
-    }
-
-    try {
-      setShowSwipeHint(window.localStorage.getItem(SWIPE_HINT_DISMISS_KEY) !== '1');
-    } catch {
-      setShowSwipeHint(true);
-    }
-  }, []);
 
   const loadOverviewData = useCallback(async () => {
     if (loadInFlightRef.current) {
       return;
     }
     loadInFlightRef.current = true;
-    setIsRefreshingData(true);
 
     try {
       const tickerSymbols = [
@@ -679,9 +517,6 @@ export default function Home() {
         fetchJson<CnnFearGreedPoint[]>('/data/sentiment/cnn-fear-greed.json'),
         fetchJson<NumberPoint[]>('/data/sentiment/vix.json'),
         fetchJson<PutCallPoint[]>('/data/sentiment/cnn-put-call.json'),
-        fetchJson<NumberPoint[]>('/data/sentiment/move.json'),
-        fetchJson<AaiiPoint[]>('/data/sentiment/aaii.json'),
-        fetchJson<CftcPoint[]>('/data/sentiment/cftc-sp500.json'),
         fetchJson<CryptoFearGreedPoint[]>('/data/sentiment/crypto-fear-greed.json'),
         fetchJson<BenchmarksSummaryPayload>('/data/benchmarks/summaries.json'),
         fetchJson<FredSeriesPayload>('/data/fred-banking-weekly.json'),
@@ -694,7 +529,8 @@ export default function Home() {
           quote: await fetchJson<TickerQuotePayload>(`/api/ticker/${symbol}`, 3200),
         })),
       );
-      const [[fearGreed, vix, putCall, move, aaii, cftc, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking], tickerSettled] = await Promise.all([
+
+      const [[fearGreed, vix, putCall, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking], tickerSettled] = await Promise.all([
         dataPromise,
         tickerPromise,
       ]);
@@ -732,83 +568,14 @@ export default function Home() {
         indexTicker,
       });
 
-      const sourcePayloads = [
-        fearGreed,
-        vix,
-        putCall,
-        move,
-        aaii,
-        cftc,
-        crypto,
-        summaries,
-        weeklyBanking,
-        quarterlyBanking,
-        dailyBanking,
-        ...Object.values(sectorTicker),
-        ...Object.values(indexTicker),
-      ];
-      const liveSourceCount = sourcePayloads.filter((payload) => payload !== null).length;
-
       if (!isMountedRef.current) {
         return;
       }
 
-      const latestMove = Array.isArray(move) && move.length > 0
-        ? optionalNumber(move[move.length - 1]?.value)
-        : null;
-      const latestAaii = Array.isArray(aaii) && aaii.length > 0 ? aaii[aaii.length - 1] : null;
-      const latestCftc = Array.isArray(cftc) && cftc.length > 0 ? cftc[cftc.length - 1] : null;
-      const aaiiBearish = optionalNumber(latestAaii?.bearish);
-      const aaiiBullish = optionalNumber(latestAaii?.bullish);
-      const aaiiSpread = optionalNumber(latestAaii?.spread)
-        ?? (aaiiBullish !== null && aaiiBearish !== null ? aaiiBullish - aaiiBearish : null);
-      const cftcNet = optionalNumber(latestCftc?.net) ?? optionalNumber(latestCftc?.value);
-
-      const indicators: SentimentWidgetPayload['indicators'] = {};
-      const vixValue = optionalNumber(nextSnapshot.vixValue);
-      const putCallValue = optionalNumber(nextSnapshot.putCallValue);
-      const fearGreedValue = optionalNumber(nextSnapshot.fearGreedScore);
-      const cryptoValue = optionalNumber(nextSnapshot.cryptoFearGreed);
-      const liquidityFlowValue = optionalNumber(nextSnapshot.liquidityFlow);
-      const loanDepositRatioValue = optionalNumber(nextSnapshot.loanDepositRatio);
-      const liquidityIndicators: LiquidityWidgetPayload = {};
-
-      if (vixValue !== null) indicators.vix = vixValue;
-      if (putCallValue !== null) indicators.putcall_ratio = putCallValue;
-      if (fearGreedValue !== null) indicators.cnn_fg = fearGreedValue;
-      if (cryptoValue !== null) indicators.crypto_fg = cryptoValue;
-      if (latestMove !== null) indicators.move = latestMove;
-      if (aaiiBearish !== null) indicators.aaii_bearish = aaiiBearish;
-      if (aaiiSpread !== null) indicators.aaii_spread = aaiiSpread;
-      if (cftcNet !== null) indicators.cftc_net = cftcNet;
-      if (liquidityFlowValue !== null) {
-        const normalizedFlow = Number(liquidityFlowValue.toFixed(2));
-        liquidityIndicators.netFlow = normalizedFlow;
-        liquidityIndicators.netLiquidityDelta = normalizedFlow;
-        liquidityIndicators.weeklyNetFlow = normalizedFlow;
-      }
-      if (loanDepositRatioValue !== null) {
-        liquidityIndicators.loanDepositRatio = Number(loanDepositRatioValue.toFixed(2));
-      }
-      if (Object.keys(liquidityIndicators).length > 0) {
-        liquidityIndicators.source = 'next-dashboard';
-      }
-
       setDashboard(nextSnapshot);
-      setLiveSourceStats({
-        live: liveSourceCount,
-        total: sourcePayloads.length,
-      });
-      setLiquidityWidgetPayload(Object.keys(liquidityIndicators).length > 0 ? liquidityIndicators : null);
-      setSentimentWidgetPayload({ indicators });
-      const syncedAt = Date.now();
-      lastSyncedEpochRef.current = syncedAt;
-      setLastSyncedAt(new Date(syncedAt).toISOString());
+      lastSyncedEpochRef.current = Date.now();
     } finally {
       loadInFlightRef.current = false;
-      if (isMountedRef.current) {
-        setIsRefreshingData(false);
-      }
     }
   }, []);
 
@@ -826,45 +593,6 @@ export default function Home() {
   }, [loadOverviewData]);
 
   useEffect(() => {
-    const tickId = window.setInterval(() => {
-      setSyncTick(Date.now());
-    }, 60 * 1000);
-    return () => {
-      window.clearInterval(tickId);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleWidgetBridge = (event: Event) => {
-      const customEvent = event as CustomEvent<{
-        freshness?: string;
-        dataState?: string;
-        widgetId?: string;
-        at?: string;
-      }>;
-      const detail = customEvent.detail;
-      if (!detail) return;
-      setWidgetBridgeRuntime((prev) => {
-        const nextAt = typeof detail.at === 'string' ? detail.at : null;
-        if (toEpochMs(nextAt) < toEpochMs(prev.at)) {
-          return prev;
-        }
-        return {
-          freshness: normalizeBridgeFreshness(detail.freshness),
-          dataState: typeof detail.dataState === 'string' ? detail.dataState : 'LOCAL',
-          widgetId: typeof detail.widgetId === 'string' ? detail.widgetId : null,
-          at: nextAt,
-        };
-      });
-    };
-
-    window.addEventListener('fenok:widget-bridge', handleWidgetBridge as EventListener);
-    return () => {
-      window.removeEventListener('fenok:widget-bridge', handleWidgetBridge as EventListener);
-    };
-  }, []);
-
-  useEffect(() => {
     const maybeRefreshIfStale = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
         return;
@@ -872,12 +600,6 @@ export default function Home() {
 
       const lastSynced = lastSyncedEpochRef.current;
       if (lastSynced === null || Date.now() - lastSynced >= FOCUS_REFRESH_STALE_MS) {
-        window.dispatchEvent(new CustomEvent('fenok:refresh-intent', {
-          detail: {
-            reason: 'stale-focus',
-            at: Date.now(),
-          },
-        }));
         void loadOverviewData();
       }
     };
@@ -891,326 +613,21 @@ export default function Home() {
     };
   }, [loadOverviewData]);
 
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (activeTab === 'overview') {
-      url.searchParams.delete('tab');
-    } else {
-      url.searchParams.set('tab', activeTab);
-    }
-    if (activePeriod === '1W') {
-      url.searchParams.delete('period');
-    } else {
-      url.searchParams.set('period', activePeriod);
-    }
-    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
-  }, [activePeriod, activeTab]);
-
-  useEffect(() => {
-    if (!isPeriodMenuOpen) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!periodMenuRef.current) return;
-      if (!periodMenuRef.current.contains(event.target as Node)) {
-        setIsPeriodMenuOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsPeriodMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('keydown', handleEscape);
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isPeriodMenuOpen]);
-
-  const dismissSwipeHint = useCallback(() => {
-    setShowSwipeHint(false);
-    if (typeof window === 'undefined') return;
-    try {
-      window.localStorage.setItem(SWIPE_HINT_DISMISS_KEY, '1');
-    } catch {
-      // ignore storage failures
-    }
-  }, []);
-
-  const emitTabIntent = useCallback((nextTab: TabId, reason: TabIntentReason) => {
-    if (typeof window === 'undefined') return;
-    window.dispatchEvent(new CustomEvent('fenok:tab-intent', {
-      detail: {
-        tab: nextTab,
-        reason,
-        at: Date.now(),
-      },
-    }));
-  }, []);
-
-  const emitPeriodIntent = useCallback((period: string, reason: PeriodIntentReason) => {
-    if (typeof window === 'undefined') return;
-    window.dispatchEvent(new CustomEvent('fenok:period-intent', {
-      detail: {
-        period,
-        reason,
-        at: Date.now(),
-      },
-    }));
-  }, []);
-
-  const emitRefreshIntent = useCallback((reason: RefreshIntentReason) => {
-    if (typeof window === 'undefined') return;
-    window.dispatchEvent(new CustomEvent('fenok:refresh-intent', {
-      detail: {
-        reason,
-        at: Date.now(),
-      },
-    }));
-  }, []);
-
-  const refreshOverview = useCallback((reason: RefreshIntentReason = 'button') => {
-    emitRefreshIntent(reason);
-    void loadOverviewData();
-  }, [emitRefreshIntent, loadOverviewData]);
-
-  const setPeriodWithIntent = useCallback((period: string, reason: PeriodIntentReason) => {
-    if (!isValidPeriod(period)) return;
-    setActivePeriod(period);
-    emitPeriodIntent(period, reason);
-  }, [emitPeriodIntent]);
-
-  const cyclePeriod = useCallback((step: 1 | -1, reason: PeriodIntentReason = 'shortcut') => {
-    const currentPeriodIndex = periods.indexOf(activePeriod);
-    const nextIndex = (currentPeriodIndex + step + periods.length) % periods.length;
-    const nextPeriod = periods[nextIndex] ?? periods[0];
-    if (!nextPeriod) return;
-    setPeriodWithIntent(nextPeriod, reason);
-  }, [activePeriod, setPeriodWithIntent]);
-
-  const selectTab = useCallback((nextTab: TabId, reason: TabIntentReason = 'click') => {
-    if (nextTab === activeTab) return;
-    const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
-    const nextIndex = TAB_SEQUENCE.indexOf(nextTab);
-    if (currentIndex >= 0 && nextIndex >= 0) {
-      setTabMotion(nextIndex > currentIndex ? 'next' : 'prev');
-    } else {
-      setTabMotion('direct');
-    }
-    setActiveTab(nextTab);
-    emitTabIntent(nextTab, reason);
-  }, [activeTab, emitTabIntent]);
-
-  const handleSwipeTabChange = useCallback((direction: 'next' | 'prev') => {
-    const currentIndex = TAB_SEQUENCE.indexOf(activeTab);
-    if (currentIndex < 0) return;
-    const offset = direction === 'next' ? 1 : -1;
-    const nextIndex = currentIndex + offset;
-    if (nextIndex < 0 || nextIndex >= TAB_SEQUENCE.length) return;
-    const nextTab = TAB_SEQUENCE[nextIndex];
-    if (!nextTab) return;
-    setTabMotion(direction);
-    setActiveTab(nextTab);
-    emitTabIntent(nextTab, 'swipe');
-    if (showSwipeHint) {
-      dismissSwipeHint();
-    }
-  }, [activeTab, dismissSwipeHint, emitTabIntent, showSwipeHint]);
-
-  const handleTabKeyNavigation = useCallback((event: ReactKeyboardEvent<HTMLButtonElement>, currentTab: TabId) => {
-    const currentIndex = TAB_SEQUENCE.indexOf(currentTab);
-    if (currentIndex < 0) return;
-
-    let targetIndex = currentIndex;
-    if (event.key === 'ArrowRight') {
-      targetIndex = Math.min(currentIndex + 1, TAB_SEQUENCE.length - 1);
-    } else if (event.key === 'ArrowLeft') {
-      targetIndex = Math.max(currentIndex - 1, 0);
-    } else if (event.key === 'Home') {
-      targetIndex = 0;
-    } else if (event.key === 'End') {
-      targetIndex = TAB_SEQUENCE.length - 1;
-    } else {
-      return;
-    }
-
-    event.preventDefault();
-    const nextTab = TAB_SEQUENCE[targetIndex];
-    if (!nextTab) return;
-
-    selectTab(nextTab, 'keyboard');
-    window.requestAnimationFrame(() => {
-      const tabButton = document.getElementById(TAB_BUTTON_IDS[nextTab]);
-      if (tabButton instanceof HTMLButtonElement) {
-        tabButton.focus();
-      }
-    });
-  }, [selectTab]);
-
-  const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
-    const first = event.touches[0];
-    if (!first) return;
-    touchStartXRef.current = first.clientX;
-    touchStartYRef.current = first.clientY;
-  };
-
-  const handleTouchEnd = (event: TouchEvent<HTMLElement>) => {
-    const first = event.changedTouches[0];
-    if (!first || touchStartXRef.current === null || touchStartYRef.current === null) return;
-
-    const deltaX = first.clientX - touchStartXRef.current;
-    const deltaY = first.clientY - touchStartYRef.current;
-
-    touchStartXRef.current = null;
-    touchStartYRef.current = null;
-
-    const horizontalIntent = Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2;
-    if (!horizontalIntent) return;
-
-    handleSwipeTabChange(deltaX < 0 ? 'next' : 'prev');
-  };
-
-  useEffect(() => {
-    const handleKeydown = (event: KeyboardEvent) => {
-      if (isTypingTarget(event.target)) return;
-      if (!event.altKey || event.metaKey || event.ctrlKey) return;
-
-      if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        handleSwipeTabChange('next');
-        return;
-      }
-
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        handleSwipeTabChange('prev');
-        return;
-      }
-
-      if (event.key.toLowerCase() === 'r') {
-        event.preventDefault();
-        refreshOverview('shortcut');
-        return;
-      }
-
-      if (event.key.toLowerCase() === 'o') {
-        event.preventDefault();
-        selectTab('overview', 'shortcut');
-        return;
-      }
-
-      if (event.key.toLowerCase() === 's') {
-        event.preventDefault();
-        selectTab('sectors', 'shortcut');
-        return;
-      }
-
-      if (event.key.toLowerCase() === 'l') {
-        event.preventDefault();
-        selectTab('liquidity', 'shortcut');
-        return;
-      }
-
-      if (event.key.toLowerCase() === 't') {
-        event.preventDefault();
-        selectTab('sentiment', 'shortcut');
-        return;
-      }
-
-      if (event.key.toLowerCase() === 'p') {
-        event.preventDefault();
-        cyclePeriod(event.shiftKey ? -1 : 1, 'shortcut');
-        return;
-      }
-
-      if (event.key === '[') {
-        event.preventDefault();
-        cyclePeriod(-1, 'shortcut');
-        return;
-      }
-
-      if (event.key === ']') {
-        event.preventDefault();
-        cyclePeriod(1, 'shortcut');
-        return;
-      }
-
-      const shortcutPeriod = PERIOD_SHORTCUT_MAP[event.key.toLowerCase()];
-      if (shortcutPeriod) {
-        event.preventDefault();
-        setPeriodWithIntent(shortcutPeriod, 'shortcut');
-        return;
-      }
-
-      const numeric = Number(event.key);
-      if (Number.isNaN(numeric) || numeric < 1 || numeric > TAB_SEQUENCE.length) return;
-      event.preventDefault();
-      const selected = TAB_SEQUENCE[numeric - 1];
-      if (selected) selectTab(selected, 'shortcut');
-    };
-
-    window.addEventListener('keydown', handleKeydown);
-    return () => {
-      window.removeEventListener('keydown', handleKeydown);
-    };
-  }, [cyclePeriod, handleSwipeTabChange, refreshOverview, selectTab, setPeriodWithIntent]);
-
   const sectorTopRows = [...dashboard.sectorRows]
     .sort((left, right) => right.displayChange - left.displayChange)
-    .slice(0, 3);
-  const spyIndex = dashboard.quickIndices.find((item) => item.symbol === 'SPY') ?? DEFAULT_DASHBOARD.quickIndices[0];
-  const qqqIndex = dashboard.quickIndices.find((item) => item.symbol === 'QQQ') ?? DEFAULT_DASHBOARD.quickIndices[1];
-  const spyMarketStateMeta = getMarketStateMeta(spyIndex.marketState);
-  const qqqMarketStateMeta = getMarketStateMeta(qqqIndex.marketState);
-  const activeTabIndex = TAB_SEQUENCE.indexOf(activeTab);
-  const prevTab = activeTabIndex > 0 ? TAB_SEQUENCE[activeTabIndex - 1] : null;
-  const nextTab = activeTabIndex >= 0 && activeTabIndex < TAB_SEQUENCE.length - 1 ? TAB_SEQUENCE[activeTabIndex + 1] : null;
-  const sectorPanelModeLabel = dashboard.sectorMode === 'LIVE_1D'
-    ? `LIVE 1D · ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length} sectors`
-    : dashboard.sectorMode === 'MIXED'
-      ? `MIXED · ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length} live`
-      : 'BASE 1M · Treemap by Market Cap';
-  const sectorPanelMetaClass = dashboard.sectorMode === 'LIVE_1D'
-    ? 'is-live'
-    : dashboard.sectorMode === 'MIXED'
-      ? 'is-mixed'
-      : 'is-fallback';
-  const sectorPanelTimestamp = dashboard.sectorMode !== 'BASE_1M'
-    ? formatTimeLabel(dashboard.tickerFetchedAt)
-    : '--';
-  const sectorLiveCoverageRate = dashboard.sectorRows.length > 0
-    ? clamp(dashboard.sectorLiveCount / dashboard.sectorRows.length, 0, 1)
-    : 0;
-  const sectorConfidenceLabel = dashboard.sectorMode === 'LIVE_1D'
-    ? `Live coverage ${Math.round(sectorLiveCoverageRate * 100)}%`
-    : dashboard.sectorMode === 'MIXED'
-      ? `Mixed mode · ${Math.round(sectorLiveCoverageRate * 100)}% live`
-      : 'Base snapshot mode';
+    .slice(0, 4);
   const sectorLeaders = [...dashboard.sectorRows]
     .sort((left, right) => right.displayChange - left.displayChange)
     .slice(0, 3);
   const sectorLaggards = [...dashboard.sectorRows]
     .sort((left, right) => left.displayChange - right.displayChange)
     .slice(0, 3);
-  const sectorLiveRows = dashboard.sectorRows.filter((sector) => sector.displayHorizon === '1D');
-  const sectorSessionMix = sectorLiveRows.reduce(
-    (acc, sector) => {
-      const state = sector.marketState ?? '';
-      if (state.includes('REGULAR')) acc.regular += 1;
-      else if (state.includes('PRE')) acc.pre += 1;
-      else if (state.includes('POST')) acc.post += 1;
-      else acc.closed += 1;
-      return acc;
-    },
-    { regular: 0, pre: 0, post: 0, closed: 0 },
-  );
+  const spyIndex = dashboard.quickIndices.find((item) => item.symbol === 'SPY') ?? DEFAULT_DASHBOARD.quickIndices[0];
+  const qqqIndex = dashboard.quickIndices.find((item) => item.symbol === 'QQQ') ?? DEFAULT_DASHBOARD.quickIndices[1];
+  const spyMarketStateMeta = getMarketStateMeta(spyIndex.marketState);
+  const qqqMarketStateMeta = getMarketStateMeta(qqqIndex.marketState);
 
   const fearGreedOffset = Number((126 * (1 - clamp(dashboard.fearGreedScore, 0, 100) / 100)).toFixed(2));
-
   const fearGreedBadgeClass = dashboard.fearGreedScore >= 55
     ? 'bg-green-100 text-green-800'
     : dashboard.fearGreedScore <= 45
@@ -1224,678 +641,303 @@ export default function Home() {
     0,
     1,
   );
-  const regimeLabel = regimeScore >= 0.62 ? 'RISK-ON' : regimeScore >= 0.45 ? 'BALANCED' : 'RISK-OFF';
-  const regimeClass = regimeScore >= 0.62 ? 'is-risk-on' : regimeScore >= 0.45 ? 'is-balanced' : 'is-risk-off';
+  const regimeLabel = getRegimeLabel(regimeScore);
+  const regimeClass = getRegimeClass(regimeScore);
   const regimeConfidence = Math.round(regimeScore * 100);
 
   const liquidityPillClass = dashboard.liquidityFlow >= 0 ? 'is-positive' : 'is-negative';
+  const liquidityPillLabel = dashboard.liquidityFlow >= 0 ? '개선' : '둔화';
   const stressPillClass = dashboard.stressTone === 'low'
     ? 'is-positive'
     : dashboard.stressTone === 'medium'
       ? 'is-warning'
       : 'is-negative';
-
   const bankingDotClass = dashboard.bankingTone === 'stable'
     ? 'is-stable'
     : dashboard.bankingTone === 'watch'
       ? 'is-watch'
       : 'is-stress';
 
-  const commandSyncLabel = lastSyncedAt ? formatTimeLabel(lastSyncedAt) : '--';
-  const commandSourceCoverage = liveSourceStats.total > 0
-    ? `${liveSourceStats.live}/${liveSourceStats.total}`
-    : '--';
-  const dataCoverageRate = liveSourceStats.total > 0
-    ? liveSourceStats.live / liveSourceStats.total
-    : 0;
-  const dataConnectionMode = liveSourceStats.total === 0
-    ? 'fallback'
-    : dataCoverageRate >= 0.75
-      ? 'live'
-      : dataCoverageRate >= 0.35
-        ? 'mixed'
-        : 'fallback';
-  const tabPanelModeLabel = dataConnectionMode === 'live'
-    ? '실시간 반영'
-    : dataConnectionMode === 'mixed'
-      ? '부분 반영'
-      : '기본 데이터';
-  const dataConnectionClass = dataConnectionMode === 'live'
-    ? 'is-live'
-    : dataConnectionMode === 'mixed'
-      ? 'is-mixed'
-      : 'is-fallback';
-  const syncedAtEpoch = lastSyncedAt ? new Date(lastSyncedAt).getTime() : null;
-  const syncAgeMinutes = syncedAtEpoch !== null && Number.isFinite(syncedAtEpoch)
-    ? Math.max(0, Math.floor((syncTick - syncedAtEpoch) / (60 * 1000)))
-    : null;
-  const dataStatusLabel = dataConnectionMode === 'live'
-    ? '실시간 데이터'
-    : dataConnectionMode === 'mixed'
-      ? '부분 반영'
-      : '기본 데이터';
-  const sentimentIndicatorCount = Object.keys(sentimentWidgetPayload?.indicators ?? {}).length;
-  const liquidityIndicatorCount = liquidityWidgetPayload ? Object.keys(liquidityWidgetPayload).length : 0;
-  const bridgeSignalCount = sentimentIndicatorCount + liquidityIndicatorCount;
+  const sectorDetailHref = '/sectors';
   const liquidityRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html';
   const sentimentRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html';
   const bankingRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html';
   const stressRadarDetailHref = '/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-stress.html';
+  const quickIndexDetail = (item: QuickIndexSnapshot) => {
+    if (item.price === null) return '기본 데이터';
+    return item.displayHorizon === '1D' ? `$${item.price.toFixed(2)} · 당일` : `$${item.price.toFixed(2)}`;
+  };
 
   return (
     <div className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
-      <section className="command-toolbar" role="toolbar" aria-label="대시보드 설정">
-        <div className="command-main">
-          <div className="tab-pills tab-pills-compact" role="tablist" aria-label="View tabs">
-            <button
-              id={TAB_BUTTON_IDS.overview}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'overview'}
-              aria-controls={TAB_PANEL_IDS.overview}
-              aria-keyshortcuts="Alt+O Alt+1"
-              tabIndex={activeTab === 'overview' ? 0 : -1}
-              className={`tab-pill ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => selectTab('overview', 'click')}
-              onKeyDown={(event) => handleTabKeyNavigation(event, 'overview')}
-            >
-              개요
-            </button>
-            <button
-              id={TAB_BUTTON_IDS.sectors}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'sectors'}
-              aria-controls={TAB_PANEL_IDS.sectors}
-              aria-keyshortcuts="Alt+S Alt+2"
-              tabIndex={activeTab === 'sectors' ? 0 : -1}
-              className={`tab-pill ${activeTab === 'sectors' ? 'active' : ''}`}
-              onClick={() => selectTab('sectors', 'click')}
-              onKeyDown={(event) => handleTabKeyNavigation(event, 'sectors')}
-            >
-              섹터
-            </button>
-            <button
-              id={TAB_BUTTON_IDS.liquidity}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'liquidity'}
-              aria-controls={TAB_PANEL_IDS.liquidity}
-              aria-keyshortcuts="Alt+L Alt+3"
-              tabIndex={activeTab === 'liquidity' ? 0 : -1}
-              className={`tab-pill ${activeTab === 'liquidity' ? 'active' : ''}`}
-              onClick={() => selectTab('liquidity', 'click')}
-              onKeyDown={(event) => handleTabKeyNavigation(event, 'liquidity')}
-            >
-              유동성
-            </button>
-            <button
-              id={TAB_BUTTON_IDS.sentiment}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'sentiment'}
-              aria-controls={TAB_PANEL_IDS.sentiment}
-              aria-keyshortcuts="Alt+T Alt+4"
-              tabIndex={activeTab === 'sentiment' ? 0 : -1}
-              className={`tab-pill ${activeTab === 'sentiment' ? 'active' : ''}`}
-              onClick={() => selectTab('sentiment', 'click')}
-              onKeyDown={(event) => handleTabKeyNavigation(event, 'sentiment')}
-            >
-              심리
-            </button>
+      <Link
+        href="/posts/2026-02-21_tariff-ruling-comprehensive.html"
+        className="group block w-full rounded-2xl overflow-hidden mb-4 bg-gradient-to-r from-red-50 via-amber-50/80 to-slate-50 border border-red-200/50 hover:border-amber-300/70 shadow-sm hover:shadow-lg transition-all duration-300"
+      >
+        <div className="flex items-start gap-3 px-3 py-3 sm:items-center sm:gap-4 sm:px-5 sm:py-4">
+          <span className="text-2xl flex-shrink-0">&#9878;</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 px-2 py-0.5 rounded-full animate-pulse">
+                주요 분석
+              </span>
+              <span className="text-[10px] text-slate-600 font-mono">2026.02.21</span>
+            </div>
+            <p className="text-sm font-bold text-slate-800 line-clamp-2">
+              IEEPA 관세 위헌 판결 — 종합 분석
+            </p>
+            <p className="text-xs text-slate-600 line-clamp-2">
+              대법원 6-3 위헌 · 트럼프 122조 10% 즉시 서명 · 국가별 관세 영향 · 포트폴리오 함의
+            </p>
           </div>
-
-          <div className="period-menu-wrap" ref={periodMenuRef}>
-            <button
-              type="button"
-              className="period-trigger"
-              aria-haspopup="menu"
-              aria-expanded={isPeriodMenuOpen}
-              aria-keyshortcuts="Alt+P Alt+Shift+P Alt+[ Alt+]"
-              onClick={() => setIsPeriodMenuOpen((prev) => !prev)}
-            >
-              <i className="fas fa-calendar-days" aria-hidden="true" />
-              <span>{activePeriod}</span>
-              <i
-                className={`fas fa-chevron-down text-[10px] transition-transform ${isPeriodMenuOpen ? 'rotate-180' : ''}`}
-                aria-hidden="true"
-              />
-            </button>
-
-            {isPeriodMenuOpen && (
-              <div className="period-menu" role="menu" aria-label="Time period">
-                {periods.map((period) => (
-                  <button
-                    type="button"
-                    key={period}
-                    role="menuitemradio"
-                    aria-checked={activePeriod === period}
-                    className={`period-option ${activePeriod === period ? 'active' : ''}`}
-                    onClick={() => {
-                      setPeriodWithIntent(period, 'menu');
-                      setIsPeriodMenuOpen(false);
-                    }}
-                  >
-                    {period}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="hidden min-[420px]:block flex-shrink-0 text-slate-300 group-hover:text-amber-600 transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </div>
-        <div className="command-meta" aria-live="polite">
-          <span className={`command-live-pill ${dataConnectionClass}`}>{dataStatusLabel}</span>
-          <span className="command-meta-chip">반영 소스 {commandSourceCoverage}</span>
-          <span className="command-meta-chip">최근 갱신 {commandSyncLabel}</span>
-          <button
-            type="button"
-            className="command-refresh-btn"
-            onClick={() => {
-              refreshOverview('button');
-            }}
-            disabled={isRefreshingData}
-            aria-label="데이터 새로고침"
-            aria-keyshortcuts="Alt+R"
-            title="데이터 새로고침"
-          >
-            <i className={`fas fa-rotate-right ${isRefreshingData ? 'is-spinning' : ''}`} aria-hidden="true" />
-            <span>{isRefreshingData ? '새로고침 중' : '새로고침'}</span>
-          </button>
+      </Link>
+
+      <section className="mb-4">
+        <div className="hero-zone min-w-0">
+          <div className="bento-card p-4">
+            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">시장 심리</h3>
+            <div className="flex items-center gap-3">
+              <div className="relative w-16 h-8">
+                <svg viewBox="0 0 100 50" className="w-full h-full" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="gaugeFinal" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#ef4444" />
+                      <stop offset="50%" stopColor="#eab308" />
+                      <stop offset="100%" stopColor="#22c55e" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#e2e8f0" strokeWidth="6" strokeLinecap="round" />
+                  <path
+                    d="M 10 45 A 40 40 0 0 1 90 45"
+                    fill="none"
+                    stroke="url(#gaugeFinal)"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray="126"
+                    strokeDashoffset={fearGreedOffset}
+                  />
+                </svg>
+              </div>
+              <span className="text-2xl font-bold text-brand-navy orbitron">{Math.round(dashboard.fearGreedScore)}</span>
+              <span className={`px-2 py-0.5 rounded-full font-bold text-xs ${fearGreedBadgeClass}`}>{dashboard.fearGreedLabel}</span>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">
+              공포·탐욕 지수와 변동성 흐름을 합쳐 시장의 온도를 요약합니다.
+            </p>
+          </div>
+
+          <div className="bento-card p-4">
+            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">시장 국면</h3>
+            <div className="flex items-center justify-between gap-3">
+              <div className={`regime-badge ${regimeClass}`}>
+                <i className="fas fa-rocket text-xs" />
+                <span>{regimeLabel}</span>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-600">신호 강도</p>
+                <p className="text-xl font-bold text-emerald-800 orbitron">{regimeConfidence}%</p>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">
+              심리, 섹터 확산, 스트레스 지표를 합쳐 현재 시장의 방향성을 보여줍니다.
+            </p>
+          </div>
+
+          <div className="bento-card p-4 quick-indices-card">
+            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">빠른 지표</h3>
+            <div className="quick-indices-scroll">
+              <div className="index-item">
+                <span className="text-xs text-slate-600">SPY</span>
+                <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,16 10,14 20,12 30,10 40,11 50,6 60,4" /></svg>
+                <span className={`font-bold text-sm ${spyIndex.change >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
+                  {formatSignedPercentDecimal(spyIndex.change)}
+                </span>
+                <span className="index-live-detail">{quickIndexDetail(spyIndex)}</span>
+                {spyMarketStateMeta ? (
+                  <span className={`market-state-badge index-market-state ${spyMarketStateMeta.className}`}>
+                    {spyMarketStateMeta.label}
+                  </span>
+                ) : null}
+              </div>
+              <div className="index-item">
+                <span className="text-xs text-slate-600">QQQ</span>
+                <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,18 10,16 20,12 30,10 40,8 50,6 60,3" /></svg>
+                <span className={`font-bold text-sm ${qqqIndex.change >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
+                  {formatSignedPercentDecimal(qqqIndex.change)}
+                </span>
+                <span className="index-live-detail">{quickIndexDetail(qqqIndex)}</span>
+                {qqqMarketStateMeta ? (
+                  <span className={`market-state-badge index-market-state ${qqqMarketStateMeta.className}`}>
+                    {qqqMarketStateMeta.label}
+                  </span>
+                ) : null}
+              </div>
+              <div className="index-item">
+                <span className="text-xs text-slate-600">UST10Y</span>
+                <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#ef4444" strokeWidth="1.5" points="0,8 10,9 20,10 30,11 40,12 50,13 60,14" /></svg>
+                <span className="font-bold text-slate-700 text-sm">{formatPercent(dashboard.tenYearYield, 2)}</span>
+              </div>
+              <div className="index-item">
+                <span className="text-xs text-slate-600">HY OAS</span>
+                <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#f59e0b" strokeWidth="1.5" points="0,12 10,11 20,10 30,9 40,10 50,11 60,12" /></svg>
+                <span className="font-bold text-amber-800 text-sm">{formatPercent(dashboard.hySpread, 2)}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="tab-scene-status sm:hidden" aria-live="polite">
-        <span className="tab-scene-status-step">{activeTabIndex + 1}/{TAB_SEQUENCE.length}</span>
-        <strong className="tab-scene-status-title">{TAB_LABELS[activeTab]}</strong>
-        <span className="tab-scene-status-neighbor">
-          {prevTab ? `← ${TAB_LABELS[prevTab]}` : '←'}
-          {' · '}
-          {nextTab ? `${TAB_LABELS[nextTab]} →` : '→'}
-        </span>
-      </div>
-
-      {showSwipeHint ? (
-        <button
-          type="button"
-          className="mb-2 px-1 text-[11px] font-semibold text-slate-500 sm:hidden"
-          onClick={dismissSwipeHint}
-          aria-label="스와이프 안내 닫기"
-        >
-          좌우 스와이프로 탭 전환
-        </button>
-      ) : null}
-
-      <section
-        key={activeTab}
-        id={TAB_PANEL_IDS[activeTab]}
-        role="tabpanel"
-        aria-labelledby={TAB_BUTTON_IDS[activeTab]}
-        className={`tab-scene tab-scene-${tabMotion}`}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        {activeTab === 'overview' && (
-          <>
-            <Link
-              href="/posts/2026-02-21_tariff-ruling-comprehensive.html"
-              className="group block w-full rounded-2xl overflow-hidden mb-4
-                        bg-gradient-to-r from-red-50 via-amber-50/80 to-slate-50
-                        border border-red-200/50 hover:border-amber-300/70
-                        shadow-sm hover:shadow-lg transition-all duration-300"
-            >
-              <div className="flex items-start gap-3 px-3 py-3 sm:items-center sm:gap-4 sm:px-5 sm:py-4">
-                <span className="text-2xl flex-shrink-0">&#9878;</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider
-                                     bg-red-100 text-red-700 px-2 py-0.5 rounded-full
-                                     animate-pulse">Breaking</span>
-                    <span className="text-[10px] text-slate-600 font-mono">2026.02.21</span>
-                  </div>
-                  <p className="text-sm font-bold text-slate-800 line-clamp-2">
-                    IEEPA 관세 위헌 판결 — 종합 분석
-                  </p>
-                  <p className="text-xs text-slate-600 line-clamp-2">
-                    대법원 6-3 위헌 · 트럼프 122조 10% 즉시 서명 · 국가별 관세 영향 · 포트폴리오 함의
-                  </p>
-                </div>
-                <div className="hidden min-[420px]:block flex-shrink-0 text-slate-300 group-hover:text-amber-600 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
-
-            <div className="hero-zone min-w-0">
-              <div className="bento-card p-4">
-                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">FEAR &amp; GREED</h3>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-16 h-8">
-                    <svg viewBox="0 0 100 50" className="w-full h-full" aria-hidden="true">
-                      <defs>
-                        <linearGradient id="gaugeFinal" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#ef4444" />
-                          <stop offset="50%" stopColor="#eab308" />
-                          <stop offset="100%" stopColor="#22c55e" />
-                        </linearGradient>
-                      </defs>
-                      <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#e2e8f0" strokeWidth="6" strokeLinecap="round" />
-                      <path
-                        d="M 10 45 A 40 40 0 0 1 90 45"
-                        fill="none"
-                        stroke="url(#gaugeFinal)"
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                        strokeDasharray="126"
-                        strokeDashoffset={fearGreedOffset}
-                      />
-                    </svg>
-                  </div>
-                  <span className="text-2xl font-bold text-brand-navy orbitron">{Math.round(dashboard.fearGreedScore)}</span>
-                  <span className={`px-2 py-0.5 rounded-full font-bold text-xs ${fearGreedBadgeClass}`}>{dashboard.fearGreedLabel}</span>
-                </div>
-              </div>
-
-              <div className="bento-card p-4">
-                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">MARKET REGIME</h3>
-                <div className="flex items-center justify-between">
-                  <div className={`regime-badge ${regimeClass}`}>
-                    <i className="fas fa-rocket text-xs" />
-                    <span>{regimeLabel}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-600">Confidence</p>
-                    <p className="text-xl font-bold text-emerald-800 orbitron">{regimeConfidence}%</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bento-card p-4 quick-indices-card">
-                <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">QUICK INDICES</h3>
-                <div className="quick-indices-scroll">
-                  <div className="index-item">
-                    <span className="text-xs text-slate-600">SPY</span>
-                    <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,16 10,14 20,12 30,10 40,11 50,6 60,4" /></svg>
-                    <span className={`font-bold text-sm ${spyIndex.change >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
-                      {formatSignedPercentDecimal(spyIndex.change)}
-                    </span>
-                    <span className="index-live-detail">{spyIndex.price !== null ? `$${spyIndex.price.toFixed(2)} · ` : ''}{spyIndex.displayHorizon}</span>
-                    {spyMarketStateMeta ? (
-                      <span className={`market-state-badge index-market-state ${spyMarketStateMeta.className}`}>
-                        {spyMarketStateMeta.label}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="index-item">
-                    <span className="text-xs text-slate-600">QQQ</span>
-                    <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#22c55e" strokeWidth="1.5" points="0,18 10,16 20,12 30,10 40,8 50,6 60,3" /></svg>
-                    <span className={`font-bold text-sm ${qqqIndex.change >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
-                      {formatSignedPercentDecimal(qqqIndex.change)}
-                    </span>
-                    <span className="index-live-detail">{qqqIndex.price !== null ? `$${qqqIndex.price.toFixed(2)} · ` : ''}{qqqIndex.displayHorizon}</span>
-                    {qqqMarketStateMeta ? (
-                      <span className={`market-state-badge index-market-state ${qqqMarketStateMeta.className}`}>
-                        {qqqMarketStateMeta.label}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="index-item">
-                    <span className="text-xs text-slate-600">UST10Y</span>
-                    <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#ef4444" strokeWidth="1.5" points="0,8 10,9 20,10 30,11 40,12 50,13 60,14" /></svg>
-                    <span className="font-bold text-slate-700 text-sm">{formatPercent(dashboard.tenYearYield, 2)}</span>
-                  </div>
-                  <div className="index-item">
-                    <span className="text-xs text-slate-600">HY OAS</span>
-                    <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="#f59e0b" strokeWidth="1.5" points="0,12 10,11 20,10 30,9 40,10 50,11 60,12" /></svg>
-                    <span className="font-bold text-amber-800 text-sm">{formatPercent(dashboard.hySpread, 2)}</span>
-                  </div>
-                </div>
-              </div>
+      <section className="overview-widget-grid mb-4">
+        <article className="overview-widget-card overview-widget-card--sector">
+          <header className="overview-widget-head">
+            <div>
+              <p className="overview-widget-kicker orbitron">섹터 흐름</p>
+              <h3 className="overview-widget-subtitle">상승과 하락의 폭</h3>
+              <p className="overview-source-meta">최근 강세와 약세 섹터를 한눈에 요약합니다.</p>
             </div>
-
-            <div className="overview-widget-grid mb-4">
-              <article className="overview-widget-card overview-widget-card--sector">
-                <header className="overview-widget-head">
-                  <div>
-                    <p className="overview-widget-kicker orbitron">SECTOR SNAPSHOT</p>
-                    <h3 className="overview-widget-subtitle">Breadth Expansion</h3>
-                    <p className="overview-source-meta">
-                      {dashboard.sectorMode === 'BASE_1M' ? 'Ticker Source · Base 1M Momentum' : `Ticker Source · Live 1D ${dashboard.sectorLiveCount}/${dashboard.sectorRows.length}`}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => selectTab('sectors', 'click')}
-                    className="overview-widget-action"
-                    aria-label="섹터 히트맵 보기"
-                  >
-                    히트맵
-                  </button>
-                </header>
-                <div className="overview-breadth">
-                  <div className="overview-breadth-ledger">
-                    <span className="overview-dot is-up" aria-hidden="true" />
-                    <span className="overview-breadth-value">{dashboard.sectorUp} Up</span>
-                    <span className="overview-dot is-down" aria-hidden="true" />
-                    <span className="overview-breadth-value is-down">{dashboard.sectorDown} Down</span>
-                  </div>
-                  <div className="overview-chip-row">
-                    {sectorTopRows.map((sector) => (
-                      <span key={sector.key} className={`overview-chip ${sector.displayChange >= 0 ? 'is-up' : 'is-down'}`}>
-                        {sector.etf} {formatSignedPercentDecimal(sector.displayChange, 1)}
-                        <em className="overview-chip-horizon">{sector.displayHorizon}</em>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </article>
-
-              <article className="overview-widget-card overview-widget-card--liquidity">
-                <header className="overview-widget-head">
-                  <div>
-                    <p className="overview-widget-kicker orbitron">LIQUIDITY FLOW</p>
-                    <h3 className="overview-widget-subtitle">Funding Pulse</h3>
-                    <p className="overview-source-meta">
-                      {liquidityWidgetPayload?.source === 'next-dashboard' ? 'Bridge Source · Next Dashboard Payload' : 'Bridge Source · Snapshot'}
-                    </p>
-                  </div>
-                  <span className={`overview-status-pill ${liquidityPillClass}`}>
-                    {dashboard.liquidityFlow >= 0 ? 'WoW +' : 'WoW -'}
-                  </span>
-                </header>
-                <div className="overview-metric-stack">
-                  <p className="overview-metric-main orbitron">{formatSignedBillions(dashboard.liquidityFlow)}</p>
-                  <p className="overview-metric-sub">{dashboard.liquidityFlowLabel}</p>
-                </div>
-                <div className="overview-mini-bars" aria-hidden="true">
-                  {dashboard.liquidityBars.map((bar, index) => (
-                    <span
-                      key={`${bar.delta}-${index}`}
-                      className={bar.delta >= 0 ? 'is-up' : 'is-down'}
-                      style={{ height: `${bar.height}%` }}
-                    />
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => selectTab('liquidity', 'click')}
-                  className="overview-widget-link"
-                  aria-label="Liquidity 탭 열기"
-                >
-                  자세히 보기
-                </button>
-              </article>
-
-              <article className="overview-widget-card overview-widget-card--sentiment">
-                <header className="overview-widget-head">
-                  <div>
-                    <p className="overview-widget-kicker orbitron">SENTIMENT</p>
-                    <h3 className="overview-widget-subtitle">Risk Appetite</h3>
-                    <p className="overview-source-meta">
-                      {dataConnectionMode === 'live'
-                        ? `Sentiment Source · Live Stack (${sentimentIndicatorCount})`
-                        : dataConnectionMode === 'mixed'
-                          ? `Sentiment Source · Partial Stack (${sentimentIndicatorCount})`
-                          : 'Sentiment Source · Fallback Snapshot'}
-                    </p>
-                  </div>
-                  <span className={`overview-status-pill ${dataConnectionMode === 'live' ? 'is-positive' : dataConnectionMode === 'mixed' ? 'is-warning' : ''}`}>
-                    {dataConnectionMode === 'live' ? 'Live' : dataConnectionMode === 'mixed' ? 'Partial' : 'Fallback'}
-                  </span>
-                </header>
-                <div className="overview-stat-list">
-                  <p className="overview-stat-row">
-                    <span>VIX</span>
-                    <strong className="text-emerald-800">{dashboard.vixValue.toFixed(2)} <em>{dashboard.vixLabel}</em></strong>
-                  </p>
-                  <p className="overview-stat-row">
-                    <span>Put/Call</span>
-                    <strong className="text-slate-700">{dashboard.putCallValue.toFixed(2)} <em>{dashboard.putCallLabel}</em></strong>
-                  </p>
-                  <p className="overview-stat-row">
-                    <span>Crypto F&amp;G</span>
-                    <strong className="text-brand-gold">{Math.round(dashboard.cryptoFearGreed)} <em>{dashboard.cryptoLabel}</em></strong>
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => selectTab('sentiment', 'click')}
-                  className="overview-widget-link"
-                  aria-label="Sentiment 탭 열기"
-                >
-                  자세히 보기
-                </button>
-              </article>
+          </header>
+          <div className="overview-breadth">
+            <div className="overview-breadth-ledger">
+              <span className="overview-dot is-up" aria-hidden="true" />
+              <span className="overview-breadth-value">상승 {dashboard.sectorUp}</span>
+              <span className="overview-dot is-down" aria-hidden="true" />
+              <span className="overview-breadth-value is-down">하락 {dashboard.sectorDown}</span>
             </div>
-
-            <div className="overview-widget-grid overview-widget-grid--secondary">
-              <article className="overview-widget-card overview-widget-card--banking">
-                <header className="overview-widget-head">
-                  <div>
-                    <p className="overview-widget-kicker orbitron">BANKING HEALTH</p>
-                    <h3 className="overview-widget-subtitle">Funding Stress Guard</h3>
-                    <p className="overview-source-meta">Macro Source · FRED Weekly Credit Stack</p>
-                  </div>
-                </header>
-                <div className="overview-health-row">
-                  <span className={`overview-pulse-dot ${bankingDotClass}`} aria-hidden="true" />
-                  <strong>{dashboard.bankingLabel}</strong>
-                </div>
-                <p className="overview-metric-sub">{dashboard.bankingSummary}</p>
-                <Link href={bankingRadarDetailHref} className="overview-widget-link">
-                  상세 보기
-                </Link>
-              </article>
-
-              <article className="overview-widget-card overview-widget-card--stress">
-                <header className="overview-widget-head">
-                  <div>
-                    <p className="overview-widget-kicker orbitron">STRESS INDEX</p>
-                    <h3 className="overview-widget-subtitle">Spread Monitor</h3>
-                    <p className="overview-source-meta">Macro Source · HY OAS + UST10Y Composite</p>
-                  </div>
-                  <span className={`overview-status-pill ${stressPillClass}`}>{dashboard.stressLabel}</span>
-                </header>
-                <div className="overview-health-row">
-                  <strong className="overview-metric-main orbitron">{dashboard.stressScore.toFixed(2)}</strong>
-                </div>
-                <p className="overview-metric-sub">HY {formatPercent(dashboard.hySpread, 2)} · UST10Y {formatPercent(dashboard.tenYearYield, 2)}</p>
-                <Link href={stressRadarDetailHref} className="overview-widget-link">
-                  상세 보기
-                </Link>
-              </article>
-            </div>
-          </>
-        )}
-
-        {activeTab === 'sectors' && (
-          <div className="heatmap-panel">
-            <div className="heatmap-panel-head">
-              <div>
-                <p className="heatmap-panel-kicker orbitron">SECTOR HEATMAP</p>
-                <h3 className="heatmap-panel-title">Market Cap Weighted Map</h3>
-              </div>
-              <span className={`heatmap-panel-meta ${sectorPanelMetaClass}`}>
-                {sectorPanelModeLabel}
-                {dashboard.sectorMode !== 'BASE_1M' && sectorPanelTimestamp !== '--' ? ` · ${sectorPanelTimestamp}` : ''}
-              </span>
-            </div>
-            <div className="heatmap-legend" aria-label="섹터 히트맵 범례">
-              <span className="heatmap-legend-chip is-risk-on">Risk-On</span>
-              <span className="heatmap-legend-chip is-neutral">Neutral</span>
-              <span className="heatmap-legend-chip is-risk-off">Risk-Off</span>
-            </div>
-            <div className="heatmap-confidence" role="status" aria-live="polite">
-              <span className="heatmap-confidence-label">{sectorConfidenceLabel}</span>
-              <div className="heatmap-confidence-track" aria-hidden="true">
-                <span
-                  className={`heatmap-confidence-fill ${sectorPanelMetaClass}`}
-                  style={{ width: `${Math.max(8, Math.round(sectorLiveCoverageRate * 100))}%` }}
-                />
-              </div>
-            </div>
-            <div className="heatmap-grid">
-              {dashboard.sectorRows.map((sector) => {
-                const pinClass = sector.etf === 'XLK' ? 'xlk' : sector.etf === 'XLF' ? 'xlf' : '';
-                const marketStateMeta = getMarketStateMeta(sector.marketState);
-                return (
-                  <div key={sector.key} className={`heatmap-cell ${pinClass} ${getHeatmapToneClass(sector.displayChange, sector.displayHorizon)}`}>
-                    <span className="heatmap-cell-symbol" title={sector.etf}>{sector.etf}</span>
-                    <span className="heatmap-cell-name" title={sector.name}>{sector.name}</span>
-                    <span className="heatmap-cell-value">{formatSignedPercentDecimal(sector.displayChange)}</span>
-                    <span className="heatmap-cell-horizon">{sector.displayHorizon}</span>
-                    {sector.quotePrice !== null ? (
-                      <span className="heatmap-cell-price">${sector.quotePrice.toFixed(2)}</span>
-                    ) : null}
-                    {marketStateMeta ? (
-                      <span className={`market-state-badge heatmap-market-state ${marketStateMeta.className}`}>
-                        {marketStateMeta.label}
-                      </span>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="sector-insight-strip" aria-label="섹터 요약 인사이트">
-              <article className="sector-insight-card">
-                <h4 className="sector-insight-title">Leaders</h4>
-                <div className="sector-insight-list">
-                  {sectorLeaders.map((sector) => (
-                    <div key={`leader-${sector.key}`} className="sector-insight-row">
-                      <span className="sector-insight-symbol">{sector.etf}</span>
-                      <span className="sector-insight-horizon">{sector.displayHorizon}</span>
-                      <strong className="sector-insight-value is-up">{formatSignedPercentDecimal(sector.displayChange, 1)}</strong>
-                    </div>
-                  ))}
-                </div>
-              </article>
-              <article className="sector-insight-card">
-                <h4 className="sector-insight-title">Laggards</h4>
-                <div className="sector-insight-list">
-                  {sectorLaggards.map((sector) => (
-                    <div key={`laggard-${sector.key}`} className="sector-insight-row">
-                      <span className="sector-insight-symbol">{sector.etf}</span>
-                      <span className="sector-insight-horizon">{sector.displayHorizon}</span>
-                      <strong className="sector-insight-value is-down">{formatSignedPercentDecimal(sector.displayChange, 1)}</strong>
-                    </div>
-                  ))}
-                </div>
-              </article>
-              <article className="sector-insight-card">
-                <h4 className="sector-insight-title">Session Mix</h4>
-                <div className="sector-session-grid">
-                  <span className="sector-session-chip is-regular">LIVE {sectorSessionMix.regular}</span>
-                  <span className="sector-session-chip is-pre">PRE {sectorSessionMix.pre}</span>
-                  <span className="sector-session-chip is-post">POST {sectorSessionMix.post}</span>
-                  <span className="sector-session-chip is-closed">CLOSED {sectorSessionMix.closed}</span>
-                </div>
-              </article>
+            <div className="overview-chip-row">
+              {sectorTopRows.map((sector) => (
+                <span key={sector.key} className={`overview-chip ${sector.displayChange >= 0 ? 'is-up' : 'is-down'}`}>
+                  {sector.etf} {formatSignedPercentDecimal(sector.displayChange, 1)}
+                </span>
+              ))}
             </div>
           </div>
-        )}
+          <div className="sector-insight-strip mt-4" aria-label="섹터 요약">
+            <article className="sector-insight-card">
+              <h4 className="sector-insight-title">강한 섹터</h4>
+              <div className="sector-insight-list">
+                {sectorLeaders.map((sector) => (
+                  <div key={`leader-${sector.key}`} className="sector-insight-row">
+                    <span className="sector-insight-symbol">{sector.etf}</span>
+                    <strong className="sector-insight-value is-up">{formatSignedPercentDecimal(sector.displayChange, 1)}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article className="sector-insight-card">
+              <h4 className="sector-insight-title">약한 섹터</h4>
+              <div className="sector-insight-list">
+                {sectorLaggards.map((sector) => (
+                  <div key={`laggard-${sector.key}`} className="sector-insight-row">
+                    <span className="sector-insight-symbol">{sector.etf}</span>
+                    <strong className="sector-insight-value is-down">{formatSignedPercentDecimal(sector.displayChange, 1)}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </div>
+          <Link href={sectorDetailHref} className="overview-widget-link">
+            시장 랩 보기
+          </Link>
+        </article>
 
-        {activeTab === 'liquidity' && (
-          <section className="insight-tab-panel">
-            <header className="insight-tab-head">
-              <div>
-                <p className="insight-tab-kicker orbitron">LIQUIDITY DETAIL</p>
-                <h3 className="insight-tab-title">Flow Engine Console</h3>
-              </div>
-              <div className="insight-tab-head-side">
-                <span className={`insight-tab-badge ${dataConnectionClass}`}>{tabPanelModeLabel}</span>
-                <div className="insight-tab-actions">
-                  <Link href="/radar?category=liquidity" className="insight-tab-action-link">
-                    레이더
-                  </Link>
-                  <Link href={liquidityRadarDetailHref} className="insight-tab-action-link is-primary">
-                    상세 페이지
-                  </Link>
-                </div>
-              </div>
-            </header>
-            <div className="insight-tab-metrics">
-              <article className="insight-tab-metric-card">
-                <span>Loan Flow WoW</span>
-                <strong>{formatSignedBillions(dashboard.liquidityFlow)}</strong>
-              </article>
-              <article className="insight-tab-metric-card">
-                <span>Loan/Deposit</span>
-                <strong>{formatPercent(dashboard.loanDepositRatio)}</strong>
-              </article>
-              <article className="insight-tab-metric-card">
-                <span>Banking Tone</span>
-                <strong>{dashboard.bankingLabel}</strong>
-              </article>
-              <article className="insight-tab-metric-card">
-                <span>Bridge Signals</span>
-                <strong>{bridgeSignalCount}</strong>
-              </article>
+        <article className="overview-widget-card overview-widget-card--liquidity">
+          <header className="overview-widget-head">
+            <div>
+              <p className="overview-widget-kicker orbitron">유동성</p>
+              <h3 className="overview-widget-subtitle">유동성 흐름</h3>
+              <p className="overview-source-meta">대출과 예금 흐름으로 유동성 방향을 봅니다.</p>
             </div>
-            <div className="insight-tab-frame">
-              <WidgetConsoleFrame
-                src="/tools/macro-monitor/widgets/liquidity-flow.html?parentData=1"
-                title="Liquidity Flow"
-                widgetId="liquidity-flow"
-                timeoutMs={12000}
-                payload={liquidityWidgetPayload ?? undefined}
-                onSyncRequest={() => refreshOverview('widget')}
-                isSyncing={isRefreshingData}
+            <span className={`overview-status-pill ${liquidityPillClass}`}>{liquidityPillLabel}</span>
+          </header>
+          <div className="overview-metric-stack">
+            <p className="overview-metric-main orbitron">{formatSignedBillions(dashboard.liquidityFlow)}</p>
+            <p className="overview-metric-sub">{dashboard.liquidityFlowLabel}</p>
+          </div>
+          <div className="overview-mini-bars" aria-hidden="true">
+            {dashboard.liquidityBars.map((bar, index) => (
+              <span
+                key={`${bar.delta}-${index}`}
+                className={bar.delta >= 0 ? 'is-up' : 'is-down'}
+                style={{ height: `${bar.height}%` }}
               />
-            </div>
-          </section>
-        )}
+            ))}
+          </div>
+          <p className="overview-metric-sub mt-3">예대율 {formatPercent(dashboard.loanDepositRatio)}</p>
+          <Link href={liquidityRadarDetailHref} className="overview-widget-link">
+            상세 분석
+          </Link>
+        </article>
 
-        {activeTab === 'sentiment' && (
-          <section className="insight-tab-panel insight-tab-panel--sentiment">
-            <header className="insight-tab-head">
-              <div>
-                <p className="insight-tab-kicker orbitron">SENTIMENT DETAIL</p>
-                <h3 className="insight-tab-title">Risk Monitor Console</h3>
-              </div>
-              <div className="insight-tab-head-side">
-                <span className={`insight-tab-badge ${dataConnectionClass}`}>{tabPanelModeLabel}</span>
-                <div className="insight-tab-actions">
-                  <Link href="/radar?category=sentiment" className="insight-tab-action-link">
-                    레이더
-                  </Link>
-                  <Link href={sentimentRadarDetailHref} className="insight-tab-action-link is-primary">
-                    상세 페이지
-                  </Link>
-                </div>
-              </div>
-            </header>
-            <div className="insight-tab-metrics">
-              <article className="insight-tab-metric-card">
-                <span>VIX</span>
-                <strong>{dashboard.vixValue.toFixed(2)}</strong>
-              </article>
-              <article className="insight-tab-metric-card">
-                <span>Put/Call</span>
-                <strong>{dashboard.putCallValue.toFixed(2)}</strong>
-              </article>
-              <article className="insight-tab-metric-card">
-                <span>CNN F&amp;G</span>
-                <strong>{Math.round(dashboard.fearGreedScore)}</strong>
-              </article>
-              <article className="insight-tab-metric-card">
-                <span>Sync Freshness</span>
-                <strong>{syncAgeMinutes === null ? '--' : `${syncAgeMinutes}m`}</strong>
-              </article>
+        <article className="overview-widget-card overview-widget-card--sentiment">
+          <header className="overview-widget-head">
+            <div>
+              <p className="overview-widget-kicker orbitron">투자 심리</p>
+              <h3 className="overview-widget-subtitle">위험 선호</h3>
+              <p className="overview-source-meta">변동성과 옵션, 암호화폐 심리를 함께 봅니다.</p>
             </div>
-            <div className="insight-tab-frame">
-              <WidgetConsoleFrame
-                src="/tools/macro-monitor/widgets/sentiment-signal.html?parentData=1"
-                title="Sentiment Signal"
-                widgetId="sentiment-signal"
-                timeoutMs={12000}
-                payload={sentimentWidgetPayload ?? undefined}
-                onSyncRequest={() => refreshOverview('widget')}
-                isSyncing={isRefreshingData}
-              />
+          </header>
+          <div className="overview-stat-list">
+            <p className="overview-stat-row">
+              <span>VIX</span>
+              <strong className="text-emerald-800">{dashboard.vixValue.toFixed(2)} <em>{dashboard.vixLabel}</em></strong>
+            </p>
+            <p className="overview-stat-row">
+              <span>Put/Call</span>
+              <strong className="text-slate-700">{dashboard.putCallValue.toFixed(2)} <em>{dashboard.putCallLabel}</em></strong>
+            </p>
+            <p className="overview-stat-row">
+              <span>Crypto F&amp;G</span>
+              <strong className="text-brand-gold">{Math.round(dashboard.cryptoFearGreed)} <em>{dashboard.cryptoLabel}</em></strong>
+            </p>
+          </div>
+          <Link href={sentimentRadarDetailHref} className="overview-widget-link">
+            상세 분석
+          </Link>
+        </article>
+      </section>
+
+      <section className="overview-widget-grid overview-widget-grid--secondary">
+        <article className="overview-widget-card overview-widget-card--banking">
+          <header className="overview-widget-head">
+            <div>
+              <p className="overview-widget-kicker orbitron">금융 건전성</p>
+              <h3 className="overview-widget-subtitle">은행권 상태</h3>
+              <p className="overview-source-meta">연체율, 예대율, 자본비율로 은행권 상태를 봅니다.</p>
             </div>
-          </section>
-        )}
+          </header>
+          <div className="overview-health-row">
+            <span className={`overview-pulse-dot ${bankingDotClass}`} aria-hidden="true" />
+            <strong>{dashboard.bankingLabel}</strong>
+          </div>
+          <p className="overview-metric-sub">{dashboard.bankingSummary}</p>
+          <Link href={bankingRadarDetailHref} className="overview-widget-link">
+            상세 분석
+          </Link>
+        </article>
+
+        <article className="overview-widget-card overview-widget-card--stress">
+          <header className="overview-widget-head">
+            <div>
+              <p className="overview-widget-kicker orbitron">시장 스트레스</p>
+              <h3 className="overview-widget-subtitle">스트레스 강도</h3>
+              <p className="overview-source-meta">금리와 하이일드 스프레드로 위험 강도를 봅니다.</p>
+            </div>
+            <span className={`overview-status-pill ${stressPillClass}`}>{dashboard.stressLabel}</span>
+          </header>
+          <div className="overview-health-row">
+            <strong className="overview-metric-main orbitron">{dashboard.stressScore.toFixed(2)}</strong>
+          </div>
+          <p className="overview-metric-sub">HY {formatPercent(dashboard.hySpread, 2)} · UST10Y {formatPercent(dashboard.tenYearYield, 2)}</p>
+          <Link href={stressRadarDetailHref} className="overview-widget-link">
+            상세 분석
+          </Link>
+        </article>
       </section>
     </div>
   );

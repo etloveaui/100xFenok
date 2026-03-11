@@ -271,6 +271,23 @@ applyReplacements("public/tools/asset/multichart.html", [
   ],
 ]);
 
+applyReplacements("public/tools/macro-monitor/details/banking-health.html", [
+  [
+    `    const isLocal = /^(127\\.0\\.0\\.1|localhost|192\\.168\\.\\d+\\.\\d+)$/.test(location.hostname) || location.protocol === 'file:';
+    const isCloudflare = location.hostname.endsWith('pages.dev');
+    const basePath = (isLocal || isCloudflare) ? '' : '/100xFenok';
+    const baseUrl = window.location.origin + basePath + '/data/';`,
+    `    const baseUrl = window.location.origin + '/data/';`,
+  ],
+  [
+    `      const isLocal = /^(127\\.0\\.0\\.1|localhost|192\\.168\\.\\d+\\.\\d+)$/.test(location.hostname) || location.protocol === 'file:';
+      const isCloudflare = location.hostname.endsWith('pages.dev');
+      const basePath = (isLocal || isCloudflare) ? '' : '/100xFenok';
+      const jsonUrl = window.location.origin + basePath + '/data/fdic-tier1.json';`,
+    `      const jsonUrl = window.location.origin + '/data/fdic-tier1.json';`,
+  ],
+]);
+
 applyReplacements("public/tools/macro-monitor/shared/data-fetcher.js", [
   [
     `    const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
