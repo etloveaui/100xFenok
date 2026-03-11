@@ -205,6 +205,13 @@ const progressOptions = [
     recommended: false,
     barPosition: "bottom-12",
   },
+  {
+    id: "P4",
+    title: "화면 최하단",
+    summary: "화면 맨 아래에 두는 안입니다. footer와 OS 홈 인디케이터와의 충돌 가능성은 있습니다.",
+    recommended: false,
+    barPosition: "bottom-0",
+  },
 ];
 
 const dockOptions = [

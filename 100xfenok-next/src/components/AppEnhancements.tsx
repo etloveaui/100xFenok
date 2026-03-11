@@ -47,18 +47,24 @@ const dockItems = [
   },
 ] as const;
 
+function normalizePathname(pathname: string) {
+  if (!pathname || pathname === "/") return "/";
+  return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+}
+
 function isDockRoute(pathname: string) {
+  const normalized = normalizePathname(pathname);
   return (
-    pathname === '/' ||
-    pathname === '/market' ||
-    pathname === '/alpha-scout' ||
-    pathname === '/posts' ||
-    pathname.startsWith('/posts/') ||
-    pathname === '/multichart' ||
-    pathname === '/radar' ||
-    pathname === '/ib' ||
-    pathname === '/infinite-buying' ||
-    pathname === '/vr'
+    normalized === '/' ||
+    normalized === '/market' ||
+    normalized === '/alpha-scout' ||
+    normalized === '/posts' ||
+    normalized.startsWith('/posts/') ||
+    normalized === '/multichart' ||
+    normalized === '/radar' ||
+    normalized === '/ib' ||
+    normalized === '/infinite-buying' ||
+    normalized === '/vr'
   );
 }
 
@@ -88,8 +94,9 @@ function getIsDataSaverMode() {
 
 export default function AppEnhancements() {
   const pathname = usePathname();
+  const normalizedPathname = normalizePathname(pathname);
   const router = useRouter();
-  const dockEnabled = isDockRoute(pathname);
+  const dockEnabled = isDockRoute(normalizedPathname);
   const lastScrollYRef = useRef(0);
   const dockNavTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dockLockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -500,7 +507,7 @@ export default function AppEnhancements() {
 
       <nav className={`app-mobile-dock md:hidden ${dockHidden ? 'collapsed' : ''} ${isDockNavigating ? 'navigating' : ''}`} aria-label="Primary quick navigation">
         {dockItems.map((item) => {
-          const active = item.isActive(pathname);
+          const active = item.isActive(normalizedPathname);
           return (
             <Link
               key={item.href}
