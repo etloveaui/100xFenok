@@ -22,6 +22,13 @@ const adminLinks = [
     badge: "MACRO",
   },
   {
+    href: "/admin/design-lab?mode=home-preview",
+    title: "Home Preview Lab",
+    description: "메인 카드, 진행 바, 모바일 dock 비교안을 관리자에서 고릅니다.",
+    icon: "fa-layer-group",
+    badge: "PREVIEW",
+  },
+  {
     href: "/admin/design-lab?mode=native",
     title: "Design Lab (Native)",
     description: "Figma 포팅 결과를 네이티브 컴포넌트로 점검합니다.",
@@ -48,8 +55,14 @@ export default function AdminRootPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
-            href="/admin/design-lab?mode=native"
+            href="/admin/design-lab?mode=home-preview"
             className="min-h-11 rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-white/20"
+          >
+            Home Preview 열기
+          </Link>
+          <Link
+            href="/admin/design-lab?mode=native"
+            className="min-h-11 rounded-xl border border-white/25 bg-transparent px-4 text-sm font-bold text-white transition hover:bg-white/15"
           >
             Native Preview 열기
           </Link>
