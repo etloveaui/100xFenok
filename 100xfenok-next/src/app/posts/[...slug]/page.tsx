@@ -1,89 +1,41 @@
 import type { Metadata } from "next";
-import fs from "node:fs";
-import path from "node:path";
 import { notFound } from "next/navigation";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
+import { readPostCatalog, readPostMetadataBySlug } from "@/lib/server/posts";
 
-export const metadata: Metadata = {
+const defaultMetadata: Metadata = {
   title: "분석 아카이브 상세",
-  description: "기존 posts 상세 HTML을 Next.js 라우트로 브릿지합니다.",
+  description: "분석 리포트 상세 페이지입니다.",
 };
 
 interface PostLegacyPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-const POSTS_ROOT = path.join(process.cwd(), "public", "posts-raw");
-
-function normalizePublicPath(absolutePath: string): string | null {
-  const relative = path.relative(POSTS_ROOT, absolutePath);
-  if (!relative || relative.startsWith("..")) {
-    return null;
-  }
-  return `/posts-raw/${relative.replaceAll(path.sep, "/")}`;
-}
-
-function resolveLegacyPostSrc(slug: string[]): string | null {
-  const joined = slug.join("/");
-  const candidates = joined.endsWith(".html")
-    ? [joined]
-    : [`${joined}.html`, path.join(joined, "index.html")];
-
-  for (const candidate of candidates) {
-    const absolutePath = path.resolve(POSTS_ROOT, candidate);
-    if (!absolutePath.startsWith(`${POSTS_ROOT}${path.sep}`)) continue;
-    if (!fs.existsSync(absolutePath)) continue;
-    if (!fs.statSync(absolutePath).isFile()) continue;
-
-    const publicPath = normalizePublicPath(absolutePath);
-    if (publicPath) return publicPath;
-  }
-
-  return null;
-}
-
-function collectPostSlugs(): string[][] {
-  if (!fs.existsSync(POSTS_ROOT)) return [];
-
-  const slugs: string[][] = [];
-  const stack = [POSTS_ROOT];
-
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current) continue;
-
-    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      const absolutePath = path.join(current, entry.name);
-
-      if (entry.isDirectory()) {
-        stack.push(absolutePath);
-        continue;
-      }
-
-      if (!entry.isFile() || !entry.name.endsWith(".html")) {
-        continue;
-      }
-
-      const relative = path.relative(POSTS_ROOT, absolutePath);
-      if (relative.startsWith("..")) continue;
-
-      const slug = relative
-        .replaceAll(path.sep, "/")
-        .split("/")
-        .filter(Boolean);
-
-      if (slug.length > 0) {
-        slugs.push(slug);
-      }
-    }
-  }
-
-  return slugs;
-}
-
 export function generateStaticParams(): Array<{ slug: string[] }> {
-  return collectPostSlugs().map((slug) => ({ slug }));
+  return readPostCatalog().map((post) => ({ slug: post.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: PostLegacyPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = readPostMetadataBySlug(slug);
+
+  if (!post) {
+    return defaultMetadata;
+  }
+
+  return {
+    title: post.title,
+    description: post.description,
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      type: "article",
+    },
+  };
 }
 
 export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
@@ -93,10 +45,10 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
     notFound();
   }
 
-  const iframeSrc = resolveLegacyPostSrc(slug);
-  if (!iframeSrc) {
+  const post = readPostMetadataBySlug(slug);
+  if (!post) {
     notFound();
   }
 
-  return <RouteEmbedFrame src={iframeSrc} title={`Posts Detail ${slug.join(" / ")}`} loading="eager" />;
+  return <RouteEmbedFrame src={post.publicPath} title={post.title} loading="eager" />;
 }
