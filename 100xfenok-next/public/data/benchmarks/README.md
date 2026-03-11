@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-04-02 ~ 2026-02-13 (16 years, 829 data points)
+> **Period**: 2010-04-23 ~ 2026-03-06 (16 years, 829 data points)
 > **Version**: 3.7.0
-> **Last Update**: 2026-02-23
+> **Last Update**: 2026-03-09
 
 ---
 
@@ -17,7 +17,7 @@
 | `developed.json` | Developed Markets | `euro_stoxx_50`, `topix`, `hong_kong`, `nikkei` |
 | `emerging.json` | Emerging Markets | `shanghai`, `india_sensex`, `kospi`, `brazil`, `vietnam`, `hang_seng_h` |
 | `msci.json` | MSCI Indices | `world`, `developed`, `emerging`, `china`, `india`, `korea` |
-| `summaries.json` | Momentum & Yearly Returns | All 37 sections |
+| `summaries.json` | Momentum & Yearly Returns | 37 sections × 2 summary sets (74 blocks) |
 
 ---
 

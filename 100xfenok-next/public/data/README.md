@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-03-08
-> **Total Files**: 1,686 JSON files
+> **Last Updated**: 2026-03-09
+> **Total Files**: 1,691 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -10,13 +10,13 @@
 
 | Folder | Files | Update Frequency | Source |
 |--------|-------|------------------|--------|
-| [benchmarks/](benchmarks/DEV.md) | 7 | Weekly | Bloomberg Terminal |
+| [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,068 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
-| [slickcharts/](slickcharts/README.md) | 550 | Daily/Weekly/Monthly | SlickCharts.com |
+| [slickcharts/](slickcharts/README.md) | 556 | Daily/Weekly/Monthly | SlickCharts.com |
 
 ---
 
