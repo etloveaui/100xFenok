@@ -18,7 +18,7 @@ type NavigatorWithConnection = Navigator & {
 const dockItems = [
   {
     href: '/',
-    label: 'HOME',
+    label: 'DASHBOARD',
     icon: '⌂',
     isActive: (pathname: string) => pathname === '/',
   },
@@ -26,21 +26,27 @@ const dockItems = [
     href: '/market',
     label: 'MARKET',
     icon: '◔',
-    isActive: (pathname: string) => pathname === '/market' || pathname === '/alpha-scout',
+    isActive: (pathname: string) =>
+      pathname === '/market' ||
+      pathname === '/alpha-scout' ||
+      pathname === '/sectors',
   },
   {
-    href: '/posts',
-    label: 'INSIGHT',
-    icon: '✦',
+    href: '/multichart',
+    label: 'ANALYTICS',
+    icon: '▦',
     isActive: (pathname: string) =>
       pathname === '/posts' ||
       pathname.startsWith('/posts/') ||
       pathname === '/multichart' ||
-      pathname === '/radar',
+      pathname === '/radar' ||
+      pathname === '/tools/stock-analyzer' ||
+      pathname === '/tools/stock-analyzer/native' ||
+      pathname === '/100x/daily-wrap',
   },
   {
     href: '/ib',
-    label: 'IB',
+    label: 'STRATEGIES',
     icon: '∞',
     isActive: (pathname: string) =>
       pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr',
@@ -58,10 +64,14 @@ function isDockRoute(pathname: string) {
     normalized === '/' ||
     normalized === '/market' ||
     normalized === '/alpha-scout' ||
+    normalized === '/sectors' ||
     normalized === '/posts' ||
     normalized.startsWith('/posts/') ||
     normalized === '/multichart' ||
     normalized === '/radar' ||
+    normalized === '/tools/stock-analyzer' ||
+    normalized === '/tools/stock-analyzer/native' ||
+    normalized === '/100x/daily-wrap' ||
     normalized === '/ib' ||
     normalized === '/infinite-buying' ||
     normalized === '/vr'
@@ -169,9 +179,10 @@ export default function AppEnhancements() {
       setShowBackToTop(currentY > 560);
       setDockCollapsed((prev) => {
         if (currentY < 72) return false;
+        if (scrollableHeight < 220) return false;
         if (Date.now() < dockNavLockUntilRef.current) return false;
         const delta = currentY - lastScrollYRef.current;
-        if (delta > 28 && currentY > 220) return true;
+        if (delta > 36 && currentY > 320) return true;
         if (delta < -18) return false;
         return prev;
       });
