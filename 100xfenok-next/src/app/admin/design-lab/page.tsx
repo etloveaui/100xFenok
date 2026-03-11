@@ -24,21 +24,30 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
   const mode = getSingleSearchParam(params.mode);
   const isNativeMode = mode === "native";
   const isHomePreviewMode = mode === "home-preview";
+  const isHomePreviewStrongMode = mode === "home-preview-strong";
 
-  if (isHomePreviewMode) {
+  if (isHomePreviewMode || isHomePreviewStrongMode) {
     return (
       <main className="container mx-auto px-4 py-4">
         <section className="mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
-                Design Lab Home Preview
+                {isHomePreviewStrongMode ? "Design Lab Stronger Preview" : "Design Lab Home Preview"}
               </p>
               <p className="text-sm text-slate-600">
-                메인 카드 안, 진행 바 위치, 모바일 dock 범위를 관리자에서 비교합니다.
+                {isHomePreviewStrongMode
+                  ? "기존 A/B/C보다 더 강한 카드안만 바로 보도록 정리한 전용 진입입니다."
+                  : "메인 카드 안, 진행 바 위치, 모바일 dock 범위를 관리자에서 비교합니다."}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Link
+                href={isHomePreviewStrongMode ? "/admin/design-lab?mode=home-preview" : "/admin/design-lab?mode=home-preview-strong"}
+                className="min-h-11 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+              >
+                {isHomePreviewStrongMode ? "전체 비교 보기" : "강한 카드안만 보기"}
+              </Link>
               <Link
                 href="/admin/design-lab?mode=native"
                 className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
@@ -55,7 +64,7 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
           </div>
         </section>
 
-        <HomeDesignPreview />
+        <HomeDesignPreview focus={isHomePreviewStrongMode ? "strong" : "all"} />
       </main>
     );
   }

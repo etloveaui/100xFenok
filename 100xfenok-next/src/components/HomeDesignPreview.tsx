@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+type HomeDesignPreviewProps = {
+  focus?: "all" | "strong";
+};
+
 type PreviewCard =
   | {
       id: string;
@@ -722,14 +726,20 @@ function ProgressOptionCard({
   );
 }
 
-export default function HomeDesignPreview() {
+export default function HomeDesignPreview({ focus = "all" }: HomeDesignPreviewProps) {
+  const showStrongFirst = focus === "strong";
+
   return (
     <div className="space-y-6">
       <section className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-r from-slate-950 via-brand-navy to-brand-interactive p-5 text-white shadow-[0_26px_55px_-38px_rgba(2,6,23,0.92)]">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">Admin Only Preview</p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight">Home Design Preview</h1>
+        <h1 className="mt-2 text-3xl font-black tracking-tight">
+          {showStrongFirst ? "Home Design Preview · Stronger Round" : "Home Design Preview"}
+        </h1>
         <p className="mt-3 max-w-3xl text-sm text-white/85">
-          이 화면은 아직 메인에 적용하지 않은 비교안입니다. 카드 스타일, 스크롤 진행 바 위치, 모바일 하단 dock 범위를 보고 조합을 고르면 그다음 메인에 반영합니다.
+          {showStrongFirst
+            ? "이 화면은 stronger 카드안만 바로 보도록 정리한 전용 미리보기입니다. 기존 A/B/C보다 구조 차이가 큰 안을 우선 보여줍니다."
+            : "이 화면은 아직 메인에 적용하지 않은 비교안입니다. 카드 스타일, 스크롤 진행 바 위치, 모바일 하단 dock 범위를 보고 조합을 고르면 그다음 메인에 반영합니다."}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]">
@@ -738,6 +748,21 @@ export default function HomeDesignPreview() {
           <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]">
             선택 후 반영
           </span>
+          {showStrongFirst ? (
+            <Link
+              href="/admin/design-lab?mode=home-preview"
+              className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white transition hover:bg-white/20"
+            >
+              전체 비교 보기
+            </Link>
+          ) : (
+            <Link
+              href="/admin/design-lab?mode=home-preview-strong"
+              className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white transition hover:bg-white/20"
+            >
+              Stronger 안만 보기
+            </Link>
+          )}
         </div>
       </section>
 
@@ -761,17 +786,6 @@ export default function HomeDesignPreview() {
 
       <section className="space-y-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">1. Card Variants</p>
-          <h2 className="mt-2 text-2xl font-black text-slate-950">카드 구역 비교안</h2>
-          <p className="mt-2 text-sm text-slate-600">A/B/C를 한 화면에서 보고 골라주면 됩니다.</p>
-        </div>
-        {variantTones.map((variant) => (
-          <PreviewVariant key={variant.id} variant={variant} />
-        ))}
-      </section>
-
-      <section className="space-y-4">
-        <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">1-B. Stronger Variants</p>
           <h2 className="mt-2 text-2xl font-black text-slate-950">B 기반 stronger preview</h2>
           <p className="mt-2 text-sm text-slate-600">
@@ -782,6 +796,19 @@ export default function HomeDesignPreview() {
           <StrongPreviewVariant key={variant.id} variant={variant} />
         ))}
       </section>
+
+      {!showStrongFirst ? (
+        <section className="space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">1. Card Variants</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-950">카드 구역 비교안</h2>
+            <p className="mt-2 text-sm text-slate-600">A/B/C를 한 화면에서 보고 골라주면 됩니다.</p>
+          </div>
+          {variantTones.map((variant) => (
+            <PreviewVariant key={variant.id} variant={variant} />
+          ))}
+        </section>
+      ) : null}
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
         <div>
