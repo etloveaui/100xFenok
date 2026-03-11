@@ -741,7 +741,7 @@
 
 /* Ticker Animation */
 @keyframes ticker {
-  0% { transform: translateX(100%); }
+  0% { transform: translateX(0); }
   100% { transform: translateX(-100%); }
 }
 
@@ -755,6 +755,7 @@
   align-items: center;
   gap: 0.85rem;
   min-width: max-content;
+  padding-inline-start: 100%;
   white-space: nowrap;
   animation: ticker 18s linear infinite;
 }

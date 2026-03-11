@@ -134,6 +134,19 @@ function formatTickerChange(value: number): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+function getTickerStateLabel(rawState: string, fallbackStatus: FooterMarketStatus): string {
+  const normalized = rawState.trim().toUpperCase();
+  if (normalized.includes('REGULAR')) return 'LIVE';
+  if (normalized.includes('PRE')) return 'PRE';
+  if (normalized.includes('POST') || normalized.includes('AFTER')) return 'POST';
+  if (normalized.includes('CLOSED')) return 'CLOSED';
+
+  if (fallbackStatus === 'regular') return 'LIVE';
+  if (fallbackStatus === 'pre') return 'PRE';
+  if (fallbackStatus === 'after') return 'POST';
+  return 'CLOSED';
+}
+
 function canInstallOnIOS() {
   if (typeof window === 'undefined') return false;
   const nav = window.navigator as NavigatorWithStandalone;
@@ -565,7 +578,7 @@ export default function Footer() {
       <span className={`footer-ticker-change ${item.changePercent >= 0 ? 'is-up' : 'is-down'}`}>
         {formatTickerChange(item.changePercent)}
       </span>
-      <span className="footer-ticker-state">{item.source === 'live' ? item.marketState : 'BASE'}</span>
+      <span className="footer-ticker-state">{getTickerStateLabel(item.marketState, marketStatus)}</span>
     </span>
   ));
 

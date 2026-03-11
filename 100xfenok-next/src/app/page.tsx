@@ -701,7 +701,7 @@ export default function Home() {
       <section className="mb-4">
         <div className="hero-zone min-w-0">
           <div className="bento-card p-4">
-            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">시장 심리</h3>
+            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">Sentiment</h3>
             <div className="flex items-center gap-3">
               <div className="relative w-16 h-8">
                 <svg viewBox="0 0 100 50" className="w-full h-full" aria-hidden="true">
@@ -733,7 +733,7 @@ export default function Home() {
           </div>
 
           <div className="bento-card p-4">
-            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">시장 국면</h3>
+            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">Regime</h3>
             <div className="flex items-center justify-between gap-3">
               <div className={`regime-badge ${regimeClass}`}>
                 <i className="fas fa-rocket text-xs" />
@@ -750,7 +750,7 @@ export default function Home() {
           </div>
 
           <div className="bento-card p-4 quick-indices-card">
-            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">빠른 지표</h3>
+            <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">Quick Indices</h3>
             <div className="quick-indices-scroll">
               <div className="index-item">
                 <span className="text-xs text-slate-600">SPY</span>
