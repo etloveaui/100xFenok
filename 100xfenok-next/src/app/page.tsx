@@ -798,7 +798,7 @@ export default function Home() {
           <header className="overview-widget-head">
             <div>
               <p className="overview-widget-kicker orbitron">섹터 흐름</p>
-              <h3 className="overview-widget-subtitle">상승과 하락의 폭</h3>
+              <h3 className="overview-widget-subtitle">Breadth Expansion</h3>
               <p className="overview-source-meta">최근 강세와 약세 섹터를 한눈에 요약합니다.</p>
             </div>
           </header>
@@ -850,7 +850,7 @@ export default function Home() {
           <header className="overview-widget-head">
             <div>
               <p className="overview-widget-kicker orbitron">유동성</p>
-              <h3 className="overview-widget-subtitle">유동성 흐름</h3>
+              <h3 className="overview-widget-subtitle">Funding Pulse</h3>
               <p className="overview-source-meta">대출과 예금 흐름으로 유동성 방향을 봅니다.</p>
             </div>
             <span className={`overview-status-pill ${liquidityPillClass}`}>{liquidityPillLabel}</span>
@@ -878,7 +878,7 @@ export default function Home() {
           <header className="overview-widget-head">
             <div>
               <p className="overview-widget-kicker orbitron">투자 심리</p>
-              <h3 className="overview-widget-subtitle">위험 선호</h3>
+              <h3 className="overview-widget-subtitle">Risk Appetite</h3>
               <p className="overview-source-meta">변동성과 옵션, 암호화폐 심리를 함께 봅니다.</p>
             </div>
           </header>
@@ -907,7 +907,7 @@ export default function Home() {
           <header className="overview-widget-head">
             <div>
               <p className="overview-widget-kicker orbitron">금융 건전성</p>
-              <h3 className="overview-widget-subtitle">은행권 상태</h3>
+              <h3 className="overview-widget-subtitle">Funding Stress Guard</h3>
               <p className="overview-source-meta">연체율, 예대율, 자본비율로 은행권 상태를 봅니다.</p>
             </div>
           </header>
@@ -925,7 +925,7 @@ export default function Home() {
           <header className="overview-widget-head">
             <div>
               <p className="overview-widget-kicker orbitron">시장 스트레스</p>
-              <h3 className="overview-widget-subtitle">스트레스 강도</h3>
+              <h3 className="overview-widget-subtitle">Stress Monitor</h3>
               <p className="overview-source-meta">금리와 하이일드 스프레드로 위험 강도를 봅니다.</p>
             </div>
             <span className={`overview-status-pill ${stressPillClass}`}>{dashboard.stressLabel}</span>

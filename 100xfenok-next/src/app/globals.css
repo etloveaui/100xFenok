@@ -741,23 +741,22 @@
 
 /* Ticker Animation */
 @keyframes ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
 }
 
 .ticker-scroll {
-  display: flex;
-  width: max-content;
-  gap: 2rem;
-  animation: ticker 12s linear infinite;
+  width: 100%;
+  overflow: hidden;
 }
 
 .footer-ticker-track {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.85rem;
-  flex-shrink: 0;
+  min-width: max-content;
   white-space: nowrap;
+  animation: ticker 18s linear infinite;
 }
 
 .footer-ticker-lead {

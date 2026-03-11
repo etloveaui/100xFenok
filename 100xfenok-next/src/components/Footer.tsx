@@ -588,10 +588,6 @@ export default function Footer() {
                   <span className="footer-ticker-lead">{status.tickerLabel}</span>
                   {tickerTape}
                 </div>
-                <div className="footer-ticker-track" aria-hidden="true">
-                  <span className="footer-ticker-lead">{status.tickerLabel}</span>
-                  {tickerTape}
-                </div>
               </div>
             </div>
 
