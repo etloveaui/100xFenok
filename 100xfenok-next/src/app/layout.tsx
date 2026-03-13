@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import AppEnhancements from "@/components/AppEnhancements";
 
 const notoSansKr = Noto_Sans_KR({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "700"],
   display: "swap",
   variable: "--font-noto-sans-kr",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "100x Fenok",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
   formatDetection: {
     telephone: false,

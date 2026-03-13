@@ -170,23 +170,28 @@ export default function AppEnhancements() {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
+    let scrollRafId = 0;
     const handleScroll = () => {
-      const currentY = window.scrollY;
-      const doc = document.documentElement;
-      const scrollableHeight = Math.max(1, doc.scrollHeight - window.innerHeight);
-      const progress = Math.min(1, Math.max(0, currentY / scrollableHeight));
-      setScrollProgress(progress);
-      setShowBackToTop(currentY > 560);
-      setDockCollapsed((prev) => {
-        if (currentY < 72) return false;
-        if (scrollableHeight < 220) return false;
-        if (Date.now() < dockNavLockUntilRef.current) return false;
-        const delta = currentY - lastScrollYRef.current;
-        if (delta > 36 && currentY > 320) return true;
-        if (delta < -18) return false;
-        return prev;
+      if (scrollRafId) return;
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = 0;
+        const currentY = window.scrollY;
+        const doc = document.documentElement;
+        const scrollableHeight = Math.max(1, doc.scrollHeight - window.innerHeight);
+        const progress = Math.min(1, Math.max(0, currentY / scrollableHeight));
+        setScrollProgress(progress);
+        setShowBackToTop(currentY > 560);
+        setDockCollapsed((prev) => {
+          if (currentY < 72) return false;
+          if (scrollableHeight < 220) return false;
+          if (Date.now() < dockNavLockUntilRef.current) return false;
+          const delta = currentY - lastScrollYRef.current;
+          if (delta > 36 && currentY > 320) return true;
+          if (delta < -18) return false;
+          return prev;
+        });
+        lastScrollYRef.current = currentY;
       });
-      lastScrollYRef.current = currentY;
     };
 
     const handleFocusIn = (event: FocusEvent) => {
@@ -213,6 +218,7 @@ export default function AppEnhancements() {
     window.addEventListener('focusout', handleFocusOut);
 
     return () => {
+      cancelAnimationFrame(scrollRafId);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('scroll', handleScroll);
