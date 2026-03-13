@@ -22,6 +22,13 @@ const adminLinks = [
     badge: "MACRO",
   },
   {
+    href: "/admin/design-gallery",
+    title: "Design Gallery",
+    description: "150개 금융 대시보드 디자인 패턴 — 시각화, 인터랙션, 레이아웃, 모바일 UX 레퍼런스",
+    icon: "fa-swatchbook",
+    badge: "DESIGN",
+  },
+  {
     href: "/admin/design-lab?mode=home-preview",
     title: "Home Preview Lab",
     description: "메인 카드, 진행 바, 모바일 dock 비교안을 관리자에서 고릅니다.",
