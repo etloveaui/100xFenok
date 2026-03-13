@@ -2,34 +2,6 @@ import { z } from "zod";
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
-export const benchmarkPointSchema = z.object({
-  date: z.string().regex(isoDate),
-  px_last: z.number(),
-  best_eps: z.number(),
-  best_pe_ratio: z.number(),
-  px_to_book_ratio: z.number(),
-  roe: z.number(),
-});
-
-export const benchmarkSectionSchema = z.object({
-  name: z.string(),
-  name_en: z.string().optional(),
-  data: z.array(benchmarkPointSchema),
-});
-
-export const benchmarkDatasetSchema = z.object({
-  metadata: z
-    .object({
-      version: z.string(),
-      source: z.string(),
-      generated: z.string().optional(),
-      sheet: z.string().optional(),
-      update_frequency: z.string().optional(),
-    })
-    .passthrough(),
-  sections: z.record(z.string(), benchmarkSectionSchema),
-});
-
 export const benchmarkSummarySchema = z
   .object({
     metadata: z
@@ -105,13 +77,12 @@ export const folderSchemaMetaSchema = z
   })
   .passthrough();
 
-export const sentimentEntrySchema = z.object({
+const sentimentEntrySchema = z.object({
   date: z.string().regex(isoDate),
 });
 
 export const sentimentSeriesSchema = z.array(sentimentEntrySchema.passthrough());
 
-export type BenchmarkDataset = z.infer<typeof benchmarkDatasetSchema>;
 export type BenchmarkSummary = z.infer<typeof benchmarkSummarySchema>;
 export type BenchmarkCatalog = z.infer<typeof benchmarkCatalogSchema>;
 export type SentimentSeries = z.infer<typeof sentimentSeriesSchema>;

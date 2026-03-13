@@ -94,7 +94,16 @@ export async function verifyAdminPasswordServer(
   const normalized = input.trim();
   if (!normalized) return false;
   const hash = await sha256Hex(normalized);
-  return hash === getAdminPasswordHash();
+  const expected = getAdminPasswordHash();
+  // Constant-time comparison to prevent timing attacks
+  const a = new TextEncoder().encode(hash);
+  const b = new TextEncoder().encode(expected);
+  if (a.byteLength !== b.byteLength) return false;
+  let diff = 0;
+  for (let i = 0; i < a.byteLength; i++) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
 }
 
 export async function createAdminSessionToken(
@@ -125,7 +134,16 @@ export async function verifyAdminSessionToken(
     encodedPayload,
     getAdminSessionSecret(),
   );
-  return expectedSignature === signature;
+
+  // Constant-time comparison to prevent timing attacks
+  const a = new TextEncoder().encode(expectedSignature);
+  const b = new TextEncoder().encode(signature);
+  if (a.byteLength !== b.byteLength) return false;
+  let diff = 0;
+  for (let i = 0; i < a.byteLength; i++) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
 }
 
 export function getAdminSessionCookieOptions() {
