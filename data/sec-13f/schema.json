@@ -1,10 +1,10 @@
 {
   "folder": "sec-13f",
-  "version": "3.2.0",
-  "updated": "2026-02-27",
+  "version": "3.3.0",
+  "updated": "2026-03-15",
   "source": "SEC EDGAR 13F filings",
   "update_frequency": "quarterly (45 days after quarter end)",
-  "maintainer": "SEC 13F Converter v3.2.0 (accumulate mode)",
+  "maintainer": "SEC 13F Converter v3.3.0 (accumulate mode, full backfill default)",
   "structure": {
     "summary.json": "Aggregated holdings summary",
     "by_sector.json": "Holdings by sector",
@@ -284,6 +284,11 @@
     ]
   },
   "breaking_changes_history": [
+    {
+      "version": "3.3.0",
+      "date": "2026-03-15",
+      "change": "Bug #318 fix: per-quarter independent data (parser cache key + backfill default=full). Clean rebuild with real quarterly holdings."
+    },
     {
       "version": "3.2.0",
       "date": "2026-02-27",

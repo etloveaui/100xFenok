@@ -3,7 +3,7 @@
 > **Source**: SEC EDGAR
 > **Update**: Quarterly
 > **Files**: 41 (30 investors + 3 index + 8 analytics)
-> **Version**: 3.2.0
+> **Version**: 3.3.0
 
 ---
 
@@ -54,8 +54,8 @@ sec-13f/
 ```json
 {
   "metadata": {
-    "version": "3.2.0",
-    "generated_at": "2026-02-27T00:37:14Z",
+    "version": "3.3.0",
+    "generated_at": "2026-03-15T...",
     "quarters_covered": ["2025-Q4", "2025-Q3", "..."],
     "data_latency_note": "13F filings may be delayed up to 45 days after quarter end",
     "enrichment_coverage": {
@@ -117,4 +117,4 @@ const consensus = await fetch(`${BASE}/analytics/consensus.json`).then(r => r.js
 
 ---
 
-*Last Updated: 2026-02-27*
+*Last Updated: 2026-03-15*
