@@ -36,7 +36,7 @@ jobs:
           node-version: '20'
 
       - name: Create data directory
-        run: mkdir -p data
+        run: mkdir -p data data/macro
 
       # ===== Daily =====
       - name: Fetch Daily FRED Data
@@ -102,7 +102,10 @@ jobs:
             };
 
             fs.writeFileSync('data/fred-banking-daily.json', JSON.stringify(output, null, 2));
+            fs.mkdirSync('data/macro', { recursive: true });
+            fs.writeFileSync('data/macro/fred-banking-daily.json', JSON.stringify(output, null, 2));
             console.log('Saved to data/fred-banking-daily.json');
+            console.log('Saved to data/macro/fred-banking-daily.json');
           }
 
           main().catch(console.error);
@@ -172,7 +175,10 @@ jobs:
             };
 
             fs.writeFileSync('data/fred-banking-weekly.json', JSON.stringify(output, null, 2));
+            fs.mkdirSync('data/macro', { recursive: true });
+            fs.writeFileSync('data/macro/fred-banking-weekly.json', JSON.stringify(output, null, 2));
             console.log('Saved to data/fred-banking-weekly.json');
+            console.log('Saved to data/macro/fred-banking-weekly.json');
           }
 
           main().catch(console.error);
@@ -254,7 +260,10 @@ jobs:
             };
 
             fs.writeFileSync('data/fred-banking-quarterly.json', JSON.stringify(output, null, 2));
+            fs.mkdirSync('data/macro', { recursive: true });
+            fs.writeFileSync('data/macro/fred-banking-quarterly.json', JSON.stringify(output, null, 2));
             console.log('Saved to data/fred-banking-quarterly.json');
+            console.log('Saved to data/macro/fred-banking-quarterly.json');
           }
 
           main().catch(console.error);
@@ -265,7 +274,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/fred-banking-*.json
+          git add data/fred-banking-*.json data/macro/fred-banking-*.json
           git diff --staged --quiet || git commit -m "chore: update FRED banking data [skip ci]"
           git pull --rebase origin main
           git push

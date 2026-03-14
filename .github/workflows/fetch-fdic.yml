@@ -25,7 +25,7 @@ jobs:
           node-version: '20'
 
       - name: Create data directory
-        run: mkdir -p data
+        run: mkdir -p data data/macro
 
       - name: Fetch FDIC Tier1 Data
         run: |
@@ -120,7 +120,10 @@ jobs:
             };
 
             fs.writeFileSync('data/fdic-tier1.json', JSON.stringify(output, null, 2));
+            fs.mkdirSync('data/macro', { recursive: true });
+            fs.writeFileSync('data/macro/fdic-tier1.json', JSON.stringify(output, null, 2));
             console.log(`\nSaved ${results.length} quarters to data/fdic-tier1.json`);
+            console.log(`Saved ${results.length} quarters to data/macro/fdic-tier1.json`);
           }
 
           main().catch(console.error);
@@ -137,6 +140,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/fdic-tier1.json
+          git add data/fdic-tier1.json data/macro/fdic-tier1.json
           git diff --staged --quiet || git commit -m "chore: update FDIC Tier1 data [skip ci]"
           git push

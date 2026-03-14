@@ -1085,18 +1085,22 @@
   async function loadFredJsonCache() {
     if (fredJsonCache.loaded) return;
 
-    const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
-    const isCloudflare = location.hostname.endsWith('pages.dev');
-    const basePath = (isLocal || isCloudflare) ? '' : '/100xFenok';
+    const basePath = location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';
     const baseUrl = window.location.origin + basePath + '/data/';
     const files = ['fred-banking-daily.json', 'fred-banking-weekly.json', 'fred-banking-quarterly.json'];
 
     try {
       const results = await Promise.all(files.map(async (file) => {
-        try {
-          const res = await fetch(baseUrl + file);
-          if (res.ok) return await res.json();
-        } catch (e) { }
+        const candidates = [
+          `${baseUrl}macro/${file}`,
+          `${baseUrl}${file}`
+        ];
+        for (const url of candidates) {
+          try {
+            const res = await fetch(url);
+            if (res.ok) return await res.json();
+          } catch (e) { }
+        }
         return null;
       }));
 
@@ -1230,26 +1234,30 @@
   }
 
   // ===== FDIC Tier1: GitHub Actions JSON 또는 API 폴백 =====
-  // 1순위: /data/fdic-tier1.json (GitHub Actions로 생성)
-  // 2순위: FDIC API 직접 호출 (폴백)
+  // 1순위: /data/macro/fdic-tier1.json
+  // 2순위: /data/fdic-tier1.json (compat)
+  // 3순위: FDIC API 직접 호출 (폴백)
   const FDIC_CACHE_KEY = 'fdic_tier1_cache';
 
   async function getFDICTier1() {
     // 1. GitHub Actions JSON 시도 (빠름)
     try {
-      const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
-      const isCloudflare = location.hostname.endsWith('pages.dev');
-      const basePath = (isLocal || isCloudflare) ? '' : '/100xFenok';
-      const jsonUrl = window.location.origin + basePath + '/data/fdic-tier1.json';
+      const basePath = location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';
+      const candidates = [
+        window.location.origin + basePath + '/data/macro/fdic-tier1.json',
+        window.location.origin + basePath + '/data/fdic-tier1.json'
+      ];
       console.log('[FDIC] JSON 파일 로드 시도...');
-      const res = await fetch(jsonUrl);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && json.data.length > 0) {
-          // JSON 형식: { date, value } → { date, val } 변환
-          const data = json.data.map(d => ({ date: d.date, val: d.value }));
-          console.log(`[FDIC] JSON 로드 성공 (${data.length}개 분기, 업데이트: ${json.updated})`);
-          return data;
+      for (const jsonUrl of candidates) {
+        const res = await fetch(jsonUrl);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && json.data.length > 0) {
+            // JSON 형식: { date, value } → { date, val } 변환
+            const data = json.data.map(d => ({ date: d.date, val: d.value }));
+            console.log(`[FDIC] JSON 로드 성공 (${data.length}개 분기, 업데이트: ${json.updated})`);
+            return data;
+          }
         }
       }
     } catch (e) {

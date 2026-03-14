@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.0.0",
   "created": "2026-01-20",
-  "last_updated": "2026-03-13",
+  "last_updated": "2026-03-15",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "benchmarks": {
@@ -40,14 +40,23 @@
       "schema": true,
       "description": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
+    "macro": {
+      "version": "1.0.0",
+      "updated": "2026-03-14",
+      "update_frequency": "daily/weekly/quarterly",
+      "source": "FRED + FDIC",
+      "file_count": 4,
+      "schema": true,
+      "description": "Macro banking series promoted from root compatibility JSON (FRED daily/weekly/quarterly + FDIC Tier1)"
+    },
     "sec-13f": {
-      "version": "3.2.0",
-      "updated": "2026-02-27",
+      "version": "3.3.0",
+      "updated": "2026-03-15",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
       "file_count": 41,
       "schema": true,
-      "description": "Institutional holdings from 30 major investors (20Q accumulate, enrichment + 8 analytics)"
+      "description": "Institutional holdings from 30 major investors (20Q accumulate, per-quarter independent data, enrichment + 8 analytics)"
     },
     "sentiment": {
       "version": "1.0.0",
@@ -69,6 +78,20 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-03-15",
+      "folder": "sec-13f",
+      "version": "3.3.0",
+      "change": "Bug #318 fix: per-quarter independent data rebuild. Parser cache key fix + backfill default=full. 30 investors × 20Q verified.",
+      "breaking": false
+    },
+    {
+      "date": "2026-03-14",
+      "folder": "macro",
+      "version": "1.0.0",
+      "change": "Promoted FRED banking + FDIC Tier1 root JSON into manifest category with dual-write compatibility path",
+      "breaking": false
+    },
     {
       "date": "2026-03-09",
       "folder": "benchmarks",

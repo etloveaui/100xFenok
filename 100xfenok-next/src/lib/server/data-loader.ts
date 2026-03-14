@@ -40,6 +40,7 @@ type DataFolderKey =
   | "sentiment"
   | "slickcharts"
   | "damodaran"
+  | "macro"
   | "sec-13f";
 
 type JsonFileEntry = {
@@ -71,7 +72,7 @@ async function getFolderSchemaMeta(folder: DataFolderKey): Promise<FolderSchemaM
 async function listJsonFileNames(absDir: string): Promise<string[]> {
   const entries = await readdir(absDir, { withFileTypes: true });
   return entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json") && entry.name !== "schema.json")
     .map((entry) => entry.name)
     .sort((a, b) => a.localeCompare(b));
 }
@@ -226,6 +227,29 @@ export async function getDamodaranManifest() {
   return {
     generatedAt: new Date().toISOString(),
     basePath: "/data/damodaran/",
+    version: meta.version,
+    updated: meta.updated,
+    source: meta.source,
+    updateFrequency: meta.updateFrequency,
+    declaredFileCount: meta.declaredFileCount,
+    description: meta.description,
+    files: {
+      count: files.count,
+      sample: files.sample,
+    },
+  };
+}
+
+export async function getMacroManifest() {
+  const baseDir = path.join(PUBLIC_DATA_ROOT, "macro");
+  const [meta, files] = await Promise.all([
+    getBaseMeta("macro"),
+    buildJsonSample(baseDir, "/data/macro", 10),
+  ]);
+
+  return {
+    generatedAt: new Date().toISOString(),
+    basePath: "/data/macro/",
     version: meta.version,
     updated: meta.updated,
     source: meta.source,
