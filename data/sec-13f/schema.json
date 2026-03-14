@@ -10,7 +10,7 @@
     "by_sector.json": "Holdings by sector",
     "by_ticker.json": "Holdings by ticker",
     "investors/": "30 individual investor files",
-    "analytics/": "Derived metrics (8 files)"
+    "analytics/": "Derived metrics (10 files)"
   },
   "files": {
     "summary.json": {
@@ -232,6 +232,22 @@
           "weighted_score": "number",
           "signal": "bullish|neutral|bearish"
         }
+      }
+    },
+    "analytics/conviction_entries.json": {
+      "description": "Cross-reference of conviction weights with new/continued positions",
+      "schema": {
+        "metadata": {"quarter": "string", "high_conviction_new_count": "number", "top_conviction_hold_count": "number"},
+        "high_conviction_new[]": {"investor": "string", "ticker": "string", "weight": "number", "value": "number", "signal": "string"},
+        "top_conviction_hold[]": {"investor": "string", "ticker": "string", "weight": "number", "value": "number", "signal": "string"}
+      }
+    },
+    "analytics/multi_quarter_trends.json": {
+      "description": "Multi-quarter streak detection and turnover trends (newest 8 quarters)",
+      "schema": {
+        "metadata": {"investors_count": "number", "max_quarters_analyzed": "number"},
+        "by_investor.{id}.quarterly_snapshots[]": {"quarter": "string", "aum": "number", "holdings_count": "number", "top_10_weight": "number"},
+        "by_investor.{id}.streaks[]": {"ticker": "string", "direction": "buy|sell", "streak_quarters": "number", "start_quarter": "string", "end_quarter": "string"}
       }
     }
   },

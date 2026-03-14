@@ -2,8 +2,8 @@
 
 > **Source**: SEC EDGAR
 > **Update**: Quarterly
-> **Files**: 41 (30 investors + 3 index + 8 analytics)
-> **Version**: 3.3.0
+> **Files**: 43 (30 investors + 3 index + 10 analytics)
+> **Version**: 3.3.1
 
 ---
 
@@ -31,7 +31,9 @@ sec-13f/
     ├── hhi.json           # Concentration (HHI)
     ├── turnover.json      # Quarter turnover
     ├── options_hedge.json # Options hedge ratio
-    └── enhanced_consensus.json # Weighted consensus
+    ├── enhanced_consensus.json # Weighted consensus
+    ├── conviction_entries.json # Conviction + new position cross-reference
+    └── multi_quarter_trends.json # Multi-quarter streaks + snapshots
 ```
 
 ## Investors Tracked (30)
