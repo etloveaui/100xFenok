@@ -1,0 +1,41 @@
+{
+  "folder": "macro",
+  "version": "1.0.0",
+  "updated": "2026-03-14",
+  "source": "FRED + FDIC",
+  "update_frequency": "daily/weekly/quarterly",
+  "files": {
+    "fred-banking-daily.json": {
+      "description": "Daily banking macro series",
+      "schema": {
+        "updated": "ISO timestamp",
+        "type": "\"daily\"",
+        "series.{series_id}[]": {
+          "date": "YYYY-MM-DD",
+          "value": "number"
+        }
+      }
+    },
+    "fred-banking-weekly.json": {
+      "description": "Weekly banking macro series",
+      "schema": "Same as fred-banking-daily.json with type='weekly'"
+    },
+    "fred-banking-quarterly.json": {
+      "description": "Quarterly banking stress and capital series",
+      "schema": "Same as fred-banking-daily.json with type='quarterly'"
+    },
+    "fdic-tier1.json": {
+      "description": "FDIC average Tier 1 capital ratio",
+      "schema": {
+        "updated": "ISO timestamp",
+        "source": "\"FDIC\"",
+        "description": "string",
+        "data[]": {
+          "date": "YYYY-MM-DD",
+          "value": "number",
+          "banks": "number"
+        }
+      }
+    }
+  }
+}

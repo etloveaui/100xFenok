@@ -730,16 +730,27 @@ class MacroDataFetcher {
 
   /**
    * FDIC Tier1 데이터 fetch (JSON 캐시 우선)
+   * 1순위: /data/macro/fdic-tier1.json
+   * 2순위: /data/fdic-tier1.json (compat)
    * @returns {Promise<Array>} - [{ date, val }, ...]
    */
   async fetchFDICTier1() {
     // 1. JSON 캐시 시도
     try {
       const basePath = this.getBasePath();
-      const jsonUrl = window.location.origin + basePath + '/data/fdic-tier1.json';
-      const res = await this.fetchWithTimeout(jsonUrl);
-      if (res?.data?.length > 0) {
-        return res.data.map(d => ({ date: d.date, val: d.value }));
+      const candidates = [
+        window.location.origin + basePath + '/data/macro/fdic-tier1.json',
+        window.location.origin + basePath + '/data/fdic-tier1.json',
+      ];
+      for (const jsonUrl of candidates) {
+        try {
+          const res = await this.fetchWithTimeout(jsonUrl);
+          if (res?.data?.length > 0) {
+            return res.data.map(d => ({ date: d.date, val: d.value }));
+          }
+        } catch (e) {
+          // Try the legacy compatibility path before falling back to the API.
+        }
       }
     } catch (e) {
       console.log('[DataFetcher] FDIC JSON 없음, API 폴백...');
@@ -916,9 +927,7 @@ class MacroDataFetcher {
    * 동적 base path (Cloudflare Pages, localhost, GitHub Pages 호환)
    */
   getBasePath() {
-    const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
-    const isCloudflare = location.hostname.endsWith('pages.dev');
-    return (isLocal || isCloudflare) ? '' : '/100xFenok';
+    return location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';
   }
 
   /**

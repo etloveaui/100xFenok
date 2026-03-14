@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-03-09
-> **Total Files**: 1,691 JSON files
+> **Last Updated**: 2026-03-14
+> **Total Files**: 1,695 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -14,6 +14,7 @@
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,068 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
+| [macro/](macro/README.md) | 4 | Daily/Weekly/Quarterly | FRED + FDIC |
 | [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
 | [slickcharts/](slickcharts/README.md) | 556 | Daily/Weekly/Monthly | SlickCharts.com |
@@ -36,6 +37,11 @@
 - Analytics: 8 files (consensus, new_positions, buying_pressure, conviction, hhi, turnover, options_hedge, enhanced_consensus)
 - Enrichment metadata: sector/cap/filing-return coverage + source mix
 - Quarterly updates
+
+### Macro Banking Data (macro/)
+- FRED banking series: daily, weekly, quarterly
+- FDIC Tier1 capital ratio quarterly history
+- Root compatibility files are still published during migration
 
 ### Sentiment Data (sentiment/)
 - AAII sentiment, Investors Intelligence
@@ -71,6 +77,12 @@ const aapl = await fetch('https://100xfenok.pages.dev/data/slickcharts/stocks/AA
 2. Update folder's README.md file catalog
 3. Update this file's count if significant
 4. Record in `docs/CHANGELOG.md`
+
+### Compatibility Note
+
+- `fred-banking-*.json`, `fdic-tier1.json` in `data/` root are temporary compatibility files
+- Canonical location is now `data/macro/`
+- Consumers should migrate to `data/macro/*` first, then root files can be removed
 
 ### File Size Guidelines
 
