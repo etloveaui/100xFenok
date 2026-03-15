@@ -33,7 +33,7 @@
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-03-12",
+      "updated": "2026-03-13",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
       "file_count": 2,
@@ -50,17 +50,17 @@
       "description": "Macro banking series promoted from root compatibility JSON (FRED daily/weekly/quarterly + FDIC Tier1)"
     },
     "sec-13f": {
-      "version": "3.2.0",
-      "updated": "2026-02-27",
+      "version": "3.3.1",
+      "updated": "2026-03-14",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
-      "file_count": 41,
+      "file_count": 43,
       "schema": true,
-      "description": "Institutional holdings from 30 major investors (20Q accumulate, enrichment + 8 analytics)"
+      "description": "Institutional holdings from 30 major investors (20Q accumulate, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
     },
     "sentiment": {
       "version": "1.0.0",
-      "updated": "2026-03-12",
+      "updated": "2026-03-13",
       "update_frequency": "daily",
       "source": "Multiple (AAII, CNN, CFTC, CBOE)",
       "file_count": 13,
@@ -78,6 +78,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-03-15",
+      "folder": "sec-13f",
+      "version": "3.3.0",
+      "change": "Bug #318 fix: per-quarter independent data rebuild. Parser cache key fix + backfill default=full. 30 investors × 20Q verified.",
+      "breaking": false
+    },
     {
       "date": "2026-03-14",
       "folder": "macro",
