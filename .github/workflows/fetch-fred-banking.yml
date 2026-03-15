@@ -113,7 +113,7 @@ jobs:
 
       # ===== Weekly =====
       - name: Fetch Weekly FRED Data
-        if: github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'weekly'
+        if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'weekly'
         run: |
           echo "Fetching weekly FRED series..."
 
