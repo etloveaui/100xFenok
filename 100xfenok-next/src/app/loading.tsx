@@ -1,50 +1,36 @@
 export default function Loading() {
   return (
     <div className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
-      {/* Hero Zone skeleton — matches 3-card layout in page.tsx */}
-      <section className="mb-4">
-        <div className="hero-zone min-w-0">
-          <div className="bento-card p-4">
-            <div className="skeleton-bar h-3 w-20 mb-2" />
-            <div className="skeleton-bar h-10 w-16" />
-          </div>
-          <div className="bento-card p-4">
-            <div className="skeleton-bar h-3 w-20 mb-2" />
-            <div className="skeleton-bar h-6 w-24" />
-          </div>
-          <div className="bento-card p-4">
-            <div className="skeleton-bar h-3 w-20 mb-2" />
-            <div className="skeleton-bar h-6 w-full" />
+      <section className="grid auto-rows-[minmax(138px,auto)] grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+        <div className="col-span-2 rounded-[1.5rem] border border-slate-200 bg-slate-950 p-4 lg:col-span-2 lg:row-span-2">
+          <div className="skeleton-bar h-3 w-28 mb-3" />
+          <div className="skeleton-bar h-10 w-40 mb-4" />
+          <div className="space-y-3">
+            <div className="skeleton-bar h-3 w-full" />
+            <div className="skeleton-bar h-3 w-[92%]" />
+            <div className="skeleton-bar h-3 w-[88%]" />
           </div>
         </div>
-      </section>
 
-      {/* Primary widget grid skeleton — matches 3-card overview-widget-grid */}
-      <section className="overview-widget-grid mb-4">
-        <div className="bento-card overview-widget-card p-4">
-          <div className="skeleton-bar h-3 w-24 mb-3" />
-          <div className="skeleton-bar h-20 w-full" />
-        </div>
-        <div className="bento-card overview-widget-card p-4">
-          <div className="skeleton-bar h-3 w-24 mb-3" />
-          <div className="skeleton-bar h-20 w-full" />
-        </div>
-        <div className="bento-card overview-widget-card p-4">
-          <div className="skeleton-bar h-3 w-24 mb-3" />
-          <div className="skeleton-bar h-20 w-full" />
-        </div>
-      </section>
-
-      {/* Secondary widget grid skeleton — matches 2-card secondary grid */}
-      <section className="overview-widget-grid overview-widget-grid--secondary">
-        <div className="bento-card overview-widget-card p-4">
-          <div className="skeleton-bar h-3 w-20 mb-3" />
-          <div className="skeleton-bar h-12 w-full" />
-        </div>
-        <div className="bento-card overview-widget-card p-4">
-          <div className="skeleton-bar h-3 w-20 mb-3" />
-          <div className="skeleton-bar h-12 w-full" />
-        </div>
+        {[
+          "col-span-2 sm:col-span-1 lg:col-span-2",
+          "col-span-1",
+          "col-span-1",
+          "col-span-1 sm:col-span-2 lg:col-span-2",
+          "col-span-1",
+          "col-span-2 sm:col-span-1",
+          "col-span-2 sm:col-span-3 lg:col-span-2",
+          "col-span-2 sm:col-span-2 lg:col-span-2",
+        ].map((tileClass, index) => (
+          <div
+            key={`bento-loading-${index}`}
+            className={`${tileClass} rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm`}
+          >
+            <div className="skeleton-bar h-3 w-24 mb-3" />
+            <div className="skeleton-bar h-7 w-32 mb-3" />
+            <div className="skeleton-bar h-16 w-full" />
+          </div>
+        ))}
       </section>
     </div>
   );

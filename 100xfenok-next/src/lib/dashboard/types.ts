@@ -21,10 +21,19 @@ export type CryptoFearGreedPoint = {
 };
 
 export type BenchmarksSummaryPayload = {
+  metadata?: {
+    generated?: string;
+    version?: string;
+    type?: string;
+    source?: string;
+    description?: string;
+  };
   momentum?: Record<string, { '1m'?: number }>;
 };
 
 export type FredSeriesPayload = {
+  updated?: string;
+  type?: string;
   series?: Record<string, NumberPoint[]>;
 };
 
@@ -50,6 +59,27 @@ export type QuickIndexDefinition = {
   symbol: 'SPY' | 'QQQ';
   fallback: number;
 };
+
+export type DashboardFreshnessCadence = 'realtime' | 'daily' | 'weekly' | 'quarterly';
+
+export type DashboardSourceId =
+  | 'sentiment'
+  | 'vix'
+  | 'putCall'
+  | 'crypto'
+  | 'benchmarks'
+  | 'weeklyBanking'
+  | 'quarterlyBanking'
+  | 'dailyBanking'
+  | `ticker:${string}`;
+
+export type DashboardSourceFreshness = {
+  cadence: DashboardFreshnessCadence;
+  updatedAt: string | null;
+  isFallback: boolean;
+};
+
+export type DashboardFreshnessMap = Record<string, DashboardSourceFreshness>;
 
 export type SectorSnapshot = {
   key: string;
@@ -82,6 +112,7 @@ export type StressTone = 'low' | 'medium' | 'high';
 export type DashboardSnapshot = {
   fearGreedScore: number;
   fearGreedLabel: string;
+  freshness: DashboardFreshnessMap;
   sectorRows: SectorSnapshot[];
   sectorUp: number;
   sectorDown: number;
@@ -107,4 +138,11 @@ export type DashboardSnapshot = {
   stressLabel: string;
   tenYearYield: number;
   hySpread: number;
+};
+
+export type DashboardDataResult = {
+  dashboard: DashboardSnapshot;
+  dataReady: boolean;
+  failedSources: DashboardSourceId[];
+  freshness: DashboardFreshnessMap;
 };

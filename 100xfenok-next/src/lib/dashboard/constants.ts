@@ -1,4 +1,11 @@
-import type { SectorDefinition, QuickIndexDefinition, DashboardSnapshot } from './types';
+import type {
+  SectorDefinition,
+  QuickIndexDefinition,
+  DashboardSnapshot,
+  DashboardFreshnessCadence,
+  DashboardFreshnessMap,
+  DashboardSourceFreshness,
+} from './types';
 
 export const CLIENT_FETCH_TIMEOUT_MS = 2500;
 export const FOCUS_REFRESH_STALE_MS = 3 * 60 * 1000;
@@ -22,9 +29,41 @@ export const QUICK_INDEX_DEFINITIONS: QuickIndexDefinition[] = [
   { symbol: 'QQQ', fallback: 0.0112 },
 ];
 
+function fallbackFreshness(cadence: DashboardFreshnessCadence): DashboardSourceFreshness {
+  return {
+    cadence,
+    updatedAt: null,
+    isFallback: true,
+  };
+}
+
+function createDefaultFreshnessMap(): DashboardFreshnessMap {
+  const tickerSymbols = Array.from(new Set([
+    ...SECTOR_DEFINITIONS.map((sector) => sector.etf),
+    ...QUICK_INDEX_DEFINITIONS.map((item) => item.symbol),
+  ]));
+
+  const tickerFreshness = Object.fromEntries(
+    tickerSymbols.map((symbol) => [`ticker:${symbol}`, fallbackFreshness('realtime')]),
+  );
+
+  return {
+    sentiment: fallbackFreshness('daily'),
+    vix: fallbackFreshness('daily'),
+    putCall: fallbackFreshness('daily'),
+    crypto: fallbackFreshness('daily'),
+    benchmarks: fallbackFreshness('daily'),
+    weeklyBanking: fallbackFreshness('weekly'),
+    quarterlyBanking: fallbackFreshness('quarterly'),
+    dailyBanking: fallbackFreshness('daily'),
+    ...tickerFreshness,
+  };
+}
+
 export const DEFAULT_DASHBOARD: DashboardSnapshot = {
   fearGreedScore: 72,
   fearGreedLabel: '탐욕',
+  freshness: createDefaultFreshnessMap(),
   sectorRows: SECTOR_DEFINITIONS.map((sector) => ({
     key: sector.key,
     etf: sector.etf,

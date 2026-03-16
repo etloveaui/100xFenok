@@ -9,6 +9,8 @@ import type {
   TickerQuotePayload,
   SectorTickerMap,
   DashboardSnapshot,
+  DashboardDataResult,
+  DashboardSourceId,
 } from '@/lib/dashboard/types';
 import {
   CLIENT_FETCH_TIMEOUT_MS,
@@ -51,7 +53,10 @@ async function fetchJsonWithFallback<T>(
 
 export function useDashboardData() {
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
+  const [dataReady, setDataReady] = useState(false);
+  const [failedSources, setFailedSources] = useState<DashboardSourceId[]>([]);
   const loadInFlightRef = useRef(false);
+  const hasLiveDataRef = useRef(false);
   const isMountedRef = useRef(true);
   const lastSyncedEpochRef = useRef<number | null>(null);
 
@@ -129,13 +134,30 @@ export function useDashboardData() {
         sectorTicker,
         indexTicker,
       });
+      const nextFailedSources = Object.entries(nextSnapshot.freshness)
+        .filter(([, meta]) => meta.isFallback)
+        .map(([source]) => source as DashboardSourceId);
+      const hasSuccessfulSource = Object.values(nextSnapshot.freshness)
+        .some((meta) => !meta.isFallback);
 
       if (!isMountedRef.current) {
         return;
       }
 
-      setDashboard(nextSnapshot);
-      lastSyncedEpochRef.current = Date.now();
+      setFailedSources(nextFailedSources);
+
+      if (hasSuccessfulSource) {
+        setDashboard(nextSnapshot);
+        setDataReady(true);
+        hasLiveDataRef.current = true;
+        lastSyncedEpochRef.current = Date.now();
+        return;
+      }
+
+      if (!hasLiveDataRef.current) {
+        setDashboard(nextSnapshot);
+        setDataReady(false);
+      }
     } finally {
       loadInFlightRef.current = false;
     }
@@ -175,5 +197,10 @@ export function useDashboardData() {
     };
   }, [loadOverviewData]);
 
-  return { dashboard };
+  return {
+    dashboard,
+    dataReady,
+    failedSources,
+    freshness: dashboard.freshness,
+  } satisfies DashboardDataResult;
 }

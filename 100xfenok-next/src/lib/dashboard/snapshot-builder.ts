@@ -5,11 +5,14 @@ import type {
   CryptoFearGreedPoint,
   BenchmarksSummaryPayload,
   FredSeriesPayload,
+  TickerQuotePayload,
   SectorTickerMap,
   SectorSnapshot,
   QuickIndexSnapshot,
   BankingTone,
   DashboardSnapshot,
+  DashboardFreshnessMap,
+  DashboardFreshnessCadence,
 } from './types';
 import { SECTOR_DEFINITIONS, QUICK_INDEX_DEFINITIONS, DEFAULT_DASHBOARD } from './constants';
 import {
@@ -24,6 +27,87 @@ import {
   getStressTone,
 } from './formatters';
 
+function cloneFreshnessMap(seed: DashboardFreshnessMap): DashboardFreshnessMap {
+  return Object.fromEntries(
+    Object.entries(seed).map(([source, meta]) => [source, { ...meta }]),
+  );
+}
+
+function pickTimestamp(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value : null;
+}
+
+function pickLatestPointDate<T extends { date?: string }>(series: T[] | null | undefined): string | null {
+  if (!Array.isArray(series) || series.length === 0) {
+    return null;
+  }
+  return pickTimestamp(series[series.length - 1]?.date);
+}
+
+function hasFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function hasNumberSeries(series: NumberPoint[] | undefined): boolean {
+  return Array.isArray(series) && series.some((point) => hasFiniteNumber(point?.value));
+}
+
+function hasFearGreedSeries(series: CnnFearGreedPoint[] | null): boolean {
+  return Array.isArray(series) && series.some((point) => hasFiniteNumber(point?.score));
+}
+
+function hasPutCallSeries(series: PutCallPoint[] | null): boolean {
+  return Array.isArray(series) && series.some((point) => hasFiniteNumber(point?.value));
+}
+
+function hasCryptoSeries(series: CryptoFearGreedPoint[] | null): boolean {
+  return Array.isArray(series) && series.some((point) => hasFiniteNumber(point?.value));
+}
+
+function hasBenchmarkMomentum(payload: BenchmarksSummaryPayload | null): boolean {
+  return !!payload?.momentum && Object.keys(payload.momentum).length > 0;
+}
+
+function hasRequiredFredSeries(payload: FredSeriesPayload | null, keys: string[]): boolean {
+  if (!payload?.series) {
+    return false;
+  }
+  return keys.every((key) => hasNumberSeries(payload.series?.[key]));
+}
+
+function pickFredUpdatedAt(payload: FredSeriesPayload | null, keys: string[]): string | null {
+  const payloadUpdated = pickTimestamp(payload?.updated);
+  if (payloadUpdated) {
+    return payloadUpdated;
+  }
+
+  return keys
+    .map((key) => pickLatestPointDate(payload?.series?.[key]))
+    .filter((value): value is string => value !== null)
+    .sort()
+    .at(-1) ?? null;
+}
+
+function hasTickerData(ticker: TickerQuotePayload | null | undefined): boolean {
+  return hasFiniteNumber(ticker?.price)
+    || hasFiniteNumber(ticker?.changePercent)
+    || pickTimestamp(ticker?.fetchedAt) !== null;
+}
+
+function setFreshnessEntry(
+  freshness: DashboardFreshnessMap,
+  source: string,
+  cadence: DashboardFreshnessCadence,
+  updatedAt: string | null,
+  isFallback: boolean,
+) {
+  freshness[source] = {
+    cadence,
+    updatedAt,
+    isFallback,
+  };
+}
+
 export function buildDashboardSnapshot(payload: {
   fearGreed: CnnFearGreedPoint[] | null;
   vix: NumberPoint[] | null;
@@ -37,6 +121,81 @@ export function buildDashboardSnapshot(payload: {
   indexTicker: SectorTickerMap;
 }): DashboardSnapshot {
   const fallback = DEFAULT_DASHBOARD;
+  const freshness = cloneFreshnessMap(fallback.freshness);
+
+  setFreshnessEntry(
+    freshness,
+    'sentiment',
+    'daily',
+    pickLatestPointDate(payload.fearGreed),
+    !hasFearGreedSeries(payload.fearGreed),
+  );
+  setFreshnessEntry(
+    freshness,
+    'vix',
+    'daily',
+    pickLatestPointDate(payload.vix),
+    !hasNumberSeries(payload.vix ?? undefined),
+  );
+  setFreshnessEntry(
+    freshness,
+    'putCall',
+    'daily',
+    pickLatestPointDate(payload.putCall),
+    !hasPutCallSeries(payload.putCall),
+  );
+  setFreshnessEntry(
+    freshness,
+    'crypto',
+    'daily',
+    pickLatestPointDate(payload.crypto),
+    !hasCryptoSeries(payload.crypto),
+  );
+  setFreshnessEntry(
+    freshness,
+    'benchmarks',
+    'daily',
+    pickTimestamp(payload.summaries?.metadata?.generated) ?? pickTimestamp(payload.summaries?.metadata?.version),
+    !hasBenchmarkMomentum(payload.summaries),
+  );
+  setFreshnessEntry(
+    freshness,
+    'weeklyBanking',
+    'weekly',
+    pickFredUpdatedAt(payload.weeklyBanking, ['TOTLL', 'DPSACBW027SBOG']),
+    !hasRequiredFredSeries(payload.weeklyBanking, ['TOTLL', 'DPSACBW027SBOG']),
+  );
+  setFreshnessEntry(
+    freshness,
+    'quarterlyBanking',
+    'quarterly',
+    pickFredUpdatedAt(payload.quarterlyBanking, ['DRALACBN', 'BOGZ1FL010000016Q']),
+    !hasRequiredFredSeries(payload.quarterlyBanking, ['DRALACBN', 'BOGZ1FL010000016Q']),
+  );
+  setFreshnessEntry(
+    freshness,
+    'dailyBanking',
+    'daily',
+    pickFredUpdatedAt(payload.dailyBanking, ['DGS10', 'BAMLH0A0HYM2']),
+    !hasRequiredFredSeries(payload.dailyBanking, ['DGS10', 'BAMLH0A0HYM2']),
+  );
+
+  const tickerEntries = new Map<string, TickerQuotePayload | null>();
+  Object.entries(payload.sectorTicker).forEach(([symbol, ticker]) => {
+    tickerEntries.set(symbol, ticker);
+  });
+  Object.entries(payload.indexTicker).forEach(([symbol, ticker]) => {
+    tickerEntries.set(symbol, ticker);
+  });
+  tickerEntries.forEach((ticker, symbol) => {
+    setFreshnessEntry(
+      freshness,
+      `ticker:${symbol}`,
+      'realtime',
+      pickTimestamp(ticker?.fetchedAt),
+      !hasTickerData(ticker),
+    );
+  });
 
   const sectorRows = SECTOR_DEFINITIONS.map((sector) => {
     const momentum = payload.summaries?.momentum?.[sector.key]?.['1m'];
@@ -194,6 +353,7 @@ export function buildDashboardSnapshot(payload: {
   return {
     fearGreedScore,
     fearGreedLabel,
+    freshness,
     sectorRows,
     sectorUp,
     sectorDown,
