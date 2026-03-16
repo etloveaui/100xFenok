@@ -30,8 +30,8 @@ const adminLinks = [
   },
   {
     href: "/admin/design-lab?mode=home-preview",
-    title: "Home Preview Lab",
-    description: "메인 카드, 진행 바, 모바일 dock 비교안을 관리자에서 고릅니다.",
+    title: "Home Candidate Lab",
+    description: "홈 전체 정보구조 후보 4개를 비교하고 선택할 Admin 프리뷰입니다.",
     icon: "fa-layer-group",
     badge: "PREVIEW",
   },
@@ -65,7 +65,7 @@ export default function AdminRootPage() {
             href="/admin/design-lab?mode=home-preview"
             className="min-h-11 rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-white/20"
           >
-            Home Preview 열기
+            Home Candidate 열기
           </Link>
           <Link
             href="/admin/design-lab?mode=native"
