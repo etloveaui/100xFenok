@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-03-14
+> **Last Updated**: 2026-03-16
 > **Total Files**: 1,695 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -48,7 +48,7 @@
 - 12+ indicators
 
 ### Stock Screening (global-scouter/)
-- 1,063 stock profiles + ETFs (23) + Economic Indicators (1,051 records)
+- 1,063 stock profiles + ETFs (23) + Economic Indicators (1,052 records)
 - **v2.2.0**: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
 - On-demand updates
