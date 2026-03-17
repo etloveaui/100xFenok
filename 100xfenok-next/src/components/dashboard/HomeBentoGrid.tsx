@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { type ReactNode } from "react";
 import type { DashboardFreshnessCadence, DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
+import TileBoundary from "@/components/dashboard/TileBoundary";
 import {
   clamp,
   formatPercent,
@@ -342,6 +343,7 @@ export default function HomeBentoGrid({
         ) : null}
 
         <section className="grid auto-rows-[minmax(138px,auto)] grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+          <TileBoundary tileKey="hero">
           <TileShell
             kicker="Market Regime"
             title={regimeLabel}
@@ -393,7 +395,9 @@ export default function HomeBentoGrid({
               ))}
             </div>
           </TileShell>
+          </TileBoundary>
 
+          <TileBoundary tileKey="quick">
           <TileShell
             kicker="Quick Indices"
             title="SPY · QQQ · 10Y · HY"
@@ -445,7 +449,9 @@ export default function HomeBentoGrid({
               ))}
             </div>
           </TileShell>
+          </TileBoundary>
 
+          <TileBoundary tileKey="vix">
           <TileShell
             kicker="Volatility"
             title="VIX"
@@ -459,7 +465,9 @@ export default function HomeBentoGrid({
               {dashboard.vixLabel}
             </p>
           </TileShell>
+          </TileBoundary>
 
+          <TileBoundary tileKey="crypto">
           <TileShell
             kicker="Crypto Sentiment"
             title="Crypto F&G"
@@ -473,7 +481,9 @@ export default function HomeBentoGrid({
               {dashboard.cryptoLabel}
             </p>
           </TileShell>
+          </TileBoundary>
 
+          <TileBoundary tileKey="fearGreed">
           <TileShell
             kicker="Fear & Greed"
             title="Sentiment Gauge"
@@ -512,7 +522,9 @@ export default function HomeBentoGrid({
               </div>
             </div>
           </TileShell>
+          </TileBoundary>
 
+          <TileBoundary tileKey="breadth">
           <TileShell
             kicker="Breadth"
             title="Sector Expansion"
@@ -553,7 +565,9 @@ export default function HomeBentoGrid({
               </div>
             </div>
           </TileShell>
+          </TileBoundary>
 
+          <TileBoundary tileKey="liquidity">
           <TileShell
             kicker="Liquidity"
             title="Funding Pulse"
@@ -580,7 +594,9 @@ export default function HomeBentoGrid({
               예대율 {formatPercent(dashboard.loanDepositRatio, 1)}
             </p>
           </TileShell>
+          </TileBoundary>
 
+          <TileBoundary tileKey="bankingStress">
           <TileShell
             kicker="Banking + Stress"
             title="Funding Stress Guard"
@@ -612,7 +628,9 @@ export default function HomeBentoGrid({
               </div>
             </div>
           </TileShell>
+          </TileBoundary>
 
+          <TileBoundary tileKey="riskAppetite">
           <TileShell
             kicker="Positioning"
             title="Risk Appetite"
@@ -640,6 +658,7 @@ export default function HomeBentoGrid({
               </div>
             </div>
           </TileShell>
+          </TileBoundary>
         </section>
     </div>
   );
