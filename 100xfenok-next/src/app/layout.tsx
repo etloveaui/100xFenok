@@ -109,7 +109,7 @@ export default function RootLayout({
           본문으로 건너뛰기
         </a>
         <Navbar />
-        <main id="main-content" tabIndex={-1}>
+        <main id="main-content" tabIndex={-1} className="pt-14 sm:pt-16">
           {children}
         </main>
         <Footer />
