@@ -195,7 +195,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="fixed bottom-0 left-0 right-0 z-40">
+      <footer className="fixed bottom-0 left-0 right-0 z-40 hidden md:block">
         <FooterTickerBar
           marketStatus={marketStatus}
           tickerLabel={status.tickerLabel}
@@ -226,12 +226,12 @@ export default function Footer() {
       />
 
       {toast.isVisible && (
-        <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 bg-brand-navy text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg toast-animate">
+        <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 bg-brand-navy text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg toast-animate">
           {toast.message}
         </div>
       )}
 
-      <div className="h-[calc(48px+24px+env(safe-area-inset-bottom))] md:h-[calc(48px+24px+24px+env(safe-area-inset-bottom))]" />
+      <div className="hidden md:block md:h-[calc(48px+24px+24px+env(safe-area-inset-bottom))]" />
     </>
   );
 }
