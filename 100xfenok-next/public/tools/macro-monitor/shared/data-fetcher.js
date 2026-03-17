@@ -730,27 +730,21 @@ class MacroDataFetcher {
 
   /**
    * FDIC Tier1 데이터 fetch (JSON 캐시 우선)
-   * 1순위: /data/macro/fdic-tier1.json
-   * 2순위: /data/fdic-tier1.json (compat)
+   * 경로: /data/macro/fdic-tier1.json
    * @returns {Promise<Array>} - [{ date, val }, ...]
    */
   async fetchFDICTier1() {
     // 1. JSON 캐시 시도
     try {
       const basePath = this.getBasePath();
-      const candidates = [
-        window.location.origin + basePath + '/data/macro/fdic-tier1.json',
-        window.location.origin + basePath + '/data/fdic-tier1.json',
-      ];
-      for (const jsonUrl of candidates) {
-        try {
-          const res = await this.fetchWithTimeout(jsonUrl);
-          if (res?.data?.length > 0) {
-            return res.data.map(d => ({ date: d.date, val: d.value }));
-          }
-        } catch (e) {
-          // Try the legacy compatibility path before falling back to the API.
+      const jsonUrl = window.location.origin + basePath + '/data/macro/fdic-tier1.json';
+      try {
+        const res = await this.fetchWithTimeout(jsonUrl);
+        if (res?.data?.length > 0) {
+          return res.data.map(d => ({ date: d.date, val: d.value }));
         }
+      } catch (e) {
+        // Fall through to the API if the macro cache is unavailable.
       }
     } catch (e) {
       console.log('[DataFetcher] FDIC JSON 없음, API 폴백...');
