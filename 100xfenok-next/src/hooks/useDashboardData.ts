@@ -38,19 +38,6 @@ async function fetchJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): P
   }
 }
 
-async function fetchJsonWithFallback<T>(
-  urls: string[],
-  timeoutMs = CLIENT_FETCH_TIMEOUT_MS,
-): Promise<T | null> {
-  for (const url of urls) {
-    const payload = await fetchJson<T>(url, timeoutMs);
-    if (payload) {
-      return payload;
-    }
-  }
-  return null;
-}
-
 export function useDashboardData() {
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
   const [dataReady, setDataReady] = useState(false);
@@ -77,18 +64,9 @@ export function useDashboardData() {
         fetchJson<PutCallPoint[]>('/data/sentiment/cnn-put-call.json'),
         fetchJson<CryptoFearGreedPoint[]>('/data/sentiment/crypto-fear-greed.json'),
         fetchJson<BenchmarksSummaryPayload>('/data/benchmarks/summaries.json'),
-        fetchJsonWithFallback<FredSeriesPayload>([
-          '/data/macro/fred-banking-weekly.json',
-          '/data/fred-banking-weekly.json',
-        ]),
-        fetchJsonWithFallback<FredSeriesPayload>([
-          '/data/macro/fred-banking-quarterly.json',
-          '/data/fred-banking-quarterly.json',
-        ]),
-        fetchJsonWithFallback<FredSeriesPayload>([
-          '/data/macro/fred-banking-daily.json',
-          '/data/fred-banking-daily.json',
-        ]),
+        fetchJson<FredSeriesPayload>('/data/macro/fred-banking-weekly.json'),
+        fetchJson<FredSeriesPayload>('/data/macro/fred-banking-quarterly.json'),
+        fetchJson<FredSeriesPayload>('/data/macro/fred-banking-daily.json'),
       ]);
       const tickerPromise = Promise.allSettled(
         tickerSymbols.map(async (symbol) => ({

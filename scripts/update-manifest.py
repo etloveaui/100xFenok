@@ -48,14 +48,9 @@ MANIFEST   = DATA_DIR / "manifest.json"
 EXCLUDE_FILES = {"schema.json"}
 
 # Root-level names that are NOT orphan data files
-# Compatibility files remain during #313 migration until all consumers move to data/macro/.
 ROOT_KNOWN = {
     "manifest.json",
     "README.md",
-    "fdic-tier1.json",
-    "fred-banking-daily.json",
-    "fred-banking-weekly.json",
-    "fred-banking-quarterly.json",
 }
 
 # Default template for newly discovered folders
