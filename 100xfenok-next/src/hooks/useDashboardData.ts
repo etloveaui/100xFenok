@@ -21,14 +21,14 @@ import {
 } from '@/lib/dashboard/constants';
 import { buildDashboardSnapshot } from '@/lib/dashboard/snapshot-builder';
 
+// HTTP cache intentional: static /data/*.json has Cache-Control max-age=300
+// (see next.config.ts headers). Ticker /api/* has its own s-maxage=15.
+// Browser uses ETag/304 to avoid re-downloading unchanged daily JSON.
 async function fetchJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Promise<T | null> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, {
-      cache: 'no-store',
-      signal: controller.signal,
-    });
+    const response = await fetch(url, { signal: controller.signal });
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {

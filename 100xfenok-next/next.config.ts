@@ -26,6 +26,21 @@ const nextConfig: NextConfig = {
   // Trailing slash for consistent URLs
   trailingSlash: true,
 
+  // CDN cache for static data JSON (daily-updated, 5 min browser + 10 min stale)
+  async headers() {
+    return [
+      {
+        source: "/data/:path*.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+    ];
+  },
+
   // Keep legacy .html detail links inside Next.js shell routes.
   async redirects() {
     return [

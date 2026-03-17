@@ -171,6 +171,33 @@ body {
   outline-offset: 2px;
 }
 
+/* View Transition — SPA navigation crossfade */
+::view-transition-old(root) {
+  animation: 180ms cubic-bezier(0.4, 0, 1, 1) vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 220ms cubic-bezier(0, 0, 0.2, 1) vt-fade-in;
+}
+
+@keyframes vt-fade-out {
+  to { opacity: 0; transform: scale(0.98); }
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; transform: scale(1.015); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;

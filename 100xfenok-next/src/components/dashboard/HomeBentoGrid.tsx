@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { type ReactNode } from "react";
+import TransitionLink from "@/components/TransitionLink";
 import type { DashboardFreshnessCadence, DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
 import TileBoundary from "@/components/dashboard/TileBoundary";
 import {
@@ -226,7 +226,7 @@ function TileShell({
 
         {href ? (
           <div className="flex justify-end">
-            <Link
+            <TransitionLink
               href={href}
               className={cx(
                 "inline-flex min-h-9 items-center justify-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.12em] transition hover:-translate-y-0.5",
@@ -236,7 +236,7 @@ function TileShell({
               )}
             >
               {hrefLabel}
-            </Link>
+            </TransitionLink>
           </div>
         ) : null}
       </div>
