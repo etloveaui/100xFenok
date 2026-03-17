@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 type FooterMainBarProps = {
   statusLabel: string;
   statusClassName: string;
@@ -27,11 +29,10 @@ export default function FooterMainBar({
     <div className="bg-white/95 backdrop-blur-md border-t border-brand-navy/20 shadow-[0_-6px_20px_rgba(0,0,0,0.08)]">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="h-12 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onShareClick}
-            className="flex items-center gap-2 group cursor-pointer min-w-0"
-            aria-label="Copy URL"
+          <Link
+            href="/"
+            className="flex items-center gap-2 group min-w-0"
+            aria-label="Home"
           >
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-navy/10 to-brand-interactive/10 flex items-center justify-center text-brand-navy group-hover:from-brand-navy group-hover:to-brand-interactive group-hover:text-white transition-all duration-300 flex-shrink-0">
               <i className="fas fa-chart-line" />
@@ -42,7 +43,7 @@ export default function FooterMainBar({
               </span>
               <span className="text-[8px] text-slate-600">© 2025 All rights reserved</span>
             </div>
-          </button>
+          </Link>
 
           <div className="flex-1 flex justify-center min-w-0">
             <p className="hidden md:block text-[11px] text-slate-600 truncate max-w-[400px]">
@@ -69,6 +70,14 @@ export default function FooterMainBar({
           </div>
 
           <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={onShareClick}
+              className="hidden md:flex w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+              aria-label="URL 복사"
+            >
+              <i className="fas fa-link text-sm" />
+            </button>
             <button
               type="button"
               onClick={onNotificationClick}
