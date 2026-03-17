@@ -49,19 +49,23 @@ function hasFiniteNumber(value: unknown): value is number {
 }
 
 function hasNumberSeries(series: NumberPoint[] | undefined): boolean {
-  return Array.isArray(series) && series.some((point) => hasFiniteNumber(point?.value));
+  if (!Array.isArray(series) || series.length === 0) return false;
+  return hasFiniteNumber(series[series.length - 1]?.value);
 }
 
 function hasFearGreedSeries(series: CnnFearGreedPoint[] | null): boolean {
-  return Array.isArray(series) && series.some((point) => hasFiniteNumber(point?.score));
+  if (!Array.isArray(series) || series.length === 0) return false;
+  return hasFiniteNumber(series[series.length - 1]?.score);
 }
 
 function hasPutCallSeries(series: PutCallPoint[] | null): boolean {
-  return Array.isArray(series) && series.some((point) => hasFiniteNumber(point?.value));
+  if (!Array.isArray(series) || series.length === 0) return false;
+  return hasFiniteNumber(series[series.length - 1]?.value);
 }
 
 function hasCryptoSeries(series: CryptoFearGreedPoint[] | null): boolean {
-  return Array.isArray(series) && series.some((point) => hasFiniteNumber(point?.value));
+  if (!Array.isArray(series) || series.length === 0) return false;
+  return hasFiniteNumber(series[series.length - 1]?.value);
 }
 
 function hasBenchmarkMomentum(payload: BenchmarksSummaryPayload | null): boolean {

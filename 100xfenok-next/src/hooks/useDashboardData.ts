@@ -135,6 +135,8 @@ export function useDashboardData() {
       if (!hasLiveDataRef.current) {
         setDashboard(nextSnapshot);
         setDataReady(false);
+      } else {
+        setDashboard((prev) => ({ ...prev, freshness: nextSnapshot.freshness }));
       }
     } finally {
       loadInFlightRef.current = false;

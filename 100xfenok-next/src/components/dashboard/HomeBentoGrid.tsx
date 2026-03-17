@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import type { DashboardFreshnessCadence, DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
 import {
   clamp,
@@ -45,18 +45,10 @@ type HomeBentoGridProps = {
   freshness?: DashboardFreshnessMap;
 };
 
-type DetailConfig = {
-  title: string;
-  summary: string;
-  bullets: string[];
-  href?: string;
-  hrefLabel?: string;
-};
-
 const tileSourceMap: Record<TileKey, string[]> = {
-  hero: ["fearGreed", "benchmarks", "weeklyBanking", "quarterlyBanking", "dailyBanking"],
+  hero: ["sentiment", "benchmarks", "weeklyBanking", "quarterlyBanking", "dailyBanking"],
   quick: ["ticker:SPY", "ticker:QQQ", "dailyBanking"],
-  fearGreed: ["fearGreed"],
+  fearGreed: ["sentiment"],
   breadth: ["benchmarks", "ticker:XLK", "ticker:XLF", "ticker:XLV", "ticker:XLE", "ticker:XLI", "ticker:XLC", "ticker:XLY", "ticker:XLP", "ticker:XLRE", "ticker:XLB", "ticker:XLU"],
   vix: ["vix"],
   crypto: ["crypto"],
@@ -189,27 +181,21 @@ function FreshnessBadge({
 function TileShell({
   kicker,
   title,
-  summary,
   children,
   className,
   dark = false,
   muted = false,
   freshness,
-  detail,
-  onOpenDetail,
   href,
   hrefLabel = "상세 보기",
 }: {
   kicker: string;
   title: string;
-  summary?: string;
   children: ReactNode;
   className?: string;
   dark?: boolean;
   muted?: boolean;
   freshness?: TileFreshness;
-  detail?: DetailConfig;
-  onOpenDetail?: (detail: DetailConfig) => void;
   href?: string;
   hrefLabel?: string;
 }) {
@@ -231,25 +217,8 @@ function TileShell({
               {kicker}
             </p>
             <h3 className={cx("mt-2 text-lg font-black tracking-tight", dark ? "text-white" : "text-slate-950")}>{title}</h3>
-            {summary ? (
-              <p className={cx("mt-2 text-sm leading-5", dark ? "text-white/70" : "text-slate-600")}>{summary}</p>
-            ) : null}
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-2">
-            <FreshnessBadge meta={freshness} dark={dark} />
-            {detail && onOpenDetail ? (
-              <button
-                type="button"
-                onClick={() => onOpenDetail(detail)}
-                className={cx(
-                  "inline-flex min-h-8 items-center justify-center rounded-full border px-2.5 text-[10px] font-black uppercase tracking-[0.12em] md:hidden",
-                  dark ? "border-white/[0.10] bg-white/[0.08] text-white/70" : "border-slate-200 bg-white text-slate-600",
-                )}
-              >
-                요약
-              </button>
-            ) : null}
-          </div>
+          <FreshnessBadge meta={freshness} dark={dark} />
         </header>
 
         <div className="min-w-0 flex-1">{children}</div>
@@ -287,68 +256,6 @@ function TileShell({
   );
 }
 
-function DetailSheet({
-  detail,
-  onClose,
-}: {
-  detail: DetailConfig | null;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    if (!detail || typeof document === "undefined") return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [detail]);
-
-  if (!detail) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
-      <button
-        type="button"
-        className="absolute inset-0 bg-slate-950/45 backdrop-blur-[1px]"
-        aria-label="닫기"
-        onClick={onClose}
-      />
-      <div className="absolute inset-x-0 bottom-0 rounded-t-[1.8rem] border border-slate-200 bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_42px_-20px_rgba(15,23,42,0.65)]">
-        <div className="mx-auto h-1.5 w-14 rounded-full bg-slate-200" />
-        <div className="mt-4 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Tile Note</p>
-            <h4 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{detail.title}</h4>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{detail.summary}</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500"
-            aria-label="시트 닫기"
-          >
-            <span aria-hidden="true">✕</span>
-          </button>
-        </div>
-        <div className="mt-4 space-y-2">
-          {detail.bullets.map((bullet) => (
-            <div key={bullet} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
-              {bullet}
-            </div>
-          ))}
-        </div>
-        {detail.href ? (
-          <Link
-            href={detail.href}
-            className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-brand-interactive bg-brand-interactive px-4 text-sm font-black text-white"
-          >
-            {detail.hrefLabel ?? "상세 보기"}
-          </Link>
-        ) : null}
-      </div>
-    </div>
-  );
-}
 
 function axisStyle(index: number) {
   if (index === 0) return "from-emerald-300 to-sky-300";
@@ -366,8 +273,6 @@ export default function HomeBentoGrid({
   failedSources,
   freshness,
 }: HomeBentoGridProps) {
-  const [detail, setDetail] = useState<DetailConfig | null>(null);
-
   const regimeTone = toneFromRegimeClass(regimeClass);
   const spyIndex = dashboard.quickIndices.find((item) => item.symbol === "SPY") ?? dashboard.quickIndices[0];
   const qqqIndex = dashboard.quickIndices.find((item) => item.symbol === "QQQ") ?? dashboard.quickIndices[1];
@@ -418,101 +323,8 @@ export default function HomeBentoGrid({
     },
   };
 
-  const detailMap: Record<TileKey, DetailConfig> = {
-    hero: {
-      title: "Regime Hero",
-      summary: "현재 시장 판정과 3축 기여도를 가장 큰 타일에서 바로 읽게 하는 영역입니다.",
-      bullets: regimeAxes.map((axis) => `${axis.label} ${axis.value}% · ${axis.detail}`),
-      href: "/market",
-      hrefLabel: "Market 열기",
-    },
-    quick: {
-      title: "Quick Indices",
-      summary: "핵심 지수와 금리 스프레드를 같은 시야에 두고 큰 방향을 빠르게 확인합니다.",
-      bullets: [
-        `SPY ${formatSignedPercentDecimal(spyIndex.change)}`,
-        `QQQ ${formatSignedPercentDecimal(qqqIndex.change)}`,
-        `10Y ${formatPercent(dashboard.tenYearYield, 2)}`,
-        `HY ${formatPercent(dashboard.hySpread, 2)}`,
-      ],
-    },
-    fearGreed: {
-      title: "Fear & Greed",
-      summary: "공포-탐욕 지수를 독립 타일로 빼서 심리의 방향을 한 번에 읽게 합니다.",
-      bullets: [
-        `점수 ${Math.round(dashboard.fearGreedScore)} · ${dashboard.fearGreedLabel}`,
-        freshnessMap.fearGreed?.label ?? "일간 기준 데이터",
-      ],
-      href: "/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html",
-      hrefLabel: "심리 상세 보기",
-    },
-    breadth: {
-      title: "Breadth",
-      summary: "섹터 강약을 단일 타일로 요약해 시장 확산의 폭을 빠르게 보여줍니다.",
-      bullets: [
-        `상승 ${dashboard.sectorUp} · 하락 ${dashboard.sectorDown}`,
-        ...sectorLeaders.map((sector) => `${sector.etf} ${formatSignedPercentDecimal(sector.displayChange, 1)}`),
-      ],
-      href: "/sectors",
-      hrefLabel: "섹터 보기",
-    },
-    vix: {
-      title: "VIX",
-      summary: "변동성을 독립 타일로 떼어내 시장의 불안 수준을 바로 확인하게 합니다.",
-      bullets: [
-        `${dashboard.vixValue.toFixed(2)} · ${dashboard.vixLabel}`,
-        freshnessMap.vix?.label ?? "일간 기준 데이터",
-      ],
-      href: "/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html",
-      hrefLabel: "VIX 상세 보기",
-    },
-    crypto: {
-      title: "Crypto Fear & Greed",
-      summary: "암호화폐 심리를 별도 타일로 분리해 위험 선호의 극단 구간을 포착합니다.",
-      bullets: [
-        `${Math.round(dashboard.cryptoFearGreed)} · ${dashboard.cryptoLabel}`,
-        freshnessMap.crypto?.label ?? "일간 기준 데이터",
-      ],
-      href: "/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html",
-      hrefLabel: "심리 상세 보기",
-    },
-    liquidity: {
-      title: "Liquidity",
-      summary: "대출 흐름과 예대율을 묶어 유동성 방향을 한 칸에서 확인합니다.",
-      bullets: [
-        `${formatSignedBillions(dashboard.liquidityFlow)} · ${dashboard.liquidityFlowLabel}`,
-        `예대율 ${formatPercent(dashboard.loanDepositRatio, 1)}`,
-        freshnessMap.liquidity?.label ?? "주간 기준 데이터",
-      ],
-      href: "/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html",
-      hrefLabel: "유동성 상세 보기",
-    },
-    riskAppetite: {
-      title: "Risk Appetite",
-      summary: "옵션 포지셔닝과 심리 요약을 묶어 리스크 선호를 보조적으로 해석합니다.",
-      bullets: [
-        `Put/Call ${dashboard.putCallValue.toFixed(2)} · ${dashboard.putCallLabel}`,
-        `Crypto ${Math.round(dashboard.cryptoFearGreed)} · ${dashboard.cryptoLabel}`,
-      ],
-      href: "/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html",
-      hrefLabel: "심리 상세 보기",
-    },
-    bankingStress: {
-      title: "Banking + Stress",
-      summary: "은행 건전성과 시장 스트레스를 한 타일로 병합해 리스크 바닥을 같이 봅니다.",
-      bullets: [
-        dashboard.bankingSummary,
-        `스트레스 ${dashboard.stressScore.toFixed(2)} · ${dashboard.stressLabel}`,
-        freshnessMap.bankingStress?.label ?? "혼합 기준 데이터",
-      ],
-      href: "/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html",
-      hrefLabel: "건전성 상세 보기",
-    },
-  };
-
   return (
-    <>
-      <div className="space-y-4">
+    <div className="space-y-4">
         {isLoading ? (
           <div className="rounded-[1.2rem] border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-800">
             데이터를 확인하는 중입니다. 기본값은 흐리게 표시됩니다.
@@ -533,12 +345,9 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Market Regime"
             title={regimeLabel}
-            summary="Hero가 3초 판정을 맡고, 아래 타일이 30초 오버뷰를 채웁니다."
             dark
             muted={!dataReady || isOffline || tileFailed.hero}
             freshness={freshnessMap.hero}
-            detail={detailMap.hero}
-            onOpenDetail={setDetail}
             className={cx(
               "col-span-2 sm:col-span-3 lg:col-span-2",
               "lg:row-span-2",
@@ -588,11 +397,8 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Quick Indices"
             title="SPY · QQQ · 10Y · HY"
-            summary="핵심 지수와 금리만 별도 타일로 분리했습니다."
             muted={!dataReady || isOffline || tileFailed.quick}
             freshness={freshnessMap.quick}
-            detail={detailMap.quick}
-            onOpenDetail={setDetail}
             className="col-span-2 sm:col-span-1 lg:col-span-2"
           >
             <div className="grid grid-cols-2 gap-2">
@@ -643,11 +449,8 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Volatility"
             title="VIX"
-            summary="불안의 크기를 숫자 하나로 읽습니다."
             muted={!dataReady || isOffline || tileFailed.vix}
             freshness={freshnessMap.vix}
-            detail={detailMap.vix}
-            onOpenDetail={setDetail}
             href="/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html"
             className="col-span-1"
           >
@@ -660,11 +463,8 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Crypto Sentiment"
             title="Crypto F&G"
-            summary="극단 구간을 별도 타일로 뽑았습니다."
             muted={!dataReady || isOffline || tileFailed.crypto}
             freshness={freshnessMap.crypto}
-            detail={detailMap.crypto}
-            onOpenDetail={setDetail}
             href="/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html"
             className="col-span-1"
           >
@@ -677,11 +477,8 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Fear & Greed"
             title="Sentiment Gauge"
-            summary="공포-탐욕을 독립 타일로 남겨 심리의 축을 분명히 유지합니다."
             muted={!dataReady || isOffline || tileFailed.fearGreed}
             freshness={freshnessMap.fearGreed}
-            detail={detailMap.fearGreed}
-            onOpenDetail={setDetail}
             href="/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html"
             className="col-span-1 sm:col-span-2 lg:col-span-2"
           >
@@ -719,11 +516,8 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Breadth"
             title="Sector Expansion"
-            summary="강한 섹터와 약한 섹터를 한 칸 안에 함께 보여줍니다."
             muted={!dataReady || isOffline || tileFailed.breadth}
             freshness={freshnessMap.breadth}
-            detail={detailMap.breadth}
-            onOpenDetail={setDetail}
             href="/sectors"
             hrefLabel="섹터 보기"
             className="col-span-1"
@@ -763,11 +557,8 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Liquidity"
             title="Funding Pulse"
-            summary="유동성은 넓은 타일에서 바와 수치를 함께 보여줍니다."
             muted={!dataReady || isOffline || tileFailed.liquidity}
             freshness={freshnessMap.liquidity}
-            detail={detailMap.liquidity}
-            onOpenDetail={setDetail}
             href="/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html"
             className="col-span-2 sm:col-span-1"
           >
@@ -793,11 +584,8 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Banking + Stress"
             title="Funding Stress Guard"
-            summary="건전성과 스트레스를 한 타일에 붙여 리스크 바닥을 같이 봅니다."
             muted={!dataReady || isOffline || tileFailed.bankingStress}
             freshness={freshnessMap.bankingStress}
-            detail={detailMap.bankingStress}
-            onOpenDetail={setDetail}
             href="/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fbanking-health.html"
             className="col-span-2 sm:col-span-3 lg:col-span-2"
           >
@@ -828,11 +616,8 @@ export default function HomeBentoGrid({
           <TileShell
             kicker="Positioning"
             title="Risk Appetite"
-            summary="옵션 포지셔닝을 보조 타일로 남겨 심리 해석을 받쳐줍니다."
             muted={!dataReady || isOffline || tileFailed.riskAppetite}
             freshness={freshnessMap.riskAppetite}
-            detail={detailMap.riskAppetite}
-            onOpenDetail={setDetail}
             href="/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fsentiment-signal%2Findex.html"
             className="col-span-2 sm:col-span-2 lg:col-span-2"
           >
@@ -850,15 +635,12 @@ export default function HomeBentoGrid({
                   VIX {dashboard.vixValue.toFixed(2)} · {dashboard.vixLabel}
                 </div>
                 <div className="rounded-[1rem] border border-slate-200 bg-white/70 px-3 py-2 text-sm font-semibold text-slate-700">
-                  심리 보조 해석 타일
+                  Put/Call {dashboard.putCallValue.toFixed(2)} · {dashboard.putCallLabel}
                 </div>
               </div>
             </div>
           </TileShell>
         </section>
-      </div>
-
-      <DetailSheet detail={detail} onClose={() => setDetail(null)} />
-    </>
+    </div>
   );
 }
