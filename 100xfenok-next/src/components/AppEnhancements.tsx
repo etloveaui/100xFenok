@@ -181,13 +181,24 @@ export default function AppEnhancements() {
         const progress = Math.min(1, Math.max(0, currentY / scrollableHeight));
         setScrollProgress(progress);
         setShowBackToTop(currentY > 560);
+        const delta = currentY - lastScrollYRef.current;
+        const isScrollingDown = delta > 8 && currentY > 80;
+        const isScrollingUp = delta < -5;
+
+        if (typeof document !== 'undefined') {
+          const root = document.documentElement;
+          if (isScrollingDown) {
+            root.setAttribute('data-scroll-hide', '1');
+          } else if (isScrollingUp || currentY < 40) {
+            root.removeAttribute('data-scroll-hide');
+          }
+        }
+
         setDockCollapsed((prev) => {
-          if (currentY < 72) return false;
-          if (scrollableHeight < 220) return false;
+          if (currentY < 40) return false;
           if (Date.now() < dockNavLockUntilRef.current) return false;
-          const delta = currentY - lastScrollYRef.current;
-          if (delta > 36 && currentY > 320) return true;
-          if (delta < -18) return false;
+          if (isScrollingDown) return true;
+          if (isScrollingUp) return false;
           return prev;
         });
         lastScrollYRef.current = currentY;
