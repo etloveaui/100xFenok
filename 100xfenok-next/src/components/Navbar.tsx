@@ -217,7 +217,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="nav-wrapper fixed top-0 left-0 right-0 z-50 bg-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border-b border-gray-100" id="mainNav">
+      <nav className="nav-wrapper fixed top-0 left-0 right-0 z-50 bg-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border-b border-gray-100" id="mainNav" style={{ transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
         <div className="w-full">
           <div className="container mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
             {/* Brand */}

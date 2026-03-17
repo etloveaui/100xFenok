@@ -185,12 +185,14 @@ export default function AppEnhancements() {
         const isScrollingDown = delta > 8 && currentY > 80;
         const isScrollingUp = delta < -5;
 
-        if (typeof document !== 'undefined') {
-          const root = document.documentElement;
-          if (isScrollingDown) {
-            root.setAttribute('data-scroll-hide', '1');
-          } else if (isScrollingUp || currentY < 40) {
-            root.removeAttribute('data-scroll-hide');
+        if (typeof document !== 'undefined' && window.innerWidth < 768) {
+          const navEl = document.getElementById('mainNav');
+          if (navEl) {
+            if (isScrollingDown) {
+              navEl.style.transform = 'translateY(-100%)';
+            } else if (isScrollingUp || currentY < 40) {
+              navEl.style.transform = '';
+            }
           }
         }
 
