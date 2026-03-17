@@ -20,8 +20,7 @@
 ## Contract
 
 1. Canonical location for these files is `data/macro/`
-2. Root `data/fred-banking-*.json` and `data/fdic-tier1.json` remain as temporary compatibility mirrors
-3. New consumers should read `data/macro/*` first and keep root fallback only while migration is in progress
+2. All consumers should read `data/macro/*`
 
 ---
 

@@ -78,11 +78,10 @@ const aapl = await fetch('https://100xfenok.pages.dev/data/slickcharts/stocks/AA
 3. Update this file's count if significant
 4. Record in `docs/CHANGELOG.md`
 
-### Compatibility Note
+### Macro Canonical Path
 
-- `fred-banking-*.json`, `fdic-tier1.json` in `data/` root are temporary compatibility files
-- Canonical location is now `data/macro/`
-- Consumers should migrate to `data/macro/*` first, then root files can be removed
+- Banking and FDIC macro files now live under `data/macro/`
+- Consumers should read `data/macro/*`
 
 ### File Size Guidelines
 
