@@ -1,7 +1,7 @@
 {
   "folder": "global-scouter",
   "version": "2.2.0",
-  "updated": "2026-03-16",
+  "updated": "2026-03-22",
   "source": "Custom aggregation (FinancialModelingPrep, Yahoo Finance)",
   "update_frequency": "on-demand",
   "maintainer": "Manual conversion scripts",
@@ -32,7 +32,7 @@
     "core/stocks_index.json": {
       "description": "Master stock index (ticker -> basic info)",
       "size_kb": 288,
-      "stock_count": 1063,
+      "stock_count": 1062,
       "schema": {
         "stocks.{TICKER}": {
           "n": "string (name)",
@@ -49,7 +49,7 @@
       }
     },
     "stocks/detail/{TICKER}.json": {
-      "description": "Individual stock profile (1,063 files)",
+      "description": "Individual stock profile (1,062 files)",
       "schema": {
         "years": "string[] (FY-4 to FY0)",
         "scale": {
@@ -90,14 +90,14 @@
           "fy_plus_1": "number",
           "fy_plus_2": "number",
           "fy_plus_3": "number",
-          "_coverage": "100% (1,063 stocks) - v2.2.0"
+          "_coverage": "100% (1,062 stocks) - v2.2.0"
         },
         "growth_consensus": {
           "revenue_7y": "number (%)",
           "revenue_3y": "number (%)",
           "earnings_7y": "number (%)",
           "earnings_3y": "number (%)",
-          "_coverage": "100% (1,063 stocks) - v2.2.0"
+          "_coverage": "100% (1,062 stocks) - v2.2.0"
         },
         "per_bands": {
           "current": "number",
@@ -105,7 +105,7 @@
           "avg_8y": "number",
           "max_8y": "number",
           "source": "string (S_Valuation|calculated)",
-          "_coverage": "97.8% (1,040 stocks) - v2.2.0"
+          "_coverage": "98.1% (1,042 stocks) - v2.2.0"
         }
       }
     },
