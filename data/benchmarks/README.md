@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-04-30 ~ 2026-03-15 (16 years, 829 data points)
+> **Period**: 2010-05-07 ~ 2026-03-22 (16 years, 829 data points)
 > **Version**: 3.7.0
-> **Last Update**: 2026-03-16
+> **Last Update**: 2026-03-23
 
 ---
 
@@ -112,6 +112,7 @@ console.log(summaries.yearly_returns.sp500);  // {2025, 2024, 2023, ...}
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.7.0 | 2026-03-23 | Weekly data update (2026-03-20): 30,430 records, 2010-05-07 ~ 2026-03-22, micro_sectors +1 |
 | 3.7.0 | 2026-01-20 | Added summaries.json (momentum + yearly returns) |
 | 3.6.0 | 2025-12-26 | Unified output path |
 | 3.5.0 | 2025-12-20 | Added micro_sectors.json |
