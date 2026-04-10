@@ -2,13 +2,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- <script type="module">
-    const cfg = document.createElement('script');
-    cfg.defer = true;
-    cfg.type = 'module';
-    cfg.src = `config.js?v=${siteVersion}`;
-    document.head.appendChild(cfg);
-  </script> -->
+  <script defer src="./config.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>100x 멀티차트</title>
@@ -77,54 +71,51 @@
     /* ===== 2. 스타일 팔레트 ===== */
     const PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
     const getColor = i => PALETTE[i % PALETTE.length];
+    const STOOQ_PROXY = window.STOOQ_PROXY || 'https://stooq-proxy.etloveaui.workers.dev';
+    const POLYGON_KEY = window.POLYGON_KEY || '';
+    const USE_ALPHA = window.USE_ALPHA ?? false;
+
+    function showToast(msg, type = 'info') {
+      const color = { info: 'bg-blue-600', warn: 'bg-amber-600', error: 'bg-red-600' }[type] || 'bg-gray-800';
+      const el = Object.assign(document.createElement('div'), { textContent: msg });
+      el.className = `${color} fixed top-5 left-1/2 -translate-x-1/2 text-white px-4 py-2 rounded-xl shadow-lg z-50`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
 
     /* ===== 3. 데이터 호출 ===== */
     
-    
-/* ===== [Stooq via AllOrigins – 단일 구현] ===== */
-const STOOQ_PROXY = 'https://stooq-proxy.etloveaui.workers.dev';
+    function toStooqSymbol(symbol) {
+      if (symbol.startsWith('^')) return symbol.toLowerCase();          // ^GSPC
+      if (/^[0-9]{6}\.KS$/i.test(symbol)) return symbol.slice(0, 6).toLowerCase() + '.kr'; // 005930.KS
+      return symbol.toLowerCase() + '.us';                              // default US
+    }
 
+    async function fetchStooq(symbol) {
+      const stoSym = toStooqSymbol(symbol);
+      const cacheKey = `stooq_cache_${stoSym}`;
+      const c = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+      if (c.ts && Date.now() - c.ts < 86400000) return c.data;          // 24h cache
 
-function toStooqSymbol(symbol) {
-  if (symbol.startsWith('^')) return symbol.toLowerCase();          // ^GSPC
-  if (/^[0-9]{6}\.KS$/i.test(symbol)) return symbol.slice(0,6).toLowerCase()+'.kr'; // 005930.KS
-  return symbol.toLowerCase() + '.us';                              // default US
-}
+      const upstream = `https://stooq.com/q/d/l/?s=${stoSym}&i=d`;
+      const proxyBase = STOOQ_PROXY.endsWith('/') ? STOOQ_PROXY : `${STOOQ_PROXY}/`;
+      const url = proxyBase + encodeURIComponent(upstream);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Stooq proxy ${res.status}`);
 
-async function fetchStooq(symbol) {
-  const stoSym = toStooqSymbol(symbol);
-  const cacheKey = `stooq_cache_${stoSym}`;
-  const c = JSON.parse(localStorage.getItem(cacheKey)||'{}');
-  if (c.ts && Date.now() - c.ts < 86400000) return c.data;          // 24h cache
+      const txt = await res.text();
+      if (!txt.startsWith('Date')) throw new Error('CSV format');
 
-  const upstream = `https://stooq.com/q/d/l/?s=${stoSym}&i=d`;
-  const url = STOOQ_PROXY + encodeURIComponent(upstream);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Stooq proxy ' + res.status);
+      const data = txt.trim().split('\n').slice(1).map(l => {
+        const f = l.split(',');
+        return { date: f[0], price: +f[4] };
+      }).sort((a, b) => a.date.localeCompare(b.date));
 
-  const txt = await res.text();
-  if (!txt.startsWith('Date')) throw new Error('CSV format');
+      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+      return data;
+    }
 
-  const data = txt.trim().split('\n').slice(1).map(l => {
-    const f = l.split(',');
-    return { date: f[0], price: +f[4] };
-  }).sort((a,b)=>a.date.localeCompare(b.date));
-
-  localStorage.setItem(cacheKey, JSON.stringify({ts:Date.now(), data}));
-  return data;
-}
-
-async function fetchPriceData(symbol) {
-  try {
-    return await fetchStooq(symbol);
-  } catch (e) {
-    console.warn('[Alpha Fallback]', e.message);
-    return await fetchPriceDataAlpha(symbol);
-  }
-}
-
-
-async function fetchPriceDataAlpha(symbol) {
+    async function fetchPriceDataAlpha(symbol) {
       let lastError = null;
       for (let i = 0; i < API_KEYS.length; i++) {
         const apiKey = rotateKey();
@@ -149,6 +140,19 @@ async function fetchPriceDataAlpha(symbol) {
         }
       }
       throw lastError;
+    }
+
+    async function fetchPriceData(symbol) {
+      try {
+        return await fetchStooq(symbol);
+      } catch (e) {
+        console.warn('[Alpha Fallback]', e.message);
+        if (USE_ALPHA) {
+          showToast(`${symbol}: Alpha Vantage 사용`, 'info');
+          return await fetchPriceDataAlpha(symbol);
+        }
+        throw e;
+      }
     }
 
     /* ===== 4. 계산 유틸 ===== */
@@ -419,72 +423,11 @@ async function fetchPriceDataAlpha(symbol) {
       );
     }
 
+    window.showToast = showToast;
+    window.fetchStooq = fetchStooq;
+    window.fetchPriceDataAlpha = fetchPriceDataAlpha;
+    window.fetchPriceData = fetchPriceData;
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-	window.fetchPriceDataAlpha = fetchPriceData;
   </script>
-
-<!-- === Stooq + Polygon override (v10) === -->
-<script defer="" type="text/babel">
-
-  function showToast(msg, type='info'){
-    const color = {info:'bg-blue-600',warn:'bg-amber-600',error:'bg-red-600'}[type]||'bg-gray-800';
-    const el = Object.assign(document.createElement('div'), {textContent: msg});
-    el.className = `${color} fixed top-5 left-1/2 -translate-x-1/2 text-white px-4 py-2 rounded-xl shadow-lg z-50`;
-    document.body.appendChild(el);
-    setTimeout(()=>el.remove(), 3000);
-  }
-
-  async function fetchStooq(symbol){
-    const stoSym = toStooqSymbol(symbol);
-    const url = `${STOOQ_PROXY}/?s=${stoSym}&i=d`;
-    const res = await fetch(url);
-    if(!res.ok) throw new Error('http');
-    const txt = await res.text();
-    if(txt.startsWith('<!DOCTYPE')) throw new Error('ticker');
-    if(txt.startsWith('Date') && txt.trim().split('\n').length===1) throw new Error('empty');
-    return txt.trim().split('\n').slice(1).map(l=>{const f=l.split(',');return {date:f[0],price:+f[4]};});
-  }
-
-  async function fetchPolygon(symbol){
-    const url = `https://api.polygon.io/v2/aggs/ticker/${symbol.toUpperCase()}/range/1/day/2000-01-01/2999-12-31?adjusted=true&apiKey=${POLYGON_KEY}`;
-    const r = await fetch(url);
-    if(!r.ok) throw new Error('polygon-http');
-    const j = await r.json();
-    if(!j.results || !j.results.length) throw new Error('polygon-empty');
-    return j.results.map(o=>({date:new Date(o.t).toISOString().slice(0,10),price:o.c}));
-  }
-
-  const fetchPriceDataAlphaOriginal = window.fetchPriceDataAlpha;
-
-  async function fetchPriceData(symbol){
-    try{
-      return await fetchStooq(symbol);
-    }catch(e1){
-      if(e1.message==='ticker'){
-          showToast(`${symbol}: 티커 형식 오류(Stooq)`, 'warn');
-      }
-      try{
-        return await fetchPolygon(symbol);
-      }catch(e2){
-        if(e2.message.startsWith('polygon')){
-          showToast(`${symbol}: Polygon 데이터 없음`, 'warn');
-        }
-        if(e1.message==='empty'){
-          showToast(`${symbol}: Stooq 데이터 없음`, 'warn');
-        }
-        if(USE_ALPHA){
-          showToast(`${symbol}: Alpha Vantage 사용`, 'info');
-          return await fetchPriceDataAlphaOriginal(symbol);
-        }
-        return [];
-      }
-    }
-  }
-
-  window.fetchPriceDataAlpha = fetchPriceData;
-
-</script>
-<!-- === override end === -->
-
 
 </body></html>
