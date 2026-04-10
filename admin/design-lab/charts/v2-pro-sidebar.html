@@ -2,6 +2,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Noto+Sans+KR:wght@500;700&amp;display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="../../../tools/asset/config.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -48,9 +49,9 @@
 
   <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script defer="" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-  <script defer="" src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script defer="" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script defer="" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
 </head>
 <body>
 
@@ -65,7 +66,14 @@
     const DELAY_MS = Math.ceil(60000 / (5 * API_KEYS.length));
     const PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
     const getColor = i => PALETTE[i % PALETTE.length];
-    const STOOQ_PROXY = 'https://stooq-proxy.etloveaui.workers.dev';
+    const STOOQ_PROXY = window.STOOQ_PROXY || 'https://stooq-proxy.etloveaui.workers.dev';
+    const POLYGON_KEY = window.POLYGON_KEY || '';
+    const USE_ALPHA = window.USE_ALPHA ?? false;
+
+    function toStooqProxyUrl(upstream) {
+        const proxyBase = STOOQ_PROXY.endsWith('/') ? STOOQ_PROXY : `${STOOQ_PROXY}/`;
+        return proxyBase + encodeURIComponent(upstream);
+    }
 
     function toStooqSymbol(symbol) {
         if (symbol.startsWith('^')) return symbol.toLowerCase();
@@ -79,7 +87,7 @@
         const c = JSON.parse(localStorage.getItem(cacheKey)||'{}');
         if (c.ts && Date.now() - c.ts < 86400000) return c.data;
         
-        const url = STOOQ_PROXY + encodeURIComponent(`https://stooq.com/q/d/l/?s=${stoSym}&i=d`);
+        const url = toStooqProxyUrl(`https://stooq.com/q/d/l/?s=${stoSym}&i=d`);
         const res = await fetch(url);
         if (!res.ok) throw new Error('Proxy error');
         const txt = await res.text();
@@ -142,7 +150,7 @@
             if (chartMode === 'benchmark' && !tickers.includes(options.benchmarkTicker)) tickers.push(options.benchmarkTicker);
             
             const dataMap = {};
-            for(const t of tickers) { try { dataMap[t] = await fetchStooq(t); } catch(e){} }
+            for(const t of tickers) { try { dataMap[t] = await fetchPriceData(t); } catch(e){} }
             
             // Date Filtering
             const sStr = startDate;

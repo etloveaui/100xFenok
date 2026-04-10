@@ -3,6 +3,7 @@
   <title>Multichart v4 - Quantum Workspace (Light)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="../../../tools/asset/config.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -74,9 +75,9 @@
 
   <script defer="" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script defer="" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-  <script defer="" src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script defer="" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script defer="" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
 </head>
 <body>
 
@@ -85,14 +86,31 @@
   <script type="text/babel">
     const { useState, useRef, useEffect } = React;
     /* Logic Copy - Stooq Proxy */
-    const STOOQ_PROXY = 'https://stooq-proxy.etloveaui.workers.dev';
+    const STOOQ_PROXY = window.STOOQ_PROXY || 'https://stooq-proxy.etloveaui.workers.dev';
+    const POLYGON_KEY = window.POLYGON_KEY || '';
+    const USE_ALPHA = window.USE_ALPHA ?? false;
+
+    function toStooqProxyUrl(upstream) {
+        const proxyBase = STOOQ_PROXY.endsWith('/') ? STOOQ_PROXY : `${STOOQ_PROXY}/`;
+        return proxyBase + encodeURIComponent(upstream);
+    }
+
+    function toStooqSymbol(symbol) {
+        if (symbol.startsWith('^')) return symbol.toLowerCase();
+        if (/^[0-9]{6}\.KS$/i.test(symbol)) return symbol.slice(0,6).toLowerCase()+'.kr';
+        return symbol.toLowerCase() + '.us';
+    }
     async function fetchStooq(symbol) {
         try {
-            const res = await fetch(STOOQ_PROXY + encodeURIComponent(`https://stooq.com/q/d/l/?s=${symbol.toLowerCase()}.us&i=d`));
+            const stoSym = toStooqSymbol(symbol);
+            const res = await fetch(toStooqProxyUrl(`https://stooq.com/q/d/l/?s=${stoSym}&i=d`));
             if(!res.ok) return [];
             const txt = await res.text();
             return txt.trim().split('\n').slice(1).map(l=>{const f=l.split(',');return{date:f[0],price:+f[4]}}).sort((a,b)=>a.date.localeCompare(b.date));
         } catch(e) { return []; }
+    }
+    async function fetchPriceData(symbol) {
+        try { return await fetchStooq(symbol); } catch (e) { console.warn(e); return []; }
     }
     const calculateMDD = p => { let peak=-Infinity, maxDD=0; p.forEach(v=>{if(v>peak)peak=v; const dd=(v-peak)/peak; if(dd<maxDD)maxDD=dd;}); return maxDD*-100; };
     const calculateVol = p => { if(p.length<2)return 0; const r=[]; for(let i=1;i<p.length;i++) r.push(Math.log(p[i]/p[i-1])); const m=r.reduce((a,b)=>a+b,0)/r.length; return Math.sqrt(r.reduce((a,v)=>a+(v-m)**2,0)/(r.length-1))*Math.sqrt(252)*100; };
@@ -116,7 +134,7 @@
             if(!tickers.length) { setIsLoading(false); return; }
             
             const map = {};
-            for(const t of tickers) map[t] = await fetchStooq(t);
+            for(const t of tickers) map[t] = await fetchPriceData(t);
             
             const end = new Date(); const start = new Date();
             const m = {'1M':-1,'6M':-6,'1Y':-12,'YTD':0}[period]||-12;
