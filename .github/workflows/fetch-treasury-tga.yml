@@ -1,0 +1,139 @@
+name: Fetch Treasury TGA Data
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-treasury-tga:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create data directory
+        run: mkdir -p data data/macro
+
+      - name: Fetch TGA JSON
+        run: |
+          node << 'EOF_NODE'
+          const https = require('https');
+          const fs = require('fs');
+
+          const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
+          const accountTypes = [
+            'Federal Reserve Account',
+            'Treasury General Account (TGA)',
+            'Treasury General Account (TGA) Opening Balance'
+          ];
+
+          function fetchJson(url) {
+            return new Promise((resolve, reject) => {
+              https.get(url, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                  try {
+                    if (res.statusCode < 200 || res.statusCode >= 300) {
+                      throw new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`);
+                    }
+                    resolve(JSON.parse(data));
+                  } catch (e) {
+                    reject(e);
+                  }
+                });
+              }).on('error', reject);
+            });
+          }
+
+          function buildUrl(accountType) {
+            const url = new URL(baseUrl);
+            url.searchParams.set('filter', `account_type:eq:${accountType}`);
+            url.searchParams.set('sort', 'record_date');
+            url.searchParams.set('page[size]', '10000');
+            url.searchParams.set('fields', 'record_date,open_today_bal');
+            return url.toString();
+          }
+
+          async function main() {
+            const payloads = await Promise.all(
+              accountTypes.map(accountType => fetchJson(buildUrl(accountType)))
+            );
+
+            const buckets = [
+              { key: 'fra', name: 'Federal Reserve Account' },
+              { key: 'tga', name: 'Treasury General Account (TGA)' },
+              { key: 'tgaOpening', name: 'Treasury General Account (TGA) Opening Balance' }
+            ];
+
+            const allData = [];
+            const raw = {};
+
+            payloads.forEach((json, idx) => {
+              const rows = Array.isArray(json?.data) ? json.data : [];
+              raw[buckets[idx].key] = rows;
+              rows.forEach(row => {
+                if (row.open_today_bal != null && row.open_today_bal !== 'null') {
+                  allData.push({
+                    date: row.record_date,
+                    val: parseFloat(row.open_today_bal)
+                  });
+                }
+              });
+            });
+
+            if (allData.length === 0) {
+              throw new Error('Treasury TGA payload is empty');
+            }
+
+            allData.sort((a, b) => a.date.localeCompare(b.date));
+
+            const uniqueMap = new Map();
+            allData.forEach(row => uniqueMap.set(row.date, row.val));
+
+            const series = Array.from(uniqueMap.entries()).map(([date, val]) => ({ date, val }));
+
+            const output = {
+              updated: new Date().toISOString(),
+              source: 'Treasury FiscalData',
+              endpoint: 'accounting/dts/operating_cash_balance',
+              series,
+              raw
+            };
+
+            fs.mkdirSync('data/macro', { recursive: true });
+            fs.writeFileSync('data/macro/tga.json', JSON.stringify(output, null, 2));
+            console.log(`Saved ${series.length} points to data/macro/tga.json`);
+          }
+
+          main().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF_NODE
+
+      - name: Verify output
+        run: |
+          echo "=== Generated JSON ==="
+          head -20 data/macro/tga.json
+          echo "..."
+          echo "Total lines: $(wc -l < data/macro/tga.json)"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/macro/tga.json
+          git diff --staged --quiet || git commit -m "chore: update Treasury TGA data [skip ci]"
+          git pull --rebase origin main
+          git push

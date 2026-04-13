@@ -1,0 +1,103 @@
+name: Fetch DefiLlama Stablecoins Data
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-defillama:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create data directory
+        run: mkdir -p data data/macro
+
+      - name: Fetch stablecoins JSON
+        run: |
+          node << 'EOF_NODE'
+          const https = require('https');
+          const fs = require('fs');
+
+          const chartUrl = 'https://stablecoins.llama.fi/stablecoincharts/all';
+          const listUrl = 'https://stablecoins.llama.fi/stablecoins?includePrices=false';
+
+          function fetchJson(url) {
+            return new Promise((resolve, reject) => {
+              https.get(url, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                  try {
+                    if (res.statusCode < 200 || res.statusCode >= 300) {
+                      throw new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`);
+                    }
+                    resolve(JSON.parse(data));
+                  } catch (e) {
+                    reject(e);
+                  }
+                });
+              }).on('error', reject);
+            });
+          }
+
+          async function main() {
+            const [chart, stablecoins] = await Promise.all([
+              fetchJson(chartUrl),
+              fetchJson(listUrl),
+            ]);
+
+            if (!Array.isArray(chart) || chart.length === 0) {
+              throw new Error('DefiLlama chart payload is empty');
+            }
+
+            const series = chart.map(row => ({
+              date: new Date(row.date * 1000).toISOString().slice(0, 10),
+              val: row.totalCirculating?.peggedUSD ?? 0
+            }));
+
+            const output = {
+              updated: new Date().toISOString(),
+              source: 'DefiLlama',
+              current: series.at(-1)?.val ?? 0,
+              series,
+              stablecoins: Array.isArray(stablecoins) ? stablecoins : []
+            };
+
+            fs.mkdirSync('data/macro', { recursive: true });
+            fs.writeFileSync('data/macro/stablecoins.json', JSON.stringify(output, null, 2));
+            console.log(`Saved ${series.length} points to data/macro/stablecoins.json`);
+          }
+
+          main().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF_NODE
+
+      - name: Verify output
+        run: |
+          echo "=== Generated JSON ==="
+          head -20 data/macro/stablecoins.json
+          echo "..."
+          echo "Total lines: $(wc -l < data/macro/stablecoins.json)"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/macro/stablecoins.json
+          git diff --staged --quiet || git commit -m "chore: update DefiLlama stablecoins data [skip ci]"
+          git pull --rebase origin main
+          git push
