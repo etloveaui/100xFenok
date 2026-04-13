@@ -707,7 +707,6 @@
   const CONFIG = {
     fredApiKey: '6dda7dc3956a2c1d6ac939133de115f1',
     proxy: 'https://fed-proxy.etloveaui.workers.dev/',
-    defiLlamaUrl: 'https://stablecoins.llama.fi/stablecoins?includePrices=false',
     colors: {
       inflow: getColor('CHART', 'NET_LIQ') || '#10b981',
       outflow: '#ef4444',
@@ -769,71 +768,64 @@
   //   2022-04-18 ~ 현재: Treasury General Account (TGA) Opening Balance
   // 필드: open_today_bal
   async function getTreasuryTGA(days) {
-    // DST-safe 날짜 계산 (정오 고정)
+    const basePath = location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';
+    const json = await fetchData(window.location.origin + basePath + '/data/macro/tga.json');
+    const rows = Array.isArray(json?.series) ? json.series : [];
+
+    if (rows.length === 0) {
+      console.warn('[TGA] 로컬 JSON 비어 있음');
+      return [];
+    }
+
     const endDate = new Date();
     endDate.setHours(12, 0, 0, 0);
-    
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - days);
     const start = toLocalYMD(startDate);
 
-    try {
-      const json = await fetchData(`/api/data?dataset=treasury-tga&start=${encodeURIComponent(start)}`);
-      const rows = Array.isArray(json?.data) ? json.data : [];
+    const result = rows
+      .filter(row => row?.date && row.date >= start && Number.isFinite(Number(row.val)))
+      .map(row => ({ date: row.date, val: Number(row.val) }));
 
-      if (rows.length === 0) {
-        console.warn('[TGA] Treasury API 데이터 없음, FRED 폴백');
-        return getFredSeries('WTREGEN', days);
-      }
-      const result = rows
-        .filter(d => d?.record_date && d?.open_today_bal && d.open_today_bal !== 'null')
-        .map(d => ({ date: d.record_date, val: parseFloat(d.open_today_bal) }))
-        .filter(d => Number.isFinite(d.val));
-      console.log(`[TGA] Treasury API 로드 완료: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
-
-      return result;
-
-    } catch (e) {
-      console.error('[TGA] Treasury API 실패, FRED 폴백:', e);
-      return getFredSeries('WTREGEN', days);
-    }
+    console.log(`[TGA] 로컬 JSON 로드 완료: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
+    return result;
   }
 
   async function getStablecoinData() {
-    // ★ 시계열 API 사용 (일간 데이터, 2017년~현재)
-    const chartUrl = 'https://stablecoins.llama.fi/stablecoincharts/all';
-    const json = await fetchData(chartUrl);
+    const basePath = location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';
+    const json = await fetchData(window.location.origin + basePath + '/data/macro/stablecoins.json');
+    const series = Array.isArray(json?.series) ? json.series : [];
+    const peggedAssets = Array.isArray(json?.peggedAssets) ? json.peggedAssets : [];
 
-    if (!json || !Array.isArray(json) || json.length === 0) {
-      console.warn('[SC] 시계열 API 실패, 현재값 API로 fallback');
-      // Fallback: 현재값만 가져오기
-      const fallbackJson = await fetchData(CONFIG.defiLlamaUrl);
-      if (!fallbackJson?.peggedAssets) return null;
-      const total = fallbackJson.peggedAssets.reduce((sum, asset) => {
-        return sum + (asset.circulating?.peggedUSD || 0);
-      }, 0);
-      return { totalMarketCap: total / 1e9, historical: null };
+    if (series.length === 0 && peggedAssets.length === 0) {
+      console.warn('[SC] 로컬 JSON 비어 있음');
+      return null;
     }
 
-    // 시계열 데이터를 Map으로 변환 (날짜 → 시총)
     const historicalMap = new Map();
-    json.forEach(item => {
-      const timestamp = parseInt(item.date);
-      // toUTCYMD 사용하여 UTC 날짜 문자열 생성 (P0)
-      const dateStr = toUTCYMD(new Date(timestamp * 1000));
-      const mcap = (item.totalCirculatingUSD?.peggedUSD || 0) / 1e9; // billions
-      historicalMap.set(dateStr, mcap);
+    series.forEach(item => {
+      if (!item?.date) return;
+      const rawVal = Number(item.val);
+      if (!Number.isFinite(rawVal)) return;
+      historicalMap.set(item.date, rawVal / 1e9);
     });
 
-    // 최신 값
-    const lastItem = json[json.length - 1];
-    const latestMcap = (lastItem.totalCirculatingUSD?.peggedUSD || 0) / 1e9;
+    let latestMcap = Number(json?.current);
+    if (!Number.isFinite(latestMcap)) {
+      latestMcap = historicalMap.size > 0 ? Array.from(historicalMap.values()).at(-1) : Number.NaN;
+    } else {
+      latestMcap = latestMcap / 1e9;
+    }
 
-    console.log(`[SC] 시계열 로드 완료: ${historicalMap.size}일, 최신: $${latestMcap.toFixed(1)}B`);
+    if (!Number.isFinite(latestMcap) && peggedAssets.length > 0) {
+      latestMcap = peggedAssets.reduce((sum, asset) => sum + (asset.circulating?.peggedUSD || 0), 0) / 1e9;
+    }
+
+    console.log(`[SC] 로컬 JSON 로드 완료: ${historicalMap.size}일, 최신: $${(Number.isFinite(latestMcap) ? latestMcap : 0).toFixed(1)}B`);
 
     return {
-      totalMarketCap: latestMcap,
-      historical: historicalMap  // 날짜별 시총
+      totalMarketCap: Number.isFinite(latestMcap) ? latestMcap : 0,
+      historical: historicalMap.size > 0 ? historicalMap : null
     };
   }
 

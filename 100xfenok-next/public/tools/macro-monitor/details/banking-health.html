@@ -1228,93 +1228,30 @@
     }
   }
 
-  // ===== FDIC Tier1: GitHub Actions JSON 또는 API 폴백 =====
-  // 1순위: /data/macro/fdic-tier1.json
-  // 2순위: FDIC API 직접 호출 (폴백)
-  const FDIC_CACHE_KEY = 'fdic_tier1_cache';
-
+  // ===== FDIC Tier1: same-origin JSON only =====
+  // source: /data/macro/fdic-tier1.json
   async function getFDICTier1() {
-    // 1. GitHub Actions JSON 시도 (빠름)
     try {
       const basePath = location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';
       const jsonUrl = window.location.origin + basePath + '/data/macro/fdic-tier1.json';
       console.log('[FDIC] JSON 파일 로드 시도...');
       const res = await fetch(jsonUrl);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && json.data.length > 0) {
-          // JSON 형식: { date, value } → { date, val } 변환
-          const data = json.data.map(d => ({ date: d.date, val: d.value }));
-          console.log(`[FDIC] JSON 로드 성공 (${data.length}개 분기, 업데이트: ${json.updated})`);
-          return data;
-        }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
       }
+
+      const json = await res.json();
+      if (json.data && json.data.length > 0) {
+        const data = json.data.map(d => ({ date: d.date, val: d.value }));
+        console.log(`[FDIC] JSON 로드 성공 (${data.length}개 분기, 업데이트: ${json.updated})`);
+        return data;
+      }
+
+      console.warn('[FDIC] JSON 비어 있음');
+      return [];
     } catch (e) {
-      console.log('[FDIC] JSON 없음, API 폴백 시도...');
-    }
-
-    // 2. API 폴백 (JSON 없을 때만)
-    return await getFDICTier1FromAPI();
-  }
-
-  // FDIC API 직접 호출 (폴백용)
-  async function getFDICTier1FromAPI() {
-    // 캐시 확인
-    try {
-      const cached = localStorage.getItem(FDIC_CACHE_KEY);
-      if (cached) {
-        const { data } = JSON.parse(cached);
-        if (data.length > 50) {
-          console.log(`[FDIC API] 캐시 사용 (${data.length}개 분기)`);
-          return data;
-        }
-      }
-    } catch (e) { /* 캐시 에러 무시 */ }
-
-    // API 호출
-    try {
-      const quarterEnds = ['0331', '0630', '0930', '1231'];
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-
-      const quarters = [];
-      for (let year = 2009; year <= currentYear; year++) {
-        for (let q = 0; q < 4; q++) {
-          const qMonth = q * 3 + 2;
-          if (year < currentYear || (year === currentYear && qMonth <= currentMonth - 2)) {
-            quarters.push(`${year}${quarterEnds[q]}`);
-          }
-        }
-      }
-      quarters.sort().reverse();
-      console.log(`[FDIC API] ${quarters.length}개 분기 로드 시작...`);
-
-      const fetchQ = async (q) => {
-        try {
-          const res = await fetch(`https://api.fdic.gov/banks/financials?limit=10000&fields=RBC1AAJ,RISDATE&filters=RISDATE:${q}`);
-          if (!res.ok) return null;
-          const json = await res.json();
-          const ratios = json.data?.map(r => r.data?.RBC1AAJ).filter(v => v != null && !isNaN(v)) || [];
-          if (ratios.length === 0) return null;
-          return { date: `${q.slice(0,4)}-${q.slice(4,6)}-${q.slice(6,8)}`, val: ratios.reduce((a,b) => a+b, 0) / ratios.length };
-        } catch { return null; }
-      };
-
-      const results = (await Promise.all(quarters.map(fetchQ))).filter(r => r);
-      results.sort((a, b) => a.date.localeCompare(b.date));
-
-      if (results.length > 0) {
-        try {
-          localStorage.setItem(FDIC_CACHE_KEY, JSON.stringify({ data: results, timestamp: Date.now() }));
-          console.log(`[FDIC API] ${results.length}개 분기 캐시 저장`);
-        } catch (e) { /* 캐시 저장 실패 무시 */ }
-      }
-
-      return results.length > 0 ? results : null;
-    } catch (e) {
-      console.error('[FDIC API] 에러:', e);
-      return null;
+      console.error('[FDIC] JSON 로드 실패:', e);
+      return [];
     }
   }
 
