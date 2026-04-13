@@ -5,6 +5,36 @@ import {
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
 
+const BLOCKED_AI_BOT_PATTERNS = [
+  /\bClaudeBot\b/i,
+  /\bClaude-Web\b/i,
+  /\banthropic-ai\b/i,
+  /\bGPTBot\b/i,
+  /\bChatGPT-User\b/i,
+  /\bOAI-SearchBot\b/i,
+  /\bGoogle-Extended\b/i,
+  /\bApplebot-Extended\b/i,
+  /\bPerplexityBot\b/i,
+  /\bCCBot\b/i,
+  /\bBytespider\b/i,
+  /\bAmazonbot\b/i,
+  /\bFacebookBot\b/i,
+  /\bDiffbot\b/i,
+  /\bMetaExternalAgent\b/i,
+  /\bAhrefsBot\b/i,
+  /\bSemrushBot\b/i,
+  /\bMJ12bot\b/i,
+  /\bDotBot\b/i,
+];
+
+function isBlockedAiBot(userAgent: string | null): boolean {
+  if (!userAgent) {
+    return false;
+  }
+
+  return BLOCKED_AI_BOT_PATTERNS.some((pattern) => pattern.test(userAgent));
+}
+
 function normalizeAdminLegacyPath(pathname: string): string | null {
   if (!pathname.startsWith("/admin/") || !pathname.endsWith(".html")) {
     return null;
@@ -39,6 +69,17 @@ function normalizeLegacyTravelPath(pathname: string): string | null {
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  if (pathname !== "/robots.txt" && isBlockedAiBot(request.headers.get("user-agent"))) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Robots-Tag": "noindex, nofollow, noarchive",
+      },
+    });
+  }
+
   const normalizedAdminPath = normalizeAdminLegacyPath(pathname);
   const normalizedTravelPath = normalizeLegacyTravelPath(pathname);
 
@@ -78,5 +119,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/travel/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
