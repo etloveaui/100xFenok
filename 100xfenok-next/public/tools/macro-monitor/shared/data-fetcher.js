@@ -25,8 +25,6 @@ class MacroDataFetcher {
 
     // 외부 API URLs
     this.urls = {
-      defiLlamaChart: 'https://stablecoins.llama.fi/stablecoincharts/all',
-      defiLlamaList: 'https://stablecoins.llama.fi/stablecoins?includePrices=false',
       fdicApi: 'https://api.fdic.gov/banks/financials'
     };
   }
@@ -715,32 +713,31 @@ class MacroDataFetcher {
    *   2022-04-18 ~ 현재: Treasury General Account (TGA) Opening Balance
    */
   async fetchTreasuryTGA(days = 365) {
-    // ★ 금지패턴 제거: Date.now() - ms, toISOString().split('T')
-    const startDate = new Date();
-    startDate.setHours(12, 0, 0, 0);
-    startDate.setDate(startDate.getDate() - days);
-    const start = this.toLocalYMD(startDate);
+    // ★ same-origin JSON only: cron-generated cache under data/macro/tga.json
     try {
-      const json = await this.fetchWithTimeout(
-        `${window.location.origin}/api/data?dataset=treasury-tga&start=${encodeURIComponent(start)}`
-      );
-      const rows = Array.isArray(json?.data) ? json.data : [];
+      const basePath = this.getBasePath();
+      const jsonUrl = window.location.origin + basePath + '/data/macro/tga.json';
+      const res = await this.fetchWithTimeout(jsonUrl);
+      const rows = Array.isArray(res?.series) ? res.series : [];
 
       if (rows.length === 0) {
-        console.warn('[DataFetcher] Treasury API 데이터 없음, FRED 폴백');
-        return this.fetchFRED('WTREGEN', days);
+        console.warn('[DataFetcher] TGA JSON empty');
+        return [];
       }
+
+      const startDate = new Date();
+      startDate.setHours(12, 0, 0, 0);
+      startDate.setDate(startDate.getDate() - days);
+      const start = this.toLocalYMD(startDate);
       const result = rows
-        .filter(d => d?.record_date && d?.open_today_bal && d.open_today_bal !== 'null')
-        .map(d => ({ date: d.record_date, val: parseFloat(d.open_today_bal) }))
-        .filter(d => Number.isFinite(d.val));
-      console.log(`[DataFetcher] Treasury TGA 로드: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
+        .filter((row) => row?.date && row.date >= start && Number.isFinite(Number(row.val)))
+        .map((row) => ({ date: row.date, val: Number(row.val) }));
 
+      console.log(`[DataFetcher] Treasury TGA JSON 로드: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
       return result;
-
     } catch (e) {
-      console.error('[DataFetcher] Treasury API 실패, FRED 폴백:', e);
-      return this.fetchFRED('WTREGEN', days);
+      console.error('[DataFetcher] TGA JSON load failed:', e);
+      return [];
     }
   }
 
@@ -804,25 +801,20 @@ class MacroDataFetcher {
    */
   async fetchStablecoinData() {
     try {
-      // 시계열 API
-      const json = await this.fetchWithTimeout(this.urls.defiLlamaChart);
-      if (Array.isArray(json) && json.length > 0) {
-        const series = json.map(d => {
-          // ★ 금지패턴 제거: toISOString().split('T')
-          const dt = new Date(d.date * 1000);
-          dt.setHours(12, 0, 0, 0); // DST 안전
-          return {
-            date: this.toLocalYMD(dt),
-            val: d.totalCirculating?.peggedUSD || 0
-          };
-        });
+      const basePath = this.getBasePath();
+      const jsonUrl = window.location.origin + basePath + '/data/macro/stablecoins.json';
+      const json = await this.fetchWithTimeout(jsonUrl);
+      const series = Array.isArray(json?.series) ? json.series : [];
+      if (series.length > 0) {
         return {
-          current: series[series.length - 1]?.val || 0,
-          series
+          current: Number(json?.current ?? series[series.length - 1]?.val ?? 0),
+          series: series
+            .filter((row) => row?.date && Number.isFinite(Number(row.val)))
+            .map((row) => ({ date: row.date, val: Number(row.val) }))
         };
       }
     } catch (e) {
-      console.error('[DataFetcher] DefiLlama error:', e);
+      console.error('[DataFetcher] stablecoins JSON error:', e);
     }
     return null;
   }

@@ -25,8 +25,6 @@ class MacroDataFetcher {
 
     // 외부 API URLs
     this.urls = {
-      defiLlamaChart: 'https://stablecoins.llama.fi/stablecoincharts/all',
-      defiLlamaList: 'https://stablecoins.llama.fi/stablecoins?includePrices=false',
       fdicApi: 'https://api.fdic.gov/banks/financials'
     };
   }
@@ -715,60 +713,31 @@ class MacroDataFetcher {
    *   2022-04-18 ~ 현재: Treasury General Account (TGA) Opening Balance
    */
   async fetchTreasuryTGA(days = 365) {
-    // ★ 금지패턴 제거: Date.now() - ms, toISOString().split('T')
-    const startDate = new Date();
-    startDate.setHours(12, 0, 0, 0);
-    startDate.setDate(startDate.getDate() - days);
-    const start = this.toLocalYMD(startDate);
-    const baseUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance';
-
+    // ★ same-origin JSON only: cron-generated cache under data/macro/tga.json
     try {
-      // 3개 account_type 모두 fetch (시기별 다른 이름 사용)
-      const urls = [
-        // 1. Federal Reserve Account (2005 ~ 2021-09-30)
-        `${baseUrl}?filter=account_type:eq:Federal Reserve Account,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
-        // 2. Treasury General Account (TGA) (2021-10-01 ~ 2022-04-15)
-        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA),record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`,
-        // 3. Treasury General Account (TGA) Opening Balance (2022-04-18 ~ 현재) ★ 추가!
-        `${baseUrl}?filter=account_type:eq:Treasury General Account (TGA) Opening Balance,record_date:gte:${start}&sort=record_date&page[size]=10000&fields=record_date,open_today_bal`
-      ];
+      const basePath = this.getBasePath();
+      const jsonUrl = window.location.origin + basePath + '/data/macro/tga.json';
+      const res = await this.fetchWithTimeout(jsonUrl);
+      const rows = Array.isArray(res?.series) ? res.series : [];
 
-      const responses = await Promise.all(urls.map(url => this.fetchWithTimeout(url)));
-
-      // 데이터 병합
-      const allData = [];
-      responses.forEach((json, idx) => {
-        if (json?.data) {
-          const typeName = ['FRA', 'TGA', 'TGA-Opening'][idx];
-          json.data.forEach(d => {
-            if (d.open_today_bal && d.open_today_bal !== 'null') {
-              allData.push({ date: d.record_date, val: parseFloat(d.open_today_bal) });
-            }
-          });
-          console.log(`[DataFetcher] ${typeName}: ${json.data.length}개`);
-        }
-      });
-
-      if (allData.length === 0) {
-        console.warn('[DataFetcher] Treasury API 데이터 없음, FRED 폴백');
-        return this.fetchFRED('WTREGEN', days);
+      if (rows.length === 0) {
+        console.warn('[DataFetcher] TGA JSON empty');
+        return [];
       }
 
-      // 날짜 정렬 (오름차순)
-      allData.sort((a, b) => a.date.localeCompare(b.date));
+      const startDate = new Date();
+      startDate.setHours(12, 0, 0, 0);
+      startDate.setDate(startDate.getDate() - days);
+      const start = this.toLocalYMD(startDate);
+      const result = rows
+        .filter((row) => row?.date && row.date >= start && Number.isFinite(Number(row.val)))
+        .map((row) => ({ date: row.date, val: Number(row.val) }));
 
-      // 중복 제거 (같은 날짜면 나중 데이터 = Opening Balance 우선)
-      const uniqueMap = new Map();
-      allData.forEach(d => uniqueMap.set(d.date, d.val));
-
-      const result = Array.from(uniqueMap.entries()).map(([date, val]) => ({ date, val }));
-      console.log(`[DataFetcher] Treasury TGA 로드: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
-
+      console.log(`[DataFetcher] Treasury TGA JSON 로드: ${result.length}개 (일간, ${result[0]?.date} ~ ${result[result.length-1]?.date})`);
       return result;
-
     } catch (e) {
-      console.error('[DataFetcher] Treasury API 실패, FRED 폴백:', e);
-      return this.fetchFRED('WTREGEN', days);
+      console.error('[DataFetcher] TGA JSON load failed:', e);
+      return [];
     }
   }
 
@@ -832,25 +801,20 @@ class MacroDataFetcher {
    */
   async fetchStablecoinData() {
     try {
-      // 시계열 API
-      const json = await this.fetchWithTimeout(this.urls.defiLlamaChart);
-      if (Array.isArray(json) && json.length > 0) {
-        const series = json.map(d => {
-          // ★ 금지패턴 제거: toISOString().split('T')
-          const dt = new Date(d.date * 1000);
-          dt.setHours(12, 0, 0, 0); // DST 안전
-          return {
-            date: this.toLocalYMD(dt),
-            val: d.totalCirculating?.peggedUSD || 0
-          };
-        });
+      const basePath = this.getBasePath();
+      const jsonUrl = window.location.origin + basePath + '/data/macro/stablecoins.json';
+      const json = await this.fetchWithTimeout(jsonUrl);
+      const series = Array.isArray(json?.series) ? json.series : [];
+      if (series.length > 0) {
         return {
-          current: series[series.length - 1]?.val || 0,
-          series
+          current: Number(json?.current ?? series[series.length - 1]?.val ?? 0),
+          series: series
+            .filter((row) => row?.date && Number.isFinite(Number(row.val)))
+            .map((row) => ({ date: row.date, val: Number(row.val) }))
         };
       }
     } catch (e) {
-      console.error('[DataFetcher] DefiLlama error:', e);
+      console.error('[DataFetcher] stablecoins JSON error:', e);
     }
     return null;
   }
