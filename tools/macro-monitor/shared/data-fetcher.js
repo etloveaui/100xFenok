@@ -570,15 +570,16 @@ class MacroDataFetcher {
       const basePath = this.getBasePath();
       const baseUrl = window.location.origin + basePath + '/data/sentiment/';
 
-      // 병렬 로드 (필수 5개 + 선택 2개)
-      const [vix, move, cftc, cnn, crypto, aaii, cnnComponents] = await Promise.all([
+      // 병렬 로드 (필수 5개 + 선택 3개)
+      const [vix, move, cftc, cnn, crypto, aaii, cnnComponents, putcall] = await Promise.all([
         this.fetchJsonFile(baseUrl + 'vix.json'),
         this.fetchJsonFile(baseUrl + 'move.json'),
         this.fetchJsonFile(baseUrl + 'cftc-sp500.json'),
         this.fetchJsonFile(baseUrl + 'cnn-fear-greed.json'),
         this.fetchJsonFile(baseUrl + 'crypto-fear-greed.json'),
         this.fetchJsonFile(baseUrl + 'aaii.json'),
-        this.fetchJsonFile(baseUrl + 'cnn-components.json')
+        this.fetchJsonFile(baseUrl + 'cnn-components.json'),
+        this.fetchJsonFile(baseUrl + 'cnn-put-call.json')
       ]);
 
       // 최신값 추출
@@ -598,20 +599,38 @@ class MacroDataFetcher {
       const latestCnn = getLatest(cnn, 'score');
       // Crypto F&G: { date, value } 형태
       const latestCrypto = getLatest(crypto, 'value');
+      // Put/Call: { date, value } 형태
+      const latestPutCall = getLatest(putcall, 'value');
       // AAII: { date, bullish, bearish, neutral } 형태 - 사용 예정
       const latestAaii = aaii?.[aaii.length - 1] || null;
+      const aaiiBearish = latestAaii?.bearish ?? null;
+      const aaiiSpread = (() => {
+        if (!latestAaii || typeof latestAaii !== 'object') return null;
+        if (Number.isFinite(latestAaii.spread)) return latestAaii.spread;
+        if (Number.isFinite(latestAaii.bullish) && Number.isFinite(latestAaii.bearish)) {
+          return latestAaii.bullish - latestAaii.bearish;
+        }
+        return null;
+      })();
 
-      console.log(`[DataFetcher] Sentiment 로드: VIX=${latestVix}, MOVE=${latestMove}, CFTC=${latestCftc}, CNN=${latestCnn}, Crypto=${latestCrypto}`);
+      console.log(`[DataFetcher] Sentiment 로드: VIX=${latestVix}, MOVE=${latestMove}, CFTC=${latestCftc}, CNN=${latestCnn}, Crypto=${latestCrypto}, PutCall=${latestPutCall}`);
 
       return {
-        // 핵심 지표 (계산용)
+        // Widget contract (parent -> child)
         vix: latestVix,
         move: latestMove,
+        cnn_fg: latestCnn,
+        aaii_bearish: aaiiBearish,
+        aaii_spread: aaiiSpread,
+        cftc_net: latestCftc,
+        crypto_fg: latestCrypto,
+        putcall_ratio: latestPutCall,
+        // Compatibility aliases (temporary)
         cftc: latestCftc,
         cnn: latestCnn,
         crypto: latestCrypto,
-        // 추가 지표
         aaii: latestAaii,
+        // 추가 지표
         cnnComponents: cnnComponents,
         // 히스토리 데이터 (차트용)
         history: {
@@ -619,7 +638,8 @@ class MacroDataFetcher {
           move: move || [],
           cftc: cftc || [],
           cnn: cnn || [],
-          crypto: crypto || []
+          crypto: crypto || [],
+          putcall: putcall || []
         },
         // 메타데이터
         updated: new Date().toISOString()

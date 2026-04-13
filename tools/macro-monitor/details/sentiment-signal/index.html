@@ -1414,6 +1414,10 @@
       const text = document.getElementById('statusText');
       const time = document.getElementById('updateTime');
 
+      if (!badge || !icon || !text || !time) {
+        return;
+      }
+
       // 상태 결정
       if (warnActive > 0) {
         badge.className = 'status-badge fear';
