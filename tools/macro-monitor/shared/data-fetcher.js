@@ -55,12 +55,12 @@ class MacroDataFetcher {
           if (data) {
             DataManager.saveWidgetData(widgetId, data);
             console.log(`[DataFetcher] ${widgetId}: API 갱신 성공`);
-            return { data, isStale: false, isFresh: true, ageMs: 0 };
+            return { data, isStale: false, isFresh: true, ageMs: 0, failed: false };
           }
         } catch (e) {
           console.log(`[DataFetcher] ${widgetId}: API 실패, stale 캐시 사용`);
         }
-        return cached; // API 실패 시 stale 캐시 반환
+        return { ...cached, failed: false }; // API 실패 시 stale 캐시 반환
       }
     }
 
@@ -73,7 +73,7 @@ class MacroDataFetcher {
         // 3. 캐시 저장
         DataManager.saveWidgetData(widgetId, data);
         console.log(`[DataFetcher] ${widgetId}: API 호출 성공, 캐시 저장`);
-        return { data, isStale: false, isFresh: true, ageMs: 0 };
+        return { data, isStale: false, isFresh: true, ageMs: 0, failed: false };
       }
     } catch (e) {
       console.error(`[DataFetcher] ${widgetId}: API 호출 실패`, e);
@@ -83,10 +83,10 @@ class MacroDataFetcher {
     const fallback = DataManager.getWidgetDataWithStale(widgetId);
     if (fallback.data) {
       console.log(`[DataFetcher] ${widgetId}: API 실패, stale 캐시 사용`);
-      return fallback;
+      return { ...fallback, failed: false };
     }
 
-    return { data: null, isStale: true, isFresh: false, ageMs: 0 };
+    return { data: null, isStale: true, isFresh: false, ageMs: 0, failed: true };
   }
 
   // =========================================
