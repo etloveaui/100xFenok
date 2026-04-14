@@ -50,8 +50,22 @@
             --nav-height-mobile: 60px;
             --touch-target: 44px;
         }
-        body { background-color: #f8fafc; }
+        html { overflow-x: hidden; }
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
         .orbitron { font-family: 'Orbitron', sans-serif; }
+        .text-slate-400 { color: #475569 !important; }
+        .text-slate-300 { color: #64748b !important; }
+        .text-brand-gold { color: #7a5a00 !important; }
+        .text-green-600 { color: #15803d !important; }
+        .text-red-500 { color: #b91c1c !important; }
+        .text-red-600 { color: #b91c1c !important; }
+        .text-blue-400 { color: #2563eb !important; }
+        .text-red-400 { color: #dc2626 !important; }
+        .text-white\/50 { color: rgba(255, 255, 255, 0.82) !important; }
 
         /* P2-2: Focus Visible 스타일 */
         *:focus-visible {
@@ -365,6 +379,7 @@
             display: flex;
             gap: 1rem;
             overflow-x: auto;
+            max-width: 100%;
             padding-bottom: 0.5rem;
             -webkit-overflow-scrolling: touch;
         }
@@ -457,7 +472,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen overflow-x-hidden">
 
     <!-- P0-1: 모바일 오버레이 -->
     <div class="mobile-nav-overlay" id="mobileOverlay" onclick="closeMobileNav()" aria-hidden="true"></div>
@@ -590,7 +605,7 @@
     </div>
 
     <!-- Main -->
-    <main class="container mx-auto px-4 py-4">
+    <main class="container mx-auto max-w-full overflow-x-hidden px-4 py-4">
 
         <!-- Tab: Overview -->
         <div id="tab-overview" class="tab-content active" role="tabpanel" aria-labelledby="tab-overview-btn">
@@ -1022,6 +1037,9 @@
                 try {
                     const result = await DataFetcher.fetch(entry.widgetId);
                     const data = result?.data ?? null;
+                    if (result?.failed) {
+                        return { cardId: entry.cardId, data: null };
+                    }
                     entry.render(data);
                     return { cardId: entry.cardId, data };
                 } catch (error) {
@@ -1109,6 +1127,41 @@
             });
         });
     </script>
+
+    <style>
+        /* Footer v21 */
+        .ticker-track {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .ticker-scroll {
+            display: inline-block;
+            max-width: 100%;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: ticker-traverse 18s linear infinite;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        .ticker-scroll:hover {
+            animation-play-state: paused;
+        }
+        @keyframes ticker-traverse {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+        .glow-bar {
+            box-shadow: 0 0 15px rgba(1, 0, 121, 0.25);
+        }
+        .market-regular { background: linear-gradient(135deg, #10b981, #059669); }
+        .market-pre { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .market-after { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .market-overnight { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .market-closed { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    </style>
 
     <!-- Footer v21: Broadcast HUD Pro -->
     <footer class="fixed bottom-0 left-0 right-0 z-40">

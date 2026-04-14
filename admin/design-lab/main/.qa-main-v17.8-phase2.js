@@ -30,7 +30,7 @@ const smokeRoutes = [
   { route: phase2Route, label: "Phase 2 design-lab prototype" },
   { route: "/index.html?path=tools/asset/multichart.html", label: "Multichart SPA" },
   { route: "/index.html?path=ib/ib-total-guide-calculator.html", label: "IB Helper SPA" },
-  { route: "/admin/notification-control/notification-control-panel-web.html", label: "admin notification-control" },
+  { route: "/notification-control-panel-web.html", label: "admin notification-control" },
   { route: "/admin/design-lab/index.html", label: "design-lab index" },
 ];
 
@@ -55,10 +55,13 @@ const bentoKickers = [
 // The 4 kickers wired to real data in Phase 2 (Sector Snapshot remains mock per spec §2.2).
 const connectedKickers = ["LIQUIDITY FLOW", "SENTIMENT", "BANKING HEALTH", "STRESS INDEX"];
 
-// Partial failure target (spec §5.2): summaries.json → 503.
-// summaries.json is consumed by Hero Zone tiles (Phase 1 carry-over), not Phase 2 bento directly.
-// This verifies: partial banner fires via Hero Zone tile, but Phase 2 bento cards remain unaffected.
-const PARTIAL_FAILURE_PATTERN = "**/data/benchmarks/summaries.json";
+// Partial failure target (spec §5.2): fdic-tier1.json → 503.
+// Blocks only the banking-health card's primary data source (one of the 4 Phase 2 widgets).
+// Expected: BANKING HEALTH muted, other 3 connected cards stay live, partial banner fires.
+// (summaries.json was the original target but is not consumed by v17.8-responsive.html.)
+const PARTIAL_FAILURE_PATTERN = "**/data/macro/fdic-tier1.json";
+// Kicker that should be muted in partial scenario (matches the blocked data source above).
+const PARTIAL_MUTED_KICKER = "BANKING HEALTH";
 
 const BANNER_TEXTS = {
   loading: "데이터를 확인하는 중입니다. 기본값은 흐리게 표시됩니다.",
@@ -143,14 +146,13 @@ async function collectBentoSnapshot(page) {
     };
 
     const tiles = articles.map((node) => {
-      const kicker = node.querySelector("p")?.textContent?.trim() || "";
-      const title = node.querySelector("h3")?.textContent?.trim() || "";
+      const kicker = node.querySelector("h3")?.textContent?.trim() || "";
       const opacity = getOpacity(node);
-      return { kicker, title, opacity };
+      return { kicker, opacity };
     });
 
     const findByKicker = (kicker) =>
-      articles.find((node) => node.querySelector("p")?.textContent?.trim() === kicker) || null;
+      articles.find((node) => node.querySelector("h3")?.textContent?.trim() === kicker) || null;
 
     const mutedKickers = tiles
       .filter((t) => typeof t.opacity === "number" && t.opacity < 0.9)
@@ -197,20 +199,22 @@ function isBentoScenarioPass(snapshot, scenario) {
   const hasAllKickers = bentoKickers.every((k) => snapshot.presentKickers.includes(k));
 
   if (scenario === "live") {
+    // bentoStateIndicatorCount removed — .market-state-badge is a Hero Zone element, not bento (Phase 1 carry-over).
     return (
       snapshot.bannerType === "none" &&
       hasAllKickers &&
-      snapshot.bentoStateIndicatorCount >= 1 &&
       snapshot.hasHorizontalScroll === false
     );
   }
 
   if (scenario === "partial") {
-    // summaries.json fails → partial banner fires (via Hero Zone); Phase 2 bento cards unaffected.
+    // fdic-tier1.json fails → BANKING HEALTH muted; other 3 connected cards stay live.
+    const bankingMuted = snapshot.connectedCardStates.find((c) => c.kicker === PARTIAL_MUTED_KICKER)?.muted === true;
     return (
       snapshot.bannerType === "partial" &&
       hasAllKickers &&
-      snapshot.connectedMutedCount === 0 &&
+      bankingMuted &&
+      snapshot.connectedMutedCount === 1 &&
       snapshot.hasHorizontalScroll === false
     );
   }
@@ -227,7 +231,11 @@ function isBentoScenarioPass(snapshot, scenario) {
 // Per-card pass — emits 4 individual assertions per page load (36 bento-card total).
 function isBentoCardPass(cardState, scenario) {
   if (!cardState.exists) return false;
-  if (scenario === "live" || scenario === "partial") return !cardState.muted;
+  if (scenario === "live") return !cardState.muted;
+  if (scenario === "partial") {
+    // BANKING HEALTH must be muted (its data source is blocked); others must stay live.
+    return cardState.kicker === PARTIAL_MUTED_KICKER ? cardState.muted : !cardState.muted;
+  }
   return cardState.muted; // offline → each connected card must be muted
 }
 
