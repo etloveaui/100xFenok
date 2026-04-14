@@ -35,19 +35,14 @@ jobs:
           const fs = require('fs');
 
           const TICKERS = ['TQQQ', 'SOXL'];
-          const YAHOO_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
-          // Yahoo rejects bare http-client UAs; mimic a desktop browser.
-          const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+          // Route via our Cloudflare worker — Yahoo blocks GitHub Actions runner IPs with HTTP 429,
+          // but Cloudflare worker IPs succeed and share the same Yahoo origin data. Worker also
+          // applies deriveMarketStateFromTradingPeriods fallback + 5min edge cache.
+          const WORKER_BASE = 'https://ticker-api.etloveaui.workers.dev/api/ticker';
 
           function fetchJson(url) {
             return new Promise((resolve, reject) => {
-              const options = {
-                headers: {
-                  'User-Agent': USER_AGENT,
-                  'Accept': 'application/json'
-                }
-              };
-              https.get(url, options, (res) => {
+              https.get(url, { headers: { 'Accept': 'application/json' } }, (res) => {
                 let data = '';
                 res.on('data', chunk => data += chunk);
                 res.on('end', () => {
@@ -74,23 +69,17 @@ jobs:
           }
 
           async function fetchTicker(symbol) {
-            const url = `${YAHOO_BASE}${encodeURIComponent(symbol)}?interval=1d&range=5d&includePrePost=true`;
+            const url = `${WORKER_BASE}?symbol=${encodeURIComponent(symbol)}`;
             const payload = await fetchJson(url);
-            const result = payload?.chart?.result?.[0];
-            if (!result) {
-              throw new Error(`Yahoo payload for ${symbol} has no chart.result`);
-            }
-            const meta = result.meta || {};
-            const price = toFiniteNumber(meta.regularMarketPrice);
+            const price = toFiniteNumber(payload.price);
             if (price === null || price <= 0) {
-              throw new Error(`Yahoo payload for ${symbol} has no valid regularMarketPrice`);
+              throw new Error(`Worker payload for ${symbol} has no valid price`);
             }
-            const previousClose =
-              toFiniteNumber(meta.chartPreviousClose) ??
-              toFiniteNumber(meta.previousClose) ??
-              price;
-            const change = price - previousClose;
-            const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+            const previousClose = toFiniteNumber(payload.previousClose) ?? price;
+            const change = toFiniteNumber(payload.change) ?? (price - previousClose);
+            const changePercent =
+              toFiniteNumber(payload.changePercent) ??
+              (previousClose > 0 ? (change / previousClose) * 100 : 0);
 
             return {
               symbol,
@@ -98,10 +87,10 @@ jobs:
               previousClose,
               change,
               changePercent,
-              marketState: String(meta.marketState ?? 'UNKNOWN'),
-              regularMarketTime: toFiniteNumber(meta.regularMarketTime),
-              currency: meta.currency ?? null,
-              exchangeName: meta.exchangeName ?? null
+              marketState: String(payload.marketState ?? 'UNKNOWN'),
+              regularMarketTime: toFiniteNumber(payload.regularMarketTime),
+              currency: payload.currency ?? null,
+              exchangeName: payload.exchangeName ?? null
             };
           }
 
@@ -136,8 +125,8 @@ jobs:
 
             const output = {
               updated: new Date().toISOString(),
-              source: 'yahoo-finance',
-              endpoint: 'v8/finance/chart',
+              source: 'ticker-api-worker (yahoo-finance origin)',
+              endpoint: 'https://ticker-api.etloveaui.workers.dev/api/ticker',
               tickers,
               errors: errors.length > 0 ? errors : undefined
             };
