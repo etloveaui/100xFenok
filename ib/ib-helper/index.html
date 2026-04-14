@@ -431,6 +431,68 @@
     .qty-copy-btn {
       color: #6b7280;
     }
+
+    @media (max-width: 280px) {
+      #results-mobile {
+        padding: 0.75rem;
+      }
+      #multi-results-section .flex.items-center.justify-between {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+      #multi-results-section .flex.items-center.justify-between h2,
+      #multi-results-section .flex.items-center.justify-between button {
+        width: 100%;
+      }
+      #results-accordion {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .accordion-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.75rem;
+      }
+      .accordion-header > .flex.items-center.gap-2,
+      .accordion-header > .flex.items-center.gap-4 {
+        width: 100%;
+      }
+      .accordion-header > .flex.items-center.gap-2 {
+        flex-wrap: wrap;
+      }
+      .accordion-header > .flex.items-center.gap-4 {
+        justify-content: space-between;
+      }
+      .accordion-badge {
+        margin-left: 0;
+      }
+      .accordion-content {
+        padding: 0.75rem;
+      }
+      .accordion-content > .grid.grid-cols-3 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .accordion-content .grid.grid-cols-3 > div {
+        padding: 0.5rem;
+      }
+      .accordion-content .flex.justify-between.bg-white.rounded.px-2.py-1.items-center {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+      .accordion-content .flex.justify-between.bg-white.rounded.px-2.py-1.items-center > div {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .order-copy-btn {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+      .qty-copy-btn {
+        justify-content: flex-start;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
