@@ -1,0 +1,170 @@
+name: Fetch Yahoo Finance Ticker Snapshot
+
+# DEC-196 — cron pre-fetch for admin design-lab calculators (TQQQ/SOXL).
+# Output: data/macro/yahoo-ticker.json (same-origin, 1h stale tolerance).
+# No untrusted input is used in run: blocks (schedule + workflow_dispatch only).
+
+on:
+  schedule:
+    - cron: '5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-yahoo-ticker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: '20'
+
+      - name: Create data directory
+        run: mkdir -p data data/macro
+
+      - name: Fetch Yahoo Finance chart snapshot
+        run: |
+          node << 'EOF_NODE'
+          const https = require('https');
+          const fs = require('fs');
+
+          const TICKERS = ['TQQQ', 'SOXL'];
+          const YAHOO_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
+          // Yahoo rejects bare http-client UAs; mimic a desktop browser.
+          const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+          function fetchJson(url) {
+            return new Promise((resolve, reject) => {
+              const options = {
+                headers: {
+                  'User-Agent': USER_AGENT,
+                  'Accept': 'application/json'
+                }
+              };
+              https.get(url, options, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                  try {
+                    if (res.statusCode < 200 || res.statusCode >= 300) {
+                      throw new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`);
+                    }
+                    resolve(JSON.parse(data));
+                  } catch (e) {
+                    reject(e);
+                  }
+                });
+              }).on('error', reject);
+            });
+          }
+
+          function toFiniteNumber(value) {
+            if (typeof value === 'number' && Number.isFinite(value)) return value;
+            if (typeof value === 'string' && value.trim() !== '') {
+              const n = Number(value);
+              if (Number.isFinite(n)) return n;
+            }
+            return null;
+          }
+
+          async function fetchTicker(symbol) {
+            const url = `${YAHOO_BASE}${encodeURIComponent(symbol)}?interval=1d&range=5d&includePrePost=true`;
+            const payload = await fetchJson(url);
+            const result = payload?.chart?.result?.[0];
+            if (!result) {
+              throw new Error(`Yahoo payload for ${symbol} has no chart.result`);
+            }
+            const meta = result.meta || {};
+            const price = toFiniteNumber(meta.regularMarketPrice);
+            if (price === null || price <= 0) {
+              throw new Error(`Yahoo payload for ${symbol} has no valid regularMarketPrice`);
+            }
+            const previousClose =
+              toFiniteNumber(meta.chartPreviousClose) ??
+              toFiniteNumber(meta.previousClose) ??
+              price;
+            const change = price - previousClose;
+            const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+
+            return {
+              symbol,
+              price,
+              previousClose,
+              change,
+              changePercent,
+              marketState: String(meta.marketState ?? 'UNKNOWN'),
+              regularMarketTime: toFiniteNumber(meta.regularMarketTime),
+              currency: meta.currency ?? null,
+              exchangeName: meta.exchangeName ?? null
+            };
+          }
+
+          async function main() {
+            const tickers = {};
+            const errors = [];
+
+            for (const symbol of TICKERS) {
+              try {
+                const quote = await fetchTicker(symbol);
+                tickers[symbol] = {
+                  price: quote.price,
+                  previousClose: quote.previousClose,
+                  change: quote.change,
+                  changePercent: quote.changePercent,
+                  marketState: quote.marketState,
+                  regularMarketTime: quote.regularMarketTime,
+                  currency: quote.currency,
+                  exchangeName: quote.exchangeName
+                };
+                console.log(`${symbol}: price=${quote.price} change=${quote.change.toFixed(4)} (${quote.changePercent.toFixed(2)}%)`);
+              } catch (e) {
+                errors.push({ symbol, message: e.message });
+                console.error(`${symbol}: ERROR — ${e.message}`);
+              }
+              await new Promise(r => setTimeout(r, 500));
+            }
+
+            if (Object.keys(tickers).length === 0) {
+              throw new Error(`Yahoo ticker snapshot empty — all symbols failed: ${JSON.stringify(errors)}`);
+            }
+
+            const output = {
+              updated: new Date().toISOString(),
+              source: 'yahoo-finance',
+              endpoint: 'v8/finance/chart',
+              tickers,
+              errors: errors.length > 0 ? errors : undefined
+            };
+
+            fs.mkdirSync('data/macro', { recursive: true });
+            fs.writeFileSync('data/macro/yahoo-ticker.json', JSON.stringify(output, null, 2));
+            console.log(`Saved ${Object.keys(tickers).length} ticker(s) to data/macro/yahoo-ticker.json`);
+          }
+
+          main().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF_NODE
+
+      - name: Verify output
+        run: |
+          echo "=== Generated JSON ==="
+          head -40 data/macro/yahoo-ticker.json
+          echo "..."
+          echo "Total lines: $(wc -l < data/macro/yahoo-ticker.json)"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/macro/yahoo-ticker.json
+          git diff --staged --quiet || git commit -m "data: refresh yahoo-ticker snapshot (TQQQ/SOXL)"
+          git pull --rebase origin main
+          git push

@@ -115,18 +115,23 @@
             });
 
             async function updateLivePrice() {
+                // DEC-196 — same-origin snapshot from hourly cron.
                 try {
-                    const proxyUrl = 'https://api.allorigins.win/get?url=';
-                    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${state.ticker}`;
-                    const res = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                    const basePath = location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';
+                    const jsonUrl = window.location.origin + basePath + '/data/macro/yahoo-ticker.json';
+                    const res = await fetch(jsonUrl, { cache: 'no-store' });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const data = await res.json();
-                    const content = JSON.parse(data.contents);
-                    const price = content?.chart?.result?.[0]?.meta?.regularMarketPrice;
-                    if (price) {
+                    const entry = data?.tickers?.[state.ticker];
+                    const price = Number(entry?.price);
+                    if (Number.isFinite(price) && price > 0) {
                         state.price = price;
                         document.getElementById('live-price').textContent = price.toFixed(2);
+                    } else {
+                        console.warn(`[live-price] ${state.ticker} missing in yahoo-ticker.json`, data);
+                        document.getElementById('live-price').textContent = '—';
                     }
-                } catch (e) { console.error(e); }
+                } catch (e) { console.warn('[live-price] fetch failed:', e); }
             }
             updateLivePrice();
 

@@ -49,6 +49,8 @@ type WorkerSymbolPayload = {
   postMarket?: unknown;
   afterHours?: unknown;
   marketState?: unknown;
+  currentTradingPeriod?: YahooMeta["currentTradingPeriod"];
+  regularMarketTime?: unknown;
 };
 
 type WorkerPayload = WorkerSymbolPayload & {
@@ -260,6 +262,8 @@ async function fetchWorkerQuote(symbol: string): Promise<TickerQuote> {
     toNumber(candidate.afterHours);
   const marketState = deriveMarketStateFromTradingPeriods({
     marketStateRaw: candidate.marketState,
+    currentTradingPeriod: candidate.currentTradingPeriod,
+    regularMarketTime: candidate.regularMarketTime,
   });
 
   return {
