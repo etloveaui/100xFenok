@@ -27,6 +27,12 @@ from scraper_utils import (
 
 SOURCE_URL = "https://www.slickcharts.com/treasury"
 DEFAULT_OUTPUT = Path("source/100xFenok/data/slickcharts/treasury.json")
+PLAYWRIGHT_VIEWPORT = {"width": 1440, "height": 2400}
+PLAYWRIGHT_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/123.0.0.0 Safari/537.36"
+)
 
 
 def clean_maturity(text: str) -> str:
@@ -37,6 +43,15 @@ def clean_maturity(text: str) -> str:
     elif "Year" in text:
         text = text.replace("Year", "Yr")
     return text.strip()
+
+
+def looks_like_challenge_page(html: str) -> bool:
+    lowered = html.lower()
+    return (
+        "just a moment" in lowered
+        or "enable javascript and cookies" in lowered
+        or "cloudflare" in lowered and "treasury" not in lowered
+    )
 
 
 def parse_treasury(html: str) -> List[Dict[str, float | str]]:
@@ -114,7 +129,16 @@ def main() -> None:
     args = parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    html = fetch_html_playwright(SOURCE_URL)
+    html = fetch_html_playwright(
+        SOURCE_URL,
+        wait_for_selector="table.table",
+        user_agent=PLAYWRIGHT_USER_AGENT,
+        viewport=PLAYWRIGHT_VIEWPORT,
+        wait_until="domcontentloaded",
+        retry=2,
+        challenge_detector=looks_like_challenge_page,
+        post_load_wait_ms=2500,
+    )
     rates = parse_treasury(html)
     if not rates:
         raise RuntimeError("No treasury rates parsed from SlickCharts response")

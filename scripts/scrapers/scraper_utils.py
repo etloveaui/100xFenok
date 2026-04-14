@@ -23,7 +23,7 @@ import re
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -51,6 +51,12 @@ def fetch_html_playwright(
     *,
     wait_for_selector: str = "table.table",
     timeout: int = 60000,
+    user_agent: Optional[str] = None,
+    viewport: Optional[Dict[str, int]] = None,
+    wait_until: str = "domcontentloaded",
+    retry: int = 0,
+    challenge_detector: Optional[Callable[[str], bool]] = None,
+    post_load_wait_ms: int = 0,
 ) -> str:
     """
     Fetch HTML content using Playwright headless browser.
@@ -60,6 +66,12 @@ def fetch_html_playwright(
         url: Target URL to fetch
         wait_for_selector: CSS selector to wait for before capturing HTML
         timeout: Navigation timeout in milliseconds (default: 60000)
+        user_agent: Optional browser context user agent override
+        viewport: Optional browser context viewport override
+        wait_until: Playwright wait_until mode (default: domcontentloaded)
+        retry: Additional attempts after the initial fetch (default: 0)
+        challenge_detector: Optional callable that returns True when HTML looks like a challenge page
+        post_load_wait_ms: Optional delay after navigation/load-state before selector wait
 
     Returns:
         Rendered HTML content as string
@@ -68,18 +80,46 @@ def fetch_html_playwright(
         RuntimeError: If page load or selector wait times out
     """
     from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.set_extra_http_headers({"User-Agent": USER_AGENT})
-            page.goto(url, wait_until="domcontentloaded", timeout=timeout)
-            page.wait_for_selector(wait_for_selector, timeout=15000)
-            html = page.content()
-            browser.close()
-        return html
-    except PlaywrightTimeout as exc:
-        raise RuntimeError(f"Playwright timed out fetching {url}") from exc
+
+    attempts = retry + 1
+    last_error: Exception | None = None
+    effective_user_agent = user_agent or USER_AGENT
+
+    for attempt in range(1, attempts + 1):
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context_options = {
+                    "user_agent": effective_user_agent,
+                }
+                if viewport is not None:
+                    context_options["viewport"] = viewport
+                context = browser.new_context(**context_options)
+                page = context.new_page()
+                page.goto(url, wait_until=wait_until, timeout=timeout)
+                if post_load_wait_ms > 0:
+                    page.wait_for_timeout(post_load_wait_ms)
+                page.wait_for_selector(wait_for_selector, timeout=15000)
+                page.wait_for_timeout(1200)
+                html = page.content()
+                title = page.title()
+                context.close()
+                browser.close()
+
+            if challenge_detector and challenge_detector(html):
+                raise RuntimeError(f"Challenge page detected for {url} (title={title})")
+
+            return html
+        except (PlaywrightTimeout, RuntimeError) as exc:
+            last_error = exc
+            if attempt == attempts:
+                break
+            time.sleep(RATE_LIMIT_SECONDS)
+            continue
+
+    if last_error is None:
+        raise RuntimeError(f"Playwright failed fetching {url}")
+    raise RuntimeError(f"Playwright failed fetching {url}: {last_error}") from last_error
 
 
 def fetch_html(

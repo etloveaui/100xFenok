@@ -23,6 +23,12 @@ from scraper_utils import fetch_html_playwright, clean_number, to_float
 
 SOURCE_URL = "https://www.slickcharts.com/magnificent7"
 DEFAULT_OUTPUT = Path(__file__).with_name("magnificent7.json")
+PLAYWRIGHT_VIEWPORT = {"width": 1440, "height": 2400}
+PLAYWRIGHT_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/123.0.0.0 Safari/537.36"
+)
 
 
 def _clean_number_mag7(value: str) -> str:
@@ -46,6 +52,15 @@ def _to_float_mag7(value: str) -> float:
     """Custom to_float for Magnificent 7 using custom clean_number."""
     stripped = _clean_number_mag7(value)
     return float(stripped) if stripped else 0.0
+
+
+def looks_like_challenge_page(html: str) -> bool:
+    lowered = html.lower()
+    return (
+        "just a moment" in lowered
+        or "enable javascript and cookies" in lowered
+        or "cloudflare" in lowered and "table table-hover" not in lowered
+    )
 
 
 def parse_magnificent7(html: str) -> List[Dict[str, float | int | str]]:
@@ -113,7 +128,16 @@ def main() -> None:
     args = parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    html = fetch_html_playwright(SOURCE_URL, wait_for_selector="table.table.table-hover")
+    html = fetch_html_playwright(
+        SOURCE_URL,
+        wait_for_selector="table.table.table-hover",
+        user_agent=PLAYWRIGHT_USER_AGENT,
+        viewport=PLAYWRIGHT_VIEWPORT,
+        wait_until="domcontentloaded",
+        retry=2,
+        challenge_detector=looks_like_challenge_page,
+        post_load_wait_ms=2500,
+    )
     data = parse_magnificent7(html)
     if not data:
         raise RuntimeError("No Magnificent 7 data parsed from SlickCharts response")
