@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-03-16
+> **Last Updated**: 2026-04-14
 > **Total Files**: 1,695 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -10,9 +10,10 @@
 
 | Folder | Files | Update Frequency | Source |
 |--------|-------|------------------|--------|
+| [admin/](admin/README.md) | 1 | Hourly | GitHub repository tree |
 | [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
-| [global-scouter/](global-scouter/README.md) | 1,068 | On-demand | Global Scouter Tool |
+| [global-scouter/](global-scouter/README.md) | 1,067 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [macro/](macro/README.md) | 4 | Daily/Weekly/Quarterly | FRED + FDIC |
 | [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
@@ -30,6 +31,7 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
+- Benchmarks latest: 30,433 records, 2010-05-28 ~ 2026-04-12, 37 sections, 829 data points per index
 - Damodaran: industries (96 w/ beta, margins, EVA), ERP (178 countries), historical ERP (66 years), credit ratings
 
 ### Institutional Data (sec-13f/)
@@ -48,7 +50,7 @@
 - 12+ indicators
 
 ### Stock Screening (global-scouter/)
-- 1,063 stock profiles + ETFs (23) + Economic Indicators (1,052 records)
+- 1,062 stock profiles + ETFs (23) + Economic Indicators (1,054 records)
 - **v2.2.0**: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
 - On-demand updates

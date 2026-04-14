@@ -1,12 +1,12 @@
 # Update Manifest — Automatic manifest.json sync
 #
-# Triggered whenever any file under data/ is pushed to main.
-# Updates file_count and updated fields for changed folders.
+# Triggered whenever data/ or the manifest updater script changes on main.
+# Updates file_count, updated, last_updated, generatedAt, categories, and manifest_version.
 #
 # Infinite loop prevention:
 #   This workflow's own commit uses "[skip ci]" → GitHub Actions skips it.
 #
-# What is updated:  file_count, updated, last_updated
+# What is updated:  file_count, updated, last_updated, generatedAt, categories, manifest_version
 # What is NOT touched: version, update_frequency, source, description, recent_changes
 
 name: Update Manifest
@@ -16,6 +16,7 @@ on:
     branches: [main]
     paths:
       - 'data/**'
+      - 'scripts/update-manifest.py'
 
 jobs:
   update-manifest:
@@ -30,7 +31,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Need HEAD~1 for git diff (changed folder detection)
+          fetch-depth: 0  # Need full history so BEFORE_SHA diff always resolves
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -43,13 +44,19 @@ jobs:
         # BEFORE_SHA: covers ALL commits in the push (not just HEAD~1)
         env:
           BEFORE_SHA: ${{ github.event.before }}
-        run: python3 scripts/update-manifest.py
-        continue-on-error: true
+        run: |
+          set +e
+          python3 scripts/update-manifest.py
+          status=$?
+          if [ "$status" -eq 1 ]; then
+            exit 0
+          fi
+          exit "$status"
 
       - name: Check if manifest changed
         id: check
         run: |
-          git diff --quiet data/manifest.json \
+          git diff --quiet data/manifest.json 100xfenok-next/public/data/manifest.json \
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
             || echo "changed=true"  >> "$GITHUB_OUTPUT"
 
@@ -58,7 +65,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/manifest.json
+          git add data/manifest.json 100xfenok-next/public/data/manifest.json
           git commit -m "chore: update manifest.json [skip ci]"
           git push
 

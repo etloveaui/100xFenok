@@ -1,17 +1,26 @@
 {
-  "manifest_version": "1.0.0",
+  "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-03-17",
+  "last_updated": "2026-04-14",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
+    "admin": {
+      "version": "1.0.0",
+      "updated": "2026-04-14",
+      "update_frequency": "hourly",
+      "source": "GitHub repository tree",
+      "file_count": 1,
+      "schema": false,
+      "description": "Hourly folder listing cache for notification-control-panel-web.html"
+    },
     "benchmarks": {
       "version": "3.7.0",
-      "updated": "2026-03-16",
+      "updated": "2026-04-13",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 15+ years history"
+      "description": "Market indices P/E, P/B, ROE - 30,433 records, 2010-05-28 ~ 2026-04-12, 37 sections"
     },
     "damodaran": {
       "version": "2.0.0",
@@ -24,16 +33,16 @@
     },
     "global-scouter": {
       "version": "2.2.0",
-      "updated": "2026-03-16",
+      "updated": "2026-04-13",
       "update_frequency": "on-demand",
       "source": "Custom aggregation",
-      "file_count": 1068,
+      "file_count": 1067,
       "schema": true,
-      "description": "Stock screening (1,063), ETFs (23), indicators (1,051) + extended: eps_consensus, growth_consensus, per_bands"
+      "description": "Stock screening (1,062), ETFs (23), indicators (1,054) + extended: eps_consensus, growth_consensus, per_bands"
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-03-17",
+      "updated": "2026-04-11",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
       "file_count": 2,
@@ -42,10 +51,10 @@
     },
     "macro": {
       "version": "1.0.0",
-      "updated": "2026-03-14",
+      "updated": "2026-04-13",
       "update_frequency": "daily/weekly/quarterly",
       "source": "FRED + FDIC",
-      "file_count": 4,
+      "file_count": 6,
       "schema": true,
       "description": "Macro banking series promoted from root compatibility JSON (FRED daily/weekly/quarterly + FDIC Tier1)"
     },
@@ -60,7 +69,7 @@
     },
     "sentiment": {
       "version": "1.0.0",
-      "updated": "2026-03-16",
+      "updated": "2026-04-12",
       "update_frequency": "daily",
       "source": "Multiple (AAII, CNN, CFTC, CBOE)",
       "file_count": 13,
@@ -69,15 +78,94 @@
     },
     "slickcharts": {
       "version": "2.1.0",
-      "updated": "2026-03-01",
+      "updated": "2026-04-01",
       "update_frequency": "daily/weekly/monthly",
       "source": "SlickCharts.com (32 scrapers)",
-      "file_count": 556,
+      "file_count": 560,
       "schema": true,
       "description": "Index holdings, returns, individual stocks"
+    },
+    "yardney": {
+      "version": "1.0.0",
+      "updated": "2026-03-31",
+      "update_frequency": "on-demand",
+      "source": "TBD",
+      "file_count": 1,
+      "schema": false,
+      "description": "TBD"
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-04-14",
+      "folder": "manifest",
+      "version": "1.1.0",
+      "change": "Added hybrid categories registry for fenok-data-mcp while preserving legacy folders for runtime compatibility.",
+      "breaking": false
+    },
+    {
+      "date": "2026-04-14",
+      "folder": "admin",
+      "version": "1.0.0",
+      "change": "Added hourly same-origin cache for notification-control-panel-web.html and hourly GitHub Actions index workflow",
+      "breaking": false
+    },
+    {
+      "date": "2026-04-13",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "Weekly data update (2026-04-10 source): 30,433 records, 2010-05-28 ~ 2026-04-12, 37 sections, 829 data points per index",
+      "breaking": false
+    },
+    {
+      "date": "2026-04-13",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Data refresh (2026-04-10 source): 1,062 stocks, 1,054 indicators, per_bands 98.3%",
+      "breaking": false
+    },
+    {
+      "date": "2026-04-06",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "Weekly data update (2026-04-03 source): 30,432 records, 2010-05-21 ~ 2026-04-03, 37 sections, ~822 data points per index",
+      "breaking": false
+    },
+    {
+      "date": "2026-04-05",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Data refresh (2026-04-03 source): 1,062 stocks (-1), 1,053 indicators, per_bands 98.2%",
+      "breaking": false
+    },
+    {
+      "date": "2026-03-30",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "Weekly data update (2026-03-27 source): 31,114 records, 2010-01-01 ~ 2026-03-29, 37 sections, 848 data points per index",
+      "breaking": false
+    },
+    {
+      "date": "2026-03-30",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Data refresh (2026-03-27 source): 1,063 stocks (+1), 1,053 indicators (+1), per_bands 98.0%",
+      "breaking": false
+    },
+    {
+      "date": "2026-03-23",
+      "folder": "benchmarks",
+      "version": "3.7.0",
+      "change": "Weekly data update (2026-03-20 source): 30,430 records, 2010-05-07 ~ 2026-03-22, 37 sections, micro_sectors +1",
+      "breaking": false
+    },
+    {
+      "date": "2026-03-22",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Data refresh (2026-03-20 source): 1,062 stocks (-1), 1,052 indicators, per_bands 98.1%",
+      "breaking": false
+    },
     {
       "date": "2026-03-16",
       "folder": "global-scouter",
@@ -245,5 +333,72 @@
     "on_schema_change": "Update folder schema.json AND this manifest recent_changes",
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
-  }
+  },
+  "generatedAt": "2026-04-14T04:02:42Z",
+  "categories": [
+    {
+      "name": "sentiment",
+      "path": "/data/sentiment/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 13,
+      "lastUpdated": "2026-04-13",
+      "notes": "Market sentiment indicators"
+    },
+    {
+      "name": "slickcharts",
+      "path": "/data/slickcharts/",
+      "schemaVersion": "2.1.0",
+      "fileCount": 560,
+      "lastUpdated": "2026-04-13",
+      "notes": "Index holdings, returns, individual stocks"
+    },
+    {
+      "name": "sec-13f",
+      "path": "/data/sec-13f/",
+      "schemaVersion": "3.3.0",
+      "fileCount": 43,
+      "lastUpdated": "2026-03-15",
+      "notes": "Institutional holdings from 30 major investors (20Q accumulate, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
+    },
+    {
+      "name": "benchmarks",
+      "path": "/data/benchmarks/",
+      "schemaVersion": "3.7.0",
+      "fileCount": 7,
+      "lastUpdated": "2026-04-13",
+      "notes": "Market indices P/E, P/B, ROE - 30,433 records, 2010-05-28 ~ 2026-04-12, 37 sections"
+    },
+    {
+      "name": "damodaran",
+      "path": "/data/damodaran/",
+      "schemaVersion": "2.0.0",
+      "fileCount": 4,
+      "lastUpdated": "2026-03-13",
+      "notes": "Industry valuation data, ERP, credit ratings"
+    },
+    {
+      "name": "indices",
+      "path": "/data/indices/",
+      "schemaVersion": "2.0.0",
+      "fileCount": 2,
+      "lastUpdated": "2026-04-13",
+      "notes": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
+    },
+    {
+      "name": "global-scouter",
+      "path": "/data/global-scouter/",
+      "schemaVersion": "2.2.0",
+      "fileCount": 1067,
+      "lastUpdated": "2026-04-13",
+      "notes": "Stock screening (1,062), ETFs (23), indicators (1,054) + extended: eps_consensus, growth_consensus, per_bands"
+    },
+    {
+      "name": "macro",
+      "path": "/data/macro/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 6,
+      "lastUpdated": "2026-04-13",
+      "notes": "Macro banking series promoted from root compatibility JSON (FRED daily/weekly/quarterly + FDIC Tier1)"
+    }
+  ]
 }

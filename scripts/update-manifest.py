@@ -8,10 +8,13 @@ What this script updates:
   - file_count  : actual JSON file count per folder (schema.json excluded)
   - updated     : today's date if file count changed OR git-detected change
   - last_updated: root-level metadata
+  - generatedAt : UTC snapshot timestamp for the manifest
+  - categories  : MCP-facing hybrid registry derived from legacy folders
+  - manifest_version: bumped once when the hybrid registry is introduced
 
-What this script NEVER touches:
+What this script never rewrites:
   - version, update_frequency, source, schema, description
-  - recent_changes, agent_instructions
+  - existing recent_changes entries (it only inserts the one-time hybrid note)
 
 New folder behavior:
   - Auto-discovers folders not in manifest → adds default entry
@@ -30,19 +33,30 @@ import json
 import os
 import subprocess
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 
-# ─── Paths ────────────────────────────────────────────────────────────────────
+# ─── Constants ────────────────────────────────────────────────────────────────
+
+CATEGORY_ORDER = (
+    "sentiment",
+    "slickcharts",
+    "sec-13f",
+    "benchmarks",
+    "damodaran",
+    "indices",
+    "global-scouter",
+    "macro",
+)
+
+HYBRID_MANIFEST_VERSION = "1.1.0"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-REPO_ROOT  = SCRIPT_DIR.parent          # scripts/ → repo root
-DATA_DIR   = REPO_ROOT / "data"
-MANIFEST   = DATA_DIR / "manifest.json"
-
-
-# ─── Config ───────────────────────────────────────────────────────────────────
+REPO_ROOT = SCRIPT_DIR.parent          # scripts/ → repo root
+DATA_DIR = REPO_ROOT / "data"
+MANIFEST = DATA_DIR / "manifest.json"
+NEXT_MANIFEST = REPO_ROOT / "100xfenok-next" / "public" / "data" / "manifest.json"
 
 # JSON files excluded from count (metadata files, not data)
 EXCLUDE_FILES = {"schema.json"}
@@ -53,30 +67,70 @@ ROOT_KNOWN = {
     "README.md",
 }
 
-# Default template for newly discovered folders
-# Fill in update_frequency / source / description manually after auto-add
-NEW_FOLDER_TEMPLATE = {
-    "version": "1.0.0",
-    "updated": None,             # set at runtime
-    "update_frequency": "on-demand",  # ← update manually
-    "source": "TBD",                  # ← update manually
-    "file_count": 0,             # set at runtime
-    "schema": False,
-    "description": "TBD"              # ← update manually
-}
-
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
+
+def parse_semver(version: str | None) -> tuple[int, int, int]:
+    """Parse a loose semver string into a comparable tuple."""
+    if not version:
+        return (0, 0, 0)
+
+    parts = version.split(".")
+    parsed: list[int] = []
+
+    for part in parts[:3]:
+        token = part.split("-")[0]
+        try:
+            parsed.append(int(token))
+        except ValueError:
+            parsed.append(0)
+
+    while len(parsed) < 3:
+        parsed.append(0)
+
+    return tuple(parsed)
+
+
 def count_data_files(folder: Path) -> int:
-    """
-    Count all .json files under folder recursively,
-    excluding metadata files (schema.json).
-    """
+    """Count all .json files under folder recursively, excluding schema.json."""
     return sum(
-        1 for f in folder.rglob("*.json")
-        if f.name not in EXCLUDE_FILES
+        1 for file_path in folder.rglob("*.json")
+        if file_path.name not in EXCLUDE_FILES
     )
+
+
+def read_schema_version(folder: Path, fallback: str) -> str:
+    """Read the per-folder schema version, falling back to the manifest version."""
+    schema_path = folder / "schema.json"
+    try:
+        with open(schema_path, encoding="utf-8") as f:
+            schema = json.load(f)
+    except Exception:
+        return fallback
+
+    version = schema.get("version")
+    if isinstance(version, str) and version.strip():
+        return version
+
+    return fallback
+
+
+def latest_data_date(folder: Path) -> str | None:
+    """Return the date declared in a folder schema, or the fallback manifest date."""
+    schema_path = folder / "schema.json"
+    try:
+        with open(schema_path, encoding="utf-8") as f:
+            schema = json.load(f)
+    except Exception:
+        return None
+
+    for key in ("updated", "last_updated", "generatedAt"):
+        value = schema.get(key)
+        if isinstance(value, str) and value.strip():
+            return value[:10]
+
+    return None
 
 
 def get_git_changed_folders() -> set[str]:
@@ -125,18 +179,55 @@ def get_orphan_files() -> list[str]:
     )
 
 
+def build_categories(folders_meta: dict[str, dict[str, object]]) -> list[dict[str, object]]:
+    """Build the MCP-facing category registry from the core data folders."""
+    categories = []
+
+    for name in CATEGORY_ORDER:
+        manifest_meta = folders_meta.get(name)
+        if not manifest_meta:
+            continue
+
+        folder_path = DATA_DIR / name
+        fallback_version = str(manifest_meta.get("version", "1.0.0"))
+        fallback_last_updated = str(manifest_meta.get("updated", date.today().isoformat()))
+
+        categories.append(
+            {
+                "name": name,
+                "path": f"/data/{name}/",
+                "schemaVersion": read_schema_version(folder_path, fallback_version),
+                "fileCount": int(manifest_meta.get("file_count", count_data_files(folder_path))),
+                "lastUpdated": latest_data_date(folder_path) or fallback_last_updated,
+                "notes": str(manifest_meta.get("description") or ""),
+            }
+        )
+
+    return categories
+
+
+def write_manifest(path: Path, manifest: dict[str, object]) -> None:
+    """Write a manifest JSON file with stable formatting."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+
+
 # ─── Core ─────────────────────────────────────────────────────────────────────
 
+
 def update_manifest(dry_run: bool = False) -> int:
-    """
-    Main logic. Returns exit code (0=clean, 1=has warnings).
-    """
-    today     = str(date.today())
+    """Main logic. Returns exit code (0=clean, 1=has warnings)."""
+    today = str(date.today())
+    generated_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     exit_code = 0
 
     # Load manifest
     with open(MANIFEST, encoding="utf-8") as f:
         manifest = json.load(f)
+
+    original_manifest_version = manifest.get("manifest_version")
     folders_meta = manifest.setdefault("folders", {})
 
     # Detect git-changed folders (for `updated` accuracy)
@@ -163,21 +254,21 @@ def update_manifest(dry_run: bool = False) -> int:
 
     # ── Process each folder ───────────────────────────────────────────────────
     updated_entries = []
-    new_entries     = []
+    new_entries = []
 
     for folder_name in actual_folders:
-        folder_path  = DATA_DIR / folder_name
+        folder_path = DATA_DIR / folder_name
         actual_count = count_data_files(folder_path)
 
         if folder_name in folders_meta:
-            entry       = folders_meta[folder_name]
-            old_count   = entry.get("file_count", 0)
-            count_diff  = old_count != actual_count
+            entry = folders_meta[folder_name]
+            old_count = entry.get("file_count", 0)
+            count_diff = old_count != actual_count
             git_touched = folder_name in git_changed
 
             if count_diff or git_touched:
                 entry["file_count"] = actual_count
-                entry["updated"]    = today
+                entry["updated"] = today
 
                 reasons = []
                 if count_diff:
@@ -190,9 +281,15 @@ def update_manifest(dry_run: bool = False) -> int:
                 )
         else:
             # Brand-new folder not yet in manifest
-            new_entry               = NEW_FOLDER_TEMPLATE.copy()
-            new_entry["file_count"] = actual_count
-            new_entry["updated"]    = today
+            new_entry = {
+                "version": "1.0.0",
+                "updated": today,
+                "update_frequency": "on-demand",
+                "source": "TBD",
+                "file_count": actual_count,
+                "schema": False,
+                "description": "TBD",
+            }
             folders_meta[folder_name] = new_entry
 
             new_entries.append(
@@ -209,8 +306,37 @@ def update_manifest(dry_run: bool = False) -> int:
         print("   Tip: remove the entry or restore the folder")
         exit_code = 1
 
-    # ── Update root last_updated ──────────────────────────────────────────────
+    # ── Update root metadata ──────────────────────────────────────────────────
     manifest["last_updated"] = today
+    manifest["generatedAt"] = generated_at
+
+    if parse_semver(original_manifest_version) < parse_semver(HYBRID_MANIFEST_VERSION):
+        manifest["manifest_version"] = HYBRID_MANIFEST_VERSION
+    elif isinstance(original_manifest_version, str) and original_manifest_version.strip():
+        manifest["manifest_version"] = original_manifest_version
+    else:
+        manifest["manifest_version"] = HYBRID_MANIFEST_VERSION
+
+    categories = build_categories(folders_meta)
+    manifest["categories"] = categories
+
+    recent_changes = manifest.setdefault("recent_changes", [])
+    if not any(
+        isinstance(entry, dict)
+        and entry.get("folder") == "manifest"
+        and entry.get("version") == manifest["manifest_version"]
+        for entry in recent_changes
+    ):
+        recent_changes.insert(
+            0,
+            {
+                "date": today,
+                "folder": "manifest",
+                "version": manifest["manifest_version"],
+                "change": "Added hybrid categories registry for fenok-data-mcp while preserving legacy folders for runtime compatibility.",
+                "breaking": False,
+            },
+        )
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print()
@@ -222,15 +348,18 @@ def update_manifest(dry_run: bool = False) -> int:
         print(f"🆕 New folders added ({len(new_entries)}):")
         for e in new_entries:
             print(f"   {e}")
-    if not updated_entries and not new_entries:
-        print("✓ manifest.json already up to date — no changes")
+
+    print("🧩 Manifest metadata refreshed:")
+    print(f"   manifest_version: {manifest['manifest_version']}")
+    print(f"   generatedAt     : {generated_at}")
+    print(f"   categories      : {len(categories)} entries")
 
     # ── Write ─────────────────────────────────────────────────────────────────
     if not dry_run:
-        with open(MANIFEST, "w", encoding="utf-8") as f:
-            json.dump(manifest, f, indent=2, ensure_ascii=False)
-            f.write("\n")
+        write_manifest(MANIFEST, manifest)
+        write_manifest(NEXT_MANIFEST, manifest)
         print(f"\n💾 Saved → {MANIFEST.relative_to(REPO_ROOT)}")
+        print(f"💾 Mirrored → {NEXT_MANIFEST.relative_to(REPO_ROOT)}")
     else:
         print("\n[dry-run] — no file written")
 
@@ -246,6 +375,7 @@ if __name__ == "__main__":
     print("update-manifest.py")
     print(f"  date    : {date.today()}")
     print(f"  data/   : {DATA_DIR}")
+    print(f"  mirror  : {NEXT_MANIFEST}")
     print(f"  mode    : {'dry-run' if dry_run else 'write'}")
     print("=" * 60)
 

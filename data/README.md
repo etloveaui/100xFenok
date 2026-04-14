@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-04-13
-> **Total Files**: 1,694 JSON files
+> **Last Updated**: 2026-04-14
+> **Total Files**: 1,695 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -10,6 +10,7 @@
 
 | Folder | Files | Update Frequency | Source |
 |--------|-------|------------------|--------|
+| [admin/](admin/README.md) | 1 | Hourly | GitHub repository tree |
 | [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,067 | On-demand | Global Scouter Tool |
