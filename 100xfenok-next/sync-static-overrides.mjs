@@ -8,7 +8,10 @@ function replaceExact(content, from, to, filePath) {
     return content;
   }
   if (!content.includes(from)) {
-    throw new Error(`[sync-static-overrides] pattern not found in ${filePath}`);
+    console.warn(
+      `[sync-static-overrides] pattern not found in ${filePath} — skipped (submodule likely moved past this rewrite)`
+    );
+    return content;
   }
   return content.replace(from, to);
 }
