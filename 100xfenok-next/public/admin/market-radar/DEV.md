@@ -177,6 +177,7 @@ admin/market-radar/
 
 | 날짜 | 변경 |
 |------|------|
+| 04-14 | Added `embed=1` shell mode to `index.html` so iframe bridge hides legacy header/footer under Next.js outer shell (#269) |
 | 01-02 | **🔴 Sentiment Dashboard 전면 재설계 (#98)** |
 | 01-02 | 콤보시그널 10개 구현 (매수 7 + 경고 3) |
 | 01-02 | JSON 데이터 연동: `data/sentiment/` → `loadMarketData()` |

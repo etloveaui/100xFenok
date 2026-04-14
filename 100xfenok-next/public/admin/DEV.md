@@ -165,6 +165,17 @@ if (inputHash === storedHash) {
 - Fixed: Details panel click not working (function clickHandler support)
 - Korean localization: index.html, status-card.js, renderer.js
 
+### 2026-04-14: Notification Control GitHub API rate-limit fix
+- `notification-control-panel-web.html`이 GitHub Contents API 직접 호출 대신 `data/admin/notification-folders.json` same-origin 캐시를 읽도록 전환됨.
+- 알림 전송은 Apps Script 응답 JSON 검증 + 파일명 날짜 추출 실패 시 명시적 오류로 처리해 silent failure를 줄였음.
+- `fetch-admin-notification.yml`(hourly)로 폴더 목록을 GitHub Actions에서 pre-fetch해서 브라우저 요청을 제거함.
+- Reference: BACKLOG #277, DEC-196
+
+### 2026-04-14: Embed shell mode for legacy admin iframes
+- Added `?embed=1` handling to `admin/data-lab/index.html` and `admin/market-radar/index.html`
+- In embed mode, legacy header/footer stay hidden so Next.js outer shell is the only visible navigation/footer
+- Reference: #269 Next.js Shell Duplication Fix
+
 ### 2026-01-20: Unified Shared Modules
 - Created `admin/shared/` folder with 7 modules
 - CacheManager: Added `setPrefix()` for multi-lab support

@@ -16,6 +16,27 @@
 
   <!-- Dashboard Styles -->
   <link rel="stylesheet" href="styles/dashboard.css">
+  <script>
+    (function () {
+      try {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.setAttribute('data-embed-mode', '1');
+          document.addEventListener('DOMContentLoaded', function () {
+            document.querySelector('body > header')?.remove();
+            document.querySelector('body > footer')?.remove();
+          });
+        }
+      } catch (error) {
+        console.warn('[Data Lab] embed mode detection failed:', error);
+      }
+    })();
+  </script>
+  <style>
+    html[data-embed-mode="1"] body > header,
+    html[data-embed-mode="1"] body > footer {
+      display: none !important;
+    }
+  </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen text-gray-800">
 

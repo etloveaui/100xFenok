@@ -1439,6 +1439,29 @@
     }
   }
 </style>
+<script>
+  (function () {
+    try {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        document.documentElement.setAttribute('data-embed-mode', '1');
+        document.addEventListener('DOMContentLoaded', function () {
+          document.querySelector('.masthead')?.remove();
+          document.querySelector('.nav-bar')?.remove();
+          document.querySelector('body > footer')?.remove();
+        });
+      }
+    } catch (error) {
+      console.warn('[Tariff report] embed mode detection failed:', error);
+    }
+  })();
+</script>
+<style>
+  html[data-embed-mode="1"] .masthead,
+  html[data-embed-mode="1"] .nav-bar,
+  html[data-embed-mode="1"] body > footer {
+    display: none !important;
+  }
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">본문으로 건너뛰기</a>

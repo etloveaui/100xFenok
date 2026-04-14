@@ -147,6 +147,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.0.1 | 2026-04-14 | Added `embed=1` shell mode to hide legacy header/footer inside Next.js iframe bridge (#269) |
 | 2.0.0 | 2026-01-20 | Manifest-driven architecture, 94% code reduction (1,716→103 lines) |
 | 1.1.0 | 2026-01-10 | SlickCharts integration (34 validators) |
 | 1.0.0 | 2025-12-27 | Initial release (DEC-063) |

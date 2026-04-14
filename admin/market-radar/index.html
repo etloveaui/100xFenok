@@ -36,7 +36,26 @@
     .preview-frame:hover {
       border-color: #6366f1;
     }
+    html[data-embed-mode="1"] body > header,
+    html[data-embed-mode="1"] body > footer {
+      display: none !important;
+    }
   </style>
+  <script>
+    (function () {
+      try {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.setAttribute('data-embed-mode', '1');
+          document.addEventListener('DOMContentLoaded', function () {
+            document.querySelector('body > header')?.remove();
+            document.querySelector('body > footer')?.remove();
+          });
+        }
+      } catch (error) {
+        console.warn('[Market Radar Admin] embed mode detection failed:', error);
+      }
+    })();
+  </script>
 </head>
 <body class="text-gray-800">
 
