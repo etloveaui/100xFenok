@@ -122,11 +122,23 @@ async function configureScenarioRoutes(page, scenario) {
       await route.fulfill({ status: 503, contentType: "application/json",
         body: JSON.stringify({ error: "forced offline failure" }) });
     });
+    // FDIC API fallback — fetchFDICTier1() falls through to api.fdic.gov when local JSON fails.
+    // Must be blocked here or banking-health will still return data in offline scenario.
+    await page.route("**/api.fdic.gov/**", async (route) => {
+      await route.fulfill({ status: 503, contentType: "application/json",
+        body: JSON.stringify({ error: "forced offline failure" }) });
+    });
     return;
   }
 
-  // partial: summaries.json only (spec §5.2)
+  // partial: block fdic-tier1.json AND the api.fdic.gov fallback to force banking-health to fail.
+  // fetchFDICTier1() silently falls through to api.fdic.gov when the local JSON returns 503;
+  // both routes must be blocked for BANKING HEALTH to register as failed.
   await page.route(PARTIAL_FAILURE_PATTERN, async (route) => {
+    await route.fulfill({ status: 503, contentType: "application/json",
+      body: JSON.stringify({ error: "forced partial failure" }) });
+  });
+  await page.route("**/api.fdic.gov/**", async (route) => {
     await route.fulfill({ status: 503, contentType: "application/json",
       body: JSON.stringify({ error: "forced partial failure" }) });
   });
@@ -199,9 +211,11 @@ function isBentoScenarioPass(snapshot, scenario) {
 
   if (scenario === "live") {
     // bentoStateIndicatorCount removed — .market-state-badge is a Hero Zone element, not bento (Phase 1 carry-over).
+    // connectedMutedCount === 0 required: prevents false-pass during CSS opacity 0.3s transition after unmuting.
     return (
       snapshot.bannerType === "none" &&
       hasAllKickers &&
+      snapshot.connectedMutedCount === 0 &&
       snapshot.hasHorizontalScroll === false
     );
   }
