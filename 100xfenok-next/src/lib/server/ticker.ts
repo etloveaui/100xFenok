@@ -2,8 +2,28 @@ const YAHOO_BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart/";
 const WORKER_TICKER_BASE = "https://ticker-api.etloveaui.workers.dev/api/ticker";
 const FETCH_TIMEOUT_MS = 5000;
 
+type TradingPeriodWindow = {
+  start?: unknown;
+  end?: unknown;
+};
+
+type YahooMeta = Record<string, unknown> & {
+  marketState?: unknown;
+  regularMarketPrice?: unknown;
+  chartPreviousClose?: unknown;
+  previousClose?: unknown;
+  preMarketPrice?: unknown;
+  postMarketPrice?: unknown;
+  regularMarketTime?: unknown;
+  currentTradingPeriod?: {
+    pre?: TradingPeriodWindow;
+    regular?: TradingPeriodWindow;
+    post?: TradingPeriodWindow;
+  };
+};
+
 type YahooResult = {
-  meta?: Record<string, unknown>;
+  meta?: YahooMeta;
   indicators?: {
     quote?: Array<{
       close?: unknown[];
@@ -88,6 +108,54 @@ function normalizeMarketState(raw: unknown): TickerQuote["marketState"] {
   return "UNKNOWN";
 }
 
+function toEpochSeconds(value: unknown): number | null {
+  const n = toNumber(value);
+  if (n === null) return null;
+  return Math.trunc(n);
+}
+
+export function deriveMarketStateFromTradingPeriods(params: {
+  marketStateRaw?: unknown;
+  currentTradingPeriod?: YahooMeta["currentTradingPeriod"];
+  regularMarketTime?: unknown;
+  nowMs?: number;
+}): TickerQuote["marketState"] {
+  const parsed = normalizeMarketState(params.marketStateRaw);
+  if (parsed !== "UNKNOWN") {
+    return parsed;
+  }
+
+  const nowSec = Math.floor((params.nowMs ?? Date.now()) / 1000);
+  const preStart = toEpochSeconds(params.currentTradingPeriod?.pre?.start);
+  const regularStart = toEpochSeconds(params.currentTradingPeriod?.regular?.start);
+  const regularEnd = toEpochSeconds(params.currentTradingPeriod?.regular?.end);
+  const postEnd = toEpochSeconds(params.currentTradingPeriod?.post?.end);
+
+  if (preStart !== null && regularStart !== null && nowSec >= preStart && nowSec < regularStart) {
+    return "PRE";
+  }
+  if (regularStart !== null && regularEnd !== null && nowSec >= regularStart && nowSec < regularEnd) {
+    return "REGULAR";
+  }
+  if (regularEnd !== null && postEnd !== null && nowSec >= regularEnd && nowSec < postEnd) {
+    return "POST";
+  }
+
+  const regularMarketTime = toEpochSeconds(params.regularMarketTime);
+  if (regularMarketTime !== null && regularEnd !== null && regularMarketTime < regularEnd) {
+    return "CLOSED";
+  }
+
+  if (regularMarketTime !== null && regularStart !== null && regularEnd !== null) {
+    if (regularMarketTime >= regularStart && regularMarketTime < regularEnd) {
+      return "REGULAR";
+    }
+    return "CLOSED";
+  }
+
+  return "UNKNOWN";
+}
+
 function pickPrice(
   marketState: TickerQuote["marketState"],
   regular: number,
@@ -141,7 +209,11 @@ async function fetchYahooQuote(symbol: string): Promise<TickerQuote> {
     regular;
   const preMarket = toNumber(meta.preMarketPrice);
   const postMarket = toNumber(meta.postMarketPrice);
-  const marketState = normalizeMarketState(meta.marketState);
+  const marketState = deriveMarketStateFromTradingPeriods({
+    marketStateRaw: meta.marketState,
+    currentTradingPeriod: meta.currentTradingPeriod,
+    regularMarketTime: meta.regularMarketTime,
+  });
   const price = pickPrice(marketState, regular, preMarket, postMarket);
   const change = price - previousClose;
   const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
@@ -186,7 +258,9 @@ async function fetchWorkerQuote(symbol: string): Promise<TickerQuote> {
   const postMarket =
     toNumber(candidate.postMarket) ??
     toNumber(candidate.afterHours);
-  const marketState = normalizeMarketState(candidate.marketState);
+  const marketState = deriveMarketStateFromTradingPeriods({
+    marketStateRaw: candidate.marketState,
+  });
 
   return {
     symbol,
