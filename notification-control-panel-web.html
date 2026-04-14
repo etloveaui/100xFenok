@@ -65,7 +65,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">Daily Wrap</h3>
                     <p class="text-sm text-gray-600 mb-4">오늘의 데일리 랩 리포트</p>
-                    <button onclick="sendQuickNotification('daily_wrap')" 
+                    <button onclick="sendQuickNotification(event, 'daily_wrap')"
                             class="w-full bg-green-500 text-white px-6 py-3 rounded-lg font-semibold btn-hover transition-all duration-300">
                         지금 발송
                     </button>
@@ -78,7 +78,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">Alpha Scout</h3>
                     <p class="text-sm text-gray-600 mb-4">최신 알파 스카우트 분석</p>
-                    <button onclick="sendQuickNotification('alpha_scout')" 
+                    <button onclick="sendQuickNotification(event, 'alpha_scout')"
                             class="w-full bg-purple-500 text-white px-6 py-3 rounded-lg font-semibold btn-hover transition-all duration-300">
                         지금 발송
                     </button>
@@ -91,7 +91,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">Strategic Briefing</h3>
                     <p class="text-sm text-gray-600 mb-4">전략 브리핑 업데이트</p>
-                    <button onclick="sendQuickNotification('briefing')" 
+                    <button onclick="sendQuickNotification(event, 'briefing')"
                             class="w-full bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold btn-hover transition-all duration-300">
                         지금 발송
                     </button>
@@ -126,7 +126,7 @@
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     
-                    <button onclick="sendCustomNotification()" 
+                    <button onclick="sendCustomNotification(event)"
                             class="w-full bg-orange-500 text-white px-6 py-4 rounded-lg font-semibold text-lg btn-hover transition-all duration-300">
                         <i class="fas fa-paper-plane mr-2"></i>커스텀 알림 발송
                     </button>
@@ -217,6 +217,8 @@
 
         // Google Apps Script Web App URL (프록시)
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxp9riUdfBjG0zuG1USN46E5k1-nVWR2ikR40RNGfINkmgCTJ6wIRuq9b-4BpIOZZNv/exec';
+        const PAGE_DIR = location.pathname.replace(/[^/]*$/, '');
+        const NOTIFICATION_INDEX_PATH = `${PAGE_DIR}data/admin/notification-folders.json`;
 
         // 템플릿 데이터
         const templates = {
@@ -242,146 +244,147 @@
         const reportConfigs = {
             daily_wrap: {
                 name: "100x Daily Wrap",
-                title: "🔥 100x Daily Wrap 업데이트", 
+                title: "🔥 100x Daily Wrap 업데이트",
                 urlPattern: "https://100xfenok.com/100x/daily-wrap/{filename}",
-                filePattern: "daily-wrap/*.html"
+                pathPrefix: "100x/daily-wrap/",
+                folderKey: "daily_wrap"
             },
             alpha_scout: {
                 name: "100x Alpha Scout",
                 title: "🎯 Alpha Scout 리포트 공개",
                 urlPattern: "https://100xfenok.com/alpha-scout/reports/{filename}",
-                filePattern: "alpha-scout/reports/*.html"
+                pathPrefix: "alpha-scout/reports/",
+                folderKey: "alpha_scout"
             },
             briefing: {
-                name: "100x Strategic Briefing", 
+                name: "100x Strategic Briefing",
                 title: "📋 전략 브리핑 업데이트",
                 urlPattern: "https://100xfenok.com/100x%20Briefing/Briefing/{filename}",
-                filePattern: "100x Briefing/Briefing/*.html"
+                pathPrefix: "100x%20Briefing/Briefing/",
+                folderKey: "briefing"
             }
         };
+
+        async function getNotificationFolders() {
+            const response = await fetch(NOTIFICATION_INDEX_PATH, { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`알림 인덱스 로드 실패 (${response.status})`);
+            }
+
+            const manifest = await response.json();
+            if (!manifest || !manifest.folders) {
+                throw new Error('알림 인덱스 형식이 올바르지 않습니다.');
+            }
+
+            return manifest.folders;
+        }
+
+        function pickLatestHtmlFile(folder) {
+            if (!folder || !Array.isArray(folder.files) || folder.files.length === 0) {
+                throw new Error('알림 폴더 목록이 비어있습니다.');
+            }
+
+            return folder.files[0];
+        }
 
         // 텔레그램 메시지 발송 (Apps Script 프록시 방식)
         // - 토큰: Apps Script에서 안전하게 관리
         // - Chat IDs: Google Sheets에서 동적 로드
         async function sendTelegramMessage(title, message) {
-            try {
-                // Apps Script 프록시로 요청 전송
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',  // CORS 우회
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'web_notification',
-                        title: title,
-                        message: message
-                    })
-                });
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'web_notification',
+                    title: title,
+                    message: message
+                })
+            });
 
-                // no-cors 모드에서는 response 읽기 불가
-                // Apps Script에서 실제 발송 처리
-                return [{
-                    success: true,
-                    message: '프록시로 요청 전송됨 (Chat IDs는 시트에서 자동 로드)'
-                }];
-
-            } catch (error) {
-                console.error('프록시 요청 실패:', error);
-                return [{
-                    success: false,
-                    error: error.message
-                }];
+            const responseText = await response.text();
+            if (!response.ok) {
+                throw new Error(`프록시 요청 실패 (${response.status}): ${responseText || '응답 없음'}`);
             }
+
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                throw new Error(`프록시 응답 파싱 실패: ${parseError.message}${responseText ? ` | ${responseText}` : ''}`);
+            }
+
+            if (!data?.success) {
+                throw new Error(data?.error || '프록시가 발송 실패를 반환했습니다.');
+            }
+
+            return [data];
         }
 
-        // GitHub API를 통한 최신 파일 검색
-        async function getLatestFile(folderPath) {
-            try {
-                console.log(`Fetching latest file from: ${folderPath}`);
-                const response = await fetch(`https://api.github.com/repos/etloveaui/100xFenok/contents/${folderPath}`);
-                const files = await response.json();
-                
-                if (!Array.isArray(files)) {
-                    throw new Error('폴더를 찾을 수 없습니다.');
-                }
-                
-                // HTML 파일만 필터링하고 날짜순 정렬
-                const htmlFiles = files
-                    .filter(file => file.name.endsWith('.html') && file.name.includes('2025-'))
-                    .sort((a, b) => {
-                        // 파일명에서 날짜 추출 (YYYY-MM-DD 형식)
-                        const dateA = a.name.match(/(\d{4}-\d{2}-\d{2})/)?.[1] || '0000-00-00';
-                        const dateB = b.name.match(/(\d{4}-\d{2}-\d{2})/)?.[1] || '0000-00-00';
-                        return dateB.localeCompare(dateA); // 최신순
-                    });
-                
-                if (htmlFiles.length === 0) {
-                    throw new Error('HTML 파일을 찾을 수 없습니다.');
-                }
-                
-                console.log(`Latest file found: ${htmlFiles[0].name}`);
-                return htmlFiles[0].name;
-                
-            } catch (error) {
-                console.error('GitHub API 오류:', error);
-                // 폴백: 오늘 날짜로 추정
-                const today = new Date().toISOString().split('T')[0];
-                return `${today}_fallback.html`;
+        // 최신 파일 검색 (same-origin JSON cache)
+        async function getLatestFile(folderKey) {
+            console.log(`Fetching latest file from local manifest: ${folderKey}`);
+            const folders = await getNotificationFolders();
+            const folder = folders[folderKey];
+            if (!folder) {
+                throw new Error(`알림 폴더를 찾을 수 없습니다: ${folderKey}`);
             }
+
+            return pickLatestHtmlFile(folder);
         }
 
         // 빠른 알림 발송 (업데이트된 버전)
-        async function sendQuickNotification(type) {
-            const button = event.target;
+        async function sendQuickNotification(event, type) {
+            const button = event?.currentTarget;
+            if (!button) {
+                showError('버튼 컨텍스트를 찾을 수 없습니다. 다시 시도해주세요.');
+                return;
+            }
+
             const originalText = button.textContent;
-            
+            const config = reportConfigs[type];
+
             // 버튼 상태 변경
             button.textContent = '최신 파일 검색 중...';
             button.disabled = true;
-            
+
             try {
-                const config = reportConfigs[type];
                 if (!config) {
                     throw new Error('지원하지 않는 알림 타입입니다.');
                 }
 
-                // GitHub API로 최신 파일 검색
-                button.textContent = 'GitHub에서 최신 파일 검색 중...';
-                let filename;
-                
-                if (type === 'daily_wrap') {
-                    filename = await getLatestFile('100x/daily-wrap');
-                } else if (type === 'alpha_scout') {
-                    filename = await getLatestFile('alpha-scout/reports');
-                } else if (type === 'briefing') {
-                    filename = await getLatestFile('100x%20Briefing/Briefing');
-                }
-                
+                // same-origin JSON에서 최신 파일 검색
+                button.textContent = '로컬 인덱스에서 최신 파일 검색 중...';
+                const filename = await getLatestFile(config.folderKey);
+
                 // 파일명에서 날짜 추출
                 const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
-                const fileDate = dateMatch ? dateMatch[1] : new Date().toISOString().split('T')[0];
-                
+                if (!dateMatch) {
+                    console.error('Failed to extract date from notification filename', { type, filename });
+                    throw new Error(`파일명에서 날짜를 추출할 수 없습니다: ${filename}`);
+                }
+                const fileDate = dateMatch[1];
+
                 button.textContent = '알림 발송 중...';
-                
+
                 let message;
                 const baseUrl = "https://etloveaui.github.io/100xFenok/";
+                const fullUrl = `${baseUrl}?path=${config.pathPrefix}${filename}`;
                 if (type === 'daily_wrap') {
-                    const fullUrl = `${baseUrl}?path=100x/daily-wrap/${filename}`;
                     message = `새로운 Daily Wrap 리포트가 업로드되었습니다!\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 <a href="${fullUrl}">리포트 보기</a>\n\n💡 오늘의 시장 인사이트를 확인하세요!\n\n100xFenok DailyWrap`;
                 } else if (type === 'alpha_scout') {
-                    const fullUrl = `${baseUrl}?path=alpha-scout/reports/${filename}`;
                     message = `새로운 Alpha Scout 분석 리포트가 발행되었습니다! 🎯\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 <a href="${fullUrl}">분석 리포트 보기</a>\n\n🚀 알파 기회를 놓치지 마세요!\n\nAlphaScout 100xFenok`;
                 } else if (type === 'briefing') {
-                    const fullUrl = `${baseUrl}?path=100x%20Briefing/Briefing/${filename}`;
                     message = `새로운 전략 브리핑이 발행되었습니다! 📋\n\n📅 날짜: ${fileDate}\n📄 파일: ${filename}\n🔗 <a href="${fullUrl}">브리핑 보기</a>\n\n📈 전략적 인사이트를 확인하세요!\n\nBriefing 100xFenok`;
                 }
-                
+
                 const results = await sendTelegramMessage(config.title, message);
-                
+
                 // 결과 확인
                 const successCount = results.filter(r => r.success).length;
-                
+
                 if (successCount > 0) {
                     showSuccess(`${config.name} 알림이 ${successCount}개 채널에 성공적으로 발송되었습니다!`);
                     addToHistory(config.name, 'success', `${successCount}개 채널 성공`);
@@ -389,7 +392,7 @@
                     showError('모든 채널에서 발송에 실패했습니다.');
                     addToHistory(config.name, 'failed', '모든 채널 실패');
                 }
-                
+
             } catch (error) {
                 console.error('Error:', error);
                 showError(`발송 실패: ${error.message}`);
@@ -402,38 +405,43 @@
         }
 
         // 커스텀 알림 발송
-        async function sendCustomNotification() {
+        async function sendCustomNotification(event) {
             const title = document.getElementById('customTitle').value.trim();
             const message = document.getElementById('customMessage').value.trim();
             const url = document.getElementById('customUrl').value.trim();
-            
+
             if (!title || !message) {
                 alert('제목과 메시지를 모두 입력해주세요.');
                 return;
             }
-            
-            const button = event.target;
+
+            const button = event?.currentTarget;
+            if (!button) {
+                showError('버튼 컨텍스트를 찾을 수 없습니다. 다시 시도해주세요.');
+                return;
+            }
+
             const originalText = button.textContent;
-            
+
             // 버튼 상태 변경
             button.textContent = '발송 중...';
             button.disabled = true;
-            
+
             try {
                 let fullMessage = message;
                 if (url) {
                     fullMessage += `\n\n링크: ${url}`;
                 }
-                
+
                 const results = await sendTelegramMessage(title, fullMessage);
-                
+
                 // 결과 확인
                 const successCount = results.filter(r => r.success).length;
-                
+
                 if (successCount > 0) {
                     showSuccess(`커스텀 알림이 ${successCount}개 채널에 성공적으로 발송되었습니다!`);
                     addToHistory('커스텀 알림', 'success', `${successCount}개 채널 성공`);
-                    
+
                     // 폼 초기화
                     document.getElementById('customTitle').value = '';
                     document.getElementById('customMessage').value = '';
@@ -442,7 +450,7 @@
                     showError('모든 채널에서 발송에 실패했습니다.');
                     addToHistory('커스텀 알림', 'failed', '모든 채널 실패');
                 }
-                
+
             } catch (error) {
                 console.error('Error:', error);
                 showError(`발송 실패: ${error.message}`);

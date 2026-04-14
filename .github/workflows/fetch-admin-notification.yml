@@ -1,0 +1,101 @@
+name: Fetch Admin Notification Index
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-admin-notification-index:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create data directory
+        run: mkdir -p data data/admin 100xfenok-next/public/data/admin
+
+      - name: Build notification index
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          const baseDir = process.cwd();
+          const datePattern = /\d{4}-\d{2}-\d{2}/;
+          const folders = [
+            { key: 'daily_wrap', folderPath: '100x/daily-wrap' },
+            { key: 'alpha_scout', folderPath: 'alpha-scout/reports' },
+            { key: 'briefing', folderPath: '100x Briefing/Briefing' },
+          ];
+
+          const output = {
+            updated: new Date().toISOString(),
+            source: 'GitHub repository tree',
+            schedule: 'hourly',
+            scope: 'notification-control-panel-web latest-file cache',
+            folders: {},
+          };
+
+          for (const { key, folderPath } of folders) {
+            const absolutePath = path.join(baseDir, folderPath);
+            if (!fs.existsSync(absolutePath)) {
+              throw new Error(`Missing folder: ${folderPath}`);
+            }
+
+            const files = fs.readdirSync(absolutePath, { withFileTypes: true })
+              .filter((entry) => entry.isFile() && entry.name.endsWith('.html') && datePattern.test(entry.name))
+              .map((entry) => entry.name)
+              .sort((a, b) => {
+                const dateA = a.match(datePattern)?.[0] ?? '0000-00-00';
+                const dateB = b.match(datePattern)?.[0] ?? '0000-00-00';
+                return dateB.localeCompare(dateA) || b.localeCompare(a);
+              });
+
+            if (files.length === 0) {
+              throw new Error(`No HTML files found in ${folderPath}`);
+            }
+
+            output.folders[key] = {
+              folderPath,
+              files,
+            };
+          }
+
+          fs.mkdirSync('data/admin', { recursive: true });
+          fs.mkdirSync('100xfenok-next/public/data/admin', { recursive: true });
+
+          const serialized = JSON.stringify(output, null, 2);
+          fs.writeFileSync('data/admin/notification-folders.json', serialized);
+          fs.writeFileSync('100xfenok-next/public/data/admin/notification-folders.json', serialized);
+          console.log('Saved data/admin/notification-folders.json and public mirror');
+          EOF
+
+      - name: Verify output
+        run: |
+          echo "=== Generated JSON ==="
+          head -30 data/admin/notification-folders.json
+          echo "..."
+          echo "Total lines: $(wc -l < data/admin/notification-folders.json)"
+          cmp -s data/admin/notification-folders.json 100xfenok-next/public/data/admin/notification-folders.json
+          echo "Public mirror synced"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/admin/notification-folders.json 100xfenok-next/public/data/admin/notification-folders.json
+          git diff --staged --quiet || git commit -m "chore: update admin notification folders data"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+
