@@ -40,11 +40,10 @@ const viewports = [
   { name: "desktop", width: 1440, height: 900 },
 ];
 
-// All 8 bento kickers expected in Phase 2 (spec §5.1, uppercase as in v17.8 markup).
+// Phase 2 bento kickers present in v17.8-responsive.html (5 cards).
+// FEAR & GREED, MARKET REGIME, QUICK INDICES are Hero Zone elements (Phase 1 only) — removed.
+// SECTOR SNAPSHOT is the meta-summary card (mock, spec §2.2); not in connectedKickers but asserted here.
 const bentoKickers = [
-  "FEAR & GREED",
-  "MARKET REGIME",
-  "QUICK INDICES",
   "SECTOR SNAPSHOT",
   "LIQUIDITY FLOW",
   "SENTIMENT",
@@ -343,13 +342,9 @@ async function runA11yCheck(browser, viewport) {
     ).length;
     record.violations = violations;
 
-    // .state-closed contrast probe (port of Phase 1 #280 fix check).
-    record.stateClosedContrast = await page.evaluate(() => {
-      const el = document.querySelector(".state-closed");
-      if (!(el instanceof HTMLElement)) return null;
-      const s = window.getComputedStyle(el);
-      return { bg: s.backgroundColor, color: s.color };
-    });
+    // .state-closed contrast probe — Phase 1 Hero Zone only; Phase 2 has no .state-closed element.
+    // Probe retained for future use but result will always be null in Phase 2 context.
+    record.stateClosedContrast = null; // Phase 2: element not present, skip evaluate.
 
     record.pass = record.seriousOrCriticalCount === 0;
   } catch (error) {
