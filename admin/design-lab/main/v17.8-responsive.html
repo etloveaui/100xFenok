@@ -988,6 +988,32 @@
             }
         }
 
+        function renderSectorSnapshot(results) {
+            const available = results.filter((entry) => entry.data !== null).length;
+            const failed = results.length - available;
+            setText('phase2-sector-up', `${available} Live`);
+            setText('phase2-sector-down', `${failed} Missing`);
+            const chipList = document.getElementById('phase2-sector-chip-list');
+            if (!chipList) return;
+            const items = [];
+            const liquidityFlow = results.find((entry) => entry.cardId === 'phase2-liquidity-card')?.data;
+            const sentiment = results.find((entry) => entry.cardId === 'phase2-sentiment-card')?.data;
+            const banking = results.find((entry) => entry.cardId === 'phase2-banking-card')?.data;
+            if (liquidityFlow) items.push({ label: `M2 ${toFiniteNumber(liquidityFlow.m2YoY).toFixed(1)}%`, positive: toFiniteNumber(liquidityFlow.m2YoY) >= 0 });
+            if (sentiment) items.push({ label: `VIX ${toFiniteNumber(sentiment.vix).toFixed(1)}`, positive: toFiniteNumber(sentiment.vix) < 20 });
+            if (banking) items.push({ label: `Tier1 ${toFiniteNumber(banking.tier1?.value).toFixed(1)}%`, positive: toFiniteNumber(banking.tier1?.value) >= 10 });
+            while (items.length < 3) {
+                items.push({ label: 'Data pending', positive: false });
+            }
+            const chips = items.slice(0, 3).map((item) => {
+                const span = document.createElement('span');
+                span.className = `sector-chip ${item.positive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`;
+                span.textContent = item.label;
+                return span;
+            });
+            chipList.replaceChildren(...chips);
+        }
+
         async function loadPhase2Widgets() {
             setBannerState('loading');
             PHASE2_WIDGETS.forEach((entry) => setCardMuted(entry.cardId, true));
@@ -1004,6 +1030,7 @@
                 }
             }));
 
+            renderSectorSnapshot(settled);
             applyStateContract(settled);
         }
 
