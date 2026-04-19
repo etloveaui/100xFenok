@@ -1,18 +1,16 @@
 {
   "folder": "global-scouter",
   "version": "2.2.0",
-  "updated": "2026-04-13",
+  "updated": "2026-04-19",
   "source": "Custom aggregation (FinancialModelingPrep, Yahoo Finance)",
   "update_frequency": "on-demand",
   "maintainer": "Manual conversion scripts",
-
   "structure": {
     "core/": "Dashboard config, metadata, master stock index",
-    "stocks/detail/": "1,062 individual stock profiles",
+    "stocks/detail/": "1,066 individual stock profiles",
     "etfs/": "ETF and index benchmarks",
     "indicators/": "Economic indicators"
   },
-
   "files": {
     "core/dashboard.json": {
       "description": "Dashboard configuration",
@@ -24,7 +22,7 @@
     "core/metadata.json": {
       "description": "System metadata",
       "size_kb": 0.4,
-      "source_date": "2026-04-10",
+      "source_date": "2026-04-17",
       "schema": {
         "version": "string",
         "last_updated": "ISO timestamp"
@@ -33,7 +31,7 @@
     "core/stocks_index.json": {
       "description": "Master stock index (ticker -> basic info)",
       "size_kb": 288,
-      "stock_count": 1062,
+      "stock_count": 1066,
       "schema": {
         "stocks.{TICKER}": {
           "n": "string (name)",
@@ -50,7 +48,7 @@
       }
     },
     "stocks/detail/{TICKER}.json": {
-      "description": "Individual stock profile (1,062 files)",
+      "description": "Individual stock profile (1,066 files)",
       "schema": {
         "years": "string[] (FY-4 to FY0)",
         "scale": {
@@ -82,23 +80,35 @@
           "peg": "number[]"
         },
         "estimates": {
-          "eps": {"fy1": "number", "fy2": "number", "fy3": "number"},
-          "fcf": {"fy1": "number", "fy2": "number", "fy3": "number"},
-          "revenue": {"fy1": "number", "fy2": "number", "fy3": "number"}
+          "eps": {
+            "fy1": "number",
+            "fy2": "number",
+            "fy3": "number"
+          },
+          "fcf": {
+            "fy1": "number",
+            "fy2": "number",
+            "fy3": "number"
+          },
+          "revenue": {
+            "fy1": "number",
+            "fy2": "number",
+            "fy3": "number"
+          }
         },
         "fiscal_month": "string (Jan, Dec, etc.) - v2.2.0",
         "eps_consensus": {
           "fy_plus_1": "number",
           "fy_plus_2": "number",
           "fy_plus_3": "number",
-          "_coverage": "100% (1,062 stocks) - v2.2.0"
+          "_coverage": "100% (1,066 stocks) - v2.2.0"
         },
         "growth_consensus": {
           "revenue_7y": "number (%)",
           "revenue_3y": "number (%)",
           "earnings_7y": "number (%)",
           "earnings_3y": "number (%)",
-          "_coverage": "100% (1,062 stocks) - v2.2.0"
+          "_coverage": "100% (1,066 stocks) - v2.2.0"
         },
         "per_bands": {
           "current": "number",
@@ -106,7 +116,7 @@
           "avg_8y": "number",
           "max_8y": "number",
           "source": "string (S_Valuation|calculated)",
-          "_coverage": "98.3% (1,044 stocks) - v2.2.0"
+          "_coverage": "98.3% (1,048 stocks) - v2.2.0"
         }
       }
     },
@@ -138,7 +148,7 @@
     "indicators/economic.json": {
       "added_in": "2.1.0",
       "description": "Treasury rates, spreads, HY yields, TIPS",
-      "record_count": 1054,
+      "record_count": 1055,
       "schema": {
         "records[]": {
           "date": "YYYY-MM-DD",
@@ -152,11 +162,26 @@
       }
     }
   },
-
   "breaking_changes_history": [
-    {"version": "2.2.0", "date": "2026-01-25", "change": "Extended fields: fiscal_month, eps_consensus, growth_consensus, per_bands"},
-    {"version": "2.1.0", "date": "2026-01-10", "change": "etfs/ and indicators/ folders added"},
-    {"version": "2.0.0", "date": "2025-12-15", "change": "stocks/detail/ restructured"},
-    {"version": "1.0.0", "date": "2025-11-01", "change": "Initial schema"}
+    {
+      "version": "2.2.0",
+      "date": "2026-01-25",
+      "change": "Extended fields: fiscal_month, eps_consensus, growth_consensus, per_bands"
+    },
+    {
+      "version": "2.1.0",
+      "date": "2026-01-10",
+      "change": "etfs/ and indicators/ folders added"
+    },
+    {
+      "version": "2.0.0",
+      "date": "2025-12-15",
+      "change": "stocks/detail/ restructured"
+    },
+    {
+      "version": "1.0.0",
+      "date": "2025-11-01",
+      "change": "Initial schema"
+    }
   ]
 }

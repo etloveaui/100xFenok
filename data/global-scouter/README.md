@@ -2,7 +2,7 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,067
+> **Files**: 1,071
 > **Version**: v2.2.0
 
 ---
@@ -20,14 +20,14 @@ global-scouter/
 │   ├── metadata.json        # System metadata
 │   └── stocks_index.json    # Master stock index
 ├── stocks/
-│   └── detail/              # Individual stock profiles (1,062 files)
+│   └── detail/              # Individual stock profiles (1,066 files)
 │       ├── AAPL.json
 │       ├── MSFT.json
 │       └── ...
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (23 items)
 └── indicators/              # v2.1.0
-    └── economic.json        # Economic indicators (1,054 records)
+    └── economic.json        # Economic indicators (1,055 records)
 ```
 
 ## File Counts
@@ -35,10 +35,10 @@ global-scouter/
 | Folder | Files |
 |--------|-------|
 | core/ | 3 |
-| stocks/detail/ | 1,062 |
+| stocks/detail/ | 1,066 |
 | etfs/ | 1 |
 | indicators/ | 1 |
-| **Total** | 1,067 |
+| **Total** | 1,071 |
 
 ## Schema
 
@@ -93,10 +93,10 @@ global-scouter/
 
 | Field | Coverage | Description |
 |-------|----------|-------------|
-| `fiscal_month` | 100% (1,062) | Fiscal year end month (Jan, Dec, etc.) |
-| `eps_consensus` | 100% (1,062) | EPS estimates FY+1/+2/+3 (6-week average) |
-| `growth_consensus` | 100% (1,062) | Revenue/Earnings growth 7Y/3Y (%) |
-| `per_bands` | 98.3% (1,044) | PER min/avg/max over 8 years |
+| `fiscal_month` | 100% (1,066) | Fiscal year end month (Jan, Dec, etc.) |
+| `eps_consensus` | 100% (1,066) | EPS estimates FY+1/+2/+3 (6-week average) |
+| `growth_consensus` | 100% (1,066) | Revenue/Earnings growth 7Y/3Y (%) |
+| `per_bands` | 98.3% (1,048) | PER min/avg/max over 8 years |
 
 ### etfs/index.json (v2.1.0)
 
@@ -161,6 +161,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.0 | 2026-04-19 | Data refresh (2026-04-17 source): 1,066 stocks (+4), 1,055 indicators (+1), per_bands 98.3% |
 | 2.2.0 | 2026-04-13 | Data refresh: 1,062 stocks (2026-04-10 source), 1,054 indicators, per_bands 98.3% |
 | 2.2.0 | 2026-04-05 | Data refresh: 1,062 stocks (2026-04-03 source), 1,053 indicators, per_bands 98.2% |
 | 2.2.0 | 2026-03-30 | Data refresh: 1,063 stocks (2026-03-27 source), 1,053 indicators, per_bands 98.0% |
@@ -178,4 +179,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-04-13*
+*Last Updated: 2026-04-19*

@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-04-18",
+  "last_updated": "2026-04-19",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -33,12 +33,12 @@
     },
     "global-scouter": {
       "version": "2.2.0",
-      "updated": "2026-04-13",
+      "updated": "2026-04-19",
       "update_frequency": "on-demand",
       "source": "Custom aggregation",
-      "file_count": 1067,
+      "file_count": 1071,
       "schema": true,
-      "description": "Stock screening (1,062), ETFs (23), indicators (1,054) + extended: eps_consensus, growth_consensus, per_bands"
+      "description": "Stock screening (1,066), ETFs (23), indicators (1,055) + extended: eps_consensus, growth_consensus, per_bands"
     },
     "indices": {
       "version": "2.0.0",
@@ -96,6 +96,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-04-19",
+      "folder": "global-scouter",
+      "version": "2.2.0",
+      "change": "Data refresh (2026-04-17 source): 1,066 stocks (+4), 1,055 indicators (+1), per_bands 98.3%",
+      "breaking": false
+    },
     {
       "date": "2026-04-14",
       "folder": "manifest",
@@ -334,7 +341,7 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-04-18T22:52:56Z",
+  "generatedAt": "2026-04-19T11:57:05Z",
   "categories": [
     {
       "name": "sentiment",
@@ -388,9 +395,9 @@
       "name": "global-scouter",
       "path": "/data/global-scouter/",
       "schemaVersion": "2.2.0",
-      "fileCount": 1067,
-      "lastUpdated": "2026-04-13",
-      "notes": "Stock screening (1,062), ETFs (23), indicators (1,054) + extended: eps_consensus, growth_consensus, per_bands"
+      "fileCount": 1071,
+      "lastUpdated": "2026-04-19",
+      "notes": "Stock screening (1,066), ETFs (23), indicators (1,055) + extended: eps_consensus, growth_consensus, per_bands"
     },
     {
       "name": "macro",
