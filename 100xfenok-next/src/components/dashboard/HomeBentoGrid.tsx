@@ -203,10 +203,10 @@ function TileShell({
   return (
     <article
       className={cx(
-        "relative min-w-0 overflow-hidden rounded-[1.5rem] border p-4 shadow-[0_18px_42px_-32px_rgba(15,23,42,0.55)] transition",
+        "relative min-w-0 overflow-hidden rounded-[1.5rem] border p-4 transition hover:-translate-y-px",
         dark
-          ? "border-white/10 bg-[linear-gradient(160deg,#020617_0%,#08182f_52%,#0f2e57_100%)] text-white"
-          : "border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_65%,#eef4ff_100%)] text-slate-950",
+          ? "border-white/10 bg-[linear-gradient(160deg,#020617_0%,#08182f_52%,#0f2e57_100%)] text-white shadow-[0_18px_42px_-32px_rgba(15,23,42,0.85)]"
+          : "border-slate-200 bg-white text-slate-950 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.10)] hover:shadow-[0_18px_48px_-12px_rgba(0,0,0,0.14)]",
         muted && "opacity-[0.55] saturate-[0.75]",
         className,
       )}
@@ -249,7 +249,7 @@ function TileShell({
           "pointer-events-none absolute inset-0 rounded-[inherit]",
           dark
             ? "bg-[radial-gradient(120%_100%_at_0%_0%,rgba(52,211,153,0.12),rgba(52,211,153,0)_55%)]"
-            : "bg-[radial-gradient(120%_100%_at_0%_0%,rgba(59,130,246,0.1),rgba(59,130,246,0)_55%),radial-gradient(120%_90%_at_100%_100%,rgba(245,158,11,0.08),rgba(245,158,11,0)_52%)]",
+            : "bg-[radial-gradient(120%_90%_at_0%_0%,rgba(27,115,211,0.06),rgba(27,115,211,0)_55%),radial-gradient(110%_80%_at_100%_100%,rgba(213,173,54,0.05),rgba(213,173,54,0)_52%)]",
         )}
         aria-hidden="true"
       />
