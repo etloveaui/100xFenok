@@ -40,19 +40,21 @@
 
 /* Bento Card */
 .bento-card {
-  background: white;
-  border-radius: 1.25rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  background: var(--paper-1, white);
+  border-radius: var(--r-2xl, 1.5rem);
+  border: 1px solid var(--stroke-light, #e2e8f0);
+  box-shadow: var(--shadow-card-light, 0 10px 40px -10px rgba(0,0,0,0.10));
   padding: 1.25rem;
-  transition: box-shadow 0.3s;
+  transition: box-shadow var(--dur-med, 200ms) var(--ease-standard, cubic-bezier(0.4,0,0.2,1)),
+              transform var(--dur-fast, 120ms) var(--ease-standard, cubic-bezier(0.4,0,0.2,1));
   min-width: 0;
   max-width: 100%;
   min-height: 120px;
 }
 
 .bento-card:hover {
-  box-shadow: 0 8px 16px -4px rgba(0,0,0,0.08);
+  box-shadow: 0 18px 48px -12px rgba(0,0,0,0.14);
+  transform: translateY(-1px);
 }
 
 .card-title {
@@ -513,6 +515,24 @@
   width: 60px;
   height: 20px;
 }
+
+/* Data Chips — Up / Down / Watch / Info */
+.data-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.data-chip--up   { background: var(--up-bg, rgba(16,185,129,0.10)); color: #047857; border-color: rgba(16,185,129,0.25); }
+.data-chip--down { background: var(--down-bg, rgba(244,63,94,0.10)); color: #b91c1c; border-color: rgba(244,63,94,0.25); }
+.data-chip--watch{ background: var(--warn-bg, rgba(245,158,11,0.12)); color: #b45309; border-color: rgba(245,158,11,0.28); }
+.data-chip--info { background: rgba(56,189,248,0.12); color: #0369a1; border-color: rgba(56,189,248,0.28); }
 
 .quick-indices-scroll {
   display: flex;
