@@ -45,9 +45,9 @@ class MacroDataFetcher {
       const cached = DataManager.getWidgetDataWithStale(widgetId);
       if (cached.data && cached.isFresh) {
         console.log(`[DataFetcher] ${widgetId}: 캐시 사용 (fresh)`);
-        return cached;
+        return { ...cached, failed: false };
       }
-      // Stale이면 API 시도 후 실패 시 캐시 반환 (#16 수정)
+      // Stale이면 API 시도 후 실패 시 캐시는 유지하되 failure를 surface 한다.
       if (cached.data && cached.isStale) {
         console.log(`[DataFetcher] ${widgetId}: stale 캐시 (${this.formatAge(cached.ageMs)}) → API 시도`);
         try {
@@ -55,12 +55,12 @@ class MacroDataFetcher {
           if (data) {
             DataManager.saveWidgetData(widgetId, data);
             console.log(`[DataFetcher] ${widgetId}: API 갱신 성공`);
-            return { data, isStale: false, isFresh: true, ageMs: 0 };
+            return { data, isStale: false, isFresh: true, ageMs: 0, failed: false };
           }
         } catch (e) {
-          console.log(`[DataFetcher] ${widgetId}: API 실패, stale 캐시 사용`);
+          console.log(`[DataFetcher] ${widgetId}: API 실패, stale 캐시는 유지하지만 failed=true로 반환`);
         }
-        return cached; // API 실패 시 stale 캐시 반환
+        return { ...cached, failed: true };
       }
     }
 
@@ -73,20 +73,20 @@ class MacroDataFetcher {
         // 3. 캐시 저장
         DataManager.saveWidgetData(widgetId, data);
         console.log(`[DataFetcher] ${widgetId}: API 호출 성공, 캐시 저장`);
-        return { data, isStale: false, isFresh: true, ageMs: 0 };
+        return { data, isStale: false, isFresh: true, ageMs: 0, failed: false };
       }
     } catch (e) {
       console.error(`[DataFetcher] ${widgetId}: API 호출 실패`, e);
     }
 
-    // 4. API 실패 시 stale 캐시라도 반환
+    // 4. API 실패 시 stale 캐시라도 반환하되 failure는 숨기지 않는다.
     const fallback = DataManager.getWidgetDataWithStale(widgetId);
     if (fallback.data) {
-      console.log(`[DataFetcher] ${widgetId}: API 실패, stale 캐시 사용`);
-      return fallback;
+      console.log(`[DataFetcher] ${widgetId}: API 실패, stale 캐시 반환 + failed=true`);
+      return { ...fallback, failed: true };
     }
 
-    return { data: null, isStale: true, isFresh: false, ageMs: 0 };
+    return { data: null, isStale: true, isFresh: false, ageMs: 0, failed: true };
   }
 
   // =========================================
@@ -144,6 +144,10 @@ class MacroDataFetcher {
         this.fetchFRED('BAMLH0A0HYM2', days),   // HY 스프레드
         this.fetchFDICTier1()                   // FDIC Tier1
       ]);
+
+      if (!fdicTier1?.length) {
+        return null;
+      }
 
       // 최신값 추출
       const latestDelinquency = this.getLatestValue(delinquency) || 0;
@@ -270,6 +274,10 @@ class MacroDataFetcher {
         this.fetchFRED('RRPONTSYD', days),
         this.fetchStablecoinData()
       ]);
+
+      if (!m2?.length && !fedBs?.length && !tga?.length) {
+        return null;
+      }
 
       // 최신값 (단위 변환: WALCL, TGA는 Millions → Billions)
       // M2SL, RRP는 이미 Billions
@@ -512,6 +520,10 @@ class MacroDataFetcher {
         this.fetchFRED('GDP', 1095) // 3년 (분기 데이터)
       ]);
 
+      if (!sofr?.length && !iorb?.length && !reserves?.length) {
+        return null;
+      }
+
       // Spread 계산 (bp)
       const latestSofr = this.getLatestValue(sofr);
       const latestIorb = this.getLatestValue(iorb);
@@ -579,6 +591,10 @@ class MacroDataFetcher {
         this.fetchJsonFile(baseUrl + 'cnn-components.json'),
         this.fetchJsonFile(baseUrl + 'cnn-put-call.json')
       ]);
+
+      if (!vix && !move && !cftc) {
+        return null;
+      }
 
       // 최신값 추출
       const getLatest = (arr, field = 'value') => {
