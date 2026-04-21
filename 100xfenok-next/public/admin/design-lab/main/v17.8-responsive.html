@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <!-- Google tag (gtag.js) - 호스트별 자동 선택 -->
+    <script>
+      (function() {
+        const GA_IDS = {
+          'etloveaui.github.io': 'G-X7MZFQZRBW',
+          '100xfenok.pages.dev': 'G-BWHGXQPH2D'
+        };
+        const id = GA_IDS[location.hostname] || 'G-X7MZFQZRBW';
+        const s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', id);
+      })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main v17.8 - Responsive Ultimate</title>
@@ -31,8 +50,22 @@
             --nav-height-mobile: 60px;
             --touch-target: 44px;
         }
-        body { background-color: #f8fafc; }
+        html { overflow-x: hidden; }
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
         .orbitron { font-family: 'Orbitron', sans-serif; }
+        .text-slate-400 { color: #475569 !important; }
+        .text-slate-300 { color: #64748b !important; }
+        .text-brand-gold { color: #7a5a00 !important; }
+        .text-green-600 { color: #15803d !important; }
+        .text-red-500 { color: #b91c1c !important; }
+        .text-red-600 { color: #b91c1c !important; }
+        .text-blue-400 { color: #2563eb !important; }
+        .text-red-400 { color: #dc2626 !important; }
+        .text-white\/50 { color: rgba(255, 255, 255, 0.82) !important; }
 
         /* P2-2: Focus Visible 스타일 */
         *:focus-visible {
@@ -62,7 +95,7 @@
             padding: 0.5rem 1rem;
             font-size: 0.75rem;
             font-weight: 600;
-            color: #64748b;
+            color: #475569;
             border-radius: 9999px;
             transition: all 0.2s;
             /* P2-1: 터치 타겟 */
@@ -165,11 +198,15 @@
             background: #f1f5f9;
             border-radius: 9999px;
             font-size: 0.75rem;
-            color: #94a3b8;
+            color: #475569;
             cursor: pointer;
             min-height: var(--touch-target);
         }
         .search-bar:hover { background: #e2e8f0; }
+        .search-bar .px-1\.5 {
+            color: #334155;
+            border-color: #cbd5e1;
+        }
 
         /* P0-2: 검색 모달 */
         .search-modal {
@@ -225,7 +262,7 @@
             padding: 0.5rem 1rem;
             font-size: 0.75rem;
             font-weight: 600;
-            color: #64748b;
+            color: #334155;
             border-radius: 9999px;
             transition: all 0.2s;
             cursor: pointer;
@@ -247,7 +284,7 @@
             /* P1-2: 최소 폰트 12px */
             font-size: 0.75rem;
             font-weight: 600;
-            color: #64748b;
+            color: #334155;
             border-radius: 0.5rem;
             cursor: pointer;
             /* P2-1: 터치 타겟 */
@@ -281,6 +318,33 @@
         .bento-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .bento-card.is-muted {
+            opacity: 0.55;
+            filter: saturate(0.78);
+        }
+        .state-banner {
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            padding: 0.875rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .state-banner.loading {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+        .state-banner.partial {
+            background: #fffbeb;
+            border-color: #fcd34d;
+            color: #b45309;
+        }
+        .state-banner.offline {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #475569;
         }
 
         /* Regime Badge */
@@ -319,6 +383,7 @@
             display: flex;
             gap: 1rem;
             overflow-x: auto;
+            max-width: 100%;
             padding-bottom: 0.5rem;
             -webkit-overflow-scrolling: touch;
         }
@@ -411,7 +476,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen overflow-x-hidden">
 
     <!-- P0-1: 모바일 오버레이 -->
     <div class="mobile-nav-overlay" id="mobileOverlay" onclick="closeMobileNav()" aria-hidden="true"></div>
@@ -544,7 +609,7 @@
     </div>
 
     <!-- Main -->
-    <main class="container mx-auto px-4 py-4">
+    <main class="container mx-auto max-w-full overflow-x-hidden px-4 py-4">
 
         <!-- Tab: Overview -->
         <div id="tab-overview" class="tab-content active" role="tabpanel" aria-labelledby="tab-overview-btn">
@@ -624,11 +689,15 @@
                 </div>
             </div>
 
+            <div id="phase2-loading-banner" class="state-banner loading">데이터를 확인하는 중입니다. 기본값은 흐리게 표시됩니다.</div>
+            <div id="phase2-partial-banner" class="state-banner partial hidden">일부 데이터가 늦거나 미수신 상태입니다. 정상 수신된 타일만 선명하게 표시합니다.</div>
+            <div id="phase2-offline-banner" class="state-banner offline hidden">오프라인 기준값입니다. 실제 시장과 다를 수 있습니다.</div>
+
             <!-- P1 Main Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
                 <!-- Sector Snapshot -->
-                <div class="bento-card p-4">
+                <article id="phase2-sector-card" class="bento-card p-4">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-xs font-bold text-slate-400 tracking-widest orbitron">SECTOR SNAPSHOT</h3>
                         <button class="text-xs text-brand-interactive font-bold min-h-[var(--touch-target)] flex items-center" onclick="switchTab('sectors')">View All →</button>
@@ -636,26 +705,26 @@
                     <div class="sector-snapshot">
                         <div class="flex gap-2 items-center">
                             <span class="w-2 h-2 bg-green-500 rounded-full" aria-hidden="true"></span>
-                            <span class="font-bold text-green-600 text-sm">7 Up</span>
+                            <span id="phase2-sector-up" class="font-bold text-green-600 text-sm">7 Up</span>
                             <span class="w-2 h-2 bg-red-500 rounded-full ml-2" aria-hidden="true"></span>
-                            <span class="font-bold text-red-600 text-sm">4 Down</span>
+                            <span id="phase2-sector-down" class="font-bold text-red-600 text-sm">4 Down</span>
                         </div>
-                        <div class="flex gap-1 flex-wrap mt-2">
+                        <div id="phase2-sector-chip-list" class="flex gap-1 flex-wrap mt-2">
                             <span class="sector-chip bg-green-100 text-green-700">XLK +2.3%</span>
                             <span class="sector-chip bg-green-100 text-green-700">XLF +1.5%</span>
                             <span class="sector-chip bg-green-100 text-green-700">XLC +1.1%</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Liquidity -->
-                <div class="bento-card p-4">
+                <article id="phase2-liquidity-card" class="bento-card p-4">
                     <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">LIQUIDITY FLOW</h3>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-2xl font-bold text-brand-navy orbitron">+$87B</span>
-                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">WoW</span>
+                        <span id="phase2-liquidity-hero" class="text-2xl font-bold text-brand-navy orbitron">+$87B</span>
+                        <span id="phase2-liquidity-badge" class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">WoW</span>
                     </div>
-                    <div class="h-10 bg-gradient-to-r from-green-100 to-green-50 rounded flex items-end px-1 gap-0.5" aria-hidden="true">
+                    <div id="phase2-liquidity-bars" class="h-10 bg-gradient-to-r from-green-100 to-green-50 rounded flex items-end px-1 gap-0.5" aria-hidden="true">
                         <div class="w-3 bg-green-400 rounded-t" style="height: 60%"></div>
                         <div class="w-3 bg-green-400 rounded-t" style="height: 75%"></div>
                         <div class="w-3 bg-green-500 rounded-t" style="height: 90%"></div>
@@ -663,47 +732,138 @@
                         <div class="w-3 bg-green-500 rounded-t" style="height: 85%"></div>
                         <div class="w-3 bg-green-600 rounded-t" style="height: 100%"></div>
                     </div>
-                </div>
+                    <div class="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-500">
+                        <div>
+                            <p class="font-bold text-slate-700">M2 YoY</p>
+                            <p id="phase2-liquidity-m2">+5.9%</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-700">Net Liq</p>
+                            <p id="phase2-liquidity-net">$5.8T</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-700">SC/M2</p>
+                            <p id="phase2-liquidity-sc">1.02%</p>
+                        </div>
+                    </div>
+                </article>
 
                 <!-- Sentiment -->
-                <div class="bento-card p-4">
+                <article id="phase2-sentiment-card" class="bento-card p-4">
                     <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">SENTIMENT</h3>
                     <div class="space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-xs text-slate-500">VIX</span>
-                            <span class="font-bold text-green-600 text-sm">14.2 <span class="text-xs text-slate-400">Low</span></span>
+                            <span class="font-bold text-green-600 text-sm"><span id="phase2-sentiment-vix">14.2</span> <span id="phase2-sentiment-vix-label" class="text-xs text-slate-400">Low</span></span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-500">Put/Call</span>
-                            <span class="font-bold text-slate-700 text-sm">0.78</span>
+                            <span class="text-xs text-slate-500">CNN F&amp;G</span>
+                            <span class="font-bold text-slate-700 text-sm"><span id="phase2-sentiment-cnn">38</span> <span id="phase2-sentiment-cnn-label" class="text-xs text-slate-400">Fear</span></span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-500">Crypto F&G</span>
-                            <span class="font-bold text-brand-gold text-sm">78 <span class="text-xs">Greed</span></span>
+                            <span class="text-xs text-slate-500">AAII</span>
+                            <span class="font-bold text-brand-gold text-sm"><span id="phase2-sentiment-aaii">44</span> <span id="phase2-sentiment-aaii-label" class="text-xs">Bearish</span></span>
                         </div>
                     </div>
-                </div>
+                </article>
             </div>
 
             <!-- Banking + Stress -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bento-card p-4">
+                <article id="phase2-banking-card" class="bento-card p-4">
                     <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">BANKING HEALTH</h3>
                     <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse" aria-hidden="true"></div>
-                        <span class="text-lg font-bold text-green-600">Stable</span>
+                        <div id="phase2-banking-dot" class="w-3 h-3 bg-green-500 rounded-full animate-pulse" aria-hidden="true"></div>
+                        <span id="phase2-banking-label" class="text-lg font-bold text-green-600">Stable</span>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1">BTFP $12.3B ↓ / DW $4.1B</p>
-                </div>
-                <div class="bento-card p-4">
+                    <p id="phase2-banking-detail" class="text-xs text-slate-400 mt-1">BTFP $12.3B ↓ / DW $4.1B</p>
+                </article>
+                <article id="phase2-stress-card" class="bento-card p-4">
                     <h3 class="text-xs font-bold text-slate-400 tracking-widest mb-3 orbitron">STRESS INDEX</h3>
                     <div class="flex items-center justify-between">
-                        <span class="text-2xl font-bold text-green-600 orbitron">0.12</span>
-                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">Low Risk</span>
+                        <span id="phase2-stress-value" class="text-2xl font-bold text-green-600 orbitron">0.12</span>
+                        <span id="phase2-stress-badge" class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">Low Risk</span>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1">SOFR-IORB Spread</p>
-                </div>
+                    <p id="phase2-stress-detail" class="text-xs text-slate-400 mt-1">SOFR-IORB Spread</p>
+                </article>
             </div>
+
+            <!-- Phase 2: Service Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 mb-24">
+                <a href="index.html?path=100x/100x-main.html" class="bento-card p-6 sm:p-8 flex flex-col group" aria-label="Open 100x Market Wrap">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">100x Market Wrap</h2>
+                        <i class="fas fa-newspaper text-3xl text-blue-600 group-hover:text-blue-700 transition-colors"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6">AI 기반 멀티에셋 분석 (월스트리트 이슈 / 기관 자금 / 실행 가능한 트레이드)</p>
+                    <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base text-slate-600">
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>월스트리트 이슈 요약</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>기관 자금 흐름</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>실행 가능한 트레이드</p>
+                    </div>
+                </a>
+                <a href="index.html?path=alpha-scout/alpha-scout-main.html" class="bento-card p-6 sm:p-8 flex flex-col group" aria-label="Open 100x Alpha Scout">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">100x Alpha Scout</h2>
+                        <i class="fas fa-compass text-3xl text-neutral-500 group-hover:text-rose-600 transition-colors"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6">숨겨진 투자 기회 '알파' 탐색 (Value &amp; Momentum / 기관 의견 / 투자 힌트)</p>
+                    <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base text-slate-600">
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>전략별 종목 선별(Value &amp; Momentum)</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>기관 의견과 핵심 이벤트 일정</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>투자 힌트 포착</p>
+                    </div>
+                </a>
+                <a href="index.html?path=tools/asset/multichart.html" class="bento-card p-6 sm:p-8 flex flex-col group" aria-label="Open 100x Multichart Pro">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">100x Multichart Pro</h2>
+                        <i class="fas fa-chart-line text-3xl text-amber-600 group-hover:text-amber-700 transition-colors"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6">레버리지 ETF 지원 브라우저 멀티차트 (Stooq+Polygon / 100+ 종목 / 성능 최적화)</p>
+                    <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base text-slate-600">
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>Stooq + Polygon 자동 소스 선택</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>100+ 종목 동시 분석</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>성능 최적화 캐싱</p>
+                    </div>
+                </a>
+                <a href="index.html?path=ib/ib-total-guide-calculator.html" class="bento-card p-6 sm:p-8 flex flex-col group" aria-label="Open Infinite Buying">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">Infinite Buying</h2>
+                        <i class="fas fa-calculator text-3xl text-purple-600 group-hover:text-purple-700 transition-colors"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6">TQQQ·SOXL 분할매수 자동 계산 (실시간 가격 / 자동 주문표 / 위기관리)</p>
+                    <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base text-slate-600">
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>실시간 가격 연동</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>자동 주문표 생성</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>위기관리 단계별 지원</p>
+                    </div>
+                </a>
+                <a href="index.html?path=vr/vr-main.html" class="bento-card p-6 sm:p-8 flex flex-col group" aria-label="Open Value Rebalancing">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">Value Rebalancing</h2>
+                        <i class="fas fa-balance-scale-right text-3xl text-teal-600 group-hover:text-teal-700 transition-colors"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6">밸류 리밸런싱 완전 자동화 + 백테스트 (VR 5.0 / 3단계 라이프사이클 / 성과 시뮬레이션)</p>
+                    <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base text-slate-600">
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>VR 5.0 공식 계산기</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>3단계 라이프사이클</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>성과 시뮬레이션</p>
+                    </div>
+                </a>
+                <a href="index.html?path=posts/posts-main.html" class="bento-card p-6 sm:p-8 flex flex-col group" aria-label="Open Quantum Analysis">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold orbitron text-slate-900">Quantum Analysis</h2>
+                        <i class="fas fa-search-dollar text-3xl text-red-600 group-hover:text-red-700 transition-colors"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6">심층 분석 콘텐츠 (거시 경제·정책 / 미국 경제 플레이북 / 디지털 자산)</p>
+                    <div class="mt-auto border-t border-slate-200 pt-4 space-y-2 text-sm sm:text-base text-slate-600">
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>거시 경제 및 정책 분석</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>미국 경제 플레이북</p>
+                        <p class="flex items-center"><i class="fas fa-check-circle w-5 mr-2 text-green-600"></i>디지털 자산 동향</p>
+                    </div>
+                </a>
+            </section>
+
         </div>
 
         <!-- Tab: Sectors (P1-3: 반응형 Heatmap) -->
@@ -794,6 +954,193 @@
         </div>
     </main>
 
+    <script type="module">
+        import { DataFetcher } from '../../../tools/macro-monitor/shared/data-fetcher.js';
+
+        const PHASE2_WIDGETS = [
+            { widgetId: 'liquidity-flow', cardId: 'phase2-liquidity-card', render: renderLiquidityFlowCard },
+            { widgetId: 'sentiment-signal', cardId: 'phase2-sentiment-card', render: renderSentimentCard },
+            { widgetId: 'banking-health', cardId: 'phase2-banking-card', render: renderBankingCard },
+            { widgetId: 'liquidity-stress', cardId: 'phase2-stress-card', render: renderStressCard }
+        ];
+
+        function toFiniteNumber(value, fallback = 0) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : fallback;
+        }
+
+        function setCardMuted(cardId, muted) {
+            const node = document.getElementById(cardId);
+            if (!node) return;
+            node.classList.toggle('is-muted', muted);
+        }
+
+        function setBannerState(kind) {
+            const loading = document.getElementById('phase2-loading-banner');
+            const partial = document.getElementById('phase2-partial-banner');
+            const offline = document.getElementById('phase2-offline-banner');
+            if (loading) loading.classList.toggle('hidden', kind !== 'loading');
+            if (partial) partial.classList.toggle('hidden', kind !== 'partial');
+            if (offline) offline.classList.toggle('hidden', kind !== 'offline');
+        }
+
+        function applyStateContract(results) {
+            const succeeded = results.filter((entry) => entry.data !== null);
+            const failedIds = results.filter((entry) => entry.data === null).map((entry) => entry.cardId);
+
+            setCardMuted('phase2-sector-card', false);
+
+            if (succeeded.length === 0) {
+                setBannerState('offline');
+                PHASE2_WIDGETS.forEach((entry) => setCardMuted(entry.cardId, true));
+                return;
+            }
+
+            if (failedIds.length > 0) {
+                setBannerState('partial');
+            } else {
+                setBannerState('none');
+            }
+
+            PHASE2_WIDGETS.forEach((entry) => {
+                setCardMuted(entry.cardId, failedIds.includes(entry.cardId));
+            });
+        }
+
+        function replaceBars(containerId, values) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const bars = values.map((value) => {
+                const bar = document.createElement('div');
+                const height = Math.max(20, Math.min(100, Math.round(Math.abs(value) * 8)));
+                bar.className = `w-3 rounded-t ${value >= 0 ? 'bg-green-500' : 'bg-red-500'}`;
+                bar.style.height = `${height}%`;
+                return bar;
+            });
+            container.replaceChildren(...bars);
+        }
+
+        function setText(id, value) {
+            const node = document.getElementById(id);
+            if (node) node.textContent = value;
+        }
+
+        function renderLiquidityFlowCard(data) {
+            if (!data) return;
+            const weeklyFlow = toFiniteNumber(data.weeklyNetFlow ?? data.netFlow);
+            const m2YoY = toFiniteNumber(data.m2YoY);
+            const netLiquidity = toFiniteNumber(data.netLiquidity);
+            const stablecoinRatio = toFiniteNumber(data.scM2Ratio);
+            setText('phase2-liquidity-hero', `${weeklyFlow >= 0 ? '+' : ''}${Math.round(weeklyFlow)}B`);
+            setText('phase2-liquidity-m2', `${m2YoY >= 0 ? '+' : ''}${m2YoY.toFixed(1)}%`);
+            setText('phase2-liquidity-net', `$${(netLiquidity / 1000).toFixed(2)}T`);
+            setText('phase2-liquidity-sc', `${stablecoinRatio.toFixed(2)}%`);
+            const badge = document.getElementById('phase2-liquidity-badge');
+            if (badge) {
+                badge.textContent = weeklyFlow >= 0 ? 'WoW' : 'Drawdown';
+                badge.className = `px-2 py-0.5 rounded-full text-xs font-bold ${weeklyFlow >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            }
+            replaceBars('phase2-liquidity-bars', [m2YoY, weeklyFlow / 10, stablecoinRatio * 10, m2YoY * 0.8, weeklyFlow / 12, stablecoinRatio * 12]);
+        }
+
+        function renderSentimentCard(data) {
+            if (!data) return;
+            const vix = toFiniteNumber(data.vix);
+            const cnn = toFiniteNumber(data.cnn_fg);
+            const aaiiBearish = toFiniteNumber(data.aaii_bearish);
+            setText('phase2-sentiment-vix', vix.toFixed(1));
+            setText('phase2-sentiment-vix-label', vix >= 20 ? 'High' : 'Low');
+            setText('phase2-sentiment-cnn', `${Math.round(cnn)}`);
+            setText('phase2-sentiment-cnn-label', cnn <= 25 ? 'Fear' : cnn >= 75 ? 'Greed' : 'Neutral');
+            setText('phase2-sentiment-aaii', `${Math.round(aaiiBearish)}`);
+            setText('phase2-sentiment-aaii-label', aaiiBearish >= 50 ? 'Bearish' : 'Mixed');
+        }
+
+        function renderBankingCard(data) {
+            if (!data) return;
+            setText('phase2-banking-label', data.overallLabel || 'Stable');
+            const tier1Value = toFiniteNumber(data.tier1?.value);
+            const delinquencyValue = toFiniteNumber(data.delinquency?.value);
+            setText('phase2-banking-detail', `Tier1 ${tier1Value.toFixed(2)}% · Delinquency ${delinquencyValue.toFixed(2)}%`);
+            const dot = document.getElementById('phase2-banking-dot');
+            if (dot) {
+                const status = data.overallStatus || 'normal';
+                dot.className = `w-3 h-3 rounded-full ${status === 'danger' ? 'bg-red-500' : status === 'warning' ? 'bg-amber-500' : 'bg-green-500'}`;
+            }
+        }
+
+        function renderStressCard(data) {
+            if (!data) return;
+            const spread = toFiniteNumber(data.tier1?.value);
+            const reservesGdp = toFiniteNumber(data.tier2?.value);
+            setText('phase2-stress-value', `${spread}bp`);
+            setText('phase2-stress-detail', `RB/GDP ${reservesGdp.toFixed(1)}% · ${data.tier1?.label || '정상'}`);
+            const badge = document.getElementById('phase2-stress-badge');
+            if (badge) {
+                const status = data.overallStatus || 'normal';
+                badge.textContent = data.overallLabel || 'Normal';
+                badge.className = `px-2 py-0.5 rounded-full text-xs font-bold ${status === 'danger' ? 'bg-red-100 text-red-700' : status === 'warning' ? 'bg-amber-100 text-amber-700' : status === 'caution' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`;
+            }
+        }
+
+        function renderSectorSnapshot(results) {
+            const available = results.filter((entry) => entry.data !== null).length;
+            const failed = results.length - available;
+            setText('phase2-sector-up', `${available} Live`);
+            setText('phase2-sector-down', `${failed} Missing`);
+            const chipList = document.getElementById('phase2-sector-chip-list');
+            if (!chipList) return;
+            const items = [];
+            const liquidityFlow = results.find((entry) => entry.cardId === 'phase2-liquidity-card')?.data;
+            const sentiment = results.find((entry) => entry.cardId === 'phase2-sentiment-card')?.data;
+            const banking = results.find((entry) => entry.cardId === 'phase2-banking-card')?.data;
+            if (liquidityFlow) items.push({ label: `M2 ${toFiniteNumber(liquidityFlow.m2YoY).toFixed(1)}%`, positive: toFiniteNumber(liquidityFlow.m2YoY) >= 0 });
+            if (sentiment) items.push({ label: `VIX ${toFiniteNumber(sentiment.vix).toFixed(1)}`, positive: toFiniteNumber(sentiment.vix) < 20 });
+            if (banking) items.push({ label: `Tier1 ${toFiniteNumber(banking.tier1?.value).toFixed(1)}%`, positive: toFiniteNumber(banking.tier1?.value) >= 10 });
+            while (items.length < 3) {
+                items.push({ label: 'Data pending', positive: false });
+            }
+            const chips = items.slice(0, 3).map((item) => {
+                const span = document.createElement('span');
+                span.className = `sector-chip ${item.positive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`;
+                span.textContent = item.label;
+                return span;
+            });
+            chipList.replaceChildren(...chips);
+        }
+
+        async function loadPhase2Widgets() {
+            setBannerState('loading');
+            PHASE2_WIDGETS.forEach((entry) => setCardMuted(entry.cardId, true));
+
+            const settled = await Promise.all(PHASE2_WIDGETS.map(async (entry) => {
+                try {
+                    const result = await DataFetcher.fetch(entry.widgetId);
+                    const data = result?.data ?? null;
+                    if (result?.failed) {
+                        return { cardId: entry.cardId, data: null };
+                    }
+                    entry.render(data);
+                    return { cardId: entry.cardId, data };
+                } catch (error) {
+                    console.warn('[Phase2] widget fetch failed:', entry.widgetId, error);
+                    return { cardId: entry.cardId, data: null };
+                }
+            }));
+
+            renderSectorSnapshot(settled);
+            applyStateContract(settled);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPhase2Widgets().catch((error) => {
+                console.error('[Phase2] widget wiring failed', error);
+                setBannerState('offline');
+                PHASE2_WIDGETS.forEach((entry) => setCardMuted(entry.cardId, true));
+            });
+        });
+    </script>
+
     <script>
         // P0-1: 모바일 네비게이션
         function openMobileNav() {
@@ -860,5 +1207,140 @@
             });
         });
     </script>
+
+    <style>
+        /* Footer v21 */
+        .ticker-track {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .ticker-scroll {
+            display: inline-block;
+            max-width: 100%;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: ticker-traverse 18s linear infinite;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        .ticker-scroll:hover {
+            animation-play-state: paused;
+        }
+        @keyframes ticker-traverse {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+        .glow-bar {
+            box-shadow: 0 0 15px rgba(1, 0, 121, 0.25);
+        }
+        .market-regular { background: linear-gradient(135deg, #10b981, #059669); }
+        .market-pre { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .market-after { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .market-overnight { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .market-closed { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    </style>
+
+    <!-- Footer v21: Broadcast HUD Pro -->
+    <footer class="fixed bottom-0 left-0 right-0 z-40">
+      <!-- Upper Ticker Bar - Desktop Only -->
+      <div class="hidden md:block glow-bar overflow-hidden" style="background: linear-gradient(to right, #010079, #1B73D3, #010079);">
+        <div class="h-6 flex items-center px-4">
+          <!-- Left: LIVE Badge -->
+          <div class="flex items-center gap-1.5 flex-shrink-0 mr-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+            <span class="text-[9px] font-bold text-white uppercase">LIVE</span>
+          </div>
+
+          <!-- Center: Data Ticker (Full traverse from right to left) -->
+          <div class="ticker-track flex-1">
+            <div id="ticker-content" class="ticker-scroll cursor-pointer text-[11px] font-medium text-white/90" title="15-minute delayed data">
+              <span class="text-white/50">Loading market data...</span>
+            </div>
+          </div>
+
+          <!-- 15m Delayed Badge -->
+          <div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/30 ml-2 flex-shrink-0">
+            <span class="text-[9px] font-bold text-amber-300 uppercase">15m</span>
+          </div>
+
+          <!-- Right: Market Status Badge -->
+          <button
+            id="market-badge"
+            class="market-regular px-2.5 py-1 rounded text-white text-[10px] font-bold tracking-wide shadow-sm transition-all duration-200 hover:scale-105 hover:brightness-110 ml-3 flex-shrink-0"
+            aria-label="Market Status"
+          >
+            <span id="market-text">MARKET OPEN</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Bar - Compact -->
+      <div class="bg-white/95 backdrop-blur-md border-t border-brand-navy/20 shadow-[0_-6px_20px_rgba(0,0,0,0.08)]">
+        <div class="container mx-auto px-4 sm:px-6">
+          <div class="h-12 flex items-center justify-between gap-3">
+
+            <!-- Left: Brand (URL copy on click) -->
+            <button
+              id="footer-share-btn"
+              class="flex items-center gap-2 group cursor-pointer min-w-0"
+              aria-label="Copy URL"
+            >
+              <div class="w-11 h-11 rounded-lg bg-gradient-to-br from-brand-navy/10 to-brand-interactive/10 flex items-center justify-center text-brand-navy group-hover:from-brand-navy group-hover:to-brand-interactive group-hover:text-white transition-all duration-300 flex-shrink-0">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="hidden sm:flex flex-col">
+                <span class="font-[800] orbitron text-slate-800 text-sm group-hover:text-brand-interactive transition-colors leading-none">
+                  100x <span class="text-brand-gold">FENOK</span>
+                </span>
+                <span class="text-[10px] text-slate-400">© 2026 All rights reserved</span>
+              </div>
+            </button>
+
+            <!-- Center: Disclaimer / Mobile Market Status -->
+            <div class="flex-1 flex justify-center min-w-0">
+              <p class="hidden md:block text-[11px] text-slate-600 truncate max-w-[400px]">
+                모든 정보는 투자 참고용이지만, <span class="font-bold text-slate-800">손실 나면 니 탓</span> <span class="font-bold text-brand-gold">수익 나면 내 탓</span>
+              </p>
+              <!-- Mobile: Market Status Badge -->
+              <button
+                id="market-badge-mobile"
+                class="md:hidden market-regular px-3 py-1.5 rounded text-white text-[10px] font-bold tracking-wide shadow-sm"
+                aria-label="Market Status"
+              >
+                <span id="market-text-mobile">MARKET OPEN</span>
+              </button>
+            </div>
+
+            <!-- Right: Utility Buttons -->
+            <div class="flex items-center gap-1.5">
+              <button
+                id="notification-btn"
+                class="w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                aria-label="Notifications"
+              >
+                <i class="fas fa-bell text-sm"></i>
+              </button>
+              <button
+                id="admin-trigger"
+                class="hidden sm:flex w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                aria-label="Admin"
+              >
+                <i class="fas fa-cog text-sm"></i>
+              </button>
+              <button
+                id="help-btn"
+                class="hidden sm:flex w-11 h-11 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 items-center justify-center text-slate-600 hover:text-brand-interactive transition-all duration-200"
+                aria-label="Help"
+              >
+                <i class="fas fa-question text-sm"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
 </body>
 </html>
