@@ -2705,19 +2705,6 @@
         ncoCRE: ncoCRE.length
       });
 
-      // 전체 데이터 로딩 실패 체크
-      if (apiErrorCount >= 4) {
-        document.querySelector('.loading-text').innerHTML =
-          '<span style="color:#dc2626; font-weight:600;">❌ 데이터 로딩 실패</span><br>' +
-          '<span style="font-size:12px;">네트워크 연결을 확인하고 새로고침해 주세요.</span>';
-        return;
-      }
-
-      // 부분 실패 경고
-      if (apiErrorCount > 0) {
-        console.warn(`[Init] ${apiErrorCount} API calls failed, showing partial data`);
-      }
-
       const processed = processData();
 
       updateUI(processed);
