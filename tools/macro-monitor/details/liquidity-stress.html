@@ -34,9 +34,11 @@
   <!-- Constants & DataManager ES Module import -->
   <script type="module">
     import { DataManager } from '../shared/data-manager.js';
+    import { DataFetcher } from '../shared/data-fetcher.js';
     import { THRESHOLDS, COLORS, LABELS } from '../shared/constants.js';
     import { getRecessionAnnotations } from '../shared/chart-annotations.js';
     window.DataManager = DataManager;
+    window.DataFetcher = DataFetcher;
     window.THRESHOLDS = THRESHOLDS;
     window.COLORS = COLORS;
     window.LABELS = LABELS;
@@ -857,8 +859,6 @@
   };
 
   const CONFIG = {
-    apiKey: (window.FRED_API_KEY || localStorage.getItem('FRED_API_KEY') || '6dda7dc3956a2c1d6ac939133de115f1'),
-    proxy: 'https://fed-proxy.etloveaui.workers.dev/',
     colors: {
       spread: getColor('CHART', 'SPREAD') || '#2563eb',
       reservesFill: 'rgba(16, 185, 129, 0.15)',
@@ -868,23 +868,14 @@
     }
   };
 
-  async function fetchData(url) {
-    const candidates = [url, CONFIG.proxy + (url.startsWith('http') ? url : ''), 'https://cors.isomorphic-git.org/' + url];
-    for (const u of candidates) {
-      try { const res = await fetch(u); if (res.ok) return await res.json(); } catch (e) {}
-    }
-    return null;
-  }
-
   async function getSeries(seriesId, days) {
     const lookback = seriesId === 'GDP' ? 1095 : days;
-    const end = new Date().toISOString().split('T')[0];
-    const start = new Date(Date.now() - lookback * 86400000).toISOString().split('T')[0];
-    const url = `https://fed-proxy.etloveaui.workers.dev/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
-    
-    const json = await fetchData(url);
-    if (!json || !json.observations) return [];
-    return json.observations.filter(o => o.value !== '.').map(o => ({ date: o.date, val: parseFloat(o.value) }));
+    try {
+      return await window.DataFetcher.fetchFRED(seriesId, lookback);
+    } catch (e) {
+      console.error(`[FRED] ${seriesId} fetch error:`, e);
+      return [];
+    }
   }
 
   // --- 3. DATA PROCESSING (High-Precision Logic) ---
@@ -1221,7 +1212,7 @@
     const chartEnd = dates[dates.length - 1];
     console.log('[Chart] 날짜 범위:', chartStart, '~', chartEnd);
 
-    if (typeof getRecessionAnnotations === 'function') {
+    if (typeof getRecessionAnnotations === 'function' && window.DataFetcher) {
       const recessionAnnotations = getRecessionAnnotations(chartStart, chartEnd, { showLabel: true });
       console.log('[Chart] 리세션 annotations:', Object.keys(recessionAnnotations).length, '개');
 
@@ -1600,7 +1591,7 @@
 
   // 초기화 - ES Module 로드 완료 대기
   function startApp() {
-    if (typeof getRecessionAnnotations === 'function') {
+    if (typeof getRecessionAnnotations === 'function' && window.DataFetcher) {
       console.log('[Init] getRecessionAnnotations loaded ✓');
       init(365);  // 기본값: 1Y
       setupSwipeGesture();  // 모바일 스와이프 설정

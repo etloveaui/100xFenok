@@ -1,0 +1,116 @@
+# Macro FRED 데이터 수집
+# 결과: data/macro/fred-macro.json + public mirror
+
+name: Fetch FRED Macro Data
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+env:
+  FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+
+jobs:
+  fetch-fred-macro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create data directories
+        run: mkdir -p data/macro 100xfenok-next/public/data/macro
+
+      - name: Fetch macro FRED data
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const fs = require('fs');
+
+          const API_KEY = process.env.FRED_API_KEY;
+          if (!API_KEY) throw new Error('FRED_API_KEY secret missing');
+
+          const SERIES = [
+            { id: 'M2SL', days: 3650 },
+            { id: 'WALCL', days: 3650 },
+            { id: 'RRPONTSYD', days: 3650 },
+            { id: 'SOFR', days: 3650 },
+            { id: 'IORB', days: 3650 },
+            { id: 'WRESBAL', days: 3650 },
+            { id: 'GDP', days: 1095 }
+          ];
+
+          function formatDate(date) {
+            return date.toISOString().split('T')[0];
+          }
+
+          function fetchSeries(seriesId, days) {
+            return new Promise((resolve) => {
+              const end = formatDate(new Date());
+              const startDate = new Date();
+              startDate.setDate(startDate.getDate() - days);
+              const start = formatDate(startDate);
+              const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+
+              https.get(url, (res) => {
+                let data = '';
+                res.on('data', (chunk) => { data += chunk; });
+                res.on('end', () => {
+                  try {
+                    const json = JSON.parse(data);
+                    const observations = Array.isArray(json.observations) ? json.observations : [];
+                    const rows = observations
+                      .filter((item) => item.value !== '.')
+                      .map((item) => ({ date: item.date, value: Number(item.value) }))
+                      .filter((item) => item.date && Number.isFinite(item.value));
+                    console.log(`${seriesId}: ${rows.length} points`);
+                    resolve({ id: seriesId, data: rows });
+                  } catch (error) {
+                    console.error(`${seriesId}: parse error - ${error.message}`);
+                    resolve({ id: seriesId, data: [] });
+                  }
+                });
+              }).on('error', (error) => {
+                console.error(`${seriesId}: network error - ${error.message}`);
+                resolve({ id: seriesId, data: [] });
+              });
+            });
+          }
+
+          async function main() {
+            const series = {};
+            for (const item of SERIES) {
+              const result = await fetchSeries(item.id, item.days);
+              series[item.id] = result.data;
+              await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+
+            const output = {
+              updated: new Date().toISOString(),
+              series
+            };
+
+            const payload = JSON.stringify(output, null, 2);
+            fs.writeFileSync('data/macro/fred-macro.json', payload);
+            fs.writeFileSync('100xfenok-next/public/data/macro/fred-macro.json', payload);
+            console.log('Saved fred-macro.json to source and public mirror');
+          }
+
+          main().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          EOF
+
+      - name: Commit and push macro FRED data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/macro/fred-macro.json 100xfenok-next/public/data/macro/fred-macro.json
+          git diff --staged --quiet || git commit -m "chore: update FRED macro data [skip ci]"
+          git pull --rebase origin main
+          git push

@@ -132,8 +132,8 @@ const result = await DataFetcher.fetch(WIDGET_ID);
 
 | 항목 | 값 |
 |------|-----|
-| CORS 프록시 | `https://fed-proxy.etloveaui.workers.dev/` |
-| FRED API Key | `6dda7dc3956a2c1d6ac939133de115f1` |
+| FRED delivery | GitHub Actions cron → same-origin `data/macro/*.json` |
+| FRED API Key | GitHub Actions secret `FRED_API_KEY` |
 | 캐시 TTL | 30분 fresh / 6시간 stale (localStorage) |
 | Admin | `admin/DEV.md` 참조 |
 

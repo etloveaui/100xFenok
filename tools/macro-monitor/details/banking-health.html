@@ -34,9 +34,11 @@
   <!-- Constants & DataManager ES Module import -->
   <script type="module">
     import { DataManager } from '../shared/data-manager.js';
+    import { DataFetcher } from '../shared/data-fetcher.js';
     import { THRESHOLDS, COLORS, LABELS, ICONS } from '../shared/constants.js';
     import { getRecessionAnnotations } from '../shared/chart-annotations.js';
     window.DataManager = DataManager;
+    window.DataFetcher = DataFetcher;
     window.THRESHOLDS = THRESHOLDS;
     window.COLORS = COLORS;
     window.LABELS = LABELS;
@@ -1063,168 +1065,13 @@
     return fallback[status] || '🟢';
   };
 
-  // ===== API Config =====
-  const CONFIG = {
-    apiKey: '6dda7dc3956a2c1d6ac939133de115f1',
-    proxy: 'https://fed-proxy.etloveaui.workers.dev/'
-  };
-
-  // ===== FRED 데이터: JSON 캐시 우선, API 폴백 =====
-  let apiErrorCount = 0;
-  const API_TIMEOUT = 10000;
-
-  // JSON 캐시 저장소 (페이지 로드 시 한 번만 fetch)
-  let fredJsonCache = {
-    daily: null,
-    weekly: null,
-    quarterly: null,
-    loaded: false
-  };
-
-  // JSON 파일들 미리 로드
-  async function loadFredJsonCache() {
-    if (fredJsonCache.loaded) return;
-
-    const basePath = location.pathname.startsWith('/100xFenok/') ? '/100xFenok' : '';
-    const baseUrl = window.location.origin + basePath + '/data/';
-    const files = ['fred-banking-daily.json', 'fred-banking-weekly.json', 'fred-banking-quarterly.json'];
-
-    try {
-      const results = await Promise.all(files.map(async (file) => {
-        const url = `${baseUrl}macro/${file}`;
-        try {
-          const res = await fetch(url);
-          if (res.ok) return await res.json();
-        } catch (e) { }
-        return null;
-      }));
-
-      fredJsonCache.daily = results[0];
-      fredJsonCache.weekly = results[1];
-      fredJsonCache.quarterly = results[2];
-      fredJsonCache.loaded = true;
-
-      const loadedCount = results.filter(r => r).length;
-      console.log(`[FRED JSON] ${loadedCount}/3 파일 로드 완료`);
-    } catch (e) {
-      console.log('[FRED JSON] 캐시 로드 실패, API 폴백 사용');
-    }
-  }
-
-  // 시리즈별 JSON 타입 매핑
-  const SERIES_TYPE_MAP = {
-    // Daily
-    'DGS10': 'daily',
-    'BAMLH0A0HYM2': 'daily',
-    // Weekly
-    'TOTLL': 'weekly',
-    'DPSACBW027SBOG': 'weekly',
-    // Quarterly
-    'DRALACBN': 'quarterly',
-    'DRCCLACBS': 'quarterly',
-    'DRCLACBS': 'quarterly',
-    'DRBLACBS': 'quarterly',
-    'DRCRELEXFACBS': 'quarterly',
-    'BOGZ1FL010000016Q': 'quarterly',
-    'CORALACBN': 'quarterly',
-    'CORCCACBS': 'quarterly',
-    'CORCACBS': 'quarterly',
-    'CORBLACBS': 'quarterly',
-    'CORCREXFACBS': 'quarterly'
-  };
-
-  // JSON 캐시에서 시리즈 가져오기
-  function getSeriesFromCache(seriesId) {
-    const type = SERIES_TYPE_MAP[seriesId];
-    if (!type) return null;
-
-    const cache = fredJsonCache[type];
-    if (!cache || !cache.series || !cache.series[seriesId]) return null;
-
-    // JSON 형식: { date, value } → { date, val } 변환
-    return cache.series[seriesId].map(d => ({ date: d.date, val: d.value }));
-  }
-
-  // Stale 임계값 (밀리초): 시리즈 타입별
-  const STALE_THRESHOLDS = {
-    daily: 5 * 24 * 60 * 60 * 1000,      // 5일
-    weekly: 14 * 24 * 60 * 60 * 1000,    // 14일
-    quarterly: 140 * 24 * 60 * 60 * 1000 // 140일 (분기+버퍼)
-  };
-
-  // 메인 함수: JSON 우선, stale 체크 후 API 폴백
+  // ===== FRED 데이터: shared same-origin JSON =====
   async function getSeries(seriesId, days) {
-    // 1. JSON 캐시 시도
-    const cached = getSeriesFromCache(seriesId);
-    if (cached && cached.length > 0) {
-      // 2. Stale 체크: 마지막 데이터 날짜 기준
-      const lastDate = new Date(cached[cached.length - 1].date);
-      const type = SERIES_TYPE_MAP[seriesId] || 'weekly';
-      const threshold = STALE_THRESHOLDS[type] || STALE_THRESHOLDS.weekly;
-      const age = Date.now() - lastDate.getTime();
-      const isStale = age > threshold;
-
-      if (!isStale) {
-        console.log(`[FRED] ${seriesId}: JSON 캐시 (${cached.length}개, fresh)`);
-        return cached;
-      }
-
-      // 3. Stale이면 API 시도, 실패 시 캐시 반환
-      console.log(`[FRED] ${seriesId}: 캐시 stale (${Math.floor(age/86400000)}일 전) → API 시도`);
-      try {
-        const fresh = await getSeriesFromAPI(seriesId, days);
-        if (fresh && fresh.length > 0) return fresh;
-      } catch (e) {
-        console.log(`[FRED] ${seriesId}: API 실패, stale 캐시 사용`);
-      }
-      return cached; // API 실패 시 stale 캐시라도 반환
-    }
-
-    // 4. 캐시 없으면 API 직접
-    return await getSeriesFromAPI(seriesId, days);
-  }
-
-  // API 직접 호출 (폴백용)
-  async function getSeriesFromAPI(seriesId, days) {
-    const end = new Date().toISOString().split('T')[0];
-    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-    const url = `${CONFIG.proxy}fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
-
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (!json.observations) return [];
-
-      const result = json.observations
-        .filter(o => o.value !== '.')
-        .map(o => {
-          const val = parseFloat(o.value);
-          return { date: o.date, val: isNaN(val) ? null : val };
-        })
-        .filter(o => o.val !== null);
-
-      console.log(`[FRED] ${seriesId}: API (${result.length}개)`);
-      return result;
+      return await window.DataFetcher.fetchFRED(seriesId, days);
     } catch (e) {
-      apiErrorCount++;
-      const errorMsg = e.name === 'AbortError' ? '타임아웃 (10초)' : e.message;
       console.error(`[FRED] ${seriesId} fetch error:`, e);
-      showApiError(seriesId, errorMsg);
       return [];
-    }
-  }
-
-  // API 에러 사용자 표시
-  function showApiError(seriesId, message) {
-    const loadingText = document.querySelector('.loading-text');
-    if (loadingText) {
-      loadingText.innerHTML = `<span style="color:#dc2626;">⚠️ ${seriesId} 로딩 실패: ${message}</span><br>다른 데이터 로딩 중...`;
     }
   }
 
@@ -2788,8 +2635,7 @@
     console.log('[Init] Banking Health loading...');
 
     try {
-      // 🚀 FRED JSON 캐시 먼저 로드 (GitHub Actions에서 생성된 정적 파일)
-      await loadFredJsonCache();
+      // shared DataFetcher가 same-origin FRED JSON를 읽는다.
 
       // 15개 FRED 시리즈 + FDIC Tier1 병렬 로드 (NCO 5개 추가)
       // Capital Resilience: Defense(FDIC Tier1, FED Tier1) vs Offense(10Y, HY Spread)
@@ -2892,7 +2738,7 @@
   let moduleWaitStart = Date.now();
 
   function startApp() {
-    if (typeof getRecessionAnnotations === 'function') {
+    if (typeof getRecessionAnnotations === 'function' && window.DataFetcher) {
       console.log('[Init] Modules loaded ✓');
       init();
     } else if (Date.now() - moduleWaitStart > MODULE_TIMEOUT) {

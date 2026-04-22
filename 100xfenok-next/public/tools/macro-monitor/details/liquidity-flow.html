@@ -33,9 +33,11 @@
   <!-- Constants & DataManager ES Module import -->
   <script type="module">
     import { DataManager } from '../shared/data-manager.js';
+    import { DataFetcher } from '../shared/data-fetcher.js';
     import { THRESHOLDS, COLORS } from '../shared/constants.js';
     import { getRecessionAnnotations } from '../shared/chart-annotations.js';
     window.DataManager = DataManager;
+    window.DataFetcher = DataFetcher;
     window.THRESHOLDS = THRESHOLDS;
     window.COLORS = COLORS;
     window.getRecessionAnnotations = getRecessionAnnotations;
@@ -705,8 +707,6 @@
 
   // ===== CONFIG =====
   const CONFIG = {
-    fredApiKey: '6dda7dc3956a2c1d6ac939133de115f1',
-    proxy: 'https://fed-proxy.etloveaui.workers.dev/',
     colors: {
       inflow: getColor('CHART', 'NET_LIQ') || '#10b981',
       outflow: '#ef4444',
@@ -720,45 +720,23 @@
 
   // ===== DATA FETCH =====
   async function fetchData(url) {
-    // 이미 프록시 URL인지 확인
-    const isProxyUrl = url.includes('fed-proxy.etloveaui.workers.dev');
-
-    // 프록시 URL이면 그대로 사용, 아니면 fallback 후보 생성
-    const candidates = isProxyUrl
-      ? [url]  // 프록시 URL은 재시도 없이 1회만
-      : [
-          url,
-          CONFIG.proxy + url.replace(/^https?:\/\//, ''),
-          'https://cors.isomorphic-git.org/' + url
-        ];
-
-    for (const u of candidates) {
-      try {
-        const res = await fetch(u);
-        if (res.ok) return await res.json();
-        console.log('[Fetch] HTTP', res.status, u);
-      } catch (e) { console.log('[Fetch] Network error:', u); }
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      console.log('[Fetch] Network error:', url);
+      return null;
     }
-    return null;
   }
 
   async function getFredSeries(seriesId, days) {
-    // DST-safe 날짜 계산 (정오 고정)
-    const endDate = new Date();
-    endDate.setHours(12, 0, 0, 0);
-    const end = toLocalYMD(endDate);
-
-    const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - days);
-    const start = toLocalYMD(startDate);
-
-    const url = `https://fed-proxy.etloveaui.workers.dev/fred/series/observations?series_id=${seriesId}&api_key=${CONFIG.fredApiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
-
-    const json = await fetchData(url);
-    if (!json?.observations) return [];
-    return json.observations
-      .filter(o => o.value !== '.')
-      .map(o => ({ date: o.date, val: parseFloat(o.value) }));
+    try {
+      return await window.DataFetcher.fetchFRED(seriesId, days);
+    } catch (e) {
+      console.error(`[FRED] ${seriesId} fetch error:`, e);
+      return [];
+    }
   }
 
   // ★ Treasury FiscalData API - TGA 일간 데이터 (DEC-048, DEC-049 수정)
@@ -1498,7 +1476,7 @@
     const chartStart = dates[0];
     const chartEnd = dates[dates.length - 1];
     console.log('[Chart] 날짜 범위:', chartStart, '~', chartEnd);
-    if (typeof getRecessionAnnotations === 'function') {
+    if (typeof getRecessionAnnotations === 'function' && window.DataFetcher) {
       const recessionAnnotations = getRecessionAnnotations(chartStart, chartEnd, { showLabel: true });
 
       // Category 축에서는 라벨과 정확히 일치해야 함 → 가장 가까운 날짜로 매핑
@@ -1906,7 +1884,7 @@
   // (type="module"은 defer처럼 동작하므로 DOMContentLoaded 후 실행되지만,
   //  일반 script와의 실행 순서 보장 위해 약간의 지연 추가)
   function startApp() {
-    if (typeof getRecessionAnnotations === 'function') {
+    if (typeof getRecessionAnnotations === 'function' && window.DataFetcher) {
       console.log('[Init] getRecessionAnnotations loaded ✓');
       init(180);
     } else {

@@ -12,9 +12,7 @@ import { DataManager } from './data-manager.js';
 
 class MacroDataFetcher {
   constructor() {
-    // API 설정
-    this.proxy = 'https://fed-proxy.etloveaui.workers.dev/';
-    this.apiKey = '6dda7dc3956a2c1d6ac939133de115f1';
+    this.fredFileCache = new Map();
 
     // TTL 설정 (DEC-032: 24시간/7일로 조정)
     this.ttl = 24 * 60 * 60 * 1000;        // 24시간 (fresh)
@@ -690,24 +688,63 @@ class MacroDataFetcher {
    * @returns {Promise<Array>} - [{ date, val }, ...]
    */
   async fetchFRED(seriesId, days = 365) {
-    // ★ 금지패턴 제거: toISOString().split('T'), Date.now() - ms
-    const endDate = new Date();
-    endDate.setHours(12, 0, 0, 0);
-    const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - days);
-    const end = this.toLocalYMD(endDate);
-    const start = this.toLocalYMD(startDate);
-    const url = `${this.proxy}fred/series/observations?series_id=${seriesId}&api_key=${this.apiKey}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+    const fileMap = {
+      DGS10: 'fred-banking-daily',
+      BAMLH0A0HYM2: 'fred-banking-daily',
+      TOTLL: 'fred-banking-weekly',
+      DPSACBW027SBOG: 'fred-banking-weekly',
+      DRALACBN: 'fred-banking-quarterly',
+      DRCCLACBS: 'fred-banking-quarterly',
+      DRCLACBS: 'fred-banking-quarterly',
+      DRBLACBS: 'fred-banking-quarterly',
+      DRCRELEXFACBS: 'fred-banking-quarterly',
+      BOGZ1FL010000016Q: 'fred-banking-quarterly',
+      CORALACBN: 'fred-banking-quarterly',
+      CORCCACBS: 'fred-banking-quarterly',
+      CORCACBS: 'fred-banking-quarterly',
+      CORBLACBS: 'fred-banking-quarterly',
+      CORCREXFACBS: 'fred-banking-quarterly',
+      M2SL: 'fred-macro',
+      WALCL: 'fred-macro',
+      RRPONTSYD: 'fred-macro',
+      SOFR: 'fred-macro',
+      IORB: 'fred-macro',
+      WRESBAL: 'fred-macro',
+      GDP: 'fred-macro'
+    };
+
+    const file = fileMap[seriesId];
+    if (!file) {
+      console.error(`[DataFetcher] FRED series unmapped: ${seriesId}`);
+      return [];
+    }
 
     try {
-      const json = await this.fetchWithTimeout(url);
-      if (!json?.observations) return [];
+      let payloadPromise = this.fredFileCache.get(file);
+      if (!payloadPromise) {
+        const basePath = this.getBasePath();
+        const jsonUrl = window.location.origin + basePath + `/data/macro/${file}.json`;
+        payloadPromise = this.fetchWithTimeout(jsonUrl);
+        this.fredFileCache.set(file, payloadPromise);
+      }
 
-      return json.observations
-        .filter(o => o.value !== '.')
-        .map(o => ({ date: o.date, val: parseFloat(o.value) }));
+      const payload = await payloadPromise;
+      const rows = Array.isArray(payload?.series?.[seriesId])
+        ? payload.series[seriesId]
+            .map((row) => ({ date: row?.date, val: Number(row?.value) }))
+            .filter((row) => row.date && Number.isFinite(row.val))
+        : [];
+
+      if (!days) return rows;
+
+      const startDate = new Date();
+      startDate.setHours(12, 0, 0, 0);
+      startDate.setDate(startDate.getDate() - days);
+      const start = this.toLocalYMD(startDate);
+      return rows.filter((row) => row.date >= start);
     } catch (e) {
-      console.error(`[DataFetcher] FRED ${seriesId} error:`, e);
+      this.fredFileCache.delete(file);
+      console.error(`[DataFetcher] FRED ${seriesId} JSON error:`, e);
       return [];
     }
   }
