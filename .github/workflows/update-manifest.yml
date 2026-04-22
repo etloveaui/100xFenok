@@ -18,6 +18,10 @@ on:
       - 'data/**'
       - 'scripts/update-manifest.py'
 
+concurrency:
+  group: update-manifest
+  cancel-in-progress: false
+
 jobs:
   update-manifest:
     runs-on: ubuntu-latest
@@ -60,14 +64,44 @@ jobs:
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
             || echo "changed=true"  >> "$GITHUB_OUTPUT"
 
-      - name: Commit and push manifest
+      - name: Commit and push manifest (with rebase retry)
         if: steps.check.outputs.changed == 'true'
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/manifest.json 100xfenok-next/public/data/manifest.json
-          git commit -m "chore: update manifest.json [skip ci]"
-          git push
+
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+
+            status=0
+            BEFORE_SHA="${BEFORE_SHA}" python3 scripts/update-manifest.py || status=$?
+            if [ "$status" -ne 0 ] && [ "$status" -ne 1 ]; then
+              echo "update-manifest.py exited with $status on attempt $attempt"
+              exit "$status"
+            fi
+
+            if git diff --quiet data/manifest.json 100xfenok-next/public/data/manifest.json; then
+              echo "Attempt $attempt: manifest already current on latest main — nothing to push"
+              exit 0
+            fi
+
+            git add data/manifest.json 100xfenok-next/public/data/manifest.json
+            git commit -m "chore: update manifest.json [skip ci]"
+
+            if git push origin HEAD:main; then
+              echo "Attempt $attempt: push succeeded"
+              exit 0
+            fi
+
+            echo "Attempt $attempt: push rejected, retrying..."
+            sleep $((attempt * 3))
+          done
+
+          echo "All 3 attempts failed"
+          exit 1
 
       - name: No changes needed
         if: steps.check.outputs.changed == 'false'
