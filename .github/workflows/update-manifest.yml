@@ -4,7 +4,8 @@
 # Updates file_count, updated, last_updated, generatedAt, categories, and manifest_version.
 #
 # Infinite loop prevention:
-#   This workflow's own commit uses "[skip ci]" → GitHub Actions skips it.
+#   This workflow ignores data/manifest.json and data/computed/**, so its own
+#   manifest/signals commit can still trigger deploy without retriggering itself.
 #
 # What is updated:  file_count, updated, last_updated, generatedAt, categories, manifest_version
 # What is NOT touched: version, update_frequency, source, description, recent_changes
@@ -16,7 +17,15 @@ on:
     branches: [main]
     paths:
       - 'data/**'
+      - '!data/manifest.json'
+      - '!data/computed/**'
       - 'scripts/update-manifest.py'
+      - 'scripts/export-computed-signals.mjs'
+      - 'tools/macro-monitor/shared/signals-core.mjs'
+  schedule:
+    # UTC 02:30 = KST 11:30. Covers upstream data commits that skip CI.
+    - cron: '30 2 * * *'
+  workflow_dispatch:
 
 concurrency:
   group: update-manifest
@@ -27,9 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required for git push (manifest.json update)
-
-    # Skip commits made by this workflow itself ([skip ci] pattern)
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
     steps:
       - name: Checkout repository
@@ -42,12 +48,16 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Export computed signals
+        run: node scripts/export-computed-signals.mjs
+
       - name: Run update-manifest.py
         # Exit code 1 = warnings only (orphan files / missing folders)
         # These are non-fatal — the manifest update still proceeds
         # BEFORE_SHA: covers ALL commits in the push (not just HEAD~1)
+        # Scheduled/manual runs use HEAD to avoid false folder freshness bumps.
         env:
-          BEFORE_SHA: ${{ github.event.before }}
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'HEAD' }}
         run: |
           set +e
           python3 scripts/update-manifest.py
@@ -60,14 +70,18 @@ jobs:
       - name: Check if manifest changed
         id: check
         run: |
-          git diff --quiet data/manifest.json 100xfenok-next/public/data/manifest.json \
+          git diff --quiet \
+              data/computed/signals.json \
+              data/manifest.json \
+              100xfenok-next/public/data/computed/signals.json \
+              100xfenok-next/public/data/manifest.json \
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
             || echo "changed=true"  >> "$GITHUB_OUTPUT"
 
       - name: Commit and push manifest (with rebase retry)
         if: steps.check.outputs.changed == 'true'
         env:
-          BEFORE_SHA: ${{ github.event.before }}
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'HEAD' }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -76,6 +90,8 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
+            node scripts/export-computed-signals.mjs
+
             status=0
             BEFORE_SHA="${BEFORE_SHA}" python3 scripts/update-manifest.py || status=$?
             if [ "$status" -ne 0 ] && [ "$status" -ne 1 ]; then
@@ -83,13 +99,21 @@ jobs:
               exit "$status"
             fi
 
-            if git diff --quiet data/manifest.json 100xfenok-next/public/data/manifest.json; then
+            if git diff --quiet \
+                data/computed/signals.json \
+                data/manifest.json \
+                100xfenok-next/public/data/computed/signals.json \
+                100xfenok-next/public/data/manifest.json; then
               echo "Attempt $attempt: manifest already current on latest main — nothing to push"
               exit 0
             fi
 
-            git add data/manifest.json 100xfenok-next/public/data/manifest.json
-            git commit -m "chore: update manifest.json [skip ci]"
+            git add \
+              data/computed/signals.json \
+              data/manifest.json \
+              100xfenok-next/public/data/computed/signals.json \
+              100xfenok-next/public/data/manifest.json
+            git commit -m "chore: update computed signals and manifest"
 
             if git push origin HEAD:main; then
               echo "Attempt $attempt: push succeeded"

@@ -1,0 +1,482 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-25T03:46:58.768Z",
+  "as_of": "2026-04-25",
+  "engine": {
+    "name": "macro-monitor-computed-signals",
+    "version": "1.0.0",
+    "rules": "tools/macro-monitor/shared/signals-core.mjs"
+  },
+  "source_files": [
+    "data/macro/fdic-tier1.json",
+    "data/macro/fred-banking-daily.json",
+    "data/macro/fred-banking-quarterly.json",
+    "data/macro/fred-banking-weekly.json",
+    "data/macro/fred-macro.json",
+    "data/macro/stablecoins.json",
+    "data/macro/tga.json",
+    "data/sentiment/aaii.json",
+    "data/sentiment/cftc-sp500.json",
+    "data/sentiment/cnn-components.json",
+    "data/sentiment/cnn-fear-greed.json",
+    "data/sentiment/cnn-put-call.json",
+    "data/sentiment/crypto-fear-greed.json",
+    "data/sentiment/move.json",
+    "data/sentiment/vix.json"
+  ],
+  "thresholds": {
+    "liquidity_flow": {
+      "m2_yoy": {
+        "POSITIVE": 6,
+        "NEUTRAL": 2,
+        "NEGATIVE": 2
+      },
+      "net_liquidity": {
+        "POSITIVE": 50,
+        "NEUTRAL": 50,
+        "NEGATIVE": -50
+      },
+      "stablecoin": {
+        "POSITIVE": 1.5,
+        "NEUTRAL": 1,
+        "NEGATIVE": 1
+      },
+      "overall": {
+        "EXPANDING": {
+          "netLiq": 50,
+          "m2YoY": 4
+        },
+        "CONTRACTING": {
+          "netLiq": -50,
+          "m2YoY": 2
+        }
+      }
+    },
+    "liquidity_stress": {
+      "spread": {
+        "NORMAL": 10,
+        "CAUTION": 20,
+        "WARNING": 30,
+        "DANGER": 30
+      },
+      "reserves_gdp": {
+        "NORMAL": 12,
+        "CAUTION": 10,
+        "WARNING": 8,
+        "DANGER": 8
+      }
+    },
+    "banking_health": {
+      "delinquency": {
+        "NORMAL": 2,
+        "CAUTION": 3,
+        "WARNING": 4,
+        "DANGER": 4
+      },
+      "tier1_ratio": {
+        "NORMAL": 12,
+        "CAUTION": 10,
+        "WARNING": 8,
+        "DANGER": 8
+      },
+      "loan_deposit": {
+        "NORMAL_HIGH": 85,
+        "NORMAL_LOW": 60,
+        "CAUTION": 60,
+        "WARNING": 55
+      },
+      "loan_growth": {
+        "POSITIVE": 5,
+        "NEUTRAL": 0,
+        "NEGATIVE": 0
+      }
+    }
+  },
+  "signals": {
+    "liquidity_flow": {
+      "status": "falling",
+      "overallStatus": "falling",
+      "overallLabel": "FALLING",
+      "m2YoY": 6.24,
+      "m2Total": 22667.3,
+      "netLiquidity": 5700.1,
+      "netLiquidityDelta": -272,
+      "weeklyNetFlow": -272,
+      "stablecoinMcap": 318.63745017567,
+      "scM2Ratio": 1.41,
+      "walcl": 6707.4,
+      "tga": 1007.2,
+      "rrp": 0.1,
+      "netFlow": -272,
+      "components": {
+        "m2_yoy": {
+          "value": 6.24,
+          "unit": "%",
+          "status": "rising"
+        },
+        "net_liquidity_wow": {
+          "value": -272,
+          "unit": "B USD",
+          "status": "falling"
+        },
+        "stablecoin_m2_ratio": {
+          "value": 1.41,
+          "unit": "%",
+          "status": "stable"
+        }
+      },
+      "metrics": {
+        "m2_yoy_pct": 6.24,
+        "m2_total_b": 22667.3,
+        "net_liquidity_b": 5700.1,
+        "weekly_net_flow_b": -272,
+        "stablecoin_mcap_b": 318.6,
+        "sc_m2_ratio_pct": 1.41
+      },
+      "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
+      "as_of": "2026-04-25",
+      "source_files": [
+        "data/macro/fred-macro.json",
+        "data/macro/tga.json",
+        "data/macro/stablecoins.json"
+      ],
+      "threshold_ref": "tools/macro-monitor/shared/signals-core.mjs#THRESHOLDS"
+    },
+    "liquidity_stress": {
+      "overallStatus": "caution",
+      "overallLabel": "Caution",
+      "tier1": {
+        "status": "normal",
+        "value": -1,
+        "unit": "bp"
+      },
+      "tier2": {
+        "status": "warning",
+        "value": 9.2,
+        "unit": "%"
+      },
+      "metrics": {
+        "sofr_iorb_spread_bp": -1,
+        "reserves_gdp_pct": 9.2
+      },
+      "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
+      "as_of": "2026-04-24",
+      "source_files": [
+        "data/macro/fred-macro.json"
+      ],
+      "threshold_ref": "tools/macro-monitor/shared/signals-core.mjs#THRESHOLDS"
+    },
+    "banking_health": {
+      "overallStatus": "normal",
+      "overallLabel": "Healthy",
+      "delinquency": {
+        "value": 1.47,
+        "status": "normal"
+      },
+      "tier1": {
+        "value": 13.12,
+        "status": "normal"
+      },
+      "loanDeposit": {
+        "value": 71.99,
+        "status": "normal"
+      },
+      "loanGrowth": {
+        "value": 7.06,
+        "status": "normal"
+      },
+      "metrics": {
+        "delinquency_pct": 1.47,
+        "tier1_pct": 13.12,
+        "loan_deposit_pct": 71.99,
+        "loan_growth_yoy_pct": 7.06
+      },
+      "as_of": "2026-04-08",
+      "source_files": [
+        "data/macro/fred-banking-daily.json",
+        "data/macro/fred-banking-weekly.json",
+        "data/macro/fred-banking-quarterly.json",
+        "data/macro/fdic-tier1.json"
+      ],
+      "threshold_ref": "tools/macro-monitor/shared/signals-core.mjs#THRESHOLDS"
+    },
+    "sentiment_signal": {
+      "overallStatus": "neutral",
+      "buy_active": 0,
+      "buy_near": 0,
+      "warn_active": 0,
+      "warn_near": 0,
+      "values": {
+        "vix": 18.71,
+        "move": 66.97,
+        "cnn_fg": 66,
+        "aaii_bearish": 34.4,
+        "aaii_spread": 11.600000000000001,
+        "cftc_net": -104083,
+        "crypto_fg": 39,
+        "putcall_ratio": 0.73
+      },
+      "combos": [
+        {
+          "id": "vix-panic",
+          "name": "VIX Panic Buy",
+          "category": "buy",
+          "priority": 5,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "vix",
+              "operator": ">=",
+              "value": 40,
+              "label": "VIX >= 40",
+              "current": 18.71,
+              "status": "unmet"
+            }
+          ],
+          "winRate": "~100%",
+          "avgReturn": "+35%",
+          "sampleSize": "20y+"
+        },
+        {
+          "id": "aaii-extreme",
+          "name": "AAII Extreme Bear",
+          "category": "buy",
+          "priority": 5,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "aaii_bearish",
+              "operator": ">=",
+              "value": 60,
+              "label": "Bearish >= 60%",
+              "current": 34.4,
+              "status": "unmet"
+            }
+          ],
+          "winRate": "100%",
+          "avgReturn": "+27%",
+          "sampleSize": "1987+"
+        },
+        {
+          "id": "cnn-extreme-fear",
+          "name": "CNN Extreme Fear",
+          "category": "buy",
+          "priority": 4,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "cnn_fg",
+              "operator": "<=",
+              "value": 10,
+              "label": "F&G <= 10",
+              "current": 66,
+              "status": "unmet"
+            }
+          ],
+          "winRate": "~90%",
+          "avgReturn": "+20%",
+          "sampleSize": "2011+"
+        },
+        {
+          "id": "triple-fear",
+          "name": "Triple Fear",
+          "category": "buy",
+          "priority": 4,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "vix",
+              "operator": ">=",
+              "value": 30,
+              "label": "VIX >= 30",
+              "current": 18.71,
+              "status": "unmet"
+            },
+            {
+              "indicator": "cnn_fg",
+              "operator": "<=",
+              "value": 25,
+              "label": "CNN <= 25",
+              "current": 66,
+              "status": "unmet"
+            },
+            {
+              "indicator": "cftc_net",
+              "operator": "<",
+              "value": -150000,
+              "label": "CFTC < -150K",
+              "current": -104083,
+              "status": "unmet"
+            }
+          ],
+          "winRate": "~85%",
+          "avgReturn": "+25%",
+          "sampleSize": "2011+"
+        },
+        {
+          "id": "fear-consensus",
+          "name": "Fear Consensus",
+          "category": "buy",
+          "priority": 4,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "vix",
+              "operator": ">=",
+              "value": 30,
+              "label": "VIX >= 30",
+              "current": 18.71,
+              "status": "unmet"
+            },
+            {
+              "indicator": "cnn_fg",
+              "operator": "<=",
+              "value": 25,
+              "label": "CNN <= 25",
+              "current": 66,
+              "status": "unmet"
+            }
+          ],
+          "winRate": "84%",
+          "avgReturn": "+20%",
+          "sampleSize": "2011+"
+        },
+        {
+          "id": "aaii-spread-panic",
+          "name": "AAII Spread Panic",
+          "category": "buy",
+          "priority": 3,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "aaii_spread",
+              "operator": "<=",
+              "value": -30,
+              "label": "Spread <= -30",
+              "current": 11.600000000000001,
+              "status": "unmet"
+            }
+          ],
+          "winRate": "79.5%",
+          "avgReturn": "+12.6%",
+          "sampleSize": "1987+"
+        },
+        {
+          "id": "putcall-extreme-fear",
+          "name": "Put/Call Extreme",
+          "category": "buy",
+          "priority": 3,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "putcall_ratio",
+              "operator": ">=",
+              "value": 1.2,
+              "label": "P/C >= 1.2",
+              "current": 0.73,
+              "status": "unmet"
+            }
+          ],
+          "winRate": "68%",
+          "avgReturn": "+5%",
+          "sampleSize": "10y+",
+          "source": "Billingsley & Chance 1988"
+        },
+        {
+          "id": "triple-greed",
+          "name": "Triple Greed",
+          "category": "warn",
+          "priority": 4,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "vix",
+              "operator": "<",
+              "value": 15,
+              "label": "VIX < 15",
+              "current": 18.71,
+              "status": "unmet"
+            },
+            {
+              "indicator": "cnn_fg",
+              "operator": ">=",
+              "value": 75,
+              "label": "CNN >= 75",
+              "current": 66,
+              "status": "unmet"
+            },
+            {
+              "indicator": "cftc_net",
+              "operator": ">",
+              "value": 150000,
+              "label": "CFTC > 150K",
+              "current": -104083,
+              "status": "unmet"
+            }
+          ],
+          "correctionProb": "~70%",
+          "sampleSize": "2011+"
+        },
+        {
+          "id": "greed-consensus",
+          "name": "Greed Consensus",
+          "category": "warn",
+          "priority": 3,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "vix",
+              "operator": "<",
+              "value": 15,
+              "label": "VIX < 15",
+              "current": 18.71,
+              "status": "unmet"
+            },
+            {
+              "indicator": "cnn_fg",
+              "operator": ">=",
+              "value": 75,
+              "label": "CNN >= 75",
+              "current": 66,
+              "status": "unmet"
+            }
+          ],
+          "correctionProb": "~71%",
+          "sampleSize": "2011+"
+        },
+        {
+          "id": "putcall-complacency",
+          "name": "Put/Call Low",
+          "category": "warn",
+          "priority": 3,
+          "status": "inactive",
+          "conditions": [
+            {
+              "indicator": "putcall_ratio",
+              "operator": "<",
+              "value": 0.6,
+              "label": "P/C < 0.6",
+              "current": 0.73,
+              "status": "unmet"
+            }
+          ],
+          "correctionProb": "68%",
+          "sampleSize": "10y+",
+          "source": "Billingsley & Chance 1988"
+        }
+      ],
+      "as_of": "2026-04-24",
+      "source_files": [
+        "data/sentiment/vix.json",
+        "data/sentiment/move.json",
+        "data/sentiment/cnn-fear-greed.json",
+        "data/sentiment/aaii.json",
+        "data/sentiment/cftc-sp500.json",
+        "data/sentiment/crypto-fear-greed.json",
+        "data/sentiment/cnn-put-call.json",
+        "data/sentiment/cnn-components.json"
+      ],
+      "threshold_ref": "tools/macro-monitor/shared/signals-core.mjs#COMBO_SIGNALS"
+    }
+  }
+}

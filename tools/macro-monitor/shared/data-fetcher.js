@@ -9,6 +9,24 @@
  */
 
 import { DataManager } from './data-manager.js';
+import {
+  calculateLoanGrowth,
+  calculateWeeklyNetLiquidityDelta,
+  calculateYoY,
+  computeBankingHealthSnapshot,
+  computeLiquidityFlowSnapshot,
+  computeLiquidityStressSnapshot,
+  getDelinquencyStatus,
+  getLoanDepositStatus,
+  getLoanGrowthStatus,
+  getTier1Status,
+  getWorstStatus,
+  getWeekKeyFromDate,
+  getWeekKeyFromYMD,
+  pickCompleteWeeks,
+  toFiniteNumber,
+  toLocalYMD
+} from './signals-core.mjs';
 
 class MacroDataFetcher {
   constructor() {
@@ -143,43 +161,20 @@ class MacroDataFetcher {
         this.fetchFDICTier1()                   // FDIC Tier1
       ]);
 
-      if (!fdicTier1?.length) {
+      if (!fdicTier1?.length && !fedTier1?.length) {
         return null;
       }
 
-      // 최신값 추출
-      const latestDelinquency = this.getLatestValue(delinquency) || 0;
-      const latestLoans = this.getLatestValue(loans);
-      const latestDeposits = this.getLatestValue(deposits);
-      const latestTier1 = this.getLatestValue(fdicTier1) || this.getLatestValue(fedTier1) || 0;
-
-      // 예대율 계산
-      const loanDepositRatio = latestDeposits > 0 ? parseFloat((latestLoans / latestDeposits * 100).toFixed(2)) : 0;
-
-      // 여신증가율 계산 (YoY)
-      const loanGrowth = this.calculateLoanGrowth(loans);
-
-      // 상태 판정 (constants.js THRESHOLDS 기반)
-      const delStatus = this.getDelinquencyStatus(latestDelinquency);
-      const t1Status = this.getTier1Status(latestTier1);
-      const ldStatus = this.getLoanDepositStatus(loanDepositRatio);
-      const lgStatus = this.getLoanGrowthStatus(loanGrowth);
-
-      // 종합 상태 (Weakest Link)
-      const overallStatus = this.getWorstStatus([delStatus, t1Status, ldStatus, lgStatus]);
-
-      // 라벨 맵 (Detail과 동일)
       const statusLabels = { normal: '정상', caution: '주의', warning: '경계', danger: '위험' };
-      const overallLabels = { normal: 'Healthy', caution: 'Watch', warning: 'Caution', danger: 'Stress' };
+      const snapshot = computeBankingHealthSnapshot({ delinquency, loans, deposits, fedTier1, fdicTier1 });
 
       // ★ Detail과 동일한 형식으로 반환
       return {
-        overallStatus,
-        overallLabel: overallLabels[overallStatus],
-        delinquency: { value: parseFloat(latestDelinquency.toFixed(2)), status: delStatus, label: statusLabels[delStatus] },
-        tier1: { value: parseFloat(latestTier1.toFixed(2)), status: t1Status, label: statusLabels[t1Status] },
-        loanDeposit: { value: loanDepositRatio, status: ldStatus, label: statusLabels[ldStatus] },
-        loanGrowth: { value: parseFloat(loanGrowth.toFixed(2)), status: lgStatus, label: statusLabels[lgStatus] },
+        ...snapshot,
+        delinquency: { ...snapshot.delinquency, label: statusLabels[snapshot.delinquency.status] },
+        tier1: { ...snapshot.tier1, label: statusLabels[snapshot.tier1.status] },
+        loanDeposit: { ...snapshot.loanDeposit, label: statusLabels[snapshot.loanDeposit.status] },
+        loanGrowth: { ...snapshot.loanGrowth, label: statusLabels[snapshot.loanGrowth.status] },
         updated: new Date().toISOString()
       };
     } catch (e) {
@@ -192,58 +187,35 @@ class MacroDataFetcher {
    * 여신증가율 계산 (YoY)
    */
   calculateLoanGrowth(loans) {
-    if (!loans?.length || loans.length < 2) return 0;
-
-    const latestVal = loans[loans.length - 1]?.val;
-    // 약 1년 전 데이터 (주간 데이터 ~52주)
-    const yearAgoIdx = Math.max(0, loans.length - 52);
-    const yearAgoVal = loans[yearAgoIdx]?.val;
-
-    if (!latestVal || !yearAgoVal || yearAgoVal === 0) return 0;
-    return ((latestVal - yearAgoVal) / yearAgoVal) * 100;
+    return calculateLoanGrowth(loans);
   }
 
   /**
    * 연체율 상태 판정
    */
   getDelinquencyStatus(val) {
-    if (val == null) return 'normal';
-    if (val < 2) return 'normal';
-    if (val < 3) return 'caution';
-    if (val < 4) return 'warning';
-    return 'danger';
+    return getDelinquencyStatus(val);
   }
 
   /**
    * Tier1 자본비율 상태 판정
    */
   getTier1Status(val) {
-    if (val == null) return 'normal';
-    if (val >= 12) return 'normal';
-    if (val >= 10) return 'caution';
-    if (val >= 8) return 'warning';
-    return 'danger';
+    return getTier1Status(val);
   }
 
   /**
    * 예대율 상태 판정
    */
   getLoanDepositStatus(val) {
-    if (val == null) return 'normal';
-    if (val >= 60 && val <= 85) return 'normal';
-    if (val > 85) return 'warning';  // 과열
-    if (val >= 55) return 'caution';
-    return 'warning';  // 위축
+    return getLoanDepositStatus(val);
   }
 
   /**
    * 여신증가율 상태 판정
    */
   getLoanGrowthStatus(val) {
-    if (val == null) return 'normal';
-    if (val >= 5) return 'normal';
-    if (val >= 0) return 'caution';
-    return 'warning';
+    return getLoanGrowthStatus(val);
   }
 
   /**
@@ -277,52 +249,34 @@ class MacroDataFetcher {
         return null;
       }
 
-      // 최신값 (단위 변환: WALCL, TGA는 Millions → Billions)
-      // M2SL, RRP는 이미 Billions
-      const latestM2 = this.toFiniteNumber(this.getLatestValue(m2));  // Billions
-      const walclB = this.toFiniteNumber(this.getLatestValue(fedBs)) / 1000;  // Millions → Billions
-      const tgaB = this.toFiniteNumber(this.getLatestValue(tga)) / 1000;      // Millions → Billions
-      const rrpB = this.toFiniteNumber(this.getLatestValue(rrp));             // 이미 Billions ★ 수정됨
-
       if (!Array.isArray(rrp) || rrp.length === 0) {
         console.warn('[DataFetcher] RRP series empty, fallback value 0 applied');
       }
 
-      // Net Liquidity 계산 (정식 공식): Fed BS - TGA - RRP (Billions)
-      const netLiquidity = walclB - tgaB - rrpB;
-
-      // M2 YoY 계산
-      const m2YoY = this.toFiniteNumber(this.calculateYoY(m2));
-
-      // Stablecoin / M2 비율 (%)
-      const stablecoinMcap = this.toFiniteNumber(stablecoin?.current) / 1e9;  // Billions
-      const scM2Ratio = latestM2 > 0 ? (stablecoinMcap / (latestM2 * 1000)) * 100 : 0;  // M2는 Trillions 단위
-
-      // Delta 값들 (최근 2주 데이터로 계산)
-      // ★ weeklyNetFlow: 최근 1주일간 변화량 (Hero Value용)
-      const weeklyNetFlow = this.toFiniteNumber(this.calculateWeeklyDelta(fedBs, tga, rrp));
+      const snapshot = computeLiquidityFlowSnapshot({ m2, fedBs, tga, rrp, stablecoin });
 
       // ★ Detail과 동일한 형식으로 반환
       return {
+        ...snapshot,
         // Signal Matrix 3개 지표
-        m2YoY: parseFloat(m2YoY.toFixed(2)),
-        m2Total: latestM2,  // Billions
-        netLiquidity: parseFloat(netLiquidity.toFixed(1)),  // Billions
+        m2YoY: snapshot.m2YoY,
+        m2Total: snapshot.m2Total,  // Billions
+        netLiquidity: snapshot.netLiquidity,  // Billions
         // netLiquidityDelta: 초기 로딩 시에도 의미있는 값 제공 (일간 변화량 근사치)
         // 단, 위젯은 weeklyNetFlow를 우선 사용하도록 설계됨
-        netLiquidityDelta: weeklyNetFlow, 
-        weeklyNetFlow: weeklyNetFlow, // ★ 명시적 필드 추가
-        stablecoinMcap,  // Billions
-        scM2Ratio: parseFloat(scM2Ratio.toFixed(2)),
+        netLiquidityDelta: snapshot.weeklyNetFlow,
+        weeklyNetFlow: snapshot.weeklyNetFlow, // ★ 명시적 필드 추가
+        stablecoinMcap: snapshot.stablecoinMcap,  // Billions
+        scM2Ratio: snapshot.scM2Ratio,
         // Components (Chart용)
-        walcl: parseFloat(walclB.toFixed(1)),
-        tga: parseFloat(tgaB.toFixed(1)),
-        rrp: parseFloat(rrpB.toFixed(1)),
+        walcl: snapshot.walcl,
+        tga: snapshot.tga,
+        rrp: snapshot.rrp,
         walclDelta: 0,  
         tgaDelta: 0,
         rrpDelta: 0,
         // 기존 호환용
-        netFlow: weeklyNetFlow,
+        netFlow: snapshot.weeklyNetFlow,
         updated: new Date().toISOString()
       };
     } catch (e) {
@@ -341,11 +295,7 @@ class MacroDataFetcher {
    * @returns {string} "YYYY-MM-DD"
    */
   toLocalYMD(dt) {
-    const pad2 = (n) => String(n).padStart(2, '0');
-    const y = dt.getFullYear();
-    const m = pad2(dt.getMonth() + 1);
-    const d = pad2(dt.getDate());
-    return `${y}-${m}-${d}`;
+    return toLocalYMD(dt);
   }
 
   /**
@@ -353,21 +303,14 @@ class MacroDataFetcher {
    * Detail 페이지와 동일한 로직
    */
   getWeekKeyFromDate(dt) {
-    const x = new Date(dt);
-    x.setHours(12, 0, 0, 0);              // DST/경계 방어
-    const day = x.getDay();               // 0=Sun..6=Sat
-    const diff = (day + 6) % 7;           // Monday=0 기준으로 보정
-    x.setDate(x.getDate() - diff);        // 해당 주의 월요일
-    return this.toLocalYMD(x);            // ★ 금지패턴 제거
+    return getWeekKeyFromDate(dt);
   }
 
   /**
    * YYYY-MM-DD 문자열 → weekKey
    */
   getWeekKeyFromYMD(ymd) {
-    const parts = ymd.split('-').map(Number);
-    const d = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0, 0);
-    return this.getWeekKeyFromDate(d);
+    return getWeekKeyFromYMD(ymd);
   }
 
   /**
@@ -376,42 +319,11 @@ class MacroDataFetcher {
    * @returns {Object} - { lastComplete, prevComplete } 또는 null
    */
   pickCompleteWeeks(series) {
-    if (!Array.isArray(series) || series.length < 7) return null;
-
-    // 1. weekKey로 버킷팅 (각 주의 마지막 값 사용)
-    const weeklyMap = new Map();
-    series.forEach(item => {
-      const weekKey = this.getWeekKeyFromYMD(item.date);
-      if (!weeklyMap.has(weekKey) || item.date > weeklyMap.get(weekKey).date) {
-        weeklyMap.set(weekKey, { ...item, weekKey });
-      }
-    });
-
-    // 2. weekKey 정렬
-    const sortedWeeks = Array.from(weeklyMap.values())
-      .sort((a, b) => a.weekKey.localeCompare(b.weekKey));
-
-    if (sortedWeeks.length < 2) return null;
-
-    // 3. 오늘 weekKey
-    const todayWeekKey = this.getWeekKeyFromDate(new Date());
-
-    // 4. 미완결 주(오늘 주) 제외
-    const last = sortedWeeks[sortedWeeks.length - 1];
-    const secondLast = sortedWeeks[sortedWeeks.length - 2];
-    const thirdLast = sortedWeeks.length >= 3 ? sortedWeeks[sortedWeeks.length - 3] : null;
-
-    let lastComplete, prevComplete;
-    if (last.weekKey === todayWeekKey) {
-      lastComplete = secondLast;
-      prevComplete = thirdLast ?? secondLast;
-    } else {
-      lastComplete = last;
-      prevComplete = secondLast;
+    const result = pickCompleteWeeks(series);
+    if (result) {
+      console.log(`[DataFetcher] pickCompleteWeeks: last=${result.lastComplete.weekKey} prev=${result.prevComplete.weekKey}`);
     }
-
-    console.log(`[DataFetcher] pickCompleteWeeks: last=${lastComplete.weekKey} prev=${prevComplete.weekKey}`);
-    return { lastComplete, prevComplete };
+    return result;
   }
 
   /**
@@ -421,57 +333,7 @@ class MacroDataFetcher {
    * ★ 개선: weekKey 버킷팅 → 완결 주 2개 → Δ 계산
    */
   calculateWeeklyDelta(fedBs, tga, rrp) {
-    // 데이터 부족 시 0 반환
-    if (!fedBs?.length || fedBs.length < 2 || !tga?.length || tga.length < 7) return 0;
-
-    const hasRrp = Array.isArray(rrp) && rrp.length > 0;
-
-    // TGA 기준으로 완결 주 선택 (일간 데이터이므로 가장 풍부)
-    const completeWeeks = this.pickCompleteWeeks(tga);
-    if (!completeWeeks) {
-      console.warn('[DataFetcher] 완결 주 계산 실패, fallback 사용');
-      return this.calculateWeeklyDeltaFallback(fedBs, tga, rrp);
-    }
-
-    const { lastComplete, prevComplete } = completeWeeks;
-
-    // WALCL: 완결 주의 endDate 이하 중 가장 최근 값 (주간 지표)
-    const findNearestValue = (series, targetDate) => {
-      if (!Array.isArray(series) || series.length === 0) return 0;
-      for (let i = series.length - 1; i >= 0; i--) {
-        if (series[i].date <= targetDate) return series[i].val;
-      }
-      return series[0]?.val || 0;
-    };
-
-    // 완결 주 기준 값 추출
-    const lastWalcl = findNearestValue(fedBs, lastComplete.date) / 1000;  // Billions
-    const prevWalcl = findNearestValue(fedBs, prevComplete.date) / 1000;
-    const lastTga = lastComplete.val / 1000;  // Billions
-    const prevTga = prevComplete.val / 1000;
-
-    // RRP: 완결 주 기준
-    let lastRrp = 0, prevRrp = 0;
-    if (hasRrp) {
-      const rrpCompleteWeeks = this.pickCompleteWeeks(rrp);
-      if (rrpCompleteWeeks) {
-        lastRrp = rrpCompleteWeeks.lastComplete.val;  // 이미 Billions
-        prevRrp = rrpCompleteWeeks.prevComplete.val;
-      }
-    }
-
-    // Sanity Check: RRP 단위 검증
-    if (lastRrp > 5000) {
-      console.warn(`[DataFetcher] Abnormal RRP value: ${lastRrp}. Unit might be incorrect.`);
-    }
-
-    // Net Liquidity = WALCL - TGA - RRP
-    const lastNet = lastWalcl - lastTga - lastRrp;
-    const prevNet = prevWalcl - prevTga - prevRrp;
-    const delta = parseFloat((lastNet - prevNet).toFixed(1));
-
-    console.log(`[DataFetcher] WeeklyDelta: week=${lastComplete.weekKey} net=${lastNet.toFixed(1)} prev=${prevNet.toFixed(1)} delta=${delta}`);
-    return delta;
+    return calculateWeeklyNetLiquidityDelta(fedBs, tga, rrp);
   }
 
   /**
@@ -522,42 +384,24 @@ class MacroDataFetcher {
         return null;
       }
 
-      // Spread 계산 (bp)
-      const latestSofr = this.getLatestValue(sofr);
-      const latestIorb = this.getLatestValue(iorb);
-      const spread = latestSofr && latestIorb ? Math.round((latestSofr - latestIorb) * 100) : 0;
-
-      // Reserves/GDP 비율
-      // 단위: WRESBAL = Millions, GDP = Billions → Reserves를 Billions로 변환 (/1000)
-      const latestReserves = this.getLatestValue(reserves);
-      const latestGdp = this.getLatestValue(gdp);
-      const reservesGdpRatio = (latestReserves && latestGdp)
-        ? parseFloat(((latestReserves / 1000) / latestGdp * 100).toFixed(1))
-        : 0;
-
-      // 상태 판정 (Detail과 동일)
-      const tier1Status = spread >= 30 ? 'danger' : spread >= 20 ? 'warning' : spread >= 10 ? 'caution' : 'normal';
-      const tier2Status = reservesGdpRatio < 8 ? 'danger' : reservesGdpRatio < 10 ? 'warning' : reservesGdpRatio < 12 ? 'caution' : 'normal';
-      const overallStatus = this.getWorstStatus([tier1Status, tier2Status]);
-
-      // 라벨 맵 (Detail과 동일)
       const statusLabels = { normal: '정상', caution: '주의', warning: '경계', danger: '위험' };
-      const overallLabels = { normal: 'Normal', caution: 'Caution', warning: 'High Stress', danger: 'Critical' };
+      const snapshot = computeLiquidityStressSnapshot({ sofr, iorb, reserves, gdp });
 
       // ★ Detail과 동일한 형식으로 반환
       return {
-        overallStatus,
-        overallLabel: overallLabels[overallStatus] || 'Normal',
+        ...snapshot,
+        overallStatus: snapshot.overallStatus,
+        overallLabel: snapshot.overallLabel || 'Normal',
         tier1: {
-          status: tier1Status,
-          label: statusLabels[tier1Status],
-          value: spread,  // bp 단위, 정수
+          status: snapshot.tier1.status,
+          label: statusLabels[snapshot.tier1.status],
+          value: snapshot.tier1.value,  // bp 단위, 정수
           unit: 'bp'
         },
         tier2: {
-          status: tier2Status,
-          label: statusLabels[tier2Status],
-          value: reservesGdpRatio,  // % 단위
+          status: snapshot.tier2.status,
+          label: statusLabels[snapshot.tier2.status],
+          value: snapshot.tier2.value,  // % 단위
           unit: '%'
         },
         updated: new Date().toISOString()
@@ -909,21 +753,14 @@ class MacroDataFetcher {
    * @returns {number}
    */
   toFiniteNumber(value, fallback = 0) {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
+    return toFiniteNumber(value, fallback);
   }
 
   /**
    * YoY 계산 (1년 전 대비)
    */
   calculateYoY(series) {
-    if (!Array.isArray(series) || series.length < 2) return null;
-    const latest = series[series.length - 1]?.val;
-    // 약 1년 전 데이터 찾기 (주간 데이터 기준 ~52주)
-    const yearAgoIdx = Math.max(0, series.length - 52);
-    const yearAgo = series[yearAgoIdx]?.val;
-    if (!latest || !yearAgo || yearAgo === 0) return null;
-    return ((latest - yearAgo) / yearAgo) * 100;
+    return calculateYoY(series);
   }
 
   /**
@@ -953,13 +790,7 @@ class MacroDataFetcher {
    * 최악 상태 선택 (Weakest Link)
    */
   getWorstStatus(statuses) {
-    const order = ['normal', 'caution', 'warning', 'danger'];
-    let worst = 0;
-    for (const s of statuses) {
-      const idx = order.indexOf(s);
-      if (idx > worst) worst = idx;
-    }
-    return order[worst];
+    return getWorstStatus(statuses);
   }
 
   /**

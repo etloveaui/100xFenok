@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-04-24",
+  "last_updated": "2026-04-25",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -88,11 +88,20 @@
     "yardney": {
       "version": "1.0.0",
       "updated": "2026-03-31",
-      "update_frequency": "on-demand",
-      "source": "TBD",
+      "update_frequency": "weekly",
+      "source": "Yardeni model workbook",
       "file_count": 1,
       "schema": false,
-      "description": "TBD"
+      "description": "Moody's corporate spread to Bond PER to S&P 500 fair value model."
+    },
+    "computed": {
+      "version": "1.0.0",
+      "updated": "2026-04-25",
+      "update_frequency": "after source data refresh",
+      "source": "Macro Monitor computed signal export",
+      "file_count": 1,
+      "schema": false,
+      "description": "Deterministic computed signals derived from macro, banking, liquidity, and sentiment raw data."
     }
   },
   "recent_changes": [
@@ -341,14 +350,22 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-04-24T22:53:02Z",
+  "generatedAt": "2026-04-25T03:46:20Z",
   "categories": [
+    {
+      "name": "computed",
+      "path": "/data/computed/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 1,
+      "lastUpdated": "2026-04-25",
+      "notes": "Deterministic computed signals derived from macro, banking, liquidity, and sentiment raw data."
+    },
     {
       "name": "sentiment",
       "path": "/data/sentiment/",
       "schemaVersion": "1.0.0",
       "fileCount": 13,
-      "lastUpdated": "2026-01-20",
+      "lastUpdated": "2026-04-24",
       "notes": "Market sentiment indicators"
     },
     {
@@ -356,7 +373,7 @@
       "path": "/data/slickcharts/",
       "schemaVersion": "2.1.0",
       "fileCount": 560,
-      "lastUpdated": "2026-01-20",
+      "lastUpdated": "2026-04-01",
       "notes": "Index holdings, returns, individual stocks"
     },
     {
@@ -364,7 +381,7 @@
       "path": "/data/sec-13f/",
       "schemaVersion": "3.3.0",
       "fileCount": 43,
-      "lastUpdated": "2026-03-15",
+      "lastUpdated": "2026-03-14",
       "notes": "Institutional holdings from 30 major investors (20Q accumulate, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
     },
     {
@@ -388,7 +405,7 @@
       "path": "/data/indices/",
       "schemaVersion": "2.0.0",
       "fileCount": 2,
-      "lastUpdated": "2026-01-25",
+      "lastUpdated": "2026-04-24",
       "notes": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
     {
@@ -404,8 +421,16 @@
       "path": "/data/macro/",
       "schemaVersion": "1.0.0",
       "fileCount": 8,
-      "lastUpdated": "2026-03-14",
+      "lastUpdated": "2026-04-22",
       "notes": "Macro banking series promoted from root compatibility JSON (FRED daily/weekly/quarterly + FDIC Tier1)"
+    },
+    {
+      "name": "yardney",
+      "path": "/data/yardney/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 1,
+      "lastUpdated": "2026-03-31",
+      "notes": "Moody's corporate spread to Bond PER to S&P 500 fair value model."
     }
   ]
 }

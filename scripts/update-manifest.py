@@ -40,6 +40,7 @@ from pathlib import Path
 # ─── Constants ────────────────────────────────────────────────────────────────
 
 CATEGORY_ORDER = (
+    "computed",
     "sentiment",
     "slickcharts",
     "sec-13f",
@@ -48,9 +49,20 @@ CATEGORY_ORDER = (
     "indices",
     "global-scouter",
     "macro",
+    "yardney",
 )
 
 HYBRID_MANIFEST_VERSION = "1.1.0"
+EXCLUDED_CATEGORIES = {"admin"}
+DEFAULT_FOLDER_META = {
+    "computed": {
+        "version": "1.0.0",
+        "update_frequency": "after source data refresh",
+        "source": "Macro Monitor computed signal export",
+        "schema": False,
+        "description": "Deterministic computed signals derived from macro, banking, liquidity, and sentiment raw data.",
+    },
+}
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent          # scripts/ → repo root
@@ -133,12 +145,13 @@ def latest_data_date(folder: Path) -> str | None:
     return None
 
 
-def get_git_changed_folders() -> set[str]:
+def get_git_changed_folders() -> tuple[set[str], bool]:
     """
-    Return data/ subfolder names that have changes in this push.
+    Return data/ subfolder names that have changes in this push, plus
+    whether the git diff command itself succeeded.
     Uses BEFORE_SHA env var (set by GitHub Actions) to cover ALL commits
     in a multi-commit push. Falls back to HEAD~1 for local runs.
-    Falls back to empty set if git is unavailable.
+    Returns (empty set, False) if git is unavailable.
     """
     try:
         before = os.environ.get("BEFORE_SHA", "").strip()
@@ -163,9 +176,9 @@ def get_git_changed_folders() -> set[str]:
                 # Skip root-level files and manifest itself
                 if candidate and "." not in candidate:
                     changed.add(candidate)
-        return changed
+        return changed, True
     except Exception:
-        return set()
+        return set(), False
 
 
 def get_orphan_files() -> list[str]:
@@ -182,8 +195,16 @@ def get_orphan_files() -> list[str]:
 def build_categories(folders_meta: dict[str, dict[str, object]]) -> list[dict[str, object]]:
     """Build the MCP-facing category registry from the core data folders."""
     categories = []
+    ordered_names = [
+        name for name in CATEGORY_ORDER
+        if name in folders_meta and name not in EXCLUDED_CATEGORIES
+    ]
+    ordered_names.extend(
+        name for name in sorted(folders_meta)
+        if name not in ordered_names and name not in EXCLUDED_CATEGORIES
+    )
 
-    for name in CATEGORY_ORDER:
+    for name in ordered_names:
         manifest_meta = folders_meta.get(name)
         if not manifest_meta:
             continue
@@ -198,7 +219,7 @@ def build_categories(folders_meta: dict[str, dict[str, object]]) -> list[dict[st
                 "path": f"/data/{name}/",
                 "schemaVersion": read_schema_version(folder_path, fallback_version),
                 "fileCount": int(manifest_meta.get("file_count", count_data_files(folder_path))),
-                "lastUpdated": latest_data_date(folder_path) or fallback_last_updated,
+                "lastUpdated": fallback_last_updated or latest_data_date(folder_path),
                 "notes": str(manifest_meta.get("description") or ""),
             }
         )
@@ -231,9 +252,11 @@ def update_manifest(dry_run: bool = False) -> int:
     folders_meta = manifest.setdefault("folders", {})
 
     # Detect git-changed folders (for `updated` accuracy)
-    git_changed = get_git_changed_folders()
+    git_changed, git_diff_available = get_git_changed_folders()
     if git_changed:
         print(f"🔍 Git changes detected in: {', '.join(sorted(git_changed))}")
+    elif git_diff_available:
+        print("🔍 Git diff checked — no data folder changes detected")
     else:
         print("🔍 Git diff not available — using file-count change detection")
 
@@ -281,21 +304,20 @@ def update_manifest(dry_run: bool = False) -> int:
                 )
         else:
             # Brand-new folder not yet in manifest
+            defaults = DEFAULT_FOLDER_META.get(folder_name, {})
             new_entry = {
-                "version": "1.0.0",
+                "version": defaults.get("version", "1.0.0"),
                 "updated": today,
-                "update_frequency": "on-demand",
-                "source": "TBD",
+                "update_frequency": defaults.get("update_frequency", "on-demand"),
+                "source": defaults.get("source", "TBD"),
                 "file_count": actual_count,
-                "schema": False,
-                "description": "TBD",
+                "schema": defaults.get("schema", False),
+                "description": defaults.get("description", "TBD"),
             }
             folders_meta[folder_name] = new_entry
 
-            new_entries.append(
-                f"{folder_name} ({actual_count} files) "
-                f"← needs manual: update_frequency, source, description"
-            )
+            manual_note = "" if defaults else " ← needs manual: update_frequency, source, description"
+            new_entries.append(f"{folder_name} ({actual_count} files){manual_note}")
 
     # ── Warn: manifest folders missing from disk ───────────────────────────────
     missing = sorted(set(folders_meta.keys()) - set(actual_folders))
