@@ -48,10 +48,25 @@ function readJson(relPath) {
   return JSON.parse(fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8'));
 }
 
+function readJsonIfExists(relPath) {
+  try {
+    return readJson(relPath);
+  } catch {
+    return null;
+  }
+}
+
 function writeJson(relPath, payload) {
   const target = path.join(REPO_ROOT, relPath);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function stablePayloadForCompare(payload) {
+  return JSON.stringify({
+    ...payload,
+    generated_at: null
+  });
 }
 
 function seriesFromFred(payload, seriesId) {
@@ -215,6 +230,15 @@ const payload = {
   },
   signals
 };
+
+const existingPayload = readJsonIfExists(OUT_REL);
+if (
+  existingPayload
+  && stablePayloadForCompare(existingPayload) === stablePayloadForCompare(payload)
+  && typeof existingPayload.generated_at === 'string'
+) {
+  payload.generated_at = existingPayload.generated_at;
+}
 
 writeJson(OUT_REL, payload);
 writeJson(NEXT_OUT_REL, payload);

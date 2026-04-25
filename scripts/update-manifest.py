@@ -145,19 +145,48 @@ def latest_data_date(folder: Path) -> str | None:
     return None
 
 
-def get_git_changed_folders() -> tuple[set[str], bool]:
+def infer_manifest_base_sha() -> str:
+    """
+    Return the last commit that refreshed manifest/computed outputs.
+    Scheduled runs use this as the diff base because GITHUB_TOKEN data commits
+    do not trigger this workflow directly.
+    """
+    result = subprocess.run(
+        [
+            "git",
+            "rev-list",
+            "-n",
+            "1",
+            "HEAD",
+            "--",
+            "data/manifest.json",
+            "data/computed/signals.json",
+            "100xfenok-next/public/data/manifest.json",
+            "100xfenok-next/public/data/computed/signals.json",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    inferred = result.stdout.strip()
+    return inferred or "HEAD~1"
+
+
+def get_git_changed_folders() -> tuple[set[str], bool, str]:
     """
     Return data/ subfolder names that have changes in this push, plus
     whether the git diff command itself succeeded.
     Uses BEFORE_SHA env var (set by GitHub Actions) to cover ALL commits
-    in a multi-commit push. Falls back to HEAD~1 for local runs.
-    Returns (empty set, False) if git is unavailable.
+    in a multi-commit push. Schedule/manual runs infer the last manifest
+    refresh commit as the base. Returns (empty set, False, base) if git is
+    unavailable.
     """
     try:
         before = os.environ.get("BEFORE_SHA", "").strip()
-        # Initial push or local run: fall back to HEAD~1
-        if not before or before == "0" * 40:
-            before = "HEAD~1"
+        if not before or before.upper() == "AUTO" or before == "HEAD" or before == "0" * 40:
+            before = infer_manifest_base_sha()
 
         result = subprocess.run(
             ["git", "diff", "--name-only", before, "HEAD"],
@@ -176,9 +205,9 @@ def get_git_changed_folders() -> tuple[set[str], bool]:
                 # Skip root-level files and manifest itself
                 if candidate and "." not in candidate:
                     changed.add(candidate)
-        return changed, True
+        return changed, True, before
     except Exception:
-        return set(), False
+        return set(), False, ""
 
 
 def get_orphan_files() -> list[str]:
@@ -249,14 +278,16 @@ def update_manifest(dry_run: bool = False) -> int:
         manifest = json.load(f)
 
     original_manifest_version = manifest.get("manifest_version")
+    original_categories = manifest.get("categories")
     folders_meta = manifest.setdefault("folders", {})
+    manifest_changed = False
 
     # Detect git-changed folders (for `updated` accuracy)
-    git_changed, git_diff_available = get_git_changed_folders()
+    git_changed, git_diff_available, git_diff_base = get_git_changed_folders()
     if git_changed:
-        print(f"🔍 Git changes detected in: {', '.join(sorted(git_changed))}")
+        print(f"🔍 Git changes detected since {git_diff_base}: {', '.join(sorted(git_changed))}")
     elif git_diff_available:
-        print("🔍 Git diff checked — no data folder changes detected")
+        print(f"🔍 Git diff checked since {git_diff_base} — no data folder changes detected")
     else:
         print("🔍 Git diff not available — using file-count change detection")
 
@@ -290,6 +321,7 @@ def update_manifest(dry_run: bool = False) -> int:
             git_touched = folder_name in git_changed
 
             if count_diff or git_touched:
+                manifest_changed = True
                 entry["file_count"] = actual_count
                 entry["updated"] = today
 
@@ -315,6 +347,7 @@ def update_manifest(dry_run: bool = False) -> int:
                 "description": defaults.get("description", "TBD"),
             }
             folders_meta[folder_name] = new_entry
+            manifest_changed = True
 
             manual_note = "" if defaults else " ← needs manual: update_frequency, source, description"
             new_entries.append(f"{folder_name} ({actual_count} files){manual_note}")
@@ -328,18 +361,18 @@ def update_manifest(dry_run: bool = False) -> int:
         print("   Tip: remove the entry or restore the folder")
         exit_code = 1
 
-    # ── Update root metadata ──────────────────────────────────────────────────
-    manifest["last_updated"] = today
-    manifest["generatedAt"] = generated_at
-
     if parse_semver(original_manifest_version) < parse_semver(HYBRID_MANIFEST_VERSION):
         manifest["manifest_version"] = HYBRID_MANIFEST_VERSION
+        manifest_changed = True
     elif isinstance(original_manifest_version, str) and original_manifest_version.strip():
         manifest["manifest_version"] = original_manifest_version
     else:
         manifest["manifest_version"] = HYBRID_MANIFEST_VERSION
+        manifest_changed = True
 
     categories = build_categories(folders_meta)
+    if categories != original_categories:
+        manifest_changed = True
     manifest["categories"] = categories
 
     recent_changes = manifest.setdefault("recent_changes", [])
@@ -359,6 +392,16 @@ def update_manifest(dry_run: bool = False) -> int:
                 "breaking": False,
             },
         )
+        manifest_changed = True
+
+    # ── Update root metadata only when manifest content changed ───────────────
+    if manifest_changed:
+        manifest["last_updated"] = today
+        manifest["generatedAt"] = generated_at
+    else:
+        generated_at = str(manifest.get("generatedAt", generated_at))
+        manifest["last_updated"] = manifest.get("last_updated", today)
+        manifest["generatedAt"] = generated_at
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print()

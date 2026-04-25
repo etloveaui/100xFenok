@@ -23,8 +23,10 @@ on:
       - 'scripts/export-computed-signals.mjs'
       - 'tools/macro-monitor/shared/signals-core.mjs'
   schedule:
-    # UTC 02:30 = KST 11:30. Covers upstream data commits that skip CI.
+    # UTC 02:30 = KST 11:30. Morning reconciliation.
     - cron: '30 2 * * *'
+    # UTC 09:30 = KST 18:30. Runs after daily FRED/SlickCharts refresh windows.
+    - cron: '30 9 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -55,9 +57,9 @@ jobs:
         # Exit code 1 = warnings only (orphan files / missing folders)
         # These are non-fatal — the manifest update still proceeds
         # BEFORE_SHA: covers ALL commits in the push (not just HEAD~1)
-        # Scheduled/manual runs use HEAD to avoid false folder freshness bumps.
+        # Scheduled/manual runs infer the last manifest refresh commit.
         env:
-          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'HEAD' }}
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
         run: |
           set +e
           python3 scripts/update-manifest.py
@@ -81,7 +83,7 @@ jobs:
       - name: Commit and push manifest (with rebase retry)
         if: steps.check.outputs.changed == 'true'
         env:
-          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'HEAD' }}
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
