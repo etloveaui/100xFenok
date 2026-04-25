@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-04-19
-> **Total Files**: 1,699 JSON files
+> **Last Updated**: 2026-04-26
+> **Total Files**: 1,723 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -12,6 +12,7 @@
 |--------|-------|------------------|--------|
 | [admin/](admin/README.md) | 1 | Hourly | GitHub repository tree |
 | [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
+| [calendar/](calendar/README.md) | 1 | Daily / on edit | BujaBot USD Google Calendar |
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,071 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
@@ -44,6 +45,10 @@
 - FRED banking series: daily, weekly, quarterly
 - FDIC Tier1 capital ratio quarterly history
 - Root compatibility files are still published during migration
+
+### Calendar Data (calendar/)
+- USD macro, FOMC, FOMC minutes, 13F filing deadline, and market calendar events
+- Google Calendar remains the operational alert source; JSON mirror is for feno-data and public reads
 
 ### Sentiment Data (sentiment/)
 - AAII sentiment, Investors Intelligence

@@ -41,6 +41,7 @@ from pathlib import Path
 
 CATEGORY_ORDER = (
     "computed",
+    "calendar",
     "sentiment",
     "slickcharts",
     "sec-13f",
@@ -61,6 +62,13 @@ DEFAULT_FOLDER_META = {
         "source": "Macro Monitor computed signal export",
         "schema": False,
         "description": "Deterministic computed signals derived from macro, banking, liquidity, and sentiment raw data.",
+    },
+    "calendar": {
+        "version": "1.0.0",
+        "update_frequency": "daily / on calendar edit",
+        "source": "BujaBot USD Google Calendar",
+        "schema": True,
+        "description": "Verified USD macro, Fed policy, filing, and market calendar events mirrored from BujaBot Google Calendar.",
     },
 }
 

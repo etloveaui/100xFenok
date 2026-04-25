@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-04-25",
+  "last_updated": "2026-04-26",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -102,6 +102,15 @@
       "file_count": 1,
       "schema": false,
       "description": "Deterministic computed signals derived from macro, banking, liquidity, and sentiment raw data."
+    },
+    "calendar": {
+      "version": "1.0.0",
+      "updated": "2026-04-26",
+      "update_frequency": "daily / on calendar edit",
+      "source": "BujaBot USD Google Calendar",
+      "file_count": 1,
+      "schema": true,
+      "description": "Verified USD macro, Fed policy, filing, and market calendar events mirrored from BujaBot Google Calendar."
     }
   },
   "recent_changes": [
@@ -350,7 +359,7 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-04-25T09:35:33Z",
+  "generatedAt": "2026-04-25T16:04:52Z",
   "categories": [
     {
       "name": "computed",
@@ -359,6 +368,14 @@
       "fileCount": 1,
       "lastUpdated": "2026-04-25",
       "notes": "Deterministic computed signals derived from macro, banking, liquidity, and sentiment raw data."
+    },
+    {
+      "name": "calendar",
+      "path": "/data/calendar/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 1,
+      "lastUpdated": "2026-04-26",
+      "notes": "Verified USD macro, Fed policy, filing, and market calendar events mirrored from BujaBot Google Calendar."
     },
     {
       "name": "sentiment",

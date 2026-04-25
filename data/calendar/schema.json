@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-04-26",
+  "description": "BujaBot USD Google Calendar mirror schema",
+  "root": {
+    "schema_version": "string",
+    "generated_at": "ISO-8601 string",
+    "source": "string",
+    "calendar_id": "string",
+    "range": {
+      "time_min": "ISO-8601 string",
+      "time_max": "ISO-8601 string"
+    },
+    "event_count": "number",
+    "category_counts": "object",
+    "categories": "array",
+    "importance_levels": "array",
+    "notification_profiles": "object",
+    "events": "array"
+  },
+  "event": {
+    "id": "Google Calendar event id",
+    "status": "confirmed/cancelled",
+    "summary": "visible Google Calendar title",
+    "title_en": "simple English title without leading importance emoji",
+    "title_ko": "Korean display title from description first line",
+    "start": "source start datetime",
+    "timezone": "source timezone",
+    "start_kst": "Asia/Seoul datetime",
+    "date_kst": "YYYY-MM-DD",
+    "time_kst": "HH:MM",
+    "start_utc": "UTC datetime",
+    "end": "source end datetime",
+    "importance": "H/M/L",
+    "importance_label": "Korean importance label",
+    "importance_emoji": "visible importance marker",
+    "category": "EMP/INF/PMI/CON/REA/ECO/FIN/PRO/POL/FIL/EARN",
+    "category_label": "Korean category label",
+    "notification_profile": "critical/high/medium/low/filing",
+    "notification_alerts": "array of alert timing labels",
+    "source": "source agency or calendar note",
+    "source_url": "official or reference URL",
+    "html_link": "Google Calendar event URL"
+  }
+}
