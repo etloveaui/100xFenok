@@ -55,7 +55,7 @@
 - 12+ indicators
 
 ### Stock Screening (global-scouter/)
-- 1,066 stock profiles + ETFs (23) + Economic Indicators (1,055 records)
+- 1,066 stock profiles + ETFs (23) + Economic Indicators (1,056 records)
 - **v2.2.0**: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
 - On-demand updates
