@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-04-26T22:52:58.944Z",
-  "as_of": "2026-04-26",
+  "generated_at": "2026-04-27T05:38:01.793Z",
+  "as_of": "2026-04-27",
   "engine": {
     "name": "macro-monitor-computed-signals",
     "version": "1.0.0",
@@ -94,20 +94,20 @@
   },
   "signals": {
     "liquidity_flow": {
-      "status": "falling",
-      "overallStatus": "falling",
-      "overallLabel": "FALLING",
+      "status": "stable",
+      "overallStatus": "stable",
+      "overallLabel": "STABLE",
       "m2YoY": 6.24,
       "m2Total": 22667.3,
       "netLiquidity": 5700.2,
-      "netLiquidityDelta": -272,
-      "weeklyNetFlow": -272,
-      "stablecoinMcap": 318.6918029551,
+      "netLiquidityDelta": -34.2,
+      "weeklyNetFlow": -34.2,
+      "stablecoinMcap": 318.70721866599,
       "scM2Ratio": 1.41,
       "walcl": 6707.4,
       "tga": 1007.2,
       "rrp": 0.1,
-      "netFlow": -272,
+      "netFlow": -34.2,
       "components": {
         "m2_yoy": {
           "value": 6.24,
@@ -115,9 +115,9 @@
           "status": "rising"
         },
         "net_liquidity_wow": {
-          "value": -272,
+          "value": -34.2,
           "unit": "B USD",
-          "status": "falling"
+          "status": "stable"
         },
         "stablecoin_m2_ratio": {
           "value": 1.41,
@@ -129,12 +129,12 @@
         "m2_yoy_pct": 6.24,
         "m2_total_b": 22667.3,
         "net_liquidity_b": 5700.2,
-        "weekly_net_flow_b": -272,
+        "weekly_net_flow_b": -34.2,
         "stablecoin_mcap_b": 318.7,
         "sc_m2_ratio_pct": 1.41
       },
       "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
-      "as_of": "2026-04-26",
+      "as_of": "2026-04-27",
       "source_files": [
         "data/macro/fred-macro.json",
         "data/macro/tga.json",
