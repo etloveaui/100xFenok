@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-04-26
+> **Last Updated**: 2026-04-27
 > **Total Files**: 1,723 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -32,7 +32,7 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Benchmarks latest: 30,433 records, 2010-05-28 ~ 2026-04-12, 37 sections, 829 data points per index
+- Benchmarks latest: 30,435 records, 2010-06-11 ~ 2026-04-24, 37 sections, 829 data points per index
 - Damodaran: industries (96 w/ beta, margins, EVA), ERP (178 countries), historical ERP (66 years), credit ratings
 
 ### Institutional Data (sec-13f/)
