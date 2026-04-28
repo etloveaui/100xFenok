@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-04-28T05:42:37.222Z",
+  "generated_at": "2026-04-28T11:20:35.574Z",
   "as_of": "2026-04-28",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -99,14 +99,14 @@
       "overallLabel": "STABLE",
       "m2YoY": 6.24,
       "m2Total": 22667.3,
-      "netLiquidity": 5737.5,
+      "netLiquidity": 5737.2,
       "netLiquidityDelta": 3.1,
       "weeklyNetFlow": 3.1,
       "stablecoinMcap": 318.47833734915,
       "scM2Ratio": 1.41,
       "walcl": 6707.4,
       "tga": 969.8,
-      "rrp": 0.1,
+      "rrp": 0.4,
       "netFlow": 3.1,
       "components": {
         "m2_yoy": {
@@ -128,7 +128,7 @@
       "metrics": {
         "m2_yoy_pct": 6.24,
         "m2_total_b": 22667.3,
-        "net_liquidity_b": 5737.5,
+        "net_liquidity_b": 5737.2,
         "weekly_net_flow_b": 3.1,
         "stablecoin_mcap_b": 318.5,
         "sc_m2_ratio_pct": 1.41
@@ -147,7 +147,7 @@
       "overallLabel": "Caution",
       "tier1": {
         "status": "normal",
-        "value": 0,
+        "value": 1,
         "unit": "bp"
       },
       "tier2": {
@@ -156,19 +156,19 @@
         "unit": "%"
       },
       "metrics": {
-        "sofr_iorb_spread_bp": 0,
+        "sofr_iorb_spread_bp": 1,
         "reserves_gdp_pct": 9.2
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-04-27",
+      "as_of": "2026-04-28",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
       "threshold_ref": "tools/macro-monitor/shared/signals-core.mjs#THRESHOLDS"
     },
     "banking_health": {
-      "overallStatus": "normal",
-      "overallLabel": "Healthy",
+      "overallStatus": "warning",
+      "overallLabel": "Caution",
       "delinquency": {
         "value": 1.47,
         "status": "normal"
@@ -178,18 +178,18 @@
         "status": "normal"
       },
       "loanDeposit": {
-        "value": 71.87,
-        "status": "normal"
+        "value": 0,
+        "status": "warning"
       },
       "loanGrowth": {
-        "value": 7.05,
-        "status": "normal"
+        "value": 0,
+        "status": "caution"
       },
       "metrics": {
         "delinquency_pct": 1.47,
         "tier1_pct": 13.12,
-        "loan_deposit_pct": 71.87,
-        "loan_growth_yoy_pct": 7.05
+        "loan_deposit_pct": 0,
+        "loan_growth_yoy_pct": 0
       },
       "as_of": "2026-04-15",
       "source_files": [
