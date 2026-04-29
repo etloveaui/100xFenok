@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-04-26
+> **Last Updated**: 2026-04-27
 > **Total Files**: 1,723 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -32,7 +32,7 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Benchmarks latest: 30,433 records, 2010-05-28 ~ 2026-04-12, 37 sections, 829 data points per index
+- Benchmarks latest: 30,435 records, 2010-06-11 ~ 2026-04-24, 37 sections, 829 data points per index
 - Damodaran: industries (96 w/ beta, margins, EVA), ERP (178 countries), historical ERP (66 years), credit ratings
 
 ### Institutional Data (sec-13f/)
@@ -55,7 +55,7 @@
 - 12+ indicators
 
 ### Stock Screening (global-scouter/)
-- 1,066 stock profiles + ETFs (23) + Economic Indicators (1,055 records)
+- 1,066 stock profiles + ETFs (23) + Economic Indicators (1,056 records)
 - **v2.2.0**: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
 - On-demand updates
