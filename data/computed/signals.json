@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-04-29T05:38:11.272Z",
+  "generated_at": "2026-04-29T11:12:37.673Z",
   "as_of": "2026-04-29",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -97,22 +97,22 @@
       "status": "stable",
       "overallStatus": "stable",
       "overallLabel": "STABLE",
-      "m2YoY": 6.24,
-      "m2Total": 22667.3,
-      "netLiquidity": 5732.8,
+      "m2YoY": 5.52,
+      "m2Total": 22686,
+      "netLiquidity": 5732.5,
       "netLiquidityDelta": 3.1,
       "weeklyNetFlow": 3.1,
-      "stablecoinMcap": 318.72420138098,
-      "scM2Ratio": 1.41,
+      "stablecoinMcap": 318.73804738015997,
+      "scM2Ratio": 1.4,
       "walcl": 6707.4,
       "tga": 974.3,
-      "rrp": 0.4,
+      "rrp": 0.6,
       "netFlow": 3.1,
       "components": {
         "m2_yoy": {
-          "value": 6.24,
+          "value": 5.52,
           "unit": "%",
-          "status": "rising"
+          "status": "stable"
         },
         "net_liquidity_wow": {
           "value": 3.1,
@@ -120,18 +120,18 @@
           "status": "stable"
         },
         "stablecoin_m2_ratio": {
-          "value": 1.41,
+          "value": 1.4,
           "unit": "%",
           "status": "stable"
         }
       },
       "metrics": {
-        "m2_yoy_pct": 6.24,
-        "m2_total_b": 22667.3,
-        "net_liquidity_b": 5732.8,
+        "m2_yoy_pct": 5.52,
+        "m2_total_b": 22686,
+        "net_liquidity_b": 5732.5,
         "weekly_net_flow_b": 3.1,
         "stablecoin_mcap_b": 318.7,
-        "sc_m2_ratio_pct": 1.41
+        "sc_m2_ratio_pct": 1.4
       },
       "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
       "as_of": "2026-04-29",
@@ -160,15 +160,15 @@
         "reserves_gdp_pct": 9.2
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-04-28",
+      "as_of": "2026-04-29",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
       "threshold_ref": "tools/macro-monitor/shared/signals-core.mjs#THRESHOLDS"
     },
     "banking_health": {
-      "overallStatus": "warning",
-      "overallLabel": "Caution",
+      "overallStatus": "normal",
+      "overallLabel": "Healthy",
       "delinquency": {
         "value": 1.47,
         "status": "normal"
@@ -178,18 +178,18 @@
         "status": "normal"
       },
       "loanDeposit": {
-        "value": 0,
-        "status": "warning"
+        "value": 71.87,
+        "status": "normal"
       },
       "loanGrowth": {
-        "value": 0,
-        "status": "caution"
+        "value": 7.05,
+        "status": "normal"
       },
       "metrics": {
         "delinquency_pct": 1.47,
         "tier1_pct": 13.12,
-        "loan_deposit_pct": 0,
-        "loan_growth_yoy_pct": 0
+        "loan_deposit_pct": 71.87,
+        "loan_growth_yoy_pct": 7.05
       },
       "as_of": "2026-04-15",
       "source_files": [
