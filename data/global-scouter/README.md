@@ -2,7 +2,7 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,071
+> **Files**: 1,072
 > **Version**: v2.2.0
 
 ---
@@ -27,7 +27,7 @@ global-scouter/
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (23 items)
 └── indicators/              # v2.1.0
-    └── economic.json        # Economic indicators (1,056 records)
+    └── economic.json        # Economic indicators (1,057 records)
 ```
 
 ## File Counts
@@ -35,10 +35,10 @@ global-scouter/
 | Folder | Files |
 |--------|-------|
 | core/ | 3 |
-| stocks/detail/ | 1,066 |
+| stocks/detail/ | 1,067 |
 | etfs/ | 1 |
 | indicators/ | 1 |
-| **Total** | 1,071 |
+| **Total** | 1,072 |
 
 ## Schema
 
@@ -121,7 +121,7 @@ global-scouter/
 
 ```json
 {
-  "count": 1056,
+  "count": 1057,
   "records": [
     {
       "date": "2026-01-02",
@@ -161,6 +161,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.0 | 2026-05-03 | Data refresh (2026-05-01 source): 1,066 stocks, 1,057 indicators (+1), per_bands 98.4% |
 | 2.2.0 | 2026-04-26 | Data refresh (2026-04-24 source): 1,066 stocks, 1,056 indicators (+1), per_bands 98.4% |
 | 2.2.0 | 2026-04-19 | Data refresh (2026-04-17 source): 1,066 stocks (+4), 1,055 indicators (+1), per_bands 98.3% |
 | 2.2.0 | 2026-04-13 | Data refresh: 1,062 stocks (2026-04-10 source), 1,054 indicators, per_bands 98.3% |
@@ -180,4 +181,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-04-26*
+*Last Updated: 2026-05-03*
