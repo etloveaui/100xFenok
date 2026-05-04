@@ -20,6 +20,7 @@
 | [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
 | [slickcharts/](slickcharts/README.md) | 556 | Daily/Weekly/Monthly | SlickCharts.com |
+| [yardney/](yardney/README.md) | 1 | Weekly | Yardeni model workbook |
 
 ---
 
@@ -34,6 +35,7 @@
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
 - Benchmarks latest: 30,436 records, 2010-06-18 ~ 2026-05-01, 37 sections, 829 data points per index
 - Damodaran: industries (96 w/ beta, margins, EVA), ERP (178 countries), historical ERP (66 years), credit ratings
+- Yardney: S&P 500 fair value model, 1,867 weekly records, latest 2026-05-01 fair value 6,015.64 and premium +20.19%
 
 ### Institutional Data (sec-13f/)
 - 30 investors' 13F holdings (20Q accumulate mode)

@@ -1,11 +1,11 @@
 {
   "meta": {
     "model": "yardney_model",
-    "description": "Moody's Corporate Spread → Bond PER → S&P500 Fair Value",
-    "source_file": "야데니모델.xlsx",
+    "description": "Moody's Corporate Spread to Bond PER to S&P500 Fair Value",
+    "source_file": "20260504_야데니모델.xlsx",
     "frequency": "weekly",
-    "date_range": "1990-02-02 ~ 2026-03-27",
-    "total_records": 1862,
+    "date_range": "1990-02-02 ~ 2026-05-01",
+    "total_records": 1867,
     "columns": {
       "date": "Weekly Friday date",
       "moodys_aaa": "Moody's AAA Corporate Spread (%)",
@@ -14,11 +14,21 @@
       "spx": "S&P 500 Index",
       "eps": "S&P 500 EPS (TTM)",
       "bond_per": "Bond PER = 100 / spread_avg",
-      "fair_value": "Estimated fair value = EPS × bond_per",
-      "premium_pct": "(SPX - fair_value) / fair_value × 100"
+      "fair_value": "Estimated fair value = EPS x bond_per",
+      "premium_pct": "(SPX - fair_value) / fair_value x 100"
     },
-    "extracted_at": "2026-03-31 23:05",
-    "extracted_by": "claude-code"
+    "extracted_at": "2026-05-04 22:16",
+    "extracted_by": "codex",
+    "source_sheet": "야데디모델(공유)",
+    "last_update": {
+      "mode": "append",
+      "source_records": 1867,
+      "existing_records": 1862,
+      "appended_records": 5,
+      "revision_conflicts": 13,
+      "missing_existing_dates": 0,
+      "last_source_date": "2026-05-01"
+    }
   },
   "data": [
     {
@@ -20502,6 +20512,61 @@
       "bond_per": 17.11,
       "fair_value": 5731.07,
       "premium_pct": 11.13
+    },
+    {
+      "date": "2026-04-03",
+      "moodys_aaa": 5.5,
+      "moodys_baa": 6.09,
+      "spread_avg": 5.795,
+      "spx": 6582.69,
+      "eps": 336.8805,
+      "bond_per": 17.26,
+      "fair_value": 5813.3,
+      "premium_pct": 13.23
+    },
+    {
+      "date": "2026-04-10",
+      "moodys_aaa": 5.42,
+      "moodys_baa": 6.04,
+      "spread_avg": 5.73,
+      "spx": 6816.89,
+      "eps": 338.5608,
+      "bond_per": 17.45,
+      "fair_value": 5908.57,
+      "premium_pct": 15.37
+    },
+    {
+      "date": "2026-04-17",
+      "moodys_aaa": 5.38,
+      "moodys_baa": 5.99,
+      "spread_avg": 5.685,
+      "spx": 7126.06,
+      "eps": 341.4162,
+      "bond_per": 17.59,
+      "fair_value": 6005.56,
+      "premium_pct": 18.66
+    },
+    {
+      "date": "2026-04-24",
+      "moodys_aaa": 5.39,
+      "moodys_baa": 6.0,
+      "spread_avg": 5.695,
+      "spx": 7165.08,
+      "eps": 343.4931,
+      "bond_per": 17.56,
+      "fair_value": 6031.49,
+      "premium_pct": 18.79
+    },
+    {
+      "date": "2026-05-01",
+      "moodys_aaa": 5.5,
+      "moodys_baa": 6.08,
+      "spread_avg": 5.79,
+      "spx": 7230.12,
+      "eps": 348.3058,
+      "bond_per": 17.27,
+      "fair_value": 6015.64,
+      "premium_pct": 20.19
     }
   ]
 }
