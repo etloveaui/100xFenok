@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-05-05T05:26:13.125Z",
+  "generated_at": "2026-05-05T10:57:46.196Z",
   "as_of": "2026-05-05",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -99,15 +99,15 @@
       "overallLabel": "STABLE",
       "m2YoY": 5.52,
       "m2Total": 22686,
-      "netLiquidity": -969.4,
-      "netLiquidityDelta": 0,
-      "weeklyNetFlow": 0,
+      "netLiquidity": 5729.9,
+      "netLiquidityDelta": -7.5,
+      "weeklyNetFlow": -7.5,
       "stablecoinMcap": 320.82950726090996,
       "scM2Ratio": 1.41,
-      "walcl": 0,
+      "walcl": 6700,
       "tga": 969.4,
-      "rrp": 0,
-      "netFlow": 0,
+      "rrp": 0.6,
+      "netFlow": -7.5,
       "components": {
         "m2_yoy": {
           "value": 5.52,
@@ -115,7 +115,7 @@
           "status": "stable"
         },
         "net_liquidity_wow": {
-          "value": 0,
+          "value": -7.5,
           "unit": "B USD",
           "status": "stable"
         },
@@ -128,8 +128,8 @@
       "metrics": {
         "m2_yoy_pct": 5.52,
         "m2_total_b": 22686,
-        "net_liquidity_b": -969.4,
-        "weekly_net_flow_b": 0,
+        "net_liquidity_b": 5729.9,
+        "weekly_net_flow_b": -7.5,
         "stablecoin_mcap_b": 320.8,
         "sc_m2_ratio_pct": 1.41
       },
@@ -147,7 +147,7 @@
       "overallLabel": "Caution",
       "tier1": {
         "status": "normal",
-        "value": 1,
+        "value": -1,
         "unit": "bp"
       },
       "tier2": {
@@ -156,11 +156,11 @@
         "unit": "%"
       },
       "metrics": {
-        "sofr_iorb_spread_bp": 1,
+        "sofr_iorb_spread_bp": -1,
         "reserves_gdp_pct": 9.2
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-05-04",
+      "as_of": "2026-05-05",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
