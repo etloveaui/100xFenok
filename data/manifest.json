@@ -52,11 +52,11 @@
     "macro": {
       "version": "1.0.0",
       "updated": "2026-05-11",
-      "update_frequency": "daily/weekly/quarterly",
-      "source": "FRED + FDIC",
-      "file_count": 8,
+      "update_frequency": "daily/weekly/monthly/quarterly",
+      "source": "FRED + FDIC + OECD + PMI workbooks",
+      "file_count": 9,
       "schema": true,
-      "description": "Macro banking series promoted from root compatibility JSON (FRED daily/weekly/quarterly + FDIC Tier1)"
+      "description": "Macro banking, liquidity, and monthly activity survey series (FRED, FDIC, OECD CLI, major-country PMI, ISM components)"
     },
     "sec-13f": {
       "version": "3.3.1",
@@ -114,6 +114,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-05-11",
+      "folder": "macro",
+      "version": "1.0.0",
+      "change": "Added activity-surveys.json first full-history load: OECD CLI, major-country manufacturing/services PMI, and ISM components; 919 monthly records across 5 datasets.",
+      "breaking": false
+    },
     {
       "date": "2026-05-11",
       "folder": "benchmarks",
@@ -408,7 +415,7 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-05-11T07:50:01Z",
+  "generatedAt": "2026-05-11T08:32:15Z",
   "categories": [
     {
       "name": "computed",
@@ -486,9 +493,9 @@
       "name": "macro",
       "path": "/data/macro/",
       "schemaVersion": "1.0.0",
-      "fileCount": 8,
+      "fileCount": 9,
       "lastUpdated": "2026-05-11",
-      "notes": "Macro banking series promoted from root compatibility JSON (FRED daily/weekly/quarterly + FDIC Tier1)"
+      "notes": "Macro banking, liquidity, and monthly activity survey series (FRED, FDIC, OECD CLI, major-country PMI, ISM components)"
     },
     {
       "name": "yardney",

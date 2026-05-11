@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-04-27
-> **Total Files**: 1,723 JSON files
+> **Last Updated**: 2026-05-11
+> **Total Files**: 1,713 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -14,12 +14,13 @@
 | [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
 | [calendar/](calendar/README.md) | 1 | Daily / on edit | BujaBot USD Google Calendar |
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
-| [global-scouter/](global-scouter/README.md) | 1,071 | On-demand | Global Scouter Tool |
+| [global-scouter/](global-scouter/README.md) | 1,070 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
-| [macro/](macro/README.md) | 4 | Daily/Weekly/Quarterly | FRED + FDIC |
+| [macro/](macro/README.md) | 9 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
 | [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
 | [slickcharts/](slickcharts/README.md) | 556 | Daily/Weekly/Monthly | SlickCharts.com |
+| [yardney/](yardney/README.md) | 1 | Weekly | Yardeni model workbook |
 
 ---
 
@@ -32,8 +33,9 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Benchmarks latest: 30,435 records, 2010-06-11 ~ 2026-04-24, 37 sections, 829 data points per index
+- Benchmarks latest: 30,437 records, 2010-06-25 ~ 2026-05-08, 37 sections, 829 data points per index
 - Damodaran: industries (96 w/ beta, margins, EVA), ERP (178 countries), historical ERP (66 years), credit ratings
+- Yardney: S&P 500 fair value model, 1,867 weekly records, latest 2026-05-01 fair value 6,015.64 and premium +20.19%
 
 ### Institutional Data (sec-13f/)
 - 30 investors' 13F holdings (20Q accumulate mode)
@@ -41,9 +43,10 @@
 - Enrichment metadata: sector/cap/filing-return coverage + source mix
 - Quarterly updates
 
-### Macro Banking Data (macro/)
+### Macro Data (macro/)
 - FRED banking series: daily, weekly, quarterly
 - FDIC Tier1 capital ratio quarterly history
+- Activity surveys: OECD CLI, major-country manufacturing/services PMI, ISM components
 - Root compatibility files are still published during migration
 
 ### Calendar Data (calendar/)
@@ -55,7 +58,7 @@
 - 12+ indicators
 
 ### Stock Screening (global-scouter/)
-- 1,066 stock profiles + ETFs (23) + Economic Indicators (1,056 records)
+- 1,065 stock profiles + ETFs (23) + Economic Indicators (1,058 records)
 - **v2.2.0**: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
 - On-demand updates

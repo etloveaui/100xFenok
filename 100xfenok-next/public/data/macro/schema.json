@@ -1,9 +1,9 @@
 {
   "folder": "macro",
   "version": "1.0.0",
-  "updated": "2026-03-14",
-  "source": "FRED + FDIC",
-  "update_frequency": "daily/weekly/quarterly",
+  "updated": "2026-05-11",
+  "source": "FRED + FDIC + OECD + PMI workbooks",
+  "update_frequency": "daily/weekly/monthly/quarterly",
   "files": {
     "fred-banking-daily.json": {
       "description": "Daily banking macro series",
@@ -34,6 +34,37 @@
           "date": "YYYY-MM-DD",
           "value": "number",
           "banks": "number"
+        }
+      }
+    },
+    "activity-surveys.json": {
+      "description": "Monthly OECD composite leading indicators and major-country PMI activity survey series",
+      "schema": {
+        "meta": {
+          "dataset": "\"macro_activity_surveys\"",
+          "frequency": "\"monthly\"",
+          "coverage": "Per-dataset record count, date range, latest date/release date, latest values",
+          "update_policy": "Append by dataset/date, preserve existing non-empty values, report source revisions"
+        },
+        "datasets.{dataset_id}": {
+          "dataset": "oecd_cli | pmi_manufacturing | pmi_services | ism_manufacturing | ism_services",
+          "label": "string",
+          "indicator_family": "string",
+          "sector": "manufacturing | services when applicable",
+          "source": "string",
+          "series.{series_id}": {
+            "name": "string",
+            "source_name": "string",
+            "unit": "index | point"
+          },
+          "empty_source_series[]": "Optional source columns with no numeric observations",
+          "records[]": {
+            "date": "YYYY-MM-DD",
+            "period": "YYYY-MM",
+            "release_date": "YYYY-MM-DD when available",
+            "values": "{series_id: number}",
+            "source_row": "number"
+          }
         }
       }
     }

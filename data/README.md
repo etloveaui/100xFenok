@@ -1,7 +1,7 @@
 # Data Catalog
 
 > **Last Updated**: 2026-05-11
-> **Total Files**: 1,711 JSON files
+> **Total Files**: 1,713 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -16,7 +16,7 @@
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,070 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
-| [macro/](macro/README.md) | 4 | Daily/Weekly/Quarterly | FRED + FDIC |
+| [macro/](macro/README.md) | 9 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
 | [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
 | [slickcharts/](slickcharts/README.md) | 556 | Daily/Weekly/Monthly | SlickCharts.com |
@@ -43,9 +43,10 @@
 - Enrichment metadata: sector/cap/filing-return coverage + source mix
 - Quarterly updates
 
-### Macro Banking Data (macro/)
+### Macro Data (macro/)
 - FRED banking series: daily, weekly, quarterly
 - FDIC Tier1 capital ratio quarterly history
+- Activity surveys: OECD CLI, major-country manufacturing/services PMI, ISM components
 - Root compatibility files are still published during migration
 
 ### Calendar Data (calendar/)
