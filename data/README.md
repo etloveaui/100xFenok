@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-05-04
-> **Total Files**: 1,723 JSON files
+> **Last Updated**: 2026-05-11
+> **Total Files**: 1,711 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -14,7 +14,7 @@
 | [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
 | [calendar/](calendar/README.md) | 1 | Daily / on edit | BujaBot USD Google Calendar |
 | [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
-| [global-scouter/](global-scouter/README.md) | 1,072 | On-demand | Global Scouter Tool |
+| [global-scouter/](global-scouter/README.md) | 1,070 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [macro/](macro/README.md) | 4 | Daily/Weekly/Quarterly | FRED + FDIC |
 | [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
@@ -33,7 +33,7 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Benchmarks latest: 30,436 records, 2010-06-18 ~ 2026-05-01, 37 sections, 829 data points per index
+- Benchmarks latest: 30,437 records, 2010-06-25 ~ 2026-05-08, 37 sections, 829 data points per index
 - Damodaran: industries (96 w/ beta, margins, EVA), ERP (178 countries), historical ERP (66 years), credit ratings
 - Yardney: S&P 500 fair value model, 1,867 weekly records, latest 2026-05-01 fair value 6,015.64 and premium +20.19%
 
@@ -57,7 +57,7 @@
 - 12+ indicators
 
 ### Stock Screening (global-scouter/)
-- 1,066 stock profiles + ETFs (23) + Economic Indicators (1,057 records)
+- 1,065 stock profiles + ETFs (23) + Economic Indicators (1,058 records)
 - **v2.2.0**: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
 - On-demand updates

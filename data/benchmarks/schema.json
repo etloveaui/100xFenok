@@ -1,17 +1,19 @@
 {
   "folder": "benchmarks",
   "version": "3.7.0",
-  "updated": "2026-05-04",
+  "updated": "2026-05-11",
   "source": "Bloomberg Terminal",
   "update_frequency": "weekly (Sunday)",
   "maintainer": "Manual upload from Bloomberg",
-
   "files": {
     "us.json": {
       "description": "S&P 500, Nasdaq 100, Nasdaq Composite, Russell 2000",
       "size_kb": 689,
       "records_per_index": 829,
-      "date_range": ["2010-06", "2026-05"],
+      "date_range": [
+        "2010-06-25",
+        "2026-05-08"
+      ],
       "schema": {
         "metadata": {
           "version": "string (YYYY-MM-DD)",
@@ -34,7 +36,20 @@
     "us_sectors.json": {
       "description": "11 GICS sectors + Housing",
       "size_kb": 2046,
-      "sectors": ["Technology", "Healthcare", "Financials", "Consumer Discretionary", "Communication Services", "Industrials", "Consumer Staples", "Energy", "Utilities", "Real Estate", "Materials", "Housing"],
+      "sectors": [
+        "Technology",
+        "Healthcare",
+        "Financials",
+        "Consumer Discretionary",
+        "Communication Services",
+        "Industrials",
+        "Consumer Staples",
+        "Energy",
+        "Utilities",
+        "Real Estate",
+        "Materials",
+        "Housing"
+      ],
       "schema": "Same as us.json"
     },
     "micro_sectors.json": {
@@ -82,17 +97,58 @@
       }
     }
   },
-
   "index_keys": {
-    "us.json": ["sp500", "nasdaq100", "nasdaq_composite", "russell2000"],
-    "developed.json": ["euro_stoxx_50", "topix", "hong_kong", "nikkei"],
-    "emerging.json": ["shanghai", "india_sensex", "kospi", "brazil", "vietnam", "hang_seng_h"],
-    "msci.json": ["world", "developed", "emerging", "china", "india", "korea"]
+    "us.json": [
+      "sp500",
+      "nasdaq100",
+      "nasdaq_composite",
+      "russell2000"
+    ],
+    "developed.json": [
+      "euro_stoxx_50",
+      "topix",
+      "hong_kong",
+      "nikkei"
+    ],
+    "emerging.json": [
+      "shanghai",
+      "india_sensex",
+      "kospi",
+      "brazil",
+      "vietnam",
+      "hang_seng_h"
+    ],
+    "msci.json": [
+      "world",
+      "developed",
+      "emerging",
+      "china",
+      "india",
+      "korea"
+    ],
+    "micro_sectors.json": [
+      "philadelphia_semi",
+      "us_regional_banks",
+      "hang_seng_tech",
+      "us_biotech",
+      "kosdaq_150"
+    ]
   },
-
   "breaking_changes_history": [
-    {"version": "3.7.0", "date": "2026-01-20", "change": "summaries.json added"},
-    {"version": "3.6.0", "date": "2026-01-15", "change": "micro_sectors.json added"},
-    {"version": "3.0.0", "date": "2025-12-01", "change": "Schema unified across all files"}
+    {
+      "version": "3.7.0",
+      "date": "2026-01-20",
+      "change": "summaries.json added"
+    },
+    {
+      "version": "3.6.0",
+      "date": "2026-01-15",
+      "change": "micro_sectors.json added"
+    },
+    {
+      "version": "3.0.0",
+      "date": "2025-12-01",
+      "change": "Schema unified across all files"
+    }
   ]
 }
