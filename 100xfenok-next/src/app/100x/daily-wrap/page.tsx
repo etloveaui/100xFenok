@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { getSingleSearchParam } from "@/lib/server/legacy-bridge";
+import { getDesignVersionFromSearchParams } from "@/lib/design/version";
+import MarketWrapV2 from "@/components/wrap/v2/MarketWrapV2";
 
 export const metadata: Metadata = {
   title: "100x Daily Wrap",
@@ -8,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 type DailyWrapPageProps = {
-  searchParams?: Promise<{ date?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function isValidDateParam(value: string | undefined): value is string {
@@ -17,6 +19,12 @@ function isValidDateParam(value: string | undefined): value is string {
 
 export default async function DailyWrapPage({ searchParams }: DailyWrapPageProps) {
   const params = searchParams ? await searchParams : {};
+  const version = getDesignVersionFromSearchParams(params);
+
+  if (version === "v2" || version === "v3" || version === "v4") {
+    return <MarketWrapV2 />;
+  }
+
   const requestedDate = getSingleSearchParam(params.date);
   const dateSuffix = isValidDateParam(requestedDate)
     ? `?date=${encodeURIComponent(requestedDate)}`
