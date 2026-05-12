@@ -20,9 +20,11 @@ const ENV_OVERRIDE: DesignVersion | null =
         ? "v2"
         : null;
 
-function pickFromParam(raw: string | string[] | undefined): "v3" | "v2" | null {
+function readFlag(
+  raw: string | string[] | undefined,
+): boolean {
   const value = Array.isArray(raw) ? raw[0] : raw;
-  return value === "1" ? null : null;
+  return value === "1";
 }
 
 /**
@@ -32,17 +34,9 @@ export function getDesignVersionFromSearchParams(
   searchParams: Record<string, string | string[] | undefined> | undefined,
 ): DesignVersion {
   if (ENV_OVERRIDE) return ENV_OVERRIDE;
-  const v4Raw = searchParams?.v4;
-  const v4Value = Array.isArray(v4Raw) ? v4Raw[0] : v4Raw;
-  if (v4Value === "1") return "v4";
-  const v3Raw = searchParams?.v3;
-  const v3Value = Array.isArray(v3Raw) ? v3Raw[0] : v3Raw;
-  if (v3Value === "1") return "v3";
-  const v2Raw = searchParams?.v2;
-  const v2Value = Array.isArray(v2Raw) ? v2Raw[0] : v2Raw;
-  if (v2Value === "1") return "v2";
-  // suppress unused warning for typing helper
-  void pickFromParam;
+  if (readFlag(searchParams?.v4)) return "v4";
+  if (readFlag(searchParams?.v3)) return "v3";
+  if (readFlag(searchParams?.v2)) return "v2";
   return "v1";
 }
 

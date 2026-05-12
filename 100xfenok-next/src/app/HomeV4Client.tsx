@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import {
   clamp,
@@ -34,6 +34,7 @@ export default function HomeV4Client() {
     pins,
     watches,
     alerts,
+    storageError,
     togglePin,
     addWatch,
     pushAlerts,
@@ -43,21 +44,41 @@ export default function HomeV4Client() {
   const [inboxOpen, setInboxOpen] = useState(false);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [sparklineKey, setSparklineKey] = useState(0);
-  const lastFiredRef = useRef<Set<string>>(new Set());
   const traceMode: TraceableMode = "hover-one";
 
-  /** Push a RegimeSparkline history point each time a fresh snapshot lands. */
+  /** Push a RegimeSparkline history point each time a fresh snapshot lands.
+   *  Audit fix (code-reviewer, 2026-05-12): regime field is the actual
+   *  market regime class, not bankingTone (those are different domains). */
   useEffect(() => {
     if (!dataReady) return;
     const spy = dashboard.quickIndices.find((q) => q.symbol === "SPY");
     if (!spy?.price) return;
+    // Compute the regime class the same way the page header does, so the
+    // sparkline tone matches the rest of the UI.
+    const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
+    const breadthRatio = dashboard.sectorUp / breadthTotal;
+    const score = clamp(
+      (dashboard.fearGreedScore / 100) * 0.45 +
+        breadthRatio * 0.35 +
+        (1 - dashboard.stressScore) * 0.2,
+      0,
+      1,
+    );
+    const regimeClass = getRegimeClass(score);
+    const regimeState =
+      regimeClass === "is-risk-on"
+        ? "RISK-ON"
+        : regimeClass === "is-risk-off"
+          ? "RISK-OFF"
+          : "NEUTRAL";
     pushRegimeHistoryPoint({
       t: Date.now(),
       spy: spy.price,
-      regime: dashboard.bankingTone,
+      regime: regimeState,
     });
     // Bump the refresh key after writing to sessionStorage so RegimeSparkline
-    // re-reads. This is a deliberate sync with an external store.
+    // re-reads. Deliberate sync with an external store; React doesn't
+    // subscribe to sessionStorage.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSparklineKey((k) => k + 1);
   }, [dashboard, dataReady]);
@@ -65,11 +86,10 @@ export default function HomeV4Client() {
   /** Re-evaluate watches each time the snapshot changes (same as V3). */
   useEffect(() => {
     if (!dataReady || watches.length === 0) return;
-    const fired = evaluateWatches(dashboard, watches, lastFiredRef.current);
+    const fired = evaluateWatches(dashboard, watches, alerts);
     if (fired.length === 0) return;
-    fired.forEach((alert) => lastFiredRef.current.add(alert.watchId));
     pushAlerts(fired);
-  }, [dashboard, dataReady, watches, pushAlerts]);
+  }, [dashboard, dataReady, watches, alerts, pushAlerts]);
 
   const regime = useMemo(() => {
     const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
@@ -126,7 +146,6 @@ export default function HomeV4Client() {
 
   const handleCreateWatch = (watch: Watch) => {
     addWatch(watch);
-    lastFiredRef.current.delete(watch.id);
   };
 
   const alertsByMetric = useMemo(() => {
@@ -144,6 +163,11 @@ export default function HomeV4Client() {
         onToggleInbox={() => setInboxOpen((open) => !open)}
         onOpenBuilder={() => setBuilderOpen(true)}
       />
+      {storageError ? (
+        <div className="hp-storage-warn" role="status">
+          브라우저 저장이 비활성화돼 Watch · 핀 · 알림이 새로고침 후 유지되지 않습니다.
+        </div>
+      ) : null}
       <AlertInbox
         open={inboxOpen}
         alerts={alerts}

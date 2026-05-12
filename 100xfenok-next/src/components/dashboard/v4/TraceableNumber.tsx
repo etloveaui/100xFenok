@@ -246,18 +246,12 @@ export function metaFromFreshness(
     | undefined,
   rawValue: TraceableMeta["rawValue"],
   opts: { sourceKey?: string; note?: string } = {},
-): TraceableMeta {
-  if (!freshness) {
-    return {
-      tone: "dated",
-      rawValue,
-      source: "—",
-      fetchedAt: "—",
-      cadence: "daily",
-      sourceKey: opts.sourceKey,
-      note: opts.note,
-    };
-  }
+): TraceableMeta | undefined {
+  // Audit (silent-failure-hunter, 2026-05-12): when freshness is missing we
+  // have no provenance to display. Returning undefined makes TraceableNumber
+  // render a passthrough (no fake "캐시 · 정상" dot). Callers already pass
+  // `meta` through the `meta && ...` guard.
+  if (!freshness) return undefined;
   const tone: TraceableTone = freshness.isFallback
     ? freshness.cadence === "realtime"
       ? "stale"

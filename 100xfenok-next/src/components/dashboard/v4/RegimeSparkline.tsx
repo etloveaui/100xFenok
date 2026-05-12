@@ -25,14 +25,35 @@ export type RegimeHistPoint = {
 const SS_KEY = "v4.regimeHist.spy";
 const MAX_POINTS = 7;
 
+/**
+ * Audit fix (silent-failure-hunter, 2026-05-12): on JSON.parse failure,
+ * rename the corrupt key for diagnosis instead of silently zeroing the
+ * history and immediately overwriting with a single new point.
+ */
 function readHistory(): RegimeHistPoint[] {
   if (typeof window === "undefined") return [];
+  const ss = window.sessionStorage;
+  const raw = ss.getItem(SS_KEY);
+  if (!raw) return [];
   try {
-    const raw = window.sessionStorage.getItem(SS_KEY);
-    if (!raw) return [];
     const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr.slice(-MAX_POINTS) : [];
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter(
+        (p): p is RegimeHistPoint =>
+          p != null &&
+          typeof p === "object" &&
+          typeof p.t === "number" &&
+          Number.isFinite(p.spy),
+      )
+      .slice(-MAX_POINTS);
   } catch {
+    try {
+      ss.setItem(`${SS_KEY}.corrupt-${Date.now()}`, raw);
+      ss.removeItem(SS_KEY);
+    } catch {
+      /* ignore — best-effort diagnosis */
+    }
     return [];
   }
 }
@@ -42,7 +63,7 @@ function writeHistory(arr: RegimeHistPoint[]) {
   try {
     window.sessionStorage.setItem(SS_KEY, JSON.stringify(arr.slice(-MAX_POINTS)));
   } catch {
-    /* quota / private mode — silently skip */
+    /* quota / private mode — write skipped; reader will return [] */
   }
 }
 

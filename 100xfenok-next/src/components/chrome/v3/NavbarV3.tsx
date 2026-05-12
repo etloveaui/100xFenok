@@ -131,7 +131,7 @@ export default function NavbarV3({
                 aria-label="명령어 팔레트 열기"
               >
                 <i className="fas fa-search" aria-hidden="true" />
-                <span>티커 · 리포트 · &quot;watch VIX&gt;25&quot;…</span>
+                <span>티커 · 리포트 검색…</span>
                 <span className="hp-search-trigger__kbd">⌘K</span>
               </button>
               <button

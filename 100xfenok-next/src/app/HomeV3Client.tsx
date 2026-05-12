@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import {
   clamp,
@@ -28,6 +28,7 @@ export default function HomeV3Client() {
     pins,
     watches,
     alerts,
+    storageError,
     togglePin,
     addWatch,
     pushAlerts,
@@ -36,16 +37,16 @@ export default function HomeV3Client() {
 
   const [inboxOpen, setInboxOpen] = useState(false);
   const [builderOpen, setBuilderOpen] = useState(false);
-  const lastFiredRef = useRef<Set<string>>(new Set());
 
-  /** Re-evaluate watches each time the snapshot changes. */
+  /** Re-evaluate watches each time the snapshot changes. Cooldown is now
+   *  keyed on persisted `alerts` (60-minute window) so a page reload no
+   *  longer re-fires a watch that already triggered this hour. */
   useEffect(() => {
     if (!dataReady || watches.length === 0) return;
-    const fired = evaluateWatches(dashboard, watches, lastFiredRef.current);
+    const fired = evaluateWatches(dashboard, watches, alerts);
     if (fired.length === 0) return;
-    fired.forEach((alert) => lastFiredRef.current.add(alert.watchId));
     pushAlerts(fired);
-  }, [dashboard, dataReady, watches, pushAlerts]);
+  }, [dashboard, dataReady, watches, alerts, pushAlerts]);
 
   /** Regime axes — same shape as V2. */
   const regime = useMemo(() => {
@@ -103,7 +104,6 @@ export default function HomeV3Client() {
 
   const handleCreateWatch = (watch: Watch) => {
     addWatch(watch);
-    lastFiredRef.current.delete(watch.id);
   };
 
   /** Build the alerts-by-metric record for PinnedStrip flash. */
@@ -122,6 +122,11 @@ export default function HomeV3Client() {
         onToggleInbox={() => setInboxOpen((open) => !open)}
         onOpenBuilder={() => setBuilderOpen(true)}
       />
+      {storageError ? (
+        <div className="hp-storage-warn" role="status">
+          브라우저 저장이 비활성화돼 Watch · 핀 · 알림이 새로고침 후 유지되지 않습니다.
+        </div>
+      ) : null}
       <AlertInbox
         open={inboxOpen}
         alerts={alerts}

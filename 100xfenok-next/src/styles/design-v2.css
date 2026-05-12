@@ -1309,6 +1309,25 @@
   cursor: not-allowed;
 }
 
+/* ===== Storage failure banner (V3/V4) ===== */
+.hp-storage-warn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  margin: 0;
+  background: rgba(244, 63, 94, 0.08);
+  border-bottom: 1px solid rgba(244, 63, 94, 0.24);
+  color: var(--down);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+}
+.hp-storage-warn::before {
+  content: "⚠";
+  font-size: 13px;
+}
+
 /* ===== Mobile PinnedStrip overflow ===== */
 @media (max-width: 640px) {
   .hp-pinstrip {
