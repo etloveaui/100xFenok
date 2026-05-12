@@ -18,9 +18,10 @@ export default function DesignVersionToggle() {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const body = document.body;
-    body.classList.remove("design-v2", "design-v3");
+    body.classList.remove("design-v2", "design-v3", "design-v4");
     if (version === "v2") body.classList.add("design-v2");
     if (version === "v3") body.classList.add("design-v3");
+    if (version === "v4") body.classList.add("design-v4");
   }, [version]);
 
   return null;

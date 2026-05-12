@@ -3,8 +3,12 @@
 import TileShell from "../TileShell";
 import { v2cx } from "../types";
 import type { V2Freshness } from "../types";
-import type { DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
 import { clamp } from "@/lib/dashboard/formatters";
+import TraceableNumber, {
+  metaFromFreshness,
+  type TraceableMode,
+} from "@/components/dashboard/v4/TraceableNumber";
 
 /**
  * V2 Fear & Greed — AUDIT P0 (enlarge gauge) + P1 (pointer + tick marks).
@@ -15,10 +19,14 @@ export default function SentimentGaugeTile({
   dashboard,
   freshness,
   muted,
+  traceMode,
+  freshnessMap,
 }: {
   dashboard: DashboardSnapshot;
   freshness: V2Freshness;
   muted: boolean;
+  traceMode?: TraceableMode;
+  freshnessMap?: DashboardFreshnessMap;
 }) {
   const value = Math.round(clamp(dashboard.fearGreedScore, 0, 100));
   const offset = Number((126 * (1 - value / 100)).toFixed(2));
@@ -118,7 +126,20 @@ export default function SentimentGaugeTile({
               letterSpacing: "-0.015em",
             }}
           >
-            {value}
+            <TraceableNumber
+              mode={traceMode}
+              meta={
+                traceMode && freshnessMap
+                  ? metaFromFreshness(
+                      freshnessMap.sentiment,
+                      dashboard.fearGreedScore,
+                      { sourceKey: "sentiment", note: "CNN Fear & Greed daily 합성지수" },
+                    )
+                  : undefined
+              }
+            >
+              {value}
+            </TraceableNumber>
           </div>
           <div
             className={v2cx("hp-stat__label", labelClass)}

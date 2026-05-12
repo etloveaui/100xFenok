@@ -3,7 +3,11 @@
 import TileShell from "../TileShell";
 import { v2cx } from "../types";
 import type { V2Freshness } from "../types";
-import type { DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
+import TraceableNumber, {
+  metaFromFreshness,
+  type TraceableMode,
+} from "@/components/dashboard/v4/TraceableNumber";
 
 /**
  * V2 Crypto — V1 had only the Crypto F&G number; V2 leads with the BTC
@@ -14,10 +18,14 @@ export default function CryptoTile({
   dashboard,
   freshness,
   muted,
+  traceMode,
+  freshnessMap,
 }: {
   dashboard: DashboardSnapshot;
   freshness: V2Freshness;
   muted: boolean;
+  traceMode?: TraceableMode;
+  freshnessMap?: DashboardFreshnessMap;
 }) {
   const fg = Math.round(dashboard.cryptoFearGreed);
   return (
@@ -45,7 +53,19 @@ export default function CryptoTile({
               color: "var(--hp-ink)",
             }}
           >
-            {fg}
+            <TraceableNumber
+              mode={traceMode}
+              meta={
+                traceMode && freshnessMap
+                  ? metaFromFreshness(freshnessMap.crypto, fg, {
+                      sourceKey: "crypto",
+                      note: "Alternative.me Crypto Fear & Greed (1h)",
+                    })
+                  : undefined
+              }
+            >
+              {fg}
+            </TraceableNumber>
           </strong>
           <span
             className={v2cx(

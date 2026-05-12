@@ -2,7 +2,11 @@
 
 import TileShell from "../TileShell";
 import type { V2Freshness } from "../types";
-import type { DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
+import TraceableNumber, {
+  metaFromFreshness,
+  type TraceableMode,
+} from "@/components/dashboard/v4/TraceableNumber";
 
 const TONE_COLOR = {
   stable: {
@@ -31,10 +35,14 @@ export default function BankingStressTile({
   dashboard,
   freshness,
   muted,
+  traceMode,
+  freshnessMap,
 }: {
   dashboard: DashboardSnapshot;
   freshness: V2Freshness;
   muted: boolean;
+  traceMode?: TraceableMode;
+  freshnessMap?: DashboardFreshnessMap;
 }) {
   const tone = TONE_COLOR[dashboard.bankingTone] ?? TONE_COLOR.watch;
   const dotClass =
@@ -84,7 +92,24 @@ export default function BankingStressTile({
                 color: "var(--hp-ink)",
               }}
             >
-              {dashboard.stressScore.toFixed(2)}
+              <TraceableNumber
+                mode={traceMode}
+                meta={
+                  traceMode && freshnessMap
+                    ? metaFromFreshness(
+                        freshnessMap.weeklyBanking ??
+                          freshnessMap.quarterlyBanking,
+                        dashboard.stressScore,
+                        {
+                          sourceKey: "weeklyBanking",
+                          note: "FRED H.8 + Q quarterly banking 합성 스트레스 인덱스 (0~1)",
+                        },
+                      )
+                    : undefined
+                }
+              >
+                {dashboard.stressScore.toFixed(2)}
+              </TraceableNumber>
             </strong>
             <span style={{ fontSize: 12, color: "var(--hp-ink-3)" }}>/ 1.00</span>
           </div>

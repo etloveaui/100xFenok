@@ -2,7 +2,11 @@
 
 import TileShell from "../TileShell";
 import type { V2Freshness } from "../types";
-import type { DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
+import TraceableNumber, {
+  metaFromFreshness,
+  type TraceableMode,
+} from "@/components/dashboard/v4/TraceableNumber";
 
 function colorFor(value: number) {
   if (value >= 1.5) return { bg: "rgba(16,185,129,0.28)", fg: "#047857" };
@@ -21,10 +25,14 @@ export default function BreadthHeatmapTile({
   dashboard,
   freshness,
   muted,
+  traceMode,
+  freshnessMap,
 }: {
   dashboard: DashboardSnapshot;
   freshness: V2Freshness;
   muted: boolean;
+  traceMode?: TraceableMode;
+  freshnessMap?: DashboardFreshnessMap;
 }) {
   const cells = dashboard.sectorRows
     .slice(0, 11)
@@ -44,7 +52,24 @@ export default function BreadthHeatmapTile({
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
         <span className="hp-breadth-pill hp-breadth-pill--up">
           <span className="hp-dot" style={{ background: "#10b981" }} aria-hidden="true" />
-          상승 {dashboard.sectorUp}
+          상승{" "}
+          <TraceableNumber
+            mode={traceMode}
+            meta={
+              traceMode && freshnessMap
+                ? metaFromFreshness(
+                    freshnessMap.benchmarks ?? freshnessMap["ticker:XLK"],
+                    dashboard.sectorUp,
+                    {
+                      sourceKey: "benchmarks",
+                      note: `${dashboard.sectorRows.length}개 섹터 ETF 일일 변동률 집계 (mode: ${dashboard.sectorMode})`,
+                    },
+                  )
+                : undefined
+            }
+          >
+            {dashboard.sectorUp}
+          </TraceableNumber>
         </span>
         <span className="hp-breadth-pill hp-breadth-pill--down">
           <span className="hp-dot" style={{ background: "#f43f5e" }} aria-hidden="true" />

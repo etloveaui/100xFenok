@@ -284,11 +284,13 @@ main {
   padding-bottom: 1rem;
 }
 
-/* Design V2/V3 — hide V1 chrome wrappers when alternate version is active */
+/* Design V2/V3/V4 — hide V1 chrome wrappers when alternate version is active */
 body.design-v2 [data-v1-chrome],
-body.design-v3 [data-v1-chrome] { display: none !important; }
+body.design-v3 [data-v1-chrome],
+body.design-v4 [data-v1-chrome] { display: none !important; }
 body.design-v2 main,
-body.design-v3 main { padding-top: 0 !important; padding-bottom: 0 !important; }
+body.design-v3 main,
+body.design-v4 main { padding-top: 0 !important; padding-bottom: 0 !important; }
 
 /* Line clamp utilities */
 .line-clamp-2 {

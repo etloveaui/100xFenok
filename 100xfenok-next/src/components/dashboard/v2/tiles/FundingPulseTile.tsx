@@ -3,11 +3,15 @@
 import TileShell from "../TileShell";
 import { v2cx } from "../types";
 import type { V2Freshness } from "../types";
-import type { DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
 import {
   formatPercent,
   formatSignedBillions,
 } from "@/lib/dashboard/formatters";
+import TraceableNumber, {
+  metaFromFreshness,
+  type TraceableMode,
+} from "@/components/dashboard/v4/TraceableNumber";
 
 const DAYS = ["월", "화", "수", "목", "금", "토", "일"];
 
@@ -19,16 +23,36 @@ export default function FundingPulseTile({
   dashboard,
   freshness,
   muted,
+  traceMode,
+  freshnessMap,
 }: {
   dashboard: DashboardSnapshot;
   freshness: V2Freshness;
   muted: boolean;
+  traceMode?: TraceableMode;
+  freshnessMap?: DashboardFreshnessMap;
 }) {
   return (
     <TileShell kicker="Liquidity" title="Funding" freshness={freshness} muted={muted}>
       <div>
         <div className="hp-liq__val" style={{ fontSize: 28 }}>
-          {formatSignedBillions(dashboard.liquidityFlow)}
+          <TraceableNumber
+            mode={traceMode}
+            meta={
+              traceMode && freshnessMap
+                ? metaFromFreshness(
+                    freshnessMap.weeklyBanking,
+                    dashboard.liquidityFlow,
+                    {
+                      sourceKey: "weeklyBanking",
+                      note: "FRED H.8 (banking) weekly 합성. 7d 순유동성 = 자산 변화 - 부채 변화.",
+                    },
+                  )
+                : undefined
+            }
+          >
+            {formatSignedBillions(dashboard.liquidityFlow)}
+          </TraceableNumber>
         </div>
         <div style={{ fontSize: 11, color: "var(--hp-ink-3)", marginTop: 2 }}>
           7d 순유동성 · 예대율 {formatPercent(dashboard.loanDepositRatio, 1)}

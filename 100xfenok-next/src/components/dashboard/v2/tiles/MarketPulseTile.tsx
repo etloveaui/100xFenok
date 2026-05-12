@@ -3,8 +3,13 @@
 import TileShell from "../TileShell";
 import { v2cx } from "../types";
 import type { V2Freshness, V2RegimeAxis } from "../types";
-import type { DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
 import { formatSignedBillions } from "@/lib/dashboard/formatters";
+import TraceableNumber, {
+  metaFromFreshness,
+  type TraceableMode,
+} from "@/components/dashboard/v4/TraceableNumber";
+import RegimeSparkline from "@/components/dashboard/v4/RegimeSparkline";
 
 function axisBg(index: number, tone: V2RegimeAxis["tone"]) {
   if (tone === "down") return "linear-gradient(to right,#f43f5e,#fb923c)";
@@ -31,6 +36,10 @@ export default function MarketPulseTile({
   regimeAxes,
   freshness,
   muted,
+  traceMode,
+  freshnessMap,
+  showSparkline,
+  sparklineRefreshKey,
 }: {
   dashboard: DashboardSnapshot;
   regimeLabel: string;
@@ -39,6 +48,13 @@ export default function MarketPulseTile({
   regimeAxes: V2RegimeAxis[];
   freshness: V2Freshness;
   muted: boolean;
+  /** V4 — wrap confidence KPI in TraceableNumber. */
+  traceMode?: TraceableMode;
+  freshnessMap?: DashboardFreshnessMap;
+  /** V4 — render the 200x40 RegimeSparkline above the 3-axis bars. */
+  showSparkline?: boolean;
+  /** V4 — bump to force RegimeSparkline to re-read sessionStorage. */
+  sparklineRefreshKey?: number | string;
 }) {
   return (
     <TileShell
@@ -61,7 +77,23 @@ export default function MarketPulseTile({
               className="hp-num-xl"
               style={{ marginTop: 6, fontSize: 44 }}
             >
-              {regimeConfidence}%
+              <TraceableNumber
+                mode={traceMode}
+                meta={
+                  traceMode && freshnessMap
+                    ? metaFromFreshness(
+                        freshnessMap.sentiment ?? freshnessMap.benchmarks,
+                        regimeConfidence,
+                        {
+                          sourceKey: "regime",
+                          note: "심리·확산·안정 3축 가중 합산 (V1 page.tsx 알고리즘 기준)",
+                        },
+                      )
+                    : undefined
+                }
+              >
+                {regimeConfidence}%
+              </TraceableNumber>
             </div>
             <div
               style={{
@@ -73,15 +105,31 @@ export default function MarketPulseTile({
               3축 합의 기준
             </div>
           </div>
-          <div
-            className="hp-chip"
-            style={{
-              background: "var(--hp-tile-bg-softer)",
-              color: "var(--hp-ink-2)",
-              borderColor: "var(--hp-stroke)",
-            }}
-          >
-            {regimeClass === "is-risk-off" ? "▼" : "▲"} {regimeLabel}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+            <div
+              className="hp-chip"
+              style={{
+                background: "var(--hp-tile-bg-softer)",
+                color: "var(--hp-ink-2)",
+                borderColor: "var(--hp-stroke)",
+              }}
+            >
+              {regimeClass === "is-risk-off" ? "▼" : "▲"} {regimeLabel}
+            </div>
+            {showSparkline ? (
+              <RegimeSparkline
+                width={200}
+                height={40}
+                regimeTone={
+                  regimeClass === "is-risk-off"
+                    ? "down"
+                    : regimeClass === "is-neutral"
+                      ? "neutral"
+                      : "up"
+                }
+                refreshKey={sparklineRefreshKey}
+              />
+            ) : null}
           </div>
         </div>
         <div className="hp-regime__bars">

@@ -3,21 +3,33 @@
 import TileShell from "../TileShell";
 import { v2cx } from "../types";
 import type { V2Freshness } from "../types";
-import type { DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
+import TraceableNumber, {
+  metaFromFreshness,
+  type TraceableMode,
+} from "@/components/dashboard/v4/TraceableNumber";
 
 /**
  * V2 VIX — AUDIT P1 (sparkline restored) + delta chip.
  * 7-day approximated sparkline (current + 6 synthetic backfill steps; in
  * production, wire to actual VIX series when available).
+ *
+ * V4 (optional): when `traceMode` and `freshnessMap` are supplied, the
+ * KPI is wrapped with TraceableNumber. V2/V3 callers omit these — no
+ * change to V2/V3 HTML output.
  */
 export default function VixTile({
   dashboard,
   freshness,
   muted,
+  traceMode,
+  freshnessMap,
 }: {
   dashboard: DashboardSnapshot;
   freshness: V2Freshness;
   muted: boolean;
+  traceMode?: TraceableMode;
+  freshnessMap?: DashboardFreshnessMap;
 }) {
   const pts = [
     dashboard.vixValue * 1.13,
@@ -48,7 +60,21 @@ export default function VixTile({
         }}
       >
         <div>
-          <div className="hp-stat__val">{dashboard.vixValue.toFixed(1)}</div>
+          <div className="hp-stat__val">
+            <TraceableNumber
+              mode={traceMode}
+              meta={
+                traceMode && freshnessMap
+                  ? metaFromFreshness(freshnessMap.vix, dashboard.vixValue, {
+                      sourceKey: "vix",
+                      note: "CBOE 실시간 — 표시값은 소수점 1자리 반올림",
+                    })
+                  : undefined
+              }
+            >
+              {dashboard.vixValue.toFixed(1)}
+            </TraceableNumber>
+          </div>
           <div
             style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}
           >

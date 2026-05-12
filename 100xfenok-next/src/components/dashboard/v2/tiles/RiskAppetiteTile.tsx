@@ -2,7 +2,11 @@
 
 import TileShell from "../TileShell";
 import type { V2Freshness } from "../types";
-import type { DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
+import TraceableNumber, {
+  metaFromFreshness,
+  type TraceableMode,
+} from "@/components/dashboard/v4/TraceableNumber";
 
 /**
  * V2 Risk Appetite — AUDIT P1 fix: reshape from V1's "Put/Call + redundant
@@ -18,10 +22,14 @@ export default function RiskAppetiteTile({
   dashboard,
   freshness,
   muted,
+  traceMode,
+  freshnessMap,
 }: {
   dashboard: DashboardSnapshot;
   freshness: V2Freshness;
   muted: boolean;
+  traceMode?: TraceableMode;
+  freshnessMap?: DashboardFreshnessMap;
 }) {
   return (
     <TileShell
@@ -43,7 +51,23 @@ export default function RiskAppetiteTile({
               color: "var(--hp-ink)",
             }}
           >
-            {dashboard.putCallValue.toFixed(2)}
+            <TraceableNumber
+              mode={traceMode}
+              meta={
+                traceMode && freshnessMap
+                  ? metaFromFreshness(
+                      freshnessMap.putCall,
+                      dashboard.putCallValue,
+                      {
+                        sourceKey: "putCall",
+                        note: "CBOE 일간 옵션 Put/Call 비율 (지수 기준)",
+                      },
+                    )
+                  : undefined
+              }
+            >
+              {dashboard.putCallValue.toFixed(2)}
+            </TraceableNumber>
           </div>
           <div className="hp-bk__desc">{dashboard.putCallLabel}</div>
         </div>
