@@ -1,0 +1,103 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { v2cx } from "@/components/dashboard/v2/types";
+import CoverCard from "./CoverCard";
+import { ISSUES } from "./mockData";
+import type { Issue } from "./types";
+
+export default function ListView({
+  onOpenArticle,
+}: {
+  onOpenArticle: (issue: Issue) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    ISSUES.forEach((issue) => issue.tags.forEach((t) => set.add(t)));
+    return Array.from(set);
+  }, []);
+
+  const filtered = useMemo(() => {
+    return ISSUES.filter((issue) => {
+      if (activeTag && !issue.tags.includes(activeTag)) return false;
+      if (query.trim()) {
+        const q = query.toLowerCase();
+        const hay = `${issue.headline} ${issue.dek} ${issue.kicker} ${issue.tags.join(" ")}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [query, activeTag]);
+
+  const [featured, ...rest] = filtered.length > 0 ? filtered : ISSUES;
+
+  const byMonth = useMemo(() => {
+    const map = new Map<string, Issue[]>();
+    rest.forEach((issue) => {
+      const arr = map.get(issue.monthLabel) ?? [];
+      arr.push(issue);
+      map.set(issue.monthLabel, arr);
+    });
+    return Array.from(map.entries());
+  }, [rest]);
+
+  return (
+    <div className="as-list">
+      <header className="as-list__head">
+        <span className="kicker">100x Alpha Scout · 주간 딥다이브</span>
+        <h1 className="as-list__title">알파 스카우트 · 이번 주 리포트</h1>
+      </header>
+      <div className="as-filter">
+        <div className="as-filter__search">
+          <i className="fas fa-search" aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="제목 · 섹터 · 티커 검색"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            aria-label="아카이브 검색"
+          />
+        </div>
+        <div className="as-filter__tags">
+          {allTags.slice(0, 8).map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              className={v2cx("as-tag", activeTag === tag && "is-on")}
+              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              aria-pressed={activeTag === tag}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      </div>
+      {featured ? (
+        <section className="as-hero-section">
+          <CoverCard issue={featured} variant="hero" onClick={onOpenArticle} />
+        </section>
+      ) : null}
+      {byMonth.map(([month, issues]) => (
+        <section key={month} className="as-month">
+          <h2 className="as-month__label">{month}</h2>
+          <div className="as-month__grid">
+            {issues.map((issue) => (
+              <CoverCard
+                key={issue.id}
+                issue={issue}
+                variant="row"
+                onClick={onOpenArticle}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+      {filtered.length === 0 ? (
+        <div className="as-empty">검색 조건에 맞는 리포트가 없습니다.</div>
+      ) : null}
+    </div>
+  );
+}

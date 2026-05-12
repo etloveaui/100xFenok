@@ -5,6 +5,8 @@ import {
   legacyPublicFileExists,
   sanitizeLegacyPath,
 } from '@/lib/server/legacy-bridge';
+import { getDesignVersionFromSearchParams } from '@/lib/design/version';
+import AlphaScoutV2Client from './AlphaScoutV2Client';
 
 export const metadata: Metadata = {
   title: 'Alpha Scout',
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams?: Promise<{ path?: string | string[]; report?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function sanitizeReportFilename(rawReport?: string): string | null {
@@ -33,6 +35,11 @@ function sanitizeReportFilename(rawReport?: string): string | null {
 
 export default async function AlphaScoutPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
+  const version = getDesignVersionFromSearchParams(params);
+  if (version === "v2" || version === "v3" || version === "v4") {
+    return <AlphaScoutV2Client />;
+  }
+
   const rawPath = getSingleSearchParam(params.path);
   const rawReport = getSingleSearchParam(params.report);
 
