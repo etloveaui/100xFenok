@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-05-12T05:50:06.315Z",
+  "generated_at": "2026-05-12T11:29:42.209Z",
   "as_of": "2026-05-12",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -99,14 +99,14 @@
       "overallLabel": "RISING",
       "m2YoY": 5.52,
       "m2Total": 22686,
-      "netLiquidity": 5862.2,
+      "netLiquidity": 5861.8,
       "netLiquidityDelta": 132.2,
       "weeklyNetFlow": 132.2,
-      "stablecoinMcap": 53.66223345476,
-      "scM2Ratio": 0.24,
+      "stablecoinMcap": 321.02791280833003,
+      "scM2Ratio": 1.42,
       "walcl": 6709.5,
       "tga": 846.6,
-      "rrp": 0.8,
+      "rrp": 1.1,
       "netFlow": 132.2,
       "components": {
         "m2_yoy": {
@@ -120,18 +120,18 @@
           "status": "rising"
         },
         "stablecoin_m2_ratio": {
-          "value": 0.24,
+          "value": 1.42,
           "unit": "%",
-          "status": "falling"
+          "status": "stable"
         }
       },
       "metrics": {
         "m2_yoy_pct": 5.52,
         "m2_total_b": 22686,
-        "net_liquidity_b": 5862.2,
+        "net_liquidity_b": 5861.8,
         "weekly_net_flow_b": 132.2,
-        "stablecoin_mcap_b": 53.7,
-        "sc_m2_ratio_pct": 0.24
+        "stablecoin_mcap_b": 321,
+        "sc_m2_ratio_pct": 1.42
       },
       "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
       "as_of": "2026-05-12",
@@ -160,7 +160,7 @@
         "reserves_gdp_pct": 9.5
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-05-11",
+      "as_of": "2026-05-12",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
