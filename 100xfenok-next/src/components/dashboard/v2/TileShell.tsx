@@ -15,15 +15,23 @@ type TileShellProps = {
   muted?: boolean;
   action?: ReactNode;
   children: ReactNode;
+  /** V3 — pin toggle in header */
+  pinned?: boolean;
+  onPin?: () => void;
+  /** V3 — pulsing red dot on the pin chip when an alert fired */
+  hasAlert?: boolean;
+  /** V3 — gold flash + ring while an alert is "active" */
+  flash?: boolean;
+  /** V3 — DOM id for AlertInbox scroll-into-view */
+  tileId?: string;
 };
 
 /**
  * V2 bento tile primitive — Claude Design `HpTile` port.
- * - Kicker + Title (3-tier hierarchy: eyebrow / title / meta in body)
- * - Freshness chip stacks above title (single column, no head collision)
- * - Title forced nowrap + ellipsis (resolves P0 "Risk Appetite" clip)
- * - Optional `span` controls bento grid placement
- * - `muted` applies opacity + saturation for offline/partial states
+ *
+ * V3 evolution (DEC-199):
+ * - Optional `pinned/onPin/hasAlert/flash/tileId` props enable the
+ *   Watch & Alert layer without changing V2 callers (all defaults safe).
  */
 export default function TileShell({
   kicker,
@@ -33,15 +41,22 @@ export default function TileShell({
   muted,
   action,
   children,
+  pinned,
+  onPin,
+  hasAlert,
+  flash,
+  tileId,
 }: TileShellProps) {
   return (
     <article
+      id={tileId}
       className={v2cx(
         "hp-tile",
         span === "hero" && "hp-tile--hero",
         span === "wide" && "hp-tile--wide",
         span === "wide3" && "hp-tile--wide3",
         muted && "hp-tile--muted",
+        flash && "hp-tile--flash",
       )}
     >
       <div className="hp-tile__head">
@@ -49,7 +64,34 @@ export default function TileShell({
           <div className="hp-kicker">{kicker}</div>
           <h3 className="hp-tile__title">{title}</h3>
         </div>
-        {freshness ? <FreshnessBadge meta={freshness} /> : null}
+        <div className="hp-tile__head-actions">
+          {freshness ? <FreshnessBadge meta={freshness} /> : null}
+          {onPin ? (
+            <button
+              type="button"
+              className={v2cx("hp-pin-toggle", pinned && "is-pinned")}
+              onClick={onPin}
+              aria-pressed={pinned}
+              aria-label={pinned ? "핀 해제" : "핀 고정"}
+            >
+              <svg
+                width={10}
+                height={10}
+                viewBox="0 0 24 24"
+                fill={pinned ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 2v6l3 3v3H9v-3l3-3V2z" />
+                <path d="M12 14v8" />
+              </svg>
+              {hasAlert ? <span className="hp-pin-toggle__alert" aria-hidden="true" /> : null}
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="hp-tile__body">{children}</div>
       {action ? <div className="hp-tile__action">{action}</div> : null}

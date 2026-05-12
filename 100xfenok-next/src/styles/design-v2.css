@@ -909,3 +909,414 @@
     animation: none !important;
   }
 }
+
+/* ============================================================
+ * V3 — Watch & Alert layer (DEC-199)
+ * Adds: pin toggle on tile, PinnedStrip, AlertInbox dropdown,
+ * WatchBuilder modal. Reuses V2 tokens; no new brand colors.
+ * ============================================================ */
+
+.hp-tile__head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-end;
+  order: -1;
+}
+
+.hp-pin-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  cursor: pointer;
+  background: var(--hp-tile-bg-soft);
+  border: 1.5px solid var(--hp-stroke);
+  color: var(--hp-ink-3);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition: all 0.15s var(--ease-standard);
+}
+.hp-pin-toggle:hover {
+  border-color: var(--brand-interactive);
+  color: var(--brand-interactive);
+}
+.hp-pin-toggle.is-pinned {
+  background: rgba(213, 173, 54, 0.12);
+  border-color: var(--brand-gold-bright);
+  color: var(--brand-gold-deep);
+}
+.hp-pin-toggle__alert {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--down-soft);
+  box-shadow: 0 0 0 2px var(--hp-tile-bg);
+  animation: hp-pulse 1.6s ease-in-out infinite;
+}
+
+.hp-tile--flash {
+  border-color: var(--brand-gold-bright) !important;
+  box-shadow:
+    0 0 0 3px rgba(213, 173, 54, 0.18),
+    0 18px 50px -18px rgba(213, 173, 54, 0.35);
+}
+
+/* ===== PinnedStrip ===== */
+.hp-pinstrip {
+  position: sticky;
+  top: 64px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: linear-gradient(
+    180deg,
+    var(--hp-nav-bg) 0%,
+    rgba(248, 250, 252, 0.94) 100%
+  );
+  border-bottom: 1px solid var(--hp-stroke);
+  backdrop-filter: blur(10px);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.hp-pinstrip__kicker {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hp-ink-3);
+  flex-shrink: 0;
+}
+.hp-pinstrip__list {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.hp-pinstrip__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--hp-stroke);
+  background: var(--hp-tile-bg);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--hp-ink);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-standard);
+}
+.hp-pinstrip__chip:hover {
+  border-color: var(--brand-interactive);
+  color: var(--brand-interactive);
+}
+.hp-pinstrip__chip-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--hp-ink-3);
+}
+.hp-pinstrip__chip--alert {
+  border-color: var(--down-border);
+  background: var(--down-bg);
+  color: var(--down);
+}
+.hp-pinstrip__chip--alert .hp-pinstrip__chip-value {
+  color: var(--down);
+}
+.hp-pinstrip__suggest {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px dashed var(--hp-stroke-2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hp-ink-3);
+  font-size: 11px;
+  cursor: pointer;
+}
+.hp-pinstrip__suggest:hover {
+  border-color: var(--brand-interactive);
+  color: var(--brand-interactive);
+}
+.hp-pinstrip__empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--hp-ink-3);
+}
+
+/* ===== Bell + count badge in nav ===== */
+.hp-bell-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--hp-tile-bg);
+  border: 1px solid var(--hp-stroke);
+  color: var(--hp-ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.hp-bell-btn:hover {
+  background: var(--hp-tile-bg-soft);
+  border-color: var(--brand-interactive);
+  color: var(--brand-interactive);
+}
+.hp-bell-btn__badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--down-soft);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--hp-tile-bg);
+}
+
+/* ===== AlertInbox dropdown ===== */
+.hp-alertinbox {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 24px;
+  width: min(360px, calc(100vw - 48px));
+  background: var(--hp-tile-bg);
+  border: 1px solid var(--hp-stroke);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  overflow: hidden;
+  animation: hp-cmd-in 0.18s var(--ease-out);
+}
+.hp-alertinbox__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hp-stroke);
+}
+.hp-alertinbox__title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hp-ink-2);
+}
+.hp-alertinbox__action {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand-interactive);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.hp-alertinbox__list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.hp-alertinbox__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--hp-stroke);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.hp-alertinbox__item:hover {
+  background: var(--hp-tile-bg-soft);
+}
+.hp-alertinbox__item:last-child {
+  border-bottom: none;
+}
+.hp-alertinbox__item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hp-ink);
+}
+.hp-alertinbox__item-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--hp-ink-3);
+}
+.hp-alertinbox__item-time {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--hp-ink-3);
+}
+.hp-alertinbox__item--unread {
+  background: rgba(244, 63, 94, 0.04);
+}
+.hp-alertinbox__empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--hp-ink-3);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.hp-alertinbox__cta {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--hp-tile-bg-soft);
+  border: none;
+  border-top: 1px solid var(--hp-stroke);
+  color: var(--brand-interactive);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+.hp-alertinbox__cta:hover {
+  background: var(--hp-accent-soft);
+}
+
+/* ===== WatchBuilder modal ===== */
+.hp-watchbuilder-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  animation: hp-fade-in 0.15s ease-out;
+}
+.hp-watchbuilder {
+  width: min(560px, 90vw);
+  background: var(--hp-tile-bg);
+  border: 1px solid var(--hp-stroke);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+  animation: hp-cmd-in 0.18s var(--ease-out);
+}
+.hp-watchbuilder__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--hp-stroke);
+}
+.hp-watchbuilder__title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hp-ink);
+}
+.hp-watchbuilder__close {
+  background: transparent;
+  border: none;
+  color: var(--hp-ink-3);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.hp-watchbuilder__section {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--hp-stroke);
+}
+.hp-watchbuilder__section:last-child {
+  border-bottom: none;
+}
+.hp-watchbuilder__label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hp-ink-3);
+  margin-bottom: 8px;
+}
+.hp-watchbuilder__row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.hp-watchbuilder__row select,
+.hp-watchbuilder__row input[type="number"] {
+  padding: 8px 12px;
+  border: 1px solid var(--hp-stroke);
+  border-radius: 8px;
+  background: var(--hp-tile-bg);
+  color: var(--hp-ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+.hp-watchbuilder__row input[type="number"] {
+  width: 100px;
+  font-family: var(--font-mono);
+}
+.hp-watchbuilder__preset {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--hp-stroke);
+  background: var(--hp-tile-bg);
+  font-size: 12px;
+  color: var(--hp-ink-2);
+  cursor: pointer;
+  margin: 4px 4px 0 0;
+}
+.hp-watchbuilder__preset:hover {
+  border-color: var(--brand-interactive);
+  color: var(--brand-interactive);
+}
+.hp-watchbuilder__submit {
+  padding: 10px 18px;
+  background: var(--brand-navy);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+.hp-watchbuilder__submit:hover {
+  background: var(--brand-navy-2);
+}
+.hp-watchbuilder__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Mobile PinnedStrip overflow ===== */
+@media (max-width: 640px) {
+  .hp-pinstrip {
+    top: 56px;
+    padding: 8px 14px;
+  }
+  .hp-alertinbox {
+    right: 12px;
+    width: calc(100vw - 24px);
+  }
+}
