@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_KR, Orbitron } from "next/font/google";
+import { JetBrains_Mono, Noto_Sans_KR, Orbitron } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AppEnhancements from "@/components/AppEnhancements";
+import DesignVersionToggle from "@/components/design/DesignVersionToggle";
+import { Suspense } from "react";
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ["latin", "latin-ext"],
@@ -19,6 +21,13 @@ const orbitron = Orbitron({
   weight: ["600", "800", "900"],
   display: "swap",
   variable: "--font-orbitron-face",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  variable: "--font-jetbrains-mono",
 });
 
 const siteOrigin = (() => {
@@ -104,15 +113,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${notoSansKr.variable} ${orbitron.variable} antialiased min-h-screen bg-[#f8fafc] overflow-x-hidden`}>
+      <body className={`${notoSansKr.variable} ${orbitron.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-[#f8fafc] overflow-x-hidden`}>
         <a href="#main-content" className="skip-link">
           본문으로 건너뛰기
         </a>
-        <Navbar />
+        <Suspense fallback={null}>
+          <DesignVersionToggle />
+        </Suspense>
+        <div data-v1-chrome="navbar">
+          <Navbar />
+        </div>
         <main id="main-content" tabIndex={-1} className="pt-14 sm:pt-16">
           {children}
         </main>
-        <Footer />
+        <div data-v1-chrome="footer">
+          <Footer />
+        </div>
         <AppEnhancements />
         {enableVercelRUM ? (
           <>

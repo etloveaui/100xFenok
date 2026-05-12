@@ -5,6 +5,7 @@
 @import "../styles/navigation.css";
 @import "../styles/route-embed.css";
 @import "../styles/legacy-widgets.css";
+@import "../styles/design-v2.css";
 
 :root {
   --background: #f8fafc;
@@ -18,8 +19,13 @@
 
   /* Brand Colors */
   --brand-navy: #010079;
+  --brand-navy-2: #1a1ea8;
   --brand-gold: #7a5a00;
+  --brand-gold-deep: #7a5a00;
+  --brand-gold-bright: #D5AD36;
   --brand-interactive: #1B73D3;
+  --brand-interactive-2: #3b8fe6;
+  --brand-cta: #FED701;
   --brand-bg: #f8fafc;
 
   /* Design System — Paper / Ink / Stroke */
@@ -39,11 +45,29 @@
   --up: #047857;
   --up-soft: #10b981;
   --up-bg: rgba(16,185,129,0.10);
+  --up-border: rgba(16,185,129,0.28);
   --down: #b91c1c;
   --down-soft: #f43f5e;
   --down-bg: rgba(244,63,94,0.10);
+  --down-border: rgba(244,63,94,0.28);
   --warn: #b45309;
-  --warn-bg: rgba(245,158,11,0.12);
+  --warn-soft: #f59e0b;
+  --warn-bg: rgba(245,158,11,0.10);
+  --warn-border: rgba(245,158,11,0.28);
+  --info: #1B73D3;
+  --info-bg: rgba(27,115,211,0.10);
+  --info-border: rgba(27,115,211,0.28);
+  --live: #22c55e;
+
+  /* Market state pairs */
+  --state-regular-bg: #dcfce7;
+  --state-regular-fg: #166534;
+  --state-pre-bg: #fef9c3;
+  --state-pre-fg: #854d0e;
+  --state-post-bg: #e0e7ff;
+  --state-post-fg: #3730a3;
+  --state-closed-bg: #f1f5f9;
+  --state-closed-fg: #475569;
 
   /* Design System — Radii */
   --r-sm: 8px;
@@ -58,8 +82,16 @@
 
   /* Design System — Motion */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --dur-fast: 120ms;
   --dur-med: 200ms;
+  --dur-slow: 320ms;
+
+  /* Design V2 font aliases (used by design-v2.css) */
+  --font-display: var(--font-orbitron-face), system-ui, sans-serif;
+  --font-body: var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 @theme inline {
@@ -111,6 +143,7 @@
 }
 
 .fa-arrow-left::before { content: "\2190"; }
+.fa-arrow-right::before { content: "\2192"; }
 .fa-balance-scale::before { content: "\2696"; }
 .fa-bars::before { content: "\2630"; }
 .fa-bell::before { content: "\1F514"; }
@@ -121,6 +154,7 @@
 .fa-chevron-down::before { content: "\25BE"; }
 .fa-cog::before { content: "\2699"; }
 .fa-compass::before { content: "\1F9ED"; }
+.fa-file-alt::before { content: "\1F4C4"; }
 .fa-home::before { content: "\2302"; }
 .fa-infinity::before { content: "\221E"; }
 .fa-lightbulb::before { content: "\1F4A1"; }
@@ -128,6 +162,7 @@
 .fa-question-circle::before { content: "\2754"; }
 .fa-rocket::before { content: "\1F680"; }
 .fa-satellite-dish::before { content: "\1F4E1"; }
+.fa-search::before { content: "\1F50D"; }
 .fa-sliders-h::before { content: "\2637"; }
 .fa-sync-alt::before { content: "\21BB"; }
 .fa-table::before { content: "\25A6"; }
@@ -248,6 +283,10 @@ html {
 main {
   padding-bottom: 1rem;
 }
+
+/* Design V2 — hide V1 chrome wrappers when V2 mode is active */
+body.design-v2 [data-v1-chrome] { display: none !important; }
+body.design-v2 main { padding-top: 0 !important; padding-bottom: 0 !important; }
 
 /* Line clamp utilities */
 .line-clamp-2 {
