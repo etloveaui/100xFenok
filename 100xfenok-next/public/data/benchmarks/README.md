@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-06-11 ~ 2026-04-24 (15+ years, 829 data points)
+> **Period**: 2010-06-25 ~ 2026-05-08 (15+ years, 829 data points)
 > **Version**: 3.7.0
-> **Last Update**: 2026-04-27
+> **Last Update**: 2026-05-11
 
 ---
 
@@ -112,6 +112,8 @@ console.log(summaries.yearly_returns.sp500);  // {2025, 2024, 2023, ...}
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.7.0 | 2026-05-11 | Weekly data update (2026-05-08 source): 30,437 records (+1), 2010-06-25 ~ 2026-05-08, 37 sections, 829 data points per index |
+| 3.7.0 | 2026-05-04 | Weekly data update (2026-05-01 source): 30,436 records (+1), 2010-06-18 ~ 2026-05-01, 37 sections, 829 data points per index |
 | 3.7.0 | 2026-04-27 | Weekly data update (2026-04-24 source): 30,435 records, 2010-06-11 ~ 2026-04-24, 37 sections, 829 data points per index |
 | 3.7.0 | 2026-04-13 | Weekly data update (2026-04-10 source): 30,433 records, 2010-05-28 ~ 2026-04-12, 37 sections, 829 data points per index |
 | 3.7.0 | 2026-04-06 | Weekly data update (2026-04-03 source): 30,432 records, 2010-05-21 ~ 2026-04-03, 37 sections, ~822 data points per index |
