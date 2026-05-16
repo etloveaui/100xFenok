@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-05-11
-> **Total Files**: 1,713 JSON files
+> **Last Updated**: 2026-05-16
+> **Total Files**: 1,722 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -17,7 +17,7 @@
 | [global-scouter/](global-scouter/README.md) | 1,070 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [macro/](macro/README.md) | 9 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
-| [sec-13f/](sec-13f/README.md) | 41 | Quarterly | SEC EDGAR |
+| [sec-13f/](sec-13f/README.md) | 43 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
 | [slickcharts/](slickcharts/README.md) | 556 | Daily/Weekly/Monthly | SlickCharts.com |
 | [yardney/](yardney/README.md) | 1 | Weekly | Yardeni model workbook |
@@ -38,8 +38,8 @@
 - Yardney: S&P 500 fair value model, 1,867 weekly records, latest 2026-05-01 fair value 6,015.64 and premium +20.19%
 
 ### Institutional Data (sec-13f/)
-- 30 investors' 13F holdings (20Q accumulate mode)
-- Analytics: 8 files (consensus, new_positions, buying_pressure, conviction, hhi, turnover, options_hedge, enhanced_consensus)
+- 30 tracked investors' 13F holdings, with 2026-Q1 included where filed (29Q accumulate mode; configured Greenlight/Einhorn CIK is stale after 2023-Q4)
+- Analytics: 10 files (consensus, new_positions, buying_pressure, conviction, hhi, turnover, options_hedge, enhanced_consensus, conviction_entries, multi_quarter_trends)
 - Enrichment metadata: sector/cap/filing-return coverage + source mix
 - Quarterly updates
 
