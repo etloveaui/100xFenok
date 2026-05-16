@@ -59,13 +59,13 @@
       "description": "Macro banking, liquidity, and monthly activity survey series (FRED, FDIC, OECD CLI, major-country PMI, ISM components)"
     },
     "sec-13f": {
-      "version": "3.3.1",
-      "updated": "2026-03-14",
+      "version": "3.3.2",
+      "updated": "2026-05-16",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
       "file_count": 43,
       "schema": true,
-      "description": "Institutional holdings from 30 major investors (20Q accumulate, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
+      "description": "Institutional holdings from 30 tracked investors (29Q accumulate where filed, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
     },
     "sentiment": {
       "version": "1.0.0",
@@ -114,6 +114,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-05-16",
+      "folder": "sec-13f",
+      "version": "3.3.2",
+      "change": "Q1 2026 SEC 13F refresh: 30 tracked investors, 29 quarters covered where filed, 43 public JSON files, 10 analytics files; full rebuild with Yahoo enrichment disabled. Configured Greenlight/Einhorn CIK remains stale after 2023-Q4.",
+      "breaking": false
+    },
     {
       "date": "2026-05-11",
       "folder": "macro",
@@ -415,7 +422,7 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-05-16T00:17:04Z",
+  "generatedAt": "2026-05-16T03:08:01Z",
   "categories": [
     {
       "name": "computed",
@@ -452,10 +459,10 @@
     {
       "name": "sec-13f",
       "path": "/data/sec-13f/",
-      "schemaVersion": "3.3.0",
+      "schemaVersion": "3.3.2",
       "fileCount": 43,
-      "lastUpdated": "2026-03-14",
-      "notes": "Institutional holdings from 30 major investors (20Q accumulate, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
+      "lastUpdated": "2026-05-16",
+      "notes": "Institutional holdings from 30 tracked investors (29Q accumulate where filed, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
     },
     {
       "name": "benchmarks",
