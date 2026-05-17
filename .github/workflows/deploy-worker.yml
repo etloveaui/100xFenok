@@ -1,0 +1,58 @@
+# Deploy the Next.js app to Cloudflare Workers via OpenNext.
+#
+# Triggers:
+#   - push to main affecting source/UI/legacy paths -> immediate deploy
+#     (data directories are excluded; data is refreshed on the schedule
+#     below so the ~60 data commits/day do not each trigger a build)
+#   - schedule -> picks up the latest data into the deployed assets
+#   - workflow_dispatch -> manual deploy
+name: Deploy Worker (Cloudflare)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '100xfenok-next/**'
+      - '100x/**'
+      - 'alpha-scout/**'
+      - 'tools/**'
+      - 'ib/**'
+      - 'admin/**'
+      - 'posts/**'
+      - '!**/data/**'
+  schedule:
+    - cron: '0 0 * * *'   # 09:00 KST
+    - cron: '0 8 * * *'   # 17:00 KST
+    - cron: '0 16 * * *'  # 01:00 KST
+  workflow_dispatch:
+
+concurrency:
+  group: workers-100xfenok-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: 100xfenok-next
+        run: npm ci
+
+      - name: Build (OpenNext Cloudflare)
+        working-directory: 100xfenok-next
+        run: npm run cf:build
+
+      - name: Deploy to Cloudflare Workers
+        working-directory: 100xfenok-next
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
