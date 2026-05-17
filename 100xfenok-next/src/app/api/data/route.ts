@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withResponseCache } from "@/lib/server/response-cache";
 
 const TREASURY_API_URL =
   "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance";
@@ -43,29 +44,7 @@ async function fetchTreasuryRows(start: string, accountType: string) {
   return Array.isArray(payload.data) ? payload.data : [];
 }
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const dataset = searchParams.get("dataset");
-
-  if (dataset !== "treasury-tga") {
-    return NextResponse.json(
-      {
-        error: "UNSUPPORTED_DATASET",
-      },
-      { status: 400, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
-  const start = searchParams.get("start");
-  if (!isValidDateParam(start)) {
-    return NextResponse.json(
-      {
-        error: "INVALID_START_DATE",
-      },
-      { status: 400, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
+async function getTreasuryTgaResponse(start: string): Promise<Response> {
   const settled = await Promise.allSettled(
     TREASURY_ACCOUNT_TYPES.map((accountType) =>
       fetchTreasuryRows(start, accountType),
@@ -115,5 +94,35 @@ export async function GET(request: Request) {
         "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
       },
     },
+  );
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const dataset = searchParams.get("dataset");
+
+  if (dataset !== "treasury-tga") {
+    return NextResponse.json(
+      {
+        error: "UNSUPPORTED_DATASET",
+      },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  const start = searchParams.get("start");
+  if (!isValidDateParam(start)) {
+    return NextResponse.json(
+      {
+        error: "INVALID_START_DATE",
+      },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  return withResponseCache(
+    `treasury-tga:${start}`,
+    1800,
+    () => getTreasuryTgaResponse(start),
   );
 }
