@@ -62,6 +62,11 @@ type LocalRateLimitEntry = {
   resetAt: number;
 };
 
+type RateLimitCheck = {
+  allowed: boolean;
+  debugHeaders: Record<string, string>;
+};
+
 const STATIC_ASSET_PATH_PATTERN =
   /\.(?:avif|css|csv|gif|ico|jpe?g|js|json|map|mjs|png|svg|txt|webmanifest|webp|woff2?)$/i;
 const ONE_MINUTE_MS = 60_000;
@@ -161,38 +166,60 @@ function passesLocalRateLimit(tier: RateLimitTier, now = Date.now()): boolean {
   return current.count <= tier.fallbackLimit;
 }
 
-async function passesRateLimit(request: NextRequest): Promise<boolean> {
+async function passesRateLimit(request: NextRequest): Promise<RateLimitCheck> {
+  const debugHeaders: Record<string, string> = {
+    "X-Dbg-RL-Ctx": "skip",
+    "X-Dbg-RL-Bind": "skip",
+    "X-Dbg-RL-Called": "no",
+    "X-Dbg-RL-Result": "skip",
+  };
+
   if (shouldSkipBotProtection(request.nextUrl.pathname)) {
-    return true;
+    return { allowed: true, debugHeaders };
   }
 
   const tier = getRateLimitTier(request);
 
   try {
-    const { env } = getCloudflareContext();
+    const { env } = await getCloudflareContext({ async: true });
+    debugHeaders["X-Dbg-RL-Ctx"] = "ok";
     const rateLimitEnv = env as RateLimitEnv;
     const limiter = rateLimitEnv[tier.bindingName];
+    debugHeaders["X-Dbg-RL-Bind"] = limiter ? "yes" : "no";
 
     if (!limiter) {
-      return passesLocalRateLimit(tier);
+      return { allowed: passesLocalRateLimit(tier), debugHeaders };
     }
 
+    debugHeaders["X-Dbg-RL-Called"] = "yes";
     const result = await limiter.limit({ key: tier.key });
-    return result.success && passesLocalRateLimit(tier);
+    debugHeaders["X-Dbg-RL-Result"] = result.success ? "true" : "false";
+    return {
+      allowed: result.success && passesLocalRateLimit(tier),
+      debugHeaders,
+    };
   } catch {
-    return passesLocalRateLimit(tier);
+    debugHeaders["X-Dbg-RL-Ctx"] = "throw";
+    return { allowed: passesLocalRateLimit(tier), debugHeaders };
   }
 }
 
-function rateLimitResponse(): NextResponse {
-  return new NextResponse("Too Many Requests", {
+function addDebugHeaders(response: NextResponse, headers: Record<string, string>): NextResponse {
+  Object.entries(headers).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+  return response;
+}
+
+function rateLimitResponse(debugHeaders: Record<string, string>): NextResponse {
+  return addDebugHeaders(new NextResponse("Too Many Requests", {
     status: 429,
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "Retry-After": "60",
       "X-Robots-Tag": "noindex, nofollow, noarchive",
     },
-  });
+  }), debugHeaders);
 }
 
 function getAdminTrailingSlashRedirect(request: NextRequest): NextResponse | null {
@@ -251,25 +278,26 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  if (!(await passesRateLimit(request))) {
-    return rateLimitResponse();
+  const rateLimitCheck = await passesRateLimit(request);
+  if (!rateLimitCheck.allowed) {
+    return rateLimitResponse(rateLimitCheck.debugHeaders);
   }
 
   const adminTrailingSlashRedirect = getAdminTrailingSlashRedirect(request);
   if (adminTrailingSlashRedirect) {
-    return adminTrailingSlashRedirect;
+    return addDebugHeaders(adminTrailingSlashRedirect, rateLimitCheck.debugHeaders);
   }
 
   const normalizedAdminPath = normalizeAdminLegacyPath(pathname);
   const normalizedTravelPath = normalizeLegacyTravelPath(pathname);
 
   if (!normalizedAdminPath && !normalizedTravelPath) {
-    return NextResponse.next();
+    return addDebugHeaders(NextResponse.next(), rateLimitCheck.debugHeaders);
   }
 
   const redirectTarget = normalizedAdminPath ?? normalizedTravelPath;
   if (!redirectTarget) {
-    return NextResponse.next();
+    return addDebugHeaders(NextResponse.next(), rateLimitCheck.debugHeaders);
   }
 
   const targetUrl = request.nextUrl.clone();
@@ -288,14 +316,14 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.searchParams.get("embed") === "1" &&
     authenticated
   ) {
-    return NextResponse.next();
+    return addDebugHeaders(NextResponse.next(), rateLimitCheck.debugHeaders);
   }
 
   if (normalizedTravelPath && !authenticated) {
-    return NextResponse.redirect(targetUrl);
+    return addDebugHeaders(NextResponse.redirect(targetUrl), rateLimitCheck.debugHeaders);
   }
 
-  return NextResponse.redirect(targetUrl);
+  return addDebugHeaders(NextResponse.redirect(targetUrl), rateLimitCheck.debugHeaders);
 }
 
 export const config = {
