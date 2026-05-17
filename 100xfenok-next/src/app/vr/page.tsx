@@ -34,7 +34,7 @@ export default async function VRPage({ searchParams }: PageProps) {
   const rawPath = getSingleSearchParam(params.path);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['vr/'] });
 
-  if (safePath && legacyPublicFileExists(safePath)) {
+  if (safePath && await legacyPublicFileExists(safePath)) {
     const frameTitle = safePath.endsWith('vr-complete-system.html')
       ? 'VR 완전 가이드'
       : safePath.endsWith('vr-total-guide-calculator.html')

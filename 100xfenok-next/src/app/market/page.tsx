@@ -20,8 +20,9 @@ export default async function MarketPage({ searchParams }: PageProps) {
   const rawPath = getSingleSearchParam(params.path);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['100x/'] });
   const iframeSrc = safePath ? `/${safePath}` : '/100x/100x-main.html';
+  const hasSafePath = safePath ? await legacyPublicFileExists(safePath) : false;
   const effectiveIframeSrc =
-    safePath && legacyPublicFileExists(safePath) ? iframeSrc : '/100x/100x-main.html';
+    safePath && hasSafePath ? iframeSrc : '/100x/100x-main.html';
 
   return (
     <RouteEmbedFrame

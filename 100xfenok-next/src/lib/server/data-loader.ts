@@ -1,5 +1,7 @@
+import type { Dirent } from "node:fs";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { DATA_JSON_FILES_BY_PATH } from "@/generated/static-route-manifest";
 import type { z } from "zod";
 import {
   benchmarkCatalogSchema,
@@ -50,10 +52,42 @@ type JsonFileEntry = {
   updatedAt: string;
 };
 
+type DataJsonManifestEntry = Omit<JsonFileEntry, "path">;
+
 async function readJson<T>(filePath: string, schema: z.ZodType<T>): Promise<T> {
-  const raw = await readFile(filePath, "utf-8");
+  const raw = await readPublicDataFile(filePath);
   const parsed = JSON.parse(raw) as unknown;
   return schema.parse(parsed);
+}
+
+async function readPublicDataFile(filePath: string): Promise<string> {
+  try {
+    return await readFile(filePath, "utf-8");
+  } catch (fsError) {
+    const publicPath = toPublicPath(filePath);
+    if (!publicPath) throw fsError;
+
+    try {
+      const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+      const { env } = await getCloudflareContext({ async: true });
+      const assets = env.ASSETS;
+      if (!assets) throw fsError;
+
+      const response = await assets.fetch(new URL(publicPath, "https://assets.local"));
+      if (!response.ok) {
+        throw new Error(`ASSET_FETCH_FAILED:${response.status}:${publicPath}`);
+      }
+      return await response.text();
+    } catch {
+      throw fsError;
+    }
+  }
+}
+
+function toPublicPath(filePath: string): string | null {
+  const relative = path.relative(path.join(process.cwd(), "public"), filePath);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) return null;
+  return `/${relative.split(path.sep).join("/")}`;
 }
 
 async function getRootDataManifest() {
@@ -69,8 +103,25 @@ async function getFolderSchemaMeta(folder: DataFolderKey): Promise<FolderSchemaM
   }
 }
 
-async function listJsonFileNames(absDir: string): Promise<string[]> {
-  const entries = await readdir(absDir, { withFileTypes: true });
+function getDataPathKey(publicBasePath: string) {
+  return publicBasePath.replace(/^\/data\/?/, "") || ".";
+}
+
+function getManifestJsonEntries(publicBasePath: string): DataJsonManifestEntry[] {
+  const key = getDataPathKey(publicBasePath);
+  return [...((DATA_JSON_FILES_BY_PATH as Record<string, readonly DataJsonManifestEntry[]>)[key] ?? [])];
+}
+
+async function listJsonFileNames(
+  absDir: string,
+  publicBasePath: string,
+): Promise<string[]> {
+  let entries: Dirent[];
+  try {
+    entries = await readdir(absDir, { withFileTypes: true });
+  } catch {
+    return getManifestJsonEntries(publicBasePath).map((entry) => entry.name);
+  }
   return entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json") && entry.name !== "schema.json")
     .map((entry) => entry.name)
@@ -82,17 +133,21 @@ async function buildJsonSample(
   publicBasePath: string,
   sampleLimit: number,
 ): Promise<{ count: number; sample: JsonFileEntry[] }> {
-  const names = await listJsonFileNames(absDir);
+  const names = await listJsonFileNames(absDir, publicBasePath);
+  const manifestByName = new Map(
+    getManifestJsonEntries(publicBasePath).map((entry) => [entry.name, entry]),
+  );
   const sampleNames = names.slice(0, sampleLimit);
   const sample = await Promise.all(
     sampleNames.map(async (name): Promise<JsonFileEntry> => {
       const absPath = path.join(absDir, name);
-      const info = await stat(absPath);
+      const info = await stat(absPath).catch(() => null);
+      const manifestEntry = manifestByName.get(name);
       return {
         name,
         path: `${publicBasePath}/${name}`,
-        sizeBytes: info.size,
-        updatedAt: info.mtime.toISOString(),
+        sizeBytes: info?.size ?? manifestEntry?.sizeBytes ?? 0,
+        updatedAt: info?.mtime.toISOString() ?? manifestEntry?.updatedAt ?? "",
       };
     }),
   );

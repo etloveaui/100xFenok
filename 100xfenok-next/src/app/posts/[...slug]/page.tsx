@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
-import { readPostCatalog, readPostMetadataBySlug } from "@/lib/server/posts";
+import { readPostMetadataBySlug, readPostStaticParams } from "@/lib/server/posts";
 
 const defaultMetadata: Metadata = {
   title: "분석 아카이브 상세",
@@ -14,14 +14,14 @@ interface PostLegacyPageProps {
 }
 
 export function generateStaticParams(): Array<{ slug: string[] }> {
-  return readPostCatalog().map((post) => ({ slug: post.slug }));
+  return readPostStaticParams();
 }
 
 export async function generateMetadata({
   params,
 }: PostLegacyPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = readPostMetadataBySlug(slug);
+  const post = await readPostMetadataBySlug(slug);
 
   if (!post) {
     return defaultMetadata;
@@ -45,7 +45,7 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
     notFound();
   }
 
-  const post = readPostMetadataBySlug(slug);
+  const post = await readPostMetadataBySlug(slug);
   if (!post) {
     notFound();
   }

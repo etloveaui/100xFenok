@@ -34,11 +34,11 @@ export default async function PostsPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
   const rawPath = getSingleSearchParam(params.path);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['posts/'] });
-  const posts = readPostCatalog();
+  const posts = await readPostCatalog();
   const [featuredPost, ...archivePosts] = posts;
 
   const filePath = safePath ? safePath.replace(/^posts\//, 'posts-raw/') : null;
-  if (filePath && legacyPublicFileExists(filePath)) {
+  if (filePath && await legacyPublicFileExists(filePath)) {
     const rawSrc = `/${filePath}`;
     return <RouteEmbedFrame src={rawSrc} title="Posts Detail" loading="eager" />;
   }

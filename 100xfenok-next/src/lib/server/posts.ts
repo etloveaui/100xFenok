@@ -1,5 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
+import { POST_HTML_FILES } from "@/generated/static-route-manifest";
+import { readPublicAssetText } from "@/lib/server/public-assets";
 
 export type PostCatalogEntry = {
   slug: string[];
@@ -12,7 +12,8 @@ export type PostCatalogEntry = {
   badgeClass: string;
 };
 
-const POSTS_ROOT = path.join(process.cwd(), "public", "posts-raw");
+const POST_PUBLIC_ROOT = "/posts-raw";
+const POST_HTML_FILE_SET = new Set<string>(POST_HTML_FILES);
 
 function extractFirst(pattern: RegExp, source: string): string | null {
   const match = source.match(pattern);
@@ -75,46 +76,22 @@ function getBadgeMeta(title: string, relativePath: string) {
   return { badgeLabel: "리포트", badgeClass: "posts-badge-alphapick" };
 }
 
-function collectHtmlFiles(root: string): string[] {
-  if (!fs.existsSync(root)) return [];
-
-  const files: string[] = [];
-  const stack = [root];
-
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current) continue;
-
-    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      const absolutePath = path.join(current, entry.name);
-
-      if (entry.isDirectory()) {
-        stack.push(absolutePath);
-        continue;
-      }
-
-      if (!entry.isFile() || !entry.name.endsWith(".html")) {
-        continue;
-      }
-
-      const relativePath = path.relative(root, absolutePath).replaceAll(path.sep, "/");
-      if (relativePath === "posts-main.html") {
-        continue;
-      }
-      files.push(relativePath);
-    }
-  }
-
-  return files.sort((left, right) => right.localeCompare(left));
+function collectHtmlFiles(): string[] {
+  return [...POST_HTML_FILES].sort((left, right) => right.localeCompare(left));
 }
 
-export function readPostCatalog(): PostCatalogEntry[] {
-  const files = collectHtmlFiles(POSTS_ROOT);
+export function readPostStaticParams(): Array<{ slug: string[] }> {
+  return collectHtmlFiles().map((relativePath) => ({
+    slug: relativePath.split("/").filter(Boolean),
+  }));
+}
 
-  return files
-    .map((relativePath) => {
-      const absolutePath = path.join(POSTS_ROOT, relativePath);
-      const html = fs.readFileSync(absolutePath, "utf8");
+export async function readPostCatalog(): Promise<PostCatalogEntry[]> {
+  const files = collectHtmlFiles();
+
+  const entries = await Promise.all(
+    files.map(async (relativePath) => {
+      const html = await readPublicAssetText(`${POST_PUBLIC_ROOT}/${relativePath}`);
 
       const title = normalizeText(
         extractFirst(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i, html)
@@ -140,45 +117,38 @@ export function readPostCatalog(): PostCatalogEntry[] {
         badgeLabel,
         badgeClass,
       } satisfies PostCatalogEntry;
-    })
-    .sort((left, right) => {
-      if (left.publishedAt !== right.publishedAt) {
-        return right.publishedAt.localeCompare(left.publishedAt);
-      }
-      return left.title.localeCompare(right.title, "ko");
-    });
+    }),
+  );
+
+  return entries.sort((left, right) => {
+    if (left.publishedAt !== right.publishedAt) {
+      return right.publishedAt.localeCompare(left.publishedAt);
+    }
+    return left.title.localeCompare(right.title, "ko");
+  });
 }
 
-export function resolvePostFileBySlug(slug: string[]): string | null {
+export function resolvePostPublicPathBySlug(slug: string[]): string | null {
   const joined = slug.join("/");
   const candidates = joined.endsWith(".html")
     ? [joined]
-    : [`${joined}.html`, path.join(joined, "index.html")];
+    : [`${joined}.html`, `${joined}/index.html`];
 
   for (const candidate of candidates) {
-    const absolutePath = path.resolve(POSTS_ROOT, candidate);
-    if (!absolutePath.startsWith(`${POSTS_ROOT}${path.sep}`)) continue;
-    if (!fs.existsSync(absolutePath)) continue;
-    if (!fs.statSync(absolutePath).isFile()) continue;
-    return absolutePath;
+    const normalized = candidate.replace(/^\/+/, "").replaceAll("\\", "/");
+    if (POST_HTML_FILE_SET.has(normalized)) {
+      return `${POST_PUBLIC_ROOT}/${normalized}`;
+    }
   }
 
   return null;
 }
 
-export function normalizePostPublicPath(absolutePath: string): string | null {
-  const relative = path.relative(POSTS_ROOT, absolutePath);
-  if (!relative || relative.startsWith("..")) {
-    return null;
-  }
-  return `/posts-raw/${relative.replaceAll(path.sep, "/")}`;
-}
+export async function readPostMetadataBySlug(slug: string[]) {
+  const publicPath = resolvePostPublicPathBySlug(slug);
+  if (!publicPath) return null;
 
-export function readPostMetadataBySlug(slug: string[]) {
-  const absolutePath = resolvePostFileBySlug(slug);
-  if (!absolutePath) return null;
-
-  const html = fs.readFileSync(absolutePath, "utf8");
+  const html = await readPublicAssetText(publicPath);
   const title = normalizeText(
     extractFirst(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i, html)
       || extractFirst(/<title>([^<]+)<\/title>/i, html),
@@ -189,13 +159,10 @@ export function readPostMetadataBySlug(slug: string[]) {
       || extractParagraphSummary(html),
     "분석 리포트 상세 페이지입니다.",
   );
-  const publicPath = normalizePostPublicPath(absolutePath);
 
-  return publicPath
-    ? {
-        title,
-        description,
-        publicPath,
-      }
-    : null;
+  return {
+    title,
+    description,
+    publicPath,
+  };
 }

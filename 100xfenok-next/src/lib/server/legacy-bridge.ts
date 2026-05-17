@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
+import { publicAssetExists } from "@/lib/server/public-assets";
 
 const LEGACY_PATH_PATTERN = /^[A-Za-z0-9._/-]+$/;
 const LEGACY_SEGMENT_PATTERN = /^[A-Za-z0-9._-]+$/;
@@ -65,20 +64,10 @@ export function isSafeSlugSegments(slug: string[]): boolean {
   );
 }
 
-export function legacyPublicFileExists(relativePath: string): boolean {
-  const publicRoot = path.resolve(process.cwd(), "public");
+export async function legacyPublicFileExists(relativePath: string): Promise<boolean> {
   const { pathname } = splitLegacyPathSuffix(relativePath);
   const safeRelativePath = pathname.replace(/^\/+/, "");
-  const absolutePath = path.resolve(publicRoot, safeRelativePath);
-
-  if (
-    absolutePath !== publicRoot &&
-    !absolutePath.startsWith(`${publicRoot}${path.sep}`)
-  ) {
-    return false;
-  }
-  if (!fs.existsSync(absolutePath)) return false;
-  return fs.statSync(absolutePath).isFile();
+  return publicAssetExists(safeRelativePath);
 }
 
 function splitLegacyPathSuffix(value: string): { pathname: string; suffix: string } {

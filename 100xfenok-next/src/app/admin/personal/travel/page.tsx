@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import fs from "node:fs";
-import path from "node:path";
 import Link from "next/link";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import { TRAVEL_HTML_FILES } from "@/generated/static-route-manifest";
 import {
   getSingleSearchParam,
   legacyPublicFileExists,
@@ -19,12 +18,7 @@ type TravelPageProps = {
 };
 
 function getTravelFiles(): string[] {
-  const dir = path.join(process.cwd(), "public", "admin", "personal", "travel");
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".html"))
-    .sort();
+  return [...TRAVEL_HTML_FILES].sort();
 }
 
 export default async function TravelPage({ searchParams }: TravelPageProps) {
@@ -45,7 +39,7 @@ export default async function TravelPage({ searchParams }: TravelPageProps) {
 
   const singleFile = files.length === 1 ? files[0] : null;
   const selectedPath =
-    safePath && legacyPublicFileExists(safePath)
+    safePath && await legacyPublicFileExists(safePath)
       ? safePath
       : singleFile
         ? `admin/personal/travel/${singleFile}`

@@ -5,7 +5,6 @@ const TICKER_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=15, stale-while-revalidate=45",
 } as const;
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 export const revalidate = false;
 

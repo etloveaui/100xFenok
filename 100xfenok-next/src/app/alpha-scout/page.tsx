@@ -46,10 +46,12 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['alpha-scout/'] });
   const safeReport = sanitizeReportFilename(rawReport);
   const reportPath = safeReport ? `alpha-scout/reports/${safeReport}` : null;
+  const hasSafePath = safePath ? await legacyPublicFileExists(safePath) : false;
+  const hasReportPath = reportPath ? await legacyPublicFileExists(reportPath) : false;
   const iframeSrc =
-    safePath && legacyPublicFileExists(safePath)
+    safePath && hasSafePath
       ? `/${safePath}`
-      : reportPath && legacyPublicFileExists(reportPath)
+      : reportPath && hasReportPath
         ? `/${reportPath}`
         : '/alpha-scout/alpha-scout-main.html';
 

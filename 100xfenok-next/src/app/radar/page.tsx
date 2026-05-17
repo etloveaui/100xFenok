@@ -26,7 +26,8 @@ export default async function RadarPage({ searchParams }: PageProps) {
   const rawCategory = getSingleSearchParam(params.category);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['tools/macro-monitor/'] });
   const isValidCategory = typeof rawCategory === 'string' && VALID_RADAR_CATEGORIES.has(rawCategory);
-  const baseIframeSrc = safePath && legacyPublicFileExists(safePath)
+  const hasSafePath = safePath ? await legacyPublicFileExists(safePath) : false;
+  const baseIframeSrc = safePath && hasSafePath
     ? `/${safePath}`
     : '/tools/macro-monitor/index.html';
   const shouldApplyCategory = isValidCategory

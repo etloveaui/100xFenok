@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import fs from "node:fs";
-import path from "node:path";
 import { notFound } from "next/navigation";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
+import { publicAssetExists } from "@/lib/server/public-assets";
 
 export const metadata: Metadata = {
   title: "Admin Legacy Bridge",
@@ -18,13 +17,12 @@ const legacyAliasBySlug: Record<string, string> = {
   "ib-helper": "ib/ib-helper/index.html",
 };
 
-function resolveLegacyIframeSrc(slug: string[]): string | null {
+async function resolveLegacyIframeSrc(slug: string[]): Promise<string | null> {
   const joined = slug.join("/");
   const alias = legacyAliasBySlug[joined];
   if (alias) {
-    const aliasAbsPath = path.join(process.cwd(), "public", alias);
-    if (fs.existsSync(aliasAbsPath) && fs.statSync(aliasAbsPath).isFile()) {
-      return `/${alias.replaceAll(path.sep, "/")}`;
+    if (await publicAssetExists(alias)) {
+      return `/${alias}`;
     }
   }
 
@@ -33,11 +31,10 @@ function resolveLegacyIframeSrc(slug: string[]): string | null {
     : [`${joined}.html`, `${joined}/index.html`];
 
   for (const candidate of candidates) {
-    const relativePath = path.join("admin", candidate);
-    const absolutePath = path.join(process.cwd(), "public", relativePath);
+    const relativePath = `admin/${candidate}`.replaceAll("\\", "/");
 
-    if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile()) {
-      return `/${relativePath.replaceAll(path.sep, "/")}`;
+    if (await publicAssetExists(relativePath)) {
+      return `/${relativePath}`;
     }
   }
 
@@ -51,7 +48,7 @@ export default async function AdminLegacyPage({ params }: AdminLegacyPageProps) 
     notFound();
   }
 
-  const iframeSrc = resolveLegacyIframeSrc(slug);
+  const iframeSrc = await resolveLegacyIframeSrc(slug);
   if (!iframeSrc) {
     notFound();
   }

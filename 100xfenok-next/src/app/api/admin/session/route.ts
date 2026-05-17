@@ -4,6 +4,7 @@ import {
   ADMIN_SESSION_COOKIE,
   createAdminSessionToken,
   getAdminSessionCookieOptions,
+  isAdminAuthConfigured,
   verifyAdminPasswordServer,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
@@ -22,6 +23,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isAdminAuthConfigured()) {
+    return NextResponse.json(
+      { error: "ADMIN_AUTH_NOT_CONFIGURED" },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const body = (await request.json().catch(() => null)) as
     | { password?: string }
     | null;

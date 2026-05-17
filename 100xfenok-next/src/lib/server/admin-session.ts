@@ -12,11 +12,25 @@ type AdminSessionPayload = {
 };
 
 function getAdminPasswordHash(): string {
-  return process.env.NEXT_ADMIN_PASSWORD_HASH || DEFAULT_ADMIN_PASSWORD_HASH;
+  const configured = process.env.NEXT_ADMIN_PASSWORD_HASH;
+  if (configured) return configured;
+  if (allowDefaultAdminAuth()) return DEFAULT_ADMIN_PASSWORD_HASH;
+  return "";
 }
 
 function getAdminSessionSecret(): string {
-  return process.env.NEXT_ADMIN_SESSION_SECRET || DEFAULT_ADMIN_SESSION_SECRET;
+  const configured = process.env.NEXT_ADMIN_SESSION_SECRET;
+  if (configured) return configured;
+  if (allowDefaultAdminAuth()) return DEFAULT_ADMIN_SESSION_SECRET;
+  return "";
+}
+
+function allowDefaultAdminAuth(): boolean {
+  return process.env.NODE_ENV !== "production" || process.env.NEXT_ADMIN_ALLOW_DEFAULTS === "1";
+}
+
+export function isAdminAuthConfigured(): boolean {
+  return Boolean(getAdminPasswordHash() && getAdminSessionSecret());
 }
 
 function bytesToHex(buffer: ArrayBuffer): string {
@@ -93,8 +107,9 @@ export async function verifyAdminPasswordServer(
 ): Promise<boolean> {
   const normalized = input.trim();
   if (!normalized) return false;
-  const hash = await sha256Hex(normalized);
   const expected = getAdminPasswordHash();
+  if (!expected) return false;
+  const hash = await sha256Hex(normalized);
   // Constant-time comparison to prevent timing attacks
   const a = new TextEncoder().encode(hash);
   const b = new TextEncoder().encode(expected);
@@ -109,12 +124,16 @@ export async function verifyAdminPasswordServer(
 export async function createAdminSessionToken(
   now = Date.now(),
 ): Promise<string> {
+  const secret = getAdminSessionSecret();
+  if (!secret) {
+    throw new Error("ADMIN_AUTH_NOT_CONFIGURED");
+  }
   const payload: AdminSessionPayload = {
     v: 1,
     exp: now + ADMIN_SESSION_TTL_MS,
   };
   const encodedPayload = serializePayload(payload);
-  const signature = await hmacHex(encodedPayload, getAdminSessionSecret());
+  const signature = await hmacHex(encodedPayload, secret);
   return `${encodedPayload}.${signature}`;
 }
 
@@ -129,10 +148,12 @@ export async function verifyAdminSessionToken(
 
   const payload = parsePayload(encodedPayload);
   if (!payload || payload.exp <= now) return false;
+  const secret = getAdminSessionSecret();
+  if (!secret) return false;
 
   const expectedSignature = await hmacHex(
     encodedPayload,
-    getAdminSessionSecret(),
+    secret,
   );
 
   // Constant-time comparison to prevent timing attacks

@@ -106,7 +106,7 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
   }
 
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ["admin/design-lab/"] });
-  const iframeSrc = safePath && legacyPublicFileExists(safePath)
+  const iframeSrc = safePath && await legacyPublicFileExists(safePath)
     ? `/${safePath}`
     : "/admin/design-lab/index.html";
 
