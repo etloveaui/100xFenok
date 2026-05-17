@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
 
   // Trailing slash for consistent URLs
   trailingSlash: true,
+  ...(isCloudflareProfile ? { skipTrailingSlashRedirect: true } : {}),
 
   // CDN cache for static data JSON (daily-updated, 5 min browser + 10 min stale)
   async headers() {

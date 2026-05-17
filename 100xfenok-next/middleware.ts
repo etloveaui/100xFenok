@@ -53,10 +53,19 @@ type RateLimitEnv = {
 type RateLimitTier = {
   bindingName: keyof RateLimitEnv;
   key: string;
+  fallbackLimit: number;
+  periodMs: number;
+};
+
+type LocalRateLimitEntry = {
+  count: number;
+  resetAt: number;
 };
 
 const STATIC_ASSET_PATH_PATTERN =
   /\.(?:avif|css|csv|gif|ico|jpe?g|js|json|map|mjs|png|svg|txt|webmanifest|webp|woff2?)$/i;
+const ONE_MINUTE_MS = 60_000;
+const localRateLimitStore = new Map<string, LocalRateLimitEntry>();
 
 function isBlockedAiBot(userAgent: string | null): boolean {
   if (!userAgent) {
@@ -84,15 +93,25 @@ function getClientIp(request: NextRequest): string {
   );
 }
 
+function isAdminPath(pathname: string): boolean {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+function isAdminSessionPath(pathname: string): boolean {
+  return pathname === "/api/admin/session" || pathname.startsWith("/api/admin/session/");
+}
+
 function getRateLimitTier(request: NextRequest): RateLimitTier {
   const { pathname } = request.nextUrl;
   const ip = getClientIp(request);
   const hasUserAgent = Boolean(request.headers.get("user-agent")?.trim());
 
-  if (pathname === "/api/admin/session" || pathname.startsWith("/admin")) {
+  if (isAdminSessionPath(pathname) || isAdminPath(pathname)) {
     return {
       bindingName: "RL_ADMIN",
       key: `admin:${ip}`,
+      fallbackLimit: 10,
+      periodMs: ONE_MINUTE_MS,
     };
   }
 
@@ -106,6 +125,8 @@ function getRateLimitTier(request: NextRequest): RateLimitTier {
     return {
       bindingName: "RL_API",
       key: `api:${apiClass}:${ip}`,
+      fallbackLimit: 120,
+      periodMs: ONE_MINUTE_MS,
     };
   }
 
@@ -113,13 +134,31 @@ function getRateLimitTier(request: NextRequest): RateLimitTier {
     return {
       bindingName: "RL_API",
       key: `suspect:${ip}`,
+      fallbackLimit: 120,
+      periodMs: ONE_MINUTE_MS,
     };
   }
 
   return {
     bindingName: "RL_GLOBAL",
     key: `global:${ip}`,
+    fallbackLimit: 600,
+    periodMs: ONE_MINUTE_MS,
   };
+}
+
+function passesLocalRateLimit(tier: RateLimitTier, now = Date.now()): boolean {
+  const current = localRateLimitStore.get(tier.key);
+  if (!current || current.resetAt <= now) {
+    localRateLimitStore.set(tier.key, {
+      count: 1,
+      resetAt: now + tier.periodMs,
+    });
+    return true;
+  }
+
+  current.count += 1;
+  return current.count <= tier.fallbackLimit;
 }
 
 async function passesRateLimit(request: NextRequest): Promise<boolean> {
@@ -127,20 +166,21 @@ async function passesRateLimit(request: NextRequest): Promise<boolean> {
     return true;
   }
 
+  const tier = getRateLimitTier(request);
+
   try {
     const { env } = getCloudflareContext();
     const rateLimitEnv = env as RateLimitEnv;
-    const tier = getRateLimitTier(request);
     const limiter = rateLimitEnv[tier.bindingName];
 
     if (!limiter) {
-      return true;
+      return passesLocalRateLimit(tier);
     }
 
     const result = await limiter.limit({ key: tier.key });
-    return result.success;
+    return result.success && passesLocalRateLimit(tier);
   } catch {
-    return true;
+    return passesLocalRateLimit(tier);
   }
 }
 
@@ -153,6 +193,17 @@ function rateLimitResponse(): NextResponse {
       "X-Robots-Tag": "noindex, nofollow, noarchive",
     },
   });
+}
+
+function getAdminTrailingSlashRedirect(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  if (!isAdminPath(pathname) || pathname.endsWith("/")) {
+    return null;
+  }
+
+  const targetUrl = request.nextUrl.clone();
+  targetUrl.pathname = `${pathname}/`;
+  return NextResponse.redirect(targetUrl, 308);
 }
 
 function normalizeAdminLegacyPath(pathname: string): string | null {
@@ -202,6 +253,11 @@ export async function middleware(request: NextRequest) {
 
   if (!(await passesRateLimit(request))) {
     return rateLimitResponse();
+  }
+
+  const adminTrailingSlashRedirect = getAdminTrailingSlashRedirect(request);
+  if (adminTrailingSlashRedirect) {
+    return adminTrailingSlashRedirect;
   }
 
   const normalizedAdminPath = normalizeAdminLegacyPath(pathname);
