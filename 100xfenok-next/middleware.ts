@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextResponse } from "next/server";
 import {
   ADMIN_SESSION_COOKIE,
@@ -25,7 +26,37 @@ const BLOCKED_AI_BOT_PATTERNS = [
   /\bSemrushBot\b/i,
   /\bMJ12bot\b/i,
   /\bDotBot\b/i,
+  /\bBLEXBot\b/i,
+  /\bPetalBot\b/i,
+  /\bBaiduspider\b/i,
+  /\bYandexBot\b/i,
+  /\bSogou\b/i,
+  /\bAwario\b/i,
+  /\bDataForSeoBot\b/i,
+  /\bImagesiftBot\b/i,
+  /\bomgili\b/i,
+  /\bMeltwater\b/i,
+  /\bSeznamBot\b/i,
+  /\bSeekportBot\b/i,
 ];
+
+type RateLimitBinding = {
+  limit(input: { key: string }): Promise<{ success: boolean }>;
+};
+
+type RateLimitEnv = {
+  RL_GLOBAL?: RateLimitBinding;
+  RL_API?: RateLimitBinding;
+  RL_ADMIN?: RateLimitBinding;
+};
+
+type RateLimitTier = {
+  bindingName: keyof RateLimitEnv;
+  key: string;
+};
+
+const STATIC_ASSET_PATH_PATTERN =
+  /\.(?:avif|css|csv|gif|ico|jpe?g|js|json|map|mjs|png|svg|txt|webmanifest|webp|woff2?)$/i;
 
 function isBlockedAiBot(userAgent: string | null): boolean {
   if (!userAgent) {
@@ -33,6 +64,95 @@ function isBlockedAiBot(userAgent: string | null): boolean {
   }
 
   return BLOCKED_AI_BOT_PATTERNS.some((pattern) => pattern.test(userAgent));
+}
+
+function shouldSkipBotProtection(pathname: string): boolean {
+  return (
+    pathname === "/robots.txt" ||
+    pathname === "/favicon.ico" ||
+    pathname.startsWith("/_next/static/") ||
+    pathname.startsWith("/_next/image/") ||
+    STATIC_ASSET_PATH_PATTERN.test(pathname)
+  );
+}
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+function getRateLimitTier(request: NextRequest): RateLimitTier {
+  const { pathname } = request.nextUrl;
+  const ip = getClientIp(request);
+  const hasUserAgent = Boolean(request.headers.get("user-agent")?.trim());
+
+  if (pathname === "/api/admin/session" || pathname.startsWith("/admin")) {
+    return {
+      bindingName: "RL_ADMIN",
+      key: `admin:${ip}`,
+    };
+  }
+
+  if (pathname.startsWith("/api/")) {
+    const apiClass = pathname.startsWith("/api/ticker")
+      ? "ticker"
+      : pathname.startsWith("/api/data")
+        ? "data"
+        : "other";
+
+    return {
+      bindingName: "RL_API",
+      key: `api:${apiClass}:${ip}`,
+    };
+  }
+
+  if (!hasUserAgent) {
+    return {
+      bindingName: "RL_API",
+      key: `suspect:${ip}`,
+    };
+  }
+
+  return {
+    bindingName: "RL_GLOBAL",
+    key: `global:${ip}`,
+  };
+}
+
+async function passesRateLimit(request: NextRequest): Promise<boolean> {
+  if (shouldSkipBotProtection(request.nextUrl.pathname)) {
+    return true;
+  }
+
+  try {
+    const { env } = getCloudflareContext();
+    const rateLimitEnv = env as RateLimitEnv;
+    const tier = getRateLimitTier(request);
+    const limiter = rateLimitEnv[tier.bindingName];
+
+    if (!limiter) {
+      return true;
+    }
+
+    const result = await limiter.limit({ key: tier.key });
+    return result.success;
+  } catch {
+    return true;
+  }
+}
+
+function rateLimitResponse(): NextResponse {
+  return new NextResponse("Too Many Requests", {
+    status: 429,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Retry-After": "60",
+      "X-Robots-Tag": "noindex, nofollow, noarchive",
+    },
+  });
 }
 
 function normalizeAdminLegacyPath(pathname: string): string | null {
@@ -70,7 +190,7 @@ function normalizeLegacyTravelPath(pathname: string): string | null {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  if (pathname !== "/robots.txt" && isBlockedAiBot(request.headers.get("user-agent"))) {
+  if (!shouldSkipBotProtection(pathname) && isBlockedAiBot(request.headers.get("user-agent"))) {
     return new NextResponse("Forbidden", {
       status: 403,
       headers: {
@@ -78,6 +198,10 @@ export async function middleware(request: NextRequest) {
         "X-Robots-Tag": "noindex, nofollow, noarchive",
       },
     });
+  }
+
+  if (!(await passesRateLimit(request))) {
+    return rateLimitResponse();
   }
 
   const normalizedAdminPath = normalizeAdminLegacyPath(pathname);
