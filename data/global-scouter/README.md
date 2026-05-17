@@ -27,7 +27,7 @@ global-scouter/
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (23 items)
 └── indicators/              # v2.1.0
-    └── economic.json        # Economic indicators (1,058 records)
+    └── economic.json        # Economic indicators (1,059 records)
 ```
 
 ## File Counts
@@ -121,7 +121,7 @@ global-scouter/
 
 ```json
 {
-  "count": 1058,
+  "count": 1059,
   "records": [
     {
       "date": "2026-01-02",
@@ -161,6 +161,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.0 | 2026-05-17 | Data refresh (2026-05-15 source): 1,065 stocks, 1,059 indicators (+1), per_bands 98.3% |
 | 2.2.0 | 2026-05-11 | Data refresh (2026-05-08 source): 1,065 stocks (-1), 1,058 indicators (+1), per_bands 98.3% |
 | 2.2.0 | 2026-05-03 | Data refresh (2026-05-01 source): 1,066 stocks, 1,057 indicators (+1), per_bands 98.4% |
 | 2.2.0 | 2026-04-26 | Data refresh (2026-04-24 source): 1,066 stocks, 1,056 indicators (+1), per_bands 98.4% |
@@ -182,4 +183,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-05-11*
+*Last Updated: 2026-05-17*
