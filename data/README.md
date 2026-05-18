@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-05-17
+> **Last Updated**: 2026-05-18
 > **Total Files**: 1,722 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -38,7 +38,8 @@
 - Yardney: S&P 500 fair value model, 1,867 weekly records, latest 2026-05-01 fair value 6,015.64 and premium +20.19%
 
 ### Institutional Data (sec-13f/)
-- 30 tracked investors' 13F holdings, with 2026-Q1 included where filed (29Q accumulate mode; configured Greenlight/Einhorn CIK is stale after 2023-Q4)
+- 30 tracked investors' 13F holdings, with 2026-Q1 included where filed (29Q accumulate mode; Einhorn last filed 2023-Q4 and is flagged `is_stale`)
+- v3.4.0 rebuild: per-filing value-unit normalization (thousands/dollars 1000x fix), 30/30 CIK→entity mappings audited and corrected, 13F-HR/A amendment merge
 - Analytics: 10 files (consensus, new_positions, buying_pressure, conviction, hhi, turnover, options_hedge, enhanced_consensus, conviction_entries, multi_quarter_trends)
 - Enrichment metadata: sector/cap/filing-return coverage + source mix
 - Quarterly updates

@@ -1,10 +1,10 @@
 {
   "folder": "sec-13f",
-  "version": "3.3.2",
-  "updated": "2026-05-16",
+  "version": "3.4.0",
+  "updated": "2026-05-18",
   "source": "SEC EDGAR 13F filings",
   "update_frequency": "quarterly (45 days after quarter end)",
-  "maintainer": "SEC 13F Converter v3.3.2 (accumulate mode, full backfill default)",
+  "maintainer": "SEC 13F Converter v3.4.0 (accumulate mode, full backfill default)",
   "structure": {
     "summary.json": "Aggregated holdings summary",
     "by_sector.json": "Holdings by sector",
@@ -34,10 +34,27 @@
           "mode": {
             "strict_official": "boolean",
             "backfill_mode": "latest|full",
-            "use_yahoo": "boolean"
+            "use_yahoo": "boolean",
+            "continue_on_investor_error": "boolean"
+          },
+          "partial_run": "boolean",
+          "publish_blocked": "boolean",
+          "investor_errors": "array"
+        },
+        "investors": {
+          "{investor_id}": {
+            "name": "string",
+            "group": "string",
+            "aum": "number",
+            "holdings_count": "number",
+            "top5": "string[]",
+            "quarter": "string",
+            "latest_quarter": "string",
+            "global_latest_quarter": "string",
+            "is_stale": "boolean",
+            "stale_quarters": "number"
           }
         },
-        "investors": "object",
         "top_stocks": "object"
       }
     },
@@ -116,9 +133,28 @@
           "filings[]": {
             "quarter": "string (YYYY-QN)",
             "filing_date": "YYYY-MM-DD",
+            "report_date": "YYYY-MM-DD",
+            "accession_number": "string",
+            "form": "13F-HR|13F-HR/A",
             "aum_total": "number",
-            "holdings_count": "number",
+            "holdings_count": "number (public filtered holdings array length)",
+            "reported_holdings_count": "number (raw parsed holdings before filtering)",
+            "filtered_out_count": "number",
             "top_10_weight": "number (0-1)",
+            "value_unit": "dollars|thousands",
+            "value_unit_method": "implied_price|continuity|date_fallback|override|empty",
+            "value_unit_confidence": "high|medium|low",
+            "raw_table_value_total": "number|null",
+            "normalized_table_value_total": "number|null",
+            "table_entry_total": "number|null",
+            "is_confidential_omitted": "boolean|null",
+            "unit_detection_stats": {
+              "candidate_count": "number",
+              "median_implied_price": "number|null",
+              "p75_implied_price": "number|null",
+              "tentative_unit": "dollars|thousands|null",
+              "reason": "string"
+            },
             "holdings[]": {
               "ticker": "string",
               "cusip": "string",

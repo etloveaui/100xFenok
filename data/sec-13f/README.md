@@ -3,13 +3,13 @@
 > **Source**: SEC EDGAR
 > **Update**: Quarterly
 > **Files**: 43 (30 investors + 3 index + 10 analytics)
-> **Version**: 3.3.2
+> **Version**: 3.4.0
 
 ---
 
 ## Overview
 
-Institutional holdings data from SEC 13F filings. Tracks 30 major investors' portfolio positions across 29 quarters through 2026-Q1 where filings are available (accumulate mode). The configured Greenlight/Einhorn CIK currently has no SEC 13F after 2023-Q4.
+Institutional holdings data from SEC 13F filings. Tracks 30 major investors' portfolio positions across 29 quarters through 2026-Q1 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
 
 ## Structure
 
@@ -56,8 +56,8 @@ sec-13f/
 ```json
 {
   "metadata": {
-    "version": "3.3.2",
-    "generated_at": "2026-05-16T...",
+    "version": "3.4.0",
+    "generated_at": "2026-05-18T...",
     "quarters_covered": ["2026-Q1", "2025-Q4", "..."],
     "data_latency_note": "13F filings may be delayed up to 45 days after quarter end",
     "enrichment_coverage": {
@@ -79,6 +79,11 @@ sec-13f/
         "filing_date": "2026-05-15",
         "aum_total": 263095703570.0,
         "holdings_count": 90,
+        "reported_holdings_count": 90,
+        "filtered_out_count": 0,
+        "value_unit": "dollars",
+        "value_unit_method": "implied_price",
+        "value_unit_confidence": "high",
         "top_10_weight": 0.6802,
         "holdings": [
           {
@@ -97,6 +102,10 @@ sec-13f/
 }
 ```
 
+`holdings_count` is the public filtered `holdings[]` length. `reported_holdings_count` is the raw parsed information-table row count before the 0.1% public-output filter, and `filtered_out_count` is the difference.
+
+Stale investors are flagged in `summary.json` with `is_stale`, `latest_quarter`, `global_latest_quarter`, and `stale_quarters`. Current-quarter analytics exclude stale investors.
+
 ## Usage
 
 ```javascript
@@ -114,4 +123,4 @@ const consensus = await fetch(`${BASE}/analytics/consensus.json`).then(r => r.js
 
 ---
 
-*Last Updated: 2026-05-16*
+*Last Updated: 2026-05-18*
