@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-05-17",
+  "last_updated": "2026-05-18",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -59,13 +59,13 @@
       "description": "Macro banking, liquidity, and monthly activity survey series (FRED, FDIC, OECD CLI, major-country PMI, ISM components)"
     },
     "sec-13f": {
-      "version": "3.3.2",
-      "updated": "2026-05-16",
+      "version": "3.4.0",
+      "updated": "2026-05-18",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
       "file_count": 43,
       "schema": true,
-      "description": "Institutional holdings from 30 tracked investors (29Q accumulate where filed, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
+      "description": "Institutional holdings from 30 tracked investors (29Q accumulate where filed, per-quarter independent data, GICS sectors, enrichment + 10 analytics). v3.4.0: per-filing value-unit normalization, 30/30 CIK corrections, 13F-HR/A amendment merge"
     },
     "sentiment": {
       "version": "1.0.0",
@@ -114,6 +114,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-05-18",
+      "folder": "sec-13f",
+      "version": "3.4.0",
+      "change": "v3.4.0 converter fix cycle + full rebuild: per-filing SEC value-unit normalization (thousands/dollars 1000x understatement fixed for pre-2023 quarters and Druckenmiller), all 30 CIK→entity mappings audited and 2 corrected (Laffont→Coatue, Klarman→Baupost), case-insensitive .xml discovery, 13F-HR/A amendment merge, holdings_count schema split (reported_holdings_count + filtered_out_count), stale-investor exclusion from current-quarter analytics. 30 investors, 43 public JSON files; verify EXIT=0.",
+      "breaking": false
+    },
     {
       "date": "2026-05-17",
       "folder": "global-scouter",
@@ -429,7 +436,7 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-05-17T22:53:06Z",
+  "generatedAt": "2026-05-18T03:37:13Z",
   "categories": [
     {
       "name": "computed",
@@ -466,10 +473,10 @@
     {
       "name": "sec-13f",
       "path": "/data/sec-13f/",
-      "schemaVersion": "3.3.2",
+      "schemaVersion": "3.4.0",
       "fileCount": 43,
-      "lastUpdated": "2026-05-16",
-      "notes": "Institutional holdings from 30 tracked investors (29Q accumulate where filed, per-quarter independent data, GICS sectors, enrichment + 10 analytics)"
+      "lastUpdated": "2026-05-18",
+      "notes": "Institutional holdings from 30 tracked investors (29Q accumulate where filed, per-quarter independent data, GICS sectors, enrichment + 10 analytics). v3.4.0: per-filing value-unit normalization, 30/30 CIK corrections, 13F-HR/A amendment merge"
     },
     {
       "name": "benchmarks",
