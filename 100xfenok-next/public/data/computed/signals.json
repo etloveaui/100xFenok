@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-05-20T22:53:04.335Z",
-  "as_of": "2026-05-20",
+  "generated_at": "2026-05-21T12:29:20.985Z",
+  "as_of": "2026-05-21",
   "engine": {
     "name": "macro-monitor-computed-signals",
     "version": "1.0.0",
@@ -99,14 +99,14 @@
       "overallLabel": "RISING",
       "m2YoY": 5.52,
       "m2Total": 22686,
-      "netLiquidity": 5929.7,
+      "netLiquidity": 5917.7,
       "netLiquidityDelta": 63.3,
       "weeklyNetFlow": 63.3,
-      "stablecoinMcap": 321.46244857895,
-      "scM2Ratio": 1.42,
+      "stablecoinMcap": 320.39508181631,
+      "scM2Ratio": 1.41,
       "walcl": 6728.5,
       "tga": 785.9,
-      "rrp": 12.9,
+      "rrp": 24.9,
       "netFlow": 63.3,
       "components": {
         "m2_yoy": {
@@ -120,7 +120,7 @@
           "status": "rising"
         },
         "stablecoin_m2_ratio": {
-          "value": 1.42,
+          "value": 1.41,
           "unit": "%",
           "status": "stable"
         }
@@ -128,13 +128,13 @@
       "metrics": {
         "m2_yoy_pct": 5.52,
         "m2_total_b": 22686,
-        "net_liquidity_b": 5929.7,
+        "net_liquidity_b": 5917.7,
         "weekly_net_flow_b": 63.3,
-        "stablecoin_mcap_b": 321.5,
-        "sc_m2_ratio_pct": 1.42
+        "stablecoin_mcap_b": 320.4,
+        "sc_m2_ratio_pct": 1.41
       },
       "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
-      "as_of": "2026-05-19",
+      "as_of": "2026-05-21",
       "source_files": [
         "data/macro/fred-macro.json",
         "data/macro/tga.json",
@@ -147,7 +147,7 @@
       "overallLabel": "Caution",
       "tier1": {
         "status": "normal",
-        "value": -12,
+        "value": -14,
         "unit": "bp"
       },
       "tier2": {
@@ -156,11 +156,11 @@
         "unit": "%"
       },
       "metrics": {
-        "sofr_iorb_spread_bp": -12,
+        "sofr_iorb_spread_bp": -14,
         "reserves_gdp_pct": 9.7
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-05-20",
+      "as_of": "2026-05-21",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
