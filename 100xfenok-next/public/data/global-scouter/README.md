@@ -2,14 +2,14 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,070
-> **Version**: v2.2.0
+> **Files**: 1,079
+> **Version**: v2.3.0
 
 ---
 
 ## Overview
 
-Stock screening, ETF benchmarks, and economic indicators exported from Global Scouter tool.
+Stock screening, ETF benchmarks, economic indicators, and source-sheet raw tables exported from Global Scouter tool.
 
 ## Structure
 
@@ -26,8 +26,15 @@ global-scouter/
 │       └── ...
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (23 items)
-└── indicators/              # v2.1.0
-    └── economic.json        # Economic indicators (1,058 records)
+├── indicators/              # v2.1.0
+│   └── economic.json        # Economic indicators (1,060 records)
+└── raw/                     # v2.3.0
+    ├── manifest.json        # Raw layer file catalog
+    ├── companies_a_company.json
+    ├── eps_consensus_t_eps_c.json
+    ├── growth_consensus_t_growth_c.json
+    ├── valuation_s_valuation.json
+    └── ...
 ```
 
 ## File Counts
@@ -38,7 +45,8 @@ global-scouter/
 | stocks/detail/ | 1,065 |
 | etfs/ | 1 |
 | indicators/ | 1 |
-| **Total** | 1,070 |
+| raw/ | 9 |
+| **Total** | 1,079 |
 
 ## Schema
 
@@ -94,9 +102,24 @@ global-scouter/
 | Field | Coverage | Description |
 |-------|----------|-------------|
 | `fiscal_month` | 100% (1,065) | Fiscal year end month (Jan, Dec, etc.) |
-| `eps_consensus` | 100% (1,065) | EPS estimates FY+1/+2/+3 (6-week average) |
-| `growth_consensus` | 100% (1,065) | Revenue/Earnings growth 7Y/3Y (%) |
-| `per_bands` | 98.3% (1,047) | PER min/avg/max over 8 years |
+| `eps_consensus` | 100% (1,065) | EPS estimates FY+1/+2/+3 plus 6-week raw points |
+| `growth_consensus` | 100% (1,065) | Revenue/Operating/Earnings growth 7Y/3Y (%) |
+| `per_bands` | 100% (1,065) | PER/PBR bands with FY-4~FY+3 values where available |
+| `*_estimates` | 100% (1,065) | FY+1~FY+3 forward scale, income, cash flow, profitability, per-share, valuation |
+| `weekly_revision_history` | 100% (1,065) | Individual-sheet lower-block revision/price histories; empty for source-sheet-missing placeholders |
+
+### raw/ (v2.3.0)
+
+| File | Count | Description |
+|------|-------|-------------|
+| `raw/companies_a_company.json` | 1,065 | A_Company 52-column raw table |
+| `raw/company_master_m_company.json` | 6,115 | M_Company master universe table |
+| `raw/eps_consensus_t_eps_c.json` | 1,065 | T_EPS C weekly consensus raw table |
+| `raw/growth_consensus_t_growth_c.json` | 1,065 | T_Growth C raw table |
+| `raw/valuation_s_valuation.json` | 44 | S_Valuation PER/PBR/growth raw rows |
+| `raw/etfs_m_etfs.json` | 23 | M_ETFs raw table |
+| `raw/etfs_a_etfs.json` | 353 | A_ETFs 160-column raw table |
+| `raw/workbook_inventory.json` | 1,333 sheets | Workbook sheet inventory and categories |
 
 ### etfs/index.json (v2.1.0)
 
@@ -121,7 +144,7 @@ global-scouter/
 
 ```json
 {
-  "count": 1058,
+  "count": 1059,
   "records": [
     {
       "date": "2026-01-02",
@@ -161,6 +184,8 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.3.0 | 2026-05-24 | Raw preservation upgrade + data refresh (2026-05-22 source): 1,065 stocks, 1,060 indicators, 9 raw files |
+| 2.2.0 | 2026-05-17 | Data refresh (2026-05-15 source): 1,065 stocks, 1,059 indicators (+1), per_bands 98.3% |
 | 2.2.0 | 2026-05-11 | Data refresh (2026-05-08 source): 1,065 stocks (-1), 1,058 indicators (+1), per_bands 98.3% |
 | 2.2.0 | 2026-05-03 | Data refresh (2026-05-01 source): 1,066 stocks, 1,057 indicators (+1), per_bands 98.4% |
 | 2.2.0 | 2026-04-26 | Data refresh (2026-04-24 source): 1,066 stocks, 1,056 indicators (+1), per_bands 98.4% |
@@ -182,4 +207,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-05-11*
+*Last Updated: 2026-05-24*

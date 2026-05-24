@@ -32,13 +32,13 @@
       "description": "Industry valuation data, ERP, credit ratings"
     },
     "global-scouter": {
-      "version": "2.2.0",
-      "updated": "2026-05-17",
+      "version": "2.3.0",
+      "updated": "2026-05-24",
       "update_frequency": "on-demand",
-      "source": "Custom aggregation",
-      "file_count": 1070,
+      "source": "Global Scouter Tool",
+      "file_count": 1079,
       "schema": true,
-      "description": "Stock screening (1,065), ETFs (23), indicators (1,059) + extended: eps_consensus, growth_consensus, per_bands"
+      "description": "Stock screening (1,065), ETFs (23), indicators (1,060), raw preservation files (9) + FY+1~FY+3 forward/revision extensions"
     },
     "indices": {
       "version": "2.0.0",
@@ -114,6 +114,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-05-24",
+      "folder": "global-scouter",
+      "version": "2.3.0",
+      "change": "Raw preservation upgrade + data refresh (2026-05-22 source): 1,065 stock detail files, 1,060 indicators, 9 raw files covering A_Company, M_Company, S_Valuation, T_EPS C, T_Growth C, M_ETFs, A_ETFs, and workbook inventory. Existing v2.2 fields remain backward compatible.",
+      "breaking": false
+    },
     {
       "date": "2026-05-21",
       "folder": "benchmarks",
