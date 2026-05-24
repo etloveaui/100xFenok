@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-05-24",
+  "last_updated": "2026-05-25",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -14,13 +14,13 @@
       "description": "Hourly folder listing cache for notification-control-panel-web.html"
     },
     "benchmarks": {
-      "version": "3.7.0",
-      "updated": "2026-05-21",
+      "version": "3.8.0",
+      "updated": "2026-05-25",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 30,438 records, 2010-07-02 ~ 2026-05-15, 37 sections, 829 data points per index"
+      "description": "Market indices P/E, P/B, ROE - 30,438 records, 2010-07-02 ~ 2026-05-15, 37 sections, 829 data points per index + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
       "version": "2.0.0",
@@ -114,6 +114,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-05-25",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Backward-compatible summaries expansion: 1W price momentum plus source_summaries for px_last, best_eps, best_pe_ratio, px_to_book_ratio, and roe across 37 benchmark sections (2,353 non-null values + 52 null placeholders). Source data remains 2026-05-15.",
+      "breaking": false
+    },
     {
       "date": "2026-05-24",
       "folder": "global-scouter",
