@@ -112,14 +112,14 @@ global-scouter/
 
 | File | Count | Description |
 |------|-------|-------------|
-| `raw/companies_a_company.json` | 1,065 | A_Company 52-column raw table |
-| `raw/company_master_m_company.json` | 6,115 | M_Company master universe table |
-| `raw/eps_consensus_t_eps_c.json` | 1,065 | T_EPS C weekly consensus raw table |
-| `raw/growth_consensus_t_growth_c.json` | 1,065 | T_Growth C raw table |
+| `raw/companies_a_company.json` | 1,066 | A_Company 52-column raw table |
+| `raw/company_master_m_company.json` | 6,116 | M_Company master universe table |
+| `raw/eps_consensus_t_eps_c.json` | 1,066 | T_EPS C weekly consensus raw table |
+| `raw/growth_consensus_t_growth_c.json` | 1,066 | T_Growth C raw table |
 | `raw/valuation_s_valuation.json` | 44 | S_Valuation PER/PBR/growth raw rows |
 | `raw/etfs_m_etfs.json` | 23 | M_ETFs raw table |
-| `raw/etfs_a_etfs.json` | 353 | A_ETFs 160-column raw table |
-| `raw/workbook_inventory.json` | 1,333 sheets | Workbook sheet inventory and categories |
+| `raw/etfs_a_etfs.json` | 354 | A_ETFs 160-column raw table |
+| `raw/workbook_inventory.json` | 1,335 sheets | Workbook sheet inventory and categories |
 
 ### etfs/index.json (v2.1.0)
 
