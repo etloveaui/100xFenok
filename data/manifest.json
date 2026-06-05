@@ -23,13 +23,13 @@
       "description": "Market indices P/E, P/B, ROE - 30,440 records, 2010-07-16 ~ 2026-05-29, 37 sections, 829 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
-      "version": "2.0.0",
-      "updated": "2026-01-15",
-      "update_frequency": "yearly",
+      "version": "2.2.0",
+      "updated": "2026-06-05",
+      "update_frequency": "yearly + ERP interim",
       "source": "NYU Stern (Aswath Damodaran)",
-      "file_count": 4,
+      "file_count": 5,
       "schema": true,
-      "description": "Industry valuation data, ERP, credit ratings"
+      "description": "Industry valuation data, extended metrics, ERP, credit ratings"
     },
     "global-scouter": {
       "version": "2.3.0",
@@ -114,6 +114,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-06-05",
+      "folder": "damodaran",
+      "version": "2.2.0",
+      "change": "Current data refresh and additive valuation expansion: 5 JSON files, 96 industries, 11 extended industry metric datasets, ERP April 2026 with 178 countries and US ERP 5.03%. Existing file names remain backward compatible.",
+      "breaking": false
+    },
     {
       "date": "2026-06-05",
       "folder": "benchmarks",
@@ -531,10 +538,10 @@
     {
       "name": "damodaran",
       "path": "/data/damodaran/",
-      "schemaVersion": "2.0.0",
-      "fileCount": 4,
-      "lastUpdated": "2026-01-15",
-      "notes": "Industry valuation data, ERP, credit ratings"
+      "schemaVersion": "2.2.0",
+      "fileCount": 5,
+      "lastUpdated": "2026-06-05",
+      "notes": "Industry valuation data, extended metrics, ERP, credit ratings"
     },
     {
       "name": "indices",

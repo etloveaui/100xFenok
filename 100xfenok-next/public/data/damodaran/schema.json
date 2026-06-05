@@ -1,31 +1,34 @@
 {
   "folder": "damodaran",
-  "version": "2.0.0",
-  "updated": "2026-01-15",
+  "version": "2.2.0",
+  "updated": "2026-06-05",
   "source": "NYU Stern - Aswath Damodaran",
-  "source_url": "https://pages.stern.nyu.edu/~adamodar/",
-  "update_frequency": "yearly (January)",
-  "maintainer": "Manual conversion from Excel",
-
+  "source_url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datacurrent.html",
+  "update_frequency": "yearly with interim ERP updates",
+  "maintainer": "docs/products/converters/damodaran",
   "files": {
     "industries.json": {
-      "description": "96 industries with beta, margins, EVA, debt, growth, multiples",
-      "size_kb": 72,
+      "description": "96 US industries with beta, margins, EVA, debt, growth, and sales multiples",
+      "size_kb": 75,
       "industry_count": 96,
+      "source_date": "January 2026",
+      "scope": "US current-year industry tables",
       "datasets_merged": ["betas", "margin", "eva", "debtdetails", "fundgr", "ev_sales"],
       "schema": {
         "metadata": {
-          "schema_version": "string",
-          "last_updated": "YYYY-MM-DD",
+          "schema_version": "2.0.0",
           "industry_count": "number",
-          "datasets_merged": "string[]"
+          "datasets_merged": "string[]",
+          "source_date": "string",
+          "scope": "string"
         },
         "industries.{industry_name}": {
           "num_firms": "number",
           "beta": {
             "levered": "number",
             "unlevered": "number",
-            "cash_adjusted": "number"
+            "unlevered_cash_adj": "number",
+            "d_e_ratio": "number"
           },
           "margins": {
             "gross": "number (0-1)",
@@ -34,79 +37,117 @@
             "ebitda": "number (0-1)"
           },
           "eva": {
-            "roe": "number",
-            "roc": "number",
-            "wacc": "number",
-            "eva_spread": "number"
+            "roe": "number (0-1)",
+            "roc": "number (0-1)",
+            "wacc": "number (0-1)",
+            "eva_millions": "number"
           },
           "debt": {
-            "debt_to_equity": "number",
-            "debt_to_capital": "number",
-            "interest_coverage": "number"
+            "total_debt": "number",
+            "lease_debt": "number",
+            "short_term_pct": "number (0-1)"
           },
           "growth": {
-            "revenue_growth": "number",
-            "earnings_growth": "number",
-            "reinvestment_rate": "number"
+            "fundamental_growth": "number (0-1)",
+            "retention_ratio": "number (0-1)",
+            "roe_for_growth": "number (0-1)"
           },
           "multiples": {
             "ev_sales": "number",
-            "ev_ebitda": "number",
-            "pe_ratio": "number"
+            "price_sales": "number"
           }
         }
       }
     },
+    "industry_metrics.json": {
+      "description": "Additive valuation metrics from 11 Damodaran US current-year industry tables",
+      "size_kb": 307,
+      "industry_count": 96,
+      "dataset_count": 11,
+      "source_date": "January 2026",
+      "scope": "US current-year industry tables",
+      "datasets_merged": ["wacc", "taxrate", "pedata", "pbvdata", "psdata", "vebitda", "capex", "roe", "wcdata", "leaseeffect", "fundgrEB"],
+      "schema": {
+        "industries.{industry_name}.cost_of_capital": "WACC, cost of equity/debt, tax rate, D/(D+E), E/(D+E)",
+        "industries.{industry_name}.tax_rates": "accrual/cash tax rate aggregates",
+        "industries.{industry_name}.pe_multiples": "current/trailing/forward PE, PEG, expected growth",
+        "industries.{industry_name}.book_value_returns": "PBV, ROE, EV/invested capital, ROIC",
+        "industries.{industry_name}.sales_multiples": "price/sales, EV/sales, margin fields",
+        "industries.{industry_name}.ev_multiples": "EV/EBITDA and EV/EBIT variants",
+        "industries.{industry_name}.reinvestment": "capex, D&A, net R&D, net capex ratios",
+        "industries.{industry_name}.roe_decomposition": "ROE unadjusted and R&D-adjusted",
+        "industries.{industry_name}.working_capital": "A/R, inventory, A/P, non-cash WC to sales",
+        "industries.{industry_name}.lease_adjustments": "lease-adjusted debt, margin, ROIC fields",
+        "industries.{industry_name}.ebit_growth": "ROC, reinvestment rate, expected EBIT growth"
+      }
+    },
     "erp.json": {
-      "description": "178 countries with ERP, CRP, credit ratings, tax rates",
+      "description": "178 countries with ERP, CRP, Moody's ratings, default spreads, and corporate tax rates",
       "size_kb": 45,
       "country_count": 178,
+      "source_date": "April 1, 2026",
       "schema": {
         "metadata": {
-          "base_erp": "number (US implied ERP)",
-          "risk_free_rate": "number",
-          "last_updated": "YYYY-MM-DD"
+          "schema_version": "2.0.0",
+          "country_count": "number",
+          "source_date": "string",
+          "scope": "string"
         },
         "countries.{country_name}": {
           "region": "string",
-          "moodys_rating": "string (e.g., Aaa, Aa1)",
-          "default_spread": "number (basis points)",
-          "country_risk_premium": "number",
-          "equity_risk_premium": "number",
+          "rating": "string",
+          "default_spread": "number (0-1)",
+          "country_risk_premium": "number (0-1)",
+          "equity_risk_premium": "number (0-1)",
           "corporate_tax_rate": "number (0-1)"
-        }
+        },
+        "us_erp": "number (0-1)"
       }
     },
     "historical_erp.json": {
-      "description": "66 years (1960-2025) implied ERP history",
+      "description": "66 years (1960-2025) of US historical implied ERP",
       "size_kb": 6.5,
       "year_range": [1960, 2025],
+      "source_date": "January 2026",
       "schema": {
-        "data[]": {
-          "year": "number",
-          "implied_erp": "number (percent)",
-          "sp500_return": "number (percent)",
-          "tbond_rate": "number (percent)"
+        "years.{year}": {
+          "sp500_level": "number",
+          "tbond_rate": "number (0-1)",
+          "implied_erp_ddm": "number (0-1)",
+          "implied_erp_fcfe": "number (0-1)"
         }
       }
     },
     "credit_ratings.json": {
       "description": "Interest coverage to credit rating lookup tables",
-      "size_kb": 6.2,
+      "size_kb": 6.5,
+      "source_date": "January 2026",
+      "notes": "large_manufacturing and financial parsed from current HTML; small_risky remains compatibility fallback",
       "schema": {
-        "large_cap[]": {
+        "lookup_tables.{table_name}[]": {
           "min_coverage": "number",
-          "max_coverage": "number",
+          "max_coverage": "number|null",
           "rating": "string",
-          "spread": "number (basis points)"
-        },
-        "small_cap[]": "Same structure as large_cap"
+          "spread": "number (0-1)"
+        }
       }
     }
   },
-
   "breaking_changes_history": [
-    {"version": "2.0.0", "date": "2026-01-15", "change": "Merged 6 datasets into industries.json"},
-    {"version": "1.0.0", "date": "2025-12-01", "change": "Initial schema"}
+    {
+      "version": "2.2.0",
+      "date": "2026-06-05",
+      "change": "Added industry_metrics.json and refreshed current data without changing existing file names"
+    },
+    {
+      "version": "2.0.0",
+      "date": "2026-01-15",
+      "change": "Merged 6 datasets into industries.json"
+    },
+    {
+      "version": "1.0.0",
+      "date": "2025-12-01",
+      "change": "Initial schema"
+    }
   ]
 }

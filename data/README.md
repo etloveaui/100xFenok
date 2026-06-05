@@ -1,7 +1,7 @@
 # Data Catalog
 
 > **Last Updated**: 2026-06-05
-> **Total Files**: 1,735 JSON files
+> **Total Files**: 1,736 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -13,7 +13,7 @@
 | [admin/](admin/README.md) | 1 | Hourly | GitHub repository tree |
 | [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
 | [calendar/](calendar/README.md) | 1 | Daily / on edit | BujaBot USD Google Calendar |
-| [damodaran/](damodaran/README.md) | 4 | Yearly | NYU Stern (Damodaran) |
+| [damodaran/](damodaran/README.md) | 5 | Yearly + ERP interim | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,080 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [macro/](macro/README.md) | 9 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
@@ -35,7 +35,7 @@
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
 - Benchmarks latest: 30,440 records, 2010-07-16 ~ 2026-05-29, 37 sections, 829 S&P 500 data points
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,353 non-null values + 52 null placeholders)
-- Damodaran: industries (96 w/ beta, margins, EVA), ERP (178 countries), historical ERP (66 years), credit ratings
+- Damodaran: industries (96 w/ beta, margins, EVA), extended industry metrics (11 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
 - Yardney: S&P 500 fair value model, 1,867 weekly records, latest 2026-05-01 fair value 6,015.64 and premium +20.19%
 
 ### Institutional Data (sec-13f/)
