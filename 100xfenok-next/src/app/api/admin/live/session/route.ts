@@ -21,6 +21,7 @@ import {
 } from "@/lib/server/admin-live";
 import {
   DEFAULT_LIVE_ENABLED_TOOL_IDS,
+  getDefaultLiveEnabledToolIds,
   getLiveToolMetadata,
   LIVE_SEARCH_SELECTION_POLICY,
   normalizeLiveToolIds,
@@ -36,17 +37,13 @@ function noStoreJson(body: unknown, status = 200) {
   });
 }
 
-function normalizeRequestedToolIds(body: {
+function normalizeRequestedToolIds(mode: string, body: {
   enabledToolIds?: unknown;
-  marketDataTool?: unknown;
 } | null) {
   if (Array.isArray(body?.enabledToolIds)) {
     return normalizeLiveToolIds(body.enabledToolIds);
   }
-  if (body?.marketDataTool === true) {
-    return normalizeLiveToolIds(["market-data"]);
-  }
-  return [];
+  return getDefaultLiveEnabledToolIds(mode);
 }
 
 async function requireAdminSession() {
@@ -71,7 +68,12 @@ export async function GET() {
       constraints: profile.constraints,
       sampleProbe: profile.sampleProbe,
       languageHints: profile.languageHints,
-      defaultSystemPrompt: buildDefaultSystemPrompt(profile.id, true, "concise", DEFAULT_LIVE_ENABLED_TOOL_IDS),
+      defaultSystemPrompt: buildDefaultSystemPrompt(
+        profile.id,
+        true,
+        "concise",
+        getDefaultLiveEnabledToolIds(profile.id),
+      ),
     })),
     voices: LIVE_VOICES,
     defaults: {
@@ -80,6 +82,10 @@ export async function GET() {
       vadPreset: "balanced",
       tools: {
         enabledToolIds: DEFAULT_LIVE_ENABLED_TOOL_IDS,
+        enabledToolIdsByMode: {
+          fenok: getDefaultLiveEnabledToolIds("fenok"),
+          mona: getDefaultLiveEnabledToolIds("mona"),
+        },
         registry: getLiveToolMetadata(),
         searchSelectionPolicy: LIVE_SEARCH_SELECTION_POLICY,
       },
@@ -100,7 +106,6 @@ export async function POST(request: Request) {
         vadPreset?: unknown;
         systemPrompt?: unknown;
         enabledToolIds?: unknown;
-        marketDataTool?: unknown;
       }
     | null;
   const mode = normalizeLiveMode(body?.mode);
@@ -108,7 +113,7 @@ export async function POST(request: Request) {
   const voiceName = normalizeLiveVoice(body?.voiceName);
   const responseStyle = normalizeResponseStyle(body?.responseStyle);
   const vadPreset = normalizeVadPreset(body?.vadPreset, mode);
-  const enabledToolIds = normalizeRequestedToolIds(body);
+  const enabledToolIds = normalizeRequestedToolIds(mode, body);
   const now = new Date();
   const apiKey = getGeminiApiKey();
 
@@ -126,7 +131,7 @@ export async function POST(request: Request) {
 
   const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
   const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
-  const setup = buildLiveSetup(mode, {
+  const setup = await buildLiveSetup(mode, {
     lowVoice,
     voiceName,
     responseStyle,

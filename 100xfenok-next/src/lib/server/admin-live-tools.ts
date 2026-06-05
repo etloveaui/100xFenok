@@ -1,5 +1,9 @@
 import { getTickerQuote } from "@/lib/server/ticker";
 import { readPublicAssetText } from "@/lib/server/public-assets";
+import {
+  MONA_STUDY_TOOL_IDS,
+  executeMonaStudyToolFunction,
+} from "@/lib/server/mona-study-tools";
 
 export type LiveToolId =
   | "market-data"
@@ -8,8 +12,12 @@ export type LiveToolId =
   | "google-search"
   | "naver-search"
   | "kakao-search"
-  | "camera";
-export type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode";
+  | "camera"
+  | "mona-save-session"
+  | "mona-yesterday"
+  | "mona-memory"
+  | "mona-weekly-test";
+export type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode" | "study";
 export type LiveToolStatus = "available" | "locked" | "soon";
 
 type LiveToolDeclaration = {
@@ -56,59 +64,122 @@ export const LIVE_SEARCH_SELECTION_POLICY = "multi" as const;
 
 const LIVE_TOOL_DEFINITIONS = [
   {
-    id: "market-data",
-    label: "현재가",
-    category: "data",
+    id: "mona-save-session",
+    label: "세션 저장",
+    category: "study",
     status: "available",
-    description: "100xFenok ticker price snapshot",
-    functionName: "getTickerSnapshot",
+    description: "Mona Wind-Down BEST3/weak-note checkpoint",
+    functionName: "saveStudySession",
     instruction:
-      "Tool: getTickerSnapshot(symbol) is available for same-origin 100xFenok price snapshots only. Use it for current price context, not for full Fenok fundamentals, Scouter, 13F, or signal data. Keep stale or missing fields separate from verified facts.",
+      "Tool: saveStudySession({best3, weakMisses, theme, summary}) stores Mona Wind-Down study checkpoints using the server-side Asia/Seoul studyDate. Call after today's expression block, after the variable corner, and at final BEST3. Do not invent file paths or dates. Keep the spoken acknowledgement to one soft sentence.",
     declaration: {
-      name: "getTickerSnapshot",
+      name: "saveStudySession",
       description:
-        "Fetch a same-origin 100xFenok price snapshot for a public market symbol. Use when the user asks for current ticker, index, ETF, crypto proxy, or market price context.",
+        "Idempotently upsert today's Mona English study checkpoint. The server decides the canonical studyDate with Asia/Seoul 04:00 cutoff.",
       parameters: {
         type: "OBJECT",
         properties: {
-          symbol: {
-            type: "STRING",
-            description:
-              "Uppercase ticker symbol, ETF, index proxy, or crypto proxy such as SPY, QQQ, TQQQ, NVDA, BTC-USD.",
+          theme: { type: "STRING", description: "Optional short theme label." },
+          summary: { type: "STRING", description: "Optional short session summary." },
+          best3: {
+            type: "ARRAY",
+            description: "Up to three useful expressions from this checkpoint.",
+            items: {
+              type: "OBJECT",
+              properties: {
+                ko: { type: "STRING", description: "Korean prompt." },
+                en: { type: "STRING", description: "Natural English expression." },
+                note: { type: "STRING", description: "Optional pronunciation or usage note." },
+              },
+              required: ["ko", "en"],
+            },
+          },
+          weakMisses: {
+            type: "ARRAY",
+            description: "Expressions Mona repeatedly missed.",
+            items: {
+              type: "OBJECT",
+              properties: {
+                expression: { type: "STRING", description: "English expression that blocked Mona." },
+                note: { type: "STRING", description: "Optional short reason or pronunciation note." },
+              },
+              required: ["expression"],
+            },
           },
         },
-        required: ["symbol"],
       },
     },
   },
   {
-    id: "feno-data",
-    label: "Feno Data",
-    category: "data",
+    id: "mona-yesterday",
+    label: "어제 세션",
+    category: "study",
     status: "available",
-    description: "Global Scouter + 13F + computed signals",
-    functionName: "getFenoTickerContext",
+    description: "Yesterday BEST3 and weak-note warmup",
+    functionName: "getYesterdaySession",
     instruction:
-      "Tool: getFenoTickerContext(symbol, section?) is available for local 100xFenok feno-data. Use it when the user asks for Fenok data, Global Scouter, valuation, growth, profitability, consensus, 13F holders, ETF/index context, or known context about a symbol. Default to section=overview and summarize in 1-2 spoken sentences; never enumerate every returned field. Use getTickerSnapshot for price-only questions. Use a specific section only when the user asks for that detail. Explain when a symbol has ETF/index coverage but no stock detail file, and explain that computed signals are global/USD market context, not ticker-specific signals.",
+      "Tool: getYesterdaySession() returns the latest previous Mona study session from the server snapshot. If empty, skip warmup and start today's expression block. Never ask the user which corner to run.",
     declaration: {
-      name: "getFenoTickerContext",
-      description:
-        "Read local 100xFenok feno-data for a symbol. Default overview is voice-compact; optional section returns one focused detail area. Supports stock rows and ETF/index rows when available.",
+      name: "getYesterdaySession",
+      description: "Read the latest previous Mona Wind-Down session for warmup.",
+      parameters: {
+        type: "OBJECT",
+        properties: {},
+      },
+    },
+  },
+  {
+    id: "mona-memory",
+    label: "표현집·약점",
+    category: "study",
+    status: "available",
+    description: "Mona cumulative BEST3 and weak notes",
+    functionName: "getStudyMemory",
+    instruction:
+      "Tool: getStudyMemory({scope, limit}) returns cached Mona BEST3 and weak notes. Use it only when extra reuse material is needed; do not stall the conversation.",
+    declaration: {
+      name: "getStudyMemory",
+      description: "Read cached Mona study memory from setup snapshot.",
       parameters: {
         type: "OBJECT",
         properties: {
-          symbol: {
+          scope: {
             type: "STRING",
-            description: "Uppercase ticker, ETF, or index proxy such as NVDA, AAPL, MSFT, TSLA, AVGO, SPY, QQQ, or SOXX.",
+            description: "all, best3, or weak.",
+            enum: ["all", "best3", "weak"],
           },
-          section: {
-            type: "STRING",
-            description:
-              "Optional detail section. Use overview by default; use valuation, growth, profitability, cash_flow, per_share, holders, or signals only when the user asks for that area.",
-            enum: FENO_DETAIL_SECTIONS,
+          limit: {
+            type: "NUMBER",
+            description: "Maximum entries per list. Defaults to 12, capped at 30.",
           },
         },
-        required: ["symbol"],
+      },
+    },
+  },
+  {
+    id: "mona-weekly-test",
+    label: "주간 테스트",
+    category: "study",
+    status: "available",
+    description: "Sunday random recall set from memory",
+    functionName: "getWeeklyTestSet",
+    instruction:
+      "Tool: getWeeklyTestSet({count, weakBias}) returns a random weekly recall set from existing Mona memory. On Sunday, use the returned count as-is; if fewer than requested, do not invent new items.",
+    declaration: {
+      name: "getWeeklyTestSet",
+      description: "Build a weekly recall set from saved Mona BEST3 and weak notes.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          count: {
+            type: "NUMBER",
+            description: "Requested item count. Defaults to 30 and caps at 50.",
+          },
+          weakBias: {
+            type: "BOOLEAN",
+            description: "Prioritize weak-note items first. Defaults true.",
+          },
+        },
       },
     },
   },
@@ -164,6 +235,10 @@ const TOOL_BY_FUNCTION_NAME = new Map<string, LiveToolDefinition>(
 );
 
 export const DEFAULT_LIVE_ENABLED_TOOL_IDS: LiveToolId[] = [];
+
+export function getDefaultLiveEnabledToolIds(mode: string): LiveToolId[] {
+  return mode === "mona" ? [...MONA_STUDY_TOOL_IDS] : [];
+}
 
 export function getLiveToolMetadata(): LiveToolMetadata[] {
   return LIVE_TOOL_DEFINITIONS.map(({ id, label, category, status, description, reason }) => ({
@@ -680,6 +755,15 @@ export async function executeLiveToolFunction(name: string, args: Record<string,
   const tool = TOOL_BY_FUNCTION_NAME.get(name);
   if (!tool || tool.status !== "available") {
     return { error: "UNKNOWN_TOOL" };
+  }
+
+  if (
+    name === "saveStudySession" ||
+    name === "getYesterdaySession" ||
+    name === "getStudyMemory" ||
+    name === "getWeeklyTestSet"
+  ) {
+    return executeMonaStudyToolFunction(name, args);
   }
 
   if (name === "getTickerSnapshot") {

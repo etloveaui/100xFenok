@@ -9,7 +9,7 @@ type MicState = "unknown" | "unsupported" | "prompt" | "granted" | "denied" | "a
 type Rating = "useful" | "not-useful" | null;
 type ResponseStyle = "concise" | "balanced" | "detailed";
 type VadPreset = "responsive" | "balanced" | "relaxed";
-type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode";
+type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode" | "study";
 type LiveToolStatus = "available" | "locked" | "soon";
 type SearchSelectionPolicy = "single" | "multi";
 
@@ -70,6 +70,7 @@ type ReadinessResponse = {
     vadPreset?: VadPreset;
     tools?: {
       enabledToolIds?: string[];
+      enabledToolIdsByMode?: Partial<Record<BenchMode, string[]>>;
       registry?: LiveToolMetadata[];
       searchSelectionPolicy?: SearchSelectionPolicy;
     };
@@ -132,38 +133,36 @@ type LiveFunctionCall = {
 const PROFILE_FALLBACK: ReadinessResponse["profiles"] = [
   {
     id: "fenok",
-    label: "시장 리스크 문답",
-    intent: "시장 리스크를 짧게 묻고 답합니다.",
-    constraints: ["한국어 우선", "짧게 답변", "외부 도구 연결 없음"],
-    sampleProbe: "오늘 시장에서 가장 먼저 확인할 리스크를 짧게 정리해줘.",
+    label: "일반",
+    intent: "일상 대화를 자연스럽게 나누는 한국어 음성 비서입니다.",
+    constraints: ["한국어 자연 대화", "질문 난이도에 맞춘 깊이", "모르는 사실은 솔직히 구분"],
+    sampleProbe: "오늘 저녁 뭐 해 먹으면 좋을지 같이 골라줘.",
     languageHints: ["ko-KR", "en-US"],
     defaultSystemPrompt: [
-      "Profile: 시장 리스크 문답",
-      "Intent: 시장 리스크를 짧게 묻고 답합니다.",
+      "Profile: 일반",
+      "Intent: 일상 대화를 자연스럽게 나누는 한국어 음성 비서입니다.",
       "Voice: calm, low-energy, late-night pacing",
       "Response style: 첫 답변은 두세 문장으로 짧게 답한다.",
-      "Constraint: 한국어로 먼저 답한다.",
-      "Constraint: Cortex, 저장소, 포트폴리오 시스템을 호출하지 않는다.",
-      "Constraint: 웹 검색과 외부 시장 데이터는 현재 연결되지 않았다고 정확히 말한다.",
-      "Constraint: 실시간 검증이 아닌 시장 사실은 불확실성과 구분해서 말한다.",
+      "Constraint: 한국어로 자연스럽게 대화한다.",
+      "Constraint: 질문 난이도에 맞춰 답의 깊이를 조절한다.",
+      "Constraint: 사용자가 켜지 않은 도구는 연결된 것처럼 말하지 않는다.",
     ].join("\n"),
   },
   {
     id: "mona",
-    label: "영어 워밍업",
-    intent: "짧은 영어 말하기 연습을 합니다.",
-    constraints: ["천천히 답변", "짧은 문장", "개인 기록 저장 없음"],
-    sampleProbe: "오늘 너무 피곤해서 짧게만 공부하고 싶어.",
-    languageHints: ["ko-KR", "en-US"],
+    label: "Wind-Down",
+    intent: "자기 전 영어 발화 코치입니다. 아는 단어로 문장 조립을 반복 연습시킵니다.",
+    constraints: ["자기 전 low voice", "한→영 즉답", "BEST3와 약점 노트 저장"],
+    sampleProbe: "시작",
+    languageHints: ["en-US", "ko-KR"],
     defaultSystemPrompt: [
-      "Profile: 영어 워밍업",
-      "Intent: 짧은 영어 말하기 연습을 합니다.",
+      "Profile: Wind-Down",
+      "Intent: 자기 전 영어 발화 코치입니다.",
       "Voice: calm, low-energy, late-night pacing",
       "Response style: 첫 답변은 두세 문장으로 짧게 답한다.",
-      "Constraint: 차분하고 짧게 답한다.",
-      "Constraint: 먼저 자연스러운 영어 문장 하나를 말하고, 필요한 경우 짧게 교정한다.",
-      "Constraint: 개인 transcript 기록을 저장하거나 추론하지 않는다.",
-      "Constraint: 학습 라벨은 필요할 때만 짧게 말한다.",
+      "Constraint: 교과서 영어 금지. 미국인이 실제로 자주 쓰는 표현만.",
+      "Constraint: 단계 전환을 말로 알리지 말고, 어느 코너 할지 묻지 않는다.",
+      "Constraint: 중간 checkpoint와 끝의 BEST3를 저장한다.",
     ].join("\n"),
   },
 ];
@@ -191,12 +190,13 @@ const VAD_PRESET_LABEL: Record<VadPreset, string> = {
 
 const TOOL_CATEGORY_LABEL: Record<LiveToolCategory, string> = {
   data: "데이터",
+  study: "학습",
   search: "검색",
   vision: "비전",
   "dialog-mode": "대화 모드",
 };
 
-const TOOL_CATEGORY_ORDER: LiveToolCategory[] = ["data", "search", "vision", "dialog-mode"];
+const TOOL_CATEGORY_ORDER: LiveToolCategory[] = ["study", "data", "search", "vision", "dialog-mode"];
 
 const TOOL_STATUS_TEXT: Record<LiveToolStatus, string> = {
   available: "사용 가능",
@@ -206,18 +206,32 @@ const TOOL_STATUS_TEXT: Record<LiveToolStatus, string> = {
 
 const TOOL_REGISTRY_FALLBACK: LiveToolMetadata[] = [
   {
-    id: "market-data",
-    label: "현재가",
-    category: "data",
+    id: "mona-save-session",
+    label: "세션 저장",
+    category: "study",
     status: "available",
-    description: "100xFenok ticker price snapshot",
+    description: "Mona Wind-Down BEST3/weak-note checkpoint",
   },
   {
-    id: "feno-data",
-    label: "Feno Data",
-    category: "data",
+    id: "mona-yesterday",
+    label: "어제 세션",
+    category: "study",
     status: "available",
-    description: "Global Scouter + 13F + computed signals",
+    description: "Yesterday BEST3 and weak-note warmup",
+  },
+  {
+    id: "mona-memory",
+    label: "표현집·약점",
+    category: "study",
+    status: "available",
+    description: "Mona cumulative BEST3 and weak notes",
+  },
+  {
+    id: "mona-weekly-test",
+    label: "주간 테스트",
+    category: "study",
+    status: "available",
+    description: "Sunday random recall set from memory",
   },
   {
     id: "feno-search",
@@ -455,6 +469,19 @@ function normalizeEnabledToolIds(value: unknown, registry: LiveToolMetadata[]): 
   return [...seen];
 }
 
+function getModeDefaultToolIds(
+  mode: BenchMode,
+  registry: LiveToolMetadata[],
+  byMode?: Partial<Record<BenchMode, string[]>>,
+) {
+  const fallback = mode === "mona"
+    ? registry
+      .filter((tool) => tool.category === "study" && tool.status === "available")
+      .map((tool) => tool.id)
+    : [];
+  return normalizeEnabledToolIds(byMode?.[mode] ?? fallback, registry);
+}
+
 function toolTokenHint(count: number): string {
   if (count === 0) return "도구 0개";
   if (count === 1) return "도구 1개 · 토큰 낮음";
@@ -473,13 +500,9 @@ function buildPromptPreview(
     balanced: "필요한 맥락을 포함하되 장황하게 늘리지 않는다.",
     detailed: "사용자가 원인을 묻는 경우 근거와 한계를 함께 설명한다.",
   } satisfies Record<ResponseStyle, string>;
-  const constraints = profile.constraints.filter((constraint) => !constraint.includes("외부 시장 데이터"));
   const toolInstructions = [
-    enabledToolIds.includes("market-data")
-      ? "Tool: getTickerSnapshot(symbol) is available for same-origin 100xFenok price snapshots only. Use it for current price context, not for full Fenok fundamentals, Scouter, 13F, or signal data. Keep stale or missing fields separate from verified facts."
-      : null,
-    enabledToolIds.includes("feno-data")
-      ? "Tool: getFenoTickerContext(symbol, section?) is available for local 100xFenok feno-data. Use it when the user asks for Fenok data, Global Scouter, valuation, growth, profitability, consensus, 13F holders, ETF/index context, or known context about a symbol. Default to section=overview and summarize in 1-2 spoken sentences; never enumerate every returned field. Use getTickerSnapshot for price-only questions. Use a specific section only when the user asks for that detail. Explain when a symbol has ETF/index coverage but no stock detail file, and explain that computed signals are global/USD market context, not ticker-specific signals."
+    enabledToolIds.some((id) => id.startsWith("mona-"))
+      ? "Tool: Mona study tools are enabled. Use saveStudySession for checkpoints and BEST3, getYesterdaySession/getStudyMemory/getWeeklyTestSet only when needed. Do not invent dates or files."
       : null,
   ].filter((instruction): instruction is string => Boolean(instruction));
 
@@ -488,10 +511,10 @@ function buildPromptPreview(
     `Intent: ${profile.intent}`,
     `Voice: ${lowVoice ? "calm, low-energy, late-night pacing" : "normal conversational pacing"}`,
     `Response style: ${responseStyleText[responseStyle]}`,
-    ...constraints.map((constraint) => `Constraint: ${constraint}`),
+    ...profile.constraints.map((constraint) => `Constraint: ${constraint}`),
     ...(toolInstructions.length
       ? toolInstructions
-      : ["Constraint: 웹 검색과 외부 시장 데이터는 현재 연결되지 않았다고 정확히 말한다."]),
+      : ["Constraint: 사용자가 켜지 않은 도구는 연결된 것처럼 말하지 않는다."]),
   ].join("\n");
 }
 
@@ -561,7 +584,7 @@ export default function AdminLiveBench() {
     if (readiness?.status === "BLOCKED") return `${readiness.missingEnv} 설정이 필요해요.`;
     if (status === "connecting") return CONNECTION_TEXT[metrics.connectionState];
     if (status === "listening") return "한 문장씩 편하게 말하면 됩니다.";
-    return mode === "mona" ? "짧은 영어 워밍업" : "시장 리스크 문답";
+    return mode === "mona" ? "자기 전 영어 코치" : "일반 음성 대화";
   }, [isSecure, metrics.connectionState, metrics.lastError, mode, readiness, status]);
 
   useEffect(() => {
@@ -936,7 +959,7 @@ export default function AdminLiveBench() {
           ? payload.defaults.tools.registry
           : TOOL_REGISTRY_FALLBACK;
         setToolRegistry(nextToolRegistry);
-        setEnabledToolIds(normalizeEnabledToolIds(payload.defaults?.tools?.enabledToolIds, nextToolRegistry));
+        setEnabledToolIds(getModeDefaultToolIds("fenok", nextToolRegistry, payload.defaults?.tools?.enabledToolIdsByMode));
         setSearchSelectionPolicy(payload.defaults?.tools?.searchSelectionPolicy ?? "multi");
         setVoiceName(payload.defaults?.voiceName ?? "Kore");
         setResponseStyle(payload.defaults?.responseStyle ?? "concise");
@@ -1445,7 +1468,7 @@ export default function AdminLiveBench() {
         <header className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-bold text-slate-500">Voice Lab</p>
-            <h1 className="mt-1 text-2xl font-black text-slate-950">Fenok Voice Lab</h1>
+            <h1 className="mt-1 text-2xl font-black text-slate-950">Voice Lab</h1>
           </div>
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-700">
             <span className={`size-2 rounded-full ${status === "listening" ? "bg-emerald-500" : metrics.lastError || status === "blocked" ? "bg-red-500" : status === "connecting" ? "bg-amber-500" : "bg-slate-400"}`} />
@@ -1463,7 +1486,9 @@ export default function AdminLiveBench() {
                 onClick={() => {
                   setMode(profile.id);
                   setTextProbe(profile.sampleProbe);
-                  setSystemPrompt(buildPromptPreview(profile, lowVoice, responseStyle, enabledToolIds));
+                  const nextEnabledToolIds = getModeDefaultToolIds(profile.id, toolRegistry);
+                  setEnabledToolIds(nextEnabledToolIds);
+                  setSystemPrompt(buildPromptPreview(profile, lowVoice, responseStyle, nextEnabledToolIds));
                   setPromptEdited(false);
                 }}
                 disabled={status === "connecting" || status === "listening"}
@@ -1806,7 +1831,7 @@ function ToolBoard({
 
       <div className="mt-3 space-y-2">
         {categories.map((group) => (
-          <details key={group.category} open={group.category === "data" || group.category === "search"} className="rounded-lg border border-slate-200 bg-slate-50">
+          <details key={group.category} open={group.category === "study" || group.category === "search"} className="rounded-lg border border-slate-200 bg-slate-50">
             <summary className="cursor-pointer px-3 py-2 text-sm font-black text-slate-800">
               {TOOL_CATEGORY_LABEL[group.category]}
             </summary>
