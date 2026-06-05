@@ -2929,28 +2929,33 @@ export const DATA_JSON_FILES_BY_PATH = {
   "damodaran": [
     {
       "name": "credit_ratings.json",
-      "sizeBytes": 6628,
-      "updatedAt": "2026-06-05T01:08:06.039Z"
+      "sizeBytes": 6572,
+      "updatedAt": "2026-06-05T02:13:16.390Z"
     },
     {
       "name": "erp.json",
       "sizeBytes": 45568,
-      "updatedAt": "2026-06-05T01:08:06.039Z"
+      "updatedAt": "2026-06-05T02:13:16.390Z"
     },
     {
       "name": "historical_erp.json",
       "sizeBytes": 6663,
-      "updatedAt": "2026-06-05T01:08:06.038Z"
+      "updatedAt": "2026-06-05T02:13:16.391Z"
     },
     {
       "name": "industries.json",
       "sizeBytes": 76588,
-      "updatedAt": "2026-06-05T01:08:06.038Z"
+      "updatedAt": "2026-06-05T02:13:16.394Z"
+    },
+    {
+      "name": "industry_metrics_regions.json",
+      "sizeBytes": 4415105,
+      "updatedAt": "2026-06-05T02:13:16.409Z"
     },
     {
       "name": "industry_metrics.json",
       "sizeBytes": 314303,
-      "updatedAt": "2026-06-05T01:08:06.039Z"
+      "updatedAt": "2026-06-05T02:13:16.397Z"
     }
   ],
   "macro": [

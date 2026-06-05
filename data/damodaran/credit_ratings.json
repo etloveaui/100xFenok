@@ -2,20 +2,16 @@
   "metadata": {
     "source": "Damodaran Online",
     "dataset": "credit_ratings",
-    "url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/ratings.html",
+    "url": "https://pages.stern.nyu.edu/~adamodar/pc/ratings.xls",
     "schema_version": "2.0.0",
-    "generated_at": "2026-06-05T10:06:34.845644",
+    "generated_at": "2026-06-05T10:58:54.284853",
     "table_count": 3,
     "description": "Interest coverage to credit rating lookup tables",
-    "fallback_used": true,
-    "warning": "Fallback data used - latest spreads may not be reflected",
-    "parsing_method": "html_dynamic_partial_fallback",
-    "fallback_tables": [
-      "small_risky"
-    ],
+    "parsing_method": "xls_dynamic",
+    "fallback_used": false,
     "source_date": "January 2026",
     "scope": "US credit rating spread lookup",
-    "source_format": "Damodaran HTML current data page"
+    "source_format": "Damodaran current ratings workbook"
   },
   "lookup_tables": {
     "large_manufacturing": [
@@ -110,6 +106,98 @@
         "spread": 0.19
       }
     ],
+    "small_risky": [
+      {
+        "min_coverage": 12.5,
+        "max_coverage": null,
+        "rating": "Aaa/AAA",
+        "spread": 0.004
+      },
+      {
+        "min_coverage": 9.5,
+        "max_coverage": 12.499999,
+        "rating": "Aa2/AA",
+        "spread": 0.0055
+      },
+      {
+        "min_coverage": 7.5,
+        "max_coverage": 9.499999,
+        "rating": "A1/A+",
+        "spread": 0.007
+      },
+      {
+        "min_coverage": 6.0,
+        "max_coverage": 7.499999,
+        "rating": "A2/A",
+        "spread": 0.0078
+      },
+      {
+        "min_coverage": 4.5,
+        "max_coverage": 5.999999,
+        "rating": "A3/A-",
+        "spread": 0.0089
+      },
+      {
+        "min_coverage": 4.0,
+        "max_coverage": 4.499999,
+        "rating": "Baa2/BBB",
+        "spread": 0.0111
+      },
+      {
+        "min_coverage": 3.5,
+        "max_coverage": 4.0,
+        "rating": "Ba1/BB+",
+        "spread": 0.0138
+      },
+      {
+        "min_coverage": 3.0,
+        "max_coverage": 3.499999,
+        "rating": "Ba2/BB",
+        "spread": 0.0184
+      },
+      {
+        "min_coverage": 2.5,
+        "max_coverage": 2.999999,
+        "rating": "B1/B+",
+        "spread": 0.0275
+      },
+      {
+        "min_coverage": 2.0,
+        "max_coverage": 2.499999,
+        "rating": "B2/B",
+        "spread": 0.0321
+      },
+      {
+        "min_coverage": 1.5,
+        "max_coverage": 1.999999,
+        "rating": "B3/B-",
+        "spread": 0.0509
+      },
+      {
+        "min_coverage": 1.25,
+        "max_coverage": 1.499999,
+        "rating": "Caa/CCC",
+        "spread": 0.0885
+      },
+      {
+        "min_coverage": 0.8,
+        "max_coverage": 1.249999,
+        "rating": "Ca2/CC",
+        "spread": 0.1261
+      },
+      {
+        "min_coverage": 0.5,
+        "max_coverage": 0.799999,
+        "rating": "C2/C",
+        "spread": 0.16
+      },
+      {
+        "min_coverage": 0,
+        "max_coverage": 0.499999,
+        "rating": "D2/D",
+        "spread": 0.19
+      }
+    ],
     "financial": [
       {
         "min_coverage": 3.0,
@@ -200,98 +288,6 @@
         "max_coverage": 0.049999,
         "rating": "D2/D",
         "spread": 0.19
-      }
-    ],
-    "small_risky": [
-      {
-        "min_coverage": 8.5,
-        "max_coverage": null,
-        "rating": "AAA",
-        "spread": 0.0063
-      },
-      {
-        "min_coverage": 6.5,
-        "max_coverage": 8.5,
-        "rating": "AA",
-        "spread": 0.0078
-      },
-      {
-        "min_coverage": 5.5,
-        "max_coverage": 6.5,
-        "rating": "A+",
-        "spread": 0.0098
-      },
-      {
-        "min_coverage": 4.25,
-        "max_coverage": 5.5,
-        "rating": "A",
-        "spread": 0.0108
-      },
-      {
-        "min_coverage": 3.0,
-        "max_coverage": 4.25,
-        "rating": "A-",
-        "spread": 0.0122
-      },
-      {
-        "min_coverage": 2.5,
-        "max_coverage": 3.0,
-        "rating": "BBB",
-        "spread": 0.0156
-      },
-      {
-        "min_coverage": 2.25,
-        "max_coverage": 2.5,
-        "rating": "BB+",
-        "spread": 0.02
-      },
-      {
-        "min_coverage": 2.0,
-        "max_coverage": 2.25,
-        "rating": "BB",
-        "spread": 0.024
-      },
-      {
-        "min_coverage": 1.75,
-        "max_coverage": 2.0,
-        "rating": "BB-",
-        "spread": 0.03
-      },
-      {
-        "min_coverage": 1.5,
-        "max_coverage": 1.75,
-        "rating": "B+",
-        "spread": 0.0375
-      },
-      {
-        "min_coverage": 1.25,
-        "max_coverage": 1.5,
-        "rating": "B",
-        "spread": 0.045
-      },
-      {
-        "min_coverage": 1.0,
-        "max_coverage": 1.25,
-        "rating": "B-",
-        "spread": 0.0525
-      },
-      {
-        "min_coverage": 0.65,
-        "max_coverage": 1.0,
-        "rating": "CCC",
-        "spread": 0.07
-      },
-      {
-        "min_coverage": 0.45,
-        "max_coverage": 0.65,
-        "rating": "CC",
-        "spread": 0.085
-      },
-      {
-        "min_coverage": null,
-        "max_coverage": 0.45,
-        "rating": "C/D",
-        "spread": 0.11
       }
     ]
   }

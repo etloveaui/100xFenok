@@ -1,6 +1,6 @@
 {
   "folder": "damodaran",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "updated": "2026-06-05",
   "source": "NYU Stern - Aswath Damodaran",
   "source_url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datacurrent.html",
@@ -81,6 +81,39 @@
         "industries.{industry_name}.ebit_growth": "ROC, reinvestment rate, expected EBIT growth"
       }
     },
+    "industry_metrics_regions.json": {
+      "description": "Additive non-US regional industry metrics from 17 Damodaran current-year industry tables",
+      "size_kb": 4312,
+      "region_count": 7,
+      "industry_count_per_region": 96,
+      "dataset_count": 17,
+      "source_date": "January 2026",
+      "scope": "Non-US current-year regional industry tables",
+      "contract": "US remains in industry_metrics.json; this file contains non-US regional variants only",
+      "regions": ["europe", "japan", "rest", "emerging", "china", "india", "global"],
+      "datasets_merged": ["betas", "totalbeta", "wacc", "taxrate", "eva", "debtdetails", "leaseeffect", "capex", "margin", "wcdata", "roe", "fundgr", "fundgrEB", "pedata", "pbvdata", "psdata", "vebitda"],
+      "schema": {
+        "regions.{region_key}.label": "Region display label",
+        "regions.{region_key}.industries.{industry_name}.num_firms": "number",
+        "regions.{region_key}.industries.{industry_name}.beta": "Levered/unlevered beta, D/E, tax, cash, HiLo risk, standard deviation fields",
+        "regions.{region_key}.industries.{industry_name}.total_beta": "Total beta metrics for undiversified investors",
+        "regions.{region_key}.industries.{industry_name}.cost_of_capital": "WACC, cost of equity/debt, tax rate, D/(D+E), E/(D+E)",
+        "regions.{region_key}.industries.{industry_name}.tax_rates": "accrual/cash tax rate aggregates",
+        "regions.{region_key}.industries.{industry_name}.eva": "ROE, ROC, cost of capital, equity EVA and EVA fields",
+        "regions.{region_key}.industries.{industry_name}.debt_details": "Debt, leases, interest expense, and debt flow fields",
+        "regions.{region_key}.industries.{industry_name}.lease_adjustments": "lease-adjusted debt, margin, and ROIC fields",
+        "regions.{region_key}.industries.{industry_name}.reinvestment": "capex, D&A, net R&D, net capex ratios",
+        "regions.{region_key}.industries.{industry_name}.margins": "profitability and cost ratio fields",
+        "regions.{region_key}.industries.{industry_name}.working_capital": "A/R, inventory, A/P, non-cash WC to sales",
+        "regions.{region_key}.industries.{industry_name}.roe_decomposition": "ROE unadjusted and R&D-adjusted",
+        "regions.{region_key}.industries.{industry_name}.eps_growth": "ROE, retention ratio, fundamental EPS growth",
+        "regions.{region_key}.industries.{industry_name}.ebit_growth": "ROC, reinvestment rate, expected EBIT growth",
+        "regions.{region_key}.industries.{industry_name}.pe_multiples": "current/trailing/forward PE, PEG, expected growth",
+        "regions.{region_key}.industries.{industry_name}.book_value_returns": "PBV, ROE, EV/invested capital, ROIC",
+        "regions.{region_key}.industries.{industry_name}.sales_multiples": "price/sales, EV/sales, margin fields",
+        "regions.{region_key}.industries.{industry_name}.ev_multiples": "EV/EBITDA and EV/EBIT variants"
+      }
+    },
     "erp.json": {
       "description": "178 countries with ERP, CRP, Moody's ratings, default spreads, and corporate tax rates",
       "size_kb": 45,
@@ -122,7 +155,7 @@
       "description": "Interest coverage to credit rating lookup tables",
       "size_kb": 6.5,
       "source_date": "January 2026",
-      "notes": "large_manufacturing and financial parsed from current HTML; small_risky remains compatibility fallback",
+      "notes": "large_manufacturing, small_risky, and financial parsed dynamically from the official current ratings workbook",
       "schema": {
         "lookup_tables.{table_name}[]": {
           "min_coverage": "number",
@@ -134,6 +167,11 @@
     }
   },
   "breaking_changes_history": [
+    {
+      "version": "2.3.0",
+      "date": "2026-06-05",
+      "change": "Added industry_metrics_regions.json with 7 non-US regions, PE/PB/PS regional multiples, and switched credit_ratings.json to official XLS dynamic parsing"
+    },
     {
       "version": "2.2.0",
       "date": "2026-06-05",
