@@ -66,13 +66,13 @@ const VLAB_CONFIG = {
       files: [
         '/data/damodaran/erp.json',
         '/data/damodaran/industries.json',
-        '/data/damodaran/betas.json',
-        '/data/damodaran/margins.json'
+        '/data/damodaran/industry_metrics.json',
+        '/data/damodaran/industry_metrics_regions.json',
+        '/data/damodaran/historical_erp.json',
+        '/data/damodaran/credit_ratings.json'
       ],
       tools: [
-        { href: 'expansion/damodaran-hub.html', label: '허브' },
-        { href: 'expansion/erp-rank.html', label: 'ERP 랭킹' },
-        { href: 'expansion/ev-sales.html', label: 'EV/Sales' }
+        { href: 'expansion/damodaran-explorer.html', label: 'Explorer' }
       ]
     },
 

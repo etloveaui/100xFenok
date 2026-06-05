@@ -23,13 +23,13 @@
       "description": "Market indices P/E, P/B, ROE - 30,440 records, 2010-07-16 ~ 2026-05-29, 37 sections, 829 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
-      "version": "2.2.0",
+      "version": "2.3.0",
       "updated": "2026-06-05",
       "update_frequency": "yearly + ERP interim",
       "source": "NYU Stern (Aswath Damodaran)",
-      "file_count": 5,
+      "file_count": 6,
       "schema": true,
-      "description": "Industry valuation data, extended metrics, ERP, credit ratings"
+      "description": "Industry valuation data, extended US metrics, non-US regional metrics, ERP, credit ratings"
     },
     "global-scouter": {
       "version": "2.3.0",
@@ -117,8 +117,8 @@
     {
       "date": "2026-06-05",
       "folder": "damodaran",
-      "version": "2.2.0",
-      "change": "Current data refresh and additive valuation expansion: 5 JSON files, 96 industries, 11 extended industry metric datasets, ERP April 2026 with 178 countries and US ERP 5.03%. Existing file names remain backward compatible.",
+      "version": "2.3.0",
+      "change": "Regional valuation expansion: 6 JSON files, added industry_metrics_regions.json with 7 non-US regions x 17 datasets including regional PE/PB/PS, and switched credit ratings to official XLS dynamic parsing without fallback.",
       "breaking": false
     },
     {
@@ -485,7 +485,7 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-06-05T01:15:15Z",
+  "generatedAt": "2026-06-05T02:01:04Z",
   "categories": [
     {
       "name": "computed",
@@ -538,10 +538,10 @@
     {
       "name": "damodaran",
       "path": "/data/damodaran/",
-      "schemaVersion": "2.2.0",
-      "fileCount": 5,
+      "schemaVersion": "2.3.0",
+      "fileCount": 6,
       "lastUpdated": "2026-06-05",
-      "notes": "Industry valuation data, extended metrics, ERP, credit ratings"
+      "notes": "Industry valuation data, extended US metrics, non-US regional metrics, ERP, credit ratings"
     },
     {
       "name": "indices",

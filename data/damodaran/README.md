@@ -10,11 +10,12 @@ Aswath Damodaran's public financial data converted to JSON format.
 |------|------|-------------|--------|
 | `industries.json` | 75 KB | 96 US industries with 6 datasets merged (beta, margins, EVA, debt, growth, multiples) | Yearly |
 | `industry_metrics.json` | 307 KB | 96 US industries with 11 extended valuation metric datasets | Yearly |
+| `industry_metrics_regions.json` | 4.2 MB | 7 non-US regions with 96 industries each and 17 regional metric datasets | Yearly |
 | `erp.json` | 45 KB | 178 countries with ERP, CRP, ratings, tax rates (April 2026 update) | Quarterly/Yearly |
 | `historical_erp.json` | 6.5 KB | 66 years of implied ERP (1960-2025) | Yearly |
-| `credit_ratings.json` | 6.5 KB | 3 interest coverage lookup tables (large/financial current HTML, small/risky compatibility fallback) | Yearly |
+| `credit_ratings.json` | 6.4 KB | 3 interest coverage lookup tables parsed from the official current ratings workbook | Yearly |
 
-**Total**: 5 files, ~439 KB
+**Total**: 6 files, ~4.2 MB
 
 ---
 
@@ -117,6 +118,44 @@ Additive US industry valuation metrics from 11 Damodaran current-year tables.
 
 **Scope**: US current-year industry tables only. Regional variants are not included in v1.0.0.
 
+### industry_metrics_regions.json (v1.0.0)
+
+Additive non-US regional industry valuation metrics from 17 Damodaran current-year tables.
+
+```json
+{
+  "metadata": {
+    "schema_version": "1.0.0",
+    "source_date": "January 2026",
+    "scope": "Non-US current-year regional industry tables",
+    "region_count": 7,
+    "dataset_count": 17,
+    "regions": ["europe", "japan", "rest", "emerging", "china", "india", "global"],
+    "datasets_merged": ["betas", "totalbeta", "wacc", "taxrate", "eva", "debtdetails", "leaseeffect", "capex", "margin", "wcdata", "roe", "fundgr", "fundgrEB", "pedata", "pbvdata", "psdata", "vebitda"],
+    "errors": []
+  },
+  "regions": {
+    "europe": {
+      "label": "Europe",
+      "industries": {
+        "Software (System & Application)": {
+          "num_firms": 72,
+          "beta": {"levered": 1.12},
+          "cost_of_capital": {"cost_of_capital": 0.083},
+          "ev_multiples": {"all_ev_to_ebitda": 13.4},
+          "pe_multiples": {"current_pe": 24.8},
+          "book_value_returns": {"pbv": 3.1},
+          "sales_multiples": {"price_sales": 4.6}
+        }
+      }
+    }
+  }
+}
+```
+
+**Scope**: Non-US regional variants only. US remains in `industry_metrics.json`.
+**Regional PE/PB/PS**: regional workbooks use short names (`pe`, `pbv`, `ps`) while JSON dataset keys remain `pedata`, `pbvdata`, and `psdata`.
+
 ### erp.json (v2.0.0)
 
 Country-level Equity Risk Premiums with 2026 structure updates.
@@ -201,14 +240,13 @@ Interest coverage ratio to credit rating lookup tables.
     "schema_version": "2.0.0",
     "generated_at": "2026-06-05T...",
     "table_count": 3,
-    "parsing_method": "html_dynamic_partial_fallback",
-    "fallback_used": true,
-    "fallback_tables": ["small_risky"]
+    "parsing_method": "xls_dynamic",
+    "fallback_used": false
   },
   "lookup_tables": {
     "large_manufacturing": [
-      {"min_coverage": 12.5, "max_coverage": null, "rating": "AAA", "spread": 0.0063},
-      {"min_coverage": 9.5, "max_coverage": 12.5, "rating": "AA", "spread": 0.0078}
+      {"min_coverage": 12.5, "max_coverage": null, "rating": "Aaa/AAA", "spread": 0.004},
+      {"min_coverage": 9.5, "max_coverage": 12.5, "rating": "Aa2/AA", "spread": 0.0055}
     ],
     "small_risky": [...],
     "financial": [...]
@@ -216,7 +254,7 @@ Interest coverage ratio to credit rating lookup tables.
 }
 ```
 
-**Note**: Large non-financial and financial tables are parsed from the current HTML page. The legacy `small_risky` table remains a compatibility fallback because the current public HTML page does not expose a separate small/risky table.
+**Note**: All three tables are parsed from the official current `pc/ratings.xls` workbook.
 
 ---
 
@@ -228,11 +266,11 @@ Interest coverage ratio to credit rating lookup tables.
    cd docs/products/converters/damodaran
    $HOME/.pyenv/versions/3.12.8/bin/python3 run.py --dataset all
    ```
-3. Copy 5 JSON files from `output/` to this folder and the Next public mirror
+3. Copy 6 JSON files from `output/` to this folder and the Next public mirror
 4. Commit + push
 5. Verify fetch from `https://100xfenok.pages.dev/data/damodaran/`
 
-**Converter location**: `docs/products/converters/damodaran/` (v2.2.0)
+**Converter location**: `docs/products/converters/damodaran/` (v2.3.0)
 
 ---
 
@@ -240,6 +278,7 @@ Interest coverage ratio to credit rating lookup tables.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| v2.3.0 | 2026-06-05 | Regional expansion: added `industry_metrics_regions.json` with 7 non-US regions x 17 datasets, including regional PE/PB/PS, and switched credit ratings to official XLS dynamic parsing |
 | v2.2.0 | 2026-06-05 | Current data refresh: ERP April 2026, HTML-based industry/rating parsing, new `industry_metrics.json` with 11 extended valuation datasets |
 | v2.0.0 | 2026-01-11 | **Major update**: 4 files, industries.json replaces ev_sales.json, 2026 ERP structure |
 | v1.0.0 | 2025-12-18 | Initial: erp.json + ev_sales.json |

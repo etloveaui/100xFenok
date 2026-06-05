@@ -172,11 +172,12 @@ valuation-lab/
 
 ### Damodaran
 
-- `expansion/damodaran-hub.html` (EV/Sales + ERP 요약) ✅ v2.0.0
-- `expansion/ev-sales.html` (EV/Sales 섹터 대시보드) ✅ v2.0.0
-- `expansion/erp-rank.html` (국가 ERP 랭킹) ✅ Compatible
-- `expansion/damodaran-relative.html` (상대 벤치마크) ✅ v2.0.0
+- `expansion/damodaran-explorer.html` (산업 · 국가 · ERP 히스토리 · ratings explorer) ✅ v2.3.0
 - `expansion/composite-report.html` (Composite 리포트) ✅ v2.0.0
+
+**v2.3.0 Expansion (2026-06-05)**: `industry_metrics_regions.json` added
+- Path: `/data/damodaran/industry_metrics_regions.json`
+- Structure: `regions[region].industries[name]` with 7 non-US regions x 17 datasets
 
 **v2.0.0 Migration (2026-01-20)**: `ev_sales.json` → `industries.json`
 - Path: `/data/damodaran/industries.json`
