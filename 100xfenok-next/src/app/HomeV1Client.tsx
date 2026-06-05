@@ -2,7 +2,6 @@
 
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, getRegimeLabel, getRegimeClass } from "@/lib/dashboard/formatters";
-import TariffBanner from "@/components/dashboard/TariffBanner";
 import HomeBentoGrid from "@/components/dashboard/HomeBentoGrid";
 
 /**
@@ -53,7 +52,6 @@ export default function HomeV1Client() {
 
   return (
     <div className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4">
-      <TariffBanner />
       <HomeBentoGrid
         dashboard={dashboard}
         regimeLabel={regimeLabel}
