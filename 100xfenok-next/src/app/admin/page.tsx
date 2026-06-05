@@ -22,6 +22,13 @@ const adminLinks = [
     badge: "MACRO",
   },
   {
+    href: "/admin/live",
+    title: "Voice Lab",
+    description: "시장 리스크 문답과 영어 워밍업용 Gemini 음성 콘솔입니다.",
+    icon: "fa-wave-square",
+    badge: "LIVE",
+  },
+  {
     href: "/admin/design-gallery",
     title: "Design Gallery",
     description: "150개 금융 대시보드 디자인 패턴 — 시각화, 인터랙션, 레이아웃, 모바일 UX 레퍼런스",

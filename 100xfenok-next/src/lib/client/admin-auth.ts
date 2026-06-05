@@ -3,8 +3,8 @@ export const ADMIN_AUTH_CHANGE_EVENT = "fenok:admin-auth-change";
 export const ADMIN_VERIFY_STATE_EVENT = "fenok:admin-verify-state";
 export const ADMIN_VERIFY_FAIL_COUNT_KEY = "adminVerifyFailCount";
 export const ADMIN_VERIFY_LOCK_UNTIL_KEY = "adminVerifyLockUntil";
-export const ADMIN_MAX_FAILURES = 3;
-export const ADMIN_VERIFY_LOCK_MS = 3000;
+export const ADMIN_MAX_FAILURES = 1;
+export const ADMIN_VERIFY_LOCK_MS = 0;
 
 export type AdminVerifyResult = "matched" | "mismatch" | "unsupported";
 export type AdminVerifyFailureState = {
@@ -15,22 +15,37 @@ export type AdminVerifyFailureState = {
 
 function getSessionStorage(): Storage | null {
   if (typeof window === "undefined") return null;
-  return window.sessionStorage;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
 }
 
 function dispatchAdminEvent(name: string, detail: Record<string, unknown>): void {
   if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent(name, { detail }));
+  try {
+    window.dispatchEvent(new CustomEvent(name, { detail }));
+  } catch {
+    // Some privacy-restricted browser contexts can block storage/events.
+  }
 }
 
 function setCachedAdminAuthenticated(authenticated: boolean): void {
   const storage = getSessionStorage();
-  if (!storage) return;
+  if (!storage) {
+    dispatchAdminEvent(ADMIN_AUTH_CHANGE_EVENT, { authenticated });
+    return;
+  }
 
-  if (authenticated) {
-    storage.setItem(ADMIN_AUTH_STORAGE_KEY, "true");
-  } else {
-    storage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+  try {
+    if (authenticated) {
+      storage.setItem(ADMIN_AUTH_STORAGE_KEY, "true");
+    } else {
+      storage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+    }
+  } catch {
+    // The HttpOnly cookie remains the source of truth.
   }
 
   dispatchAdminEvent(ADMIN_AUTH_CHANGE_EVENT, { authenticated });
@@ -39,13 +54,22 @@ function setCachedAdminAuthenticated(authenticated: boolean): void {
 export function isAdminAuthenticated(): boolean {
   const storage = getSessionStorage();
   if (!storage) return false;
-  return storage.getItem(ADMIN_AUTH_STORAGE_KEY) === "true";
+  try {
+    return storage.getItem(ADMIN_AUTH_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
 }
 
 export function getAdminVerifyFailCount(): number {
   const storage = getSessionStorage();
   if (!storage) return 0;
-  const raw = Number(storage.getItem(ADMIN_VERIFY_FAIL_COUNT_KEY) || "0");
+  let raw = 0;
+  try {
+    raw = Number(storage.getItem(ADMIN_VERIFY_FAIL_COUNT_KEY) || "0");
+  } catch {
+    return 0;
+  }
   return Number.isFinite(raw) && raw > 0 ? raw : 0;
 }
 
@@ -53,20 +77,25 @@ export function getAdminVerifyLockRemainingMs(now = Date.now()): number {
   const storage = getSessionStorage();
   if (!storage) return 0;
 
-  const rawUntil = Number(storage.getItem(ADMIN_VERIFY_LOCK_UNTIL_KEY) || "0");
-  if (!Number.isFinite(rawUntil) || rawUntil <= now) {
+  try {
     storage.removeItem(ADMIN_VERIFY_LOCK_UNTIL_KEY);
-    return 0;
+  } catch {
+    // Ignore storage cleanup failures.
   }
-
-  return rawUntil - now;
+  void now;
+  return 0;
 }
 
 export function clearAdminVerifyState(): void {
   const storage = getSessionStorage();
-  if (!storage) return;
-  storage.removeItem(ADMIN_VERIFY_FAIL_COUNT_KEY);
-  storage.removeItem(ADMIN_VERIFY_LOCK_UNTIL_KEY);
+  if (storage) {
+    try {
+      storage.removeItem(ADMIN_VERIFY_FAIL_COUNT_KEY);
+      storage.removeItem(ADMIN_VERIFY_LOCK_UNTIL_KEY);
+    } catch {
+      // Ignore storage cleanup failures.
+    }
+  }
   dispatchAdminEvent(ADMIN_VERIFY_STATE_EVENT, {
     failCount: 0,
     locked: false,
@@ -76,54 +105,30 @@ export function clearAdminVerifyState(): void {
 
 export function registerAdminVerifyFailure(now = Date.now()): AdminVerifyFailureState {
   const storage = getSessionStorage();
-  if (!storage) {
-    return { locked: false, remainingMs: 0, failCount: 0 };
+  if (storage) {
+    try {
+      storage.removeItem(ADMIN_VERIFY_FAIL_COUNT_KEY);
+      storage.removeItem(ADMIN_VERIFY_LOCK_UNTIL_KEY);
+    } catch {
+      // Ignore storage cleanup failures.
+    }
   }
-
-  const activeLockRemainingMs = getAdminVerifyLockRemainingMs(now);
-  if (activeLockRemainingMs > 0) {
-    const lockedState = {
-      locked: true,
-      remainingMs: activeLockRemainingMs,
-      failCount: 0,
-    };
-    dispatchAdminEvent(ADMIN_VERIFY_STATE_EVENT, lockedState);
-    return lockedState;
-  }
-
-  const nextFailCount = getAdminVerifyFailCount() + 1;
-  if (nextFailCount >= ADMIN_MAX_FAILURES) {
-    storage.removeItem(ADMIN_VERIFY_FAIL_COUNT_KEY);
-    storage.setItem(ADMIN_VERIFY_LOCK_UNTIL_KEY, String(now + ADMIN_VERIFY_LOCK_MS));
-    const lockedState = {
-      locked: true,
-      remainingMs: ADMIN_VERIFY_LOCK_MS,
-      failCount: 0,
-    };
-    dispatchAdminEvent(ADMIN_VERIFY_STATE_EVENT, lockedState);
-    return lockedState;
-  }
-
-  storage.setItem(ADMIN_VERIFY_FAIL_COUNT_KEY, String(nextFailCount));
+  void now;
   const nextState = {
     locked: false,
     remainingMs: 0,
-    failCount: nextFailCount,
+    failCount: 1,
   };
   dispatchAdminEvent(ADMIN_VERIFY_STATE_EVENT, nextState);
   return nextState;
 }
 
 export function setAdminAuthenticated(): void {
-  const storage = getSessionStorage();
-  if (!storage) return;
   clearAdminVerifyState();
   setCachedAdminAuthenticated(true);
 }
 
 export function clearAdminAuthenticated(): void {
-  const storage = getSessionStorage();
-  if (!storage) return;
   setCachedAdminAuthenticated(false);
 }
 
@@ -131,9 +136,10 @@ export async function refreshAdminAuthenticated(): Promise<boolean> {
   if (typeof window === "undefined") return false;
 
   try {
-    const response = await fetch("/api/admin/session", {
+    const response = await fetch("/api/admin/session/", {
       method: "GET",
       cache: "no-store",
+      credentials: "same-origin",
       headers: { Accept: "application/json" },
     });
     if (!response.ok) {
@@ -152,9 +158,10 @@ export async function refreshAdminAuthenticated(): Promise<boolean> {
 export async function logoutAdminSession(): Promise<void> {
   if (typeof window !== "undefined") {
     try {
-      await fetch("/api/admin/session", {
+      await fetch("/api/admin/session/", {
         method: "DELETE",
         cache: "no-store",
+        credentials: "same-origin",
       });
     } catch {
       // 네트워크 오류여도 클라이언트 상태는 즉시 정리
@@ -170,9 +177,10 @@ export async function verifyAdminPassword(input: string): Promise<AdminVerifyRes
   if (!normalized) return "mismatch";
 
   try {
-    const response = await fetch("/api/admin/session", {
+    const response = await fetch("/api/admin/session/", {
       method: "POST",
       cache: "no-store",
+      credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

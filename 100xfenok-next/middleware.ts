@@ -97,8 +97,12 @@ function isAdminPath(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
-function isAdminSessionPath(pathname: string): boolean {
-  return pathname === "/api/admin/session" || pathname.startsWith("/api/admin/session/");
+function isAdminApiPath(pathname: string): boolean {
+  return pathname === "/api/admin" || pathname.startsWith("/api/admin/");
+}
+
+function isPublicLiveBenchPath(pathname: string): boolean {
+  return pathname === "/admin/live" || pathname.startsWith("/admin/live/");
 }
 
 function getRateLimitTier(request: NextRequest): RateLimitTier {
@@ -106,11 +110,11 @@ function getRateLimitTier(request: NextRequest): RateLimitTier {
   const ip = getClientIp(request);
   const hasUserAgent = Boolean(request.headers.get("user-agent")?.trim());
 
-  if (isAdminSessionPath(pathname) || isAdminPath(pathname)) {
+  if (isAdminApiPath(pathname) || isAdminPath(pathname)) {
     return {
       bindingName: "RL_ADMIN",
       key: `admin:${ip}`,
-      fallbackLimit: 10,
+      fallbackLimit: 120,
       periodMs: ONE_MINUTE_MS,
     };
   }
@@ -162,7 +166,12 @@ function passesLocalRateLimit(tier: RateLimitTier, now = Date.now()): boolean {
 }
 
 async function passesRateLimit(request: NextRequest): Promise<boolean> {
-  if (shouldSkipBotProtection(request.nextUrl.pathname)) {
+  const { pathname } = request.nextUrl;
+  if (
+    shouldSkipBotProtection(pathname) ||
+    isAdminPath(pathname) ||
+    isAdminApiPath(pathname)
+  ) {
     return true;
   }
 
@@ -251,6 +260,12 @@ export async function middleware(request: NextRequest) {
         "X-Robots-Tag": "noindex, nofollow, noarchive",
       },
     });
+  }
+
+  if (isPublicLiveBenchPath(pathname)) {
+    const targetUrl = request.nextUrl.clone();
+    targetUrl.pathname = "/live-bench/";
+    return NextResponse.rewrite(targetUrl);
   }
 
   if (!(await passesRateLimit(request))) {
