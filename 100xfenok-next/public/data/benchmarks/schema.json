@@ -1,7 +1,7 @@
 {
   "folder": "benchmarks",
-  "version": "3.7.0",
-  "updated": "2026-05-11",
+  "version": "3.8.0",
+  "updated": "2026-06-05",
   "source": "Bloomberg Terminal",
   "update_frequency": "weekly (Sunday)",
   "maintainer": "Manual upload from Bloomberg",
@@ -11,8 +11,8 @@
       "size_kb": 689,
       "records_per_index": 829,
       "date_range": [
-        "2010-06-25",
-        "2026-05-08"
+        "2010-07-16",
+        "2026-05-29"
       ],
       "schema": {
         "metadata": {
@@ -54,12 +54,12 @@
     },
     "micro_sectors.json": {
       "description": "Philadelphia Semi, Regional Banks, Hang Seng Tech, Biotech, KOSDAQ 150",
-      "size_kb": 797,
+      "size_kb": 798,
       "schema": "Same as us.json"
     },
     "developed.json": {
       "description": "Euro STOXX 50, TOPIX, Hong Kong, Nikkei",
-      "size_kb": 689,
+      "size_kb": 690,
       "schema": "Same as us.json"
     },
     "emerging.json": {
@@ -74,18 +74,30 @@
     },
     "summaries.json": {
       "added_in": "3.7.0",
-      "description": "Momentum + Yearly Returns for all 37 sections (74 summary blocks total)",
-      "size_kb": 12,
+      "description": "Backward-compatible price momentum/yearly returns plus source summaries for all benchmark metrics",
+      "size_kb": 88,
       "sections": 37,
       "summary_blocks": 74,
+      "source_summary_slots": 2405,
+      "source_summary_non_null_values": 2353,
+      "source_summary_null_values": 52,
       "schema": {
         "metadata": {
           "version": "YYYY-MM-DD",
           "generated": "ISO timestamp",
           "type": "summary",
-          "source": "Bloomberg Terminal"
+          "source": "Bloomberg Terminal",
+          "summary_fields": [
+            "px_last",
+            "best_eps",
+            "best_pe_ratio",
+            "px_to_book_ratio",
+            "roe"
+          ],
+          "compatibility": "momentum and yearly_returns remain px_last-only legacy views"
         },
         "momentum.{index_key}": {
+          "1w": "number (decimal)",
           "1m": "number (decimal, e.g., 0.0182 = 1.82%)",
           "3m": "number (decimal)",
           "6m": "number (decimal)",
@@ -93,6 +105,22 @@
         },
         "yearly_returns.{index_key}": {
           "YYYY": "number (decimal, e.g., 2025, 2024, 2023...2018)"
+        },
+        "source_summaries.{index_key}.momentum.{metric}": {
+          "description": "Bloomberg workbook bottom summary rows for px_last, best_eps, best_pe_ratio, px_to_book_ratio, and roe",
+          "keys": [
+            "1w",
+            "1m",
+            "3m",
+            "6m",
+            "ytd"
+          ],
+          "value": "number or null"
+        },
+        "source_summaries.{index_key}.yearly_returns.{metric}": {
+          "description": "Bloomberg workbook yearly summary rows by metric",
+          "keys": "YYYY",
+          "value": "number or null"
         }
       }
     }
@@ -135,6 +163,11 @@
     ]
   },
   "breaking_changes_history": [
+    {
+      "version": "3.8.0",
+      "date": "2026-05-25",
+      "change": "source_summaries added to summaries.json without removing legacy momentum/yearly_returns"
+    },
     {
       "version": "3.7.0",
       "date": "2026-01-20",
