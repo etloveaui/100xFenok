@@ -6,6 +6,8 @@ export const ADMIN_VERIFY_LOCK_UNTIL_KEY = "adminVerifyLockUntil";
 export const ADMIN_MAX_FAILURES = 1;
 export const ADMIN_VERIFY_LOCK_MS = 0;
 
+let lastKnownAdminAuthenticated: boolean | null = null;
+
 export type AdminVerifyResult = "matched" | "mismatch" | "unsupported";
 export type AdminVerifyFailureState = {
   locked: boolean;
@@ -31,34 +33,42 @@ function dispatchAdminEvent(name: string, detail: Record<string, unknown>): void
   }
 }
 
-function setCachedAdminAuthenticated(authenticated: boolean): void {
+function readCachedAdminAuthenticated(): boolean {
   const storage = getSessionStorage();
-  if (!storage) {
-    dispatchAdminEvent(ADMIN_AUTH_CHANGE_EVENT, { authenticated });
-    return;
-  }
-
+  if (!storage) return lastKnownAdminAuthenticated === true;
   try {
-    if (authenticated) {
-      storage.setItem(ADMIN_AUTH_STORAGE_KEY, "true");
-    } else {
-      storage.removeItem(ADMIN_AUTH_STORAGE_KEY);
-    }
+    const authenticated = storage.getItem(ADMIN_AUTH_STORAGE_KEY) === "true";
+    lastKnownAdminAuthenticated = authenticated;
+    return authenticated;
   } catch {
-    // The HttpOnly cookie remains the source of truth.
+    return lastKnownAdminAuthenticated === true;
+  }
+}
+
+function setCachedAdminAuthenticated(authenticated: boolean): void {
+  const previous = readCachedAdminAuthenticated();
+  lastKnownAdminAuthenticated = authenticated;
+  const storage = getSessionStorage();
+
+  if (storage) {
+    try {
+      if (authenticated) {
+        storage.setItem(ADMIN_AUTH_STORAGE_KEY, "true");
+      } else {
+        storage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+      }
+    } catch {
+      // The HttpOnly cookie remains the source of truth.
+    }
   }
 
-  dispatchAdminEvent(ADMIN_AUTH_CHANGE_EVENT, { authenticated });
+  if (previous !== authenticated) {
+    dispatchAdminEvent(ADMIN_AUTH_CHANGE_EVENT, { authenticated });
+  }
 }
 
 export function isAdminAuthenticated(): boolean {
-  const storage = getSessionStorage();
-  if (!storage) return false;
-  try {
-    return storage.getItem(ADMIN_AUTH_STORAGE_KEY) === "true";
-  } catch {
-    return false;
-  }
+  return readCachedAdminAuthenticated();
 }
 
 export function getAdminVerifyFailCount(): number {

@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ADMIN_AUTH_CHANGE_EVENT,
-  ADMIN_VERIFY_STATE_EVENT,
   isAdminAuthenticated,
   refreshAdminAuthenticated,
 } from '@/lib/client/admin-auth';
@@ -93,9 +91,13 @@ export default function Footer() {
   const [hasAdminSession, setHasAdminSession] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
 
+  /*
+   * This footer is mounted on every route. Keep server session checks explicit:
+   * only the Admin button or login flow should hit /api/admin/session/.
+   */
   const syncAdminState = useCallback(async () => {
-    const authenticatedState = await refreshAdminAuthenticated();
-    setHasAdminSession(authenticatedState);
+    const sessionActive = await refreshAdminAuthenticated();
+    setHasAdminSession(sessionActive);
   }, []);
 
   const navigateToAdmin = useCallback(() => {
@@ -108,14 +110,23 @@ export default function Footer() {
   }, [router]);
 
   const handleAdminClick = useCallback(() => {
-    const sessionActive = hasAdminSession || isAdminAuthenticated();
-    if (sessionActive) {
-      void syncAdminState();
-      navigateToAdmin();
-      return;
-    }
-    setShowAdminModal(true);
-  }, [hasAdminSession, navigateToAdmin, syncAdminState]);
+    void (async () => {
+      const sessionActive = isAdminAuthenticated() || await refreshAdminAuthenticated();
+      setHasAdminSession(sessionActive);
+
+      if (sessionActive) {
+        navigateToAdmin();
+        return;
+      }
+
+      setShowAdminModal(true);
+    })();
+  }, [navigateToAdmin]);
+
+  const handleAuthenticated = useCallback(() => {
+    setHasAdminSession(true);
+    navigateToAdmin();
+  }, [navigateToAdmin]);
 
   // Market status + ET clock polling
   useEffect(() => {
@@ -136,22 +147,6 @@ export default function Footer() {
       detail: { open: showAdminModal },
     }));
   }, [showAdminModal]);
-
-  // Admin session sync
-  useEffect(() => {
-    void syncAdminState();
-    const handleSync = () => { void syncAdminState(); };
-    window.addEventListener('focus', handleSync);
-    window.addEventListener('storage', handleSync);
-    window.addEventListener(ADMIN_AUTH_CHANGE_EVENT, handleSync as EventListener);
-    window.addEventListener(ADMIN_VERIFY_STATE_EVENT, handleSync as EventListener);
-    return () => {
-      window.removeEventListener('focus', handleSync);
-      window.removeEventListener('storage', handleSync);
-      window.removeEventListener(ADMIN_AUTH_CHANGE_EVENT, handleSync as EventListener);
-      window.removeEventListener(ADMIN_VERIFY_STATE_EVENT, handleSync as EventListener);
-    };
-  }, [syncAdminState]);
 
   // Alt+A keyboard shortcut
   useEffect(() => {
@@ -192,6 +187,7 @@ export default function Footer() {
   };
 
   const status = marketStatusConfig[marketStatus];
+  const adminSessionActive = hasAdminSession || isAdminAuthenticated();
 
   return (
     <>
@@ -207,7 +203,7 @@ export default function Footer() {
           statusLabel={status.label}
           statusClassName={status.className}
           etClock={etClock}
-          hasAdminSession={hasAdminSession}
+          hasAdminSession={adminSessionActive}
           showInstallAction={showInstallAction}
           onShareClick={() => { void handleShareClick(); }}
           onMarketStatusClick={handleMarketStatusClick}
@@ -220,7 +216,7 @@ export default function Footer() {
       <AdminAuthModal
         isOpen={showAdminModal}
         onClose={() => setShowAdminModal(false)}
-        onAuthenticated={navigateToAdmin}
+        onAuthenticated={handleAuthenticated}
         syncAdminState={syncAdminState}
         showToast={toast.show}
       />

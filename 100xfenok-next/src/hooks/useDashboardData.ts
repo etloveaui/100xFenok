@@ -6,7 +6,6 @@ import type {
   CryptoFearGreedPoint,
   BenchmarksSummaryPayload,
   FredSeriesPayload,
-  TickerQuotePayload,
   SectorTickerMap,
   DashboardSnapshot,
   DashboardDataResult,
@@ -14,7 +13,6 @@ import type {
 } from '@/lib/dashboard/types';
 import {
   CLIENT_FETCH_TIMEOUT_MS,
-  FOCUS_REFRESH_STALE_MS,
   SECTOR_DEFINITIONS,
   QUICK_INDEX_DEFINITIONS,
   DEFAULT_DASHBOARD,
@@ -45,7 +43,6 @@ export function useDashboardData() {
   const loadInFlightRef = useRef(false);
   const hasLiveDataRef = useRef(false);
   const isMountedRef = useRef(true);
-  const lastSyncedEpochRef = useRef<number | null>(null);
 
   const loadOverviewData = useCallback(async () => {
     if (loadInFlightRef.current) {
@@ -54,11 +51,7 @@ export function useDashboardData() {
     loadInFlightRef.current = true;
 
     try {
-      const tickerSymbols = [
-        ...SECTOR_DEFINITIONS.map((sector) => sector.etf),
-        ...QUICK_INDEX_DEFINITIONS.map((item) => item.symbol),
-      ];
-      const dataPromise = Promise.all([
+      const [fearGreed, vix, putCall, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking] = await Promise.all([
         fetchJson<CnnFearGreedPoint[]>('/data/sentiment/cnn-fear-greed.json'),
         fetchJson<NumberPoint[]>('/data/sentiment/vix.json'),
         fetchJson<PutCallPoint[]>('/data/sentiment/cnn-put-call.json'),
@@ -68,36 +61,15 @@ export function useDashboardData() {
         fetchJson<FredSeriesPayload>('/data/macro/fred-banking-quarterly.json'),
         fetchJson<FredSeriesPayload>('/data/macro/fred-banking-daily.json'),
       ]);
-      const tickerPromise = Promise.allSettled(
-        tickerSymbols.map(async (symbol) => ({
-          symbol,
-          quote: await fetchJson<TickerQuotePayload>(`/api/ticker/${symbol}`, 3200),
-        })),
-      );
-
-      const [[fearGreed, vix, putCall, crypto, summaries, weeklyBanking, quarterlyBanking, dailyBanking], tickerSettled] = await Promise.all([
-        dataPromise,
-        tickerPromise,
-      ]);
-
-      const tickerMap: SectorTickerMap = {};
-      for (const symbol of tickerSymbols) {
-        tickerMap[symbol] = null;
-      }
-      tickerSettled.forEach((result, index) => {
-        const symbol = tickerSymbols[index];
-        if (!symbol || result.status !== 'fulfilled') return;
-        tickerMap[symbol] = result.value.quote;
-      });
 
       const sectorTicker: SectorTickerMap = {};
       for (const sector of SECTOR_DEFINITIONS) {
-        sectorTicker[sector.etf] = tickerMap[sector.etf] ?? null;
+        sectorTicker[sector.etf] = null;
       }
 
       const indexTicker: SectorTickerMap = {};
       for (const item of QUICK_INDEX_DEFINITIONS) {
-        indexTicker[item.symbol] = tickerMap[item.symbol] ?? null;
+        indexTicker[item.symbol] = null;
       }
 
       const nextSnapshot = buildDashboardSnapshot({
@@ -128,7 +100,6 @@ export function useDashboardData() {
         setDashboard(nextSnapshot);
         setDataReady(true);
         hasLiveDataRef.current = true;
-        lastSyncedEpochRef.current = Date.now();
         return;
       }
 
@@ -146,34 +117,9 @@ export function useDashboardData() {
   useEffect(() => {
     isMountedRef.current = true;
     void loadOverviewData();
-    const refreshId = window.setInterval(() => {
-      void loadOverviewData();
-    }, 10 * 60 * 1000);
 
     return () => {
       isMountedRef.current = false;
-      window.clearInterval(refreshId);
-    };
-  }, [loadOverviewData]);
-
-  useEffect(() => {
-    const maybeRefreshIfStale = () => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
-        return;
-      }
-
-      const lastSynced = lastSyncedEpochRef.current;
-      if (lastSynced === null || Date.now() - lastSynced >= FOCUS_REFRESH_STALE_MS) {
-        void loadOverviewData();
-      }
-    };
-
-    window.addEventListener('focus', maybeRefreshIfStale);
-    document.addEventListener('visibilitychange', maybeRefreshIfStale);
-
-    return () => {
-      window.removeEventListener('focus', maybeRefreshIfStale);
-      document.removeEventListener('visibilitychange', maybeRefreshIfStale);
     };
   }, [loadOverviewData]);
 

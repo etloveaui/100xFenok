@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
 type FooterTickerItem = {
   symbol: string;
@@ -9,12 +7,6 @@ type FooterTickerItem = {
   changePercent: number;
   marketState: string;
   source: 'live' | 'fallback';
-};
-
-type FooterTickerQuotePayload = {
-  price?: number;
-  changePercent?: number;
-  marketState?: string;
 };
 
 const FOOTER_TICKER_CATALOG = [
@@ -65,68 +57,7 @@ type FooterTickerBarProps = {
 };
 
 export default function FooterTickerBar({ marketStatus, tickerLabel, statusLabel, statusClassName, onMarketStatusClick }: FooterTickerBarProps) {
-  const [tickerItems, setTickerItems] = useState<FooterTickerItem[]>(() => getDefaultFooterTickerItems());
-
-  useEffect(() => {
-    let disposed = false;
-
-    const loadTickerItems = async () => {
-      const results = await Promise.allSettled(
-        FOOTER_TICKER_CATALOG.map(async (item) => {
-          const response = await fetch(`/api/ticker/${item.symbol}`, {
-            method: 'GET',
-            cache: 'no-store',
-            headers: { Accept: 'application/json' },
-          });
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          const payload = (await response.json()) as FooterTickerQuotePayload;
-          return {
-            symbol: item.symbol,
-            price: typeof payload.price === 'number' ? payload.price : item.fallbackPrice,
-            changePercent:
-              typeof payload.changePercent === 'number'
-                ? payload.changePercent
-                : item.fallbackChangePercent,
-            marketState:
-              typeof payload.marketState === 'string' && payload.marketState.trim()
-                ? payload.marketState
-                : 'LIVE',
-            source: 'live' as const,
-          };
-        }),
-      );
-
-      if (disposed) return;
-
-      setTickerItems(
-        FOOTER_TICKER_CATALOG.map((item, index) => {
-          const result = results[index];
-          if (result?.status === 'fulfilled') {
-            return result.value;
-          }
-          return {
-            symbol: item.symbol,
-            price: item.fallbackPrice,
-            changePercent: item.fallbackChangePercent,
-            marketState: 'BASE',
-            source: 'fallback' as const,
-          };
-        }),
-      );
-    };
-
-    void loadTickerItems();
-    const intervalId = window.setInterval(() => {
-      void loadTickerItems();
-    }, 60 * 1000);
-
-    return () => {
-      disposed = true;
-      window.clearInterval(intervalId);
-    };
-  }, []);
+  const tickerItems = getDefaultFooterTickerItems();
 
   const tickerTape = tickerItems.map((item) => (
     <span key={item.symbol} className="footer-ticker-item">
