@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-06-06T11:02:22.281Z",
+  "generated_at": "2026-06-06T18:35:01.644Z",
   "as_of": "2026-06-06",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -201,20 +201,20 @@
       "threshold_ref": "tools/macro-monitor/shared/signals-core.mjs#THRESHOLDS"
     },
     "sentiment_signal": {
-      "overallStatus": "warning",
+      "overallStatus": "neutral",
       "buy_active": 0,
       "buy_near": 0,
-      "warn_active": 1,
-      "warn_near": 0,
+      "warn_active": 0,
+      "warn_near": 1,
       "values": {
         "vix": 21.51,
         "move": 71.16,
-        "cnn_fg": 54.7,
+        "cnn_fg": 42.1,
         "aaii_bearish": 37,
         "aaii_spread": -0.7000000000000028,
         "cftc_net": -188943,
         "crypto_fg": 12,
-        "putcall_ratio": 0.59
+        "putcall_ratio": 0.65
       },
       "combos": [
         {
@@ -269,7 +269,7 @@
               "operator": "<=",
               "value": 10,
               "label": "F&G <= 10",
-              "current": 54.7,
+              "current": 42.1,
               "status": "unmet"
             }
           ],
@@ -297,7 +297,7 @@
               "operator": "<=",
               "value": 25,
               "label": "CNN <= 25",
-              "current": 54.7,
+              "current": 42.1,
               "status": "unmet"
             },
             {
@@ -333,7 +333,7 @@
               "operator": "<=",
               "value": 25,
               "label": "CNN <= 25",
-              "current": 54.7,
+              "current": 42.1,
               "status": "unmet"
             }
           ],
@@ -373,7 +373,7 @@
               "operator": ">=",
               "value": 1.2,
               "label": "P/C >= 1.2",
-              "current": 0.59,
+              "current": 0.65,
               "status": "unmet"
             }
           ],
@@ -402,7 +402,7 @@
               "operator": ">=",
               "value": 75,
               "label": "CNN >= 75",
-              "current": 54.7,
+              "current": 42.1,
               "status": "unmet"
             },
             {
@@ -437,7 +437,7 @@
               "operator": ">=",
               "value": 75,
               "label": "CNN >= 75",
-              "current": 54.7,
+              "current": 42.1,
               "status": "unmet"
             }
           ],
@@ -449,15 +449,15 @@
           "name": "Put/Call Low",
           "category": "warn",
           "priority": 3,
-          "status": "active",
+          "status": "near",
           "conditions": [
             {
               "indicator": "putcall_ratio",
               "operator": "<",
               "value": 0.6,
               "label": "P/C < 0.6",
-              "current": 0.59,
-              "status": "met"
+              "current": 0.65,
+              "status": "near"
             }
           ],
           "correctionProb": "68%",
@@ -465,7 +465,7 @@
           "source": "Billingsley & Chance 1988"
         }
       ],
-      "as_of": "2026-06-05",
+      "as_of": "2026-06-06",
       "source_files": [
         "data/sentiment/vix.json",
         "data/sentiment/move.json",
