@@ -1,0 +1,55 @@
+name: Fetch Sentiment Data
+
+# Refreshes the dashboard sentiment series (CNN Fear & Greed + components +
+# put/call, Yahoo ^VIX, crypto Fear & Greed) that were previously updated only
+# by manual commits / Google Apps Scripts — which left them frozen when no one
+# ran the scripts. Merge-by-date: today's point is updated in place or appended;
+# history is never overwritten. Per-source resilient (one source failing does
+# not block the others).
+
+on:
+  schedule:
+    # 22:00 UTC Mon-Fri = ~after US cash close (17:00/18:00 ET). CNN F&G,
+    # put/call and VIX settle for the session by then; crypto updates daily.
+    - cron: '0 22 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-sentiment
+  cancel-in-progress: false
+
+jobs:
+  fetch-sentiment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch sentiment series
+        run: node scripts/fetch-sentiment.mjs
+
+      - name: Verify output
+        run: |
+          echo "=== Latest points (data/sentiment) ==="
+          for f in cnn-fear-greed cnn-components cnn-put-call vix crypto-fear-greed; do
+            echo "--- $f.json ---"
+            node -e "const d=require('./data/sentiment/$f.json');console.log('len',d.length,'last',JSON.stringify(d[d.length-1]))"
+          done
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/sentiment/*.json 100xfenok-next/public/data/sentiment/*.json
+          git diff --staged --quiet || git commit -m "chore: update sentiment data (CNN/VIX/crypto)"
+          git pull --rebase origin main
+          git push
