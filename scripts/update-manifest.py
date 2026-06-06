@@ -6,8 +6,12 @@ Automatically keeps manifest.json in sync with the actual data/ folder state.
 
 What this script updates:
   - file_count  : actual JSON file count per folder (schema.json excluded)
-  - updated     : today's date if file count changed OR git-detected change
-  - last_updated: root-level metadata
+  - updated     : the TRUE latest data-point date for the folder (max `date`/
+                  `as_of`/`generated_at`/`updated` across the folder's real data
+                  files). A reformat or git-touch can NOT stamp today — staleness
+                  always surfaces. Falls back to today only when a folder exposes
+                  no derivable data date.
+  - last_updated: root-level metadata (manifest rebuild day)
   - generatedAt : UTC snapshot timestamp for the manifest
   - categories  : MCP-facing hybrid registry derived from legacy folders
   - manifest_version: bumped once when the hybrid registry is introduced
@@ -81,6 +85,15 @@ NEXT_MANIFEST = REPO_ROOT / "100xfenok-next" / "public" / "data" / "manifest.jso
 # JSON files excluded from count (metadata files, not data)
 EXCLUDE_FILES = {"schema.json"}
 
+# Folders whose `updated` must reflect the TRUE latest data point (max date
+# across the real data files), so a reformat/git-touch can never mask staleness.
+# Restricted to genuine time-series folders: their nested `date`/`as_of`/
+# `updated` fields are real observation timestamps. Fundamental/forward folders
+# (global-scouter, benchmarks, indices, yardney, calendar) carry forward-looking
+# fiscal/forecast/event dates that are NOT freshness signals, so they keep the
+# conservative schema-declared behaviour.
+TIME_SERIES_FOLDERS = {"sentiment", "macro", "computed", "slickcharts"}
+
 # Root-level names that are NOT orphan data files
 ROOT_KNOWN = {
     "manifest.json",
@@ -109,7 +122,7 @@ def parse_semver(version: str | None) -> tuple[int, int, int]:
     while len(parsed) < 3:
         parsed.append(0)
 
-    return tuple(parsed)
+    return (parsed[0], parsed[1], parsed[2])
 
 
 def count_data_files(folder: Path) -> int:
@@ -136,8 +149,126 @@ def read_schema_version(folder: Path, fallback: str) -> str:
     return fallback
 
 
+# Top-level / nested metadata keys that carry a real data timestamp.
+# Order matters only for tie-resolution within a single object; the folder
+# date is always the MAX across every data file, so staleness can never be
+# masked by a sibling reformat.
+_DATA_DATE_KEYS = (
+    "as_of",
+    "asOf",
+    "date",
+    "generated_at",
+    "generatedAt",
+    "updated",
+    "last_updated",
+    "lastUpdated",
+    "history_end",
+)
+
+
+def _coerce_date_str(value: object) -> str | None:
+    """Pull a YYYY-MM-DD prefix out of a scalar if it looks like a date/timestamp."""
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    # Accept ISO date / datetime ("2026-06-05", "2026-06-05T23:59:52+00:00",
+    # "2026-05-11 17:31") — require the YYYY-MM-DD shape up front.
+    if len(text) >= 10 and text[4] == "-" and text[7] == "-":
+        head = text[:10]
+        y, m, d = head[:4], head[5:7], head[8:10]
+        if y.isdigit() and m.isdigit() and d.isdigit():
+            return head
+    return None
+
+
+def _scan_max_date(node: object, depth: int = 0) -> str | None:
+    """
+    Recursively walk a parsed JSON value and return the lexicographically
+    greatest YYYY-MM-DD found in any data-date field or any `date` entry of a
+    list element. Bounded depth keeps very large series files cheap.
+    """
+    if depth > 6:
+        return None
+
+    best: str | None = None
+
+    if isinstance(node, dict):
+        # 1) Honour explicit metadata keys on this object.
+        for key in _DATA_DATE_KEYS:
+            if key in node:
+                cand = _coerce_date_str(node[key])
+                if cand and (best is None or cand > best):
+                    best = cand
+        # 2) Recurse into nested containers that commonly hold dated series.
+        for key, child in node.items():
+            if isinstance(child, (dict, list)):
+                cand = _scan_max_date(child, depth + 1)
+                if cand and (best is None or cand > best):
+                    best = cand
+    elif isinstance(node, list):
+        # Sample head + tail for huge arrays (series are date-sorted), but also
+        # scan a bounded interior window to stay correct for unsorted data.
+        n = len(node)
+        if n == 0:
+            return None
+        if n <= 400:
+            indices = range(n)
+        else:
+            indices = list(range(0, 50)) + list(range(n - 50, n)) + list(range(0, n, max(1, n // 300)))
+        for i in indices:
+            item = node[i]
+            if isinstance(item, dict):
+                d = _coerce_date_str(item.get("date"))
+                if d and (best is None or d > best):
+                    best = d
+                else:
+                    cand = _scan_max_date(item, depth + 1)
+                    if cand and (best is None or cand > best):
+                        best = cand
+            elif isinstance(item, list):
+                cand = _scan_max_date(item, depth + 1)
+                if cand and (best is None or cand > best):
+                    best = cand
+
+    return best
+
+
+def _file_latest_date(file_path: Path) -> str | None:
+    """Return the greatest data date inside a single JSON file, or None."""
+    try:
+        with open(file_path, encoding="utf-8") as f:
+            payload = json.load(f)
+    except Exception:
+        return None
+    return _scan_max_date(payload)
+
+
 def latest_data_date(folder: Path) -> str | None:
-    """Return the date declared in a folder schema, or the fallback manifest date."""
+    """
+    Return the TRUE latest data-point date for a folder.
+
+    For time-series folders (TIME_SERIES_FOLDERS) this scans every real data
+    JSON file (schema.json excluded) and takes the max date — so a reformat or
+    git-touch can never make a stale folder look fresh, and per-file staleness
+    (e.g. fred-banking-quarterly) is surfaced once it is the latest signal.
+
+    For all other folders it keeps the conservative schema-declared date, since
+    their nested dates are forward-looking (fiscal/forecast/calendar) and are
+    not freshness signals. Falls back to the schema date when no data file
+    exposes a usable date.
+    """
+    if folder.name in TIME_SERIES_FOLDERS:
+        dates: list[str] = []
+        for file_path in folder.rglob("*.json"):
+            if file_path.name in EXCLUDE_FILES:
+                continue
+            d = _file_latest_date(file_path)
+            if d:
+                dates.append(d)
+        if dates:
+            return max(dates)
+
+    # Fallback: folder schema declared date (legacy behaviour).
     schema_path = folder / "schema.json"
     try:
         with open(schema_path, encoding="utf-8") as f:
@@ -248,15 +379,23 @@ def build_categories(folders_meta: dict[str, dict[str, object]]) -> list[dict[st
 
         folder_path = DATA_DIR / name
         fallback_version = str(manifest_meta.get("version", "1.0.0"))
-        fallback_last_updated = str(manifest_meta.get("updated", date.today().isoformat()))
+        # Prefer the manifest entry's (now TRUE) data date; if absent, scan the
+        # folder directly rather than defaulting to today.
+        last_updated = (
+            manifest_meta.get("updated")
+            or latest_data_date(folder_path)
+            or date.today().isoformat()
+        )
 
+        raw_file_count = manifest_meta.get("file_count")
+        file_count = raw_file_count if isinstance(raw_file_count, int) else count_data_files(folder_path)
         categories.append(
             {
                 "name": name,
                 "path": f"/data/{name}/",
                 "schemaVersion": read_schema_version(folder_path, fallback_version),
-                "fileCount": int(manifest_meta.get("file_count", count_data_files(folder_path))),
-                "lastUpdated": fallback_last_updated or latest_data_date(folder_path),
+                "fileCount": file_count,
+                "lastUpdated": last_updated,
                 "notes": str(manifest_meta.get("description") or ""),
             }
         )
@@ -325,29 +464,55 @@ def update_manifest(dry_run: bool = False) -> int:
         if folder_name in folders_meta:
             entry = folders_meta[folder_name]
             old_count = entry.get("file_count", 0)
+            old_updated = entry.get("updated")
             count_diff = old_count != actual_count
             git_touched = folder_name in git_changed
 
-            if count_diff or git_touched:
-                manifest_changed = True
-                entry["file_count"] = actual_count
-                entry["updated"] = today
+            if folder_name in TIME_SERIES_FOLDERS:
+                # `updated` must reflect the TRUE latest data point, never the
+                # rebuild day — a reformat/git-touch can NOT mask staleness.
+                true_date = latest_data_date(folder_path)
+                new_updated = true_date or old_updated or today
+                date_diff = new_updated != old_updated
 
-                reasons = []
-                if count_diff:
-                    reasons.append(f"count {old_count}→{actual_count}")
-                if git_touched and not count_diff:
-                    reasons.append("content updated (git)")
+                if count_diff or date_diff:
+                    manifest_changed = True
+                    entry["file_count"] = actual_count
+                    entry["updated"] = new_updated
 
-                updated_entries.append(
-                    f"{folder_name}: {', '.join(reasons)}"
-                )
+                    reasons = []
+                    if count_diff:
+                        reasons.append(f"count {old_count}→{actual_count}")
+                    if date_diff:
+                        reasons.append(f"data date {old_updated}→{new_updated}")
+                    if reasons:
+                        updated_entries.append(f"{folder_name}: {', '.join(reasons)}")
+                elif git_touched:
+                    # Keep file_count fresh; `updated` already equals the true
+                    # latest data date, so do not bump it to today.
+                    if entry.get("file_count") != actual_count:
+                        entry["file_count"] = actual_count
+                        manifest_changed = True
+            else:
+                # Legacy behaviour for non-time-series folders (fundamental /
+                # forward-dated / calendar): stamp today on a real change only.
+                if count_diff or git_touched:
+                    manifest_changed = True
+                    entry["file_count"] = actual_count
+                    entry["updated"] = today
+
+                    reasons = []
+                    if count_diff:
+                        reasons.append(f"count {old_count}→{actual_count}")
+                    if git_touched and not count_diff:
+                        reasons.append("content updated (git)")
+                    updated_entries.append(f"{folder_name}: {', '.join(reasons)}")
         else:
             # Brand-new folder not yet in manifest
             defaults = DEFAULT_FOLDER_META.get(folder_name, {})
             new_entry = {
                 "version": defaults.get("version", "1.0.0"),
-                "updated": today,
+                "updated": latest_data_date(folder_path) or today,
                 "update_frequency": defaults.get("update_frequency", "on-demand"),
                 "source": defaults.get("source", "TBD"),
                 "file_count": actual_count,
