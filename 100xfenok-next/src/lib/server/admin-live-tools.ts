@@ -184,6 +184,36 @@ const LIVE_TOOL_DEFINITIONS = [
     },
   },
   {
+    id: "feno-data",
+    label: "Feno Data",
+    category: "data",
+    status: "available",
+    description: "Global Scouter, computed signals, SEC 13F local context",
+    functionName: "getFenoTickerContext",
+    instruction:
+      "Tool: getFenoTickerContext({symbol, section}) reads local 100xFenok Global Scouter, computed signals, and SEC 13F data. Use it for ticker context, holders, and signal questions. It is not live web search; state source dates and missing coverage.",
+    declaration: {
+      name: "getFenoTickerContext",
+      description:
+        "Read compact local 100xFenok context for one ticker from Global Scouter, computed signals, and SEC 13F files.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          symbol: {
+            type: "STRING",
+            description: "Ticker symbol such as AAPL, NVDA, SPY, or QQQ.",
+          },
+          section: {
+            type: "STRING",
+            description: "Optional focused section. Defaults to overview.",
+            enum: FENO_DETAIL_SECTIONS,
+          },
+        },
+        required: ["symbol"],
+      },
+    },
+  },
+  {
     id: "feno-search",
     label: "Feno Search",
     category: "search",
@@ -237,6 +267,7 @@ const TOOL_BY_FUNCTION_NAME = new Map<string, LiveToolDefinition>(
 export const DEFAULT_LIVE_ENABLED_TOOL_IDS: LiveToolId[] = [];
 
 export function getDefaultLiveEnabledToolIds(mode: string): LiveToolId[] {
+  if (mode === "fenok") return ["feno-data"];
   return mode === "mona" ? [...MONA_STUDY_TOOL_IDS] : [];
 }
 

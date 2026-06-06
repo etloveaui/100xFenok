@@ -234,6 +234,13 @@ const TOOL_REGISTRY_FALLBACK: LiveToolMetadata[] = [
     description: "Sunday random recall set from memory",
   },
   {
+    id: "feno-data",
+    label: "Feno Data",
+    category: "data",
+    status: "available",
+    description: "Global Scouter, computed signals, SEC 13F local context",
+  },
+  {
     id: "feno-search",
     label: "Feno Search",
     category: "search",
@@ -503,6 +510,9 @@ function buildPromptPreview(
   const toolInstructions = [
     enabledToolIds.some((id) => id.startsWith("mona-"))
       ? "Tool: Mona study tools are enabled. Use saveStudySession for checkpoints and BEST3, getYesterdaySession/getStudyMemory/getWeeklyTestSet only when needed. Do not invent dates or files."
+      : null,
+    enabledToolIds.includes("feno-data")
+      ? "Tool: Feno Data is enabled. Use it for ticker context from local Global Scouter, computed signals, and SEC 13F data; state source dates and missing coverage."
       : null,
   ].filter((instruction): instruction is string => Boolean(instruction));
 
