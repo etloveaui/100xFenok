@@ -1,0 +1,67 @@
+name: Worker Request Budget Alarm
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: worker-request-budget-alarm
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check Worker request budget
+        id: budget
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_NAME: ${{ vars.CLOUDFLARE_ACCOUNT_NAME }}
+          DAILY_REQUEST_THRESHOLD: '50000'
+          HOURLY_REQUEST_THRESHOLD: '20000'
+          WORKER_REQUEST_BUDGET_RESULT: worker-request-budget-result.json
+          WORKER_SCRIPT_NAME: 100xfenok
+        run: node scripts/ops/check-worker-request-budget.mjs
+
+      - name: Prepare issue body
+        if: steps.budget.outcome == 'failure'
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const result = JSON.parse(fs.readFileSync('worker-request-budget-result.json', 'utf8'));
+          fs.writeFileSync('worker-request-budget-issue.md', result.issueBody || result.message || 'Worker request budget alarm failed.');
+          fs.writeFileSync('worker-request-budget-title.txt', result.issueTitle || '100xFenok Worker request budget alarm');
+          NODE
+
+      - name: Open or update OPS issue
+        if: steps.budget.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="$(cat worker-request-budget-title.txt)"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file worker-request-budget-issue.md
+          else
+            gh issue create --title "$title" --body-file worker-request-budget-issue.md
+          fi
+
+      - name: Fail on alarm
+        if: steps.budget.outcome == 'failure'
+        run: exit 1
