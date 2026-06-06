@@ -4,6 +4,12 @@ import {
   MONA_STUDY_TOOL_IDS,
   executeMonaStudyToolFunction,
 } from "@/lib/server/mona-study-tools";
+import {
+  LIVE_SKILL_BRIDGE_TOKEN_ENV,
+  LIVE_SKILL_BRIDGE_URL_ENV,
+  callLiveSkillBridge,
+  isLiveSkillBridgeConfigured,
+} from "@/lib/server/admin-live-skill-bridge";
 
 export type LiveToolId =
   | "market-data"
@@ -59,6 +65,11 @@ const FENO_DETAIL_SECTIONS = [
   "holders",
   "signals",
 ] as const;
+const SKILL_BRIDGE_CONFIGURED = isLiveSkillBridgeConfigured();
+const SKILL_BRIDGE_STATUS: LiveToolStatus = SKILL_BRIDGE_CONFIGURED ? "available" : "soon";
+const SKILL_BRIDGE_REASON = SKILL_BRIDGE_CONFIGURED
+  ? undefined
+  : `맥미니 skill bridge env 설정 필요: ${LIVE_SKILL_BRIDGE_URL_ENV}, ${LIVE_SKILL_BRIDGE_TOKEN_ENV}`;
 
 export const LIVE_SEARCH_SELECTION_POLICY = "multi" as const;
 
@@ -217,9 +228,45 @@ const LIVE_TOOL_DEFINITIONS = [
     id: "feno-search",
     label: "Feno Search",
     category: "search",
-    status: "soon",
+    status: SKILL_BRIDGE_STATUS,
     description: "Brave/Tavily search skill bridge",
-    reason: "서버 skill bridge 연결 후 활성화",
+    reason: SKILL_BRIDGE_REASON,
+    functionName: "searchFenoWeb",
+    instruction:
+      "Tool: searchFenoWeb({query, provider, category, strategy, maxResults}) calls the Mac mini skill bridge for Brave/Tavily current web search. Use it only for facts that need live verification and cite returned sources; do not claim search ran if the tool returns an error.",
+    declaration: {
+      name: "searchFenoWeb",
+      description: "Search current web information through the Mac mini feno-search bridge using Brave/Tavily.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          query: {
+            type: "STRING",
+            description: "Specific search query. Include entity, timeframe, and region when useful.",
+          },
+          provider: {
+            type: "STRING",
+            description: "Optional provider preference.",
+            enum: ["auto", "brave", "tavily"],
+          },
+          category: {
+            type: "STRING",
+            description: "Optional category hint.",
+            enum: ["market", "news", "weather", "economic_calendar", "general"],
+          },
+          strategy: {
+            type: "STRING",
+            description: "quality for user-facing answers; speed for quick checks.",
+            enum: ["quality", "speed"],
+          },
+          maxResults: {
+            type: "NUMBER",
+            description: "Maximum results, 1 to 5. Defaults to 5.",
+          },
+        },
+        required: ["query"],
+      },
+    },
   },
   {
     id: "google-search",
@@ -233,17 +280,79 @@ const LIVE_TOOL_DEFINITIONS = [
     id: "naver-search",
     label: "Naver",
     category: "search",
-    status: "soon",
+    status: SKILL_BRIDGE_STATUS,
     description: "Naver search skill bridge",
-    reason: "서버 skill bridge 연결 후 활성화",
+    reason: SKILL_BRIDGE_REASON,
+    functionName: "searchNaverWeb",
+    instruction:
+      "Tool: searchNaverWeb({query, type, strategy, maxResults}) calls the Mac mini Naver bridge. Prefer it for Korean web/news/blog/shop/image/local/book/kin/cafe/doc/encyc lookups. Cite returned sources and label weak or missing results.",
+    declaration: {
+      name: "searchNaverWeb",
+      description: "Search Naver through the Mac mini bridge.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          query: {
+            type: "STRING",
+            description: "Korean or English Naver search query.",
+          },
+          type: {
+            type: "STRING",
+            description: "Naver vertical to search.",
+            enum: ["web", "news", "blog", "shop", "image", "local", "book", "kin", "cafe", "doc", "encyc"],
+          },
+          strategy: {
+            type: "STRING",
+            description: "quality for user-facing answers; speed for quick checks.",
+            enum: ["quality", "speed"],
+          },
+          maxResults: {
+            type: "NUMBER",
+            description: "Maximum results, 1 to 5. Defaults to 5.",
+          },
+        },
+        required: ["query"],
+      },
+    },
   },
   {
     id: "kakao-search",
     label: "Kakao",
     category: "search",
-    status: "soon",
+    status: SKILL_BRIDGE_STATUS,
     description: "Kakao/Daum search skill bridge",
-    reason: "서버 skill bridge 연결 후 활성화",
+    reason: SKILL_BRIDGE_REASON,
+    functionName: "searchKakaoWeb",
+    instruction:
+      "Tool: searchKakaoWeb({query, type, strategy, maxResults}) calls the Mac mini Kakao/Daum bridge. Prefer it for Korean web/blog/place/image/video/book/cafe lookups and place-style queries. Cite returned sources and label weak or missing results.",
+    declaration: {
+      name: "searchKakaoWeb",
+      description: "Search Kakao/Daum through the Mac mini bridge.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          query: {
+            type: "STRING",
+            description: "Korean or English Kakao/Daum search query.",
+          },
+          type: {
+            type: "STRING",
+            description: "Kakao/Daum vertical to search.",
+            enum: ["web", "blog", "place", "image", "vclip", "book", "cafe"],
+          },
+          strategy: {
+            type: "STRING",
+            description: "quality for user-facing answers; speed for quick checks.",
+            enum: ["quality", "speed"],
+          },
+          maxResults: {
+            type: "NUMBER",
+            description: "Maximum results, 1 to 5. Defaults to 5.",
+          },
+        },
+        required: ["query"],
+      },
+    },
   },
   {
     id: "camera",
@@ -298,13 +407,19 @@ export function normalizeLiveToolIds(value: unknown): LiveToolId[] {
 
 export function buildLiveToolInstructions(enabledToolIds: LiveToolId[]): string[] {
   return enabledToolIds
-    .map((toolId) => TOOL_BY_ID.get(toolId)?.instruction)
+    .map((toolId) => {
+      const tool = TOOL_BY_ID.get(toolId);
+      return tool?.status === "available" ? tool.instruction : undefined;
+    })
     .filter((instruction): instruction is string => Boolean(instruction));
 }
 
 export function buildLiveToolDeclarations(enabledToolIds: LiveToolId[]): LiveToolDeclaration[] {
   return enabledToolIds
-    .map((toolId) => TOOL_BY_ID.get(toolId)?.declaration)
+    .map((toolId) => {
+      const tool = TOOL_BY_ID.get(toolId);
+      return tool?.status === "available" ? tool.declaration : undefined;
+    })
     .filter((declaration): declaration is LiveToolDeclaration => Boolean(declaration));
 }
 
@@ -803,6 +918,18 @@ export async function executeLiveToolFunction(name: string, args: Record<string,
 
   if (name === "getFenoTickerContext") {
     return getFenoTickerContext(args);
+  }
+
+  if (name === "searchFenoWeb") {
+    return callLiveSkillBridge("feno-search", args);
+  }
+
+  if (name === "searchNaverWeb") {
+    return callLiveSkillBridge("naver-search", args);
+  }
+
+  if (name === "searchKakaoWeb") {
+    return callLiveSkillBridge("kakao-search", args);
   }
 
   return { error: "TOOL_HANDLER_MISSING" };

@@ -47,6 +47,10 @@ jobs:
         working-directory: 100xfenok-next
         run: npm ci
 
+      - name: Run admin live bridge guards
+        working-directory: 100xfenok-next
+        run: npm run test:live-bridge
+
       - name: Build (OpenNext Cloudflare)
         working-directory: 100xfenok-next
         run: npm run cf:build

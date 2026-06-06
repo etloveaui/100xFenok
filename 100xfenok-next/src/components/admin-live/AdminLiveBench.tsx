@@ -514,6 +514,9 @@ function buildPromptPreview(
     enabledToolIds.includes("feno-data")
       ? "Tool: Feno Data is enabled. Use it for ticker context from local Global Scouter, computed signals, and SEC 13F data; state source dates and missing coverage."
       : null,
+    enabledToolIds.some((id) => id === "feno-search" || id === "naver-search" || id === "kakao-search")
+      ? "Tool: Search bridge tools are enabled. Use them for live verification through the Mac mini bridge, cite returned sources, and say plainly when a bridge call fails."
+      : null,
   ].filter((instruction): instruction is string => Boolean(instruction));
 
   return [
