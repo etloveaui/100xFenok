@@ -101,10 +101,10 @@ export default function Footer() {
   }, []);
 
   const navigateToAdmin = useCallback(() => {
-    router.push('/admin');
+    router.push('/admin/');
     window.setTimeout(() => {
-      if (window.location.pathname !== '/admin') {
-        window.location.assign('/admin');
+      if (window.location.pathname !== '/admin/') {
+        window.location.assign('/admin/');
       }
     }, 420);
   }, [router]);

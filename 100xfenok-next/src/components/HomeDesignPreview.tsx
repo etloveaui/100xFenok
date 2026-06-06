@@ -776,7 +776,7 @@ export default function HomeDesignPreview({ focus = "all" }: HomeDesignPreviewPr
             </p>
           </div>
           <Link
-            href="/admin"
+            href="/admin/"
             className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
           >
             Admin Hub로 돌아가기
