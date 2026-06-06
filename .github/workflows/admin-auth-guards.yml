@@ -1,0 +1,39 @@
+name: Admin Auth Guards
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '100xfenok-next/src/lib/client/admin-auth.ts'
+      - '100xfenok-next/src/components/Footer.tsx'
+      - 'scripts/ops/test-admin-auth-guards.mjs'
+      - '.github/workflows/admin-auth-guards.yml'
+  pull_request:
+    paths:
+      - '100xfenok-next/src/lib/client/admin-auth.ts'
+      - '100xfenok-next/src/components/Footer.tsx'
+      - 'scripts/ops/test-admin-auth-guards.mjs'
+      - '.github/workflows/admin-auth-guards.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  admin-auth-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: 100xfenok-next
+        run: npm ci
+
+      - name: Run admin auth guards
+        run: node scripts/ops/test-admin-auth-guards.mjs
