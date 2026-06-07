@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-06-07",
+  "last_updated": "2026-06-08",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -33,12 +33,12 @@
     },
     "global-scouter": {
       "version": "2.3.0",
-      "updated": "2026-05-31",
+      "updated": "2026-06-08",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
       "file_count": 1080,
       "schema": true,
-      "description": "Stock screening (1,066), ETFs (23), indicators (1,061), raw preservation files (9) + FY+1~FY+3 forward/revision extensions"
+      "description": "Stock screening (1,066), ETFs (23), indicators (1,062), raw preservation files (9) + FY+1~FY+3 forward/revision extensions"
     },
     "indices": {
       "version": "2.0.0",
@@ -51,12 +51,12 @@
     },
     "macro": {
       "version": "1.0.0",
-      "updated": "2026-06-07",
+      "updated": "2026-06-08",
       "update_frequency": "daily/weekly/monthly/quarterly",
       "source": "FRED + FDIC + OECD + PMI workbooks",
       "file_count": 9,
       "schema": true,
-      "description": "Macro banking, liquidity, and monthly activity survey series (FRED, FDIC, OECD CLI, major-country PMI, ISM components)"
+      "description": "Macro banking, liquidity, and monthly activity survey series: 924 activity records, OECD CLI through 2026-04, PMI/ISM through 2026-05"
     },
     "sec-13f": {
       "version": "3.4.0",
@@ -114,6 +114,20 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-06-08",
+      "folder": "global-scouter",
+      "version": "2.3.0",
+      "change": "Data refresh (2026-06-05 source): 1,066 stock detail files, 1,062 indicators (+1), per_bands 98.3%, 9 raw files. Existing v2.2/v2.3 fields remain backward compatible.",
+      "breaking": false
+    },
+    {
+      "date": "2026-06-08",
+      "folder": "macro",
+      "version": "1.0.0",
+      "change": "PMI partial-input append from 2026-05 workbooks: 5 records added, total 924 records; manufacturing/services PMI and ISM components through 2026-05, OECD CLI preserved through 2026-04; 1 historical ISM manufacturing source revision detected and preserved.",
+      "breaking": false
+    },
     {
       "date": "2026-06-05",
       "folder": "damodaran",

@@ -30,3 +30,4 @@
 - `macro` is a single manifest category so Data Lab and `fenok-data-mcp` can query the dataset without special root handling
 - File payloads intentionally keep the old JSON shape to avoid consumer breakage during migration
 - `activity-surveys.json` keeps empty source columns in `empty_source_series` but exposes only series with numeric observations
+- Latest activity survey refresh: 924 total records; manufacturing/services PMI through 2026-05; OECD CLI preserved through 2026-04

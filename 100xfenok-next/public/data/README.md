@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-06-05
+> **Last Updated**: 2026-06-08
 > **Total Files**: 1,737 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -48,7 +48,7 @@
 ### Macro Data (macro/)
 - FRED banking series: daily, weekly, quarterly
 - FDIC Tier1 capital ratio quarterly history
-- Activity surveys: OECD CLI, major-country manufacturing/services PMI, ISM components
+- Activity surveys: 924 records; OECD CLI through 2026-04, major-country manufacturing/services PMI and ISM components through 2026-05
 - Root compatibility files are still published during migration
 
 ### Calendar Data (calendar/)
@@ -60,7 +60,7 @@
 - 12+ indicators
 
 ### Stock Screening (global-scouter/)
-- 1,066 stock profiles + ETFs (23) + Economic Indicators (1,061 records) + raw preservation files (9)
+- 1,066 stock profiles + ETFs (23) + Economic Indicators (1,062 records) + raw preservation files (9)
 - **v2.3.0**: Raw source-sheet preservation + FY+1~FY+3 forward/revision detail extensions
 - v2.2.0: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json

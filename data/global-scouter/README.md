@@ -27,7 +27,7 @@ global-scouter/
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (23 items)
 ├── indicators/              # v2.1.0
-│   └── economic.json        # Economic indicators (1,061 records)
+│   └── economic.json        # Economic indicators (1,062 records)
 └── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
@@ -104,7 +104,7 @@ global-scouter/
 | `fiscal_month` | 100% (1,066) | Fiscal year end month (Jan, Dec, etc.) |
 | `eps_consensus` | 100% (1,066) | EPS estimates FY+1/+2/+3 plus 6-week raw points |
 | `growth_consensus` | 100% (1,066) | Revenue/Operating/Earnings growth 7Y/3Y (%) |
-| `per_bands` | 98.2% (1,047) | PER/PBR bands with FY-4~FY+3 values where available |
+| `per_bands` | 98.3% (1,048) | PER/PBR bands with FY-4~FY+3 values where available |
 | `*_estimates` | 100% (1,066) | FY+1~FY+3 forward scale, income, cash flow, profitability, per-share, valuation |
 | `weekly_revision_history` | 100% (1,066) | Individual-sheet lower-block revision/price histories; empty for source-sheet-missing placeholders |
 
@@ -144,7 +144,7 @@ global-scouter/
 
 ```json
 {
-  "count": 1059,
+  "count": 1062,
   "records": [
     {
       "date": "2026-01-02",
@@ -184,6 +184,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.3.0 | 2026-06-08 | Data refresh (2026-06-05 source): 1,066 stocks, 1,062 indicators (+1), per_bands 98.3%, 9 raw files |
 | 2.3.0 | 2026-05-31 | Data refresh (2026-05-29 source): 1,066 stocks (+1), 1,061 indicators (+1), per_bands 98.2% |
 | 2.3.0 | 2026-05-24 | Raw preservation upgrade + data refresh (2026-05-22 source): 1,065 stocks, 1,060 indicators, 9 raw files |
 | 2.2.0 | 2026-05-17 | Data refresh (2026-05-15 source): 1,065 stocks, 1,059 indicators (+1), per_bands 98.3% |
@@ -208,4 +209,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-05-31*
+*Last Updated: 2026-06-08*
