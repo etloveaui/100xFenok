@@ -571,16 +571,17 @@ function formatWeak(items: WeakMiss[] | WeakNote[]) {
     : "없음";
 }
 
-export async function buildMonaCoachDynamicBlock(studyDate = getCanonicalMonaStudyDate()) {
-  const snapshot = await prepareMonaStudySnapshot(studyDate);
-  const plan = getWeekdayPlan(studyDate);
-  const yesterday = findYesterdaySession(snapshot, studyDate);
-  const weekly = plan.weekday === "일요일" ? buildWeeklyItems(snapshot, 30, true) : [];
-  const firstSession = snapshot.sessions.length === 0;
+export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: StudySnapshot | null) {
+  const resolvedDate = studyDate ?? getCanonicalMonaStudyDate();
+  const resolvedSnapshot = snapshot ?? await prepareMonaStudySnapshot(resolvedDate);
+  const plan = getWeekdayPlan(resolvedDate);
+  const yesterday = findYesterdaySession(resolvedSnapshot, resolvedDate);
+  const weekly = plan.weekday === "일요일" ? buildWeeklyItems(resolvedSnapshot, 30, true) : [];
+  const firstSession = resolvedSnapshot.sessions.length === 0;
 
   return [
     "[오늘 - 서버 확정값, 다시 계산하지 마]",
-    `날짜: ${studyDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
+    `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
     `테마: ${plan.theme} · 변동코너: ${plan.corner}`,
     "",
     "[어제 복습 재료]",

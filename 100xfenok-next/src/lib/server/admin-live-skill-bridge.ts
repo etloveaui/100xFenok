@@ -182,3 +182,72 @@ export async function callLiveSkillBridge(tool: LiveSkillBridgeToolId, args: Rec
     clearTimeout(timeout);
   }
 }
+
+const VALID_MONA_STUDY_NAMES = new Set([
+  "prepareMonaStudySnapshot",
+  "saveStudySession",
+  "getYesterdaySession",
+  "getStudyMemory",
+  "getWeeklyTestSet",
+]);
+
+export async function callMonaStudy(name: string, args: Record<string, unknown>) {
+  const config = getLiveSkillBridgeConfig();
+  if (!config) {
+    return {
+      error: "SKILL_BRIDGE_NOT_CONFIGURED",
+      missingEnv: [LIVE_SKILL_BRIDGE_URL_ENV, LIVE_SKILL_BRIDGE_TOKEN_ENV],
+    };
+  }
+
+  if (typeof name !== "string" || !VALID_MONA_STUDY_NAMES.has(name)) {
+    return { error: "UNKNOWN_STUDY_NAME", name, valid: [...VALID_MONA_STUDY_NAMES] };
+  }
+
+  if (args !== null && typeof args !== "object") {
+    return { error: "INVALID_ARGS" };
+  }
+
+  const studyUrl = new URL("/live-study", config.endpoint).toString();
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), LIVE_SKILL_BRIDGE_TIMEOUT_MS);
+  try {
+    const response = await fetch(studyUrl, {
+      method: "POST",
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${config.token}`,
+      },
+      body: JSON.stringify({ name, args }),
+    });
+
+    const body = await readJsonOrText(response);
+    if (!response.ok) {
+      return {
+        error: "SKILL_BRIDGE_HTTP_FAILED",
+        status: response.status,
+        body,
+      };
+    }
+
+    return {
+      bridge: "mac-mini",
+      studyName: name,
+      fetchedAt: new Date().toISOString(),
+      payload: body,
+    };
+  } catch (error) {
+    return {
+      error: isAbortError(error)
+        ? "SKILL_BRIDGE_TIMEOUT"
+        : "SKILL_BRIDGE_REQUEST_FAILED",
+      message: errorMessage(error),
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}

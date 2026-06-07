@@ -2,12 +2,12 @@ import { getTickerQuote } from "@/lib/server/ticker";
 import { readPublicAssetText } from "@/lib/server/public-assets";
 import {
   MONA_STUDY_TOOL_IDS,
-  executeMonaStudyToolFunction,
 } from "@/lib/server/mona-study-tools";
 import {
   LIVE_SKILL_BRIDGE_TOKEN_ENV,
   LIVE_SKILL_BRIDGE_URL_ENV,
   callLiveSkillBridge,
+  callMonaStudy,
   isLiveSkillBridgeConfigured,
 } from "@/lib/server/admin-live-skill-bridge";
 
@@ -909,7 +909,11 @@ export async function executeLiveToolFunction(name: string, args: Record<string,
     name === "getStudyMemory" ||
     name === "getWeeklyTestSet"
   ) {
-    return executeMonaStudyToolFunction(name, args);
+    const bridgeResult = await callMonaStudy(name, args);
+    if (bridgeResult && !("error" in bridgeResult)) {
+      return bridgeResult.payload as Record<string, unknown>;
+    }
+    return bridgeResult;
   }
 
   if (name === "getTickerSnapshot") {

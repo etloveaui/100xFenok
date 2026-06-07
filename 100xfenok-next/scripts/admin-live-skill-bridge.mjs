@@ -5,6 +5,10 @@ import { timingSafeEqual } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
+import {
+  executeMonaStudyToolFunction,
+  prepareMonaStudySnapshot,
+} from "../src/lib/server/mona-study-tools.ts";
 
 const SERVICE_NAME = "100x-admin-live-skill-bridge";
 const DEFAULT_HOST = "127.0.0.1";
@@ -22,6 +26,13 @@ const DEFAULT_KAKAO_LOCAL_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/
 const DEFAULT_KAKAO_BOOK_URL = "https://dapi.kakao.com/v3/search/book";
 
 const VALID_TOOLS = new Set(["feno-search", "naver-search", "kakao-search"]);
+const VALID_STUDY_NAMES = new Set([
+  "prepareMonaStudySnapshot",
+  "saveStudySession",
+  "getYesterdaySession",
+  "getStudyMemory",
+  "getWeeklyTestSet",
+]);
 const VALID_FENO_PROVIDERS = new Set(["auto", "tavily", "brave"]);
 const VALID_NAVER_TYPES = new Set([
   "web",
@@ -42,10 +53,12 @@ const metrics = {
   totalRequests: 0,
   bridgeRequests: 0,
   searchRequests: 0,
+  studyRequests: 0,
   errors: 0,
   byPath: {},
   byTool: {},
   byProvider: {},
+  byStudyName: {},
   byStatus: {},
   lastRequestAt: null,
   lastError: null,
@@ -160,10 +173,11 @@ function incrementMetric(bucket, key) {
   bucket[normalized] = (bucket[normalized] ?? 0) + 1;
 }
 
-function recordMetric({ path, statusCode, tool, provider, error }) {
+function recordMetric({ path, statusCode, tool, provider, studyName, error }) {
   metrics.totalRequests += 1;
   if (path !== "/healthz") metrics.bridgeRequests += 1;
   if (path === "/live-search") metrics.searchRequests += 1;
+  if (path === "/live-study") metrics.studyRequests += 1;
   if (statusCode >= 400 || error) metrics.errors += 1;
   metrics.lastRequestAt = new Date().toISOString();
   if (error) metrics.lastError = String(error).slice(0, 200);
@@ -171,6 +185,7 @@ function recordMetric({ path, statusCode, tool, provider, error }) {
   incrementMetric(metrics.byStatus, String(statusCode));
   if (tool) incrementMetric(metrics.byTool, tool);
   if (provider) incrementMetric(metrics.byProvider, provider);
+  if (studyName) incrementMetric(metrics.byStudyName, studyName);
 }
 
 function requestPath(req) {
@@ -401,6 +416,20 @@ async function handleSearch(body) {
   return { error: "TOOL_HANDLER_MISSING" };
 }
 
+async function handleStudy(body) {
+  if (!body || typeof body !== "object") return { error: "INVALID_JSON_BODY" };
+  const { name, args = {} } = body;
+  if (typeof name !== "string" || !VALID_STUDY_NAMES.has(name)) {
+    return { error: "UNKNOWN_STUDY_NAME", name, valid: [...VALID_STUDY_NAMES] };
+  }
+  if (args !== null && typeof args !== "object") return { error: "INVALID_ARGS" };
+  if (name === "prepareMonaStudySnapshot") {
+    const studyDate = typeof args.studyDate === "string" ? args.studyDate : undefined;
+    return prepareMonaStudySnapshot(studyDate);
+  }
+  return executeMonaStudyToolFunction(name, args);
+}
+
 function sendJson(res, statusCode, body) {
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
@@ -501,6 +530,20 @@ const server = createServer(async (req, res) => {
         statusCode,
         tool: body?.tool,
         provider: result?.provider,
+        error: result?.error,
+      });
+      sendJson(res, statusCode, result);
+      return;
+    }
+
+    if (req.method === "POST" && path === "/live-study") {
+      const body = await readRequestBody(req);
+      const result = await handleStudy(body);
+      const statusCode = result && result.error ? 400 : 200;
+      recordMetric({
+        path,
+        statusCode,
+        studyName: body?.name,
         error: result?.error,
       });
       sendJson(res, statusCode, result);
