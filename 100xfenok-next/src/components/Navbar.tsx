@@ -11,6 +11,9 @@ type DesktopMenuId = 'market' | 'analytics' | 'strategies';
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopMenuOpen, setDesktopMenuOpen] = useState<DesktopMenuId | null>(null);
+  const [adminTapCount, setAdminTapCount] = useState(0);
+  const [adminTapFlash, setAdminTapFlash] = useState(false);
+  const adminTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobilePanelRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
@@ -215,6 +218,48 @@ export default function Navbar() {
     };
   }, [desktopMenuOpen]);
 
+  // Admin 3-tap: reset counter on blur / tab-hidden to prevent stale counts
+  useEffect(() => {
+    const resetAdminTap = () => {
+      setAdminTapCount(0);
+      if (adminTapTimerRef.current) {
+        clearTimeout(adminTapTimerRef.current);
+        adminTapTimerRef.current = null;
+      }
+    };
+    const handleVisibility = () => {
+      if (document.hidden) resetAdminTap();
+    };
+    window.addEventListener('blur', resetAdminTap);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('blur', resetAdminTap);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
+
+  const handleAdminTap = () => {
+    if (!isDashboard) return;
+    const next = adminTapCount + 1;
+    if (next === 3) {
+      setAdminTapCount(0);
+      if (adminTapTimerRef.current) {
+        clearTimeout(adminTapTimerRef.current);
+        adminTapTimerRef.current = null;
+      }
+      window.dispatchEvent(new CustomEvent('fenok:admin-open'));
+      return;
+    }
+    setAdminTapCount(next);
+    setAdminTapFlash(true);
+    setTimeout(() => setAdminTapFlash(false), 150);
+    if (adminTapTimerRef.current) clearTimeout(adminTapTimerRef.current);
+    adminTapTimerRef.current = setTimeout(() => {
+      setAdminTapCount(0);
+      adminTapTimerRef.current = null;
+    }, 3000);
+  };
+
   return (
     <>
       <nav className="nav-wrapper fixed top-0 left-0 right-0 z-50 bg-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border-b border-gray-100" id="mainNav" style={{ transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
@@ -225,8 +270,9 @@ export default function Navbar() {
                 href="/"
                 className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0 cursor-pointer"
                 aria-label="Go to home"
+                onClick={handleAdminTap}
               >
-                <div className="brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300 border border-slate-100 active:scale-95">
+                <div className={`brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300 border border-slate-100 active:scale-95 ${adminTapFlash ? 'ring-2 ring-brand-gold ring-offset-1' : ''}`}>
                   <Image
                     src="/favicon-96x96.png"
                     alt=""

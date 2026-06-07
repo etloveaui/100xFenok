@@ -162,6 +162,13 @@ export default function Footer() {
     return () => window.removeEventListener('keydown', handleShortcut);
   }, [handleAdminClick]);
 
+  // Mobile logo 3-tap admin entry — listen for Navbar CustomEvent
+  useEffect(() => {
+    const handler = () => handleAdminClick();
+    window.addEventListener('fenok:admin-open', handler);
+    return () => window.removeEventListener('fenok:admin-open', handler);
+  }, [handleAdminClick]);
+
   const handleShareClick = async () => {
     try {
       if (!window.isSecureContext || !navigator.clipboard?.writeText) {
