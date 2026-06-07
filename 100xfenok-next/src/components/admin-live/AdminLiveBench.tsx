@@ -566,6 +566,7 @@ export default function AdminLiveBench() {
   const outputRef = useRef<AudioOutput | null>(null);
   const wakeLockRef = useRef<WakeLockHandle | null>(null);
   const runtimeRef = useRef<AudioRuntime | null>(null);
+  const logsRef = useRef<BenchLog[]>([]);
   const startRequestMsRef = useRef<number | null>(null);
   const firstResponseSeenRef = useRef(false);
   const lastAudioSentMsRef = useRef<number | null>(null);
@@ -605,6 +606,10 @@ export default function AdminLiveBench() {
       setSystemPrompt(buildPromptPreview(activeProfile, lowVoice, responseStyle, enabledToolIds));
     }
   }, [activeProfile, enabledToolIds, lowVoice, promptEdited, responseStyle]);
+
+  useEffect(() => {
+    logsRef.current = logs;
+  }, [logs]);
 
   const addLog = (role: BenchLog["role"], text: string) => {
     setLogs((current) => [
@@ -1385,10 +1390,23 @@ export default function AdminLiveBench() {
 
   const stopSession = async () => {
     const currentSessionId = sessionId;
+    const stoppedAt = new Date().toISOString();
+    const stopLog: BenchLog = {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      role: "system",
+      text: "대화를 멈췄어요",
+      at: nowLabel(),
+    };
+    const finalMetrics: BenchMetrics = {
+      ...metrics,
+      connectionState: "closed",
+      micPermission: "stopped",
+    };
+    const currentLogs = [stopLog, ...logsRef.current].slice(0, MAX_LOG_ENTRIES);
     resetRuntime();
     setStatus("stopped");
-    setMetrics((current) => ({ ...current, connectionState: "closed", micPermission: "stopped" }));
-    addLog("system", "대화를 멈췄어요");
+    setMetrics(finalMetrics);
+    setLogs(currentLogs);
 
     if (currentSessionId) {
       await fetch("/api/admin/live/session/", {
@@ -1400,6 +1418,64 @@ export default function AdminLiveBench() {
         },
         body: JSON.stringify({ sessionId: currentSessionId }),
       }).catch(() => undefined);
+
+      await saveConversationLog(currentSessionId, stoppedAt, currentLogs, finalMetrics);
+    }
+  };
+
+  const saveConversationLog = async (
+    currentSessionId: string,
+    stoppedAt: string,
+    currentLogs: BenchLog[],
+    finalMetrics: BenchMetrics,
+  ) => {
+    const startedAt = startedAtMs ? new Date(startedAtMs).toISOString() : null;
+    const client = typeof window === "undefined" ? {} : {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio,
+    };
+
+    try {
+      const response = await fetch("/api/admin/live/log/", {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          sessionId: currentSessionId,
+          mode,
+          startedAt,
+          stoppedAt,
+          settings: {
+            lowVoice,
+            voiceName,
+            responseStyle,
+            vadPreset,
+            enabledToolIds,
+          },
+          metrics: finalMetrics,
+          client,
+          logs: currentLogs.slice().reverse(),
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string; payload?: { file?: string } } | null;
+      if (!response.ok) {
+        const error = payload?.error ?? "LOG_SAVE_FAILED";
+        throw new Error(error);
+      }
+      const file = payload?.payload?.file;
+      addLog("system", file ? `대화 로그 저장 완료: ${file}` : "대화 로그 저장 완료");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "LOG_SAVE_FAILED";
+      addLog("error", `대화 로그 저장 실패: ${message}`);
     }
   };
 

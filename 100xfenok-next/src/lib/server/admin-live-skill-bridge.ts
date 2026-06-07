@@ -21,6 +21,7 @@ type BridgePayload = {
 const MAX_QUERY_LENGTH = 500;
 const DEFAULT_MAX_RESULTS = 5;
 const LIVE_SKILL_BRIDGE_TIMEOUT_MS = 8_000;
+const LIVE_LOG_BRIDGE_TIMEOUT_MS = 8_000;
 const VALID_STRATEGIES = new Set(["quality", "speed"]);
 const VALID_FENO_PROVIDERS = new Set(["auto", "brave", "tavily"]);
 const VALID_CATEGORIES = new Set(["market", "news", "weather", "economic_calendar", "general"]);
@@ -237,6 +238,62 @@ export async function callMonaStudy(name: string, args: Record<string, unknown>)
     return {
       bridge: "mac-mini",
       studyName: name,
+      fetchedAt: new Date().toISOString(),
+      payload: body,
+    };
+  } catch (error) {
+    return {
+      error: isAbortError(error)
+        ? "SKILL_BRIDGE_TIMEOUT"
+        : "SKILL_BRIDGE_REQUEST_FAILED",
+      message: errorMessage(error),
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function callAdminLiveConversationLog(args: Record<string, unknown>) {
+  const config = getLiveSkillBridgeConfig();
+  if (!config) {
+    return {
+      error: "SKILL_BRIDGE_NOT_CONFIGURED",
+      missingEnv: [LIVE_SKILL_BRIDGE_URL_ENV, LIVE_SKILL_BRIDGE_TOKEN_ENV],
+    };
+  }
+
+  if (args !== null && typeof args !== "object") {
+    return { error: "INVALID_ARGS" };
+  }
+
+  const logUrl = new URL("/live-log", config.endpoint).toString();
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), LIVE_LOG_BRIDGE_TIMEOUT_MS);
+  try {
+    const response = await fetch(logUrl, {
+      method: "POST",
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${config.token}`,
+      },
+      body: JSON.stringify(args),
+    });
+
+    const body = await readJsonOrText(response);
+    if (!response.ok) {
+      return {
+        error: "SKILL_BRIDGE_HTTP_FAILED",
+        status: response.status,
+        body,
+      };
+    }
+
+    return {
+      bridge: "mac-mini",
       fetchedAt: new Date().toISOString(),
       payload: body,
     };

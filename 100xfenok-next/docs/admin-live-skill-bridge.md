@@ -1,7 +1,8 @@
 # Admin Live Skill Bridge
 
-Purpose: let the Cloudflare-hosted Admin Live bench call local Mac mini search skills
-without storing third-party search API keys in the Worker.
+Purpose: let the Cloudflare-hosted Admin Live bench call local Mac mini search
+skills and persist private Admin Live logs without storing third-party search API
+keys or local filesystem state in the Worker.
 
 ## Runtime Split
 
@@ -14,6 +15,9 @@ without storing third-party search API keys in the Worker.
   - `NAVER_CLIENT_ID`
   - `NAVER_CLIENT_SECRET`
   - `KAKAO_REST_API_KEY`
+- Mac mini bridge also writes private local-only files:
+  - `data/mona-english/`
+  - `data/voice-logs/`
 
 ## Mac Mini Command
 
@@ -44,6 +48,8 @@ local secret files.
 - `GET /healthz`: unauthenticated liveness only.
 - `GET /health`: bearer-token protected provider readiness and bridge metrics.
 - `POST /live-search`: bearer-token protected search bridge.
+- `POST /live-study`: bearer-token protected Mona study tools.
+- `POST /live-log`: bearer-token protected Admin Live conversation log writer.
 
 Request body:
 
@@ -61,6 +67,18 @@ Supported tools:
 - `feno-search`: Tavily first, Brave fallback when `provider=auto`.
 - `naver-search`: `web`, `news`, `blog`, `shop`, `image`, `local`, `book`, `kin`, `cafe`, `doc`, `encyc`.
 - `kakao-search`: `web`, `blog`, `place`, `image`, `vclip`, `book`, `cafe`.
+
+Conversation logs:
+
+- `/admin/live` posts the visible transcript/log buffer to `/api/admin/live/log/`
+  when the user stops a session.
+- The Worker route forwards that payload to bridge `/live-log`; it does not write
+  files directly.
+- The bridge writes `data/voice-logs/{date}_{mode}_{sessionId}.json` under the
+  bridge process cwd.
+- Logs include mode, settings, basic client viewport/user-agent metadata,
+  metrics, UI logs, and a compact user/model transcript.
+- `data/voice-logs/` is gitignored and must remain private local state.
 
 ## Local Verification
 
@@ -83,11 +101,12 @@ The registry smoke validates the env gate: without both Worker-side bridge envs,
 search tools stay pending and emit no Gemini declarations; with both envs,
 `searchFenoWeb`, `searchNaverWeb`, and `searchKakaoWeb` become available.
 
-The bridge smoke starts a local mock provider server and validates the full bridge HTTP path
-for auth, health, feno-search Tavily/Brave shape, Naver shape, and Kakao/Daum
-web/place shape. It also checks trailing-slash tolerance, invalid JSON handling,
-and bearer-protected bridge metrics. It does not use real provider keys or
-network calls.
+The bridge smoke starts a local mock provider server and validates the full
+bridge HTTP path for auth, health, feno-search Tavily/Brave shape, Naver shape,
+Kakao/Daum web/place shape, and `/live-log` file persistence in a temporary cwd.
+It also checks trailing-slash tolerance, invalid JSON handling, and
+bearer-protected bridge metrics. It does not use real provider keys or network
+calls.
 
 Provider endpoint overrides exist only to make this testable without spending
 quota:

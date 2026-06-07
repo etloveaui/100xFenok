@@ -9,11 +9,14 @@ import {
   executeMonaStudyToolFunction,
   prepareMonaStudySnapshot,
 } from "../src/lib/server/mona-study-tools.ts";
+import {
+  saveAdminLiveConversationLog,
+} from "../src/lib/server/admin-live-voice-logs.ts";
 
 const SERVICE_NAME = "100x-admin-live-skill-bridge";
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 3577;
-const MAX_BODY_BYTES = 16 * 1024;
+const MAX_BODY_BYTES = 128 * 1024;
 const MAX_QUERY_LENGTH = 500;
 const DEFAULT_MAX_RESULTS = 5;
 const REQUEST_TIMEOUT_MS = 8_000;
@@ -54,11 +57,13 @@ const metrics = {
   bridgeRequests: 0,
   searchRequests: 0,
   studyRequests: 0,
+  logRequests: 0,
   errors: 0,
   byPath: {},
   byTool: {},
   byProvider: {},
   byStudyName: {},
+  byLogMode: {},
   byStatus: {},
   lastRequestAt: null,
   lastError: null,
@@ -173,11 +178,12 @@ function incrementMetric(bucket, key) {
   bucket[normalized] = (bucket[normalized] ?? 0) + 1;
 }
 
-function recordMetric({ path, statusCode, tool, provider, studyName, error }) {
+function recordMetric({ path, statusCode, tool, provider, studyName, logMode, error }) {
   metrics.totalRequests += 1;
   if (path !== "/healthz") metrics.bridgeRequests += 1;
   if (path === "/live-search") metrics.searchRequests += 1;
   if (path === "/live-study") metrics.studyRequests += 1;
+  if (path === "/live-log") metrics.logRequests += 1;
   if (statusCode >= 400 || error) metrics.errors += 1;
   metrics.lastRequestAt = new Date().toISOString();
   if (error) metrics.lastError = String(error).slice(0, 200);
@@ -186,6 +192,7 @@ function recordMetric({ path, statusCode, tool, provider, studyName, error }) {
   if (tool) incrementMetric(metrics.byTool, tool);
   if (provider) incrementMetric(metrics.byProvider, provider);
   if (studyName) incrementMetric(metrics.byStudyName, studyName);
+  if (logMode) incrementMetric(metrics.byLogMode, logMode);
 }
 
 function requestPath(req) {
@@ -430,6 +437,11 @@ async function handleStudy(body) {
   return executeMonaStudyToolFunction(name, args);
 }
 
+async function handleLog(body) {
+  if (!body || typeof body !== "object") return { error: "INVALID_JSON_BODY" };
+  return saveAdminLiveConversationLog(body);
+}
+
 function sendJson(res, statusCode, body) {
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
@@ -544,6 +556,20 @@ const server = createServer(async (req, res) => {
         path,
         statusCode,
         studyName: body?.name,
+        error: result?.error,
+      });
+      sendJson(res, statusCode, result);
+      return;
+    }
+
+    if (req.method === "POST" && path === "/live-log") {
+      const body = await readRequestBody(req);
+      const result = await handleLog(body);
+      const statusCode = result && result.error ? 400 : 200;
+      recordMetric({
+        path,
+        statusCode,
+        logMode: body?.mode,
         error: result?.error,
       });
       sendJson(res, statusCode, result);

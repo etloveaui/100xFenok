@@ -4,6 +4,9 @@ import { strict as assert } from "node:assert";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { once } from "node:events";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const TEST_TOKEN = "test-token";
 
@@ -139,9 +142,10 @@ async function getFreePort() {
   return port;
 }
 
-function startBridge({ bridgePort, mockPort }) {
+function startBridge({ bridgePort, mockPort, cwd }) {
   const child = spawn(process.execPath, [new URL("./admin-live-skill-bridge.mjs", import.meta.url).pathname], {
     stdio: ["ignore", "pipe", "pipe"],
+    cwd,
     env: {
       ...process.env,
       FENO_SKILL_BRIDGE_SKIP_ENV_FILES: "1",
@@ -201,7 +205,8 @@ async function bridgeRequest(bridgePort, path, options = {}) {
 async function main() {
   const { server: mockServer, port: mockPort } = await startMockProvider();
   const bridgePort = await getFreePort();
-  const bridge = startBridge({ bridgePort, mockPort });
+  const bridgeCwd = await mkdtemp(join(tmpdir(), "admin-live-bridge-"));
+  const bridge = startBridge({ bridgePort, mockPort, cwd: bridgeCwd });
 
   try {
     await waitForBridge(bridge);
@@ -312,6 +317,46 @@ async function main() {
     assert.equal(kakaoBook.body.provider, "kakao:book");
     assert.equal(kakaoBook.body.results[0].title, "Kakao Book Result");
 
+    const liveLog = await bridgeRequest(bridgePort, "/live-log", {
+      method: "POST",
+      token: TEST_TOKEN,
+      body: {
+        sessionId: "live-fenok-test",
+        mode: "fenok",
+        startedAt: "2026-06-08T00:00:00.000Z",
+        stoppedAt: "2026-06-08T00:01:00.000Z",
+        settings: {
+          lowVoice: true,
+          voiceName: "Kore",
+          responseStyle: "concise",
+          vadPreset: "balanced",
+          enabledToolIds: ["feno-data"],
+        },
+        metrics: {
+          turnCount: 1,
+          transcriptLatencyMs: 120,
+          sessionDurationSec: 60,
+        },
+        client: {
+          userAgent: "bridge-test",
+          viewportWidth: 390,
+          viewportHeight: 844,
+        },
+        logs: [
+          { role: "user", text: "오늘 저녁 뭐 먹지?", at: "오전 9:00:00" },
+          { role: "bench", text: "가볍게 먹는 쪽이면 좋겠어요.", at: "오전 9:00:01" },
+        ],
+      },
+    });
+    assert.equal(liveLog.status, 200);
+    assert.equal(liveLog.body.ok, true);
+    assert.equal(liveLog.body.mode, "fenok");
+    assert.equal(liveLog.body.transcriptCount, 2);
+    const savedLogRaw = await readFile(join(bridgeCwd, liveLog.body.file), "utf8");
+    const savedLog = JSON.parse(savedLogRaw);
+    assert.equal(savedLog.mode, "fenok");
+    assert.equal(savedLog.transcript[0].speaker, "user");
+
     const postSearchHealth = await bridgeRequest(bridgePort, "/health", { token: TEST_TOKEN });
     assert.equal(postSearchHealth.status, 200);
     assert.equal(postSearchHealth.body.metrics.byPath["/live-search"], 10);
@@ -319,6 +364,9 @@ async function main() {
     assert.equal(postSearchHealth.body.metrics.byTool["naver-search"], 2);
     assert.equal(postSearchHealth.body.metrics.byTool["kakao-search"], 4);
     assert.equal(postSearchHealth.body.metrics.byProvider["kakao:book"], 1);
+    assert.equal(postSearchHealth.body.metrics.byPath["/live-log"], 1);
+    assert.equal(postSearchHealth.body.metrics.logRequests, 1);
+    assert.equal(postSearchHealth.body.metrics.byLogMode.fenok, 1);
     assert.equal(postSearchHealth.body.metrics.byStatus["401"], 1);
     assert.equal(postSearchHealth.body.metrics.byStatus["400"], 1);
 
@@ -326,6 +374,7 @@ async function main() {
   } finally {
     bridge.kill("SIGTERM");
     await new Promise((resolve) => mockServer.close(resolve));
+    await rm(bridgeCwd, { recursive: true, force: true });
   }
 }
 
