@@ -75,6 +75,19 @@
       <!-- Rendered by Renderer.renderSummary() -->
     </section>
 
+    <!-- Ops Health Section -->
+    <section class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-600">
+          <i class="fas fa-shield-halved text-blue-500 mr-2"></i>운영 관제
+        </h2>
+        <span class="text-xs text-gray-400">manifest route · source/live drift</span>
+      </div>
+      <div id="ops-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Rendered by Renderer.renderOpsResults() -->
+      </div>
+    </section>
+
     <!-- Data Sources Grid -->
     <section class="mb-8">
       <h2 class="text-lg font-semibold text-gray-600 mb-4">
@@ -119,6 +132,7 @@
   <!-- App -->
   <script src="app/state-manager.js"></script>
   <script src="app/renderer.js"></script>
+  <script src="app/ops-console.js"></script>
   <script src="app/dashboard.js"></script>
 
 </body>
