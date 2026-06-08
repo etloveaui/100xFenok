@@ -127,7 +127,11 @@ export default function SectorsClient() {
                 {MOMENTUM_WINDOWS.map((window) => {
                   const active = window.key === sortWindow;
                   return (
-                    <th key={window.key} className="px-1 py-2 text-center">
+                    <th
+                      key={window.key}
+                      aria-sort={active ? "descending" : "none"}
+                      className="px-1 py-2 text-center"
+                    >
                       <button
                         type="button"
                         onClick={() => setSortWindow(window.key)}
@@ -137,7 +141,6 @@ export default function SectorsClient() {
                             ? "bg-brand-navy text-white"
                             : "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
                         )}
-                        aria-pressed={active}
                       >
                         {window.label}
                         {active ? " ↓" : ""}
@@ -239,7 +242,7 @@ export default function SectorsClient() {
                         {etf.beta === null ? "—" : etf.beta.toFixed(2)}
                       </td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-500">
-                        {etf.expenseRatio === null ? "—" : formatPercent(etf.expenseRatio, 2)}
+                        {etf.expenseRatio === null ? "—" : formatPercent(etf.expenseRatio * 100, 2)}
                       </td>
                     </tr>
                   );

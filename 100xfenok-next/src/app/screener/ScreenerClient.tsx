@@ -47,7 +47,8 @@ function fmtSignedPct(value: number | null): string {
   return value === null ? "—" : formatSignedPercentDecimal(value, 1);
 }
 function fmtYield(value: number | null): string {
-  return value === null ? "—" : formatPercent(value, 2);
+  // dy is a fraction (0.025 = 2.5%); formatPercent does not multiply, so scale here.
+  return value === null ? "—" : formatPercent(value * 100, 2);
 }
 
 export default function ScreenerClient() {
@@ -73,7 +74,8 @@ export default function ScreenerClient() {
       if (sector && stock.sector !== sector) return false;
       if (country && stock.country !== country) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
-      if (perMaxValid && (stock.per === null || stock.per > (perMaxValue as number))) return false;
+      // PER max filter: exclude null AND non-positive PER so "PER ≤ N" never shows loss-makers (e.g. -150).
+      if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
       return true;
     });
   }, [stocks, search, sector, country, perMax, profitableOnly]);
@@ -246,7 +248,11 @@ export default function ScreenerClient() {
                 {COLUMNS.map((column) => {
                   const active = column.key === sortKey;
                   return (
-                    <th key={column.key} className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}>
+                    <th
+                      key={column.key}
+                      aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
+                      className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
+                    >
                       <button
                         type="button"
                         onClick={() => toggleSort(column.key)}
@@ -255,7 +261,6 @@ export default function ScreenerClient() {
                           column.align === "right" && "flex-row-reverse",
                           active && "text-brand-interactive",
                         )}
-                        aria-pressed={active}
                       >
                         {column.label}
                         <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
@@ -271,7 +276,9 @@ export default function ScreenerClient() {
                   <td className="px-2 py-2 text-left">
                     <span className="text-sm font-black text-slate-950">{stock.ticker}</span>
                   </td>
-                  <td className="max-w-[200px] truncate px-2 py-2 text-left text-sm font-semibold text-slate-700">{stock.name}</td>
+                  <td className="px-2 py-2 text-left">
+                    <span className="block max-w-[180px] truncate text-sm font-semibold text-slate-700">{stock.name}</span>
+                  </td>
                   <td className="px-2 py-2 text-left text-xs font-bold text-slate-500">{stock.sector || "—"}</td>
                   <td className="px-2 py-2 text-left text-xs font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</td>
                   <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-900">{stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}</td>
