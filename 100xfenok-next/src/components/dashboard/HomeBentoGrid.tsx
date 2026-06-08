@@ -2,7 +2,8 @@
 
 import { type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
-import type { DashboardFreshnessCadence, DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
+import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
+import { formatFreshnessLabels } from "@/lib/dashboard/freshness-labels";
 import TileBoundary from "@/components/dashboard/TileBoundary";
 import {
   clamp,
@@ -25,6 +26,8 @@ type TileKey =
 
 type TileFreshness = {
   label?: string;
+  compactLabel?: string;
+  microLabel?: string;
   tone?: "live" | "dated" | "stale" | "offline";
 };
 
@@ -90,44 +93,33 @@ function toneFromRegimeClass(regimeClass: string) {
   };
 }
 
-function formatQuarterLabel(value: string) {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-  const month = parsed.getUTCMonth();
-  const quarter = Math.floor(month / 3) + 1;
-  return `Q${quarter} ${parsed.getUTCFullYear()}`;
-}
-
-function formatDateLabel(cadence: DashboardFreshnessCadence, value: string | null) {
-  if (!value) {
-    if (cadence === "realtime") return "실시간";
-    if (cadence === "weekly") return "주간";
-    if (cadence === "quarterly") return "분기";
-    return "일간";
-  }
-
-  if (cadence === "quarterly") {
-    return `분기 · ${formatQuarterLabel(value)}`;
-  }
-
-  if (cadence === "realtime") {
-    return "실시간";
-  }
-
-  const compact = value.slice(0, 10);
-  const cadenceLabel = cadence === "weekly" ? "주간" : "일간";
-  return `${cadenceLabel} · ${compact}`;
-}
-
 function deriveFreshnessMeta(meta: DashboardFreshnessMap[string] | undefined): TileFreshness | undefined {
   if (!meta) return undefined;
   const tone = meta.isFallback ? (meta.cadence === "realtime" ? "stale" : "offline") : meta.cadence === "realtime" ? "live" : "dated";
   return {
-    label: formatDateLabel(meta.cadence, meta.updatedAt),
+    ...formatFreshnessLabels(meta.cadence, meta.updatedAt),
     tone,
   };
+}
+
+function FreshnessLabel({ meta }: { meta: TileFreshness }) {
+  const compactLabel = meta.compactLabel ?? meta.label;
+  const microLabel = meta.microLabel ?? compactLabel;
+
+  return (
+    <>
+      <span className="sr-only">{meta.label}</span>
+      <span className="responsive-freshness__label responsive-freshness__label--full" aria-hidden="true">
+        {meta.label}
+      </span>
+      <span className="responsive-freshness__label responsive-freshness__label--compact" aria-hidden="true">
+        {compactLabel}
+      </span>
+      <span className="responsive-freshness__label responsive-freshness__label--micro" aria-hidden="true">
+        {microLabel}
+      </span>
+    </>
+  );
 }
 
 function FreshnessBadge({
@@ -143,12 +135,14 @@ function FreshnessBadge({
     return (
       <span
         className={cx(
-          "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
+          "responsive-freshness inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black uppercase",
           dark ? "border-white/[0.12] bg-white/[0.08] text-emerald-200" : "border-emerald-200 bg-emerald-50 text-emerald-700",
         )}
+        aria-label={meta.label}
+        title={meta.label}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.18)]" />
-        {meta.label}
+        <FreshnessLabel meta={meta} />
       </span>
     );
   }
@@ -157,12 +151,14 @@ function FreshnessBadge({
     return (
       <span
         className={cx(
-          "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
+          "responsive-freshness inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black uppercase",
           dark ? "border-amber-300/20 bg-amber-300/12 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-700",
         )}
+        aria-label={meta.label}
+        title={meta.label}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-        {meta.label}
+        <FreshnessLabel meta={meta} />
       </span>
     );
   }
@@ -170,11 +166,13 @@ function FreshnessBadge({
   return (
     <span
         className={cx(
-          "inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
+          "responsive-freshness inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-black uppercase",
           dark ? "border-white/[0.10] bg-white/[0.08] text-white/70" : "border-slate-200 bg-slate-50 text-slate-600",
         )}
+        aria-label={meta.label}
+        title={meta.label}
       >
-      {meta.label}
+      <FreshnessLabel meta={meta} />
     </span>
   );
 }
@@ -212,7 +210,7 @@ function TileShell({
       )}
     >
       <div className="relative z-10 flex min-h-full flex-col gap-4">
-        <header className="flex items-start justify-between gap-3">
+        <header className="home-tile-header flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className={cx("text-[11px] font-black uppercase tracking-[0.14em]", dark ? "text-white/60" : "text-slate-500")}>
               {kicker}
@@ -342,7 +340,7 @@ export default function HomeBentoGrid({
           </div>
         ) : null}
 
-        <section className="grid auto-rows-[minmax(138px,auto)] grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+        <section className="home-bento-grid grid auto-rows-[minmax(138px,auto)] grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-4">
           <TileBoundary tileKey="hero">
           <TileShell
             kicker="Market Regime"
@@ -356,7 +354,7 @@ export default function HomeBentoGrid({
               regimeTone.ring,
             )}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div className={cx("inline-flex rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em]", regimeTone.badge)}>
                 <span className={regimeTone.label}>시장 판정</span>
               </div>

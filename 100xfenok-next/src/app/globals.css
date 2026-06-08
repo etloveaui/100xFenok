@@ -187,6 +187,68 @@
 .state-post { background: #e0e7ff; color: #3730a3; }
 .state-closed { background: #f1f5f9; color: #475569; }
 
+/* Responsive freshness badges — desktop full, phone compact, Fold micro. */
+.responsive-freshness {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+.responsive-freshness__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.responsive-freshness__label--compact,
+.responsive-freshness__label--micro {
+  display: none;
+}
+
+@media (max-width: 1023.98px) {
+  .responsive-freshness__label--full {
+    display: none;
+  }
+
+  .responsive-freshness__label--compact {
+    display: inline;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .home-bento-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-bento-grid > * {
+    grid-column: 1 / -1 !important;
+  }
+
+  .home-tile-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .home-tile-header .responsive-freshness {
+    align-self: flex-start;
+  }
+
+  .responsive-freshness {
+    gap: 0.25rem;
+    padding-inline: 0.45rem;
+  }
+
+  .responsive-freshness__label--compact {
+    display: none;
+  }
+
+  .responsive-freshness__label--micro {
+    display: inline;
+  }
+}
+
 /* Skeleton */
 @keyframes shimmer {
   0% { background-position: -200px 0; }

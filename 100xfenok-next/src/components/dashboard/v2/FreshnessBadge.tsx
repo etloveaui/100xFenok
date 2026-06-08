@@ -38,21 +38,35 @@ const TONE_STYLE: Record<
 
 export default function FreshnessBadge({ meta }: { meta: V2Freshness }) {
   const s = TONE_STYLE[meta.tone];
+  const compactLabel = meta.compactLabel ?? meta.label;
+  const microLabel = meta.microLabel ?? compactLabel;
+
   return (
     <span
-      className="hp-chip"
+      className="hp-chip responsive-freshness"
       style={{
         background: s.bg,
         color: s.fg,
         borderColor: s.border,
       }}
+      aria-label={meta.label}
+      title={meta.label}
     >
       <span
         className={v2cx("hp-dot", s.pulse && "hp-dot--pulse")}
         style={{ background: s.dot }}
         aria-hidden="true"
       />
-      {meta.label}
+      <span className="sr-only">{meta.label}</span>
+      <span className="responsive-freshness__label responsive-freshness__label--full" aria-hidden="true">
+        {meta.label}
+      </span>
+      <span className="responsive-freshness__label responsive-freshness__label--compact" aria-hidden="true">
+        {compactLabel}
+      </span>
+      <span className="responsive-freshness__label responsive-freshness__label--micro" aria-hidden="true">
+        {microLabel}
+      </span>
     </span>
   );
 }

@@ -3,12 +3,15 @@ import type {
   DashboardFreshnessMap,
   DashboardSnapshot,
 } from "@/lib/dashboard/types";
+import { formatFreshnessLabels } from "@/lib/dashboard/freshness-labels";
 
 export type V2FreshTone = "live" | "dated" | "stale" | "offline";
 
 export type V2Freshness = {
   tone: V2FreshTone;
   label: string;
+  compactLabel?: string;
+  microLabel?: string;
 };
 
 export type V2TileFailedMap = {
@@ -64,18 +67,17 @@ export function freshnessFromCadence(
     };
   }
   if (meta.cadence === "realtime") {
-    return { tone: "live", label: "LIVE · 15m" };
+    return {
+      tone: "live",
+      ...formatFreshnessLabels(meta.cadence, meta.updatedAt, {
+        realtimeLabel: "LIVE · 15m",
+        realtimeCompactLabel: "LIVE",
+      }),
+    };
   }
-  const compact = meta.updatedAt ? meta.updatedAt.slice(0, 10) : "";
-  const cadenceLabel =
-    meta.cadence === "quarterly"
-      ? "분기"
-      : meta.cadence === "weekly"
-        ? "주간"
-        : "일간";
   return {
     tone: "dated",
-    label: compact ? `${cadenceLabel} · ${compact}` : cadenceLabel,
+    ...formatFreshnessLabels(meta.cadence, meta.updatedAt),
   };
 }
 
