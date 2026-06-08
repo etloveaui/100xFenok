@@ -27,7 +27,7 @@ const ManifestLoader = (function() {
    */
   function getBasePath() {
     const isLocal = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname) || location.protocol === 'file:';
-    const isCloudflare = location.hostname.endsWith('pages.dev');
+    const isCloudflare = location.hostname.endsWith('pages.dev') || location.hostname.endsWith('workers.dev');
     return (isLocal || isCloudflare) ? '' : '/100xFenok';
   }
 

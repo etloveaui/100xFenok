@@ -113,7 +113,7 @@
       if (location.protocol === 'file:') return '';
       if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]') return '';
       if (host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')) return '';
-      if (host.endsWith('pages.dev')) return '';
+      if (host.endsWith('pages.dev') || host.endsWith('workers.dev')) return '';
       return '/100xFenok';
     };
 
