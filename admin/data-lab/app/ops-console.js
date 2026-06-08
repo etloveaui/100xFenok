@@ -2,10 +2,10 @@
  * OpsConsole - read-only operational checks for Data Lab
  *
  * v1 scope: manifest route smoke + live asset parity + source/live drift
- * + GitHub Actions health checks.
+ * + GitHub Actions health checks + internal data timestamp guard.
  *
  * @module ops-console
- * @version 0.2.0
+ * @version 0.3.0
  */
 
 const OpsConsole = (function() {
@@ -36,14 +36,76 @@ const OpsConsole = (function() {
     { label: 'Deploy Pages', name: 'Deploy to GitHub Pages' }
   ];
 
+  const FRESHNESS_GUARD_WATCHLIST = [
+    {
+      label: 'Manifest catalog',
+      path: '/data/manifest.json',
+      datePath: 'last_updated',
+      warnAfterDays: 1,
+      failAfterDays: 3
+    },
+    {
+      label: 'Sector momentum',
+      path: '/data/benchmarks/summaries.json',
+      datePath: 'metadata.generated',
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'Scouter stock index',
+      path: '/data/global-scouter/core/stocks_index.json',
+      datePath: 'source_date',
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'Sector ETF table',
+      path: '/data/global-scouter/etfs/index.json',
+      datePath: 'source_date',
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'Computed signals',
+      path: '/data/computed/signals.json',
+      datePath: 'as_of',
+      warnAfterDays: 1,
+      failAfterDays: 3
+    },
+    {
+      label: 'Fear & Greed',
+      path: '/data/sentiment/cnn-fear-greed.json',
+      datePath: '',
+      arrayLastDate: true,
+      warnAfterDays: 1,
+      failAfterDays: 3
+    },
+    {
+      label: 'PMI activity',
+      path: '/data/macro/activity-surveys.json',
+      datePath: 'meta.coverage.pmi_manufacturing.latest_release_date',
+      warnAfterDays: 45,
+      failAfterDays: 75
+    },
+    {
+      label: 'Banking quarterly',
+      path: '/data/macro/fred-banking-quarterly.json',
+      datePath: 'series.DRALACBN',
+      arrayLastDate: true,
+      warnAfterDays: 150,
+      failAfterDays: 220
+    }
+  ];
+
   let lastResults = null;
 
   async function run() {
-    const [routes, assets, drift, actions] = await Promise.all([
+    const [routes, assets, drift, actions, freshness] = await Promise.all([
       runRouteSmoke(),
       runAssetParityChecks(),
       runDriftChecks(),
-      runActionsHealth()
+      runActionsHealth(),
+      runFreshnessGuard()
     ]);
 
     lastResults = {
@@ -51,7 +113,8 @@ const OpsConsole = (function() {
       routes,
       assets,
       drift,
-      actions
+      actions,
+      freshness
     };
 
     return lastResults;
@@ -345,6 +408,108 @@ const OpsConsole = (function() {
     };
   }
 
+  async function runFreshnessGuard() {
+    return Promise.all(FRESHNESS_GUARD_WATCHLIST.map(checkDataFreshness));
+  }
+
+  async function checkDataFreshness(check) {
+    try {
+      const response = await fetchWithTimeout(toRuntimeUrl(check.path), {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!response.ok) {
+        return {
+          label: check.label,
+          status: 'fail',
+          code: String(response.status),
+          detail: `${check.path} fetch failed with ${response.status}.`
+        };
+      }
+
+      const payload = await response.json();
+      const rawDate = resolveDateValue(payload, check);
+      const parsed = parseDateValue(rawDate);
+
+      if (!parsed) {
+        return {
+          label: check.label,
+          status: 'fail',
+          code: 'missing',
+          detail: `${check.path} has no readable date at ${formatDatePath(check)}.`
+        };
+      }
+
+      const ageDays = daysSince(parsed);
+      const status = ageDays > check.failAfterDays
+        ? 'fail'
+        : ageDays > check.warnAfterDays
+          ? 'warn'
+          : 'pass';
+
+      return {
+        label: check.label,
+        status,
+        code: ageDays <= 0 ? 'today' : `${ageDays}d`,
+        detail: `${formatDatePath(check)}=${formatDateValue(rawDate)} · warn>${check.warnAfterDays}d · fail>${check.failAfterDays}d`
+      };
+    } catch (error) {
+      return {
+        label: check.label,
+        status: 'warn',
+        code: 'ERR',
+        detail: `Freshness guard failed: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
+  }
+
+  function resolveDateValue(payload, check) {
+    const value = check.datePath ? getByPath(payload, check.datePath) : payload;
+    if (check.arrayLastDate) {
+      const item = Array.isArray(value) ? value[value.length - 1] : null;
+      return item?.date || item?.updated || item?.as_of || null;
+    }
+    return value;
+  }
+
+  function getByPath(payload, path) {
+    return String(path || '').split('.').filter(Boolean).reduce((value, segment) => {
+      if (value === null || value === undefined) return undefined;
+      return value[segment];
+    }, payload);
+  }
+
+  function parseDateValue(value) {
+    if (!value) return null;
+    const text = String(value).trim();
+    const dateOnly = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnly) {
+      const [, year, month, day] = dateOnly;
+      return new Date(Number(year), Number(month) - 1, Number(day));
+    }
+
+    const parsed = new Date(text.replace(' ', 'T'));
+    return Number.isFinite(parsed.getTime()) ? parsed : null;
+  }
+
+  function daysSince(date) {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    return Math.floor((now - target) / 86400000);
+  }
+
+  function formatDatePath(check) {
+    if (check.arrayLastDate && !check.datePath) return 'last[].date';
+    if (check.arrayLastDate) return `${check.datePath}[-1].date`;
+    return check.datePath;
+  }
+
+  function formatDateValue(value) {
+    return String(value || '').slice(0, 19);
+  }
+
   function safeBasePath() {
     try {
       return ManifestLoader.getBasePath();
@@ -459,7 +624,8 @@ const OpsConsole = (function() {
     run,
     getLastResults,
     ASSET_PARITY_WATCHLIST,
-    DRIFT_WATCHLIST
+    DRIFT_WATCHLIST,
+    FRESHNESS_GUARD_WATCHLIST
   };
 })();
 

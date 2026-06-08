@@ -91,7 +91,7 @@ const Renderer = (function() {
   function renderOpsLoading() {
     if (!elements?.opsContainer) return;
     elements.opsContainer.innerHTML = `
-      ${Array.from({ length: 4 }, () => `
+      ${Array.from({ length: 5 }, () => `
         <div class="bg-white rounded-xl p-5 shadow animate-pulse">
           <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
           <div class="space-y-3">
@@ -134,6 +134,12 @@ const Renderer = (function() {
         icon: 'fa-circle-nodes',
         description: 'Latest main deploy workflows vs GitHub main HEAD',
         items: results.actions
+      })}
+      ${renderOpsCard({
+        title: 'Freshness Guard',
+        icon: 'fa-clock-rotate-left',
+        description: 'Internal JSON timestamps used by live data surfaces',
+        items: results.freshness || []
       })}
     `;
   }
