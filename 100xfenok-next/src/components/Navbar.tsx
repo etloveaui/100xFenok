@@ -27,7 +27,7 @@ export default function Navbar() {
 
   const isDashboard = pathname === '/';
   const isMarket = pathname === '/market' || pathname === '/alpha-scout';
-  const isAnalytics = pathname === '/multichart' || pathname === '/radar' || pathname === '/posts';
+  const isAnalytics = pathname === '/multichart' || pathname === '/radar' || pathname === '/posts' || pathname === '/sectors' || pathname === '/screener';
   const isStrategies = pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr';
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -400,6 +400,14 @@ export default function Navbar() {
                       <i className="fas fa-lightbulb text-xl text-amber-500 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Insights</span>
                     </Link>
+                    <Link href="/sectors" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-th text-xl text-emerald-600 mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">Sectors</span>
+                    </Link>
+                    <Link href="/screener" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-filter text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">Screener</span>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -549,6 +557,8 @@ export default function Navbar() {
                 <Link href="/multichart" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Multichart</Link>
                 <Link href="/radar" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
                 <Link href="/posts" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
+                <Link href="/sectors" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Sectors</Link>
+                <Link href="/screener" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Screener</Link>
               </div>
             </details>
 
