@@ -188,7 +188,7 @@ jobs:
 
       # ===== Quarterly =====
       - name: Fetch Quarterly FRED Data
-        if: github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'quarterly'
+        if: github.event_name == 'schedule' || github.event.inputs.data_type == 'all' || github.event.inputs.data_type == 'quarterly'
         run: |
           echo "Fetching quarterly FRED series..."
 
