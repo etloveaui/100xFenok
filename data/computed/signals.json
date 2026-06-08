@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-06-08T21:48:03.018Z",
+  "generated_at": "2026-06-08T22:18:50.105Z",
   "as_of": "2026-06-08",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -205,7 +205,7 @@
       "buy_active": 0,
       "buy_near": 0,
       "warn_active": 0,
-      "warn_near": 1,
+      "warn_near": 0,
       "values": {
         "vix": 21.51,
         "move": 75.2,
@@ -214,7 +214,7 @@
         "aaii_spread": -0.7000000000000028,
         "cftc_net": -188943,
         "crypto_fg": 12,
-        "putcall_ratio": 0.65
+        "putcall_ratio": 0.68
       },
       "combos": [
         {
@@ -373,7 +373,7 @@
               "operator": ">=",
               "value": 1.2,
               "label": "P/C >= 1.2",
-              "current": 0.65,
+              "current": 0.68,
               "status": "unmet"
             }
           ],
@@ -449,15 +449,15 @@
           "name": "Put/Call Low",
           "category": "warn",
           "priority": 3,
-          "status": "near",
+          "status": "inactive",
           "conditions": [
             {
               "indicator": "putcall_ratio",
               "operator": "<",
               "value": 0.6,
               "label": "P/C < 0.6",
-              "current": 0.65,
-              "status": "near"
+              "current": 0.68,
+              "status": "unmet"
             }
           ],
           "correctionProb": "68%",
@@ -465,7 +465,7 @@
           "source": "Billingsley & Chance 1988"
         }
       ],
-      "as_of": "2026-06-07",
+      "as_of": "2026-06-08",
       "source_files": [
         "data/sentiment/vix.json",
         "data/sentiment/move.json",
