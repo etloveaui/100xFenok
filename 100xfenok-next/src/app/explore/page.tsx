@@ -22,7 +22,7 @@ const TIERS: ReadonlyArray<Tier> = [
     tier: "시장",
     title: "시장 밸류에이션",
     desc: "S&P500·나스닥·러셀 등 지수 밸류에이션과 신용 환경. 시장 전체가 비싼지 싼지.",
-    href: null, // v1: corporate-health native 이관 예정 (#294)
+    href: "/market-valuation",
     icon: "fa-globe",
     accent: "text-brand-navy",
   },
