@@ -91,22 +91,16 @@ const Renderer = (function() {
   function renderOpsLoading() {
     if (!elements?.opsContainer) return;
     elements.opsContainer.innerHTML = `
-      <div class="bg-white rounded-xl p-5 shadow animate-pulse">
-        <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-        <div class="space-y-3">
-          <div class="h-3 bg-gray-200 rounded w-full"></div>
-          <div class="h-3 bg-gray-200 rounded w-4/5"></div>
-          <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+      ${Array.from({ length: 4 }, () => `
+        <div class="bg-white rounded-xl p-5 shadow animate-pulse">
+          <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div class="space-y-3">
+            <div class="h-3 bg-gray-200 rounded w-full"></div>
+            <div class="h-3 bg-gray-200 rounded w-4/5"></div>
+            <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+          </div>
         </div>
-      </div>
-      <div class="bg-white rounded-xl p-5 shadow animate-pulse">
-        <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-        <div class="space-y-3">
-          <div class="h-3 bg-gray-200 rounded w-full"></div>
-          <div class="h-3 bg-gray-200 rounded w-4/5"></div>
-          <div class="h-3 bg-gray-200 rounded w-2/3"></div>
-        </div>
-      </div>
+      `).join('')}
     `;
   }
 
@@ -124,10 +118,22 @@ const Renderer = (function() {
         items: results.routes
       })}
       ${renderOpsCard({
+        title: 'Live Asset Parity',
+        icon: 'fa-layer-group',
+        description: 'Current runtime assets vs GitHub source HEAD',
+        items: results.assets
+      })}
+      ${renderOpsCard({
         title: 'Source / Live Drift',
         icon: 'fa-code-compare',
         description: 'GitHub source HEAD vs current served admin assets',
         items: results.drift
+      })}
+      ${renderOpsCard({
+        title: 'Actions Health',
+        icon: 'fa-circle-nodes',
+        description: 'Latest main deploy workflows vs GitHub main HEAD',
+        items: results.actions
       })}
     `;
   }
@@ -150,11 +156,14 @@ const Renderer = (function() {
     const failed = items.filter(item => item.status === 'fail').length;
     const warn = items.filter(item => item.status === 'warn').length;
     const skipped = items.filter(item => item.status === 'skip').length;
+    const allSkipped = items.length > 0 && skipped === items.length;
     const badge = failed > 0
       ? { text: 'FAIL', cls: 'bg-red-100 text-red-700 border-red-200' }
       : warn > 0
         ? { text: 'WARN', cls: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
-        : { text: 'PASS', cls: 'bg-green-100 text-green-700 border-green-200' };
+        : allSkipped
+          ? { text: 'SKIP', cls: 'bg-gray-100 text-gray-600 border-gray-200' }
+          : { text: 'PASS', cls: 'bg-green-100 text-green-700 border-green-200' };
 
     return `
       <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
