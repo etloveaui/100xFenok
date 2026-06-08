@@ -86,6 +86,136 @@ const Renderer = (function() {
   }
 
   /**
+   * Render Ops loading state
+   */
+  function renderOpsLoading() {
+    if (!elements?.opsContainer) return;
+    elements.opsContainer.innerHTML = `
+      ${Array.from({ length: 5 }, () => `
+        <div class="bg-white rounded-xl p-5 shadow animate-pulse">
+          <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div class="space-y-3">
+            <div class="h-3 bg-gray-200 rounded w-full"></div>
+            <div class="h-3 bg-gray-200 rounded w-4/5"></div>
+            <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  /**
+   * Render Ops check results
+   * @param {Object} results
+   */
+  function renderOpsResults(results) {
+    if (!elements?.opsContainer) return;
+    elements.opsContainer.innerHTML = `
+      ${renderOpsCard({
+        title: 'Manifest Route Smoke',
+        icon: 'fa-route',
+        description: 'Data Lab manifest path and dead-prefix guard',
+        items: results.routes
+      })}
+      ${renderOpsCard({
+        title: 'Live Asset Parity',
+        icon: 'fa-layer-group',
+        description: 'Current runtime assets vs GitHub source HEAD',
+        items: results.assets
+      })}
+      ${renderOpsCard({
+        title: 'Source / Live Drift',
+        icon: 'fa-code-compare',
+        description: 'GitHub source HEAD vs current served admin assets',
+        items: results.drift
+      })}
+      ${renderOpsCard({
+        title: 'Actions Health',
+        icon: 'fa-circle-nodes',
+        description: 'Latest main deploy workflows vs GitHub main HEAD',
+        items: results.actions
+      })}
+      ${renderOpsCard({
+        title: 'Freshness Guard',
+        icon: 'fa-clock-rotate-left',
+        description: 'Internal JSON timestamps used by live data surfaces',
+        items: results.freshness || []
+      })}
+    `;
+  }
+
+  /**
+   * Render Ops unavailable state
+   * @param {string} message
+   */
+  function renderOpsUnavailable(message) {
+    if (!elements?.opsContainer) return;
+    elements.opsContainer.innerHTML = `
+      <div class="lg:col-span-2 rounded-xl border border-yellow-200 bg-yellow-50 p-5 text-sm text-yellow-800">
+        <div class="font-semibold mb-1">운영 관제 확인 불가</div>
+        <div>${escapeHtml(message)}</div>
+      </div>
+    `;
+  }
+
+  function renderOpsCard({ title, icon, description, items }) {
+    const failed = items.filter(item => item.status === 'fail').length;
+    const warn = items.filter(item => item.status === 'warn').length;
+    const skipped = items.filter(item => item.status === 'skip').length;
+    const allSkipped = items.length > 0 && skipped === items.length;
+    const badge = failed > 0
+      ? { text: 'FAIL', cls: 'bg-red-100 text-red-700 border-red-200' }
+      : warn > 0
+        ? { text: 'WARN', cls: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
+        : allSkipped
+          ? { text: 'SKIP', cls: 'bg-gray-100 text-gray-600 border-gray-200' }
+          : { text: 'PASS', cls: 'bg-green-100 text-green-700 border-green-200' };
+
+    return `
+      <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
+        <div class="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <i class="fas ${icon} text-blue-500"></i>
+              <h3 class="font-semibold text-gray-800">${title}</h3>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">${description}</p>
+          </div>
+          <span class="px-2 py-1 rounded-full border text-xs font-bold ${badge.cls}">${badge.text}</span>
+        </div>
+        <div class="space-y-2">
+          ${items.map(renderOpsItem).join('')}
+        </div>
+        ${skipped > 0 ? `<div class="text-[11px] text-gray-400 mt-3">${skipped} skipped outside target runtime</div>` : ''}
+      </article>
+    `;
+  }
+
+  function renderOpsItem(item) {
+    const meta = {
+      pass: { icon: 'fa-circle-check', cls: 'text-green-600', bg: 'bg-green-50 border-green-100' },
+      fail: { icon: 'fa-circle-xmark', cls: 'text-red-600', bg: 'bg-red-50 border-red-100' },
+      warn: { icon: 'fa-triangle-exclamation', cls: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-100' },
+      skip: { icon: 'fa-circle-minus', cls: 'text-gray-500', bg: 'bg-gray-50 border-gray-100' }
+    }[item.status] || { icon: 'fa-circle-question', cls: 'text-gray-500', bg: 'bg-gray-50 border-gray-100' };
+
+    return `
+      <div class="rounded-lg border ${meta.bg} p-3">
+        <div class="flex items-start gap-3">
+          <i class="fas ${meta.icon} ${meta.cls} mt-0.5"></i>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-3">
+              <div class="font-medium text-sm text-gray-800 truncate" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div>
+              ${item.code ? `<code class="text-[11px] text-gray-500">${escapeHtml(item.code)}</code>` : ''}
+            </div>
+            <div class="text-xs text-gray-500 mt-1 break-words">${escapeHtml(item.detail || '')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Render folder details panel
    * @param {string} folderName
    * @param {Object} config
@@ -219,12 +349,24 @@ const Renderer = (function() {
     return str.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
   }
 
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   return {
     init,
     renderSummary,
     renderCards,
     renderLoading,
     renderError,
+    renderOpsLoading,
+    renderOpsResults,
+    renderOpsUnavailable,
     renderDetails,
     hideDetails,
     updateTimestamp

@@ -101,10 +101,10 @@ jobs:
       - name: Move artifacts to data folder
         run: |
           mkdir -p data/slickcharts
-          mv artifacts/symbols-A-D/symbols-A-D.json data/slickcharts/ || true
-          mv artifacts/symbols-E-L/symbols-E-L.json data/slickcharts/ || true
-          mv artifacts/symbols-M-R/symbols-M-R.json data/slickcharts/ || true
-          mv artifacts/symbols-S-Z/symbols-S-Z.json data/slickcharts/ || true
+          mv artifacts/symbols-A-D/symbols-A-D.json data/slickcharts/
+          mv artifacts/symbols-E-L/symbols-E-L.json data/slickcharts/
+          mv artifacts/symbols-M-R/symbols-M-R.json data/slickcharts/
+          mv artifacts/symbols-S-Z/symbols-S-Z.json data/slickcharts/
 
       - name: Merge batch files (cumulative)
         run: |
@@ -124,11 +124,16 @@ jobs:
           rm -f data/slickcharts/symbols-M-R.json
           rm -f data/slickcharts/symbols-S-Z.json
 
+      - name: Sync public mirror
+        run: |
+          mkdir -p 100xfenok-next/public/data/slickcharts
+          rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
+
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/slickcharts/symbols.json
+          git add data/slickcharts/ 100xfenok-next/public/data/slickcharts/
           git diff --staged --quiet || git commit -m "chore: update SlickCharts symbols $(date -u +%Y-%m-%d)"
           git push
 

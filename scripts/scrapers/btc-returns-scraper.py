@@ -3,7 +3,7 @@
 SlickCharts Bitcoin Historical Returns scraper.
 
 Usage:
-    python scripts/scrapers/btc-returns-scraper.py --output source/100xFenok/data/slickcharts/btc-returns.json --pretty
+    python scripts/scrapers/btc-returns-scraper.py --output data/slickcharts/btc-returns.json --pretty
 """
 from __future__ import annotations
 
@@ -23,7 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scraper_utils import fetch_html, clean_number, to_float
 
 SOURCE_URL = "https://www.slickcharts.com/currency/BTC/returns"
-DEFAULT_OUTPUT = Path("source/100xFenok/data/slickcharts/btc-returns.json")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OUTPUT = REPO_ROOT / "data" / "slickcharts" / "btc-returns.json"
 
 
 def parse_returns(html: str) -> List[Dict[str, float | int]]:

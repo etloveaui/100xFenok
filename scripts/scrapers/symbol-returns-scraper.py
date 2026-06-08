@@ -41,7 +41,8 @@ from bs4 import BeautifulSoup
 
 # Constants
 BASE_URL = "https://www.slickcharts.com/symbol"
-DATA_DIR = Path(__file__).parent.parent.parent / "source/100xFenok/data/slickcharts"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data" / "slickcharts"
 
 # Batch definitions
 BATCHES = {
@@ -140,9 +141,14 @@ def main():
     if args.merge:
         all_stocks = []
         for f in args.merge:
-            if f.exists():
-                data = json.loads(f.read_text(encoding="utf-8"))
-                all_stocks.extend(data.get("stocks", []))
+            if not f.exists():
+                print(f"Error: merge input not found: {f}", file=sys.stderr)
+                sys.exit(1)
+            data = json.loads(f.read_text(encoding="utf-8"))
+            all_stocks.extend(data.get("stocks", []))
+        if not all_stocks:
+            print("Error: no stocks loaded from merge inputs", file=sys.stderr)
+            sys.exit(1)
         
         payload = build_standard_payload(all_stocks, data_key="stocks")
         write_output(payload, args.output, pretty=args.pretty)
@@ -161,15 +167,27 @@ def main():
         tickers = load_universe_tickers()
         filter_func = BATCHES[args.batch]
         filtered = [t for t in tickers if filter_func(t)]
-        
+        if not tickers:
+            print(f"Error: no universe tickers loaded from {DATA_DIR}", file=sys.stderr)
+            sys.exit(1)
+        if not filtered:
+            print(f"Error: no tickers matched batch {args.batch}", file=sys.stderr)
+            sys.exit(1)
+
         print(f"Scraping {len(filtered)} stocks for batch {args.batch}")
         results = []
+        success_count = 0
         for i, ticker in enumerate(filtered):
             if (i+1) % 5 == 0:
                 print(f"  Progress: {i+1}/{len(filtered)} ({ticker})")
-            data, _ = scrape_symbol(session, ticker)
+            data, success = scrape_symbol(session, ticker)
+            if success:
+                success_count += 1
             results.append(data)
-            
+        if success_count == 0:
+            print(f"Error: all {len(filtered)} return scrapes failed", file=sys.stderr)
+            sys.exit(1)
+
         payload = build_standard_payload(results, data_key="stocks", extra_fields={"batch": args.batch})
         write_output(payload, args.output, pretty=args.pretty)
     else:

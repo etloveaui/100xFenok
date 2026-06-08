@@ -30,7 +30,8 @@ from typing import Any, Dict, List, Set, Tuple
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Constants
-DATA_DIR = Path(__file__).parent.parent.parent / "source/100xFenok/data/slickcharts"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data" / "slickcharts"
 MEMBERSHIP_FILE = DATA_DIR / "membership-changes.json"
 UNIVERSE_FILE = DATA_DIR / "universe.json"
 
@@ -130,6 +131,7 @@ def check_membership_changes(verbose: bool = True) -> Dict[str, Any]:
     timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
     all_changes: List[Dict[str, Any]] = []
+    missing_indices: List[str] = []
 
     for index_name in INDEX_FILES:
         current_tickers = load_index_tickers(index_name)
@@ -140,6 +142,7 @@ def check_membership_changes(verbose: bool = True) -> Dict[str, Any]:
 
         # Skip if no current data
         if not current_tickers:
+            missing_indices.append(index_name)
             if verbose:
                 print(f"  {index_name}: No data found")
             continue
@@ -174,6 +177,11 @@ def check_membership_changes(verbose: bool = True) -> Dict[str, Any]:
             "tickers": sorted(current_tickers),
         }
 
+    if missing_indices:
+        raise RuntimeError(
+            "Missing or empty index data for: " + ", ".join(sorted(missing_indices))
+        )
+
     # Add new changes to history
     if all_changes:
         existing_changes = history.get("changes", [])
@@ -192,13 +200,24 @@ def generate_universe() -> Dict[str, Any]:
         Universe payload dictionary
     """
     all_tickers: Dict[str, List[str]] = {}  # ticker -> list of indices
+    index_ticker_sets: Dict[str, Set[str]] = {}
+    missing_indices: List[str] = []
 
     for index_name in INDEX_FILES:
         tickers = load_index_tickers(index_name)
+        index_ticker_sets[index_name] = tickers
+        if not tickers:
+            missing_indices.append(index_name)
+            continue
         for ticker in tickers:
             if ticker not in all_tickers:
                 all_tickers[ticker] = []
             all_tickers[ticker].append(index_name)
+
+    if missing_indices:
+        raise RuntimeError(
+            "Missing or empty index data for: " + ", ".join(sorted(missing_indices))
+        )
 
     # Build universe list with index membership
     universe: List[Dict[str, Any]] = []
@@ -213,7 +232,7 @@ def generate_universe() -> Dict[str, Any]:
 
     # Count per index
     index_counts = {
-        index_name: len(load_index_tickers(index_name))
+        index_name: len(index_ticker_sets[index_name])
         for index_name in INDEX_FILES
     }
 

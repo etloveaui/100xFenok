@@ -53,7 +53,6 @@ jobs:
           python scripts/scrapers/gainers-scraper.py \
             --output data/slickcharts/gainers.json \
             --pretty --cumulative
-        continue-on-error: true
 
       # Losers - cumulative mode
       - name: Run Losers scraper
@@ -62,7 +61,6 @@ jobs:
           python scripts/scrapers/losers-scraper.py \
             --output data/slickcharts/losers.json \
             --pretty --cumulative
-        continue-on-error: true
 
       # Treasury rates - cumulative mode
       - name: Run Treasury scraper
@@ -71,7 +69,6 @@ jobs:
           python scripts/scrapers/treasury-scraper.py \
             --output data/slickcharts/treasury.json \
             --pretty --cumulative
-        continue-on-error: true
 
       # Crypto currency - cumulative mode
       - name: Run Currency scraper
@@ -80,7 +77,6 @@ jobs:
           python scripts/scrapers/currency-scraper.py \
             --output data/slickcharts/currency.json \
             --pretty --cumulative
-        continue-on-error: true
 
       # Mortgage rates - cumulative mode
       - name: Run Mortgage scraper
@@ -89,12 +85,16 @@ jobs:
           python scripts/scrapers/mortgage-scraper.py \
             --output data/slickcharts/mortgage.json \
             --pretty --cumulative
-        continue-on-error: true
+
+      - name: Sync public mirror
+        run: |
+          mkdir -p 100xfenok-next/public/data/slickcharts
+          rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
 
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/slickcharts/
+          git add data/slickcharts/ 100xfenok-next/public/data/slickcharts/
           git diff --staged --quiet || git commit -m "chore: update SlickCharts daily data $(date -u +%Y-%m-%d)"
           git push

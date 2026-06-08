@@ -1,9 +1,9 @@
 # SlickCharts Data
 
 > **Source**: [SlickCharts](https://www.slickcharts.com/)
-> **Pipeline**: `.github/workflows/slickcharts-*.yml` (4 workflows)
+> **Pipeline**: `.github/workflows/slickcharts-*.yml` (5 workflows)
 > **Scrapers**: `scripts/scrapers/` (36 files)
-> **Last Updated**: 2026-01-10
+> **Last Updated**: 2026-06-08
 
 ---
 
@@ -20,8 +20,10 @@
 | Rates | 3 | Daily |
 | Crypto | 3 | Daily/Monthly |
 | Portfolios | 2 | Weekly |
-| Individual Stocks | 516 | Monthly |
-| **Total** | **550** | - |
+| Individual Stocks | 516 active universe | Monthly |
+| **Total** | **567 JSON files** | - |
+
+> Integrity note: `universe.json`, `membership-changes.json`, and stock history aggregates are current-universe files. A small number of retained `stocks/{SYMBOL}.json` files may remain for former index members, but they are not referenced by the active universe or aggregate files.
 
 ---
 
@@ -32,7 +34,7 @@
 | File | Description | Scraper |
 |------|-------------|---------|
 | `sp500.json` | S&P 500 (503 stocks) | sp500-scraper.py |
-| `nasdaq100.json` | Nasdaq 100 (102 stocks) | nasdaq100-scraper.py |
+| `nasdaq100.json` | Nasdaq 100 (101 stocks) | nasdaq100-scraper.py |
 | `dowjones.json` | Dow Jones 30 | dowjones-scraper.py |
 
 ### Index Returns (Monthly)
@@ -110,7 +112,7 @@
 | `stocks-dividends.json` | 13-year dividend history | symbol-dividend-scraper.py |
 | `stocks-dividends-recent.json` | Recent 5 years dividends | stock-aggregator.py |
 | `stocks-dividends-historical.json` | Historical dividends (pre-2021) | stock-aggregator.py |
-| `stocks/{SYMBOL}.json` | 516 individual stock files | stock-aggregator.py |
+| `stocks/{SYMBOL}.json` | Current universe stock detail files | stock-aggregator.py |
 
 ---
 
@@ -147,7 +149,7 @@
 | Workflow | Schedule | Scrapers |
 |----------|----------|----------|
 | `slickcharts-daily.yml` | 6:00 UTC | gainers, losers, treasury, currency, mortgage |
-| `slickcharts-weekly.yml` | 7:00 UTC (Mon) | sp500, nasdaq100, dowjones, magnificent7, etf, berkshire |
+| `slickcharts-weekly.yml` | 7:00 UTC (Sun) | sp500, magnificent7, etf, berkshire |
 | `slickcharts-monthly.yml` | 8:00 UTC (1st) | 22 returns/performance/yields/analysis scrapers |
 | `slickcharts-history.yml` | 9:00 UTC (1st) | membership-tracker, symbol-returns, symbol-dividend, stock-aggregator |
 | `slickcharts-symbols.yml` | 7:30 UTC (Mon) | symbol-scraper (matrix: 4 batches) |
@@ -171,7 +173,7 @@ console.log(aapl.current.pe, aapl.returns.length);
 
 // Get all symbols
 const universe = await fetch(`${BASE}/universe.json`).then(r => r.json());
-console.log(universe.tickers.length); // 516
+console.log(universe.stocks.length); // 516
 ```
 
 ### Python (Backend)
@@ -202,7 +204,23 @@ python scripts/scrapers/stock-aggregator.py \
   --metrics data/slickcharts/symbols.json \
   --dividends data/slickcharts/stocks-dividends.json \
   --output-dir data/slickcharts/stocks/
+
+# Repair current membership and aggregate stock history from local stock files
+python scripts/scrapers/membership-tracker.py --quiet
+python scripts/scrapers/rebuild-stock-history-aggregates.py --pretty
+rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
+python scripts/validate-slickcharts-integrity.py --warn-extra-stock-files
 ```
+
+---
+
+## Integrity Guardrails
+
+- Scraper defaults resolve from the current repository root; they must not point to `source/100xFenok/...`.
+- SlickCharts workflows fail fast instead of committing empty outputs.
+- Workflows sync `data/slickcharts/` to `100xfenok-next/public/data/slickcharts/` before commit.
+- `scripts/validate-slickcharts-integrity.py` checks current index membership, universe, stock history aggregates, public mirror parity, and obsolete scraper paths.
+- `scripts/scrapers/rebuild-stock-history-aggregates.py` can rebuild aggregate returns/dividends from local `stocks/{SYMBOL}.json` without scraping.
 
 ---
 
@@ -214,4 +232,4 @@ python scripts/scrapers/stock-aggregator.py \
 
 ---
 
-*Last Updated: 2026-01-10*
+*Last Updated: 2026-06-08*

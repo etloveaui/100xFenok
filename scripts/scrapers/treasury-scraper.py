@@ -26,7 +26,8 @@ from scraper_utils import (
 )
 
 SOURCE_URL = "https://www.slickcharts.com/treasury"
-DEFAULT_OUTPUT = Path("source/100xFenok/data/slickcharts/treasury.json")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OUTPUT = REPO_ROOT / "data" / "slickcharts" / "treasury.json"
 PLAYWRIGHT_VIEWPORT = {"width": 1440, "height": 2400}
 PLAYWRIGHT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

@@ -54,7 +54,6 @@ jobs:
           python scripts/scrapers/sp500-scraper.py \
             --output data/slickcharts/sp500.json \
             --pretty
-        continue-on-error: true
 
       # Magnificent 7 stocks
       - name: Run Magnificent 7 scraper
@@ -63,7 +62,6 @@ jobs:
           python scripts/scrapers/magnificent7-scraper.py \
             --output data/slickcharts/magnificent7.json \
             --pretty
-        continue-on-error: true
 
       # ARK ETFs
       - name: Run ETF scraper
@@ -72,7 +70,6 @@ jobs:
           python scripts/scrapers/etf-scraper.py \
             --output data/slickcharts/etf.json \
             --pretty
-        continue-on-error: true
 
       # Berkshire Hathaway holdings + returns
       - name: Run Berkshire scraper
@@ -82,12 +79,20 @@ jobs:
             --all \
             --output data/slickcharts/berkshire.json \
             --pretty
-        continue-on-error: true
+
+      - name: Refresh membership universe
+        run: |
+          python scripts/scrapers/membership-tracker.py --quiet
+
+      - name: Sync public mirror
+        run: |
+          mkdir -p 100xfenok-next/public/data/slickcharts
+          rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
 
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/slickcharts/
+          git add data/slickcharts/ 100xfenok-next/public/data/slickcharts/
           git diff --staged --quiet || git commit -m "chore: update SlickCharts weekly data $(date -u +%Y-%m-%d)"
           git push

@@ -28,7 +28,8 @@ from scraper_utils import (
 )
 
 SOURCE_URL = "https://www.slickcharts.com/sp500/gainers"
-DEFAULT_OUTPUT = Path("source/100xFenok/data/slickcharts/gainers.json")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OUTPUT = REPO_ROOT / "data" / "slickcharts" / "gainers.json"
 
 
 def parse_gainers(html: str) -> List[Dict[str, float | int | str]]:

@@ -28,7 +28,8 @@ from scraper_utils import (
 )
 
 SOURCE_URL = "https://www.slickcharts.com/currency"
-DEFAULT_OUTPUT = Path("source/100xFenok/data/slickcharts/currency.json")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OUTPUT = REPO_ROOT / "data" / "slickcharts" / "currency.json"
 
 
 def parse_currency(html: str) -> Dict[str, object]:

@@ -57,7 +57,8 @@ from bs4 import BeautifulSoup
 
 # Constants
 BASE_URL = "https://www.slickcharts.com/symbol"
-SP500_JSON_PATH = Path(__file__).parent.parent.parent / "data/slickcharts/sp500.json"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SP500_JSON_PATH = REPO_ROOT / "data" / "slickcharts" / "sp500.json"
 
 # Batch definitions for matrix builds
 BATCHES = {
@@ -275,12 +276,14 @@ def merge_batch_files(
 
     for batch_file in batch_files:
         if not batch_file.exists():
-            print(f"Warning: {batch_file} not found, skipping")
-            continue
+            raise FileNotFoundError(f"Merge input not found: {batch_file}")
 
         data = json.loads(batch_file.read_text(encoding="utf-8"))
         stocks = data.get("stocks", [])
         all_stocks.extend(stocks)
+
+    if not all_stocks:
+        raise RuntimeError("No stocks loaded from merge inputs")
 
     # Sort by symbol
     all_stocks.sort(key=lambda x: x.get("symbol", ""))
@@ -418,11 +421,17 @@ def main() -> None:
 
         # Batch mode
         tickers = load_sp500_tickers()
+        if not tickers:
+            raise RuntimeError(f"No S&P 500 tickers loaded from {SP500_JSON_PATH}")
         results, success, errors = scrape_batch(
             tickers,
             args.batch,
             progress=not args.quiet
         )
+        if not results:
+            raise RuntimeError(f"No symbols matched batch {args.batch}")
+        if success == 0:
+            raise RuntimeError(f"All {len(results)} symbol scrapes failed")
 
         # Cumulative mode: append to history
         if args.cumulative and args.output:

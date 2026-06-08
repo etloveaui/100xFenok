@@ -71,13 +71,14 @@ jobs:
       - name: Run Membership Tracker
         run: |
           python scripts/scrapers/membership-tracker.py
-        continue-on-error: true
 
       - name: Commit membership changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/slickcharts/membership-changes.json data/slickcharts/universe.json
+          mkdir -p 100xfenok-next/public/data/slickcharts
+          rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
+          git add data/slickcharts/ 100xfenok-next/public/data/slickcharts/
           git diff --staged --quiet || git commit -m "chore: update index membership $(date -u +%Y-%m-%d)"
           git push
 
@@ -111,7 +112,6 @@ jobs:
             --batch ${{ matrix.batch }} \
             --output data/slickcharts/stocks-returns-${{ matrix.batch }}.json \
             --pretty
-        continue-on-error: true
 
       - name: Upload batch artifact
         uses: actions/upload-artifact@v4
@@ -150,7 +150,6 @@ jobs:
             --batch ${{ matrix.batch }} \
             --output data/slickcharts/stocks-dividends-${{ matrix.batch }}.json \
             --pretty
-        continue-on-error: true
 
       - name: Upload batch artifact
         uses: actions/upload-artifact@v4
@@ -186,10 +185,10 @@ jobs:
       - name: Move and merge returns
         run: |
           mkdir -p data/slickcharts
-          mv artifacts/returns-A-D/*.json data/slickcharts/ 2>/dev/null || true
-          mv artifacts/returns-E-L/*.json data/slickcharts/ 2>/dev/null || true
-          mv artifacts/returns-M-R/*.json data/slickcharts/ 2>/dev/null || true
-          mv artifacts/returns-S-Z/*.json data/slickcharts/ 2>/dev/null || true
+          mv artifacts/returns-A-D/*.json data/slickcharts/
+          mv artifacts/returns-E-L/*.json data/slickcharts/
+          mv artifacts/returns-M-R/*.json data/slickcharts/
+          mv artifacts/returns-S-Z/*.json data/slickcharts/
 
           # Merge returns batches (if merger script exists)
           if [ -f scripts/scrapers/symbol-returns-scraper.py ]; then
@@ -199,16 +198,15 @@ jobs:
               data/slickcharts/stocks-returns-E-L.json \
               data/slickcharts/stocks-returns-M-R.json \
               data/slickcharts/stocks-returns-S-Z.json \
-              --output data/slickcharts/stocks-returns.json || true
+              --output data/slickcharts/stocks-returns.json
           fi
-        continue-on-error: true
 
       - name: Move and merge dividends
         run: |
-          mv artifacts/dividends-A-D/*.json data/slickcharts/ 2>/dev/null || true
-          mv artifacts/dividends-E-L/*.json data/slickcharts/ 2>/dev/null || true
-          mv artifacts/dividends-M-R/*.json data/slickcharts/ 2>/dev/null || true
-          mv artifacts/dividends-S-Z/*.json data/slickcharts/ 2>/dev/null || true
+          mv artifacts/dividends-A-D/*.json data/slickcharts/
+          mv artifacts/dividends-E-L/*.json data/slickcharts/
+          mv artifacts/dividends-M-R/*.json data/slickcharts/
+          mv artifacts/dividends-S-Z/*.json data/slickcharts/
 
           # Merge dividend batches (if merger script exists)
           if [ -f scripts/scrapers/symbol-dividend-scraper.py ]; then
@@ -218,9 +216,8 @@ jobs:
               data/slickcharts/stocks-dividends-E-L.json \
               data/slickcharts/stocks-dividends-M-R.json \
               data/slickcharts/stocks-dividends-S-Z.json \
-              --output data/slickcharts/stocks-dividends.json || true
+              --output data/slickcharts/stocks-dividends.json
           fi
-        continue-on-error: true
 
       - name: Clean up batch files
         run: |
@@ -248,13 +245,21 @@ jobs:
             --output-dir data/slickcharts/stocks/ \
             --split-dividends data/slickcharts/ \
             --retention-days 365
-        continue-on-error: true
+
+      - name: Sync public mirror
+        run: |
+          mkdir -p 100xfenok-next/public/data/slickcharts
+          rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
+
+      - name: Validate SlickCharts integrity
+        run: |
+          python scripts/validate-slickcharts-integrity.py
 
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/slickcharts/
+          git add data/slickcharts/ 100xfenok-next/public/data/slickcharts/
           git diff --staged --quiet || git commit -m "chore: update SlickCharts stock history $(date -u +%Y-%m-%d)"
           git push
 

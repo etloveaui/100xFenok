@@ -20,6 +20,7 @@ const DataLabUI = (function() {
     // Initialize renderer with DOM references
     Renderer.init({
       summaryContainer: document.getElementById('summary-container'),
+      opsContainer: document.getElementById('ops-container'),
       cardsContainer: document.getElementById('cards-container'),
       detailsPanel: document.getElementById('details-panel'),
       timestampEl: document.getElementById('last-updated')
@@ -27,6 +28,7 @@ const DataLabUI = (function() {
 
     // Show loading state
     Renderer.renderLoading();
+    Renderer.renderOpsLoading();
 
     // Subscribe to state changes
     setupStateSubscriptions();
@@ -34,6 +36,7 @@ const DataLabUI = (function() {
     // Load data
     try {
       await loadAllData();
+      runOpsChecks();
       const loadTime = Math.round(performance.now() - startTime);
       StateManager.set('loadTime', loadTime);
       console.log(`[DataLab] Initialized in ${loadTime}ms`);
@@ -142,6 +145,24 @@ const DataLabUI = (function() {
   }
 
   /**
+   * Run read-only operational checks.
+   */
+  async function runOpsChecks() {
+    if (!window.OpsConsole) {
+      Renderer.renderOpsUnavailable('OpsConsole module is not loaded.');
+      return;
+    }
+
+    try {
+      const results = await OpsConsole.run();
+      Renderer.renderOpsResults(results);
+    } catch (error) {
+      console.error('[DataLab] Ops checks failed:', error);
+      Renderer.renderOpsUnavailable(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  /**
    * Show folder details
    * @param {string} folderName
    */
@@ -168,6 +189,7 @@ const DataLabUI = (function() {
       loadTime: state.loadTime,
       lastUpdated: state.lastUpdated,
       health: state.health,
+      ops: window.OpsConsole?.getLastResults?.() || null,
       cache: {
         manifest: ManifestLoader.getCacheStats(),
         data: CacheManager.getStats()
@@ -193,6 +215,7 @@ const DataLabUI = (function() {
     showFolderDetails,
     closeDetails,
     getStats,
+    runOpsChecks,
     debug
   };
 })();

@@ -78,7 +78,6 @@ jobs:
           python scripts/scrapers/sp500-returns-scraper.py \
             --output data/slickcharts/sp500-returns.json \
             --pretty
-        continue-on-error: true
 
       - name: Run S&P 500 Returns Details scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-returns-details' || github.event_name == 'schedule' }}
@@ -86,7 +85,6 @@ jobs:
           python scripts/scrapers/sp500-returns-details-scraper.py \
             --output data/slickcharts/sp500-returns-details.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Nasdaq 100 Returns scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-returns' || github.event_name == 'schedule' }}
@@ -94,7 +92,6 @@ jobs:
           python scripts/scrapers/nasdaq100-returns-scraper.py \
             --output data/slickcharts/nasdaq100-returns.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Dow Jones Returns scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones-returns' || github.event_name == 'schedule' }}
@@ -102,7 +99,6 @@ jobs:
           python scripts/scrapers/dowjones-returns-scraper.py \
             --output data/slickcharts/dowjones-returns.json \
             --pretty
-        continue-on-error: true
 
       - name: Run S&P 500 Drawdown scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-drawdown' || github.event_name == 'schedule' }}
@@ -110,7 +106,6 @@ jobs:
           python scripts/scrapers/sp500-drawdown-scraper.py \
             --output data/slickcharts/sp500-drawdown.json \
             --pretty
-        continue-on-error: true
 
       - name: Run BTC Returns scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'btc-returns' || github.event_name == 'schedule' }}
@@ -118,7 +113,6 @@ jobs:
           python scripts/scrapers/btc-returns-scraper.py \
             --output data/slickcharts/btc-returns.json \
             --pretty
-        continue-on-error: true
 
       - name: Run ETH Returns scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'eth-returns' || github.event_name == 'schedule' }}
@@ -126,7 +120,6 @@ jobs:
           python scripts/scrapers/eth-returns-scraper.py \
             --output data/slickcharts/eth-returns.json \
             --pretty
-        continue-on-error: true
 
       # ========================================
       # Performance Section
@@ -138,7 +131,6 @@ jobs:
           python scripts/scrapers/sp500-performance-scraper.py \
             --output data/slickcharts/sp500-performance.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Nasdaq 100 Performance scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-performance' || github.event_name == 'schedule' }}
@@ -146,7 +138,6 @@ jobs:
           python scripts/scrapers/nasdaq100-performance-scraper.py \
             --output data/slickcharts/nasdaq100-performance.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Dow Jones Performance scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones-performance' || github.event_name == 'schedule' }}
@@ -154,7 +145,6 @@ jobs:
           python scripts/scrapers/dowjones-performance-scraper.py \
             --output data/slickcharts/dowjones-performance.json \
             --pretty
-        continue-on-error: true
 
       # ========================================
       # Yields Section
@@ -166,7 +156,6 @@ jobs:
           python scripts/scrapers/sp500-yield-scraper.py \
             --output data/slickcharts/sp500-yield.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Nasdaq 100 Yield scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-yield' || github.event_name == 'schedule' }}
@@ -174,7 +163,6 @@ jobs:
           python scripts/scrapers/nasdaq100-yield-scraper.py \
             --output data/slickcharts/nasdaq100-yield.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Dow Jones Yield scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones-yield' || github.event_name == 'schedule' }}
@@ -182,7 +170,6 @@ jobs:
           python scripts/scrapers/dowjones-yield-scraper.py \
             --output data/slickcharts/dowjones-yield.json \
             --pretty
-        continue-on-error: true
 
       # ========================================
       # Analysis Section
@@ -194,7 +181,6 @@ jobs:
           python scripts/scrapers/sp500-analysis-scraper.py \
             --output data/slickcharts/sp500-analysis.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Nasdaq 100 Analysis scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-analysis' || github.event_name == 'schedule' }}
@@ -202,7 +188,6 @@ jobs:
           python scripts/scrapers/nasdaq100-analysis-scraper.py \
             --output data/slickcharts/nasdaq100-analysis.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Dow Jones Analysis scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones-analysis' || github.event_name == 'schedule' }}
@@ -210,7 +195,6 @@ jobs:
           python scripts/scrapers/dowjones-analysis-scraper.py \
             --output data/slickcharts/dowjones-analysis.json \
             --pretty
-        continue-on-error: true
 
       - name: Run S&P 500 Market Cap scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'sp500-marketcap' || github.event_name == 'schedule' }}
@@ -218,7 +202,6 @@ jobs:
           python scripts/scrapers/sp500-marketcap-scraper.py \
             --output data/slickcharts/sp500-marketcap.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Nasdaq 100 Ratio scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'nasdaq100-ratio' || github.event_name == 'schedule' }}
@@ -226,7 +209,6 @@ jobs:
           python scripts/scrapers/nasdaq100-ratio-scraper.py \
             --output data/slickcharts/nasdaq100-ratio.json \
             --pretty
-        continue-on-error: true
 
       # ========================================
       # Other Indices
@@ -238,7 +220,6 @@ jobs:
           python scripts/scrapers/nasdaq100-scraper.py \
             --output data/slickcharts/nasdaq100.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Dow Jones scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dowjones' || github.event_name == 'schedule' }}
@@ -246,7 +227,6 @@ jobs:
           python scripts/scrapers/dowjones-scraper.py \
             --output data/slickcharts/dowjones.json \
             --pretty
-        continue-on-error: true
 
       # ========================================
       # Historical (One-Time)
@@ -258,7 +238,6 @@ jobs:
           python scripts/scrapers/1929crash-scraper.py \
             --output data/slickcharts/1929crash.json \
             --pretty
-        continue-on-error: true
 
       - name: Run Inflation scraper
         if: ${{ github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'inflation' || github.event_name == 'schedule' }}
@@ -266,12 +245,20 @@ jobs:
           python scripts/scrapers/inflation-scraper.py \
             --output data/slickcharts/inflation.json \
             --pretty
-        continue-on-error: true
+
+      - name: Refresh membership universe
+        run: |
+          python scripts/scrapers/membership-tracker.py --quiet
+
+      - name: Sync public mirror
+        run: |
+          mkdir -p 100xfenok-next/public/data/slickcharts
+          rsync -a data/slickcharts/ 100xfenok-next/public/data/slickcharts/
 
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/slickcharts/
+          git add data/slickcharts/ 100xfenok-next/public/data/slickcharts/
           git diff --staged --quiet || git commit -m "chore: update SlickCharts monthly data $(date -u +%Y-%m-%d)"
           git push
