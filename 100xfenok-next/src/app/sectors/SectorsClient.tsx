@@ -255,6 +255,44 @@ export default function SectorsClient() {
           XLC(커뮤니케이션) · XLRE(부동산)는 추적 ETF 미수록 — 히트맵 성과만 표시됩니다.
         </p>
       </SectionCard>
+
+      {/* Sector valuation */}
+      <SectionCard kicker="Valuation" title="섹터 밸류에이션">
+        <div className="-mx-1 overflow-x-auto px-1">
+          <table className="w-full min-w-[420px] text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
+                <th className="px-2 py-2 text-left">업종</th>
+                <th className="px-2 py-2 text-right">Fwd P/E</th>
+                <th className="px-2 py-2 text-right">P/B</th>
+                <th className="px-2 py-2 text-right">ROE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows
+                .filter((row) => row.valuation)
+                .map((row) => {
+                  const v = row.valuation;
+                  if (!v) return null;
+                  return (
+                    <tr key={row.key} className="border-b border-slate-100 last:border-0">
+                      <td className="px-2 py-2 text-left">
+                        <span className="text-sm font-bold text-slate-900">{row.name}</span>
+                        <span className="ml-2 text-xs font-semibold text-slate-400">{row.etf}</span>
+                      </td>
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-900">{v.pe === null ? "—" : v.pe.toFixed(1)}</td>
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">{v.pb === null ? "—" : v.pb.toFixed(2)}</td>
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-600">{v.roe === null ? "—" : formatPercent(v.roe * 100, 1)}</td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-[11px] text-slate-400">
+          업종 지수 밸류에이션 (Bloomberg). 시장 전체 밸류는 <strong>시장 밸류에이션</strong> 페이지 참고.
+        </p>
+      </SectionCard>
     </main>
   );
 }

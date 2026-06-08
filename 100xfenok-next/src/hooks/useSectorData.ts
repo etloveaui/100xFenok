@@ -37,6 +37,14 @@ interface TickerQuote {
   changePercent?: number;
   marketState?: string;
 }
+interface UsSectorPoint {
+  best_pe_ratio?: number;
+  px_to_book_ratio?: number;
+  roe?: number;
+}
+interface UsSectorsPayload {
+  sections?: Record<string, { data?: UsSectorPoint[] } | undefined>;
+}
 
 // HTTP cache intentional: static /data/*.json has Cache-Control max-age=300;
 // ticker /api/* has its own s-maxage. Mirrors useDashboardData fetch policy.
@@ -86,9 +94,10 @@ export function useSectorData(): SectorDataResult {
     inFlightRef.current = true;
     try {
       const etfSymbols = SECTOR_DEFINITIONS.map((sector) => sector.etf);
-      const [benchmarks, etfs, tickerSettled] = await Promise.all([
+      const [benchmarks, etfs, usSectors, tickerSettled] = await Promise.all([
         fetchJson<BenchmarksMomentumPayload>("/data/benchmarks/summaries.json"),
         fetchJson<EtfsPayload>("/data/global-scouter/etfs/index.json"),
+        fetchJson<UsSectorsPayload>("/data/benchmarks/us_sectors.json"),
         Promise.allSettled(
           etfSymbols.map(async (symbol) => ({
             symbol,
@@ -122,6 +131,9 @@ export function useSectorData(): SectorDataResult {
             ? quote.marketState.toUpperCase()
             : null;
 
+        const valData = usSectors?.sections?.[sector.key]?.data;
+        const valLatest = Array.isArray(valData) && valData.length > 0 ? valData[valData.length - 1] : null;
+
         return {
           key: sector.key,
           etf: sector.etf,
@@ -131,6 +143,9 @@ export function useSectorData(): SectorDataResult {
           price: num(quote?.price),
           marketState,
           etfInfo: buildEtfInfo(etfs?.etfs?.[sector.etf]),
+          valuation: valLatest
+            ? { pe: num(valLatest.best_pe_ratio), pb: num(valLatest.px_to_book_ratio), roe: num(valLatest.roe) }
+            : null,
         };
       });
 

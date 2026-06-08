@@ -47,6 +47,17 @@ export interface SectorRow {
   marketState: string | null;
   /** SPDR/sector ETF detail; null for sectors without a tracked ETF (XLC, XLRE). */
   etfInfo: SectorEtfInfo | null;
+  /** Sector-index valuation (us_sectors.json latest: Fwd P/E, P/B, ROE). */
+  valuation: SectorValuation | null;
+}
+
+export interface SectorValuation {
+  /** Forward P/E (best_pe_ratio). */
+  pe: number | null;
+  /** Price/Book (px_to_book_ratio). */
+  pb: number | null;
+  /** ROE (fraction). */
+  roe: number | null;
 }
 
 export interface SectorDataResult {
