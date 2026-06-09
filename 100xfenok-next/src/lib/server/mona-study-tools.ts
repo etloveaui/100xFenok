@@ -1,7 +1,12 @@
 import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const MONA_ROOT = path.join(process.cwd(), "data", "mona-english");
+// Resolve the data dir name at runtime (env-overridable). The non-literal
+// segment keeps Turbopack from statically tracing data/mona-english into the
+// build graph — that dir is a gitignored, out-of-root symlink to mona-life
+// (the SSOT) read only at runtime by the Mac mini skill bridge.
+const MONA_DATA_DIRNAME = process.env.MONA_DATA_DIRNAME ?? "mona-english";
+const MONA_ROOT = path.join(process.cwd(), "data", MONA_DATA_DIRNAME);
 const MONA_SESSIONS = path.join(MONA_ROOT, "sessions");
 const MONA_BEST3 = path.join(MONA_ROOT, "best3.json");
 const MONA_WEAK_NOTES = path.join(MONA_ROOT, "weak-notes.json");
