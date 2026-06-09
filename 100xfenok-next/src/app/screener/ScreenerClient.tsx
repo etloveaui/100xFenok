@@ -123,18 +123,46 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
   const badgeClass = BADGE_CLASS_MAP[cls];
   const dotClass = DOT_CLASS_MAP[cls];
   const title = `현재 ${current.toFixed(1)} · 평균 ${avg?.toFixed(1) ?? "—"} · 8Y ${min.toFixed(1)}~${max.toFixed(1)} · ${Math.round(pct * 100)}%`;
+  const isClampedHigh = pct >= 1;
+  const isClampedLow = pct <= 0;
 
   return (
-    <div className="inline-flex items-center gap-2" title={title}>
-      <div className="relative h-2 w-16 rounded-full bg-slate-200">
+    <div className="inline-flex items-center gap-1.5" title={title}>
+      <div className="relative h-2 w-20 rounded-full overflow-hidden">
+        {/* 3-zone shading */}
+        <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${BAND_CHEAP * 100}%` }} />
+        <div className="absolute inset-y-0 bg-slate-100" style={{ left: `${BAND_CHEAP * 100}%`, width: `${(BAND_RICH - BAND_CHEAP) * 100}%` }} />
+        <div className="absolute inset-y-0 right-0 bg-rose-100" style={{ width: `${(1 - BAND_RICH) * 100}%` }} />
+
+        {/* avg line */}
         {avgPct !== null && (
-          <div className="absolute top-0 h-full w-px bg-slate-400" style={{ left: `${avgPct * 100}%` }} />
+          <div className="absolute top-0 h-full w-[1.5px] bg-slate-500" style={{ left: `${avgPct * 100}%` }} />
         )}
-        <div
-          className={cx("absolute top-1/2 h-2.5 w-2.5 rounded-full border-2 border-white", dotClass)}
-          style={{ left: `${pct * 100}%`, transform: "translate(-50%, -50%)" }}
-        />
+
+        {/* edge marker or dot */}
+        {isClampedHigh ? (
+          <div
+            className="absolute top-1/2 border-y-4 border-l-[6px] border-y-transparent border-l-rose-500"
+            style={{ right: 0, transform: "translateY(-50%)" }}
+          />
+        ) : isClampedLow ? (
+          <div
+            className="absolute top-1/2 border-y-4 border-r-[6px] border-y-transparent border-r-emerald-500"
+            style={{ left: 0, transform: "translateY(-50%)" }}
+          />
+        ) : (
+          <div
+            className={cx("absolute top-1/2 h-2.5 w-2.5 rounded-full border-2 border-white", dotClass)}
+            style={{ left: `${pct * 100}%`, transform: "translate(-50%, -50%)" }}
+          />
+        )}
       </div>
+
+      {/* band width hint */}
+      <span className="text-[8px] text-slate-400">
+        ({(max - min).toFixed(0)})
+      </span>
+
       <span className={cx("orbitron tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
         {label} {Math.round(pct * 100)}%
       </span>
