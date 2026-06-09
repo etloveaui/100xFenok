@@ -44,6 +44,15 @@ const TIERS: ReadonlyArray<Tier> = [
     icon: "fa-filter",
     accent: "text-brand-interactive",
   },
+  {
+    step: "04",
+    tier: "구루",
+    title: "13F Superinvestors",
+    desc: "버핏·클라먼·드러컨밀러 등 30개 슈퍼인베스터의 13F 보유 데이터와 컨센서스.",
+    href: "/superinvestors",
+    icon: "fa-user-tie",
+    accent: "text-violet-600",
+  },
 ];
 
 export default function ExplorePage() {
