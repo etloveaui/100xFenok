@@ -5,6 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
+import { bandPct, bandClass, bandLabel, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
 import StockDetailPanel from "./StockDetailPanel";
 
 const PAGE_SIZE = 50;
@@ -99,20 +100,32 @@ function getMomentumClass(value: number | null): string {
   return value >= 0 ? "text-emerald-600" : "text-rose-600";
 }
 
+const BADGE_CLASS_MAP: Record<string, string> = {
+  emerald: "bg-emerald-100 text-emerald-700",
+  slate: "bg-slate-100 text-slate-600",
+  rose: "bg-rose-100 text-rose-700",
+};
+
+const DOT_CLASS_MAP: Record<string, string> = {
+  emerald: "bg-emerald-500",
+  slate: "bg-slate-500",
+  rose: "bg-rose-500",
+};
+
 function PerBandBar({ current, min, avg, max }: { current: number | null; min: number | null; avg: number | null; max: number | null }) {
   if (current === null || min === null || max === null || min >= max) {
     return <span className="text-slate-300">—</span>;
   }
-  const pct = Math.min(1, Math.max(0, (current - min) / (max - min)));
-  const avgPct = avg !== null ? Math.min(1, Math.max(0, (avg - min) / (max - min))) : null;
-  const isCheap = pct <= 0.25;
-  const isRich = pct >= 0.75;
-  const label = isCheap ? "저평가" : isRich ? "고평가" : "적정";
-  const badgeClass = isCheap ? "bg-emerald-100 text-emerald-700" : isRich ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600";
-  const dotClass = isCheap ? "bg-emerald-500" : isRich ? "bg-rose-500" : "bg-slate-500";
+  const pct = bandPct(current, min, max);
+  const avgPct = avg !== null ? bandPct(avg, min, max) : null;
+  const cls = bandClass(pct);
+  const label = bandLabel(pct);
+  const badgeClass = BADGE_CLASS_MAP[cls];
+  const dotClass = DOT_CLASS_MAP[cls];
+  const title = `현재 ${current.toFixed(1)} · 평균 ${avg?.toFixed(1) ?? "—"} · 8Y ${min.toFixed(1)}~${max.toFixed(1)} · ${Math.round(pct * 100)}%`;
 
   return (
-    <div className="inline-flex items-center gap-2">
+    <div className="inline-flex items-center gap-2" title={title}>
       <div className="relative h-2 w-16 rounded-full bg-slate-200">
         {avgPct !== null && (
           <div className="absolute top-0 h-full w-px bg-slate-400" style={{ left: `${avgPct * 100}%` }} />
@@ -122,8 +135,8 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
           style={{ left: `${pct * 100}%`, transform: "translate(-50%, -50%)" }}
         />
       </div>
-      <span className={cx("rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
-        {label}
+      <span className={cx("orbitron tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
+        {label} {Math.round(pct * 100)}%
       </span>
     </div>
   );
@@ -236,10 +249,10 @@ export default function ScreenerClient() {
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
       if (bandFilter) {
         if (stock.perBandCurrent === null || stock.perBandMin === null || stock.perBandMax === null) return false;
-        const pct = (stock.perBandCurrent - stock.perBandMin) / (stock.perBandMax - stock.perBandMin);
-        if (bandFilter === "cheap" && pct > 0.25) return false;
-        if (bandFilter === "fair" && (pct <= 0.25 || pct >= 0.75)) return false;
-        if (bandFilter === "rich" && pct < 0.75) return false;
+        const pct = bandPct(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
+        if (bandFilter === "cheap" && pct > BAND_CHEAP) return false;
+        if (bandFilter === "fair" && (pct <= BAND_CHEAP || pct >= BAND_RICH)) return false;
+        if (bandFilter === "rich" && pct < BAND_RICH) return false;
       }
       return true;
     });
