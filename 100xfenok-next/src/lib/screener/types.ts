@@ -30,6 +30,10 @@ export interface ScreenerStock {
   momentum6m: number | null;
   momentum12m: number | null;
   rank: number | null;
+  perBandCurrent: number | null;
+  perBandMin: number | null;
+  perBandAvg: number | null;
+  perBandMax: number | null;
 }
 
 export type ScreenerSortKey =
@@ -51,7 +55,8 @@ export type ScreenerSortKey =
   | "momentum3m"
   | "momentum6m"
   | "momentum12m"
-  | "rank";
+  | "rank"
+  | "perBandCurrent";
 
 export type SortDir = "asc" | "desc";
 

@@ -26,6 +26,10 @@ interface RawStock {
   momentum6m?: number;
   momentum12m?: number;
   rank?: number;
+  perBandCurrent?: number;
+  perBandMin?: number;
+  perBandAvg?: number;
+  perBandMax?: number;
 }
 interface RawIndex {
   source_date?: string;
@@ -96,6 +100,10 @@ export function useScreenerData(): ScreenerDataResult {
         momentum6m: num(item.momentum6m),
         momentum12m: num(item.momentum12m),
         rank: num(item.rank),
+        perBandCurrent: num(item.perBandCurrent),
+        perBandMin: num(item.perBandMin),
+        perBandAvg: num(item.perBandAvg),
+        perBandMax: num(item.perBandMax),
       }));
 
       const sectors = Array.from(new Set(stocks.map((s) => s.sector).filter(Boolean))).sort();

@@ -36,13 +36,14 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "momentum6m", label: "6M", align: "right" },
   { key: "momentum12m", label: "12M", align: "right" },
   { key: "rank", label: "Rank", align: "right" },
+  { key: "perBandCurrent", label: "PER밴드", align: "left" },
 ];
 
 type ColumnPreset = "basic" | "value" | "momentum" | "dividend";
 
 const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
-  value: ["ticker", "name", "sector", "per", "pbr", "roe", "opm", "eps", "rank"],
+  value: ["ticker", "name", "sector", "per", "pbr", "roe", "opm", "eps", "perBandCurrent", "rank"],
   momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum6m", "momentum12m", "rank"],
   dividend: ["ticker", "name", "sector", "dividendYield", "return12m", "per", "pbr", "marketCap"],
 };
@@ -91,6 +92,36 @@ function getMomentumClass(value: number | null): string {
   return value >= 0 ? "text-emerald-600" : "text-rose-600";
 }
 
+function PerBandBar({ current, min, avg, max }: { current: number | null; min: number | null; avg: number | null; max: number | null }) {
+  if (current === null || min === null || max === null || min >= max) {
+    return <span className="text-slate-300">—</span>;
+  }
+  const pct = Math.min(1, Math.max(0, (current - min) / (max - min)));
+  const avgPct = avg !== null ? Math.min(1, Math.max(0, (avg - min) / (max - min))) : null;
+  const isCheap = pct <= 0.25;
+  const isRich = pct >= 0.75;
+  const label = isCheap ? "저평가" : isRich ? "고평가" : "적정";
+  const badgeClass = isCheap ? "bg-emerald-100 text-emerald-700" : isRich ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600";
+  const dotClass = isCheap ? "bg-emerald-500" : isRich ? "bg-rose-500" : "bg-slate-500";
+
+  return (
+    <div className="inline-flex items-center gap-2">
+      <div className="relative h-2 w-16 rounded-full bg-slate-200">
+        {avgPct !== null && (
+          <div className="absolute top-0 h-full w-px bg-slate-400" style={{ left: `${avgPct * 100}%` }} />
+        )}
+        <div
+          className={cx("absolute top-1/2 h-2.5 w-2.5 rounded-full border-2 border-white", dotClass)}
+          style={{ left: `${pct * 100}%`, transform: "translate(-50%, -50%)" }}
+        />
+      </div>
+      <span className={cx("rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
 function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode {
   switch (key) {
     case "ticker":
@@ -129,6 +160,8 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
       return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
     case "rank":
       return <span className="orbitron tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
+    case "perBandCurrent":
+      return <PerBandBar current={stock.perBandCurrent} min={stock.perBandMin} avg={stock.perBandAvg} max={stock.perBandMax} />;
     default:
       return "—";
   }
@@ -142,6 +175,7 @@ export default function ScreenerClient() {
   const [country, setCountry] = useState("");
   const [perMax, setPerMax] = useState("");
   const [profitableOnly, setProfitableOnly] = useState(false);
+  const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
   const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
@@ -180,9 +214,16 @@ export default function ScreenerClient() {
       if (country && stock.country !== country) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
+      if (bandFilter) {
+        if (stock.perBandCurrent === null || stock.perBandMin === null || stock.perBandMax === null) return false;
+        const pct = (stock.perBandCurrent - stock.perBandMin) / (stock.perBandMax - stock.perBandMin);
+        if (bandFilter === "cheap" && pct > 0.25) return false;
+        if (bandFilter === "fair" && (pct <= 0.25 || pct >= 0.75)) return false;
+        if (bandFilter === "rich" && pct < 0.75) return false;
+      }
       return true;
     });
-  }, [stocks, search, sector, country, perMax, profitableOnly]);
+  }, [stocks, search, sector, country, perMax, profitableOnly, bandFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -196,7 +237,7 @@ export default function ScreenerClient() {
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${sector}|${country}|${perMax}|${profitableOnly}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${sector}|${country}|${perMax}|${profitableOnly}|${bandFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -223,9 +264,10 @@ export default function ScreenerClient() {
     setCountry("");
     setPerMax("");
     setProfitableOnly(false);
+    setBandFilter("");
   }
 
-  const hasFilters = Boolean(search || sector || country || perMax || profitableOnly);
+  const hasFilters = Boolean(search || sector || country || perMax || profitableOnly || bandFilter);
 
   return (
     <main className="container mx-auto max-w-6xl space-y-4 overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6">
@@ -313,6 +355,19 @@ export default function ScreenerClient() {
               placeholder="예: 20"
               className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
             />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 밴드</span>
+            <select
+              value={bandFilter}
+              onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
+              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+            >
+              <option value="">전체 밴드</option>
+              <option value="cheap">저평가 (하위 25%)</option>
+              <option value="fair">적정 (중간 50%)</option>
+              <option value="rich">고평가 (상위 25%)</option>
+            </select>
           </label>
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">

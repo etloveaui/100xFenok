@@ -18,7 +18,9 @@ const PATHS = {
   stocksIndex: path.join(ROOT, "data/global-scouter/core/stocks_index.json"),
   companyMaster: path.join(ROOT, "data/global-scouter/raw/company_master_m_company.json"),
   epsConsensus: path.join(ROOT, "data/global-scouter/raw/eps_consensus_t_eps_c.json"),
+  stocksDetailDir: path.join(ROOT, "data/global-scouter/stocks/detail"),
   output: path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json"),
+  perBandsOutput: path.join(ROOT, "data/global-scouter/core/per_bands_index.json"),
 };
 
 function toFiniteNumber(value) {
@@ -91,12 +93,37 @@ for (const rec of ec.records) {
   ecMap.set(ticker, { eps });
 }
 
-/* ── 4. Merge ── */
+/* ── 4. per_bands from detail/*.json ── */
+const perBands = {}; // symbol -> { current, min, avg, max }
+
+for (const [symbol, idx] of Object.entries(index.stocks)) {
+  const current = toFiniteNumber(idx.pe);
+  if (current === undefined) continue;
+
+  let detail = null;
+  try {
+    detail = loadJson(path.join(PATHS.stocksDetailDir, `${symbol}.json`));
+  } catch {
+    // detail file missing
+  }
+
+  const band = detail?.valuation?.per_band;
+  const min = toFiniteNumber(band?.min);
+  const avg = toFiniteNumber(band?.avg);
+  const max = toFiniteNumber(band?.max);
+
+  if (min !== undefined && avg !== undefined && max !== undefined) {
+    perBands[symbol] = { current, min, avg, max };
+  }
+}
+
+/* ── 5. Merge ── */
 const merged = [];
 
 for (const [symbol, idx] of Object.entries(index.stocks)) {
   const cmRec = cmMap.get(symbol);
   const ecRec = ecMap.get(symbol);
+  const pbRec = perBands[symbol];
 
   if (!cmRec) {
     // stocks_index에 있지만 company_master에 없는 경우 skip
@@ -124,6 +151,10 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
     momentum3m: cmRec.momentum3m,
     momentum6m: cmRec.momentum6m,
     momentum12m: cmRec.momentum12m,
+    perBandCurrent: pbRec?.current,
+    perBandMin: pbRec?.min,
+    perBandAvg: pbRec?.avg,
+    perBandMax: pbRec?.max,
   });
 }
 
@@ -159,7 +190,7 @@ for (let i = 0; i < count; i++) {
   merged[i].rank = finalRanks[i];
 }
 
-/* ── 6. Output ── */
+/* ── 7. Output ── */
 const output = {
   generated_at: new Date().toISOString(),
   source_date: sourceDate,
@@ -172,7 +203,17 @@ fs.writeFileSync(PATHS.output, JSON.stringify(output, null, 2));
 
 console.log(`[build-stocks-analyzer] Written ${merged.length} stocks to ${PATHS.output}`);
 
-/* ── 7. Smoke check ── */
+/* ── 8. per_bands_index.json ── */
+const perBandsOutput = {
+  generated_at: new Date().toISOString(),
+  source_date: sourceDate,
+  count: Object.keys(perBands).length,
+  data: perBands,
+};
+fs.writeFileSync(PATHS.perBandsOutput, JSON.stringify(perBandsOutput, null, 2));
+console.log(`[build-stocks-analyzer] Written ${perBandsOutput.count} per-band records to ${PATHS.perBandsOutput}`);
+
+/* ── 9. Smoke check ── */
 const samples = ["AAPL", "NVDA", "MSFT"];
 for (const sym of samples) {
   const rec = merged.find((m) => m.symbol === sym);
