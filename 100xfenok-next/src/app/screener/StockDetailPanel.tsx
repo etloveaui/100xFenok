@@ -11,7 +11,8 @@ interface DetailData {
 
 interface F13Entry {
   investor: string;
-  quarter_added: string;
+  shares?: number;
+  weight?: number;
 }
 
 function useStockDetail(ticker: string) {
@@ -55,11 +56,17 @@ function use13FData(ticker: string) {
         return;
       }
       try {
-        const r = await fetch("/data/sec-13f/analytics/new_positions.json");
+        const r = await fetch("/data/sec-13f/by_ticker.json");
         const d = r.ok ? await r.json() : null;
-        const list = d?.by_ticker?.[ticker] ?? [];
-        F13_CACHE.set(ticker, list);
-        if (!cancelled) setEntries(list);
+        const holders = d?.[ticker]?.holder_details ?? [];
+        const seen = new Set<string>();
+        const unique = holders.filter((h: { investor: string }) => {
+          if (seen.has(h.investor)) return false;
+          seen.add(h.investor);
+          return true;
+        });
+        F13_CACHE.set(ticker, unique);
+        if (!cancelled) setEntries(unique);
       } catch {
         if (!cancelled) setEntries([]);
       }
