@@ -272,7 +272,7 @@ export default function StockDetailPanel({ ticker }: { ticker: string }) {
       {f13Entries && f13Entries.length > 0 ? (
         <div className="mt-4">
           <h4 className="mb-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
-            13F New Positions
+            13F 보유 구루
           </h4>
           <div className="flex flex-wrap gap-1.5">
             {f13Entries.map((e) => (

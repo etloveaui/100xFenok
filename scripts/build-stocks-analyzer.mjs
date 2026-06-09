@@ -14,6 +14,8 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
+const PUBLIC_MIRROR = path.join(ROOT, "100xfenok-next/public/data/global-scouter/core");
+
 const PATHS = {
   stocksIndex: path.join(ROOT, "data/global-scouter/core/stocks_index.json"),
   companyMaster: path.join(ROOT, "data/global-scouter/raw/company_master_m_company.json"),
@@ -24,6 +26,17 @@ const PATHS = {
   perBandsOutput: path.join(ROOT, "data/global-scouter/core/per_bands_index.json"),
   slickOutput: path.join(ROOT, "data/global-scouter/core/slick_index.json"),
 };
+
+function writeJson(filePath, data) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+function writeBoth(rootPath, data) {
+  writeJson(rootPath, data);
+  const mirrorPath = path.join(PUBLIC_MIRROR, path.basename(rootPath));
+  writeJson(mirrorPath, data);
+}
 
 function toFiniteNumber(value) {
   if (value === null || value === undefined) return undefined;
@@ -254,10 +267,8 @@ const output = {
   data: merged,
 };
 
-fs.mkdirSync(path.dirname(PATHS.output), { recursive: true });
-fs.writeFileSync(PATHS.output, JSON.stringify(output, null, 2));
-
-console.log(`[build-stocks-analyzer] Written ${merged.length} stocks to ${PATHS.output}`);
+writeBoth(PATHS.output, output);
+console.log(`[build-stocks-analyzer] Written ${merged.length} stocks to ${PATHS.output} + mirror`);
 
 /* ── 8. per_bands_index.json ── */
 const perBandsOutput = {
@@ -266,8 +277,8 @@ const perBandsOutput = {
   count: Object.keys(perBands).length,
   data: perBands,
 };
-fs.writeFileSync(PATHS.perBandsOutput, JSON.stringify(perBandsOutput, null, 2));
-console.log(`[build-stocks-analyzer] Written ${perBandsOutput.count} per-band records to ${PATHS.perBandsOutput}`);
+writeBoth(PATHS.perBandsOutput, perBandsOutput);
+console.log(`[build-stocks-analyzer] Written ${perBandsOutput.count} per-band records to ${PATHS.perBandsOutput} + mirror`);
 
 /* ── 9. slick_index.json ── */
 const slickIndex = {};
@@ -287,8 +298,8 @@ const slickOutput = {
   count: Object.keys(slickIndex).length,
   data: slickIndex,
 };
-fs.writeFileSync(PATHS.slickOutput, JSON.stringify(slickOutput, null, 2));
-console.log(`[build-stocks-analyzer] Written ${slickOutput.count} slick records to ${PATHS.slickOutput}`);
+writeBoth(PATHS.slickOutput, slickOutput);
+console.log(`[build-stocks-analyzer] Written ${slickOutput.count} slick records to ${PATHS.slickOutput} + mirror`);
 
 /* ── 10. Smoke check ── */
 const samples = ["AAPL", "NVDA", "MSFT"];
