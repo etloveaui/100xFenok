@@ -60,61 +60,56 @@ export class StaticStockAnalyzerDataProvider
   implements StockAnalyzerDataProvider<StockAnalyzerRecord>
 {
   readonly id = "stock-analyzer-static-json-provider";
-  readonly source =
-    "public/tools/stock_analyzer/data/M_Company.json + T_Rank.json";
+  readonly source = "data/global-scouter/core/stocks_analyzer.json";
 
+  /**
+   * CAUTION: roe, opm, growthRate, and momentum fields are stored as
+   * fractions in stocks_analyzer.json (e.g., roe=1.17 means 117%,
+   * opm=0.32 means 32%). Multiply by 100 when displaying as percentages
+   * to prevent a future 100× bug.
+   */
   async load(
     context?: StockAnalyzerDataProviderContext,
   ): Promise<StockAnalyzerRecord[]> {
-    const [companyRows, rankRows] = await Promise.all([
-      fetchDataset("/tools/stock_analyzer/data/M_Company.json", context),
-      fetchDataset("/tools/stock_analyzer/data/T_Rank.json", context),
-    ]);
+    const rows = await fetchDataset(
+      "/data/global-scouter/core/stocks_analyzer.json",
+      context,
+    );
 
-    const rankBySymbol = new Map<string, JsonRecord>();
-
-    for (const row of rankRows) {
-      const symbol = normalizeString(row.Ticker).toUpperCase();
-      if (!symbol) continue;
-      if (!rankBySymbol.has(symbol)) {
-        rankBySymbol.set(symbol, row);
-      }
-    }
-
-    const merged = companyRows
-      .map((companyRow) => {
-        const symbol = normalizeString(companyRow.Ticker).toUpperCase();
+    const parsed = rows
+      .map((row) => {
+        const symbol = normalizeString(row.symbol).toUpperCase();
         if (!symbol) return null;
-
-        const rankRow = rankBySymbol.get(symbol);
-
-        const growthRate =
-          parseNumber(rankRow?.["3 M"]) ?? parseNumber(companyRow["3 M"]);
 
         return {
           symbol,
           companyName:
-            normalizeString(companyRow.Corp) || normalizeString(rankRow?.Corp),
+            normalizeString(row.companyName) || normalizeString(row.Corp),
           sector:
-            normalizeString(companyRow.WI26) || normalizeString(rankRow?.WI26),
-          industry: normalizeString(companyRow.Exchange),
-          marketCap:
-            parseNumber(companyRow["(USD mn)"]) ??
-            parseNumber(rankRow?.["(USD mn)"]),
-          growthRate,
-          eps: parseNumber(rankRow?.["EPS (Oct-25)"]),
-          per:
-            parseNumber(companyRow["PER (Fwd)"]) ??
-            parseNumber(rankRow?.["PER (Oct-25)"]),
-          rank:
-            parseNumber(rankRow?.["PER+PBR"]) ??
-            parseNumber(rankRow?.["CCC (FY 0)"]),
+            normalizeString(row.sector) || normalizeString(row.WI26),
+          industry: normalizeString(row.industry) || normalizeString(row.Exchange),
+          marketCap: parseNumber(row.marketCap) ?? parseNumber(row["(USD mn)"]),
+          growthRate: parseNumber(row.growthRate) ?? parseNumber(row["3 M"]),
+          eps: parseNumber(row.eps) ?? parseNumber(row["EPS (Oct-25)"]),
+          per: parseNumber(row.per) ?? parseNumber(row["PER (Fwd)"]),
+          rank: parseNumber(row.rank) ?? parseNumber(row["PER+PBR"]),
+          pbr: parseNumber(row.pbr) ?? parseNumber(row["PBR (Fwd)"]),
+          roe: parseNumber(row.roe) ?? parseNumber(row["ROE (Fwd)"]),
+          opm: parseNumber(row.opm) ?? parseNumber(row["OPM (Fwd)"]),
+          momentum1m:
+            parseNumber(row.momentum1m) ?? parseNumber(row["1 M"]),
+          momentum3m:
+            parseNumber(row.momentum3m) ?? parseNumber(row["3 M"]),
+          momentum6m:
+            parseNumber(row.momentum6m) ?? parseNumber(row["6 M"]),
+          momentum12m:
+            parseNumber(row.momentum12m) ?? parseNumber(row["12 M"]),
         } satisfies StockAnalyzerRecord;
       })
       .filter((row) => row !== null)
       .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
 
-    return merged as StockAnalyzerRecord[];
+    return parsed as StockAnalyzerRecord[];
   }
 
   async getBySymbol(
