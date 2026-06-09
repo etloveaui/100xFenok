@@ -601,7 +601,7 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
         `약점노트:\n${formatWeak(yesterday.weakMisses)}`,
       ].join("\n"),
     "",
-    "[진행 규칙 - 낸부 페이싱]",
+    "[진행 규칙 - 내부 페이싱]",
     ...MONA_PACING_RULES,
     "단계 번호를 말하지 마. '이제 ②단계' 같은 말 금지. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
     "트리거 '시작/go/오늘꺼'가 오면 메뉴 설명 없이 바로 시작한다. 모나가 바꾸자고 할 때만 방향을 바꾼다.",
