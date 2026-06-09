@@ -371,3 +371,18 @@ body.design-v4 main { padding-top: 0 !important; padding-bottom: 0 !important; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* iOS PWA safe-area handling */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-area-nav {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pt-safe-nav {
+    padding-top: calc(var(--nav-height-mobile) + env(safe-area-inset-top));
+  }
+  @media (min-width: 640px) {
+    .pt-safe-nav {
+      padding-top: calc(var(--nav-height-desktop) + env(safe-area-inset-top));
+    }
+  }
+}

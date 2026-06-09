@@ -123,7 +123,7 @@ export default function RootLayout({
         <div data-v1-chrome="navbar">
           <Navbar />
         </div>
-        <main id="main-content" tabIndex={-1} className="pt-14 sm:pt-16">
+        <main id="main-content" tabIndex={-1} className="pt-safe-nav">
           {children}
         </main>
         <div data-v1-chrome="footer">
