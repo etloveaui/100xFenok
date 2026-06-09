@@ -1,12 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { bandPct, bandClass } from "@/lib/screener/bands";
 
 interface DetailData {
   years: string[];
   valuation: { per: number[] };
   income_statement: { revenue: number[] };
   per_share: { eps: number[] };
+  per_bands?: {
+    current: number;
+    min_8y: number;
+    avg_8y: number;
+    max_8y: number;
+    source: string;
+  };
+  valuation_estimates?: {
+    per?: { fy1?: number | null; fy2?: number | null; fy3?: number | null };
+  };
 }
 
 interface F13Entry {
@@ -116,34 +127,121 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-function PerMiniChart({ years, per }: { years: string[]; per: number[] }) {
+function PerBandChart({
+  years,
+  per,
+  perBands,
+  estimates,
+}: {
+  years: string[];
+  per: number[];
+  perBands?: { current: number; min_8y: number; avg_8y: number; max_8y: number };
+  estimates?: { fy1?: number | null };
+}) {
   if (!per || per.length < 2) return <span className="text-xs text-slate-300">—</span>;
-  const min = Math.min(...per);
-  const max = Math.max(...per);
-  const range = max - min || 1;
-  const w = 240;
-  const h = 80;
-  const pad = 20;
 
-  const points = per
-    .map((v, i) => {
-      const x = pad + (i / (per.length - 1)) * (w - 2 * pad);
-      const y = h - pad - ((v - min) / range) * (h - 2 * pad);
-      return `${x},${y}`;
-    })
-    .join(" ");
+  const allValues = [...per];
+  if (estimates?.fy1 !== undefined && estimates.fy1 !== null) {
+    allValues.push(estimates.fy1);
+  }
+
+  let yMin = Math.min(...allValues);
+  let yMax = Math.max(...allValues);
+  if (perBands) {
+    yMin = Math.min(yMin, perBands.min_8y);
+    yMax = Math.max(yMax, perBands.max_8y);
+  }
+  const yPad = (yMax - yMin) * 0.1 || 1;
+  yMin -= yPad;
+  yMax += yPad;
+
+  const w = 280;
+  const h = 110;
+  const padL = 44;
+  const padR = 28;
+  const padT = 10;
+  const padB = 24;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const toX = (i: number) => padL + (i / (per.length - 1)) * plotW;
+  const toY = (v: number) => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+  const points = per.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
+
+  const currentIndex = per.length - 1;
+  const currentX = toX(currentIndex);
+  const currentY = toY(per[currentIndex]);
+  const currentPct = perBands ? bandPct(perBands.current, perBands.min_8y, perBands.max_8y) : 0.5;
+  const currentCls = bandClass(currentPct);
+  const currentColor =
+    currentCls === "emerald" ? "#10b981" : currentCls === "rose" ? "#f43f5e" : "#64748b";
+
+  const hasForward = estimates?.fy1 !== undefined && estimates.fy1 !== null;
+  const forwardX = padL + plotW + 16;
+  const forwardY = hasForward ? toY(estimates.fy1!) : 0;
 
   return (
     <div>
       <svg width={w} height={h} className="overflow-visible">
+        {/* Shaded band */}
+        {perBands && (
+          <>
+            <rect
+              x={padL}
+              y={toY(perBands.max_8y)}
+              width={plotW}
+              height={toY(perBands.min_8y) - toY(perBands.max_8y)}
+              fill="#f1f5f9"
+            />
+            <rect
+              x={padL}
+              y={toY(perBands.max_8y)}
+              width={plotW}
+              height={toY(perBands.avg_8y) - toY(perBands.max_8y)}
+              fill="#fff1f2"
+            />
+            <rect
+              x={padL}
+              y={toY(perBands.avg_8y)}
+              width={plotW}
+              height={toY(perBands.min_8y) - toY(perBands.avg_8y)}
+              fill="#ecfdf5"
+            />
+          </>
+        )}
+
+        {/* Avg dashed line + label */}
+        {perBands && (
+          <>
+            <line
+              x1={padL}
+              y1={toY(perBands.avg_8y)}
+              x2={padL + plotW}
+              y2={toY(perBands.avg_8y)}
+              stroke="#64748b"
+              strokeWidth={1}
+              strokeDasharray="4,2"
+            />
+            <text
+              x={padL + plotW + 4}
+              y={toY(perBands.avg_8y) + 3}
+              className="text-[8px] font-black fill-slate-500"
+            >
+              avg {perBands.avg_8y.toFixed(1)}
+            </text>
+          </>
+        )}
+
+        {/* Grid lines */}
         {[0, 0.5, 1].map((t) => {
-          const y = h - pad - t * (h - 2 * pad);
+          const y = padT + t * plotH;
           return (
             <line
               key={t}
-              x1={pad}
+              x1={padL}
               y1={y}
-              x2={w - pad}
+              x2={padL + plotW}
               y2={y}
               stroke="#e2e8f0"
               strokeWidth={1}
@@ -151,23 +249,51 @@ function PerMiniChart({ years, per }: { years: string[]; per: number[] }) {
             />
           );
         })}
+
+        {/* PER line */}
         <polyline
           points={points}
           fill="none"
-          stroke="#3b82f6"
-          strokeWidth={2.5}
+          stroke="#1B73D3"
+          strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+
+        {/* Forward extension */}
+        {hasForward && (
+          <>
+            <line
+              x1={currentX}
+              y1={currentY}
+              x2={forwardX}
+              y2={forwardY}
+              stroke="#1B73D3"
+              strokeWidth={2}
+              strokeDasharray="4,2"
+            />
+            <circle cx={forwardX} cy={forwardY} r={3} fill="none" stroke="#1B73D3" strokeWidth={2} />
+          </>
+        )}
+
+        {/* Data points */}
         {per.map((v, i) => {
-          const x = pad + (i / (per.length - 1)) * (w - 2 * pad);
-          const y = h - pad - ((v - min) / range) * (h - 2 * pad);
+          const x = toX(i);
+          const y = toY(v);
+          const isCurrent = i === currentIndex;
           return (
             <g key={i}>
-              <circle cx={x} cy={y} r={4} fill="#3b82f6" stroke="white" strokeWidth={2} />
+              <circle
+                cx={x}
+                cy={y}
+                r={isCurrent ? 5 : 3}
+                fill={isCurrent ? currentColor : "#1B73D3"}
+                stroke="white"
+                strokeWidth={2}
+              />
               <text
                 x={x}
-                y={y - 8}
+                y={y - 10}
                 textAnchor="middle"
                 className="text-[9px] font-black fill-slate-600"
               >
@@ -176,11 +302,42 @@ function PerMiniChart({ years, per }: { years: string[]; per: number[] }) {
             </g>
           );
         })}
+
+        {/* Y-axis labels */}
+        {perBands && (
+          <>
+            <text
+              x={padL - 4}
+              y={toY(perBands.max_8y) + 3}
+              textAnchor="end"
+              className="text-[8px] font-black fill-slate-400 orbitron tabular-nums"
+            >
+              {perBands.max_8y.toFixed(0)}
+            </text>
+            <text
+              x={padL - 4}
+              y={toY(perBands.avg_8y) + 3}
+              textAnchor="end"
+              className="text-[8px] font-black fill-slate-500 orbitron tabular-nums"
+            >
+              {perBands.avg_8y.toFixed(1)}
+            </text>
+            <text
+              x={padL - 4}
+              y={toY(perBands.min_8y) + 3}
+              textAnchor="end"
+              className="text-[8px] font-black fill-slate-400 orbitron tabular-nums"
+            >
+              {perBands.min_8y.toFixed(0)}
+            </text>
+          </>
+        )}
       </svg>
-      <div className="mt-1 flex justify-between px-5 text-[10px] font-bold text-slate-400">
+      <div className="mt-1 flex justify-between px-11 text-[10px] font-bold text-slate-400">
         {years.map((y) => (
           <span key={y}>{y}</span>
         ))}
+        {hasForward && <span>FY+1</span>}
       </div>
     </div>
   );
@@ -220,13 +377,18 @@ export default function StockDetailPanel({ ticker }: { ticker: string }) {
   return (
     <div className="col-span-full border-t border-slate-100 bg-slate-50/50 p-4">
       <div className="grid gap-5 sm:grid-cols-3">
-        {/* PER Mini Chart */}
+        {/* PER Band Chart */}
         <div>
           <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
-            PER 추이
+            PER 밴드
           </h4>
           {hasPer ? (
-            <PerMiniChart years={detail.years} per={detail.valuation.per} />
+            <PerBandChart
+              years={detail.years}
+              per={detail.valuation.per}
+              perBands={detail.per_bands}
+              estimates={detail.valuation_estimates?.per}
+            />
           ) : (
             <span className="text-xs text-slate-300">—</span>
           )}
