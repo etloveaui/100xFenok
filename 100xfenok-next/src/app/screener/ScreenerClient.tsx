@@ -5,6 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
+import StockDetailPanel from "./StockDetailPanel";
 
 const PAGE_SIZE = 50;
 
@@ -197,6 +198,7 @@ export default function ScreenerClient() {
   const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
+  const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
 
   const [preset, setPreset] = useState<ColumnPreset>(() => {
     if (typeof window === "undefined") return "basic";
@@ -468,16 +470,31 @@ export default function ScreenerClient() {
             </thead>
             <tbody>
               {pageRows.map((stock) => (
-                <tr key={stock.ticker} className="border-b border-slate-100 transition last:border-0 hover:bg-slate-50">
-                  {activeColumns.map((column) => (
-                    <td
-                      key={column.key}
-                      className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
-                    >
-                      {renderCell(stock, column.key)}
-                    </td>
-                  ))}
-                </tr>
+                <>
+                  <tr
+                    key={stock.ticker}
+                    onClick={() =>
+                      setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
+                    }
+                    className="cursor-pointer border-b border-slate-100 transition last:border-0 hover:bg-slate-50"
+                  >
+                    {activeColumns.map((column) => (
+                      <td
+                        key={column.key}
+                        className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
+                      >
+                        {renderCell(stock, column.key)}
+                      </td>
+                    ))}
+                  </tr>
+                  {expandedTicker === stock.ticker ? (
+                    <tr key={`${stock.ticker}-detail`}>
+                      <td colSpan={activeColumns.length} className="p-0">
+                        <StockDetailPanel ticker={stock.ticker} />
+                      </td>
+                    </tr>
+                  ) : null}
+                </>
               ))}
               {dataReady && pageRows.length === 0 ? (
                 <tr>
