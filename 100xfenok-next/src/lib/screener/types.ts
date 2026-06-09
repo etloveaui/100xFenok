@@ -34,6 +34,12 @@ export interface ScreenerStock {
   perBandMin: number | null;
   perBandAvg: number | null;
   perBandMax: number | null;
+  peForward: number | null;
+  epsForward: number | null;
+  dividendTtm: number | null;
+  ret1y: number | null;
+  ret3y: number | null;
+  ret5y: number | null;
 }
 
 export type ScreenerSortKey =
@@ -56,7 +62,13 @@ export type ScreenerSortKey =
   | "momentum6m"
   | "momentum12m"
   | "rank"
-  | "perBandCurrent";
+  | "perBandCurrent"
+  | "peForward"
+  | "epsForward"
+  | "dividendTtm"
+  | "ret1y"
+  | "ret3y"
+  | "ret5y";
 
 export type SortDir = "asc" | "desc";
 

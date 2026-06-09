@@ -37,15 +37,21 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "momentum12m", label: "12M", align: "right" },
   { key: "rank", label: "Rank", align: "right" },
   { key: "perBandCurrent", label: "PER밴드", align: "left" },
+  { key: "peForward", label: "Fwd PER", align: "right" },
+  { key: "epsForward", label: "Fwd EPS", align: "right" },
+  { key: "dividendTtm", label: "Div TTM", align: "right" },
+  { key: "ret1y", label: "1Y", align: "right" },
+  { key: "ret3y", label: "3Y", align: "right" },
+  { key: "ret5y", label: "5Y", align: "right" },
 ];
 
 type ColumnPreset = "basic" | "value" | "momentum" | "dividend";
 
 const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
-  value: ["ticker", "name", "sector", "per", "pbr", "roe", "opm", "eps", "perBandCurrent", "rank"],
+  value: ["ticker", "name", "sector", "per", "peForward", "pbr", "roe", "opm", "eps", "perBandCurrent", "rank"],
   momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum6m", "momentum12m", "rank"],
-  dividend: ["ticker", "name", "sector", "dividendYield", "return12m", "per", "pbr", "marketCap"],
+  dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
 };
 
 const PRESET_LABEL: Record<ColumnPreset, string> = {
@@ -162,6 +168,18 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
       return <span className="orbitron tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
     case "perBandCurrent":
       return <PerBandBar current={stock.perBandCurrent} min={stock.perBandMin} avg={stock.perBandAvg} max={stock.perBandMax} />;
+    case "peForward":
+      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.peForward, 1)}</span>;
+    case "epsForward":
+      return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock.epsForward)}</span>;
+    case "dividendTtm":
+      return <span className="orbitron tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
+    case "ret1y":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret1y))}>{fmtSignedPct(stock.ret1y)}</span>;
+    case "ret3y":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret3y))}>{fmtSignedPct(stock.ret3y)}</span>;
+    case "ret5y":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret5y))}>{fmtSignedPct(stock.ret5y)}</span>;
     default:
       return "—";
   }

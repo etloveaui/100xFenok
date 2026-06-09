@@ -19,8 +19,10 @@ const PATHS = {
   companyMaster: path.join(ROOT, "data/global-scouter/raw/company_master_m_company.json"),
   epsConsensus: path.join(ROOT, "data/global-scouter/raw/eps_consensus_t_eps_c.json"),
   stocksDetailDir: path.join(ROOT, "data/global-scouter/stocks/detail"),
+  slickchartsDir: path.join(ROOT, "data/slickcharts/stocks"),
   output: path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json"),
   perBandsOutput: path.join(ROOT, "data/global-scouter/core/per_bands_index.json"),
+  slickOutput: path.join(ROOT, "data/global-scouter/core/slick_index.json"),
 };
 
 function toFiniteNumber(value) {
@@ -115,6 +117,55 @@ for (const [symbol] of Object.entries(index.stocks)) {
   }
 }
 
+/* ── 4.5 slickcharts (forward PE, dividend, returns) ── */
+const slickMap = new Map();
+
+for (const [symbol] of Object.entries(index.stocks)) {
+  let slick = null;
+  try {
+    slick = loadJson(path.join(PATHS.slickchartsDir, `${symbol}.json`));
+  } catch {
+    // slickcharts file missing (non-US or not in universe)
+  }
+
+  if (!slick?.current) continue;
+
+  const peForward = toFiniteNumber(slick.current.pe_forward);
+  const epsForward = toFiniteNumber(slick.current.eps_forward);
+  const dividendTtm = toFiniteNumber(slick.current.dividend_ttm);
+
+  // Returns: 1Y = 2025, 3Y = cumulative 2023-2025, 5Y = cumulative 2021-2025
+  let ret1y, ret3y, ret5y;
+  const returns = slick.returns;
+  if (Array.isArray(returns)) {
+    const byYear = new Map(returns.map((r) => [r.year, r.return]));
+
+    const r25 = byYear.get(2025);
+    if (r25 !== undefined) ret1y = r25 / 100;
+
+    const r23 = byYear.get(2023);
+    const r24 = byYear.get(2024);
+    if (r23 !== undefined && r24 !== undefined && r25 !== undefined) {
+      ret3y = (1 + r23 / 100) * (1 + r24 / 100) * (1 + r25 / 100) - 1;
+    }
+
+    const years5 = [2021, 2022, 2023, 2024, 2025];
+    const vals5 = years5.map((y) => byYear.get(y)).filter((v) => v !== undefined);
+    if (vals5.length === 5) {
+      ret5y = vals5.reduce((acc, v) => acc * (1 + v / 100), 1) - 1;
+    }
+  }
+
+  slickMap.set(symbol, {
+    peForward,
+    epsForward,
+    dividendTtm,
+    ret1y,
+    ret3y,
+    ret5y,
+  });
+}
+
 /* ── 5. Merge ── */
 const merged = [];
 
@@ -122,6 +173,7 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
   const cmRec = cmMap.get(symbol);
   const ecRec = ecMap.get(symbol);
   const pbRec = perBands[symbol];
+  const slickRec = slickMap.get(symbol);
 
   if (!cmRec) {
     // stocks_index에 있지만 company_master에 없는 경우 skip
@@ -153,6 +205,12 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
     perBandMin: pbRec?.min,
     perBandAvg: pbRec?.avg,
     perBandMax: pbRec?.max,
+    peForward: slickRec?.peForward,
+    epsForward: slickRec?.epsForward,
+    dividendTtm: slickRec?.dividendTtm,
+    ret1y: slickRec?.ret1y,
+    ret3y: slickRec?.ret3y,
+    ret5y: slickRec?.ret5y,
   });
 }
 
@@ -211,13 +269,34 @@ const perBandsOutput = {
 fs.writeFileSync(PATHS.perBandsOutput, JSON.stringify(perBandsOutput, null, 2));
 console.log(`[build-stocks-analyzer] Written ${perBandsOutput.count} per-band records to ${PATHS.perBandsOutput}`);
 
-/* ── 9. Smoke check ── */
+/* ── 9. slick_index.json ── */
+const slickIndex = {};
+for (const [symbol, rec] of slickMap) {
+  slickIndex[symbol] = {
+    peForward: rec.peForward,
+    epsForward: rec.epsForward,
+    dividendTtm: rec.dividendTtm,
+    ret1y: rec.ret1y,
+    ret3y: rec.ret3y,
+    ret5y: rec.ret5y,
+  };
+}
+const slickOutput = {
+  generated_at: new Date().toISOString(),
+  source_date: sourceDate,
+  count: Object.keys(slickIndex).length,
+  data: slickIndex,
+};
+fs.writeFileSync(PATHS.slickOutput, JSON.stringify(slickOutput, null, 2));
+console.log(`[build-stocks-analyzer] Written ${slickOutput.count} slick records to ${PATHS.slickOutput}`);
+
+/* ── 10. Smoke check ── */
 const samples = ["AAPL", "NVDA", "MSFT"];
 for (const sym of samples) {
   const rec = merged.find((m) => m.symbol === sym);
   if (rec) {
     console.log(
-      `  ${sym}: mc=${rec.marketCap?.toLocaleString()}, per=${rec.per?.toFixed(2)}, pbr=${rec.pbr?.toFixed(2)}, eps=${rec.eps?.toFixed(2)}, roe=${rec.roe?.toFixed(2)}, opm=${rec.opm?.toFixed(2)}, 3M=${rec.growthRate?.toFixed(3)}, rank=${rec.rank}`
+      `  ${sym}: mc=${rec.marketCap?.toLocaleString()}, per=${rec.per?.toFixed(2)}, pbr=${rec.pbr?.toFixed(2)}, eps=${rec.eps?.toFixed(2)}, roe=${rec.roe?.toFixed(2)}, opm=${rec.opm?.toFixed(2)}, 3M=${rec.growthRate?.toFixed(3)}, rank=${rec.rank}, fwdPE=${rec.peForward?.toFixed(2)}, divTTM=${rec.dividendTtm?.toFixed(2)}, ret1Y=${rec.ret1y?.toFixed(3)}`
     );
   } else {
     console.log(`  ${sym}: NOT FOUND`);

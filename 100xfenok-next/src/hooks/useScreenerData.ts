@@ -30,6 +30,12 @@ interface RawStock {
   perBandMin?: number;
   perBandAvg?: number;
   perBandMax?: number;
+  peForward?: number;
+  epsForward?: number;
+  dividendTtm?: number;
+  ret1y?: number;
+  ret3y?: number;
+  ret5y?: number;
 }
 interface RawIndex {
   source_date?: string;
@@ -104,6 +110,12 @@ export function useScreenerData(): ScreenerDataResult {
         perBandMin: num(item.perBandMin),
         perBandAvg: num(item.perBandAvg),
         perBandMax: num(item.perBandMax),
+        peForward: num(item.peForward),
+        epsForward: num(item.epsForward),
+        dividendTtm: num(item.dividendTtm),
+        ret1y: num(item.ret1y),
+        ret3y: num(item.ret3y),
+        ret5y: num(item.ret5y),
       }));
 
       const sectors = Array.from(new Set(stocks.map((s) => s.sector).filter(Boolean))).sort();
