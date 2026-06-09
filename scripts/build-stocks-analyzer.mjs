@@ -96,10 +96,7 @@ for (const rec of ec.records) {
 /* ── 4. per_bands from detail/*.json ── */
 const perBands = {}; // symbol -> { current, min, avg, max }
 
-for (const [symbol, idx] of Object.entries(index.stocks)) {
-  const current = toFiniteNumber(idx.pe);
-  if (current === undefined) continue;
-
+for (const [symbol] of Object.entries(index.stocks)) {
   let detail = null;
   try {
     detail = loadJson(path.join(PATHS.stocksDetailDir, `${symbol}.json`));
@@ -107,12 +104,13 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
     // detail file missing
   }
 
-  const band = detail?.valuation?.per_band;
-  const min = toFiniteNumber(band?.min);
-  const avg = toFiniteNumber(band?.avg);
-  const max = toFiniteNumber(band?.max);
+  const pb = detail?.per_bands;
+  const current = toFiniteNumber(pb?.current);
+  const min = toFiniteNumber(pb?.min_8y);
+  const avg = toFiniteNumber(pb?.avg_8y);
+  const max = toFiniteNumber(pb?.max_8y);
 
-  if (min !== undefined && avg !== undefined && max !== undefined) {
+  if (current !== undefined && min !== undefined && avg !== undefined && max !== undefined) {
     perBands[symbol] = { current, min, avg, max };
   }
 }
