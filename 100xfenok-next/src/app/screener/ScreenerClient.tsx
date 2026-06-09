@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useScreenerData } from "@/hooks/useScreenerData";
-import type { ScreenerSortKey, SortDir } from "@/lib/screener/types";
+import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 
 const PAGE_SIZE = 50;
@@ -28,7 +28,31 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "pbr", label: "PBR", align: "right" },
   { key: "dividendYield", label: "배당", align: "right" },
   { key: "return12m", label: "12M", align: "right" },
+  { key: "roe", label: "ROE", align: "right" },
+  { key: "opm", label: "OPM", align: "right" },
+  { key: "eps", label: "EPS", align: "right" },
+  { key: "growthRate", label: "3M", align: "right" },
+  { key: "momentum1m", label: "1M", align: "right" },
+  { key: "momentum6m", label: "6M", align: "right" },
+  { key: "momentum12m", label: "12M", align: "right" },
+  { key: "rank", label: "Rank", align: "right" },
 ];
+
+type ColumnPreset = "basic" | "value" | "momentum" | "dividend";
+
+const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
+  basic: ["ticker", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
+  value: ["ticker", "name", "sector", "per", "pbr", "roe", "opm", "eps", "rank"],
+  momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum6m", "momentum12m", "rank"],
+  dividend: ["ticker", "name", "sector", "dividendYield", "return12m", "per", "pbr", "marketCap"],
+};
+
+const PRESET_LABEL: Record<ColumnPreset, string> = {
+  basic: "기본",
+  value: "밸류",
+  momentum: "모멘텀",
+  dividend: "배당",
+};
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -47,8 +71,67 @@ function fmtSignedPct(value: number | null): string {
   return value === null ? "—" : formatSignedPercentDecimal(value, 1);
 }
 function fmtYield(value: number | null): string {
-  // dy is a fraction (0.025 = 2.5%); formatPercent does not multiply, so scale here.
   return value === null ? "—" : formatPercent(value * 100, 2);
+}
+function fmtRoe(value: number | null): string {
+  return value === null ? "—" : formatPercent(value * 100, 1);
+}
+function fmtOpm(value: number | null): string {
+  return value === null ? "—" : formatPercent(value * 100, 1);
+}
+function fmtEps(value: number | null): string {
+  return value === null ? "—" : value.toFixed(2);
+}
+function fmtRank(value: number | null): string {
+  return value === null ? "—" : value.toLocaleString();
+}
+
+function getMomentumClass(value: number | null): string {
+  if (value === null) return "text-slate-300";
+  return value >= 0 ? "text-emerald-600" : "text-rose-600";
+}
+
+function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode {
+  switch (key) {
+    case "ticker":
+      return <span className="text-sm font-black text-slate-950">{stock.ticker}</span>;
+    case "name":
+      return <span className="block max-w-[180px] truncate text-sm font-semibold text-slate-700">{stock.name}</span>;
+    case "sector":
+      return <span className="text-xs font-bold text-slate-500">{stock.sector || "—"}</span>;
+    case "country":
+      return <span className="text-xs font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</span>;
+    case "price":
+      return <span className="orbitron tabular-nums text-slate-900">{stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}</span>;
+    case "marketCap":
+      return <span className="orbitron tabular-nums text-slate-700">{fmtMarketCap(stock.marketCap)}</span>;
+    case "per":
+      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.per, 1)}</span>;
+    case "pbr":
+      return <span className="orbitron tabular-nums text-slate-700">{fmtNum(stock.pbr, 2)}</span>;
+    case "dividendYield":
+      return <span className="orbitron tabular-nums text-slate-600">{fmtYield(stock.dividendYield)}</span>;
+    case "return12m":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.return12m))}>{fmtSignedPct(stock.return12m)}</span>;
+    case "roe":
+      return <span className="orbitron tabular-nums text-slate-900">{fmtRoe(stock.roe)}</span>;
+    case "opm":
+      return <span className="orbitron tabular-nums text-slate-700">{fmtOpm(stock.opm)}</span>;
+    case "eps":
+      return <span className="orbitron tabular-nums text-slate-900">{fmtEps(stock.eps)}</span>;
+    case "growthRate":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.growthRate))}>{fmtSignedPct(stock.growthRate)}</span>;
+    case "momentum1m":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum1m))}>{fmtSignedPct(stock.momentum1m)}</span>;
+    case "momentum6m":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum6m))}>{fmtSignedPct(stock.momentum6m)}</span>;
+    case "momentum12m":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
+    case "rank":
+      return <span className="orbitron tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
+    default:
+      return "—";
+  }
 }
 
 export default function ScreenerClient() {
@@ -63,6 +146,28 @@ export default function ScreenerClient() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
 
+  const [preset, setPreset] = useState<ColumnPreset>(() => {
+    if (typeof window === "undefined") return "basic";
+    const saved = localStorage.getItem("screener-preset") as ColumnPreset | null;
+    return saved && PRESET_KEYS[saved] ? saved : "basic";
+  });
+
+  const activeColumns = useMemo(() => {
+    const keys = new Set(PRESET_KEYS[preset]);
+    return COLUMNS.filter((c) => keys.has(c.key));
+  }, [preset]);
+
+  function handlePresetChange(next: ColumnPreset) {
+    setPreset(next);
+    localStorage.setItem("screener-preset", next);
+    // Reset sort to a column that exists in the new preset
+    const validKeys = PRESET_KEYS[next];
+    if (!validKeys.includes(sortKey)) {
+      setSortKey("marketCap");
+      setSortDir("desc");
+    }
+  }
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     const perMaxValue = perMax.trim() === "" ? null : Number(perMax);
@@ -74,7 +179,6 @@ export default function ScreenerClient() {
       if (sector && stock.sector !== sector) return false;
       if (country && stock.country !== country) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
-      // PER max filter: exclude null AND non-positive PER so "PER ≤ N" never shows loss-makers (e.g. -150).
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
       return true;
     });
@@ -85,15 +189,14 @@ export default function ScreenerClient() {
     return [...filtered].sort((a, b) => {
       const av = a[sortKey];
       const bv = b[sortKey];
-      if (av === null || av === undefined) return 1; // nulls always last
+      if (av === null || av === undefined) return 1;
       if (bv === null || bv === undefined) return -1;
       if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * dir;
       return ((av as number) - (bv as number)) * dir;
     });
   }, [filtered, sortKey, sortDir]);
 
-  // Reset to first page when filters/sort change — store-previous-render pattern (React docs).
-  const stateKey = `${search}|${sector}|${country}|${perMax}|${profitableOnly}|${sortKey}|${sortDir}`;
+  const stateKey = `${search}|${sector}|${country}|${perMax}|${profitableOnly}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -239,13 +342,33 @@ export default function ScreenerClient() {
         </div>
       </section>
 
+      {/* Preset selector */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">뷰</span>
+        {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => handlePresetChange(p)}
+            className={cx(
+              "inline-flex min-h-7 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition",
+              preset === p
+                ? "border border-brand-interactive bg-brand-interactive/10 text-brand-interactive"
+                : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900",
+            )}
+          >
+            {PRESET_LABEL[p]}
+          </button>
+        ))}
+      </div>
+
       {/* Table */}
       <section className={cx("rounded-[1.5rem] border border-slate-200 bg-white p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
         <div className="-mx-1 overflow-x-auto px-1">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
-                {COLUMNS.map((column) => {
+                {activeColumns.map((column) => {
                   const active = column.key === sortKey;
                   return (
                     <th
@@ -273,32 +396,19 @@ export default function ScreenerClient() {
             <tbody>
               {pageRows.map((stock) => (
                 <tr key={stock.ticker} className="border-b border-slate-100 transition last:border-0 hover:bg-slate-50">
-                  <td className="px-2 py-2 text-left">
-                    <span className="text-sm font-black text-slate-950">{stock.ticker}</span>
-                  </td>
-                  <td className="px-2 py-2 text-left">
-                    <span className="block max-w-[180px] truncate text-sm font-semibold text-slate-700">{stock.name}</span>
-                  </td>
-                  <td className="px-2 py-2 text-left text-xs font-bold text-slate-500">{stock.sector || "—"}</td>
-                  <td className="px-2 py-2 text-left text-xs font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</td>
-                  <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-900">{stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}</td>
-                  <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">{fmtMarketCap(stock.marketCap)}</td>
-                  <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-900">{fmtNum(stock.per, 1)}</td>
-                  <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">{fmtNum(stock.pbr, 2)}</td>
-                  <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-600">{fmtYield(stock.dividendYield)}</td>
-                  <td
-                    className={cx(
-                      "orbitron px-2 py-2 text-right font-black tabular-nums",
-                      stock.return12m === null ? "text-slate-300" : stock.return12m >= 0 ? "text-emerald-600" : "text-rose-600",
-                    )}
-                  >
-                    {fmtSignedPct(stock.return12m)}
-                  </td>
+                  {activeColumns.map((column) => (
+                    <td
+                      key={column.key}
+                      className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
+                    >
+                      {renderCell(stock, column.key)}
+                    </td>
+                  ))}
                 </tr>
               ))}
               {dataReady && pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="px-2 py-10 text-center text-sm font-semibold text-slate-500">
+                  <td colSpan={activeColumns.length} className="px-2 py-10 text-center text-sm font-semibold text-slate-500">
                     조건에 맞는 종목이 없습니다.
                   </td>
                 </tr>

@@ -1,14 +1,12 @@
 /**
  * Stock screener types (/screener).
  *
- * Source: `/data/global-scouter/core/stocks_index.json` .stocks (1,066 tickers,
- * single 287KB fetch — no per-ticker files needed for the list view).
+ * Source: `/data/global-scouter/core/stocks_analyzer.json` .data (1,066 tickers,
+ * single fetch — enriched with ROE/OPM/EPS/momentum/rank from F-2).
  *
- * Raw item shape (compact keys):
- *   n  = name        x  = exchange    s  = sector (Korean GICS-like label)
- *   c  = country     p  = price       mc = market cap (USD mn)
- *   pe = PER         pb = PBR         dy = dividend yield (fraction)
- *   r12 = trailing 12-month return (fraction)
+ * CAUTION: roe, opm, growthRate, and momentum fields are stored as fractions
+ * (e.g., roe=1.17 means 117%, opm=0.32 means 32%). Multiply by 100 when
+ * displaying as percentages.
  */
 
 export interface ScreenerStock {
@@ -23,6 +21,15 @@ export interface ScreenerStock {
   pbr: number | null;
   dividendYield: number | null;
   return12m: number | null;
+  roe: number | null;
+  opm: number | null;
+  eps: number | null;
+  growthRate: number | null;
+  momentum1m: number | null;
+  momentum3m: number | null;
+  momentum6m: number | null;
+  momentum12m: number | null;
+  rank: number | null;
 }
 
 export type ScreenerSortKey =
@@ -35,7 +42,16 @@ export type ScreenerSortKey =
   | "per"
   | "pbr"
   | "dividendYield"
-  | "return12m";
+  | "return12m"
+  | "roe"
+  | "opm"
+  | "eps"
+  | "growthRate"
+  | "momentum1m"
+  | "momentum3m"
+  | "momentum6m"
+  | "momentum12m"
+  | "rank";
 
 export type SortDir = "asc" | "desc";
 
@@ -43,7 +59,7 @@ export interface ScreenerDataResult {
   stocks: ScreenerStock[];
   dataReady: boolean;
   failed: boolean;
-  /** stocks_index source_date (data freshness), or null. */
+  /** stocks_analyzer source_date (data freshness), or null. */
   sourceDate: string | null;
   /** Distinct sector labels for the filter dropdown (sorted). */
   sectors: string[];

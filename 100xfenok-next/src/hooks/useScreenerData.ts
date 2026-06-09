@@ -3,23 +3,33 @@
 import { useEffect, useRef, useState } from "react";
 import type { ScreenerStock, ScreenerDataResult } from "@/lib/screener/types";
 
-const FETCH_TIMEOUT_MS = 4000; // 287KB single payload
+const FETCH_TIMEOUT_MS = 4000; // single payload
 
 interface RawStock {
-  n?: string;
-  x?: string;
-  s?: string;
-  c?: string;
-  p?: number;
-  mc?: number;
-  pe?: number;
-  pb?: number;
-  dy?: number;
-  r12?: number;
+  symbol?: string;
+  companyName?: string;
+  sector?: string;
+  industry?: string;
+  country?: string;
+  price?: number;
+  marketCap?: number;
+  per?: number;
+  pbr?: number;
+  dividendYield?: number;
+  return12m?: number;
+  roe?: number;
+  opm?: number;
+  eps?: number;
+  growthRate?: number;
+  momentum1m?: number;
+  momentum3m?: number;
+  momentum6m?: number;
+  momentum12m?: number;
+  rank?: number;
 }
 interface RawIndex {
   source_date?: string;
-  stocks?: Record<string, RawStock | undefined>;
+  data?: RawStock[];
 }
 
 async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
@@ -57,26 +67,35 @@ export function useScreenerData(): ScreenerDataResult {
     isMountedRef.current = true;
 
     void (async () => {
-      const raw = await fetchJson<RawIndex>("/data/global-scouter/core/stocks_index.json");
+      const raw = await fetchJson<RawIndex>("/data/global-scouter/core/stocks_analyzer.json");
       if (!isMountedRef.current) return;
 
-      if (!raw?.stocks) {
+      if (!raw?.data || !Array.isArray(raw.data)) {
         setResult({ ...EMPTY, failed: true });
         return;
       }
 
-      const stocks: ScreenerStock[] = Object.entries(raw.stocks).map(([ticker, item]) => ({
-        ticker,
-        name: item?.n ?? ticker,
-        exchange: item?.x ?? "",
-        sector: item?.s ?? "",
-        country: item?.c ?? "",
-        price: num(item?.p),
-        marketCap: num(item?.mc),
-        per: num(item?.pe),
-        pbr: num(item?.pb),
-        dividendYield: num(item?.dy),
-        return12m: num(item?.r12),
+      const stocks: ScreenerStock[] = raw.data.map((item) => ({
+        ticker: item.symbol ?? "",
+        name: item.companyName ?? item.symbol ?? "",
+        exchange: item.industry ?? "",
+        sector: item.sector ?? "",
+        country: item.country ?? "",
+        price: num(item.price),
+        marketCap: num(item.marketCap),
+        per: num(item.per),
+        pbr: num(item.pbr),
+        dividendYield: num(item.dividendYield),
+        return12m: num(item.return12m),
+        roe: num(item.roe),
+        opm: num(item.opm),
+        eps: num(item.eps),
+        growthRate: num(item.growthRate),
+        momentum1m: num(item.momentum1m),
+        momentum3m: num(item.momentum3m),
+        momentum6m: num(item.momentum6m),
+        momentum12m: num(item.momentum12m),
+        rank: num(item.rank),
       }));
 
       const sectors = Array.from(new Set(stocks.map((s) => s.sector).filter(Boolean))).sort();
