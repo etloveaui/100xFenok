@@ -39,7 +39,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/global-scouter/core/stocks_analyzer.json
+          git add \
+            data/global-scouter/core/stocks_analyzer.json \
+            data/global-scouter/core/per_bands_index.json \
+            data/global-scouter/core/slick_index.json \
+            100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json \
+            100xfenok-next/public/data/global-scouter/core/per_bands_index.json \
+            100xfenok-next/public/data/global-scouter/core/slick_index.json
           git diff --staged --quiet || git commit -m "data: refresh stocks_analyzer.json"
           git pull --rebase origin main
           git push
