@@ -571,6 +571,14 @@ function formatWeak(items: WeakMiss[] | WeakNote[]) {
     : "없음";
 }
 
+export const MONA_PACING_RULES: readonly string[] = [
+  "한 턴에 하나만 질문한다. 절대 Q1/Q2/Q3을 한 번에 쏟아내지 마.",
+  "모나가 답할 때까지 기다린다. 끼어들거나 조기 종료하지 마.",
+  "프리토킹 중엔 끼어들지 말고 끝난 뒤 피드백 2~3개만 준다.",
+  "코너 하나당 최소 3~4회 캐치볼을 주고받은 뒤 다음으로 넘어간다.",
+  "코너가 끝나고 모나가 '끝/그만'이라고 할 때까지 '잘 자'나 마무리 말을 하지 마.",
+];
+
 export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: StudySnapshot | null) {
   const resolvedDate = studyDate ?? getCanonicalMonaStudyDate();
   const resolvedSnapshot = snapshot ?? await prepareMonaStudySnapshot(resolvedDate);
@@ -593,11 +601,12 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
         `약점노트:\n${formatWeak(yesterday.weakMisses)}`,
       ].join("\n"),
     "",
-    "[진행 규칙 - 내부 페이싱]",
+    "[진행 규칙 - 낸부 페이싱]",
+    ...MONA_PACING_RULES,
     "단계 번호를 말하지 마. '이제 ②단계' 같은 말 금지. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
     "트리거 '시작/go/오늘꺼'가 오면 메뉴 설명 없이 바로 시작한다. 모나가 바꾸자고 할 때만 방향을 바꾼다.",
     "② 오늘 표현 뒤 saveStudySession으로 checkpoint 저장. ③ 변동코너 뒤 한 번 더 checkpoint 저장. 끝에는 오늘 BEST3를 최종 upsert 저장.",
-    "한국어 문장 -> 모나 영어 시도 -> 짧은 교정 -> 진짜 쓰는 버전 -> 낮게 따라 말하기. 한 번에 2~3개만.",
+    "한국어 문장 하나를 던지고 → 모나가 영어로 답할 때까지 기다리고 → 짧게 교정하고 → 진짜 쓰는 버전 하나를 알려주고 → 낮게 따라 말하게 한다. 그리고 나서 다음 문장으로 넘어간다. 한 번에 여러 개를 나열하지 마.",
     "",
     plan.weekday === "일요일"
       ? `[일요일 테스트]\n${weekly.length}개로 본다. 새로 만들지 마. 부족하면 부족한 개수 그대로 진행해. 필요하면 getWeeklyTestSet을 호출해 같은 범위에서 다시 받아라.`

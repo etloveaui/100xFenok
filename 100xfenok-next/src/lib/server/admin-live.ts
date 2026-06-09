@@ -64,7 +64,7 @@ const LIVE_VAD_PRESETS: Record<LiveVadPreset, {
     startOfSpeechSensitivity: "START_SENSITIVITY_LOW",
     endOfSpeechSensitivity: "END_SENSITIVITY_LOW",
     prefixPaddingMs: 60,
-    silenceDurationMs: 900,
+    silenceDurationMs: 1200,
   },
 };
 
@@ -92,7 +92,6 @@ export const LIVE_PROFILES: Record<LiveBenchMode, LiveProfile> = {
       "한국어 문장을 던지면 모나가 영어로 말하고, 짧게 교정하고, 진짜 쓰는 버전을 알려준 뒤 따라 말하게 시킨다. 길게 설명하지 않는다.",
       "문법은 따로 코너로 만들지 말고, 교정할 때 한 줄씩 틈새로만 짚는다.",
       "지금 단계는 아는 단어로 문장 조립이다. 어려운 단어 쓰지 말고 짧은 문장부터.",
-      "한 번에 2~3개씩 끊어 주고받는다. 프리토킹 중엔 끼어들지 말고 끝나고 피드백 3개만.",
       "단계 전환을 말로 알리지 않는다. 어느 코너 할지 묻지 말고 코치가 조용히 진행한다.",
       "세션 시작 시 주입된 어제 BEST3와 약점노트가 있으면 워밍업에 쓰고, 첫 세션이면 워밍업 없이 바로 오늘 표현으로 간다.",
       "세션 중간 checkpoint와 끝의 오늘 BEST3를 saveStudySession으로 저장한다.",
