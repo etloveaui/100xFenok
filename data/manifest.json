@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-06-08",
+  "last_updated": "2026-06-09",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -87,12 +87,12 @@
     },
     "yardney": {
       "version": "1.0.0",
-      "updated": "2026-05-04",
+      "updated": "2026-06-09",
       "update_frequency": "weekly",
       "source": "Yardeni model workbook",
       "file_count": 1,
       "schema": false,
-      "description": "Moody's corporate spread to Bond PER to S&P 500 fair value model - 1,867 records through 2026-05-01."
+      "description": "Moody's corporate spread to Bond PER to S&P 500 fair value model - 1,872 records through 2026-06-05."
     },
     "computed": {
       "version": "1.0.0",
@@ -114,6 +114,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-06-09",
+      "folder": "yardney",
+      "version": "1.0.0",
+      "change": "Weekly append from Yardeni model workbook: 5 records added, total 1,872 records, date range 1990-02-02 ~ 2026-06-05, latest fair value 6,284.32 and premium +17.49%; 18 historical source revisions detected and existing values preserved.",
+      "breaking": false
+    },
     {
       "date": "2026-06-08",
       "folder": "benchmarks",
@@ -593,8 +600,8 @@
       "path": "/data/yardney/",
       "schemaVersion": "1.0.0",
       "fileCount": 1,
-      "lastUpdated": "2026-05-04",
-      "notes": "Moody's corporate spread to Bond PER to S&P 500 fair value model - 1,867 records through 2026-05-01."
+      "lastUpdated": "2026-06-09",
+      "notes": "Moody's corporate spread to Bond PER to S&P 500 fair value model - 1,872 records through 2026-06-05."
     }
   ]
 }
