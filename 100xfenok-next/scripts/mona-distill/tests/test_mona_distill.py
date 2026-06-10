@@ -214,6 +214,21 @@ class ChainProviderTests(unittest.TestCase):
             curriculum = read_json(root / "curriculum-live.json")
             self.assertTrue(curriculum["next_focus"])
 
+    def test_bank_gate_filters_and_dedupes(self) -> None:
+        from bank_refresh import gate_entry, parse_entries
+
+        seen: set[str] = set()
+        ok = gate_entry({"ko": "막혔어", "en": "I was stuck.", "theme": "selftalk-emotion", "register": "casual"}, "vid1", seen)
+        self.assertIsNotNone(ok)
+        self.assertIsNone(gate_entry({"ko": "막혔어", "en": "I WAS  stuck.", "theme": "free"}, "vid1", seen))  # dedupe
+        self.assertIsNone(gate_entry({"ko": "no hangul", "en": "I was late.", "theme": "free"}, "vid1", seen))
+        self.assertIsNone(gate_entry({"ko": "긴 문장", "en": "one two three four five six seven eight nine ten eleven twelve thirteen", "theme": "free"}, "vid1", seen))
+        bad_theme = gate_entry({"ko": "연락할게", "en": "I'll be in touch.", "theme": "weird"}, "vid1", seen)
+        self.assertEqual(bad_theme["theme"], "free")
+        entries = parse_entries('```json\n[{"ko":"늦었어","en":"I am running late.","theme":"free"}]\n```', "vid2", seen)
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(parse_entries("not json", "vid3", seen), [])
+
     def test_canonical_study_date_cutoff(self) -> None:
         from datetime import datetime
         from zoneinfo import ZoneInfo

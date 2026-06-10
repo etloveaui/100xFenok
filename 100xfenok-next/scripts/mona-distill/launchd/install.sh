@@ -15,16 +15,25 @@ mkdir -p "$QUEUE_DIR"
 AGENTS_DIR="$HOME/Library/LaunchAgents"
 mkdir -p "$AGENTS_DIR"
 
-for name in watch nightly; do
-  src="$SCRIPT_DIR/com.feno.mona-distill-$name.plist.template"
-  dst="$AGENTS_DIR/com.feno.mona-distill-$name.plist"
+BANK_REFRESH="$SCRIPT_DIR/../bank_refresh.py"
+
+install_plist() {
+  local src="$1" dst="$2"
   sed -e "s|__PYTHON3__|$PYTHON3|g" \
       -e "s|__WORKER__|$WORKER|g" \
+      -e "s|__BANK_REFRESH__|$BANK_REFRESH|g" \
       -e "s|__QUEUE_DIR__|$QUEUE_DIR|g" \
       -e "s|__PENDING_FILE__|$QUEUE_DIR/pending.json|g" \
       "$src" > "$dst"
   launchctl bootout "gui/$(id -u)" "$dst" 2>/dev/null || true
   launchctl bootstrap "gui/$(id -u)" "$dst"
   echo "installed $dst"
+}
+
+for name in watch nightly; do
+  install_plist "$SCRIPT_DIR/com.feno.mona-distill-$name.plist.template" \
+                "$AGENTS_DIR/com.feno.mona-distill-$name.plist"
 done
-launchctl list | grep com.feno.mona-distill || true
+install_plist "$SCRIPT_DIR/com.feno.mona-bank-refresh.plist.template" \
+              "$AGENTS_DIR/com.feno.mona-bank-refresh.plist"
+launchctl list | grep -E "com.feno.mona-(distill|bank)" || true
