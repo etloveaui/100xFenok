@@ -13,11 +13,28 @@ type Props = {
   card: ExpressionCard | null;
   coachLine: string | null;
   errorText: string | null;
+  voiceName: string;
+  vadPreset: string;
+  onVoiceChange: (voice: string) => void;
+  onVadChange: (preset: "relaxed" | "balanced") => void;
   onStart: () => void;
   onStop: () => void;
 };
 
 const THEME_STORAGE_KEY = "winddown-theme";
+const VOICE_STORAGE_KEY = "winddown-voice";
+const VAD_STORAGE_KEY = "winddown-vad";
+
+const VOICE_CHOICES = [
+  { id: "Achernar", label: "포근한 목소리", hint: "기본" },
+  { id: "Aoede", label: "가벼운 목소리", hint: "산뜻" },
+  { id: "Kore", label: "차분한 목소리", hint: "또렷" },
+];
+
+const WAIT_CHOICES: Array<{ id: "relaxed" | "balanced"; label: string; hint: string }> = [
+  { id: "relaxed", label: "여유 있게", hint: "생각할 틈을 줘" },
+  { id: "balanced", label: "보통", hint: "조금 빠르게" },
+];
 
 const WEEKDAY_PLAN: Record<number, { day: string; theme: string }> = {
   0: { day: "일요일", theme: "주간 복습 테스트" },
@@ -70,8 +87,14 @@ function studyPlanLine(): string {
   return `${plan.day} · ${plan.theme}`;
 }
 
-export default function MonaWindDown({ phase, message, card, coachLine, errorText, onStart, onStop }: Props) {
+export default function MonaWindDown({
+  phase, message, card, coachLine, errorText,
+  voiceName, vadPreset, onVoiceChange, onVadChange,
+  onStart, onStop,
+}: Props) {
   const [theme, setTheme] = useState<WindDownTheme>("light");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [prefsApplied, setPrefsApplied] = useState(false);
 
   useEffect(() => {
     try {
@@ -81,6 +104,37 @@ export default function MonaWindDown({ phase, message, card, coachLine, errorTex
       // storage unavailable — keep light
     }
   }, []);
+
+  useEffect(() => {
+    if (prefsApplied || phase === "boot") return;
+    setPrefsApplied(true);
+    try {
+      const savedVoice = window.localStorage.getItem(VOICE_STORAGE_KEY);
+      if (savedVoice && VOICE_CHOICES.some((choice) => choice.id === savedVoice)) onVoiceChange(savedVoice);
+      const savedVad = window.localStorage.getItem(VAD_STORAGE_KEY);
+      if (savedVad === "relaxed" || savedVad === "balanced") onVadChange(savedVad);
+    } catch {
+      // storage unavailable — keep presets
+    }
+  }, [phase, prefsApplied, onVoiceChange, onVadChange]);
+
+  const pickVoice = (id: string) => {
+    onVoiceChange(id);
+    try {
+      window.localStorage.setItem(VOICE_STORAGE_KEY, id);
+    } catch {
+      // ignore
+    }
+  };
+
+  const pickWait = (id: "relaxed" | "balanced") => {
+    onVadChange(id);
+    try {
+      window.localStorage.setItem(VAD_STORAGE_KEY, id);
+    } catch {
+      // ignore
+    }
+  };
 
   const toggleTheme = () => {
     setTheme((current) => {
@@ -125,15 +179,31 @@ export default function MonaWindDown({ phase, message, card, coachLine, errorTex
           </p>
           <p className="mt-1 text-[13px] font-medium tracking-[0.08em] text-[var(--wd-muted)]">{planLine}</p>
         </div>
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={theme === "light" ? "어둡게 보기" : "밝게 보기"}
-          className="wd-enter flex min-h-11 min-w-11 items-center justify-center rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] text-[18px] shadow-sm transition-transform active:scale-95"
-          style={{ animationDelay: "120ms" }}
-        >
-          {theme === "light" ? "☾" : "☀"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            aria-label="설정 열기"
+            className="wd-enter flex min-h-11 min-w-11 items-center justify-center rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] shadow-sm transition-transform active:scale-95"
+            style={{ animationDelay: "100ms" }}
+          >
+            <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+              <line x1="4" y1="8" x2="20" y2="8" />
+              <circle cx="9" cy="8" r="2.4" fill="var(--wd-card)" />
+              <line x1="4" y1="16" x2="20" y2="16" />
+              <circle cx="15" cy="16" r="2.4" fill="var(--wd-card)" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "light" ? "어둡게 보기" : "밝게 보기"}
+            className="wd-enter flex min-h-11 min-w-11 items-center justify-center rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] text-[18px] shadow-sm transition-transform active:scale-95"
+            style={{ animationDelay: "140ms" }}
+          >
+            {theme === "light" ? "☾" : "☀"}
+          </button>
+        </div>
       </header>
 
       <main className="relative flex flex-1 flex-col items-center justify-center gap-6 px-6">
@@ -227,6 +297,65 @@ export default function MonaWindDown({ phase, message, card, coachLine, errorTex
         <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--wd-muted)]">{buttonLabel}</p>
       </footer>
 
+      {sheetOpen && (
+        <div className="absolute inset-0 z-10 flex flex-col justify-end" role="dialog" aria-label="설정">
+          <button
+            type="button"
+            aria-label="설정 닫기"
+            onClick={() => setSheetOpen(false)}
+            className="wd-fade absolute inset-0 bg-black/25 backdrop-blur-[2px]"
+          />
+          <div
+            className="wd-sheet-in relative rounded-t-[28px] border-t border-[var(--wd-line)] bg-[var(--wd-card)] px-7 pb-[max(env(safe-area-inset-bottom),24px)] pt-3"
+            style={{ boxShadow: "0 -18px 48px -18px rgba(0,0,0,0.35)" }}
+          >
+            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-[var(--wd-line)]" />
+
+            <p className="mt-5 text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-muted)]">목소리</p>
+            <div className="mt-3 flex gap-2">
+              {VOICE_CHOICES.map((choice) => (
+                <button
+                  key={choice.id}
+                  type="button"
+                  onClick={() => pickVoice(choice.id)}
+                  className={`flex min-h-14 flex-1 flex-col items-center justify-center rounded-2xl border transition-all active:scale-[0.97] ${
+                    voiceName === choice.id
+                      ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
+                      : "border-[var(--wd-line)] text-[var(--wd-muted)]"
+                  }`}
+                >
+                  <span className="text-[14px] font-semibold">{choice.label}</span>
+                  <span className="mt-0.5 text-[11px]">{choice.hint}</span>
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-6 text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-muted)]">내 말 기다리기</p>
+            <div className="mt-3 flex gap-2">
+              {WAIT_CHOICES.map((choice) => (
+                <button
+                  key={choice.id}
+                  type="button"
+                  onClick={() => pickWait(choice.id)}
+                  className={`flex min-h-14 flex-1 flex-col items-center justify-center rounded-2xl border transition-all active:scale-[0.97] ${
+                    vadPreset === choice.id
+                      ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
+                      : "border-[var(--wd-line)] text-[var(--wd-muted)]"
+                  }`}
+                >
+                  <span className="text-[14px] font-semibold">{choice.label}</span>
+                  <span className="mt-0.5 text-[11px]">{choice.hint}</span>
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-5 min-h-[18px] text-center text-[12px] text-[var(--wd-muted)]">
+              {live ? "대화 중이라 다음 시작부터 적용돼" : "바로 적용돼"}
+            </p>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes wd-enter {
           from { opacity: 0; transform: translateY(10px); }
@@ -245,6 +374,13 @@ export default function MonaWindDown({ phase, message, card, coachLine, errorTex
         .wd-breathe { animation: wd-breathe 3s ease-in-out infinite; }
         @keyframes wd-spin { to { transform: rotate(360deg); } }
         .wd-spin { animation: wd-spin 0.9s linear infinite; }
+        @keyframes wd-fade { from { opacity: 0; } to { opacity: 1; } }
+        .wd-fade { animation: wd-fade 240ms ease-out; }
+        @keyframes wd-sheet-in {
+          from { transform: translateY(28px); opacity: 0.6; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .wd-sheet-in { animation: wd-sheet-in 320ms cubic-bezier(0.22, 1, 0.36, 1); }
         @media (prefers-reduced-motion: reduce) {
           .wd-enter, .wd-card-in, .wd-breathe, .wd-spin { animation-duration: 0.01ms; animation-iteration-count: 1; }
         }

@@ -250,8 +250,9 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
     const incomingSettings = normalizeSettings(args.settings);
     const incomingClient = normalizeClient(args.client);
     const incomingMetrics = pickPrimitiveObject(args.metrics, [
-      "micPermission", "connectionState", "firstResponseMs", "transcriptLatencyMs",
-      "turnCount", "interruptionCount", "sessionDurationSec", "lowVoice", "lastError", "rating",
+      "micPermission", "connectionState", "firstResponseMs", "sessionPostMs", "socketOpenMs",
+      "setupDoneMs", "transcriptLatencyMs", "turnCount", "interruptionCount",
+      "sessionDurationSec", "lowVoice", "lastError", "rating",
     ]);
 
     const mergedSettings = Object.keys(incomingSettings).length > 0

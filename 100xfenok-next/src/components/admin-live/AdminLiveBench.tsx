@@ -44,6 +44,9 @@ type BenchMetrics = {
   micPermission: MicState;
   connectionState: ConnectionState;
   firstResponseMs: number | null;
+  sessionPostMs: number | null;
+  socketOpenMs: number | null;
+  setupDoneMs: number | null;
   transcriptLatencyMs: number | null;
   turnCount: number;
   interruptionCount: number;
@@ -302,6 +305,9 @@ const EMPTY_METRICS: BenchMetrics = {
   micPermission: "unknown",
   connectionState: "not-started",
   firstResponseMs: null,
+  sessionPostMs: null,
+  socketOpenMs: null,
+  setupDoneMs: null,
   transcriptLatencyMs: null,
   turnCount: 0,
   interruptionCount: 0,
@@ -1354,6 +1360,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const handleServerMessage = (payload: Record<string, unknown>) => {
     if ("setupComplete" in payload) {
       clearSocketTimeout();
+      const setupDoneMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
+      setMetrics((current) => ({ ...current, setupDoneMs }));
       addLog("system", "Gemini 연결 완료");
       const socket = wsRef.current;
       if (socket) {
@@ -1494,6 +1502,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         }),
       });
       const payload = (await response.json().catch(() => null)) as SessionResponse | { error?: string; missingEnv?: string } | null;
+      const sessionPostMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
+      setMetrics((current) => ({ ...current, sessionPostMs }));
 
       if (!response.ok) {
         const error = payload && "error" in payload ? payload.error : `HTTP_${response.status}`;
@@ -1523,7 +1533,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       }, 15000);
 
       socket.onopen = () => {
-        setMetrics((current) => ({ ...current, connectionState: "setup-wait" }));
+        const socketOpenMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
+        setMetrics((current) => ({ ...current, connectionState: "setup-wait", socketOpenMs }));
         socket.send(JSON.stringify({ setup: session.setup }));
         addLog("system", "Gemini 연결 열림. 대화 준비 중");
       };
@@ -1768,6 +1779,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         card={card}
         coachLine={lastCoachLine}
         errorText={metrics.lastError}
+        voiceName={voiceName}
+        vadPreset={vadPreset}
+        onVoiceChange={setVoiceName}
+        onVadChange={setVadPreset}
         onStart={() => void startSession()}
         onStop={() => void stopSession()}
       />
