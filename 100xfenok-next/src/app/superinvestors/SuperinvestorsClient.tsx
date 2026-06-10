@@ -1,20 +1,49 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
+import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
+import { PortfolioTreemap, SectorMixPanel, loadPortfolioViews } from "./PortfolioCharts";
 import type {
   SuperInvestorsTab,
   ConsensusTicker,
   SummaryInvestor,
   InvestorHolding,
   InvestorFiling,
+  TradesRankingData,
+  TradesRankingRow,
+  TurnoverData,
+  PortfolioViewsData,
 } from "@/lib/superinvestors/types";
 
 const PAGE_SIZE = 50;
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
+}
+
+// Module-level turnover cache — fetched lazily once per page
+let turnoverCache: TurnoverData["by_investor"] | null = null;
+let turnoverPromise: Promise<TurnoverData["by_investor"] | null> | null = null;
+
+function loadTurnover(): Promise<TurnoverData["by_investor"] | null> {
+  if (turnoverCache) return Promise.resolve(turnoverCache);
+  if (turnoverPromise) return turnoverPromise;
+  turnoverPromise = fetch("/data/sec-13f/analytics/turnover.json")
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json() as Promise<TurnoverData>;
+    })
+    .then((data) => {
+      turnoverCache = data.by_investor ?? {};
+      return turnoverCache;
+    })
+    .catch(() => {
+      turnoverPromise = null;
+      return null;
+    });
+  return turnoverPromise;
 }
 
 function fmtAum(value: number | null | undefined): string {
@@ -161,53 +190,117 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
   );
 }
 
-function GuruDetailPanel({ id, summary }: { id: string; summary: SummaryInvestor }) {
+function GuruDetailPanel({
+  id,
+  summary,
+  pvData,
+}: {
+  id: string;
+  summary: SummaryInvestor;
+  pvData: PortfolioViewsData | null;
+}) {
   const { data, loading } = useInvestorDetail(id);
+  const [turnover, setTurnover] = useState<number | null | undefined>(undefined);
 
   const latest: InvestorFiling | null = data?.investor?.filings?.[data.investor.filings.length - 1] ?? null;
   const prev: InvestorFiling | null =
     data?.investor?.filings?.[data.investor.filings.length - 2] ?? null;
 
+  useEffect(() => {
+    let cancelled = false;
+    loadTurnover().then((map) => {
+      if (cancelled) return;
+      const entry = map?.[id];
+      setTurnover(entry?.turnover ?? null);
+    });
+    return () => { cancelled = true; };
+  }, [id]);
+
   return (
     <div className="mt-3 rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">최신 분기</p>
-          <p className="text-sm font-bold text-slate-900">
-            {latest ? latest.quarter : "—"} · 보유 {latest ? latest.holdings_count.toLocaleString() : "—"}종목
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">AUM</p>
-          <p className="text-sm font-bold text-slate-900">{fmtAum(latest?.aum_total ?? summary.aum)}</p>
-        </div>
+      {/* Row 1 — KPI strip */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="운용 자산" value={fmtAum(latest?.aum_total ?? summary.aum)} isLoading={loading} />
+        <KpiCard
+          label="보유 종목"
+          value={latest ? latest.holdings_count.toLocaleString() : "—"}
+          isLoading={loading}
+        />
+        <KpiCard
+          label="TOP 10 비중"
+          value={latest?.top_10_weight != null ? `${(latest.top_10_weight * 100).toFixed(1)}%` : "—"}
+          isLoading={loading}
+        />
+        <KpiCard
+          label="회전율"
+          value={turnover === undefined ? "..." : turnover === null ? "—" : `${(turnover * 100).toFixed(1)}%`}
+          isLoading={loading || turnover === undefined}
+        />
       </div>
 
+      {/* Row 2 — 분기 매매 내역 */}
       {latest?.changes_summary ? (
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">신규</p>
-            <p className="orbitron mt-1 text-sm font-black text-emerald-800">{latest.changes_summary.new_positions ?? 0}</p>
-          </div>
-          <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">증가</p>
-            <p className="orbitron mt-1 text-sm font-black text-sky-800">{latest.changes_summary.added_to ?? 0}</p>
-          </div>
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">감소</p>
-            <p className="orbitron mt-1 text-sm font-black text-amber-800">{latest.changes_summary.reduced ?? 0}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">신규매수 ↑</p>
+            <p className="orbitron mt-1 text-sm font-black text-emerald-800">
+              {latest.changes_summary.new_positions ?? 0}
+            </p>
           </div>
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">매도</p>
-            <p className="orbitron mt-1 text-sm font-black text-rose-800">{latest.changes_summary.sold_out ?? 0}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">청산매도 ↓</p>
+            <p className="orbitron mt-1 text-sm font-black text-rose-800">
+              {latest.changes_summary.sold_out ?? 0}
+            </p>
+          </div>
+          <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">비중확대 ↑</p>
+            <p className="orbitron mt-1 text-sm font-black text-sky-800">
+              {latest.changes_summary.added_to ?? 0}
+            </p>
+          </div>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">비중축소 ↓</p>
+            <p className="orbitron mt-1 text-sm font-black text-amber-800">
+              {latest.changes_summary.reduced ?? 0}
+            </p>
           </div>
         </div>
       ) : null}
 
-      {prev && latest ? (
-        <p className="mt-3 text-[10px] font-semibold text-slate-500">
-          이전 분기 대비: {prev.quarter} → {latest.quarter}
+      {/* Quarter label */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+          {latest ? latest.quarter : summary.quarter || "—"}
         </p>
+        {prev ? (
+          <p className="text-[10px] font-semibold text-slate-500">
+            이전 분기: {prev.quarter}
+          </p>
+        ) : null}
+      </div>
+
+      {/* Portfolio charts (from portfolio_views.json) */}
+      {pvData?.investors?.[id] ? (
+        <div className="mt-4 border-t border-slate-200 pt-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
+          <div className="mt-2 space-y-4">
+            <PortfolioTreemap
+              rows={pvData.investors[id].treemap}
+              quarterLabel={pvData.investors[id].quarter}
+            />
+            <SectorMixPanel
+              currentSectors={Object.fromEntries(
+                Object.entries(pvData.investors[id].sector_history).map(([s, h]) => [
+                  s,
+                  h[h.length - 1] ?? 0,
+                ]),
+              )}
+              history={pvData.investors[id].sector_history}
+              quarters={pvData.investors[id].quarters}
+            />
+          </div>
+        </div>
       ) : null}
 
       {loading ? (
@@ -230,12 +323,144 @@ function GuruDetailPanel({ id, summary }: { id: string; summary: SummaryInvestor
   );
 }
 
+function KpiCard({
+  label,
+  value,
+  isLoading,
+}: {
+  label: string;
+  value: string;
+  isLoading?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      {isLoading ? (
+        <div className="mt-1 h-8 w-3/4 rounded bg-slate-200" />
+      ) : (
+        <p className="mt-1 text-2xl font-black tracking-tight text-slate-950 orbitron tabular-nums sm:text-3xl">
+          {value}
+        </p>
+      )}
+    </div>
+  );
+}
+
+type AmountColor = "emerald" | "rose";
+
+function TradeRankingPanel({
+  title,
+  rows,
+  amountColor,
+  expanded,
+  onToggle,
+  actionLabel,
+}: {
+  title: string;
+  rows: TradesRankingRow[];
+  amountColor: AmountColor;
+  expanded: boolean;
+  onToggle: () => void;
+  actionLabel: (r: TradesRankingRow) => string | undefined;
+}) {
+  const visibleRows = expanded ? rows : rows.slice(0, 10);
+  const amountTextClass = amountColor === "emerald" ? "text-emerald-700" : "text-rose-700";
+  const topLabel = amountColor === "emerald" ? "TOP 매수자" : "TOP 매도자";
+
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+        <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
+        <EmptyState title="데이터가 없습니다" desc="해당 분기 매매 데이터가 존재하지 않습니다." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+      <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
+      <div className="mt-3 -mx-1 overflow-x-auto px-1">
+        <table className="w-full min-w-[440px] text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+              <th className="px-2 py-2 text-left">순위</th>
+              <th className="px-2 py-2 text-left">종목</th>
+              <th className="px-2 py-2 text-left">섹터</th>
+              <th className="px-2 py-2 text-right">금액</th>
+              <th className="px-2 py-2 text-right">구루</th>
+              <th className="px-2 py-2 text-left">{topLabel}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((r) => (
+              <tr key={`${r.ticker}-${r.rank}`} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-2">
+                  <span className="orbitron tabular-nums text-xs font-bold text-slate-400">{r.rank}</span>
+                </td>
+                <td className="px-2 py-2">
+                  <span className="block max-w-[130px] truncate font-bold text-slate-900">{r.name}</span>
+                  <TransitionLink
+                    href={`/screener?ticker=${encodeURIComponent(r.ticker)}`}
+                    className="text-[10px] font-black text-brand-interactive hover:underline"
+                  >
+                    {r.ticker}
+                  </TransitionLink>
+                </td>
+                <td className="px-2 py-2">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold">
+                    <span
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ backgroundColor: sectorColor(r.sector as Parameters<typeof sectorColor>[0]) }}
+                    />
+                    {sectorLabelKo(r.sector as Parameters<typeof sectorLabelKo>[0])}
+                  </span>
+                </td>
+                <td className="px-2 py-2 text-right">
+                  <span className={`orbitron tabular-nums font-bold ${amountTextClass}`}>
+                    {fmtAum(r.amount)}
+                  </span>
+                </td>
+                <td className="px-2 py-2 text-right">
+                  <span className="orbitron tabular-nums font-bold text-slate-900">{r.investors_count}</span>
+                  {actionLabel(r) ? (
+                    <span className="block text-[10px] font-semibold text-slate-400">{actionLabel(r)}</span>
+                  ) : null}
+                </td>
+                <td className="px-2 py-2 max-w-[110px]">
+                  <span className="block truncate text-[10px] font-bold text-slate-700">{r.top_investor.name}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > 10 ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="mt-3 inline-flex min-h-8 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+        >
+          {expanded ? "접기" : "전체 50개 보기"}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export default function SuperinvestorsClient() {
   const { consensus, summary, byTicker, dataReady, failed, quarter, excludedStale } = use13FData();
   const [tab, setTab] = useState<SuperInvestorsTab>("consensus");
   const [search, setSearch] = useState("");
   const [group, setGroup] = useState("");
   const [expandedGuru, setExpandedGuru] = useState<string | null>(null);
+  const [tradesData, setTradesData] = useState<TradesRankingData | null>(null);
+  const [tradesLoading, setTradesLoading] = useState(true);
+  const [tradesFailed, setTradesFailed] = useState(false);
+  const [tradesBoughtExpanded, setTradesBoughtExpanded] = useState(false);
+  const [tradesSoldExpanded, setTradesSoldExpanded] = useState(false);
+  const [pvData, setPvData] = useState<PortfolioViewsData | null>(null);
+  const [pvFailed, setPvFailed] = useState(false);
+  const [totalPortfolioOpen, setTotalPortfolioOpen] = useState(true);
   const [consensusSortDir, setConsensusSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(0);
 
@@ -278,6 +503,36 @@ export default function SuperinvestorsClient() {
     if (page !== 0) setPage(0);
   }
 
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setTradesLoading(true);
+      setTradesFailed(false);
+      try {
+        const res = await fetch("/data/sec-13f/analytics/trades_ranking.json");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json: TradesRankingData = await res.json();
+        if (!cancelled) setTradesData(json);
+      } catch {
+        if (!cancelled) setTradesFailed(true);
+      } finally {
+        if (!cancelled) setTradesLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadPortfolioViews().then((data) => {
+      if (cancelled) return;
+      if (data) setPvData(data);
+      else setPvFailed(true);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   const quarterLabel = quarter ? `${quarter} 기준` : null;
   const delayLabel = "13F 공시는 분기 종료 후 최대 45일 지연됩니다";
 
@@ -287,7 +542,7 @@ export default function SuperinvestorsClient() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">13F Superinvestors</p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">구루 보유 현황</h1>
+          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">구루 보유 현황</h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
             워런 버핏, 세스 클라먼 등 30개 슈퍼인베스터의 13F 보유 데이터를 탐색합니다.
           </p>
@@ -320,6 +575,7 @@ export default function SuperinvestorsClient() {
           { id: "consensus" as const, label: "컨센서스" },
           { id: "gurus" as const, label: "구루 리스트" },
           { id: "by-ticker" as const, label: "종목별 보유" },
+          { id: "trades" as const, label: "매매랭킹" },
         ].map((t) => (
           <button
             key={t.id}
@@ -344,6 +600,42 @@ export default function SuperinvestorsClient() {
       {/* Consensus */}
       {tab === "consensus" && (
         <section className="space-y-3">
+          {/* Total portfolio (collapsible) */}
+          {pvData && !pvFailed ? (
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+              <button
+                type="button"
+                onClick={() => setTotalPortfolioOpen((v) => !v)}
+                className="flex w-full items-center justify-between text-left"
+              >
+                <div>
+                  <h2 className="text-sm font-black tracking-tight text-slate-900">
+                    거장 토탈 포트폴리오
+                  </h2>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">
+                      {pvData.metadata.quarter}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {pvData.total.treemap.length}종목 · 30인 합산
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
+                  {totalPortfolioOpen ? "접기" : "펼치기"}
+                </span>
+              </button>
+              {totalPortfolioOpen ? (
+                <div className="mt-3 space-y-4 border-t border-slate-100 pt-3">
+                  <PortfolioTreemap rows={pvData.total.treemap} quarterLabel={pvData.metadata.quarter} />
+                  {pvData.metadata.disclaimer ? (
+                    <p className="text-[10px] font-semibold text-slate-400">{pvData.metadata.disclaimer}</p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="flex flex-wrap items-center justify-between gap-3">
             <label className="flex min-w-[220px] flex-col gap-1">
               <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">티커 검색</span>
@@ -559,7 +851,7 @@ export default function SuperinvestorsClient() {
                       {isOpen ? "접기" : "포트폴리오 보기"}
                     </button>
 
-                    {isOpen ? <GuruDetailPanel id={id} summary={inv} /> : null}
+                    {isOpen ? <GuruDetailPanel id={id} summary={inv} pvData={pvData} /> : null}
                   </div>
                 );
               })}
@@ -668,6 +960,78 @@ export default function SuperinvestorsClient() {
           </div>
         </section>
       )}
+
+      {/* Trades ranking */}
+      {tab === "trades" && (
+        <section className="space-y-4">
+          {/* Header strip */}
+          {tradesData ? (
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  {tradesData.metadata.quarter} 기준
+                </span>
+                <span className="text-[10px] font-bold text-slate-400">{delayLabel}</span>
+              </div>
+              {tradesData.metadata.disclaimer ? (
+                <p className="text-[10px] font-semibold text-slate-400">{tradesData.metadata.disclaimer}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Loading skeleton */}
+          {tradesLoading ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {[0, 1].map((p) => (
+                <div key={p} className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+                  <div className="h-5 w-1/3 rounded bg-slate-200" />
+                  <div className="mt-3 space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="h-4 w-full rounded bg-slate-200" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : tradesFailed ? (
+            <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+              매매랭킹 데이터를 불러오지 못했습니다. /data/sec-13f/analytics/trades_ranking.json 을 확인해 주세요.
+            </div>
+          ) : tradesData ? (
+            <>
+              {/* Panels */}
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TradeRankingPanel
+                  title="많이 매수된 종목"
+                  rows={tradesData.bought}
+                  amountColor="emerald"
+                  expanded={tradesBoughtExpanded}
+                  onToggle={() => setTradesBoughtExpanded((v) => !v)}
+                  actionLabel={(r) =>
+                    r.new_count != null && r.new_count > 0
+                      ? `${r.new_count}개 신규`
+                      : undefined
+                  }
+                />
+                <TradeRankingPanel
+                  title="많이 매도된 종목"
+                  rows={tradesData.sold}
+                  amountColor="rose"
+                  expanded={tradesSoldExpanded}
+                  onToggle={() => setTradesSoldExpanded((v) => !v)}
+                  actionLabel={(r) =>
+                    r.exit_count != null && r.exit_count > 0
+                      ? `${r.exit_count}개 청산`
+                      : undefined
+                  }
+                />
+              </div>
+            </>
+          ) : null}
+        </section>
+      )}
+
     </main>
   );
 }
