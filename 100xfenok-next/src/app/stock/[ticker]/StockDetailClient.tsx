@@ -88,7 +88,8 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   const { detail, loading: detailLoading } = useStockDetail(ticker);
   const f13Entries = use13FData(ticker);
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
-  const canonical = row ? resolveSector(row.sector) : null;
+  // stocks_analyzer sector is the Korean scouter taxonomy — pass as 2nd arg.
+  const canonical = row ? resolveSector(null, row.sector) : null;
 
   useEffect(() => {
     let cancelled = false;

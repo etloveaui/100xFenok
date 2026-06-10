@@ -169,10 +169,10 @@ export interface InvestorFiling {
   top_10_weight: number;
   holdings: InvestorHolding[];
   changes_summary?: {
-    new_positions?: number;
-    added_to?: number;
-    reduced?: number;
-    sold_out?: number;
+    new?: Array<{ ticker: string; name: string; change_pct: number }>;
+    increased?: Array<{ ticker: string; name: string; change_pct: number }>;
+    decreased?: Array<{ ticker: string; name: string; change_pct: number }>;
+    sold?: Array<{ ticker: string; name: string; change_pct: number }>;
   };
 }
 

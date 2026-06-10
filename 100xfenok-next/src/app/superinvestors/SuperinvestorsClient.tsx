@@ -132,8 +132,20 @@ function SkeletonCards({ count = 6 }: { count?: number }) {
 
 function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
   const rows = useMemo(() => {
-    return [...holdings]
-      .filter((h) => h.ticker !== null && h.ticker !== "")
+    // Filings carry one row per share class / CUSIP — aggregate by ticker.
+    const byTicker = new Map<string, InvestorHolding>();
+    for (const h of holdings) {
+      if (!h.ticker) continue;
+      const cur = byTicker.get(h.ticker);
+      if (cur) {
+        cur.weight = (cur.weight || 0) + (h.weight || 0);
+        cur.shares = (cur.shares || 0) + (h.shares || 0);
+        cur.market_value = (cur.market_value || 0) + (h.market_value || 0);
+      } else {
+        byTicker.set(h.ticker, { ...h });
+      }
+    }
+    return [...byTicker.values()]
       .sort((a, b) => (b.weight || 0) - (a.weight || 0))
       .slice(0, 50);
   }, [holdings]);
@@ -218,8 +230,8 @@ function GuruDetailPanel({
 
   return (
     <div className="mt-3 rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4">
-      {/* Row 1 — KPI strip */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Row 1 — KPI strip (panel lives inside a narrow card column — keep 2x2) */}
+      <div className="grid grid-cols-2 gap-2">
         <KpiCard label="운용 자산" value={fmtAum(latest?.aum_total ?? summary.aum)} isLoading={loading} />
         <KpiCard
           label="보유 종목"
@@ -244,25 +256,25 @@ function GuruDetailPanel({
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">신규매수 ↑</p>
             <p className="orbitron mt-1 text-sm font-black text-emerald-800">
-              {latest.changes_summary.new_positions ?? 0}
+              {latest.changes_summary.new?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">청산매도 ↓</p>
             <p className="orbitron mt-1 text-sm font-black text-rose-800">
-              {latest.changes_summary.sold_out ?? 0}
+              {latest.changes_summary.sold?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">비중확대 ↑</p>
             <p className="orbitron mt-1 text-sm font-black text-sky-800">
-              {latest.changes_summary.added_to ?? 0}
+              {latest.changes_summary.increased?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">비중축소 ↓</p>
             <p className="orbitron mt-1 text-sm font-black text-amber-800">
-              {latest.changes_summary.reduced ?? 0}
+              {latest.changes_summary.decreased?.length ?? 0}
             </p>
           </div>
         </div>
@@ -333,12 +345,12 @@ function KpiCard({
   isLoading?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
+      <p className="truncate text-[11px] font-medium text-slate-500">{label}</p>
       {isLoading ? (
-        <div className="mt-1 h-8 w-3/4 rounded bg-slate-200" />
+        <div className="mt-1 h-6 w-3/4 rounded bg-slate-200" />
       ) : (
-        <p className="mt-1 text-2xl font-black tracking-tight text-slate-950 orbitron tabular-nums sm:text-3xl">
+        <p className="mt-1 truncate text-lg font-black tracking-tight text-slate-950 orbitron tabular-nums sm:text-xl">
           {value}
         </p>
       )}
@@ -460,7 +472,14 @@ export default function SuperinvestorsClient() {
   const [tradesSoldExpanded, setTradesSoldExpanded] = useState(false);
   const [pvData, setPvData] = useState<PortfolioViewsData | null>(null);
   const [pvFailed, setPvFailed] = useState(false);
-  const [totalPortfolioOpen, setTotalPortfolioOpen] = useState(true);
+  const [totalPortfolioOpen, setTotalPortfolioOpen] = useState(false);
+
+  // Open the total-portfolio treemap by default on desktop only (mobile stays collapsed).
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
+      setTotalPortfolioOpen(true);
+    }
+  }, []);
   const [consensusSortDir, setConsensusSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(0);
 
@@ -798,7 +817,8 @@ export default function SuperinvestorsClient() {
                     key={id}
                     className={cx(
                       "rounded-[1.5rem] border bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] transition",
-                      isOpen ? "border-brand-interactive" : "border-slate-200",
+                      // expanded detail (KPI + treemap + sector mix) needs the full row width
+                      isOpen ? "border-brand-interactive sm:col-span-2 lg:col-span-3" : "border-slate-200",
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -831,7 +851,7 @@ export default function SuperinvestorsClient() {
                       <div className="mt-3">
                         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">Top 5</p>
                         <div className="mt-1 flex flex-wrap gap-1">
-                          {inv.top5.slice(0, 5).map((ticker, i) => (
+                          {[...new Set(inv.top5)].slice(0, 5).map((ticker, i) => (
                             <span
                               key={`${ticker}-${i}`}
                               className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-700"

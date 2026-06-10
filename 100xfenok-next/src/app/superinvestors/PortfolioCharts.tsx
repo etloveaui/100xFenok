@@ -82,6 +82,12 @@ interface TreemapProps {
   quarterLabel: string;
 }
 
+type TreemapLeaf = { raw?: { _data?: PortfolioRow } };
+
+function leafRow(ctx: TreemapLeaf): PortfolioRow | null {
+  return ctx.raw?._data ?? null;
+}
+
 export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
   const data = useMemo(() => {
     const displayRows = rows.filter((r) => r.weight > 0);
@@ -89,20 +95,37 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
       datasets: [
         {
           label: "Portfolio",
-          tree: displayRows.map((r) => ({
-            value: r.weight,
-            _data: r,
-          })),
-          key: "value",
-          labels: displayRows.map((r) => {
-            if (r.weight >= 0.04) return `${r.ticker}\n${retStr(r.ret)}`;
-            if (r.weight >= 0.015) return r.ticker;
-            return "";
-          }),
-          backgroundColor: displayRows.map((r) => retColor(r.ret)),
+          // chartjs-chart-treemap contract: `tree` (flat objects) + `key`;
+          // generated leaf points expose the source object at `raw._data`.
+          tree: displayRows as unknown as number[],
+          key: "weight",
+          data: [],
           borderColor: "#ffffff",
-          borderWidth: 2,
+          borderWidth: 1,
           spacing: 1,
+          backgroundColor: (ctx: TreemapLeaf) => {
+            const d = leafRow(ctx);
+            return d ? retColor(d.ret) : "#f1f5f9";
+          },
+          // `labels` must be the plugin's object config (NOT an array).
+          labels: {
+            display: true,
+            color: (ctx: TreemapLeaf) => {
+              const d = leafRow(ctx);
+              if (d?.ret != null && Math.abs(d.ret) > 0.055) return "#ffffff";
+              return "#0f172a";
+            },
+            font: { size: 11, weight: "bold" as const },
+            formatter: (ctx: TreemapLeaf) => {
+              const d = leafRow(ctx);
+              if (!d) return "";
+              const name = d.ticker === "_OTHERS" ? "기타" : d.ticker;
+              if (d.ticker === "_OTHERS") return name;
+              if (d.weight >= 0.04) return [name, retStr(d.ret)];
+              if (d.weight >= 0.015) return name;
+              return "";
+            },
+          },
         },
       ],
     };
@@ -115,13 +138,14 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
       plugins: {
         tooltip: {
           callbacks: {
-            title(items: Array<{ raw: { _data: PortfolioRow } }>) {
-              const d = items[0]?.raw?._data;
+            title(items: TreemapLeaf[]) {
+              const d = items[0] ? leafRow(items[0]) : null;
               if (!d) return "";
               return `${d.name} (${d.ticker})`;
             },
-            label(item: { raw: { _data: PortfolioRow } }) {
-              const d = item.raw._data;
+            label(item: TreemapLeaf) {
+              const d = leafRow(item);
+              if (!d) return "";
               return [
                 `비중: ${(d.weight * 100).toFixed(2)}%`,
                 `수익률(3개월): ${retStr(d.ret)}`,
@@ -138,7 +162,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
 
   return (
     <div>
-      <div className="relative" style={{ height: 420 }}>
+      <div className="relative h-[300px] sm:h-[420px]">
         {/* @ts-expect-error treemap type from chartjs-chart-treemap */}
         <Chart type="treemap" data={data} options={options} />
       </div>
