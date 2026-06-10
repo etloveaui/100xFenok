@@ -28,6 +28,11 @@ jobs:
       - name: Build stocks_analyzer.json
         run: node scripts/build-stocks-analyzer.mjs
 
+      - name: Build 13F analytics (trades ranking + portfolio views)
+        run: |
+          node scripts/build-13f-trades.mjs
+          node scripts/build-13f-portfolio-views.mjs
+
       - name: Verify output
         run: |
           echo "=== stocks_analyzer.json header ==="
@@ -43,9 +48,13 @@ jobs:
             data/global-scouter/core/stocks_analyzer.json \
             data/global-scouter/core/per_bands_index.json \
             data/global-scouter/core/slick_index.json \
+            data/sec-13f/analytics/trades_ranking.json \
+            data/sec-13f/analytics/portfolio_views.json \
             100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json \
             100xfenok-next/public/data/global-scouter/core/per_bands_index.json \
-            100xfenok-next/public/data/global-scouter/core/slick_index.json
-          git diff --staged --quiet || git commit -m "data: refresh stocks_analyzer.json"
+            100xfenok-next/public/data/global-scouter/core/slick_index.json \
+            100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json \
+            100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json
+          git diff --staged --quiet || git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
           git pull --rebase origin main
           git push
