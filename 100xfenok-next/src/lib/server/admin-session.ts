@@ -1,5 +1,5 @@
 export const ADMIN_SESSION_COOKIE = "fenok_admin_session";
-export const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60 * 8;
+export const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 
 const DEFAULT_ADMIN_PASSWORD_HASH =
   "8736ca6f3957409305f60068e93215c85f8751e4dcdc9303832b325a72c7789f";

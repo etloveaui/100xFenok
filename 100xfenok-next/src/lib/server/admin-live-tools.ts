@@ -22,7 +22,8 @@ export type LiveToolId =
   | "mona-save-session"
   | "mona-yesterday"
   | "mona-memory"
-  | "mona-weekly-test";
+  | "mona-weekly-test"
+  | "mona-show-card";
 export type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode" | "study";
 export type LiveToolStatus = "available" | "locked" | "soon";
 
@@ -193,6 +194,47 @@ const LIVE_TOOL_DEFINITIONS = [
             description: "Prioritize weak-note items first. Defaults true.",
           },
         },
+      },
+    },
+  },
+  {
+    id: "mona-show-card",
+    label: "표현 카드",
+    category: "study",
+    status: "available",
+    description: "Mona Wind-Down BEST3/weak-note checkpoint",
+    functionName: "showCard",
+    instruction:
+      '화면 표현 카드 제어. 모나가 시도하기 전엔 state=prompt(ko만), 교정을 들려준 뒤 state=reveal(ko+en+pron), 변형 드릴은 state=drill(ko+drillHint), 카드 치울 땐 state=clear. 문장을 바꿀 때마다 호출해라. 호출 사실을 입 밖에 내지 마.',
+    declaration: {
+      name: "showCard",
+      description: "Control the on-screen expression card for Mona Wind-Down practice.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          state: {
+            type: "STRING",
+            description: "Card state: prompt (before attempt), reveal (after correction), drill (transform practice), clear (dismiss).",
+            enum: ["prompt", "reveal", "drill", "clear"],
+          },
+          ko: {
+            type: "STRING",
+            description: "Korean sentence. Required unless state=clear.",
+          },
+          en: {
+            type: "STRING",
+            description: "English sentence. Required for reveal state.",
+          },
+          pron: {
+            type: "STRING",
+            description: "Korean-letter pronunciation hint. Optional.",
+          },
+          drillHint: {
+            type: "STRING",
+            description: "Short transform instruction, e.g. '과거형으로'. Optional, for drill state.",
+          },
+        },
+        required: ["state"],
       },
     },
   },
@@ -379,7 +421,7 @@ export const DEFAULT_LIVE_ENABLED_TOOL_IDS: LiveToolId[] = [];
 
 export function getDefaultLiveEnabledToolIds(mode: string): LiveToolId[] {
   if (mode === "fenok") return ["feno-data"];
-  return mode === "mona" ? [...MONA_STUDY_TOOL_IDS] : [];
+  return mode === "mona" ? [...MONA_STUDY_TOOL_IDS, "mona-show-card"] : [];
 }
 
 export function getLiveToolMetadata(): LiveToolMetadata[] {
@@ -936,6 +978,10 @@ export async function executeLiveToolFunction(name: string, args: Record<string,
 
   if (name === "searchKakaoWeb") {
     return callLiveSkillBridge("kakao-search", args);
+  }
+
+  if (name === "showCard") {
+    return { ok: true };
   }
 
   return { error: "TOOL_HANDLER_MISSING" };

@@ -847,18 +847,31 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
     ...buildProfileSection(resolvedSnapshot),
     ...buildExpressionBankSection(expressionCandidates),
     "",
+    ...(plan.weekday === "일요일"
+      ? [
+        "[일요일 테스트]",
+        `${weekly.length}개로 본다. 새로 만들지 마. 부족하면 부족한 개수 그대로 진행해. 필요하면 getWeeklyTestSet을 호출해 같은 범위에서 다시 받아라.`,
+      ]
+      : [
+        "[세션 구조 - 같은 문장이 라운드마다 어려워지는 나선. 라운드 이름은 입 밖에 내지 마]",
+        "R1 도입: 오늘 표현 후보에서 3개 + 복습 재료에서 2개를 골라 오늘의 5문장으로 정한다. 하나씩: 영어로 들려주고 → 뜻을 짧게 → 낮게 따라 말하게.",
+        "R2 즉답: 같은 5문장을 한국어만 던지고 3초 안에 영어로 말하게 한다. 모나가 답할 때까지 기다리고 → 짧게 교정 → 진짜 쓰는 버전 → 따라 말하기. 막힌 문장은 다시 들려주고 한 번 더 즉답시킨다.",
+        "R3 변형: 같은 문장을 과거형/부정/질문/주어 바꾸기로 비틀어 즉답시킨다. 한 문장당 변형 1~2개만.",
+        `R4 코너(오늘: ${plan.corner}): 오늘 5문장이 자연스럽게 나오는 짧은 상황을 만들어 코너 방식대로 써먹게 한다.`,
+        "R5 마무리: 오늘 BEST3를 골라 자기 직전 한 번 더 따라 말하게 한다.",
+        "라운드가 오를수록 힌트를 줄인다. 잘하면 칭찬 한마디 후 바로 다음 난이도로. 주간 테스트를 새로 만들지 마.",
+        "체크포인트: R2 끝과 R4 끝에 saveStudySession 저장, R5에서 오늘 BEST3 최종 저장.",
+      ]),
+    "",
     "[진행 규칙 - 내부 페이싱]",
     ...MONA_PACING_RULES,
-    "단계 번호를 말하지 마. '이제 ②단계' 같은 말 금지. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
+    "단계 번호를 말하지 마. '이제 R2' 같은 말 금지. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
     "트리거 '시작/go/오늘꺼'가 오면 메뉴 설명 없이 바로 시작한다. 모나가 바꾸자고 할 때만 방향을 바꾼다.",
-    "② 오늘 표현 뒤 saveStudySession으로 checkpoint 저장. ③ 변동코너 뒤 한 번 더 checkpoint 저장. 끝에는 오늘 BEST3를 최종 upsert 저장.",
-    "한국어 문장 하나를 던지고 → 모나가 영어로 답할 때까지 기다리고 → 짧게 교정하고 → 진짜 쓰는 버전 하나를 알려주고 → 낮게 따라 말하게 한다. 그리고 나서 다음 문장으로 넘어간다. 한 번에 여러 개를 나열하지 마.",
     "",
-    plan.weekday === "일요일"
-      ? `[일요일 테스트]\n${weekly.length}개로 본다. 새로 만들지 마. 부족하면 부족한 개수 그대로 진행해. 필요하면 getWeeklyTestSet을 호출해 같은 범위에서 다시 받아라.`
-      : "[평일]\n주간 테스트를 새로 만들지 마. 오늘 요일의 테마와 변동코너만 진행해.",
+    "[표현 카드 - showCard]",
+    "문장을 다룰 때마다 showCard로 화면을 맞춘다: 모나가 시도하기 전 state=prompt(ko만) → 교정을 들려준 뒤 state=reveal(ko+en+pron) → 변형 드릴은 state=drill(ko+drillHint) → 다음 문장으로 넘어갈 때 새로 호출. 카드 호출 사실은 입 밖에 내지 않는다.",
     "",
     "[도구]",
-    "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
+    "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
   ].join("\n");
 }

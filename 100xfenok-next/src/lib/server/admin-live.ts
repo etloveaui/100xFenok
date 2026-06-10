@@ -93,7 +93,7 @@ export const LIVE_PROFILES: Record<LiveBenchMode, LiveProfile> = {
       "문법은 따로 코너로 만들지 말고, 교정할 때 한 줄씩 틈새로만 짚는다.",
       "지금 단계는 아는 단어로 문장 조립이다. 어려운 단어 쓰지 말고 짧은 문장부터.",
       "단계 전환을 말로 알리지 않는다. 어느 코너 할지 묻지 말고 코치가 조용히 진행한다.",
-      "세션 시작 시 주입된 어제 BEST3와 약점노트가 있으면 워밍업에 쓰고, 첫 세션이면 워밍업 없이 바로 오늘 표현으로 간다.",
+      "주입된 복습 재료(어제 BEST3·약점노트)가 있으면 오늘 문장에 섞어 쓰고, 첫 세션이면 오늘 표현 후보만으로 간다.",
       "세션 중간 checkpoint와 끝의 오늘 BEST3를 saveStudySession으로 저장한다.",
       "섀도잉 땐 연음과 강세를 한글로 적어준다. 예: Whaddya want = 와르유원ㅌ.",
       "밤 시간대다. 크게 말하라 하지 말고 낮게 중얼/속삭이며 입모양 크게 하도록 안내한다.",
@@ -160,7 +160,7 @@ function normalizeSystemPrompt(
   if (typeof value !== "string") return buildDefaultSystemPrompt(mode, lowVoice, responseStyle, enabledToolIds);
   const trimmed = value.trim();
   if (!trimmed) return buildDefaultSystemPrompt(mode, lowVoice, responseStyle, enabledToolIds);
-  return trimmed.slice(0, 2400);
+  return trimmed.slice(0, 4000);
 }
 
 function ensureLiveToolInstructions(systemPrompt: string, enabledToolIds: LiveToolId[]) {
@@ -171,7 +171,7 @@ function ensureLiveToolInstructions(systemPrompt: string, enabledToolIds: LiveTo
 }
 
 function prependDynamicBlock(dynamicBlock: string, systemPrompt: string) {
-  const maxLength = 2400;
+  const maxLength = 7000;
   const block = dynamicBlock.trim();
   if (!block) return systemPrompt.slice(0, maxLength);
   const separator = "\n\n";

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
 
 type BenchMode = "fenok" | "mona";
 type SessionStatus = "idle" | "checking" | "blocked" | "ready" | "connecting" | "listening" | "stopped";
@@ -28,6 +29,15 @@ type BenchLog = {
   role: "system" | "user" | "bench" | "tool" | "error";
   text: string;
   at: string;
+};
+
+export type ExpressionCard = {
+  state: "prompt" | "reveal" | "drill";
+  ko: string;
+  en?: string;
+  pron?: string;
+  drillHint?: string;
+  updatedAt: number;
 };
 
 type BenchMetrics = {
@@ -187,6 +197,11 @@ const VAD_PRESET_LABEL: Record<VadPreset, string> = {
   responsive: "빠른 끼어들기",
   balanced: "기본",
   relaxed: "느긋함",
+};
+
+const MODE_PRESETS: Record<BenchMode, { voiceName: string; vadPreset: VadPreset; lowVoice: boolean }> = {
+  fenok: { voiceName: "Kore", vadPreset: "balanced", lowVoice: false },
+  mona: { voiceName: "Achernar", vadPreset: "relaxed", lowVoice: true },
 };
 
 const TOOL_CATEGORY_LABEL: Record<LiveToolCategory, string> = {
@@ -540,8 +555,13 @@ async function readSocketData(data: MessageEvent["data"]): Promise<string> {
   return String(data);
 }
 
-export default function AdminLiveBench() {
-  const [mode, setMode] = useState<BenchMode>("fenok");
+type AdminLiveBenchProps = {
+  initialMode?: BenchMode;
+  simpleUi?: boolean;
+};
+
+export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false }: AdminLiveBenchProps = {}) {
+  const [mode, setMode] = useState<BenchMode>(initialMode);
   const [status, setStatus] = useState<SessionStatus>("checking");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [startedAtMs, setStartedAtMs] = useState<number | null>(null);
@@ -561,6 +581,8 @@ export default function AdminLiveBench() {
   const [enabledToolIds, setEnabledToolIds] = useState<string[]>([]);
   const [searchSelectionPolicy, setSearchSelectionPolicy] = useState<SearchSelectionPolicy>("multi");
   const [isSendingText, setIsSendingText] = useState(false);
+  const [card, setCard] = useState<ExpressionCard | null>(null);
+  const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const socketTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -614,6 +636,14 @@ export default function AdminLiveBench() {
 
   useEffect(() => {
     logsRef.current = logs;
+  }, [logs]);
+
+  useEffect(() => {
+    const el = transcriptScrollRef.current;
+    if (!el || logs.length === 0) return;
+    if (el.scrollTop < 40) {
+      el.scrollTop = 0;
+    }
   }, [logs]);
 
   const addLog = (role: BenchLog["role"], text: string) => {
@@ -1014,7 +1044,48 @@ export default function AdminLiveBench() {
 
     addLog("tool", `도구 요청 ${functionCalls.length}개 수신`);
 
-    void Promise.all(functionCalls.map((call) => executeLiveToolCall(call as LiveFunctionCall)))
+    const localResponses: Array<{ id: string; name: string; response: unknown }> = [];
+    const remoteCalls: LiveFunctionCall[] = [];
+
+    for (const call of functionCalls as LiveFunctionCall[]) {
+      if (call.name === "showCard") {
+        const id = typeof call.id === "string" ? call.id : "";
+        const args = call.args && typeof call.args === "object" ? call.args : {};
+        const state = typeof args.state === "string" ? args.state : "";
+        if (state === "clear") {
+          setCard(null);
+          localResponses.push({ id, name: "showCard", response: { ok: true } });
+        } else if (state === "prompt" || state === "reveal" || state === "drill") {
+          const ko = typeof args.ko === "string" ? args.ko : "";
+          if (state === "prompt" && !ko) {
+            localResponses.push({ id, name: "showCard", response: { ok: false, error: "INVALID_CARD" } });
+          } else {
+            setCard({
+              state,
+              ko,
+              en: typeof args.en === "string" ? args.en : undefined,
+              pron: typeof args.pron === "string" ? args.pron : undefined,
+              drillHint: typeof args.drillHint === "string" ? args.drillHint : undefined,
+              updatedAt: Date.now(),
+            });
+            localResponses.push({ id, name: "showCard", response: { ok: true } });
+          }
+        } else {
+          const id = typeof call.id === "string" ? call.id : "";
+          localResponses.push({ id, name: "showCard", response: { ok: false, error: "INVALID_CARD" } });
+        }
+      } else {
+        remoteCalls.push(call);
+      }
+    }
+
+    if (localResponses.length > 0) {
+      socket.send(JSON.stringify({ toolResponse: { functionResponses: localResponses } }));
+    }
+
+    if (remoteCalls.length === 0) return;
+
+    void Promise.all(remoteCalls.map((call) => executeLiveToolCall(call)))
       .then((functionResponses) => {
         if (socket.readyState !== WebSocket.OPEN) return;
         socket.send(JSON.stringify({
@@ -1071,11 +1142,13 @@ export default function AdminLiveBench() {
           ? payload.defaults.tools.registry
           : TOOL_REGISTRY_FALLBACK;
         setToolRegistry(nextToolRegistry);
-        setEnabledToolIds(getModeDefaultToolIds("fenok", nextToolRegistry, payload.defaults?.tools?.enabledToolIdsByMode));
+        setEnabledToolIds(getModeDefaultToolIds(initialMode, nextToolRegistry, payload.defaults?.tools?.enabledToolIdsByMode));
         setSearchSelectionPolicy(payload.defaults?.tools?.searchSelectionPolicy ?? "multi");
-        setVoiceName(payload.defaults?.voiceName ?? "Kore");
         setResponseStyle(payload.defaults?.responseStyle ?? "concise");
-        setVadPreset(payload.defaults?.vadPreset ?? "balanced");
+        const initPreset = MODE_PRESETS[initialMode];
+        setVoiceName(initialMode === "mona" ? initPreset.voiceName : (payload.defaults?.voiceName ?? initPreset.voiceName));
+        setVadPreset(initialMode === "mona" ? initPreset.vadPreset : (payload.defaults?.vadPreset ?? initPreset.vadPreset));
+        setLowVoice(initPreset.lowVoice);
         setStatus(payload.readiness.status === "READY" ? "ready" : "blocked");
         setMetrics((current) => ({
           ...current,
@@ -1389,6 +1462,7 @@ export default function AdminLiveBench() {
     sentMetaRef.current = false;
     logSeqRef.current = 0;
     clearFlushTimer();
+    setCard(null);
 
     try {
       await ensureAudioOutput();
@@ -1603,6 +1677,7 @@ export default function AdminLiveBench() {
     sentMetaRef.current = false;
     logSeqRef.current = 0;
     clearFlushTimer();
+    setCard(null);
     setStatus(readiness?.status === "BLOCKED" ? "blocked" : "ready");
     setSessionId(null);
     setStartedAtMs(null);
@@ -1673,8 +1748,34 @@ export default function AdminLiveBench() {
     });
   };
 
+  if (simpleUi) {
+    const phase: WindDownPhase = status === "listening"
+      ? "live"
+      : status === "connecting"
+        ? "connecting"
+        : status === "checking"
+          ? "boot"
+          : status === "blocked"
+            ? "blocked"
+            : status === "stopped"
+              ? "stopped"
+              : "ready";
+    const lastCoachLine = logs.find((entry) => entry.role === "bench")?.text ?? null;
+    return (
+      <MonaWindDown
+        phase={phase}
+        message={mainMessage}
+        card={card}
+        coachLine={lastCoachLine}
+        errorText={metrics.lastError}
+        onStart={() => void startSession()}
+        onStop={() => void stopSession()}
+      />
+    );
+  }
+
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-slate-50 px-4 py-5">
+    <main className="min-h-[calc(100vh-80px)] bg-slate-50 px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-5">
       <section className="mx-auto flex max-w-3xl flex-col gap-4">
         <header className="flex items-center justify-between gap-3">
           <div>
@@ -1697,9 +1798,14 @@ export default function AdminLiveBench() {
                 onClick={() => {
                   setMode(profile.id);
                   setTextProbe(profile.sampleProbe);
+                  const preset = MODE_PRESETS[profile.id];
+                  setVoiceName(preset.voiceName);
+                  setVadPreset(preset.vadPreset);
+                  setLowVoice(preset.lowVoice);
+                  setMetrics((current) => ({ ...current, lowVoice: preset.lowVoice }));
                   const nextEnabledToolIds = getModeDefaultToolIds(profile.id, toolRegistry);
                   setEnabledToolIds(nextEnabledToolIds);
-                  setSystemPrompt(buildPromptPreview(profile, lowVoice, responseStyle, nextEnabledToolIds));
+                  setSystemPrompt(buildPromptPreview(profile, preset.lowVoice, responseStyle, nextEnabledToolIds));
                   setPromptEdited(false);
                 }}
                 disabled={status === "connecting" || status === "listening"}
@@ -1771,7 +1877,7 @@ export default function AdminLiveBench() {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <label className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700">
+            <label className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700">
               <input
                 type="checkbox"
                 checked={lowVoice}
@@ -1787,7 +1893,7 @@ export default function AdminLiveBench() {
               />
               조용한 목소리로 답변
             </label>
-            <span className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-black text-slate-700">
+            <span className="inline-flex min-h-11 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-black text-slate-700">
               {toolTokenHint(activeToolCount)}
             </span>
           </div>
@@ -1890,6 +1996,8 @@ export default function AdminLiveBench() {
           </div>
         </details>
 
+        <ExpressionCardView card={card} />
+
         <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-black text-slate-950">대화 기록</h2>
@@ -1911,7 +2019,7 @@ export default function AdminLiveBench() {
               </button>
             </div>
           </div>
-          <div className="mt-3 space-y-2" aria-live="polite">
+          <div ref={transcriptScrollRef} className="mt-3 max-h-[40vh] space-y-2 overflow-y-auto" aria-live="polite">
             {logs.length === 0 ? (
               <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-sm font-semibold text-slate-400">
                 아직 대화가 없습니다.
@@ -2098,6 +2206,31 @@ function ToolBoard({
           </details>
         ))}
       </div>
+    </section>
+  );
+}
+
+function ExpressionCardView({ card }: { card: ExpressionCard | null }) {
+  if (!card) return null;
+
+  return (
+    <section aria-live="polite" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-2 text-xs font-black text-slate-500">
+        {card.state === "prompt" && <span aria-label="locked">🔒</span>}
+        <span>
+          {card.state === "prompt" ? "듣기 전" : card.state === "reveal" ? "교정" : "드릴"}
+        </span>
+      </div>
+      <p className="mt-2 text-xl font-black text-slate-950">{card.ko}</p>
+      {card.state === "reveal" && card.en && (
+        <p className="mt-1 text-lg font-bold text-emerald-700">{card.en}</p>
+      )}
+      {card.state === "reveal" && card.pron && (
+        <p className="mt-1 text-sm font-semibold text-slate-400">{card.pron}</p>
+      )}
+      {card.state === "drill" && card.drillHint && (
+        <p className="mt-1 text-sm font-bold text-amber-700">{card.drillHint}</p>
+      )}
     </section>
   );
 }
