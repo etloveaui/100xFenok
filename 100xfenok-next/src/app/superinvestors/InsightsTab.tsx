@@ -1,0 +1,450 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import TransitionLink from "@/components/TransitionLink";
+import type {
+  BuyingPressureData,
+  NewPositionsData,
+  HhiData,
+  ConvictionData,
+  BuyingPressureRow,
+  ConvictionPosition,
+} from "@/lib/superinvestors/types";
+
+// ---------------------------------------------------------------------------
+// Module-level caches
+// ---------------------------------------------------------------------------
+
+let bpCache: BuyingPressureData | null = null;
+let bpPromise: Promise<BuyingPressureData | null> | null = null;
+function loadBuyingPressure(): Promise<BuyingPressureData | null> {
+  if (bpCache) return Promise.resolve(bpCache);
+  if (bpPromise) return bpPromise;
+  bpPromise = fetch("/data/sec-13f/analytics/buying_pressure.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { bpCache = d; return d; })
+    .catch(() => { bpPromise = null; return null; });
+  return bpPromise;
+}
+
+let npCache: NewPositionsData | null = null;
+let npPromise: Promise<NewPositionsData | null> | null = null;
+function loadNewPositions(): Promise<NewPositionsData | null> {
+  if (npCache) return Promise.resolve(npCache);
+  if (npPromise) return npPromise;
+  npPromise = fetch("/data/sec-13f/analytics/new_positions.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { npCache = d; return d; })
+    .catch(() => { npPromise = null; return null; });
+  return npPromise;
+}
+
+let hhiCache: HhiData | null = null;
+let hhiPromise: Promise<HhiData | null> | null = null;
+function loadHhi(): Promise<HhiData | null> {
+  if (hhiCache) return Promise.resolve(hhiCache);
+  if (hhiPromise) return hhiPromise;
+  hhiPromise = fetch("/data/sec-13f/analytics/hhi.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { hhiCache = d; return d; })
+    .catch(() => { hhiPromise = null; return null; });
+  return hhiPromise;
+}
+
+let cvCache: ConvictionData | null = null;
+let cvPromise: Promise<ConvictionData | null> | null = null;
+function loadConviction(): Promise<ConvictionData | null> {
+  if (cvCache) return Promise.resolve(cvCache);
+  if (cvPromise) return cvPromise;
+  cvPromise = fetch("/data/sec-13f/analytics/conviction.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { cvCache = d; return d; })
+    .catch(() => { cvPromise = null; return null; });
+  return cvPromise;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function fmtUSD(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000_000) return `${n >= 0 ? "" : "-"}$${(abs / 1_000_000_000).toFixed(1)}B`;
+  if (abs >= 1_000_000) return `${n >= 0 ? "" : "-"}$${(abs / 1_000_000).toFixed(0)}M`;
+  return `${n >= 0 ? "" : "-"}$${Math.round(abs).toLocaleString()}`;
+}
+
+function isTicker(s: string): boolean {
+  return /^[A-Z0-9.]+$/.test(s) && s.length <= 6;
+}
+
+function classificationColor(c: string): string {
+  if (c === "concentrated") return "bg-amber-100 text-amber-700 border-amber-200";
+  if (c === "moderate") return "bg-slate-100 text-slate-600 border-slate-200";
+  return "bg-sky-100 text-sky-700 border-sky-200";
+}
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+      <div className="h-5 w-1/3 rounded bg-slate-200" />
+      <div className="mt-3 space-y-2">
+        {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-4 w-full rounded bg-slate-200" />)}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Card 1: 매수 압력
+// ---------------------------------------------------------------------------
+
+function BuyingPressureCard({ data }: { data: BuyingPressureData }) {
+  const buyRows = useMemo(() => {
+    return (data.top_buying ?? [])
+      .filter((r) => r.net_buyers + r.net_sellers >= 3)
+      .sort((a, b) => b.pressure - a.pressure)
+      .slice(0, 12);
+  }, [data]);
+
+  const sellRows = useMemo(() => {
+    return (data.top_selling ?? [])
+      .filter((r) => r.net_buyers + r.net_sellers >= 3)
+      .sort((a, b) => a.pressure - b.pressure)
+      .slice(0, 12);
+  }, [data]);
+
+  const hasSelling = sellRows.length > 0;
+
+  return (
+    <div>
+      <div className={hasSelling ? "grid gap-4 lg:grid-cols-2" : ""}>
+        <PressurePanel title="매수 압력 TOP" rows={buyRows} color="emerald" signLabel={(r) => `${r.net_buyers} vs ${r.net_sellers}`} />
+        {hasSelling ? (
+          <PressurePanel title="매도 압력 TOP" rows={sellRows} color="rose" signLabel={(r) => `${r.net_sellers} vs ${r.net_buyers}`} />
+        ) : null}
+      </div>
+      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+        {data.metadata.quarter} 기준 · 29인 전체 포트폴리오 변화량 기반 매수/매도 압력 (net_buyers+net_sellers≥3 필터)
+      </p>
+    </div>
+  );
+}
+
+function PressurePanel({ title, rows, color, signLabel }: {
+  title: string; rows: BuyingPressureRow[]; color: "emerald" | "rose";
+  signLabel: (r: BuyingPressureRow) => string;
+}) {
+  const textColor = color === "emerald" ? "text-emerald-700" : "text-rose-700";
+  const barColor = color === "emerald" ? "#10b981" : "#f43f5e";
+  if (rows.length === 0) return <p className="text-xs text-slate-400">데이터 없음</p>;
+  return (
+    <div>
+      <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{title}</h4>
+      <div className="-mx-1 overflow-x-auto px-1">
+        <table className="w-full min-w-[380px] text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+              <th className="px-2 py-1.5 text-left">티커</th>
+              <th className="px-2 py-1.5 text-center">매수/매도</th>
+              <th className="px-2 py-1.5 text-left">압력</th>
+              <th className="px-2 py-1.5 text-right">순변화액</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.ticker} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-1.5">
+                  <TransitionLink href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-black text-brand-interactive hover:underline">
+                    {r.ticker}
+                  </TransitionLink>
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  <span className={`text-[10px] font-bold ${textColor}`}>{signLabel(r)}</span>
+                </td>
+                <td className="px-2 py-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 flex-1 rounded-full bg-slate-100">
+                      <div className="h-2 rounded-full" style={{ width: `${Math.abs(r.pressure) * 100}%`, backgroundColor: barColor }} />
+                    </div>
+                    <span className="orbitron tabular-nums text-[10px] font-bold text-slate-600">{(Math.abs(r.pressure) * 100).toFixed(0)}%</span>
+                  </div>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className={`orbitron tabular-nums text-[10px] font-bold ${r.total_value_change >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                    {fmtUSD(r.total_value_change)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Card 2: 신규 편입 빅베팅
+// ---------------------------------------------------------------------------
+
+function NewPositionsCard({ data }: { data: NewPositionsData }) {
+  const rows = useMemo(() => {
+    const q = data.metadata.quarter;
+    return (data.new_positions ?? [])
+      .filter((r) => r.quarter_added === q)
+      .sort((a, b) => b.position_value - a.position_value)
+      .slice(0, 12);
+  }, [data]);
+
+  return (
+    <div>
+      <div className="-mx-1 overflow-x-auto px-1">
+        <table className="w-full min-w-[400px] text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+              <th className="px-2 py-1.5 text-left">종목</th>
+              <th className="px-2 py-1.5 text-left">구루</th>
+              <th className="px-2 py-1.5 text-right">금액</th>
+              <th className="px-2 py-1.5 text-right">비중</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={`${r.ticker}-${r.investor}-${i}`} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-1.5">
+                  {isTicker(r.ticker) ? (
+                    <TransitionLink href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-black text-brand-interactive hover:underline">
+                      {r.ticker}
+                    </TransitionLink>
+                  ) : (
+                    <span className="font-semibold text-slate-700">{r.ticker}</span>
+                  )}
+                </td>
+                <td className="px-2 py-1.5">
+                  <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums text-[10px] font-bold text-slate-900">{fmtUSD(r.position_value)}</span>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{(r.position_weight * 100).toFixed(2)}%</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length === 0 ? <p className="text-xs text-slate-400">현재 분기 신규 편입 데이터 없음</p> : null}
+      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+        {data.metadata.quarter} 신규 편입 · 총 {data.metadata.new_positions_count}건 ({data.metadata.unique_tickers}종목)
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Card 3: 확신 베팅 (TOP5)
+// ---------------------------------------------------------------------------
+
+function ConvictionCard({ data }: { data: ConvictionData }) {
+  const rows = useMemo(() => {
+    const flat: Array<ConvictionPosition & { investor: string }> = [];
+    for (const [investor, positions] of Object.entries(data.by_investor ?? {})) {
+      for (const p of positions) {
+        if (p.is_top5) flat.push({ ...p, investor });
+      }
+    }
+    return flat.sort((a, b) => b.weight - a.weight).slice(0, 12);
+  }, [data]);
+
+  return (
+    <div>
+      <div className="-mx-1 overflow-x-auto px-1">
+        <table className="w-full min-w-[400px] text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+              <th className="px-2 py-1.5 text-left">구루</th>
+              <th className="px-2 py-1.5 text-left">티커</th>
+              <th className="px-2 py-1.5 text-right">포트 비중</th>
+              <th className="px-2 py-1.5 text-right">평가액</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={`${r.investor}-${r.ticker}`} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-1.5">
+                  <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
+                </td>
+                <td className="px-2 py-1.5">
+                  <TransitionLink href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-black text-brand-interactive hover:underline">
+                    {r.ticker}
+                  </TransitionLink>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums font-bold text-slate-900">{(r.weight * 100).toFixed(1)}%</span>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{fmtUSD(r.market_value)}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+        {data.metadata.quarter} · 각 구루 포트폴리오 TOP5 포지션 (비중 기준 정렬, 상위 12개)
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Card 4: 집중도 (HHI)
+// ---------------------------------------------------------------------------
+
+function HhiCard({ data }: { data: HhiData }) {
+  const rows = useMemo(() => {
+    return Object.values(data.by_investor ?? [])
+      .sort((a, b) => b.hhi - a.hhi)
+      .slice(0, 8);
+  }, [data]);
+
+  return (
+    <div>
+      <div className="-mx-1 overflow-x-auto px-1">
+        <table className="w-full min-w-[400px] text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+              <th className="px-2 py-1.5 text-left">구루</th>
+              <th className="px-2 py-1.5 text-right">HHI</th>
+              <th className="px-2 py-1.5 text-right">TOP1 비중</th>
+              <th className="px-2 py-1.5 text-right">보유수</th>
+              <th className="px-2 py-1.5 text-center">분류</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.investor} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-1.5">
+                  <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums font-bold text-slate-900">{r.hhi.toFixed(2)}</span>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{(r.top_weight * 100).toFixed(1)}%</span>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{r.holdings_count}</span>
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${classificationColor(r.classification)}`}>
+                    {r.classification}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+        {data.metadata.quarter} · HHI (Herfindahl-Hirschman Index): 0~1, 높을수록 집중 · concentrated≥0.25, moderate≥0.15, diversified&lt;0.15
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main InsightsTab
+// ---------------------------------------------------------------------------
+
+export default function InsightsTab() {
+  const [bp, setBp] = useState<BuyingPressureData | null>(null);
+  const [np, setNp] = useState<NewPositionsData | null>(null);
+  const [hhi, setHhi] = useState<HhiData | null>(null);
+  const [cv, setCv] = useState<ConvictionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([loadBuyingPressure(), loadNewPositions(), loadHhi(), loadConviction()]).then(([bpR, npR, hhiR, cvR]) => {
+      if (cancelled) return;
+      const anyData = bpR || npR || hhiR || cvR;
+      if (!anyData) { setFailed(true); }
+      setBp(bpR); setNp(npR); setHhi(hhiR); setCv(cvR);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const quarterLabel = bp?.metadata.quarter ?? np?.metadata.quarter ?? hhi?.metadata.quarter ?? "";
+
+  if (failed) {
+    return (
+      <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+        인사이트 데이터를 불러오지 못했습니다. /data/sec-13f/analytics/ 경로를 확인해 주세요.
+      </div>
+    );
+  }
+
+  return (
+    <section className="space-y-4">
+      {/* Header strip */}
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          {quarterLabel ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              {quarterLabel} 기준
+            </span>
+          ) : null}
+          <span className="text-[10px] font-bold text-slate-400">13F 공시는 분기 종료 후 최대 45일 지연됩니다</span>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-4">
+          <SkeletonCard />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <SkeletonCard /><SkeletonCard />
+          </div>
+          <SkeletonCard />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* 1. 매수 압력 */}
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+            <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
+            <p className="mb-3 text-[10px] font-semibold text-slate-400">구루 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
+            {bp ? <BuyingPressureCard data={bp} /> : <SkeletonCard />}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* 2. 신규 편입 빅베팅 */}
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+              <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">신규 편입 빅베팅</h3>
+              <p className="mb-3 text-[10px] font-semibold text-slate-400">이번 분기 처음 포트폴리오에 편입된 종목 (금액순)</p>
+              {np ? <NewPositionsCard data={np} /> : <SkeletonCard />}
+            </div>
+
+            {/* 3. 확신 베팅 */}
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+              <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">확신 베팅 (TOP5)</h3>
+              <p className="mb-3 text-[10px] font-semibold text-slate-400">각 구루 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
+              {cv ? <ConvictionCard data={cv} /> : <SkeletonCard />}
+            </div>
+          </div>
+
+          {/* 4. 집중도 */}
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+            <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">집중도 (HHI)</h3>
+            <p className="mb-3 text-[10px] font-semibold text-slate-400">포트폴리오 집중도 — HHI가 높을수록 소수 종목에 집중 투자</p>
+            {hhi ? <HhiCard data={hhi} /> : <SkeletonCard />}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

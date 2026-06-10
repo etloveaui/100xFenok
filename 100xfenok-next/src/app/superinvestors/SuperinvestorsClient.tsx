@@ -5,6 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import { PortfolioTreemap, SectorMixPanel, loadPortfolioViews } from "./PortfolioCharts";
+import InsightsTab from "./InsightsTab";
 import type {
   SuperInvestorsTab,
   ConsensusTicker,
@@ -172,7 +173,7 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
               <td className="px-2 py-2">
                 {h.ticker ? (
                   <TransitionLink
-                    href={`/screener?ticker=${encodeURIComponent(h.ticker)}`}
+                    href={`/stock/${encodeURIComponent(h.ticker)}`}
                     className="font-black text-brand-interactive hover:underline"
                   >
                     {h.ticker}
@@ -412,7 +413,7 @@ function TradeRankingPanel({
                 <td className="px-2 py-2">
                   <span className="block max-w-[130px] truncate font-bold text-slate-900">{r.name}</span>
                   <TransitionLink
-                    href={`/screener?ticker=${encodeURIComponent(r.ticker)}`}
+                    href={`/stock/${encodeURIComponent(r.ticker)}`}
                     className="text-[10px] font-black text-brand-interactive hover:underline"
                   >
                     {r.ticker}
@@ -595,6 +596,7 @@ export default function SuperinvestorsClient() {
           { id: "gurus" as const, label: "구루 리스트" },
           { id: "by-ticker" as const, label: "종목별 보유" },
           { id: "trades" as const, label: "매매랭킹" },
+          { id: "insights" as const, label: "인사이트" },
         ].map((t) => (
           <button
             key={t.id}
@@ -969,7 +971,7 @@ export default function SuperinvestorsClient() {
                 </div>
                 <div className="flex justify-end">
                   <TransitionLink
-                    href={`/screener?ticker=${encodeURIComponent(search.trim().toUpperCase())}`}
+                    href={`/stock/${encodeURIComponent(search.trim().toUpperCase())}`}
                     className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
                   >
                     스크리너에서 보기 →
@@ -1051,6 +1053,9 @@ export default function SuperinvestorsClient() {
           ) : null}
         </section>
       )}
+
+      {/* Insights */}
+      {tab === "insights" && <InsightsTab />}
 
     </main>
   );

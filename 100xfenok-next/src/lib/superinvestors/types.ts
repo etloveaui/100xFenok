@@ -8,7 +8,7 @@
  * - /data/sec-13f/investors/{name}.json
  */
 
-export type SuperInvestorsTab = "consensus" | "gurus" | "by-ticker" | "trades";
+export type SuperInvestorsTab = "consensus" | "gurus" | "by-ticker" | "trades" | "insights";
 
 export interface TradesRankingRow {
   rank: number;
@@ -87,6 +87,66 @@ export interface PortfolioViewsData {
     sectors: Record<string, number>;
   };
   investors: Record<string, InvestorPortfolioView>;
+}
+
+// ---------------------------------------------------------------------------
+// W3a Insight tab types
+// ---------------------------------------------------------------------------
+
+export interface BuyingPressureRow {
+  ticker: string;
+  net_buyers: number;
+  net_sellers: number;
+  net_holders: number;
+  pressure: number;
+  total_value_change: number;
+}
+
+export interface BuyingPressureData {
+  metadata: { tickers_count: number; quarter: string; current_cohort_investors: number };
+  buying_pressure: Record<string, BuyingPressureRow>;
+  top_buying: BuyingPressureRow[];
+  top_selling: BuyingPressureRow[];
+}
+
+export interface NewPositionRow {
+  ticker: string;
+  investor: string;
+  quarter_added: string;
+  position_value: number;
+  position_weight: number;
+}
+
+export interface NewPositionsData {
+  metadata: { quarter: string; new_positions_count: number; unique_tickers: number };
+  new_positions: NewPositionRow[];
+}
+
+export interface HhiRow {
+  investor: string;
+  hhi: number;
+  holdings_count: number;
+  top_weight: number;
+  classification: string;
+}
+
+export interface HhiData {
+  metadata: { investors_count: number; classifications: Record<string, number>; quarter: string };
+  by_investor: Record<string, HhiRow>;
+}
+
+export interface ConvictionPosition {
+  ticker: string;
+  weight: number;
+  rank: number;
+  is_top5: boolean;
+  is_top10: boolean;
+  market_value: number;
+}
+
+export interface ConvictionData {
+  metadata: { quarter: string; investors_count: number };
+  by_investor: Record<string, ConvictionPosition[]>;
 }
 
 export interface ConsensusMetadata {
