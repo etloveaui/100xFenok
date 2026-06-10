@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-06-08
+> **Last Updated**: 2026-06-09
 > **Total Files**: 1,737 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -36,7 +36,7 @@
 - Benchmarks latest: 30,441 records, 2010-07-23 ~ 2026-06-05, 37 sections, 829 S&P 500 data points
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,353 non-null values + 52 null placeholders)
 - Damodaran: industries (96 w/ beta, margins, EVA), extended US industry metrics (11 datasets), non-US regional metrics (7 regions x 17 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
-- Yardney: S&P 500 fair value model, 1,867 weekly records, latest 2026-05-01 fair value 6,015.64 and premium +20.19%
+- Yardney: S&P 500 fair value model, 1,872 weekly records, latest 2026-06-05 fair value 6,284.32 and premium +17.49%
 
 ### Institutional Data (sec-13f/)
 - 30 tracked investors' 13F holdings, with 2026-Q1 included where filed (29Q accumulate mode; Einhorn last filed 2023-Q4 and is flagged `is_stale`)
