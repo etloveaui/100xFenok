@@ -4,11 +4,19 @@ import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 
-interface DetailData {
+export interface DetailData {
   years: string[];
   valuation: { per: number[] };
-  income_statement: { revenue: number[] };
+  income_statement: {
+    revenue: number[];
+    gross_profit?: number[];
+    operating_income?: number[];
+    net_income?: number[];
+  };
   per_share: { eps: number[] };
+  cash_flow?: { cfo?: number[]; capex?: number[]; fcf?: number[] };
+  profitability?: { roe?: number[]; operating_margin?: number[] };
+  growth?: { revenue_growth?: number[]; eps_growth?: number[] };
   per_bands?: {
     current: number;
     min_8y: number;
@@ -19,9 +27,14 @@ interface DetailData {
   valuation_estimates?: {
     per?: { fy1?: number | null; fy2?: number | null; fy3?: number | null };
   };
+  income_statement_estimates?: Record<string, Record<string, number>>;
+  cash_flow_estimates?: Record<string, Record<string, number>>;
+  per_share_estimates?: Record<string, Record<string, number>>;
+  dividend_estimates?: Record<string, Record<string, number>>;
+  dividend?: { dps?: number[] };
 }
 
-interface F13Entry {
+export interface F13Entry {
   investor: string;
   shares?: number;
   weight?: number;
@@ -92,7 +105,7 @@ export function use13FData(ticker: string) {
   return entries;
 }
 
-function Sparkline({ data, color }: { data: number[]; color: string }) {
+export function Sparkline({ data, color }: { data: number[]; color: string }) {
   if (!data || data.length < 2) return <span className="text-xs text-slate-300">—</span>;
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -128,7 +141,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-function PerBandChart({
+export function PerBandChart({
   years,
   per,
   perBands,
@@ -344,7 +357,7 @@ function PerBandChart({
   );
 }
 
-function fmtLarge(n: number): string {
+export function fmtLarge(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}T`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}B`;
   return `${n}M`;
