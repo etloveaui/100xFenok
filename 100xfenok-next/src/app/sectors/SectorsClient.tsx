@@ -77,7 +77,7 @@ export default function SectorsClient() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Sector Intelligence</p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">섹터 히트맵</h1>
+          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">섹터 히트맵</h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
             11개 미국 업종의 다기간 성과를 한눈에. 업종 순환, 강·약 순위, 섹터 ETF를 비교합니다.
           </p>

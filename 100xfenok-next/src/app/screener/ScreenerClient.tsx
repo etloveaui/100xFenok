@@ -336,7 +336,7 @@ export default function ScreenerClient() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Stock Screener</p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">종목 스크리너</h1>
+          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">종목 스크리너</h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
             글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 거르고 줄세웁니다.
           </p>

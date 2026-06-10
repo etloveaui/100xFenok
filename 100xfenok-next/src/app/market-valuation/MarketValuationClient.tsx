@@ -78,7 +78,7 @@ export default function MarketValuationClient() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Market Valuation</p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">시장 밸류에이션</h1>
+          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">시장 밸류에이션</h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
             주요 미국 지수가 <strong className="text-slate-800">역사적으로 비싼지/싼지</strong>. Fwd P/E·P/B를 16년 밴드와 대조합니다.
           </p>

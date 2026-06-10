@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import TransitionLink from "@/components/TransitionLink";
+import ExploreHotTopics from "./ExploreHotTopics";
 
 export const metadata: Metadata = {
   title: "Explore | 100xFenok",
@@ -60,7 +61,7 @@ export default function ExplorePage() {
     <main className="container mx-auto max-w-5xl px-3 py-6 sm:px-4 sm:py-10">
       <header className="max-w-2xl">
         <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Explore</p>
-        <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">데이터 탐색</h1>
+        <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">데이터 탐색</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
           <strong className="text-slate-800">시장 → 섹터 → 종목</strong>으로 좁혀 들어가며 살펴보세요.
           전체 시장이 어떤지 보고, 어떤 업종이 강한지 찾고, 그 안의 종목을 거릅니다.
@@ -103,8 +104,10 @@ export default function ExplorePage() {
         })}
       </div>
 
+      <ExploreHotTopics />
+
       <p className="mt-6 text-[11px] text-slate-400">
-        시장 밸류에이션은 곧 추가됩니다 (지수 밸류 + 신용). 데이터: Global Scouter · Bloomberg benchmarks.
+        데이터: Global Scouter · Bloomberg benchmarks · SEC 13F.
       </p>
     </main>
   );
