@@ -3,6 +3,7 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import SmartMoneyPanel from "./SmartMoneyPanel";
 import TransitionLink from "@/components/TransitionLink";
+import DataNav from "@/components/DataNav";
 import { useSectorData } from "@/hooks/useSectorData";
 import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow } from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
@@ -83,6 +84,7 @@ export default function SectorsClient() {
             11개 미국 업종의 다기간 성과를 한눈에. 업종 순환, 강·약 순위, 섹터 ETF를 비교합니다.
           </p>
         </div>
+        <DataNav active="sectors" />
         <div className="flex items-center gap-2">
           {dateLabel ? (
             <span

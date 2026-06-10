@@ -6,6 +6,7 @@ import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import { PortfolioTreemap, SectorMixPanel, loadPortfolioViews } from "./PortfolioCharts";
 import InsightsTab from "./InsightsTab";
+import DataNav from "@/components/DataNav";
 import type {
   SuperInvestorsTab,
   ConsensusTicker,
@@ -567,6 +568,7 @@ export default function SuperinvestorsClient() {
             워런 버핏, 세스 클라먼 등 30개 슈퍼인베스터의 13F 보유 데이터를 탐색합니다.
           </p>
         </div>
+        <DataNav active="superinvestors" />
         <div className="flex flex-col items-end gap-1.5">
           {quarterLabel ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">

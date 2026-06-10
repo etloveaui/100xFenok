@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import TransitionLink from "@/components/TransitionLink";
 import ExploreHotTopics from "./ExploreHotTopics";
 import ExploreDashboard from "./ExploreDashboard";
+import DataNav from "@/components/DataNav";
 
 export const metadata: Metadata = {
   title: "Explore | 100xFenok",
@@ -67,6 +68,9 @@ export default function ExplorePage() {
           <strong className="text-slate-800">시장 → 섹터 → 종목</strong>으로 좁혀 들어가며 살펴보세요.
           전체 시장이 어떤지 보고, 어떤 업종이 강한지 찾고, 그 안의 종목을 거릅니다.
         </p>
+        <div className="mt-3">
+          <DataNav active="explore" />
+        </div>
       </header>
 
       <ExploreDashboard />

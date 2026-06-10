@@ -3,6 +3,7 @@
 import TransitionLink from "@/components/TransitionLink";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import type { ValuationBand } from "@/lib/market-valuation/types";
+import DataNav from "@/components/DataNav";
 import { formatPercent } from "@/lib/dashboard/formatters";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -83,6 +84,7 @@ export default function MarketValuationClient() {
             주요 미국 지수가 <strong className="text-slate-800">역사적으로 비싼지/싼지</strong>. Fwd P/E·P/B를 16년 밴드와 대조합니다.
           </p>
         </div>
+        <DataNav active="market" />
         <div className="flex items-center gap-2">
           {sourceDate ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">

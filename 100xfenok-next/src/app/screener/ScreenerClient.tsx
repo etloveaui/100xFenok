@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useScreenerData } from "@/hooks/useScreenerData";
+import DataNav from "@/components/DataNav";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandClass, bandLabel, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
@@ -367,6 +368,7 @@ export default function ScreenerClient() {
             글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 거르고 줄세웁니다.
           </p>
         </div>
+        <DataNav active="screener" />
         <div className="flex items-center gap-2">
           {sourceDate ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">
