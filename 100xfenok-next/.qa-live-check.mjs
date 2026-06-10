@@ -38,6 +38,16 @@ if (await tradesTab.count()) {
   await shot("02-superinvestors-trades-MISSING");
 }
 
+// 2b. insights tab
+const insightsTab = page.getByRole("button", { name: "인사이트" });
+if (await insightsTab.count()) {
+  await insightsTab.first().click();
+  await page.waitForTimeout(2000);
+  await shot("02b-superinvestors-insights");
+} else {
+  console.log("!! 인사이트 tab NOT FOUND");
+}
+
 // 3. guru list tab + expand first guru
 const guruTab = page.getByRole("button", { name: "구루 리스트" });
 if (await guruTab.count()) {
@@ -68,6 +78,25 @@ await shot("04-explore");
 await page.goto(`${BASE}/stock/AAPL`, { waitUntil: "load" });
 await page.waitForTimeout(4500);
 await shot("05-stock-aapl");
+
+// 5b. screener guru preset
+await page.goto(`${BASE}/screener`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(2000);
+const guruPreset = page.getByRole("button", { name: "구루픽" });
+if (await guruPreset.count()) {
+  await guruPreset.first().click();
+  await page.waitForTimeout(1200);
+  await shot("07-screener-guru-preset");
+} else {
+  console.log("!! 구루픽 preset NOT FOUND");
+}
+
+// 5c. sectors smart money (bottom)
+await page.goto(`${BASE}/sectors`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(2000);
+await page.keyboard.press("End");
+await page.waitForTimeout(1500);
+await shot("08-sectors-smartmoney");
 
 // 6. mobile viewport check of superinvestors trades
 await page.setViewportSize({ width: 390, height: 844 });
