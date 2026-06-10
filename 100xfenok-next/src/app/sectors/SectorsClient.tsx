@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import SmartMoneyPanel from "./SmartMoneyPanel";
 import TransitionLink from "@/components/TransitionLink";
 import { useSectorData } from "@/hooks/useSectorData";
 import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow } from "@/lib/sectors/types";
@@ -293,6 +294,8 @@ export default function SectorsClient() {
           업종 지수 밸류에이션 (Bloomberg). 시장 전체 밸류는 <strong>시장 밸류에이션</strong> 페이지 참고.
         </p>
       </SectionCard>
+      <SmartMoneyPanel />
+
     </main>
   );
 }
