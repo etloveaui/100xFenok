@@ -24,6 +24,7 @@ type LiveToolMetadata = {
 
 type BenchLog = {
   id: string;
+  seq?: number;
   role: "system" | "user" | "bench" | "tool" | "error";
   text: string;
   at: string;
@@ -575,6 +576,10 @@ export default function AdminLiveBench() {
   const scheduledSourcesRef = useRef<AudioBufferSourceNode[]>([]);
   const dropAudioUntilTurnCompleteRef = useRef(false);
   const dropAudioResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const logSeqRef = useRef(0);
+  const pendingRef = useRef<BenchLog[]>([]);
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sentMetaRef = useRef(false);
   const isSecure = typeof window === "undefined" ? true : window.isSecureContext;
 
   const statusLabel = useMemo(() => STATUS_TEXT[status], [status]);
@@ -612,15 +617,17 @@ export default function AdminLiveBench() {
   }, [logs]);
 
   const addLog = (role: BenchLog["role"], text: string) => {
-    setLogs((current) => [
-      {
-        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        role,
-        text,
-        at: nowLabel(),
-      },
-      ...current,
-    ].slice(0, MAX_LOG_ENTRIES));
+    const seq = ++logSeqRef.current;
+    const entry: BenchLog = {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      seq,
+      role,
+      text,
+      at: nowLabel(),
+    };
+    setLogs((current) => [entry, ...current].slice(0, MAX_LOG_ENTRIES));
+    pendingRef.current.push(entry);
+    scheduleFlush();
   };
 
   const appendTranscriptLog = (role: "user" | "bench", text: string) => {
@@ -630,25 +637,30 @@ export default function AdminLiveBench() {
     setLogs((current) => {
       const first = current[0];
       if (first?.role === role) {
-        return [
-          {
-            ...first,
-            text: mergeTranscriptText(first.text, cleanText),
-            at: nowLabel(),
-          },
-          ...current.slice(1),
-        ];
+        const merged = {
+          ...first,
+          text: mergeTranscriptText(first.text, cleanText),
+          at: nowLabel(),
+        };
+        const pendingFirst = pendingRef.current[0];
+        if (pendingFirst && pendingFirst.role === role) {
+          pendingFirst.text = merged.text;
+          pendingFirst.at = merged.at;
+        }
+        return [merged, ...current.slice(1)];
       }
 
-      return [
-        {
-          id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          role,
-          text: cleanText,
-          at: nowLabel(),
-        },
-        ...current,
-      ].slice(0, MAX_LOG_ENTRIES);
+      const seq = ++logSeqRef.current;
+      const entry: BenchLog = {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        seq,
+        role,
+        text: cleanText,
+        at: nowLabel(),
+      };
+      pendingRef.current.push(entry);
+      scheduleFlush();
+      return [entry, ...current].slice(0, MAX_LOG_ENTRIES);
     });
   };
 
@@ -672,6 +684,88 @@ export default function AdminLiveBench() {
       clearTimeout(dropAudioResetTimeoutRef.current);
       dropAudioResetTimeoutRef.current = null;
     }
+  };
+
+  const clearFlushTimer = () => {
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+  };
+
+  const flushAppends = async (useBeacon = false) => {
+    clearFlushTimer();
+    if (!sessionId || pendingRef.current.length === 0) return;
+
+    const capped = pendingRef.current.length > 60
+      ? pendingRef.current.slice(-60)
+      : pendingRef.current;
+
+    const body: Record<string, unknown> = {
+      op: "append",
+      sessionId,
+      mode,
+      startedAt: startedAtMs ? new Date(startedAtMs).toISOString() : new Date().toISOString(),
+      entries: capped.map((e) => ({ seq: e.seq, role: e.role, text: e.text, at: e.at })),
+    };
+
+    if (!sentMetaRef.current || useBeacon) {
+      body.settings = {
+        lowVoice,
+        voiceName,
+        responseStyle,
+        vadPreset,
+        enabledToolIds,
+      };
+      body.client = typeof window === "undefined" ? {} : {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        screenWidth: window.screen.width,
+        screenHeight: window.screen.height,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio,
+      };
+    }
+
+    if (useBeacon) {
+      body.stoppedAt = new Date().toISOString();
+      body.metrics = metrics;
+    }
+
+    const json = JSON.stringify(body);
+
+    if (useBeacon && typeof navigator !== "undefined" && navigator.sendBeacon) {
+      const blob = new Blob([json], { type: "application/json" });
+      const sent = navigator.sendBeacon("/api/admin/live/log/", blob);
+      if (sent) {
+        pendingRef.current = [];
+        sentMetaRef.current = true;
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch("/api/admin/live/log/", {
+        method: "POST",
+        keepalive: true,
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: json,
+      });
+      if (response.ok) {
+        pendingRef.current = [];
+        sentMetaRef.current = true;
+      }
+    } catch {
+      // silent; server dedupes by seq; next flush retries
+    }
+  };
+
+  const scheduleFlush = () => {
+    if (flushTimerRef.current || !sessionId) return;
+    flushTimerRef.current = setTimeout(() => void flushAppends(), 2500);
   };
 
   const requestWakeLock = async () => {
@@ -1046,7 +1140,23 @@ export default function AdminLiveBench() {
   }, [status]);
 
   useEffect(() => {
+    const handlePageHide = () => void flushAppends(true);
+    const handleVisibilityHidden = () => {
+      if (document.visibilityState === "hidden") void flushAppends(true);
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibilityHidden);
     return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibilityHidden);
+    };
+  }, [sessionId, mode, lowVoice, voiceName, responseStyle, vadPreset, enabledToolIds, metrics]);
+
+  useEffect(() => {
+    return () => {
+      clearFlushTimer();
+      void flushAppends(true);
       clearSocketTimeout();
       clearDropAudioTimeout();
       const socket = wsRef.current;
@@ -1275,6 +1385,10 @@ export default function AdminLiveBench() {
     }
 
     resetRuntime();
+    pendingRef.current = [];
+    sentMetaRef.current = false;
+    logSeqRef.current = 0;
+    clearFlushTimer();
 
     try {
       await ensureAudioOutput();
@@ -1391,8 +1505,10 @@ export default function AdminLiveBench() {
   const stopSession = async () => {
     const currentSessionId = sessionId;
     const stoppedAt = new Date().toISOString();
+    const stopSeq = ++logSeqRef.current;
     const stopLog: BenchLog = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      seq: stopSeq,
       role: "system",
       text: "대화를 멈췄어요",
       at: nowLabel(),
@@ -1403,6 +1519,8 @@ export default function AdminLiveBench() {
       micPermission: "stopped",
     };
     const currentLogs = [stopLog, ...logsRef.current].slice(0, MAX_LOG_ENTRIES);
+    pendingRef.current.push(stopLog);
+    await flushAppends();
     resetRuntime();
     setStatus("stopped");
     setMetrics(finalMetrics);
@@ -1481,6 +1599,10 @@ export default function AdminLiveBench() {
 
   const resetBench = () => {
     resetRuntime();
+    pendingRef.current = [];
+    sentMetaRef.current = false;
+    logSeqRef.current = 0;
+    clearFlushTimer();
     setStatus(readiness?.status === "BLOCKED" ? "blocked" : "ready");
     setSessionId(null);
     setStartedAtMs(null);

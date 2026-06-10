@@ -10,6 +10,7 @@ import {
   prepareMonaStudySnapshot,
 } from "../src/lib/server/mona-study-tools.ts";
 import {
+  appendAdminLiveConversationLog,
   saveAdminLiveConversationLog,
 } from "../src/lib/server/admin-live-voice-logs.ts";
 
@@ -439,6 +440,7 @@ async function handleStudy(body) {
 
 async function handleLog(body) {
   if (!body || typeof body !== "object") return { error: "INVALID_JSON_BODY" };
+  if (body.op === "append") return appendAdminLiveConversationLog(body);
   return saveAdminLiveConversationLog(body);
 }
 
