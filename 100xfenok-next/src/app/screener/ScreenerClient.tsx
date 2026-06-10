@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
@@ -38,6 +38,7 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "momentum6m", label: "6M", align: "right" },
   { key: "momentum12m", label: "12M", align: "right" },
   { key: "rank", label: "Rank", align: "right" },
+  { key: "guruHolders", label: "구루", align: "right" },
   { key: "perBandCurrent", label: "PER밴드", align: "left" },
   { key: "peForward", label: "Fwd PER", align: "right" },
   { key: "epsForward", label: "Fwd EPS", align: "right" },
@@ -47,13 +48,14 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "ret5y", label: "5Y", align: "right" },
 ];
 
-type ColumnPreset = "basic" | "value" | "momentum" | "dividend";
+type ColumnPreset = "basic" | "value" | "momentum" | "dividend" | "guru";
 
 const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
   value: ["ticker", "name", "sector", "per", "peForward", "pbr", "roe", "opm", "eps", "perBandCurrent", "rank"],
   momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum6m", "momentum12m", "rank"],
   dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
+  guru: ["ticker", "name", "sector", "guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m"],
 };
 
 const PRESET_LABEL: Record<ColumnPreset, string> = {
@@ -61,6 +63,7 @@ const PRESET_LABEL: Record<ColumnPreset, string> = {
   value: "밸류",
   momentum: "모멘텀",
   dividend: "배당",
+  guru: "구루픽",
 };
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -206,6 +209,12 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
       return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum6m))}>{fmtSignedPct(stock.momentum6m)}</span>;
     case "momentum12m":
       return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
+    case "guruHolders":
+      return stock.guruHolders != null ? (
+        <span className="orbitron tabular-nums font-bold text-violet-700">{stock.guruHolders}</span>
+      ) : (
+        <span className="text-slate-300">—</span>
+      );
     case "rank":
       return <span className="orbitron tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
     case "perBandCurrent":
@@ -228,7 +237,24 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
 }
 
 export default function ScreenerClient() {
-  const { stocks, dataReady, failed, sourceDate, sectors, countries } = useScreenerData();
+  const { stocks: rawStocks, dataReady, failed, sourceDate, sectors, countries } = useScreenerData();
+  const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/data/sec-13f/analytics/guru_holders_index.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!cancelled && j?.holders) setGuruMap(j.holders as Record<string, number>);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const stocks = useMemo(() => {
+    if (!guruMap) return rawStocks;
+    return rawStocks.map((s) => ({ ...s, guruHolders: guruMap[s.ticker] ?? null }));
+  }, [rawStocks, guruMap]);
 
   const [search, setSearch] = useState("");
   const [sector, setSector] = useState("");

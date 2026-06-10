@@ -10,6 +10,7 @@
  */
 
 export interface ScreenerStock {
+  guruHolders?: number | null;
   ticker: string;
   name: string;
   exchange: string;
@@ -68,7 +69,8 @@ export type ScreenerSortKey =
   | "dividendTtm"
   | "ret1y"
   | "ret3y"
-  | "ret5y";
+  | "ret5y"
+  | "guruHolders";
 
 export type SortDir = "asc" | "desc";
 
