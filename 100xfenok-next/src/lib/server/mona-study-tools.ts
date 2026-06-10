@@ -35,7 +35,10 @@ type Best3Item = {
 };
 
 type WeakMiss = {
-  expression: string;
+  expression?: string;
+  ko: string;
+  tried: string | null;
+  correct: string;
   note: string | null;
 };
 
@@ -54,7 +57,10 @@ type Best3Entry = Best3Item & {
 };
 
 type WeakNote = {
-  expression: string;
+  expression?: string;
+  ko: string;
+  tried: string | null;
+  correct: string;
   missCount: number;
   lastSeen: string;
   note: string | null;
@@ -187,12 +193,12 @@ function normalizeWeakMisses(value: unknown): WeakMiss[] {
   const items: WeakMiss[] = [];
   for (const item of value) {
     if (!isRecord(item)) continue;
-    const expression = normalizeText(item.expression, 220);
-    if (!expression) continue;
-    const key = normalizeKey(expression);
+    const correct = normalizeText(item.correct, 220) || normalizeText(item.expression, 220);
+    if (!correct) continue;
+    const key = normalizeKey(correct);
     if (seen.has(key)) continue;
     seen.add(key);
-    items.push({ expression, note: normalizeText(item.note, 180) });
+    items.push({ correct, ko: normalizeText(item.ko, 220) || "", tried: normalizeText(item.tried, 220) || null, note: normalizeText(item.note, 180) });
     if (items.length >= 12) break;
   }
   return items;
@@ -239,12 +245,14 @@ function normalizeWeakStore(value: unknown): WeakNote[] {
   return value.notes
     .filter(isRecord)
     .map((note) => {
-      const expression = normalizeText(note.expression, 220);
+      const correct = normalizeText(note.correct, 220) || normalizeText(note.expression, 220);
       const firstSeen = validateStudyDate(note.firstSeen);
       const lastSeen = validateStudyDate(note.lastSeen) ?? firstSeen;
-      if (!expression || !firstSeen || !lastSeen) return null;
+      if (!correct || !firstSeen || !lastSeen) return null;
       return {
-        expression,
+        correct,
+        ko: normalizeText(note.ko, 220) || "",
+        tried: normalizeText(note.tried, 220) || null,
         missCount: typeof note.missCount === "number" && Number.isFinite(note.missCount)
           ? Math.max(1, Math.round(note.missCount))
           : 1,
@@ -338,7 +346,7 @@ function mergeBest3(existing: Best3Item[], incoming: Best3Item[]) {
 function mergeWeak(existing: WeakMiss[], incoming: WeakMiss[]) {
   const seen = new Set<string>();
   return [...incoming, ...existing].filter((item) => {
-    const key = normalizeKey(item.expression);
+    const key = normalizeKey(item.correct);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -368,20 +376,23 @@ function updateBest3Store(entries: Best3Entry[], incoming: Best3Item[], studyDat
 }
 
 function updateWeakStore(entries: WeakNote[], incoming: WeakMiss[], studyDate: string, existingForDate: WeakMiss[]) {
-  const existingKeys = new Set(existingForDate.map((item) => normalizeKey(item.expression)));
-  const byKey = new Map(entries.map((entry) => [normalizeKey(entry.expression), entry]));
+  const existingKeys = new Set(existingForDate.map((item) => normalizeKey(item.correct)));
+  const byKey = new Map(entries.map((entry) => [normalizeKey(entry.correct), entry]));
   for (const item of incoming) {
-    const key = normalizeKey(item.expression);
+    const key = normalizeKey(item.correct);
     const current = byKey.get(key);
     if (current) {
       if (!current.sessions.includes(studyDate)) current.sessions.unshift(studyDate);
       if (!existingKeys.has(key)) current.missCount += 1;
       current.lastSeen = studyDate;
       if (item.note) current.note = item.note;
+      if (item.tried) current.tried = item.tried;
       continue;
     }
     byKey.set(key, {
-      expression: item.expression,
+      correct: item.correct,
+      ko: item.ko,
+      tried: item.tried,
       missCount: 1,
       lastSeen: studyDate,
       note: item.note,
@@ -517,8 +528,8 @@ function buildWeeklyItems(snapshot: StudySnapshot, requested: number, weakBias: 
     source: "best3" as const,
   }));
   const weakItems = snapshot.weakNotes.map((note) => ({
-    ko: note.note ?? note.expression,
-    en: note.expression,
+    ko: note.ko || note.note || note.correct,
+    en: note.correct,
     note: note.note,
     source: "weak" as const,
     missCount: note.missCount,
@@ -569,9 +580,9 @@ function formatBest3(items: Best3Item[]) {
 function formatWeak(items: WeakMiss[] | WeakNote[]) {
   return items.length
     ? items.slice(0, 5).map((item, index) => {
-      const text = "expression" in item ? item.expression : "";
+      const tried = item.tried ? ` ✗ ${item.tried}` : "";
       const miss = "missCount" in item ? ` x${item.missCount}` : "";
-      return `${index + 1}) ${text}${miss}${item.note ? ` - ${item.note}` : ""}`;
+      return `${index + 1}) ${item.correct}${tried}${miss}${item.note ? ` - ${item.note}` : ""}`;
     }).join("\n")
     : "없음";
 }
@@ -597,13 +608,13 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
     `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
     `테마: ${plan.theme} · 변동코너: ${plan.corner}`,
     "",
-    "[어제 복습 재료]",
+    "[복습 재료]",
     firstSession || !yesterday
       ? "첫 세션이야. 워밍업 ①은 건너뛰고 바로 오늘 표현 ②부터 가."
       : [
         `어제 날짜: ${yesterday.date}`,
-        `BEST3:\n${formatBest3(yesterday.best3)}`,
-        `약점노트:\n${formatWeak(yesterday.weakMisses)}`,
+        `최근 BEST3:\n${formatBest3(resolvedSnapshot.best3.slice(0, 5))}`,
+        `약점노트:\n${formatWeak(resolvedSnapshot.weakNotes.slice(0, 3))}`,
       ].join("\n"),
     "",
     "[진행 규칙 - 내부 페이싱]",

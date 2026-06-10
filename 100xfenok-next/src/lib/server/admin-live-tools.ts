@@ -82,7 +82,7 @@ const LIVE_TOOL_DEFINITIONS = [
     description: "Mona Wind-Down BEST3/weak-note checkpoint",
     functionName: "saveStudySession",
     instruction:
-      "Tool: saveStudySession({best3, weakMisses, theme, summary}) stores Mona Wind-Down study checkpoints using the server-side Asia/Seoul studyDate. Call after today's expression block, after the variable corner, and at final BEST3. Do not invent file paths or dates. Keep the spoken acknowledgement to one soft sentence.",
+      "Tool: saveStudySession({best3, weakMisses, theme, summary}) stores Mona Wind-Down study checkpoints using the server-side Asia/Seoul studyDate. Call after today's expression block, after the variable corner, and at final BEST3. Do not invent file paths or dates. Keep the spoken acknowledgement to one soft sentence. For weakMisses: correct=the right English expression, tried=what Mona actually said (may be wrong), ko=Korean meaning.",
     declaration: {
       name: "saveStudySession",
       description:
@@ -111,10 +111,12 @@ const LIVE_TOOL_DEFINITIONS = [
             items: {
               type: "OBJECT",
               properties: {
-                expression: { type: "STRING", description: "English expression that blocked Mona." },
+                ko: { type: "STRING", description: "Korean meaning." },
+                tried: { type: "STRING", description: "What Mona actually said (may be wrong)." },
+                correct: { type: "STRING", description: "Natural English answer." },
                 note: { type: "STRING", description: "Optional short reason or pronunciation note." },
               },
-              required: ["expression"],
+              required: ["correct", "ko"],
             },
           },
         },
