@@ -87,7 +87,10 @@ function fmtPct(n: number): string {
 function fmtDivYield(n: number): string { return `${(n * 100).toFixed(2)}%`; }
 
 function perBandPositionText(current: number, min: number, max: number): string {
-  return `${(bandPct(current, min, max) * 100).toFixed(0)}%`;
+  const pct = bandPct(current, min, max);
+  const cls = bandClass(pct);
+  const verdict = cls === "emerald" ? "역사적 저평가" : cls === "rose" ? "역사적 고평가" : "적정 범위";
+  return `${(pct * 100).toFixed(0)}% · ${verdict}`;
 }
 function perBandPositionColor(current: number, min: number, max: number): string {
   const cls = bandClass(bandPct(current, min, max));
@@ -101,13 +104,12 @@ function perBandPositionColor(current: number, min: number, max: number): string
 // ---------------------------------------------------------------------------
 
 function MiniBarChart({
-  actuals, estimates, years, color, formatFn,
+  actuals, estimates, years, color,
 }: {
   actuals: number[];
   estimates: Record<string, number> | null;
   years: string[];
   color: string;
-  formatFn: (v: number) => string;
 }) {
   const allVals = [...actuals];
   const estKeys: string[] = [];
@@ -445,7 +447,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                   ] as Array<[string, number[] | undefined, Record<string, number> | undefined, string]>).map(([label, actuals, estimates, color]) => (
                     <div key={label}>
                       <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
-                      <MiniBarChart actuals={actuals ?? []} estimates={estimates ?? null} years={years} color={color} formatFn={(v) => fmtLarge(v)} />
+                      <MiniBarChart actuals={actuals ?? []} estimates={estimates ?? null} years={years} color={color} />
                     </div>
                   ))}
                 </div>

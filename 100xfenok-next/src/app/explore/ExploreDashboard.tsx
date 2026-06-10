@@ -69,17 +69,17 @@ export default function ExploreDashboard() {
   return (
     <section className="mt-6 space-y-3">
       {/* Ticker jump */}
-      <form onSubmit={onSearch} className="flex max-w-md items-center gap-2">
+      <form onSubmit={onSearch} className="flex max-w-xl items-center gap-2">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="티커로 바로 이동 (예: AAPL, NVDA)"
+          placeholder="티커 검색 — 종목 상세로 바로 이동 (예: AAPL, NVDA, TSM)"
           aria-label="티커 검색"
-          className="min-h-10 w-full rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-brand-interactive"
+          className="min-h-12 w-full rounded-full border-2 border-slate-200 bg-white px-5 text-base font-semibold text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-brand-interactive"
         />
         <button
           type="submit"
-          className="inline-flex min-h-10 shrink-0 items-center rounded-full bg-brand-interactive px-4 text-sm font-black text-white transition hover:opacity-90"
+          className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-brand-interactive px-5 text-sm font-black text-white transition hover:opacity-90"
         >
           종목 상세 →
         </button>
