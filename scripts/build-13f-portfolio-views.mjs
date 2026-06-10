@@ -193,6 +193,39 @@ for (const { quarter, agg } of latestAggs) {
   }
 }
 
+/* ── cohort sector history (smart-money trend, last 12 global quarters) ── */
+const quarterSet = new Set();
+for (const file of investorFiles) {
+  const { investor } = loadJson(path.join(INVESTORS_DIR, file));
+  for (const f of investor.filings ?? []) quarterSet.add(f.quarter);
+}
+const historyQuarters = [...quarterSet].sort().slice(-12);
+const cohortByQuarter = new Map(
+  historyQuarters.map((q) => [q, Object.fromEntries(CANONICAL.map((c) => [c, 0]))]),
+);
+const cohortTotals = new Map(historyQuarters.map((q) => [q, 0]));
+for (const file of investorFiles) {
+  const { investor } = loadJson(path.join(INVESTORS_DIR, file));
+  for (const filing of investor.filings ?? []) {
+    if (!cohortByQuarter.has(filing.quarter)) continue;
+    const agg = aggByTicker(filing);
+    const bucket = cohortByQuarter.get(filing.quarter);
+    for (const [ticker, h] of agg) {
+      bucket[resolveCanonical(h.gics, ticker, h.name)] += h.value;
+      cohortTotals.set(filing.quarter, cohortTotals.get(filing.quarter) + h.value);
+    }
+  }
+}
+const totalSectorHistory = Object.fromEntries(
+  CANONICAL.map((c) => [
+    c,
+    historyQuarters.map((q) => {
+      const t = cohortTotals.get(q);
+      return t > 0 ? round4(cohortByQuarter.get(q)[c] / t) : 0;
+    }),
+  ]),
+);
+
 const output = {
   metadata: {
     quarter: globalQuarter,
@@ -207,6 +240,7 @@ const output = {
   total: {
     treemap: treemapRows(totalAgg, TOTAL_TREEMAP_TOP_N),
     sectors: sectorWeights(totalAgg),
+    sector_history: { quarters: historyQuarters, series: totalSectorHistory },
   },
   investors,
 };

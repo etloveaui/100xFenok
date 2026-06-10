@@ -32,6 +32,7 @@ jobs:
         run: |
           node scripts/build-13f-trades.mjs
           node scripts/build-13f-portfolio-views.mjs
+          node scripts/build-guru-holders-index.mjs
 
       - name: Verify output
         run: |
@@ -50,11 +51,13 @@ jobs:
             data/global-scouter/core/slick_index.json \
             data/sec-13f/analytics/trades_ranking.json \
             data/sec-13f/analytics/portfolio_views.json \
+            data/sec-13f/analytics/guru_holders_index.json \
             100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json \
             100xfenok-next/public/data/global-scouter/core/per_bands_index.json \
             100xfenok-next/public/data/global-scouter/core/slick_index.json \
             100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json \
-            100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json
+            100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json \
+            100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json
           git diff --staged --quiet || git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
           git pull --rebase origin main
           git push
