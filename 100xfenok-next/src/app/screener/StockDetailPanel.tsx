@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import TransitionLink from "@/components/TransitionLink";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 
 interface DetailData {
@@ -26,7 +27,7 @@ interface F13Entry {
   weight?: number;
 }
 
-function useStockDetail(ticker: string) {
+export function useStockDetail(ticker: string) {
   const [detail, setDetail] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +56,7 @@ function useStockDetail(ticker: string) {
 
 const F13_CACHE = new Map<string, F13Entry[]>();
 
-function use13FData(ticker: string) {
+export function use13FData(ticker: string) {
   const [entries, setEntries] = useState<F13Entry[] | null>(null);
 
   useEffect(() => {
@@ -349,33 +350,20 @@ function fmtLarge(n: number): string {
   return `${n}M`;
 }
 
-export default function StockDetailPanel({ ticker }: { ticker: string }) {
-  const { detail, loading } = useStockDetail(ticker);
-  const f13Entries = use13FData(ticker);
-
-  if (loading) {
-    return (
-      <div className="col-span-full border-t border-slate-100 bg-slate-50/50 px-4 py-6 text-sm text-slate-500">
-        상세 데이터 로딩 중…
-      </div>
-    );
-  }
-
-  if (!detail) {
-    return (
-      <div className="col-span-full border-t border-slate-100 bg-slate-50/50 px-4 py-6 text-sm text-slate-500">
-        상세 데이터를 불러올 수 없습니다.
-      </div>
-    );
-  }
-
+export function StockDetailBody({
+  detail,
+  f13Entries,
+}: {
+  detail: DetailData;
+  f13Entries: F13Entry[] | null;
+}) {
   const hasRevenue =
     detail.income_statement?.revenue && detail.income_statement.revenue.length >= 2;
   const hasEps = detail.per_share?.eps && detail.per_share.eps.length >= 2;
   const hasPer = detail.valuation?.per && detail.valuation.per.length >= 2;
 
   return (
-    <div className="col-span-full border-t border-slate-100 bg-slate-50/50 p-4">
+    <>
       <div className="grid gap-5 sm:grid-cols-3">
         {/* PER Band Chart */}
         <div>
@@ -448,6 +436,44 @@ export default function StockDetailPanel({ ticker }: { ticker: string }) {
           </div>
         </div>
       ) : null}
+    </>
+  );
+}
+
+export default function StockDetailPanel({ ticker }: { ticker: string }) {
+  const { detail, loading } = useStockDetail(ticker);
+  const f13Entries = use13FData(ticker);
+
+  if (loading) {
+    return (
+      <div className="col-span-full border-t border-slate-100 bg-slate-50/50 px-4 py-6 text-sm text-slate-500">
+        상세 데이터 로딩 중…
+      </div>
+    );
+  }
+
+  if (!detail) {
+    return (
+      <div className="col-span-full border-t border-slate-100 bg-slate-50/50 px-4 py-6 text-sm text-slate-500">
+        상세 데이터를 불러올 수 없습니다.
+      </div>
+    );
+  }
+
+  return (
+    <div className="col-span-full border-t border-slate-100 bg-slate-50/50 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
+          종목 상세
+        </span>
+        <TransitionLink
+          href={`/stock/${encodeURIComponent(ticker)}`}
+          className="text-[10px] font-black text-brand-interactive hover:underline"
+        >
+          전체 화면 →
+        </TransitionLink>
+      </div>
+      <StockDetailBody detail={detail} f13Entries={f13Entries} />
     </div>
   );
 }
