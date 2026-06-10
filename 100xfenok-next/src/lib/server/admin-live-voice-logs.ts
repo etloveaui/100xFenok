@@ -298,8 +298,9 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       }
     }
 
+    const finalRaw = `${JSON.stringify(payload, null, 2)}\n`;
     const tmpPath = `${filePath}.tmp`;
-    await writeFile(tmpPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+    await writeFile(tmpPath, finalRaw, "utf8");
     await rename(tmpPath, filePath);
 
     return {
@@ -308,6 +309,8 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       mode,
       sessionId,
       logCount: (payload.logs as unknown[]).length,
+      transcriptCount: (payload.transcript as unknown[]).length,
+      sizeBytes: Buffer.byteLength(finalRaw, "utf8"),
       lastSeq,
       finalized: payload.finalized,
     };
