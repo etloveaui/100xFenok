@@ -34,11 +34,18 @@ const CHIPS: Array<{ key: string; label: string }> = [
   { key: "sentiment_signal", label: "센티먼트" },
 ];
 
-const STATUS_COLOR: Record<string, string> = {
-  stable: "bg-emerald-500",
-  normal: "bg-emerald-500",
-  neutral: "bg-slate-400",
-  caution: "bg-amber-500",
+const STATUS_LED: Record<string, string> = {
+  stable: "led-green",
+  normal: "led-green",
+  neutral: "led-gray",
+  caution: "led-amber",
+};
+
+const STATUS_ST: Record<string, string> = {
+  stable: "st-green",
+  normal: "st-green",
+  neutral: "st-gray",
+  caution: "st-amber",
 };
 
 const STATUS_KO: Record<string, string> = {
@@ -48,9 +55,14 @@ const STATUS_KO: Record<string, string> = {
   caution: "주의",
 };
 
-function dotColor(status: SignalStatus | undefined): string {
-  if (!status) return "bg-slate-300";
-  return STATUS_COLOR[status] ?? "bg-slate-300";
+function ledClass(status: SignalStatus | undefined): string {
+  if (!status) return "led-gray";
+  return STATUS_LED[status] ?? "led-gray";
+}
+
+function stClass(status: SignalStatus | undefined): string {
+  if (!status) return "st-gray";
+  return STATUS_ST[status] ?? "st-gray";
 }
 
 function statusLabel(status: SignalStatus | undefined): string {
@@ -74,26 +86,23 @@ export default function SignalStrip() {
   if (!doc?.signals) return null;
 
   return (
-    <div className="rounded-[1.2rem] border border-slate-200 bg-white px-4 py-3">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="c-card">
+      <div className="sig-grid">
         {CHIPS.map((c) => {
           const s = doc.signals?.[c.key]?.overallStatus;
           return (
-            <div
-              key={c.key}
-              className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2"
-            >
-              <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${dotColor(s)}`} />
-              <span className="text-[11px] font-bold leading-tight text-slate-700">{c.label}</span>
-              <span className="ml-auto shrink-0 text-[10px] font-black text-slate-500">
-                {statusLabel(s)}
+            <div key={c.key} className="sig">
+              <span className={`led ${ledClass(s)}`} />
+              <span className="tx">
+                <span className="nm">{c.label}</span>
+                <span className={`st ${stClass(s)}`}>{statusLabel(s)}</span>
               </span>
             </div>
           );
         })}
       </div>
-      <p className="mt-2 text-[10px] font-semibold text-slate-400">
-        기준 {doc.as_of ?? "—"} · 유동성·뱅킹·센티먼트 종합 신호
+      <p className="sig-cap">
+        기준 <span className="num">{doc.as_of ?? "—"}</span> · 유동성·뱅킹·센티먼트 종합 신호
       </p>
     </div>
   );

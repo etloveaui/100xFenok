@@ -38,8 +38,8 @@ function pct(v: number | undefined): string {
 }
 
 function toneClass(v: number | undefined): string {
-  if (v === undefined) return "text-slate-400";
-  return v >= 0 ? "text-emerald-700" : "text-rose-700";
+  if (v === undefined) return "neu";
+  return v >= 0 ? "up" : "down";
 }
 
 export default function ExploreDashboard() {
@@ -59,65 +59,56 @@ export default function ExploreDashboard() {
   }, []);
 
   return (
-    <section className="mt-6 space-y-3">
-      {/* Ticker typeahead */}
-      <div className="max-w-xl">
+    <section>
+      {/* Search card */}
+      <div className="c-card search-card">
         <TickerTypeahead
           placeholder="티커 검색 — 종목 상세로 바로 이동 (예: AAPL, NVDA, TSM)"
-          className="min-h-12 w-full rounded-full border-2 border-slate-200 bg-white px-5 text-base font-semibold text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-brand-interactive"
-          formClass="flex items-center gap-2"
+          className="min-w-0 flex-1 bg-transparent py-3.5 text-[15.5px] font-semibold outline-none"
+          formClass="flex w-full items-center gap-3"
           showButton
-          buttonLabel="종목 상세 →"
+          buttonLabel="종목 상세"
+          buttonClass="search-btn"
         />
       </div>
 
-      {/* Market pulse strip */}
-      <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <span className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">시장 펄스 · YTD</span>
+      {/* Market pulse */}
+      <div className="c-card">
+        <div className="card-title">
+          <h2>시장 펄스</h2>
+          <span className="sub">연초 대비 · YTD</span>
+          <TransitionLink href="/market-valuation" className="more">전체 →</TransitionLink>
+        </div>
+        <div className="pulse">
           {INDEX_CHIPS.map((c) => {
             const v = momentum?.[c.key]?.ytd;
             return (
-              <TransitionLink key={c.key} href="/market-valuation" className="group inline-flex items-baseline gap-1.5">
-                <span className="text-xs font-bold text-slate-600 group-hover:text-slate-950">{c.label}</span>
-                <span className={`orbitron text-xs font-black tabular-nums ${toneClass(v)}`}>
-                  {momentum ? pct(v) : "…"}
-                </span>
+              <TransitionLink key={c.key} href="/market-valuation" className="pcell">
+                <div className="pn">{c.label}</div>
+                <div className={`pv num ${toneClass(v)}`}>{momentum ? pct(v) : "…"}</div>
               </TransitionLink>
             );
           })}
         </div>
 
-        {/* Sector heat strip */}
-        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-11">
+        <p className="heat-cap">11개 섹터 · 최근 1개월 수익률 · 탭하여 히트맵으로</p>
+        <div className="heat">
           {SECTOR_KEYS.map(({ key, canonical }) => {
             const v = momentum?.[key]?.["1m"];
-            const bg =
-              v === undefined
-                ? "#f1f5f9"
-                : v >= 0
-                  ? `rgba(5,150,105,${Math.min(0.85, 0.15 + Math.abs(v) * 8)})`
-                  : `rgba(225,29,72,${Math.min(0.85, 0.15 + Math.abs(v) * 8)})`;
-            const strong = v !== undefined && Math.abs(v) * 8 + 0.15 > 0.45;
+            const tone = v === undefined ? "ht-flat" : Math.abs(v) < 0.005 ? "ht-flat" : v >= 0 ? "ht-up" : "ht-down";
             return (
               <TransitionLink
                 key={key}
                 href="/sectors"
-                className="rounded-lg px-2 py-1.5 text-center transition hover:opacity-80"
-                style={{ backgroundColor: bg }}
+                className={`ht ${tone}`}
                 title={`${sectorLabelKo(canonical)} 1개월 ${pct(v)}`}
               >
-                <span className="block truncate text-[10px] font-black" style={{ color: strong ? "#ffffff" : "#0f172a" }}>
-                  {sectorLabelKo(canonical)}
-                </span>
-                <span className="orbitron block text-[10px] font-bold tabular-nums" style={{ color: strong ? "#ffffff" : "#334155" }}>
-                  {momentum ? pct(v) : "…"}
-                </span>
+                <span className="hn">{sectorLabelKo(canonical)}</span>
+                <span className="hv num">{momentum ? pct(v) : "…"}</span>
               </TransitionLink>
             );
           })}
         </div>
-        <p className="mt-2 text-[10px] font-semibold text-slate-400">섹터 = 최근 1개월 수익률 · 클릭 시 섹터 히트맵</p>
       </div>
     </section>
   );
