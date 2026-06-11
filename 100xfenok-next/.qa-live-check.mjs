@@ -70,6 +70,9 @@ if (await guruTab.count()) {
   await page.mouse.wheel(0, 700);
   await page.waitForTimeout(1500);
   await shot("03d-guru-performance-vs-spy");
+  await page.mouse.wheel(0, 700);
+  await page.waitForTimeout(1500);
+  await shot("03e-guru-trend-block");
 }
 
 // 4. explore — super-tool: signal strip + thermometer + week-ahead
@@ -89,6 +92,13 @@ if (await p3m.count()) {
   console.log("!! thermometer 3개월 toggle NOT FOUND");
 }
 await page.mouse.wheel(0, -1200);
+await page.waitForTimeout(600);
+
+// 4r. revision movers card (below thermometer area)
+await page.mouse.wheel(0, 900);
+await page.waitForTimeout(1200);
+await shot("04r-explore-revision-movers");
+await page.mouse.wheel(0, -2400);
 await page.waitForTimeout(600);
 
 // 4b. typeahead — stock + guru suggestions

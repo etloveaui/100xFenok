@@ -6,6 +6,7 @@ import MarketThermometer from "./MarketThermometer";
 import SignalStrip from "./SignalStrip";
 import WeekAheadCard from "./WeekAheadCard";
 import MyWatchlistStrip from "./MyWatchlistStrip";
+import RevisionMoversCard from "./RevisionMoversCard";
 import DataNav from "@/components/DataNav";
 
 export const metadata: Metadata = {
@@ -87,6 +88,10 @@ export default function ExplorePage() {
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <MarketThermometer />
         <WeekAheadCard />
+      </div>
+
+      <div className="mt-6">
+        <RevisionMoversCard />
       </div>
 
       <ExploreHotTopics />
