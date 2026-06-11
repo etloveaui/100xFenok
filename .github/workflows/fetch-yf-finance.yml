@@ -1,0 +1,64 @@
+# yf Finance Engine v1 — field-selected batch fetch (global-scouter universe)
+# Weekly cron + manual dispatch with limit/shard for staged rollout.
+# Output: data/yf/finance/{TICKER}.json + public mirror.
+
+name: Fetch YF Finance Data
+
+on:
+  schedule:
+    # 매주 토요일 22:00 UTC (한국 일요일 07:00) — scouter weekly 주기와 정합
+    - cron: '0 22 * * 6'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Ticker limit (empty = full universe)'
+        required: false
+        default: ''
+      shard:
+        description: 'Shard i/n (e.g. 0/4, empty = no shard)'
+        required: false
+        default: ''
+      sleep:
+        description: 'Seconds between tickers'
+        required: false
+        default: '0.8'
+
+jobs:
+  fetch-yf-finance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install yfinance
+        run: pip install yfinance
+
+      - name: Run batch fetch
+        env:
+          INPUT_LIMIT: ${{ github.event.inputs.limit }}
+          INPUT_SHARD: ${{ github.event.inputs.shard }}
+          INPUT_SLEEP: ${{ github.event.inputs.sleep }}
+        run: |
+          ARGS=""
+          if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
+          if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
+          python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}"
+
+      - name: Mirror to public
+        run: |
+          mkdir -p 100xfenok-next/public/data/yf/finance
+          cp -r data/yf/finance/. 100xfenok-next/public/data/yf/finance/
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/yf/finance 100xfenok-next/public/data/yf/finance
+          git diff --staged --quiet || git commit -m "chore: update yf finance data"
+          git pull --rebase origin main
+          git push
