@@ -45,7 +45,7 @@ export default function ExploreDashboard() {
   }, []);
 
   return (
-    <section>
+    <>
       {/* Search card */}
       <div className="c-card search-card">
         <TickerTypeahead
@@ -83,6 +83,6 @@ export default function ExploreDashboard() {
           })}
         </div>
       </div>
-    </section>
+    </>
   );
 }

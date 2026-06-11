@@ -44,15 +44,14 @@ export default function ExplorePage() {
         <MyWatchlistStrip />
         <SignalStrip />
 
-        {/* desktop: dashboard left, calendar floats in its own right column */}
-        <div className="mid">
+        {/* desktop: 2-col masonry — cards pack by height, no aligned-row voids */}
+        <div className="pack">
           <ExploreDashboard />
           <WeekAheadCard />
+          <MarketThermometer />
+          <RevisionMoversCard />
+          <ExploreHotTopics />
         </div>
-
-        <MarketThermometer />
-        <RevisionMoversCard />
-        <ExploreHotTopics />
 
         <p className="heat-cap mt-5">데이터: Global Scouter · Bloomberg benchmarks · SEC 13F · Yahoo Finance.</p>
       </main>
