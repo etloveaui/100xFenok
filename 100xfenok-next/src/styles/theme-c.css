@@ -104,10 +104,6 @@ body.theme-c-chrome {
 .theme-c .search-btn:hover { filter: brightness(0.96); }
 
 /* market pulse */
-.theme-c .pulse { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.theme-c .pcell { background: var(--c-surface-2); border-radius: 14px; padding: 16px; }
-.theme-c .pcell .pn { color: var(--c-ink-2); font-size: 14px; font-weight: 600; }
-.theme-c .pcell .pv { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-top: 6px; }
 .theme-c .heat-cap { color: var(--c-ink-3); font-size: 13px; margin: 18px 0 10px; font-weight: 500; }
 .theme-c .heat { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .theme-c .ht { border-radius: 14px; padding: 14px; text-align: center; }
@@ -177,10 +173,6 @@ body.theme-c-chrome {
 .theme-c .f13-row .desc { color: var(--c-ink-3); font-size: 13px; font-weight: 500; margin-top: 1px; }
 .theme-c .f13-row .amt { font-size: 16px; font-weight: 700; text-align: right; color: var(--c-ink); }
 
-/* deep-dive pills */
-.theme-c .deep-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.theme-c .deep-pills a { display: inline-flex; align-items: center; gap: 8px; background: var(--c-surface); box-shadow: var(--c-sm); color: var(--c-ink-2); padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; min-height: 44px; }
-.theme-c .deep-pills a:hover { color: var(--c-brand); }
 
 /*
  * Chrome seam removal — V1 Navbar/Footer sit outside the page's `.theme-c`
@@ -207,14 +199,11 @@ body.theme-c-chrome footer .bg-white\/95 { border-top-color: var(--c-line); }
 
 @media (min-width: 760px) {
   .theme-c .sig-grid { grid-template-columns: repeat(4, 1fr); }
-  .theme-c .pulse { grid-template-columns: repeat(3, 1fr); }
   .theme-c .heat { grid-template-columns: repeat(4, 1fr); }
 }
 @media (min-width: 1000px) {
   .theme-c .hero h1 { font-size: 40px; }
-  .theme-c .pulse { grid-template-columns: repeat(6, 1fr); }
   .theme-c .heat { grid-template-columns: repeat(6, 1fr); }
-  .theme-c .lower { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
-  .theme-c .lower .c-card { margin-top: 0; }
-  .theme-c .lower .c-card + .c-card { margin-top: 14px; }
+  .theme-c .mid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; align-items: start; }
+  .theme-c .mid > .c-card { margin-top: 14px; }
 }
