@@ -4,6 +4,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import type { ValuationBand } from "@/lib/market-valuation/types";
 import DataNav from "@/components/DataNav";
+import YardeniCard from "./YardeniCard";
 import { formatPercent } from "@/lib/dashboard/formatters";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -139,6 +140,8 @@ export default function MarketValuationClient() {
           </section>
         ))}
       </div>
+
+      <YardeniCard />
 
       <p className="px-1 text-[11px] text-slate-400">
         역사 밴드 = 2010년 이후 weekly 시계열의 min/avg/max. percentile은 현재값의 역사적 위치(높을수록 고평가). 데이터: Bloomberg benchmarks. 참고용입니다.
