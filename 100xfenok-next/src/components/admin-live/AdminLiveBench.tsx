@@ -617,6 +617,31 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const sentMetaRef = useRef(false);
   const isSecure = typeof window === "undefined" ? true : window.isSecureContext;
 
+  const PENDING_LOG_KEY = "fenok.adminlive.pendinglog.v1";
+
+  const persistPending = () => {
+    try {
+      const sid = sessionIdRef.current;
+      if (!sid || typeof localStorage === "undefined") return;
+      if (pendingRef.current.length === 0) {
+        localStorage.removeItem(PENDING_LOG_KEY);
+        return;
+      }
+      localStorage.setItem(PENDING_LOG_KEY, JSON.stringify({
+        sessionId: sid,
+        mode,
+        startedAt: startedAtMs ? new Date(startedAtMs).toISOString() : new Date().toISOString(),
+        entries: pendingRef.current,
+      }));
+    } catch {
+      setMetrics((m) => ({
+        ...m,
+        appendFailureCount: m.appendFailureCount + 1,
+        lastAppendError: "STORAGE_WRITE_FAILED",
+      }));
+    }
+  };
+
   const statusLabel = useMemo(() => STATUS_TEXT[status], [status]);
   const activeProfile = useMemo(() => profiles.find((profile) => profile.id === mode) ?? profiles[0] ?? PROFILE_FALLBACK[0], [mode, profiles]);
   const settingsLocked = status === "connecting" || status === "listening";
@@ -659,6 +684,48 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
   }, [logs]);
 
+  const flushOrphanedPending = async () => {
+    try {
+      if (typeof localStorage === "undefined") return;
+      const raw = localStorage.getItem(PENDING_LOG_KEY);
+      if (!raw) return;
+      const stored = JSON.parse(raw) as { sessionId?: string; mode?: string; startedAt?: string; entries?: unknown[] };
+      if (!stored.sessionId || !Array.isArray(stored.entries) || stored.entries.length === 0) {
+        localStorage.removeItem(PENDING_LOG_KEY);
+        return;
+      }
+      if (stored.sessionId === sessionIdRef.current) return;
+      const body = {
+        op: "append",
+        sessionId: stored.sessionId,
+        mode: stored.mode ?? "fenok",
+        startedAt: stored.startedAt ?? new Date().toISOString(),
+        entries: stored.entries,
+      };
+      const response = await fetch("/api/admin/live/log/", {
+        method: "POST",
+        keepalive: true,
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        localStorage.removeItem(PENDING_LOG_KEY);
+      } else {
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        if (payload?.error === "ALREADY_FINALIZED") {
+          localStorage.removeItem(PENDING_LOG_KEY);
+        }
+      }
+    } catch {
+      // network fail — keep key for next visit
+    }
+  };
+
+  useEffect(() => {
+    void flushOrphanedPending();
+  }, []);
+
   const addLog = (role: BenchLog["role"], text: string) => {
     const seq = ++logSeqRef.current;
     const entry: BenchLog = {
@@ -671,6 +738,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     };
     setLogs((current) => [entry, ...current].slice(0, MAX_LOG_ENTRIES));
     pendingRef.current.push(entry);
+    persistPending();
     scheduleFlush();
   };
 
@@ -705,6 +773,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         atIso: new Date().toISOString(),
       };
       pendingRef.current.push(entry);
+      persistPending();
       scheduleFlush();
       return [entry, ...current].slice(0, MAX_LOG_ENTRIES);
     });
@@ -746,6 +815,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
     if (pendingRef.current.length > 600) {
       pendingRef.current = pendingRef.current.slice(pendingRef.current.length - 600);
+      persistPending();
       setMetrics((m) => ({
         ...m,
         appendFailureCount: m.appendFailureCount + 1,
@@ -797,6 +867,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       if (sent) {
         pendingRef.current = pendingRef.current.slice(sentCount);
         sentMetaRef.current = true;
+        persistPending();
         return;
       }
     }
@@ -813,6 +884,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         pendingRef.current = pendingRef.current.slice(sentCount);
         sentMetaRef.current = true;
         backoffRef.current = 2500;
+        persistPending();
         if (pendingRef.current.length > 0) {
           flushTimerRef.current = setTimeout(() => void flushAppends(), 0);
         }
@@ -1503,10 +1575,12 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
 
     resetRuntime();
+    void flushOrphanedPending();
     pendingRef.current = [];
     sentMetaRef.current = false;
     logSeqRef.current = 0;
     clearFlushTimer();
+    persistPending();
     setCard(null);
 
     try {
@@ -1643,6 +1717,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     };
     const currentLogs = [stopLog, ...logsRef.current].slice(0, MAX_LOG_ENTRIES);
     pendingRef.current.push(stopLog);
+    persistPending();
     await flushAppends();
     resetRuntime();
     setStatus("stopped");
@@ -1660,7 +1735,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         body: JSON.stringify({ sessionId: currentSessionId }),
       }).catch(() => undefined);
 
-      await saveConversationLog(currentSessionId, stoppedAt, currentLogs, finalMetrics);
+      const saved = await saveConversationLog(currentSessionId, stoppedAt, currentLogs, finalMetrics);
+      if (saved) {
+        try { localStorage.removeItem(PENDING_LOG_KEY); } catch {}
+      }
     }
 
     sessionIdRef.current = null;
@@ -1671,7 +1749,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     stoppedAt: string,
     currentLogs: BenchLog[],
     finalMetrics: BenchMetrics,
-  ) => {
+  ): Promise<boolean> => {
     const startedAt = startedAtMs ? new Date(startedAtMs).toISOString() : null;
     const client = typeof window === "undefined" ? {} : {
       userAgent: navigator.userAgent,
@@ -1716,9 +1794,11 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       }
       const file = payload?.payload?.file;
       addLog("system", file ? `대화 로그 저장 완료: ${file}` : "대화 로그 저장 완료");
+      return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : "LOG_SAVE_FAILED";
       addLog("error", `대화 로그 저장 실패: ${message}`);
+      return false;
     }
   };
 
@@ -1728,6 +1808,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     sentMetaRef.current = false;
     logSeqRef.current = 0;
     clearFlushTimer();
+    persistPending();
     setCard(null);
     setStatus(readiness?.status === "BLOCKED" ? "blocked" : "ready");
     setSessionId(null);
