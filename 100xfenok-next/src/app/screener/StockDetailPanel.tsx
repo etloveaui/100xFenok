@@ -4,34 +4,37 @@ import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 
+type MaybeNumber = number | null | undefined;
+type NumberSeries = MaybeNumber[];
+
 export interface DetailData {
   years: string[];
-  valuation: { per: number[] };
+  valuation?: { per?: NumberSeries };
   income_statement: {
-    revenue: number[];
-    gross_profit?: number[];
-    operating_income?: number[];
-    net_income?: number[];
+    revenue?: NumberSeries;
+    gross_profit?: NumberSeries;
+    operating_income?: NumberSeries;
+    net_income?: NumberSeries;
   };
-  per_share: { eps: number[] };
-  cash_flow?: { cfo?: number[]; capex?: number[]; fcf?: number[] };
-  profitability?: { roe?: number[]; operating_margin?: number[] };
-  growth?: { revenue_growth?: number[]; eps_growth?: number[] };
+  per_share?: { eps?: NumberSeries };
+  cash_flow?: { cfo?: NumberSeries; capex?: NumberSeries; fcf?: NumberSeries };
+  profitability?: { roe?: NumberSeries; operating_margin?: NumberSeries };
+  growth?: { revenue_growth?: NumberSeries; eps_growth?: NumberSeries };
   per_bands?: {
-    current: number;
-    min_8y: number;
-    avg_8y: number;
-    max_8y: number;
+    current: MaybeNumber;
+    min_8y: MaybeNumber;
+    avg_8y: MaybeNumber;
+    max_8y: MaybeNumber;
     source: string;
   };
   valuation_estimates?: {
-    per?: { fy1?: number | null; fy2?: number | null; fy3?: number | null };
+    per?: { fy1?: MaybeNumber; fy2?: MaybeNumber; fy3?: MaybeNumber };
   };
-  income_statement_estimates?: Record<string, Record<string, number>>;
-  cash_flow_estimates?: Record<string, Record<string, number>>;
-  per_share_estimates?: Record<string, Record<string, number>>;
-  dividend_estimates?: Record<string, Record<string, number>>;
-  dividend?: { dps?: number[] };
+  income_statement_estimates?: Record<string, Record<string, MaybeNumber>>;
+  cash_flow_estimates?: Record<string, Record<string, MaybeNumber>>;
+  per_share_estimates?: Record<string, Record<string, MaybeNumber>>;
+  dividend_estimates?: Record<string, Record<string, MaybeNumber>>;
+  dividend?: { dps?: NumberSeries };
 }
 
 export interface F13Entry {
@@ -40,12 +43,45 @@ export interface F13Entry {
   weight?: number;
 }
 
-export function useStockDetail(ticker: string) {
+function isFiniteNumber(value: MaybeNumber): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function finiteValues(data: NumberSeries | null | undefined): number[] {
+  return (data ?? []).filter(isFiniteNumber);
+}
+
+function lastFinite(data: NumberSeries | null | undefined): number | null {
+  const values = finiteValues(data);
+  return values.length > 0 ? values[values.length - 1] : null;
+}
+
+function validPerBands(
+  perBands: DetailData["per_bands"],
+): perBands is { current: number; min_8y: number; avg_8y: number; max_8y: number; source: string } {
+  return Boolean(
+    perBands &&
+      isFiniteNumber(perBands.current) &&
+      isFiniteNumber(perBands.min_8y) &&
+      isFiniteNumber(perBands.avg_8y) &&
+      isFiniteNumber(perBands.max_8y) &&
+      perBands.min_8y < perBands.max_8y,
+  );
+}
+
+export function useStockDetail(ticker: string, enabled = true) {
   const [detail, setDetail] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    if (!enabled) {
+      setDetail(null);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
     const run = async () => {
       setLoading(true);
       try {
@@ -62,7 +98,7 @@ export function useStockDetail(ticker: string) {
     return () => {
       cancelled = true;
     };
-  }, [ticker]);
+  }, [ticker, enabled]);
 
   return { detail, loading };
 }
@@ -105,18 +141,19 @@ export function use13FData(ticker: string) {
   return entries;
 }
 
-export function Sparkline({ data, color }: { data: number[]; color: string }) {
-  if (!data || data.length < 2) return <span className="text-xs text-slate-300">—</span>;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+export function Sparkline({ data, color }: { data: NumberSeries; color: string }) {
+  const values = finiteValues(data);
+  if (values.length < 2) return <span className="text-xs text-slate-300">—</span>;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
   const range = max - min || 1;
   const width = 200;
   const height = 60;
   const pad = 4;
 
-  const points = data
+  const points = values
     .map((v, i) => {
-      const x = (i / (data.length - 1)) * width;
+      const x = (i / (values.length - 1)) * width;
       const y = height - pad - ((v - min) / range) * (height - 2 * pad);
       return `${x},${y}`;
     })
@@ -132,8 +169,8 @@ export function Sparkline({ data, color }: { data: number[]; color: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {data.map((v, i) => {
-        const x = (i / (data.length - 1)) * width;
+      {values.map((v, i) => {
+        const x = (i / (values.length - 1)) * width;
         const y = height - pad - ((v - min) / range) * (height - 2 * pad);
         return <circle key={i} cx={x} cy={y} r={3} fill={color} />;
       })}
@@ -148,22 +185,26 @@ export function PerBandChart({
   estimates,
 }: {
   years: string[];
-  per: number[];
-  perBands?: { current: number; min_8y: number; avg_8y: number; max_8y: number };
-  estimates?: { fy1?: number | null };
+  per: NumberSeries;
+  perBands?: DetailData["per_bands"];
+  estimates?: { fy1?: MaybeNumber };
 }) {
-  if (!per || per.length < 2) return <span className="text-xs text-slate-300">—</span>;
+  const perPoints = (per ?? [])
+    .map((value, index) => ({ value, index }))
+    .filter((point): point is { value: number; index: number } => isFiniteNumber(point.value));
+  if (perPoints.length < 2) return <span className="text-xs text-slate-300">—</span>;
 
-  const allValues = [...per];
-  if (estimates?.fy1 !== undefined && estimates.fy1 !== null) {
+  const allValues = perPoints.map((point) => point.value);
+  if (isFiniteNumber(estimates?.fy1)) {
     allValues.push(estimates.fy1);
   }
 
+  const bands = validPerBands(perBands) ? perBands : null;
   let yMin = Math.min(...allValues);
   let yMax = Math.max(...allValues);
-  if (perBands) {
-    yMin = Math.min(yMin, perBands.min_8y);
-    yMax = Math.max(yMax, perBands.max_8y);
+  if (bands) {
+    yMin = Math.min(yMin, bands.min_8y);
+    yMax = Math.max(yMax, bands.max_8y);
   }
   const yPad = (yMax - yMin) * 0.1 || 1;
   yMin -= yPad;
@@ -177,21 +218,22 @@ export function PerBandChart({
   const padB = 24;
   const plotW = w - padL - padR;
   const plotH = h - padT - padB;
+  const xDenominator = Math.max((per?.length ?? 0) - 1, 1);
 
-  const toX = (i: number) => padL + (i / (per.length - 1)) * plotW;
+  const toX = (i: number) => padL + (i / xDenominator) * plotW;
   const toY = (v: number) => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
 
-  const points = per.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
+  const points = perPoints.map(({ value, index }) => `${toX(index)},${toY(value)}`).join(" ");
 
-  const currentIndex = per.length - 1;
-  const currentX = toX(currentIndex);
-  const currentY = toY(per[currentIndex]);
-  const currentPct = perBands ? bandPct(perBands.current, perBands.min_8y, perBands.max_8y) : 0.5;
+  const currentPoint = perPoints[perPoints.length - 1];
+  const currentX = toX(currentPoint.index);
+  const currentY = toY(currentPoint.value);
+  const currentPct = bands ? bandPct(bands.current, bands.min_8y, bands.max_8y) : 0.5;
   const currentCls = bandClass(currentPct);
   const currentColor =
     currentCls === "emerald" ? "#10b981" : currentCls === "rose" ? "#f43f5e" : "#64748b";
 
-  const hasForward = estimates?.fy1 !== undefined && estimates.fy1 !== null;
+  const hasForward = isFiniteNumber(estimates?.fy1);
   const forwardX = padL + plotW + 16;
   const forwardY = hasForward ? toY(estimates.fy1!) : 0;
 
@@ -199,50 +241,50 @@ export function PerBandChart({
     <div>
       <svg width={w} height={h} className="overflow-visible">
         {/* Shaded band */}
-        {perBands && (
+        {bands && (
           <>
             <rect
               x={padL}
-              y={toY(perBands.max_8y)}
+              y={toY(bands.max_8y)}
               width={plotW}
-              height={toY(perBands.min_8y) - toY(perBands.max_8y)}
+              height={toY(bands.min_8y) - toY(bands.max_8y)}
               fill="#f1f5f9"
             />
             <rect
               x={padL}
-              y={toY(perBands.max_8y)}
+              y={toY(bands.max_8y)}
               width={plotW}
-              height={toY(perBands.avg_8y) - toY(perBands.max_8y)}
+              height={toY(bands.avg_8y) - toY(bands.max_8y)}
               fill="#fff1f2"
             />
             <rect
               x={padL}
-              y={toY(perBands.avg_8y)}
+              y={toY(bands.avg_8y)}
               width={plotW}
-              height={toY(perBands.min_8y) - toY(perBands.avg_8y)}
+              height={toY(bands.min_8y) - toY(bands.avg_8y)}
               fill="#ecfdf5"
             />
           </>
         )}
 
         {/* Avg dashed line + label */}
-        {perBands && (
+        {bands && (
           <>
             <line
               x1={padL}
-              y1={toY(perBands.avg_8y)}
+              y1={toY(bands.avg_8y)}
               x2={padL + plotW}
-              y2={toY(perBands.avg_8y)}
+              y2={toY(bands.avg_8y)}
               stroke="#64748b"
               strokeWidth={1}
               strokeDasharray="4,2"
             />
             <text
               x={padL + plotW + 4}
-              y={toY(perBands.avg_8y) + 3}
+              y={toY(bands.avg_8y) + 3}
               className="text-[8px] font-black fill-slate-500"
             >
-              avg {perBands.avg_8y.toFixed(1)}
+              avg {bands.avg_8y.toFixed(1)}
             </text>
           </>
         )}
@@ -291,12 +333,12 @@ export function PerBandChart({
         )}
 
         {/* Data points */}
-        {per.map((v, i) => {
-          const x = toX(i);
-          const y = toY(v);
-          const isCurrent = i === currentIndex;
+        {perPoints.map(({ value, index }) => {
+          const x = toX(index);
+          const y = toY(value);
+          const isCurrent = index === currentPoint.index;
           return (
-            <g key={i}>
+            <g key={index}>
               <circle
                 cx={x}
                 cy={y}
@@ -311,38 +353,38 @@ export function PerBandChart({
                 textAnchor="middle"
                 className="text-[9px] font-black fill-slate-600"
               >
-                {v.toFixed(1)}
+                {value.toFixed(1)}
               </text>
             </g>
           );
         })}
 
         {/* Y-axis labels */}
-        {perBands && (
+        {bands && (
           <>
             <text
               x={padL - 4}
-              y={toY(perBands.max_8y) + 3}
+              y={toY(bands.max_8y) + 3}
               textAnchor="end"
               className="text-[8px] font-black fill-slate-400 orbitron tabular-nums"
             >
-              {perBands.max_8y.toFixed(0)}
+              {bands.max_8y.toFixed(0)}
             </text>
             <text
               x={padL - 4}
-              y={toY(perBands.avg_8y) + 3}
+              y={toY(bands.avg_8y) + 3}
               textAnchor="end"
               className="text-[8px] font-black fill-slate-500 orbitron tabular-nums"
             >
-              {perBands.avg_8y.toFixed(1)}
+              {bands.avg_8y.toFixed(1)}
             </text>
             <text
               x={padL - 4}
-              y={toY(perBands.min_8y) + 3}
+              y={toY(bands.min_8y) + 3}
               textAnchor="end"
               className="text-[8px] font-black fill-slate-400 orbitron tabular-nums"
             >
-              {perBands.min_8y.toFixed(0)}
+              {bands.min_8y.toFixed(0)}
             </text>
           </>
         )}
@@ -357,7 +399,8 @@ export function PerBandChart({
   );
 }
 
-export function fmtLarge(n: number): string {
+export function fmtLarge(n: MaybeNumber): string {
+  if (!isFiniteNumber(n)) return "—";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}T`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}B`;
   return `${n}M`;
@@ -370,10 +413,14 @@ export function StockDetailBody({
   detail: DetailData;
   f13Entries: F13Entry[] | null;
 }) {
-  const hasRevenue =
-    detail.income_statement?.revenue && detail.income_statement.revenue.length >= 2;
-  const hasEps = detail.per_share?.eps && detail.per_share.eps.length >= 2;
-  const hasPer = detail.valuation?.per && detail.valuation.per.length >= 2;
+  const revenue = detail.income_statement?.revenue ?? [];
+  const eps = detail.per_share?.eps ?? [];
+  const per = detail.valuation?.per ?? [];
+  const hasRevenue = finiteValues(revenue).length >= 2;
+  const hasEps = finiteValues(eps).length >= 2;
+  const hasPer = finiteValues(per).length >= 2;
+  const latestRevenue = lastFinite(revenue);
+  const latestEps = lastFinite(eps);
 
   return (
     <>
@@ -386,7 +433,7 @@ export function StockDetailBody({
           {hasPer ? (
             <PerBandChart
               years={detail.years}
-              per={detail.valuation.per}
+              per={per}
               perBands={detail.per_bands}
               estimates={detail.valuation_estimates?.per}
             />
@@ -402,9 +449,9 @@ export function StockDetailBody({
           </h4>
           {hasRevenue ? (
             <>
-              <Sparkline data={detail.income_statement.revenue} color="#10b981" />
+              <Sparkline data={revenue} color="#10b981" />
               <div className="mt-1 text-[10px] font-bold text-slate-400">
-                {fmtLarge(detail.income_statement.revenue[detail.income_statement.revenue.length - 1])}
+                {fmtLarge(latestRevenue)}
                 {" (최신)"}
               </div>
             </>
@@ -420,9 +467,9 @@ export function StockDetailBody({
           </h4>
           {hasEps ? (
             <>
-              <Sparkline data={detail.per_share.eps} color="#8b5cf6" />
+              <Sparkline data={eps} color="#8b5cf6" />
               <div className="mt-1 text-[10px] font-bold text-slate-400">
-                {`$${detail.per_share.eps[detail.per_share.eps.length - 1].toFixed(2)} (최신)`}
+                {latestEps != null ? `$${latestEps.toFixed(2)} (최신)` : "—"}
               </div>
             </>
           ) : (

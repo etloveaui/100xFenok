@@ -32,10 +32,10 @@ interface AnalyzerRow {
   pbr: number | null;
   dividendYield: number | null;
   return12m: number | null;
-  perBandCurrent: number;
-  perBandMin: number;
-  perBandAvg: number;
-  perBandMax: number;
+  perBandCurrent: number | null;
+  perBandMin: number | null;
+  perBandAvg: number | null;
+  perBandMax: number | null;
 }
 
 let analyzerCache: Record<string, AnalyzerRow> | null = null;
@@ -99,6 +99,22 @@ function loadTradesRanking(): Promise<typeof tradesCache> {
 // Formatters
 // ---------------------------------------------------------------------------
 
+type MaybeNumber = number | null | undefined;
+type NumberSeries = MaybeNumber[];
+
+function isFiniteNumber(value: MaybeNumber): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function finiteValues(data: NumberSeries | null | undefined): number[] {
+  return (data ?? []).filter(isFiniteNumber);
+}
+
+function lastFinite(data: NumberSeries | null | undefined): number | null {
+  const values = finiteValues(data);
+  return values.length > 0 ? values[values.length - 1] : null;
+}
+
 function fmtPrice(n: number): string { return `$${n.toFixed(2)}`; }
 function fmtMcap(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}T`;
@@ -110,6 +126,39 @@ function fmtPct(n: number): string {
   return pct >= 0 ? `+${pct.toFixed(1)}%` : `${pct.toFixed(1)}%`;
 }
 function fmtDivYield(n: number): string { return `${(n * 100).toFixed(2)}%`; }
+function fmtWholePct(n: MaybeNumber): string { return isFiniteNumber(n) ? `${n.toFixed(1)}%` : "—"; }
+function fmtWholeSignedPct(n: MaybeNumber): string { return isFiniteNumber(n) ? fmtPct(n / 100) : "—"; }
+
+function toFractionSeries(data: NumberSeries | null | undefined): NumberSeries {
+  return (data ?? []).map((value) => (isFiniteNumber(value) ? value / 100 : null));
+}
+
+function validAnalyzerPerBand(row: AnalyzerRow | null | undefined) {
+  if (
+    !row ||
+    !isFiniteNumber(row.perBandCurrent) ||
+    !isFiniteNumber(row.perBandMin) ||
+    !isFiniteNumber(row.perBandMax) ||
+    row.perBandMin >= row.perBandMax
+  ) {
+    return null;
+  }
+  return { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax };
+}
+
+function validDetailPerBands(perBands: any) {
+  if (
+    !perBands ||
+    !isFiniteNumber(perBands.current) ||
+    !isFiniteNumber(perBands.min_8y) ||
+    !isFiniteNumber(perBands.avg_8y) ||
+    !isFiniteNumber(perBands.max_8y) ||
+    perBands.min_8y >= perBands.max_8y
+  ) {
+    return null;
+  }
+  return perBands as { current: number; min_8y: number; avg_8y: number; max_8y: number };
+}
 
 function perBandPositionText(current: number, min: number, max: number): string {
   const pct = bandPct(current, min, max);
@@ -131,15 +180,15 @@ function perBandPositionColor(current: number, min: number, max: number): string
 function MiniBarChart({
   actuals, estimates, years, color,
 }: {
-  actuals: number[];
-  estimates: Record<string, number> | null;
+  actuals: NumberSeries;
+  estimates: Record<string, MaybeNumber> | null;
   years: string[];
   color: string;
 }) {
-  const allVals = [...actuals];
+  const allVals = finiteValues(actuals);
   const estKeys: string[] = [];
   if (estimates) for (const k of ["fy1", "fy2", "fy3"]) {
-    if (estimates[k] != null) { allVals.push(estimates[k]); estKeys.push(k); }
+    if (isFiniteNumber(estimates[k])) { allVals.push(estimates[k]); estKeys.push(k); }
   }
   if (allVals.length === 0) return <span className="text-xs text-slate-300">—</span>;
   const maxVal = Math.max(...allVals, 0);
@@ -148,13 +197,16 @@ function MiniBarChart({
   return (
     <div className="space-y-1">
       <div className="flex items-end gap-[2px]" style={{ height: 60 }}>
-        {actuals.map((v, i) => (
-          <div key={i} className="flex flex-1 flex-col items-center justify-end">
-            <div className="w-full rounded-t-sm" style={{ height: `${Math.max(2, v * scale)}%`, backgroundColor: color }} />
-          </div>
-        ))}
+        {actuals.map((v, i) => {
+          const height = isFiniteNumber(v) ? Math.max(2, v * scale) : 0;
+          return (
+            <div key={i} className="flex flex-1 flex-col items-center justify-end">
+              <div className="w-full rounded-t-sm" style={{ height: `${height}%`, backgroundColor: color }} />
+            </div>
+          );
+        })}
         {estKeys.map((k) => {
-          const v = estimates![k];
+          const v = estimates![k] ?? 0;
           return (
             <div key={k} className="flex flex-1 flex-col items-center justify-end">
               <div className="w-full rounded-t-sm border-2 border-dashed"
@@ -179,7 +231,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
   const estKeys = ["fy1", "fy2", "fy3"];
   const s = (n: number) => n >= 1000 ? fmtLarge(n) : `${n.toFixed(1)}`;
   const usd = (n: number) => `$${n.toFixed(2)}`;
-  const rows: Array<{ label: string; actuals: number[] | null; estimates: Record<string, number> | null; fmt: (v: number) => string }> = [
+  const rows: Array<{ label: string; actuals: NumberSeries | null; estimates: Record<string, MaybeNumber> | null; fmt: (v: number) => string }> = [
     { label: "매출", actuals: detail.income_statement?.revenue ?? null, estimates: detail.income_statement_estimates?.revenue ?? null, fmt: s },
     { label: "영업이익", actuals: detail.income_statement?.operating_income ?? null, estimates: detail.income_statement_estimates?.operating_income ?? null, fmt: s },
     { label: "순이익", actuals: detail.income_statement?.net_income ?? null, estimates: detail.income_statement_estimates?.net_income ?? null, fmt: s },
@@ -187,7 +239,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
     { label: "FCF", actuals: detail.cash_flow?.fcf ?? null, estimates: detail.cash_flow_estimates?.fcf ?? null, fmt: s },
     { label: "DPS", actuals: detail.dividend?.dps ?? null, estimates: detail.dividend_estimates?.dps ?? null, fmt: usd },
   ];
-  const validRows = rows.filter((r) => r.actuals && r.actuals.length > 0);
+  const validRows = rows.filter((r) => finiteValues(r.actuals).length > 0);
   if (validRows.length === 0) return null;
 
   return (
@@ -205,11 +257,11 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
             <tr key={row.label} className="border-b border-slate-100 last:border-b-0">
               <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{row.label}</td>
               {row.actuals!.map((v, i) => (
-                <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-900">{row.fmt(v)}</td>
+                <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-900">{isFiniteNumber(v) ? row.fmt(v) : "—"}</td>
               ))}
               {estKeys.map((k) => (
                 <td key={k} className="px-2 py-1.5 text-right bg-slate-50 orbitron tabular-nums font-semibold text-slate-500">
-                  {row.estimates?.[k] != null ? row.fmt(row.estimates![k]) : "—"}
+                  {isFiniteNumber(row.estimates?.[k]) ? row.fmt(row.estimates![k] as number) : "—"}
                 </td>
               ))}
             </tr>
@@ -309,7 +361,7 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
 // ---------------------------------------------------------------------------
 
 function MetricWithSpark({ label, value, data, color }: {
-  label: string; value: string; data: number[]; color: string;
+  label: string; value: string; data: NumberSeries; color: string;
 }) {
   return (
     <div className="rounded-xl border border-slate-200 p-3">
@@ -317,7 +369,7 @@ function MetricWithSpark({ label, value, data, color }: {
         <span className="text-[10px] font-bold text-slate-500">{label}</span>
         <span className="orbitron tabular-nums text-sm font-black text-slate-900">{value}</span>
       </div>
-      {data && data.length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} /></div> : null}
+      {finiteValues(data).length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} /></div> : null}
     </div>
   );
 }
@@ -340,11 +392,14 @@ function KV({ label, value }: { label: string; value: string }) {
 // ---------------------------------------------------------------------------
 
 export default function StockDetailClient({ ticker }: { ticker: string }) {
-  const { detail, loading: detailLoading } = useStockDetail(ticker);
-  const f13Entries = use13FData(ticker);
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
+  const canLoadStockData = row !== undefined && row !== null;
+  const { detail, loading: detailLoading } = useStockDetail(ticker, canLoadStockData);
+  const f13Entries = use13FData(ticker);
   const canonical = row ? resolveSector(null, row.sector) : null;
   const years: string[] = detail?.years ?? [];
+  const rowPerBand = validAnalyzerPerBand(row);
+  const detailPerBands = validDetailPerBands(detail?.per_bands);
 
   useEffect(() => {
     let cancelled = false;
@@ -358,9 +413,13 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    if (!canLoadStockData) {
+      setYfData(row === null ? null : undefined);
+      return () => { cancelled = true; };
+    }
     loadYfFinance(ticker.toUpperCase()).then((d) => { if (!cancelled) setYfData(d ?? null); });
     return () => { cancelled = true; };
-  }, [ticker]);
+  }, [ticker, canLoadStockData, row]);
 
   const [benchDoc, setBenchDoc] = useState<Awaited<ReturnType<typeof loadIndustryBenchmarks>>>(null);
   useEffect(() => {
@@ -457,7 +516,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           {yfAvailable ? (
             <ThreeSecondSummary
               data={yfData}
-              perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
+              perBand={rowPerBand}
               guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
               industry={industryBench}
             />
@@ -466,7 +525,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           {yfAvailable ? (
             <SummaryScoreCard
               data={yfData}
-              perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
+              perBand={rowPerBand}
               industry={industryBench}
             />
           ) : null}
@@ -500,14 +559,14 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 {/* scouter rows carry null price/ratios for non-US listings */}
                 <KV label="현재가" value={row.price != null ? fmtPrice(row.price) : "—"} />
                 <KV label="시가총액" value={row.marketCap != null ? fmtMcap(row.marketCap) : "—"} />
-                <KV label="PER" value={row.per != null ? row.per.toFixed(1) : "—"} />
-                <KV label="PBR" value={row.pbr != null ? row.pbr.toFixed(2) : "—"} />
-                <KV label="배당률" value={row.dividendYield != null ? fmtDivYield(row.dividendYield) : "—"} />
-                <KV label="12개월 수익률" value={row.return12m != null ? fmtPct(row.return12m) : "—"} />
-                {row.perBandCurrent > 0 ? (
-                  <div className={`rounded-lg px-2.5 py-1.5 ${perBandPositionColor(row.perBandCurrent, row.perBandMin, row.perBandMax)}`}>
+                <KV label="PER" value={isFiniteNumber(row.per) ? row.per.toFixed(1) : "—"} />
+                <KV label="PBR" value={isFiniteNumber(row.pbr) ? row.pbr.toFixed(2) : "—"} />
+                <KV label="배당률" value={isFiniteNumber(row.dividendYield) ? fmtDivYield(row.dividendYield) : "—"} />
+                <KV label="12개월 수익률" value={isFiniteNumber(row.return12m) ? fmtPct(row.return12m) : "—"} />
+                {rowPerBand ? (
+                  <div className={`rounded-lg px-2.5 py-1.5 ${perBandPositionColor(rowPerBand.current, rowPerBand.min, rowPerBand.max)}`}>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.05em] opacity-70">PER 밴드 위치</p>
-                    <p className="orbitron tabular-nums text-sm font-black">{perBandPositionText(row.perBandCurrent, row.perBandMin, row.perBandMax)}</p>
+                    <p className="orbitron tabular-nums text-sm font-black">{perBandPositionText(rowPerBand.current, rowPerBand.min, rowPerBand.max)}</p>
                   </div>
                 ) : null}
               </div>
@@ -539,17 +598,17 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
                     <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 (8Y)</h4>
-                    {(detail.valuation?.per && detail.valuation.per.length >= 2) ? (
-                      <PerBandChart years={detail.years} per={detail.valuation.per} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
+                    {finiteValues(detail.valuation?.per).length >= 2 ? (
+                      <PerBandChart years={detail.years} per={detail.valuation?.per ?? []} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
                     ) : <span className="text-xs text-slate-300">—</span>}
                   </div>
-                  {detail.per_bands ? (
+                  {detailPerBands ? (
                     <div>
                       <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 위치</h4>
                       <div className="space-y-2">
-                        {[{ label: "최고", v: detail.per_bands.max_8y }, { label: "평균", v: detail.per_bands.avg_8y }, { label: "현재", v: detail.per_bands.current, highlight: true }, { label: "최저", v: detail.per_bands.min_8y }].map(({ label, v, highlight }) => {
-                          const range = detail.per_bands!.max_8y - detail.per_bands!.min_8y || 1;
-                          const pct = ((v - detail.per_bands!.min_8y) / range) * 100;
+                        {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "현재", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
+                          const range = detailPerBands.max_8y - detailPerBands.min_8y || 1;
+                          const pct = ((v - detailPerBands.min_8y) / range) * 100;
                           const barColor = highlight ? "bg-brand-interactive" : "bg-slate-300";
                           const textColor = highlight ? "text-slate-900" : "text-slate-500";
                           return (
@@ -576,7 +635,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                     ["영업이익", detail.income_statement?.operating_income, detail.income_statement_estimates?.operating_income, "#06b6d4"],
                     ["순이익", detail.income_statement?.net_income, detail.income_statement_estimates?.net_income, "#8b5cf6"],
                     ["FCF", detail.cash_flow?.fcf, detail.cash_flow_estimates?.fcf, "#f59e0b"],
-                  ] as Array<[string, number[] | undefined, Record<string, number> | undefined, string]>).map(([label, actuals, estimates, color]) => (
+                  ] as Array<[string, NumberSeries | undefined, Record<string, MaybeNumber> | undefined, string]>).map(([label, actuals, estimates, color]) => (
                     <div key={label}>
                       <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
                       <MiniBarChart actuals={actuals ?? []} estimates={estimates ?? null} years={years} color={color} />
@@ -595,15 +654,15 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                   <div>
                     <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
                     <div className="space-y-3">
-                      <MetricWithSpark label="ROE" value={`${(detail.profitability as any)?.roe?.slice(-1)[0]?.toFixed(1) ?? "—"}%`} data={(detail.profitability as any)?.roe ?? []} color="#8b5cf6" />
-                      <MetricWithSpark label="영업이익률" value={`${(detail.profitability as any)?.operating_margin?.slice(-1)[0]?.toFixed(1) ?? "—"}%`} data={(detail.profitability as any)?.operating_margin ?? []} color="#06b6d4" />
+                      <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} color="#8b5cf6" />
+                      <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} color="#06b6d4" />
                     </div>
                   </div>
                   <div>
                     <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">성장률 (YoY)</h4>
                     <div className="space-y-3">
-                      <MetricWithSpark label="매출 성장률" value={fmtPct(((detail.growth as any)?.revenue_growth?.slice(-1)[0] ?? 0) / 100)} data={((detail.growth as any)?.revenue_growth ?? []).map((v: number) => v / 100)} color="#10b981" />
-                      <MetricWithSpark label="EPS 성장률" value={fmtPct(((detail.growth as any)?.eps_growth?.slice(-1)[0] ?? 0) / 100)} data={((detail.growth as any)?.eps_growth ?? []).map((v: number) => v / 100)} color="#f59e0b" />
+                      <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} color="#10b981" />
+                      <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} color="#f59e0b" />
                     </div>
                   </div>
                 </div>
