@@ -63,7 +63,8 @@ const LIVE_VAD_PRESETS: Record<LiveVadPreset, {
   relaxed: {
     startOfSpeechSensitivity: "START_SENSITIVITY_LOW",
     endOfSpeechSensitivity: "END_SENSITIVITY_LOW",
-    prefixPaddingMs: 60,
+    // 300ms: short fillers ("어", breaths) no longer trigger barge-in mid-playback
+    prefixPaddingMs: 300,
     silenceDurationMs: 1200,
   },
 };

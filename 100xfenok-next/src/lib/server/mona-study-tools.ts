@@ -983,6 +983,7 @@ export const MONA_PACING_RULES: readonly string[] = [
   "프리토킹 중엔 끼어들지 말고 끝난 뒤 피드백 2~3개만 준다.",
   "코너 하나당 최소 3~4회 캐치볼을 주고받은 뒤 다음으로 넘어간다.",
   "코너가 끝나고 모나가 '끝/그만'이라고 할 때까지 마무리 말을 하지 마.",
+  "말이 겹쳐서 네 말이 끊겼으면, 사과나 처음부터 다시 말하기 없이 끊긴 문장을 그 지점부터 이어서 완성한다.",
 ];
 
 function buildProfileSection(snapshot: StudySnapshot): string[] {
