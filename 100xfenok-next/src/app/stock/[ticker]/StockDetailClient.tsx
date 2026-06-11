@@ -12,7 +12,8 @@ import {
   fmtLarge,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
-import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard } from "./StockTabs";
+import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench } from "./StockTabs";
+import type { IndustryBench } from "./StockTabs";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -360,6 +361,17 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
     return () => { cancelled = true; };
   }, [ticker]);
 
+  const [benchDoc, setBenchDoc] = useState<Awaited<ReturnType<typeof loadIndustryBenchmarks>>>(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadIndustryBenchmarks().then((doc) => { if (!cancelled) setBenchDoc(doc); });
+    return () => { cancelled = true; };
+  }, []);
+  const industryBench: IndustryBench | null = useMemo(
+    () => resolveIndustryBench(benchDoc, yfData?.info?.industry),
+    [benchDoc, yfData],
+  );
+
   const yfLoaded = yfData !== undefined;
   const yfAvailable = yfData != null;
   const yfTabs: Array<{ id: typeof stockTab; label: string }> = yfAvailable
@@ -392,12 +404,21 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
         <TransitionLink href="/screener" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
       </div>
 
-      {/* 52-week range bar + summary score */}
+      {/* 3-second verdict + 52-week range bar + summary score */}
+      {yfAvailable ? (
+        <ThreeSecondSummary
+          data={yfData}
+          perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
+          guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
+          industry={industryBench}
+        />
+      ) : null}
       {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
       {yfAvailable ? (
         <SummaryScoreCard
           data={yfData}
           perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
+          industry={industryBench}
         />
       ) : null}
 
@@ -421,7 +442,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
       {/* YF tabs (non-overview) */}
       {stockTab !== "overview" && yfAvailable ? (
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
-          {renderYfTab(stockTab, yfData)}
+          {renderYfTab(stockTab, yfData, industryBench)}
         </div>
       ) : (
       <div className="gap-6 lg:flex">

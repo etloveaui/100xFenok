@@ -46,6 +46,45 @@ function getCurrencyFn(currency: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Industry benchmarks (damodaran extract — build-industry-benchmarks.mjs)
+// ---------------------------------------------------------------------------
+
+export interface IndustryBench {
+  name: string;
+  num_firms: number | null;
+  trailing_pe: number | null;
+  forward_pe: number | null;
+  roe: number | null;
+  cost_of_capital: number | null;
+  operating_margin: number | null;
+  net_margin: number | null;
+}
+
+type BenchDoc = {
+  yf_industry_map?: Record<string, string>;
+  industries?: Record<string, Omit<IndustryBench, "name">>;
+};
+
+let benchCache: BenchDoc | null = null;
+let benchPending: Promise<BenchDoc | null> | null = null;
+export function loadIndustryBenchmarks(): Promise<BenchDoc | null> {
+  if (benchCache) return Promise.resolve(benchCache);
+  if (benchPending) return benchPending;
+  benchPending = fetch("/data/damodaran/industry_benchmarks.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { benchCache = d; return d; })
+    .catch(() => { benchPending = null; return null; });
+  return benchPending;
+}
+
+export function resolveIndustryBench(doc: BenchDoc | null, yfIndustry: string | undefined | null): IndustryBench | null {
+  if (!doc || !yfIndustry) return null;
+  const key = doc.yf_industry_map?.[yfIndustry];
+  const row = key ? doc.industries?.[key] : undefined;
+  return key && row ? { name: key, ...row } : null;
+}
+
+// ---------------------------------------------------------------------------
 // Financials tab
 // ---------------------------------------------------------------------------
 
@@ -172,7 +211,41 @@ function FinancialsTab({ data }: { data: YfData }) {
 // Statistics tab
 // ---------------------------------------------------------------------------
 
-function StatisticsTab({ data }: { data: YfData }) {
+function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; industry: IndustryBench }) {
+  const rows: Array<{ label: string; stock: number | null; ind: number | null; isFraction: boolean; lowerBetter: boolean }> = [
+    { label: "Trailing P/E", stock: info.trailingPE ?? null, ind: industry.trailing_pe, isFraction: false, lowerBetter: true },
+    { label: "Forward P/E", stock: info.forwardPE ?? null, ind: industry.forward_pe, isFraction: false, lowerBetter: true },
+    { label: "ROE", stock: info.returnOnEquity ?? null, ind: industry.roe, isFraction: true, lowerBetter: false },
+    { label: "영업이익률", stock: info.operatingMargins ?? null, ind: industry.operating_margin, isFraction: true, lowerBetter: false },
+    { label: "순이익률", stock: info.profitMargins ?? null, ind: industry.net_margin, isFraction: true, lowerBetter: false },
+  ].filter((r) => r.stock !== null && r.ind !== null);
+  if (rows.length === 0) return null;
+  const fmt = (v: number, frac: boolean) => (frac ? `${(v * 100).toFixed(1)}%` : v.toFixed(1));
+  return (
+    <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+        산업 대비 — {industry.name}{industry.num_firms ? ` (${industry.num_firms}개사, 다모다란)` : " (다모다란)"}
+      </p>
+      <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+        {rows.map((r) => {
+          const better = r.lowerBetter ? (r.stock as number) < (r.ind as number) : (r.stock as number) > (r.ind as number);
+          return (
+            <div key={r.label} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
+              <span className="text-[10px] font-medium text-slate-500">{r.label}</span>
+              <span className="orbitron tabular-nums text-[11px] font-black">
+                <span className={better ? "text-emerald-700" : "text-slate-900"}>{fmt(r.stock as number, r.isFraction)}</span>
+                <span className="mx-1 font-semibold text-slate-300">/</span>
+                <span className="font-bold text-slate-400">산업 {fmt(r.ind as number, r.isFraction)}</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBench | null }) {
   const info = data.info ?? {};
 
   const isFractionKey = (k: string) =>
@@ -217,6 +290,7 @@ function StatisticsTab({ data }: { data: YfData }) {
 
   return (
     <div className="space-y-5">
+      {industry ? <IndustryCompareBlock info={info} industry={industry} /> : null}
       {sections.map((sec) => {
         const hasData = sec.items.some(([k]) => info[k] != null);
         if (!hasData) return null;
@@ -513,6 +587,7 @@ function estGrowth(rows: any[] | null | undefined, idx: string): number | null {
 export function computeSummaryScores(
   data: YfData,
   perBand: { current: number; min: number; max: number } | null,
+  industry?: IndustryBench | null,
 ): AreaScore[] {
   const info = data.info ?? {};
   const n = (v: any): number | null => (typeof v === "number" ? v : null);
@@ -533,6 +608,9 @@ export function computeSummaryScores(
     pushCheck(c, "애널리스트 목표가 대비 상승 여력", target !== null && price !== null ? target > price : null);
     pushCheck(c, "PER 25배 미만", lt(info.trailingPE, 25));
     pushCheck(c, "EV/EBITDA 15배 미만", lt(info.enterpriseToEbitda, 15));
+    const indPe = industry?.trailing_pe ?? null;
+    const pe = n(info.trailingPE);
+    pushCheck(c, "PER 산업 평균 미만 (다모다란)", indPe !== null && pe !== null ? pe < indPe : null);
   });
 
   area("미래 성장", (c) => {
@@ -587,12 +665,13 @@ function scoreColor(ratio: number): string {
   return "#e11d48"; // rose-600
 }
 
-export function SummaryScoreCard({ data, perBand }: {
+export function SummaryScoreCard({ data, perBand, industry }: {
   data: YfData;
   perBand: { current: number; min: number; max: number } | null;
+  industry?: IndustryBench | null;
 }) {
   const [open, setOpen] = useState(false);
-  const areas = computeSummaryScores(data, perBand);
+  const areas = computeSummaryScores(data, perBand, industry);
   if (areas.length === 0) return null;
   const score = areas.reduce((s, a) => s + a.score, 0);
   const total = areas.reduce((s, a) => s + a.total, 0);
@@ -656,14 +735,91 @@ export function SummaryScoreCard({ data, perBand }: {
 }
 
 // ---------------------------------------------------------------------------
+// ThreeSecondSummary — meaning-first verdict paragraph (deep-research claim 2:
+// summary module at top; numbers stay below in their existing sections)
+// ---------------------------------------------------------------------------
+
+function bandPhrase(current: number, min: number, max: number): string | null {
+  if (!(current > 0) || !(max > min)) return null;
+  const pct = ((current - min) / (max - min)) * 100;
+  if (pct >= 80) return "역사적 밴드 상단 — 비싸게 거래";
+  if (pct >= 55) return "밴드 중상단 — 다소 프리미엄";
+  if (pct >= 35) return "역사적 밴드 중간 — 평년 수준";
+  return "밴드 하단 — 역사 대비 싼 구간";
+}
+
+export function buildThreeSecondSummary(
+  data: YfData,
+  perBand: { current: number; min: number; max: number } | null,
+  guruCount: number,
+  industry?: IndustryBench | null,
+): string[] {
+  const info = data.info ?? {};
+  const sentences: string[] = [];
+
+  // 1) valuation now
+  const val: string[] = [];
+  const band = perBand ? bandPhrase(perBand.current, perBand.min, perBand.max) : null;
+  if (band) val.push(band);
+  if (industry?.trailing_pe && typeof info.trailingPE === "number") {
+    const ratio = info.trailingPE / industry.trailing_pe;
+    if (ratio <= 0.85) val.push(`산업 평균 PER(${industry.trailing_pe.toFixed(0)}배)보다 싸게 거래`);
+    else if (ratio >= 1.15) val.push(`산업 평균 PER(${industry.trailing_pe.toFixed(0)}배)의 ${ratio.toFixed(1)}배 수준`);
+  }
+  const target = data.analyst_price_targets?.mean;
+  const price = info.currentPrice;
+  if (typeof target === "number" && typeof price === "number" && price > 0) {
+    const up = (target / price - 1) * 100;
+    val.push(`애널리스트 목표가까지 ${up >= 0 ? "+" : ""}${up.toFixed(0)}%`);
+  }
+  if (val.length) sentences.push(`${val.join(", ")}.`);
+
+  // 2) fundamentals direction
+  const fun: string[] = [];
+  const g = (data.earnings_estimate ?? []).find((e: any) => e._index === "+1y")?.growth;
+  if (typeof g === "number") {
+    fun.push(g > 0.05 ? `내년 EPS ${(g * 100).toFixed(0)}% 성장 전망` : g < 0 ? "내년 이익 감소 전망" : "내년 이익 정체 전망");
+  }
+  const scores = computeSummaryScores(data, perBand);
+  if (scores.length) {
+    const total = scores.reduce((s, a) => s + a.total, 0);
+    const score = scores.reduce((s, a) => s + a.score, 0);
+    const weakest = [...scores].sort((a, b) => a.score / a.total - b.score / b.total)[0];
+    fun.push(`체크 ${score}/${total} 통과 (약점: ${weakest.area})`);
+  }
+  if (fun.length) sentences.push(`${fun.join(", ")}.`);
+
+  // 3) smart money
+  if (guruCount > 0) sentences.push(`슈퍼인베스터 ${guruCount}명이 보유 중.`);
+
+  return sentences;
+}
+
+export function ThreeSecondSummary({ data, perBand, guruCount, industry }: {
+  data: YfData;
+  perBand: { current: number; min: number; max: number } | null;
+  guruCount: number;
+  industry?: IndustryBench | null;
+}) {
+  const sentences = buildThreeSecondSummary(data, perBand, guruCount, industry);
+  if (sentences.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-brand-interactive/20 bg-brand-interactive/[0.03] p-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-brand-interactive">3초 요약</p>
+      <p className="mt-1 text-[13px] font-bold leading-6 text-slate-800">{sentences.join(" ")}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main export
 // ---------------------------------------------------------------------------
 
-export function renderYfTab(tab: string, data: YfData) {
+export function renderYfTab(tab: string, data: YfData, industry?: IndustryBench | null) {
   if (!data) return null;
   switch (tab) {
     case "financials": return <FinancialsTab data={data} />;
-    case "statistics": return <StatisticsTab data={data} />;
+    case "statistics": return <StatisticsTab data={data} industry={industry} />;
     case "ownership": return <OwnershipTab data={data} />;
     case "estimates": return <EstimatesTab data={data} />;
     default: return null;

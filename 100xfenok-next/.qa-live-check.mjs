@@ -156,6 +156,13 @@ if (await guruPreset.count()) {
   console.log("!! 구루픽 preset NOT FOUND");
 }
 
+// 5b2. market-valuation — yardeni model card (bottom)
+await page.goto(`${BASE}/market-valuation`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(2500);
+await page.keyboard.press("End");
+await page.waitForTimeout(1500);
+await shot("07b-market-valuation-yardeni");
+
 // 5c. sectors smart money (bottom)
 await page.goto(`${BASE}/sectors`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(2000);
