@@ -5,6 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import { PerformanceChart, PortfolioTreemap, SectorMixPanel, loadPortfolioViews } from "./PortfolioCharts";
+import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
 import DataNav from "@/components/DataNav";
 import type {
@@ -319,6 +320,7 @@ function GuruDetailPanel({
                 investorName={pvData.investors[id].name}
               />
             ) : null}
+            <GuruTrendBlock investorId={id} />
           </div>
         </div>
       ) : null}
