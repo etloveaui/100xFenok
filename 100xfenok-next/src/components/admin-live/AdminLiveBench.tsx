@@ -1709,6 +1709,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       role: "system",
       text: "대화를 멈췄어요",
       at: nowLabel(),
+      atIso: new Date().toISOString(),
     };
     const finalMetrics: BenchMetrics = {
       ...metrics,
