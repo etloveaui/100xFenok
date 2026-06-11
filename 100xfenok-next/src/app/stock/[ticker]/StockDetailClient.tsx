@@ -14,6 +14,7 @@ import {
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
 import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
+import WatchStar from "@/components/WatchStar";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -399,9 +400,10 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   return (
     <main className="container mx-auto max-w-5xl space-y-6 px-3 py-6 sm:px-4 sm:py-8">
-      {/* Breadcrumb */}
+      {/* Breadcrumb + watch star */}
       <div className="flex flex-wrap items-center gap-2">
         <TransitionLink href="/screener" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+        <WatchStar ticker={ticker.toUpperCase()} className="ml-auto" />
       </div>
 
       {/* 3-second verdict + 52-week range bar + summary score */}

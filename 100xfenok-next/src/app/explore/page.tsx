@@ -5,6 +5,7 @@ import ExploreDashboard from "./ExploreDashboard";
 import MarketThermometer from "./MarketThermometer";
 import SignalStrip from "./SignalStrip";
 import WeekAheadCard from "./WeekAheadCard";
+import MyWatchlistStrip from "./MyWatchlistStrip";
 import DataNav from "@/components/DataNav";
 
 export const metadata: Metadata = {
@@ -76,7 +77,8 @@ export default function ExplorePage() {
         </div>
       </header>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-3">
+        <MyWatchlistStrip />
         <SignalStrip />
       </div>
 
