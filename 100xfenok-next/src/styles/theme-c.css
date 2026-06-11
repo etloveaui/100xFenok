@@ -5,7 +5,8 @@
  * western (owner choice): up = soft green, down = clay red; brand blue kept.
  */
 
-.theme-c {
+.theme-c,
+body.theme-c-chrome {
   --c-bg: #f2f4f6;
   --c-surface: #fff;
   --c-surface-2: #f7f9fb;
@@ -180,6 +181,29 @@
 .theme-c .deep-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .theme-c .deep-pills a { display: inline-flex; align-items: center; gap: 8px; background: var(--c-surface); box-shadow: var(--c-sm); color: var(--c-ink-2); padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; min-height: 44px; }
 .theme-c .deep-pills a:hover { color: var(--c-brand); }
+
+/*
+ * Chrome seam removal — V1 Navbar/Footer sit outside the page's `.theme-c`
+ * wrapper, so Theme C pages opt in via <ThemeCChrome /> (body.theme-c-chrome).
+ * Goal: one app, not two stitched together. V1 pages stay untouched.
+ */
+body.theme-c-chrome .nav-wrapper {
+  background: rgba(242, 244, 246, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: none;
+  border-bottom: 1px solid var(--c-line);
+}
+body.theme-c-chrome .nav-wrapper .nav-pill {
+  font-family: inherit;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+body.theme-c-chrome .nav-wrapper .text-brand-navy { color: var(--c-brand); }
+body.theme-c-chrome .nav-wrapper .border-brand-navy { border-color: var(--c-brand); }
+/* footer ticker: navy-blue glow gradient -> solid theme ink band */
+body.theme-c-chrome footer .glow-bar { background: var(--c-ink); }
+body.theme-c-chrome footer .bg-white\/95 { border-top-color: var(--c-line); }
 
 @media (min-width: 760px) {
   .theme-c .sig-grid { grid-template-columns: repeat(4, 1fr); }

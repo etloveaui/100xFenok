@@ -9,6 +9,7 @@ import WeekAheadCard from "./WeekAheadCard";
 import MyWatchlistStrip from "./MyWatchlistStrip";
 import RevisionMoversCard from "./RevisionMoversCard";
 import DataNav from "@/components/DataNav";
+import ThemeCChrome from "@/components/design/ThemeCChrome";
 
 // Theme C (Korean fintech minimal) — pilot page font
 const plexKr = IBM_Plex_Sans_KR({
@@ -35,6 +36,7 @@ const TIERS: ReadonlyArray<{ title: string; href: string; icon: string }> = [
 export default function ExplorePage() {
   return (
     <div className={`theme-c ${plexKr.className}`}>
+      <ThemeCChrome />
       <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-8">
         <header className="hero">
           <p className="eyebrow">탐색 · EXPLORE</p>
