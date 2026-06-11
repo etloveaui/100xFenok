@@ -3,7 +3,6 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import SmartMoneyPanel from "./SmartMoneyPanel";
 import TransitionLink from "@/components/TransitionLink";
-import DataNav from "@/components/DataNav";
 import { useSectorData } from "@/hooks/useSectorData";
 import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow } from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
@@ -74,39 +73,32 @@ export default function SectorsClient() {
   const dateLabel = updatedAt ? updatedAt.slice(0, 10) : null;
 
   return (
-    <main className="container mx-auto max-w-6xl space-y-4 overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6">
-      {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Sector Intelligence</p>
-          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">섹터 히트맵</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+    <div className="data-shell-page">
+      <section className="panel data-shell-header">
+        <div className="data-shell-head-main">
+          <p className="data-shell-kicker">Sector Intelligence</p>
+          <h1 className="data-shell-title">섹터 히트맵</h1>
+          <p className="data-shell-desc">
             11개 미국 업종의 다기간 성과를 한눈에. 업종 순환, 강·약 순위, 섹터 ETF를 비교합니다.
           </p>
         </div>
-        <DataNav active="sectors" />
-        <div className="flex items-center gap-2">
+        <div className="data-shell-head-actions">
           {dateLabel ? (
             <span
               className={cx(
-                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
-                benchmarksFailed
-                  ? "border-amber-200 bg-amber-50 text-amber-700"
-                  : "border-emerald-200 bg-emerald-50 text-emerald-700",
+                "data-shell-pill",
+                benchmarksFailed ? "warn" : "ok",
               )}
             >
-              <span className={cx("h-1.5 w-1.5 rounded-full", benchmarksFailed ? "bg-amber-400" : "bg-emerald-400")} />
+              <span />
               {dateLabel}
             </span>
           ) : null}
-          <TransitionLink
-            href="/"
-            className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.12em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-          >
+          <TransitionLink href="/" className="data-shell-link">
             홈
           </TransitionLink>
         </div>
-      </header>
+      </section>
 
       {isMuted ? (
         <div className="rounded-[1.2rem] border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
@@ -298,7 +290,7 @@ export default function SectorsClient() {
       </SectionCard>
       <SmartMoneyPanel />
 
-    </main>
+    </div>
   );
 }
 

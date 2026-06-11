@@ -377,80 +377,112 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   const yfAvailable = yfData != null;
   const yfTabs: Array<{ id: typeof stockTab; label: string }> = yfAvailable
     ? [
-        { id: "overview", label: "개요" },
+        { id: "overview", label: "요약" },
         { id: "financials", label: "재무" },
         { id: "statistics", label: "통계" },
         { id: "ownership", label: "보유기관" },
         { id: "estimates", label: "추정치" },
       ]
-    : [{ id: "overview" as const, label: "개요" }];
+    : [{ id: "overview" as const, label: "요약" }];
 
   // Unknown ticker
   if (!rowLoading && !row) {
     return (
-      <main className="container mx-auto max-w-5xl px-3 py-8 sm:px-4 sm:py-12">
-        <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+      <div className="stock-shell">
+        <div className="panel stock-empty">
           <p className="text-lg font-black text-slate-700">해당 티커를 찾을 수 없습니다</p>
           <p className="mt-2 text-sm font-semibold text-slate-500">{ticker.toUpperCase()} — stocks_analyzer.json에 존재하지 않는 티커입니다.</p>
           <TransitionLink href="/screener" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
         </div>
-      </main>
+      </div>
     );
   }
 
+  const symbol = ticker.toUpperCase();
+  const displayName = row?.companyName ?? symbol;
+  const priceText = row?.price != null ? fmtPrice(row.price) : "—";
+  const returnText = row?.return12m != null ? fmtPct(row.return12m) : null;
+  const returnUp = (row?.return12m ?? 0) >= 0;
+
   return (
-    <main className="container mx-auto max-w-5xl space-y-6 px-3 py-6 sm:px-4 sm:py-8">
-      {/* Breadcrumb + watch star */}
-      <div className="flex flex-wrap items-center gap-2">
-        <TransitionLink href="/screener" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-        <WatchStar ticker={ticker.toUpperCase()} className="ml-auto" />
-      </div>
+    <div className="stock-shell">
+      <section className="stock-entity panel">
+        <div className="stock-entity-in">
+          <span className="stock-logo">{symbol.slice(0, 1)}</span>
+          <div className="stock-id">
+            <div className="stock-name">
+              <h1>{displayName}</h1>
+              <WatchStar ticker={symbol} className="stock-star" />
+            </div>
+            <div className="stock-meta">
+              <span className="num">{symbol}</span>
+              {canonical ? (
+                <>
+                  <span className="x">·</span>
+                  <span>{sectorLabelKo(canonical)}</span>
+                </>
+              ) : null}
+              {row?.sector ? (
+                <>
+                  <span className="x">·</span>
+                  <span>{row.sector}</span>
+                </>
+              ) : null}
+            </div>
+          </div>
+          <div className="stock-price">
+            <span className="big num">{priceText}</span>
+            {returnText ? <span className={`stock-chip num ${returnUp ? "up" : "down"}`}>12M {returnText}</span> : null}
+            <span className="delay">데이터 지연 가능</span>
+          </div>
+        </div>
+        <div className="stock-tabs" role="tablist" aria-label={`${symbol} 상세 탭`}>
+          {yfTabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setStockTab(t.id)}
+              className={`stock-tab ${stockTab === t.id ? "on" : ""}`}
+              aria-current={stockTab === t.id ? "page" : undefined}
+            >
+              {t.label}
+            </button>
+          ))}
+          {!yfLoaded ? <span className="stock-tab-note">yf 데이터 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">yf 데이터 수집 전</span> : null}
+        </div>
+      </section>
 
-      {/* 3-second verdict + 52-week range bar + summary score */}
-      {yfAvailable ? (
-        <ThreeSecondSummary
-          data={yfData}
-          perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
-          guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
-          industry={industryBench}
-        />
-      ) : null}
-      {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
-      {yfAvailable ? (
-        <SummaryScoreCard
-          data={yfData}
-          perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
-          industry={industryBench}
-        />
-      ) : null}
-
-      {/* Tab strip */}
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-1">
-        {yfTabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setStockTab(t.id)}
-            className={`relative inline-flex min-h-9 items-center px-3 text-[11px] font-black uppercase tracking-[0.12em] transition ${stockTab === t.id ? "text-brand-interactive" : "text-slate-500 hover:text-slate-900"}`}
-            aria-current={stockTab === t.id ? "page" : undefined}
-          >
-            {t.label}
-            {stockTab === t.id ? <span className="absolute bottom-[-5px] left-0 right-0 h-[2px] rounded-full bg-brand-interactive" /> : null}
-          </button>
-        ))}
-        {!yfLoaded ? <span className="ml-auto text-[10px] font-semibold text-slate-400">yf 데이터 로딩 중…</span> : !yfAvailable ? <span className="ml-auto text-[10px] font-semibold text-slate-400">yf 데이터 수집 전</span> : null}
+      <div className="stock-body">
+        <div className="stock-summary-stack">
+          {yfAvailable ? (
+            <ThreeSecondSummary
+              data={yfData}
+              perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
+              guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
+              industry={industryBench}
+            />
+          ) : null}
+          {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
+          {yfAvailable ? (
+            <SummaryScoreCard
+              data={yfData}
+              perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
+              industry={industryBench}
+            />
+          ) : null}
       </div>
 
       {/* YF tabs (non-overview) */}
       {stockTab !== "overview" && yfAvailable ? (
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
-          {renderYfTab(stockTab, yfData, industryBench)}
-        </div>
+        <section className="panel stock-tab-panel">
+          <div className="panel-b">{renderYfTab(stockTab, yfData, industryBench)}</div>
+        </section>
       ) : (
-      <div className="gap-6 lg:flex">
+      <div className="stock-overview-grid">
         {/* LEFT RAIL (280px sticky) */}
-        <aside className="mb-6 shrink-0 lg:sticky lg:top-4 lg:mb-0 lg:w-[280px] lg:self-start">
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]">
+        <aside className="stock-side">
+          <div className="panel stock-side-panel">
+            <div className="panel-b">
             <div className="mb-3">
               <h1 className="text-lg font-black tracking-tight text-slate-950">{row ? row.companyName : "..."}</h1>
               <p className="orbitron text-sm font-black text-slate-400">{ticker.toUpperCase()}</p>
@@ -489,11 +521,12 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 </a>
               </div>
             ) : null}
+            </div>
           </div>
         </aside>
 
         {/* MAIN CONTENT */}
-        <div className="min-w-0 flex-1 space-y-8">
+        <div className="stock-main-stack">
           {detailLoading ? (
             <div className="space-y-8">
               <SkeletonSection />
@@ -593,31 +626,34 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           )}
 
           {/* Footer */}
-          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          <footer className="stock-footer">
             <TransitionLink href={`/screener?ticker=${encodeURIComponent(ticker)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
             <TransitionLink href="/superinvestors" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">구루 보유 보기</TransitionLink>
           </footer>
         </div>
       </div>
       )}
-    </main>
+      </div>
+    </div>
   );
 }
 
 function SectionCard({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
-      {title ? <h2 className="mb-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-500">{title}</h2> : null}
-      {children}
+    <section className="panel stock-section">
+      {title ? <div className="panel-h"><h2>{title}</h2></div> : null}
+      <div className="panel-b">{children}</div>
     </section>
   );
 }
 
 function SkeletonSection() {
   return (
-    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+    <div className="panel stock-section">
+      <div className="panel-b">
       <div className="h-5 w-1/3 rounded bg-slate-200" />
       <div className="mt-3 h-32 rounded bg-slate-200" />
+      </div>
     </div>
   );
 }

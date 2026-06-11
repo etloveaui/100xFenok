@@ -3,7 +3,6 @@
 import TransitionLink from "@/components/TransitionLink";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import type { ValuationBand } from "@/lib/market-valuation/types";
-import DataNav from "@/components/DataNav";
 import YardeniCard from "./YardeniCard";
 import { formatPercent } from "@/lib/dashboard/formatters";
 
@@ -76,31 +75,27 @@ export default function MarketValuationClient() {
   const { indices, dataReady, failed, sourceDate } = useMarketValuation();
 
   return (
-    <main className="container mx-auto max-w-5xl space-y-4 overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Market Valuation</p>
-          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">시장 밸류에이션</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+    <div className="data-shell-page">
+      <section className="panel data-shell-header">
+        <div className="data-shell-head-main">
+          <p className="data-shell-kicker">Market Valuation</p>
+          <h1 className="data-shell-title">시장 밸류에이션</h1>
+          <p className="data-shell-desc">
             주요 미국 지수가 <strong className="text-slate-800">역사적으로 비싼지/싼지</strong>. Fwd P/E·P/B를 16년 밴드와 대조합니다.
           </p>
         </div>
-        <DataNav active="market" />
-        <div className="flex items-center gap-2">
+        <div className="data-shell-head-actions">
           {sourceDate ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="data-shell-pill ok">
+              <span />
               {sourceDate}
             </span>
           ) : null}
-          <TransitionLink
-            href="/explore"
-            className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.12em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-          >
+          <TransitionLink href="/explore" className="data-shell-link">
             Explore
           </TransitionLink>
         </div>
-      </header>
+      </section>
 
       {failed ? (
         <div className="rounded-[1.2rem] border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
@@ -146,6 +141,6 @@ export default function MarketValuationClient() {
       <p className="px-1 text-[11px] text-slate-400">
         역사 밴드 = 2010년 이후 weekly 시계열의 min/avg/max. percentile은 현재값의 역사적 위치(높을수록 고평가). 데이터: Bloomberg benchmarks. 참고용입니다.
       </p>
-    </main>
+    </div>
   );
 }

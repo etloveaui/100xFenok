@@ -265,11 +265,14 @@ export default function PortfolioClient() {
 
   if (portfolios.length === 0) {
     return (
-      <div className="space-y-4">
-        <header>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Portfolio</p>
-          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">내 포트폴리오</h1>
-        </header>
+      <div className="data-shell-page">
+        <section className="panel data-shell-header">
+          <div className="data-shell-head-main">
+            <p className="data-shell-kicker">Portfolio</p>
+            <h1 className="data-shell-title">내 포트폴리오</h1>
+            <p className="data-shell-desc">기기 안에서만 보관되는 개인 포트폴리오입니다.</p>
+          </div>
+        </section>
 
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-2">
@@ -280,7 +283,7 @@ export default function PortfolioClient() {
           <p className="mt-2 text-xs font-semibold text-slate-500">
             아래는 샘플 포트폴리오입니다. 실제 데이터를 입력하려면 포트폴리오를 만드세요.
           </p>
-          <div className="mt-3">
+          <div className="mt-3 -mx-1 overflow-x-auto px-1">
             <HoldingsTable rows={buildSampleRows()} />
           </div>
           <button
@@ -298,13 +301,14 @@ export default function PortfolioClient() {
   }
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Portfolio</p>
-          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">내 포트폴리오</h1>
+    <div className="data-shell-page">
+      <section className="panel data-shell-header">
+        <div className="data-shell-head-main">
+          <p className="data-shell-kicker">Portfolio</p>
+          <h1 className="data-shell-title">내 포트폴리오</h1>
+          <p className="data-shell-desc">보유 종목, 현금, 손익을 기기 안에서 관리합니다.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="data-shell-head-actions">
           {portfolios.map((p) => (
             <button
               key={p.id}
@@ -327,7 +331,7 @@ export default function PortfolioClient() {
             + 새 포트폴리오
           </button>
         </div>
-      </header>
+      </section>
 
       {isSample && (
         <div className="flex items-center gap-2">

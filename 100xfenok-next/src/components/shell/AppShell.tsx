@@ -93,8 +93,8 @@ const NAV: Array<{ id: ShellPage; label: string; href: string; icon: ReactNode }
   },
 ];
 
-// 5 mobile slots: real pages only (no dead "더보기" sheet yet)
-const TAB_IDS: ShellPage[] = ["explore", "market", "screener", "superinvestors", "portfolio"];
+// Mobile slots are real shell pages only (no dead "더보기" sheet yet).
+const TAB_IDS: ShellPage[] = ["explore", "market", "sectors", "screener", "superinvestors", "portfolio"];
 
 interface TapeItem {
   label: string;
@@ -200,10 +200,12 @@ function Tape() {
 export default function AppShell({
   active,
   title,
+  backHref,
   children,
 }: {
-  active: ShellPage;
+  active?: ShellPage;
   title: string;
+  backHref?: string;
   children: ReactNode;
 }) {
   const [searching, setSearching] = useState(false);
@@ -231,7 +233,7 @@ export default function AppShell({
         </TransitionLink>
         <nav className="rail-nav">
           {NAV.map((n) => (
-            <TransitionLink key={n.id} href={n.href} className={`rail-item ${n.id === active ? "on" : ""}`}>
+            <TransitionLink key={n.id} href={n.href} className={`rail-item ${active && n.id === active ? "on" : ""}`}>
               {n.icon} {n.label}
             </TransitionLink>
           ))}
@@ -269,6 +271,13 @@ export default function AppShell({
       {/* mobile app header */}
       <header className={`appbar ${searching ? "searching" : ""}`}>
         <div className="appbar-main">
+          {backHref ? (
+            <TransitionLink href={backHref} className="back" aria-label="뒤로">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </TransitionLink>
+          ) : null}
           <span className="title">{title}</span>
           {status ? (
             <span className="mstat">
@@ -302,7 +311,7 @@ export default function AppShell({
         {TAB_IDS.map((id) => {
           const n = NAV.find((x) => x.id === id)!;
           return (
-            <TransitionLink key={id} href={n.href} className={`tab ${id === active ? "on" : ""}`}>
+            <TransitionLink key={id} href={n.href} className={`tab ${active && id === active ? "on" : ""}`}>
               {n.icon} {n.label}
             </TransitionLink>
           );

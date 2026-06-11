@@ -3,7 +3,6 @@
 import { useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useScreenerData } from "@/hooks/useScreenerData";
-import DataNav from "@/components/DataNav";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandClass, bandLabel, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
@@ -358,32 +357,27 @@ export default function ScreenerClient() {
   const hasFilters = Boolean(search || sector || country || perMax || profitableOnly || bandFilter);
 
   return (
-    <main className="container mx-auto max-w-6xl space-y-4 overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6">
-      {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Stock Screener</p>
-          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">종목 스크리너</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+    <div className="data-shell-page">
+      <section className="panel data-shell-header">
+        <div className="data-shell-head-main">
+          <p className="data-shell-kicker">Stock Screener</p>
+          <h1 className="data-shell-title">종목 스크리너</h1>
+          <p className="data-shell-desc">
             글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 거르고 줄세웁니다.
           </p>
         </div>
-        <DataNav active="screener" />
-        <div className="flex items-center gap-2">
+        <div className="data-shell-head-actions">
           {sourceDate ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="data-shell-pill ok">
+              <span />
               {sourceDate}
             </span>
           ) : null}
-          <TransitionLink
-            href="/sectors"
-            className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.12em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-          >
+          <TransitionLink href="/sectors" className="data-shell-link">
             섹터
           </TransitionLink>
         </div>
-      </header>
+      </section>
 
       {failed ? (
         <div className="rounded-[1.2rem] border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
@@ -605,6 +599,6 @@ export default function ScreenerClient() {
       <p className="px-1 text-[11px] text-slate-400">
         데이터: Global Scouter (정렬 시 결측치는 항상 뒤로 정렬). 투자 판단의 근거가 아닌 참고용입니다.
       </p>
-    </main>
+    </div>
   );
 }

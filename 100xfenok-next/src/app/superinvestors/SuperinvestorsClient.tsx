@@ -7,7 +7,6 @@ import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import { PerformanceChart, PortfolioTreemap, SectorMixPanel, loadPortfolioViews } from "./PortfolioCharts";
 import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
-import DataNav from "@/components/DataNav";
 import type {
   SuperInvestorsTab,
   ConsensusTicker,
@@ -566,32 +565,30 @@ export default function SuperinvestorsClient() {
   const delayLabel = "13F 공시는 분기 종료 후 최대 45일 지연됩니다";
 
   return (
-    <main className="container mx-auto max-w-6xl space-y-4 overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6">
-      {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">13F Superinvestors</p>
-          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">구루 보유 현황</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+    <div className="data-shell-page">
+      <section className="panel data-shell-header">
+        <div className="data-shell-head-main">
+          <p className="data-shell-kicker">13F Superinvestors</p>
+          <h1 className="data-shell-title">구루 보유 현황</h1>
+          <p className="data-shell-desc">
             워런 버핏, 세스 클라먼 등 30개 슈퍼인베스터의 13F 보유 데이터를 탐색합니다.
           </p>
         </div>
-        <DataNav active="superinvestors" />
-        <div className="flex flex-col items-end gap-1.5">
+        <div className="data-shell-head-actions">
           {quarterLabel ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="data-shell-pill ok">
+              <span />
               {quarterLabel}
             </span>
           ) : null}
-          <span className="text-[10px] font-bold text-slate-400">{delayLabel}</span>
+          <span className="data-shell-note">{delayLabel}</span>
           {excludedStale.length > 0 ? (
-            <span className="text-[10px] font-bold text-amber-600">
+            <span className="data-shell-note warn">
               제외된 stale: {excludedStale.join(", ")}
             </span>
           ) : null}
         </div>
-      </header>
+      </section>
 
       {failed ? (
         <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
@@ -1067,6 +1064,6 @@ export default function SuperinvestorsClient() {
       {/* Insights */}
       {tab === "insights" && <InsightsTab />}
 
-    </main>
+    </div>
   );
 }
