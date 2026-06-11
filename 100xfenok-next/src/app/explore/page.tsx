@@ -13,6 +13,8 @@ import DataNav from "@/components/DataNav";
 // Theme C (Korean fintech minimal) — pilot page font
 const plexKr = IBM_Plex_Sans_KR({
   weight: ["400", "500", "600", "700"],
+  // next/font ships CJK glyphs via unicode-range slices regardless of `subsets`
+  // (which only controls preload); "korean" is not an accepted subset name here.
   subsets: ["latin"],
   display: "swap",
 });

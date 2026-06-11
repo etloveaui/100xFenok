@@ -21,9 +21,9 @@ export default function DataNav({ active }: { active: Page }) {
           <TransitionLink
             key={p.id}
             href={p.href}
-            className={`inline-flex min-h-8 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition ${
+            className={`dnav-pill inline-flex min-h-8 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition ${
               p.id === active
-                ? "bg-slate-900 text-white"
+                ? "dnav-on bg-slate-900 text-white"
                 : "border border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
             }`}
           >
