@@ -9,6 +9,7 @@ import type {
   ConvictionData,
   BuyingPressureRow,
   ConvictionPosition,
+  TradesRankingData,
 } from "@/lib/superinvestors/types";
 
 // ---------------------------------------------------------------------------
@@ -25,6 +26,18 @@ function loadBuyingPressure(): Promise<BuyingPressureData | null> {
     .then((d) => { bpCache = d; return d; })
     .catch(() => { bpPromise = null; return null; });
   return bpPromise;
+}
+
+let trCache: TradesRankingData | null = null;
+let trPromise: Promise<TradesRankingData | null> | null = null;
+function loadTradesRanking(): Promise<TradesRankingData | null> {
+  if (trCache) return Promise.resolve(trCache);
+  if (trPromise) return trPromise;
+  trPromise = fetch("/data/sec-13f/analytics/trades_ranking.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { trCache = d; return d; })
+    .catch(() => { trPromise = null; return null; });
+  return trPromise;
 }
 
 let npCache: NewPositionsData | null = null;
@@ -99,20 +112,70 @@ function SkeletonCard() {
 // Card 1: 매수 압력
 // ---------------------------------------------------------------------------
 
-function BuyingPressureCard({ data }: { data: BuyingPressureData }) {
-  const buyRows = useMemo(() => {
-    return (data.top_buying ?? [])
+/**
+ * Joins trades_ranking bought/sold (50+50 rows, per-ticker investor counts)
+ * instead of the converter's top_buying/top_selling, whose ratio sort
+ * surfaces only single-buyer tickers and left this card nearly empty.
+ */
+function buildPressureRows(trades: TradesRankingData): { buy: BuyingPressureRow[]; sell: BuyingPressureRow[] } {
+  const byTicker = new Map<string, { buyers: number; sellers: number; buyAmt: number; sellAmt: number }>();
+  for (const r of trades.bought ?? []) {
+    const cur = byTicker.get(r.ticker) ?? { buyers: 0, sellers: 0, buyAmt: 0, sellAmt: 0 };
+    cur.buyers = r.investors_count;
+    cur.buyAmt = r.amount;
+    byTicker.set(r.ticker, cur);
+  }
+  for (const r of trades.sold ?? []) {
+    const cur = byTicker.get(r.ticker) ?? { buyers: 0, sellers: 0, buyAmt: 0, sellAmt: 0 };
+    cur.sellers = r.investors_count;
+    cur.sellAmt = r.amount;
+    byTicker.set(r.ticker, cur);
+  }
+  const rows: BuyingPressureRow[] = [...byTicker.entries()].map(([ticker, v]) => ({
+    ticker,
+    net_buyers: v.buyers,
+    net_sellers: v.sellers,
+    net_holders: 0,
+    pressure: v.buyers + v.sellers > 0 ? v.buyers / (v.buyers + v.sellers) : 0,
+    total_value_change: v.buyAmt - v.sellAmt,
+  }));
+  const buy = rows
+    .filter((r) => r.net_buyers >= 2)
+    .sort((a, b) => b.net_buyers - a.net_buyers || b.total_value_change - a.total_value_change)
+    .slice(0, 12);
+  const sell = rows
+    .filter((r) => r.net_sellers >= 2)
+    .sort((a, b) => b.net_sellers - a.net_sellers || a.total_value_change - b.total_value_change)
+    .slice(0, 12);
+  return { buy, sell };
+}
+
+function BuyingPressureCard({ data, trades }: { data: BuyingPressureData | null; trades: TradesRankingData | null }) {
+  const { buyRows, sellRows, quarter, note } = useMemo(() => {
+    if (trades?.bought?.length) {
+      const { buy, sell } = buildPressureRows(trades);
+      return {
+        buyRows: buy,
+        sellRows: sell,
+        quarter: trades.metadata.quarter,
+        note: "구루 매매랭킹 기반 — 매수/매도 참여 구루 수와 거래액으로 압력 측정 (2인 이상)",
+      };
+    }
+    const legacyBuy = (data?.top_buying ?? [])
       .filter((r) => r.net_buyers + r.net_sellers >= 3)
       .sort((a, b) => b.pressure - a.pressure)
       .slice(0, 12);
-  }, [data]);
-
-  const sellRows = useMemo(() => {
-    return (data.top_selling ?? [])
+    const legacySell = (data?.top_selling ?? [])
       .filter((r) => r.net_buyers + r.net_sellers >= 3)
       .sort((a, b) => a.pressure - b.pressure)
       .slice(0, 12);
-  }, [data]);
+    return {
+      buyRows: legacyBuy,
+      sellRows: legacySell,
+      quarter: data?.metadata.quarter ?? "",
+      note: "29인 전체 포트폴리오 변화량 기반 매수/매도 압력 (net_buyers+net_sellers≥3 필터)",
+    };
+  }, [data, trades]);
 
   const hasSelling = sellRows.length > 0;
 
@@ -125,7 +188,7 @@ function BuyingPressureCard({ data }: { data: BuyingPressureData }) {
         ) : null}
       </div>
       <p className="mt-2 text-[10px] font-semibold text-slate-400">
-        {data.metadata.quarter} 기준 · 29인 전체 포트폴리오 변화량 기반 매수/매도 압력 (net_buyers+net_sellers≥3 필터)
+        {quarter} 기준 · {note}
       </p>
     </div>
   );
@@ -361,6 +424,7 @@ function HhiCard({ data }: { data: HhiData }) {
 
 export default function InsightsTab() {
   const [bp, setBp] = useState<BuyingPressureData | null>(null);
+  const [tr, setTr] = useState<TradesRankingData | null>(null);
   const [np, setNp] = useState<NewPositionsData | null>(null);
   const [hhi, setHhi] = useState<HhiData | null>(null);
   const [cv, setCv] = useState<ConvictionData | null>(null);
@@ -369,11 +433,11 @@ export default function InsightsTab() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadBuyingPressure(), loadNewPositions(), loadHhi(), loadConviction()]).then(([bpR, npR, hhiR, cvR]) => {
+    Promise.all([loadBuyingPressure(), loadTradesRanking(), loadNewPositions(), loadHhi(), loadConviction()]).then(([bpR, trR, npR, hhiR, cvR]) => {
       if (cancelled) return;
-      const anyData = bpR || npR || hhiR || cvR;
+      const anyData = bpR || trR || npR || hhiR || cvR;
       if (!anyData) { setFailed(true); }
-      setBp(bpR); setNp(npR); setHhi(hhiR); setCv(cvR);
+      setBp(bpR); setTr(trR); setNp(npR); setHhi(hhiR); setCv(cvR);
       setLoading(false);
     });
     return () => { cancelled = true; };
@@ -418,7 +482,7 @@ export default function InsightsTab() {
           <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
             <p className="mb-3 text-[10px] font-semibold text-slate-400">구루 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
-            {bp ? <BuyingPressureCard data={bp} /> : <SkeletonCard />}
+            {bp || tr ? <BuyingPressureCard data={bp} trades={tr} /> : <SkeletonCard />}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
