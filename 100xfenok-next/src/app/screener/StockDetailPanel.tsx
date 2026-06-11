@@ -47,6 +47,14 @@ function isFiniteNumber(value: MaybeNumber): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function normalizeTicker(ticker: string): string {
+  return ticker.trim().toUpperCase();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 function finiteValues(data: NumberSeries | null | undefined): number[] {
   return (data ?? []).filter(isFiniteNumber);
 }
@@ -75,7 +83,8 @@ export function useStockDetail(ticker: string, enabled = true) {
 
   useEffect(() => {
     let cancelled = false;
-    if (!enabled) {
+    const symbol = normalizeTicker(ticker);
+    if (!enabled || !symbol) {
       setDetail(null);
       setLoading(false);
       return () => {
@@ -85,9 +94,9 @@ export function useStockDetail(ticker: string, enabled = true) {
     const run = async () => {
       setLoading(true);
       try {
-        const r = await fetch(`/data/global-scouter/stocks/detail/${ticker}.json`);
+        const r = await fetch(`/data/global-scouter/stocks/detail/${encodeURIComponent(symbol)}.json`);
         const d = r.ok ? await r.json() : null;
-        if (!cancelled) setDetail(d);
+        if (!cancelled) setDetail(isRecord(d) ? (d as unknown as DetailData) : null);
       } catch {
         if (!cancelled) setDetail(null);
       } finally {
@@ -110,8 +119,15 @@ export function use13FData(ticker: string) {
 
   useEffect(() => {
     let cancelled = false;
+    const symbol = normalizeTicker(ticker);
+    if (!symbol) {
+      setEntries([]);
+      return () => {
+        cancelled = true;
+      };
+    }
     const run = async () => {
-      const cached = F13_CACHE.get(ticker);
+      const cached = F13_CACHE.get(symbol);
       if (cached !== undefined) {
         setEntries(cached);
         return;
@@ -119,14 +135,15 @@ export function use13FData(ticker: string) {
       try {
         const r = await fetch("/data/sec-13f/by_ticker.json");
         const d = r.ok ? await r.json() : null;
-        const holders = d?.[ticker]?.holder_details ?? [];
+        const holders = Array.isArray(d?.[symbol]?.holder_details) ? d[symbol].holder_details : [];
         const seen = new Set<string>();
-        const unique = holders.filter((h: { investor: string }) => {
+        const unique = holders.filter((h: { investor?: unknown }) => {
+          if (typeof h.investor !== "string" || h.investor.trim() === "") return false;
           if (seen.has(h.investor)) return false;
           seen.add(h.investor);
           return true;
-        });
-        F13_CACHE.set(ticker, unique);
+        }) as F13Entry[];
+        F13_CACHE.set(symbol, unique);
         if (!cancelled) setEntries(unique);
       } catch {
         if (!cancelled) setEntries([]);

@@ -7,6 +7,25 @@ import type { CanonicalSector } from "@/lib/design/sectorMap";
 
 type SectorHistory = { quarters: string[]; series: Record<string, number[]> };
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function normalizeSectorHistory(value: unknown): SectorHistory | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Partial<SectorHistory>;
+  if (!Array.isArray(raw.quarters) || !raw.series || typeof raw.series !== "object" || Array.isArray(raw.series)) {
+    return null;
+  }
+  const series: Record<string, number[]> = {};
+  for (const [sector, values] of Object.entries(raw.series)) {
+    if (typeof sector !== "string" || !Array.isArray(values)) continue;
+    const nums = values.filter(isFiniteNumber);
+    if (nums.length > 0) series[sector] = nums;
+  }
+  return raw.quarters.length > 0 && Object.keys(series).length > 0 ? { quarters: raw.quarters, series } : null;
+}
+
 export default function SmartMoneyPanel() {
   const [hist, setHist] = useState<SectorHistory | null>(null);
   const [quarter, setQuarter] = useState<string | null>(null);
@@ -16,8 +35,10 @@ export default function SmartMoneyPanel() {
     fetch("/data/sec-13f/analytics/portfolio_views.json")
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
-        if (cancelled || !j?.total?.sector_history) return;
-        setHist(j.total.sector_history as SectorHistory);
+        if (cancelled) return;
+        const next = normalizeSectorHistory(j?.total?.sector_history);
+        if (!next) return;
+        setHist(next);
         setQuarter(j.metadata?.quarter ?? null);
       })
       .catch(() => {});
@@ -29,8 +50,10 @@ export default function SmartMoneyPanel() {
   if (!hist) return null;
 
   const n = hist.quarters.length;
+  if (n === 0) return null;
   const backIdx = Math.max(0, n - 5); // ~4 quarters back
   const rows = Object.entries(hist.series)
+    .filter(([, arr]) => arr.length > 0)
     .map(([sector, arr]) => ({
       sector,
       now: arr[n - 1] ?? 0,
@@ -55,16 +78,16 @@ export default function SmartMoneyPanel() {
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {rows.map((r) => (
-          <div key={r.sector} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+          <div key={r.sector} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
             <p className="truncate text-[10px] font-black text-slate-500">
               {sectorLabelKo(r.sector as CanonicalSector)}
             </p>
-            <div className="mt-0.5 flex items-baseline justify-between gap-1">
-              <span className="orbitron text-sm font-black tabular-nums text-slate-950">
+            <div className="mt-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+              <span className="orbitron shrink-0 text-sm font-black tabular-nums text-slate-950">
                 {(r.now * 100).toFixed(1)}%
               </span>
               <span
-                className={`orbitron text-[10px] font-bold tabular-nums ${
+                className={`orbitron shrink-0 text-[10px] font-bold tabular-nums ${
                   r.delta >= 0 ? "text-emerald-700" : "text-rose-700"
                 }`}
               >

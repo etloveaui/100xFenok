@@ -116,6 +116,7 @@ export function useSectorData(): SectorDataResult {
       const failed: string[] = [];
       if (!benchmarks?.momentum) failed.push("benchmarks");
       if (!etfs?.etfs) failed.push("etfs");
+      if (!usSectors?.sections) failed.push("us_sectors");
 
       const rows: SectorRow[] = SECTOR_DEFINITIONS.map((sector) => {
         const rawMomentum = benchmarks?.momentum?.[sector.key];

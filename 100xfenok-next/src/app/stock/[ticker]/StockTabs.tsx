@@ -10,8 +10,22 @@ type YfData = Record<string, any>;
 // Helpers
 // ---------------------------------------------------------------------------
 
-function fmtUSD(v: number | null | undefined): string {
-  if (v == null) return "—";
+function finiteNumber(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function clamp(value: number, min = 0, max = 100): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function fmtUSD(value: unknown): string {
+  const v = finiteNumber(value);
+  if (v === null) return "—";
   const abs = Math.abs(v);
   if (abs >= 1_000_000_000_000) return `$${(v / 1_000_000_000_000).toFixed(2)}T`;
   if (abs >= 1_000_000_000) return `$${(v / 1_000_000_000).toFixed(2)}B`;
@@ -19,26 +33,39 @@ function fmtUSD(v: number | null | undefined): string {
   return `$${Math.round(v).toLocaleString()}`;
 }
 
-function fmtKRW(v: number | null | undefined): string {
-  if (v == null) return "—";
+function fmtKRW(value: unknown): string {
+  const v = finiteNumber(value);
+  if (v === null) return "—";
   const abs = Math.abs(v);
   if (abs >= 1_000_000_000_000) return `${(v / 1_000_000_000_000).toFixed(2)}조`;
   if (abs >= 100_000_000) return `${(v / 100_000_000).toFixed(0)}억`;
   return `${Math.round(v).toLocaleString()}`;
 }
 
-function fmtNum(v: number | null | undefined, decimals = 1): string {
-  if (v == null) return "—";
+function fmtNum(value: unknown, decimals = 1): string {
+  const v = finiteNumber(value);
+  if (v === null) return "—";
   if (v >= 1_000_000_000_000) return `${(v / 1_000_000_000_000).toFixed(2)}T`;
   if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(2)}B`;
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}M`;
   return v.toFixed(decimals);
 }
 
-function fmtPct(v: number | null | undefined, isFraction = true): string {
-  if (v == null) return "—";
+function fmtPct(value: unknown, isFraction = true): string {
+  const v = finiteNumber(value);
+  if (v === null) return "—";
   const pct = isFraction ? v * 100 : v;
   return `${pct.toFixed(1)}%`;
+}
+
+function fmtFixed(value: unknown, digits: number): string {
+  const v = finiteNumber(value);
+  return v === null ? "—" : v.toFixed(digits);
+}
+
+function fmtDollar(value: unknown, digits: number): string {
+  const v = finiteNumber(value);
+  return v === null ? "—" : `$${v.toFixed(digits)}`;
 }
 
 function getCurrencyFn(currency: string) {
@@ -168,8 +195,9 @@ function FinancialsTab({ data }: { data: YfData }) {
     return fmtUSD(v);
   };
 
-  const fmtEps = (v: number | null | undefined) => {
-    if (v == null) return "—";
+  const fmtEps = (value: number | null | undefined) => {
+    const v = finiteNumber(value);
+    if (v === null) return "—";
     if (currency === "KRW" || currency === "JPY") return Math.round(v).toLocaleString();
     return `$${v.toFixed(2)}`;
   };
@@ -213,11 +241,11 @@ function FinancialsTab({ data }: { data: YfData }) {
 
 function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; industry: IndustryBench }) {
   const rows: Array<{ label: string; stock: number | null; ind: number | null; isFraction: boolean; lowerBetter: boolean }> = [
-    { label: "Trailing P/E", stock: info.trailingPE ?? null, ind: industry.trailing_pe, isFraction: false, lowerBetter: true },
-    { label: "Forward P/E", stock: info.forwardPE ?? null, ind: industry.forward_pe, isFraction: false, lowerBetter: true },
-    { label: "ROE", stock: info.returnOnEquity ?? null, ind: industry.roe, isFraction: true, lowerBetter: false },
-    { label: "영업이익률", stock: info.operatingMargins ?? null, ind: industry.operating_margin, isFraction: true, lowerBetter: false },
-    { label: "순이익률", stock: info.profitMargins ?? null, ind: industry.net_margin, isFraction: true, lowerBetter: false },
+    { label: "Trailing P/E", stock: finiteNumber(info.trailingPE), ind: finiteNumber(industry.trailing_pe), isFraction: false, lowerBetter: true },
+    { label: "Forward P/E", stock: finiteNumber(info.forwardPE), ind: finiteNumber(industry.forward_pe), isFraction: false, lowerBetter: true },
+    { label: "ROE", stock: finiteNumber(info.returnOnEquity), ind: finiteNumber(industry.roe), isFraction: true, lowerBetter: false },
+    { label: "영업이익률", stock: finiteNumber(info.operatingMargins), ind: finiteNumber(industry.operating_margin), isFraction: true, lowerBetter: false },
+    { label: "순이익률", stock: finiteNumber(info.profitMargins), ind: finiteNumber(industry.net_margin), isFraction: true, lowerBetter: false },
   ].filter((r) => r.stock !== null && r.ind !== null);
   if (rows.length === 0) return null;
   const fmt = (v: number, frac: boolean) => (frac ? `${(v * 100).toFixed(1)}%` : v.toFixed(1));
@@ -292,15 +320,15 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
     <div className="space-y-5">
       {industry ? <IndustryCompareBlock info={info} industry={industry} /> : null}
       {sections.map((sec) => {
-        const hasData = sec.items.some(([k]) => info[k] != null);
+        const hasData = sec.items.some(([k]) => finiteNumber(info[k]) !== null);
         if (!hasData) return null;
         return (
           <div key={sec.title}>
             <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">{sec.title}</h3>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {sec.items.map(([k, label]) => {
-                const v = info[k];
-                if (v == null) return null;
+                const v = finiteNumber(info[k]);
+                if (v === null) return null;
                 let display: string;
                 if (isFractionKey(k)) display = fmtPct(v, true);
                 else if (["totalCash", "totalDebt", "freeCashflow"].includes(k)) display = fmt(v);
@@ -330,9 +358,9 @@ function OwnershipTab({ data }: { data: YfData }) {
         <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">주요 보유 현황</h3>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            ["기관 보유율", mh.institutionsPercentHeld != null ? `${(Number(mh.institutionsPercentHeld) * 100).toFixed(1)}%` : "—"],
-            ["내부자 보유율", mh.insidersPercentHeld != null ? `${(Number(mh.insidersPercentHeld) * 100).toFixed(1)}%` : "—"],
-            ["기관 수", mh.institutionsCount != null ? Number(mh.institutionsCount).toLocaleString() : "—"],
+            ["기관 보유율", fmtPct(mh.institutionsPercentHeld, true)],
+            ["내부자 보유율", fmtPct(mh.insidersPercentHeld, true)],
+            ["기관 수", finiteNumber(mh.institutionsCount)?.toLocaleString() ?? "—"],
           ].map(([label, value]) => (
             <div key={label as string} className="rounded-xl border border-slate-200 bg-white p-3 text-center">
               <p className="text-[10px] font-bold text-slate-500">{label as string}</p>
@@ -359,12 +387,15 @@ function OwnershipTab({ data }: { data: YfData }) {
               <tbody>
                 {ih.slice(0, 10).map((h: any, i: number) => {
                   // yf pctChange is a fraction (-0.0086 = -0.86%)
-                  const pctChange = h.pctChange != null ? Number(h.pctChange) * 100 : null;
+                  const pctHeld = finiteNumber(h.pctHeld);
+                  const shares = finiteNumber(h.Shares);
+                  const pctChangeRaw = finiteNumber(h.pctChange);
+                  const pctChange = pctChangeRaw !== null ? pctChangeRaw * 100 : null;
                   return (
                     <tr key={i} className="border-b border-slate-100 last:border-b-0">
                       <td className="px-2 py-1.5 max-w-[180px] truncate text-[10px] font-bold text-slate-700">{h.Holder}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{h.pctHeld != null ? `${(Number(h.pctHeld) * 100).toFixed(2)}%` : "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{h.Shares != null ? Number(h.Shares).toLocaleString() : "—"}</td>
+                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
+                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
                       <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-400"}`}>
                         {pctChange != null ? `${pctChange > 0 ? "+" : ""}${pctChange.toFixed(1)}%` : "—"}
                       </td>
@@ -390,34 +421,41 @@ function EstimatesTab({ data }: { data: YfData }) {
   const revenue = (data.revenue_estimate ?? []) as any[];
   const recs = (data.recommendations ?? []) as any[];
   const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
+  const targetLow = finiteNumber(targets.low);
+  const targetMean = finiteNumber(targets.mean);
+  const targetHigh = finiteNumber(targets.high);
+  const targetCurrent = finiteNumber(targets.current);
+  const targetMedian = finiteNumber(targets.median);
+  const targetRangeValid = targetLow !== null && targetHigh !== null && targetCurrent !== null && targetHigh > targetLow;
+  const targetPct = targetRangeValid ? clamp(((targetCurrent - targetLow) / (targetHigh - targetLow)) * 100) : null;
 
   const indexLabels: Record<string, string> = { "0q": "이번분기", "+1q": "다음분기", "0y": "올해", "+1y": "내년" };
 
   return (
     <div className="space-y-5">
       {/* Analyst price targets banner */}
-      {targets.current != null ? (
+      {targetCurrent !== null ? (
         <div>
           <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">애널리스트 목표가</h3>
           <div className="rounded-xl border border-slate-200 bg-white p-4">
             <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
-              <span>Low ${targets.low?.toFixed(0) ?? "—"}</span>
-              <span>Mean ${targets.mean?.toFixed(0) ?? "—"}</span>
-              <span>High ${targets.high?.toFixed(0) ?? "—"}</span>
+              <span>Low {fmtDollar(targetLow, 0)}</span>
+              <span>Mean {fmtDollar(targetMean, 0)}</span>
+              <span>High {fmtDollar(targetHigh, 0)}</span>
             </div>
             <div className="relative mt-2 h-3 rounded-full bg-slate-100">
-              {targets.low != null && targets.high != null && targets.current != null ? (
+              {targetPct !== null ? (
                 <>
                   <div className="absolute top-0 h-3 rounded-full bg-slate-300" style={{ left: 0, width: "100%" }} />
                   <div
                     className="absolute top-0 h-3 w-3 rounded-full border-2 border-white bg-brand-interactive"
-                    style={{ left: `${((targets.current - targets.low) / (targets.high - targets.low)) * 100}%`, transform: "translateX(-50%)" }}
+                    style={{ left: `${targetPct}%`, transform: "translateX(-50%)" }}
                   />
                 </>
               ) : null}
             </div>
             <p className="mt-1 text-center text-[10px] font-bold text-slate-500">
-              현재가 ${targets.current?.toFixed(2)} · 중간값 ${targets.median?.toFixed(0) ?? "—"}
+              현재가 {fmtDollar(targetCurrent, 2)} · 중간값 {fmtDollar(targetMedian, 0)}
             </p>
           </div>
         </div>
@@ -440,17 +478,20 @@ function EstimatesTab({ data }: { data: YfData }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {earnings.map((e: any) => (
-                    <tr key={e._index} className="border-b border-slate-100 last:border-b-0">
-                      <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[e._index] ?? e._index}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">${e.avg?.toFixed(2) ?? "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">${e.low?.toFixed(2) ?? "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">${e.high?.toFixed(2) ?? "—"}</td>
-                      <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${e.growth != null ? (e.growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
-                        {e.growth != null ? `${(e.growth * 100).toFixed(1)}%` : "—"}
-                      </td>
-                    </tr>
-                  ))}
+                  {earnings.map((e: any) => {
+                    const growth = finiteNumber(e.growth);
+                    return (
+                      <tr key={e._index} className="border-b border-slate-100 last:border-b-0">
+                        <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[e._index] ?? e._index}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{fmtDollar(e.avg, 2)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtDollar(e.low, 2)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtDollar(e.high, 2)}</td>
+                        <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
+                          {growth !== null ? `${(growth * 100).toFixed(1)}%` : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -472,17 +513,20 @@ function EstimatesTab({ data }: { data: YfData }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {revenue.map((r: any) => (
-                    <tr key={r._index} className="border-b border-slate-100 last:border-b-0">
-                      <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[r._index] ?? r._index}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{fmtNum(r.avg, 1)}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtNum(r.low, 1)}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtNum(r.high, 1)}</td>
-                      <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${r.growth != null ? (r.growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
-                        {r.growth != null ? `${(r.growth * 100).toFixed(1)}%` : "—"}
-                      </td>
-                    </tr>
-                  ))}
+                  {revenue.map((r: any) => {
+                    const growth = finiteNumber(r.growth);
+                    return (
+                      <tr key={r._index} className="border-b border-slate-100 last:border-b-0">
+                        <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[r._index] ?? r._index}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{fmtNum(r.avg, 1)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtNum(r.low, 1)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtNum(r.high, 1)}</td>
+                        <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
+                          {growth !== null ? `${(growth * 100).toFixed(1)}%` : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -533,14 +577,13 @@ function EstimatesTab({ data }: { data: YfData }) {
 // ---------------------------------------------------------------------------
 
 export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
-  const low = info.fiftyTwoWeekLow;
-  const high = info.fiftyTwoWeekHigh;
-  const current = info.currentPrice;
+  const low = finiteNumber(info.fiftyTwoWeekLow);
+  const high = finiteNumber(info.fiftyTwoWeekHigh);
+  const current = finiteNumber(info.currentPrice);
 
-  if (low == null || high == null || current == null) return null;
+  if (low === null || high === null || current === null || high <= low) return null;
 
-  const range = high - low || 1;
-  const pct = ((current - low) / range) * 100;
+  const pct = clamp(((current - low) / (high - low)) * 100);
   const isUsd = (info.currency ?? "USD") === "USD";
   const fmtBound = (v: number) =>
     isUsd ? `$${v.toFixed(0)}` : `${Math.round(v).toLocaleString()} ${info.currency}`;
@@ -553,7 +596,7 @@ export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
         <div className="relative h-2 flex-1 rounded-full bg-slate-100">
           <div
             className="absolute top-0 h-2 w-2 rounded-full bg-brand-interactive"
-            style={{ left: `${Math.min(100, Math.max(0, pct))}%`, transform: "translateX(-50%)" }}
+            style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
           />
         </div>
         <span className="text-[10px] orbitron font-semibold text-slate-500">{fmtBound(high)}</span>
@@ -581,7 +624,7 @@ function pushCheck(checks: ScoreCheck[], label: string, pass: boolean | null) {
 
 function estGrowth(rows: any[] | null | undefined, idx: string): number | null {
   const r = (rows ?? []).find((e: any) => e._index === idx);
-  return typeof r?.growth === "number" ? r.growth : null;
+  return finiteNumber(r?.growth);
 }
 
 export function computeSummaryScores(
@@ -590,9 +633,15 @@ export function computeSummaryScores(
   industry?: IndustryBench | null,
 ): AreaScore[] {
   const info = data.info ?? {};
-  const n = (v: any): number | null => (typeof v === "number" ? v : null);
-  const gt = (v: any, t: number): boolean | null => (n(v) === null ? null : (v as number) > t);
-  const lt = (v: any, t: number): boolean | null => (n(v) === null ? null : (v as number) < t);
+  const n = (v: any): number | null => finiteNumber(v);
+  const gt = (v: any, t: number): boolean | null => {
+    const value = n(v);
+    return value === null ? null : value > t;
+  };
+  const lt = (v: any, t: number): boolean | null => {
+    const value = n(v);
+    return value === null ? null : value < t;
+  };
 
   const areas: AreaScore[] = [];
   const area = (name: string, build: (c: ScoreCheck[]) => void) => {
@@ -608,7 +657,7 @@ export function computeSummaryScores(
     pushCheck(c, "애널리스트 목표가 대비 상승 여력", target !== null && price !== null ? target > price : null);
     pushCheck(c, "PER 25배 미만", lt(info.trailingPE, 25));
     pushCheck(c, "EV/EBITDA 15배 미만", lt(info.enterpriseToEbitda, 15));
-    const indPe = industry?.trailing_pe ?? null;
+    const indPe = finiteNumber(industry?.trailing_pe);
     const pe = n(info.trailingPE);
     pushCheck(c, "PER 산업 평균 미만 (다모다란)", indPe !== null && pe !== null ? pe < indPe : null);
   });
@@ -761,14 +810,16 @@ export function buildThreeSecondSummary(
   const val: string[] = [];
   const band = perBand ? bandPhrase(perBand.current, perBand.min, perBand.max) : null;
   if (band) val.push(band);
-  if (industry?.trailing_pe && typeof info.trailingPE === "number") {
-    const ratio = info.trailingPE / industry.trailing_pe;
-    if (ratio <= 0.85) val.push(`산업 평균 PER(${industry.trailing_pe.toFixed(0)}배)보다 싸게 거래`);
-    else if (ratio >= 1.15) val.push(`산업 평균 PER(${industry.trailing_pe.toFixed(0)}배)의 ${ratio.toFixed(1)}배 수준`);
+  const industryPe = finiteNumber(industry?.trailing_pe);
+  const trailingPe = finiteNumber(info.trailingPE);
+  if (industryPe !== null && industryPe > 0 && trailingPe !== null) {
+    const ratio = trailingPe / industryPe;
+    if (ratio <= 0.85) val.push(`산업 평균 PER(${industryPe.toFixed(0)}배)보다 싸게 거래`);
+    else if (ratio >= 1.15) val.push(`산업 평균 PER(${industryPe.toFixed(0)}배)의 ${ratio.toFixed(1)}배 수준`);
   }
-  const target = data.analyst_price_targets?.mean;
-  const price = info.currentPrice;
-  if (typeof target === "number" && typeof price === "number" && price > 0) {
+  const target = finiteNumber(data.analyst_price_targets?.mean);
+  const price = finiteNumber(info.currentPrice);
+  if (target !== null && price !== null && price > 0) {
     const up = (target / price - 1) * 100;
     val.push(`애널리스트 목표가까지 ${up >= 0 ? "+" : ""}${up.toFixed(0)}%`);
   }
@@ -776,8 +827,8 @@ export function buildThreeSecondSummary(
 
   // 2) fundamentals direction
   const fun: string[] = [];
-  const g = (data.earnings_estimate ?? []).find((e: any) => e._index === "+1y")?.growth;
-  if (typeof g === "number") {
+  const g = finiteNumber((data.earnings_estimate ?? []).find((e: any) => e._index === "+1y")?.growth);
+  if (g !== null) {
     fun.push(g > 0.05 ? `내년 EPS ${(g * 100).toFixed(0)}% 성장 전망` : g < 0 ? "내년 이익 감소 전망" : "내년 이익 정체 전망");
   }
   const scores = computeSummaryScores(data, perBand);

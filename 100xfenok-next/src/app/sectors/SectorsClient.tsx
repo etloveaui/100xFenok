@@ -12,12 +12,12 @@ function cx(...parts: Array<string | false | undefined>) {
 }
 
 function pct(value: number | null | undefined, digits = 1): string {
-  return value === null || value === undefined ? "—" : formatSignedPercentDecimal(value, digits);
+  return typeof value !== "number" || !Number.isFinite(value) ? "—" : formatSignedPercentDecimal(value, digits);
 }
 
 /** Continuous green/red heat scale over a momentum fraction. */
 function heatStyle(value: number | null | undefined): CSSProperties {
-  if (value === null || value === undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return { backgroundColor: "rgba(148,163,184,0.10)", color: "#94a3b8" };
   }
   const alpha = Math.min(Math.max(Math.abs(value) / 0.15, 0.1), 0.9);
@@ -234,10 +234,10 @@ export default function SectorsClient() {
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.cagr["3y"], 1)}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.cagr["5y"], 1)}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">
-                        {etf.beta === null ? "—" : etf.beta.toFixed(2)}
+                        {typeof etf.beta === "number" && Number.isFinite(etf.beta) ? etf.beta.toFixed(2) : "—"}
                       </td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-500">
-                        {etf.expenseRatio === null ? "—" : formatPercent(etf.expenseRatio * 100, 2)}
+                        {typeof etf.expenseRatio === "number" && Number.isFinite(etf.expenseRatio) ? formatPercent(etf.expenseRatio * 100, 2) : "—"}
                       </td>
                     </tr>
                   );
@@ -275,9 +275,9 @@ export default function SectorsClient() {
                         <span className="text-sm font-bold text-slate-900">{row.name}</span>
                         <span className="ml-2 text-xs font-semibold text-slate-400">{row.etf}</span>
                       </td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-900">{v.pe === null ? "—" : v.pe.toFixed(1)}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">{v.pb === null ? "—" : v.pb.toFixed(2)}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-600">{v.roe === null ? "—" : formatPercent(v.roe * 100, 1)}</td>
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-900">{typeof v.pe === "number" && Number.isFinite(v.pe) ? v.pe.toFixed(1) : "—"}</td>
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">{typeof v.pb === "number" && Number.isFinite(v.pb) ? v.pb.toFixed(2) : "—"}</td>
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-600">{typeof v.roe === "number" && Number.isFinite(v.roe) ? formatPercent(v.roe * 100, 1) : "—"}</td>
                     </tr>
                   );
                 })}
@@ -304,7 +304,7 @@ function RankList({ rows, window, tone }: { rows: SectorRow[]; window: MomentumW
         const value = row.momentum[window];
         return (
           <li key={row.key} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-            <span className="flex items-center gap-2 min-w-0">
+              <span className="flex min-w-0 items-center gap-2">
               <span
                 className={cx(
                   "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black",
@@ -314,9 +314,9 @@ function RankList({ rows, window, tone }: { rows: SectorRow[]; window: MomentumW
                 {index + 1}
               </span>
               <span className="truncate text-sm font-bold text-slate-900">{row.name}</span>
-              <span className="text-[11px] font-bold uppercase text-slate-400">{row.etf}</span>
+              <span className="shrink-0 text-[11px] font-bold uppercase text-slate-400">{row.etf}</span>
             </span>
-            <span className={cx("orbitron text-sm font-black tabular-nums", tone === "up" ? "text-emerald-600" : "text-rose-600")}>
+              <span className={cx("orbitron shrink-0 text-sm font-black tabular-nums", tone === "up" ? "text-emerald-600" : "text-rose-600")}>
               {pct(value, 1)}
             </span>
           </li>

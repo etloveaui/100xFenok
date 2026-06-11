@@ -93,6 +93,14 @@ function normalizePortfolioViews(data: unknown): PortfolioViewsData | null {
     total: {
       treemap: Array.isArray(raw.total?.treemap) ? raw.total.treemap : [],
       sectors: raw.total?.sectors ?? {},
+      sector_history:
+        raw.total?.sector_history &&
+        Array.isArray(raw.total.sector_history.quarters) &&
+        raw.total.sector_history.series &&
+        typeof raw.total.sector_history.series === "object" &&
+        !Array.isArray(raw.total.sector_history.series)
+          ? raw.total.sector_history
+          : undefined,
     },
     investors,
   };

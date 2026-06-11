@@ -21,17 +21,24 @@ const priceCache = new Map<string, number | null>();
 const pricePending = new Map<string, Promise<number | null>>();
 
 async function fetchPrice(ticker: string): Promise<number | null> {
-  if (priceCache.has(ticker)) return priceCache.get(ticker)!;
-  if (pricePending.has(ticker)) return pricePending.get(ticker)!;
+  const symbol = ticker.trim().toUpperCase();
+  if (!symbol) return null;
+  if (priceCache.has(symbol)) return priceCache.get(symbol)!;
+  if (pricePending.has(symbol)) return pricePending.get(symbol)!;
 
   const p = (async () => {
     try {
       const r1 = await fetch("/data/global-scouter/core/stocks_analyzer.json");
       if (r1.ok) {
         const doc: AnalyzerDoc = await r1.json();
-        const row = doc.data?.find((d) => d.symbol === ticker);
-        if (row?.price != null) {
-          priceCache.set(ticker, row.price);
+        const rows = Array.isArray(doc.data) ? doc.data : [];
+        const row = rows.find((d) => d.symbol === symbol);
+        if (!row) {
+          priceCache.set(symbol, null);
+          return null;
+        }
+        if (typeof row.price === "number" && Number.isFinite(row.price)) {
+          priceCache.set(symbol, row.price);
           return row.price;
         }
       }
@@ -39,23 +46,23 @@ async function fetchPrice(ticker: string): Promise<number | null> {
       // fall through
     }
     try {
-      const r2 = await fetch(`/data/yf/finance/${encodeURIComponent(ticker)}.json`);
+      const r2 = await fetch(`/data/yf/finance/${encodeURIComponent(symbol)}.json`);
       if (r2.ok) {
         const doc: PriceDoc = await r2.json();
         const price = doc.data?.info?.currentPrice;
-        if (price != null) {
-          priceCache.set(ticker, price);
+        if (typeof price === "number" && Number.isFinite(price)) {
+          priceCache.set(symbol, price);
           return price;
         }
       }
     } catch {
       // fall through
     }
-    priceCache.set(ticker, null);
+    priceCache.set(symbol, null);
     return null;
   })();
 
-  pricePending.set(ticker, p);
+  pricePending.set(symbol, p);
   return p;
 }
 
@@ -105,7 +112,7 @@ export default function PortfolioClient() {
   }, [active, editingCash]);
 
   const tickers = useMemo(
-    () => (active ? [...new Set(active.holdings.map((h) => h.ticker))] : []),
+    () => (active ? [...new Set(active.holdings.map((h) => h.ticker.trim().toUpperCase()).filter(Boolean))] : []),
     [active],
   );
 
@@ -138,7 +145,7 @@ export default function PortfolioClient() {
     let cost = 0;
     let missing = 0;
     for (const h of active.holdings) {
-      const price = prices.get(h.ticker);
+      const price = prices.get(h.ticker.trim().toUpperCase());
       if (price == null) {
         missing++;
         continue;
@@ -253,7 +260,7 @@ export default function PortfolioClient() {
   const holdingRows = useMemo(() => {
     if (!active) return [];
     return active.holdings.map((h) => {
-      const price = prices.get(h.ticker) ?? null;
+      const price = prices.get(h.ticker.trim().toUpperCase()) ?? null;
       const marketValue = price != null ? h.shares * price : null;
       const costBasis = h.shares * h.avg_cost;
       const gain = marketValue != null ? marketValue - costBasis : null;

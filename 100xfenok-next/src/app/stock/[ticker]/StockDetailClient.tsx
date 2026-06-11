@@ -48,7 +48,12 @@ function loadAnalyzer(): Promise<Record<string, AnalyzerRow> | null> {
     .then((res) => (res.ok ? res.json() : null))
     .then((data) => {
       const map: Record<string, AnalyzerRow> = {};
-      for (const r of (data as any)?.data ?? []) map[r.symbol] = r;
+      const rows = Array.isArray((data as any)?.data) ? (data as any).data : [];
+      for (const r of rows) {
+        if (typeof r?.symbol === "string" && r.symbol.trim()) {
+          map[r.symbol.trim().toUpperCase()] = r;
+        }
+      }
       analyzerCache = map;
       return map;
     })
@@ -64,17 +69,19 @@ const yfCache: Record<string, any> = {};
 const yfPending: Record<string, Promise<any | null>> = {};
 
 function loadYfFinance(ticker: string): Promise<any | null> {
-  if (ticker in yfCache) return Promise.resolve(yfCache[ticker] || null);
-  if (ticker in yfPending) return yfPending[ticker];
-  const p = fetch(`/data/yf/finance/${ticker.toUpperCase()}.json`)
+  const symbol = ticker.trim().toUpperCase();
+  if (!symbol) return Promise.resolve(null);
+  if (symbol in yfCache) return Promise.resolve(yfCache[symbol] || null);
+  if (symbol in yfPending) return yfPending[symbol];
+  const p = fetch(`/data/yf/finance/${encodeURIComponent(symbol)}.json`)
     .then((res) => (res.ok ? res.json() : null))
     .then((d) => {
-      yfCache[ticker] = d?.data ?? null;
-      delete yfPending[ticker];
-      return yfCache[ticker];
+      yfCache[symbol] = d && typeof d === "object" && !Array.isArray(d) ? d.data ?? null : null;
+      delete yfPending[symbol];
+      return yfCache[symbol];
     })
-    .catch(() => { delete yfPending[ticker]; return null; });
-  yfPending[ticker] = p;
+    .catch(() => { delete yfPending[symbol]; return null; });
+  yfPending[symbol] = p;
   return p;
 }
 
@@ -82,15 +89,24 @@ function loadYfFinance(ticker: string): Promise<any | null> {
 // trades_ranking cache
 // ---------------------------------------------------------------------------
 
-let tradesCache: { bought: any[]; sold: any[]; metadata: any } | null = null;
-let tradesPromise: Promise<typeof tradesCache> | null = null;
+type TradesCache = { bought: any[]; sold: any[]; metadata: any };
 
-function loadTradesRanking(): Promise<typeof tradesCache> {
+let tradesCache: TradesCache | null = null;
+let tradesPromise: Promise<TradesCache | null> | null = null;
+
+function loadTradesRanking(): Promise<TradesCache | null> {
   if (tradesCache) return Promise.resolve(tradesCache);
   if (tradesPromise) return tradesPromise;
   tradesPromise = fetch("/data/sec-13f/analytics/trades_ranking.json")
     .then((res) => (res.ok ? res.json() : null))
-    .then((data) => { tradesCache = data; return data; })
+    .then((data) => {
+      tradesCache = {
+        bought: Array.isArray(data?.bought) ? data.bought : [],
+        sold: Array.isArray(data?.sold) ? data.sold : [],
+        metadata: data?.metadata ?? null,
+      };
+      return tradesCache;
+    })
     .catch(() => { tradesPromise = null; return null; });
   return tradesPromise;
 }
@@ -102,12 +118,16 @@ function loadTradesRanking(): Promise<typeof tradesCache> {
 type MaybeNumber = number | null | undefined;
 type NumberSeries = MaybeNumber[];
 
-function isFiniteNumber(value: MaybeNumber): value is number {
+function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
-function finiteValues(data: NumberSeries | null | undefined): number[] {
-  return (data ?? []).filter(isFiniteNumber);
+function finiteValues(data: unknown): number[] {
+  return Array.isArray(data) ? data.filter(isFiniteNumber) : [];
+}
+
+function numberSeries(data: unknown): NumberSeries {
+  return Array.isArray(data) ? data.map((value) => (isFiniteNumber(value) ? value : null)) : [];
 }
 
 function lastFinite(data: NumberSeries | null | undefined): number | null {
@@ -266,12 +286,12 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
   const s = (n: number) => n >= 1000 ? fmtLarge(n) : `${n.toFixed(1)}`;
   const usd = (n: number) => `$${n.toFixed(2)}`;
   const rows: Array<{ label: string; actuals: NumberSeries | null; estimates: Record<string, MaybeNumber> | null; fmt: (v: number) => string }> = [
-    { label: "매출", actuals: detail.income_statement?.revenue ?? null, estimates: detail.income_statement_estimates?.revenue ?? null, fmt: s },
-    { label: "영업이익", actuals: detail.income_statement?.operating_income ?? null, estimates: detail.income_statement_estimates?.operating_income ?? null, fmt: s },
-    { label: "순이익", actuals: detail.income_statement?.net_income ?? null, estimates: detail.income_statement_estimates?.net_income ?? null, fmt: s },
-    { label: "EPS", actuals: detail.per_share?.eps ?? null, estimates: detail.per_share_estimates?.eps ?? null, fmt: usd },
-    { label: "FCF", actuals: detail.cash_flow?.fcf ?? null, estimates: detail.cash_flow_estimates?.fcf ?? null, fmt: s },
-    { label: "DPS", actuals: detail.dividend?.dps ?? null, estimates: detail.dividend_estimates?.dps ?? null, fmt: usd },
+    { label: "매출", actuals: numberSeries(detail.income_statement?.revenue), estimates: detail.income_statement_estimates?.revenue ?? null, fmt: s },
+    { label: "영업이익", actuals: numberSeries(detail.income_statement?.operating_income), estimates: detail.income_statement_estimates?.operating_income ?? null, fmt: s },
+    { label: "순이익", actuals: numberSeries(detail.income_statement?.net_income), estimates: detail.income_statement_estimates?.net_income ?? null, fmt: s },
+    { label: "EPS", actuals: numberSeries(detail.per_share?.eps), estimates: detail.per_share_estimates?.eps ?? null, fmt: usd },
+    { label: "FCF", actuals: numberSeries(detail.cash_flow?.fcf), estimates: detail.cash_flow_estimates?.fcf ?? null, fmt: s },
+    { label: "DPS", actuals: numberSeries(detail.dividend?.dps), estimates: detail.dividend_estimates?.dps ?? null, fmt: usd },
   ];
   const validRows = rows.filter((r) => finiteValues(r.actuals).length > 0);
   if (validRows.length === 0) return null;
@@ -319,8 +339,8 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
     loadTradesRanking().then((data) => {
       if (cancelled || !data) return;
       const upper = ticker.toUpperCase();
-      const b = (data.bought as any[]).find((r: any) => r.ticker === upper);
-      const s = (data.sold as any[]).find((r: any) => r.ticker === upper);
+      const b = data.bought.find((r: any) => r?.ticker === upper);
+      const s = data.sold.find((r: any) => r?.ticker === upper);
       setTradesChip({ bought: b, sold: s });
     });
     return () => { cancelled = true; };
@@ -330,9 +350,12 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
     if (!f13Entries || f13Entries.length === 0) return [];
     const byInv = new Map<string, { shares: number; weight: number }>();
     for (const e of f13Entries) {
+      if (typeof e.investor !== "string" || e.investor.trim() === "") continue;
       const cur = byInv.get(e.investor);
-      if (cur) { cur.shares += (e.shares || 0); cur.weight += (e.weight || 0); }
-      else { byInv.set(e.investor, { shares: e.shares ?? 0, weight: e.weight ?? 0 }); }
+      const shares = isFiniteNumber(e.shares) ? e.shares : 0;
+      const weight = isFiniteNumber(e.weight) ? e.weight : 0;
+      if (cur) { cur.shares += shares; cur.weight += weight; }
+      else { byInv.set(e.investor, { shares, weight }); }
     }
     return [...byInv.entries()].map(([investor, v]) => ({ investor, ...v }))
       .sort((a, b) => b.weight - a.weight).slice(0, 10);
@@ -375,10 +398,10 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
                     </TransitionLink>
                   </td>
                   <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-900">
-                    {h.shares ? h.shares.toLocaleString() : "—"}
+                    {h.shares > 0 ? h.shares.toLocaleString() : "—"}
                   </td>
                   <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-700">
-                    {(h.weight * 100).toFixed(2)}%
+                    {h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}
                   </td>
                 </tr>
               ))}
@@ -426,20 +449,21 @@ function KV({ label, value }: { label: string; value: string }) {
 // ---------------------------------------------------------------------------
 
 export default function StockDetailClient({ ticker }: { ticker: string }) {
+  const symbol = ticker.trim().toUpperCase();
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
   const canLoadStockData = row !== undefined && row !== null;
-  const { detail, loading: detailLoading } = useStockDetail(ticker, canLoadStockData);
-  const f13Entries = use13FData(ticker);
+  const { detail, loading: detailLoading } = useStockDetail(symbol, canLoadStockData);
+  const f13Entries = use13FData(symbol);
   const canonical = row ? resolveSector(null, row.sector) : null;
-  const years: string[] = detail?.years ?? [];
+  const years: string[] = Array.isArray(detail?.years) ? detail.years : [];
   const rowPerBand = validAnalyzerPerBand(row);
   const detailPerBands = validDetailPerBands(detail?.per_bands);
 
   useEffect(() => {
     let cancelled = false;
-    loadAnalyzer().then((map) => { if (!cancelled) setRow(map?.[ticker] ?? null); });
+    loadAnalyzer().then((map) => { if (!cancelled) setRow(map?.[symbol] ?? null); });
     return () => { cancelled = true; };
-  }, [ticker]);
+  }, [symbol]);
 
   const rowLoading = row === undefined;
   const [yfData, setYfData] = useState<any | undefined>(undefined);
@@ -451,9 +475,9 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
       setYfData(row === null ? null : undefined);
       return () => { cancelled = true; };
     }
-    loadYfFinance(ticker.toUpperCase()).then((d) => { if (!cancelled) setYfData(d ?? null); });
+    loadYfFinance(symbol).then((d) => { if (!cancelled) setYfData(d ?? null); });
     return () => { cancelled = true; };
-  }, [ticker, canLoadStockData, row]);
+  }, [symbol, canLoadStockData, row]);
 
   const [benchDoc, setBenchDoc] = useState<Awaited<ReturnType<typeof loadIndustryBenchmarks>>>(null);
   useEffect(() => {
@@ -484,17 +508,16 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
       <div className="stock-shell">
         <div className="panel stock-empty">
           <p className="text-lg font-black text-slate-700">해당 티커를 찾을 수 없습니다</p>
-          <p className="mt-2 text-sm font-semibold text-slate-500">{ticker.toUpperCase()} — stocks_analyzer.json에 존재하지 않는 티커입니다.</p>
+          <p className="mt-2 text-sm font-semibold text-slate-500">{symbol} — stocks_analyzer.json에 존재하지 않는 티커입니다.</p>
           <TransitionLink href="/screener" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
         </div>
       </div>
     );
   }
 
-  const symbol = ticker.toUpperCase();
   const displayName = row?.companyName ?? symbol;
-  const priceText = row?.price != null ? fmtPrice(row.price) : "—";
-  const returnText = row?.return12m != null ? fmtPct(row.return12m) : null;
+  const priceText = isFiniteNumber(row?.price) ? fmtPrice(row.price) : "—";
+  const returnText = isFiniteNumber(row?.return12m) ? fmtPct(row.return12m) : null;
   const returnUp = (row?.return12m ?? 0) >= 0;
 
   return (
@@ -578,7 +601,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
             <div className="panel-b">
             <div className="mb-3">
               <h1 className="text-lg font-black tracking-tight text-slate-950">{row ? row.companyName : "..."}</h1>
-              <p className="orbitron text-sm font-black text-slate-400">{ticker.toUpperCase()}</p>
+              <p className="orbitron text-sm font-black text-slate-400">{symbol}</p>
             </div>
             {canonical ? (
               <div className="mb-3">
@@ -633,7 +656,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                   <div>
                     <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 (8Y)</h4>
                     {finiteValues(detail.valuation?.per).length >= 2 ? (
-                      <PerBandChart years={detail.years} per={detail.valuation?.per ?? []} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
+                      <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
                     ) : <span className="text-xs text-slate-300">—</span>}
                   </div>
                   {detailPerBands ? (
@@ -642,7 +665,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                       <div className="space-y-2">
                         {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "현재", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
                           const range = detailPerBands.max_8y - detailPerBands.min_8y || 1;
-                          const pct = ((v - detailPerBands.min_8y) / range) * 100;
+                          const pct = Math.min(100, Math.max(0, ((v - detailPerBands.min_8y) / range) * 100));
                           const barColor = highlight ? "bg-brand-interactive" : "bg-slate-300";
                           const textColor = highlight ? "text-slate-900" : "text-slate-500";
                           return (
@@ -665,10 +688,10 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               <SectionCard title="재무 추이">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {([
-                    ["매출", detail.income_statement?.revenue, detail.income_statement_estimates?.revenue, "#10b981"],
-                    ["영업이익", detail.income_statement?.operating_income, detail.income_statement_estimates?.operating_income, "#06b6d4"],
-                    ["순이익", detail.income_statement?.net_income, detail.income_statement_estimates?.net_income, "#8b5cf6"],
-                    ["FCF", detail.cash_flow?.fcf, detail.cash_flow_estimates?.fcf, "#f59e0b"],
+                    ["매출", numberSeries(detail.income_statement?.revenue), detail.income_statement_estimates?.revenue, "#10b981"],
+                    ["영업이익", numberSeries(detail.income_statement?.operating_income), detail.income_statement_estimates?.operating_income, "#06b6d4"],
+                    ["순이익", numberSeries(detail.income_statement?.net_income), detail.income_statement_estimates?.net_income, "#8b5cf6"],
+                    ["FCF", numberSeries(detail.cash_flow?.fcf), detail.cash_flow_estimates?.fcf, "#f59e0b"],
                   ] as Array<[string, NumberSeries | undefined, Record<string, MaybeNumber> | undefined, string]>).map(([label, actuals, estimates, color]) => (
                     <div key={label}>
                       <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
@@ -705,7 +728,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               {/* 4. 구루 동향 */}
               <div id="guru-section">
                 <SectionCard>
-                  <GuruSection f13Entries={f13Entries} ticker={ticker} />
+                  <GuruSection f13Entries={f13Entries} ticker={symbol} />
                 </SectionCard>
               </div>
             </>
@@ -713,14 +736,14 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
             <SectionCard>
               <div className="py-8 text-center">
                 <p className="text-sm font-black text-slate-700">상세 데이터를 불러올 수 없습니다</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">/data/global-scouter/stocks/detail/{ticker}.json 을 확인해 주세요.</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">/data/global-scouter/stocks/detail/{symbol}.json 을 확인해 주세요.</p>
               </div>
             </SectionCard>
           )}
 
           {/* Footer */}
           <footer className="stock-footer">
-            <TransitionLink href={`/screener?ticker=${encodeURIComponent(ticker)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+            <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
             <TransitionLink href="/superinvestors" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">구루 보유 보기</TransitionLink>
           </footer>
         </div>

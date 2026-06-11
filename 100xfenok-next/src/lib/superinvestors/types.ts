@@ -81,6 +81,11 @@ export interface InvestorPortfolioView {
   performance?: PerformanceSeries | null;
 }
 
+export interface AggregateSectorHistory {
+  quarters: string[];
+  series: Record<string, number[]>;
+}
+
 export interface PortfolioViewsData {
   metadata: {
     quarter: string;
@@ -95,6 +100,7 @@ export interface PortfolioViewsData {
   total: {
     treemap: PortfolioRow[];
     sectors: Record<string, number>;
+    sector_history?: AggregateSectorHistory;
   };
   investors: Record<string, InvestorPortfolioView>;
 }

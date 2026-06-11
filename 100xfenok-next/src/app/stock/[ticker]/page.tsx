@@ -27,7 +27,7 @@ export default async function StockDetailPage({ params }: Props) {
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
       <AppShell title={symbol} backHref="/explore">
-        <StockDetailClient ticker={ticker} />
+        <StockDetailClient ticker={symbol} />
       </AppShell>
     </div>
   );
