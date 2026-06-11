@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import Image from "next/image";
 import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
 
@@ -225,8 +226,10 @@ export default function AppShell({
     <>
       {/* desktop left rail */}
       <aside className="rail">
-        <TransitionLink href="/" className="rail-logo">
-          <span className="mk">F</span>
+        <TransitionLink href="/" className="rail-logo" aria-label="100x Fenok 홈">
+          <span className="mk" aria-hidden="true">
+            <Image src="/100x-fenok-logo.png" alt="" width={28} height={28} />
+          </span>
           <span>
             100x <b>Fenok</b>
           </span>
@@ -277,7 +280,11 @@ export default function AppShell({
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </TransitionLink>
-          ) : null}
+          ) : (
+            <TransitionLink href="/" className="appbar-logo" aria-label="100x Fenok 홈">
+              <Image src="/100x-fenok-logo.png" alt="" width={28} height={28} />
+            </TransitionLink>
+          )}
           <span className="title">{title}</span>
           {status ? (
             <span className="mstat">

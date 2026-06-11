@@ -34,7 +34,8 @@
   /* ───────────── LEFT RAIL (desktop) ───────────── */
 .fnk-shell .rail{position:fixed; top:0; left:0; bottom:0; width:var(--rail-w); background:var(--c-rail); border-right:1px solid var(--c-line); display:flex; flex-direction:column; z-index:40}
 .fnk-shell .rail-logo{display:flex; align-items:center; gap:var(--s2); height:var(--topbar-h); padding:0 var(--s5); font-size:17px; font-weight:700; letter-spacing:-.02em; border-bottom:1px solid var(--c-line)}
-.fnk-shell .rail-logo .mk{width:26px; height:26px; border-radius:8px; background:var(--c-brand); display:grid; place-items:center; color:#fff; font-size:13px; font-weight:700; box-shadow:0 2px 6px -1px rgba(47,107,255,.5)}
+.fnk-shell .rail-logo .mk{width:30px; height:30px; border-radius:10px; background:#fff; border:1px solid var(--c-line); display:grid; place-items:center; overflow:hidden; box-shadow:0 2px 8px -3px rgba(20,30,50,.22)}
+.fnk-shell .rail-logo .mk img{width:100%; height:100%; object-fit:cover}
 .fnk-shell .rail-logo b{color:var(--c-brand)}
 .fnk-shell .rail-nav{flex:1; padding:var(--s4) var(--s3); display:flex; flex-direction:column; gap:2px; overflow-y:auto}
 .fnk-shell .rail-sect{font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--c-ink-4); padding:var(--s3) var(--s3) var(--s2)}
@@ -275,6 +276,8 @@
   .fnk-shell .appbar .back{width:40px; height:40px; border-radius:10px; background:none; border:0; color:var(--c-ink-2); display:grid; place-items:center; flex:none}
   .fnk-shell .appbar .back:hover{background:var(--c-surface-2)}
   .fnk-shell .appbar .back svg{width:22px; height:22px}
+  .fnk-shell .appbar-logo{width:36px; height:36px; border-radius:11px; background:#fff; border:1px solid var(--c-line); display:grid; place-items:center; overflow:hidden; flex:none; box-shadow:0 2px 8px -3px rgba(20,30,50,.22)}
+  .fnk-shell .appbar-logo img{width:100%; height:100%; object-fit:cover}
   .fnk-shell .appbar .title{font-size:19px; font-weight:700; letter-spacing:-.02em}
   .fnk-shell .appbar .mstat{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--c-ink-3)}
   .fnk-shell .appbar .mstat .dot{width:6px; height:6px; border-radius:50%; background:var(--c-neutral)}

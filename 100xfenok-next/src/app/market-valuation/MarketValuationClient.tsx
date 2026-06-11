@@ -2,7 +2,7 @@
 
 import TransitionLink from "@/components/TransitionLink";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import type { ValuationBand } from "@/lib/market-valuation/types";
+import type { IndexMomentum, ValuationBand, ValuationDataSource, ValuationDriver } from "@/lib/market-valuation/types";
 import YardeniCard from "./YardeniCard";
 import { formatPercent } from "@/lib/dashboard/formatters";
 
@@ -27,6 +27,59 @@ function positionPct(value: number | null, min: number | null, max: number | nul
 
 function fmt(value: number | null, digits: number): string {
   return value === null ? "—" : value.toFixed(digits);
+}
+
+function fmtSignedPct(value: number | null, digits = 1): string {
+  if (value === null) return "—";
+  const pct = value * 100;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;
+}
+
+function toneClass(tone: ValuationDriver["tone"]): string {
+  if (tone === "emerald") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (tone === "amber") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (tone === "rose") return "border-rose-200 bg-rose-50 text-rose-700";
+  return "border-slate-200 bg-slate-50 text-slate-600";
+}
+
+function DriverBadge({ driver }: { driver: ValuationDriver | null }) {
+  if (!driver) return null;
+  return (
+    <div className={cx("mt-3 rounded-[1rem] border px-3 py-2", toneClass(driver.tone))}>
+      <p className="text-[11px] font-black uppercase tracking-[0.08em]">{driver.label}</p>
+      <p className="mt-1 text-[11px] font-semibold leading-5 opacity-80">{driver.detail}</p>
+    </div>
+  );
+}
+
+function MomentumCell({ label, value }: { label: string; value: number | null }) {
+  const positive = value !== null && value >= 0;
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white/70 px-3 py-2">
+      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">{label}</p>
+      <p className={cx("orbitron mt-1 text-sm font-black tabular-nums", value === null ? "text-slate-300" : positive ? "text-emerald-600" : "text-rose-600")}>
+        {fmtSignedPct(value)}
+      </p>
+    </div>
+  );
+}
+
+function MomentumBlock({ momentum }: { momentum: IndexMomentum | null }) {
+  if (!momentum) return null;
+  return (
+    <div className="mt-3">
+      <p className="mb-1 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">YTD 분해</p>
+      <div className="grid grid-cols-3 gap-2">
+        <MomentumCell label="가격" value={momentum.price.ytd} />
+        <MomentumCell label="EPS" value={momentum.eps.ytd} />
+        <MomentumCell label="P/E" value={momentum.pe.ytd} />
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <MomentumCell label="P/B" value={momentum.pb.ytd} />
+        <MomentumCell label="ROE" value={momentum.roe.ytd} />
+      </div>
+    </div>
+  );
 }
 
 function ValuationRow({ label, band, digits }: { label: string; band: ValuationBand; digits: number }) {
@@ -71,8 +124,52 @@ function ValuationRow({ label, band, digits }: { label: string; band: ValuationB
   );
 }
 
+function DataSourcePanel({
+  sources,
+  benchmarkSections,
+  damodaranUsErp,
+}: {
+  sources: ValuationDataSource[];
+  benchmarkSections: number | null;
+  damodaranUsErp: number | null;
+}) {
+  if (sources.length === 0) return null;
+  return (
+    <section className="panel">
+      <div className="panel-h">
+        <h2>데이터 커버리지</h2>
+        <span className="desc">원천 + 가공 신호</span>
+      </div>
+      <div className="grid gap-3 p-4 sm:grid-cols-2">
+        {sources.map((source) => (
+          <div key={source.id} className="rounded-[1rem] border border-slate-200 bg-white px-3 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-black text-slate-900">{source.label}</p>
+                <p className="mt-1 text-[11px] font-semibold text-slate-400">{source.source}</p>
+              </div>
+              {source.updated ? (
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-500">
+                  {source.updated}
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-2 text-[11px] leading-5 text-slate-500">{source.coverage}</p>
+            <p className="mt-2 text-[11px] font-bold text-slate-700">{source.usage}</p>
+            {source.cadence ? <p className="mt-1 text-[10px] font-semibold text-slate-400">주기: {source.cadence}</p> : null}
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-3 text-[11px] font-bold text-slate-500">
+        {benchmarkSections !== null ? <span>벤치마크 섹션 {benchmarkSections}개</span> : null}
+        {damodaranUsErp !== null ? <span>Damodaran US ERP {fmtSignedPct(damodaranUsErp, 2).replace("+", "")}</span> : null}
+      </div>
+    </section>
+  );
+}
+
 export default function MarketValuationClient() {
-  const { indices, dataReady, failed, sourceDate } = useMarketValuation();
+  const { indices, dataSources, benchmarkSections, damodaranUsErp, dataReady, failed, sourceDate } = useMarketValuation();
 
   return (
     <div className="data-shell-page">
@@ -132,14 +229,17 @@ export default function MarketValuationClient() {
                 </span>
               </div>
             </div>
+            <MomentumBlock momentum={index.momentum} />
+            <DriverBadge driver={index.driver} />
           </section>
         ))}
       </div>
 
       <YardeniCard />
+      <DataSourcePanel sources={dataSources} benchmarkSections={benchmarkSections} damodaranUsErp={damodaranUsErp} />
 
       <p className="px-1 text-[11px] text-slate-400">
-        역사 밴드 = 2010년 이후 weekly 시계열의 min/avg/max. percentile은 현재값의 역사적 위치(높을수록 고평가). 데이터: Bloomberg benchmarks. 참고용입니다.
+        역사 밴드 = 2010년 이후 weekly 시계열의 min/avg/max. percentile은 현재값의 역사적 위치(높을수록 고평가). YTD 분해는 가격 변화가 EPS 개선인지 멀티플 확장/축소인지 보기 위한 가공 신호입니다.
       </p>
     </div>
   );
