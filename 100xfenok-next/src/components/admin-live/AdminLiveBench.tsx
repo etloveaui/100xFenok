@@ -29,6 +29,7 @@ type BenchLog = {
   role: "system" | "user" | "bench" | "tool" | "error";
   text: string;
   at: string;
+  atIso?: string;
 };
 
 export type ExpressionCard = {
@@ -54,6 +55,8 @@ type BenchMetrics = {
   lowVoice: boolean;
   lastError: string | null;
   rating: Rating;
+  appendFailureCount: number;
+  lastAppendError: string | null;
 };
 
 type ReadinessResponse = {
@@ -315,6 +318,8 @@ const EMPTY_METRICS: BenchMetrics = {
   lowVoice: true,
   lastError: null,
   rating: null,
+  appendFailureCount: 0,
+  lastAppendError: null,
 };
 
 const STATUS_TEXT: Record<SessionStatus, string> = {
@@ -607,6 +612,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const logSeqRef = useRef(0);
   const pendingRef = useRef<BenchLog[]>([]);
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const backoffRef = useRef(2500);
+  const sessionIdRef = useRef<string | null>(null);
   const sentMetaRef = useRef(false);
   const isSecure = typeof window === "undefined" ? true : window.isSecureContext;
 
@@ -660,6 +667,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       role,
       text,
       at: nowLabel(),
+      atIso: new Date().toISOString(),
     };
     setLogs((current) => [entry, ...current].slice(0, MAX_LOG_ENTRIES));
     pendingRef.current.push(entry);
@@ -677,6 +685,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           ...first,
           text: mergeTranscriptText(first.text, cleanText),
           at: nowLabel(),
+          atIso: new Date().toISOString(),
         };
         const pendingFirst = pendingRef.current[0];
         if (pendingFirst && pendingFirst.role === role) {
@@ -693,6 +702,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         role,
         text: cleanText,
         at: nowLabel(),
+        atIso: new Date().toISOString(),
       };
       pendingRef.current.push(entry);
       scheduleFlush();
@@ -731,18 +741,27 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
   const flushAppends = async (useBeacon = false) => {
     clearFlushTimer();
-    if (!sessionId || pendingRef.current.length === 0) return;
+    const sid = sessionIdRef.current;
+    if (!sid || pendingRef.current.length === 0) return;
 
-    const capped = pendingRef.current.length > 60
-      ? pendingRef.current.slice(-60)
-      : pendingRef.current;
+    if (pendingRef.current.length > 600) {
+      pendingRef.current = pendingRef.current.slice(pendingRef.current.length - 600);
+      setMetrics((m) => ({
+        ...m,
+        appendFailureCount: m.appendFailureCount + 1,
+        lastAppendError: "PENDING_QUEUE_CAPPED_600",
+      }));
+    }
+
+    const sentCount = Math.min(pendingRef.current.length, 60);
+    const capped = pendingRef.current.slice(0, sentCount);
 
     const body: Record<string, unknown> = {
       op: "append",
-      sessionId,
+      sessionId: sid,
       mode,
       startedAt: startedAtMs ? new Date(startedAtMs).toISOString() : new Date().toISOString(),
-      entries: capped.map((e) => ({ seq: e.seq, role: e.role, text: e.text, at: e.at })),
+      entries: capped.map((e) => ({ seq: e.seq, role: e.role, text: e.text, at: e.at, atIso: e.atIso })),
     };
 
     if (!sentMetaRef.current || useBeacon) {
@@ -776,7 +795,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       const blob = new Blob([json], { type: "application/json" });
       const sent = navigator.sendBeacon("/api/admin/live/log/", blob);
       if (sent) {
-        pendingRef.current = [];
+        pendingRef.current = pendingRef.current.slice(sentCount);
         sentMetaRef.current = true;
         return;
       }
@@ -791,16 +810,34 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         body: json,
       });
       if (response.ok) {
-        pendingRef.current = [];
+        pendingRef.current = pendingRef.current.slice(sentCount);
         sentMetaRef.current = true;
+        backoffRef.current = 2500;
+        if (pendingRef.current.length > 0) {
+          flushTimerRef.current = setTimeout(() => void flushAppends(), 0);
+        }
+      } else {
+        setMetrics((m) => ({
+          ...m,
+          appendFailureCount: m.appendFailureCount + 1,
+          lastAppendError: `HTTP_${response.status}`,
+        }));
+        flushTimerRef.current = setTimeout(() => void flushAppends(), backoffRef.current);
+        backoffRef.current = Math.min(backoffRef.current * 2, 10000);
       }
-    } catch {
-      // silent; server dedupes by seq; next flush retries
+    } catch (error) {
+      setMetrics((m) => ({
+        ...m,
+        appendFailureCount: m.appendFailureCount + 1,
+        lastAppendError: error instanceof Error ? error.message : "FETCH_FAILED",
+      }));
+      flushTimerRef.current = setTimeout(() => void flushAppends(), backoffRef.current);
+      backoffRef.current = Math.min(backoffRef.current * 2, 10000);
     }
   };
 
   const scheduleFlush = () => {
-    if (flushTimerRef.current || !sessionId) return;
+    if (flushTimerRef.current || !sessionIdRef.current) return;
     flushTimerRef.current = setTimeout(() => void flushAppends(), 2500);
   };
 
@@ -1514,6 +1551,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       const session = payload as SessionResponse;
       const startedAt = Date.parse(session.startedAt);
       setSessionId(session.sessionId);
+      sessionIdRef.current = session.sessionId;
       setStartedAtMs(Number.isFinite(startedAt) ? startedAt : Date.now());
       addLog("system", `대화 토큰 준비 완료. 만료 ${new Date(session.expiresAt).toLocaleTimeString("ko-KR")}`);
       addLog("bench", `${session.profile.label}: ${session.profile.intent}`);
@@ -1624,6 +1662,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
       await saveConversationLog(currentSessionId, stoppedAt, currentLogs, finalMetrics);
     }
+
+    sessionIdRef.current = null;
   };
 
   const saveConversationLog = async (
@@ -1691,6 +1731,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     setCard(null);
     setStatus(readiness?.status === "BLOCKED" ? "blocked" : "ready");
     setSessionId(null);
+    sessionIdRef.current = null;
     setStartedAtMs(null);
     setMetrics({
       ...EMPTY_METRICS,

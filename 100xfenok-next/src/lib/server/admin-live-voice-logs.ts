@@ -105,9 +105,10 @@ function normalizeLogEntries(value: unknown) {
         role,
         text,
         at: normalizeText(entry.at, 80),
+        atIso: normalizeIso(entry.atIso),
       };
     })
-    .filter((entry): entry is { role: string; text: string; at: string | null } => Boolean(entry))
+    .filter((entry): entry is { role: string; text: string; at: string | null; atIso: string | null } => Boolean(entry))
     .slice(-MAX_LOG_ENTRIES);
 }
 
@@ -120,9 +121,9 @@ function normalizeAppendEntries(value: unknown) {
       const role = typeof entry.role === "string" && ROLE_SET.has(entry.role) ? entry.role : "system";
       const text = normalizeText(entry.text);
       if (!text) return null;
-      return { seq, role, text, at: normalizeText(entry.at, 80) };
+      return { seq, role, text, at: normalizeText(entry.at, 80), atIso: normalizeIso(entry.atIso) };
     })
-    .filter((entry): entry is { seq: number | null; role: string; text: string; at: string | null } => Boolean(entry));
+    .filter((entry): entry is { seq: number | null; role: string; text: string; at: string | null; atIso: string | null } => Boolean(entry));
 }
 
 function hasAppendContent(args: Record<string, unknown>): boolean {
@@ -134,11 +135,11 @@ function hasAppendContent(args: Record<string, unknown>): boolean {
 }
 
 function mergeEntries(
-  existing: Array<{ seq: number; role: string; text: string; at: string | null }>,
-  incoming: Array<{ seq: number | null; role: string; text: string; at: string | null }>,
+  existing: Array<{ seq: number; role: string; text: string; at: string | null; atIso: string | null }>,
+  incoming: Array<{ seq: number | null; role: string; text: string; at: string | null; atIso: string | null }>,
   existingLastSeq: number,
 ) {
-  const bySeq = new Map<number, { seq: number; role: string; text: string; at: string | null }>();
+  const bySeq = new Map<number, { seq: number; role: string; text: string; at: string | null; atIso: string | null }>();
   for (const entry of existing) {
     bySeq.set(entry.seq, entry);
   }
@@ -148,7 +149,7 @@ function mergeEntries(
   for (const entry of incoming) {
     if (entry.seq !== null && Number.isFinite(entry.seq)) {
       if (!bySeq.has(entry.seq)) {
-        bySeq.set(entry.seq, { seq: entry.seq, role: entry.role, text: entry.text, at: entry.at });
+        bySeq.set(entry.seq, { seq: entry.seq, role: entry.role, text: entry.text, at: entry.at, atIso: entry.atIso });
       }
     } else {
       let isDup = false;
@@ -160,7 +161,7 @@ function mergeEntries(
       }
       if (!isDup) {
         synthSeq += 1;
-        bySeq.set(synthSeq, { seq: synthSeq, role: entry.role, text: entry.text, at: entry.at });
+        bySeq.set(synthSeq, { seq: synthSeq, role: entry.role, text: entry.text, at: entry.at, atIso: entry.atIso });
       }
     }
   }
@@ -191,7 +192,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
     await mkdir(VOICE_LOG_ROOT, { recursive: true });
 
     let doc: Record<string, unknown> = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       source: "admin-live",
       mode,
       sessionId,
@@ -213,6 +214,10 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       // missing or corrupt → fresh doc
     }
 
+    if (doc.finalized === true && final !== true) {
+      return { error: "ALREADY_FINALIZED", file: path.relative(process.cwd(), filePath) };
+    }
+
     const existingLogs = Array.isArray(doc.logs) ? doc.logs : [];
     const existingNorm = existingLogs
       .filter(isRecord)
@@ -221,6 +226,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
         role: typeof e.role === "string" && ROLE_SET.has(e.role) ? e.role : "system",
         text: typeof e.text === "string" ? e.text : "",
         at: typeof e.at === "string" ? e.at : null,
+        atIso: typeof e.atIso === "string" ? e.atIso : null,
       }))
       .filter((e) => e.text);
 
@@ -234,6 +240,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
         role: e.role,
         text: e.text.slice(0, MAX_TEXT_LENGTH),
         at: e.at,
+        atIso: e.atIso,
         seq: e.seq,
       }))
       .slice(-MAX_LOG_ENTRIES);
@@ -244,6 +251,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
         speaker: e.role === "user" ? "user" : "model",
         text: e.text,
         at: e.at,
+        atIso: e.atIso,
       }));
 
     const now = new Date().toISOString();
@@ -267,7 +275,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
 
     const payload: Record<string, unknown> = {
       ...doc,
-      schemaVersion: 2,
+      schemaVersion: 3,
       mode,
       sessionId,
       startedAt: typeof doc.startedAt === "string" ? doc.startedAt : startedAt,
@@ -293,7 +301,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
         payload.logs = trimmed;
         payload.transcript = trimmed
           .filter((e) => e.role === "user" || e.role === "bench")
-          .map((e) => ({ speaker: e.role === "user" ? "user" : "model", text: e.text, at: e.at }));
+          .map((e) => ({ speaker: e.role === "user" ? "user" : "model", text: e.text, at: e.at, atIso: e.atIso }));
         const retry = `${JSON.stringify(payload, null, 2)}\n`;
         sizeBytes = Buffer.byteLength(retry, "utf8");
       }
@@ -332,6 +340,7 @@ export async function saveAdminLiveConversationLog(args: Record<string, unknown>
     role: entry.role,
     text: entry.text,
     at: entry.at,
+    atIso: entry.atIso,
   }));
 
   return appendAdminLiveConversationLog({

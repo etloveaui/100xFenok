@@ -15,6 +15,8 @@ const MONA_DISTILL_PENDING = path.join(MONA_QUEUE, "pending.json");
 const MONA_PROFILE = path.join(MONA_ROOT, "profile", "learner-profile.json");
 const MONA_CURRICULUM = path.join(MONA_ROOT, "curriculum-live.json");
 const MONA_EXPRESSION_BANK = path.join(MONA_ROOT, "expression-bank.json");
+const MONA_REVIEW_META = path.join(MONA_ROOT, "review-meta.json");
+const SRS_INTERVALS_DAYS = [1, 3, 7, 14, 30] as const;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -68,6 +70,9 @@ type StudySession = {
 type Best3Entry = Best3Item & {
   firstSeen: string;
   sessions: string[];
+  box?: number;
+  due?: string | null;
+  lastResult?: "correct" | "wrong" | null;
 };
 
 type WeakNote = {
@@ -80,6 +85,9 @@ type WeakNote = {
   note: string | null;
   firstSeen: string;
   sessions: string[];
+  box?: number;
+  due?: string | null;
+  lastResult?: "correct" | "wrong" | null;
 };
 
 type LearnerProfile = {
@@ -93,6 +101,11 @@ type CurriculumLive = {
 };
 
 type ExpressionBankTheme = typeof EXPRESSION_BANK_THEMES[number];
+
+type ReviewMeta = {
+  lastTotalReview: string | null;
+  updatedAt: string;
+};
 
 type ExpressionBankEntry = {
   ko: string;
@@ -301,13 +314,16 @@ function normalizeSession(value: unknown): StudySession | null {
 
 function normalizeBest3Store(value: unknown): Best3Entry[] {
   if (!isRecord(value) || !Array.isArray(value.entries)) return [];
-  return value.entries
+  const entries = value.entries
     .filter(isRecord)
     .map((entry) => {
       const ko = normalizeText(entry.ko, 220);
       const en = normalizeText(entry.en, 220);
       const firstSeen = validateStudyDate(entry.firstSeen);
       if (!ko || !en || !firstSeen) return null;
+      const box = typeof entry.box === "number" && entry.box >= 1 && entry.box <= 5 ? entry.box : 1;
+      const due = validateStudyDate(entry.due) ?? null;
+      const lastResult = entry.lastResult === "correct" || entry.lastResult === "wrong" ? entry.lastResult : null;
       return {
         ko,
         en,
@@ -316,20 +332,27 @@ function normalizeBest3Store(value: unknown): Best3Entry[] {
         sessions: Array.isArray(entry.sessions)
           ? entry.sessions.map(validateStudyDate).filter((date): date is string => Boolean(date))
           : [firstSeen],
+        box,
+        due,
+        lastResult,
       };
     })
-    .filter((entry): entry is Best3Entry => Boolean(entry));
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+  return entries as Best3Entry[];
 }
 
 function normalizeWeakStore(value: unknown): WeakNote[] {
   if (!isRecord(value) || !Array.isArray(value.notes)) return [];
-  return value.notes
+  const notes = value.notes
     .filter(isRecord)
     .map((note) => {
       const correct = normalizeText(note.correct, 220) || normalizeText(note.expression, 220);
       const firstSeen = validateStudyDate(note.firstSeen);
       const lastSeen = validateStudyDate(note.lastSeen) ?? firstSeen;
       if (!correct || !firstSeen || !lastSeen) return null;
+      const box = typeof note.box === "number" && note.box >= 1 && note.box <= 5 ? note.box : 1;
+      const due = validateStudyDate(note.due) ?? null;
+      const lastResult = note.lastResult === "correct" || note.lastResult === "wrong" ? note.lastResult : null;
       return {
         correct,
         ko: normalizeText(note.ko, 220) || "",
@@ -343,9 +366,13 @@ function normalizeWeakStore(value: unknown): WeakNote[] {
         sessions: Array.isArray(note.sessions)
           ? note.sessions.map(validateStudyDate).filter((date): date is string => Boolean(date))
           : [firstSeen],
+        box,
+        due,
+        lastResult,
       };
     })
-    .filter((note): note is WeakNote => Boolean(note));
+    .filter((note): note is NonNullable<typeof note> => Boolean(note));
+  return notes as WeakNote[];
 }
 
 function normalizeExpressionBank(value: unknown): ExpressionBankEntry[] {
@@ -499,6 +526,39 @@ function findYesterdaySession(snapshot: StudySnapshot, date = snapshot.studyDate
     .sort((a, b) => b.date.localeCompare(a.date))[0] ?? null;
 }
 
+function isTotalReviewDay(snapshot: StudySnapshot, meta: ReviewMeta | null, studyDate: string): boolean {
+  if (meta?.lastTotalReview == null) return snapshot.sessions.length >= 5;
+  const lastReview = new Date(`${meta.lastTotalReview}T00:00:00.000Z`);
+  const current = new Date(`${studyDate}T00:00:00.000Z`);
+  const diffMs = current.getTime() - lastReview.getTime();
+  return diffMs >= 7 * DAY_MS;
+}
+
+function pickWarmupPool(snapshot: StudySnapshot, studyDate: string): { best3Lines: Best3Item[]; weakLines: WeakNote[] } {
+  const overdueWeak = snapshot.weakNotes
+    .filter((n) => n.due == null || n.due <= studyDate)
+    .sort((a, b) => (b.missCount - a.missCount) || ((a.due ?? "0000-00-00") < (b.due ?? "0000-00-00") ? -1 : 1))
+    .slice(0, 3);
+
+  const dueGraduated = snapshot.best3
+    .filter((e) => e.due != null && e.due <= studyDate)
+    .sort((a, b) => (a.due ?? "9999-99-99").localeCompare(b.due ?? "9999-99-99"))
+    .slice(0, 3);
+
+  const pickedKeys = new Set<string>();
+  for (const n of overdueWeak) pickedKeys.add(normalizeKey(n.correct));
+  for (const e of dueGraduated) pickedKeys.add(normalizeKey(e.en));
+
+  const recentBest3 = snapshot.best3
+    .filter((e) => !pickedKeys.has(normalizeKey(e.en)))
+    .sort((a, b) => (b.sessions[0] ?? b.firstSeen).localeCompare(a.sessions[0] ?? a.firstSeen));
+
+  const best3Lines = [...dueGraduated, ...recentBest3].slice(0, 5);
+  const weakLines = overdueWeak;
+
+  return { best3Lines, weakLines };
+}
+
 function mergeBest3(existing: Best3Item[], incoming: Best3Item[]) {
   const seen = new Set<string>();
   return [...incoming, ...existing].filter((item) => {
@@ -594,6 +654,76 @@ async function saveStudySession(args: Record<string, unknown>) {
 
   const best3Store = updateBest3Store(snapshot.best3, incomingBest3, studyDate);
   const weakStore = updateWeakStore(snapshot.weakNotes, incomingWeak, studyDate, existing?.weakMisses ?? []);
+
+  const unmatched: string[] = [];
+  if (Array.isArray(args.reviewResults)) {
+    const results = args.reviewResults as Array<{ en?: unknown; result?: unknown }>;
+    for (const r of results.slice(0, 40)) {
+      const en = normalizeText(r.en, 260);
+      const result = r.result === "correct" ? "correct" : r.result === "wrong" ? "wrong" : null;
+      if (!en || !result) continue;
+      const key = normalizeKey(en);
+
+      const best3Match = best3Store.find((e) => normalizeKey(e.en) === key);
+      const weakMatch = weakStore.find((n) => normalizeKey(n.correct) === key);
+
+      if (result === "correct") {
+        if (best3Match) {
+          best3Match.box = Math.min(5, (best3Match.box ?? 1) + 1);
+          const intervalDays = SRS_INTERVALS_DAYS[best3Match.box - 1];
+          const dueDate = new Date(`${studyDate}T00:00:00.000Z`);
+          dueDate.setUTCDate(dueDate.getUTCDate() + intervalDays);
+          best3Match.due = dueDate.toISOString().slice(0, 10);
+          best3Match.lastResult = "correct";
+        }
+        if (weakMatch) {
+          weakMatch.box = Math.min(5, (weakMatch.box ?? 1) + 1);
+          const intervalDays = SRS_INTERVALS_DAYS[weakMatch.box - 1];
+          const dueDate = new Date(`${studyDate}T00:00:00.000Z`);
+          dueDate.setUTCDate(dueDate.getUTCDate() + intervalDays);
+          weakMatch.due = dueDate.toISOString().slice(0, 10);
+          weakMatch.lastResult = "correct";
+        }
+      } else {
+        if (weakMatch) {
+          weakMatch.box = 1;
+          const dueDate = new Date(`${studyDate}T00:00:00.000Z`);
+          dueDate.setUTCDate(dueDate.getUTCDate() + 1);
+          weakMatch.due = dueDate.toISOString().slice(0, 10);
+          weakMatch.lastResult = "wrong";
+          weakMatch.missCount += 1;
+        }
+        if (best3Match && !weakMatch) {
+          const ko = best3Match.ko;
+          const existingWeak = weakStore.find((n) => normalizeKey(n.correct) === key);
+          if (existingWeak) {
+            existingWeak.missCount += 1;
+            existingWeak.lastSeen = studyDate;
+          } else {
+            const dueDate = new Date(`${studyDate}T00:00:00.000Z`);
+            dueDate.setUTCDate(dueDate.getUTCDate() + 1);
+            weakStore.push({
+              correct: en,
+              ko,
+              tried: null,
+              missCount: 1,
+              lastSeen: studyDate,
+              note: null,
+              firstSeen: studyDate,
+              sessions: [studyDate],
+              box: 1,
+              due: dueDate.toISOString().slice(0, 10),
+              lastResult: "wrong",
+            });
+          }
+        }
+        if (!best3Match && !weakMatch) {
+          unmatched.push(en);
+        }
+      }
+    }
+  }
+
   const best3Payload = {
     updatedAt: mergedSession.savedAt,
     count: best3Store.length,
@@ -633,12 +763,19 @@ async function saveStudySession(args: Record<string, unknown>) {
     expressionBank: snapshot.expressionBank,
   };
 
+  const meta = await readJsonFile<ReviewMeta>(MONA_REVIEW_META, { lastTotalReview: null, updatedAt: "" }).catch(() => null);
+  if (isTotalReviewDay(snapshot, meta, studyDate)) {
+    await writeJsonAtomic(MONA_REVIEW_META, { lastTotalReview: studyDate, updatedAt: new Date().toISOString() }).catch(() => {});
+  }
+
   return {
     ok: true,
     studyDate,
     requestedDate: validateStudyDate(args.date) ?? null,
     best3Saved: incomingBest3.length,
     weakUpdated: incomingWeak.length,
+    reviewResultsApplied: Array.isArray(args.reviewResults) ? args.reviewResults.length : 0,
+    unmatched,
     totals: {
       best3: best3Store.length,
       weak: weakStore.length,
@@ -690,29 +827,112 @@ async function getStudyMemory(args: Record<string, unknown>) {
   };
 }
 
-function buildWeeklyItems(snapshot: StudySnapshot, requested: number, weakBias: boolean) {
-  const best3Items = snapshot.best3.map((entry) => ({
-    ko: entry.ko,
-    en: entry.en,
-    note: entry.note,
-    source: "best3" as const,
-  }));
-  const weakItems = snapshot.weakNotes.map((note) => ({
-    ko: note.ko || note.note || note.correct,
-    en: note.correct,
-    note: note.note,
-    source: "weak" as const,
-    missCount: note.missCount,
-  }));
-  const pool = weakBias ? [...weakItems, ...best3Items] : [...best3Items, ...weakItems];
-  const deduped = new Map<string, (typeof pool)[number]>();
-  for (const item of pool) deduped.set(normalizeKey(item.en), item);
-  const items = [...deduped.values()];
-  for (let i = items.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
+function buildWeeklyItems(snapshot: StudySnapshot, requested: number, _weakBias: boolean) {
+  const studyDate = snapshot.studyDate;
+  const sevenDaysAgo = (() => {
+    const d = new Date(`${studyDate}T00:00:00.000Z`);
+    d.setUTCDate(d.getUTCDate() - 7);
+    return d.toISOString().slice(0, 10);
+  })();
+
+  type PoolItem = {
+    ko: string;
+    en: string;
+    note: string | null;
+    source: "best3" | "weak";
+    missCount?: number;
+    due?: string | null;
+    sessions?: string[];
+    box?: number;
+  };
+
+  const t1: PoolItem[] = [];
+  const t2: PoolItem[] = [];
+  const t3: PoolItem[] = [];
+  const backfillOnly: PoolItem[] = [];
+  const seen = new Set<string>();
+
+  for (const entry of snapshot.best3) {
+    const key = normalizeKey(entry.en);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const item: PoolItem = { ko: entry.ko, en: entry.en, note: entry.note, source: "best3", sessions: entry.sessions, box: entry.box, due: entry.due };
+    if (entry.sessions.some((d) => d >= sevenDaysAgo)) {
+      t1.push(item);
+    } else if (entry.due != null && entry.due <= studyDate) {
+      t2.push(item);
+    } else if ((entry.box ?? 1) >= 4) {
+      t3.push(item);
+    } else {
+      backfillOnly.push(item);
+    }
   }
-  return items.slice(0, requested);
+
+  for (const note of snapshot.weakNotes) {
+    const key = normalizeKey(note.correct);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const item: PoolItem = { ko: note.ko || note.correct, en: note.correct, note: note.note, source: "weak", missCount: note.missCount, due: note.due, box: note.box };
+    if (note.due == null || note.due <= studyDate) {
+      t2.push(item);
+    } else if (note.sessions.some((d) => d >= sevenDaysAgo)) {
+      t1.push(item);
+    } else if ((note.box ?? 1) >= 4) {
+      t3.push(item);
+    } else {
+      backfillOnly.push(item);
+    }
+  }
+
+  t2.sort((a, b) => {
+    const aDue = a.due ?? "0000-00-00";
+    const bDue = b.due ?? "0000-00-00";
+    if (aDue !== bDue) return aDue < bDue ? -1 : 1;
+    return (b.missCount ?? 0) - (a.missCount ?? 0);
+  });
+
+  const t1Target = Math.ceil(0.5 * requested);
+  const t2Target = Math.ceil(0.3 * requested);
+  const pickedT1 = t1.slice(0, t1Target);
+  const pickedT2 = t2.slice(0, t2Target);
+  const usedKeys = new Set<string>();
+  for (const item of [...pickedT1, ...pickedT2]) usedKeys.add(normalizeKey(item.en));
+
+  const remaining = requested - pickedT1.length - pickedT2.length;
+  const t3Pool = t3.filter((item) => !usedKeys.has(normalizeKey(item.en)));
+  t3Pool.sort((a, b) => {
+    const aHash = stableExpressionHash(`${studyDate}:${a.en}`);
+    const bHash = stableExpressionHash(`${studyDate}:${b.en}`);
+    return aHash - bHash || a.en.localeCompare(b.en);
+  });
+  const pickedT3 = t3Pool.slice(0, remaining);
+
+  const unpickedT1 = t1.filter((item) => !pickedT1.includes(item));
+  const unpickedT2 = t2.filter((item) => !pickedT2.includes(item));
+  const backfillPool = [...unpickedT2, ...unpickedT1, ...backfillOnly].filter((item) => !usedKeys.has(normalizeKey(item.en)));
+  const backfillNeed = requested - pickedT1.length - pickedT2.length - pickedT3.length;
+  const backfilled = backfillPool.slice(0, Math.max(0, backfillNeed));
+
+  const pool = [...pickedT1, ...pickedT2, ...pickedT3, ...backfilled];
+  const deduped = new Map<string, PoolItem>();
+  for (const item of pool) deduped.set(normalizeKey(item.en), item);
+
+  const result = [...deduped.values()];
+  const interleave: PoolItem[] = [];
+  const buckets = [result.filter((i) => i.source === "best3" && t1.includes(i)), result.filter((i) => i.source === "weak" && t2.includes(i)), result.filter((i) => !t1.includes(i) && !t2.includes(i))];
+  const maxLen = Math.max(...buckets.map((b) => b.length));
+  for (let i = 0; i < maxLen; i++) {
+    for (const bucket of buckets) {
+      if (i < bucket.length) interleave.push(bucket[i]);
+    }
+  }
+  const seenFinal = new Set<string>();
+  return interleave.filter((item) => {
+    const k = normalizeKey(item.en);
+    if (seenFinal.has(k)) return false;
+    seenFinal.add(k);
+    return true;
+  }).slice(0, requested);
 }
 
 async function getWeeklyTestSet(args: Record<string, unknown>) {
@@ -762,7 +982,7 @@ export const MONA_PACING_RULES: readonly string[] = [
   "모나가 답할 때까지 기다린다. 끼어들거나 조기 종료하지 마.",
   "프리토킹 중엔 끼어들지 말고 끝난 뒤 피드백 2~3개만 준다.",
   "코너 하나당 최소 3~4회 캐치볼을 주고받은 뒤 다음으로 넘어간다.",
-  "코너가 끝나고 모나가 '끝/그만'이라고 할 때까지 '잘 자'나 마무리 말을 하지 마.",
+  "코너가 끝나고 모나가 '끝/그만'이라고 할 때까지 마무리 말을 하지 마.",
 ];
 
 function buildProfileSection(snapshot: StudySnapshot): string[] {
@@ -826,30 +1046,34 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
   const resolvedDate = studyDate ?? getCanonicalMonaStudyDate();
   const resolvedSnapshot = snapshot ?? await prepareMonaStudySnapshot(resolvedDate);
   const plan = getWeekdayPlan(resolvedDate);
+  const reviewMeta = await readJsonFile<ReviewMeta>(MONA_REVIEW_META, { lastTotalReview: null, updatedAt: "" }).catch(() => null);
+  const totalReview = isTotalReviewDay(resolvedSnapshot, reviewMeta, resolvedDate);
+  const effectivePlan = !totalReview && plan.weekday === "일요일" ? WEEKDAY_PLAN[6] : plan;
   const yesterday = findYesterdaySession(resolvedSnapshot, resolvedDate);
-  const weekly = plan.weekday === "일요일" ? buildWeeklyItems(resolvedSnapshot, 30, true) : [];
+  const weekly = totalReview ? buildWeeklyItems(resolvedSnapshot, 30, true) : [];
   const firstSession = resolvedSnapshot.sessions.length === 0;
-  const expressionCandidates = pickTodayExpressions(resolvedSnapshot, resolvedDate, plan);
+  const expressionCandidates = pickTodayExpressions(resolvedSnapshot, resolvedDate, effectivePlan);
+  const warmup = firstSession || !yesterday ? null : pickWarmupPool(resolvedSnapshot, resolvedDate);
 
   return [
     "[오늘 - 서버 확정값, 다시 계산하지 마]",
     `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
-    `테마: ${plan.theme} · 변동코너: ${plan.corner}`,
+    `테마: ${totalReview ? "종합 복습" : effectivePlan.theme} · 변동코너: ${totalReview ? "전체 복습" : effectivePlan.corner}`,
     "",
     "[복습 재료]",
     firstSession || !yesterday
       ? "첫 세션이야. 워밍업 ①은 건너뛰고 바로 오늘 표현 ②부터 가."
       : [
         `어제 날짜: ${yesterday.date}`,
-        `최근 BEST3:\n${formatBest3(resolvedSnapshot.best3.slice(0, 5))}`,
-        `약점노트:\n${formatWeak(resolvedSnapshot.weakNotes.slice(0, 3))}`,
+        `최근 BEST3:\n${formatBest3(warmup?.best3Lines ?? resolvedSnapshot.best3.slice(0, 5))}`,
+        `약점노트:\n${formatWeak(warmup?.weakLines ?? resolvedSnapshot.weakNotes.slice(0, 3))}`,
       ].join("\n"),
     ...buildProfileSection(resolvedSnapshot),
     ...buildExpressionBankSection(expressionCandidates),
     "",
-    ...(plan.weekday === "일요일"
+    ...(totalReview
       ? [
-        "[일요일 테스트]",
+        "[종합 복습]",
         `${weekly.length}개로 본다. 새로 만들지 마. 부족하면 부족한 개수 그대로 진행해. 필요하면 getWeeklyTestSet을 호출해 같은 범위에서 다시 받아라.`,
       ]
       : [
@@ -857,8 +1081,8 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
         "R1 도입: 오늘 표현 후보에서 3개 + 복습 재료에서 2개를 골라 오늘의 5문장으로 정한다. 하나씩: 영어로 들려주고 → 뜻을 짧게 → 낮게 따라 말하게.",
         "R2 즉답: 같은 5문장을 한국어만 던지고 3초 안에 영어로 말하게 한다. 모나가 답할 때까지 기다리고 → 짧게 교정 → 진짜 쓰는 버전 → 따라 말하기. 막힌 문장은 다시 들려주고 한 번 더 즉답시킨다.",
         "R3 변형: 같은 문장을 과거형/부정/질문/주어 바꾸기로 비틀어 즉답시킨다. 한 문장당 변형 1~2개만.",
-        `R4 코너(오늘: ${plan.corner}): 오늘 5문장이 자연스럽게 나오는 짧은 상황을 만들어 코너 방식대로 써먹게 한다.`,
-        "R5 마무리: 오늘 BEST3를 골라 자기 직전 한 번 더 따라 말하게 한다.",
+        `R4 코너(오늘: ${effectivePlan.corner}): 오늘 5문장이 자연스럽게 나오는 짧은 상황을 만들어 코너 방식대로 써먹게 한다.`,
+        "R5 마무리: 오늘 BEST3를 골라 세션 끝에 한 번 더 따라 말하게 한다.",
         "라운드가 오를수록 힌트를 줄인다. 잘하면 칭찬 한마디 후 바로 다음 난이도로. 주간 테스트를 새로 만들지 마.",
         "체크포인트: R2 끝과 R4 끝에 saveStudySession 저장, R5에서 오늘 BEST3 최종 저장.",
       ]),

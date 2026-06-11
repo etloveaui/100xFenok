@@ -83,7 +83,7 @@ const LIVE_TOOL_DEFINITIONS = [
     description: "Mona Wind-Down BEST3/weak-note checkpoint",
     functionName: "saveStudySession",
     instruction:
-      "Tool: saveStudySession({best3, weakMisses, theme, summary}) stores Mona Wind-Down study checkpoints using the server-side Asia/Seoul studyDate. Call after today's expression block, after the variable corner, and at final BEST3. Do not invent file paths or dates. Keep the spoken acknowledgement to one soft sentence. For weakMisses: correct=the right English expression, tried=what Mona actually said (may be wrong), ko=Korean meaning.",
+      "Tool: saveStudySession({best3, weakMisses, theme, summary, reviewResults}) stores Mona Wind-Down study checkpoints using the server-side Asia/Seoul studyDate. Call after today's expression block, after the variable corner, and at final BEST3. Do not invent file paths or dates. Keep the spoken acknowledgement to one soft sentence. For weakMisses: correct=the right English expression, tried=what Mona actually said (may be wrong), ko=Korean meaning. reviewResults: report EVERY warmup/review item Mona attempted this session with result correct|wrong (3-second rule).",
     declaration: {
       name: "saveStudySession",
       description:
@@ -118,6 +118,18 @@ const LIVE_TOOL_DEFINITIONS = [
                 note: { type: "STRING", description: "Optional short reason or pronunciation note." },
               },
               required: ["correct", "ko"],
+            },
+          },
+          reviewResults: {
+            type: "ARRAY",
+            description: "Warmup/review items Mona attempted this session with correct|wrong result. Max 40.",
+            items: {
+              type: "OBJECT",
+              properties: {
+                en: { type: "STRING", description: "The English expression tested." },
+                result: { type: "STRING", description: "correct or wrong.", enum: ["correct", "wrong"] },
+              },
+              required: ["en", "result"],
             },
           },
         },
