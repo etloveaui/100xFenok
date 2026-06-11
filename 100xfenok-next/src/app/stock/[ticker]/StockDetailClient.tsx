@@ -12,6 +12,7 @@ import {
   fmtLarge,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
+import { renderYfTab, FiftyTwoWeekBar } from "./StockTabs";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -23,12 +24,12 @@ interface AnalyzerRow {
   symbol: string;
   companyName: string;
   sector: string;
-  price: number;
-  marketCap: number;
-  per: number;
-  pbr: number;
-  dividendYield: number;
-  return12m: number;
+  price: number | null;
+  marketCap: number | null;
+  per: number | null;
+  pbr: number | null;
+  dividendYield: number | null;
+  return12m: number | null;
   perBandCurrent: number;
   perBandMin: number;
   perBandAvg: number;
@@ -51,6 +52,28 @@ function loadAnalyzer(): Promise<Record<string, AnalyzerRow> | null> {
     })
     .catch(() => { analyzerPromise = null; return null; });
   return analyzerPromise;
+}
+
+// ---------------------------------------------------------------------------
+// yf finance data module-level cache
+// ---------------------------------------------------------------------------
+
+const yfCache: Record<string, any> = {};
+const yfPending: Record<string, Promise<any | null>> = {};
+
+function loadYfFinance(ticker: string): Promise<any | null> {
+  if (ticker in yfCache) return Promise.resolve(yfCache[ticker] || null);
+  if (ticker in yfPending) return yfPending[ticker];
+  const p = fetch(`/data/yf/finance/${ticker.toUpperCase()}.json`)
+    .then((res) => (res.ok ? res.json() : null))
+    .then((d) => {
+      yfCache[ticker] = d?.data ?? null;
+      delete yfPending[ticker];
+      return yfCache[ticker];
+    })
+    .catch(() => { delete yfPending[ticker]; return null; });
+  yfPending[ticker] = p;
+  return p;
 }
 
 // ---------------------------------------------------------------------------
@@ -328,6 +351,26 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   }, [ticker]);
 
   const rowLoading = row === undefined;
+  const [yfData, setYfData] = useState<any | undefined>(undefined);
+  const [stockTab, setStockTab] = useState<"overview" | "financials" | "statistics" | "ownership" | "estimates">("overview");
+
+  useEffect(() => {
+    let cancelled = false;
+    loadYfFinance(ticker.toUpperCase()).then((d) => { if (!cancelled) setYfData(d ?? null); });
+    return () => { cancelled = true; };
+  }, [ticker]);
+
+  const yfLoaded = yfData !== undefined;
+  const yfAvailable = yfData != null;
+  const yfTabs: Array<{ id: typeof stockTab; label: string }> = yfAvailable
+    ? [
+        { id: "overview", label: "개요" },
+        { id: "financials", label: "재무" },
+        { id: "statistics", label: "통계" },
+        { id: "ownership", label: "보유기관" },
+        { id: "estimates", label: "추정치" },
+      ]
+    : [{ id: "overview" as const, label: "개요" }];
 
   // Unknown ticker
   if (!rowLoading && !row) {
@@ -349,6 +392,32 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
         <TransitionLink href="/screener" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
       </div>
 
+      {/* 52-week range bar */}
+      {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
+
+      {/* Tab strip */}
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-1">
+        {yfTabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setStockTab(t.id)}
+            className={`relative inline-flex min-h-9 items-center px-3 text-[11px] font-black uppercase tracking-[0.12em] transition ${stockTab === t.id ? "text-brand-interactive" : "text-slate-500 hover:text-slate-900"}`}
+            aria-current={stockTab === t.id ? "page" : undefined}
+          >
+            {t.label}
+            {stockTab === t.id ? <span className="absolute bottom-[-5px] left-0 right-0 h-[2px] rounded-full bg-brand-interactive" /> : null}
+          </button>
+        ))}
+        {!yfLoaded ? <span className="ml-auto text-[10px] font-semibold text-slate-400">yf 데이터 로딩 중…</span> : !yfAvailable ? <span className="ml-auto text-[10px] font-semibold text-slate-400">yf 데이터 수집 전</span> : null}
+      </div>
+
+      {/* YF tabs (non-overview) */}
+      {stockTab !== "overview" && yfAvailable ? (
+        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+          {renderYfTab(stockTab, yfData)}
+        </div>
+      ) : (
       <div className="gap-6 lg:flex">
         {/* LEFT RAIL (280px sticky) */}
         <aside className="mb-6 shrink-0 lg:sticky lg:top-4 lg:mb-0 lg:w-[280px] lg:self-start">
@@ -367,12 +436,13 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
             ) : null}
             {row && !rowLoading ? (
               <div className="space-y-2 border-t border-slate-100 pt-3">
-                <KV label="현재가" value={fmtPrice(row.price)} />
-                <KV label="시가총액" value={fmtMcap(row.marketCap)} />
-                <KV label="PER" value={row.per.toFixed(1)} />
-                <KV label="PBR" value={row.pbr.toFixed(2)} />
-                <KV label="배당률" value={fmtDivYield(row.dividendYield)} />
-                <KV label="12개월 수익률" value={fmtPct(row.return12m)} />
+                {/* scouter rows carry null price/ratios for non-US listings */}
+                <KV label="현재가" value={row.price != null ? fmtPrice(row.price) : "—"} />
+                <KV label="시가총액" value={row.marketCap != null ? fmtMcap(row.marketCap) : "—"} />
+                <KV label="PER" value={row.per != null ? row.per.toFixed(1) : "—"} />
+                <KV label="PBR" value={row.pbr != null ? row.pbr.toFixed(2) : "—"} />
+                <KV label="배당률" value={row.dividendYield != null ? fmtDivYield(row.dividendYield) : "—"} />
+                <KV label="12개월 수익률" value={row.return12m != null ? fmtPct(row.return12m) : "—"} />
                 {row.perBandCurrent > 0 ? (
                   <div className={`rounded-lg px-2.5 py-1.5 ${perBandPositionColor(row.perBandCurrent, row.perBandMin, row.perBandMax)}`}>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.05em] opacity-70">PER 밴드 위치</p>
@@ -500,6 +570,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           </footer>
         </div>
       </div>
+      )}
     </main>
   );
 }

@@ -67,6 +67,9 @@ if (await guruTab.count()) {
   await page.mouse.wheel(0, 700);
   await page.waitForTimeout(1200);
   await shot("03c-guru-sector-mix");
+  await page.mouse.wheel(0, 700);
+  await page.waitForTimeout(1500);
+  await shot("03d-guru-performance-vs-spy");
 }
 
 // 4. explore
@@ -74,10 +77,33 @@ await page.goto(`${BASE}/explore`, { waitUntil: "load" });
 await page.waitForTimeout(3500);
 await shot("04-explore");
 
-// 5. stock/AAPL
+// 5. stock/AAPL — overview + yf 5 tabs
 await page.goto(`${BASE}/stock/AAPL`, { waitUntil: "load" });
 await page.waitForTimeout(4500);
 await shot("05-stock-aapl");
+for (const [idx, label] of [["05b", "재무"], ["05c", "통계"], ["05d", "보유기관"], ["05e", "추정치"]]) {
+  const tab = page.getByRole("button", { name: label });
+  if (await tab.count()) {
+    await tab.first().click();
+    await page.waitForTimeout(1500);
+    await shot(`${idx}-stock-aapl-${label}`);
+  } else {
+    console.log(`!! /stock tab ${label} NOT FOUND`);
+  }
+}
+
+// 5-kr. stock/005930.KS — KRW formatting check (재무 tab)
+await page.goto(`${BASE}/stock/005930.KS`, { waitUntil: "load" });
+await page.waitForTimeout(4000);
+const krFin = page.getByRole("button", { name: "재무" });
+if (await krFin.count()) {
+  await krFin.first().click();
+  await page.waitForTimeout(1500);
+  await shot("05f-stock-samsung-financials");
+} else {
+  console.log("!! KR stock 재무 tab NOT FOUND (yf data missing?)");
+  await shot("05f-stock-samsung-NO-TABS");
+}
 
 // 5b. screener guru preset
 await page.goto(`${BASE}/screener`, { waitUntil: "domcontentloaded" });
