@@ -72,10 +72,24 @@ if (await guruTab.count()) {
   await shot("03d-guru-performance-vs-spy");
 }
 
-// 4. explore
+// 4. explore — super-tool: signal strip + thermometer + week-ahead
 await page.goto(`${BASE}/explore`, { waitUntil: "load" });
-await page.waitForTimeout(3500);
+await page.waitForTimeout(4000);
 await shot("04-explore");
+await page.mouse.wheel(0, 800);
+await page.waitForTimeout(1200);
+await shot("04t-explore-thermometer-weekahead");
+// thermometer period toggle
+const p3m = page.getByRole("button", { name: "3개월" });
+if (await p3m.count()) {
+  await p3m.first().click();
+  await page.waitForTimeout(800);
+  await shot("04u-explore-thermometer-3m");
+} else {
+  console.log("!! thermometer 3개월 toggle NOT FOUND");
+}
+await page.mouse.wheel(0, -1200);
+await page.waitForTimeout(600);
 
 // 4b. typeahead — stock + guru suggestions
 const heroInput = page.getByRole("combobox").first();
@@ -154,6 +168,17 @@ await page.setViewportSize({ width: 390, height: 844 });
 await page.goto(`${BASE}/superinvestors`, { waitUntil: "load" });
 await page.waitForTimeout(3500);
 await shot("06-superinvestors-mobile");
+
+// 6b. mobile explore — signal strip / thermometer / week-ahead stack
+await page.goto(`${BASE}/explore`, { waitUntil: "load" });
+await page.waitForTimeout(3500);
+await shot("06b-explore-mobile-top");
+await page.mouse.wheel(0, 1100);
+await page.waitForTimeout(1000);
+await shot("06c-explore-mobile-thermo");
+await page.mouse.wheel(0, 1100);
+await page.waitForTimeout(1000);
+await shot("06d-explore-mobile-weekahead");
 
 console.log("\n=== RUNTIME ERRORS (" + errors.length + ") ===");
 for (const e of [...new Set(errors)].slice(0, 30)) console.log(e);

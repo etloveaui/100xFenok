@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import TransitionLink from "@/components/TransitionLink";
 import ExploreHotTopics from "./ExploreHotTopics";
 import ExploreDashboard from "./ExploreDashboard";
+import MarketThermometer from "./MarketThermometer";
+import SignalStrip from "./SignalStrip";
+import WeekAheadCard from "./WeekAheadCard";
 import DataNav from "@/components/DataNav";
 
 export const metadata: Metadata = {
   title: "Explore | 100xFenok",
-  description: "시장 → 섹터 → 종목으로 좁혀 들어가는 데이터 탐색 허브.",
+  description: "시장 신호·체온계·일정·섹터·종목까지 — 오늘 시장을 30초에 파악하는 대시보드.",
 };
 
 type Tier = {
@@ -63,55 +66,46 @@ export default function ExplorePage() {
     <main className="container mx-auto max-w-5xl px-3 py-6 sm:px-4 sm:py-10">
       <header className="max-w-2xl">
         <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-interactive">Explore</p>
-        <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">데이터 탐색</h1>
+        <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">오늘의 시장</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          <strong className="text-slate-800">시장 → 섹터 → 종목</strong>으로 좁혀 들어가며 살펴보세요.
-          전체 시장이 어떤지 보고, 어떤 업종이 강한지 찾고, 그 안의 종목을 거릅니다.
+          한 화면에서 <strong className="text-slate-800">시장 신호 → 체온 → 일정 → 섹터 → 종목</strong>까지.
+          지금 시장이 어떤 상태인지 30초 안에 파악하세요.
         </p>
         <div className="mt-3">
           <DataNav active="explore" />
         </div>
       </header>
 
+      <div className="mt-6">
+        <SignalStrip />
+      </div>
+
       <ExploreDashboard />
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {TIERS.map((tier) => {
-          const inner = (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="orbitron text-2xl font-black text-slate-200">{tier.step}</span>
-                <i className={`fas ${tier.icon} text-xl ${tier.accent}`} aria-hidden="true" />
-              </div>
-              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">{tier.tier}</p>
-              <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">{tier.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{tier.desc}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-[0.12em]">
-                {tier.href ? (
-                  <span className="text-brand-interactive">열기 →</span>
-                ) : (
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-slate-400">준비 중</span>
-                )}
-              </span>
-            </>
-          );
-
-          const cardClass =
-            "group flex min-h-[200px] flex-col rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] transition";
-
-          return tier.href ? (
-            <TransitionLink key={tier.step} href={tier.href} className={`${cardClass} hover:-translate-y-0.5 hover:border-brand-interactive hover:shadow-[0_18px_48px_-12px_rgba(0,0,0,0.16)]`}>
-              {inner}
-            </TransitionLink>
-          ) : (
-            <div key={tier.step} className={`${cardClass} opacity-70`} aria-disabled="true">
-              {inner}
-            </div>
-          );
-        })}
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <MarketThermometer />
+        <WeekAheadCard />
       </div>
 
       <ExploreHotTopics />
+
+      {/* Deep-dive destinations — compact pill row (demoted from hero tiles) */}
+      <nav aria-label="더 깊이 보기" className="mt-8">
+        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">더 깊이 보기</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {TIERS.filter((t) => t.href).map((tier) => (
+            <TransitionLink
+              key={tier.step}
+              href={tier.href as string}
+              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 text-[11px] font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+            >
+              <i className={`fas ${tier.icon} ${tier.accent}`} aria-hidden="true" />
+              {tier.title}
+              <span className="text-slate-300">→</span>
+            </TransitionLink>
+          ))}
+        </div>
+      </nav>
 
       <p className="mt-6 text-[11px] text-slate-400">
         데이터: Global Scouter · Bloomberg benchmarks · SEC 13F.
