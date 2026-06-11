@@ -59,8 +59,12 @@ def month_end_date(ts):
 
 
 def yahoo_symbol(ticker):
-    """13F class-share notation (BRK.B) -> Yahoo notation (BRK-B)."""
-    return ticker.replace(".", "-")
+    """Class-share dot notation (BRK.B) -> Yahoo dash notation (BRK-B).
+    Single-letter alpha suffix only; exchange suffixes keep their dot."""
+    head, _, tail = ticker.rpartition(".")
+    if head and tail.isalpha() and len(tail) == 1 and not head[-1].isdigit():
+        return f"{head}-{tail}"
+    return ticker
 
 
 def fetch_chunk(tickers, start):
