@@ -39,6 +39,12 @@ jobs:
           node scripts/build-revision-movers.mjs
           node scripts/build-industry-benchmarks.mjs
 
+      - name: Build calendar previous-release values (FRED)
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        # non-fatal: calendar context is an enhancement, not a build gate
+        run: node scripts/build-calendar-prev.mjs || echo "calendar prev-values skipped"
+
       - name: Verify output
         run: |
           echo "=== stocks_analyzer.json header ==="
@@ -59,6 +65,8 @@ jobs:
             data/sec-13f/analytics/guru_holders_index.json \
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
+            data/calendar/prev-values.json \
+            100xfenok-next/public/data/calendar/prev-values.json \
             100xfenok-next/public/data/global-scouter/core/revision_movers.json \
             100xfenok-next/public/data/damodaran/industry_benchmarks.json \
             100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json \

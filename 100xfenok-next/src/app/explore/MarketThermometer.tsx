@@ -64,18 +64,21 @@ function fmtPct(v: number | null): string {
   return v >= 0 ? `+${p}%` : `${p}%`;
 }
 
-function verdict(row: MomentumRow): { text: string; tone: "good" | "mix" | "bad" } {
+type Verdict = { head: string; why: string; tone: "good" | "mix" | "bad" };
+
+/** Two-layer copy: bold plain-Korean call + one-line reason (no jargon up front). */
+function verdict(row: MomentumRow): Verdict {
   const { px, eps, per } = row;
-  if (px === null || eps === null || per === null) return { text: "데이터 부족", tone: "mix" };
-  if (px >= 0 && eps > 0 && per <= 0.005) return { text: "이익이 끄는 상승 — 건강", tone: "good" };
+  if (px === null || eps === null || per === null) return { head: "데이터 부족", why: "이익·멀티플 분해 불가", tone: "mix" };
+  if (px >= 0 && eps > 0 && per <= 0.005) return { head: "실적이 끌어올린 상승", why: "이익 증가가 주도 — 비싸지지 않음", tone: "good" };
   if (px >= 0 && eps > 0 && per > 0.005) {
     return per > eps
-      ? { text: "멀티플 확장이 주도 — 비싸지는 중", tone: "mix" }
-      : { text: "이익 주도 + 약간의 멀티플 확장", tone: "good" };
+      ? { head: "비싸져서 오른 상승", why: "이익보다 멀티플(기대)이 더 빨리 상승 — 주의", tone: "mix" }
+      : { head: "실적이 끌어올린 상승", why: "이익이 주도, 멀티플은 소폭 확장", tone: "good" };
   }
-  if (px >= 0 && eps <= 0) return { text: "이익 없이 오르는 중 — 주의", tone: "bad" };
-  if (px < 0 && eps > 0) return { text: "이익은 느는데 가격 하락 — 싸지는 중", tone: "good" };
-  return { text: "이익·가격 동반 약세", tone: "bad" };
+  if (px >= 0 && eps <= 0) return { head: "이익 없이 오른 상승", why: "기대만으로 상승 중 — 부담 큼", tone: "bad" };
+  if (px < 0 && eps > 0) return { head: "이익은 느는데 가격은 하락", why: "그만큼 싸지는 중", tone: "good" };
+  return { head: "이익·가격 동반 약세", why: "펀더멘털과 가격이 함께 하락", tone: "bad" };
 }
 
 /** Diverging bar segment: fill from center, right=positive. */
@@ -119,7 +122,7 @@ export default function MarketThermometer() {
     const sp = pick(doc, "sp500", period);
     if (sp.px === null) return null;
     const v = verdict(sp);
-    return { px: sp.px, text: v.text };
+    return { px: sp.px, head: v.head, why: v.why };
   }, [doc, period]);
 
   if (!rows || rows.length === 0) return null;
@@ -141,7 +144,8 @@ export default function MarketThermometer() {
       {headline ? (
         <div className="verdict">
           미국 증시 <span className={`pc num ${headline.px >= 0 ? "up" : "down"}`}>{fmtPct(headline.px)}</span>{" "}
-          — <em>{headline.text}</em>
+          — <em>{headline.head}</em>
+          <small>{headline.why}</small>
         </div>
       ) : null}
 
@@ -163,7 +167,10 @@ export default function MarketThermometer() {
               <DTrack value={row.per} color="var(--c-brand)" />
               <span className="dv num">{fmtPct(row.per)}</span>
             </div>
-            <span className={`vd ${v.tone === "good" ? "" : v.tone}`}>{v.text}</span>
+            <span className={`vd ${v.tone === "good" ? "" : v.tone}`}>
+              <b>{v.head}</b>
+              <small>{v.why}</small>
+            </span>
           </div>
         );
       })}

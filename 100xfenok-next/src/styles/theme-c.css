@@ -116,6 +116,7 @@ body.theme-c-chrome {
 /* thermometer */
 .theme-c .verdict { background: var(--c-brand-soft); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; font-size: 15px; font-weight: 600; color: var(--c-ink); line-height: 1.45; }
 .theme-c .verdict .pc { font-size: 18px; }
+.theme-c .verdict small { display: block; font-size: 13px; font-weight: 500; color: var(--c-ink-2); margin-top: 4px; }
 .theme-c .temp-row { padding: 16px 0; border-bottom: 1px solid var(--c-line); }
 .theme-c .temp-row:last-child { border-bottom: 0; }
 .theme-c .temp-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
@@ -128,7 +129,9 @@ body.theme-c-chrome {
 .theme-c .dtrack .dz { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #dde2e8; border-radius: 2px; }
 .theme-c .dtrack i { position: absolute; top: 0; bottom: 0; border-radius: 6px; }
 .theme-c .dbar .dv { font-size: 14px; font-weight: 600; text-align: right; }
-.theme-c .vd { margin-top: 12px; display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; color: var(--c-up); background: var(--c-up-soft); padding: 6px 12px; border-radius: 10px; }
+.theme-c .vd { margin-top: 12px; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; font-size: 14px; font-weight: 600; color: var(--c-up); background: var(--c-up-soft); padding: 8px 14px; border-radius: 10px; }
+.theme-c .vd b { font-weight: 700; }
+.theme-c .vd small { font-size: 12px; font-weight: 500; opacity: 0.85; }
 .theme-c .vd.mix { color: var(--c-warn); background: var(--c-warn-soft); }
 .theme-c .vd.bad { color: var(--c-down); background: var(--c-down-soft); }
 .theme-c .seg { display: flex; gap: 6px; margin-left: auto; }
@@ -146,6 +149,7 @@ body.theme-c-chrome {
 .theme-c .dday.soon small { color: var(--c-brand); }
 .theme-c .cal-row .ev { flex: 1; font-size: 15px; font-weight: 600; color: var(--c-ink); }
 .theme-c .cal-row .ev small { display: block; color: var(--c-ink-3); font-size: 12px; font-weight: 500; margin-top: 2px; }
+.theme-c .cal-row .ev .prev { color: var(--c-ink-2); font-weight: 600; }
 .theme-c .imp-high { flex: none; font-size: 12px; font-weight: 700; color: var(--c-down); background: var(--c-down-soft); padding: 6px 12px; border-radius: 999px; }
 .theme-c .imp-mid { flex: none; font-size: 12px; font-weight: 700; color: var(--c-ink-2); background: var(--c-surface-2); padding: 6px 12px; border-radius: 999px; }
 

@@ -8,6 +8,11 @@ interface CalendarEvent {
   importance: "H" | "M" | "L";
   category_label: string;
   title_ko: string;
+  title_en?: string;
+}
+
+interface PrevValuesDoc {
+  values?: Record<string, { value: string; asOf: string }>;
 }
 
 interface CalendarDoc {
@@ -30,6 +35,24 @@ function loadCalendar(): Promise<CalendarDoc | null> {
       return null;
     });
   return pending;
+}
+
+let prevCache: PrevValuesDoc | null = null;
+let prevPending: Promise<PrevValuesDoc | null> | null = null;
+function loadPrevValues(): Promise<PrevValuesDoc | null> {
+  if (prevCache) return Promise.resolve(prevCache);
+  if (prevPending) return prevPending;
+  prevPending = fetch("/data/calendar/prev-values.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      prevCache = d;
+      return d;
+    })
+    .catch(() => {
+      prevPending = null;
+      return null;
+    });
+  return prevPending;
 }
 
 function todayKST(): string {
@@ -56,9 +79,13 @@ function shortDate(dateStr: string): string {
 
 export default function WeekAheadCard() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [prev, setPrev] = useState<PrevValuesDoc["values"] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    loadPrevValues().then((doc) => {
+      if (!cancelled && doc?.values) setPrev(doc.values);
+    });
     loadCalendar().then((doc) => {
       if (cancelled || !doc?.events) return;
       const today = todayKST();
@@ -97,7 +124,12 @@ export default function WeekAheadCard() {
             </span>
             <span className="ev">
               {e.title_ko}
-              <small>{e.category_label}</small>
+              <small>
+                {e.category_label}
+                {e.title_en && prev?.[e.title_en] ? (
+                  <span className="prev num"> · 직전 {prev[e.title_en].value}</span>
+                ) : null}
+              </small>
             </span>
             {isH ? (
               <span className="imp-high">중요</span>
