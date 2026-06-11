@@ -2,7 +2,7 @@
 
 import TransitionLink from "@/components/TransitionLink";
 
-type Page = "explore" | "market" | "sectors" | "screener" | "superinvestors";
+type Page = "explore" | "market" | "sectors" | "screener" | "superinvestors" | "portfolio";
 
 const PAGES: Array<{ id: Page; label: string; href: string }> = [
   { id: "explore", label: "탐색", href: "/explore" },
@@ -10,6 +10,7 @@ const PAGES: Array<{ id: Page; label: string; href: string }> = [
   { id: "sectors", label: "섹터", href: "/sectors" },
   { id: "screener", label: "스크리너", href: "/screener" },
   { id: "superinvestors", label: "구루", href: "/superinvestors" },
+  { id: "portfolio", label: "포트폴리오", href: "/portfolio" },
 ];
 
 export default function DataNav({ active }: { active: Page }) {

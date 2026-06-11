@@ -186,6 +186,17 @@ await page.keyboard.press("End");
 await page.waitForTimeout(1500);
 await shot("07b-market-valuation-yardeni");
 
+// 5p. portfolio — sample mode + add flow
+await page.goto(`${BASE}/portfolio`, { waitUntil: "load" });
+await page.waitForTimeout(3500);
+await shot("07p-portfolio-sample");
+const addInput = page.getByPlaceholder(/티커|ticker/i).first();
+if (await addInput.count()) {
+  console.log("portfolio add form present");
+} else {
+  console.log("!! portfolio add form NOT FOUND");
+}
+
 // 5c. sectors smart money (bottom)
 await page.goto(`${BASE}/sectors`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(2000);

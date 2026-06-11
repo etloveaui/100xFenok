@@ -52,9 +52,14 @@ export default function MyWatchlistStrip() {
 
   return (
     <div className="rounded-[1.2rem] border border-amber-200/70 bg-amber-50/40 px-4 py-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-amber-600">
-        <i className="fas fa-star mr-1" aria-hidden="true" />내 종목 ({tickers.length})
-      </p>
+      <div className="flex items-baseline justify-between">
+        <p className="text-[10px] font-black uppercase tracking-[0.1em] text-amber-600">
+          <i className="fas fa-star mr-1" aria-hidden="true" />내 종목 ({tickers.length})
+        </p>
+        <TransitionLink href="/portfolio" className="text-[10px] font-black text-slate-400 hover:text-brand-interactive">
+          포트폴리오 →
+        </TransitionLink>
+      </div>
       <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
         {tickers.map((t) => {
           const row = rows?.get(t) ?? null;
