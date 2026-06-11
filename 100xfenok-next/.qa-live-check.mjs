@@ -77,10 +77,35 @@ await page.goto(`${BASE}/explore`, { waitUntil: "load" });
 await page.waitForTimeout(3500);
 await shot("04-explore");
 
+// 4b. typeahead — stock + guru suggestions
+const heroInput = page.getByRole("combobox").first();
+if (await heroInput.count()) {
+  await heroInput.click();
+  await heroInput.pressSequentially("buf", { delay: 80 });
+  await page.waitForTimeout(1200);
+  await shot("04b-explore-typeahead-guru");
+  await heroInput.fill("");
+  await heroInput.pressSequentially("NVD", { delay: 80 });
+  await page.waitForTimeout(1200);
+  await shot("04c-explore-typeahead-stock");
+} else {
+  console.log("!! explore typeahead combobox NOT FOUND");
+}
+
 // 5. stock/AAPL — overview + yf 5 tabs
 await page.goto(`${BASE}/stock/AAPL`, { waitUntil: "load" });
 await page.waitForTimeout(4500);
 await shot("05-stock-aapl");
+
+// 5a-score. summary score card expand
+const scoreToggle = page.getByRole("button", { name: /통과/ });
+if (await scoreToggle.count()) {
+  await scoreToggle.first().click();
+  await page.waitForTimeout(800);
+  await shot("05a-stock-aapl-score-expanded");
+} else {
+  console.log("!! summary score card NOT FOUND");
+}
 for (const [idx, label] of [["05b", "재무"], ["05c", "통계"], ["05d", "보유기관"], ["05e", "추정치"]]) {
   const tab = page.getByRole("button", { name: label });
   if (await tab.count()) {

@@ -12,7 +12,7 @@ import {
   fmtLarge,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
-import { renderYfTab, FiftyTwoWeekBar } from "./StockTabs";
+import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard } from "./StockTabs";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -392,8 +392,14 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
         <TransitionLink href="/screener" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
       </div>
 
-      {/* 52-week range bar */}
+      {/* 52-week range bar + summary score */}
       {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
+      {yfAvailable ? (
+        <SummaryScoreCard
+          data={yfData}
+          perBand={row && row.perBandCurrent > 0 ? { current: row.perBandCurrent, min: row.perBandMin, max: row.perBandMax } : null}
+        />
+      ) : null}
 
       {/* Tab strip */}
       <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-1">

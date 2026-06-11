@@ -492,6 +492,170 @@ export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
 }
 
 // ---------------------------------------------------------------------------
+// SummaryScoreCard — 5-area binary-check score (Snowflake-style, deep-research claim 2)
+// ---------------------------------------------------------------------------
+// Field units verified by jq (2026-06-11): dividendYield = PERCENT,
+// payoutRatio/ROE/margins/estimate growth = fraction, debtToEquity = x100.
+
+interface ScoreCheck { label: string; pass: boolean }
+interface AreaScore { area: string; score: number; total: number; checks: ScoreCheck[] }
+
+function pushCheck(checks: ScoreCheck[], label: string, pass: boolean | null) {
+  if (pass === null) return; // data missing -> check excluded from total
+  checks.push({ label, pass });
+}
+
+function estGrowth(rows: any[] | null | undefined, idx: string): number | null {
+  const r = (rows ?? []).find((e: any) => e._index === idx);
+  return typeof r?.growth === "number" ? r.growth : null;
+}
+
+export function computeSummaryScores(
+  data: YfData,
+  perBand: { current: number; min: number; max: number } | null,
+): AreaScore[] {
+  const info = data.info ?? {};
+  const n = (v: any): number | null => (typeof v === "number" ? v : null);
+  const gt = (v: any, t: number): boolean | null => (n(v) === null ? null : (v as number) > t);
+  const lt = (v: any, t: number): boolean | null => (n(v) === null ? null : (v as number) < t);
+
+  const areas: AreaScore[] = [];
+  const area = (name: string, build: (c: ScoreCheck[]) => void) => {
+    const checks: ScoreCheck[] = [];
+    build(checks);
+    areas.push({ area: name, score: checks.filter((c) => c.pass).length, total: checks.length, checks });
+  };
+
+  area("밸류에이션", (c) => {
+    pushCheck(c, "PER 역사 밴드 하단권", perBand && perBand.current > 0 ? perBand.current < (perBand.min + perBand.max) / 2 : null);
+    const target = n(data.analyst_price_targets?.mean);
+    const price = n(info.currentPrice);
+    pushCheck(c, "애널리스트 목표가 대비 상승 여력", target !== null && price !== null ? target > price : null);
+    pushCheck(c, "PER 25배 미만", lt(info.trailingPE, 25));
+    pushCheck(c, "EV/EBITDA 15배 미만", lt(info.enterpriseToEbitda, 15));
+  });
+
+  area("미래 성장", (c) => {
+    pushCheck(c, "내년 EPS 성장 전망 +10% 초과", gt(estGrowth(data.earnings_estimate, "+1y"), 0.10));
+    pushCheck(c, "내년 매출 성장 전망 +5% 초과", gt(estGrowth(data.revenue_estimate, "+1y"), 0.05));
+    pushCheck(c, "애널리스트 매수 우위", lt(info.recommendationMean, 2.5));
+    const fwd = n(info.forwardPE);
+    const trl = n(info.trailingPE);
+    pushCheck(c, "이익 성장 반영 (선행 PER < 후행 PER)", fwd !== null && trl !== null ? fwd < trl : null);
+  });
+
+  area("과거 실적", (c) => {
+    const inc = data.income_statement ?? null;
+    const dates = inc ? Object.keys(inc).sort() : [];
+    const first = dates.length >= 2 ? inc[dates[0]] : null;
+    const last = dates.length >= 2 ? inc[dates[dates.length - 1]] : null;
+    const grew = (key: string): boolean | null => {
+      const a = n(first?.[key]);
+      const b = n(last?.[key]);
+      return a !== null && b !== null ? b > a : null;
+    };
+    pushCheck(c, `매출 증가 추세 (${dates.length}년)`, grew("Total Revenue"));
+    pushCheck(c, "순이익 증가 추세", grew("Net Income"));
+    pushCheck(c, "ROE 12% 초과", gt(info.returnOnEquity, 0.12));
+    pushCheck(c, "영업이익률 10% 초과", gt(info.operatingMargins, 0.10));
+  });
+
+  area("재무 건전성", (c) => {
+    pushCheck(c, "부채비율 100% 미만", lt(info.debtToEquity, 100));
+    pushCheck(c, "유동비율 1배 초과", gt(info.currentRatio, 1));
+    pushCheck(c, "잉여현금흐름 흑자", gt(info.freeCashflow, 0));
+    const cash = n(info.totalCash);
+    const debt = n(info.totalDebt);
+    pushCheck(c, "현금이 차입금의 30% 이상", cash !== null && debt !== null ? cash >= debt * 0.3 : null);
+  });
+
+  area("배당", (c) => {
+    pushCheck(c, "배당 지급 중", gt(info.dividendYield, 0));
+    pushCheck(c, "배당수익률 2% 초과", gt(info.dividendYield, 2)); // percent unit
+    pushCheck(c, "배당성향 60% 미만 (지속 가능)", info.dividendYield ? lt(info.payoutRatio, 0.6) : null);
+    const divDates = data.dividends ? Object.keys(data.dividends).sort() : [];
+    const spanYears = divDates.length >= 2 ? (new Date(divDates[divDates.length - 1]).getTime() - new Date(divDates[0]).getTime()) / 31557600000 : 0;
+    pushCheck(c, "5년 이상 배당 이력", divDates.length ? spanYears >= 5 : null);
+  });
+
+  return areas.filter((a) => a.total > 0);
+}
+
+function scoreColor(ratio: number): string {
+  if (ratio >= 0.75) return "#059669"; // emerald-600
+  if (ratio >= 0.5) return "#d97706"; // amber-600
+  return "#e11d48"; // rose-600
+}
+
+export function SummaryScoreCard({ data, perBand }: {
+  data: YfData;
+  perBand: { current: number; min: number; max: number } | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const areas = computeSummaryScores(data, perBand);
+  if (areas.length === 0) return null;
+  const score = areas.reduce((s, a) => s + a.score, 0);
+  const total = areas.reduce((s, a) => s + a.total, 0);
+  const ratio = total > 0 ? score / total : 0;
+  const verdict = ratio >= 0.75 ? "우량 신호 우세" : ratio >= 0.5 ? "혼조 — 강점·약점 공존" : "주의 신호 우세";
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 text-left"
+        aria-expanded={open}
+      >
+        <div>
+          <p className="text-[10px] font-bold text-slate-500">투자 체크 요약</p>
+          <p className="text-sm font-black text-slate-900">
+            {score}/{total} 통과 · <span style={{ color: scoreColor(ratio) }}>{verdict}</span>
+          </p>
+        </div>
+        <span className="text-[10px] font-bold text-slate-400">{open ? "접기 ▲" : "상세 ▼"}</span>
+      </button>
+
+      <div className="mt-2 grid gap-1.5 sm:grid-cols-5">
+        {areas.map((a) => {
+          const r = a.total > 0 ? a.score / a.total : 0;
+          return (
+            <div key={a.area}>
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] font-bold text-slate-600">{a.area}</span>
+                <span className="orbitron tabular-nums text-[10px] font-black text-slate-700">{a.score}/{a.total}</span>
+              </div>
+              <div className="mt-0.5 h-1.5 rounded-full bg-slate-100">
+                <div className="h-1.5 rounded-full" style={{ width: `${r * 100}%`, backgroundColor: scoreColor(r) }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {open ? (
+        <div className="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 lg:grid-cols-5">
+          {areas.map((a) => (
+            <div key={a.area}>
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">{a.area}</p>
+              <ul className="space-y-1">
+                {a.checks.map((c) => (
+                  <li key={c.label} className="flex items-start gap-1.5 text-[10px] font-semibold">
+                    <span className={c.pass ? "text-emerald-600" : "text-rose-500"}>{c.pass ? "✓" : "✗"}</span>
+                    <span className={c.pass ? "text-slate-700" : "text-slate-500"}>{c.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <p className="mt-2 text-[9px] font-semibold text-slate-400">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main export
 // ---------------------------------------------------------------------------
 
