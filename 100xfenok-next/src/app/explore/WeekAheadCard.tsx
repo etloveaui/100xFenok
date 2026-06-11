@@ -95,7 +95,7 @@ export default function WeekAheadCard() {
             e.date_kst >= today &&
             (e.importance === "H" || e.importance === "M"),
         )
-        .slice(0, 6);
+        .slice(0, 5);
       setEvents(filtered);
     });
     return () => {

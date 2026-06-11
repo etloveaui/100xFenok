@@ -209,7 +209,16 @@ body.theme-c-chrome footer .bg-white\/95 { border-top-color: var(--c-line); }
   .theme-c .hero h1 { font-size: 40px; }
   /* heat card is half-width inside .pack — 3 cols keeps sector names on one line */
   .theme-c .heat { grid-template-columns: repeat(3, 1fr); }
-  /* masonry: columns pack by content height — no fixed-row whitespace */
-  .theme-c .pack { columns: 2; column-gap: 14px; margin-top: 14px; }
-  .theme-c .pack .c-card { break-inside: avoid; margin: 0 0 14px; }
+  /* row design: heights match because content is budgeted per row */
+  .theme-c .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
+  .theme-c .row2 > .c-card { margin-top: 14px; }
+  /* thermometer: 6 indices in 2 internal columns — half the height, full width used */
+  .theme-c .temp-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; }
+  .theme-c .temp-grid .temp-row:nth-last-child(-n + 2) { border-bottom: 0; }
+  /* revision movers: up/down lists side by side (5 + 5 rows, identical height) */
+  .theme-c .mv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+  .theme-c .mv-cols .mv-grp + .mv-grp { margin-top: 0; }
+  /* 13F topics: 3 horizontal tiles instead of 3 stacked rows */
+  .theme-c .f13-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .theme-c .f13-grid .f13-row { border-bottom: 0; background: var(--c-surface-2); border-radius: 14px; padding: 14px 16px; }
 }

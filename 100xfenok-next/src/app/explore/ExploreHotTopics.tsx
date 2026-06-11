@@ -112,6 +112,7 @@ export default function ExploreHotTopics() {
         <h2>13F 핫토픽</h2>
         <span className="sub">{data.metadata.quarter} 기준</span>
       </div>
+      <div className="f13-grid">
       {topics.map((t) => (
         <TransitionLink key={t.key} href="/superinvestors" className="f13-row">
           <span className={`f13-badge ${t.badgeCls}`}>{t.chip}</span>
@@ -122,6 +123,7 @@ export default function ExploreHotTopics() {
           <span className={`amt num ${t.amountCls}`}>{t.amount}</span>
         </TransitionLink>
       ))}
+      </div>
       <p className="heat-cap">13F 공시는 분기 종료 후 최대 45일 지연됩니다</p>
     </div>
   );

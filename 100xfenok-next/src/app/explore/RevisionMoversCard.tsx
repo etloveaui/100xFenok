@@ -71,8 +71,10 @@ export default function RevisionMoversCard() {
         <h2>리비전 무버</h2>
         <span className="sub">추정치 변화</span>
       </div>
-      <MoverList rows={up} tone="up" />
-      <MoverList rows={down} tone="down" />
+      <div className="mv-cols">
+        <MoverList rows={up} tone="up" />
+        <MoverList rows={down} tone="down" />
+      </div>
       <p className="heat-cap">
         FY+1 EPS 컨센서스 1주 변화율 · 적자 전환/기저가 0에 가까운 종목은 %가 과장될 수 있음 · 클릭 시 종목 상세
       </p>

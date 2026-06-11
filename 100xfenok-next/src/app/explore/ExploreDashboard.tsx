@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
-import TickerTypeahead from "@/components/TickerTypeahead";
 import { sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 
@@ -46,18 +45,6 @@ export default function ExploreDashboard() {
 
   return (
     <>
-      {/* Search card */}
-      <div className="c-card search-card">
-        <TickerTypeahead
-          placeholder="티커 검색 — 종목 상세로 바로 이동 (예: AAPL, NVDA, TSM)"
-          className="min-w-0 flex-1 bg-transparent py-3.5 text-[15px] font-semibold outline-none"
-          formClass="flex w-full items-center gap-3"
-          showButton
-          buttonLabel="종목 상세"
-          buttonClass="search-btn"
-        />
-      </div>
-
       {/* Sector flow — index-level numbers live in MarketThermometer (richer) */}
       <div className="c-card">
         <div className="card-title">

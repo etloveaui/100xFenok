@@ -149,6 +149,7 @@ export default function MarketThermometer() {
         </div>
       ) : null}
 
+      <div className="temp-grid">
       {rows.map(({ key, label, row }) => {
         const v = verdict(row);
         return (
@@ -174,6 +175,7 @@ export default function MarketThermometer() {
           </div>
         );
       })}
+      </div>
       <p className="heat-cap">Bloomberg 주간 집계 기준 · 막대 중앙선 오른쪽 = 플러스 기여</p>
     </div>
   );
