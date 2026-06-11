@@ -86,45 +86,31 @@ export default function ExploreHotTopics() {
     };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="c-card">
-        <div className="h-4 w-32 rounded" style={{ background: "var(--c-line)" }} />
-        <div style={{ marginTop: 14 }}>
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="f13-row">
-              <div className="body"><span className="tkr">&nbsp;</span></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) return null;
+  if (loading || !data) return null;
 
   const topics = buildTopics(data);
   if (topics.length === 0) return null;
 
   return (
-    <div className="c-card">
-      <div className="card-title">
+    <section className="panel f13-wrap">
+      <div className="panel-h">
         <h2>13F 핫토픽</h2>
-        <span className="sub">{data.metadata.quarter} 기준</span>
+        <span className="desc">{data.metadata.quarter} 기준</span>
+        <TransitionLink href="/superinvestors" className="act">구루 전체 →</TransitionLink>
       </div>
       <div className="f13-grid">
-      {topics.map((t) => (
-        <TransitionLink key={t.key} href="/superinvestors" className="f13-row">
-          <span className={`f13-badge ${t.badgeCls}`}>{t.chip}</span>
-          <span className="body">
-            <span className="tkr">{t.text.split("—")[0].trim()}</span>
-            <span className="desc">{t.text.includes("—") ? t.text.split("—")[1].trim() : ""}</span>
-          </span>
-          <span className={`amt num ${t.amountCls}`}>{t.amount}</span>
-        </TransitionLink>
-      ))}
+        {topics.map((t) => (
+          <TransitionLink key={t.key} href="/superinvestors" className="f13">
+            <span className={`badge ${t.badgeCls}`}>{t.chip}</span>
+            <span className="body">
+              <span className="tkr">{t.text.split("—")[0].trim()}</span>
+              <span className="meta">{t.text.includes("—") ? t.text.split("—")[1].trim() : ""}</span>
+            </span>
+            <span className={`amt num ${t.amountCls}`}>{t.amount}</span>
+          </TransitionLink>
+        ))}
       </div>
-      <p className="heat-cap">13F 공시는 분기 종료 후 최대 45일 지연됩니다</p>
-    </div>
+      <div className="panel-foot">13F 공시는 분기 종료 후 최대 45일 지연됩니다 · 데이터: SEC 13F</div>
+    </section>
   );
 }

@@ -32,16 +32,13 @@ function loadMovers(): Promise<MoversDoc | null> {
 function MoverList({ rows, tone }: { rows: MoverRow[]; tone: "up" | "down" }) {
   if (rows.length === 0) return null;
   return (
-    <div className="mv-grp">
-      <div className={`mv-h ${tone}`}>
-        <span className="pin">{tone === "up" ? "▲" : "▼"}</span>
-        {tone === "up" ? "상향" : "하향"}
-      </div>
+    <div className="mv-col">
+      <div className={`mv-h ${tone}`}>{tone === "up" ? "▲ 상향" : "▼ 하향"}</div>
       {rows.map((r) => (
         <TransitionLink key={r.ticker} href={`/stock/${encodeURIComponent(r.ticker)}`} className="mv-row">
           <span className="co">
-            {r.name ?? r.ticker}
-            <small>{r.ticker}</small>
+            <div className="n">{r.name ?? r.ticker}</div>
+            <div className="tk">{r.ticker}</div>
           </span>
           <span className={`pc num ${tone}`}>
             {r.change_1w >= 0 ? "+" : ""}{(r.change_1w * 100).toFixed(1)}%
@@ -66,18 +63,16 @@ export default function RevisionMoversCard() {
   if (up.length === 0 && down.length === 0) return null;
 
   return (
-    <div className="c-card">
-      <div className="card-title">
+    <section className="panel">
+      <div className="panel-h">
         <h2>리비전 무버</h2>
-        <span className="sub">추정치 변화</span>
+        <span className="desc">추정치 변화</span>
       </div>
-      <div className="mv-cols">
+      <div className="mv-split">
         <MoverList rows={up} tone="up" />
         <MoverList rows={down} tone="down" />
       </div>
-      <p className="heat-cap">
-        FY+1 EPS 컨센서스 1주 변화율 · 적자 전환/기저가 0에 가까운 종목은 %가 과장될 수 있음 · 클릭 시 종목 상세
-      </p>
-    </div>
+      <div className="panel-foot">FY+1 EPS 컨센서스 1주 변화율 · 기저가 0에 가까우면 %가 과장될 수 있음</div>
+    </section>
   );
 }

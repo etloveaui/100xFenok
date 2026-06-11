@@ -5,6 +5,11 @@ import TransitionLink from "@/components/TransitionLink";
 import { sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 
+/**
+ * 섹터 흐름 패널 — 11 sectors as sorted diverging-bar rows (shell v3).
+ * Source: benchmarks/summaries.json momentum (1m).
+ */
+
 type MomentumMap = Record<string, Record<string, number>>;
 
 const SECTOR_KEYS: Array<{ key: string; canonical: CanonicalSector }> = [
@@ -21,8 +26,8 @@ const SECTOR_KEYS: Array<{ key: string; canonical: CanonicalSector }> = [
   { key: "utilities", canonical: "Utilities" },
 ];
 
-function pct(v: number | undefined): string {
-  if (v === undefined || Number.isNaN(v)) return "—";
+function pct(v: number | undefined | null): string {
+  if (v === undefined || v === null || Number.isNaN(v)) return "—";
   const p = (v * 100).toFixed(1);
   return v >= 0 ? `+${p}%` : `${p}%`;
 }
@@ -43,33 +48,50 @@ export default function ExploreDashboard() {
     };
   }, []);
 
+  if (!momentum) return null;
+
+  const rows = SECTOR_KEYS.map(({ key, canonical }) => ({
+    key,
+    label: sectorLabelKo(canonical),
+    v: typeof momentum[key]?.["1m"] === "number" ? momentum[key]["1m"] : null,
+  }))
+    .filter((r): r is { key: string; label: string; v: number } => r.v !== null)
+    .sort((a, b) => b.v - a.v);
+  if (rows.length === 0) return null;
+  const max = Math.max(...rows.map((r) => Math.abs(r.v)));
+
   return (
-    <>
-      {/* Sector flow — index-level numbers live in MarketThermometer (richer) */}
-      <div className="c-card">
-        <div className="card-title">
-          <h2>섹터 흐름</h2>
-          <span className="sub">최근 1개월 수익률</span>
-          <TransitionLink href="/sectors" className="more">히트맵 →</TransitionLink>
-        </div>
-        <div className="heat">
-          {SECTOR_KEYS.map(({ key, canonical }) => {
-            const v = momentum?.[key]?.["1m"];
-            const tone = v === undefined ? "ht-flat" : Math.abs(v) < 0.005 ? "ht-flat" : v >= 0 ? "ht-up" : "ht-down";
-            return (
-              <TransitionLink
-                key={key}
-                href="/sectors"
-                className={`ht ${tone}`}
-                title={`${sectorLabelKo(canonical)} 1개월 ${pct(v)}`}
-              >
-                <span className="hn">{sectorLabelKo(canonical)}</span>
-                <span className="hv num">{momentum ? pct(v) : "…"}</span>
-              </TransitionLink>
-            );
-          })}
-        </div>
+    <section className="panel">
+      <div className="panel-h">
+        <h2>섹터 흐름</h2>
+        <span className="desc">최근 1개월 · 수익률순</span>
+        <TransitionLink href="/sectors" className="act">
+          히트맵 →
+        </TransitionLink>
       </div>
-    </>
+      <div className="rows">
+        {rows.map(({ key, label, v }) => {
+          const up = v >= 0;
+          const w = Math.max((Math.abs(v) / max) * 50, 3);
+          return (
+            <TransitionLink key={key} href="/sectors" className="sec-row" title={`${label} 1개월 ${pct(v)}`}>
+              <span className="sn">{label}</span>
+              <div className="sec-track">
+                <span className="z" />
+                <i
+                  style={{
+                    width: `${w}%`,
+                    left: up ? "50%" : undefined,
+                    right: up ? undefined : "50%",
+                    background: up ? "var(--c-up)" : "var(--c-down)",
+                  }}
+                />
+              </div>
+              <span className={`sv num ${up ? "up" : "down"}`}>{pct(v)}</span>
+            </TransitionLink>
+          );
+        })}
+      </div>
+    </section>
   );
 }

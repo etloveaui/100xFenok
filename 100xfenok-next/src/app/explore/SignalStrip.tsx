@@ -1,6 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  loadSummaries,
+  pick,
+  verdict,
+  fmtPct,
+  type SummariesDoc,
+} from "./MarketThermometer";
+
+/**
+ * Shell signal bar — the 3-second read: 4 macro LEDs (computed/signals.json)
+ * beside the S&P 500 YTD thermometer headline. Top of /explore.
+ */
 
 type SignalStatus = "stable" | "normal" | "neutral" | "caution" | string;
 
@@ -34,18 +46,11 @@ const CHIPS: Array<{ key: string; label: string }> = [
   { key: "sentiment_signal", label: "센티먼트" },
 ];
 
-const STATUS_LED: Record<string, string> = {
-  stable: "led-green",
-  normal: "led-green",
-  neutral: "led-gray",
-  caution: "led-amber",
-};
-
-const STATUS_ST: Record<string, string> = {
-  stable: "st-green",
-  normal: "st-green",
-  neutral: "st-gray",
-  caution: "st-amber",
+const STATUS_TONE: Record<string, string> = {
+  stable: "green",
+  normal: "green",
+  neutral: "gray",
+  caution: "amber",
 };
 
 const STATUS_KO: Record<string, string> = {
@@ -55,55 +60,75 @@ const STATUS_KO: Record<string, string> = {
   caution: "주의",
 };
 
-function ledClass(status: SignalStatus | undefined): string {
-  if (!status) return "led-gray";
-  return STATUS_LED[status] ?? "led-gray";
+function tone(status: SignalStatus | undefined): string {
+  if (!status) return "gray";
+  return STATUS_TONE[status] ?? "gray";
 }
 
-function stClass(status: SignalStatus | undefined): string {
-  if (!status) return "st-gray";
-  return STATUS_ST[status] ?? "st-gray";
-}
-
-function statusLabel(status: SignalStatus | undefined): string {
+function label(status: SignalStatus | undefined): string {
   if (!status) return "—";
   return STATUS_KO[status] ?? status;
 }
 
 export default function SignalStrip() {
   const [doc, setDoc] = useState<SignalDoc | null>(null);
+  const [bench, setBench] = useState<SummariesDoc | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     loadSignals().then((d) => {
       if (!cancelled) setDoc(d);
     });
+    loadSummaries().then((d) => {
+      if (!cancelled) setBench(d);
+    });
     return () => {
       cancelled = true;
     };
   }, []);
 
+  const headline = useMemo(() => {
+    if (!bench) return null;
+    const sp = pick(bench, "sp500", "ytd");
+    if (sp.px === null) return null;
+    const v = verdict(sp);
+    return { px: sp.px, head: v.head, why: v.why };
+  }, [bench]);
+
   if (!doc?.signals) return null;
 
   return (
-    <div className="c-card">
-      <div className="sig-grid">
-        {CHIPS.map((c) => {
-          const s = doc.signals?.[c.key]?.overallStatus;
-          return (
-            <div key={c.key} className="sig">
-              <span className={`led ${ledClass(s)}`} />
-              <span className="tx">
-                <span className="nm">{c.label}</span>
-                <span className={`st ${stClass(s)}`}>{statusLabel(s)}</span>
-              </span>
+    <section className="panel signalbar">
+      <div className="sb-grid">
+        <div className="sb-cell">
+          <div className="sb-signals">
+            {CHIPS.map((c) => {
+              const s = doc.signals?.[c.key]?.overallStatus;
+              const t = tone(s);
+              return (
+                <div key={c.key} className="sig">
+                  <span className={`led ${t}`} />
+                  <span className="nm">{c.label}</span>
+                  <span className={`st ${t}`}>{label(s)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        {headline ? (
+          <div className="sb-cell sb-verdict">
+            <div className="vh">시장 체온 · 미국 증시 YTD</div>
+            <div className="vm">
+              <span className={`big num ${headline.px >= 0 ? "up" : "down"}`}>{fmtPct(headline.px)}</span> —{" "}
+              <em>{headline.head}</em>
             </div>
-          );
-        })}
+            <div className="vr">{headline.why}</div>
+          </div>
+        ) : null}
       </div>
-      <p className="sig-cap">
+      <div className="sb-cap">
         기준 <span className="num">{doc.as_of ?? "—"}</span> · 유동성·뱅킹·센티먼트 종합 신호
-      </p>
-    </div>
+      </div>
+    </section>
   );
 }

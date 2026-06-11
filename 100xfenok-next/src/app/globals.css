@@ -10,6 +10,7 @@
 @import "../styles/market-wrap-v2.css";
 @import "../styles/alpha-scout-v2.css";
 @import "../styles/theme-c.css";
+@import "../styles/app-shell.css";
 
 :root {
   --background: #f8fafc;
@@ -353,10 +354,12 @@ main {
 /* Design V2/V3/V4 — hide V1 chrome wrappers when alternate version is active */
 body.design-v2 [data-v1-chrome],
 body.design-v3 [data-v1-chrome],
-body.design-v4 [data-v1-chrome] { display: none !important; }
+body.design-v4 [data-v1-chrome],
+body.fnk-shell-on [data-v1-chrome] { display: none !important; }
 body.design-v2 main,
 body.design-v3 main,
-body.design-v4 main { padding-top: 0 !important; padding-bottom: 0 !important; }
+body.design-v4 main,
+body.fnk-shell-on main { padding-top: 0 !important; padding-bottom: 0 !important; }
 
 /* Line clamp utilities */
 .line-clamp-2 {

@@ -108,37 +108,36 @@ export default function WeekAheadCard() {
   const today = todayKST();
 
   return (
-    <div className="c-card">
-      <div className="card-title">
+    <section className="panel">
+      <div className="panel-h">
         <h2>이번 주 미국 일정</h2>
-        <span className="sub">KST 기준</span>
+        <span className="desc">KST</span>
       </div>
-      {events.map((e, i) => {
-        const isH = e.importance === "H";
-        const dd = ddayInfo(e.date_kst, today);
-        return (
-          <div key={`${e.date_kst}-${e.time_kst}-${i}`} className="cal-row">
-            <span className={`dday ${dd.cls}`}>
-              {dd.big}
-              <small>{dd.small}</small>
-            </span>
-            <span className="ev">
-              {e.title_ko}
-              <small>
-                {e.category_label}
-                {e.title_en && prev?.[e.title_en] ? (
-                  <span className="prev num"> · 직전 {prev[e.title_en].value}</span>
-                ) : null}
-              </small>
-            </span>
-            {isH ? (
-              <span className="imp-high">중요</span>
-            ) : (
-              <span className="imp-mid">보통</span>
-            )}
-          </div>
-        );
-      })}
-    </div>
+      <div className="rows">
+        {events.map((e, i) => {
+          const isH = e.importance === "H";
+          const dd = ddayInfo(e.date_kst, today);
+          const chipCls = dd.cls === "today" ? "today" : dd.cls === "soon" ? "tom" : "";
+          return (
+            <div key={`${e.date_kst}-${e.time_kst}-${i}`} className="cal-row">
+              <span className={`dchip ${chipCls}`}>
+                <span className="dd">{dd.big}</span>
+                <small>{dd.small}</small>
+              </span>
+              <span className="ev">
+                <div className="t">{e.title_ko}</div>
+                <div className="m">
+                  {e.category_label}
+                  {e.title_en && prev?.[e.title_en] ? (
+                    <span className="prev num"> · 직전 {prev[e.title_en].value}</span>
+                  ) : null}
+                </div>
+              </span>
+              <span className={`imp ${isH ? "high" : "mid"}`}>{isH ? "중요" : "보통"}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

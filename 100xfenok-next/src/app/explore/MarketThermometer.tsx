@@ -21,9 +21,11 @@ type SummariesDoc = {
   source_summaries?: Record<string, { momentum?: Record<string, Record<string, number | null>> }>;
 };
 
+export type { SummariesDoc, MomentumRow };
+
 let cache: SummariesDoc | null = null;
 let pending: Promise<SummariesDoc | null> | null = null;
-function loadSummaries(): Promise<SummariesDoc | null> {
+export function loadSummaries(): Promise<SummariesDoc | null> {
   if (cache) return Promise.resolve(cache);
   if (pending) return pending;
   pending = fetch("/data/benchmarks/summaries.json")
@@ -48,7 +50,7 @@ const PERIODS: Array<{ id: Period; label: string }> = [
   { id: "1m", label: "1개월" },
 ];
 
-function pick(doc: SummariesDoc, section: string, period: Period): MomentumRow {
+export function pick(doc: SummariesDoc, section: string, period: Period): MomentumRow {
   const m = doc.source_summaries?.[section]?.momentum;
   const n = (v: unknown): number | null => (typeof v === "number" ? v : null);
   return {
@@ -58,16 +60,16 @@ function pick(doc: SummariesDoc, section: string, period: Period): MomentumRow {
   };
 }
 
-function fmtPct(v: number | null): string {
+export function fmtPct(v: number | null): string {
   if (v === null) return "—";
   const p = (v * 100).toFixed(1);
   return v >= 0 ? `+${p}%` : `${p}%`;
 }
 
-type Verdict = { head: string; why: string; tone: "good" | "mix" | "bad" };
+export type Verdict = { head: string; why: string; tone: "good" | "mix" | "bad" };
 
 /** Two-layer copy: bold plain-Korean call + one-line reason (no jargon up front). */
-function verdict(row: MomentumRow): Verdict {
+export function verdict(row: MomentumRow): Verdict {
   const { px, eps, per } = row;
   if (px === null || eps === null || per === null) return { head: "데이터 부족", why: "이익·멀티플 분해 불가", tone: "mix" };
   if (px >= 0 && eps > 0 && per <= 0.005) return { head: "실적이 끌어올린 상승", why: "이익 증가가 주도 — 비싸지지 않음", tone: "good" };
@@ -81,18 +83,17 @@ function verdict(row: MomentumRow): Verdict {
   return { head: "이익·가격 동반 약세", why: "펀더멘털과 가격이 함께 하락", tone: "bad" };
 }
 
-/** Diverging bar segment: fill from center, right=positive. */
-function DTrack({ value, color }: { value: number | null; color: string }) {
-  if (value === null) return <div className="dtrack" />;
-  const cap = 0.6; // 60%+ clamps so semis/kospi don't flatten the rest
-  const w = (Math.min(Math.abs(value), cap) / cap) * 50;
+/** Diverging bar from center; cap = full-scale magnitude per metric (design: 이익 100%, 멀티플 22%). */
+function DTrack({ value, cap, kind }: { value: number | null; cap: number; kind: "eps" | "per" }) {
+  if (value === null) return <div className="db-track" />;
+  const w = Math.max((Math.min(Math.abs(value), cap) / cap) * 50, 3);
   return (
-    <div className="dtrack">
-      <span className="dz" />
+    <div className="db-track">
+      <span className="db-zero" />
       <i
+        className={`db-bar ${kind}`}
         style={{
           width: `${w}%`,
-          backgroundColor: color,
           left: value >= 0 ? "50%" : undefined,
           right: value < 0 ? "50%" : undefined,
         }}
@@ -117,22 +118,14 @@ export default function MarketThermometer() {
       .filter((r) => r.row.px !== null);
   }, [doc, period]);
 
-  const headline = useMemo(() => {
-    if (!doc) return null;
-    const sp = pick(doc, "sp500", period);
-    if (sp.px === null) return null;
-    const v = verdict(sp);
-    return { px: sp.px, head: v.head, why: v.why };
-  }, [doc, period]);
-
   if (!rows || rows.length === 0) return null;
 
   return (
-    <div className="c-card">
-      <div className="card-title">
+    <section className="panel">
+      <div className="panel-h">
         <h2>시장 체온계</h2>
-        <span className="sub">이익 × 멀티플 분해</span>
-        <div className="seg">
+        <span className="desc">이익 × 멀티플 분해</span>
+        <div className="seg" style={{ marginLeft: "auto" }}>
           {PERIODS.map((p) => (
             <button key={p.id} type="button" onClick={() => setPeriod(p.id)} className={period === p.id ? "on" : ""}>
               {p.label}
@@ -140,43 +133,33 @@ export default function MarketThermometer() {
           ))}
         </div>
       </div>
-
-      {headline ? (
-        <div className="verdict">
-          미국 증시 <span className={`pc num ${headline.px >= 0 ? "up" : "down"}`}>{fmtPct(headline.px)}</span>{" "}
-          — <em>{headline.head}</em>
-          <small>{headline.why}</small>
-        </div>
-      ) : null}
-
-      <div className="temp-grid">
       {rows.map(({ key, label, row }) => {
         const v = verdict(row);
         return (
-          <div key={key} className="temp-row">
-            <div className="temp-top">
+          <div key={key} className="ti">
+            <div className="ti-top">
               <span className="nm">{label}</span>
               <span className={`tot num ${row.px !== null && row.px >= 0 ? "up" : "down"}`}>{fmtPct(row.px)}</span>
             </div>
-            <div className="dbar">
-              <span className="dl">이익</span>
-              <DTrack value={row.eps} color="var(--c-up)" />
-              <span className="dv num">{fmtPct(row.eps)}</span>
+            <div className="ti-bars">
+              <div className="db-row">
+                <span className="dl">이익</span>
+                <DTrack value={row.eps} cap={1.0} kind="eps" />
+                <span className="dv num">{fmtPct(row.eps)}</span>
+              </div>
+              <div className="db-row">
+                <span className="dl">멀티플</span>
+                <DTrack value={row.per} cap={0.22} kind="per" />
+                <span className="dv num">{fmtPct(row.per)}</span>
+              </div>
             </div>
-            <div className="dbar">
-              <span className="dl">멀티플</span>
-              <DTrack value={row.per} color="var(--c-brand)" />
-              <span className="dv num">{fmtPct(row.per)}</span>
+            <div className="ti-why">
+              <span className={`tag ${v.tone}`}>{v.head}</span> {v.why}
             </div>
-            <span className={`vd ${v.tone === "good" ? "" : v.tone}`}>
-              <b>{v.head}</b>
-              <small>{v.why}</small>
-            </span>
           </div>
         );
       })}
-      </div>
-      <p className="heat-cap">Bloomberg 주간 집계 기준 · 막대 중앙선 오른쪽 = 플러스 기여</p>
-    </div>
+      <div className="panel-foot">Bloomberg 주간 집계 기준 · 막대 중앙선 오른쪽 = 플러스 기여</div>
+    </section>
   );
 }

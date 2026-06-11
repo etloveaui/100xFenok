@@ -49,22 +49,23 @@ export default function MyWatchlistStrip() {
   if (tickers.length === 0) return null;
 
   return (
-    <div className="c-card watch-card">
-      <div className="watch-head">
-        내 종목 <span className="cnt num">({tickers.length})</span>
-        <TransitionLink href="/portfolio" className="more">포트폴리오 →</TransitionLink>
+    <section className="panel wl">
+      <div className="panel-h">
+        <h2>내 종목</h2>
+        <span className="desc num">({tickers.length})</span>
+        <TransitionLink href="/portfolio" className="act">포트폴리오 →</TransitionLink>
       </div>
-      <div className="watch-row">
+      <div className="rows">
         {tickers.map((t) => {
           const row = rows?.get(t) ?? null;
           const ret = row?.return12m ?? null;
           return (
-            <TransitionLink
-              key={t}
-              href={`/stock/${encodeURIComponent(t)}`}
-              className="watch-item"
-            >
-              <span className="nm">{t}</span>
+            <TransitionLink key={t} href={`/stock/${encodeURIComponent(t)}`} className="row">
+              <span className="av">{t.slice(0, 2)}</span>
+              <span>
+                <div className="nm">{t}</div>
+                {row?.companyName ? <div className="sub">{row.companyName}</div> : null}
+              </span>
               {ret !== null ? (
                 <span className={`pc num ${ret >= 0 ? "up" : "down"}`}>
                   {ret >= 0 ? "+" : ""}{(ret * 100).toFixed(1)}%
@@ -74,6 +75,6 @@ export default function MyWatchlistStrip() {
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
