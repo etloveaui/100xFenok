@@ -65,12 +65,20 @@ export interface PortfolioRow {
   ret: number | null;
 }
 
+export interface PerformanceSeries {
+  dates: string[];
+  portfolio: number[];
+  spy: number[] | null;
+  coverage: number[];
+}
+
 export interface InvestorPortfolioView {
   name: string;
   quarter: string;
   quarters: string[];
   sector_history: Record<string, number[]>;
   treemap: PortfolioRow[];
+  performance?: PerformanceSeries | null;
 }
 
 export interface PortfolioViewsData {
@@ -78,6 +86,8 @@ export interface PortfolioViewsData {
     quarter: string;
     cohort_count: number;
     return_proxy?: string;
+    return_source?: string;
+    performance_method?: string;
     sector_chain?: string;
     generated_at?: string;
     disclaimer?: string;

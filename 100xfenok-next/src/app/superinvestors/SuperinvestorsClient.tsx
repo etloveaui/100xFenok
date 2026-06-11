@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
-import { PortfolioTreemap, SectorMixPanel, loadPortfolioViews } from "./PortfolioCharts";
+import { PerformanceChart, PortfolioTreemap, SectorMixPanel, loadPortfolioViews } from "./PortfolioCharts";
 import InsightsTab from "./InsightsTab";
 import DataNav from "@/components/DataNav";
 import type {
@@ -313,6 +313,12 @@ function GuruDetailPanel({
               history={pvData.investors[id].sector_history}
               quarters={pvData.investors[id].quarters}
             />
+            {pvData.investors[id].performance ? (
+              <PerformanceChart
+                performance={pvData.investors[id].performance}
+                investorName={pvData.investors[id].name}
+              />
+            ) : null}
           </div>
         </div>
       ) : null}

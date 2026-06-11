@@ -88,6 +88,96 @@ function returnProxy(ticker) {
   return typeof m3 === "number" ? round4(m3) : null;
 }
 
+/* ── quarter-end close snapshot (actual return since quarter end) ── */
+const QUARTER_CLOSES_PATH = path.join(ROOT, "data/yf/quarter_closes.json");
+const quarterCloses = fs.existsSync(QUARTER_CLOSES_PATH)
+  ? loadJson(QUARTER_CLOSES_PATH).tickers
+  : {};
+
+function closeAt(ticker, isoDate) {
+  const v = quarterCloses[ticker]?.[isoDate];
+  return typeof v === "number" ? v : null;
+}
+
+function latestClose(ticker) {
+  const l = quarterCloses[ticker]?.latest;
+  return typeof l?.close === "number" ? l.close : null;
+}
+
+/** Actual return since quarter end; falls back to 3m momentum proxy. */
+function returnSinceQuarterEnd(ticker, reportDate) {
+  const base = closeAt(ticker, reportDate);
+  const now = latestClose(ticker);
+  if (base && now) return round4(now / base - 1);
+  return returnProxy(ticker);
+}
+
+/**
+ * Quarterly portfolio performance vs SPY (buy-at-quarter-end assumption).
+ * Each segment return = covered-weight-renormalized sum of holding returns.
+ * Index starts at 100 on the first report date.
+ */
+function performanceSeries(filings) {
+  const points = filings
+    .filter((f) => f.report_date)
+    .map((f) => ({ date: f.report_date, agg: aggByTicker(f) }));
+  if (points.length < 2 && !(points.length === 1 && latestClose("SPY"))) {
+    return null;
+  }
+
+  const dates = points.map((p) => p.date);
+  const spyLatest = quarterCloses.SPY?.latest ?? null;
+  if (spyLatest) dates.push(spyLatest.date);
+
+  const portfolio = [100];
+  const coverage = [];
+  for (let i = 0; i < points.length; i += 1) {
+    const isLast = i === points.length - 1;
+    const fromDate = points[i].date;
+    const agg = points[i].agg;
+    const total = [...agg.values()].reduce((s, h) => s + h.value, 0);
+    if (total <= 0) {
+      portfolio.push(portfolio.at(-1));
+      coverage.push(0);
+      if (isLast && !spyLatest) break;
+      continue;
+    }
+    let covered = 0;
+    let weightedReturn = 0;
+    for (const [ticker, h] of agg) {
+      const base = closeAt(ticker, fromDate);
+      const end = isLast
+        ? latestClose(ticker)
+        : closeAt(ticker, points[i + 1].date);
+      if (!base || !end) continue;
+      const w = h.value / total;
+      covered += w;
+      weightedReturn += w * (end / base - 1);
+    }
+    if (isLast && !spyLatest) break;
+    const segReturn = covered > 0 ? weightedReturn / covered : 0;
+    portfolio.push(round4(portfolio.at(-1) * (1 + segReturn)));
+    coverage.push(round4(covered));
+  }
+
+  const spy = [];
+  const spyBase = closeAt("SPY", dates[0]);
+  if (spyBase) {
+    for (const d of dates) {
+      const c = d === spyLatest?.date ? spyLatest.close : closeAt("SPY", d);
+      spy.push(c ? round4((c / spyBase) * 100) : null);
+    }
+  }
+
+  if (portfolio.length !== dates.length) return null;
+  return {
+    dates,
+    portfolio: portfolio.map(round4),
+    spy: spy.length === dates.length ? spy : null,
+    coverage,
+  };
+}
+
 /* ── aggregate one filing by ticker ── */
 function aggByTicker(filing) {
   const map = new Map();
@@ -113,7 +203,7 @@ function sectorWeights(agg) {
   return bySector;
 }
 
-function treemapRows(agg, topN) {
+function treemapRows(agg, topN, reportDate) {
   const total = [...agg.values()].reduce((s, h) => s + h.value, 0);
   if (total <= 0) return [];
   const rows = [...agg.entries()]
@@ -123,7 +213,9 @@ function treemapRows(agg, topN) {
       sector: resolveCanonical(h.gics, ticker, h.name),
       weight: round4(h.value / total),
       value: Math.round(h.value),
-      ret: returnProxy(ticker),
+      ret: reportDate
+        ? returnSinceQuarterEnd(ticker, reportDate)
+        : returnProxy(ticker),
     }))
     .sort((a, b) => b.weight - a.weight);
   const top = rows.slice(0, topN);
@@ -170,21 +262,28 @@ for (const file of investorFiles) {
     quarter: latest.quarter,
     quarters,
     sector_history: history,
-    treemap: treemapRows(latestAgg, TREEMAP_TOP_N),
+    treemap: treemapRows(latestAgg, TREEMAP_TOP_N, latest.report_date),
+    performance: performanceSeries(filings),
   };
 
   if (!globalQuarter || latest.quarter > globalQuarter) {
     globalQuarter = latest.quarter;
   }
-  latestAggs.push({ quarter: latest.quarter, agg: latestAgg });
+  latestAggs.push({
+    quarter: latest.quarter,
+    report_date: latest.report_date,
+    agg: latestAgg,
+  });
 }
 
 /* ── cohort total (latest global quarter only) ── */
 const totalAgg = new Map();
 let cohortCount = 0;
-for (const { quarter, agg } of latestAggs) {
+let globalReportDate = null;
+for (const { quarter, report_date, agg } of latestAggs) {
   if (quarter !== globalQuarter) continue;
   cohortCount += 1;
+  if (report_date) globalReportDate = report_date;
   for (const [ticker, h] of agg) {
     const cur = totalAgg.get(ticker) ?? { value: 0, name: h.name, gics: null };
     cur.value += h.value;
@@ -230,15 +329,17 @@ const output = {
   metadata: {
     quarter: globalQuarter,
     cohort_count: cohortCount,
-    return_proxy:
-      "momentum3m from global-scouter (~3-month return, approximation of return since quarter end)",
+    return_source:
+      "yf quarter-end adjusted close -> latest (data/yf/quarter_closes.json); fallback momentum3m proxy when snapshot missing",
+    performance_method:
+      "buy-at-quarter-end, covered-weight renormalized, index base 100 vs SPY",
     sector_chain: "filing GICS enrichment -> scouter join -> Other (ETF name guard)",
     generated_at: new Date().toISOString(),
     disclaimer:
       "Estimated from 13F quarter-end snapshots (45-day lag). Sector weights are value-based on reported long positions only.",
   },
   total: {
-    treemap: treemapRows(totalAgg, TOTAL_TREEMAP_TOP_N),
+    treemap: treemapRows(totalAgg, TOTAL_TREEMAP_TOP_N, globalReportDate),
     sectors: sectorWeights(totalAgg),
     sector_history: { quarters: historyQuarters, series: totalSectorHistory },
   },

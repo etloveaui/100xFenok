@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
 import type { ChartData } from "chart.js";
-import { Doughnut, Bar, Chart } from "react-chartjs-2";
+import { Doughnut, Bar, Line, Chart } from "react-chartjs-2";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
-import type { PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
+import type { PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
 
 ChartJS.register(
   ArcElement,
@@ -16,6 +16,8 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   TreemapController,
   TreemapElement,
 );
@@ -148,7 +150,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
               if (!d) return "";
               return [
                 `비중: ${(d.weight * 100).toFixed(2)}%`,
-                `수익률(3개월): ${retStr(d.ret)}`,
+                `분기말 이후 수익률: ${retStr(d.ret)}`,
                 `섹터: ${sectorLabelKo(d.sector as CanonicalSector)}`,
               ];
             },
@@ -179,9 +181,105 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
           <span>수익</span>
         </div>
         <p className="mt-1 text-center text-[10px] font-semibold text-slate-400">
-          수익률 = 최근 3개월 (분기말 이후 근사) · {quarterLabel} 기준
+          수익률 = 분기말 종가 → 현재 (배당 조정) · {quarterLabel} 기준
         </p>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PerformanceChart — guru portfolio index vs SPY (base 100)
+// ---------------------------------------------------------------------------
+
+interface PerformanceChartProps {
+  performance: PerformanceSeries;
+  investorName: string;
+}
+
+export function PerformanceChart({ performance, investorName }: PerformanceChartProps) {
+  const { dates, portfolio, spy } = performance;
+
+  const data = useMemo(() => {
+    const labels = dates.map((d) => d.slice(0, 7));
+    const datasets = [
+      {
+        label: investorName,
+        data: portfolio,
+        borderColor: "#4f46e5", // indigo-600
+        backgroundColor: "rgba(79,70,229,0.08)",
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHitRadius: 8,
+        tension: 0.25,
+        fill: true,
+      },
+    ];
+    if (spy) {
+      datasets.push({
+        label: "SPY",
+        data: spy as number[],
+        borderColor: "#94a3b8", // slate-400
+        backgroundColor: "transparent",
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHitRadius: 8,
+        tension: 0.25,
+        fill: false,
+      } as (typeof datasets)[number]);
+    }
+    return { labels, datasets };
+  }, [dates, portfolio, spy, investorName]);
+
+  const options = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index" as const, intersect: false },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label(item: { dataset: { label?: string }; raw: unknown }) {
+              const v = Number(item.raw);
+              const ret = v - 100;
+              return `${item.dataset.label ?? ""}: ${v.toFixed(1)} (${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%)`;
+            },
+          },
+        },
+        legend: {
+          position: "top" as const,
+          align: "end" as const,
+          labels: { font: { size: 11, weight: "bold" as const }, usePointStyle: true, pointStyleWidth: 8, boxHeight: 6 },
+        },
+      },
+      scales: {
+        x: { ticks: { font: { size: 9 }, maxTicksLimit: 8 } },
+        y: { ticks: { font: { size: 10 } } },
+      },
+    }),
+    [],
+  );
+
+  const last = portfolio.at(-1) ?? 100;
+  const spyLast = spy?.at(-1) ?? null;
+  const alpha = spyLast != null ? last - spyLast : null;
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">성과 vs SPY</p>
+        {alpha != null ? (
+          <p className={`text-[11px] font-bold ${alpha >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
+            {alpha >= 0 ? "SPY 대비 앞섬" : "SPY 대비 뒤처짐"} {Math.abs(alpha).toFixed(1)}p
+          </p>
+        ) : null}
+      </div>
+      <div className="mt-2 h-[220px] sm:h-[260px]">
+        <Line data={data as ChartData<"line">} options={options} />
+      </div>
+      <p className="mt-1 text-center text-[10px] font-semibold text-slate-400">
+        13F 보고 롱 포지션을 분기말 매수·무리밸런싱 보유로 가정한 추정 (지수 100 = 첫 분기말, 배당 조정)
+      </p>
     </div>
   );
 }
