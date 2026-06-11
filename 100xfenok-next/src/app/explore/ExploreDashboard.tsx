@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import TransitionLink from "@/components/TransitionLink";
+import TickerTypeahead from "@/components/TickerTypeahead";
 import { sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 
@@ -43,9 +43,7 @@ function toneClass(v: number | undefined): string {
 }
 
 export default function ExploreDashboard() {
-  const router = useRouter();
   const [momentum, setMomentum] = useState<MomentumMap | null>(null);
-  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -60,30 +58,18 @@ export default function ExploreDashboard() {
     };
   }, []);
 
-  function onSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const t = query.trim().toUpperCase();
-    if (t) router.push(`/stock/${encodeURIComponent(t)}`);
-  }
-
   return (
     <section className="mt-6 space-y-3">
-      {/* Ticker jump */}
-      <form onSubmit={onSearch} className="flex max-w-xl items-center gap-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+      {/* Ticker typeahead */}
+      <div className="max-w-xl">
+        <TickerTypeahead
           placeholder="티커 검색 — 종목 상세로 바로 이동 (예: AAPL, NVDA, TSM)"
-          aria-label="티커 검색"
           className="min-h-12 w-full rounded-full border-2 border-slate-200 bg-white px-5 text-base font-semibold text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-brand-interactive"
+          formClass="flex items-center gap-2"
+          showButton
+          buttonLabel="종목 상세 →"
         />
-        <button
-          type="submit"
-          className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-brand-interactive px-5 text-sm font-black text-white transition hover:opacity-90"
-        >
-          종목 상세 →
-        </button>
-      </form>
+      </div>
 
       {/* Market pulse strip */}
       <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]">
