@@ -79,7 +79,7 @@
 .fnk-shell .tabbar{display:none}
 
   /* ───────────── CONTENT ───────────── */
-.fnk-shell .content{margin-left:var(--rail-w); padding:calc(var(--topbar-h) + var(--ticker-h) + var(--s5)) var(--s6) var(--s10); max-width:1320px}
+.fnk-shell .content{margin-left:var(--rail-w); padding:calc(var(--topbar-h) + var(--ticker-h) + var(--s5)) var(--s6) var(--s10); max-width:1320px; overflow-x:hidden}
 
   /* panels */
 .fnk-shell .panel{background:var(--c-panel); border:1px solid var(--c-line); border-radius:var(--panel-r); box-shadow:var(--sh-sm); overflow:hidden}
@@ -115,7 +115,7 @@
 .fnk-shell .sb-cap{font-size:12px; color:var(--c-ink-4); padding:8px var(--panel-pad); border-top:1px solid var(--c-line-2); background:var(--c-panel)}
 
   /* ─── workspace columns ─── */
-.fnk-shell .cols{display:grid; grid-template-columns:1fr; gap:var(--s4)}
+.fnk-shell .cols{display:grid; grid-template-columns:1fr; gap:var(--s4); min-width:0}
 .fnk-shell .col-a, .fnk-shell .col-b{display:flex; flex-direction:column; gap:var(--s4); min-width:0}
 
   /* dense list rows */
@@ -131,11 +131,11 @@
 .fnk-shell .wl .pc{margin-left:auto; font-size:15px; font-weight:700; text-align:right}
 
   /* thermometer rows */
-.fnk-shell .thermo .ti{padding:13px var(--panel-pad); border-top:1px solid var(--c-line-2)}
+.fnk-shell .thermo .ti{padding:13px var(--panel-pad); border-top:1px solid var(--c-line-2); overflow:hidden}
 .fnk-shell .thermo .ti:first-child{border-top:0}
-.fnk-shell .ti-top{display:flex; align-items:baseline; gap:var(--s2)}
-.fnk-shell .ti-top .nm{font-size:15px; font-weight:700; white-space:nowrap}
-.fnk-shell .ti-top .tot{margin-left:auto; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums}
+.fnk-shell .ti-top{display:flex; align-items:baseline; gap:var(--s2); min-width:0}
+.fnk-shell .ti-top .nm{min-width:0; overflow:hidden; text-overflow:ellipsis; font-size:15px; font-weight:700; white-space:nowrap}
+.fnk-shell .ti-top .tot{margin-left:auto; flex:none; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums}
 .fnk-shell .ti-bars{margin-top:9px; display:grid; grid-template-columns:1fr 1fr; gap:6px var(--s5)}
 .fnk-shell .db-row{display:grid; grid-template-columns:minmax(min-content, max-content) minmax(0, 1fr) max-content; align-items:center; gap:var(--s2)}
 .fnk-shell .db-row .dl{font-size:12px; color:var(--c-ink-3); font-weight:600; white-space:nowrap}
@@ -144,8 +144,8 @@
 .fnk-shell .db-bar{position:absolute; top:0; bottom:0; border-radius:5px}
 .fnk-shell .db-bar.eps{background:var(--c-up)} .db-bar.per{background:var(--c-mult)}
 .fnk-shell .db-row .dv{font-size:13px; font-weight:600; color:var(--c-ink-2); text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
-.fnk-shell .ti-why{display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; font-size:12.5px; color:var(--c-ink-3); margin-top:8px}
-.fnk-shell .ti-why .tag{font-size:11px; font-weight:700; color:var(--c-up); background:var(--c-up-soft); border-radius:var(--r-pill); padding:3px 9px; white-space:nowrap}
+.fnk-shell .ti-why{display:flex; min-width:0; align-items:center; gap:var(--s2); flex-wrap:wrap; font-size:12.5px; color:var(--c-ink-3); margin-top:8px}
+.fnk-shell .ti-why .tag{flex:none; font-size:11px; font-weight:700; color:var(--c-up); background:var(--c-up-soft); border-radius:var(--r-pill); padding:3px 9px; white-space:nowrap}
 
   /* sectors */
 .fnk-shell .sec-row{display:grid; grid-template-columns:minmax(min-content, max-content) minmax(0, 1fr) max-content; align-items:center; gap:var(--s3); padding:8px var(--panel-pad); border-top:1px solid var(--c-line-2); transition:.12s}

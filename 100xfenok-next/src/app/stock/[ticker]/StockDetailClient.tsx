@@ -185,39 +185,73 @@ function MiniBarChart({
   years: string[];
   color: string;
 }) {
-  const allVals = finiteValues(actuals);
   const estKeys: string[] = [];
   if (estimates) for (const k of ["fy1", "fy2", "fy3"]) {
-    if (isFiniteNumber(estimates[k])) { allVals.push(estimates[k]); estKeys.push(k); }
+    if (isFiniteNumber(estimates[k])) estKeys.push(k);
   }
+  const bars = [
+    ...actuals.map((value, i) => ({
+      key: `actual-${i}`,
+      label: (years[years.length - actuals.length + i] ?? years[i] ?? "").replace("FY", ""),
+      value,
+      estimate: false,
+    })),
+    ...estKeys.map((key) => ({
+      key,
+      label: key.toUpperCase(),
+      value: estimates?.[key] ?? null,
+      estimate: true,
+    })),
+  ];
+  const allVals = finiteValues(bars.map((b) => b.value));
   if (allVals.length === 0) return <span className="text-xs text-slate-300">—</span>;
+  const minVal = Math.min(...allVals, 0);
   const maxVal = Math.max(...allVals, 0);
-  const scale = maxVal > 0 ? 100 / maxVal : 0;
+  const range = maxVal - minVal || 1;
+  const clampPct = (v: number) => Math.max(0, Math.min(100, v));
+  const yPct = (v: number) => clampPct(((maxVal - v) / range) * 100);
+  const zeroPct = yPct(0);
+  const shape = (value: MaybeNumber) => {
+    if (!isFiniteNumber(value) || value === 0) return null;
+    const y = yPct(value);
+    const height = Math.max(2, Math.abs(y - zeroPct));
+    const top = value > 0 ? Math.min(y, 100 - height) : Math.min(zeroPct, 100 - height);
+    return { top: clampPct(top), height: clampPct(height) };
+  };
 
   return (
     <div className="space-y-1">
-      <div className="flex items-end gap-[2px]" style={{ height: 60 }}>
-        {actuals.map((v, i) => {
-          const height = isFiniteNumber(v) ? Math.max(2, v * scale) : 0;
+      <div className="relative flex gap-[2px]" style={{ height: 72 }}>
+        <span
+          className="pointer-events-none absolute left-0 right-0 border-t border-slate-300/80"
+          style={{ top: `${zeroPct}%` }}
+        />
+        {bars.map((bar) => {
+          const s = shape(bar.value);
+          const barColor = isFiniteNumber(bar.value) && bar.value < 0 ? "#f43f5e" : color;
           return (
-            <div key={i} className="flex flex-1 flex-col items-center justify-end">
-              <div className="w-full rounded-t-sm" style={{ height: `${height}%`, backgroundColor: color }} />
-            </div>
-          );
-        })}
-        {estKeys.map((k) => {
-          const v = estimates![k] ?? 0;
-          return (
-            <div key={k} className="flex flex-1 flex-col items-center justify-end">
-              <div className="w-full rounded-t-sm border-2 border-dashed"
-                style={{ height: `${Math.max(2, (v ?? 0) * scale)}%`, backgroundColor: `${color}40`, borderColor: color }} />
+            <div key={bar.key} className="relative h-full flex-1">
+              {s ? (
+                <div
+                  className="absolute left-0 right-0 rounded-sm"
+                  style={{
+                    top: `${s.top}%`,
+                    height: `${s.height}%`,
+                    backgroundColor: bar.estimate ? `${barColor}40` : barColor,
+                    border: bar.estimate ? `2px dashed ${barColor}` : undefined,
+                  }}
+                />
+              ) : null}
             </div>
           );
         })}
       </div>
       <div className="flex text-[8px] font-bold text-slate-400">
-        {years.map((y) => <span key={y} className="flex-1 text-center">{y.replace("FY", "")}</span>)}
-        {estKeys.map((k) => <span key={k} className="flex-1 text-center text-slate-400">{k.toUpperCase()}</span>)}
+        {bars.map((bar) => (
+          <span key={bar.key} className={`flex-1 text-center ${bar.estimate ? "text-slate-400" : ""}`}>
+            {bar.label}
+          </span>
+        ))}
       </div>
     </div>
   );

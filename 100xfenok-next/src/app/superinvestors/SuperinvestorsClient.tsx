@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import TransitionLink from "@/components/TransitionLink";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
-import { PerformanceChart, PortfolioTreemap, SectorMixPanel, loadPortfolioViews } from "./PortfolioCharts";
 import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
 import type {
@@ -20,6 +20,25 @@ import type {
 } from "@/lib/superinvestors/types";
 
 const PAGE_SIZE = 50;
+
+const ChartLoading = () => (
+  <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-slate-400">
+    차트 로딩 중
+  </div>
+);
+
+const PortfolioTreemap = dynamic(() => import("./PortfolioCharts").then((mod) => mod.PortfolioTreemap), {
+  ssr: false,
+  loading: ChartLoading,
+});
+const PerformanceChart = dynamic(() => import("./PortfolioCharts").then((mod) => mod.PerformanceChart), {
+  ssr: false,
+  loading: ChartLoading,
+});
+const SectorMixPanel = dynamic(() => import("./PortfolioCharts").then((mod) => mod.SectorMixPanel), {
+  ssr: false,
+  loading: ChartLoading,
+});
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -46,6 +65,66 @@ function loadTurnover(): Promise<TurnoverData["by_investor"] | null> {
       return null;
     });
   return turnoverPromise;
+}
+
+let pvCache: PortfolioViewsData | null = null;
+let pvPromise: Promise<PortfolioViewsData | null> | null = null;
+
+function normalizePortfolioViews(data: unknown): PortfolioViewsData | null {
+  const raw = data as Partial<PortfolioViewsData> | null;
+  if (!raw?.metadata) return null;
+  const investors: PortfolioViewsData["investors"] = {};
+  for (const [id, view] of Object.entries(raw.investors ?? {})) {
+    investors[id] = {
+      name: view.name ?? id,
+      quarter: view.quarter ?? raw.metadata.quarter ?? "—",
+      quarters: Array.isArray(view.quarters) ? view.quarters : [],
+      sector_history: view.sector_history ?? {},
+      treemap: Array.isArray(view.treemap) ? view.treemap : [],
+      performance: view.performance ?? null,
+    };
+  }
+  return {
+    metadata: {
+      ...raw.metadata,
+      quarter: raw.metadata.quarter ?? "—",
+      cohort_count: raw.metadata.cohort_count ?? Object.keys(investors).length,
+    },
+    total: {
+      treemap: Array.isArray(raw.total?.treemap) ? raw.total.treemap : [],
+      sectors: raw.total?.sectors ?? {},
+    },
+    investors,
+  };
+}
+
+function loadPortfolioViews(): Promise<PortfolioViewsData | null> {
+  if (pvCache) return Promise.resolve(pvCache);
+  if (pvPromise) return pvPromise;
+  pvPromise = fetch("/data/sec-13f/analytics/portfolio_views.json")
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then((data) => {
+      pvCache = normalizePortfolioViews(data);
+      return pvCache;
+    })
+    .catch(() => {
+      pvPromise = null;
+      return null;
+    });
+  return pvPromise;
+}
+
+function normalizeTradesRanking(data: unknown): TradesRankingData | null {
+  const raw = data as Partial<TradesRankingData> | null;
+  if (!raw?.metadata) return null;
+  return {
+    metadata: raw.metadata,
+    bought: Array.isArray(raw.bought) ? raw.bought : [],
+    sold: Array.isArray(raw.sold) ? raw.sold : [],
+  };
 }
 
 function fmtAum(value: number | null | undefined): string {
@@ -219,6 +298,12 @@ function GuruDetailPanel({
   const latest: InvestorFiling | null = data?.investor?.filings?.[data.investor.filings.length - 1] ?? null;
   const prev: InvestorFiling | null =
     data?.investor?.filings?.[data.investor.filings.length - 2] ?? null;
+  const investorView = pvData?.investors?.[id] ?? null;
+  const treemapRows = Array.isArray(investorView?.treemap) ? investorView.treemap : [];
+  const sectorHistory = investorView?.sector_history ?? {};
+  const sectorQuarters = Array.isArray(investorView?.quarters) ? investorView.quarters : [];
+  const hasSectorHistory = sectorQuarters.length > 0 && Object.keys(sectorHistory).length > 0;
+  const hasPortfolioView = !!investorView && (treemapRows.length > 0 || hasSectorHistory || !!investorView.performance);
 
   useEffect(() => {
     let cancelled = false;
@@ -295,28 +380,32 @@ function GuruDetailPanel({
       </div>
 
       {/* Portfolio charts (from portfolio_views.json) */}
-      {pvData?.investors?.[id] ? (
+      {hasPortfolioView ? (
         <div className="mt-4 border-t border-slate-200 pt-4">
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
           <div className="mt-2 space-y-4">
-            <PortfolioTreemap
-              rows={pvData.investors[id].treemap}
-              quarterLabel={pvData.investors[id].quarter}
-            />
-            <SectorMixPanel
-              currentSectors={Object.fromEntries(
-                Object.entries(pvData.investors[id].sector_history).map(([s, h]) => [
-                  s,
-                  h[h.length - 1] ?? 0,
-                ]),
-              )}
-              history={pvData.investors[id].sector_history}
-              quarters={pvData.investors[id].quarters}
-            />
-            {pvData.investors[id].performance ? (
+            {treemapRows.length > 0 ? (
+              <PortfolioTreemap
+                rows={treemapRows}
+                quarterLabel={investorView.quarter}
+              />
+            ) : null}
+            {hasSectorHistory ? (
+              <SectorMixPanel
+                currentSectors={Object.fromEntries(
+                  Object.entries(sectorHistory).map(([s, h]) => [
+                    s,
+                    Array.isArray(h) ? h[h.length - 1] ?? 0 : 0,
+                  ]),
+                )}
+                history={sectorHistory}
+                quarters={sectorQuarters}
+              />
+            ) : null}
+            {investorView.performance ? (
               <PerformanceChart
-                performance={pvData.investors[id].performance}
-                investorName={pvData.investors[id].name}
+                performance={investorView.performance}
+                investorName={investorView.name}
               />
             ) : null}
             <GuruTrendBlock investorId={id} />
@@ -333,7 +422,7 @@ function GuruDetailPanel({
       ) : latest ? (
         <div className="mt-4">
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">Top 보유</p>
-          <LatestHoldingsTable holdings={latest.holdings} />
+          <LatestHoldingsTable holdings={latest.holdings ?? []} />
         </div>
       ) : (
         <div className="mt-4">
@@ -448,7 +537,7 @@ function TradeRankingPanel({
                   ) : null}
                 </td>
                 <td className="px-2 py-2 max-w-[110px]">
-                  <span className="block truncate text-[10px] font-bold text-slate-700">{r.top_investor.name}</span>
+                  <span className="block truncate text-[10px] font-bold text-slate-700">{r.top_investor?.name ?? "—"}</span>
                 </td>
               </tr>
             ))}
@@ -539,7 +628,8 @@ export default function SuperinvestorsClient() {
       try {
         const res = await fetch("/data/sec-13f/analytics/trades_ranking.json");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json: TradesRankingData = await res.json();
+        const json = normalizeTradesRanking(await res.json());
+        if (!json) throw new Error("Invalid trades_ranking shape");
         if (!cancelled) setTradesData(json);
       } catch {
         if (!cancelled) setTradesFailed(true);
@@ -655,7 +745,11 @@ export default function SuperinvestorsClient() {
               </button>
               {totalPortfolioOpen ? (
                 <div className="mt-3 space-y-4 border-t border-slate-100 pt-3">
-                  <PortfolioTreemap rows={pvData.total.treemap} quarterLabel={pvData.metadata.quarter} />
+                  {pvData.total.treemap.length > 0 ? (
+                    <PortfolioTreemap rows={pvData.total.treemap} quarterLabel={pvData.metadata.quarter} />
+                  ) : (
+                    <EmptyState title="포트폴리오 차트 데이터가 없습니다" desc="portfolio_views.json 의 total.treemap 을 확인해 주세요." />
+                  )}
                   {pvData.metadata.disclaimer ? (
                     <p className="text-[10px] font-semibold text-slate-400">{pvData.metadata.disclaimer}</p>
                   ) : null}

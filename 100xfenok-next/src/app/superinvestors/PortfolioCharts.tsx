@@ -9,6 +9,12 @@ import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type { PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
 
+type MaybeNumber = number | null | undefined;
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
 ChartJS.register(
   ArcElement,
   Tooltip,
@@ -61,16 +67,16 @@ function interpolate(hexA: string, hexB: string, t: number): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${bl.toString(16).padStart(2, "0")}`;
 }
 
-function retColor(ret: number | null): string {
-  if (ret === null) return "#f1f5f9"; // slate-100
+function retColor(ret: MaybeNumber): string {
+  if (!isFiniteNumber(ret)) return "#f1f5f9"; // slate-100
   const clamped = Math.max(-0.1, Math.min(0.1, ret));
   const t = (clamped + 0.1) / 0.2; // 0..1
   if (t < 0.5) return interpolate("#f43f5e", "#e2e8f0", t * 2); // rose-500 → slate-200
   return interpolate("#e2e8f0", "#059669", (t - 0.5) * 2); // slate-200 → emerald-600
 }
 
-function retStr(ret: number | null): string {
-  if (ret === null) return "—";
+function retStr(ret: MaybeNumber): string {
+  if (!isFiniteNumber(ret)) return "—";
   const pct = (ret * 100).toFixed(1);
   return ret >= 0 ? `+${pct}%` : `${pct}%`;
 }
@@ -92,7 +98,7 @@ function leafRow(ctx: TreemapLeaf): PortfolioRow | null {
 
 export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
   const data = useMemo(() => {
-    const displayRows = rows.filter((r) => r.weight > 0);
+    const displayRows = rows.filter((r) => isFiniteNumber(r.weight) && r.weight > 0);
     return {
       datasets: [
         {
@@ -149,7 +155,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
               const d = leafRow(item);
               if (!d) return "";
               return [
-                `비중: ${(d.weight * 100).toFixed(2)}%`,
+                `비중: ${isFiniteNumber(d.weight) ? (d.weight * 100).toFixed(2) : "—"}%`,
                 `분기말 이후 수익률: ${retStr(d.ret)}`,
                 `섹터: ${sectorLabelKo(d.sector as CanonicalSector)}`,
               ];
@@ -198,10 +204,12 @@ interface PerformanceChartProps {
 }
 
 export function PerformanceChart({ performance, investorName }: PerformanceChartProps) {
-  const { dates, portfolio, spy } = performance;
+  const dates = Array.isArray(performance.dates) ? performance.dates : [];
+  const portfolio = Array.isArray(performance.portfolio) ? performance.portfolio.filter(isFiniteNumber) : [];
+  const spy = Array.isArray(performance.spy) ? performance.spy.filter(isFiniteNumber) : null;
 
   const data = useMemo(() => {
-    const labels = dates.map((d) => d.slice(0, 7));
+    const labels = dates.slice(-portfolio.length).map((d) => d.slice(0, 7));
     const datasets = [
       {
         label: investorName,
@@ -215,7 +223,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
         fill: true,
       },
     ];
-    if (spy) {
+    if (spy && spy.length > 0) {
       datasets.push({
         label: "SPY",
         data: spy as number[],
@@ -260,6 +268,14 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
     [],
   );
 
+  if (portfolio.length === 0) {
+    return (
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-slate-400">
+        성과 차트 데이터가 없습니다
+      </div>
+    );
+  }
+
   const last = portfolio.at(-1) ?? 100;
   const spyLast = spy?.at(-1) ?? null;
   const alpha = spyLast != null ? last - spyLast : null;
@@ -300,11 +316,11 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
   // --- Current doughnut ---
   const doughnutData = useMemo(() => {
     const entries = Object.entries(currentSectors)
-      .filter(([, w]) => w >= 0.01)
+      .filter(([, w]) => isFiniteNumber(w) && w >= 0.01)
       .sort((a, b) => b[1] - a[1]);
     // Aggregate sub-1% into "기타"
     const otherW = Object.entries(currentSectors)
-      .filter(([, w]) => w < 0.01)
+      .filter(([, w]) => isFiniteNumber(w) && w < 0.01)
       .reduce((sum, [, w]) => sum + w, 0);
     const labels = entries.map(([s]) => sectorLabelKo(s as CanonicalSector));
     const colors = entries.map(([s]) => sectorColor(s as CanonicalSector));
@@ -353,7 +369,7 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
     const xLabels = quarters.map((q, i) => (i % 4 === 0 ? q : ""));
     const datasets = sectors.map((s) => ({
       label: sectorLabelKo(s as CanonicalSector),
-      data: history[s],
+      data: Array.isArray(history[s]) ? history[s].map((v) => (isFiniteNumber(v) ? v : 0)) : [],
       backgroundColor: sectorColor(s as CanonicalSector),
     }));
     return { labels: xLabels, datasets };

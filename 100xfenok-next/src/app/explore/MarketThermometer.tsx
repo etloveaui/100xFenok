@@ -121,7 +121,7 @@ export default function MarketThermometer() {
   if (!rows || rows.length === 0) return null;
 
   return (
-    <section className="panel">
+    <section className="panel thermo">
       <div className="panel-h">
         <h2>시장 체온계</h2>
         <span className="desc">이익 × 멀티플 분해</span>
