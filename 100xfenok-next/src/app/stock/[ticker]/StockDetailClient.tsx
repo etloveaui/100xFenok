@@ -15,6 +15,7 @@ import type { F13Entry } from "@/app/screener/StockDetailPanel";
 import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
+import { formatSignedPercent } from "@/lib/format";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -142,8 +143,7 @@ function fmtMcap(n: number): string {
   return `$${n.toFixed(0)}M`;
 }
 function fmtPct(n: number): string {
-  const pct = n * 100;
-  return pct >= 0 ? `+${pct.toFixed(1)}%` : `${pct.toFixed(1)}%`;
+  return formatSignedPercent(n, { digits: 1 });
 }
 function fmtDivYield(n: number): string { return `${(n * 100).toFixed(2)}%`; }
 function fmtWholePct(n: MaybeNumber): string { return isFiniteNumber(n) ? `${n.toFixed(1)}%` : "—"; }
@@ -232,7 +232,8 @@ function MiniBarChart({
   const yPct = (v: number) => clampPct(((maxVal - v) / range) * 100);
   const zeroPct = yPct(0);
   const shape = (value: MaybeNumber) => {
-    if (!isFiniteNumber(value) || value === 0) return null;
+    if (!isFiniteNumber(value)) return null;
+    if (value === 0) return { top: clampPct(Math.min(zeroPct, 98)), height: 2 };
     const y = yPct(value);
     const height = Math.max(2, Math.abs(y - zeroPct));
     const top = value > 0 ? Math.min(y, 100 - height) : Math.min(zeroPct, 100 - height);
@@ -744,7 +745,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           {/* Footer */}
           <footer className="stock-footer">
             <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-            <TransitionLink href="/superinvestors" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">구루 보유 보기</TransitionLink>
+            <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">구루 보유 보기</TransitionLink>
           </footer>
         </div>
       </div>

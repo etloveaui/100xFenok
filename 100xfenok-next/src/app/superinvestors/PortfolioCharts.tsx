@@ -369,7 +369,7 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
     const xLabels = quarters.map((q, i) => (i % 4 === 0 ? q : ""));
     const datasets = sectors.map((s) => ({
       label: sectorLabelKo(s as CanonicalSector),
-      data: Array.isArray(history[s]) ? history[s].map((v) => (isFiniteNumber(v) ? v : 0)) : [],
+      data: Array.isArray(history[s]) ? history[s].map((v) => (isFiniteNumber(v) ? v : null)) : [],
       backgroundColor: sectorColor(s as CanonicalSector),
     }));
     return { labels: xLabels, datasets };
@@ -383,7 +383,8 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
         tooltip: {
           callbacks: {
             label(item: { dataset: { label?: string }; raw: unknown }) {
-              return `${item.dataset.label ?? ""}: ${(Number(item.raw) * 100).toFixed(1)}%`;
+              if (!isFiniteNumber(item.raw)) return `${item.dataset.label ?? ""}: 데이터 없음`;
+              return `${item.dataset.label ?? ""}: ${(item.raw * 100).toFixed(1)}%`;
             },
           },
         },
@@ -412,7 +413,7 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
         <button
           type="button"
           onClick={() => setView("current")}
-          className={`inline-flex min-h-8 items-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition ${
+          className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-8 ${
             view === "current"
               ? "border-brand-interactive bg-brand-interactive/5 text-brand-interactive"
               : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
@@ -423,7 +424,7 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
         <button
           type="button"
           onClick={() => setView("history")}
-          className={`inline-flex min-h-8 items-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition ${
+          className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-8 ${
             view === "history"
               ? "border-brand-interactive bg-brand-interactive/5 text-brand-interactive"
               : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"

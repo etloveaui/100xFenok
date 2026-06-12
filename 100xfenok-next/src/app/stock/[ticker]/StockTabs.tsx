@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatPlainPercent, formatSignedPercent } from "@/lib/format";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -52,10 +53,11 @@ function fmtNum(value: unknown, decimals = 1): string {
 }
 
 function fmtPct(value: unknown, isFraction = true): string {
-  const v = finiteNumber(value);
-  if (v === null) return "—";
-  const pct = isFraction ? v * 100 : v;
-  return `${pct.toFixed(1)}%`;
+  return formatPlainPercent(value, { digits: 1, fraction: isFraction });
+}
+
+function fmtSignedPct(value: unknown, isFraction = true): string {
+  return formatSignedPercent(value, { digits: 1, fraction: isFraction });
 }
 
 function fmtFixed(value: unknown, digits: number): string {
@@ -123,9 +125,6 @@ function FinancialsTab({ data }: { data: YfData }) {
   const balanceData = period === "annual" ? data.balance_sheet : data.quarterly_balance_sheet;
   const cashData = period === "annual" ? data.cash_flow : data.quarterly_cash_flow;
 
-  const dates = Object.keys(incomeData ?? {}).sort();
-  const revDates = [...dates].reverse();
-
   type RowDef = [string, string];
   const incomeRows: RowDef[] = [
     ["Total Revenue", "매출"],
@@ -155,7 +154,9 @@ function FinancialsTab({ data }: { data: YfData }) {
     source: Record<string, Record<string, number>> | null,
     formatFn: (v: number | null | undefined, eng: string) => string,
   ) {
-    if (!source || dates.length === 0) return <p className="text-xs text-slate-400">데이터 없음</p>;
+    const sourceDates = Object.keys(source ?? {}).sort();
+    const revDates = [...sourceDates].reverse();
+    if (!source || revDates.length === 0) return <p className="text-xs text-slate-400">데이터 없음</p>;
     return (
       <div className="-mx-1 overflow-x-auto px-1">
         <table className="w-full min-w-[500px] text-xs">
@@ -211,7 +212,7 @@ function FinancialsTab({ data }: { data: YfData }) {
             key={p}
             type="button"
             onClick={() => setPeriod(p)}
-            className={`inline-flex min-h-8 items-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition ${period === p ? "border-brand-interactive bg-brand-interactive/5 text-brand-interactive" : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive"}`}
+            className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-8 ${period === p ? "border-brand-interactive bg-brand-interactive/5 text-brand-interactive" : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive"}`}
           >
             {p === "annual" ? "연간" : "분기"}
           </button>
@@ -487,7 +488,7 @@ function EstimatesTab({ data }: { data: YfData }) {
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtDollar(e.low, 2)}</td>
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtDollar(e.high, 2)}</td>
                         <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
-                          {growth !== null ? `${(growth * 100).toFixed(1)}%` : "—"}
+                          {fmtSignedPct(growth, true)}
                         </td>
                       </tr>
                     );
@@ -522,7 +523,7 @@ function EstimatesTab({ data }: { data: YfData }) {
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtNum(r.low, 1)}</td>
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtNum(r.high, 1)}</td>
                         <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
-                          {growth !== null ? `${(growth * 100).toFixed(1)}%` : "—"}
+                          {fmtSignedPct(growth, true)}
                         </td>
                       </tr>
                     );
