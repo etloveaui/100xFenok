@@ -4,7 +4,12 @@ import {
   normalizeLiveToolIds,
   type LiveToolId,
 } from "@/lib/server/admin-live-tools";
-import { buildMonaCoachDynamicBlock, getCanonicalMonaStudyDate } from "@/lib/server/mona-study-tools";
+import {
+  buildMonaCoachDynamicBlock,
+  buildMonaCoachDynamicBlockV2,
+  getCanonicalMonaStudyDate,
+  isLessonV2Enabled,
+} from "@/lib/server/mona-study-tools";
 import { callMonaStudy } from "@/lib/server/admin-live-skill-bridge";
 
 export const GEMINI_API_KEY_ENV = "GEMINI_API_KEY";
@@ -220,7 +225,12 @@ export async function buildLiveSetup(
           best3: [],
           weakNotes: [],
         };
-    systemPrompt = prependDynamicBlock(await buildMonaCoachDynamicBlock(undefined, snapshot as any), systemPrompt);
+    systemPrompt = prependDynamicBlock(
+      isLessonV2Enabled()
+        ? await buildMonaCoachDynamicBlockV2(undefined, snapshot as any)
+        : await buildMonaCoachDynamicBlock(undefined, snapshot as any),
+      systemPrompt,
+    );
   }
   const functionDeclarations = buildLiveToolDeclarations(enabledToolIds);
 

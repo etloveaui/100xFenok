@@ -52,6 +52,7 @@ type BenchMetrics = {
   transcriptLatencyMs: number | null;
   turnCount: number;
   interruptionCount: number;
+  audioFramesSent: number;
   sessionDurationSec: number;
   lowVoice: boolean;
   lastError: string | null;
@@ -321,6 +322,7 @@ const EMPTY_METRICS: BenchMetrics = {
   transcriptLatencyMs: null,
   turnCount: 0,
   interruptionCount: 0,
+  audioFramesSent: 0,
   sessionDurationSec: 0,
   lowVoice: true,
   lastError: null,
@@ -629,6 +631,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const statusRef = useRef<SessionStatus>("checking");
   const resumeCountRef = useRef(0);
   const sentMetaRef = useRef(false);
+  const audioFramesSentRef = useRef(0);
+  const resumeReadyLoggedRef = useRef(false);
   const isSecure = typeof window === "undefined" ? true : window.isSecureContext;
 
   const PENDING_LOG_KEY = "fenok.adminlive.pendinglog.v1";
@@ -1319,6 +1323,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       setMetrics((current) => ({
         ...current,
         sessionDurationSec: elapsedSec,
+        audioFramesSent: audioFramesSentRef.current,
       }));
     }, 1000);
 
@@ -1423,6 +1428,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         }),
       );
       lastAudioSentMsRef.current = performance.now();
+      audioFramesSentRef.current += 1;
     };
 
     if ("audioWorklet" in context) {
@@ -1524,8 +1530,9 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       const resUpdate = payload.sessionResumptionUpdate as { resumable?: boolean; newHandle?: string } | undefined;
       if (resUpdate?.resumable && resUpdate.newHandle) {
         resumeHandleRef.current = resUpdate.newHandle;
-        if (!reconnectingRef.current) {
+        if (!reconnectingRef.current && !resumeReadyLoggedRef.current) {
           addLog("system", "이어가기 준비됨");
+          resumeReadyLoggedRef.current = true;
         }
       }
       return;
@@ -1629,6 +1636,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     logSeqRef.current = 0;
     kickoffSentRef.current = false;
     resumeCountRef.current = 0;
+    audioFramesSentRef.current = 0;
+    resumeReadyLoggedRef.current = false;
     clearFlushTimer();
     persistPending();
     setCard(null);
@@ -1887,6 +1896,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       ...metrics,
       connectionState: "closed",
       micPermission: "stopped",
+      audioFramesSent: audioFramesSentRef.current,
     };
     const currentLogs = [stopLog, ...logsRef.current].slice(0, MAX_LOG_ENTRIES);
     pendingRef.current.push(stopLog);
@@ -1992,6 +2002,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     reconnectingRef.current = false;
     kickoffSentRef.current = false;
     resumeCountRef.current = 0;
+    audioFramesSentRef.current = 0;
+    resumeReadyLoggedRef.current = false;
     setStartedAtMs(null);
     setMetrics({
       ...EMPTY_METRICS,

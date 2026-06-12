@@ -100,14 +100,14 @@ type CurriculumLive = {
   nextFocus: string;
 };
 
-type ExpressionBankTheme = typeof EXPRESSION_BANK_THEMES[number];
+export type ExpressionBankTheme = typeof EXPRESSION_BANK_THEMES[number];
 
 type ReviewMeta = {
   lastTotalReview: string | null;
   updatedAt: string;
 };
 
-type ExpressionBankEntry = {
+export type ExpressionBankEntry = {
   ko: string;
   en: string;
   note: string | null;
@@ -116,7 +116,7 @@ type ExpressionBankEntry = {
   sourceId: string;
 };
 
-type StudySnapshot = {
+export type StudySnapshot = {
   studyDate: string;
   loadedAt: string;
   sessions: StudySession[];
@@ -137,7 +137,41 @@ const WEEKDAY_PLAN = [
   { weekday: "토요일", theme: "자유", corner: "자유" },
 ] as const;
 
-type WeekdayPlan = (typeof WEEKDAY_PLAN)[number];
+export type WeekdayPlan = (typeof WEEKDAY_PLAN)[number];
+
+export type LessonConfig = {
+  lessonSize: number;
+  variationsPerItem: number;
+  difficultyCap: number;
+  advancedDay: boolean;
+};
+
+export const DEFAULT_LESSON_CONFIG: LessonConfig = {
+  lessonSize: 2,
+  variationsPerItem: 2,
+  difficultyCap: 8,
+  advancedDay: false,
+};
+
+export type LessonVariationKind = "negation" | "past" | "question" | "subject";
+
+export type LessonPlanItem = {
+  id: string;
+  ko: string;
+  en: string;
+  note?: string;
+  kind: "review" | "new";
+  sibling: { ko: string; en: string } | null;
+  variationKinds: LessonVariationKind[];
+};
+
+export type LessonPlan = {
+  planVersion: 2;
+  studyDate: string;
+  theme: string;
+  items: LessonPlanItem[];
+  config: LessonConfig;
+};
 
 const PLAN_THEME_TO_BANK_THEME: Record<WeekdayPlan["theme"], ExpressionBankTheme | null> = {
   복습: null,
@@ -1015,6 +1049,158 @@ function stableExpressionHash(value: string): number {
   return hash >>> 0;
 }
 
+const LESSON_VARIATION_ORDER: readonly LessonVariationKind[] = ["negation", "past", "question", "subject"];
+
+export function isLessonV2Enabled(): boolean {
+  return (process.env.MONA_LESSON_V2 ?? "on") !== "off";
+}
+
+function normalizeLessonConfig(config?: LessonConfig): LessonConfig {
+  return {
+    lessonSize: Math.max(1, Math.min(6, Math.round(config?.lessonSize ?? DEFAULT_LESSON_CONFIG.lessonSize))),
+    variationsPerItem: Math.max(0, Math.min(LESSON_VARIATION_ORDER.length, Math.round(config?.variationsPerItem ?? DEFAULT_LESSON_CONFIG.variationsPerItem))),
+    difficultyCap: Math.max(1, Math.round(config?.difficultyCap ?? DEFAULT_LESSON_CONFIG.difficultyCap)),
+    advancedDay: config?.advancedDay === true,
+  };
+}
+
+function lessonWordCount(value: string): number {
+  const cleaned = value.replace(/[^\w\s']/g, " ").trim();
+  return cleaned ? cleaned.split(/\s+/).length : 0;
+}
+
+function isLessonRegisterAllowed(entry: ExpressionBankEntry): boolean {
+  return entry.register === undefined || entry.register === "casual" || entry.register === "neutral";
+}
+
+function getLessonBankTheme(plan: WeekdayPlan, config: LessonConfig): ExpressionBankTheme | null {
+  const theme = PLAN_THEME_TO_BANK_THEME[plan.theme];
+  if (theme === "work-advanced" && !config.advancedDay) return "family-friends";
+  return theme;
+}
+
+function sortLessonEntries(entries: ExpressionBankEntry[], studyDate: string, salt = ""): ExpressionBankEntry[] {
+  const byKey = new Map<string, ExpressionBankEntry>();
+  for (const entry of entries) {
+    const key = normalizeKey(entry.en);
+    if (!byKey.has(key)) byKey.set(key, entry);
+  }
+  return [...byKey.values()].sort((a, b) => {
+    const prefix = salt ? `${salt}:` : "";
+    return stableExpressionHash(`${studyDate}:${prefix}${a.en}`) - stableExpressionHash(`${studyDate}:${prefix}${b.en}`)
+      || a.en.localeCompare(b.en);
+  });
+}
+
+function passesLessonLevelGate(entry: ExpressionBankEntry, difficultyCap: number): boolean {
+  return lessonWordCount(entry.en) <= difficultyCap && isLessonRegisterAllowed(entry);
+}
+
+export function pickLessonItemsV2(
+  snapshot: StudySnapshot,
+  studyDate: string,
+  plan: WeekdayPlan,
+  config: LessonConfig,
+): ExpressionBankEntry[] {
+  const resolvedConfig = normalizeLessonConfig(config);
+  const theme = getLessonBankTheme(plan, resolvedConfig);
+  if (!theme) return [];
+
+  const bank = Array.isArray(snapshot.expressionBank) ? snapshot.expressionBank : [];
+  const primary = sortLessonEntries(
+    bank.filter((entry) => entry.theme === theme && passesLessonLevelGate(entry, resolvedConfig.difficultyCap)),
+    studyDate,
+  );
+  const picked = primary.slice(0, resolvedConfig.lessonSize);
+  if (picked.length >= resolvedConfig.lessonSize) return picked;
+
+  const usedKeys = new Set(picked.map((entry) => normalizeKey(entry.en)));
+  const fallback = sortLessonEntries(
+    bank.filter((entry) => entry.theme === "free" && !usedKeys.has(normalizeKey(entry.en)) && passesLessonLevelGate(entry, resolvedConfig.difficultyCap)),
+    studyDate,
+  );
+  return [...picked, ...fallback.slice(0, resolvedConfig.lessonSize - picked.length)];
+}
+
+function setLowestReviewBox(map: Map<string, number>, key: string, box: number) {
+  const current = map.get(key);
+  if (current === undefined || box < current) map.set(key, box);
+}
+
+function buildReviewBoxMap(snapshot: StudySnapshot, studyDate: string): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const note of snapshot.weakNotes ?? []) {
+    setLowestReviewBox(map, normalizeKey(note.correct), note.box ?? 1);
+  }
+  for (const item of snapshot.best3 ?? []) {
+    if (item.due != null && item.due <= studyDate) {
+      setLowestReviewBox(map, normalizeKey(item.en), item.box ?? 1);
+    }
+  }
+  return map;
+}
+
+function pickLessonSibling(
+  snapshot: StudySnapshot,
+  item: ExpressionBankEntry,
+  studyDate: string,
+  itemKeys: Set<string>,
+): { ko: string; en: string } | null {
+  const itemKey = normalizeKey(item.en);
+  const candidates = sortLessonEntries(
+    (Array.isArray(snapshot.expressionBank) ? snapshot.expressionBank : []).filter((entry) => {
+      const key = normalizeKey(entry.en);
+      return key !== itemKey
+        && !itemKeys.has(key)
+        && (entry.theme === item.theme || entry.theme === "free")
+        && lessonWordCount(entry.en) <= 6
+        && isLessonRegisterAllowed(entry);
+    }),
+    studyDate,
+    "sibling",
+  );
+  const sibling = candidates[0];
+  return sibling ? { ko: sibling.ko, en: sibling.en } : null;
+}
+
+export function buildLessonPlan(
+  snapshot: StudySnapshot,
+  studyDate: string,
+  plan: WeekdayPlan,
+  config?: LessonConfig,
+): LessonPlan {
+  const resolvedConfig = normalizeLessonConfig(config);
+  const entries = pickLessonItemsV2(snapshot, studyDate, plan, resolvedConfig);
+  const itemKeys = new Set(entries.map((entry) => normalizeKey(entry.en)));
+  const reviewBoxMap = buildReviewBoxMap(snapshot, studyDate);
+  const reviewKey = entries
+    .map((entry) => ({ key: normalizeKey(entry.en), en: entry.en, box: reviewBoxMap.get(normalizeKey(entry.en)) }))
+    .filter((entry): entry is { key: string; en: string; box: number } => entry.box !== undefined)
+    .sort((a, b) => a.box - b.box || a.en.localeCompare(b.en))[0]?.key ?? null;
+  const variationKinds = LESSON_VARIATION_ORDER.slice(0, resolvedConfig.variationsPerItem);
+  const theme = getLessonBankTheme(plan, resolvedConfig) ?? plan.theme;
+
+  return {
+    planVersion: 2,
+    studyDate,
+    theme,
+    config: resolvedConfig,
+    items: entries.map((entry) => {
+      const key = normalizeKey(entry.en);
+      const item: LessonPlanItem = {
+        id: key,
+        ko: entry.ko,
+        en: entry.en,
+        kind: key === reviewKey ? "review" : "new",
+        sibling: pickLessonSibling(snapshot, entry, studyDate, itemKeys),
+        variationKinds: [...variationKinds],
+      };
+      if (entry.note) item.note = entry.note;
+      return item;
+    }),
+  };
+}
+
 function pickTodayExpressions(snapshot: StudySnapshot, studyDate: string, plan: WeekdayPlan): ExpressionBankEntry[] {
   const theme = PLAN_THEME_TO_BANK_THEME[plan.theme];
   if (!theme) return [];
@@ -1046,6 +1232,110 @@ function buildExpressionBankSection(entries: ExpressionBankEntry[]): string[] {
     charCount += line.length + 1;
   }
   return lines.length > 0 ? ["", header, ...lines] : [];
+}
+
+function buildLessonPlanSection(lessonPlan: LessonPlan): string[] {
+  const lines = lessonPlan.items.map((item, index) => {
+    const note = item.note ? ` (${item.note})` : "";
+    const sibling = item.sibling ? ` | 형제문장(어려워하면): ${item.sibling.ko} -> ${item.sibling.en}` : "";
+    const variations = item.variationKinds.length > 0 ? item.variationKinds.join("/") : "없음";
+    return `문장${index + 1}: ${item.ko} -> ${item.en}${note}${sibling} | 변형: ${variations}`;
+  });
+
+  return [
+    `[7분 수업 - 기본문장 ${lessonPlan.items.length}개. 아래 LessonPlan에 있는 문장만 사용한다. 새 문장을 만들지 마]`,
+    ...lines,
+    "",
+    "[턴 규율]",
+    "한 번에 한국어 프롬프트 하나만 말하고 멈춘다. 모나가 대답할 때까지 기다린다.",
+    "모나가 시도하면: 구체적 칭찬 1개 + 교정 최대 1개 -> 자연스러운 버전 들려주기 -> 따라 말하게.",
+    `그 다음 변형 ${lessonPlan.config.variationsPerItem}개를 하나씩: 변형 프롬프트 -> 멈추고 기다리기 -> 교정. 같은 영어 문장을 그대로 두 번 묻지 않는다.`,
+    "모나가 \"몰라/help/pass\"라고 하기 전에는 정답 영어를 먼저 말하지 않는다.",
+    "",
+    "[어렵다 신호]",
+    "모나가 \"어려워/쉬운 것부터/힘들어/기억 안 나\" 류의 말을 하면: 한 문장으로 인정하고, 그 문장은 오늘 포기한다.",
+    "weakMisses로 조용히 저장하고, 형제문장으로 즉시 전환한다. 성공 한 번을 받은 뒤에만 진행한다.",
+    "어렵다는 신호를 받은 문장을 다시 드릴하지 않는다.",
+    "",
+    "[종료]",
+    "BEST3를 모나에게 고르라고 하지 않는다. 모나가 실제로 잘 말한 문장을 네가 골라 saveStudySession(best3, reviewResults, weakMisses)을 조용히 호출한다.",
+    "문장1 완료 시 saveStudySession을 한 번 조용히 호출한다. 중복 저장하지 않는다.",
+    "마무리는 부드러운 한 문장. 저장했다는 말은 한 문장 이내로만.",
+    "",
+    "[CONTROL 규칙]",
+    "\"[CONTROL]\"로 시작하는 텍스트 입력은 모나의 말이 아니라 무대 지시다. 절대 소리 내어 읽거나 언급하지 말고 즉시 따른다.",
+  ];
+}
+
+function buildLessonV2PacingRules(): string[] {
+  return MONA_PACING_RULES.map((rule) => rule.replace("오늘의 5문장 루프", "오늘 수업 루프"));
+}
+
+export async function buildMonaCoachDynamicBlockV2(
+  studyDate?: string,
+  snapshot?: StudySnapshot | null,
+  config?: LessonConfig,
+) {
+  const resolvedDate = studyDate ?? getCanonicalMonaStudyDate();
+  const resolvedSnapshot = snapshot ?? await prepareMonaStudySnapshot(resolvedDate);
+  const plan = getWeekdayPlan(resolvedDate);
+  const reviewMeta = await readJsonFile<ReviewMeta>(MONA_REVIEW_META, { lastTotalReview: null, updatedAt: "" }).catch(() => null);
+  const totalReview = isTotalReviewDay(resolvedSnapshot, reviewMeta, resolvedDate);
+  if (totalReview) return buildMonaCoachDynamicBlock(resolvedDate, resolvedSnapshot);
+
+  const effectivePlan = plan.weekday === "일요일" ? WEEKDAY_PLAN[6] : plan;
+  const yesterday = findYesterdaySession(resolvedSnapshot, resolvedDate);
+  const firstSession = resolvedSnapshot.sessions.length === 0;
+  const warmup = firstSession || !yesterday ? null : pickWarmupPool(resolvedSnapshot, resolvedDate);
+  const lessonPlan = buildLessonPlan(resolvedSnapshot, resolvedDate, effectivePlan, config);
+
+  let streak = 0;
+  {
+    const sessionDates = resolvedSnapshot.sessions.map((s) => s.date).sort().reverse();
+    let checkDate = resolvedDate;
+    for (const d of sessionDates) {
+      if (d === checkDate) {
+        streak++;
+        const prev = new Date(`${checkDate}T00:00:00.000Z`);
+        prev.setUTCDate(prev.getUTCDate() - 1);
+        checkDate = prev.toISOString().slice(0, 10);
+      } else if (d < checkDate) {
+        break;
+      }
+    }
+  }
+
+  return [
+    "[오늘 - 서버 확정값, 다시 계산하지 마]",
+    `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
+    `테마: ${effectivePlan.theme} · 변동코너: ${effectivePlan.corner} · 연속: ${streak}일차`,
+    "",
+    "[인사 규칙]",
+    "세션 시작 시 먼저 따뜻하게 인사한다. '안녕 모나야' 톤으로, 오늘 테마/연속 일수/어제 기억 중 두 가지를 짧게 언급한 뒤 바로 수업으로 들어간다. 인사는 한 문장.",
+    "",
+    "[복습 재료]",
+    firstSession || !yesterday
+      ? "첫 세션이야. 워밍업은 건너뛰고 바로 오늘 수업부터 가."
+      : [
+        `어제 날짜: ${yesterday.date}`,
+        `최근 BEST3:\n${formatBest3(warmup?.best3Lines ?? resolvedSnapshot.best3.slice(0, 5))}`,
+        `약점노트:\n${formatWeak(warmup?.weakLines ?? resolvedSnapshot.weakNotes.slice(0, 3))}`,
+      ].join("\n"),
+    ...buildProfileSection(resolvedSnapshot),
+    "",
+    ...buildLessonPlanSection(lessonPlan),
+    "",
+    "[진행 규칙 - 내부 페이싱]",
+    ...buildLessonV2PacingRules(),
+    "단계 번호를 말하지 마. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
+    "트리거 '시작/go/오늘꺼'가 오면 메뉴 설명 없이 바로 시작한다. 모나가 바꾸자고 할 때만 방향을 바꾼다.",
+    "",
+    "[표현 카드 - showCard]",
+    "문장을 다룰 때마다 showCard로 화면을 맞춘다: 모나가 시도하기 전 state=prompt(ko만) -> 교정을 들려준 뒤 state=reveal(ko+en+pron) -> 변형 드릴은 state=drill(ko+drillHint) -> 다음 문장으로 넘어갈 때 새로 호출. 카드 호출 사실은 입 밖에 내지 않는다.",
+    "",
+    "[도구]",
+    "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
+  ].join("\n");
 }
 
 export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: StudySnapshot | null) {

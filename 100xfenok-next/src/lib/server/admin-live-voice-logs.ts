@@ -172,6 +172,26 @@ function mergeEntries(
   return { merged, lastSeq };
 }
 
+function getLatestEntryIso(entries: Array<{ atIso: string | null }>): string | null {
+  let latest: string | null = null;
+  for (const entry of entries) {
+    if (!entry.atIso) continue;
+    if (latest === null || entry.atIso > latest) latest = entry.atIso;
+  }
+  return latest;
+}
+
+function resolveFinalStoppedAt(
+  requestedStoppedAt: unknown,
+  existingStoppedAt: unknown,
+  entries: Array<{ atIso: string | null }>,
+  now: string,
+): string {
+  const requested = normalizeIso(requestedStoppedAt) ?? normalizeIso(existingStoppedAt) ?? now;
+  const latestEntryIso = getLatestEntryIso(entries);
+  return latestEntryIso && requested < latestEntryIso ? latestEntryIso : requested;
+}
+
 export async function appendAdminLiveConversationLog(args: Record<string, unknown>) {
   const mode = normalizeMode(args.mode);
   const sessionId = safeSegment(args.sessionId, `live-${mode}-${Date.now().toString(36)}`);
@@ -261,7 +281,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
     const incomingMetrics = pickPrimitiveObject(args.metrics, [
       "micPermission", "connectionState", "firstResponseMs", "sessionPostMs", "socketOpenMs",
       "setupDoneMs", "transcriptLatencyMs", "turnCount", "interruptionCount",
-      "sessionDurationSec", "lowVoice", "lastError", "rating", "resumeCount",
+      "audioFramesSent", "sessionDurationSec", "lowVoice", "lastError", "rating", "resumeCount",
       "appendFailureCount", "lastAppendError",
     ]);
 
@@ -281,7 +301,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       mode,
       sessionId,
       startedAt: typeof doc.startedAt === "string" ? doc.startedAt : startedAt,
-      stoppedAt: args.stoppedAt ? normalizeIso(args.stoppedAt) ?? now : (doc.stoppedAt ?? null),
+      stoppedAt: final ? resolveFinalStoppedAt(args.stoppedAt, doc.stoppedAt, normalized, now) : null,
       savedAt: now,
       settings: mergedSettings,
       metrics: mergedMetrics,
