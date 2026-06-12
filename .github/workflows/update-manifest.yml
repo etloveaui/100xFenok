@@ -4,8 +4,9 @@
 # Updates file_count, updated, last_updated, generatedAt, categories, and manifest_version.
 #
 # Infinite loop prevention:
-#   This workflow ignores data/manifest.json and data/computed/**, so its own
-#   manifest/signals commit can still trigger deploy without retriggering itself.
+#   This workflow ignores data/manifest.json, data/computed/**, and the generated
+#   admin usage manifest, so its own generated-data commit can still trigger
+#   deploy without retriggering itself.
 #
 # What is updated:  file_count, updated, last_updated, generatedAt, categories, manifest_version
 # What is NOT touched: version, update_frequency, source, description, recent_changes
@@ -19,8 +20,10 @@ on:
       - 'data/**'
       - '!data/manifest.json'
       - '!data/computed/**'
+      - '!data/admin/data-usage-manifest.json'
       - 'scripts/update-manifest.py'
       - 'scripts/export-computed-signals.mjs'
+      - 'scripts/build-phase2-closeout-indexes.mjs'
       - 'tools/macro-monitor/shared/signals-core.mjs'
   schedule:
     # UTC 02:30 = KST 11:30. Morning reconciliation.
@@ -53,6 +56,9 @@ jobs:
       - name: Export computed signals
         run: node scripts/export-computed-signals.mjs
 
+      - name: Build phase2 closeout indexes
+        run: node scripts/build-phase2-closeout-indexes.mjs
+
       - name: Run update-manifest.py
         # Exit code 1 = warnings only (orphan files / missing folders)
         # These are non-fatal — the manifest update still proceeds
@@ -74,8 +80,14 @@ jobs:
         run: |
           git diff --quiet \
               data/computed/signals.json \
+              data/computed/stock_action_index.json \
+              data/computed/market_structure_index.json \
+              data/admin/data-usage-manifest.json \
               data/manifest.json \
               100xfenok-next/public/data/computed/signals.json \
+              100xfenok-next/public/data/computed/stock_action_index.json \
+              100xfenok-next/public/data/computed/market_structure_index.json \
+              100xfenok-next/public/data/admin/data-usage-manifest.json \
               100xfenok-next/public/data/manifest.json \
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
             || echo "changed=true"  >> "$GITHUB_OUTPUT"
@@ -93,6 +105,7 @@ jobs:
             git reset --hard origin/main
 
             node scripts/export-computed-signals.mjs
+            node scripts/build-phase2-closeout-indexes.mjs
 
             status=0
             BEFORE_SHA="${BEFORE_SHA}" python3 scripts/update-manifest.py || status=$?
@@ -103,8 +116,14 @@ jobs:
 
             if git diff --quiet \
                 data/computed/signals.json \
+                data/computed/stock_action_index.json \
+                data/computed/market_structure_index.json \
+                data/admin/data-usage-manifest.json \
                 data/manifest.json \
                 100xfenok-next/public/data/computed/signals.json \
+                100xfenok-next/public/data/computed/stock_action_index.json \
+                100xfenok-next/public/data/computed/market_structure_index.json \
+                100xfenok-next/public/data/admin/data-usage-manifest.json \
                 100xfenok-next/public/data/manifest.json; then
               echo "Attempt $attempt: manifest already current on latest main — nothing to push"
               exit 0
@@ -112,8 +131,14 @@ jobs:
 
             git add \
               data/computed/signals.json \
+              data/computed/stock_action_index.json \
+              data/computed/market_structure_index.json \
+              data/admin/data-usage-manifest.json \
               data/manifest.json \
               100xfenok-next/public/data/computed/signals.json \
+              100xfenok-next/public/data/computed/stock_action_index.json \
+              100xfenok-next/public/data/computed/market_structure_index.json \
+              100xfenok-next/public/data/admin/data-usage-manifest.json \
               100xfenok-next/public/data/manifest.json
             git commit -m "chore: update computed signals and manifest"
 
