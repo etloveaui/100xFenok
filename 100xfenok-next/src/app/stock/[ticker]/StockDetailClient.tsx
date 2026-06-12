@@ -9,6 +9,8 @@ import {
   use13FData,
   Sparkline,
   PerBandChart,
+  RevisionPulse,
+  RawFinancialDepth,
   fmtLarge,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
@@ -720,7 +722,13 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 </div>
               </SectionCard>
 
-              {/* 3. 수익성·성장 */}
+              {/* 3. 리비전·원재무 깊이 */}
+              <SectionCard title="리비전·원재무 깊이">
+                <RevisionPulse detail={detail} />
+                <RawFinancialDepth detail={detail} />
+              </SectionCard>
+
+              {/* 4. 수익성·성장 */}
               <SectionCard title="수익성·성장">
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
@@ -743,7 +751,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 </div>
               </SectionCard>
 
-              {/* 4. 구루 동향 */}
+              {/* 5. 구루 동향 */}
               <div id="guru-section">
                 <SectionCard>
                   <GuruSection f13Entries={f13Entries} ticker={symbol} />

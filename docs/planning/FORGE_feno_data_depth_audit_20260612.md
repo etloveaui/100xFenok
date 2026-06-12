@@ -202,6 +202,54 @@ Depth-2 plan locked by measured coverage and peer/agent cross-check:
   overflow. The safer path is a scoped `.fnk-shell` small-text enlargement
   pass with browser overflow QA.
 
+## Implementation Slice 2A: Stock/Screener Revision and Raw Depth
+
+Implemented in `100xfenok-next`:
+
+- `/stock/[ticker]` overview now has a `리비전·원재무 깊이` section between
+  financial trends and profitability/growth. It reads only the already-fetched
+  Global Scouter detail payload.
+- Screener expanded rows now reuse the same on-demand detail fetch and show
+  compact `리비전·컨센서스` plus `원재무 깊이` blocks. The main screener list
+  still fetches only `stocks_analyzer.json`.
+- `eps_consensus.weekly.fy_plus_1/2/3` is used for the freshest EPS consensus
+  readout and 1-week change. `weekly_revision_history.weekly_consensus_revision`
+  is displayed as recent source-history rows, not as the primary latest signal.
+- `raw_financials.periods` is the table axis for the canonical 8-period
+  FY-4..FY+3 view. It is intentionally not zipped against legacy `years`
+  because `years` is only FY-4..FY0.
+- Unknown or missing tickers such as `SCHD` and `KORU` remain fail-closed:
+  the app does not fabricate rows from absent detail/YF payloads.
+
+Measured data shape for this slice:
+
+- Detail files sampled: `AAPL`, `NVDA`, `MSFT`, `BNY`; all had
+  `raw_financials.periods` length 8 and EPS weekly consensus rows.
+- Local universe check: 1,066 detail files; `raw_financials.periods >= 8` for
+  1,066; `eps_consensus.weekly.fy_plus_1 >= 2` for 1,066;
+  `weekly_revision_history.weekly_consensus_revision >= 2` for 1,060.
+- `SCHD` and `KORU` were absent from `data/global-scouter/stocks/detail`, so
+  they are unsupported symbols in this local universe, not chart-data errors.
+
+Deferred from 2A:
+
+- Screener list-level revision presets/filters. They should use a generated
+  lightweight summary index, not 1,066 detail JSON fetches in the browser.
+- SlickCharts per-stock `metrics_history`, returns, and dividends. This is the
+  next product slice after 2A.
+- Browser/Playwright visual QA. It remains intentionally skipped during
+  Mac-mini low-resource work unless explicitly approved.
+
+Low-resource verification for this slice:
+
+- PASS: `npx eslint src/app/screener/StockDetailPanel.tsx 'src/app/stock/[ticker]/StockDetailClient.tsx'`
+- PASS: `git diff --check`
+- `[blocked]` full `npx tsc --noEmit --pretty false` in the current worktree is
+  blocked by an unrelated dirty `src/components/admin-live/AdminLiveBench.tsx`
+  comparison error. This slice did not stage or edit that file.
+- `[not verified]` browser/dev-server/Playwright rendering; intentionally
+  skipped because the active constraint is low resource usage on the Mac mini.
+
 ## Dataset Findings
 
 ### Benchmarks, Indices, Yardeni

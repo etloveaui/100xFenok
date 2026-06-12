@@ -7,8 +7,47 @@ import { bandPct, bandClass } from "@/lib/screener/bands";
 type MaybeNumber = number | null | undefined;
 type NumberSeries = MaybeNumber[];
 
+interface WeeklyPoint {
+  date?: string;
+  value?: MaybeNumber;
+}
+
+interface WeeklyConsensusRow {
+  date?: string;
+  price?: MaybeNumber;
+  revenue_consensus?: MaybeNumber;
+  revenue_change?: MaybeNumber;
+  eps_consensus?: MaybeNumber;
+  eps_change?: MaybeNumber;
+  per?: MaybeNumber;
+  pbr?: MaybeNumber;
+}
+
+interface RawFinancials {
+  periods?: string[];
+  income_statement?: {
+    revenue?: NumberSeries;
+    gross_profit?: NumberSeries;
+    operating_income?: NumberSeries;
+    net_income?: NumberSeries;
+  };
+  per_share?: { eps?: NumberSeries };
+  cash_flow?: { fcf?: NumberSeries; cfo?: NumberSeries; capex?: NumberSeries };
+  profitability?: {
+    gross_margin?: NumberSeries;
+    operating_margin?: NumberSeries;
+    net_margin?: NumberSeries;
+    roe?: NumberSeries;
+    roa?: NumberSeries;
+  };
+  growth?: { revenue_growth?: NumberSeries; eps_growth?: NumberSeries };
+  valuation?: { per?: NumberSeries; pbr?: NumberSeries; psr?: NumberSeries };
+}
+
 export interface DetailData {
   years: string[];
+  raw_periods?: string[];
+  raw_financials?: RawFinancials;
   valuation?: { per?: NumberSeries };
   income_statement: {
     revenue?: NumberSeries;
@@ -41,6 +80,21 @@ export interface DetailData {
   per_share_estimates?: Record<string, Record<string, MaybeNumber>>;
   dividend_estimates?: Record<string, Record<string, MaybeNumber>>;
   dividend?: { dps?: NumberSeries };
+  eps_consensus?: {
+    weekly?: {
+      fy_plus_1?: WeeklyPoint[];
+      fy_plus_2?: WeeklyPoint[];
+      fy_plus_3?: WeeklyPoint[];
+    };
+    weekly_change?: {
+      fy_plus_1?: MaybeNumber;
+      fy_plus_2?: MaybeNumber;
+      fy_plus_3?: MaybeNumber;
+    };
+  };
+  weekly_revision_history?: {
+    weekly_consensus_revision?: WeeklyConsensusRow[];
+  };
 }
 
 export interface F13Entry {
@@ -102,6 +156,35 @@ function validPerBands(
       isFiniteNumber(perBands.max_8y) &&
       perBands.min_8y < perBands.max_8y,
   );
+}
+
+function fmtPlainNumber(value: MaybeNumber, digits = 1): string {
+  return isFiniteNumber(value) ? value.toFixed(digits) : "—";
+}
+
+function fmtSignedNumber(value: MaybeNumber, digits = 2): string {
+  if (!isFiniteNumber(value)) return "—";
+  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}`;
+}
+
+function fmtSignedPercentPoints(value: MaybeNumber, digits = 1): string {
+  if (!isFiniteNumber(value)) return "—";
+  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}%`;
+}
+
+function fmtSignedFractionPercent(value: MaybeNumber, digits = 1): string {
+  if (!isFiniteNumber(value)) return "—";
+  const pct = value * 100;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;
+}
+
+function fmtEps(value: MaybeNumber): string {
+  return isFiniteNumber(value) ? `$${value.toFixed(2)}` : "—";
+}
+
+function toneText(value: MaybeNumber): string {
+  if (!isFiniteNumber(value)) return "text-slate-400";
+  return value >= 0 ? "text-emerald-600" : "text-rose-600";
 }
 
 export function useStockDetail(ticker: string, enabled = true) {
@@ -503,6 +586,141 @@ export function fmtLarge(n: MaybeNumber): string {
   return `${sign}${abs}M`;
 }
 
+export function RevisionPulse({ detail, compact = false }: { detail: DetailData; compact?: boolean }) {
+  const weekly = detail.eps_consensus?.weekly;
+  const changes = detail.eps_consensus?.weekly_change;
+  const epsRows = [
+    { key: "fy1", label: "FY+1 EPS", series: weekly?.fy_plus_1 ?? [], change: changes?.fy_plus_1 },
+    { key: "fy2", label: "FY+2 EPS", series: weekly?.fy_plus_2 ?? [], change: changes?.fy_plus_2 },
+    { key: "fy3", label: "FY+3 EPS", series: weekly?.fy_plus_3 ?? [], change: changes?.fy_plus_3 },
+  ].filter((row) => row.series.length > 0);
+  const historyRows = (detail.weekly_revision_history?.weekly_consensus_revision ?? [])
+    .filter((row) => typeof row.date === "string")
+    .slice(0, compact ? 2 : 4);
+
+  if (epsRows.length === 0 && historyRows.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
+      <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">리비전·컨센서스</h4>
+        <span className="text-[10px] font-bold text-slate-400">EPS weekly consensus</span>
+      </div>
+      {epsRows.length > 0 ? (
+        <div className="grid gap-2 sm:grid-cols-3">
+          {epsRows.map((row) => {
+            const latest = row.series[0];
+            const previous = row.series[1];
+            return (
+              <div key={row.key} className="min-w-0 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{row.label}</span>
+                  <span className={`shrink-0 text-[10px] font-black tabular-nums ${toneText(row.change)}`}>
+                    {fmtSignedFractionPercent(row.change)}
+                  </span>
+                </div>
+                <p className="orbitron mt-1 text-sm font-black tabular-nums text-slate-950">{fmtEps(latest?.value)}</p>
+                <p className="mt-1 truncate text-[9px] font-bold tabular-nums text-slate-400">
+                  {latest?.date ?? "—"} · 전주 {fmtEps(previous?.value)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+      {historyRows.length > 0 ? (
+        <div className="-mx-1 mt-3 overflow-x-auto px-1">
+          <table className="w-full min-w-[520px] text-[10px]">
+            <thead>
+              <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+                <th className="px-2 py-1 text-left">일자</th>
+                <th className="px-2 py-1 text-right">가격</th>
+                <th className="px-2 py-1 text-right">매출 컨센</th>
+                <th className="px-2 py-1 text-right">EPS 컨센</th>
+                <th className="px-2 py-1 text-right">EPS 변화</th>
+              </tr>
+            </thead>
+            <tbody>
+              {historyRows.map((row, index) => (
+                <tr key={`${row.date}-${index}`} className="border-b border-slate-100 last:border-b-0">
+                  <td className="px-2 py-1.5 font-bold tabular-nums text-slate-600">{row.date}</td>
+                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-slate-700">{fmtPlainNumber(row.price, 2)}</td>
+                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-slate-700">{fmtLarge(row.revenue_consensus)}</td>
+                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-slate-700">{fmtEps(row.eps_consensus)}</td>
+                  <td className={`px-2 py-1.5 text-right orbitron font-black tabular-nums ${toneText(row.eps_change)}`}>
+                    {fmtSignedNumber(row.eps_change, 2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function RawFinancialDepth({ detail, compact = false }: { detail: DetailData; compact?: boolean }) {
+  const raw = detail.raw_financials;
+  const periods = raw?.periods ?? detail.raw_periods ?? [];
+  const rows: Array<{ label: string; data?: NumberSeries; fmt: (value: MaybeNumber) => string }> = [
+    { label: "매출", data: raw?.income_statement?.revenue, fmt: fmtLarge },
+    { label: "영업이익", data: raw?.income_statement?.operating_income, fmt: fmtLarge },
+    { label: "순이익", data: raw?.income_statement?.net_income, fmt: fmtLarge },
+    { label: "EPS", data: raw?.per_share?.eps, fmt: fmtEps },
+    { label: "매출 성장", data: raw?.growth?.revenue_growth, fmt: fmtSignedPercentPoints },
+    { label: "PER", data: raw?.valuation?.per, fmt: (value) => fmtPlainNumber(value, 1) },
+    { label: "PBR", data: raw?.valuation?.pbr, fmt: (value) => fmtPlainNumber(value, 2) },
+    { label: "ROE", data: raw?.profitability?.roe, fmt: fmtSignedPercentPoints },
+    { label: "영업마진", data: raw?.profitability?.operating_margin, fmt: fmtSignedPercentPoints },
+  ];
+  const validRows = rows
+    .filter((row) => finiteValues(row.data).length > 0)
+    .slice(0, compact ? 6 : rows.length);
+
+  if (periods.length === 0 || validRows.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
+      <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">원재무 깊이</h4>
+        <span className="text-[10px] font-bold text-slate-400">FY-4 ~ FY+3 canonical</span>
+      </div>
+      <div className="-mx-1 overflow-x-auto px-1">
+        <table className="w-full min-w-[720px] text-[10px]">
+          <thead>
+            <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+              <th className="px-2 py-1.5 text-left">항목</th>
+              {periods.map((period) => (
+                <th key={period} className="px-2 py-1.5 text-right">{period}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {validRows.map((row) => (
+              <tr key={row.label} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-1.5 font-black text-slate-600">{row.label}</td>
+                {periods.map((period, index) => {
+                  const value = row.data?.[index];
+                  return (
+                    <td key={`${row.label}-${period}`} className="px-2 py-1.5 text-right orbitron tabular-nums text-slate-800">
+                      {row.fmt(value)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export function StockDetailBody({
   detail,
   f13Entries,
@@ -586,6 +804,9 @@ export function StockDetailBody({
           )}
         </div>
       </div>
+
+      <RevisionPulse detail={detail} compact />
+      <RawFinancialDepth detail={detail} compact />
 
       {/* 13F Badges */}
       {f13Entries && f13Entries.length > 0 ? (
