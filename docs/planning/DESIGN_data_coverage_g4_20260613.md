@@ -32,6 +32,8 @@ Status: implemented in this slice.
 - Move deep stock detail sections out of overview into 재무/통계/추정치/보유기관
   tabs, with overview reduced to key snapshot cards and shortcuts.
 - Plot FY+1~FY+3 estimates in stock detail PER/growth/financial visuals.
+- Post-gate E1 follow-up: 수익성·성장 card consumes
+  `profitability_estimates` and `growth_estimates` with dashed estimate points.
 
 ## Track H - Real History, Real Charts
 
@@ -45,6 +47,9 @@ Status: implemented in this slice.
 - Add Yardeni S&P 500 vs fair-value overlay with visible values and input
   decomposition.
 - Join calendar event cards with previous values and as-of/series metadata.
+- Post-gate H6 follow-up: `prev-values.json` uses stable keys plus aliases,
+  expands FRED/local macro activity coverage, and resolves Explore/Market event
+  cards through the alias map instead of raw title-only matching.
 
 ## Track U - Expression And Layout Polish
 

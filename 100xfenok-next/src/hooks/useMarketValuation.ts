@@ -156,7 +156,8 @@ interface RawCalendar {
   events?: RawCalendarEvent[];
 }
 interface RawPrevValues {
-  values?: Record<string, { value?: string; asOf?: string; series?: string } | undefined>;
+  aliases?: Record<string, string>;
+  values?: Record<string, { value?: string; asOf?: string; series?: string; key?: string; source?: string } | undefined>;
 }
 interface RawIndexPoint {
   date?: string;
@@ -800,9 +801,21 @@ function todayKST(): string {
 
 function previousValueForEvent(event: RawCalendarEvent, prevValues: RawPrevValues | null) {
   const values = prevValues?.values ?? {};
-  const candidates = [event.title_en, event.title_ko].filter((value): value is string => typeof value === "string" && value.length > 0);
+  const aliases = prevValues?.aliases ?? {};
+  const normalizePrevKey = (value: unknown) => String(value ?? "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9가-힣]+/g, " ")
+    .trim()
+    .replace(/\s+/g, "_");
+  const candidates = [event.title_en, event.title_ko]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .flatMap((value) => [value, normalizePrevKey(value), aliases[value], aliases[normalizePrevKey(value)]])
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
   for (const key of candidates) {
-    const match = values[key];
+    const resolved = aliases[key] ?? key;
+    const match = values[resolved] ?? values[key];
     if (match) {
       return {
         value: typeof match.value === "string" ? match.value : null,

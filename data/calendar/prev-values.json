@@ -1,62 +1,341 @@
 {
-  "generated_at": "2026-06-12T10:37:51.293Z",
-  "source": "FRED (api.stlouisfed.org)",
+  "generated_at": "2026-06-12T19:44:22.055Z",
+  "source": "FRED (api.stlouisfed.org), local macro/activity-surveys",
   "note": "직전 발표값. consensus/forecast 미포함 (무료 소스 부재).",
+  "aliases": {
+    "jobless_claims": "jobless_claims",
+    "Initial Jobless Claims": "jobless_claims",
+    "initial_jobless_claims": "jobless_claims",
+    "주간 실업수당 청구": "jobless_claims",
+    "주간_실업수당_청구": "jobless_claims",
+    "nonfarm_payrolls": "nonfarm_payrolls",
+    "Nonfarm Payrolls (NFP)": "nonfarm_payrolls",
+    "nonfarm_payrolls_nfp": "nonfarm_payrolls",
+    "비농업 고용지수 NFP": "nonfarm_payrolls",
+    "비농업_고용지수_nfp": "nonfarm_payrolls",
+    "adp_employment": "adp_employment",
+    "ADP Employment Report": "adp_employment",
+    "adp_employment_report": "adp_employment",
+    "ADP 고용보고서": "adp_employment",
+    "adp_고용보고서": "adp_employment",
+    "cpi": "cpi",
+    "Consumer Price Index (CPI)": "cpi",
+    "consumer_price_index_cpi": "cpi",
+    "소비자물가지수 CPI": "cpi",
+    "소비자물가지수_cpi": "cpi",
+    "ppi": "ppi",
+    "Producer Price Index (PPI)": "ppi",
+    "producer_price_index_ppi": "ppi",
+    "생산자물가지수 PPI": "ppi",
+    "생산자물가지수_ppi": "ppi",
+    "pce_price": "pce_price",
+    "PCE Price Index": "pce_price",
+    "pce_price_index": "pce_price",
+    "개인소비지출 PCE": "pce_price",
+    "개인소비지출_pce": "pce_price",
+    "retail_sales": "retail_sales",
+    "Retail Sales": "retail_sales",
+    "소매판매": "retail_sales",
+    "gdp_annualized": "gdp_annualized",
+    "GDP Annualized": "gdp_annualized",
+    "국내총생산 GDP": "gdp_annualized",
+    "국내총생산_gdp": "gdp_annualized",
+    "fomc_rate": "fomc_rate",
+    "FOMC Rate Decision · Press Conference": "fomc_rate",
+    "fomc_rate_decision_press_conference": "fomc_rate",
+    "FOMC 금리결정 · 기자회견": "fomc_rate",
+    "fomc_금리결정_기자회견": "fomc_rate",
+    "michigan_sentiment": "michigan_sentiment",
+    "Michigan Consumer Sentiment": "michigan_sentiment",
+    "michigan_consumer_sentiment": "michigan_sentiment",
+    "미시간 소비자심리지수": "michigan_sentiment",
+    "미시간_소비자심리지수": "michigan_sentiment",
+    "jolts_openings": "jolts_openings",
+    "JOLTS Job Openings": "jolts_openings",
+    "jolts_job_openings": "jolts_openings",
+    "new_home_sales": "new_home_sales",
+    "New Home Sales": "new_home_sales",
+    "New Home Sales (Catch-up)": "new_home_sales",
+    "new_home_sales_catch_up": "new_home_sales",
+    "신규주택 판매": "new_home_sales",
+    "신규주택_판매": "new_home_sales",
+    "existing_home_sales": "existing_home_sales",
+    "Existing Home Sales": "existing_home_sales",
+    "기존주택 판매": "existing_home_sales",
+    "기존주택_판매": "existing_home_sales",
+    "philly_fed": "philly_fed",
+    "Philly Fed Manufacturing Index": "philly_fed",
+    "philly_fed_manufacturing_index": "philly_fed",
+    "필라델피아 연준 제조업": "philly_fed",
+    "필라델피아_연준_제조업": "philly_fed",
+    "productivity_costs": "productivity_costs",
+    "Productivity & Costs": "productivity_costs",
+    "productivity_and_costs": "productivity_costs",
+    "Productivity & Costs (Prelim)": "productivity_costs",
+    "productivity_and_costs_prelim": "productivity_costs",
+    "Productivity & Costs (Revised)": "productivity_costs",
+    "productivity_and_costs_revised": "productivity_costs",
+    "ism_manufacturing_pmi": "ism_manufacturing_pmi",
+    "ISM Manufacturing PMI": "ism_manufacturing_pmi",
+    "ISM 제조업 PMI": "ism_manufacturing_pmi",
+    "ism_제조업_pmi": "ism_manufacturing_pmi",
+    "ism_services_pmi": "ism_services_pmi",
+    "ISM Services PMI": "ism_services_pmi",
+    "ISM 서비스 PMI": "ism_services_pmi",
+    "ism_서비스_pmi": "ism_services_pmi",
+    "sp_global_manufacturing_pmi": "sp_global_manufacturing_pmi",
+    "S&P Global Manufacturing PMI": "sp_global_manufacturing_pmi",
+    "s_and_p_global_manufacturing_pmi": "sp_global_manufacturing_pmi",
+    "S&P 제조업 PMI": "sp_global_manufacturing_pmi",
+    "s_and_p_제조업_pmi": "sp_global_manufacturing_pmi",
+    "sp_global_services_pmi": "sp_global_services_pmi",
+    "S&P Global Services PMI": "sp_global_services_pmi",
+    "s_and_p_global_services_pmi": "sp_global_services_pmi",
+    "S&P 서비스 PMI": "sp_global_services_pmi",
+    "s_and_p_서비스_pmi": "sp_global_services_pmi",
+    "sp_global_flash_pmi": "sp_global_flash_pmi",
+    "S&P Global Flash PMI": "sp_global_flash_pmi",
+    "s_and_p_global_flash_pmi": "sp_global_flash_pmi"
+  },
   "values": {
-    "Initial Jobless Claims": {
+    "jobless_claims": {
+      "title": "Initial Jobless Claims",
       "value": "229K",
       "asOf": "2026-06-06",
-      "series": "ICSA"
+      "series": "ICSA",
+      "source": "FRED",
+      "key": "jobless_claims",
+      "aliases": [
+        "Initial Jobless Claims",
+        "주간 실업수당 청구"
+      ]
     },
-    "Nonfarm Payrolls (NFP)": {
+    "nonfarm_payrolls": {
+      "title": "Nonfarm Payrolls (NFP)",
       "value": "+172K",
       "asOf": "2026-05-01",
-      "series": "PAYEMS"
+      "series": "PAYEMS",
+      "source": "FRED",
+      "key": "nonfarm_payrolls",
+      "aliases": [
+        "Nonfarm Payrolls (NFP)",
+        "비농업 고용지수 NFP"
+      ]
     },
-    "Consumer Price Index (CPI)": {
+    "adp_employment": {
+      "title": "ADP Employment Report",
+      "value": "+122K",
+      "asOf": "2026-05-01",
+      "series": "ADPMNUSNERSA",
+      "source": "FRED",
+      "key": "adp_employment",
+      "aliases": [
+        "ADP Employment Report",
+        "ADP 고용보고서"
+      ]
+    },
+    "cpi": {
+      "title": "Consumer Price Index (CPI)",
       "value": "+4.3% YoY",
       "asOf": "2026-05-01",
-      "series": "CPIAUCSL"
+      "series": "CPIAUCSL",
+      "source": "FRED",
+      "key": "cpi",
+      "aliases": [
+        "Consumer Price Index (CPI)",
+        "소비자물가지수 CPI"
+      ]
     },
-    "Producer Price Index (PPI)": {
+    "ppi": {
+      "title": "Producer Price Index (PPI)",
       "value": "+6.4% YoY",
       "asOf": "2026-05-01",
-      "series": "PPIFIS"
+      "series": "PPIFIS",
+      "source": "FRED",
+      "key": "ppi",
+      "aliases": [
+        "Producer Price Index (PPI)",
+        "생산자물가지수 PPI"
+      ]
     },
-    "PCE Price Index": {
+    "pce_price": {
+      "title": "PCE Price Index",
       "value": "+3.8% YoY",
       "asOf": "2026-04-01",
-      "series": "PCEPI"
+      "series": "PCEPI",
+      "source": "FRED",
+      "key": "pce_price",
+      "aliases": [
+        "PCE Price Index",
+        "개인소비지출 PCE"
+      ]
     },
-    "Retail Sales": {
+    "retail_sales": {
+      "title": "Retail Sales",
       "value": "+0.5% MoM",
       "asOf": "2026-04-01",
-      "series": "RSAFS"
+      "series": "RSAFS",
+      "source": "FRED",
+      "key": "retail_sales",
+      "aliases": [
+        "Retail Sales",
+        "소매판매"
+      ]
     },
-    "GDP Annualized": {
+    "gdp_annualized": {
+      "title": "GDP Annualized",
       "value": "1.6% QoQ연율",
       "asOf": "2026-01-01",
-      "series": "A191RL1Q225SBEA"
+      "series": "A191RL1Q225SBEA",
+      "source": "FRED",
+      "key": "gdp_annualized",
+      "aliases": [
+        "GDP Annualized",
+        "국내총생산 GDP"
+      ]
     },
-    "FOMC Rate Decision · Press Conference": {
+    "fomc_rate": {
+      "title": "FOMC Rate Decision · Press Conference",
       "value": "3.75% 상단",
-      "asOf": "2026-06-11",
-      "series": "DFEDTARU"
+      "asOf": "2026-06-12",
+      "series": "DFEDTARU",
+      "source": "FRED",
+      "key": "fomc_rate",
+      "aliases": [
+        "FOMC Rate Decision · Press Conference",
+        "FOMC 금리결정 · 기자회견"
+      ]
     },
-    "Michigan Consumer Sentiment": {
+    "michigan_sentiment": {
+      "title": "Michigan Consumer Sentiment",
       "value": "49.8",
       "asOf": "2026-04-01",
-      "series": "UMCSENT"
+      "series": "UMCSENT",
+      "source": "FRED",
+      "key": "michigan_sentiment",
+      "aliases": [
+        "Michigan Consumer Sentiment",
+        "미시간 소비자심리지수"
+      ]
     },
-    "JOLTS Job Openings": {
+    "jolts_openings": {
+      "title": "JOLTS Job Openings",
       "value": "7.62M",
       "asOf": "2026-04-01",
-      "series": "JTSJOL"
+      "series": "JTSJOL",
+      "source": "FRED",
+      "key": "jolts_openings",
+      "aliases": [
+        "JOLTS Job Openings"
+      ]
     },
-    "New Home Sales": {
+    "new_home_sales": {
+      "title": "New Home Sales",
       "value": "622K 연율",
       "asOf": "2026-04-01",
-      "series": "HSN1F"
+      "series": "HSN1F",
+      "source": "FRED",
+      "key": "new_home_sales",
+      "aliases": [
+        "New Home Sales",
+        "New Home Sales (Catch-up)",
+        "신규주택 판매"
+      ]
+    },
+    "existing_home_sales": {
+      "title": "Existing Home Sales",
+      "value": "4.17M 연율",
+      "asOf": "2026-05-01",
+      "series": "EXHOSLUSM495S",
+      "source": "FRED",
+      "key": "existing_home_sales",
+      "aliases": [
+        "Existing Home Sales",
+        "기존주택 판매"
+      ]
+    },
+    "philly_fed": {
+      "title": "Philly Fed Manufacturing Index",
+      "value": "-0.4",
+      "asOf": "2026-05-01",
+      "series": "GACDFSA066MSFRBPHI",
+      "source": "FRED",
+      "key": "philly_fed",
+      "aliases": [
+        "Philly Fed Manufacturing Index",
+        "필라델피아 연준 제조업"
+      ]
+    },
+    "productivity_costs": {
+      "title": "Productivity & Costs",
+      "value": "0.3% QoQ연율",
+      "asOf": "2026-01-01",
+      "series": "PRS85006092",
+      "source": "FRED",
+      "key": "productivity_costs",
+      "aliases": [
+        "Productivity & Costs (Prelim)",
+        "Productivity & Costs (Revised)"
+      ]
+    },
+    "ism_manufacturing_pmi": {
+      "title": "ISM Manufacturing PMI",
+      "value": "54.0",
+      "asOf": "2026-05-01",
+      "series": "activity-surveys:ism_manufacturing.headline",
+      "source": "macro/activity-surveys",
+      "key": "ism_manufacturing_pmi",
+      "aliases": [
+        "ISM Manufacturing PMI",
+        "ISM 제조업 PMI"
+      ]
+    },
+    "ism_services_pmi": {
+      "title": "ISM Services PMI",
+      "value": "54.5",
+      "asOf": "2026-06-01",
+      "series": "activity-surveys:ism_services.headline",
+      "source": "macro/activity-surveys",
+      "key": "ism_services_pmi",
+      "aliases": [
+        "ISM Services PMI",
+        "ISM 서비스 PMI"
+      ]
+    },
+    "sp_global_manufacturing_pmi": {
+      "title": "S&P Global Manufacturing PMI",
+      "value": "55.1",
+      "asOf": "2026-06-01",
+      "series": "activity-surveys:pmi_manufacturing.us_sp_global",
+      "source": "macro/activity-surveys",
+      "key": "sp_global_manufacturing_pmi",
+      "aliases": [
+        "S&P Global Manufacturing PMI",
+        "S&P 제조업 PMI"
+      ]
+    },
+    "sp_global_services_pmi": {
+      "title": "S&P Global Services PMI",
+      "value": "50.7",
+      "asOf": "2026-06-01",
+      "series": "activity-surveys:pmi_services.us_sp_global",
+      "source": "macro/activity-surveys",
+      "key": "sp_global_services_pmi",
+      "aliases": [
+        "S&P Global Services PMI",
+        "S&P 서비스 PMI"
+      ]
+    },
+    "sp_global_flash_pmi": {
+      "title": "S&P Global Flash PMI",
+      "value": "Mfg 55.1 / Svc 50.7",
+      "asOf": "2026-06-01",
+      "series": "activity-surveys:pmi_manufacturing.us_sp_global,pmi_services.us_sp_global",
+      "source": "macro/activity-surveys",
+      "key": "sp_global_flash_pmi",
+      "aliases": [
+        "S&P Global Flash PMI"
+      ]
     }
   }
 }

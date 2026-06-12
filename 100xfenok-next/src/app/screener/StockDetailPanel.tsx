@@ -77,6 +77,7 @@ export interface DetailData {
   };
   income_statement_estimates?: Record<string, Record<string, MaybeNumber>>;
   cash_flow_estimates?: Record<string, Record<string, MaybeNumber>>;
+  profitability_estimates?: Record<string, Record<string, MaybeNumber>>;
   growth_estimates?: Record<string, Record<string, MaybeNumber>>;
   per_share_estimates?: Record<string, Record<string, MaybeNumber>>;
   dividend_estimates?: Record<string, Record<string, MaybeNumber>>;

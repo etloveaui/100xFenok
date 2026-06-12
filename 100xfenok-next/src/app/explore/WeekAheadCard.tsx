@@ -12,7 +12,8 @@ interface CalendarEvent {
 }
 
 interface PrevValuesDoc {
-  values?: Record<string, { value: string; asOf: string }>;
+  aliases?: Record<string, string>;
+  values?: Record<string, { value?: string; asOf?: string; series?: string; key?: string; source?: string }>;
 }
 
 interface CalendarDoc {
@@ -77,15 +78,40 @@ function shortDate(dateStr: string): string {
   return `${parseInt(m)}/${parseInt(d)}`;
 }
 
+function normalizePrevKey(value: unknown): string {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9가-힣]+/g, " ")
+    .trim()
+    .replace(/\s+/g, "_");
+}
+
+function previousForEvent(event: CalendarEvent, doc: PrevValuesDoc | null) {
+  const values = doc?.values ?? {};
+  const aliases = doc?.aliases ?? {};
+  const candidates = [event.title_en, event.title_ko]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .flatMap((value) => [value, normalizePrevKey(value), aliases[value], aliases[normalizePrevKey(value)]])
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+  for (const key of candidates) {
+    const resolved = aliases[key] ?? key;
+    const match = values[resolved] ?? values[key];
+    if (match?.value) return match;
+  }
+  return null;
+}
+
 export default function WeekAheadCard() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [prev, setPrev] = useState<PrevValuesDoc["values"] | null>(null);
+  const [prev, setPrev] = useState<PrevValuesDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     loadPrevValues().then((doc) => {
-      if (!cancelled && doc?.values) setPrev(doc.values);
+      if (!cancelled) setPrev(doc);
     });
     loadCalendar().then((doc) => {
       if (cancelled) return;
@@ -136,6 +162,7 @@ export default function WeekAheadCard() {
           const isH = e.importance === "H";
           const dd = ddayInfo(e.date_kst, today);
           const chipCls = dd.cls === "today" ? "today" : dd.cls === "soon" ? "tom" : "";
+          const previous = previousForEvent(e, prev);
           return (
             <div key={`${e.date_kst}-${e.time_kst}-${i}`} className="cal-row">
               <span className={`dchip ${chipCls}`}>
@@ -146,8 +173,8 @@ export default function WeekAheadCard() {
                 <div className="t">{e.title_ko}</div>
                 <div className="m">
                   {e.category_label}
-                  {e.title_en && prev?.[e.title_en] ? (
-                    <span className="prev num"> · 직전 {prev[e.title_en].value}</span>
+                  {previous?.value ? (
+                    <span className="prev num"> · 직전 {previous.value}{previous.asOf ? ` · ${previous.asOf}` : ""}</span>
                   ) : null}
                 </div>
               </span>
