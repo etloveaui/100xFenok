@@ -189,6 +189,7 @@ export async function buildLiveSetup(
     responseStyle?: unknown;
     vadPreset?: unknown;
     interruptionMode?: unknown;
+    resumeHandle?: unknown;
     systemPrompt?: unknown;
     enabledToolIds?: unknown;
   },
@@ -200,6 +201,9 @@ export async function buildLiveSetup(
   const interruptionMode = options.interruptionMode === "no-interrupt" || options.interruptionMode === "barge-in"
     ? options.interruptionMode
     : mode === "mona" ? "no-interrupt" : "barge-in";
+  const resumeHandle = typeof options.resumeHandle === "string" && options.resumeHandle.length > 0 && options.resumeHandle.length <= 512
+    ? options.resumeHandle
+    : null;
   const enabledToolIds = normalizeLiveToolIds(options.enabledToolIds);
   let systemPrompt = ensureLiveToolInstructions(
     normalizeSystemPrompt(options.systemPrompt, mode, options.lowVoice, responseStyle, enabledToolIds),
@@ -253,7 +257,8 @@ export async function buildLiveSetup(
         languageCodes: profile.languageHints,
       },
     },
-    sessionResumption: {},
+    sessionResumption: resumeHandle ? { handle: resumeHandle } : {},
+    contextWindowCompression: { slidingWindow: {} },
   };
 
   if (functionDeclarations.length > 0) {

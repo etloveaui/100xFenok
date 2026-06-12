@@ -261,7 +261,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
     const incomingMetrics = pickPrimitiveObject(args.metrics, [
       "micPermission", "connectionState", "firstResponseMs", "sessionPostMs", "socketOpenMs",
       "setupDoneMs", "transcriptLatencyMs", "turnCount", "interruptionCount",
-      "sessionDurationSec", "lowVoice", "lastError", "rating",
+      "sessionDurationSec", "lowVoice", "lastError", "rating", "resumeCount",
       "appendFailureCount", "lastAppendError",
     ]);
 

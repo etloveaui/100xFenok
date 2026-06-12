@@ -58,6 +58,7 @@ type BenchMetrics = {
   rating: Rating;
   appendFailureCount: number;
   lastAppendError: string | null;
+  resumeCount: number;
 };
 
 type ReadinessResponse = {
@@ -326,6 +327,7 @@ const EMPTY_METRICS: BenchMetrics = {
   rating: null,
   appendFailureCount: 0,
   lastAppendError: null,
+  resumeCount: 0,
 };
 
 const STATUS_TEXT: Record<SessionStatus, string> = {
@@ -622,6 +624,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const backoffRef = useRef(2500);
   const sessionIdRef = useRef<string | null>(null);
   const kickoffSentRef = useRef(false);
+  const resumeHandleRef = useRef<string | null>(null);
+  const reconnectingRef = useRef(false);
+  const statusRef = useRef<SessionStatus>("checking");
+  const resumeCountRef = useRef(0);
   const sentMetaRef = useRef(false);
   const isSecure = typeof window === "undefined" ? true : window.isSecureContext;
 
@@ -683,6 +689,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   useEffect(() => {
     logsRef.current = logs;
   }, [logs]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   useEffect(() => {
     const el = transcriptScrollRef.current;
@@ -1480,11 +1490,18 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       clearSocketTimeout();
       const setupDoneMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
       setMetrics((current) => ({ ...current, setupDoneMs }));
-      addLog("system", "연결됐어요. 코치가 먼저 인사할 거예요.");
+      if (reconnectingRef.current) {
+        addLog("system", "다시 연결됐어요. 이어서 진행해.");
+        resumeCountRef.current += 1;
+        setMetrics((current) => ({ ...current, resumeCount: resumeCountRef.current }));
+        reconnectingRef.current = false;
+      } else {
+        addLog("system", "연결됐어요. 코치가 먼저 인사할 거예요.");
+      }
       const socket = wsRef.current;
       if (socket) {
         void beginAudioStream(socket).then(() => {
-          if (mode === "mona" && !kickoffSentRef.current) {
+          if (mode === "mona" && !kickoffSentRef.current && !reconnectingRef.current) {
             kickoffSentRef.current = true;
             socket.send(JSON.stringify({ realtimeInput: { text: "시작" } }));
           }
@@ -1500,6 +1517,23 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
     if ("toolCall" in payload) {
       handleToolCall(payload.toolCall);
+      return;
+    }
+
+    if ("sessionResumptionUpdate" in payload) {
+      const resUpdate = payload.sessionResumptionUpdate as { resumable?: boolean; newHandle?: string } | undefined;
+      if (resUpdate?.resumable && resUpdate.newHandle) {
+        resumeHandleRef.current = resUpdate.newHandle;
+        if (!reconnectingRef.current) {
+          addLog("system", "이어가기 준비됨");
+        }
+      }
+      return;
+    }
+
+    if ("goAway" in payload) {
+      addLog("system", "연결 교체 예정");
+      void resumeSession();
       return;
     }
 
@@ -1594,6 +1628,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     sentMetaRef.current = false;
     logSeqRef.current = 0;
     kickoffSentRef.current = false;
+    resumeCountRef.current = 0;
     clearFlushTimer();
     persistPending();
     setCard(null);
@@ -1697,11 +1732,15 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           connectionState: current.connectionState === "error" ? "error" : "closed",
         }));
         if (event.code !== 1000) {
-          const reason = event.reason ? `: ${event.reason}` : "";
-          const message = `Gemini 연결 종료 ${event.code}${reason}`;
-          setStatus("ready");
-          setLastError(message);
-          addLog("error", message);
+          if (statusRef.current === "listening" && resumeHandleRef.current && !reconnectingRef.current) {
+            void resumeSession();
+          } else {
+            const reason = event.reason ? `: ${event.reason}` : "";
+            const message = `Gemini 연결 종료 ${event.code}${reason}`;
+            setStatus("ready");
+            setLastError(message);
+            addLog("error", message);
+          }
         } else {
           addLog("system", "Gemini 연결 종료");
         }
@@ -1712,6 +1751,123 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       setStatus(message.includes("MISSING_GEMINI_API_KEY") ? "blocked" : "ready");
       setLastError(message);
       addLog("error", message);
+    }
+  };
+
+  const resumeSession = async () => {
+    const handle = resumeHandleRef.current;
+    if (!handle || reconnectingRef.current) return;
+    if (resumeCountRef.current >= 5) {
+      setStatus("stopped");
+      setLastError("연결을 잃었어요. 다시 시작해 주세요.");
+      addLog("error", "연결을 잃었어요. 다시 시작해 주세요.");
+      return;
+    }
+    reconnectingRef.current = true;
+    setStatus("connecting");
+    addLog("system", "다시 연결 중… (대화는 이어집니다)");
+
+    const doResume = async (attempt: number): Promise<boolean> => {
+      try {
+        const response = await fetch("/api/admin/live/session/", {
+          method: "POST",
+          cache: "no-store",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            mode,
+            lowVoice,
+            voiceName,
+            responseStyle,
+            vadPreset,
+            interruptionMode,
+            resumeHandle: handle,
+            systemPrompt,
+            enabledToolIds,
+          }),
+        });
+        if (!response.ok) throw new Error(`RESUME_HTTP_${response.status}`);
+        const payload = (await response.json().catch(() => null)) as SessionResponse | { error?: string } | null;
+        if (!payload || "error" in payload) throw new Error("RESUME_FAILED");
+
+        const session = payload as SessionResponse;
+        setSessionId(session.sessionId);
+        sessionIdRef.current = session.sessionId;
+        setStartedAtMs(Date.parse(session.startedAt));
+
+        closeSocket();
+        stopAudioRuntime();
+
+        const websocketUrl = `${session.websocketEndpoint}?access_token=${encodeURIComponent(session.token)}`;
+        const socket = new WebSocket(websocketUrl);
+        socket.binaryType = "arraybuffer";
+        wsRef.current = socket;
+        setMetrics((current) => ({ ...current, connectionState: "socket-opening" }));
+        socketTimeoutRef.current = setTimeout(() => {
+          if (wsRef.current !== socket || socket.readyState === WebSocket.CLOSED) return;
+          setStatus("stopped");
+          setLastError("다시 연결 실패");
+          addLog("error", "다시 연결 타임아웃");
+          socket.close();
+          reconnectingRef.current = false;
+        }, 15000);
+
+        socket.onopen = () => {
+          setMetrics((current) => ({ ...current, connectionState: "setup-wait" }));
+          socket.send(JSON.stringify({ setup: session.setup }));
+        };
+        socket.onmessage = (event) => {
+          void (async () => {
+            try {
+              const text = await readSocketData(event.data);
+              handleServerMessage(JSON.parse(text) as Record<string, unknown>);
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "PARSE_FAILED";
+              setStatus("stopped");
+              setLastError(`다시 연결 응답 해석 실패: ${message}`);
+              addLog("error", `다시 연결 응답 해석 실패: ${message}`);
+              reconnectingRef.current = false;
+            }
+          })();
+        };
+        socket.onerror = () => {
+          clearSocketTimeout();
+          setStatus("stopped");
+          setLastError("다시 연결 오류");
+          addLog("error", "다시 연결 오류");
+          reconnectingRef.current = false;
+        };
+        socket.onclose = (event) => {
+          clearSocketTimeout();
+          stopAudioRuntime();
+          setMetrics((current) => ({
+            ...current,
+            connectionState: current.connectionState === "error" ? "error" : "closed",
+          }));
+          if (event.code !== 1000) {
+            const message = `다시 연결 종료 ${event.code}`;
+            setStatus("stopped");
+            setLastError(message);
+            addLog("error", message);
+          }
+          reconnectingRef.current = false;
+        };
+
+        return true;
+      } catch {
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 2000));
+          return doResume(attempt + 1);
+        }
+        return false;
+      }
+    };
+
+    const success = await doResume(1);
+    if (!success) {
+      setStatus("stopped");
+      setLastError("연결을 잃었어요. 다시 시작해 주세요.");
+      addLog("error", "연결을 잃었어요. 다시 시작해 주세요.");
+      reconnectingRef.current = false;
     }
   };
 
@@ -1759,6 +1915,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
 
     sessionIdRef.current = null;
+    resumeHandleRef.current = null;
   };
 
   const saveConversationLog = async (
@@ -1831,6 +1988,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     setStatus(readiness?.status === "BLOCKED" ? "blocked" : "ready");
     setSessionId(null);
     sessionIdRef.current = null;
+    resumeHandleRef.current = null;
+    reconnectingRef.current = false;
+    kickoffSentRef.current = false;
+    resumeCountRef.current = 0;
     setStartedAtMs(null);
     setMetrics({
       ...EMPTY_METRICS,

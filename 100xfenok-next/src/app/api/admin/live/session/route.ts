@@ -104,6 +104,8 @@ export async function POST(request: Request) {
         voiceName?: unknown;
         responseStyle?: unknown;
         vadPreset?: unknown;
+        interruptionMode?: unknown;
+        resumeHandle?: unknown;
         systemPrompt?: unknown;
         enabledToolIds?: unknown;
       }
@@ -113,6 +115,10 @@ export async function POST(request: Request) {
   const voiceName = normalizeLiveVoice(body?.voiceName);
   const responseStyle = normalizeResponseStyle(body?.responseStyle);
   const vadPreset = normalizeVadPreset(body?.vadPreset, mode);
+  const interruptionMode = body?.interruptionMode === "no-interrupt" ? "no-interrupt" : "barge-in";
+  const resumeHandle = typeof body?.resumeHandle === "string" && body.resumeHandle.length > 0 && body.resumeHandle.length <= 512
+    ? body.resumeHandle
+    : null;
   const enabledToolIds = normalizeRequestedToolIds(mode, body);
   const now = new Date();
   const apiKey = getGeminiApiKey();
@@ -136,6 +142,8 @@ export async function POST(request: Request) {
     voiceName,
     responseStyle,
     vadPreset,
+    interruptionMode,
+    resumeHandle,
     systemPrompt: body?.systemPrompt,
     enabledToolIds,
   });
@@ -184,6 +192,7 @@ export async function POST(request: Request) {
       startedAt: now.toISOString(),
       adapter: "gemini-live-ephemeral",
       mode,
+      resumed: !!resumeHandle,
       profile: {
         id: LIVE_PROFILES[mode].id,
         label: LIVE_PROFILES[mode].label,
