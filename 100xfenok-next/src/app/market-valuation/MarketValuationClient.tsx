@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
@@ -273,6 +273,17 @@ function BondPulsePanel({ items }: { items: MarketBondPulse[] }) {
 function AnnualReturnsPanel({ items }: { items: MarketAnnualReturn[] }) {
   const maxAbs = items.reduce((max, item) => Math.max(max, Math.abs(item.returnPct)), 0);
   const latest = items[items.length - 1] ?? null;
+  const [activeYear, setActiveYear] = useState<number | null>(latest?.year ?? null);
+  const active = items.find((item) => item.year === activeYear) ?? latest;
+  const best = items.reduce<MarketAnnualReturn | null>(
+    (winner, item) => (!winner || item.returnPct > winner.returnPct ? item : winner),
+    null,
+  );
+  const worst = items.reduce<MarketAnnualReturn | null>(
+    (loser, item) => (!loser || item.returnPct < loser.returnPct ? item : loser),
+    null,
+  );
+  const ticks = items.filter((item, index) => index === 0 || index === items.length - 1 || item.year % 10 === 0);
   return (
     <PanelShell title="S&P 500 연도별 수익률" subtitle="SlickCharts annual returns">
       {items.length === 0 || maxAbs === 0 ? (
@@ -283,38 +294,55 @@ function AnnualReturnsPanel({ items }: { items: MarketAnnualReturn[] }) {
             <p className="min-w-0 break-words text-xs font-semibold text-slate-500">
               1926년 이후 연간 수익률을 한 줄로 봅니다. 막대 위쪽은 플러스, 아래쪽은 마이너스입니다.
             </p>
-            {latest ? (
-              <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums", latest.returnPct >= 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")}>
-                {latest.year} {fmtPercentPoint(latest.returnPct)}
+            {active ? (
+              <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums", active.returnPct >= 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")}>
+                선택 {active.year} {fmtPercentPoint(active.returnPct)}
               </span>
             ) : null}
           </div>
+          <div className="mt-2 flex min-w-0 flex-wrap gap-2 text-[10px] font-black tabular-nums text-slate-500">
+            {latest ? <span>최신 {latest.year} {fmtPercentPoint(latest.returnPct)}</span> : null}
+            {best ? <span className="text-emerald-600">최고 {best.year} {fmtPercentPoint(best.returnPct)}</span> : null}
+            {worst ? <span className="text-rose-600">최저 {worst.year} {fmtPercentPoint(worst.returnPct)}</span> : null}
+          </div>
           <div className="mt-3 overflow-x-auto">
-            <div className="relative h-40 min-w-[620px] rounded-xl border border-slate-200 bg-slate-50">
-              <div className="absolute left-3 right-3 top-1/2 h-px bg-slate-300" />
+            <div className="relative h-44 min-w-[760px] rounded-xl border border-slate-200 bg-slate-50">
+              <div className="absolute left-3 right-3 top-[46%] h-px bg-slate-300" />
               {items.map((item, index) => {
-                const height = Math.max(2, (Math.abs(item.returnPct) / maxAbs) * 70);
+                const height = Math.max(2, (Math.abs(item.returnPct) / maxAbs) * 64);
                 const left = items.length <= 1 ? 50 : (index / (items.length - 1)) * 100;
                 const positive = item.returnPct >= 0;
                 return (
-                  <span
+                  <button
                     key={item.year}
+                    type="button"
                     title={`${item.year} ${fmtPercentPoint(item.returnPct)}`}
-                    className={cx("absolute w-1 -translate-x-1/2 rounded-full", positive ? "bg-emerald-500" : "bg-rose-500")}
+                    aria-label={`${item.year}년 S&P 500 수익률 ${fmtPercentPoint(item.returnPct)}`}
+                    onMouseEnter={() => setActiveYear(item.year)}
+                    onFocus={() => setActiveYear(item.year)}
+                    onClick={() => setActiveYear(item.year)}
+                    onMouseLeave={() => setActiveYear(latest?.year ?? null)}
+                    className={cx("absolute w-1 -translate-x-1/2 rounded-full border-0 p-0 outline-none ring-brand-interactive/0 transition focus:w-1.5 focus:ring-2", positive ? "bg-emerald-500" : "bg-rose-500")}
                     style={{
                       left: `${left}%`,
                       height: `${height}px`,
-                      ...(positive ? { bottom: "50%" } : { top: "50%" }),
+                      ...(positive ? { bottom: "46%" } : { top: "46%" }),
                     }}
-                    aria-hidden="true"
                   />
                 );
               })}
+              <div className="absolute bottom-2 left-0 right-0 h-4 text-[9px] font-black tabular-nums text-slate-300">
+                {ticks.map((tick) => {
+                  const index = items.findIndex((item) => item.year === tick.year);
+                  const left = items.length <= 1 ? 50 : (index / (items.length - 1)) * 100;
+                  return (
+                    <span key={tick.year} className="absolute -translate-x-1/2" style={{ left: `${left}%` }}>
+                      {tick.year}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          <div className="mt-2 flex min-w-0 justify-between text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">
-            <span>{items[0]?.year ?? "—"}</span>
-            <span>{items[items.length - 1]?.year ?? "—"}</span>
           </div>
         </div>
       )}

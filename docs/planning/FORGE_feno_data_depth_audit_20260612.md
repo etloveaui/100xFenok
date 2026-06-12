@@ -164,6 +164,44 @@ Low-resource verification for this slice:
 - `[not verified]` browser/dev-server/Playwright rendering; intentionally skipped
   because the active constraint is low resource usage on the Mac mini.
 
+## Implementation Slice 1B: UI Detail and Depth-2 Planning
+
+Implemented in `100xfenok-next` after the second measured pass:
+
+- `MarketThermometer` now exposes the already-present benchmark periods
+  `1w`, `1m`, `3m`, `6m`, `ytd`, plus the latest completed yearly return from
+  `yearly_returns`. The first viewport still stays on the six core index
+  rows; the full 37-section benchmark matrix is reserved for a lower fold,
+  drawer, or sub-route to avoid card overflow.
+- `/market-valuation` S&P 500 annual returns now has visible latest/best/worst
+  readouts, decade ticks, and hover/focus selection for year + return value.
+- Screener expanded detail and `/stock/[ticker]` PER-band charts now place
+  actual FY points and FY+1 on the same x-axis, with FY labels inside the SVG
+  coordinate system and per-point value/title metadata.
+- Screener revenue/EPS sparklines now preserve FY labels and can show FY+1
+  estimate points instead of dropping nulls into an unlabeled value-only line.
+- `/stock/[ticker]` financial bar charts now expose per-bar titles and a
+  latest/next-estimate readout; the profitability panel also renders
+  gross margin, operating margin, net margin, ROE, and ROA when present.
+
+Depth-2 plan locked by measured coverage and peer/agent cross-check:
+
+- Next product slice should be Stock/Screener revision and raw-financial depth.
+  Data coverage is already broad: 1,066 detail files, `raw_financials` for all
+  1,066, and weekly revision history for essentially the full universe.
+- Do not bulk-fetch all 1,066 detail payloads into the screener list. Use
+  on-demand detail panels, a focused revision tab, or precomputed lightweight
+  summary indexes.
+- Follow-up depth order: Stock/Screener `weekly_revision_history` +
+  `raw_financials`; then SlickCharts per-stock `metrics_history`/returns/
+  dividends; then Explore gainers/losers with freshness labels; then Guru
+  enhanced consensus/conviction/by-sector.
+- Desktop 125% type-scale is deferred from this patch. Measured risk is high
+  for global font-size or browser-zoom style changes because AppShell rail,
+  ticker, tabs, fixed table widths, and `nowrap` labels can reintroduce
+  overflow. The safer path is a scoped `.fnk-shell` small-text enlargement
+  pass with browser overflow QA.
+
 ## Dataset Findings
 
 ### Benchmarks, Indices, Yardeni

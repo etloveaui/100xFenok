@@ -3,16 +3,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatSignedPercent } from "@/lib/format";
 
-type Period = "1m" | "3m" | "ytd";
+type Period = "1w" | "1m" | "3m" | "6m" | "ytd" | "1y";
 
 interface MomentumRow {
   px: number | null;
   eps: number | null;
   per: number | null;
+  asOf?: string | null;
 }
 
 type SummariesDoc = {
-  source_summaries?: Record<string, { momentum?: Record<string, Record<string, number | null>> }>;
+  source_summaries?: Record<
+    string,
+    {
+      momentum?: Record<string, Record<string, number | null>>;
+      yearly_returns?: Record<string, Record<string, number | null>>;
+    }
+  >;
 };
 
 export type { SummariesDoc, MomentumRow };
@@ -47,17 +54,35 @@ const SECTIONS: Array<{ key: string; label: string }> = [
 
 const PERIODS: Array<{ id: Period; label: string }> = [
   { id: "ytd", label: "YTD" },
+  { id: "6m", label: "6개월" },
   { id: "3m", label: "3개월" },
   { id: "1m", label: "1개월" },
+  { id: "1w", label: "1주" },
+  { id: "1y", label: "최근연도" },
 ];
 
 export function pick(doc: SummariesDoc, section: string, period: Period): MomentumRow {
-  const m = doc.source_summaries?.[section]?.momentum;
+  const summary = doc.source_summaries?.[section];
+  const m = summary?.momentum;
   const n = (v: unknown): number | null => (typeof v === "number" ? v : null);
+  if (period === "1y") {
+    const yearly = summary?.yearly_returns;
+    const years = Object.keys(yearly?.px_last ?? {})
+      .filter((year) => Number.isFinite(Number(year)))
+      .sort((a, b) => Number(b) - Number(a));
+    const latestYear = years[0] ?? null;
+    return {
+      px: latestYear ? n(yearly?.px_last?.[latestYear]) : null,
+      eps: latestYear ? n(yearly?.best_eps?.[latestYear]) : null,
+      per: latestYear ? n(yearly?.best_pe_ratio?.[latestYear]) : null,
+      asOf: latestYear,
+    };
+  }
   return {
     px: n(m?.px_last?.[period]),
     eps: n(m?.best_eps?.[period]),
     per: n(m?.best_pe_ratio?.[period]),
+    asOf: null,
   };
 }
 
@@ -122,6 +147,8 @@ export default function MarketThermometer() {
     return SECTIONS.map((s) => ({ ...s, row: pick(doc, s.key, period) }))
       .filter((r) => r.row.px !== null);
   }, [doc, period]);
+  const activePeriodLabel = PERIODS.find((p) => p.id === period)?.label ?? "YTD";
+  const activeYear = period === "1y" ? rows?.find((r) => r.row.asOf)?.row.asOf ?? null : null;
 
   if (!rows || rows.length === 0) {
     return (
@@ -176,7 +203,10 @@ export default function MarketThermometer() {
           </div>
         );
       })}
-      <div className="panel-foot">Bloomberg 주간 집계 기준 · 막대 중앙선 오른쪽 = 플러스 기여</div>
+      <div className="panel-foot">
+        Bloomberg 주간 집계 기준 · {activePeriodLabel}
+        {activeYear ? ` ${activeYear}` : ""} · 막대 중앙선 오른쪽 = 플러스 기여
+      </div>
     </section>
   );
 }

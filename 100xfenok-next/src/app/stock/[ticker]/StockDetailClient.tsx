@@ -198,12 +198,13 @@ function perBandPositionColor(current: number, min: number, max: number): string
 // ---------------------------------------------------------------------------
 
 function MiniBarChart({
-  actuals, estimates, years, color,
+  actuals, estimates, years, color, formatValue = fmtLarge,
 }: {
   actuals: NumberSeries;
   estimates: Record<string, MaybeNumber> | null;
   years: string[];
   color: string;
+  formatValue?: (value: number) => string;
 }) {
   const estKeys: string[] = [];
   if (estimates) for (const k of ["fy1", "fy2", "fy3"]) {
@@ -239,6 +240,8 @@ function MiniBarChart({
     const top = value > 0 ? Math.min(y, 100 - height) : Math.min(zeroPct, 100 - height);
     return { top: clampPct(top), height: clampPct(height) };
   };
+  const latestActual = [...bars].reverse().find((bar) => !bar.estimate && isFiniteNumber(bar.value));
+  const nextEstimate = bars.find((bar) => bar.estimate && isFiniteNumber(bar.value));
 
   return (
     <div className="space-y-1">
@@ -250,8 +253,9 @@ function MiniBarChart({
         {bars.map((bar) => {
           const s = shape(bar.value);
           const barColor = isFiniteNumber(bar.value) && bar.value < 0 ? "#f43f5e" : color;
+          const label = `${bar.label}${bar.estimate ? " 추정" : ""} ${isFiniteNumber(bar.value) ? formatValue(bar.value) : "—"}`;
           return (
-            <div key={bar.key} className="relative h-full flex-1">
+            <div key={bar.key} className="relative h-full flex-1" title={label} aria-label={label}>
               {s ? (
                 <div
                   className="absolute left-0 right-0 rounded-sm"
@@ -273,6 +277,14 @@ function MiniBarChart({
             {bar.label}
           </span>
         ))}
+      </div>
+      <div className="flex min-w-0 justify-between gap-2 text-[9px] font-black tabular-nums text-slate-500">
+        <span className="min-w-0 truncate">
+          최신 {latestActual ? `${latestActual.label} ${formatValue(latestActual.value as number)}` : "—"}
+        </span>
+        <span className="min-w-0 truncate text-slate-400">
+          추정 {nextEstimate ? `${nextEstimate.label} ${formatValue(nextEstimate.value as number)}` : "—"}
+        </span>
       </div>
     </div>
   );
@@ -418,8 +430,8 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
 // MetricWithSpark
 // ---------------------------------------------------------------------------
 
-function MetricWithSpark({ label, value, data, color }: {
-  label: string; value: string; data: NumberSeries; color: string;
+function MetricWithSpark({ label, value, data, color, years, formatValue = (n) => n.toFixed(1) }: {
+  label: string; value: string; data: NumberSeries; color: string; years: string[]; formatValue?: (n: number) => string;
 }) {
   return (
     <div className="rounded-xl border border-slate-200 p-3">
@@ -427,7 +439,7 @@ function MetricWithSpark({ label, value, data, color }: {
         <span className="text-[10px] font-bold text-slate-500">{label}</span>
         <span className="orbitron tabular-nums text-sm font-black text-slate-900">{value}</span>
       </div>
-      {finiteValues(data).length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} /></div> : null}
+      {finiteValues(data).length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} years={years} formatValue={formatValue} /></div> : null}
     </div>
   );
 }
@@ -473,7 +485,9 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   useEffect(() => {
     let cancelled = false;
     if (!canLoadStockData) {
-      setYfData(row === null ? null : undefined);
+      Promise.resolve().then(() => {
+        if (!cancelled) setYfData(row === null ? null : undefined);
+      });
       return () => { cancelled = true; };
     }
     loadYfFinance(symbol).then((d) => { if (!cancelled) setYfData(d ?? null); });
@@ -712,15 +726,18 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                   <div>
                     <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
                     <div className="space-y-3">
-                      <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} color="#8b5cf6" />
-                      <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} color="#06b6d4" />
+                      <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} color="#14b8a6" years={years} formatValue={fmtWholePct} />
+                      <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} color="#06b6d4" years={years} formatValue={fmtWholePct} />
+                      <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} color="#6366f1" years={years} formatValue={fmtWholePct} />
+                      <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} color="#8b5cf6" years={years} formatValue={fmtWholePct} />
+                      <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} color="#0ea5e9" years={years} formatValue={fmtWholePct} />
                     </div>
                   </div>
                   <div>
                     <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">성장률 (YoY)</h4>
                     <div className="space-y-3">
-                      <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} color="#10b981" />
-                      <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} color="#f59e0b" />
+                      <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} color="#10b981" years={years} formatValue={fmtPct} />
+                      <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} color="#f59e0b" years={years} formatValue={fmtPct} />
                     </div>
                   </div>
                 </div>

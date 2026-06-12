@@ -18,7 +18,13 @@ export interface DetailData {
   };
   per_share?: { eps?: NumberSeries };
   cash_flow?: { cfo?: NumberSeries; capex?: NumberSeries; fcf?: NumberSeries };
-  profitability?: { roe?: NumberSeries; operating_margin?: NumberSeries };
+  profitability?: {
+    gross_margin?: NumberSeries;
+    operating_margin?: NumberSeries;
+    net_margin?: NumberSeries;
+    roe?: NumberSeries;
+    roa?: NumberSeries;
+  };
   growth?: { revenue_growth?: NumberSeries; eps_growth?: NumberSeries };
   per_bands?: {
     current: MaybeNumber;
@@ -57,6 +63,27 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function finiteValues(data: NumberSeries | null | undefined): number[] {
   return (data ?? []).filter(isFiniteNumber);
+}
+
+type FiscalPoint = { label: string; value: number; index: number; estimate?: boolean };
+
+function buildFiscalPoints(years: string[], data: NumberSeries | null | undefined, fy1?: MaybeNumber) {
+  const actualCount = Math.max(years.length, data?.length ?? 0);
+  const labels = Array.from({ length: actualCount }, (_, index) => years[index] ?? `P${index + 1}`);
+  const points: FiscalPoint[] = (data ?? [])
+    .map((value, index) => ({
+      label: labels[index] ?? `P${index + 1}`,
+      value,
+      index,
+    }))
+    .filter((point): point is FiscalPoint => isFiniteNumber(point.value));
+  if (isFiniteNumber(fy1)) {
+    points.push({ label: "FY+1", value: fy1, index: actualCount, estimate: true });
+  }
+  return {
+    labels: isFiniteNumber(fy1) ? [...labels, "FY+1"] : labels,
+    points,
+  };
 }
 
 function lastFinite(data: NumberSeries | null | undefined): number | null {
@@ -121,7 +148,9 @@ export function use13FData(ticker: string) {
     let cancelled = false;
     const symbol = normalizeTicker(ticker);
     if (!symbol) {
-      setEntries([]);
+      Promise.resolve().then(() => {
+        if (!cancelled) setEntries([]);
+      });
       return () => {
         cancelled = true;
       };
@@ -158,39 +187,89 @@ export function use13FData(ticker: string) {
   return entries;
 }
 
-export function Sparkline({ data, color }: { data: NumberSeries; color: string }) {
-  const values = finiteValues(data);
-  if (values.length < 2) return <span className="text-xs text-slate-300">—</span>;
+export function Sparkline({
+  data,
+  color,
+  years = [],
+  estimate,
+  formatValue = (value) => value.toFixed(1),
+}: {
+  data: NumberSeries;
+  color: string;
+  years?: string[];
+  estimate?: MaybeNumber;
+  formatValue?: (value: number) => string;
+}) {
+  const { labels, points } = buildFiscalPoints(years, data, estimate);
+  const actualPoints = points.filter((point) => !point.estimate);
+  const estimatePoint = points.find((point) => point.estimate);
+  if (points.length < 2 || labels.length < 2) return <span className="text-xs text-slate-300">—</span>;
+  const values = points.map((point) => point.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const width = 200;
-  const height = 60;
-  const pad = 4;
+  const width = 220;
+  const height = 82;
+  const padX = 6;
+  const padT = 8;
+  const padB = 17;
+  const plotW = width - padX * 2;
+  const plotH = height - padT - padB;
+  const xDenominator = Math.max(labels.length - 1, 1);
+  const toX = (index: number) => padX + (index / xDenominator) * plotW;
+  const toY = (value: number) => padT + plotH - ((value - min) / range) * plotH;
 
-  const points = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * width;
-      const y = height - pad - ((v - min) / range) * (height - 2 * pad);
-      return `${x},${y}`;
-    })
-    .join(" ");
+  const actualLine = actualPoints.map((point) => `${toX(point.index)},${toY(point.value)}`).join(" ");
+  const currentPoint = actualPoints[actualPoints.length - 1] ?? null;
+  const labelPoints = [currentPoint, estimatePoint].filter(Boolean) as FiscalPoint[];
 
   return (
-    <svg width={width} height={height} className="overflow-visible">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {values.map((v, i) => {
-        const x = (i / (values.length - 1)) * width;
-        const y = height - pad - ((v - min) / range) * (height - 2 * pad);
-        return <circle key={i} cx={x} cy={y} r={3} fill={color} />;
+    <svg width={width} height={height} className="max-w-full overflow-visible" role="img" aria-label="FY별 추이 차트">
+      <polyline points={actualLine} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      {estimatePoint && currentPoint ? (
+        <line
+          x1={toX(currentPoint.index)}
+          y1={toY(currentPoint.value)}
+          x2={toX(estimatePoint.index)}
+          y2={toY(estimatePoint.value)}
+          stroke={color}
+          strokeWidth={2}
+          strokeDasharray="4,2"
+        />
+      ) : null}
+      {points.map((point) => {
+        const x = toX(point.index);
+        const y = toY(point.value);
+        return (
+          <circle
+            key={`${point.label}-${point.index}`}
+            cx={x}
+            cy={y}
+            r={point.estimate ? 3.5 : 3}
+            fill={point.estimate ? "white" : color}
+            stroke={color}
+            strokeWidth={point.estimate ? 2 : 1}
+          >
+            <title>{`${point.label} ${formatValue(point.value)}`}</title>
+          </circle>
+        );
       })}
+      {labelPoints.map((point) => (
+        <text
+          key={`label-${point.label}`}
+          x={toX(point.index)}
+          y={Math.max(9, toY(point.value) - 7)}
+          textAnchor="middle"
+          className="text-[8px] font-black fill-slate-500"
+        >
+          {formatValue(point.value)}
+        </text>
+      ))}
+      {labels.map((label, index) => (
+        <text key={label} x={toX(index)} y={height - 3} textAnchor="middle" className="text-[8px] font-black fill-slate-400">
+          {label}
+        </text>
+      ))}
     </svg>
   );
 }
@@ -206,15 +285,12 @@ export function PerBandChart({
   perBands?: DetailData["per_bands"];
   estimates?: { fy1?: MaybeNumber };
 }) {
-  const perPoints = (per ?? [])
-    .map((value, index) => ({ value, index }))
-    .filter((point): point is { value: number; index: number } => isFiniteNumber(point.value));
+  const { labels: periodLabels, points: allPerPoints } = buildFiscalPoints(years, per, estimates?.fy1);
+  const perPoints = allPerPoints.filter((point) => !point.estimate);
+  const forwardPoint = allPerPoints.find((point) => point.estimate);
   if (perPoints.length < 2) return <span className="text-xs text-slate-300">—</span>;
 
-  const allValues = perPoints.map((point) => point.value);
-  if (isFiniteNumber(estimates?.fy1)) {
-    allValues.push(estimates.fy1);
-  }
+  const allValues = allPerPoints.map((point) => point.value);
 
   const bands = validPerBands(perBands) ? perBands : null;
   let yMin = Math.min(...allValues);
@@ -227,15 +303,15 @@ export function PerBandChart({
   yMin -= yPad;
   yMax += yPad;
 
-  const w = 280;
-  const h = 110;
+  const w = 300;
+  const h = 132;
   const padL = 44;
-  const padR = 28;
-  const padT = 10;
-  const padB = 24;
+  const padR = 30;
+  const padT = 12;
+  const padB = 30;
   const plotW = w - padL - padR;
   const plotH = h - padT - padB;
-  const xDenominator = Math.max((per?.length ?? 0) - 1, 1);
+  const xDenominator = Math.max(periodLabels.length - 1, 1);
 
   const toX = (i: number) => padL + (i / xDenominator) * plotW;
   const toY = (v: number) => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
@@ -250,13 +326,13 @@ export function PerBandChart({
   const currentColor =
     currentCls === "emerald" ? "#10b981" : currentCls === "rose" ? "#f43f5e" : "#64748b";
 
-  const hasForward = isFiniteNumber(estimates?.fy1);
-  const forwardX = padL + plotW + 16;
-  const forwardY = hasForward ? toY(estimates.fy1!) : 0;
+  const hasForward = Boolean(forwardPoint);
+  const forwardX = forwardPoint ? toX(forwardPoint.index) : 0;
+  const forwardY = forwardPoint ? toY(forwardPoint.value) : 0;
 
   return (
     <div>
-      <svg width={w} height={h} className="overflow-visible">
+      <svg width={w} height={h} className="max-w-full overflow-visible" role="img" aria-label="FY별 PER 밴드 차트">
         {/* Shaded band */}
         {bands && (
           <>
@@ -345,36 +421,44 @@ export function PerBandChart({
               strokeWidth={2}
               strokeDasharray="4,2"
             />
-            <circle cx={forwardX} cy={forwardY} r={3} fill="none" stroke="#1B73D3" strokeWidth={2} />
           </>
         )}
 
         {/* Data points */}
-        {perPoints.map(({ value, index }) => {
-          const x = toX(index);
-          const y = toY(value);
-          const isCurrent = index === currentPoint.index;
+        {allPerPoints.map((point) => {
+          const x = toX(point.index);
+          const y = toY(point.value);
+          const isCurrent = !point.estimate && point.index === currentPoint.index;
           return (
-            <g key={index}>
+            <g key={`${point.label}-${point.index}`}>
               <circle
                 cx={x}
                 cy={y}
-                r={isCurrent ? 5 : 3}
-                fill={isCurrent ? currentColor : "#1B73D3"}
-                stroke="white"
+                r={isCurrent ? 5 : point.estimate ? 3.5 : 3}
+                fill={point.estimate ? "white" : isCurrent ? currentColor : "#1B73D3"}
+                stroke={point.estimate ? "#1B73D3" : "white"}
                 strokeWidth={2}
-              />
+              >
+                <title>{`${point.label} PER ${point.value.toFixed(1)}x`}</title>
+              </circle>
               <text
                 x={x}
-                y={y - 10}
+                y={Math.max(9, y - 10)}
                 textAnchor="middle"
                 className="text-[9px] font-black fill-slate-600"
               >
-                {value.toFixed(1)}
+                {point.value.toFixed(1)}
               </text>
             </g>
           );
         })}
+
+        {/* X-axis labels */}
+        {periodLabels.map((label, index) => (
+          <text key={label} x={toX(index)} y={h - 8} textAnchor="middle" className="text-[9px] font-black fill-slate-400">
+            {label}
+          </text>
+        ))}
 
         {/* Y-axis labels */}
         {bands && (
@@ -406,21 +490,17 @@ export function PerBandChart({
           </>
         )}
       </svg>
-      <div className="mt-1 flex justify-between px-11 text-[10px] font-bold text-slate-400">
-        {years.map((y) => (
-          <span key={y}>{y}</span>
-        ))}
-        {hasForward && <span>FY+1</span>}
-      </div>
     </div>
   );
 }
 
 export function fmtLarge(n: MaybeNumber): string {
   if (!isFiniteNumber(n)) return "—";
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}T`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}B`;
-  return `${n}M`;
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toFixed(1)}T`;
+  if (abs >= 1_000) return `${sign}${(abs / 1_000).toFixed(0)}B`;
+  return `${sign}${abs}M`;
 }
 
 export function StockDetailBody({
@@ -466,7 +546,13 @@ export function StockDetailBody({
           </h4>
           {hasRevenue ? (
             <>
-              <Sparkline data={revenue} color="#10b981" />
+              <Sparkline
+                data={revenue}
+                color="#10b981"
+                years={detail.years}
+                estimate={detail.income_statement_estimates?.revenue?.fy1}
+                formatValue={fmtLarge}
+              />
               <div className="mt-1 text-[10px] font-bold text-slate-400">
                 {fmtLarge(latestRevenue)}
                 {" (최신)"}
@@ -484,7 +570,13 @@ export function StockDetailBody({
           </h4>
           {hasEps ? (
             <>
-              <Sparkline data={eps} color="#8b5cf6" />
+              <Sparkline
+                data={eps}
+                color="#8b5cf6"
+                years={detail.years}
+                estimate={detail.per_share_estimates?.eps?.fy1}
+                formatValue={(value) => `$${value.toFixed(2)}`}
+              />
               <div className="mt-1 text-[10px] font-bold text-slate-400">
                 {latestEps != null ? `$${latestEps.toFixed(2)} (최신)` : "—"}
               </div>
