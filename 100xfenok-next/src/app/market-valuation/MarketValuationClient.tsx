@@ -1,8 +1,21 @@
 "use client";
 
+import type { ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import type { IndexMomentum, ValuationBand, ValuationDataSource, ValuationDriver } from "@/lib/market-valuation/types";
+import type {
+  IndexMomentum,
+  MarketEventRisk,
+  MarketIndexTrend,
+  MarketMacroPulse,
+  MarketSentimentPulse,
+  MarketSignalPulse,
+  MarketStructurePulse,
+  MarketTone,
+  ValuationBand,
+  ValuationDriver,
+} from "@/lib/market-valuation/types";
 import YardeniCard from "./YardeniCard";
 import { formatPercent } from "@/lib/dashboard/formatters";
 
@@ -35,11 +48,193 @@ function fmtSignedPct(value: number | null, digits = 1): string {
   return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;
 }
 
-function toneClass(tone: ValuationDriver["tone"]): string {
+function toneClass(tone: MarketTone): string {
   if (tone === "emerald") return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (tone === "amber") return "border-amber-200 bg-amber-50 text-amber-700";
   if (tone === "rose") return "border-rose-200 bg-rose-50 text-rose-700";
   return "border-slate-200 bg-slate-50 text-slate-600";
+}
+
+function toneDotClass(tone: MarketTone): string {
+  if (tone === "emerald") return "bg-emerald-500";
+  if (tone === "amber") return "bg-amber-500";
+  if (tone === "rose") return "bg-rose-500";
+  return "bg-slate-400";
+}
+
+function fmtIndex(value: number | null): string {
+  return value === null ? "—" : value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function EmptyPanel({ label }: { label: string }) {
+  return <div className="px-4 py-5 text-sm font-semibold text-slate-400">{label}</div>;
+}
+
+function PanelShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-[1.2rem] border border-slate-200 bg-white shadow-[0_10px_36px_-18px_rgba(15,23,42,0.18)]">
+      <header className="flex min-w-0 flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 px-4 py-3">
+        <h2 className="min-w-0 text-sm font-black tracking-tight text-slate-950">{title}</h2>
+        <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">{subtitle}</span>
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function MacroPulsePanel({ items }: { items: MarketMacroPulse[] }) {
+  return (
+    <PanelShell title="경기 펄스" subtitle="PMI · ISM · OECD CLI">
+      {items.length === 0 ? (
+        <EmptyPanel label="경기 데이터 없음" />
+      ) : (
+        <div className="grid min-w-0 sm:grid-cols-2 xl:grid-cols-5">
+          {items.map((item) => (
+            <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 xl:border-t-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className={cx("h-2 w-2 shrink-0 rounded-full", toneDotClass(item.tone))} />
+                <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+              </div>
+              <div className="mt-2 flex min-w-0 items-end gap-1">
+                <span className="orbitron min-w-0 text-2xl font-black tabular-nums text-slate-950">{fmt(item.value, 1)}</span>
+                <span className="pb-1 text-[10px] font-bold uppercase text-slate-400">{item.unit}</span>
+              </div>
+              <p className="mt-1 text-[11px] font-semibold text-slate-400">{item.period ?? item.releaseDate ?? "—"}</p>
+              <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </PanelShell>
+  );
+}
+
+function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
+  return (
+    <PanelShell title="유동성·리스크 신호" subtitle="computed signals">
+      {items.length === 0 ? (
+        <EmptyPanel label="가공 신호 없음" />
+      ) : (
+        <div className="grid min-w-0 sm:grid-cols-2">
+          {items.map((item) => (
+            <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0">
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+                  <p className="mt-1 min-w-0 break-words text-xs font-semibold leading-5 text-slate-500">{item.detail}</p>
+                </div>
+                <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black", toneClass(item.tone))}>{item.statusLabel}</span>
+              </div>
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.asOf ?? "—"}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </PanelShell>
+  );
+}
+
+function SentimentPulsePanel({ items }: { items: MarketSentimentPulse[] }) {
+  return (
+    <PanelShell title="센티먼트" subtitle="VIX · AAII · MOVE">
+      {items.length === 0 ? (
+        <EmptyPanel label="센티먼트 데이터 없음" />
+      ) : (
+        <div className="grid min-w-0 sm:grid-cols-2 lg:grid-cols-5">
+          {items.map((item) => (
+            <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 lg:border-t-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className={cx("h-2 w-2 shrink-0 rounded-full", toneDotClass(item.tone))} />
+                <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+              </div>
+              <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
+              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.date ?? "—"}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </PanelShell>
+  );
+}
+
+function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend[]; structures: MarketStructurePulse[] }) {
+  return (
+    <PanelShell title="시장 구조" subtitle="indices · slickcharts">
+      {trends.length === 0 && structures.length === 0 ? (
+        <EmptyPanel label="시장 구조 데이터 없음" />
+      ) : (
+        <>
+          <div className="grid min-w-0 md:grid-cols-2">
+            {trends.map((trend) => (
+              <div key={trend.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 md:border-t-0">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{trend.label}</p>
+                    <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">{fmtIndex(trend.latestValue)}</p>
+                  </div>
+                  <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{trend.latestDate ?? "—"}</span>
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <MomentumCell label="1Y" value={trend.oneYearReturn} />
+                  <MomentumCell label="5Y" value={trend.fiveYearReturn} />
+                  <MomentumCell label="DD" value={trend.drawdownFromHigh} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="grid min-w-0 border-t border-slate-100 sm:grid-cols-2 lg:grid-cols-3">
+            {structures.map((item) => (
+              <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 lg:[&:nth-child(-n+3)]:border-t-0">
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+                    <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
+                  </div>
+                  <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums", toneClass(item.tone))}>{item.valueLabel}</span>
+                </div>
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.updated ?? "—"}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </PanelShell>
+  );
+}
+
+function EventRiskPanel({ items }: { items: MarketEventRisk[] }) {
+  return (
+    <PanelShell title="이벤트 리스크" subtitle="USD calendar">
+      {items.length === 0 ? (
+        <EmptyPanel label="다가오는 주요 이벤트 없음" />
+      ) : (
+        <div className="grid min-w-0 lg:grid-cols-2">
+          {items.map((item) => {
+            const tone: MarketTone = item.importance === "H" ? "rose" : "amber";
+            return (
+              <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:[&:nth-child(-n+2)]:border-t-0">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="shrink-0 text-right">
+                    <p className="text-[11px] font-black tabular-nums text-slate-950">{item.dateKst.slice(5)}</p>
+                    <p className="text-[10px] font-bold tabular-nums text-slate-400">{item.timeKst}</p>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className={cx("rounded-full border px-2 py-0.5 text-[10px] font-black", toneClass(tone))}>{item.importance}</span>
+                      <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">{item.category}</span>
+                    </div>
+                    <p className="mt-1 min-w-0 break-words text-sm font-bold leading-5 text-slate-800">{item.titleKo}</p>
+                    {item.titleEn ? <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-400">{item.titleEn}</p> : null}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </PanelShell>
+  );
 }
 
 function DriverBadge({ driver }: { driver: ValuationDriver | null }) {
@@ -124,52 +319,19 @@ function ValuationRow({ label, band, digits }: { label: string; band: ValuationB
   );
 }
 
-function DataSourcePanel({
-  sources,
-  benchmarkSections,
-  damodaranUsErp,
-}: {
-  sources: ValuationDataSource[];
-  benchmarkSections: number | null;
-  damodaranUsErp: number | null;
-}) {
-  if (sources.length === 0) return null;
-  return (
-    <section className="panel">
-      <div className="panel-h">
-        <h2>데이터 커버리지</h2>
-        <span className="desc">원천 + 가공 신호</span>
-      </div>
-      <div className="grid gap-3 p-4 sm:grid-cols-2">
-        {sources.map((source) => (
-          <div key={source.id} className="rounded-[1rem] border border-slate-200 bg-white px-3 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-black text-slate-900">{source.label}</p>
-                <p className="mt-1 text-[11px] font-semibold text-slate-400">{source.source}</p>
-              </div>
-              {source.updated ? (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-500">
-                  {source.updated}
-                </span>
-              ) : null}
-            </div>
-            <p className="mt-2 text-[11px] leading-5 text-slate-500">{source.coverage}</p>
-            <p className="mt-2 text-[11px] font-bold text-slate-700">{source.usage}</p>
-            {source.cadence ? <p className="mt-1 text-[10px] font-semibold text-slate-400">주기: {source.cadence}</p> : null}
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-3 text-[11px] font-bold text-slate-500">
-        {benchmarkSections !== null ? <span>벤치마크 섹션 {benchmarkSections}개</span> : null}
-        {damodaranUsErp !== null ? <span>Damodaran US ERP {fmtSignedPct(damodaranUsErp, 2).replace("+", "")}</span> : null}
-      </div>
-    </section>
-  );
-}
-
 export default function MarketValuationClient() {
-  const { indices, dataSources, benchmarkSections, damodaranUsErp, dataReady, failed, sourceDate } = useMarketValuation();
+  const {
+    indices,
+    macroPulses,
+    signalPulses,
+    sentimentPulses,
+    eventRisks,
+    indexTrends,
+    structurePulses,
+    dataReady,
+    failed,
+    sourceDate,
+  } = useMarketValuation();
 
   return (
     <div className="data-shell-page">
@@ -199,6 +361,20 @@ export default function MarketValuationClient() {
           지수 밸류에이션 데이터를 불러오지 못했습니다.
         </div>
       ) : null}
+
+      <MarketThermometer />
+
+      <div className={cx("grid gap-4", !dataReady && "opacity-60")}>
+        <MacroPulsePanel items={macroPulses} />
+        <SignalPulsePanel items={signalPulses} />
+      </div>
+
+      <div className={cx("grid gap-4", !dataReady && "opacity-60")}>
+        <SentimentPulsePanel items={sentimentPulses} />
+        <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
+      </div>
+
+      <EventRiskPanel items={eventRisks} />
 
       <div className={cx("grid gap-4 sm:grid-cols-2", !dataReady && "opacity-60")}>
         {indices.map((index) => (
@@ -236,7 +412,6 @@ export default function MarketValuationClient() {
       </div>
 
       <YardeniCard />
-      <DataSourcePanel sources={dataSources} benchmarkSections={benchmarkSections} damodaranUsErp={damodaranUsErp} />
 
       <p className="px-1 text-[11px] text-slate-400">
         역사 밴드 = 2010년 이후 weekly 시계열의 min/avg/max. percentile은 현재값의 역사적 위치(높을수록 고평가). YTD 분해는 가격 변화가 EPS 개선인지 멀티플 확장/축소인지 보기 위한 가공 신호입니다.

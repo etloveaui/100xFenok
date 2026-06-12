@@ -47,7 +47,7 @@ export default function ExplorePage() {
           <ExploreHotTopics />
         </div>
 
-        <p className="data-cap">데이터: Global Scouter · Bloomberg benchmarks · SEC 13F · Yahoo Finance</p>
+        <p className="data-cap">데이터: Global Scouter · Benchmarks · Calendar · SEC 13F · Computed signals</p>
       </AppShell>
     </div>
   );

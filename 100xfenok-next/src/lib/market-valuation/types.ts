@@ -42,6 +42,8 @@ export interface ValuationDriver {
   tone: "emerald" | "amber" | "rose" | "slate";
 }
 
+export type MarketTone = ValuationDriver["tone"];
+
 export interface MarketIndexValuation {
   id: string;
   name: string;
@@ -76,9 +78,75 @@ export interface ValuationDataSource {
   usage: string;
 }
 
+export interface MarketMacroPulse {
+  id: string;
+  label: string;
+  value: number | null;
+  unit: string;
+  period: string | null;
+  releaseDate: string | null;
+  detail: string;
+  tone: MarketTone;
+}
+
+export interface MarketSignalPulse {
+  id: string;
+  label: string;
+  status: string;
+  statusLabel: string;
+  detail: string;
+  asOf: string | null;
+  tone: MarketTone;
+}
+
+export interface MarketSentimentPulse {
+  id: string;
+  label: string;
+  value: number | null;
+  valueLabel: string;
+  date: string | null;
+  detail: string;
+  tone: MarketTone;
+}
+
+export interface MarketEventRisk {
+  id: string;
+  dateKst: string;
+  timeKst: string;
+  importance: "H" | "M" | "L" | string;
+  category: string;
+  titleKo: string;
+  titleEn: string | null;
+}
+
+export interface MarketIndexTrend {
+  id: string;
+  label: string;
+  latestDate: string | null;
+  latestValue: number | null;
+  oneYearReturn: number | null;
+  fiveYearReturn: number | null;
+  drawdownFromHigh: number | null;
+}
+
+export interface MarketStructurePulse {
+  id: string;
+  label: string;
+  valueLabel: string;
+  detail: string;
+  updated: string | null;
+  tone: MarketTone;
+}
+
 export interface MarketValuationResult {
   indices: MarketIndexValuation[];
   dataSources: ValuationDataSource[];
+  macroPulses: MarketMacroPulse[];
+  signalPulses: MarketSignalPulse[];
+  sentimentPulses: MarketSentimentPulse[];
+  eventRisks: MarketEventRisk[];
+  indexTrends: MarketIndexTrend[];
+  structurePulses: MarketStructurePulse[];
   benchmarkSections: number | null;
   damodaranUsErp: number | null;
   dataReady: boolean;
