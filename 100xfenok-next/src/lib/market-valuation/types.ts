@@ -89,6 +89,24 @@ export interface MarketMacroPulse {
   tone: MarketTone;
 }
 
+export interface MarketMacroComponent {
+  id: string;
+  label: string;
+  value: number | null;
+  delta1m: number | null;
+  tone: MarketTone;
+}
+
+export interface MarketMacroDepth {
+  id: string;
+  label: string;
+  period: string | null;
+  releaseDate: string | null;
+  expansionCount: number;
+  contractionCount: number;
+  components: MarketMacroComponent[];
+}
+
 export interface MarketSignalPulse {
   id: string;
   label: string;
@@ -138,15 +156,51 @@ export interface MarketStructurePulse {
   tone: MarketTone;
 }
 
+export interface MarketErpCountry {
+  country: string;
+  region: string | null;
+  rating: string | null;
+  erp: number | null;
+}
+
+export interface MarketErpInsight {
+  usErp: number | null;
+  sourceDate: string | null;
+  countryCount: number;
+  historicalPercentile: number | null;
+  latestHistoricalYear: string | null;
+  latestHistoricalErp: number | null;
+  topRiskCountries: MarketErpCountry[];
+}
+
+export interface MarketBondPulse {
+  id: string;
+  label: string;
+  valueLabel: string;
+  changeLabel: string;
+  detail: string;
+  date: string | null;
+  tone: MarketTone;
+}
+
+export interface MarketAnnualReturn {
+  year: number;
+  returnPct: number;
+}
+
 export interface MarketValuationResult {
   indices: MarketIndexValuation[];
   dataSources: ValuationDataSource[];
   macroPulses: MarketMacroPulse[];
+  macroDepths: MarketMacroDepth[];
   signalPulses: MarketSignalPulse[];
   sentimentPulses: MarketSentimentPulse[];
   eventRisks: MarketEventRisk[];
   indexTrends: MarketIndexTrend[];
   structurePulses: MarketStructurePulse[];
+  erpInsight: MarketErpInsight | null;
+  bondPulses: MarketBondPulse[];
+  sp500AnnualReturns: MarketAnnualReturn[];
   benchmarkSections: number | null;
   damodaranUsErp: number | null;
   dataReady: boolean;

@@ -3,9 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import type {
   IndexMomentum,
+  MarketAnnualReturn,
+  MarketBondPulse,
+  MarketErpCountry,
+  MarketErpInsight,
   MarketIndexValuation,
   MarketEventRisk,
   MarketIndexTrend,
+  MarketMacroComponent,
+  MarketMacroDepth,
   MarketMacroPulse,
   MarketSentimentPulse,
   MarketSignalPulse,
@@ -78,11 +84,35 @@ interface RawManifest {
 }
 interface RawDamodaranErp {
   us_erp?: number;
+  countries?: Record<
+    string,
+    | {
+        equity_risk_premium?: number;
+        country_risk_premium?: number;
+        default_spread?: number;
+        region?: string;
+        rating?: string;
+      }
+    | undefined
+  >;
   metadata?: {
     source?: string;
     source_date?: string;
     generated_at?: string;
+    country_count?: number;
   };
+}
+interface RawDamodaranHistoricalYear {
+  tbond_rate?: number;
+  implied_erp_ddm?: number;
+  implied_erp_fcfe?: number;
+}
+interface RawDamodaranHistorical {
+  metadata?: {
+    source_date?: string;
+    year_range?: string;
+  };
+  years?: Record<string, RawDamodaranHistoricalYear | undefined>;
 }
 interface RawActivityRecord {
   date?: string;
@@ -143,6 +173,22 @@ interface RawSlickReturns {
   updated?: string;
   returns?: Array<{ year?: number; "return"?: number }>;
 }
+interface RawEconomicRecord {
+  date?: string;
+  hys_us?: number;
+  hys_em?: number;
+  hys_eu?: number;
+  hyy_us?: number;
+  t10y?: number;
+  t2y?: number;
+  t10y_2y_spread?: number;
+  bei_10y?: number;
+  tips_10y?: number;
+}
+interface RawEconomicIndicators {
+  source_date?: string;
+  records?: RawEconomicRecord[];
+}
 
 async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
   const controller = new AbortController();
@@ -188,11 +234,15 @@ const EMPTY: MarketValuationResult = {
   indices: [],
   dataSources: [],
   macroPulses: [],
+  macroDepths: [],
   signalPulses: [],
   sentimentPulses: [],
   eventRisks: [],
   indexTrends: [],
   structurePulses: [],
+  erpInsight: null,
+  bondPulses: [],
+  sp500AnnualReturns: [],
   benchmarkSections: null,
   damodaranUsErp: null,
   dataReady: false,
@@ -393,6 +443,229 @@ function buildMacroPulses(activity: RawActivitySurveys | null): MarketMacroPulse
       tone: cliTone(cliUs),
     },
   ].filter((pulse) => pulse.value !== null);
+}
+
+function activityRows(activity: RawActivitySurveys | null, key: string): RawActivityRecord[] {
+  const rows = activity?.datasets?.[key]?.records;
+  return Array.isArray(rows) ? rows : [];
+}
+
+function deltaFromPrevious(latest: RawActivityRecord | null, previous: RawActivityRecord | null, key: string): number | null {
+  const latestValue = metric(latest, key);
+  const previousValue = metric(previous, key);
+  return latestValue !== null && previousValue !== null ? latestValue - previousValue : null;
+}
+
+function macroComponent(
+  id: string,
+  label: string,
+  latest: RawActivityRecord | null,
+  previous: RawActivityRecord | null,
+): MarketMacroComponent | null {
+  const value = metric(latest, id);
+  if (value === null) return null;
+  return {
+    id,
+    label,
+    value,
+    delta1m: deltaFromPrevious(latest, previous, id),
+    tone: growthTone(value),
+  };
+}
+
+function buildMacroDepths(activity: RawActivitySurveys | null): MarketMacroDepth[] {
+  const groups = [
+    {
+      id: "ism_manufacturing",
+      label: "ISM 제조업 내부",
+      components: [
+        ["new_orders", "신규주문"],
+        ["production", "생산"],
+        ["employment", "고용"],
+        ["supplier_deliveries", "공급"],
+        ["inventories", "재고"],
+        ["customers_inventories", "고객재고"],
+        ["prices", "가격"],
+        ["backlog_orders", "수주잔고"],
+        ["new_export_orders", "수출주문"],
+        ["imports", "수입"],
+      ] as const,
+    },
+    {
+      id: "ism_services",
+      label: "ISM 서비스 내부",
+      components: [
+        ["business_activity", "활동"],
+        ["new_orders", "신규주문"],
+        ["employment", "고용"],
+        ["supplier_deliveries", "공급"],
+        ["inventories", "재고"],
+        ["prices", "가격"],
+        ["backlog_orders", "수주잔고"],
+        ["new_export_orders", "수출주문"],
+        ["imports", "수입"],
+        ["inventory_sentiment", "재고심리"],
+      ] as const,
+    },
+  ];
+
+  return groups
+    .map((group) => {
+      const rows = activityRows(activity, group.id);
+      const latest = rows[rows.length - 1] ?? null;
+      const previous = rows[rows.length - 2] ?? null;
+      const components = group.components
+        .map(([id, label]) => macroComponent(id, label, latest, previous))
+        .filter((component): component is MarketMacroComponent => component !== null);
+      if (components.length === 0) return null;
+      return {
+        id: group.id,
+        label: group.label,
+        period: latest?.period ?? null,
+        releaseDate: latest?.release_date ?? null,
+        expansionCount: components.filter((component) => component.value !== null && component.value >= 50).length,
+        contractionCount: components.filter((component) => component.value !== null && component.value < 50).length,
+        components,
+      };
+    })
+    .filter((depth): depth is MarketMacroDepth => depth !== null);
+}
+
+function percentile(series: number[], current: number | null): number | null {
+  if (series.length === 0 || current === null) return null;
+  const below = series.reduce((acc, value) => acc + (value <= current ? 1 : 0), 0);
+  return Math.round((below / series.length) * 100);
+}
+
+function buildErpInsight(current: RawDamodaranErp | null, historical: RawDamodaranHistorical | null): MarketErpInsight | null {
+  const usErp = finite(current?.us_erp) ? current!.us_erp! : null;
+  const countries = current?.countries && typeof current.countries === "object" ? current.countries : {};
+  const topRiskCountries: MarketErpCountry[] = Object.entries(countries)
+    .map(([country, data]) => ({
+      country,
+      region: typeof data?.region === "string" ? data.region : null,
+      rating: typeof data?.rating === "string" ? data.rating : null,
+      erp: finite(data?.equity_risk_premium) ? data!.equity_risk_premium! : null,
+    }))
+    .filter((country) => country.erp !== null)
+    .sort((a, b) => (b.erp ?? 0) - (a.erp ?? 0))
+    .slice(0, 5);
+
+  const historicalRows = Object.entries(historical?.years ?? {})
+    .map(([year, data]) => ({
+      year,
+      value: finite(data?.implied_erp_fcfe) ? data!.implied_erp_fcfe! : null,
+    }))
+    .filter((row): row is { year: string; value: number } => row.value !== null)
+    .sort((a, b) => Number(a.year) - Number(b.year));
+  const historicalValues = historicalRows.map((row) => row.value);
+  const latestHistorical = historicalRows[historicalRows.length - 1] ?? null;
+
+  if (usErp === null && topRiskCountries.length === 0 && !latestHistorical) return null;
+  return {
+    usErp,
+    sourceDate: current?.metadata?.source_date ?? historical?.metadata?.source_date ?? null,
+    countryCount: current?.metadata?.country_count ?? Object.keys(countries).length,
+    historicalPercentile: percentile(historicalValues, usErp),
+    latestHistoricalYear: latestHistorical?.year ?? null,
+    latestHistoricalErp: latestHistorical?.value ?? null,
+    topRiskCountries,
+  };
+}
+
+function sortedEconomicRecords(economic: RawEconomicIndicators | null): RawEconomicRecord[] {
+  return (Array.isArray(economic?.records) ? economic!.records! : [])
+    .filter((record) => typeof record.date === "string")
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+}
+
+function economicValue(record: RawEconomicRecord | undefined, key: keyof RawEconomicRecord): number | null {
+  const value = record?.[key];
+  return finite(value) ? value : null;
+}
+
+function fmtDecimalPct(value: number | null, digits = 2): string {
+  return value === null ? "—" : `${(value * 100).toFixed(digits)}%`;
+}
+
+function fmtBpChange(delta: number | null): string {
+  if (delta === null) return "4주 —";
+  const bp = delta * 10000;
+  const prefix = bp >= 0 ? "+" : "";
+  return `4주 ${prefix}${bp.toFixed(0)}bp`;
+}
+
+function buildBondPulses(economic: RawEconomicIndicators | null): MarketBondPulse[] {
+  const rows = sortedEconomicRecords(economic);
+  const latest = rows[rows.length - 1];
+  if (!latest) return [];
+  const previous = rows[Math.max(0, rows.length - 5)];
+  const hysUs = economicValue(latest, "hys_us");
+  const hysPrev = economicValue(previous, "hys_us");
+  const t10y = economicValue(latest, "t10y");
+  const t10yPrev = economicValue(previous, "t10y");
+  const curve = economicValue(latest, "t10y_2y_spread");
+  const curvePrev = economicValue(previous, "t10y_2y_spread");
+  const bei = economicValue(latest, "bei_10y");
+  const beiPrev = economicValue(previous, "bei_10y");
+  const tips = economicValue(latest, "tips_10y");
+
+  return [
+    hysUs !== null
+      ? {
+          id: "hys_us",
+          label: "HY 스프레드",
+          valueLabel: fmtDecimalPct(hysUs),
+          changeLabel: fmtBpChange(hysPrev !== null ? hysUs - hysPrev : null),
+          detail: `HY 수익률 ${fmtDecimalPct(economicValue(latest, "hyy_us"))}`,
+          date: latest.date ?? null,
+          tone: hysUs >= 0.05 ? "rose" : hysUs >= 0.035 ? "amber" : "emerald",
+        }
+      : null,
+    t10y !== null
+      ? {
+          id: "t10y",
+          label: "미 10년 금리",
+          valueLabel: fmtDecimalPct(t10y),
+          changeLabel: fmtBpChange(t10yPrev !== null ? t10y - t10yPrev : null),
+          detail: `2년 ${fmtDecimalPct(economicValue(latest, "t2y"))}`,
+          date: latest.date ?? null,
+          tone: t10y >= 0.05 ? "amber" : "slate",
+        }
+      : null,
+    curve !== null
+      ? {
+          id: "curve",
+          label: "10Y-2Y 곡선",
+          valueLabel: fmtDecimalPct(curve),
+          changeLabel: fmtBpChange(curvePrev !== null ? curve - curvePrev : null),
+          detail: curve < 0 ? "역전 구간" : "양의 기울기",
+          date: latest.date ?? null,
+          tone: curve < 0 ? "rose" : curve < 0.005 ? "amber" : "slate",
+        }
+      : null,
+    bei !== null
+      ? {
+          id: "bei",
+          label: "10Y 기대물가",
+          valueLabel: fmtDecimalPct(bei),
+          changeLabel: fmtBpChange(beiPrev !== null ? bei - beiPrev : null),
+          detail: `10Y TIPS ${fmtDecimalPct(tips)}`,
+          date: latest.date ?? null,
+          tone: bei >= 0.03 ? "amber" : bei <= 0.015 ? "rose" : "slate",
+        }
+      : null,
+  ].filter((pulse): pulse is MarketBondPulse => pulse !== null);
+}
+
+function buildAnnualReturns(doc: RawSlickReturns | null): MarketAnnualReturn[] {
+  return (Array.isArray(doc?.returns) ? doc!.returns! : [])
+    .map((row) => ({
+      year: finite(row.year) ? row.year : null,
+      returnPct: finite(row["return"]) ? row["return"] : null,
+    }))
+    .filter((row): row is MarketAnnualReturn => row.year !== null && row.returnPct !== null)
+    .sort((a, b) => a.year - b.year);
 }
 
 function m(signals: RawComputedSignals | null, id: string, key: string): number | null {
@@ -659,6 +932,7 @@ export function useMarketValuation(): MarketValuationResult {
         summaries,
         manifest,
         damodaran,
+        historicalErp,
         activity,
         signals,
         vix,
@@ -674,11 +948,13 @@ export function useMarketValuation(): MarketValuationResult {
         sp500Drawdown,
         sp500Returns,
         nasdaqReturns,
+        economic,
       ] = await Promise.all([
         fetchJson<RawUs>("/data/benchmarks/us.json"),
         fetchJson<RawSummaries>("/data/benchmarks/summaries.json"),
         fetchJson<RawManifest>("/data/manifest.json"),
         fetchJson<RawDamodaranErp>("/data/damodaran/erp.json"),
+        fetchJson<RawDamodaranHistorical>("/data/damodaran/historical_erp.json"),
         fetchJson<RawActivitySurveys>("/data/macro/activity-surveys.json"),
         fetchJson<RawComputedSignals>("/data/computed/signals.json"),
         fetchJson<RawSentimentPoint[]>("/data/sentiment/vix.json"),
@@ -694,6 +970,7 @@ export function useMarketValuation(): MarketValuationResult {
         fetchJson<RawSlickDrawdown>("/data/slickcharts/sp500-drawdown.json"),
         fetchJson<RawSlickReturns>("/data/slickcharts/sp500-returns.json"),
         fetchJson<RawSlickReturns>("/data/slickcharts/nasdaq100-returns.json"),
+        fetchJson<RawEconomicIndicators>("/data/global-scouter/indicators/economic.json"),
       ]);
       if (!isMountedRef.current) return;
 
@@ -745,11 +1022,15 @@ export function useMarketValuation(): MarketValuationResult {
         indices,
         dataSources,
         macroPulses: buildMacroPulses(activity),
+        macroDepths: buildMacroDepths(activity),
         signalPulses: buildSignalPulses(signals),
         sentimentPulses: buildSentimentPulses({ vix, fearGreed, aaii, move, putCall }),
         eventRisks: buildEventRisks(calendar),
         indexTrends: buildIndexTrends(sp500Index, nasdaqIndex),
         structurePulses: buildStructurePulses({ sp500Holdings, nasdaqHoldings, sp500Drawdown, sp500Returns, nasdaqReturns }),
+        erpInsight: buildErpInsight(damodaran, historicalErp),
+        bondPulses: buildBondPulses(economic),
+        sp500AnnualReturns: buildAnnualReturns(sp500Returns),
         benchmarkSections: summaries?.metadata?.source_summary_sections ?? null,
         damodaranUsErp: finite(damodaran?.us_erp) ? damodaran!.us_erp! : null,
         dataReady: indices.length > 0,

@@ -8,8 +8,20 @@
 export const BAND_CHEAP = 0.25;
 export const BAND_RICH = 0.75;
 
+type MaybeNumber = number | null | undefined;
+
+function finite(value: MaybeNumber): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+export function normalizeBandTuple(current: MaybeNumber, min: MaybeNumber, max: MaybeNumber): [number, number, number] | null {
+  if (!finite(current) || !finite(min) || !finite(max)) return null;
+  if (min >= max) return null;
+  return [current, min, max];
+}
+
 export function bandPct(current: number, min: number, max: number): number {
-  if (min >= max) return 0;
+  if (!normalizeBandTuple(current, min, max)) return 0.5;
   return Math.min(1, Math.max(0, (current - min) / (max - min)));
 }
 

@@ -2,7 +2,7 @@
 
 Date: 2026-06-12
 Scope: `100xfenok-next` nested data depth, real consumer usage, and next UI placement.
-Status: Investigation/design. No runtime code changes in this document.
+Status: Investigation/design plus P0 Market slice implementation.
 
 ## Mandate
 
@@ -127,6 +127,42 @@ This does not need to be perfect AST analysis on day one. A conservative
 | P1 | 13F enhanced consensus, conviction entries, sector guru concentration | Superinvestors, Sectors |
 | P1 | Damodaran region metrics, credit-rating spreads, historical ERP regimes | Market, Stock |
 | P2 | raw converter sheets, fallback/provenance blocks, stale reference files | Admin Data Lab only |
+
+## Implementation Slice 1: Market P0
+
+Implemented in `100xfenok-next`:
+
+- `/market-valuation` now renders Damodaran ERP instead of only fetching it:
+  current US ERP, historical FCFE ERP latest year, historical percentile, country
+  count, and top-risk countries from `damodaran/erp.json` plus
+  `damodaran/historical_erp.json`.
+- `/market-valuation` now surfaces ISM depth from `macro/activity-surveys.json`:
+  manufacturing/services subcomponents, 1-month deltas, and expansion vs
+  contraction counts.
+- `/market-valuation` now surfaces bond/rates depth from
+  `global-scouter/indicators/economic.json`: HY spread, 10Y yield, 10Y-2Y curve,
+  and 10Y breakeven inflation with 4-week changes.
+- `/market-valuation` now renders S&P 500 annual returns from
+  `slickcharts/sp500-returns.json` as a constrained, horizontally scrollable
+  history chart.
+- Screener PER-band display/filter now ignores invalid band tuples instead of
+  treating them as cheap, reducing false "저평가" rows and click-time display
+  risk.
+
+Deferred from this slice:
+
+- Stock/Screener revision tabs and raw-financial depth.
+- Explore movers leaderboard from large SlickCharts gainers/losers payloads.
+- Superinvestors enhanced consensus and conviction panels.
+- Admin Data Lab generated field-usage manifest.
+
+Low-resource verification for this slice:
+
+- PASS: `npx tsc --noEmit --pretty false`
+- PASS: `npx eslint src/lib/market-valuation/types.ts src/hooks/useMarketValuation.ts src/app/market-valuation/MarketValuationClient.tsx src/lib/screener/bands.ts src/app/screener/ScreenerClient.tsx`
+- PASS: `git diff --check`
+- `[not verified]` browser/dev-server/Playwright rendering; intentionally skipped
+  because the active constraint is low resource usage on the Mac mini.
 
 ## Dataset Findings
 

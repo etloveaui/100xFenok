@@ -5,7 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
-import { bandPct, bandClass, bandLabel, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
+import { bandPct, bandClass, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
 import StockDetailPanel from "./StockDetailPanel";
 
 const PAGE_SIZE = 50;
@@ -116,16 +116,20 @@ const DOT_CLASS_MAP: Record<string, string> = {
 };
 
 function PerBandBar({ current, min, avg, max }: { current: number | null; min: number | null; avg: number | null; max: number | null }) {
-  if (current === null || min === null || max === null || min >= max) {
+  const band = normalizeBandTuple(current, min, max);
+  if (!band) {
     return <span className="text-slate-300">—</span>;
   }
-  const pct = bandPct(current, min, max);
-  const avgPct = avg !== null ? bandPct(avg, min, max) : null;
+  const [safeCurrent, safeMin, safeMax] = band;
+  const pct = bandPct(safeCurrent, safeMin, safeMax);
+  const avgBand = normalizeBandTuple(avg, safeMin, safeMax);
+  const safeAvg = avgBand?.[0] ?? null;
+  const avgPct = safeAvg !== null ? bandPct(safeAvg, safeMin, safeMax) : null;
   const cls = bandClass(pct);
   const label = bandLabel(pct);
   const badgeClass = BADGE_CLASS_MAP[cls];
   const dotClass = DOT_CLASS_MAP[cls];
-  const title = `현재 ${current.toFixed(1)} · 평균 ${avg?.toFixed(1) ?? "—"} · 8Y ${min.toFixed(1)}~${max.toFixed(1)} · ${Math.round(pct * 100)}%`;
+  const title = `현재 ${safeCurrent.toFixed(1)} · 평균 ${safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 8Y ${safeMin.toFixed(1)}~${safeMax.toFixed(1)} · ${Math.round(pct * 100)}%`;
   const isClampedHigh = pct >= 1;
   const isClampedLow = pct <= 0;
 
@@ -163,7 +167,7 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
 
       {/* band width hint */}
       <span className="text-[8px] text-slate-400">
-        ({(max - min).toFixed(0)})
+        ({(safeMax - safeMin).toFixed(0)})
       </span>
 
       <span className={cx("orbitron tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
@@ -265,12 +269,14 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
-  const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
+  const [expandedTicker, setExpandedTicker] = useState<string | null>(() => initialSearch || null);
+  const [prevInitialSearch, setPrevInitialSearch] = useState(initialSearch);
 
-  useEffect(() => {
+  if (prevInitialSearch !== initialSearch) {
+    setPrevInitialSearch(initialSearch);
     setSearch(initialSearch);
     setExpandedTicker(initialSearch || null);
-  }, [initialSearch]);
+  }
 
   const [preset, setPreset] = useState<ColumnPreset>(() => {
     if (typeof window === "undefined") return "basic";
@@ -307,8 +313,9 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
       if (bandFilter) {
-        if (stock.perBandCurrent === null || stock.perBandMin === null || stock.perBandMax === null) return false;
-        const pct = bandPct(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
+        const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
+        if (!band) return false;
+        const pct = bandPct(...band);
         if (bandFilter === "cheap" && pct > BAND_CHEAP) return false;
         if (bandFilter === "fair" && (pct <= BAND_CHEAP || pct >= BAND_RICH)) return false;
         if (bandFilter === "rich" && pct < BAND_RICH) return false;

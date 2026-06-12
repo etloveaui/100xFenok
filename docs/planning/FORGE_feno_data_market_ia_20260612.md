@@ -36,6 +36,16 @@ look like a narrow valuation card instead of the canonical market cockpit.
 - Mobile/card safety is mandatory: every new row uses constrained grids,
   `min-width: 0`, and wrapped detail text.
 
+## P0 Implementation
+
+Shipped as the first depth slice:
+
+- ISM internal diffusion panel from `macro/activity-surveys.json`.
+- Damodaran ERP panel from `damodaran/erp.json` and
+  `damodaran/historical_erp.json`.
+- Bond signal panel from `global-scouter/indicators/economic.json`.
+- S&P 500 annual-return history panel from `slickcharts/sp500-returns.json`.
+
 ## Verification Plan
 
 - Static data mapping by `rg`/`jq`.
