@@ -2,9 +2,9 @@
 #
 # Triggers:
 #   - push to main affecting source/UI/legacy paths -> immediate deploy
-#     (data directories are excluded; data is refreshed on the schedule
-#     below so the ~60 data commits/day do not each trigger a build)
-#   - schedule -> picks up the latest data into the deployed assets
+#     (generic nested data is excluded, but app-served /data assets are
+#     re-included so Worker bundles do not lag behind Pages)
+#   - daily schedule -> picks up bot-authored data refreshes into the bundle
 #   - workflow_dispatch -> manual deploy
 name: Deploy Worker (Cloudflare)
 
@@ -20,10 +20,10 @@ on:
       - 'admin/**'
       - 'posts/**'
       - '!**/data/**'
+      - '100xfenok-next/public/data/**'
+      - '.github/workflows/deploy-worker.yml'
   schedule:
-    - cron: '0 0 * * *'   # 09:00 KST
-    - cron: '0 8 * * *'   # 17:00 KST
-    - cron: '0 16 * * *'  # 01:00 KST
+    - cron: '30 3 * * *'  # 12:30 KST, after update-manifest data refresh
   workflow_dispatch:
 
 concurrency:

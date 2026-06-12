@@ -30,6 +30,7 @@ jobs:
 
       - name: Build 13F analytics (trades ranking + portfolio views)
         run: |
+          node scripts/build-13f-enrichment-backfill.mjs
           node scripts/build-13f-integrity-indexes.mjs
           node scripts/build-13f-trades.mjs
           node scripts/build-13f-portfolio-views.mjs
@@ -62,6 +63,9 @@ jobs:
             data/global-scouter/core/per_bands_index.json \
             data/global-scouter/core/slick_index.json \
             data/sec-13f/by_ticker.json \
+            data/sec-13f/by_sector.json \
+            data/sec-13f/summary.json \
+            data/sec-13f/investors/*.json \
             data/sec-13f/analytics/consensus.json \
             data/sec-13f/analytics/ticker_aliases.json \
             data/sec-13f/analytics/trades_ranking.json \
@@ -77,6 +81,8 @@ jobs:
             100xfenok-next/public/data/global-scouter/core/per_bands_index.json \
             100xfenok-next/public/data/global-scouter/core/slick_index.json \
             100xfenok-next/public/data/sec-13f/by_ticker.json \
+            100xfenok-next/public/data/sec-13f/by_sector.json \
+            100xfenok-next/public/data/sec-13f/summary.json \
             100xfenok-next/public/data/sec-13f/analytics/consensus.json \
             100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json \
             100xfenok-next/public/data/sec-13f/investors/*.json \

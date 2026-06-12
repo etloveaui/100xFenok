@@ -13,6 +13,8 @@ Institutional holdings data from SEC 13F filings. Tracks 30 major investors' por
 
 Current-quarter integrity indexes are rebuilt from investor filings after conversion. `by_ticker.json` and `analytics/consensus.json` use normalized ticker keys only; company-name aliases and unresolved rows are kept separately in `analytics/ticker_aliases.json`.
 
+Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path.
+
 ## Structure
 
 ```
@@ -64,11 +66,16 @@ sec-13f/
     "quarters_covered": ["2026-Q1", "2025-Q4", "..."],
     "data_latency_note": "13F filings may be delayed up to 45 days after quarter end",
     "enrichment_coverage": {
-      "sector": 0.20,
-      "industry": 0.00,
-      "market_cap": 0.00,
-      "price_at_filing": 0.93,
-      "return_since_filing": 0.93
+      "sector": 0.6386,
+      "industry": 0.5600,
+      "market_cap": 0.5603,
+      "price_at_filing": 0.4310,
+      "return_since_filing": 0.4310
+    },
+    "enrichment_denominator": "public_filtered_holdings",
+    "enrichment_backfill": {
+      "source": "local_yf_finance",
+      "price_method": "report_date quarter close to latest close from local data/yf/quarter_closes.json"
     }
   },
   "investor": {
@@ -96,7 +103,11 @@ sec-13f/
             "market_value": 498992850.0,
             "weight": 0.0019,
             "sector": "Financials",
-            "enrichment_source": "fallback"
+            "industry": "Credit Services",
+            "market_cap_usd": 15300000000,
+            "price_at_filing": 37.15,
+            "return_since_filing_pct": 3.21,
+            "enrichment_source": "yf-local"
           }
         ]
       }
@@ -106,6 +117,8 @@ sec-13f/
 ```
 
 `holdings_count` is the public filtered `holdings[]` length. `reported_holdings_count` is the raw parsed information-table row count before the 0.1% public-output filter, and `filtered_out_count` is the difference.
+
+`enrichment_coverage` is reported over public filtered holdings once local YF backfill has run. The original SEC converter can still run without live Yahoo; `enrichment_backfill.source=local_yf_finance` means the published fields were filled from checked-in local YF artifacts.
 
 Stale investors are flagged in `summary.json` with `is_stale`, `latest_quarter`, `global_latest_quarter`, and `stale_quarters`. Current-quarter analytics exclude stale investors.
 
@@ -176,4 +189,4 @@ const consensus = await fetch(`${BASE}/analytics/consensus.json`).then(r => r.js
 
 ---
 
-*Last Updated: 2026-05-18*
+*Last Updated: 2026-06-13*

@@ -234,6 +234,19 @@ export interface InvestorHolding {
   weight: number;
   title_of_class?: string;
   sector?: string;
+  industry?: string;
+  enrichment_source?: string;
+  enrichment_symbol?: string;
+  market_cap_usd?: number;
+  market_cap_bucket_abs?: string;
+  market_cap_bucket_rel?: string;
+  market_cap_as_of?: string;
+  market_cap_source?: string;
+  price_at_filing?: number;
+  price_latest?: number;
+  return_since_filing_pct?: number;
+  return_as_of?: string;
+  price_source?: string;
 }
 
 export interface InvestorFiling {
