@@ -10,6 +10,7 @@ type MicState = "unknown" | "unsupported" | "prompt" | "granted" | "denied" | "a
 type Rating = "useful" | "not-useful" | null;
 type ResponseStyle = "concise" | "balanced" | "detailed";
 type VadPreset = "responsive" | "balanced" | "relaxed";
+type InterruptionMode = "barge-in" | "no-interrupt";
 type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode" | "study";
 type LiveToolStatus = "available" | "locked" | "soon";
 type SearchSelectionPolicy = "single" | "multi";
@@ -203,6 +204,11 @@ const VAD_PRESET_LABEL: Record<VadPreset, string> = {
   responsive: "빠른 끼어들기",
   balanced: "기본",
   relaxed: "느긋함",
+};
+
+const INTERRUPTION_MODE_LABEL: Record<InterruptionMode, string> = {
+  "barge-in": "말하면 멈춤",
+  "no-interrupt": "끝까지 말함",
 };
 
 const MODE_PRESETS: Record<BenchMode, { voiceName: string; vadPreset: VadPreset; lowVoice: boolean }> = {
@@ -586,6 +592,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const [voiceName, setVoiceName] = useState("Kore");
   const [responseStyle, setResponseStyle] = useState<ResponseStyle>("concise");
   const [vadPreset, setVadPreset] = useState<VadPreset>("balanced");
+  const [interruptionMode, setInterruptionMode] = useState<InterruptionMode>(initialMode === "mona" ? "no-interrupt" : "barge-in");
   const [systemPrompt, setSystemPrompt] = useState(PROFILE_FALLBACK[0].defaultSystemPrompt ?? "");
   const [promptEdited, setPromptEdited] = useState(false);
   const [toolRegistry, setToolRegistry] = useState<LiveToolMetadata[]>(TOOL_REGISTRY_FALLBACK);
@@ -614,6 +621,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backoffRef = useRef(2500);
   const sessionIdRef = useRef<string | null>(null);
+  const kickoffSentRef = useRef(false);
   const sentMetaRef = useRef(false);
   const isSecure = typeof window === "undefined" ? true : window.isSecureContext;
 
@@ -650,7 +658,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const mainMessage = useMemo(() => {
     if (metrics.lastError) return "연결이 막혔어요";
     if (status === "checking") return "준비 확인 중";
-    if (status === "connecting") return "Gemini에 연결 중";
+    if (status === "connecting") return "준비 중이에요… (코치 깨우는 중)";
     if (status === "listening") return "지금 말하면 돼요";
     if (status === "stopped") return "대화를 멈췄어요";
     if (status === "blocked") return "시작할 수 없어요";
@@ -840,6 +848,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         voiceName,
         responseStyle,
         vadPreset,
+        interruptionMode,
         enabledToolIds,
       };
       body.client = typeof window === "undefined" ? {} : {
@@ -1339,7 +1348,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       window.removeEventListener("pagehide", handlePageHide);
       document.removeEventListener("visibilitychange", handleVisibilityHidden);
     };
-  }, [sessionId, mode, lowVoice, voiceName, responseStyle, vadPreset, enabledToolIds, metrics]);
+  }, [sessionId, mode, lowVoice, voiceName, responseStyle, vadPreset, interruptionMode, enabledToolIds, metrics]);
 
   useEffect(() => {
     return () => {
@@ -1471,10 +1480,15 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       clearSocketTimeout();
       const setupDoneMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
       setMetrics((current) => ({ ...current, setupDoneMs }));
-      addLog("system", "Gemini 연결 완료");
+      addLog("system", "연결됐어요. 코치가 먼저 인사할 거예요.");
       const socket = wsRef.current;
       if (socket) {
-        void beginAudioStream(socket).catch((error: unknown) => {
+        void beginAudioStream(socket).then(() => {
+          if (mode === "mona" && !kickoffSentRef.current) {
+            kickoffSentRef.current = true;
+            socket.send(JSON.stringify({ realtimeInput: { text: "시작" } }));
+          }
+        }).catch((error: unknown) => {
           const message = error instanceof Error ? error.message : "MIC_START_FAILED";
           setStatus("ready");
           setLastError(message);
@@ -1579,6 +1593,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     pendingRef.current = [];
     sentMetaRef.current = false;
     logSeqRef.current = 0;
+    kickoffSentRef.current = false;
     clearFlushTimer();
     persistPending();
     setCard(null);
@@ -1608,6 +1623,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           voiceName,
           responseStyle,
           vadPreset,
+          interruptionMode,
           systemPrompt,
           enabledToolIds,
         }),
@@ -1781,6 +1797,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
             voiceName,
             responseStyle,
             vadPreset,
+            interruptionMode,
             enabledToolIds,
           },
           metrics: finalMetrics,
@@ -1940,6 +1957,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                   setVoiceName(preset.voiceName);
                   setVadPreset(preset.vadPreset);
                   setLowVoice(preset.lowVoice);
+                  setInterruptionMode(profile.id === "mona" ? "no-interrupt" : "barge-in");
                   setMetrics((current) => ({ ...current, lowVoice: preset.lowVoice }));
                   const nextEnabledToolIds = getModeDefaultToolIds(profile.id, toolRegistry);
                   setEnabledToolIds(nextEnabledToolIds);
@@ -2098,6 +2116,25 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                       } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
                       {VAD_PRESET_LABEL[preset]}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset className="text-left">
+                <legend className="text-sm font-black text-slate-700">코치 말 끊기</legend>
+                <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
+                  {(Object.keys(INTERRUPTION_MODE_LABEL) as InterruptionMode[]).map((im) => (
+                    <button
+                      key={im}
+                      type="button"
+                      onClick={() => setInterruptionMode(im)}
+                      disabled={settingsLocked}
+                      className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
+                        interruptionMode === im ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
+                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                    >
+                      {INTERRUPTION_MODE_LABEL[im]}
                     </button>
                   ))}
                 </div>

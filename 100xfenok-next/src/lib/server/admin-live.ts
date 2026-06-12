@@ -188,6 +188,7 @@ export async function buildLiveSetup(
     voiceName?: unknown;
     responseStyle?: unknown;
     vadPreset?: unknown;
+    interruptionMode?: unknown;
     systemPrompt?: unknown;
     enabledToolIds?: unknown;
   },
@@ -196,6 +197,9 @@ export async function buildLiveSetup(
   const responseStyle = normalizeResponseStyle(options.responseStyle);
   const vadPreset = normalizeVadPreset(options.vadPreset, mode);
   const vad = LIVE_VAD_PRESETS[vadPreset];
+  const interruptionMode = options.interruptionMode === "no-interrupt" || options.interruptionMode === "barge-in"
+    ? options.interruptionMode
+    : mode === "mona" ? "no-interrupt" : "barge-in";
   const enabledToolIds = normalizeLiveToolIds(options.enabledToolIds);
   let systemPrompt = ensureLiveToolInstructions(
     normalizeSystemPrompt(options.systemPrompt, mode, options.lowVoice, responseStyle, enabledToolIds),
@@ -233,7 +237,7 @@ export async function buildLiveSetup(
       parts: [{ text: systemPrompt }],
     },
     realtimeInputConfig: {
-      activityHandling: "START_OF_ACTIVITY_INTERRUPTS",
+      activityHandling: interruptionMode === "no-interrupt" ? "NO_INTERRUPTION" : "START_OF_ACTIVITY_INTERRUPTS",
       automaticActivityDetection: {
         disabled: false,
         ...vad,

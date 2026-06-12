@@ -67,6 +67,7 @@ function normalizeSettings(value: unknown) {
     "voiceName",
     "responseStyle",
     "vadPreset",
+    "interruptionMode",
   ]);
   return {
     ...base,

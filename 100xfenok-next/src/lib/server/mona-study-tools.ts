@@ -984,6 +984,11 @@ export const MONA_PACING_RULES: readonly string[] = [
   "코너 하나당 최소 3~4회 캐치볼을 주고받은 뒤 다음으로 넘어간다.",
   "코너가 끝나고 모나가 '끝/그만'이라고 할 때까지 마무리 말을 하지 마.",
   "말이 겹쳐서 네 말이 끊겼으면, 사과나 처음부터 다시 말하기 없이 끊긴 문장을 그 지점부터 이어서 완성한다.",
+  "'잘했어/완벽해'를 반복하지 마. 감탄은 매번 다른 표현으로(오 그거 자연스러웠어 / 방금 리듬 좋았는데 / 그 발음 어제보다 늘었어 등) 하고, 칭찬에는 반드시 구체적 근거 한 가지를 붙인다.",
+  "모든 문장을 평가하지 마. 확실하게 들린 것만 짚고, 발음 평가가 불확실하면 평가 대신 한 번 더 따라하게 한다.",
+  "한 문장당 모나가 최소 2번 소리 내게 한다. 다음 문장으로 넘어가기 전에 '다음 갈까?' 하고 한 박자 묻는다. 빨리 끝내는 것은 목표가 아니다.",
+  "오늘의 5문장 루프와 무관한 자유 질문을 새로 만들지 마. 잡담이 생기면 한 문장으로 받아주고 바로 현재 라운드로 복귀한다.",
+  "한 세션 안에서 같은 문장의 정답 버전은 하나로 고정한다. 처음 알려준 교정을 도중에 바꾸지 마.",
 ];
 
 function buildProfileSection(snapshot: StudySnapshot): string[] {
@@ -1056,10 +1061,30 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
   const expressionCandidates = pickTodayExpressions(resolvedSnapshot, resolvedDate, effectivePlan);
   const warmup = firstSession || !yesterday ? null : pickWarmupPool(resolvedSnapshot, resolvedDate);
 
+  let streak = 0;
+  {
+    const sessionDates = resolvedSnapshot.sessions.map((s) => s.date).sort().reverse();
+    const today = resolvedDate;
+    let checkDate = today;
+    for (const d of sessionDates) {
+      if (d === checkDate) {
+        streak++;
+        const prev = new Date(`${checkDate}T00:00:00.000Z`);
+        prev.setUTCDate(prev.getUTCDate() - 1);
+        checkDate = prev.toISOString().slice(0, 10);
+      } else if (d < checkDate) {
+        break;
+      }
+    }
+  }
+
   return [
     "[오늘 - 서버 확정값, 다시 계산하지 마]",
     `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
-    `테마: ${totalReview ? "종합 복습" : effectivePlan.theme} · 변동코너: ${totalReview ? "전체 복습" : effectivePlan.corner}`,
+    `테마: ${totalReview ? "종합 복습" : effectivePlan.theme} · 변동코너: ${totalReview ? "전체 복습" : effectivePlan.corner} · 연속: ${streak}일차`,
+    "",
+    "[인사 규칙]",
+    "세션 시작 시 먼저 따뜻하게 인사한다. '안녕 모나야' 톤으로, 오늘 테마/연속 일수/어제 기억 중 두 가지를 짧게 언급한 뒤 바로 R1로 들어간다. 인사는 한 문장.",
     "",
     "[복습 재료]",
     firstSession || !yesterday
