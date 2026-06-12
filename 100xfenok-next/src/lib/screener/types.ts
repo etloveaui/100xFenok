@@ -16,8 +16,7 @@ export interface ScreenerStock {
   actionLabel?: string | null;
   actionBucket?: string | null;
   actionReasons?: string[];
-  indexMembership?: string[];
-  qualityFlags?: string[];
+  lowEvidence?: boolean | null;
   ticker: string;
   name: string;
   exchange: string;

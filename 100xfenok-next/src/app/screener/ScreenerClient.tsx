@@ -17,6 +17,7 @@ interface ActionRow {
   actionLabel?: string | null;
   actionBucket?: string | null;
   actionReasons?: string[];
+  lowEvidence?: boolean | null;
   guruHolders?: number | null;
 }
 interface ActionSummaryDoc {
@@ -41,6 +42,7 @@ function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): Actio
     actionLabel: typeof value("actionLabel") === "string" ? value("actionLabel") as string : null,
     actionBucket: typeof value("actionBucket") === "string" ? value("actionBucket") as string : null,
     actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
+    lowEvidence: typeof value("lowEvidence") === "boolean" ? value("lowEvidence") as boolean : false,
     guruHolders: typeof value("guruHolders") === "number" ? value("guruHolders") as number : null,
   };
 }
@@ -136,7 +138,22 @@ function fmtRank(value: number | null): string {
   return value === null ? "—" : value.toLocaleString();
 }
 
-function actionTone(bucket: string | null | undefined): string {
+function confidenceText(label: string | null | undefined): string {
+  if (label === "high") return "신뢰 높음";
+  if (label === "medium") return "신뢰 중간";
+  if (label === "low") return "신뢰 낮음";
+  return "신뢰 미정";
+}
+
+function confidenceClass(label: string | null | undefined, lowEvidence: boolean): string {
+  if (lowEvidence || label === "low") return "text-slate-400";
+  if (label === "medium") return "text-amber-600";
+  if (label === "high") return "text-emerald-600";
+  return "text-slate-400";
+}
+
+function actionTone(bucket: string | null | undefined, confidenceLabel?: string | null, lowEvidence = false): string {
+  if (lowEvidence || confidenceLabel === "low") return "border-slate-200 bg-slate-50 text-slate-500";
   if (bucket === "smart_money") return "border-violet-200 bg-violet-50 text-violet-700";
   if (bucket === "value_momentum") return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (bucket === "index_core") return "border-sky-200 bg-sky-50 text-sky-700";
@@ -230,15 +247,23 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
       return <span className="text-sm font-black text-slate-950">{stock.ticker}</span>;
     case "name":
       return <span className="block max-w-[180px] truncate text-sm font-semibold text-slate-700">{stock.name}</span>;
-    case "actionScore":
+    case "actionScore": {
+      const lowEvidence = stock.lowEvidence === true;
+      const confidence = confidenceText(stock.confidenceLabel);
+      const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
+      const title = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
       return (
-        <span className="flex min-w-0 max-w-[150px] flex-col items-start gap-1" title={(stock.actionReasons ?? []).join(" · ")}>
-          <span className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket))}>
+        <span className="flex min-w-0 max-w-[150px] flex-col items-start gap-1" title={title}>
+          <span className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
             {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
+          </span>
+          <span className={cx("max-w-full truncate text-[10px] font-black", confidenceClass(stock.confidenceLabel, lowEvidence))}>
+            {detail}
           </span>
           {stock.actionReasons?.[0] ? <span className="max-w-full truncate text-[10px] font-semibold text-slate-400">{stock.actionReasons[0]}</span> : null}
         </span>
       );
+    }
     case "sector":
       return <span className="text-xs font-bold text-slate-500">{stock.sector || "—"}</span>;
     case "country":
@@ -341,6 +366,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         actionLabel: action?.actionLabel ?? null,
         actionBucket: action?.actionBucket ?? null,
         actionReasons: action?.actionReasons ?? [],
+        lowEvidence: action?.lowEvidence ?? null,
       };
     });
   }, [rawStocks, guruMap, actionMap]);

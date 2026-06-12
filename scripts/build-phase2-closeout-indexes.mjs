@@ -44,7 +44,7 @@ const ACTION_SCORE_CONFIG = Object.freeze({
     smart_money: { minSmartMoneyPct: 0.5, minCoverageRatio: 0.5 },
     value_momentum: { minValuationPct: 0.5, minMomentumPct: 0.4, minCoverageRatio: 0.5 },
     index_core: { minIndexPct: 0.5, minCoverageRatio: 0.5 },
-    income: { minIncomePct: 0.45, minCoverageRatio: 0.5 },
+    income: { minIncomePct: 0.75, minCoverageRatio: 0.5 },
     momentum: { minMomentumPct: 0.55, minCoverageRatio: 0.5 },
   },
 });
@@ -900,7 +900,7 @@ function buildStockActionIndex() {
     source_date: stocksDoc?.source_date ?? null,
     source_files: STOCK_ACTION_SOURCES,
     score_contract: {
-      version: "action-score-v0.3",
+      version: "action-score-v0.3.1",
       config: ACTION_SCORE_CONFIG,
       doc: "docs/planning/CONTRACT_stock_action_score_v0_3_20260613.md",
     },
@@ -942,6 +942,7 @@ function buildStockActionSummary(stockActionIndex) {
     "actionBucket",
     "actionLabel",
     "actionReasons",
+    "lowEvidence",
     "guruHolders",
     "return12m",
   ];
@@ -951,7 +952,7 @@ function buildStockActionSummary(stockActionIndex) {
     source_file: "computed/stock_action_index.json",
     fields,
     score_contract: {
-      version: stockActionIndex.score_contract?.version ?? "action-score-v0.3",
+      version: stockActionIndex.score_contract?.version ?? "action-score-v0.3.1",
       doc: stockActionIndex.score_contract?.doc ?? "docs/planning/CONTRACT_stock_action_score_v0_3_20260613.md",
     },
     coverage: {
@@ -974,6 +975,7 @@ function buildStockActionSummary(stockActionIndex) {
       row.actionBucket ?? null,
       row.actionLabel ?? null,
       Array.isArray(row.actionReasons) ? row.actionReasons.slice(0, 2) : [],
+      Array.isArray(row.quality_flags) ? row.quality_flags.includes("low_evidence") : false,
       row.guruHolders ?? null,
       row.return12m ?? null,
     ]),

@@ -1,8 +1,8 @@
-# CONTRACT: stock_action_index actionScore v0.3
+# CONTRACT: stock_action_index actionScore v0.3.1
 
 Date: 2026-06-13
 Scope: `scripts/build-phase2-closeout-indexes.mjs` -> `data/computed/stock_action_index.json`
-Status: G0 contract plus G1 cron wiring target
+Status: G0/G1/G2 live plus G3a v0.3.1 tuning target
 
 ## Purpose
 
@@ -15,7 +15,7 @@ Admin, and peer verification.
 Top-level:
 
 - `schema_version`: `2`
-- `score_contract.version`: `action-score-v0.3`
+- `score_contract.version`: `action-score-v0.3.1`
 - `score_contract.config`: exact generator constants
 - `coverage.signal_score_percentiles_by_scope`: per `marketScope` `signalScoreP50/signalScoreP90`
 - `coverage.family_coverage`: per-family eligible/present counts
@@ -69,7 +69,7 @@ Each row adds the v0.3 audit fields:
     "smart_money": { "minSmartMoneyPct": 0.5, "minCoverageRatio": 0.5 },
     "value_momentum": { "minValuationPct": 0.5, "minMomentumPct": 0.4, "minCoverageRatio": 0.5 },
     "index_core": { "minIndexPct": 0.5, "minCoverageRatio": 0.5 },
-    "income": { "minIncomePct": 0.45, "minCoverageRatio": 0.5 },
+    "income": { "minIncomePct": 0.75, "minCoverageRatio": 0.5 },
     "momentum": { "minMomentumPct": 0.55, "minCoverageRatio": 0.5 }
   }
 }
@@ -164,7 +164,20 @@ Buckets are selected from passing candidates by strongest family contribution.
 
 `actionScore` is rank-comparable only within the same `marketScope`.
 Any UI that surfaces `actionScore` should pair it with `confidenceLabel`.
-This UI pairing is a G3 dependency, not part of G0/G1 wiring.
+Low-confidence and low-evidence rows should be visually muted and explicitly
+marked rather than shown as bare low scores.
+
+## G3a v0.3.1 Addendum
+
+Only the income bucket gate changes from v0.3:
+
+- `bucketThresholds.income.minIncomePct`: `0.45 -> 0.75`
+- Reason: v0.3 allowed the low dividend tier (`score=5/10`, roughly 1.5%+
+  yield) to become the final bucket, making `income` a catch-all bucket.
+- New effect on the 2026-06-13 generated universe: `income` moves from
+  `414/1066` rows (`38.8%`) to `257/1066` rows (`24.1%`).
+- No family weights, non-income thresholds, evidence guard, or scoring formula
+  change in v0.3.1.
 
 ## G2 Slim Summary Addendum
 
@@ -192,6 +205,7 @@ Each summary row is an array tuple in this exact `fields` order:
 - `actionBucket`
 - `actionLabel`
 - `actionReasons`: top 2 only
+- `lowEvidence`: boolean derived from full-index `quality_flags`
 - `guruHolders`
 - `return12m`
 
@@ -214,6 +228,7 @@ Required low-resource checks before push:
   - no non-watch bucket violates `eligibleFamilyCount >= 3` and `presentFamilyCount >= 3`
 - root/public mirrors match for generated JSON outputs
 - summary file target: `data/computed/stock_action_summary.json <= 250KB`
+- income bucket distribution target: roughly 15-25% of indexed rows
 - product fetch audit: Screener and Explore action candidates fetch summary,
   not full `stock_action_index.json`
 - `git diff --check`

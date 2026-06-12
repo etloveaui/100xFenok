@@ -15,6 +15,7 @@ interface ActionRow {
   actionLabel?: string | null;
   actionBucket?: string | null;
   actionReasons?: string[];
+  lowEvidence?: boolean | null;
   return12m?: number | null;
   guruHolders?: number | null;
 }
@@ -59,7 +60,15 @@ function fmtPct(value: number | null | undefined): string {
   return `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`;
 }
 
-function tone(bucket: string | null | undefined): string {
+function confidenceText(label: string | null | undefined): string {
+  if (label === "high") return "신뢰 높음";
+  if (label === "medium") return "신뢰 중간";
+  if (label === "low") return "신뢰 낮음";
+  return "신뢰 미정";
+}
+
+function tone(bucket: string | null | undefined, confidenceLabel?: string | null, lowEvidence = false): string {
+  if (lowEvidence || confidenceLabel === "low") return "neutral";
   if (bucket === "smart_money") return "up";
   if (bucket === "value_momentum") return "up";
   if (bucket === "index_core") return "neutral";
@@ -85,6 +94,7 @@ function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): Actio
     actionLabel: typeof value("actionLabel") === "string" ? value("actionLabel") as string : null,
     actionBucket: typeof value("actionBucket") === "string" ? value("actionBucket") as string : null,
     actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
+    lowEvidence: typeof value("lowEvidence") === "boolean" ? value("lowEvidence") as boolean : false,
     return12m: typeof value("return12m") === "number" ? value("return12m") as number : null,
     guruHolders: typeof value("guruHolders") === "number" ? value("guruHolders") as number : null,
   };
@@ -155,10 +165,14 @@ export default function ActionCandidatesCard() {
               <div className="tk">
                 {row.symbol}{row.sector ? ` · ${row.sector}` : ""}
               </div>
+              <div className="tk" style={{ whiteSpace: "normal" }}>
+                {row.actionLabel ?? "관찰"}{row.lowEvidence ? " · 증거 부족" : ""}
+              </div>
               {row.actionReasons?.[0] ? <div className="tk" style={{ whiteSpace: "normal" }}>{row.actionReasons[0]}</div> : null}
             </span>
-            <span className={`pc num ${tone(row.actionBucket)}`}>
+            <span className={`pc num ${tone(row.actionBucket, row.confidenceLabel, row.lowEvidence === true)}`}>
               {fmtScore(row.actionScore)}
+              <small style={{ display: "block", fontSize: 10, color: "var(--c-ink-3)" }}>{confidenceText(row.confidenceLabel)}</small>
               <small style={{ display: "block", fontSize: 10, color: "var(--c-ink-3)" }}>{fmtPct(row.return12m)}</small>
             </span>
           </TransitionLink>
