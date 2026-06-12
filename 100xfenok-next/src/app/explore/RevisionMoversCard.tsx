@@ -51,16 +51,34 @@ function MoverList({ rows, tone }: { rows: MoverRow[]; tone: "up" | "down" }) {
 
 export default function RevisionMoversCard() {
   const [doc, setDoc] = useState<MoversDoc | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    loadMovers().then((d) => { if (!cancelled) setDoc(d); });
+    loadMovers().then((d) => {
+      if (!cancelled) {
+        setDoc(d);
+        setLoaded(true);
+      }
+    });
     return () => { cancelled = true; };
   }, []);
 
   const up = (doc?.up ?? []).slice(0, 5);
   const down = (doc?.down ?? []).slice(0, 5);
-  if (up.length === 0 && down.length === 0) return null;
+  if (up.length === 0 && down.length === 0) {
+    return (
+      <section className="panel">
+        <div className="panel-h">
+          <h2>리비전 무버</h2>
+          <span className="desc">추정치 변화</span>
+        </div>
+        <div className="panel-b text-sm font-semibold text-slate-500">
+          {loaded ? "표시할 리비전 무버가 없습니다." : "리비전 데이터 확인 중"}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="panel">

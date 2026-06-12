@@ -86,10 +86,32 @@ export default function ExploreHotTopics() {
     };
   }, []);
 
-  if (loading || !data) return null;
+  if (loading || !data) {
+    return (
+      <section className="panel f13-wrap">
+        <div className="panel-h">
+          <h2>13F 핫토픽</h2>
+          <span className="desc">구루 매매 동향</span>
+        </div>
+        <div className="panel-b text-sm font-semibold text-slate-500">
+          {loading ? "13F 핫토픽 확인 중" : "13F 핫토픽 데이터를 불러오지 못했습니다."}
+        </div>
+      </section>
+    );
+  }
 
   const topics = buildTopics(data);
-  if (topics.length === 0) return null;
+  if (topics.length === 0) {
+    return (
+      <section className="panel f13-wrap">
+        <div className="panel-h">
+          <h2>13F 핫토픽</h2>
+          <span className="desc">{data.metadata.quarter} 기준</span>
+        </div>
+        <div className="panel-b text-sm font-semibold text-slate-500">표시할 13F 핫토픽이 없습니다.</div>
+      </section>
+    );
+  }
 
   return (
     <section className="panel f13-wrap">

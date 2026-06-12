@@ -46,7 +46,18 @@ export default function MyWatchlistStrip() {
     return () => { cancelled = true; };
   }, [tickers.length]);
 
-  if (tickers.length === 0) return null;
+  if (tickers.length === 0) {
+    return (
+      <section className="panel wl">
+        <div className="panel-h">
+          <h2>내 종목</h2>
+          <span className="desc num">(0)</span>
+          <TransitionLink href="/portfolio" className="act">포트폴리오 →</TransitionLink>
+        </div>
+        <div className="panel-b text-sm font-semibold text-slate-500">관심 종목을 추가하면 여기에서 바로 확인할 수 있습니다.</div>
+      </section>
+    );
+  }
 
   return (
     <section className="panel wl">

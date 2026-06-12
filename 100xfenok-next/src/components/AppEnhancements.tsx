@@ -23,11 +23,12 @@ const dockItems = [
     isActive: (pathname: string) => pathname === '/',
   },
   {
-    href: '/market',
+    href: '/market-valuation',
     label: 'MARKET',
     icon: '◔',
     isActive: (pathname: string) =>
       pathname === '/market' ||
+      pathname === '/market-valuation' ||
       pathname === '/alpha-scout' ||
       pathname === '/sectors',
   },
@@ -63,6 +64,7 @@ function isDockRoute(pathname: string) {
   return (
     normalized === '/' ||
     normalized === '/market' ||
+    normalized === '/market-valuation' ||
     normalized === '/alpha-scout' ||
     normalized === '/sectors' ||
     normalized === '/posts' ||
@@ -425,7 +427,7 @@ export default function AppEnhancements() {
     if (typeof window === 'undefined') return;
     if (isDataSaver) return;
 
-    const warmupRoutes = ['/market', '/posts', '/ib', '/tools/stock-analyzer/native'];
+    const warmupRoutes = ['/market-valuation', '/posts', '/ib', '/tools/stock-analyzer/native'];
     let idleId: number | null = null;
     let timerId: ReturnType<typeof setTimeout> | null = null;
 

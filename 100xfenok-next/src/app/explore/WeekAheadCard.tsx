@@ -80,6 +80,7 @@ function shortDate(dateStr: string): string {
 export default function WeekAheadCard() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [prev, setPrev] = useState<PrevValuesDoc["values"] | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,7 +88,11 @@ export default function WeekAheadCard() {
       if (!cancelled && doc?.values) setPrev(doc.values);
     });
     loadCalendar().then((doc) => {
-      if (cancelled || !doc?.events) return;
+      if (cancelled) return;
+      if (!doc?.events) {
+        setLoaded(true);
+        return;
+      }
       const today = todayKST();
       const filtered = doc.events
         .filter(
@@ -97,13 +102,26 @@ export default function WeekAheadCard() {
         )
         .slice(0, 5);
       setEvents(filtered);
+      setLoaded(true);
     });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (events.length === 0) return null;
+  if (events.length === 0) {
+    return (
+      <section className="panel">
+        <div className="panel-h">
+          <h2>이번 주 미국 일정</h2>
+          <span className="desc">KST</span>
+        </div>
+        <div className="panel-b text-sm font-semibold text-slate-500">
+          {loaded ? "이번 주 표시할 주요 일정이 없습니다." : "미국 일정 확인 중"}
+        </div>
+      </section>
+    );
+  }
 
   const today = todayKST();
 

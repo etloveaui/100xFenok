@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
+import { formatSignedPercent } from "@/lib/format";
 
 /**
  * 섹터 흐름 패널 — 11 sectors as sorted diverging-bar rows (shell v3).
@@ -27,13 +28,12 @@ const SECTOR_KEYS: Array<{ key: string; canonical: CanonicalSector }> = [
 ];
 
 function pct(v: number | undefined | null): string {
-  if (v === undefined || v === null || Number.isNaN(v)) return "—";
-  const p = (v * 100).toFixed(1);
-  return v >= 0 ? `+${p}%` : `${p}%`;
+  return formatSignedPercent(v, { digits: 1 });
 }
 
 export default function ExploreDashboard() {
   const [momentum, setMomentum] = useState<MomentumMap | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,14 +41,29 @@ export default function ExploreDashboard() {
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
         if (!cancelled && j?.momentum) setMomentum(j.momentum as MomentumMap);
+        if (!cancelled) setLoaded(true);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (!momentum) return null;
+  if (!momentum) {
+    return (
+      <section className="panel">
+        <div className="panel-h">
+          <h2>섹터 흐름</h2>
+          <span className="desc">최근 1개월 · 수익률순</span>
+        </div>
+        <div className="panel-b text-sm font-semibold text-slate-500">
+          {loaded ? "섹터 흐름 데이터를 불러오지 못했습니다." : "섹터 흐름 데이터 확인 중"}
+        </div>
+      </section>
+    );
+  }
 
   const rows = SECTOR_KEYS.map(({ key, canonical }) => ({
     key,
@@ -57,7 +72,17 @@ export default function ExploreDashboard() {
   }))
     .filter((r): r is { key: string; label: string; v: number } => r.v !== null)
     .sort((a, b) => b.v - a.v);
-  if (rows.length === 0) return null;
+  if (rows.length === 0) {
+    return (
+      <section className="panel">
+        <div className="panel-h">
+          <h2>섹터 흐름</h2>
+          <span className="desc">최근 1개월 · 수익률순</span>
+        </div>
+        <div className="panel-b text-sm font-semibold text-slate-500">표시할 섹터 흐름 데이터가 없습니다.</div>
+      </section>
+    );
+  }
   const max = Math.max(...rows.map((r) => Math.abs(r.v)));
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { formatSignedPercent } from "@/lib/format";
 
 /**
  * 시장 체온계 — price change decomposed into earnings vs multiple.
@@ -61,9 +62,7 @@ export function pick(doc: SummariesDoc, section: string, period: Period): Moment
 }
 
 export function fmtPct(v: number | null): string {
-  if (v === null) return "—";
-  const p = (v * 100).toFixed(1);
-  return v >= 0 ? `+${p}%` : `${p}%`;
+  return formatSignedPercent(v, { digits: 1 });
 }
 
 export type Verdict = { head: string; why: string; tone: "good" | "mix" | "bad" };
@@ -105,10 +104,16 @@ function DTrack({ value, cap, kind }: { value: number | null; cap: number; kind:
 export default function MarketThermometer() {
   const [doc, setDoc] = useState<SummariesDoc | null>(null);
   const [period, setPeriod] = useState<Period>("ytd");
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    loadSummaries().then((d) => { if (!cancelled) setDoc(d); });
+    loadSummaries().then((d) => {
+      if (!cancelled) {
+        setDoc(d);
+        setLoaded(true);
+      }
+    });
     return () => { cancelled = true; };
   }, []);
 
@@ -118,7 +123,19 @@ export default function MarketThermometer() {
       .filter((r) => r.row.px !== null);
   }, [doc, period]);
 
-  if (!rows || rows.length === 0) return null;
+  if (!rows || rows.length === 0) {
+    return (
+      <section className="panel thermo">
+        <div className="panel-h">
+          <h2>시장 체온계</h2>
+          <span className="desc">이익 × 멀티플 분해</span>
+        </div>
+        <div className="panel-b text-sm font-semibold text-slate-500">
+          {loaded ? "시장 체온계 데이터를 불러오지 못했습니다." : "시장 체온계 데이터 확인 중"}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="panel thermo">

@@ -26,7 +26,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const isDashboard = pathname === '/';
-  const isMarket = pathname === '/market' || pathname === '/alpha-scout';
+  const isMarket = pathname === '/market' || pathname === '/market-valuation' || pathname === '/alpha-scout';
   const isAnalytics = pathname === '/multichart' || pathname === '/radar' || pathname === '/posts' || pathname === '/explore' || pathname === '/sectors' || pathname === '/screener';
   const isStrategies = pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr';
 
@@ -340,7 +340,7 @@ export default function Navbar() {
                 >
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Briefing Deck</div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Link href="/market" role="menuitem" tabIndex={desktopMenuOpen === 'market' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href="/market-valuation" role="menuitem" tabIndex={desktopMenuOpen === 'market' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-chart-bar text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Market Wrap</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">Daily Pulse</span>
@@ -466,7 +466,7 @@ export default function Navbar() {
               <Link href="/" className={`nav-icon ${isDashboard ? 'active' : ''}`} title="Dashboard" aria-label="Dashboard">
                 <i className="fas fa-home" />
               </Link>
-              <Link href="/market" className={`nav-icon ${isMarket ? 'active' : ''}`} title="Market" aria-label="Market">
+              <Link href="/market-valuation" className={`nav-icon ${isMarket ? 'active' : ''}`} title="Market" aria-label="Market">
                 <i className="fas fa-chart-bar" />
               </Link>
               <Link href="/multichart" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="Analytics" aria-label="Analytics">
@@ -537,7 +537,7 @@ export default function Navbar() {
                 <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
-                <Link href="/market" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Market Wrap</Link>
+                <Link href="/market-valuation" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Market Valuation</Link>
                 <Link href="/alpha-scout" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Alpha Scout</Link>
               </div>
             </details>
