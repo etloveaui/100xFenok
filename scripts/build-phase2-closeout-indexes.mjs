@@ -82,6 +82,7 @@ const MARKET_STRUCTURE_SOURCES = [
 const GENERATED_OUTPUTS = [
   "admin/data-usage-manifest.json",
   "computed/stock_action_index.json",
+  "computed/stock_action_summary.json",
   "computed/market_structure_index.json",
 ];
 
@@ -137,7 +138,7 @@ function ensureDir(absPath) {
   fs.mkdirSync(path.dirname(absPath), { recursive: true });
 }
 
-function writeJsonToBoth(relPath, payload) {
+function writeJsonToBoth(relPath, payload, options = {}) {
   const existing = readJson(relPath, null);
   if (
     existing &&
@@ -147,7 +148,8 @@ function writeJsonToBoth(relPath, payload) {
     payload.generated_at = existing.generated_at;
   }
 
-  const body = `${JSON.stringify(payload, null, 2)}\n`;
+  const indent = options.compact ? 0 : 2;
+  const body = `${JSON.stringify(payload, null, indent)}\n`;
   for (const root of [dataRoot, publicDataRoot]) {
     const abs = path.join(root, relPath);
     ensureDir(abs);
@@ -929,6 +931,55 @@ function buildStockActionIndex() {
   };
 }
 
+function buildStockActionSummary(stockActionIndex) {
+  const fields = [
+    "symbol",
+    "company",
+    "sector",
+    "marketScope",
+    "actionScore",
+    "confidenceLabel",
+    "actionBucket",
+    "actionLabel",
+    "actionReasons",
+    "guruHolders",
+    "return12m",
+  ];
+  return {
+    schema_version: 1,
+    generated_at: stockActionIndex.generated_at,
+    source_file: "computed/stock_action_index.json",
+    fields,
+    score_contract: {
+      version: stockActionIndex.score_contract?.version ?? "action-score-v0.3",
+      doc: stockActionIndex.score_contract?.doc ?? "docs/planning/CONTRACT_stock_action_score_v0_3_20260613.md",
+    },
+    coverage: {
+      indexed_stock_count: stockActionIndex.coverage?.indexed_stock_count ?? stockActionIndex.rows.length,
+      guru_ticker_count: stockActionIndex.coverage?.guru_ticker_count ?? null,
+      conviction_matched_count: stockActionIndex.coverage?.conviction_matched_count ?? null,
+      quarter_close_ticker_count: stockActionIndex.coverage?.quarter_close_ticker_count ?? null,
+      market_scope_counts: stockActionIndex.coverage?.market_scope_counts ?? {},
+      bucket_counts: stockActionIndex.coverage?.bucket_counts ?? {},
+      confidence_counts: stockActionIndex.coverage?.confidence_counts ?? {},
+      low_evidence_count: stockActionIndex.coverage?.low_evidence_count ?? null,
+    },
+    rows: stockActionIndex.rows.map((row) => [
+      row.symbol,
+      row.company ?? row.symbol,
+      row.sector ?? null,
+      row.marketScope ?? null,
+      row.actionScore ?? null,
+      row.confidenceLabel ?? null,
+      row.actionBucket ?? null,
+      row.actionLabel ?? null,
+      Array.isArray(row.actionReasons) ? row.actionReasons.slice(0, 2) : [],
+      row.guruHolders ?? null,
+      row.return12m ?? null,
+    ]),
+  };
+}
+
 function analysisConcentration(relPath, label) {
   const doc = readJson(relPath, {});
   const rows = Array.isArray(doc?.analysis) ? doc.analysis : [];
@@ -1180,6 +1231,9 @@ function main() {
   const stockActionIndex = buildStockActionIndex();
   writeJsonToBoth("computed/stock_action_index.json", stockActionIndex);
 
+  const stockActionSummary = buildStockActionSummary(stockActionIndex);
+  writeJsonToBoth("computed/stock_action_summary.json", stockActionSummary, { compact: true });
+
   const marketStructureIndex = buildMarketStructureIndex();
   writeJsonToBoth("computed/market_structure_index.json", marketStructureIndex);
 
@@ -1189,6 +1243,7 @@ function main() {
   console.log(JSON.stringify({
     generated_at: stockActionIndex.generated_at,
     stock_action_rows: stockActionIndex.rows.length,
+    stock_action_summary_bytes: JSON.stringify(stockActionSummary).length + 1,
     market_structure_sources: marketStructureIndex.source_files.length,
     usage_root_json: usageManifest.totals.rootJsonCount,
     usage_direct_fetches: usageManifest.totals.directDataFetchCount,

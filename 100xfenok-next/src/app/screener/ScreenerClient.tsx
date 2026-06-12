@@ -13,17 +13,37 @@ const PAGE_SIZE = 50;
 interface ActionRow {
   symbol: string;
   actionScore?: number | null;
+  confidenceLabel?: string | null;
   actionLabel?: string | null;
   actionBucket?: string | null;
   actionReasons?: string[];
-  indexMembership?: string[];
   guruHolders?: number | null;
-  quality_flags?: string[];
 }
-interface ActionIndexDoc {
-  rows?: ActionRow[];
+interface ActionSummaryDoc {
+  fields?: string[];
+  rows?: Array<ActionRow | unknown[]>;
 }
 type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum";
+
+function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): ActionRow | null {
+  if (!Array.isArray(row)) return row.symbol ? row : null;
+  const value = (key: string): unknown => {
+    const index = fields.indexOf(key);
+    return index >= 0 ? row[index] : undefined;
+  };
+  const symbol = value("symbol");
+  if (typeof symbol !== "string" || symbol.length === 0) return null;
+  const actionReasons = value("actionReasons");
+  return {
+    symbol,
+    actionScore: typeof value("actionScore") === "number" ? value("actionScore") as number : null,
+    confidenceLabel: typeof value("confidenceLabel") === "string" ? value("confidenceLabel") as string : null,
+    actionLabel: typeof value("actionLabel") === "string" ? value("actionLabel") as string : null,
+    actionBucket: typeof value("actionBucket") === "string" ? value("actionBucket") as string : null,
+    actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
+    guruHolders: typeof value("guruHolders") === "number" ? value("guruHolders") as number : null,
+  };
+}
 
 const COUNTRY_LABEL: Record<string, string> = {
   US: "미국",
@@ -294,13 +314,14 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/computed/stock_action_index.json")
+    fetch("/data/computed/stock_action_summary.json")
       .then((r) => (r.ok ? r.json() : null))
-      .then((j: ActionIndexDoc | null) => {
+      .then((j: ActionSummaryDoc | null) => {
         if (cancelled || !Array.isArray(j?.rows)) return;
         const next: Record<string, ActionRow> = {};
         j.rows.forEach((row) => {
-          if (row.symbol) next[row.symbol] = row;
+          const normalized = normalizeActionRow(row, j.fields ?? []);
+          if (normalized?.symbol) next[normalized.symbol] = normalized;
         });
         setActionMap(next);
       })
@@ -316,11 +337,10 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         ...s,
         guruHolders: action?.guruHolders ?? guruMap?.[s.ticker] ?? null,
         actionScore: action?.actionScore ?? null,
+        confidenceLabel: action?.confidenceLabel ?? null,
         actionLabel: action?.actionLabel ?? null,
         actionBucket: action?.actionBucket ?? null,
         actionReasons: action?.actionReasons ?? [],
-        indexMembership: action?.indexMembership ?? [],
-        qualityFlags: action?.quality_flags ?? [],
       };
     });
   }, [rawStocks, guruMap, actionMap]);

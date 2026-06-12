@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-12T16:14:29.049Z",
+  "generated_at": "2026-06-12T16:27:19.010Z",
   "totals": {
-    "rootJsonCount": 2822,
-    "publicJsonCount": 2875,
-    "mirroredRootJsonCount": 2821,
+    "rootJsonCount": 2823,
+    "publicJsonCount": 2876,
+    "mirroredRootJsonCount": 2822,
     "missingPublicMirrorCount": 1,
     "publicOnlyJsonCount": 54,
-    "directDataFetchCount": 98,
+    "directDataFetchCount": 99,
     "dynamicPatternCount": 4
   },
   "mirror_sync_status": "partial",
@@ -44,6 +44,25 @@
     },
     {
       "path": "computed/stock_action_index.json",
+      "mirrored": true,
+      "sourceFiles": [
+        "global-scouter/core/stocks_analyzer.json",
+        "global-scouter/core/revision_movers.json",
+        "yf/quarter_closes.json",
+        "sec-13f/by_sector.json",
+        "sec-13f/analytics/guru_holders_index.json",
+        "sec-13f/analytics/enhanced_consensus.json",
+        "sec-13f/analytics/conviction_entries.json",
+        "slickcharts/universe.json",
+        "slickcharts/sp500-analysis.json",
+        "slickcharts/nasdaq100-analysis.json",
+        "slickcharts/dowjones-analysis.json",
+        "slickcharts/stocks-returns.json",
+        "slickcharts/stocks-dividends.json"
+      ]
+    },
+    {
+      "path": "computed/stock_action_summary.json",
       "mirrored": true,
       "sourceFiles": [
         "global-scouter/core/stocks_analyzer.json",
@@ -112,9 +131,9 @@
     },
     {
       "category": "computed",
-      "rootJsonCount": 3,
-      "publicJsonCount": 3,
-      "directFetchCount": 3,
+      "rootJsonCount": 4,
+      "publicJsonCount": 4,
+      "directFetchCount": 4,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 1,
       "status": "active",
@@ -334,7 +353,13 @@
       "dataPath": "computed/stock_action_index.json",
       "category": "computed",
       "consumers": [
-        "100xfenok-next/public/admin/data-lab/app/ops-console.js",
+        "100xfenok-next/public/admin/data-lab/app/ops-console.js"
+      ]
+    },
+    {
+      "dataPath": "computed/stock_action_summary.json",
+      "category": "computed",
+      "consumers": [
         "100xfenok-next/src/app/explore/ActionCandidatesCard.tsx",
         "100xfenok-next/src/app/screener/ScreenerClient.tsx"
       ]

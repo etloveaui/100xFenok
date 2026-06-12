@@ -12,6 +12,7 @@
 export interface ScreenerStock {
   guruHolders?: number | null;
   actionScore?: number | null;
+  confidenceLabel?: string | null;
   actionLabel?: string | null;
   actionBucket?: string | null;
   actionReasons?: string[];

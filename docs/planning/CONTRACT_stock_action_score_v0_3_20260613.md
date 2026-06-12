@@ -17,7 +17,7 @@ Top-level:
 - `schema_version`: `2`
 - `score_contract.version`: `action-score-v0.3`
 - `score_contract.config`: exact generator constants
-- `coverage.signal_score_percentiles_by_scope`: per `marketScope` p50/p90
+- `coverage.signal_score_percentiles_by_scope`: per `marketScope` `signalScoreP50/signalScoreP90`
 - `coverage.family_coverage`: per-family eligible/present counts
 
 Each row keeps the previous UI fields:
@@ -166,6 +166,41 @@ Buckets are selected from passing candidates by strongest family contribution.
 Any UI that surfaces `actionScore` should pair it with `confidenceLabel`.
 This UI pairing is a G3 dependency, not part of G0/G1 wiring.
 
+## G2 Slim Summary Addendum
+
+`data/computed/stock_action_summary.json` is the product-list payload for
+Screener and Explore. It is generated from the full `stock_action_index.json`,
+not from a second formula path.
+
+Top-level:
+
+- `schema_version`: `1`
+- `generated_at`: inherited from the full index
+- `source_file`: `computed/stock_action_index.json`
+- `fields`: ordered tuple column names for compact product payloads
+- `score_contract.version`: inherited from the full index
+- `coverage`: counts only, no family audit blocks
+
+Each summary row is an array tuple in this exact `fields` order:
+
+- `symbol`
+- `company`
+- `sector`
+- `marketScope`
+- `actionScore`
+- `confidenceLabel`
+- `actionBucket`
+- `actionLabel`
+- `actionReasons`: top 2 only
+- `guruHolders`
+- `return12m`
+
+The tuple shape is intentional: it keeps the generated summary under the
+250KB product-list budget while preserving explicit field names at top level.
+
+The full index remains the audit/proof payload for Admin and future detail
+surfaces. Product list views should not cold-load the full index.
+
 ## Verification Gate
 
 Required low-resource checks before push:
@@ -174,10 +209,13 @@ Required low-resource checks before push:
 - `jq` checks:
   - `schema_version == 2`
   - `coverage.sector_smart_money_joined_count > 0`
-  - each `coverage.signal_score_percentiles_by_scope[]` has `p50/p90`
+  - each `coverage.signal_score_percentiles_by_scope[]` has `signalScoreP50/signalScoreP90`
   - no row has `actionScore < 0` or `actionScore > 100`
   - no non-watch bucket violates `eligibleFamilyCount >= 3` and `presentFamilyCount >= 3`
 - root/public mirrors match for generated JSON outputs
+- summary file target: `data/computed/stock_action_summary.json <= 250KB`
+- product fetch audit: Screener and Explore action candidates fetch summary,
+  not full `stock_action_index.json`
 - `git diff --check`
 
 Browser/dev-server/Playwright checks are not part of this gate unless the user

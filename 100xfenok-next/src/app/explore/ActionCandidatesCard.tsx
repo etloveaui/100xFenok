@@ -9,7 +9,9 @@ interface ActionRow {
   symbol: string;
   company?: string | null;
   sector?: string | null;
+  marketScope?: string | null;
   actionScore?: number | null;
+  confidenceLabel?: string | null;
   actionLabel?: string | null;
   actionBucket?: string | null;
   actionReasons?: string[];
@@ -24,7 +26,8 @@ interface ActionDoc {
     conviction_matched_count?: number | null;
     quarter_close_ticker_count?: number | null;
   };
-  rows?: ActionRow[];
+  fields?: string[];
+  rows?: Array<ActionRow | unknown[]>;
 }
 
 let cache: ActionDoc | null = null;
@@ -33,7 +36,7 @@ let pending: Promise<ActionDoc | null> | null = null;
 function loadActions(): Promise<ActionDoc | null> {
   if (cache) return Promise.resolve(cache);
   if (pending) return pending;
-  pending = fetch("/data/computed/stock_action_index.json")
+  pending = fetch("/data/computed/stock_action_summary.json")
     .then((r) => (r.ok ? r.json() : null))
     .then((doc) => {
       cache = doc;
@@ -63,6 +66,30 @@ function tone(bucket: string | null | undefined): string {
   return "neutral";
 }
 
+function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): ActionRow | null {
+  if (!Array.isArray(row)) return row.symbol ? row : null;
+  const value = (key: string): unknown => {
+    const index = fields.indexOf(key);
+    return index >= 0 ? row[index] : undefined;
+  };
+  const symbol = value("symbol");
+  if (typeof symbol !== "string" || symbol.length === 0) return null;
+  const actionReasons = value("actionReasons");
+  return {
+    symbol,
+    company: typeof value("company") === "string" ? value("company") as string : null,
+    sector: typeof value("sector") === "string" ? value("sector") as string : null,
+    marketScope: typeof value("marketScope") === "string" ? value("marketScope") as string : null,
+    actionScore: typeof value("actionScore") === "number" ? value("actionScore") as number : null,
+    confidenceLabel: typeof value("confidenceLabel") === "string" ? value("confidenceLabel") as string : null,
+    actionLabel: typeof value("actionLabel") === "string" ? value("actionLabel") as string : null,
+    actionBucket: typeof value("actionBucket") === "string" ? value("actionBucket") as string : null,
+    actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
+    return12m: typeof value("return12m") === "number" ? value("return12m") as number : null,
+    guruHolders: typeof value("guruHolders") === "number" ? value("guruHolders") as number : null,
+  };
+}
+
 export default function ActionCandidatesCard() {
   const [doc, setDoc] = useState<ActionDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -83,7 +110,10 @@ export default function ActionCandidatesCard() {
 
   const rows = useMemo(() => {
     const all = Array.isArray(doc?.rows) ? doc.rows : [];
-    return all.filter((row) => row.actionBucket === tab).slice(0, 6);
+    return all
+      .map((row) => normalizeActionRow(row, doc?.fields ?? []))
+      .filter((row): row is ActionRow => row?.actionBucket === tab)
+      .slice(0, 6);
   }, [doc, tab]);
 
   if (!doc) {
@@ -134,7 +164,7 @@ export default function ActionCandidatesCard() {
           </TransitionLink>
         ))}
       </div>
-      <div className="panel-foot">YF 분기 종가 {doc.coverage?.quarter_close_ticker_count ?? "—"}개 · 데이터: computed stock_action_index</div>
+      <div className="panel-foot">YF 분기 종가 {doc.coverage?.quarter_close_ticker_count ?? "—"}개 · 데이터: computed stock_action_summary</div>
     </section>
   );
 }

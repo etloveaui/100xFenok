@@ -403,51 +403,6 @@ function SentimentPulsePanel({ items }: { items: MarketSentimentPulse[] }) {
 }
 
 function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend[]; structures: MarketStructurePulse[] }) {
-  return (
-    <PanelShell title="시장 구조" subtitle="indices · slickcharts">
-      {trends.length === 0 && structures.length === 0 ? (
-        <EmptyPanel label="시장 구조 데이터 없음" />
-      ) : (
-        <>
-          <div className="grid min-w-0 md:grid-cols-2">
-            {trends.map((trend) => (
-              <div key={trend.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 md:border-t-0">
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{trend.label}</p>
-                    <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">{fmtIndex(trend.latestValue)}</p>
-                  </div>
-                  <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{trend.latestDate ?? "—"}</span>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  <MomentumCell label="1Y" value={trend.oneYearReturn} />
-                  <MomentumCell label="5Y" value={trend.fiveYearReturn} />
-                  <MomentumCell label="DD" value={trend.drawdownFromHigh} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="grid min-w-0 border-t border-slate-100 sm:grid-cols-2 lg:grid-cols-3">
-            {structures.map((item) => (
-              <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 lg:[&:nth-child(-n+3)]:border-t-0">
-                <div className="flex min-w-0 items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-                    <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
-                  </div>
-                  <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums", toneClass(item.tone))}>{item.valueLabel}</span>
-                </div>
-                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.updated ?? "—"}</p>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </PanelShell>
-  );
-}
-
-function MarketStructureIndexAddon() {
   const [doc, setDoc] = useState<MarketStructureIndexDoc | null>(null);
 
   useEffect(() => {
@@ -460,72 +415,117 @@ function MarketStructureIndexAddon() {
     };
   }, []);
 
-  if (!doc) return null;
-
-  const concentration = doc.concentration?.slice(0, 3) ?? [];
-  const liquidity = doc.liquidity ?? [];
-  const weakSentiment = [...(doc.sentimentComponents?.components ?? [])]
+  const concentration = doc?.concentration?.slice(0, 3) ?? [];
+  const liquidity = doc?.liquidity ?? [];
+  const weakSentiment = [...(doc?.sentimentComponents?.components ?? [])]
     .sort((a, b) => (a.value ?? 100) - (b.value ?? 100))
     .slice(0, 4);
-  const signalDates = doc.component_as_of ?? [];
-  const credit = doc.creditRatings?.tables?.[0] ?? null;
+  const signalDates = doc?.component_as_of ?? [];
+  const credit = doc?.creditRatings?.tables?.[0] ?? null;
+  const isEmpty = trends.length === 0 && structures.length === 0 && !doc;
 
   return (
-    <PanelShell title="시장 구조 깊이" subtitle="computed market_structure_index">
-      <div className="grid min-w-0 lg:grid-cols-4">
-        {concentration.map((item) => (
-          <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
-            <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-            <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{fmt(item.top10Weight ?? null, 1)}%</p>
-            <p className="mt-1 text-[11px] font-semibold text-slate-500">Top3 {fmt(item.top3Weight ?? null, 1)}%</p>
-          </div>
-        ))}
-        {credit ? (
-          <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
-            <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">Credit lookup</p>
-            <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{fmtPercentDecimal(credit.medianSpread ?? null, 2)}</p>
-            <p className="mt-1 text-[11px] font-semibold text-slate-500">{doc.creditRatings?.sourceDate ?? "—"} · {doc.creditRatings?.tableCount ?? 0} tables</p>
-          </div>
-        ) : null}
-      </div>
-      <div className="grid min-w-0 border-t border-slate-100 md:grid-cols-2">
-        {liquidity.map((item) => (
-          <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 md:border-t-0">
-            <div className="flex min-w-0 items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-                <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.date ?? "—"}</p>
-              </div>
-              <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black tabular-nums text-slate-600">
-                7D {fmtSignedPoint(item.delta7d ?? null, 1)}
-              </span>
+    <PanelShell title="시장 구조" subtitle="indices · slickcharts">
+      {isEmpty ? (
+        <EmptyPanel label="시장 구조 데이터 없음" />
+      ) : (
+        <>
+          {trends.length > 0 ? (
+            <div className="grid min-w-0 md:grid-cols-2">
+              {trends.map((trend) => (
+                <div key={trend.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 md:border-t-0">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{trend.label}</p>
+                      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">{fmtIndex(trend.latestValue)}</p>
+                    </div>
+                    <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{trend.latestDate ?? "—"}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <MomentumCell label="1Y" value={trend.oneYearReturn} />
+                    <MomentumCell label="5Y" value={trend.fiveYearReturn} />
+                    <MomentumCell label="DD" value={trend.drawdownFromHigh} />
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">30D {fmtSignedPoint(item.delta30d ?? null, 1)}</p>
-          </div>
-        ))}
-      </div>
-      <div className="grid min-w-0 border-t border-slate-100 md:grid-cols-2">
-        <div className="min-w-0 px-4 py-3">
-          <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">CNN 하위 심리</p>
-          <div className="mt-2 flex min-w-0 flex-wrap gap-2">
-            {weakSentiment.map((item) => (
-              <span key={item.id} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600">
-                {item.id.replace(/_/g, " ")} {fmt(item.value ?? null, 1)}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="min-w-0 border-t border-slate-100 px-4 py-3 md:border-t-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">신호별 as-of</p>
-          <div className="mt-2 flex min-w-0 flex-wrap gap-2">
-            {signalDates.map((item) => (
-              <span key={item.id} className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-black text-slate-500">
-                {item.id} · {item.asOf ?? "—"}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+          ) : null}
+          {structures.length > 0 ? (
+            <div className="grid min-w-0 border-t border-slate-100 sm:grid-cols-2 lg:grid-cols-3">
+              {structures.map((item) => (
+                <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 lg:[&:nth-child(-n+3)]:border-t-0">
+                  <div className="flex min-w-0 items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+                      <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
+                    </div>
+                    <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums", toneClass(item.tone))}>{item.valueLabel}</span>
+                  </div>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.updated ?? "—"}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {doc ? (
+            <>
+              <div className="grid min-w-0 border-t border-slate-100 lg:grid-cols-4">
+                {concentration.map((item) => (
+                  <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
+                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label} 집중도</p>
+                    <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{fmt(item.top10Weight ?? null, 1)}%</p>
+                    <p className="mt-1 text-[11px] font-semibold text-slate-500">Top3 {fmt(item.top3Weight ?? null, 1)}%</p>
+                  </div>
+                ))}
+                {credit ? (
+                  <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
+                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">Credit lookup</p>
+                    <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{fmtPercentDecimal(credit.medianSpread ?? null, 2)}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-slate-500">{doc.creditRatings?.sourceDate ?? "—"} · {doc.creditRatings?.tableCount ?? 0} tables</p>
+                  </div>
+                ) : null}
+              </div>
+              <div className="grid min-w-0 border-t border-slate-100 md:grid-cols-2">
+                {liquidity.map((item) => (
+                  <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 md:border-t-0">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+                        <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.date ?? "—"}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black tabular-nums text-slate-600">
+                        7D {fmtSignedPoint(item.delta7d ?? null, 1)}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">30D {fmtSignedPoint(item.delta30d ?? null, 1)}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid min-w-0 border-t border-slate-100 md:grid-cols-2">
+                <div className="min-w-0 px-4 py-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">CNN 하위 심리</p>
+                  <div className="mt-2 flex min-w-0 flex-wrap gap-2">
+                    {weakSentiment.map((item) => (
+                      <span key={item.id} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600">
+                        {item.id.replace(/_/g, " ")} {fmt(item.value ?? null, 1)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="min-w-0 border-t border-slate-100 px-4 py-3 md:border-t-0">
+                  <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">신호별 as-of</p>
+                  <div className="mt-2 flex min-w-0 flex-wrap gap-2">
+                    {signalDates.map((item) => (
+                      <span key={item.id} className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-black text-slate-500">
+                        {item.id} · {item.asOf ?? "—"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : null}
+        </>
+      )}
     </PanelShell>
   );
 }
@@ -708,7 +708,6 @@ export default function MarketValuationClient() {
         </div>
         <SentimentPulsePanel items={sentimentPulses} />
         <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
-        <MarketStructureIndexAddon />
         <AnnualReturnsPanel items={sp500AnnualReturns} />
       </div>
 
