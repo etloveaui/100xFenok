@@ -1,22 +1,23 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-12T18:57:17.296Z",
+  "generated_at": "2026-06-12T19:22:28.467Z",
   "totals": {
     "rootJsonCount": 2856,
-    "publicJsonCount": 2909,
-    "mirroredRootJsonCount": 2855,
-    "missingPublicMirrorCount": 1,
+    "publicJsonCount": 2910,
+    "mirroredRootJsonCount": 2856,
+    "missingPublicMirrorCount": 0,
     "publicOnlyJsonCount": 54,
     "directDataFetchCount": 99,
     "dynamicPatternCount": 4
   },
-  "mirror_sync_status": "partial",
+  "mirror_sync_status": "ok",
   "generatedIndexes": [
     {
       "path": "admin/data-usage-manifest.json",
       "mirrored": true,
       "sourceFiles": [
         "global-scouter/core/stocks_analyzer.json",
+        "global-scouter/stocks/detail/*.json",
         "global-scouter/core/revision_movers.json",
         "yf/quarter_closes.json",
         "sec-13f/by_sector.json",
@@ -34,6 +35,7 @@
         "damodaran/credit_ratings.json",
         "macro/stablecoins.json",
         "macro/tga.json",
+        "sentiment/aaii.json",
         "sentiment/cnn-components.json",
         "slickcharts/magnificent7.json",
         "slickcharts/membership-changes.json",
@@ -47,6 +49,7 @@
       "mirrored": true,
       "sourceFiles": [
         "global-scouter/core/stocks_analyzer.json",
+        "global-scouter/stocks/detail/*.json",
         "global-scouter/core/revision_movers.json",
         "yf/quarter_closes.json",
         "sec-13f/by_sector.json",
@@ -66,6 +69,7 @@
       "mirrored": true,
       "sourceFiles": [
         "global-scouter/core/stocks_analyzer.json",
+        "global-scouter/stocks/detail/*.json",
         "global-scouter/core/revision_movers.json",
         "yf/quarter_closes.json",
         "sec-13f/by_sector.json",
@@ -89,6 +93,7 @@
         "damodaran/credit_ratings.json",
         "macro/stablecoins.json",
         "macro/tga.json",
+        "sentiment/aaii.json",
         "sentiment/cnn-components.json",
         "slickcharts/magnificent7.json",
         "slickcharts/membership-changes.json",
@@ -155,7 +160,7 @@
       "publicJsonCount": 1085,
       "directFetchCount": 10,
       "dynamicPatternCount": 1,
-      "generatedSourceCount": 2,
+      "generatedSourceCount": 3,
       "status": "active",
       "usage": "screener base universe, detail panels, revision movers, bond/economic pulses"
     },
@@ -192,7 +197,7 @@
     {
       "category": "sec-13f",
       "rootJsonCount": 48,
-      "publicJsonCount": 47,
+      "publicJsonCount": 48,
       "directFetchCount": 15,
       "dynamicPatternCount": 1,
       "generatedSourceCount": 4,
@@ -205,7 +210,7 @@
       "publicJsonCount": 14,
       "directFetchCount": 8,
       "dynamicPatternCount": 0,
-      "generatedSourceCount": 1,
+      "generatedSourceCount": 2,
       "status": "active",
       "usage": "dashboard, market valuation sentiment pulses, signal strip"
     },
@@ -319,7 +324,8 @@
       "dataPath": "calendar/prev-values.json",
       "category": "calendar",
       "consumers": [
-        "100xfenok-next/src/app/explore/WeekAheadCard.tsx"
+        "100xfenok-next/src/app/explore/WeekAheadCard.tsx",
+        "100xfenok-next/src/hooks/useMarketValuation.ts"
       ]
     },
     {
@@ -1079,9 +1085,7 @@
     ]
   },
   "mirrorGaps": {
-    "missingPublic": [
-      "sec-13f/investors/griffin.json"
-    ],
+    "missingPublic": [],
     "publicOnly": [
       "benchmarks/conversion_report.json",
       "metadata/2025-06-21.json",

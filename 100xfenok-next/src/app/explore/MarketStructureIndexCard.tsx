@@ -66,7 +66,7 @@ export default function MarketStructureIndexCard() {
       <section className="panel">
         <div className="panel-h">
           <h2>시장 구조 인덱스</h2>
-          <span className="desc">membership · liquidity · sentiment</span>
+          <span className="desc">리밸런싱·유동성·심리</span>
         </div>
         <div className="panel-b text-sm font-semibold text-slate-500">
           {loaded ? "시장 구조 데이터를 불러오지 못했습니다." : "시장 구조 확인 중"}

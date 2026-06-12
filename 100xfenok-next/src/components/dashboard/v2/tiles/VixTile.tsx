@@ -10,9 +10,7 @@ import TraceableNumber, {
 } from "@/components/dashboard/v4/TraceableNumber";
 
 /**
- * V2 VIX — AUDIT P1 (sparkline restored) + delta chip.
- * 7-day approximated sparkline (current + 6 synthetic backfill steps; in
- * production, wire to actual VIX series when available).
+ * V2 VIX — actual VIX history sparkline + delta chip.
  *
  * V4 (optional): when `traceMode` and `freshnessMap` are supplied, the
  * KPI is wrapped with TraceableNumber. V2/V3 callers omit these — no
@@ -31,23 +29,18 @@ export default function VixTile({
   traceMode?: TraceableMode;
   freshnessMap?: DashboardFreshnessMap;
 }) {
-  const pts = [
-    dashboard.vixValue * 1.13,
-    dashboard.vixValue * 1.1,
-    dashboard.vixValue * 1.06,
-    dashboard.vixValue * 1.04,
-    dashboard.vixValue * 1.02,
-    dashboard.vixValue * 0.98,
-    dashboard.vixValue,
-  ];
+  const pts = dashboard.vixHistory.map((point) => point.value);
   const max = Math.max(...pts);
   const min = Math.min(...pts);
-  const path = pts
-    .map(
-      (p, i) =>
-        `${(i / (pts.length - 1)) * 100},${100 - ((p - min) / (max - min || 1)) * 70 - 15}`,
-    )
-    .join(" ");
+  const path = pts.length >= 2
+    ? pts
+        .map(
+          (p, i) =>
+            `${(i / (pts.length - 1)) * 100},${100 - ((p - min) / (max - min || 1)) * 70 - 15}`,
+        )
+        .join(" ")
+    : "";
+  const latestHistory = dashboard.vixHistory[dashboard.vixHistory.length - 1] ?? null;
 
   return (
     <TileShell kicker="Volatility" title="VIX" freshness={freshness} muted={muted}>
@@ -90,27 +83,30 @@ export default function VixTile({
             </span>
           </div>
         </div>
-        <svg
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          style={{ width: 90, height: 50 }}
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id="vixV2Grad" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#1B73D3" stopOpacity={0.35} />
-              <stop offset="100%" stopColor="#1B73D3" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <polyline
-            points={path}
-            fill="none"
-            stroke="#1B73D3"
-            strokeWidth={2}
-            vectorEffect="non-scaling-stroke"
-          />
-          <polygon points={`0,100 ${path} 100,100`} fill="url(#vixV2Grad)" />
-        </svg>
+        {path ? (
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            style={{ width: 90, height: 50 }}
+            role="img"
+            aria-label={`최근 VIX 실제 추이 · 최신 ${latestHistory?.date ?? "—"} ${dashboard.vixValue.toFixed(1)} · 범위 ${min.toFixed(1)}~${max.toFixed(1)}`}
+          >
+            <defs>
+              <linearGradient id="vixV2Grad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#1B73D3" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#1B73D3" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <polyline
+              points={path}
+              fill="none"
+              stroke="#1B73D3"
+              strokeWidth={2}
+              vectorEffect="non-scaling-stroke"
+            />
+            <polygon points={`0,100 ${path} 100,100`} fill="url(#vixV2Grad)" />
+          </svg>
+        ) : null}
       </div>
     </TileShell>
   );

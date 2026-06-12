@@ -131,7 +131,7 @@ export default function ActionCandidatesCard() {
       <section className="panel">
         <div className="panel-h">
           <h2>액션 후보</h2>
-          <span className="desc">SlickCharts · 13F · YF</span>
+          <span className="desc">스코어 계산</span>
         </div>
         <div className="panel-b text-sm font-semibold text-slate-500">
           {loaded ? "액션 후보 데이터를 불러오지 못했습니다." : "액션 후보 계산 중"}
@@ -178,7 +178,7 @@ export default function ActionCandidatesCard() {
           </TransitionLink>
         ))}
       </div>
-      <div className="panel-foot">YF 분기 종가 {doc.coverage?.quarter_close_ticker_count ?? "—"}개 · 데이터: computed stock_action_summary</div>
+      <div className="panel-foot">YF 분기 종가 {doc.coverage?.quarter_close_ticker_count ?? "—"}개 · 데이터: SlickCharts · SEC 13F · YF · computed stock_action_summary</div>
     </section>
   );
 }

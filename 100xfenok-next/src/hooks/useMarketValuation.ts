@@ -5,7 +5,6 @@ import type {
   IndexMomentum,
   MarketAnnualReturn,
   MarketBondPulse,
-  MarketErpCountry,
   MarketErpInsight,
   MarketIndexValuation,
   MarketEventRisk,
@@ -155,6 +154,9 @@ interface RawCalendarEvent {
 }
 interface RawCalendar {
   events?: RawCalendarEvent[];
+}
+interface RawPrevValues {
+  values?: Record<string, { value?: string; asOf?: string; series?: string } | undefined>;
 }
 interface RawIndexPoint {
   date?: string;
@@ -537,19 +539,18 @@ function percentile(series: number[], current: number | null): number | null {
   return Math.round((below / series.length) * 100);
 }
 
+function erpRegime(percentileRank: number | null): { label: string; tone: MarketTone } {
+  if (percentileRank === null) return { label: "레짐 미정", tone: "slate" };
+  if (percentileRank >= 80) return { label: "요구수익률 높음", tone: "emerald" };
+  if (percentileRank >= 60) return { label: "보상 정상권 상단", tone: "slate" };
+  if (percentileRank >= 40) return { label: "역사 중립", tone: "slate" };
+  if (percentileRank >= 20) return { label: "보상 낮음", tone: "amber" };
+  return { label: "낮은 ERP", tone: "rose" };
+}
+
 function buildErpInsight(current: RawDamodaranErp | null, historical: RawDamodaranHistorical | null): MarketErpInsight | null {
   const usErp = finite(current?.us_erp) ? current!.us_erp! : null;
   const countries = current?.countries && typeof current.countries === "object" ? current.countries : {};
-  const topRiskCountries: MarketErpCountry[] = Object.entries(countries)
-    .map(([country, data]) => ({
-      country,
-      region: typeof data?.region === "string" ? data.region : null,
-      rating: typeof data?.rating === "string" ? data.rating : null,
-      erp: finite(data?.equity_risk_premium) ? data!.equity_risk_premium! : null,
-    }))
-    .filter((country) => country.erp !== null)
-    .sort((a, b) => (b.erp ?? 0) - (a.erp ?? 0))
-    .slice(0, 5);
 
   const historicalRows = Object.entries(historical?.years ?? {})
     .map(([year, data]) => ({
@@ -560,16 +561,20 @@ function buildErpInsight(current: RawDamodaranErp | null, historical: RawDamodar
     .sort((a, b) => Number(a.year) - Number(b.year));
   const historicalValues = historicalRows.map((row) => row.value);
   const latestHistorical = historicalRows[historicalRows.length - 1] ?? null;
+  const historicalPercentile = percentile(historicalValues, usErp);
+  const regime = erpRegime(historicalPercentile);
 
-  if (usErp === null && topRiskCountries.length === 0 && !latestHistorical) return null;
+  if (usErp === null && !latestHistorical) return null;
   return {
     usErp,
     sourceDate: current?.metadata?.source_date ?? historical?.metadata?.source_date ?? null,
     countryCount: current?.metadata?.country_count ?? Object.keys(countries).length,
-    historicalPercentile: percentile(historicalValues, usErp),
+    historicalPercentile,
     latestHistoricalYear: latestHistorical?.year ?? null,
     latestHistoricalErp: latestHistorical?.value ?? null,
-    topRiskCountries,
+    historicalRows,
+    regimeLabel: regime.label,
+    regimeTone: regime.tone,
   };
 }
 
@@ -793,20 +798,42 @@ function todayKST(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
 }
 
-function buildEventRisks(calendar: RawCalendar | null): MarketEventRisk[] {
+function previousValueForEvent(event: RawCalendarEvent, prevValues: RawPrevValues | null) {
+  const values = prevValues?.values ?? {};
+  const candidates = [event.title_en, event.title_ko].filter((value): value is string => typeof value === "string" && value.length > 0);
+  for (const key of candidates) {
+    const match = values[key];
+    if (match) {
+      return {
+        value: typeof match.value === "string" ? match.value : null,
+        asOf: typeof match.asOf === "string" ? match.asOf : null,
+        series: typeof match.series === "string" ? match.series : null,
+      };
+    }
+  }
+  return { value: null, asOf: null, series: null };
+}
+
+function buildEventRisks(calendar: RawCalendar | null, prevValues: RawPrevValues | null): MarketEventRisk[] {
   const today = todayKST();
   return (Array.isArray(calendar?.events) ? calendar!.events! : [])
     .filter((event) => typeof event.date_kst === "string" && event.date_kst >= today && (event.importance === "H" || event.importance === "M"))
     .slice(0, 6)
-    .map((event, index) => ({
-      id: `${event.date_kst}-${event.time_kst}-${index}`,
-      dateKst: event.date_kst ?? "—",
-      timeKst: event.time_kst ?? "—",
-      importance: event.importance ?? "M",
-      category: event.category ?? "—",
-      titleKo: event.title_ko ?? event.title_en ?? "이벤트",
-      titleEn: event.title_en ?? null,
-    }));
+    .map((event, index) => {
+      const previous = previousValueForEvent(event, prevValues);
+      return {
+        id: `${event.date_kst}-${event.time_kst}-${index}`,
+        dateKst: event.date_kst ?? "—",
+        timeKst: event.time_kst ?? "—",
+        importance: event.importance ?? "M",
+        category: event.category ?? "—",
+        titleKo: event.title_ko ?? event.title_en ?? "이벤트",
+        titleEn: event.title_en ?? null,
+        previousValue: previous.value,
+        previousAsOf: previous.asOf,
+        previousSeries: previous.series,
+      };
+    });
 }
 
 function buildTrend(id: string, label: string, rows: RawIndexPoint[] | null): MarketIndexTrend | null {
@@ -941,6 +968,7 @@ export function useMarketValuation(): MarketValuationResult {
         move,
         putCall,
         calendar,
+        prevValues,
         sp500Index,
         nasdaqIndex,
         sp500Holdings,
@@ -963,6 +991,7 @@ export function useMarketValuation(): MarketValuationResult {
         fetchJson<RawSentimentPoint[]>("/data/sentiment/move.json"),
         fetchJson<RawSentimentPoint[]>("/data/sentiment/cnn-put-call.json"),
         fetchJson<RawCalendar>("/data/calendar/usd-calendar.json"),
+        fetchJson<RawPrevValues>("/data/calendar/prev-values.json"),
         fetchJson<RawIndexPoint[]>("/data/indices/sp500.json"),
         fetchJson<RawIndexPoint[]>("/data/indices/nasdaq.json"),
         fetchJson<RawSlickHoldings>("/data/slickcharts/sp500.json"),
@@ -1025,7 +1054,7 @@ export function useMarketValuation(): MarketValuationResult {
         macroDepths: buildMacroDepths(activity),
         signalPulses: buildSignalPulses(signals),
         sentimentPulses: buildSentimentPulses({ vix, fearGreed, aaii, move, putCall }),
-        eventRisks: buildEventRisks(calendar),
+        eventRisks: buildEventRisks(calendar, prevValues),
         indexTrends: buildIndexTrends(sp500Index, nasdaqIndex),
         structurePulses: buildStructurePulses({ sp500Holdings, nasdaqHoldings, sp500Drawdown, sp500Returns, nasdaqReturns }),
         erpInsight: buildErpInsight(damodaran, historicalErp),

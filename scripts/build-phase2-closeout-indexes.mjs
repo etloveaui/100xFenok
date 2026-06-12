@@ -51,6 +51,7 @@ const ACTION_SCORE_CONFIG = Object.freeze({
 
 const STOCK_ACTION_SOURCES = [
   "global-scouter/core/stocks_analyzer.json",
+  "global-scouter/stocks/detail/*.json",
   "global-scouter/core/revision_movers.json",
   "yf/quarter_closes.json",
   "sec-13f/by_sector.json",
@@ -71,6 +72,7 @@ const MARKET_STRUCTURE_SOURCES = [
   "damodaran/credit_ratings.json",
   "macro/stablecoins.json",
   "macro/tga.json",
+  "sentiment/aaii.json",
   "sentiment/cnn-components.json",
   "slickcharts/magnificent7.json",
   "slickcharts/membership-changes.json",
@@ -256,6 +258,41 @@ function finite(value) {
 
 function num(value) {
   return finite(value) ? value : null;
+}
+
+function estimateNum(block, metric, key) {
+  const value = block?.[metric]?.[key];
+  return num(value);
+}
+
+function stockEstimateSnapshot(symbol) {
+  if (!symbol) return null;
+  const detail = readJson(`global-scouter/stocks/detail/${symbol}.json`, null);
+  if (!detail || typeof detail !== "object") return null;
+  const snapshot = {
+    forwardPe: {
+      fy1: estimateNum(detail.valuation_estimates, "per", "fy1"),
+      fy2: estimateNum(detail.valuation_estimates, "per", "fy2"),
+      fy3: estimateNum(detail.valuation_estimates, "per", "fy3"),
+    },
+    forwardEps: {
+      fy1: estimateNum(detail.per_share_estimates, "eps", "fy1"),
+      fy2: estimateNum(detail.per_share_estimates, "eps", "fy2"),
+      fy3: estimateNum(detail.per_share_estimates, "eps", "fy3"),
+    },
+    revenueGrowth: {
+      fy1: estimateNum(detail.growth_estimates, "revenue_growth", "fy1"),
+      fy2: estimateNum(detail.growth_estimates, "revenue_growth", "fy2"),
+      fy3: estimateNum(detail.growth_estimates, "revenue_growth", "fy3"),
+    },
+    epsGrowth: {
+      fy1: estimateNum(detail.growth_estimates, "eps_growth", "fy1"),
+      fy2: estimateNum(detail.growth_estimates, "eps_growth", "fy2"),
+      fy3: estimateNum(detail.growth_estimates, "eps_growth", "fy3"),
+    },
+  };
+  const hasValue = Object.values(snapshot).some((group) => Object.values(group).some((value) => value !== null));
+  return hasValue ? snapshot : null;
 }
 
 function round(value, digits = 4) {
@@ -822,6 +859,7 @@ function buildStockActionIndex() {
       const normalized = normalizeTicker(symbol);
       const marketScope = marketScopeFromMarket(normalized.market);
       const canonicalSector = canonicalSectorFromScouter(stock.sector);
+      const estimateSnapshot = stockEstimateSnapshot(symbol);
       const context = {
         marketScope,
         canonicalSector,
@@ -870,6 +908,7 @@ function buildStockActionIndex() {
           : null,
         conviction: context.conviction,
         sectorSmartMoney: context.sectorSmartMoney,
+        estimateSnapshot,
         revision: context.revision,
         slickReturn: context.returnHistory,
         dividendHistory: context.dividendHistory,
@@ -924,6 +963,10 @@ function buildStockActionIndex() {
       conviction_matched_count: convictions.map.size,
       conviction_name_only_count: convictions.nameOnlyCount,
       quarter_close_ticker_count: quarterCloses.meta.tickers,
+      estimate_snapshot_count: actionRows.filter((row) => row.estimateSnapshot !== null).length,
+      estimate_fy1_forward_pe_count: actionRows.filter((row) => finite(row.estimateSnapshot?.forwardPe?.fy1)).length,
+      estimate_fy1_revenue_growth_count: actionRows.filter((row) => finite(row.estimateSnapshot?.revenueGrowth?.fy1)).length,
+      estimate_fy1_eps_growth_count: actionRows.filter((row) => finite(row.estimateSnapshot?.epsGrowth?.fy1)).length,
       sector_smart_money_count: sectorSmartMoney.size,
       sector_smart_money_joined_count: actionRows.filter((row) => row.sectorSmartMoney != null).length,
       market_scope_counts: countBy(actionRows, "marketScope"),
@@ -957,6 +1000,10 @@ function buildStockActionSummary(stockActionIndex) {
     "lowEvidence",
     "guruHolders",
     "return12m",
+    "forwardPeFy1",
+    "forwardEpsFy1",
+    "revenueGrowthFy1",
+    "epsGrowthFy1",
   ];
   return {
     schema_version: 1,
@@ -972,6 +1019,10 @@ function buildStockActionSummary(stockActionIndex) {
       guru_ticker_count: stockActionIndex.coverage?.guru_ticker_count ?? null,
       conviction_matched_count: stockActionIndex.coverage?.conviction_matched_count ?? null,
       quarter_close_ticker_count: stockActionIndex.coverage?.quarter_close_ticker_count ?? null,
+      estimate_snapshot_count: stockActionIndex.coverage?.estimate_snapshot_count ?? null,
+      estimate_fy1_forward_pe_count: stockActionIndex.coverage?.estimate_fy1_forward_pe_count ?? null,
+      estimate_fy1_revenue_growth_count: stockActionIndex.coverage?.estimate_fy1_revenue_growth_count ?? null,
+      estimate_fy1_eps_growth_count: stockActionIndex.coverage?.estimate_fy1_eps_growth_count ?? null,
       market_scope_counts: stockActionIndex.coverage?.market_scope_counts ?? {},
       bucket_counts: stockActionIndex.coverage?.bucket_counts ?? {},
       confidence_counts: stockActionIndex.coverage?.confidence_counts ?? {},
@@ -990,6 +1041,10 @@ function buildStockActionSummary(stockActionIndex) {
       Array.isArray(row.quality_flags) ? row.quality_flags.includes("low_evidence") : false,
       row.guruHolders ?? null,
       row.return12m ?? null,
+      row.estimateSnapshot?.forwardPe?.fy1 ?? null,
+      row.estimateSnapshot?.forwardEps?.fy1 ?? null,
+      row.estimateSnapshot?.revenueGrowth?.fy1 ?? null,
+      row.estimateSnapshot?.epsGrowth?.fy1 ?? null,
     ]),
   };
 }
@@ -1014,6 +1069,22 @@ function analysisConcentration(relPath, label) {
   };
 }
 
+function sampleSeries(rows, valueReader, limit = 52) {
+  const series = (Array.isArray(rows) ? rows : [])
+    .map((row) => {
+      const date = typeof row?.date === "string" ? row.date : null;
+      const value = valueReader(row);
+      return date && finite(value) ? { date, value: round(value, 4) } : null;
+    })
+    .filter(Boolean);
+  if (series.length <= limit) return series;
+  const step = Math.ceil(series.length / limit);
+  const sampled = series.filter((_, index) => index % step === 0);
+  const latest = series[series.length - 1];
+  if (sampled[sampled.length - 1]?.date !== latest.date) sampled.push(latest);
+  return sampled.slice(-limit);
+}
+
 function latestSeriesStats(relPath, label, scale = 1) {
   const doc = readJson(relPath, {});
   const rows = Array.isArray(doc?.series) ? doc.series : [];
@@ -1030,6 +1101,7 @@ function latestSeriesStats(relPath, label, scale = 1) {
     delta7d: value !== null && finite(prev7?.val) ? round(value - prev7.val / scale, 4) : null,
     delta30d: value !== null && finite(prev30?.val) ? round(value - prev30.val / scale, 4) : null,
     points: rows.length,
+    trend: sampleSeries(rows.slice(-420), (row) => (finite(row?.val) ? row.val / scale : null), 42),
   };
 }
 
@@ -1051,8 +1123,34 @@ function buildSentimentComponentSummary() {
         id: key,
         value,
         delta7d: value !== null && prior !== null ? round(value - prior, 2) : null,
+        trend: sampleSeries(rows.slice(-90), (row) => num(row?.[key]), 30),
       };
     }),
+  };
+}
+
+function buildAaiiSummary() {
+  const rows = readJson("sentiment/aaii.json", []);
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return { latestDate: null, points: 0, bullish: null, neutral: null, bearish: null, spread: null, trend: [] };
+  }
+  const latest = rows[rows.length - 1] ?? {};
+  const bullish = num(latest.bullish);
+  const neutral = num(latest.neutral);
+  const bearish = num(latest.bearish);
+  const spread = bullish !== null && bearish !== null ? round(bullish - bearish, 2) : null;
+  return {
+    latestDate: latest.date ?? null,
+    points: rows.length,
+    bullish,
+    neutral,
+    bearish,
+    spread,
+    trend: sampleSeries(rows.slice(-260), (row) => {
+      const bull = num(row?.bullish);
+      const bear = num(row?.bearish);
+      return bull !== null && bear !== null ? bull - bear : null;
+    }, 52),
   };
 }
 
@@ -1169,6 +1267,7 @@ function buildMarketStructureIndex() {
       latestSeriesStats("macro/stablecoins.json", "Stablecoin supply", 1_000_000_000),
     ],
     sentimentComponents: buildSentimentComponentSummary(),
+    aaii: buildAaiiSummary(),
     creditRatings: buildCreditRatingsSummary(),
     component_as_of: componentAsOfFromSignals(),
   };

@@ -121,6 +121,7 @@ function loadTradesRanking(): Promise<TradesCache | null> {
 
 type MaybeNumber = number | null | undefined;
 type NumberSeries = MaybeNumber[];
+const ESTIMATE_LABELS: Record<string, string> = { fy1: "FY+1", fy2: "FY+2", fy3: "FY+3" };
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -222,7 +223,7 @@ function MiniBarChart({
     })),
     ...estKeys.map((key) => ({
       key,
-      label: key.toUpperCase(),
+      label: ESTIMATE_LABELS[key] ?? key.toUpperCase(),
       value: estimates?.[key] ?? null,
       estimate: true,
     })),
@@ -330,7 +331,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
           <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
             <th className="px-2 py-1.5 text-left" />
             {years.map((y) => <th key={y} className="px-2 py-1.5 text-right">{y}</th>)}
-            {estKeys.map((k) => <th key={k} className="px-2 py-1.5 text-right bg-slate-50 text-slate-400">{k.toUpperCase()}E</th>)}
+            {estKeys.map((k) => <th key={k} className="px-2 py-1.5 text-right bg-slate-50 text-slate-400">{ESTIMATE_LABELS[k] ?? k.toUpperCase()}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -549,6 +550,137 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   const returnText = isFiniteNumber(row?.return12m) ? fmtPct(row.return12m) : null;
   const returnUp = (row?.return12m ?? 0) >= 0;
 
+  function renderStockDataTab() {
+    if (stockTab === "overview") return null;
+    return (
+      <div className="grid gap-4">
+        {yfAvailable ? (
+          <section className="panel stock-tab-panel">
+            <div className="panel-b">{renderYfTab(stockTab, yfData, industryBench)}</div>
+          </section>
+        ) : null}
+        {detailLoading ? (
+          <div className="space-y-4">
+            <SkeletonSection />
+            <SkeletonSection />
+          </div>
+        ) : detail ? (
+          <>
+            {stockTab === "financials" ? (
+              <SectionCard title="재무 추이">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {([
+                    ["매출", numberSeries(detail.income_statement?.revenue), detail.income_statement_estimates?.revenue, "#10b981"],
+                    ["영업이익", numberSeries(detail.income_statement?.operating_income), detail.income_statement_estimates?.operating_income, "#06b6d4"],
+                    ["순이익", numberSeries(detail.income_statement?.net_income), detail.income_statement_estimates?.net_income, "#8b5cf6"],
+                    ["FCF", numberSeries(detail.cash_flow?.fcf), detail.cash_flow_estimates?.fcf, "#f59e0b"],
+                  ] as Array<[string, NumberSeries | undefined, Record<string, MaybeNumber> | undefined, string]>).map(([label, actuals, estimates, color]) => (
+                    <div key={label}>
+                      <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
+                      <MiniBarChart actuals={actuals ?? []} estimates={estimates ?? null} years={years} color={color} />
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 border-t border-slate-100 pt-4">
+                  <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">실적 추이 · 추정</h4>
+                  <CompactFinancialTable detail={detail} years={years} />
+                </div>
+                <RawFinancialDepth detail={detail} />
+              </SectionCard>
+            ) : null}
+
+            {stockTab === "statistics" ? (
+              <>
+                <SectionCard title="밸류에이션">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <div>
+                      <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 (8Y)</h4>
+                      {finiteValues(detail.valuation?.per).length >= 2 ? (
+                        <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
+                      ) : <span className="text-xs text-slate-300">—</span>}
+                    </div>
+                    {detailPerBands ? (
+                      <div>
+                        <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 위치</h4>
+                        <div className="space-y-2">
+                          {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "현재", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
+                            const range = detailPerBands.max_8y - detailPerBands.min_8y || 1;
+                            const pct = Math.min(100, Math.max(0, ((v - detailPerBands.min_8y) / range) * 100));
+                            const barColor = highlight ? "bg-brand-interactive" : "bg-slate-300";
+                            const textColor = highlight ? "text-slate-900" : "text-slate-500";
+                            return (
+                              <div key={label} className="flex items-center gap-2">
+                                <span className={`w-10 text-right text-[10px] font-semibold ${highlight ? "font-black text-brand-interactive" : "text-slate-500"}`}>{label}</span>
+                                <div className="relative h-3 flex-1 rounded-full bg-slate-100">
+                                  <div className={`absolute top-0 h-3 rounded-full ${barColor}`} style={{ left: `${pct}%`, width: "3px", transform: "translateX(-1.5px)" }} />
+                                </div>
+                                <span className={`w-14 text-xs orbitron tabular-nums font-bold ${textColor}`}>{v.toFixed(1)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </SectionCard>
+                <SectionCard title="수익성·성장">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <div>
+                      <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
+                      <div className="space-y-3">
+                        <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} color="#14b8a6" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} color="#06b6d4" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} color="#6366f1" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} color="#8b5cf6" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} color="#0ea5e9" years={years} formatValue={fmtWholePct} />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">성장률 (YoY)</h4>
+                      <div className="space-y-3">
+                        <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} color="#10b981" years={years} formatValue={fmtPct} />
+                        <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} color="#f59e0b" years={years} formatValue={fmtPct} />
+                      </div>
+                    </div>
+                  </div>
+                </SectionCard>
+                <SectionCard title="가격·수익률·배당">
+                  <SlickChartsDepth ticker={symbol} showUnavailable />
+                </SectionCard>
+              </>
+            ) : null}
+
+            {stockTab === "estimates" ? (
+              <SectionCard title="리비전·추정치">
+                <RevisionPulse detail={detail} />
+                <CompactFinancialTable detail={detail} years={years} />
+              </SectionCard>
+            ) : null}
+
+            {stockTab === "ownership" ? (
+              <div id="guru-section">
+                <SectionCard>
+                  <GuruSection f13Entries={f13Entries} ticker={symbol} />
+                </SectionCard>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <SectionCard>
+            <div className="py-8 text-center">
+              <p className="text-sm font-black text-slate-700">상세 데이터를 불러올 수 없습니다</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">/data/global-scouter/stocks/detail/{symbol}.json 을 확인해 주세요.</p>
+            </div>
+          </SectionCard>
+        )}
+        <footer className="stock-footer">
+          <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+          <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">구루 보유 보기</TransitionLink>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="stock-shell">
       <section className="stock-entity panel">
@@ -617,12 +749,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           ) : null}
       </div>
 
-      {/* YF tabs (non-overview) */}
-      {stockTab !== "overview" && yfAvailable ? (
-        <section className="panel stock-tab-panel">
-          <div className="panel-b">{renderYfTab(stockTab, yfData, industryBench)}</div>
-        </section>
-      ) : (
+      {stockTab !== "overview" ? renderStockDataTab() : (
       <div className="stock-overview-grid">
         {/* LEFT RAIL (280px sticky) */}
         <aside className="stock-side">
@@ -675,105 +802,44 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           {detailLoading ? (
             <div className="space-y-8">
               <SkeletonSection />
-              <SkeletonSection />
             </div>
           ) : detail ? (
             <>
-              {/* 1. 밸류에이션 */}
-              <SectionCard title="밸류에이션">
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div>
-                    <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 (8Y)</h4>
-                    {finiteValues(detail.valuation?.per).length >= 2 ? (
-                      <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
-                    ) : <span className="text-xs text-slate-300">—</span>}
-                  </div>
-                  {detailPerBands ? (
-                    <div>
-                      <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 위치</h4>
-                      <div className="space-y-2">
-                        {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "현재", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
-                          const range = detailPerBands.max_8y - detailPerBands.min_8y || 1;
-                          const pct = Math.min(100, Math.max(0, ((v - detailPerBands.min_8y) / range) * 100));
-                          const barColor = highlight ? "bg-brand-interactive" : "bg-slate-300";
-                          const textColor = highlight ? "text-slate-900" : "text-slate-500";
-                          return (
-                            <div key={label} className="flex items-center gap-2">
-                              <span className={`w-10 text-right text-[10px] font-semibold ${highlight ? "font-black text-brand-interactive" : "text-slate-500"}`}>{label}</span>
-                              <div className="relative h-3 flex-1 rounded-full bg-slate-100">
-                                <div className={`absolute top-0 h-3 rounded-full ${barColor}`} style={{ left: `${pct}%`, width: "3px", transform: "translateX(-1.5px)" }} />
-                              </div>
-                              <span className={`w-14 text-xs orbitron tabular-nums font-bold ${textColor}`}>{v.toFixed(1)}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </SectionCard>
-
-              {/* 2. SlickCharts 히스토리 */}
-              <SectionCard title="가격·수익률·배당">
-                <SlickChartsDepth ticker={symbol} showUnavailable />
-              </SectionCard>
-
-              {/* 3. 재무 추이 */}
-              <SectionCard title="재무 추이">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {([
-                    ["매출", numberSeries(detail.income_statement?.revenue), detail.income_statement_estimates?.revenue, "#10b981"],
-                    ["영업이익", numberSeries(detail.income_statement?.operating_income), detail.income_statement_estimates?.operating_income, "#06b6d4"],
-                    ["순이익", numberSeries(detail.income_statement?.net_income), detail.income_statement_estimates?.net_income, "#8b5cf6"],
-                    ["FCF", numberSeries(detail.cash_flow?.fcf), detail.cash_flow_estimates?.fcf, "#f59e0b"],
-                  ] as Array<[string, NumberSeries | undefined, Record<string, MaybeNumber> | undefined, string]>).map(([label, actuals, estimates, color]) => (
-                    <div key={label}>
-                      <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
-                      <MiniBarChart actuals={actuals ?? []} estimates={estimates ?? null} years={years} color={color} />
+              <SectionCard title="핵심 스냅샷">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {[
+                    { label: "PER 밴드", value: detailPerBands ? perBandPositionText(detailPerBands.current, detailPerBands.min_8y, detailPerBands.max_8y) : "—" },
+                    { label: "FY+1 PER", value: isFiniteNumber(detail.valuation_estimates?.per?.fy1) ? `${detail.valuation_estimates.per.fy1.toFixed(1)}x` : "—" },
+                    { label: "FY+1 매출 성장", value: fmtWholeSignedPct(detail.growth_estimates?.revenue_growth?.fy1) },
+                    { label: "FY+1 EPS 성장", value: fmtWholeSignedPct(detail.growth_estimates?.eps_growth?.fy1) },
+                    { label: "최근 매출", value: fmtLarge(lastFinite(numberSeries(detail.income_statement?.revenue))) },
+                    { label: "최근 EPS", value: isFiniteNumber(lastFinite(numberSeries(detail.per_share?.eps))) ? `$${(lastFinite(numberSeries(detail.per_share?.eps)) as number).toFixed(2)}` : "—" },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+                      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{item.value}</p>
                     </div>
                   ))}
                 </div>
-                <div className="mt-5 border-t border-slate-100 pt-4">
-                  <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">실적 추이 · 추정</h4>
-                  <CompactFinancialTable detail={detail} years={years} />
+                <div className="mt-4 grid gap-2 sm:grid-cols-4">
+                  {[
+                    ["재무", "매출·FCF·원재무"],
+                    ["통계", "밸류·수익성"],
+                    ["추정치", "FY+1~3·리비전"],
+                    ["보유기관", "13F 구루"],
+                  ].map(([label, desc]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setStockTab(label === "재무" ? "financials" : label === "통계" ? "statistics" : label === "추정치" ? "estimates" : "ownership")}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left transition hover:border-brand-interactive hover:bg-white"
+                    >
+                      <span className="block text-[11px] font-black text-slate-800">{label}</span>
+                      <span className="mt-0.5 block text-[10px] font-semibold text-slate-400">{desc}</span>
+                    </button>
+                  ))}
                 </div>
               </SectionCard>
-
-              {/* 4. 리비전·원재무 깊이 */}
-              <SectionCard title="리비전·원재무 깊이">
-                <RevisionPulse detail={detail} />
-                <RawFinancialDepth detail={detail} />
-              </SectionCard>
-
-              {/* 5. 수익성·성장 */}
-              <SectionCard title="수익성·성장">
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div>
-                    <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
-                    <div className="space-y-3">
-                      <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} color="#14b8a6" years={years} formatValue={fmtWholePct} />
-                      <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} color="#06b6d4" years={years} formatValue={fmtWholePct} />
-                      <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} color="#6366f1" years={years} formatValue={fmtWholePct} />
-                      <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} color="#8b5cf6" years={years} formatValue={fmtWholePct} />
-                      <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} color="#0ea5e9" years={years} formatValue={fmtWholePct} />
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">성장률 (YoY)</h4>
-                    <div className="space-y-3">
-                      <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} color="#10b981" years={years} formatValue={fmtPct} />
-                      <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} color="#f59e0b" years={years} formatValue={fmtPct} />
-                    </div>
-                  </div>
-                </div>
-              </SectionCard>
-
-              {/* 6. 구루 동향 */}
-              <div id="guru-section">
-                <SectionCard>
-                  <GuruSection f13Entries={f13Entries} ticker={symbol} />
-                </SectionCard>
-              </div>
             </>
           ) : (
             <SectionCard>
@@ -784,7 +850,6 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
             </SectionCard>
           )}
 
-          {/* Footer */}
           <footer className="stock-footer">
             <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
             <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">구루 보유 보기</TransitionLink>

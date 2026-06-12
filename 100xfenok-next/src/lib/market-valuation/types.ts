@@ -135,6 +135,9 @@ export interface MarketEventRisk {
   category: string;
   titleKo: string;
   titleEn: string | null;
+  previousValue: string | null;
+  previousAsOf: string | null;
+  previousSeries: string | null;
 }
 
 export interface MarketIndexTrend {
@@ -163,6 +166,11 @@ export interface MarketErpCountry {
   erp: number | null;
 }
 
+export interface MarketErpHistoryPoint {
+  year: string;
+  value: number;
+}
+
 export interface MarketErpInsight {
   usErp: number | null;
   sourceDate: string | null;
@@ -170,7 +178,9 @@ export interface MarketErpInsight {
   historicalPercentile: number | null;
   latestHistoricalYear: string | null;
   latestHistoricalErp: number | null;
-  topRiskCountries: MarketErpCountry[];
+  historicalRows: MarketErpHistoryPoint[];
+  regimeLabel: string;
+  regimeTone: MarketTone;
 }
 
 export interface MarketBondPulse {

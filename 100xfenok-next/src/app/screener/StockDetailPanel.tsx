@@ -77,6 +77,7 @@ export interface DetailData {
   };
   income_statement_estimates?: Record<string, Record<string, MaybeNumber>>;
   cash_flow_estimates?: Record<string, Record<string, MaybeNumber>>;
+  growth_estimates?: Record<string, Record<string, MaybeNumber>>;
   per_share_estimates?: Record<string, Record<string, MaybeNumber>>;
   dividend_estimates?: Record<string, Record<string, MaybeNumber>>;
   dividend?: { dps?: NumberSeries };
@@ -136,7 +137,7 @@ interface SlickStockData {
   dividends?: SlickDividendPoint[];
 }
 
-function isFiniteNumber(value: MaybeNumber): value is number {
+function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
@@ -160,9 +161,15 @@ function optionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
 }
 
+type EstimateSeries = { fy1?: MaybeNumber; fy2?: MaybeNumber; fy3?: MaybeNumber };
 type FiscalPoint = { label: string; value: number; index: number; estimate?: boolean };
 
-function buildFiscalPoints(years: string[], data: NumberSeries | null | undefined, fy1?: MaybeNumber) {
+function normalizeEstimates(estimates?: MaybeNumber | EstimateSeries): EstimateSeries {
+  if (isFiniteNumber(estimates)) return { fy1: estimates };
+  return estimates && typeof estimates === "object" ? estimates : {};
+}
+
+function buildFiscalPoints(years: string[], data: NumberSeries | null | undefined, estimates?: MaybeNumber | EstimateSeries) {
   const actualCount = Math.max(years.length, data?.length ?? 0);
   const labels = Array.from({ length: actualCount }, (_, index) => years[index] ?? `P${index + 1}`);
   const points: FiscalPoint[] = (data ?? [])
@@ -172,11 +179,21 @@ function buildFiscalPoints(years: string[], data: NumberSeries | null | undefine
       index,
     }))
     .filter((point): point is FiscalPoint => isFiniteNumber(point.value));
-  if (isFiniteNumber(fy1)) {
-    points.push({ label: "FY+1", value: fy1, index: actualCount, estimate: true });
-  }
+  const estimateLabels = [
+    ["fy1", "FY+1"],
+    ["fy2", "FY+2"],
+    ["fy3", "FY+3"],
+  ] as const;
+  const estimatePoints: FiscalPoint[] = [];
+  estimateLabels.forEach(([key, label]) => {
+    const value = normalizeEstimates(estimates)[key];
+    if (isFiniteNumber(value)) {
+      estimatePoints.push({ label, value, index: actualCount + estimatePoints.length, estimate: true });
+    }
+  });
+  points.push(...estimatePoints);
   return {
-    labels: isFiniteNumber(fy1) ? [...labels, "FY+1"] : labels,
+    labels: [...labels, ...estimatePoints.map((point) => point.label)],
     points,
   };
 }
@@ -427,17 +444,20 @@ export function Sparkline({
   color,
   years = [],
   estimate,
+  estimates,
   formatValue = (value) => value.toFixed(1),
 }: {
   data: NumberSeries;
   color: string;
   years?: string[];
   estimate?: MaybeNumber;
+  estimates?: EstimateSeries;
   formatValue?: (value: number) => string;
 }) {
-  const { labels, points } = buildFiscalPoints(years, data, estimate);
+  const { labels, points } = buildFiscalPoints(years, data, estimates ?? estimate);
   const actualPoints = points.filter((point) => !point.estimate);
-  const estimatePoint = points.find((point) => point.estimate);
+  const estimatePoints = points.filter((point) => point.estimate);
+  const firstEstimatePoint = estimatePoints[0] ?? null;
   if (points.length < 2 || labels.length < 2) return <span className="text-xs text-slate-300">—</span>;
   const values = points.map((point) => point.value);
   const min = Math.min(...values);
@@ -456,20 +476,31 @@ export function Sparkline({
 
   const actualLine = actualPoints.map((point) => `${toX(point.index)},${toY(point.value)}`).join(" ");
   const currentPoint = actualPoints[actualPoints.length - 1] ?? null;
-  const labelPoints = [currentPoint, estimatePoint].filter(Boolean) as FiscalPoint[];
+  const labelPoints = [currentPoint, estimatePoints[estimatePoints.length - 1] ?? firstEstimatePoint].filter(Boolean) as FiscalPoint[];
 
   return (
     <svg width={width} height={height} className="max-w-full overflow-visible" role="img" aria-label="FY별 추이 차트">
       <polyline points={actualLine} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-      {estimatePoint && currentPoint ? (
+      {firstEstimatePoint && currentPoint ? (
         <line
           x1={toX(currentPoint.index)}
           y1={toY(currentPoint.value)}
-          x2={toX(estimatePoint.index)}
-          y2={toY(estimatePoint.value)}
+          x2={toX(firstEstimatePoint.index)}
+          y2={toY(firstEstimatePoint.value)}
           stroke={color}
           strokeWidth={2}
           strokeDasharray="4,2"
+        />
+      ) : null}
+      {estimatePoints.length > 1 ? (
+        <polyline
+          points={estimatePoints.map((point) => `${toX(point.index)},${toY(point.value)}`).join(" ")}
+          fill="none"
+          stroke={color}
+          strokeWidth={2}
+          strokeDasharray="4,2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       ) : null}
       {points.map((point) => {
@@ -518,11 +549,12 @@ export function PerBandChart({
   years: string[];
   per: NumberSeries;
   perBands?: DetailData["per_bands"];
-  estimates?: { fy1?: MaybeNumber };
+  estimates?: EstimateSeries;
 }) {
-  const { labels: periodLabels, points: allPerPoints } = buildFiscalPoints(years, per, estimates?.fy1);
+  const { labels: periodLabels, points: allPerPoints } = buildFiscalPoints(years, per, estimates);
   const perPoints = allPerPoints.filter((point) => !point.estimate);
-  const forwardPoint = allPerPoints.find((point) => point.estimate);
+  const forwardPoints = allPerPoints.filter((point) => point.estimate);
+  const forwardPoint = forwardPoints[0] ?? null;
   if (perPoints.length < 2) return <span className="text-xs text-slate-300">—</span>;
 
   const allValues = allPerPoints.map((point) => point.value);
@@ -656,6 +688,17 @@ export function PerBandChart({
               strokeWidth={2}
               strokeDasharray="4,2"
             />
+            {forwardPoints.length > 1 ? (
+              <polyline
+                points={forwardPoints.map((point) => `${toX(point.index)},${toY(point.value)}`).join(" ")}
+                fill="none"
+                stroke="#1B73D3"
+                strokeWidth={2}
+                strokeDasharray="4,2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ) : null}
           </>
         )}
 
@@ -1136,7 +1179,7 @@ export function StockDetailBody({
                 data={revenue}
                 color="#10b981"
                 years={detail.years}
-                estimate={detail.income_statement_estimates?.revenue?.fy1}
+                estimates={detail.income_statement_estimates?.revenue}
                 formatValue={fmtLarge}
               />
               <div className="mt-1 text-[10px] font-bold text-slate-400">
@@ -1160,7 +1203,7 @@ export function StockDetailBody({
                 data={eps}
                 color="#8b5cf6"
                 years={detail.years}
-                estimate={detail.per_share_estimates?.eps?.fy1}
+                estimates={detail.per_share_estimates?.eps}
                 formatValue={(value) => `$${value.toFixed(2)}`}
               />
               <div className="mt-1 text-[10px] font-bold text-slate-400">

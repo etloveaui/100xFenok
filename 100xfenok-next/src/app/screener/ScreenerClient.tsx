@@ -19,12 +19,16 @@ interface ActionRow {
   actionReasons?: string[];
   lowEvidence?: boolean | null;
   guruHolders?: number | null;
+  forwardPeFy1?: number | null;
+  forwardEpsFy1?: number | null;
+  revenueGrowthFy1?: number | null;
+  epsGrowthFy1?: number | null;
 }
 interface ActionSummaryDoc {
   fields?: string[];
   rows?: Array<ActionRow | unknown[]>;
 }
-type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum";
+type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum" | "watch";
 
 function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): ActionRow | null {
   if (!Array.isArray(row)) return row.symbol ? row : null;
@@ -44,6 +48,10 @@ function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): Actio
     actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
     lowEvidence: typeof value("lowEvidence") === "boolean" ? value("lowEvidence") as boolean : false,
     guruHolders: typeof value("guruHolders") === "number" ? value("guruHolders") as number : null,
+    forwardPeFy1: typeof value("forwardPeFy1") === "number" ? value("forwardPeFy1") as number : null,
+    forwardEpsFy1: typeof value("forwardEpsFy1") === "number" ? value("forwardEpsFy1") as number : null,
+    revenueGrowthFy1: typeof value("revenueGrowthFy1") === "number" ? value("revenueGrowthFy1") as number : null,
+    epsGrowthFy1: typeof value("epsGrowthFy1") === "number" ? value("epsGrowthFy1") as number : null,
   };
 }
 
@@ -80,18 +88,23 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "perBandCurrent", label: "PER밴드", align: "left" },
   { key: "peForward", label: "Fwd PER", align: "right" },
   { key: "epsForward", label: "Fwd EPS", align: "right" },
+  { key: "forwardPeFy1", label: "FY+1 PER", align: "right" },
+  { key: "forwardEpsFy1", label: "FY+1 EPS", align: "right" },
+  { key: "revenueGrowthFy1", label: "매출+1", align: "right" },
+  { key: "epsGrowthFy1", label: "EPS+1", align: "right" },
   { key: "dividendTtm", label: "Div TTM", align: "right" },
   { key: "ret1y", label: "1Y", align: "right" },
   { key: "ret3y", label: "3Y", align: "right" },
   { key: "ret5y", label: "5Y", align: "right" },
 ];
 
-type ColumnPreset = "basic" | "action" | "value" | "momentum" | "dividend" | "guru";
+type ColumnPreset = "basic" | "action" | "value" | "estimate" | "momentum" | "dividend" | "guru";
 
 const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
   action: ["ticker", "actionScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
-  value: ["ticker", "name", "sector", "per", "peForward", "pbr", "roe", "opm", "eps", "perBandCurrent", "rank"],
+  value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
+  estimate: ["ticker", "actionScore", "name", "sector", "forwardPeFy1", "forwardEpsFy1", "revenueGrowthFy1", "epsGrowthFy1", "perBandCurrent", "marketCap"],
   momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum6m", "momentum12m", "rank"],
   dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
   guru: ["ticker", "name", "sector", "guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m"],
@@ -101,6 +114,7 @@ const PRESET_LABEL: Record<ColumnPreset, string> = {
   basic: "기본",
   action: "액션",
   value: "밸류",
+  estimate: "추정치",
   momentum: "모멘텀",
   dividend: "배당",
   guru: "구루픽",
@@ -312,6 +326,14 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
       return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.peForward, 1)}</span>;
     case "epsForward":
       return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock.epsForward)}</span>;
+    case "forwardPeFy1":
+      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.forwardPeFy1 ?? null, 1)}</span>;
+    case "forwardEpsFy1":
+      return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock.forwardEpsFy1 ?? null)}</span>;
+    case "revenueGrowthFy1":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.revenueGrowthFy1 ?? null))}>{fmtSignedPct(stock.revenueGrowthFy1 ?? null)}</span>;
+    case "epsGrowthFy1":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.epsGrowthFy1 ?? null))}>{fmtSignedPct(stock.epsGrowthFy1 ?? null)}</span>;
     case "dividendTtm":
       return <span className="orbitron tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
     case "ret1y":
@@ -371,6 +393,10 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         actionBucket: action?.actionBucket ?? null,
         actionReasons: action?.actionReasons ?? [],
         lowEvidence: action?.lowEvidence ?? null,
+        forwardPeFy1: action?.forwardPeFy1 ?? s.peForward ?? null,
+        forwardEpsFy1: action?.forwardEpsFy1 ?? s.epsForward ?? null,
+        revenueGrowthFy1: action?.revenueGrowthFy1 ?? null,
+        epsGrowthFy1: action?.epsGrowthFy1 ?? null,
       };
     });
   }, [rawStocks, guruMap, actionMap]);
@@ -379,6 +405,9 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   const [sector, setSector] = useState("");
   const [country, setCountry] = useState("");
   const [perMax, setPerMax] = useState("");
+  const [forwardPerMax, setForwardPerMax] = useState("");
+  const [revenueGrowthMin, setRevenueGrowthMin] = useState("");
+  const [epsGrowthMin, setEpsGrowthMin] = useState("");
   const [profitableOnly, setProfitableOnly] = useState(false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
   const [actionFilter, setActionFilter] = useState<ActionFilter>("");
@@ -420,6 +449,12 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     const query = search.trim().toLowerCase();
     const perMaxValue = perMax.trim() === "" ? null : Number(perMax);
     const perMaxValid = perMaxValue !== null && !Number.isNaN(perMaxValue);
+    const forwardPerMaxValue = forwardPerMax.trim() === "" ? null : Number(forwardPerMax);
+    const forwardPerMaxValid = forwardPerMaxValue !== null && !Number.isNaN(forwardPerMaxValue);
+    const revenueGrowthMinValue = revenueGrowthMin.trim() === "" ? null : Number(revenueGrowthMin);
+    const revenueGrowthMinValid = revenueGrowthMinValue !== null && !Number.isNaN(revenueGrowthMinValue);
+    const epsGrowthMinValue = epsGrowthMin.trim() === "" ? null : Number(epsGrowthMin);
+    const epsGrowthMinValid = epsGrowthMinValue !== null && !Number.isNaN(epsGrowthMinValue);
     return stocks.filter((stock) => {
       if (query && !stock.ticker.toLowerCase().includes(query) && !stock.name.toLowerCase().includes(query)) {
         return false;
@@ -429,6 +464,9 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
       if (actionFilter && stock.actionBucket !== actionFilter) return false;
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
+      if (forwardPerMaxValid && ((stock.forwardPeFy1 ?? null) === null || (stock.forwardPeFy1 as number) <= 0 || (stock.forwardPeFy1 as number) > (forwardPerMaxValue as number))) return false;
+      if (revenueGrowthMinValid && ((stock.revenueGrowthFy1 ?? null) === null || (stock.revenueGrowthFy1 as number) < (revenueGrowthMinValue as number))) return false;
+      if (epsGrowthMinValid && ((stock.epsGrowthFy1 ?? null) === null || (stock.epsGrowthFy1 as number) < (epsGrowthMinValue as number))) return false;
       if (bandFilter) {
         const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
         if (!band) return false;
@@ -439,7 +477,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       }
       return true;
     });
-  }, [stocks, search, sector, country, perMax, profitableOnly, bandFilter, actionFilter]);
+  }, [stocks, search, sector, country, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, profitableOnly, bandFilter, actionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -453,7 +491,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${sector}|${country}|${perMax}|${profitableOnly}|${bandFilter}|${actionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${sector}|${country}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -470,7 +508,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     } else {
       setSortKey(key);
       const textColumn = key === "ticker" || key === "name" || key === "sector" || key === "country";
-      setSortDir(textColumn ? "asc" : "desc");
+      setSortDir(textColumn || key === "rank" ? "asc" : "desc");
     }
   }
 
@@ -479,12 +517,15 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     setSector("");
     setCountry("");
     setPerMax("");
+    setForwardPerMax("");
+    setRevenueGrowthMin("");
+    setEpsGrowthMin("");
     setProfitableOnly(false);
     setBandFilter("");
     setActionFilter("");
   }
 
-  const hasFilters = Boolean(search || sector || country || perMax || profitableOnly || bandFilter || actionFilter);
+  const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || profitableOnly || bandFilter || actionFilter);
 
   return (
     <div className="data-shell-page">
@@ -517,7 +558,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
 
       {/* Filter bar */}
       <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <label className="flex flex-col gap-1">
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">검색</span>
             <input
@@ -570,6 +611,39 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
             />
           </label>
           <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">FY+1 PER 최대</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={forwardPerMax}
+              onChange={(event) => setForwardPerMax(event.target.value)}
+              placeholder="예: 25"
+              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">매출+1 최소</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={revenueGrowthMin}
+              onChange={(event) => setRevenueGrowthMin(event.target.value)}
+              placeholder="예: 10"
+              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">EPS+1 최소</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={epsGrowthMin}
+              onChange={(event) => setEpsGrowthMin(event.target.value)}
+              placeholder="예: 10"
+              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 밴드</span>
             <select
               value={bandFilter}
@@ -595,6 +669,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               <option value="index_core">지수 핵심</option>
               <option value="income">배당 점검</option>
               <option value="momentum">모멘텀 리더</option>
+              <option value="watch">관찰</option>
             </select>
           </label>
         </div>

@@ -88,6 +88,49 @@ function EmptyPanel({ label }: { label: string }) {
   return <div className="px-4 py-5 text-sm font-semibold text-slate-400">{label}</div>;
 }
 
+function MiniTrend({
+  points,
+  label,
+  formatValue = (value) => fmt(value, 1),
+  tone = "slate",
+}: {
+  points?: CompactTrendPoint[];
+  label: string;
+  formatValue?: (value: number) => string;
+  tone?: MarketTone;
+}) {
+  const rows = (points ?? []).filter((point) => Number.isFinite(point.value));
+  if (rows.length < 2) return null;
+  const values = rows.map((point) => point.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const w = 240;
+  const h = 72;
+  const pad = 10;
+  const x = (index: number) => pad + (index / Math.max(1, rows.length - 1)) * (w - pad * 2);
+  const y = (value: number) => h - pad - ((value - min) / range) * (h - pad * 2);
+  const path = rows.map((point, index) => `${x(index).toFixed(1)},${y(point.value).toFixed(1)}`).join(" ");
+  const latest = rows[rows.length - 1];
+  const stroke = tone === "rose" ? "#f43f5e" : tone === "amber" ? "#f59e0b" : tone === "emerald" ? "#10b981" : "#1B73D3";
+  return (
+    <div className="mt-3">
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-[72px] w-full" preserveAspectRatio="none" role="img" aria-label={`${label} 추이 · 최신 ${latest.date} ${formatValue(latest.value)} · 범위 ${formatValue(min)}~${formatValue(max)}`}>
+        <line x1={pad} y1={y(min)} x2={w - pad} y2={y(min)} stroke="#e2e8f0" strokeDasharray="2,2" />
+        <line x1={pad} y1={y(max)} x2={w - pad} y2={y(max)} stroke="#e2e8f0" strokeDasharray="2,2" />
+        {min < 0 && max > 0 ? <line x1={pad} y1={y(0)} x2={w - pad} y2={y(0)} stroke="#cbd5e1" /> : null}
+        <polyline points={path} fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <circle cx={x(rows.length - 1)} cy={y(latest.value)} r="3" fill={stroke} stroke="white" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div className="mt-1 flex min-w-0 justify-between gap-2 text-[9px] font-black tabular-nums text-slate-400">
+        <span>min {formatValue(min)}</span>
+        <span className="text-slate-600">현재 {formatValue(latest.value)}</span>
+        <span>max {formatValue(max)}</span>
+      </div>
+    </div>
+  );
+}
+
 function PanelShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
     <section className="overflow-hidden rounded-[1.2rem] border border-slate-200 bg-white shadow-[0_10px_36px_-18px_rgba(15,23,42,0.18)]">
@@ -103,10 +146,25 @@ function PanelShell({ title, subtitle, children }: { title: string; subtitle: st
 interface MarketStructureIndexDoc {
   generated_at?: string;
   concentration?: Array<{ id: string; label: string; top3Weight?: number | null; top10Weight?: number | null }>;
-  liquidity?: Array<{ id: string; label: string; date?: string | null; value?: number | null; delta7d?: number | null; delta30d?: number | null }>;
-  sentimentComponents?: { latestDate?: string | null; components?: Array<{ id: string; value?: number | null; delta7d?: number | null }> };
+  benchmarkMatrix?: { generated?: string | null; rows?: BenchmarkMatrixRow[] };
+  liquidity?: Array<{ id: string; label: string; date?: string | null; value?: number | null; delta7d?: number | null; delta30d?: number | null; trend?: CompactTrendPoint[] }>;
+  sentimentComponents?: { latestDate?: string | null; components?: Array<{ id: string; value?: number | null; delta7d?: number | null; trend?: CompactTrendPoint[] }> };
+  aaii?: { latestDate?: string | null; points?: number; bullish?: number | null; neutral?: number | null; bearish?: number | null; spread?: number | null; trend?: CompactTrendPoint[] };
   creditRatings?: { sourceDate?: string | null; tableCount?: number; tables?: Array<{ id: string; rows?: number; medianSpread?: number | null }> };
   component_as_of?: Array<{ id: string; asOf?: string | null; status?: string | null }>;
+}
+
+interface CompactTrendPoint {
+  date: string;
+  value: number;
+}
+
+interface BenchmarkMatrixRow {
+  id: string;
+  label: string;
+  price?: Record<string, number | null>;
+  eps?: Record<string, number | null>;
+  pe?: Record<string, number | null>;
 }
 
 let marketStructureIndexCache: MarketStructureIndexDoc | null = null;
@@ -228,8 +286,9 @@ function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
 }
 
 function ErpInsightPanel({ insight }: { insight: MarketErpInsight | null }) {
+  const history = insight?.historicalRows.map((point) => ({ date: point.year, value: point.value })) ?? [];
   return (
-    <PanelShell title="Damodaran ERP" subtitle="country risk premium">
+    <PanelShell title="Damodaran ERP" subtitle="US implied ERP history">
       {!insight ? (
         <EmptyPanel label="ERP 데이터 없음" />
       ) : (
@@ -245,25 +304,24 @@ function ErpInsightPanel({ insight }: { insight: MarketErpInsight | null }) {
               ) : null}
             </div>
             <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">
-              최신 역사값 {insight.latestHistoricalYear ?? "—"} {fmtPercentDecimal(insight.latestHistoricalErp, 2)} · 국가 {insight.countryCount}
+              최신 역사값 {insight.latestHistoricalYear ?? "—"} {fmtPercentDecimal(insight.latestHistoricalErp, 2)} · 국가 ERP 테이블 {insight.countryCount}개는 보조 lookup
             </p>
             <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{insight.sourceDate ?? "—"}</p>
+            <span className={cx("mt-3 inline-flex rounded-full border px-2 py-1 text-[10px] font-black", toneClass(insight.regimeTone))}>
+              {insight.regimeLabel}
+            </span>
           </div>
           <div className="min-w-0 border-t border-slate-100 px-4 py-3 lg:border-l lg:border-t-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">ERP 상위 국가</p>
-            <div className="mt-2 grid min-w-0 gap-2">
-              {insight.topRiskCountries.map((country) => (
-                <div key={country.country} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-black text-slate-800">{country.country}</p>
-                    <p className="truncate text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
-                      {country.region ?? "—"} · {country.rating ?? "—"}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-sm font-black tabular-nums text-rose-600">{fmtPercentDecimal(country.erp, 1)}</span>
-                </div>
-              ))}
+            <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+              <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">1960년 이후 ERP 레짐</p>
+              <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">min/current/max</span>
             </div>
+            <MiniTrend
+              points={history}
+              label="Damodaran US ERP"
+              formatValue={(value) => fmtPercentDecimal(value, 2)}
+              tone={insight.regimeTone}
+            />
           </div>
         </div>
       )}
@@ -416,7 +474,9 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
   }, []);
 
   const concentration = doc?.concentration?.slice(0, 3) ?? [];
+  const benchmarkRows = doc?.benchmarkMatrix?.rows?.slice(0, 7) ?? [];
   const liquidity = doc?.liquidity ?? [];
+  const aaii = doc?.aaii ?? null;
   const weakSentiment = [...(doc?.sentimentComponents?.components ?? [])]
     .sort((a, b) => (a.value ?? 100) - (b.value ?? 100))
     .slice(0, 4);
@@ -484,6 +544,25 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                   </div>
                 ) : null}
               </div>
+              {benchmarkRows.length > 0 ? (
+                <div className="border-t border-slate-100 px-4 py-3">
+                  <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+                    <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">이익 × 멀티플 매트릭스</p>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{doc.benchmarkMatrix?.generated ?? "—"}</span>
+                  </div>
+                  <div className="mt-2 grid min-w-0 gap-1">
+                    {benchmarkRows.map((row) => (
+                      <div key={row.id} className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-100 py-1.5 first:border-t-0">
+                        <span className="min-w-[96px] flex-1 truncate text-[11px] font-black text-slate-700">{row.label}</span>
+                        <span className="text-right text-[10px] font-black tabular-nums text-slate-500">1M {fmtSignedPct(row.price?.["1m"] ?? null, 1)}</span>
+                        <span className="text-right text-[10px] font-black tabular-nums text-slate-900">YTD {fmtSignedPct(row.price?.ytd ?? null, 1)}</span>
+                        <span className="text-right text-[10px] font-black tabular-nums text-emerald-600">EPS {fmtSignedPct(row.eps?.ytd ?? null, 1)}</span>
+                        <span className="text-right text-[10px] font-black tabular-nums text-slate-500">PE {fmtSignedPct(row.pe?.ytd ?? null, 1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <div className="grid min-w-0 border-t border-slate-100 md:grid-cols-2">
                 {liquidity.map((item) => (
                   <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 md:border-t-0">
@@ -496,24 +575,45 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                         7D {fmtSignedPoint(item.delta7d ?? null, 1)}
                       </span>
                     </div>
-                    <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">30D {fmtSignedPoint(item.delta30d ?? null, 1)}</p>
+                    <div className="mt-2 flex min-w-0 items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">
+                      <span>30D {fmtSignedPoint(item.delta30d ?? null, 1)}</span>
+                      <span className="orbitron tabular-nums text-slate-500">{fmt(item.value ?? null, 1)}</span>
+                    </div>
+                    <MiniTrend points={item.trend} label={item.label} formatValue={(value) => fmt(value, 1)} />
                   </div>
                 ))}
               </div>
               <div className="grid min-w-0 border-t border-slate-100 md:grid-cols-2">
                 <div className="min-w-0 px-4 py-3">
                   <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">CNN 하위 심리</p>
-                  <div className="mt-2 flex min-w-0 flex-wrap gap-2">
+                  <div className="mt-2 grid min-w-0 gap-2 sm:grid-cols-2">
                     {weakSentiment.map((item) => (
-                      <span key={item.id} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600">
-                        {item.id.replace(/_/g, " ")} {fmt(item.value ?? null, 1)}
-                      </span>
+                      <div key={item.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                        <div className="flex min-w-0 items-center justify-between gap-2">
+                          <span className="min-w-0 truncate text-[10px] font-black text-slate-600">{item.id.replace(/_/g, " ")}</span>
+                          <span className="orbitron shrink-0 text-[10px] font-black tabular-nums text-slate-900">{fmt(item.value ?? null, 1)}</span>
+                        </div>
+                        <MiniTrend points={item.trend} label={item.id.replace(/_/g, " ")} formatValue={(value) => fmt(value, 1)} />
+                      </div>
                     ))}
                   </div>
                 </div>
                 <div className="min-w-0 border-t border-slate-100 px-4 py-3 md:border-t-0">
-                  <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">신호별 as-of</p>
-                  <div className="mt-2 flex min-w-0 flex-wrap gap-2">
+                  <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">AAII 개인투자자 심리</p>
+                  {aaii ? (
+                    <>
+                      <div className="mt-2 grid grid-cols-3 gap-2">
+                        <MomentumCell label="Bull" value={aaii.bullish !== null && aaii.bullish !== undefined ? aaii.bullish / 100 : null} />
+                        <MomentumCell label="Bear" value={aaii.bearish !== null && aaii.bearish !== undefined ? aaii.bearish / 100 : null} />
+                        <MomentumCell label="Spread" value={aaii.spread !== null && aaii.spread !== undefined ? aaii.spread / 100 : null} />
+                      </div>
+                      <MiniTrend points={aaii.trend} label="AAII bull-bear spread" formatValue={(value) => `${value >= 0 ? "+" : ""}${value.toFixed(1)}%p`} tone={(aaii.spread ?? 0) < 0 ? "amber" : "slate"} />
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{aaii.latestDate ?? "—"} · {aaii.points ?? 0} points</p>
+                    </>
+                  ) : (
+                    <EmptyPanel label="AAII 데이터 없음" />
+                  )}
+                  <div className="mt-3 flex min-w-0 flex-wrap gap-2 border-t border-slate-100 pt-3">
                     {signalDates.map((item) => (
                       <span key={item.id} className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-black text-slate-500">
                         {item.id} · {item.asOf ?? "—"}
@@ -553,6 +653,11 @@ function EventRiskPanel({ items }: { items: MarketEventRisk[] }) {
                     </div>
                     <p className="mt-1 min-w-0 break-words text-sm font-bold leading-5 text-slate-800">{item.titleKo}</p>
                     {item.titleEn ? <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-400">{item.titleEn}</p> : null}
+                    {item.previousValue ? (
+                      <p className="mt-2 inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black tabular-nums text-slate-600">
+                        직전 {item.previousValue} · {item.previousAsOf ?? item.previousSeries ?? "prev"}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </div>

@@ -93,6 +93,7 @@ export const DEFAULT_DASHBOARD: DashboardSnapshot = {
   loanDepositRatio: 71.5,
   vixValue: 14.2,
   vixLabel: '낮음',
+  vixHistory: [],
   putCallValue: 0.78,
   putCallLabel: '중립',
   cryptoFearGreed: 78,

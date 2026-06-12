@@ -38,12 +38,12 @@ export default function ExplorePage() {
           <div className="col-a">
             <MarketThermometer />
             <ExploreDashboard />
+            <ActionCandidatesCard />
           </div>
           <div className="col-b">
             <MyWatchlistStrip />
             <WeekAheadCard />
             <RevisionMoversCard />
-            <ActionCandidatesCard />
             <SlickchartsDiscoveryCard />
             <MarketStructureIndexCard />
           </div>

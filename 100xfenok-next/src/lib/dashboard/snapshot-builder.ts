@@ -53,6 +53,14 @@ function hasNumberSeries(series: NumberPoint[] | undefined): boolean {
   return hasFiniteNumber(series[series.length - 1]?.value);
 }
 
+function compactNumberHistory(series: NumberPoint[] | null | undefined, limit: number): NumberPoint[] {
+  if (!Array.isArray(series) || series.length === 0) return [];
+  return series
+    .filter((point) => typeof point.date === 'string' && hasFiniteNumber(point.value))
+    .slice(-limit)
+    .map((point) => ({ date: point.date, value: point.value }));
+}
+
 function hasFearGreedSeries(series: CnnFearGreedPoint[] | null): boolean {
   if (!Array.isArray(series) || series.length === 0) return false;
   return hasFiniteNumber(series[series.length - 1]?.score);
@@ -279,6 +287,7 @@ export function buildDashboardSnapshot(payload: {
   const vixLatest = payload.vix?.[payload.vix.length - 1];
   const vixValue = safeNumber(vixLatest?.value, fallback.vixValue);
   const vixLabel = getVixLabel(vixValue);
+  const vixHistory = compactNumberHistory(payload.vix, 30);
 
   const putCallLatest = payload.putCall?.[payload.putCall.length - 1];
   const putCallValue = safeNumber(putCallLatest?.value, fallback.putCallValue);
@@ -371,6 +380,7 @@ export function buildDashboardSnapshot(payload: {
     loanDepositRatio,
     vixValue,
     vixLabel,
+    vixHistory,
     putCallValue,
     putCallLabel,
     cryptoFearGreed,

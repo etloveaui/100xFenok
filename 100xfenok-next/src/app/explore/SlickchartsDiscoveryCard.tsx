@@ -141,11 +141,11 @@ export default function SlickchartsDiscoveryCard() {
     return (
       <section className="panel">
         <div className="panel-h">
-          <h2>SlickCharts 리더보드</h2>
+          <h2>수익률 리더보드</h2>
           <span className="desc">가격·수익률·배당</span>
         </div>
         <div className="panel-b text-sm font-semibold text-slate-500">
-          {loaded ? "SlickCharts 리더보드 데이터를 불러오지 못했습니다." : "SlickCharts 리더보드 확인 중"}
+          {loaded ? "수익률 리더보드 데이터를 불러오지 못했습니다." : "수익률 리더보드 확인 중"}
         </div>
       </section>
     );
@@ -154,7 +154,7 @@ export default function SlickchartsDiscoveryCard() {
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>SlickCharts 리더보드</h2>
+        <h2>수익률 리더보드</h2>
         <span className="desc">{asOf ?? "—"} · {doc.universe?.uniqueCount ?? "—"}개 유니버스</span>
         <div className="seg" style={{ marginLeft: "auto" }}>
           {[

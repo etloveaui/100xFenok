@@ -58,7 +58,7 @@ const PERIODS: Array<{ id: Period; label: string }> = [
   { id: "3m", label: "3개월" },
   { id: "1m", label: "1개월" },
   { id: "1w", label: "1주" },
-  { id: "1y", label: "최근연도" },
+  { id: "1y", label: "연간" },
 ];
 
 export function pick(doc: SummariesDoc, section: string, period: Period): MomentumRow {
@@ -151,8 +151,11 @@ export default function MarketThermometer() {
     return SECTIONS.map((s) => ({ ...s, row: pick(doc, s.key, period) }))
       .filter((r) => r.row.px !== null);
   }, [doc, period]);
-  const activePeriodLabel = PERIODS.find((p) => p.id === period)?.label ?? "YTD";
   const activeYear = period === "1y" ? rows?.find((r) => r.row.asOf)?.row.asOf ?? null : null;
+  const periodLabel = (p: { id: Period; label: string }) => (p.id === "1y" && activeYear ? `${activeYear}년` : p.label);
+  const activePeriodLabel = period === "1y" && activeYear
+    ? `${activeYear}년 수익률`
+    : PERIODS.find((p) => p.id === period)?.label ?? "YTD";
 
   if (!rows || rows.length === 0) {
     return (
@@ -176,7 +179,7 @@ export default function MarketThermometer() {
         <div className="seg" style={{ marginLeft: "auto" }}>
           {PERIODS.map((p) => (
             <button key={p.id} type="button" onClick={() => setPeriod(p.id)} className={period === p.id ? "on" : ""} aria-pressed={period === p.id}>
-              {p.label}
+              {periodLabel(p)}
             </button>
           ))}
         </div>
@@ -208,8 +211,7 @@ export default function MarketThermometer() {
         );
       })}
       <div className="panel-foot">
-        Bloomberg 주간 집계 기준 · {activePeriodLabel}
-        {activeYear ? ` ${activeYear}` : ""} · 막대 중앙선 오른쪽 = 플러스 기여 · 이익 ±100%, 멀티플 ±22% 표시
+        Bloomberg 주간 집계 기준 · {activePeriodLabel} · 막대 중앙선 오른쪽 = 플러스 기여 · 이익 ±100%, 멀티플 ±22% 표시
       </div>
     </section>
   );

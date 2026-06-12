@@ -126,6 +126,7 @@ export type DashboardSnapshot = {
   loanDepositRatio: number;
   vixValue: number;
   vixLabel: string;
+  vixHistory: NumberPoint[];
   putCallValue: number;
   putCallLabel: string;
   cryptoFearGreed: number;

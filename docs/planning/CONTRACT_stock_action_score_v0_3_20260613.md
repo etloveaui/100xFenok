@@ -2,7 +2,7 @@
 
 Date: 2026-06-13
 Scope: `scripts/build-phase2-closeout-indexes.mjs` -> `data/computed/stock_action_index.json`
-Status: G0/G1/G2 live plus G3a v0.3.1 tuning target
+Status: G0/G1/G2 live plus G3a v0.3.1 tuning and G4 E/H summary extension
 
 ## Purpose
 
@@ -225,12 +225,34 @@ Each summary row is an array tuple in this exact `fields` order:
 - `lowEvidence`: boolean derived from full-index `quality_flags`
 - `guruHolders`
 - `return12m`
+- `forwardPeFy1`
+- `forwardEpsFy1`
+- `revenueGrowthFy1`
+- `epsGrowthFy1`
 
 The tuple shape is intentional: it keeps the generated summary under the
 250KB product-list budget while preserving explicit field names at top level.
 
 The full index remains the audit/proof payload for Admin and future detail
 surfaces. Product list views should not cold-load the full index.
+
+## G4 Track E/H/U Addendum
+
+Track E extends data depth without changing the action-score formula:
+
+- Global Scouter detail files are included as stock-action source inputs.
+- Full rows receive an `estimateSnapshot` object for FY+1~FY+3 valuation,
+  EPS, revenue-growth, and EPS-growth estimates.
+- The slim summary exposes only FY+1 fields needed by Screener list filters:
+  `forwardPeFy1`, `forwardEpsFy1`, `revenueGrowthFy1`, `epsGrowthFy1`.
+- Summary budget remains `<= 250KB`.
+
+Track H and U do not change scoring. They consume adjacent generated indexes:
+
+- `market_structure_index` carries real market-history inputs, AAII, CNN
+  component trends, liquidity trends, and `benchmarkMatrix`.
+- Market and Explore surfaces should render these fields directly and avoid
+  synthetic sparkline values or source-name-only titles.
 
 ## Verification Gate
 
@@ -245,9 +267,13 @@ Required low-resource checks before push:
   - no non-watch bucket violates `eligibleFamilyCount >= 3` and `presentFamilyCount >= 3`
 - root/public mirrors match for generated JSON outputs
 - summary file target: `data/computed/stock_action_summary.json <= 250KB`
+- estimate summary target: FY+1 estimate fields present for rows with available
+  Global Scouter estimate snapshots
 - income bucket distribution target: roughly 15-25% of indexed rows
 - product fetch audit: Screener and Explore action candidates fetch summary,
   not full `stock_action_index.json`
+- targeted eslint, `npx tsc --noEmit`, and `npm run test:live-bridge` when the
+  shared `node_modules` symlink is available
 - `git diff --check`
 
 Browser/dev-server/Playwright checks are not part of this gate unless the user

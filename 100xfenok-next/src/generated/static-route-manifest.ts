@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 23447,
-      "updatedAt": "2026-06-12T18:50:26.408Z"
+      "updatedAt": "2026-06-12T19:02:33.099Z"
     },
     {
       "name": "reports-index.json",
@@ -34,8 +34,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "admin": [
     {
       "name": "data-usage-manifest.json",
-      "sizeBytes": 36117,
-      "updatedAt": "2026-06-12T18:35:44.975Z"
+      "sizeBytes": 36378,
+      "updatedAt": "2026-06-12T19:22:28.963Z"
     },
     {
       "name": "notification-folders.json",
@@ -110,23 +110,23 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "computed": [
     {
       "name": "market_structure_index.json",
-      "sizeBytes": 13938,
-      "updatedAt": "2026-06-12T18:24:57.925Z"
+      "sizeBytes": 42420,
+      "updatedAt": "2026-06-12T19:22:28.912Z"
     },
     {
       "name": "signals.json",
-      "sizeBytes": 12729,
-      "updatedAt": "2026-06-12T18:03:51.169Z"
+      "sizeBytes": 12727,
+      "updatedAt": "2026-06-12T19:02:33.096Z"
     },
     {
       "name": "stock_action_index.json",
-      "sizeBytes": 3064876,
-      "updatedAt": "2026-06-12T18:35:44.976Z"
+      "sizeBytes": 3565007,
+      "updatedAt": "2026-06-12T19:22:28.899Z"
     },
     {
       "name": "stock_action_summary.json",
-      "sizeBytes": 178062,
-      "updatedAt": "2026-06-12T18:35:44.976Z"
+      "sizeBytes": 188314,
+      "updatedAt": "2026-06-12T19:22:28.904Z"
     }
   ],
   "damodaran": [

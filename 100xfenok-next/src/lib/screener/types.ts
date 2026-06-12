@@ -43,6 +43,10 @@ export interface ScreenerStock {
   perBandMax: number | null;
   peForward: number | null;
   epsForward: number | null;
+  forwardPeFy1?: number | null;
+  forwardEpsFy1?: number | null;
+  revenueGrowthFy1?: number | null;
+  epsGrowthFy1?: number | null;
   dividendTtm: number | null;
   ret1y: number | null;
   ret3y: number | null;
@@ -72,6 +76,10 @@ export type ScreenerSortKey =
   | "perBandCurrent"
   | "peForward"
   | "epsForward"
+  | "forwardPeFy1"
+  | "forwardEpsFy1"
+  | "revenueGrowthFy1"
+  | "epsGrowthFy1"
   | "dividendTtm"
   | "ret1y"
   | "ret3y"
