@@ -26,7 +26,7 @@ export default async function StockDetailPage({ params }: Props) {
   const symbol = ticker.toUpperCase();
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
-      <AppShell title={symbol} backHref="/explore">
+      <AppShell title={symbol} backHref={`/screener?ticker=${encodeURIComponent(symbol)}`}>
         <StockDetailClient ticker={symbol} />
       </AppShell>
     </div>

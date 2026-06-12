@@ -236,7 +236,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
   }
 }
 
-export default function ScreenerClient() {
+export default function ScreenerClient({ initialSearch = "" }: { initialSearch?: string }) {
   const { stocks: rawStocks, dataReady, failed, sourceDate, sectors, countries } = useScreenerData();
   const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
 
@@ -256,7 +256,7 @@ export default function ScreenerClient() {
     return rawStocks.map((s) => ({ ...s, guruHolders: guruMap[s.ticker] ?? null }));
   }, [rawStocks, guruMap]);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [sector, setSector] = useState("");
   const [country, setCountry] = useState("");
   const [perMax, setPerMax] = useState("");
@@ -266,6 +266,11 @@ export default function ScreenerClient() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSearch(initialSearch);
+    setExpandedTicker(initialSearch || null);
+  }, [initialSearch]);
 
   const [preset, setPreset] = useState<ColumnPreset>(() => {
     if (typeof window === "undefined") return "basic";
@@ -471,7 +476,7 @@ export default function ScreenerClient() {
               <button
                 type="button"
                 onClick={resetFilters}
-                className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-rose-300 hover:text-rose-600"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-rose-300 hover:text-rose-600 sm:min-h-8"
               >
                 초기화
               </button>
@@ -489,7 +494,7 @@ export default function ScreenerClient() {
             type="button"
             onClick={() => handlePresetChange(p)}
             className={cx(
-              "inline-flex min-h-7 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition",
+              "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
               preset === p
                 ? "border border-brand-interactive bg-brand-interactive/10 text-brand-interactive"
                 : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900",

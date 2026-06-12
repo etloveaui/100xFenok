@@ -161,7 +161,7 @@ export default function TickerTypeahead({
     if (s.type === "stock" && s.stock) {
       router.push(`/stock/${encodeURIComponent(s.stock.symbol)}`);
     } else if (s.type === "guru" && s.guru) {
-      router.push("/superinvestors");
+      router.push(`/superinvestors?tab=gurus&guru=${encodeURIComponent(s.guru.id)}`);
     }
     setOpen(false);
     setValue("");

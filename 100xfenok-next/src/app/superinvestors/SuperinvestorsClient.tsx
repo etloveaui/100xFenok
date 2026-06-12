@@ -556,7 +556,7 @@ function TradeRankingPanel({
         <button
           type="button"
           onClick={onToggle}
-          className="mt-3 inline-flex min-h-8 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
         >
           {expanded ? "접기" : "전체 50개 보기"}
         </button>
@@ -565,12 +565,20 @@ function TradeRankingPanel({
   );
 }
 
-export default function SuperinvestorsClient() {
+export default function SuperinvestorsClient({
+  initialTab,
+  initialSearch = "",
+  initialGuru = null,
+}: {
+  initialTab?: SuperInvestorsTab;
+  initialSearch?: string;
+  initialGuru?: string | null;
+}) {
   const { consensus, summary, byTicker, dataReady, failed, quarter, excludedStale } = use13FData();
-  const [tab, setTab] = useState<SuperInvestorsTab>("consensus");
-  const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<SuperInvestorsTab>(initialTab ?? "consensus");
+  const [search, setSearch] = useState(initialSearch);
   const [group, setGroup] = useState("");
-  const [expandedGuru, setExpandedGuru] = useState<string | null>(null);
+  const [expandedGuru, setExpandedGuru] = useState<string | null>(initialGuru);
   const [tradesData, setTradesData] = useState<TradesRankingData | null>(null);
   const [tradesLoading, setTradesLoading] = useState(true);
   const [tradesFailed, setTradesFailed] = useState(false);
@@ -579,6 +587,12 @@ export default function SuperinvestorsClient() {
   const [pvData, setPvData] = useState<PortfolioViewsData | null>(null);
   const [pvFailed, setPvFailed] = useState(false);
   const [totalPortfolioOpen, setTotalPortfolioOpen] = useState(false);
+
+  useEffect(() => {
+    setTab(initialTab ?? "consensus");
+    setSearch(initialSearch);
+    setExpandedGuru(initialGuru);
+  }, [initialTab, initialSearch, initialGuru]);
 
   // Open the total-portfolio treemap by default on desktop only (mobile stays collapsed).
   useEffect(() => {
@@ -848,7 +862,7 @@ export default function SuperinvestorsClient() {
                                 setSearch(row.ticker);
                                 setTab("by-ticker");
                               }}
-                              className="inline-flex min-h-7 items-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
+                              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-7"
                             >
                               보유 보기
                             </button>
@@ -867,7 +881,7 @@ export default function SuperinvestorsClient() {
                   type="button"
                   disabled={safePage === 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive disabled:opacity-40"
+                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive disabled:opacity-40 sm:min-h-8"
                 >
                   이전
                 </button>
@@ -878,7 +892,7 @@ export default function SuperinvestorsClient() {
                   type="button"
                   disabled={safePage >= pageCount - 1}
                   onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-                  className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive disabled:opacity-40"
+                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive disabled:opacity-40 sm:min-h-8"
                 >
                   다음
                 </button>
@@ -977,7 +991,7 @@ export default function SuperinvestorsClient() {
                     <button
                       type="button"
                       onClick={() => setExpandedGuru(isOpen ? null : id)}
-                      className="mt-4 inline-flex min-h-8 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                      className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
                     >
                       {isOpen ? "접기" : "포트폴리오 보기"}
                     </button>
@@ -1081,9 +1095,9 @@ export default function SuperinvestorsClient() {
                 <div className="flex justify-end">
                   <TransitionLink
                     href={`/stock/${encodeURIComponent(search.trim().toUpperCase())}`}
-                    className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                    className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
                   >
-                    스크리너에서 보기 →
+                    종목 상세 보기 →
                   </TransitionLink>
                 </div>
               </div>
