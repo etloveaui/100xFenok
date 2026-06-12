@@ -289,6 +289,40 @@ Deferred from 2B:
 - Browser/Playwright visual QA. It remains intentionally skipped during
   Mac-mini low-resource work unless explicitly approved.
 
+## Implementation Slice 2C: Explore Discovery Summary
+
+Implemented in `100xfenok-next`:
+
+- Added `scripts/build-slickcharts-discovery.mjs` to generate a lightweight
+  `data/slickcharts/discovery-summary.json` plus public mirror.
+- `/explore` now renders a `SlickCharts 리더보드` card in the right column after
+  `리비전 무버`.
+- The card exposes three compact views from the summary index:
+  - latest SlickCharts daily gainers/losers,
+  - 1Y return leaders/laggards,
+  - high dividend yield and high DPS TTM names.
+- The Explore footer data caption now includes SlickCharts.
+
+Measured data shape for this slice:
+
+- Raw `gainers.json`: 2.73 MB, 58 snapshots, latest 2026-06-08 with 251 rows.
+- Raw `losers.json`: 3.02 MB, 59 snapshots, latest 2026-06-08 with 252 rows.
+- Directly fetching both raw mover histories in Explore would cost about 5.7 MB,
+  so the product surface reads only the generated 24 KB discovery summary.
+- Summary sources include `gainers`, `losers`, `universe`,
+  `global-scouter/core/stocks_analyzer`, and `global-scouter/core/slick_index`.
+
+Deferred from 2C:
+
+- Screener membership/weight filters. They should be added only after deciding
+  whether to extend `stocks_analyzer.json` or create a dedicated screener index.
+- `membership-changes`, `magnificent7`, and index concentration cards. These are
+  good follow-up Explore/Market cards, but not needed for the first low-risk
+  discovery slice.
+- Static-route manifest refresh for the new summary file if Admin Data Lab needs
+  to inventory it. Direct `/data/slickcharts/discovery-summary.json` fetch works
+  from the public mirror without it.
+
 ## Dataset Findings
 
 ### Benchmarks, Indices, Yardeni

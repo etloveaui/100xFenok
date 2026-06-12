@@ -8,6 +8,7 @@ import SignalStrip from "./SignalStrip";
 import WeekAheadCard from "./WeekAheadCard";
 import MyWatchlistStrip from "./MyWatchlistStrip";
 import RevisionMoversCard from "./RevisionMoversCard";
+import SlickchartsDiscoveryCard from "./SlickchartsDiscoveryCard";
 
 const plexKr = IBM_Plex_Sans_KR({
   weight: ["400", "500", "600", "700"],
@@ -40,6 +41,7 @@ export default function ExplorePage() {
             <MyWatchlistStrip />
             <WeekAheadCard />
             <RevisionMoversCard />
+            <SlickchartsDiscoveryCard />
           </div>
         </div>
 
@@ -47,7 +49,7 @@ export default function ExplorePage() {
           <ExploreHotTopics />
         </div>
 
-        <p className="data-cap">데이터: Global Scouter · Benchmarks · Calendar · SEC 13F · Computed signals</p>
+        <p className="data-cap">데이터: Global Scouter · Benchmarks · Calendar · SEC 13F · SlickCharts · Computed signals</p>
       </AppShell>
     </div>
   );
